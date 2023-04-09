@@ -729,7 +729,7 @@ export type CommandStoreTypes = {
 export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
-  libraryInstallStatus: Record<EngineId, LibraryInstallStatus>;
+  libraryInstallStatuses: Record<LibraryInstallId, LibraryInstallStatus>;
 };
 
 export type EngineStoreTypes = {

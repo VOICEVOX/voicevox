@@ -888,17 +888,26 @@ ipcMainHandle("READ_FILE", (_, { filePath }) => {
 
 ipcMainHandle("START_INSTALLING_LIBRARY", (_, { engineId, library }) => {
   const libraryInstallId = LibraryInstallId(randomUUID());
-  libraryManager.installLibrary(
-    engineId,
-    library,
-    libraryInstallId,
-    (status: LibraryInstallStatus) => {
-      ipcMainSend(win, "UPDATE_LIBRARY_INSTALL_STATUS", {
-        libraryInstallId,
-        status,
-      });
-    }
-  );
+  setTimeout(() => {
+    libraryManager.installLibrary(
+      engineId,
+      library,
+      libraryInstallId,
+      (status: LibraryInstallStatus) => {
+        if (status.status === "downloading" && status.contentLength) {
+          win.setProgressBar(status.downloaded / status.contentLength);
+        } else if (status.status === "installing") {
+          win.setProgressBar(2);
+        } else {
+          win.setProgressBar(-1);
+        }
+        ipcMainSend(win, "UPDATE_LIBRARY_INSTALL_STATUS", {
+          libraryInstallId,
+          status,
+        });
+      }
+    );
+  }, 0);
   return libraryInstallId;
 });
 

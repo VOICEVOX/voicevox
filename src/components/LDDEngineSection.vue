@@ -11,13 +11,13 @@
       v-for="library of downloadableLibraries"
       :key="library.uuid"
       clickable
-      v-ripple="isHoverableItem && !isLatest(library) && !isInstallingLibrary"
+      v-ripple="isHoverableItem && !isLatest(library) && !installingLibrary"
       class="q-pa-none library-item"
       :class="[
         isHoverableItem && 'hoverable-library-item',
         selectedLibrary === library.uuid && 'selected-library-item',
       ]"
-      :disable="isLatest(library) || isInstallingLibrary"
+      :disable="isLatest(library) || !!installingLibrary"
       @click="selectLibrary(library.uuid)"
     >
       <div class="library-item-inner">
@@ -139,7 +139,7 @@
           outline
           text-color="display"
           class="text-no-wrap q-mt-sm"
-          :disable="isLatest(library) || isInstallingLibrary"
+          :disable="isLatest(library) || !!installingLibrary"
           @click.stop="installLibrary(library)"
         >
           {{
@@ -192,12 +192,15 @@ type BrandedDownloadableLibrary = DownloadableLibrary & {
 const props =
   defineProps<{
     engineId: EngineId;
-    isInstallingLibrary: boolean;
+    installingLibrary: undefined | LibraryInstallId;
     portraitUri: string;
   }>();
 const emit =
   defineEmits<{
-    (e: "update:isInstallingLibrary", isInstallingLibrary: boolean): void;
+    (
+      e: "update:installingLibrary",
+      installingLibrary: undefined | LibraryInstallId
+    ): void;
     (e: "update:portraitUri", portraitUri: string): void;
   }>();
 
@@ -207,8 +210,6 @@ const engineManifests = computed(() => store.state.engineManifests);
 
 const downloadableLibraries = ref<BrandedDownloadableLibrary[]>([]);
 const installedLibraries = ref<BrandedDownloadableLibrary[]>([]);
-
-const libraryInstallId = ref<LibraryInstallId | undefined>(undefined);
 
 const downloadableLibrariesMap = computed(() => {
   const downloadableSpeakersMap: Record<string, BrandedDownloadableLibrary> =
@@ -548,15 +549,13 @@ const rollStyleIndex = (
 };
 
 const installLibrary = async (library: DownloadableLibrary) => {
-  emit("update:isInstallingLibrary", true);
-
   selectLibrary(LibraryId(library.uuid));
   stop();
-  libraryInstallId.value = await store.dispatch("START_INSTALLING_LIBRARY", {
+  const libraryInstallId = await store.dispatch("START_INSTALLING_LIBRARY", {
     engineId: props.engineId,
     library,
   });
-  emit("update:isInstallingLibrary", false);
+  emit("update:installingLibrary", libraryInstallId);
 };
 </script>
 

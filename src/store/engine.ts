@@ -8,7 +8,7 @@ import type { EngineId, EngineInfo } from "@/type/preload";
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
   engineSupportedDevices: {},
-  libraryInstallStatus: {},
+  libraryInstallStatuses: {},
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
@@ -424,8 +424,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
   SET_LIBRARY_INSTALL_STATUS: {
     mutation: async (state, { libraryInstallId, status }) => {
-      state.libraryInstallStatus = {
-        ...state.libraryInstallStatus,
+      state.libraryInstallStatuses = {
+        ...state.libraryInstallStatuses,
         [libraryInstallId]: status,
       };
     },

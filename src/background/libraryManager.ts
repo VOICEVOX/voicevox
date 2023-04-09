@@ -71,27 +71,27 @@ export class LibraryManager {
     });
     const tempFile = await fs.promises.open(tempFilePath, "w");
     try {
-      const progressInterval = total ? Math.floor(total / 100) : 1024 * 1024;
+      const progressInterval = 1024 * 1024;
       let lastProgress = 0;
       downloadRes.body.on("data", (chunk) => {
         downloaded += chunk.length;
-        onUpdate({
-          status: "downloading",
-          contentLength: total,
-          downloaded,
-        });
         tempFile.write(chunk);
         if (
           Math.floor(downloaded) - Math.floor(lastProgress) >=
           progressInterval
         ) {
+          onUpdate({
+            status: "downloading",
+            contentLength: total,
+            downloaded,
+          });
           if (total) {
             log.log(
               prefix +
                 `Downloaded ${downloaded}/${total} bytes (${(
                   (downloaded / total) *
                   100
-                ).toFixed(0)}%)`
+                ).toFixed(1)}%)`
             );
           } else {
             log.log(
@@ -134,7 +134,7 @@ export class LibraryManager {
           );
           onUpdate({
             status: "error",
-            message: `ライブラリのインストールに失敗しました。エラーコード: ${installRes.status}`,
+            message: `ライブラリのインストールに失敗しました。エラーコード：${installRes.status}`,
           });
           return;
         }
@@ -142,6 +142,13 @@ export class LibraryManager {
       });
       onUpdate({
         status: "done",
+      });
+    } catch (e) {
+      log.error(prefix + "Failed to install library");
+      log.error(e);
+      onUpdate({
+        status: "error",
+        message: `ライブラリのインストールに失敗しました。エラー内容：${e}`,
       });
     } finally {
       await tempFile.close();
