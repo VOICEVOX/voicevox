@@ -23,7 +23,7 @@ runs:
     - name: Setup tempdir
       shell: bash
       run: |
-        TEMPDIR=$(echo ${{ runner.temp }} | sed -e 's_\\_/_g')
+        TEMPDIR=$(echo '${{ runner.temp }}' | sed -e 's_\\_/_g')
         echo TEMPDIR=$TEMPDIR >> $GITHUB_ENV
         mkdir -p $TEMPDIR
     - name: Get version
