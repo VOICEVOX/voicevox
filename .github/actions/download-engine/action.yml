@@ -58,7 +58,7 @@ runs:
           TARGET="${{ inputs.target }}"
         fi
 
-        cat $TEMPDIR/target.json | jq -er '[.assets[] | select(.name | contains("$TARGET") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
+        cat $TEMPDIR/target.json | jq -er '[.assets[] | select(.name | contains("'$TARGET'") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
         LIST_URL=$(cat $TEMPDIR/assets_txt.json | jq -er '.browser_download_url')
         echo "7z.txt url: $LIST_URL"
         echo $LIST_URL | xargs curl -sSL > $TEMPDIR/download_name.txt
