@@ -26,6 +26,10 @@ runs:
         TEMPDIR=$(echo '${{ runner.temp }}' | sed -e 's_\\_/_g')
         echo TEMPDIR=$TEMPDIR >> $GITHUB_ENV
         mkdir -p $TEMPDIR
+
+        DEST=$(echo '$DEST' | sed -e 's_\\_/_g')
+        echo DEST=$DEST >> $GITHUB_ENV
+
     - name: Get version
       shell: bash
       run: |
@@ -59,15 +63,15 @@ runs:
           wait $job
         done
         cat $TEMPDIR/download_name.txt | sed -e 's|^|'$TEMPDIR'/|' > $TEMPDIR/download_path.txt
-        cat $TEMPDIR/download_path.txt | xargs 7z x -y -o${{ inputs.dest }}
-        mv ${{ inputs.dest }}/* ${{ inputs.dest }}/
+        cat $TEMPDIR/download_path.txt | xargs 7z x -y -o$DEST
+        mv $DEST/* $DEST/
     - name: Set output
       id: result
       shell: bash
       run: |
         if [ "${{ runner.os }}" = "Windows" ]; then
-          echo run_path="${{ inputs.dest }}\run.exe" >> $GITHUB_OUTPUT
+          echo run_path="$DEST/run.exe" >> $GITHUB_OUTPUT
         else
-          echo run_path="${{ inputs.dest }}/run" >> $GITHUB_OUTPUT
+          echo run_path="$DEST/run" >> $GITHUB_OUTPUT
         fi
         cat $TEMPDIR/target.json | jq -r '.tag_name' >> $GITHUB_OUTPUT
