@@ -64,7 +64,7 @@ runs:
         done
         cat $TEMPDIR/download_name.txt | sed -e 's|^|'$TEMPDIR'/|' > $TEMPDIR/download_path.txt
         cat $TEMPDIR/download_path.txt | xargs 7z x -y -o$TEMPDIR/tmp-extract
-        mv $TEMPDIR/tmp-extract/*/. $DEST/.
+        mv $TEMPDIR/tmp-extract/${OS,,}-cpu/* $DEST
     - name: Set output
       id: result
       shell: bash
