@@ -51,8 +51,9 @@ runs:
         echo "Files to download:"
         cat $TEMPDIR/download_name.txt | sed -e 's|^|- |'
         for i in $(cat $TEMPDIR/download_name.txt); do
-          echo "Download $i"
-          cat $TEMPDIR/target.json | jq -er "[.assets[] | select(.name == \"$i\")][0].browser_download_url" | xargs curl -sSL > $TEMPDIR/$i &
+          URL=$(cat $TEMPDIR/target.json | jq -er "[.assets[] | select(.name == \"$i\")][0].browser_download_url")
+          echo "Download url: $URL"
+          curl -sSL $URL -o $TEMPDIR/$i &
         done
         for job in `jobs -p`; do
           wait $job
