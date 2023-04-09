@@ -2,7 +2,7 @@ name: "Download VOICEVOX ENGINE"
 description: |
   VOICEVOX ENGINEをダウンロードし、指定したディレクトリに展開する。
 inputs:
-  engine-version:
+  version:
     description: "VOICEVOX ENGINEのバージョン。latest、preview（デフォルト）、バージョン番号（例：0.7.2）で指定できる。"
     required: false
     default: "preview"
@@ -20,32 +20,37 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Setup tempdir
+      shell: bash
+      run: |
+        echo TEMPDIR=$(echo ${{ runner.temp }} | sed -e 's_\\_/_g') >> $GITHUB_ENV
+        mkdir -p $TEMPDIR
     - name: Get version
       shell: bash
       run: |
         curl -s https://api.github.com/repos/Hiroshiba/voicevox_engine/releases \
             -H 'authorization: Bearer ${{ github.token }}' \
-            -H 'content-type: application/json' > ${{ runner.temp }}/releases.json
+            -H 'content-type: application/json' > $TEMPDIR/releases.json
 
-        if [ "${{ inputs.engine-version }}" = "latest" ]; then
-          cat ${{ runner.temp }}/releases.json | jq -er '[.[] | select(.prerelease == false)][0]' > ${{ runner.temp }}/target.json
-        elif [ "${{ inputs.engine-version }}" = "preview" ]; then
-          cat ${{ runner.temp }}/releases.json | jq -er '[.[] | select(.prerelease == true)][0]' > ${{ runner.temp }}/target.json
+        if [ "${{ inputs.version }}" = "latest" ]; then
+          cat $TEMPDIR/releases.json | jq -er '[.[] | select(.prerelease == false)][0]' > $TEMPDIR/target.json
+        elif [ "${{ inputs.version }}" = "preview" ]; then
+          cat $TEMPDIR/releases.json | jq -er '[.[] | select(.prerelease == true)][0]' > $TEMPDIR/target.json
         else
-          cat ${{ runner.temp }}/releases.json | jq -er '[.[] | select(.tag_name == "v${{ inputs.engine-version }}")][0]' > ${{ runner.temp }}/target.json
+          cat $TEMPDIR/releases.json | jq -er '[.[] | select(.tag_name == "v${{ inputs.version }}")][0]' > $TEMPDIR/target.json
         fi
     - name: Download engine
       shell: bash
       run: |
         OS="${{ runner.os }}"
-        cat ${{ runner.temp }}/target.json | jq -r '[.assets[] | select(.name | contains("${OS,,}-cpu") and endswith(".7z.txt"))][0]' > ${{ runner.temp }}/assets_txt.json
-        cat ${{ runner.temp }}/assets_txt.json | jq -r '.browser_download_url' | xargs curl -sSL > ${{ runner.temp }}/download_name.txt
-        parallel 'cat ${{ runner.temp }}/target.json | jq -r "[.assets[] | select(.name == \"{}\")][0].browser_download_url" | xargs curl -sSL > ${{ runner.temp }}/{.}' :::: ${{ runner.temp }}/download_name.txt
-        cat ${{ runner.temp }}/download_name.txt | sed -e 's|^|${{ runner.temp }}\/|' xargs cat > ${{ runner.temp }}/engine.7z
+        cat $TEMPDIR/target.json | jq -r '[.assets[] | select(.name | contains("${OS,,}-cpu") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
+        cat $TEMPDIR/assets_txt.json | jq -r '.browser_download_url' | xargs curl -sSL > $TEMPDIR/download_name.txt
+        parallel 'cat $TEMPDIR/target.json | jq -r "[.assets[] | select(.name == \"{}\")][0].browser_download_url" | xargs curl -sSL > $TEMPDIR/{.}' :::: $TEMPDIR/download_name.txt
+        cat $TEMPDIR/download_name.txt | sed -e 's|^|${{ runner.temp }}\/|' xargs cat > $TEMPDIR/engine.7z
     - name: Extract engine
       shell: bash
       run: |
-        7z x ${{ runner.temp }}/engine.7z -o${{ inputs.dest }}
+        7z x $TEMPDIR/engine.7z -o${{ inputs.dest }}
         mv ${{ inputs.dest }}/* ${{ inputs.engine-directory }}/
     - name: Set output
       id: result
@@ -56,4 +61,4 @@ runs:
         else
           echo run_path="${{ inputs.dest }}/run" >> $GITHUB_OUTPUT
         fi
-        cat ${{ runner.temp }}/target.json | jq -r '.tag_name' >> $GITHUB_OUTPUT
+        cat $TEMPDIR/target.json | jq -r '.tag_name' >> $GITHUB_OUTPUT
