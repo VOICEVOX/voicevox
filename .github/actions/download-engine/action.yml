@@ -40,7 +40,7 @@ runs:
         else
           cat $TEMPDIR/releases.json | jq -er '[.[] | select(.tag_name == "v${{ inputs.version }}")][0]' > $TEMPDIR/target.json
         fi
-    - name: Download engine
+    - name: Download and Extract
       shell: bash
       run: |
         OS="${{ runner.os }}"
@@ -58,12 +58,9 @@ runs:
         for job in `jobs -p`; do
           wait $job
         done
-        cat $TEMPDIR/download_name.txt | sed -e 's|^|'$TEMPDIR'/|' > $TEMPDIR/download_name.txt.tmp
-    - name: Extract engine
-      shell: bash
-      run: |
-        7z x $TEMPDIR/engine.7z -o${{ inputs.dest }}
-        mv ${{ inputs.dest }}/* ${{ inputs.engine-directory }}/
+        cat $TEMPDIR/download_name.txt | sed -e 's|^|'$TEMPDIR'/|' > $TEMPDIR/download_path.txt
+        cat $TEMPDIR/download_path.txt | xargs 7z x -y -o${{ inputs.dest }}
+        mv ${{ inputs.dest }}/* ${{ inputs.dest }}/
     - name: Set output
       id: result
       shell: bash
