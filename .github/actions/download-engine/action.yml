@@ -29,7 +29,7 @@ runs:
     - name: Get version
       shell: bash
       run: |
-        curl -s https://api.github.com/repos/Hiroshiba/voicevox_engine/releases \
+        curl -s https://api.github.com/repos/voicevox/voicevox_engine/releases \
             -H 'authorization: Bearer ${{ github.token }}' \
             -H 'content-type: application/json' > $TEMPDIR/releases.json
 
@@ -44,9 +44,9 @@ runs:
       shell: bash
       run: |
         OS="${{ runner.os }}"
-        cat $TEMPDIR/target.json | jq -r '[.assets[] | select(.name | contains("${OS,,}-cpu") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
-        cat $TEMPDIR/assets_txt.json | jq -r '.browser_download_url' | xargs curl -sSL > $TEMPDIR/download_name.txt
-        parallel 'cat $TEMPDIR/target.json | jq -r "[.assets[] | select(.name == \"{}\")][0].browser_download_url" | xargs curl -sSL > $TEMPDIR/{.}' :::: $TEMPDIR/download_name.txt
+        cat $TEMPDIR/target.json | jq -er '[.assets[] | select(.name | contains("${OS,,}-cpu") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
+        cat $TEMPDIR/assets_txt.json | jq -er '.browser_download_url' | xargs curl -sSL > $TEMPDIR/download_name.txt
+        parallel 'cat $TEMPDIR/target.json | jq -er "[.assets[] | select(.name == \"{}\")][0].browser_download_url" | xargs curl -sSL > $TEMPDIR/{.}' :::: $TEMPDIR/download_name.txt
         cat $TEMPDIR/download_name.txt | sed -e 's|^|${{ runner.temp }}\/|' xargs cat > $TEMPDIR/engine.7z
     - name: Extract engine
       shell: bash
