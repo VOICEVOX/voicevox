@@ -52,7 +52,7 @@ jobs:
         id: download-engine
         uses: ./.github/actions/download-engine
         with:
-          version: "preview"
+          version: "0.14.4"
           dest: ${{ github.workspace }}/voicevox_engine
 
       - name: Run npm run test:e2e

@@ -3,9 +3,9 @@ description: |
   VOICEVOX ENGINEをダウンロードし、指定したディレクトリに展開する。
 inputs:
   version:
-    description: "VOICEVOX ENGINEのバージョン。latest、preview（デフォルト）、バージョン番号（例：0.7.2）で指定できる。"
+    description: "VOICEVOX ENGINEのバージョン。latest（デフォルト）、preview、バージョン番号（例：0.7.2）で指定できる。"
     required: false
-    default: "preview"
+    default: "latest"
   dest:
     description: "VOICEVOX ENGINEを展開するディレクトリ。"
     required: true
@@ -66,7 +66,9 @@ runs:
         cat $TEMPDIR/download_path.txt | xargs 7z x -y -o$TEMPDIR/tmp-extract
         mkdir -p $DEST
         mv $TEMPDIR/tmp-extract/${OS,,}-cpu/* $DEST
+        echo "::group:: ll $DEST"
         ls -al $DEST
+        echo "::endgroup::"
     - name: Set output
       id: result
       shell: bash
