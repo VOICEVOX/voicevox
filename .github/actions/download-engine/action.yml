@@ -9,6 +9,10 @@ inputs:
   dest:
     description: "VOICEVOX ENGINEを展開するディレクトリ。"
     required: true
+  target:
+    description: "ダウンロードする対象。デフォルトは各OSのCPU版。"
+    required: false
+    default: ""
 
 outputs:
   run_path:
@@ -47,8 +51,14 @@ runs:
     - name: Download and Extract
       shell: bash
       run: |
-        OS="${{ runner.os }}"
-        cat $TEMPDIR/target.json | jq -er '[.assets[] | select(.name | contains("'${OS,,}'-cpu") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
+        if [ "${{ inputs.target }}" = "" ]; then
+          OS="${{ runner.os }}"
+          TARGET="${OS,,}-cpu"
+        else
+          TARGET="${{ inputs.target }}"
+        fi
+
+        cat $TEMPDIR/target.json | jq -er '[.assets[] | select(.name | contains("$TARGET") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
         LIST_URL=$(cat $TEMPDIR/assets_txt.json | jq -er '.browser_download_url')
         echo "7z.txt url: $LIST_URL"
         echo $LIST_URL | xargs curl -sSL > $TEMPDIR/download_name.txt
@@ -65,8 +75,8 @@ runs:
         cat $TEMPDIR/download_name.txt | sed -e 's|^|'$TEMPDIR'/|' > $TEMPDIR/download_path.txt
         cat $TEMPDIR/download_path.txt | xargs 7z x -y -o$TEMPDIR/tmp-extract
         mkdir -p $DEST
-        mv $TEMPDIR/tmp-extract/${OS,,}-cpu/* $DEST
-        echo "::group:: ll $DEST"
+        mv $TEMPDIR/tmp-extract/$TARGET/* $DEST
+        echo "::group::ll $DEST"
         ls -al $DEST
         echo "::endgroup::"
     - name: Set output
