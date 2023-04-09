@@ -49,6 +49,7 @@ jobs:
       - run: npm run test:unit
 
       - name: Download VOICEVOX ENGINE
+        id: download-engine
         uses: ./.github/actions/download-engine
         with:
           version: "preview"
@@ -58,7 +59,7 @@ jobs:
         shell: bash
         run: |
           cp .env.test .env
-          sed -i -e 's|"../voicevox_engine/run.exe"|"'$(pwd | sed -Ee 's_^/([a-z])/_\1:/_')'/voicevox_engine/run.exe"|' .env
+          sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env
           if [ -n "${{ runner.debug }}" ]; then
             DEBUG=pw:browser* npm run test:e2e
           else
