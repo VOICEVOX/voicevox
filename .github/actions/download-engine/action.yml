@@ -58,7 +58,7 @@ runs:
         for job in `jobs -p`; do
           wait $job
         done
-        cat $TEMPDIR/download_name.txt | sed -e 's|^|${{ runner.temp }}\/|' xargs cat > $TEMPDIR/engine.7z
+        cat $TEMPDIR/download_name.txt | sed -e 's|^|${{ runner.temp }}\/|' | xargs cat > $TEMPDIR/engine.7z
     - name: Extract engine
       shell: bash
       run: |
