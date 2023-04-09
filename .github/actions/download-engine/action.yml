@@ -66,6 +66,7 @@ runs:
         cat $TEMPDIR/download_path.txt | xargs 7z x -y -o$TEMPDIR/tmp-extract
         mkdir -p $DEST
         mv $TEMPDIR/tmp-extract/${OS,,}-cpu/* $DEST
+        ls -al $DEST
     - name: Set output
       id: result
       shell: bash
