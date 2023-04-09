@@ -153,7 +153,7 @@ export class LibraryManager {
     } finally {
       await tempFile.close();
       log.log(prefix + "Removing temp file");
-      // await fs.promises.rm(tempFilePath);
+      await fs.promises.rm(tempFilePath);
     }
   }
 }
