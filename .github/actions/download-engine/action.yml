@@ -50,7 +50,13 @@ runs:
         echo $LIST_URL | xargs curl -sSL > $TEMPDIR/download_name.txt
         echo "Files to download:"
         cat $TEMPDIR/download_name.txt | sed -e 's|^|- |'
-        parallel 'cat '$TEMPDIR'/target.json | jq -er "[.assets[] | select(.name == \"{}\")][0].browser_download_url" | xargs curl -sSL > '$TEMPDIR'/{.}' :::: $TEMPDIR/download_name.txt
+        for i in $(cat $TEMPDIR/download_name.txt); do
+          echo "Download $i"
+          cat $TEMPDIR/target.json | jq -er "[.assets[] | select(.name == \"$i\")][0].browser_download_url" | xargs curl -sSL > $TEMPDIR/$i &
+        done
+        for job in `jobs -p`; do
+          wait $job
+        done
         cat $TEMPDIR/download_name.txt | sed -e 's|^|${{ runner.temp }}\/|' xargs cat > $TEMPDIR/engine.7z
     - name: Extract engine
       shell: bash
