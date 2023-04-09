@@ -49,7 +49,7 @@ runs:
         echo "7z.txt url: $LIST_URL"
         echo $LIST_URL | xargs curl -sSL > $TEMPDIR/download_name.txt
         echo "Files to download:"
-        cat download_name.txt | sed -e 's|^|- |'
+        cat $TEMPDIR/download_name.txt | sed -e 's|^|- |'
         parallel 'cat '$TEMPDIR'/target.json | jq -er "[.assets[] | select(.name == \"{}\")][0].browser_download_url" | xargs curl -sSL > '$TEMPDIR'/{.}' :::: $TEMPDIR/download_name.txt
         cat $TEMPDIR/download_name.txt | sed -e 's|^|${{ runner.temp }}\/|' xargs cat > $TEMPDIR/engine.7z
     - name: Extract engine
