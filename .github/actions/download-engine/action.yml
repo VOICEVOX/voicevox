@@ -53,7 +53,7 @@ runs:
       run: |
         if [ "${{ inputs.target }}" = "" ]; then
           OS="${{ runner.os }}"
-          TARGET="${OS,,}-cpu"
+          TARGET="${OS,,}-cpu" # 小文字にする
         else
           TARGET="${{ inputs.target }}"
         fi
