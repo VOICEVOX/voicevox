@@ -72,8 +72,7 @@ runs:
         for job in `jobs -p`; do
           wait $job
         done
-        cat $TEMPDIR/download_name.txt | sed -e 's|^|'$TEMPDIR'/|' > $TEMPDIR/download_path.txt
-        7z x -y -o$TEMPDIR/tmp-extract $(head -1 $TEMPDIR/download_path.txt)
+        7z x -y -o$TEMPDIR/tmp-extract $TEMPDIR/$(head -1 $TEMPDIR/download_name.txt)
         mkdir -p $DEST
         mv $TEMPDIR/tmp-extract/$TARGET/* $DEST
         echo "::group::ll $DEST"
