@@ -898,6 +898,12 @@ ipcMainHandle("START_INSTALLING_LIBRARY", (_, { engineId, library }) => {
           win.setProgressBar(status.downloaded / status.contentLength);
         } else if (status.status === "installing") {
           win.setProgressBar(2);
+        } else if (status.status === "error") {
+          win.setProgressBar(-1);
+          dialog.showErrorBox(
+            "ライブラリのインストールに失敗しました",
+            status.message
+          );
         } else {
           win.setProgressBar(-1);
         }

@@ -169,6 +169,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import semver from "semver";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { DownloadableLibrary, LibrarySpeaker, StyleInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
@@ -179,6 +180,7 @@ import {
   SpeakerId,
   StyleId,
 } from "@/type/preload";
+import { bytesToSize } from "@/helpers/sizeHelper";
 
 type BrandedDownloadableLibrary = DownloadableLibrary & {
   uuid: LibraryId;
@@ -188,6 +190,8 @@ type BrandedDownloadableLibrary = DownloadableLibrary & {
     };
   })[];
 };
+
+const $q = useQuasar();
 
 const props =
   defineProps<{
@@ -551,11 +555,28 @@ const rollStyleIndex = (
 const installLibrary = async (library: DownloadableLibrary) => {
   selectLibrary(LibraryId(library.uuid));
   stop();
-  const libraryInstallId = await store.dispatch("START_INSTALLING_LIBRARY", {
-    engineId: props.engineId,
-    library,
+  $q.dialog({
+    title: "ライブラリをインストール",
+    message: `ライブラリ「${
+      library.name
+    }」をインストールしますか？\n容量：${bytesToSize(library.bytes)}`,
+    cancel: {
+      label: "キャンセル",
+      color: "display",
+      flat: true,
+    },
+    ok: {
+      label: "インストール",
+      flat: true,
+      textColor: "primary-light",
+    },
+  }).onOk(async () => {
+    const libraryInstallId = await store.dispatch("START_INSTALLING_LIBRARY", {
+      engineId: props.engineId,
+      library,
+    });
+    emit("update:installingLibrary", libraryInstallId);
   });
-  emit("update:installingLibrary", libraryInstallId);
 };
 </script>
 

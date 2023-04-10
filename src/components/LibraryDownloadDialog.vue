@@ -66,7 +66,7 @@
                     (libraryInstallStatus.downloaded /
                       libraryInstallStatus.contentLength) *
                     100
-                  ).toFixed(1)
+                  ).toFixed(0)
                 }}
                 %
               </q-circular-progress>
@@ -158,14 +158,19 @@ const libraryInstallStatus = computed(() => {
 });
 watch(libraryInstallStatus, (val) => {
   if (val?.status === "done") {
+    $q.dialog({
+      title: "インストール完了",
+      message:
+        "音声ライブラリのインストールが完了しました。エンジンによっては再起動が必要になる場合があります。",
+      ok: {
+        label: "閉じる",
+        color: "primary-light",
+        flat: true,
+      },
+    });
     installingLibrary.value = undefined;
   } else if (val?.status === "error") {
     installingLibrary.value = undefined;
-    $q.dialog({
-      title: "エラー",
-      message: val.message,
-      ok: true,
-    });
   }
 });
 const portraitUri = ref("");
