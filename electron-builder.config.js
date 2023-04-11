@@ -1,3 +1,4 @@
+// @ts-check
 const path = require("path");
 const fs = require("fs");
 
@@ -23,6 +24,19 @@ const isMac = process.platform === "darwin";
 // VOICEVOX.app/Contents/MacOS/ディレクトリにコピーされるように修正する。
 // cf: https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
 const extraFilePrefix = isMac ? "MacOS/" : "";
+
+const sevenZipFile = fs
+  .readdirSync(path.resolve(__dirname, "build", "vendored", "7z"))
+  .find(
+    // Windows: 7za.exe, Linux: 7zzs, macOS: 7zz
+    (fileName) => ["7za.exe", "7zzs", "7zz"].includes(fileName)
+  );
+
+if (!sevenZipFile) {
+  throw new Error(
+    "7z binary file not found. Run `node ./build/download7z.js` first."
+  );
+}
 
 /** @type {import("electron-builder").Configuration} */
 const builderOptions = {
@@ -71,6 +85,10 @@ const builderOptions = {
     {
       from: VOICEVOX_ENGINE_DIR,
       to: extraFilePrefix,
+    },
+    {
+      from: path.resolve(__dirname, "build", "vendored", "7z", sevenZipFile),
+      to: extraFilePrefix + sevenZipFile,
     },
   ],
   // electron-builder installer

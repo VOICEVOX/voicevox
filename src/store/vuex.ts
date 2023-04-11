@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// FIXME: anyを使わないようにする
 import { InjectionKey } from "vue";
 import {
   Store as BaseStore,

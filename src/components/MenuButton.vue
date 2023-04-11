@@ -13,12 +13,12 @@
     :disable="disable"
     @click="
       (menudata.type === 'button' || menudata.type === 'root') &&
-        menudata.onClick()
+        menudata.onClick?.()
     "
   >
     {{ menudata.label }}
     <q-menu
-      v-if="menudata.subMenu"
+      v-if="'subMenu' in menudata"
       transition-show="none"
       transition-hide="none"
       :fit="true"
