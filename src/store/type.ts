@@ -77,11 +77,6 @@ export type Score = {
   notes: Note[];
 };
 
-export type RenderPhrase = {
-  renderNotes: Note[];
-  query?: AudioQuery;
-};
-
 export type Command = {
   unixMillisec: number;
   undoPatches: Patch[];
@@ -697,7 +692,6 @@ export type SingingStoreState = {
   engineId?: string;
   styleId?: number;
   score?: Score;
-  renderPhrases: RenderPhrase[];
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
   // NOTE: オーディオ再生はボイスと同様もしくは拡張して使う？
@@ -710,6 +704,10 @@ export type SingingStoreState = {
   volume: number;
   leftLocatorPosition: number;
   rightLocatorPosition: number;
+  renderingEnabled: boolean;
+  startRenderingRequested: boolean;
+  stopRenderingRequested: boolean;
+  nowRendering: boolean;
 };
 
 export type SingingStoreTypes = {
@@ -840,6 +838,31 @@ export type SingingStoreTypes = {
   SET_VOLUME: {
     mutation: { volume: number };
     action(payload: { volume: number }): void;
+  };
+
+  SET_START_RENDERING_REQUESTED: {
+    mutation: { startRenderingRequested: boolean };
+  };
+
+  SET_STOP_RENDERING_REQUESTED: {
+    mutation: { stopRenderingRequested: boolean };
+  };
+
+  SET_NOW_RENDERING: {
+    mutation: { nowRendering: boolean };
+  };
+
+  RENDER: {
+    action(): void;
+  };
+
+  STOP_RENDERING: {
+    action(): void;
+  };
+
+  SET_RENDERING_ENABLED: {
+    mutation: { renderingEnabled: boolean };
+    action(payload: { renderingEnabled: boolean }): void;
   };
 };
 
@@ -1269,6 +1292,10 @@ export type UiStoreTypes = {
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
+    action(): Promise<void>;
+  };
+
+  PROCESS_BEFORE_QUITTING: {
     action(): Promise<void>;
   };
 };

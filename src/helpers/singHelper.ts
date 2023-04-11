@@ -66,3 +66,7 @@ export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;
 }
+
+export function midiToFrequency(midi: number) {
+  return 440 * 2 ** ((midi - 69) / 12);
+}

@@ -273,6 +273,45 @@ export class OfflineTransport implements BaseTransport {
   }
 }
 
+export type AudioEvent = {
+  readonly time: number;
+  readonly buffer: AudioBuffer;
+};
+
+export class AudioSequence implements SoundSequence {
+  private readonly audioPlayer: AudioPlayer;
+  private readonly audioEvents: AudioEvent[];
+
+  constructor(audioPlayer: AudioPlayer, audioEvents: AudioEvent[]) {
+    this.audioPlayer = audioPlayer;
+    this.audioEvents = audioEvents;
+  }
+
+  // スケジュール可能なイベントを生成する
+  generateEvents(startTime: number) {
+    return this.audioEvents
+      .sort((a, b) => a.time - b.time)
+      .filter((value) => {
+        const audioEndTime = value.time + value.buffer.duration;
+        return audioEndTime > startTime;
+      })
+      .map((value): SchedulableEvent => {
+        const offset = Math.max(startTime - value.time, 0);
+        return {
+          time: Math.max(value.time, startTime),
+          schedule: (contextTime: number) => {
+            this.audioPlayer.play(contextTime, offset, value.buffer);
+          },
+        };
+      });
+  }
+
+  // シーケンスの停止をスケジュールする
+  scheduleStop(contextTime: number) {
+    this.audioPlayer.allStop(contextTime);
+  }
+}
+
 export interface Instrument {
   noteOn(contextTime: number, midi: number): void;
   noteOff(contextTime: number, midi: number): void;
@@ -317,9 +356,98 @@ export class NoteSequence implements SoundSequence {
       .sort((a, b) => a.time - b.time);
   }
 
-  // シーケンス（楽器）の停止をスケジュールする
+  // シーケンスの停止をスケジュールする
   scheduleStop(contextTime: number) {
     this.instrument.allSoundOff(contextTime);
+  }
+}
+
+class AudioPlayerVoice {
+  private readonly audioBufferSourceNode: AudioBufferSourceNode;
+  private readonly buffer: AudioBuffer;
+
+  private _isStopped = false;
+  private stopContextTime?: number;
+
+  get isStopped() {
+    return this._isStopped;
+  }
+
+  constructor(audioContext: BaseAudioContext, buffer: AudioBuffer) {
+    this.audioBufferSourceNode = audioContext.createBufferSource();
+    this.audioBufferSourceNode.buffer = buffer;
+    this.audioBufferSourceNode.onended = () => {
+      this._isStopped = true;
+    };
+    this.buffer = buffer;
+  }
+
+  connect(destination: AudioNode) {
+    this.audioBufferSourceNode.connect(destination);
+  }
+
+  play(contextTime: number, offset: number) {
+    this.audioBufferSourceNode.start(contextTime, offset);
+    this.stopContextTime = contextTime + this.buffer.duration;
+  }
+
+  stop(contextTime?: number) {
+    if (this.stopContextTime === undefined) {
+      throw new Error("Not started.");
+    }
+    if (contextTime === undefined || contextTime < this.stopContextTime) {
+      this.audioBufferSourceNode.stop(contextTime);
+      this.stopContextTime = contextTime ?? 0;
+    }
+  }
+}
+
+export type AudioPlayerOptions = {
+  readonly volume: number;
+};
+
+export class AudioPlayer {
+  private readonly audioContext: BaseAudioContext;
+  private readonly gainNode: GainNode;
+
+  private voices: AudioPlayerVoice[] = [];
+
+  constructor(context: Context, options: AudioPlayerOptions = { volume: 1.0 }) {
+    this.audioContext = context.audioContext;
+
+    this.gainNode = this.audioContext.createGain();
+    this.gainNode.gain.value = options.volume;
+  }
+
+  connect(destination: AudioNode) {
+    this.gainNode.connect(destination);
+  }
+
+  disconnect() {
+    this.gainNode.disconnect();
+  }
+
+  play(contextTime: number, offset: number, buffer: AudioBuffer) {
+    const voice = new AudioPlayerVoice(this.audioContext, buffer);
+    this.voices = this.voices.filter((value) => {
+      return !value.isStopped;
+    });
+    this.voices.push(voice);
+    voice.connect(this.gainNode);
+    voice.play(contextTime, offset);
+  }
+
+  allStop(contextTime?: number) {
+    if (contextTime === undefined) {
+      this.voices.forEach((value) => {
+        value.stop();
+      });
+      this.voices = [];
+    } else {
+      this.voices.forEach((value) => {
+        value.stop(contextTime);
+      });
+    }
   }
 }
 
@@ -371,8 +499,8 @@ class SynthVoice {
     return 440 * 2 ** ((midi - 69) / 12);
   }
 
-  connect(inputNode: AudioNode) {
-    this.gainNode.connect(inputNode);
+  connect(destination: AudioNode) {
+    this.gainNode.connect(destination);
   }
 
   noteOn(contextTime: number) {
@@ -532,6 +660,10 @@ export class AudioRenderer {
     };
   }
 
+  get audioContext() {
+    return this.onlineContext.audioContext;
+  }
+
   get transport() {
     return this.onlineContext.transport;
   }
@@ -542,7 +674,14 @@ export class AudioRenderer {
     this.onlineContext = { audioContext, transport };
   }
 
-  renderToBuffer(
+  async createAudioBuffer(blob: Blob) {
+    const audioContext = this.onlineContext.audioContext;
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    return audioBuffer;
+  }
+
+  async renderToBuffer(
     sampleRate: number,
     startTime: number,
     duration: number,
@@ -558,7 +697,8 @@ export class AudioRenderer {
 
     callback({ audioContext, transport });
     transport.scheduleEvents(startTime, duration);
-    return audioContext.startRendering();
+    const audioBuffer = await audioContext.startRendering();
+    return audioBuffer;
   }
 
   dispose() {
