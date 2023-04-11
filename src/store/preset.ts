@@ -1,7 +1,80 @@
 import { v4 as uuidv4 } from "uuid";
 import { createPartialStore } from "./vuex";
-import { PresetStoreState, PresetStoreTypes } from "@/store/type";
-import { Preset, PresetKey, VoiceId } from "@/type/preload";
+import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
+import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
+
+/**
+ * configを参照して割り当てるべきpresetKeyとそのPresetを適用すべきかどうかを返す
+ *
+ * generate: プロジェクト新規作成時、空のAudioItemを作成する場合
+ * copy: 元となるAudioItemがある場合（＋ボタンで作成したとき）
+ * changeVoice: ボイス切り替え時
+ */
+export function determineNextPresetKey(
+  state: Pick<
+    State,
+    "defaultPresetKeys" | "experimentalSetting" | "inheritAudioInfo"
+  >,
+  voice: Voice,
+  presetKeyCandidate: PresetKey | undefined,
+  operation: "generate" | "copy" | "changeVoice"
+): {
+  nextPresetKey: PresetKey | undefined;
+  shouldApplyPreset: boolean;
+} {
+  const defaultPresetKeyForCurrentVoice =
+    state.defaultPresetKeys[VoiceId(voice)];
+
+  switch (operation) {
+    case "generate": {
+      // 初回作成時
+      return {
+        nextPresetKey: defaultPresetKeyForCurrentVoice,
+        shouldApplyPreset: state.experimentalSetting.enablePreset,
+      };
+    }
+    case "copy": {
+      // 元となるAudioItemがある場合
+      if (state.inheritAudioInfo) {
+        // パラメータ引継ぎがONならそのまま引き継ぐ
+        return {
+          nextPresetKey: presetKeyCandidate,
+          shouldApplyPreset: false,
+        };
+      }
+
+      // それ以外はデフォルトプリセットを割り当て、適用するかはプリセットのON/OFFに依存
+      return {
+        nextPresetKey: defaultPresetKeyForCurrentVoice,
+        shouldApplyPreset: state.experimentalSetting.enablePreset,
+      };
+    }
+    case "changeVoice": {
+      // ボイス切り替え時
+      if (state.experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged) {
+        // デフォルトプリセットを適用する
+        return {
+          nextPresetKey: defaultPresetKeyForCurrentVoice,
+          shouldApplyPreset: true,
+        };
+      }
+
+      const isDefaultPreset = Object.values(state.defaultPresetKeys).some(
+        (key) => key === presetKeyCandidate
+      );
+
+      // 引き継ぎ元が他スタイルのデフォルトプリセットだった場合
+      // 別キャラのデフォルトプリセットを引き継がないようにする
+      // それ以外は指定そのまま
+      return {
+        nextPresetKey: isDefaultPreset
+          ? defaultPresetKeyForCurrentVoice
+          : presetKeyCandidate,
+        shouldApplyPreset: false,
+      };
+    }
+  }
+}
 
 export const presetStoreState: PresetStoreState = {
   presetItems: {},
@@ -10,6 +83,12 @@ export const presetStoreState: PresetStoreState = {
 };
 
 export const presetStore = createPartialStore<PresetStoreTypes>({
+  DEFAULT_PRESET_KEY_SETS: {
+    getter: (state) => {
+      return new Set(Object.values(state.defaultPresetKeys));
+    },
+  },
+
   SET_PRESET_ITEMS: {
     mutation(
       state,

@@ -359,11 +359,6 @@ export type AudioStoreTypes = {
     };
   };
 
-  APPLY_AUDIO_PRESET_TO_AUDIO_ITEM: {
-    mutation: { audioItem: AudioItem };
-    action(payload: { audioItem: AudioItem }): void;
-  };
-
   APPLY_AUDIO_PRESET: {
     mutation: { audioKey: AudioKey };
   };
@@ -998,6 +993,7 @@ export type SettingStoreState = {
   engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
   editorFont: EditorFontType;
+  showTextLineNumber: boolean;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
@@ -1034,6 +1030,11 @@ export type SettingStoreTypes = {
   SET_EDITOR_FONT: {
     mutation: { editorFont: EditorFontType };
     action(payload: { editorFont: EditorFontType }): void;
+  };
+
+  SET_SHOW_TEXT_LINE_NUMBER: {
+    mutation: { showTextLineNumber: boolean };
+    action(payload: { showTextLineNumber: boolean }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
@@ -1078,6 +1079,14 @@ export type SettingStoreTypes = {
 
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean; engineId: EngineId }): Promise<void>;
+  };
+
+  GET_RECENTLY_USED_PROJECTS: {
+    action(): Promise<string[]>;
+  };
+
+  APPEND_RECENTLY_USED_PROJECT: {
+    action(payload: { filePath: string }): Promise<void>;
   };
 };
 
@@ -1263,6 +1272,9 @@ export type PresetStoreState = {
 };
 
 export type PresetStoreTypes = {
+  DEFAULT_PRESET_KEY_SETS: {
+    getter: Set<PresetKey>;
+  };
   SET_PRESET_ITEMS: {
     mutation: {
       presetItems: Record<PresetKey, Preset>;

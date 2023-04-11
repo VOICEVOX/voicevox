@@ -568,6 +568,7 @@ export const electronStoreSchema = z
     defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
+    showTextLineNumber: z.boolean().default(false),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
@@ -586,6 +587,7 @@ export const electronStoreSchema = z
       .passthrough()
       .default({}),
     registeredEngineDirs: z.string().array().default([]),
+    recentlyUsedProjects: z.string().array().default([]),
   })
   .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
