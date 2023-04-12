@@ -488,9 +488,7 @@ const unWatchUserOrderCharacterInfos = watch(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (newValue, _) => {
     const audioCellRefsKeys = Object.keys(audioCellRefs);
-    if (audioCellRefsKeys.length !== 1) return;
-
-    if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return;
+    if (audioCellRefsKeys.length !== 1 || newValue.length < 1) return;
 
     const speakerId = newValue[0];
     const defaultStyleId = store.state.defaultStyleIds.find(
@@ -507,6 +505,7 @@ const unWatchUserOrderCharacterInfos = watch(
     const first = audioCellRefsKeys[0] as AudioKey;
     const audioCell = audioCellRefs[first];
     audioCell.updateFirstCharacter(voice);
+
     unWatchUserOrderCharacterInfos();
   }
 );
