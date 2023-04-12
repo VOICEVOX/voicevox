@@ -45,9 +45,17 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
       VITE_DEV_SERVER_URL: "http://localhost:5173",
     },
   });
-  const sut = await app.firstWindow();
+
+  // FIXME:
+  //   firstWindowにタイムアウトが設定できないのでワークアラウンドを使用している。
+  //   （cf: https://github.com/microsoft/playwright/issues/21846#issuecomment-1479106814）
+  //   正式版でタイムアウトを設定できるようになったら（cf: https://github.com/microsoft/playwright/pull/21863 ）
+  //   app.firstWindowを使うようにする。
+  // const sut = await app.firstWindow();
+  let sut = app.windows()[0];
+  if (!sut) sut = await app.waitForEvent("window", { timeout: 0 });
 
   // エンジンが起動し「利用規約に関するお知らせ」が表示されるのを待つ
-  await sut.waitForSelector("text=利用規約に関するお知らせ");
+  await sut.waitForSelector("text=利用規約に関するお知らせ", { timeout: 0 });
   await app.close();
 });
