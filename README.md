@@ -79,6 +79,13 @@ npm run test:unit
 npm run test:e2e
 ```
 
+### 監視モード
+
+```bash
+npm run test-watch:unit
+npm run test-watch:e2e
+```
+
 ## 依存ライブラリのライセンス情報の生成
 
 ```bash

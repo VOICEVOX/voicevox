@@ -263,48 +263,13 @@ jobs:
           mv ${{ matrix.artifact_path }} ./prepackage
 
       # Download VOICEVOX ENGINE
-      - name: Create directory voicevox_engine/download
-        shell: bash
-        run: |
-          mkdir -p voicevox_engine/download
-
-      # NOTE: VOICEVOX ENGINE should not be cached since it has a size of several GB
-      #       and actions/cache has a limit of 5GB per repository.
-      #       https://github.com/actions/cache#cache-limits
-      # - name: Dump VOICEVOX ENGINE repo URL to calc hash
-      #   shell: bash
-      #   run: |
-      #     echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
-      # - name: Cache VOICEVOX ENGINE
-      #   uses: actions/cache@v3
-      #   id: voicevox-engine-cache
-      #   with:
-      #     path: voicevox_engine/download
-      #     key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ env.VOICEVOX_ENGINE_VERSION }}
-
       - name: Download VOICEVOX ENGINE
-        # if: steps.voicevox-engine-cache.outputs.cache-hit != 'true'
-        shell: bash
-        env:
-          VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ env.VOICEVOX_ENGINE_VERSION }}
-        run: |
-          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/voicevox_engine-${{ matrix.voicevox_engine_asset_name }}-${{ env.VOICEVOX_ENGINE_VERSION }}.7z.txt"
-          cat "voicevox_engine/download/list.txt" | xargs -I '%' curl -L -o "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
-
-      - name: Extract VOICEVOX ENGINE
-        shell: bash
-        run: |
-          mkdir -p voicevox_engine/tmp
-
-          # Extract first file to extract all parts
-          # Destination: voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/
-          7z x "voicevox_engine/download/$(head -n1 voicevox_engine/download/list.txt)" -ovoicevox_engine/tmp/
-
-          mkdir -p voicevox_engine/voicevox_engine
-          mv "voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}"/* voicevox_engine/voicevox_engine
-
-          # remove downloads to free space
-          rm -rf voicevox_engine/download voicevox_engine/tmp
+        id: download-engine
+        uses: ./.github/actions/download-engine
+        with:
+          version: ${{ env.VOICEVOX_ENGINE_VERSION }}
+          dest: ${{ github.workspace }}/voicevox_engine
+          target: ${{ matrix.voicevox_engine_asset_name }}
 
       # FIXME: asarをextract/packせず、ビルド前にengine_licenses.jsonとlicenses.jsonを結合する
       - name: Merge licenses.json (ENGINE, VOICEVOX)
@@ -314,7 +279,7 @@ jobs:
           npx asar extract "${{ matrix.app_asar_dir }}/app.asar" "${{ matrix.app_asar_dir }}/app"
           rm "${{ matrix.app_asar_dir }}/app.asar"
 
-          mv voicevox_engine/voicevox_engine/licenses.json engine_licenses.json
+          mv voicevox_engine/licenses.json engine_licenses.json
           npm run license:merge -- -o "${{ matrix.app_asar_dir }}/app/dist/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/dist/licenses.json"
 
           # Repack asar
@@ -325,14 +290,14 @@ jobs:
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
         shell: bash
         run: |
-          mv voicevox_engine/voicevox_engine/* prepackage/
+          mv voicevox_engine/* prepackage/
           rm -rf voicevox_engine
 
       - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/MacOS/
         if: startsWith(matrix.artifact_name, 'macos-')
         shell: bash
         run: |
-          mv voicevox_engine/voicevox_engine/* prepackage/VOICEVOX.app/Contents/MacOS/
+          mv voicevox_engine/* prepackage/VOICEVOX.app/Contents/MacOS/
           rm -rf voicevox_engine
 
       - name: Show disk space (debug info)
