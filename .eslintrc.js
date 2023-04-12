@@ -59,6 +59,7 @@ module.exports = {
         "./src/background.ts",
         "./src/background/*.ts",
         "./src/electron/*.ts",
+        "./tests/**/*.ts",
       ],
       rules: {
         "no-console": "off",
