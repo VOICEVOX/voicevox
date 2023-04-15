@@ -85,7 +85,7 @@ defineExpose({
   selectVoice: (voice: Voice) => {
     selectedVoice.value = voice;
   },
-  getTextFromField: () => {
+  getText: () => {
     return audioTextBuffer.value;
   },
 });

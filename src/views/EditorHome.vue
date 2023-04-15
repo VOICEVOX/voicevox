@@ -496,7 +496,7 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
   if (audioCellRefsKeys.length === 1) {
     const first = audioCellRefsKeys[0] as AudioKey;
     const audioCell = audioCellRefs[first];
-    if (audioCell.getTextFromField().length > 0) {
+    if (audioCell.getText().length > 0) {
       return;
     }
 
