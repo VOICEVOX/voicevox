@@ -82,8 +82,11 @@ defineExpose({
   removeCell: () => {
     removeCell();
   },
-  updateFirstCharacter: (voice: Voice) => {
+  selectVoice: (voice: Voice) => {
     selectedVoice.value = voice;
+  },
+  getTextFromField: () => {
+    return audioTextBuffer.value;
   },
 });
 

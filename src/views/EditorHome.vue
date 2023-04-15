@@ -483,12 +483,22 @@ const userOrderedCharacterInfos = computed(
   () => store.state.userCharacterOrder
 );
 
-const unWatchUserOrderCharacterInfos = watch(
-  userOrderedCharacterInfos,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  (newValue, _) => {
-    const audioCellRefsKeys = Object.keys(audioCellRefs);
-    if (audioCellRefsKeys.length !== 1 || newValue.length < 1) return;
+/*
+初回起動時と追加キャラクター検出時の起動シーケンス内で開かれる「並び替えダイアログ」が開かれている間であっても初期化処理が進行し、
+初回起動時には「四国めたん」、追加キャラクター検出時には「追加キャラクター」が選択された最初のAudioCellが作られてしまい並び替えが無視された状態になるので、
+起動シーケンス中の「並び替えダイアログ」で変更された並び替えを元に最初のAudioCellの先頭を更新するためのwatchです。
+*/
+watch(userOrderedCharacterInfos, (newValue, oldValue) => {
+  if (newValue === oldValue || newValue.length < 1) return;
+
+  const audioCellRefsKeys = Object.keys(audioCellRefs);
+
+  if (audioCellRefsKeys.length === 1) {
+    const first = audioCellRefsKeys[0] as AudioKey;
+    const audioCell = audioCellRefs[first];
+    if (audioCell.getTextFromField().length > 0) {
+      return;
+    }
 
     const speakerId = newValue[0];
     const defaultStyleId = store.state.defaultStyleIds.find(
@@ -502,13 +512,9 @@ const unWatchUserOrderCharacterInfos = watch(
       styleId: defaultStyleId.defaultStyleId,
     };
 
-    const first = audioCellRefsKeys[0] as AudioKey;
-    const audioCell = audioCellRefs[first];
-    audioCell.updateFirstCharacter(voice);
-
-    unWatchUserOrderCharacterInfos();
+    audioCell.selectVoice(voice);
   }
-);
+});
 
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
