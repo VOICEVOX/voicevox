@@ -408,9 +408,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
-  START_INSTALLING_LIBRARY: {
+  START_LIBRARY_INSTALL: {
     action: async (_, { engineId, library }) => {
-      return await window.electron.startInstallingLibrary({
+      return await window.electron.startLibraryInstall({
         engineId,
         library: toRaw(library),
       });

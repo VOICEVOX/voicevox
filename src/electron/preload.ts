@@ -290,8 +290,8 @@ const api: Sandbox = {
     ipcRendererInvoke("RESTART_APP", { isMultiEngineOffMode });
   },
 
-  startInstallingLibrary: async ({ engineId, library }) => {
-    return ipcRendererInvoke("START_INSTALLING_LIBRARY", { engineId, library });
+  startLibraryInstall: async ({ engineId, library }) => {
+    return ipcRendererInvoke("START_LIBRARY_INSTALL", { engineId, library });
   },
 };
 

@@ -232,11 +232,11 @@ export interface Sandbox {
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
-  startInstallingLibrary(obj: {
+  restartApp(obj: { isMultiEngineOffMode: boolean }): void;
+  startLibraryInstall(obj: {
     engineId: EngineId;
     library: DownloadableLibrary;
   }): Promise<LibraryInstallId>;
-  restartApp(obj: { isMultiEngineOffMode: boolean }): void;
 }
 
 export type AppInfos = {

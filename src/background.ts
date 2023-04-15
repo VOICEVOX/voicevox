@@ -887,7 +887,7 @@ ipcMainHandle("READ_FILE", (_, { filePath }) => {
   return fs.promises.readFile(filePath);
 });
 
-ipcMainHandle("START_INSTALLING_LIBRARY", (_, { engineId, library }) => {
+ipcMainHandle("START_LIBRARY_INSTALL", (_, { engineId, library }) => {
   const libraryInstallId = LibraryInstallId(randomUUID());
   setTimeout(() => {
     libraryManager.installLibrary(

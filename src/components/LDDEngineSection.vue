@@ -571,7 +571,7 @@ const installLibrary = async (library: DownloadableLibrary) => {
       textColor: "primary-light",
     },
   }).onOk(async () => {
-    const libraryInstallId = await store.dispatch("START_INSTALLING_LIBRARY", {
+    const libraryInstallId = await store.dispatch("START_LIBRARY_INSTALL", {
       engineId: props.engineId,
       library,
     });

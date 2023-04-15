@@ -839,7 +839,7 @@ export type EngineStoreTypes = {
     getter: (engineId: EngineId) => boolean;
   };
 
-  START_INSTALLING_LIBRARY: {
+  START_LIBRARY_INSTALL: {
     action(payload: {
       engineId: EngineId;
       library: DownloadableLibrary;
