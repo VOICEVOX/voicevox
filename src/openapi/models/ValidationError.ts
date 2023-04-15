@@ -21,10 +21,10 @@ import { exists, mapValues } from '../runtime';
 export interface ValidationError {
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<string | number>}
      * @memberof ValidationError
      */
-    loc: Array<string>;
+    loc: Array<string | number>;
     /**
      * 
      * @type {string}
@@ -49,7 +49,7 @@ export function ValidationErrorFromJSONTyped(json: any, ignoreDiscriminator: boo
     }
     return {
         
-        'loc': json['loc'],
+        'loc': ((json['loc'] as Array<any>).map(string | numberFromJSON)),
         'msg': json['msg'],
         'type': json['type'],
     };
@@ -64,7 +64,7 @@ export function ValidationErrorToJSON(value?: ValidationError | null): any {
     }
     return {
         
-        'loc': value.loc,
+        'loc': ((value.loc as Array<any>).map(string | numberToJSON)),
         'msg': value.msg,
         'type': value.type,
     };

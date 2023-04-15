@@ -763,12 +763,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    versionVersionGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<any>>;
+    versionVersionGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>>;
 
     /**
      * Version
      */
-    versionVersionGet(initOverrides?: RequestInit): Promise<any>;
+    versionVersionGet(initOverrides?: RequestInit): Promise<string>;
 
 }
 
@@ -2093,7 +2093,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Version
      */
-    async versionVersionGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<any>> {
+    async versionVersionGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -2111,7 +2111,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Version
      */
-    async versionVersionGet(initOverrides?: RequestInit): Promise<any> {
+    async versionVersionGet(initOverrides?: RequestInit): Promise<string> {
         const response = await this.versionVersionGetRaw(initOverrides);
         return await response.value();
     }
