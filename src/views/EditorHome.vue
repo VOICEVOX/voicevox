@@ -482,21 +482,17 @@ const disableDefaultUndoRedo = (event: KeyboardEvent) => {
 const userOrderedCharacterInfos = computed(
   () => store.state.userCharacterOrder
 );
-
-/*
-初回起動時と追加キャラクター検出時の起動シーケンス内で開かれる「並び替えダイアログ」が開かれている間であっても初期化処理が進行し、
-初回起動時には「四国めたん」、追加キャラクター検出時には「追加キャラクター」が選択された最初のAudioCellが作られてしまい並び替えが無視された状態になるので、
-起動シーケンス中の「並び替えダイアログ」で変更された並び替えを元に最初のAudioCellの先頭を更新するためのwatchです。
-*/
+const audioItems = computed(() => store.state.audioItems);
+// 並び替え後、テキスト欄が１つで空欄なら話者を更新
+// 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
 watch(userOrderedCharacterInfos, (newValue, oldValue) => {
   if (newValue === oldValue || newValue.length < 1) return;
 
-  const audioCellRefsKeys = Object.keys(audioCellRefs);
-
-  if (audioCellRefsKeys.length === 1) {
-    const first = audioCellRefsKeys[0] as AudioKey;
-    const audioCell = audioCellRefs[first];
-    if (audioCell.getText().length > 0) {
+  const audioItemKeys = Object.keys(audioItems.value);
+  if (audioItemKeys.length === 1) {
+    const first = audioItemKeys[0] as AudioKey;
+    const audioItem = audioItems.value[first];
+    if (audioItem.text.length > 0) {
       return;
     }
 
@@ -512,7 +508,7 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
       styleId: defaultStyleId.defaultStyleId,
     };
 
-    audioCell.selectVoice(voice);
+    store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
   }
 });
 

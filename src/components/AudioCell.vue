@@ -82,12 +82,6 @@ defineExpose({
   removeCell: () => {
     removeCell();
   },
-  selectVoice: (voice: Voice) => {
-    selectedVoice.value = voice;
-  },
-  getText: () => {
-    return audioTextBuffer.value;
-  },
 });
 
 const store = useStore();
