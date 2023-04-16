@@ -40,6 +40,7 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   editorFont: "default",
+  showTextLineNumber: false,
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -82,6 +83,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           currentTheme: theme.currentTheme,
         });
       }
+
+      dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
+        showTextLineNumber: await window.electron.getSetting(
+          "showTextLineNumber"
+        ),
+      });
 
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
         acceptRetrieveTelemetry: await window.electron.getSetting(
@@ -253,6 +260,18 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
+  SET_SHOW_TEXT_LINE_NUMBER: {
+    mutation(state, { showTextLineNumber }) {
+      state.showTextLineNumber = showTextLineNumber;
+    },
+    action({ commit }, { showTextLineNumber }) {
+      window.electron.setSetting("showTextLineNumber", showTextLineNumber);
+      commit("SET_SHOW_TEXT_LINE_NUMBER", {
+        showTextLineNumber,
+      });
+    },
+  },
+
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
     mutation(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
@@ -384,6 +403,26 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         }
       }
     ),
+  },
+
+  GET_RECENTLY_USED_PROJECTS: {
+    async action() {
+      return await window.electron.getSetting("recentlyUsedProjects");
+    },
+  },
+
+  APPEND_RECENTLY_USED_PROJECT: {
+    async action({ dispatch }, { filePath }) {
+      const recentlyUsedProjects = await dispatch("GET_RECENTLY_USED_PROJECTS");
+      const newRecentlyUsedProjects = [
+        filePath,
+        ...recentlyUsedProjects.filter((value) => value != filePath),
+      ].slice(0, 10);
+      await window.electron.setSetting(
+        "recentlyUsedProjects",
+        newRecentlyUsedProjects
+      );
+    },
   },
 });
 

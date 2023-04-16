@@ -5,7 +5,12 @@ import {
   IpcRendererEvent,
 } from "electron";
 
-import { Sandbox, ElectronStoreType, EngineId } from "@/type/preload";
+import {
+  Sandbox,
+  ElectronStoreType,
+  EngineId,
+  SandboxKey,
+} from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -290,4 +295,4 @@ const api: Sandbox = {
   },
 };
 
-contextBridge.exposeInMainWorld("electron", api);
+contextBridge.exposeInMainWorld(SandboxKey, api);

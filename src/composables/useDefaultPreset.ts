@@ -6,9 +6,6 @@ export const useDefaultPreset = () => {
   const store = useStore();
 
   const defaultPresetKeys = computed(() => store.state.defaultPresetKeys);
-  const defaultPresetKeySets = computed(
-    () => new Set(Object.values(store.state.defaultPresetKeys))
-  );
 
   const getDefaultPresetKeyForVoice = (voice: Voice): string => {
     const voiceId = VoiceId(voice);
@@ -16,7 +13,7 @@ export const useDefaultPreset = () => {
   };
 
   const isDefaultPresetKey = (presetKey: PresetKey): boolean => {
-    return defaultPresetKeySets.value.has(presetKey);
+    return store.getters.DEFAULT_PRESET_KEY_SETS.has(presetKey);
   };
 
   return {

@@ -166,7 +166,7 @@
 
 <script setup lang="ts">
 import path from "path";
-import { computed, onBeforeUpdate, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver, useQuasar } from "quasar";
 import cloneDeep from "clone-deep";
@@ -353,12 +353,12 @@ const updateAudioDetailPane = async (height: number) => {
   audioDetailPaneHeight.value = height;
   await updateSplitterPosition("audioDetailPaneHeight", height);
 };
-
 // component
-let audioCellRefs: Record<AudioKey, typeof AudioCell> = {};
-const addAudioCellRef = (audioCellRef: typeof AudioCell) => {
-  if (audioCellRef) {
-    audioCellRefs[audioCellRef.audioKey] = audioCellRef;
+let audioCellRefs: Record<AudioKey, InstanceType<typeof AudioCell>> = {};
+const addAudioCellRef: VNodeRef = (audioCellRef) => {
+  if (audioCellRef && !(audioCellRef instanceof Element)) {
+    const typedAudioCellRef = audioCellRef as InstanceType<typeof AudioCell>;
+    audioCellRefs[typedAudioCellRef.audioKey] = typedAudioCellRef;
   }
 };
 onBeforeUpdate(() => {

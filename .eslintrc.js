@@ -59,9 +59,33 @@ module.exports = {
         "./src/background.ts",
         "./src/background/*.ts",
         "./src/electron/*.ts",
+        "./tests/**/*.ts",
       ],
       rules: {
         "no-console": "off",
+      },
+    },
+    // Electronのメインプロセス以外でelectronのimportを禁止する
+    {
+      files: ["./src/**/*.ts", "./src/**/*.vue"],
+      excludedFiles: [
+        "./src/background.ts",
+        "./src/background/*.ts",
+        "./src/electron/*.ts",
+      ],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: ["electron"],
+                message:
+                  "このファイル内でelectronはimportできません。許可されているファイル内へ移すか、ESLintの設定を見直してください",
+              },
+            ],
+          },
+        ],
       },
     },
   ],

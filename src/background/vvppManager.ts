@@ -1,10 +1,9 @@
 import fs from "fs";
 import path from "path";
+import { spawn } from "child_process";
 import log from "electron-log";
 import { moveFile } from "move-file";
-// FIXME: 正式版が出たら切り替える。https://github.com/VOICEVOX/voicevox_project/issues/2#issuecomment-1401721286
-import { Extract } from "unzipper";
-import { dialog } from "electron";
+import { app, dialog } from "electron";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
 import {
@@ -15,6 +14,13 @@ import {
 } from "@/type/preload";
 
 const isNotWin = process.platform !== "win32";
+
+// https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
+const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
+  0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
+]);
+
+const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 
 // globのPromise化
 const globAsync = (pattern: string, options?: glob.IOptions) => {
@@ -115,7 +121,7 @@ export class VvppManager {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
-    const streams: fs.ReadStream[] = [];
+    let archiveFileParts: string[];
     // 名前.数値.vvpppの場合は分割されているとみなして連結する
     if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
       log.log("vvpp is split, finding other parts...");
@@ -138,22 +144,98 @@ export class VvppManager {
         }
         return parseInt(aMatch[1]) - parseInt(bMatch[1]);
       });
-      for (const p of filePaths) {
-        streams.push(fs.createReadStream(p));
-      }
+      archiveFileParts = filePaths;
     } else {
       log.log("Not a split file");
-      streams.push(fs.createReadStream(vvppLikeFilePath));
+      archiveFileParts = [vvppLikeFilePath];
     }
 
+    const format = await this.detectFileFormat(archiveFileParts[0]);
+    if (!format) {
+      throw new Error(`Unknown file format: ${archiveFileParts[0]}`);
+    }
+    log.log("Format:", format);
     log.log("Extracting vvpp to", outputDir);
     try {
-      await new Promise((resolve, reject) => {
-        new MultiStream(streams)
-          .pipe(Extract({ path: outputDir }))
-          .on("close", resolve)
-          .on("error", reject);
-      });
+      let tmpConcatenatedFile: string | undefined;
+      let archiveFile: string;
+      try {
+        if (archiveFileParts.length > 1) {
+          // -siオプションでの7z解凍はサポートされていないため、
+          // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
+          log.log(`Concatenating ${archiveFileParts.length} files...`);
+          tmpConcatenatedFile = path.join(
+            app.getPath("temp"),
+            `vvpp-${new Date().getTime()}.${format}`
+          );
+          log.log("Temporary file:", tmpConcatenatedFile);
+          archiveFile = tmpConcatenatedFile;
+          await new Promise<void>((resolve, reject) => {
+            if (!tmpConcatenatedFile) throw new Error("tmpFile is undefined");
+            const inputStreams = archiveFileParts.map((f) =>
+              fs.createReadStream(f)
+            );
+            const outputStream = fs.createWriteStream(tmpConcatenatedFile);
+            new MultiStream(inputStreams)
+              .pipe(outputStream)
+              .on("close", () => {
+                outputStream.close();
+                resolve();
+              })
+              .on("error", reject);
+          });
+          log.log("Concatenated");
+        } else {
+          archiveFile = archiveFileParts[0];
+          log.log("Single file, not concatenating");
+        }
+
+        const args = ["x", "-o" + outputDir, archiveFile, "-t" + format];
+
+        let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME as string;
+        if (!sevenZipPath) {
+          throw new Error("7z path is not defined");
+        }
+        if (import.meta.env.PROD) {
+          sevenZipPath = path.join(
+            path.dirname(app.getPath("exe")),
+            sevenZipPath
+          );
+        }
+        log.log(
+          "Spawning 7z:",
+          sevenZipPath,
+          args.map((a) => JSON.stringify(a)).join(" ")
+        );
+        await new Promise<void>((resolve, reject) => {
+          const child = spawn(sevenZipPath, args, {
+            stdio: ["pipe", "pipe", "pipe"],
+          });
+
+          child.stdout?.on("data", (data) => {
+            log.info(`7z STDOUT: ${data.toString("utf-8")}`);
+          });
+
+          child.stderr?.on("data", (data) => {
+            log.error(`7z STDERR: ${data.toString("utf-8")}`);
+          });
+
+          child.on("exit", (code) => {
+            if (code === 0) {
+              resolve();
+            } else {
+              reject(new Error(`7z exited with code ${code}`));
+            }
+          });
+          // FIXME: rejectが2回呼ばれることがある
+          child.on("error", reject);
+        });
+      } finally {
+        if (tmpConcatenatedFile) {
+          log.log("Removing temporary file", tmpConcatenatedFile);
+          await fs.promises.rm(tmpConcatenatedFile);
+        }
+      }
       const manifest: MinimumEngineManifest = minimumEngineManifestSchema.parse(
         JSON.parse(
           await fs.promises.readFile(
@@ -172,10 +254,6 @@ export class VvppManager {
         await fs.promises.rm(outputDir, { recursive: true });
       }
       throw e;
-    } finally {
-      for (const stream of streams) {
-        stream.close();
-      }
     }
   }
 
@@ -222,6 +300,7 @@ export class VvppManager {
               force: true,
             });
             log.info(`Engine ${engineId} deleted successfully.`);
+            break;
           } catch (e) {
             if (i === 4) {
               log.error(e);
@@ -262,6 +341,23 @@ export class VvppManager {
       })
     );
     this.willReplaceEngineDirs = [];
+  }
+
+  private async detectFileFormat(
+    filePath: string
+  ): Promise<"zip" | "7z" | undefined> {
+    const file = await fs.promises.open(filePath, "r");
+
+    const buffer = Buffer.alloc(8);
+    await file.read(buffer, 0, 8, 0);
+    await file.close();
+
+    if (buffer.compare(SEVEN_ZIP_MAGIC_NUMBER, 0, 6, 0, 6) === 0) {
+      return "7z";
+    } else if (buffer.compare(ZIP_MAGIC_NUMBER, 0, 4, 0, 4) === 0) {
+      return "zip";
+    }
+    return undefined;
   }
 }
 
