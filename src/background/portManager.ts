@@ -6,12 +6,6 @@ const isWindows = process.platform === "win32";
 export class PortManager {
   constructor(private hostname: string, private port: number) {}
 
-  /**
-   * ex) url: `http://localhost:50021`
-   *  host -> `localhost`
-   *  port -> `50021`
-   */
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   portLog = (...message: any) => log.info(`PORT ${this.port}: ${message}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
