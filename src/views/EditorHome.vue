@@ -488,9 +488,8 @@ const audioItems = computed(() => store.state.audioItems);
 watch(userOrderedCharacterInfos, (newValue, oldValue) => {
   if (newValue === oldValue || newValue.length < 1) return;
 
-  const audioItemKeys = Object.keys(audioItems.value);
-  if (audioItemKeys.length === 1) {
-    const first = audioItemKeys[0] as AudioKey;
+  if (audioKeys.value.length === 1) {
+    const first = audioKeys.value[0] as AudioKey;
     const audioItem = audioItems.value[first];
     if (audioItem.text.length > 0) {
       return;
