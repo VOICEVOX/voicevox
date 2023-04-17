@@ -61,7 +61,6 @@ jobs:
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX.AppImage
-            sed_name: sed
             os: ubuntu-20.04
           # Linux CPU
           - artifact_name: linux-cpu-prepackage
@@ -74,7 +73,6 @@ jobs:
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX-CPU.AppImage
-            sed_name: sed
             os: ubuntu-20.04
           # Windows CUDA
           - artifact_name: windows-nvidia-prepackage
@@ -85,7 +83,6 @@ jobs:
             app_asar_dir: prepackage/resources
             installer_artifact_name: windows-nvidia-nsis-web
             nsis_web_artifact_name: "VOICEVOX-CUDA Web Setup ${version}.${ext}"
-            sed_name: sed
             os: windows-2019
           # Windows CPU
           - artifact_name: windows-cpu-prepackage
@@ -96,7 +93,6 @@ jobs:
             app_asar_dir: prepackage/resources
             installer_artifact_name: windows-cpu-nsis-web
             nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
-            sed_name: sed
             os: windows-2019
           # Windows DirectML
           - artifact_name: windows-directml-prepackage
@@ -107,7 +103,6 @@ jobs:
             app_asar_dir: prepackage/resources
             installer_artifact_name: windows-directml-nsis-web
             nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
-            sed_name: sed
             os: windows-2019
           # macOS CPU
           - artifact_name: macos-cpu-prepackage
@@ -118,7 +113,6 @@ jobs:
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-dmg
             macos_artifact_name: "VOICEVOX.${ext}"
-            sed_name: gsed
             os: macos-11
 
     runs-on: ${{ matrix.os }}
@@ -133,6 +127,7 @@ jobs:
         shell: bash
         run: |
           brew install gnu-sed
+          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
 
       # Rename executable file
       # NOTE: If the CPU/DirectML/GPU builds have the same package name,
@@ -144,10 +139,10 @@ jobs:
       - name: Replace package name & version
         shell: bash
         run: |
-          "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+          sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
-          "${{ matrix.sed_name }}" -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
+          sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -206,14 +201,14 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu-') || startsWith(matrix.os, 'macos-')
         shell: bash
         run: |
-          "${{ matrix.sed_name }}" -i 's|run.exe|./run|g' .env.production
+          sed -i 's|run.exe|./run|g' .env.production
 
       - name: Replace .env.production infomations
         shell: bash
         run: |
           # GTM ID
           gtm_id=$(jq -r '.gtm_container_id' resource/editor/metas.json)
-          "${{ matrix.sed_name }}" -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
+          sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
         shell: bash
