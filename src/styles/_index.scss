@@ -102,6 +102,11 @@ img {
   background: transparent; // デフォルトの設定だと全画面ダイアログが出る際に黒背景がちらつく
 }
 
+// トースト通知内にあるボタン
+.q-notification__actions .q-btn {
+  font-weight: bold;
+}
+
 // 設定とかのヘッダーの色
 .q-layout__section--marginal {
   background: colors.$toolbar !important;
@@ -233,15 +238,12 @@ img {
   background: colors.$toolbar-button-display;
 }
 
-.text-toast {
-  color: colors.$display;
-}
-
 .bg-toast {
-  background: rgba(colors.$primary-light-rgb, 0.4);
+  background: colors.$toast;
 }
-
-.text-on-toast {
-  color: colors.$on-toast;
-  font-weight: bold;
+.text-toast-display {
+  color: colors.$toast-display;
+}
+.text-toast-button-display {
+  color: colors.$toast-button-display;
 }

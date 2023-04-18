@@ -556,13 +556,13 @@ onMounted(async () => {
     $q.notify({
       message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
       color: "toast",
-      textColor: "toast",
+      textColor: "toast-display",
       icon: "compare_arrows",
       timeout: 5000,
       actions: [
         {
           label: "今後この通知をしない",
-          color: "on-toast",
+          textColor: "toast-button-display",
           handler: () =>
             store.dispatch("SET_CONFIRMED_TIPS", {
               confirmedTips: {
