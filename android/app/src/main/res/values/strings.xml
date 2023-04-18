@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">VOICEVOX</string>
+    <string name="title_activity_main">VOICEVOX</string>
+    <string name="package_name">jp.hiroshiba.voicevox</string>
+    <string name="custom_url_scheme">jp.hiroshiba.voicevox</string>
+</resources>
