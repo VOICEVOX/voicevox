@@ -23,8 +23,10 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
         const instance = _engineFactory.instance(engineInfo.host);
         return Promise.resolve({
           invoke: (v) => (arg) =>
+            // FIXME: anyを使わないようにする
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             instance[v](arg) as any,
         });
       },

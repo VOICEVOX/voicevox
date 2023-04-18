@@ -166,7 +166,7 @@
 
 <script setup lang="ts">
 import path from "path";
-import { computed, onBeforeUpdate, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver, useQuasar } from "quasar";
 import cloneDeep from "clone-deep";
@@ -353,12 +353,12 @@ const updateAudioDetailPane = async (height: number) => {
   audioDetailPaneHeight.value = height;
   await updateSplitterPosition("audioDetailPaneHeight", height);
 };
-
 // component
-let audioCellRefs: Record<AudioKey, typeof AudioCell> = {};
-const addAudioCellRef = (audioCellRef: typeof AudioCell) => {
-  if (audioCellRef) {
-    audioCellRefs[audioCellRef.audioKey] = audioCellRef;
+let audioCellRefs: Record<AudioKey, InstanceType<typeof AudioCell>> = {};
+const addAudioCellRef: VNodeRef = (audioCellRef) => {
+  if (audioCellRef && !(audioCellRef instanceof Element)) {
+    const typedAudioCellRef = audioCellRef as InstanceType<typeof AudioCell>;
+    audioCellRefs[typedAudioCellRef.audioKey] = typedAudioCellRef;
   }
 };
 onBeforeUpdate(() => {
@@ -478,6 +478,38 @@ const disableDefaultUndoRedo = (event: KeyboardEvent) => {
     event.preventDefault();
   }
 };
+
+const userOrderedCharacterInfos = computed(
+  () => store.state.userCharacterOrder
+);
+const audioItems = computed(() => store.state.audioItems);
+// 並び替え後、テキスト欄が１つで空欄なら話者を更新
+// 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
+watch(userOrderedCharacterInfos, (newValue, oldValue) => {
+  if (newValue === oldValue || newValue.length < 1) return;
+
+  if (audioKeys.value.length === 1) {
+    const first = audioKeys.value[0] as AudioKey;
+    const audioItem = audioItems.value[first];
+    if (audioItem.text.length > 0) {
+      return;
+    }
+
+    const speakerId = newValue[0];
+    const defaultStyleId = store.state.defaultStyleIds.find(
+      (styleId) => styleId.speakerUuid === speakerId
+    );
+    if (!defaultStyleId) return;
+
+    const voice: Voice = {
+      engineId: defaultStyleId.engineId,
+      speakerId: defaultStyleId.speakerUuid,
+      styleId: defaultStyleId.defaultStyleId,
+    };
+
+    store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
+  }
+});
 
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
