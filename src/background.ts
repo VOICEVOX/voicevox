@@ -464,7 +464,7 @@ async function createWindow() {
   }
 
   const parameter =
-    "#/home?isMultiEngineOffMode=" +
+    "#/?isMultiEngineOffMode=" +
     appState.isMultiEngineOffMode +
     "&projectFilePath=" +
     projectFilePath;

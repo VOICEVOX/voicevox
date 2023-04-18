@@ -8,7 +8,7 @@ import EditorHome from "../views/EditorHome.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: "/home",
+    path: "/",
     component: EditorHome,
     props: (route) => ({ projectFilePath: route.query["projectFilePath"] }),
   },
