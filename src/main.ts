@@ -6,6 +6,7 @@ import App from "./App.vue";
 import router from "./router";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
+// eslint-disable-next-line no-restricted-imports
 import loadMock from "./electron/mock";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
