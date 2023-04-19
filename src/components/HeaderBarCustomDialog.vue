@@ -51,7 +51,13 @@
                 @start="toolbarButtonDragging = true"
                 @end="toolbarButtonDragging = false"
               >
-                <template v-slot:item="{ element: button }">
+                <template
+                  v-slot:item="{
+                    element: button,
+                  }: {
+                    element: ToolbarButtonTagType,
+                  }"
+                >
                   <q-btn
                     unelevated
                     color="toolbar-button"

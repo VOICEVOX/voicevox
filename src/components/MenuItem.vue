@@ -14,7 +14,10 @@
     </q-item-section>
 
     <q-item-section>{{ menudata.label }}</q-item-section>
-    <q-item-section side v-if="getMenuBarHotkey(menudata.label)">
+    <q-item-section
+      side
+      v-if="menudata.label != undefined && getMenuBarHotkey(menudata.label)"
+    >
       {{ getMenuBarHotkey(menudata.label) }}
     </q-item-section>
 
@@ -53,14 +56,20 @@
       <q-icon v-else />
     </q-item-section>
 
-    <q-item-section avatar v-if="menudata.icon">
+    <q-item-section
+      avatar
+      v-if="'icon' in menudata && menudata.icon != undefined"
+    >
       <q-avatar>
         <img :src="menudata.icon" />
       </q-avatar>
     </q-item-section>
 
     <q-item-section>{{ menudata.label }}</q-item-section>
-    <q-item-section side v-if="getMenuBarHotkey(menudata.label)">
+    <q-item-section
+      side
+      v-if="menudata.label != undefined && getMenuBarHotkey(menudata.label)"
+    >
       {{ getMenuBarHotkey(menudata.label) }}
     </q-item-section>
   </q-item>
@@ -91,7 +100,7 @@ const hotkeySettingsMap = computed(
       store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
     )
 );
-const getMenuBarHotkey = (label: HotkeyAction) => {
+const getMenuBarHotkey = (label: HotkeyAction | string) => {
   const hotkey = hotkeySettingsMap.value.get(label);
   if (hotkey === undefined) {
     return "";

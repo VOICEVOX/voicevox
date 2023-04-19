@@ -273,7 +273,7 @@ const duplicatedHotkey = computed(() => {
   );
 });
 
-const deleteHotkey = (action: HotkeyAction) => {
+const deleteHotkey = (action: string) => {
   changeHotkeySettings(action, "");
 };
 
