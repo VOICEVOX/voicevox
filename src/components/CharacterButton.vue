@@ -295,6 +295,7 @@ const reassignSubMenuOpen = debounce((idx: number) => {
   subMenuOpenFlags.value = arr;
 }, 100);
 
+// 高さを制限してメニューが下方向に展開されるようにする
 const buttonRef: Ref<InstanceType<typeof QBtn> | undefined> = ref();
 const heightLimit = "65vh"; // QMenuのデフォルト値
 const maxMenuHeight = ref(heightLimit);
