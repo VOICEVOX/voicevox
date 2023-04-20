@@ -100,6 +100,7 @@ const hotkeySettingsMap = computed(
       store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
     )
 );
+// FIXME: string型は受け付けないべき
 const getMenuBarHotkey = (label: HotkeyAction | string) => {
   const hotkey = hotkeySettingsMap.value.get(label);
   if (hotkey === undefined) {
