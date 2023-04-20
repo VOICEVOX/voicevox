@@ -75,7 +75,7 @@
               :accentPhrase="accentPhrase"
               :uiLocked="uiLocked"
               :shiftKeyFlag="shiftKeyFlag"
-              :on-change-accent="changeAccent"
+              :onChangeAccent="changeAccent"
             />
           </template>
           <template v-if="selectedDetail === 'pitch'">
