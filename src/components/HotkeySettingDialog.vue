@@ -273,7 +273,8 @@ const duplicatedHotkey = computed(() => {
   );
 });
 
-const deleteHotkey = (action: HotkeyAction) => {
+// FIXME: actionはHotkeyAction型にすべき
+const deleteHotkey = (action: string) => {
   changeHotkeySettings(action, "");
 };
 

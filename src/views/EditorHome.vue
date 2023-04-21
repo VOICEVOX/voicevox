@@ -723,8 +723,8 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
 
 // ドラッグ＆ドロップ
 const dragEventCounter = ref(0);
-const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
-  if (!event || event.dataTransfer.files.length === 0) return;
+const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
+  if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
   switch (path.extname(file.name)) {
     case ".txt":
