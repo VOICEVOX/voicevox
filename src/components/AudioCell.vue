@@ -130,7 +130,8 @@ const isActiveAudioCell = computed(
 
 const audioTextBuffer = ref(audioItem.value.text);
 const isChangeFlag = ref(false);
-const setAudioTextBuffer = (text: string) => {
+const setAudioTextBuffer = (text: string | number | null) => {
+  if (typeof text !== "string") throw new Error("typeof text !== 'string'");
   audioTextBuffer.value = text;
   isChangeFlag.value = true;
 };

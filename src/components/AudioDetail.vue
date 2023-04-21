@@ -75,7 +75,7 @@
               :accentPhrase="accentPhrase"
               :uiLocked="uiLocked"
               :shiftKeyFlag="shiftKeyFlag"
-              @changeAccent="changeAccent"
+              :onChangeAccent="changeAccent"
             />
           </template>
           <template v-if="selectedDetail === 'pitch'">
@@ -111,7 +111,7 @@
             >
               <!-- consonant length -->
               <audio-parameter
-                v-if="mora.consonant"
+                v-if="mora.consonant && mora.consonantLength != undefined"
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.consonantLength"
@@ -213,8 +213,9 @@
             </div>
             <div
               v-if="
-                accentPhraseIndex < accentPhrases.length - 1 ||
-                moraIndex < accentPhrase.moras.length - 1
+                accentPhrases != undefined &&
+                (accentPhraseIndex < accentPhrases.length - 1 ||
+                  moraIndex < accentPhrase.moras.length - 1)
               "
               @click.stop="
                 uiLocked ||
@@ -694,10 +695,12 @@ const handleHoverText = (
 
 const handleLengthHoverText = (
   isOver: boolean,
-  phoneme: hoveredType,
+  phoneme: MoraDataType,
   phraseIndex: number,
   moraIndex?: number
 ) => {
+  if (phoneme !== "vowel" && phoneme !== "consonant")
+    throw new Error("phoneme != hoveredType");
   lengthHoveredInfo.type = phoneme;
   // the pause and pitch templates don't emit a mouseOver event
   if (isOver) {
