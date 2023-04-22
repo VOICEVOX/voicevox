@@ -2,12 +2,14 @@ import { createApp } from "vue";
 import { createGtm } from "@gtm-support/vue-gtm";
 import { Quasar, Dialog, Loading } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
+import { Capacitor } from "@capacitor/core";
 import App from "./App.vue";
 import router from "./router";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 // eslint-disable-next-line no-restricted-imports
 import loadMock from "./electron/mock";
+import loadPlugin from "./mobile/plugin";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
@@ -21,6 +23,11 @@ window.dataLayer = [];
 if (!window.electron) {
   loadMock();
 }
+
+if (Capacitor.isNativePlatform()) {
+  loadPlugin();
+}
+
 createApp(App)
   .use(store, storeKey)
   .use(router)

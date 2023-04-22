@@ -1,6 +1,17 @@
 apply plugin: 'com.android.application'
 
 android {
+
+    ndkVersion '25.2.9519653'
+    namespace 'jp.hiroshiba.voicevox'
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+ //           arguments "-DANDROID_STL=c++_shared"
+        }
+    }
+
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "jp.hiroshiba.voicevox"
@@ -10,9 +21,24 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
-             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
-             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+            // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+        externalNativeBuild {
+            cmake {
+                cppFlags ''
+            }
+        }
+        ndk.abiFilters 'arm64-v8a','x86_64'
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDir 'jniLibs'
         }
     }
     buildTypes {
@@ -24,7 +50,7 @@ android {
 }
 
 repositories {
-    flatDir{
+    flatDir {
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
 }
@@ -39,6 +65,8 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+
+    implementation group: 'com.microsoft.onnxruntime', name: 'onnxruntime', version: '1.13.1'
 }
 
 apply from: 'capacitor.build.gradle'
@@ -48,6 +76,6 @@ try {
     if (servicesJSON.text) {
         apply plugin: 'com.google.gms.google-services'
     }
-} catch(Exception e) {
+} catch (Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }

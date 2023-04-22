@@ -1,2 +1,6 @@
 /build/*
 !/build/.npmkeep
+/src/main/jniLibs/*
+!/src/main/jniLibs/README.md
+!/src/main/jniLibs/*/*/.gitkeep
+
