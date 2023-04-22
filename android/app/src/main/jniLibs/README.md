@@ -19,5 +19,4 @@ jniLibs:
 
 | ライブラリ | ダウンロードリンク                                                    |
 | ---------- |--------------------------------------------------------------|
-| [VOICEVOX CORE](https://github.com/voicevox/voicevox_core)  | https://github.com/VOICEVOX/voicevox_core/releases/tag/0.14.3 |
-
+| [VOICEVOX CORE](https://github.com/voicevox/voicevox_core)  | <https://github.com/VOICEVOX/voicevox_core/releases/tag/0.14.3> |
