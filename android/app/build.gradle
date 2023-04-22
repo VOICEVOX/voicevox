@@ -8,7 +8,7 @@ android {
         cmake {
             path file('src/main/cpp/CMakeLists.txt')
             version '3.22.1'
- //           arguments "-DANDROID_STL=c++_shared"
+            //           arguments "-DANDROID_STL=c++_shared"
         }
     }
 
@@ -27,10 +27,10 @@ android {
         }
         externalNativeBuild {
             cmake {
-                cppFlags ''
+                arguments '-DANDROID_STL=c++_shared'
             }
         }
-        ndk.abiFilters 'arm64-v8a','x86_64'
+        ndk.abiFilters 'arm64-v8a', 'x86_64'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 

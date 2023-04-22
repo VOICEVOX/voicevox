@@ -45,7 +45,7 @@ find_library( # Sets the name of the path variable.
 
 
 include_directories(
-        "${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/${CMAKE_ANDROID_ARCH_ABI}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/include"
 )
 target_link_libraries( # Specifies the target library.
         voicevox_core_wrapper

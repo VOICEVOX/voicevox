@@ -7,7 +7,7 @@ const loadPlugin = () => {
     }>("VoicevoxCore");
 
   plugin.getVersion().then((value) => {
-    console.log(value.value);
+    alert(value.value);
   });
   return plugin;
 };

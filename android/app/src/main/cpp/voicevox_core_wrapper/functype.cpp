@@ -1,4 +1,4 @@
-#include "voicevox_core/voicevox_core.h"
+#include "voicevox_core.h"
 
 typedef struct VoicevoxInitializeOptions (*voicevox_make_default_initialize_options_t)(void);
 
