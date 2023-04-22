@@ -6,7 +6,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
-@CapacitorPlugin(name = "Core")
+@CapacitorPlugin(name = "VoicevoxCore")
 public class CorePlugin extends Plugin {
     VoicevoxCore core;
 
@@ -16,7 +16,7 @@ public class CorePlugin extends Plugin {
     }
 
     @PluginMethod()
-    public void get_version(PluginCall call) {
+    public void getVersion(PluginCall call) {
 
         JSObject ret = new JSObject();
         ret.put("value", core.voicevoxGetVersion());
