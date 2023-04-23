@@ -496,7 +496,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
-  noticeAltPortInfo: boolean;
+  noticeAltPortInfo: boolean; // エンジンのポート変更の通知
 };
 
 export const electronStoreSchema = z
