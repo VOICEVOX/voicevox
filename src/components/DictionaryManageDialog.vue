@@ -163,7 +163,7 @@
                     :accent-phrase="accentPhrase"
                     :accent-phrase-index="0"
                     :ui-locked="uiLocked"
-                    @changeAccent="changeAccent"
+                    :onChangeAccent="changeAccent"
                   />
                   <template
                     v-for="(mora, moraIndex) in accentPhrase.moras"

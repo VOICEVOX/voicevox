@@ -3,6 +3,7 @@
 const process = require("process");
 const { execFileSync } = require("child_process");
 const fs = require("fs");
+const path = require("path");
 const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
 const argv = yargs(hideBin(process.argv))
@@ -57,12 +58,40 @@ const licenseJson = execFileSync(
 
 const checkerLicenses = JSON.parse(licenseJson);
 
-const licenses = Object.entries(checkerLicenses).map(([, license]) => ({
-  name: license.name,
-  version: license.version,
-  license: license.licenses,
-  text: license.licenseText,
-}));
+const externalLicenses = [];
+
+externalLicenses.push({
+  name: "7-Zip",
+  version: execFileSync(
+    path.join(
+      __dirname,
+      "vendored",
+      "7z",
+      {
+        win32: "7za.exe",
+        linux: "7zzs",
+        darwin: "7zz",
+      }[process.platform]
+    ),
+
+    {
+      encoding: "utf-8",
+    }
+  ).match(/7-Zip\s+(?:\(.\))?\s*([0-9.]+)/)[1],
+  license: "LGPL-2.1",
+  text: fs.readFileSync(path.join(__dirname, "vendored", "7z", "License.txt"), {
+    encoding: "utf-8",
+  }),
+});
+
+const licenses = Object.entries(checkerLicenses)
+  .map(([, license]) => ({
+    name: license.name,
+    version: license.version,
+    license: license.licenses,
+    text: license.licenseText,
+  }))
+  .concat(externalLicenses);
 
 const outputPath = argv.output_path;
 fs.writeFileSync(outputPath, JSON.stringify(licenses));

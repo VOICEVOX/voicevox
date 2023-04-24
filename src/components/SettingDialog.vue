@@ -527,6 +527,28 @@
                   ]"
                 />
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>行番号の表示</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      テキスト欄の左側に行番号を表示します。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="showTextLineNumber"
+                  @update:model-value="changeShowTextLineNumber($event)"
+                >
+                </q-toggle>
+              </q-card-actions>
             </q-card>
 
             <!-- Experimental Card -->
@@ -823,6 +845,7 @@ const activePointScrollModeOptions: Record<
 
 const experimentalSetting = computed(() => store.state.experimentalSetting);
 
+// 外観
 const currentThemeNameComputed = computed({
   get: () => store.state.themeSetting.currentTheme,
   set: (currentTheme: string) => {
@@ -837,6 +860,18 @@ const availableThemeNameComputed = computed(() => {
       return { label: theme.displayName, value: theme.name };
     });
 });
+
+const editorFont = computed(() => store.state.editorFont);
+const changeEditorFont = (editorFont: EditorFontType) => {
+  store.dispatch("SET_EDITOR_FONT", { editorFont });
+};
+
+const showTextLineNumber = computed(() => store.state.showTextLineNumber);
+const changeShowTextLineNumber = (showTextLineNumber: boolean) => {
+  store.dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
+    showTextLineNumber,
+  });
+};
 
 const currentAudioOutputDeviceComputed = computed<{
   key: string;
@@ -1040,11 +1075,6 @@ const changeSplitTextWhenPaste = (
   splitTextWhenPaste: SplitTextWhenPasteType
 ) => {
   store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
-};
-
-const editorFont = computed(() => store.state.editorFont);
-const changeEditorFont = (editorFont: EditorFontType) => {
-  store.dispatch("SET_EDITOR_FONT", { editorFont });
 };
 
 const showsFilePatternEditDialog = ref(false);

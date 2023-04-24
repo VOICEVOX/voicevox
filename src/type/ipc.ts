@@ -11,6 +11,7 @@ import {
   NativeThemeType,
   EngineSetting,
   EngineId,
+  MessageBoxReturnValue,
 } from "@/type/preload";
 
 /**
@@ -110,7 +111,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   SHOW_QUESTION_DIALOG: {
@@ -134,7 +135,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   SHOW_ERROR_DIALOG: {
@@ -144,7 +145,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   OPEN_TEXT_EDIT_CONTEXT_MENU: {

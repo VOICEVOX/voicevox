@@ -95,12 +95,14 @@ const previewAccentSlider = previewSliderHelper({
 
 const accentLine = computed(() => {
   const accent = previewAccentSlider.state.currentValue.value ?? 0;
-  return [...Array(props.accentPhrase.moras.length).keys()].map(
-    (index) =>
-      `${index * 40 + 10} ${
-        index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
-      }`
-  );
+  return [...Array(props.accentPhrase.moras.length).keys()]
+    .map(
+      (index) =>
+        `${index * 40 + 10} ${
+          index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
+        }`
+    )
+    .toString();
 });
 
 // クリックでアクセント句が選択されないように、@click.stopに渡す

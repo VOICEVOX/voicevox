@@ -479,6 +479,38 @@ const disableDefaultUndoRedo = (event: KeyboardEvent) => {
   }
 };
 
+const userOrderedCharacterInfos = computed(
+  () => store.state.userCharacterOrder
+);
+const audioItems = computed(() => store.state.audioItems);
+// 並び替え後、テキスト欄が１つで空欄なら話者を更新
+// 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
+watch(userOrderedCharacterInfos, (newValue, oldValue) => {
+  if (newValue === oldValue || newValue.length < 1) return;
+
+  if (audioKeys.value.length === 1) {
+    const first = audioKeys.value[0] as AudioKey;
+    const audioItem = audioItems.value[first];
+    if (audioItem.text.length > 0) {
+      return;
+    }
+
+    const speakerId = newValue[0];
+    const defaultStyleId = store.state.defaultStyleIds.find(
+      (styleId) => styleId.speakerUuid === speakerId
+    );
+    if (!defaultStyleId) return;
+
+    const voice: Voice = {
+      engineId: defaultStyleId.engineId,
+      speakerId: defaultStyleId.speakerUuid,
+      styleId: defaultStyleId.defaultStyleId,
+    };
+
+    store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
+  }
+});
+
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
 onMounted(async () => {
@@ -691,8 +723,8 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
 
 // ドラッグ＆ドロップ
 const dragEventCounter = ref(0);
-const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
-  if (!event || event.dataTransfer.files.length === 0) return;
+const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
+  if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
   switch (path.extname(file.name)) {
     case ".txt":
