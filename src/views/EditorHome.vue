@@ -547,33 +547,34 @@ onMounted(async () => {
 
   // 代替ポートをトースト通知する
   // FIXME: トーストが何度も出るようにする（altPortInfoをstateに持たせてwatchする）
-  if (!store.state.confirmedTips.noticeAltPortInfo) return;
-  const altPortInfo = await store.dispatch("GET_ALT_PORT_INFOS");
-  for (const engineId of store.state.engineIds) {
-    const engineName = store.state.engineInfos[engineId].name;
-    const altPort = altPortInfo[engineId];
+  if (store.state.confirmedTips.noticeAltPortInfo) {
+    const altPortInfo = await store.dispatch("GET_ALT_PORT_INFOS");
+    for (const engineId of store.state.engineIds) {
+      const engineName = store.state.engineInfos[engineId].name;
+      const altPort = altPortInfo[engineId];
 
-    if (!altPort) return;
-    $q.notify({
-      message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
-      color: "toast",
-      textColor: "toast-display",
-      icon: "compare_arrows",
-      timeout: 5000,
-      actions: [
-        {
-          label: "今後この通知をしない",
-          textColor: "toast-button-display",
-          handler: () =>
-            store.dispatch("SET_CONFIRMED_TIPS", {
-              confirmedTips: {
-                ...store.state.confirmedTips,
-                noticeAltPortInfo: false,
-              },
-            }),
-        },
-      ],
-    });
+      if (!altPort) return;
+      $q.notify({
+        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+        color: "toast",
+        textColor: "toast-display",
+        icon: "compare_arrows",
+        timeout: 5000,
+        actions: [
+          {
+            label: "今後この通知をしない",
+            textColor: "toast-button-display",
+            handler: () =>
+              store.dispatch("SET_CONFIRMED_TIPS", {
+                confirmedTips: {
+                  ...store.state.confirmedTips,
+                  noticeAltPortInfo: false,
+                },
+              }),
+          },
+        ],
+      });
+    }
   }
 });
 
