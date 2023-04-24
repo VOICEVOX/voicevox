@@ -83,7 +83,7 @@ const $q = useQuasar();
 const currentVersion = ref("");
 const altPorts = ref<number[]>([]);
 
-store.dispatch("GET_ALT_PORT_INFO").then(
+store.dispatch("GET_ALT_PORT_INFOS").then(
   (altPortInfo) =>
     // {[engineId]: {from: number, to: number}} -> to: number[]
     (altPorts.value = Object.values(altPortInfo).map(({ to }) => to))

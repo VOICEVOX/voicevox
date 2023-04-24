@@ -548,7 +548,7 @@ onMounted(async () => {
   // 代替ポートをトースト通知する
   // FIXME: トーストが何度も出るようにする（altPortInfoをstateに持たせてwatchする）
   if (!store.state.confirmedTips.noticeAltPortInfo) return;
-  const altPortInfo = await store.dispatch("GET_ALT_PORT_INFO");
+  const altPortInfo = await store.dispatch("GET_ALT_PORT_INFOS");
   for (const engineId of store.state.engineIds) {
     const engineName = store.state.engineInfos[engineId].name;
     const altPort = altPortInfo[engineId];

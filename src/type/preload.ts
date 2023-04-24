@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
-import { AltPortInfo } from "@/store/type";
+import { AltPortInfos } from "@/store/type";
 
 export const isMac =
   typeof process === "undefined"
@@ -143,7 +143,7 @@ export interface Sandbox {
   getQAndAText(): Promise<string>;
   getContactText(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
-  getAltPortInfo(): Promise<AltPortInfo>;
+  getAltPortInfos(): Promise<AltPortInfos>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
   showAudioSaveDialog(obj: {

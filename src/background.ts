@@ -599,7 +599,7 @@ ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
   return privacyPolicyText;
 });
 
-ipcMainHandle("GET_ALT_PORT_INFO", () => {
+ipcMainHandle("GET_ALT_PORT_INFOS", () => {
   return engineManager.altPortInfo;
 });
 

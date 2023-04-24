@@ -21,7 +21,7 @@ import {
   engineIdSchema,
   minimumEngineManifestSchema,
 } from "@/type/preload";
-import { AltPortInfo } from "@/store/type";
+import { AltPortInfos } from "@/store/type";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -68,7 +68,7 @@ export class EngineManager {
   defaultEngineInfos: EngineInfo[];
   engineProcessContainers: Record<EngineId, EngineProcessContainer>;
 
-  public altPortInfo: AltPortInfo = {};
+  public altPortInfo: AltPortInfos = {};
 
   constructor({
     store,

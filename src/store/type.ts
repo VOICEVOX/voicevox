@@ -80,7 +80,7 @@ export type Command = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
-export type AltPortInfo = Record<EngineId, { from: number; to: number }>;
+export type AltPortInfos = Record<EngineId, { from: number; to: number }>; // ポートが塞がれていたときの代替ポート
 
 export type SaveResult =
   | "SUCCESS"
@@ -739,8 +739,8 @@ export type EngineStoreTypes = {
     getter: EngineInfo[];
   };
 
-  GET_ALT_PORT_INFO: {
-    action(): Promise<AltPortInfo>;
+  GET_ALT_PORT_INFOS: {
+    action(): Promise<AltPortInfos>;
   };
 
   SET_ENGINE_MANIFESTS: {
