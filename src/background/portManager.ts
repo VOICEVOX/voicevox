@@ -7,9 +7,11 @@ export class PortManager {
   constructor(private hostname: string, private port: number) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  portLog = (...message: any) => log.info(`PORT ${this.port}: ${message}`);
+  portLog = (...message: any) =>
+    log.info(`PORT ${this.port} (${this.hostname}): ${message}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  portWarn = (...message: any) => log.warn(`PORT ${this.port}: ${message}`);
+  portWarn = (...message: any) =>
+    log.warn(`PORT ${this.port} (${this.hostname}): ${message}`);
 
   /**
    * "netstat -ano" の stdout から, 指定したポートを使用しているプロセスの process id を取得する
@@ -55,7 +57,24 @@ export class PortManager {
     }).toString();
 
     if (isWindows) {
-      stdout = this.stdout2processId(stdout)?.toString() ?? "";
+      const loopBackAddr = ["127.0.0.1", "0.0.0.0", "[::1]"];
+
+      if (loopBackAddr.includes(this.hostname)) {
+        this.portLog(
+          "Loopback address is specified; Using loopback address..."
+        );
+
+        const pid: (number | undefined)[] = [];
+        loopBackAddr.forEach((hostname) =>
+          pid.push(
+            // TODO: インスタンスを再定義を回避するなどのリファクタリング
+            new PortManager(hostname, this.port).stdout2processId(stdout)
+          )
+        );
+        stdout = pid.filter((pid) => pid !== undefined)[0]?.toString() ?? "";
+      } else {
+        stdout = this.stdout2processId(stdout)?.toString() ?? "";
+      }
     }
 
     if (!stdout || !stdout.length) {
