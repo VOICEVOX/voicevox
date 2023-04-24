@@ -547,7 +547,7 @@ onMounted(async () => {
 
   // 代替ポートをトースト通知する
   // FIXME: トーストが何度も出るようにする（altPortInfoをstateに持たせてwatchする）
-  if (store.state.confirmedTips.noticeAltPortInfo) {
+  if (!store.state.confirmedTips.engineStartedOnAltPort) {
     const altPortInfo = await store.dispatch("GET_ALT_PORT_INFOS");
     for (const engineId of store.state.engineIds) {
       const engineName = store.state.engineInfos[engineId].name;
@@ -568,7 +568,7 @@ onMounted(async () => {
               store.dispatch("SET_CONFIRMED_TIPS", {
                 confirmedTips: {
                   ...store.state.confirmedTips,
-                  noticeAltPortInfo: false,
+                  engineStartedOnAltPort: true,
                 },
               }),
           },

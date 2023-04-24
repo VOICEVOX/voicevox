@@ -57,7 +57,7 @@ export const settingStoreState: SettingStoreState = {
   },
   confirmedTips: {
     tweakableSliderByScroll: false,
-    noticeAltPortInfo: true,
+    engineStartedOnAltPort: false,
   },
   engineSettings: {},
 };
