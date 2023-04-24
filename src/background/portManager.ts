@@ -11,10 +11,6 @@ export class PortManager {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   portWarn = (...message: any) => log.warn(`PORT ${this.port}: ${message}`);
 
-  public getUrl(isHttps = false): string {
-    return `${isHttps ? "https" : "http"}://${this.hostname}:${this.port}`;
-  }
-
   /**
    * "netstat -ano" の stdout から, 指定したポートを使用しているプロセスの process id を取得する
    *

@@ -268,10 +268,7 @@ export class EngineManager {
       };
 
       // 代替ポートを設定
-      engineInfo.host = new PortManager(
-        engineInfoUrl.hostname,
-        altPort
-      ).getUrl();
+      engineInfo.host = `http://${engineInfoUrl.hostname}:${altPort}`;
       log.warn(
         `ENGINE ${engineId}: Applied Alternative Port: ${engineInfoUrl.port} -> ${altPort}`
       );
