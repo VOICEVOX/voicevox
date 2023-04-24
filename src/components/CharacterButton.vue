@@ -305,6 +305,8 @@ const updateMenuHeight = () => {
   const el = buttonRef.value.$el;
   if (!(el instanceof Element)) throw new Error("!(el instanceof Element)");
   const buttonRect = el.getBoundingClientRect();
+  // QMenuは展開する方向のスペースが不足している場合、自動的に展開方向を変更してしまうためmax-heightで制限する。
+  // AudioDetailよりボタンが下に来ることはないのでその最低高185pxに余裕を持たせた170pxを最小の高さにする。
   maxMenuHeight.value = `max(170px, min(${heightLimit}, calc(96vh - ${buttonRect.bottom}px)))`;
 };
 </script>
