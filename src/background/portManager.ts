@@ -57,20 +57,24 @@ export class PortManager {
     }).toString();
 
     if (isWindows) {
+      // Windows の場合は, lsof のように port と pid が 1to1 で取れないので, ３つのループバックアドレスが割り当てられているか確認
       const loopBackAddr = ["127.0.0.1", "0.0.0.0", "[::1]"];
 
+      // hostname が３つループバックアドレスのどれかの場合, それぞれのループバックアドレスに対して pid を取得
       if (loopBackAddr.includes(this.hostname)) {
         this.portLog(
-          "Loopback address is specified; Using loopback address..."
+          "Hostname is loopback address; Getting process id from all loopback addresses..."
         );
 
         const pid: (number | undefined)[] = [];
         loopBackAddr.forEach((hostname) =>
           pid.push(
-            // TODO: インスタンスを再定義を回避するなどのリファクタリング
+            // TODO: インスタンスの再定義を回避するなどのリファクタリング
             new PortManager(hostname, this.port).stdout2processId(stdout)
           )
         );
+
+        // pid が undefined (= 割り当て可能) でないものを取得 → 1つ目を取得 → stdoutへ
         stdout = pid.filter((pid) => pid !== undefined)[0]?.toString() ?? "";
       } else {
         stdout = this.stdout2processId(stdout)?.toString() ?? "";
@@ -129,7 +133,7 @@ export class PortManager {
 
     for (let altPort = this.port + 1; altPort <= altPortMax; altPort++) {
       this.portLog(`Trying whether port ${altPort} is assignable...`);
-      const altPid = await new PortManager( // TODO: インスタンスを再定義を回避するなどのリファクタリング
+      const altPid = await new PortManager( // TODO: インスタンスの再定義を回避するなどのリファクタリング
         this.hostname,
         altPort
       ).getProcessIdFromPort();
