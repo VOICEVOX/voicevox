@@ -58,16 +58,16 @@ export class PortManager {
 
     if (isWindows) {
       // Windows の場合は, lsof のように port と pid が 1to1 で取れないので, ３つのループバックアドレスが割り当てられているか確認
-      const loopBackAddr = ["127.0.0.1", "0.0.0.0", "[::1]"];
+      const loopbackAddr = ["127.0.0.1", "0.0.0.0", "[::1]"];
 
       // hostname が３つループバックアドレスのどれかの場合, それぞれのループバックアドレスに対して pid を取得
-      if (loopBackAddr.includes(this.hostname)) {
+      if (loopbackAddr.includes(this.hostname)) {
         this.portLog(
           "Hostname is loopback address; Getting process id from all loopback addresses..."
         );
 
         const pid: (number | undefined)[] = [];
-        loopBackAddr.forEach((hostname) =>
+        loopbackAddr.forEach((hostname) =>
           pid.push(
             // TODO: インスタンスの再定義を回避するなどのリファクタリング
             new PortManager(hostname, this.port).stdout2processId(stdout)
