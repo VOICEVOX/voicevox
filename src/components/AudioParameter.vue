@@ -3,7 +3,7 @@
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
-    <q-badge
+    <!-- <q-badge
       class="value-label"
       color="primary-light"
       text-color="display-on-primary"
@@ -16,7 +16,24 @@
           ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
           : undefined
       }}
-    </q-badge>
+    </q-badge> デバッグ用、↓を入力可能にする-->
+    <div>
+      <q-input
+        dense
+        borderless
+        :model-value="
+          formatValue(
+            previewSlider.qSliderProps.modelValue.value,
+            previewSlider.qSliderProps.min.value,
+            previewSlider.qSliderProps.max.value
+          )
+        "
+        @change="changeValue"
+        v-if="true"
+        style="width: 25px; height: 20px; font-size: xx-small"
+      >
+      </q-input>
+    </div>
     <q-slider
       vertical
       reverse
@@ -87,6 +104,8 @@ const emit =
   }>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) => {
+  console.log("newValue:" + newValue);
+  console.log("MoraDataType:" + type);
   emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue, type);
 };
 
@@ -138,6 +157,34 @@ const precisionComputed = computed(() => {
     return 3;
   }
 });
+
+const formatValue = (
+  value: number | null,
+  defaultMinValue: number,
+  defaultMaxValue: number
+) => {
+  if (typeof value === "number") {
+    return value.toFixed(2);
+  }
+
+  if (value === null) {
+    return defaultMinValue.toFixed(2);
+  }
+
+  const tmp = Number(value);
+  if (Number.isNaN(tmp)) {
+    return defaultMinValue.toFixed(2);
+  }
+
+  if (tmp <= defaultMinValue) {
+    return defaultMinValue.toFixed(2);
+  }
+  if (defaultMaxValue <= tmp) {
+    return defaultMaxValue.toFixed(2);
+  }
+
+  return tmp.toFixed(2);
+};
 
 // クリックでアクセント句が選択されないように@click.stopに渡す
 const stopPropagation = undefined;
