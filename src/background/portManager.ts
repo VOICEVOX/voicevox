@@ -114,7 +114,7 @@ export class PortManager {
 
     for (let altPort = this.port + 1; altPort <= altPortMax; altPort++) {
       this.portLog(`Trying whether port ${altPort} is assignable...`);
-      const altPid = await new PortManager(
+      const altPid = await new PortManager( // TODO: インスタンスを再定義を回避するなどのリファクタリング
         this.hostname,
         altPort
       ).getProcessIdFromPort();
