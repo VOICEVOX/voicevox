@@ -576,6 +576,38 @@ onMounted(async () => {
     store.state.acceptTerms !== "Accepted";
 
   isCompletedInitialStartup.value = true;
+
+  // 代替ポートをトースト通知する
+  // FIXME: トーストが何度も出るようにする（altPortInfoをstateに持たせてwatchする）
+  if (!store.state.confirmedTips.engineStartedOnAltPort) {
+    const altPortInfo = await store.dispatch("GET_ALT_PORT_INFOS");
+    for (const engineId of store.state.engineIds) {
+      const engineName = store.state.engineInfos[engineId].name;
+      const altPort = altPortInfo[engineId];
+
+      if (!altPort) return;
+      $q.notify({
+        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+        color: "toast",
+        textColor: "toast-display",
+        icon: "compare_arrows",
+        timeout: 5000,
+        actions: [
+          {
+            label: "今後この通知をしない",
+            textColor: "toast-button-display",
+            handler: () =>
+              store.dispatch("SET_CONFIRMED_TIPS", {
+                confirmedTips: {
+                  ...store.state.confirmedTips,
+                  engineStartedOnAltPort: true,
+                },
+              }),
+          },
+        ],
+      });
+    }
+  }
 });
 
 // エンジン待機

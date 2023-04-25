@@ -44,6 +44,10 @@ $active-point-hover-rgb: var(--color-active-point-hover-rgb);
 
   --color-splitter: var(--color-primary);
   --color-splitter-rgb: var(--color-primary-rgb);
+
+  --color-toast: rgba(var(--color-primary-light-rgb), 0.4);
+  --color-toast-display: var(--color-display);
+  --color-toast-button-display: rgba(var(--color-display-rgb), 0.6);
 }
 
 :root[is-dark-theme="true"] {
@@ -58,6 +62,10 @@ $active-point-hover-rgb: var(--color-active-point-hover-rgb);
 
   --color-splitter: var(--color-surface);
   --color-splitter-rgb: var(--color-surface-rgb);
+
+  --color-toast: rgba(var(--color-primary-light-rgb), 0.4);
+  --color-toast-display: var(--color-display);
+  --color-toast-button-display: var(--color-primary);
 }
 
 $toolbar: var(--color-toolbar);
@@ -74,3 +82,7 @@ $splitter-rgb: var(--color-splitter-rgb);
 
 $warning: var(--color-warning);
 $warning-rgb: var(--color-warning-rgb);
+
+$toast: var(--color-toast);
+$toast-display: var(--color-toast-display);
+$toast-button-display: var(--color-toast-button-display);

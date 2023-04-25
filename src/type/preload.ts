@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
+import { AltPortInfos } from "@/store/type";
 
 export const isMac =
   typeof process === "undefined"
@@ -142,6 +143,7 @@ export interface Sandbox {
   getQAndAText(): Promise<string>;
   getContactText(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
+  getAltPortInfos(): Promise<AltPortInfos>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
   showAudioSaveDialog(obj: {
@@ -494,6 +496,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
+  engineStartedOnAltPort: boolean; // エンジンのポート変更の通知
 };
 
 export const electronStoreSchema = z
@@ -583,6 +586,7 @@ export const electronStoreSchema = z
     confirmedTips: z
       .object({
         tweakableSliderByScroll: z.boolean().default(false),
+        engineStartedOnAltPort: z.boolean().default(false),
       })
       .passthrough()
       .default({}),
