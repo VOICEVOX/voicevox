@@ -41,7 +41,9 @@ jobs:
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
-      - run: npm ci
+      - run: |
+        npm i -g npm@9.6.5
+        npm ci
 
       - name: Disallowed licenses check
         run: npm run license:generate -- -o voicevox_licenses.json
