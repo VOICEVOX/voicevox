@@ -81,6 +81,13 @@ export type MenuItemType = MenuItemData["type"];
 const store = useStore();
 const $q = useQuasar();
 const currentVersion = ref("");
+const altPorts = ref<number[]>([]);
+
+store.dispatch("GET_ALT_PORT_INFOS").then(
+  (altPortInfo) =>
+    // {[engineId]: {from: number, to: number}} -> to: number[]
+    (altPorts.value = Object.values(altPortInfo).map(({ to }) => to))
+);
 window.electron.getAppInfos().then((obj) => {
   currentVersion.value = obj.version;
 });
@@ -103,7 +110,9 @@ const titleText = computed(
     (projectName.value !== undefined ? projectName.value + " - " : "") +
     "VOICEVOX" +
     (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
-    (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "")
+    (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
+    // メインエンジン (0番目) の代替ポートの表示のみ
+    (altPorts.value.length ? " - Port: " + altPorts.value[0] : "")
 );
 
 // FIXME: App.vue内に移動する

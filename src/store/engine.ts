@@ -44,6 +44,13 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       });
     },
   },
+
+  GET_ALT_PORT_INFOS: {
+    async action() {
+      return await window.electron.getAltPortInfos();
+    },
+  },
+
   SET_ENGINE_INFOS: {
     mutation(
       state,
