@@ -2,6 +2,7 @@
   <q-btn
     flat
     class="q-pa-none character-button"
+    ref="buttonRef"
     :disable="uiLocked"
     :class="{ opaque: loading }"
   >
@@ -23,6 +24,8 @@
       class="character-menu"
       transition-show="none"
       transition-hide="none"
+      :max-height="maxMenuHeight"
+      @before-show="updateMenuHeight"
     >
       <q-list style="min-width: max-content" class="character-item-container">
         <q-item
@@ -179,8 +182,8 @@
 </template>
 
 <script setup lang="ts">
-import { debounce } from "quasar";
-import { computed, ref } from "vue";
+import { debounce, QBtn } from "quasar";
+import { computed, Ref, ref } from "vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
@@ -291,6 +294,22 @@ const reassignSubMenuOpen = debounce((idx: number) => {
   arr[idx] = true;
   subMenuOpenFlags.value = arr;
 }, 100);
+
+// 高さを制限してメニューが下方向に展開されるようにする
+const buttonRef: Ref<InstanceType<typeof QBtn> | undefined> = ref();
+const heightLimit = "65vh"; // QMenuのデフォルト値
+const maxMenuHeight = ref(heightLimit);
+const updateMenuHeight = () => {
+  if (buttonRef.value == undefined)
+    throw new Error("buttonRef.value == undefined");
+  const el = buttonRef.value.$el;
+  if (!(el instanceof Element)) throw new Error("!(el instanceof Element)");
+  const buttonRect = el.getBoundingClientRect();
+  // QMenuは展開する方向のスペースが不足している場合、自動的に展開方向を変更してしまうためmax-heightで制限する。
+  // AudioDetailよりボタンが下に来ることはないのでその最低高185pxに余裕を持たせた170pxを最小の高さにする。
+  // pxで指定するとウインドウサイズ変更に追従できないので ウインドウの高さの96% - ボタンの下端の座標 でメニューの高さを決定する。
+  maxMenuHeight.value = `max(170px, min(${heightLimit}, calc(96vh - ${buttonRect.bottom}px)))`;
+};
 </script>
 
 <style scoped lang="scss">
