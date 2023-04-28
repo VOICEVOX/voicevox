@@ -11,7 +11,7 @@ env:
   VOICEVOX_ENGINE_VERSION: 0.14.4
 
 jobs:
-  test
+  test:
     runs-on: windows-latest
     env:
       ELECTRON_CACHE: .cache/electron
