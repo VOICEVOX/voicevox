@@ -2,7 +2,6 @@ name: "Setup environment"
 description: |
   依存関係のインストールなどを行う。
 runs:
-  - uses: actions/checkout@v3
   - name: Setup Node
     uses: actions/setup-node@v3
     with:

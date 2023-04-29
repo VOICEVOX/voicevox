@@ -18,6 +18,7 @@ jobs:
       ELECTRON_BUILDER_CACHE: .cache/electron-builder
       cache-version: v2
     steps:
+      - uses: actions/checkout@v3
       - name: Setup environment
         uses: ./.github/actions/setup-environment
       - run: npm run electron:build_pnever
@@ -29,6 +30,7 @@ jobs:
       ELECTRON_BUILDER_CACHE: .cache/electron-builder
       cache-version: v2
     steps:
+      - uses: actions/checkout@v3
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
@@ -59,6 +61,7 @@ jobs:
       ELECTRON_BUILDER_CACHE: .cache/electron-builder
       cache-version: v2
     steps:
+      - uses: actions/checkout@v3
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
