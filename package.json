@@ -6,7 +6,7 @@
   "main": "./dist/background.js",
   "engines": {
     "node": ">=18.13.0 <19",
-    "npm": ">=9.6.5 <10"
+    "npm": ">=8.19.3 <9"
   },
   "scripts": {
     "serve": "cross-env VITE_IS_ELECTRON=false vite",

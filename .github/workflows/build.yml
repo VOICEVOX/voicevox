@@ -168,9 +168,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: |
-          npm i -g npm@9.6.5
-          npm ci
+        run: npm ci
 
       - name: Show disk space (debug info)
         shell: bash
