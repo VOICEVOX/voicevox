@@ -34,4 +34,5 @@ runs:
         restore-keys: |
           ${{ env.cache-version }}-${{ runner.os }}--vendored-
 
-    - run: npm ci
+    - shell: bash
+      run: npm ci
