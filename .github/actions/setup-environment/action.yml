@@ -3,13 +3,12 @@ description: |
   依存関係のインストールなどを行う。
 runs:
   using: "composite"
-  env:
-    cache-version: 1
   steps:
     - name: Setup variable
       run: |
         echo "ELECTRON_CACHE=${{ runner.temp }}/electron-cache" >> $GITHUB_ENV
         echo "ELECTRON_BUILDER_CACHE=${{ runner.temp }}/electron-builder-cache" >> $GITHUB_ENV
+        echo "cache-version=1" >> $GITHUB_ENV
 
     - name: Setup Node
       uses: actions/setup-node@v3
