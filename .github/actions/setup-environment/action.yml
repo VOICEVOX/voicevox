@@ -1,0 +1,36 @@
+name: "Setup environment"
+description: |
+  依存関係のインストールなどを行う。
+runs:
+  - uses: actions/checkout@v3
+  - name: Setup Node
+    uses: actions/setup-node@v3
+    with:
+      node-version-file: ".node-version"
+      cache: "npm"
+
+  - name: Cache Electron
+    uses: actions/cache@v3
+    with:
+      path: ${{ env.ELECTRON_CACHE }}
+      key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
+      restore-keys: |
+        ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
+
+  - name: Cache Electron-Builder
+    uses: actions/cache@v3
+    with:
+      path: ${{ env.ELECTRON_BUILDER_CACHE }}
+      key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
+      restore-keys: |
+        ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
+
+  - name: Cache external dependencies
+    uses: actions/cache@v3
+    with:
+      path: ./build/vendored
+      key: ${{ env.cache-version }}-${{ runner.os }}--vendored-${{ hashFiles('build/*.js') }}
+      restore-keys: |
+        ${{ env.cache-version }}-${{ runner.os }}--vendored-
+
+  - run: npm ci
