@@ -7,6 +7,9 @@ on:
       - "**"
   workflow_dispatch:
 
+env:
+  VOICEVOX_ENGINE_VERSION: 0.14.4
+
 jobs:
   build-test:
     runs-on: windows-latest
