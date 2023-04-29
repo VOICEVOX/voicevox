@@ -5,6 +5,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup variable
+      shell: bash
       run: |
         echo "ELECTRON_CACHE=${{ runner.temp }}/electron-cache" >> $GITHUB_ENV
         echo "ELECTRON_BUILDER_CACHE=${{ runner.temp }}/electron-builder-cache" >> $GITHUB_ENV
