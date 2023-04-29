@@ -7,16 +7,9 @@ on:
       - "**"
   workflow_dispatch:
 
-env:
-  VOICEVOX_ENGINE_VERSION: 0.14.4
-
 jobs:
   build-test:
     runs-on: windows-latest
-    env:
-      ELECTRON_CACHE: .cache/electron
-      ELECTRON_BUILDER_CACHE: .cache/electron-builder
-      cache-version: v2
     steps:
       - uses: actions/checkout@v3
       - name: Setup environment
@@ -25,10 +18,6 @@ jobs:
 
   test:
     runs-on: windows-latest
-    env:
-      ELECTRON_CACHE: .cache/electron
-      ELECTRON_BUILDER_CACHE: .cache/electron-builder
-      cache-version: v2
     steps:
       - uses: actions/checkout@v3
       - name: Setup environment
@@ -56,10 +45,6 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    env:
-      ELECTRON_CACHE: .cache/electron
-      ELECTRON_BUILDER_CACHE: .cache/electron-builder
-      cache-version: v2
     steps:
       - uses: actions/checkout@v3
       - name: Setup environment

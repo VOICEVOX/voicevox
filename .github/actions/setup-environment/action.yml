@@ -3,6 +3,10 @@ description: |
   依存関係のインストールなどを行う。
 runs:
   using: "composite"
+  env:
+    ELECTRON_CACHE: ${{ runner.temp }}/electron-cache
+    ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder-cache
+    cache-version: 1
   steps:
     - name: Setup Node
       uses: actions/setup-node@v3
