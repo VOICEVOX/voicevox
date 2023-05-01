@@ -89,6 +89,7 @@
                     >
                       <draggable
                         class="audio-cells"
+                        ref="cellsRef"
                         :modelValue="audioKeys"
                         @update:modelValue="updateAudioKeys"
                         :itemKey="itemKey"
@@ -778,6 +779,23 @@ const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
       });
   }
 };
+
+// AudioCellの自動スクロール
+const cellsRef = ref<InstanceType<typeof draggable> | undefined>();
+watch(activeAudioKey, (audioKey) => {
+  if (audioKey == undefined) return;
+  const activeCellElement = audioCellRefs[audioKey].$el;
+  const cellsElement = cellsRef.value?.$el;
+  if (activeCellElement instanceof Element && cellsElement instanceof Element) {
+    const activeCellRect = activeCellElement.getBoundingClientRect();
+    const cellsRect = cellsElement.getBoundingClientRect();
+    const overflowTop = activeCellRect.top <= cellsRect.top;
+    const overflowBottom = activeCellRect.bottom >= cellsRect.bottom;
+    if (overflowTop || overflowBottom) {
+      activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
+    }
+  }
+});
 </script>
 
 <style scoped lang="scss">
