@@ -56,10 +56,7 @@
             mapUndefinedPipe(
               engineInfos.get(selectedInfo.engine),
               (v) => v.characterInfos,
-              (v) =>
-                selectedInfo !== undefined
-                  ? v.get(selectedInfo.character)
-                  : undefined,
+              (v) => mapUndefinedPipe(selectedInfo, (i) => v.get(i.character)),
               (v) => v.metas.speakerName
             )
           }}
@@ -72,10 +69,9 @@
                 '',
                 mapUndefinedPipe(
                   engineInfos.get(selectedInfo.engine),
+                  (v) => v.characterInfos,
                   (v) =>
-                    selectedInfo !== undefined
-                      ? v.characterInfos.get(selectedInfo.character)
-                      : undefined,
+                    mapUndefinedPipe(selectedInfo, (i) => v.get(i.character)),
                   (v) => v.metas.policy
                 )
               )
