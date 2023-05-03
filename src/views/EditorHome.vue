@@ -199,6 +199,7 @@ import {
   Voice,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import { determineNextPresetKey } from "@/store/preset";
 
 const props =
   defineProps<{
@@ -486,7 +487,15 @@ const audioItems = computed(() => store.state.audioItems);
 // 並び替え後、テキスト欄が１つで空欄なら話者を更新
 // 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
 watch(userOrderedCharacterInfos, (newValue, oldValue) => {
-  if (newValue === oldValue || newValue.length < 1) return;
+  if (
+    newValue === oldValue ||
+    newValue.length < 1 ||
+    store.getters.CAN_REDO ||
+    store.getters.CAN_UNDO ||
+    store.state.projectFilePath != undefined
+  ) {
+    return;
+  }
 
   if (audioKeys.value.length === 1) {
     const first = audioKeys.value[0] as AudioKey;
@@ -507,7 +516,24 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
       styleId: defaultStyleId.defaultStyleId,
     };
 
-    store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
+    store.dispatch("SETUP_SPEAKER", {
+      audioKey: first,
+      engineId: voice.engineId,
+      styleId: voice.styleId,
+    });
+    store.commit("SET_AUDIO_VOICE", { audioKey: first, voice: voice });
+    const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
+      store.state,
+      voice,
+      audioItem.presetKey,
+      "changeVoice"
+    );
+    if (shouldApplyPreset) {
+      store.commit("SET_AUDIO_PRESET_KEY", {
+        audioKey: first,
+        presetKey: nextPresetKey,
+      });
+    }
   }
 });
 
