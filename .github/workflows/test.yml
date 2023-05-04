@@ -11,44 +11,21 @@ env:
   VOICEVOX_ENGINE_VERSION: 0.14.4
 
 jobs:
-  build:
+  build-test:
     runs-on: windows-latest
-    env:
-      ELECTRON_CACHE: .cache/electron
-      ELECTRON_BUILDER_CACHE: .cache/electron-builder
-      cache-version: v2
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: ".node-version"
-          cache: "npm"
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+      - run: npm run electron:build_pnever
 
-      - name: Cache Electron
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.ELECTRON_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
 
-      - name: Cache Electron-Builder
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.ELECTRON_BUILDER_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
-
-      - run: npm ci
-
-      - name: Disallowed licenses check
-        run: npm run license:generate -- -o voicevox_licenses.json
-
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm run markdownlint
       - run: npm run test:unit
 
       - name: Download VOICEVOX ENGINE
@@ -68,4 +45,17 @@ jobs:
           else
             npm run test:e2e
           fi
-      - run: npm run electron:build_pnever
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Disallowed licenses check
+        run: npm run license:generate -- -o voicevox_licenses.json
+
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run markdownlint
