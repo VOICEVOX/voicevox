@@ -30,7 +30,13 @@
         "
         @change="changeValue"
         v-if="true"
-        style="width: 25px; height: 20px; font-size: xx-small"
+        :style="{
+          width: '25px',
+          height: '20px',
+          'font-size': 'xx-small',
+          position: 'relative',
+          top: `${verticalOffset}px`,
+        }"
       >
       </q-input>
     </div>
@@ -73,6 +79,7 @@ const props = withDefaults(
     type?: MoraDataType;
     clip?: boolean;
     shiftKeyFlag?: boolean;
+    verticalOffset: number;
   }>(),
   {
     min: 0.0,
@@ -82,6 +89,7 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
+    verticalOffset: 0,
   }
 );
 
@@ -158,6 +166,7 @@ const precisionComputed = computed(() => {
   }
 });
 
+// テキスト入力された数値の検証とフォーマットを行う
 const formatValue = (
   value: number | null,
   defaultMinValue: number,

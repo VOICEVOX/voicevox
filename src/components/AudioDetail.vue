@@ -122,6 +122,7 @@
                 :type="'consonant'"
                 :clip="true"
                 :shiftKeyFlag="shiftKeyFlag"
+                :verticalOffset="-10"
                 @changeValue="changeMoraData"
                 @mouseOver="handleLengthHoverText"
               />
