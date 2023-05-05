@@ -13,6 +13,7 @@ import {
   EngineId,
   MessageBoxReturnValue,
 } from "@/type/preload";
+import { AltPortInfos } from "@/store/type";
 
 /**
  * invoke, handle
@@ -66,6 +67,11 @@ export type IpcIHData = {
   GET_PRIVACY_POLICY_TEXT: {
     args: [];
     return: string;
+  };
+
+  GET_ALT_PORT_INFOS: {
+    args: [];
+    return: AltPortInfos;
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {

@@ -599,6 +599,10 @@ ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
   return privacyPolicyText;
 });
 
+ipcMainHandle("GET_ALT_PORT_INFOS", () => {
+  return engineManager.altPortInfo;
+});
+
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   const result = await dialog.showSaveDialog(win, {
     title,

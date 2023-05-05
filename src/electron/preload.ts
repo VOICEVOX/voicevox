@@ -71,6 +71,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_PRIVACY_POLICY_TEXT");
   },
 
+  getAltPortInfos: async () => {
+    return await ipcRendererInvoke("GET_ALT_PORT_INFOS");
+  },
+
   saveTempAudioFile: async ({ relativePath, buffer }) => {
     if (!tempDir) {
       tempDir = await ipcRendererInvoke("GET_TEMP_DIR");

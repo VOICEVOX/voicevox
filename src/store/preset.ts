@@ -202,12 +202,12 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
     async action({ state, dispatch, getters }) {
       const voices = getters.GET_ALL_VOICES;
 
-      for await (const voice of voices) {
+      for (const voice of voices) {
         const voiceId = VoiceId(voice);
         const defaultPresetKey = state.defaultPresetKeys[voiceId];
 
         if (state.presetKeys.includes(defaultPresetKey)) {
-          return defaultPresetKey;
+          continue;
         }
 
         const characterName = getters.VOICE_NAME(voice);
@@ -229,8 +229,6 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
             [voiceId]: newPresetKey,
           },
         });
-
-        return newPresetKey;
       }
     },
   },
