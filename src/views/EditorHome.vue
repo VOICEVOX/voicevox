@@ -488,8 +488,8 @@ const audioItems = computed(() => store.state.audioItems);
 // 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
 watch(userOrderedCharacterInfos, (newValue, oldValue) => {
   if (
-    newValue === oldValue ||
     newValue.length < 1 ||
+    (oldValue.length > 0 && newValue[0] === oldValue[0]) ||
     store.getters.CAN_REDO ||
     store.getters.CAN_UNDO ||
     store.state.projectFilePath != undefined
