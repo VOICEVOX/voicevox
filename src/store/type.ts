@@ -735,6 +735,14 @@ export type EngineStoreTypes = {
     action(): void;
   };
 
+  UPDATE_ENGINE_INFO: {
+    mutation: { engineId: EngineId; engineInfo: EngineInfo };
+  };
+
+  UPDATE_ENGINE_INFOS: {
+    action: (payload: { engineIds: EngineId[] }) => Promise<void>;
+  };
+
   GET_SORTED_ENGINE_INFOS: {
     getter: EngineInfo[];
   };
