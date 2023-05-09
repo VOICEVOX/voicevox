@@ -786,14 +786,19 @@ watch(activeAudioKey, (audioKey) => {
   if (audioKey == undefined) return;
   const activeCellElement = audioCellRefs[audioKey].$el;
   const cellsElement = cellsRef.value?.$el;
-  if (activeCellElement instanceof Element && cellsElement instanceof Element) {
-    const activeCellRect = activeCellElement.getBoundingClientRect();
-    const cellsRect = cellsElement.getBoundingClientRect();
-    const overflowTop = activeCellRect.top <= cellsRect.top;
-    const overflowBottom = activeCellRect.bottom >= cellsRect.bottom;
-    if (overflowTop || overflowBottom) {
-      activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
-    }
+  if (
+    !(activeCellElement instanceof Element) ||
+    !(cellsElement instanceof Element)
+  )
+    throw new Error(
+      `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`
+    );
+  const activeCellRect = activeCellElement.getBoundingClientRect();
+  const cellsRect = cellsElement.getBoundingClientRect();
+  const overflowTop = activeCellRect.top <= cellsRect.top;
+  const overflowBottom = activeCellRect.bottom >= cellsRect.bottom;
+  if (overflowTop || overflowBottom) {
+    activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
   }
 });
 </script>
