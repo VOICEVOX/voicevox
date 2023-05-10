@@ -735,11 +735,11 @@ export type EngineStoreTypes = {
     action(): void;
   };
 
-  UPDATE_ENGINE_INFO: {
+  SET_ENGINE_INFO: {
     mutation: { engineId: EngineId; engineInfo: EngineInfo };
   };
 
-  UPDATE_ENGINE_INFOS: {
+  GET_ONLY_ENGINE_INFOS: {
     action: (payload: { engineIds: EngineId[] }) => Promise<void>;
   };
 

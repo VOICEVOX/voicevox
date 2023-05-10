@@ -31,18 +31,18 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
-  UPDATE_ENGINE_INFO: {
+  SET_ENGINE_INFO: {
     mutation(state, { engineId, engineInfo }) {
       state.engineInfos[engineId] = engineInfo;
     },
   },
 
-  UPDATE_ENGINE_INFOS: {
+  GET_ONLY_ENGINE_INFOS: {
     async action({ commit }, { engineIds }) {
       const engineInfos = await window.electron.engineInfos();
       for (const engineInfo of engineInfos) {
         if (engineIds.includes(engineInfo.uuid)) {
-          commit("UPDATE_ENGINE_INFO", {
+          commit("SET_ENGINE_INFO", {
             engineId: engineInfo.uuid,
             engineInfo,
           });
@@ -208,7 +208,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         })
       );
 
-      await dispatch("UPDATE_ENGINE_INFOS", { engineIds });
+      await dispatch("GET_ONLY_ENGINE_INFOS", { engineIds });
 
       const result = await dispatch("POST_ENGINE_START", {
         engineIds,
