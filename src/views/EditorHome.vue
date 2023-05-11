@@ -199,7 +199,6 @@ import {
   Voice,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
-import { determineNextPresetKey } from "@/store/preset";
 
 const props =
   defineProps<{
@@ -489,10 +488,7 @@ const audioItems = computed(() => store.state.audioItems);
 watch(userOrderedCharacterInfos, (newValue, oldValue) => {
   if (
     newValue.length < 1 ||
-    (oldValue.length > 0 && newValue[0] === oldValue[0]) ||
-    store.getters.CAN_REDO ||
-    store.getters.CAN_UNDO ||
-    store.state.projectFilePath != undefined
+    (oldValue.length > 0 && newValue[0] === oldValue[0])
   ) {
     return;
   }
@@ -516,24 +512,8 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
       styleId: defaultStyleId.defaultStyleId,
     };
 
-    store.dispatch("SETUP_SPEAKER", {
-      audioKey: first,
-      engineId: voice.engineId,
-      styleId: voice.styleId,
-    });
-    store.commit("SET_AUDIO_VOICE", { audioKey: first, voice: voice });
-    const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
-      store.state,
-      voice,
-      audioItem.presetKey,
-      "changeVoice"
-    );
-    if (shouldApplyPreset) {
-      store.commit("SET_AUDIO_PRESET_KEY", {
-        audioKey: first,
-        presetKey: nextPresetKey,
-      });
-    }
+    // FIXME: UNDOができてしまうのでできれば直したい
+    store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
   }
 });
 
