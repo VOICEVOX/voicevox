@@ -77,6 +77,7 @@
                           : 0
                       ].iconPath
                     "
+                    :alt="characterInfosMap[speakerUuid].metas.speakerName"
                     class="style-icon"
                   />
                   <span class="text-subtitle1 q-ma-sm">{{
@@ -100,8 +101,9 @@
                         selectCharacter(speakerUuid);
                         rollStyleIndex(speakerUuid, -1);
                       "
+                      aria-label="前のボイススタイル"
                     />
-                    <span>{{
+                    <span aria-live="polite">{{
                       selectedStyles[speakerUuid].styleName || "ノーマル"
                     }}</span>
                     <q-btn
@@ -116,6 +118,7 @@
                         selectCharacter(speakerUuid);
                         rollStyleIndex(speakerUuid, 1);
                       "
+                      aria-label="次のボイススタイル"
                     />
                   </div>
                   <div class="voice-samples">
@@ -145,6 +148,7 @@
                           voiceSampleIndex
                         );
                       "
+                      :aria-label="`ボイスサンプル${voiceSampleIndex + 1}`"
                     />
                   </div>
                   <div
