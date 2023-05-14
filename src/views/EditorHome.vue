@@ -504,7 +504,7 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
     const defaultStyleId = store.state.defaultStyleIds.find(
       (styleId) => styleId.speakerUuid === speakerId
     );
-    if (!defaultStyleId) return;
+    if (!defaultStyleId || audioItem.voice.speakerId !== speakerId) return;
 
     const voice: Voice = {
       engineId: defaultStyleId.engineId,
