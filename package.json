@@ -8,6 +8,10 @@
     "node": ">=18.13.0 <19",
     "npm": ">=8.19.3 <9"
   },
+  "volta": {
+    "node": "18.13.0",
+    "npm": "8.19.3"
+  },
   "scripts": {
     "serve": "cross-env VITE_IS_ELECTRON=false vite",
     "build": "cross-env VITE_IS_ELECTRON=false vite build",
