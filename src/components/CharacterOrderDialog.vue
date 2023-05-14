@@ -101,7 +101,7 @@
                         selectCharacter(speakerUuid);
                         rollStyleIndex(speakerUuid, -1);
                       "
-                      aria-label="前のボイススタイル"
+                      aria-label="前のスタイル"
                     />
                     <span aria-live="polite">{{
                       selectedStyles[speakerUuid].styleName || "ノーマル"
@@ -118,7 +118,7 @@
                         selectCharacter(speakerUuid);
                         rollStyleIndex(speakerUuid, 1);
                       "
-                      aria-label="次のボイススタイル"
+                      aria-label="次のスタイル"
                     />
                   </div>
                   <div class="voice-samples">
@@ -148,7 +148,7 @@
                           voiceSampleIndex
                         );
                       "
-                      :aria-label="`ボイスサンプル${voiceSampleIndex + 1}`"
+                      :aria-label="`サンプルボイス${voiceSampleIndex + 1}`"
                     />
                   </div>
                   <div
