@@ -1,3 +1,5 @@
+name: Check version
+
 on:
   push:
   pull_request:
@@ -11,5 +13,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Synchronize volta and .node_version
+      - name: Check synchronize volta and .node_version
         uses: My-MC/check-sync-volta-and-node-version@v0.0.2
