@@ -16,6 +16,7 @@
       class="title-bar-buttons"
       id="pinned-btn"
       @click="changePinWindow()"
+      aria-label="ウィンドウを最前面に表示"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
         最前面に表示
@@ -31,6 +32,7 @@
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
       @click="changePinWindow()"
+      aria-label="ウィンドウを最前面に表示"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
         最前面に表示
@@ -59,6 +61,7 @@
       class="title-bar-buttons"
       id="pinned-btn"
       @click="changePinWindow()"
+      aria-label="ウィンドウを最前面に表示"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
         最前面に表示
@@ -73,6 +76,7 @@
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
       @click="changePinWindow()"
+      aria-label="ウィンドウを最前面に表示"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
         最前面に表示
