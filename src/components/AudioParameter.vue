@@ -158,14 +158,6 @@ const handleMouseHover = (isOver: boolean) => {
   }
 };
 
-const precisionComputed = computed(() => {
-  if (props.type == "pause" || props.type == "pitch") {
-    return 2;
-  } else {
-    return 3;
-  }
-});
-
 // テキスト入力された数値の検証とフォーマットを行う
 const formatValue = (
   value: number | null,
