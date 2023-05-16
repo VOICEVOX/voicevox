@@ -319,15 +319,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set output Node version
-        id: node-version
-        shell: bash
-        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
-
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+          node-version-file: ".node-version"
 
       - name: Cache Node packages
         uses: actions/cache@v3
@@ -621,15 +616,10 @@ jobs:
         run: |
           df -h
 
-      - name: Set output Node version
-        id: node-version
-        shell: bash
-        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
-
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+          node-version-file: ".node-version"
 
       - name: Cache Node packages
         uses: actions/cache@v3

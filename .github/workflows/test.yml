@@ -16,12 +16,11 @@ jobs:
       cache-version: v2
     steps:
       - uses: actions/checkout@v3
-      - id: node-version
-        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
 
-      - uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+          node-version-file: ".node-version"
 
       - uses: actions/cache@v3
         with:
