@@ -13,6 +13,9 @@ export function mapUndefinedPipe<T, U1, U2, U3>(
   fn2: (_: NonNullable<U1>) => U2 | undefined,
   fn3: (_: NonNullable<U2>) => U3 | undefined
 ): U3 | undefined;
+/**
+ * 一連の関数を実行する。途中でundefinedを返すとその後undefinedを返す。
+ */
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 export function mapUndefinedPipe(source: any, ...fn: Function[]) {
   return fn.reduce((prev, curr) => {
