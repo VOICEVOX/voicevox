@@ -15,13 +15,14 @@
           <template v-if="engineInfos.size > 1">
             <q-separator spaced v-if="engineIndex > 0" />
             <q-item-label header>{{
-              engineInfos.get(engineId).name
+              mapUndefinedPipe(engineInfos.get(engineId), (v) => v.name)
             }}</q-item-label>
           </template>
           <template
-            v-for="([, characterInfo], characterIndex) in engineInfos.get(
-              engineId
-            ).characterInfos"
+            v-for="([, characterInfo], characterIndex) in mapUndefinedPipe(
+              engineInfos.get(engineId),
+              (v) => v.characterInfos
+            )"
             :key="characterIndex"
           >
             <q-item
@@ -52,18 +53,28 @@
         </div>
         <div class="text-subtitle">
           {{
-            engineInfos
-              .get(selectedInfo.engine)
-              .characterInfos.get(selectedInfo.character).metas.speakerName
+            mapUndefinedPipe(
+              engineInfos.get(selectedInfo.engine),
+              (v) => v.characterInfos,
+              (v) => mapUndefinedPipe(selectedInfo, (i) => v.get(i.character)),
+              (v) => v.metas.speakerName
+            )
           }}
         </div>
         <div
           class="markdown"
           v-html="
             convertMarkdown(
-              engineInfos
-                .get(selectedInfo.engine)
-                .characterInfos.get(selectedInfo.character).metas.policy
+              undefinedToDefault(
+                '',
+                mapUndefinedPipe(
+                  engineInfos.get(selectedInfo.engine),
+                  (v) => v.characterInfos,
+                  (v) =>
+                    mapUndefinedPipe(selectedInfo, (i) => v.get(i.character)),
+                  (v) => v.metas.policy
+                )
+              )
             )
           "
         ></div>
@@ -77,6 +88,7 @@ import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
+import { mapUndefinedPipe, undefinedToDefault } from "@/helpers/map";
 
 type DetailKey = { engine: EngineId; character: SpeakerId };
 
