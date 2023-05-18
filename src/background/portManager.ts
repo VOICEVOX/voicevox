@@ -3,146 +3,200 @@ import log from "electron-log";
 
 const isWindows = process.platform === "win32";
 
-export class PortManager {
-  constructor(private hostname: string, private port: number) {}
+type HostInfo = {
+  hostname: string;
+  port: number;
+};
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  portLog = (...message: any) =>
-    log.info(`PORT ${this.port} (${this.hostname}): ${message}`);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  portWarn = (...message: any) =>
-    log.warn(`PORT ${this.port} (${this.hostname}): ${message}`);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const portLog = (port: number, message: string, isDeep = false) =>
+  log.info(`${isDeep ? "| " : ""}PORT ${port}: ${message}`);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const portWarn = (port: number, message: string, isDeep = false) =>
+  log.warn(`${isDeep ? "| " : ""}PORT ${port}: ${message}`);
 
-  /**
-   * "netstat -ano" の stdout から, 指定したポートを使用しているプロセスの process id を取得する
-   *
-   * ex) stdout:
-   * ``` cmd
-   * TCP  127.0.0.1:5173   127.0.0.1:50170  TIME_WAIT  0
-   * TCP  127.0.0.1:6463   0.0.0.0:0        LISTENING  18692
-   * TCP  127.0.0.1:50021  0.0.0.0:0        LISTENING  17320
-   * ```
-   * -> `17320`
-   *
-   * @param stdout netstat の stdout
-   * @returns `process id` or `undefined` (ポートが使用されていないとき)
-   */
-  private stdout2processId(stdout: string): number | undefined {
-    const lines = stdout.split("\n");
-    for (const line of lines) {
-      if (line.includes(`${this.hostname}:${this.port}`)) {
-        const parts = line.trim().split(/\s+/);
-        return parseInt(parts[parts.length - 1], 10);
-      }
-    }
-    return undefined;
-  }
-
-  async getProcessIdFromPort(): Promise<number | undefined> {
-    this.portLog("Getting process id...");
-    const exec = isWindows
-      ? {
-          cmd: "netstat",
-          args: ["-ano"],
-        }
-      : {
-          cmd: "lsof",
-          args: ["-i", `:${this.port}`, "-t", "-sTCP:LISTEN"],
-        };
-
-    this.portLog(`Running command: "${exec.cmd} ${exec.args.join(" ")}"`);
-
-    let stdout = execFileSync(exec.cmd, exec.args, {
-      shell: true,
-    }).toString();
-
-    if (isWindows) {
-      // Windows の場合は, lsof のように port と pid が 1to1 で取れないので, ３つのループバックアドレスが割り当てられているか確認
-      const loopbackAddr = ["127.0.0.1", "0.0.0.0", "[::1]"];
-
-      // hostname が３つループバックアドレスのどれかの場合, それぞれのループバックアドレスに対して pid を取得
-      if (loopbackAddr.includes(this.hostname)) {
-        this.portLog(
-          "Hostname is loopback address; Getting process id from all loopback addresses..."
-        );
-
-        const pid: (number | undefined)[] = [];
-        loopbackAddr.forEach((hostname) =>
-          pid.push(
-            // TODO: インスタンスの再定義を回避するなどのリファクタリング
-            new PortManager(hostname, this.port).stdout2processId(stdout)
-          )
-        );
-
-        // pid が undefined (= 割り当て可能) でないものを取得 → 1つ目を取得 → stdoutへ
-        stdout = pid.filter((pid) => pid !== undefined)[0]?.toString() ?? "";
-      } else {
-        stdout = this.stdout2processId(stdout)?.toString() ?? "";
-      }
-    }
-
-    if (!stdout || !stdout.length) {
-      this.portLog("Assignable; Nobody uses this port!");
-      return undefined;
-    }
-
-    this.portWarn(`Nonassignable; pid=${stdout} uses this port!`);
-    return parseInt(stdout);
-  }
-
-  async getProcessNameFromPid(pid: number): Promise<string> {
-    this.portLog(`Getting process name from pid=${pid}...`);
-    const exec = isWindows
-      ? {
-          cmd: "wmic",
-          args: ["process", "where", `"ProcessID=${pid}"`, "get", "name"],
-        }
-      : {
-          cmd: "ps",
-          args: ["-p", pid.toString(), "-o", "comm="],
-        };
-
-    let stdout = execFileSync(exec.cmd, exec.args, { shell: true }).toString();
-
-    if (isWindows) {
-      /*
-       * ex) stdout:
-       * ```
-       * Name
-       * node.exe
-       * ```
-       * -> `node.exe`
-       */
-      stdout = stdout.split("\r\n")[1];
-    }
-
-    this.portLog(`Found process name: ${stdout}`);
-    return stdout.trim();
-  }
-
-  /**
-   * 割り当て可能な他のポートを探します
-   *
-   * @returns 割り当て可能なポート番号 or `undefined` (割り当て可能なポートが見つからなかったとき)
-   */
-  async findAltPort(): Promise<number | undefined> {
-    this.portLog(`Find another assignable port from ${this.port}...`);
-
-    // エンジン指定のポート + 100番までを探索  エフェメラルポートの範囲の最大は超えないようにする
-    const altPortMax = Math.min(this.port + 100, 65535);
-
-    for (let altPort = this.port + 1; altPort <= altPortMax; altPort++) {
-      this.portLog(`Trying whether port ${altPort} is assignable...`);
-      const altPid = await new PortManager( // TODO: インスタンスの再定義を回避するなどのリファクタリング
-        this.hostname,
-        altPort
-      ).getProcessIdFromPort();
-
-      // ポートを既に割り当てられているプロセスidの取得: undefined → ポートが空いている
-      if (altPid === undefined) return altPort;
-    }
-
-    this.portWarn(`No alternative port found! ${this.port}...${altPortMax}`);
-    return undefined;
-  }
+function url2HostInfo(url: URL) {
+  return {
+    hostname: url.hostname,
+    port: Number(url.port),
+  };
 }
+
+/**
+ * "netstat -ano" の stdout から, 指定したポートを使用しているプロセスの process id を取得する.
+ * また, TCPの状態が TIME_WAIT のときはポートが割り当て可能だとみなします.
+ *
+ * ex) stdout:
+ * ``` cmd
+ * TCP  127.0.0.1:5173   127.0.0.1:50170  TIME_WAIT  0
+ * TCP  127.0.0.1:6463   0.0.0.0:0        LISTENING  18692
+ * TCP  127.0.0.1:50021  0.0.0.0:0        LISTENING  17320
+ * ```
+ * -> `17320`
+ *
+ * @param stdout netstat の stdout
+ * @param hostInfo ホスト情報
+ * @returns `process id` or `undefined` (ポートが割り当て可能なとき)
+ */
+function netstatStdout2pid(
+  stdout: string,
+  hostInfo: HostInfo
+): number | undefined {
+  const lines = stdout.split("\n");
+
+  for (const line of lines) {
+    if (line.includes(`${hostInfo.hostname}:${hostInfo.port}`)) {
+      const parts = line.trim().split(/\s+/);
+      const pid = parts[parts.length - 1];
+      const tcpState = parts[parts.length - 2];
+
+      // 他のプロセスが割り当てをしているとみなすTCPの状態
+      if (["LISTENING", "ESTABLISHED", "CLOSE_WAIT"].includes(tcpState)) {
+        return Number(pid);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+async function getPidFromPort(
+  hostInfo: HostInfo,
+  isDeep = false
+): Promise<number | undefined> {
+  // Windows の場合は, hostname が以下のループバックアドレスが割り当てられているか確認
+  const parse4windows = (): string | undefined => {
+    // それぞれのループバックアドレスに対して pid を取得
+    const loopbackAddr = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]"];
+    if (loopbackAddr.includes(hostInfo.hostname)) {
+      portLog(
+        hostInfo.port,
+        "Hostname is loopback address; Getting process id from all loopback addresses...",
+        isDeep
+      );
+
+      const pidArr: (number | undefined)[] = [];
+      loopbackAddr.forEach((hostname) => {
+        // netstat の stdout から pid を取得
+        const pid = netstatStdout2pid(stdout, {
+          hostname,
+          port: hostInfo.port,
+        });
+
+        portLog(
+          hostInfo.port,
+          `| ${hostname}\t-> ${
+            pid == null ? "Assignable" : `pid=${pid} uses this port`
+          }`,
+          isDeep
+        );
+
+        pidArr.push(pid);
+      });
+
+      // pid が undefined (= 割り当て可能) でないものを取得 → 1つ目を取得
+      return pidArr.filter((pid) => pid !== undefined)[0]?.toString();
+    }
+  };
+
+  portLog(hostInfo.port, "Getting process id...", isDeep);
+
+  const exec = isWindows
+    ? {
+        cmd: "netstat",
+        args: ["-ano"],
+      }
+    : {
+        cmd: "lsof",
+        args: ["-i", `:${hostInfo.port}`, "-t", "-sTCP:LISTEN"],
+      };
+
+  portLog(
+    hostInfo.port,
+    `Running command: "${exec.cmd} ${exec.args.join(" ")}"...`,
+    isDeep
+  );
+
+  const stdout = execFileSync(exec.cmd, exec.args, {
+    shell: true,
+  }).toString();
+
+  // Windows の場合は, lsof のように port と pid が 1to1 で取れないので, netstat の stdout からパース
+  const pid = isWindows ? parse4windows() : stdout;
+
+  if (pid == null || !pid.length) {
+    portLog(hostInfo.port, "Assignable; Nobody uses this port!", isDeep);
+    return undefined;
+  }
+
+  portWarn(hostInfo.port, `Nonassignable; pid=${pid} uses this port!`, isDeep);
+  return Number(pid);
+}
+
+async function getProcessNameFromPid(
+  hostInfo: HostInfo,
+  pid: number
+): Promise<string> {
+  portLog(hostInfo.port, `Getting process name from pid=${pid}...`);
+  const exec = isWindows
+    ? {
+        cmd: "wmic",
+        args: ["process", "where", `"ProcessID=${pid}"`, "get", "name"],
+      }
+    : {
+        cmd: "ps",
+        args: ["-p", pid.toString(), "-o", "comm="],
+      };
+
+  const stdout = execFileSync(exec.cmd, exec.args, { shell: true }).toString();
+
+  /*
+   * ex) stdout:
+   * ```
+   * Name
+   * node.exe
+   * ```
+   * -> `node.exe`
+   */
+  const processName = isWindows ? stdout.split("\n")[1] : stdout;
+
+  portLog(hostInfo.port, `Found process name: ${processName}`);
+  return processName.trim();
+}
+
+/**
+ * 割り当て可能な他のポートを探します
+ *
+ * @param hostInfo ホスト情報
+ * @returns 割り当て可能なポート番号 or `undefined` (割り当て可能なポートが見つからなかったとき)
+ */
+async function findAltPort(hostInfo: HostInfo): Promise<number | undefined> {
+  const basePort = hostInfo.port;
+  portLog(hostInfo.port, `Find another assignable port from ${basePort}...`);
+
+  // エンジン指定のポート + 100番までを探索  エフェメラルポートの範囲の最大は超えないようにする
+  const altPortMax = Math.min(basePort + 100, 65535);
+
+  for (let altPort = basePort + 1; altPort <= altPortMax; altPort++) {
+    portLog(hostInfo.port, `Trying whether port ${altPort} is assignable...`);
+    const altPid = await getPidFromPort(
+      {
+        hostname: hostInfo.hostname,
+        port: altPort,
+      },
+      true
+    );
+
+    // ポートを既に割り当てられているプロセスidの取得: undefined → ポートが空いている
+    if (altPid == null) return altPort;
+  }
+
+  portWarn(
+    hostInfo.port,
+    `No alternative port found! ${basePort}...${altPortMax}`
+  );
+  return undefined;
+}
+
+export type { HostInfo };
+export { url2HostInfo, getPidFromPort, getProcessNameFromPid, findAltPort };
