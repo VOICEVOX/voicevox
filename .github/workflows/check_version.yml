@@ -1,7 +1,6 @@
 name: Check version
 
 on:
-  push:
   pull_request:
     branches:
       - "**"
