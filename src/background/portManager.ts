@@ -9,11 +9,11 @@ type HostInfo = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const portLog = (port: number, message: string, isDeep = false) =>
-  log.info(`${isDeep ? "| " : ""}PORT ${port}: ${message}`);
+const portLog = (port: number, message: string, isNested = false) =>
+  log.info(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const portWarn = (port: number, message: string, isDeep = false) =>
-  log.warn(`${isDeep ? "| " : ""}PORT ${port}: ${message}`);
+const portWarn = (port: number, message: string, isNested = false) =>
+  log.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 
 function url2HostInfo(url: URL) {
   return {
@@ -62,7 +62,7 @@ function netstatStdout2pid(
 
 async function getPidFromPort(
   hostInfo: HostInfo,
-  isDeep = false
+  isNested = false
 ): Promise<number | undefined> {
   // Windows の場合は, hostname が以下のループバックアドレスが割り当てられているか確認
   const parse4windows = (): string | undefined => {
@@ -72,7 +72,7 @@ async function getPidFromPort(
       portLog(
         hostInfo.port,
         "Hostname is loopback address; Getting process id from all loopback addresses...",
-        isDeep
+        isNested
       );
 
       const pidArr: (number | undefined)[] = [];
@@ -88,7 +88,7 @@ async function getPidFromPort(
           `| ${hostname}\t-> ${
             pid == null ? "Assignable" : `pid=${pid} uses this port`
           }`,
-          isDeep
+          isNested
         );
 
         pidArr.push(pid);
@@ -99,7 +99,7 @@ async function getPidFromPort(
     }
   };
 
-  portLog(hostInfo.port, "Getting process id...", isDeep);
+  portLog(hostInfo.port, "Getting process id...", isNested);
 
   const exec = isWindows
     ? {
@@ -114,7 +114,7 @@ async function getPidFromPort(
   portLog(
     hostInfo.port,
     `Running command: "${exec.cmd} ${exec.args.join(" ")}"...`,
-    isDeep
+    isNested
   );
 
   const stdout = execFileSync(exec.cmd, exec.args, {
@@ -125,11 +125,15 @@ async function getPidFromPort(
   const pid = isWindows ? parse4windows() : stdout;
 
   if (pid == null || !pid.length) {
-    portLog(hostInfo.port, "Assignable; Nobody uses this port!", isDeep);
+    portLog(hostInfo.port, "Assignable; Nobody uses this port!", isNested);
     return undefined;
   }
 
-  portWarn(hostInfo.port, `Nonassignable; pid=${pid} uses this port!`, isDeep);
+  portWarn(
+    hostInfo.port,
+    `Nonassignable; pid=${pid} uses this port!`,
+    isNested
+  );
   return Number(pid);
 }
 

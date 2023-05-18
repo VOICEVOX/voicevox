@@ -638,12 +638,8 @@ watch(
     for (const engineId of store.state.engineIds) {
       const engineName = store.state.engineInfos[engineId].name;
       const altPort = newAltPortInfos[engineId];
-
-      console.log({ altPort });
-
       if (!altPort) return;
 
-      console.log("notices");
       $q.notify({
         message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
         color: "toast",
