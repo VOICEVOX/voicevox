@@ -627,7 +627,7 @@ watch(allEngineState, (newEngineState) => {
 watch(
   () => store.state.altPortInfos,
   async (newAltPortInfos) => {
-    // この watch が, エンジンが起動した時 (=> 設定ファイルを読み込む前) に発火して
+    // この watch がエンジンが起動した時 (=> 設定ファイルを読み込む前) に発火して,
     // "今後この通知をしない" を無視するのを防ぐために, 初期化処理 (=> 設定ファイルが読み込まれる) まで待つ
     if (!isCompletedInitialStartup.value) return;
 

@@ -23,7 +23,7 @@ function url2HostInfo(url: URL) {
 }
 
 /**
- * "netstat -ano" の stdout から, 指定したポートを使用しているプロセスの process id を取得する.
+ * "netstat -ano" の stdout から, 指定したポートを使用しているプロセスの process id を取得します.
  * また, TCPの状態が TIME_WAIT のときはポートが割り当て可能だとみなします.
  *
  * ex) stdout:
@@ -121,7 +121,7 @@ async function getPidFromPort(
     shell: true,
   }).toString();
 
-  // Windows の場合は, lsof のように port と pid が 1to1 で取れないので, netstat の stdout からパース
+  // Windows の場合は, lsof のように port と pid が 1to1 で取れないので, netstat の stdout をパース
   const pid = isWindows ? parse4windows() : stdout;
 
   if (pid == null || !pid.length) {
