@@ -7,11 +7,12 @@ import type { EngineId, EngineInfo } from "@/type/preload";
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
   engineSupportedDevices: {},
+  altPortInfos: {},
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
-    async action({ state, commit }) {
+    async action({ state, commit, dispatch }) {
       const engineInfos = await window.electron.engineInfos();
 
       // マルチエンジンオフモード時はengineIdsをデフォルトエンジンのIDだけにする。
@@ -28,6 +29,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         engineIds,
         engineInfos,
       });
+
+      // 代替ポート情報を取得 → トースト通知が発火する
+      dispatch("GET_ALT_PORT_INFOS");
     },
   },
 
@@ -66,8 +70,16 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   GET_ALT_PORT_INFOS: {
-    async action() {
-      return await window.electron.getAltPortInfos();
+    async action({ commit }) {
+      const altPortInfos = await window.electron.getAltPortInfos();
+      commit("SET_ALT_PORT_INFOS", { altPortInfos });
+      return altPortInfos;
+    },
+  },
+
+  SET_ALT_PORT_INFOS: {
+    mutation(state, { altPortInfos }) {
+      state.altPortInfos = altPortInfos;
     },
   },
 
