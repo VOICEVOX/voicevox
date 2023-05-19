@@ -263,6 +263,7 @@
                 <div>表示済みのヒントを全て再表示する</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <!-- FIXME: なぜか tooltip が左側に出る -->
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -279,7 +280,7 @@
                   name="check"
                   size="sm"
                   color="primary-light"
-                  style="margin-right: 5px"
+                  style="margin-right: 8px"
                   v-if="isDefaultConfirmedTips && hasResetConfirmedTip"
                 >
                 </q-icon>
