@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, ComputedRef, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
@@ -63,18 +63,7 @@ export type MenuItemButton = MenuItemBase<"button"> & {
   disableWhenUiLocked: boolean;
 };
 
-export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
-  checked: ComputedRef<boolean>;
-  onClick: () => void;
-  disabled?: boolean;
-  disableWhenUiLocked: boolean;
-};
-
-export type MenuItemData =
-  | MenuItemSeparator
-  | MenuItemRoot
-  | MenuItemButton
-  | MenuItemCheckbox;
+export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
 
 export type MenuItemType = MenuItemData["type"];
 
