@@ -276,9 +276,10 @@
                 "
               >
                 <li
-                  v-for="[feature, value] in Object.entries(
-                    engineManifests[selectedId].supportedFeatures
-                  )"
+                  v-for="(value, feature) in engineManifests[selectedId]
+                    .supportedFeatures !== null
+                    ? engineManifests[selectedId].supportedFeatures
+                    : null"
                   :key="feature"
                   :class="value ? '' : 'text-warning'"
                 >

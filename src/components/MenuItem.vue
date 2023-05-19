@@ -51,11 +51,6 @@
     :disable="menudata.disabled"
     @click="menudata.onClick"
   >
-    <q-item-section v-if="menudata.type === 'checkbox'" side class="q-pr-sm">
-      <q-icon v-if="menudata.checked" name="check" />
-      <q-icon v-else />
-    </q-item-section>
-
     <q-item-section
       avatar
       v-if="'icon' in menudata && menudata.icon != undefined"
