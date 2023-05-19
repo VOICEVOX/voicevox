@@ -8,10 +8,8 @@ type HostInfo = {
   port: number;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const portLog = (port: number, message: string, isNested = false) =>
   log.info(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const portWarn = (port: number, message: string, isNested = false) =>
   log.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 
