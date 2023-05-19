@@ -259,6 +259,46 @@
                   </template>
                 </q-btn-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
+                <div>表示済みのヒントを全て再表示する</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      過去に表示したヒントを全て再表示します。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-icon
+                  name="check"
+                  size="sm"
+                  color="primary-light"
+                  style="margin-right: 5px"
+                  v-if="isDefaultConfirmedTips && hasResetConfirmedTip"
+                >
+                </q-icon>
+                <q-btn
+                  label="再表示する"
+                  unelevated
+                  color="background"
+                  text-color="display"
+                  class="text-no-wrap q-mr-sm"
+                  @click="
+                    () => {
+                      store.dispatch('RESET_CONFIRMED_TIPS');
+                      hasResetConfirmedTip = true;
+                    }
+                  "
+                  :disable="isDefaultConfirmedTips"
+                >
+                </q-btn>
+              </q-card-actions>
             </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
@@ -844,6 +884,14 @@ const activePointScrollModeOptions: Record<
 };
 
 const experimentalSetting = computed(() => store.state.experimentalSetting);
+
+// 表示済みのヒント
+const hasResetConfirmedTip = ref(false);
+
+const isDefaultConfirmedTips = computed(() => {
+  const confirmedTips = store.state.confirmedTips;
+  return Object.values(confirmedTips).every((v) => !v);
+});
 
 // 外観
 const currentThemeNameComputed = computed({
