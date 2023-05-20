@@ -12,7 +12,7 @@ export const engineStoreState: EngineStoreState = {
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
-    async action({ state, commit, dispatch }) {
+    async action({ state, commit }) {
       const engineInfos = await window.electron.engineInfos();
 
       // マルチエンジンオフモード時はengineIdsをデフォルトエンジンのIDだけにする。
@@ -29,9 +29,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         engineIds,
         engineInfos,
       });
-
-      // 代替ポート情報を取得 → トースト通知が発火する
-      dispatch("GET_ALT_PORT_INFOS");
     },
   },
 
@@ -232,6 +229,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   POST_ENGINE_START: {
     async action({ state, dispatch }, { engineIds }) {
+      await dispatch("GET_ALT_PORT_INFOS");
       const result = await Promise.all(
         engineIds.map(async (engineId) => {
           if (state.engineStates[engineId] === "STARTING") {

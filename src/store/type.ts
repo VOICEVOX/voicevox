@@ -1134,6 +1134,7 @@ export type UiStoreState = {
   isPinned: boolean;
   isFullscreen: boolean;
   progress: number;
+  isVuexReady: boolean;
 };
 
 export type UiStoreTypes = {
@@ -1205,6 +1206,7 @@ export type UiStoreTypes = {
   };
 
   ON_VUEX_READY: {
+    mutation: void;
     action(): void;
   };
 

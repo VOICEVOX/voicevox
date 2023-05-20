@@ -577,9 +577,6 @@ onMounted(async () => {
     store.state.acceptTerms !== "Accepted";
 
   isCompletedInitialStartup.value = true;
-
-  // 代替ポート情報を取得 → トースト通知が発火する
-  await store.dispatch("GET_ALT_PORT_INFOS");
 });
 
 // エンジン待機
@@ -625,19 +622,20 @@ watch(allEngineState, (newEngineState) => {
 
 // 代替ポート情報の変更を監視
 watch(
-  () => store.state.altPortInfos,
-  async (newAltPortInfos) => {
-    // この watch がエンジンが起動した時 (=> 設定ファイルを読み込む前) に発火して,
-    // "今後この通知をしない" を無視するのを防ぐために, 初期化処理 (=> 設定ファイルが読み込まれる) まで待つ
-    if (!isCompletedInitialStartup.value) return;
+  () => [store.state.altPortInfos, store.state.isVuexReady],
+  async () => {
+    const altPortInfos = store.state.altPortInfos;
+    const isVuexReady = store.state.isVuexReady;
+    const engineStartedOnAltPort =
+      store.state.confirmedTips.engineStartedOnAltPort;
 
-    // "今後この通知をしない" を考慮
-    if (store.state.confirmedTips.engineStartedOnAltPort) return;
+    // この watch がエンジンが起動した時 (=> 設定ファイルを読み込む前) に発火して, "今後この通知をしない" を無視するのを防ぐ
+    if (!isVuexReady || engineStartedOnAltPort) return;
 
     // 代替ポートをトースト通知する
     for (const engineId of store.state.engineIds) {
       const engineName = store.state.engineInfos[engineId].name;
-      const altPort = newAltPortInfos[engineId];
+      const altPort = altPortInfos[engineId];
       if (!altPort) return;
 
       $q.notify({

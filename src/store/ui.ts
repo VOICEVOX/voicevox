@@ -52,6 +52,7 @@ export const uiStoreState: UiStoreState = {
   isPinned: false,
   isFullscreen: false,
   progress: -1,
+  isVuexReady: false,
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
@@ -191,8 +192,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   ON_VUEX_READY: {
-    action() {
+    mutation(state) {
+      state.isVuexReady = true;
+    },
+    action({ commit }) {
       window.electron.vuexReady();
+      commit("ON_VUEX_READY");
     },
   },
 
