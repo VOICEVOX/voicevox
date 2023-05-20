@@ -79,10 +79,14 @@ const defaultEngineAltPortTo = computed<number | undefined>(() => {
   const defaultEngineInfo = Object.values(store.state.engineInfos).find(
     (engine) => engine.type === "default"
   );
-  if (defaultEngineInfo == null) return undefined;
+  if (defaultEngineInfo == undefined) return undefined;
 
   // <defaultEngineId>: { from: number, to: number } -> to (代替先ポート)
-  return altPortInfos[defaultEngineInfo.uuid]?.to;
+  if (defaultEngineInfo.uuid in altPortInfos) {
+    return altPortInfos[defaultEngineInfo.uuid].to;
+  } else {
+    return undefined;
+  }
 });
 
 window.electron.getAppInfos().then((obj) => {

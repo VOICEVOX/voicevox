@@ -253,7 +253,7 @@ export class EngineManager {
       const altPort = await findAltPort(engineHostInfo);
 
       // 代替ポートが見つからないとき
-      if (altPort == null) {
+      if (altPort == undefined) {
         log.error(`ENGINE ${engineId}: No Alternative Port Found`);
         dialog.showErrorBox(
           `${engineInfo.name} の起動に失敗しました`,

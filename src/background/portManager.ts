@@ -3,7 +3,7 @@ import log from "electron-log";
 
 const isWindows = process.platform === "win32";
 
-type HostInfo = {
+export type HostInfo = {
   hostname: string;
   port: number;
 };
@@ -13,7 +13,7 @@ const portLog = (port: number, message: string, isNested = false) =>
 const portWarn = (port: number, message: string, isNested = false) =>
   log.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 
-function url2HostInfo(url: URL) {
+export function url2HostInfo(url: URL) {
   return {
     hostname: url.hostname,
     port: Number(url.port),
@@ -58,12 +58,12 @@ function netstatStdout2pid(
   return undefined;
 }
 
-async function getPidFromPort(
+export async function getPidFromPort(
   hostInfo: HostInfo,
-  isNested = false
+  isNested = false // ログ整形用の引数
 ): Promise<number | undefined> {
   // Windows の場合は, hostname が以下のループバックアドレスが割り当てられているか確認
-  const parse4windows = (): string | undefined => {
+  const parse4windows = (stdout: string): string | undefined => {
     // それぞれのループバックアドレスに対して pid を取得
     const loopbackAddr = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]"];
     if (loopbackAddr.includes(hostInfo.hostname)) {
@@ -84,7 +84,7 @@ async function getPidFromPort(
         portLog(
           hostInfo.port,
           `| ${hostname}\t-> ${
-            pid == null ? "Assignable" : `pid=${pid} uses this port`
+            pid == undefined ? "Assignable" : `pid=${pid} uses this port`
           }`,
           isNested
         );
@@ -120,9 +120,9 @@ async function getPidFromPort(
   }).toString();
 
   // Windows の場合は, lsof のように port と pid が 1to1 で取れないので, netstat の stdout をパース
-  const pid = isWindows ? parse4windows() : stdout;
+  const pid = isWindows ? parse4windows(stdout) : stdout;
 
-  if (pid == null || !pid.length) {
+  if (pid == undefined || !pid.length) {
     portLog(hostInfo.port, "Assignable; Nobody uses this port!", isNested);
     return undefined;
   }
@@ -135,7 +135,7 @@ async function getPidFromPort(
   return Number(pid);
 }
 
-async function getProcessNameFromPid(
+export async function getProcessNameFromPid(
   hostInfo: HostInfo,
   pid: number
 ): Promise<string> {
@@ -172,7 +172,9 @@ async function getProcessNameFromPid(
  * @param hostInfo ホスト情報
  * @returns 割り当て可能なポート番号 or `undefined` (割り当て可能なポートが見つからなかったとき)
  */
-async function findAltPort(hostInfo: HostInfo): Promise<number | undefined> {
+export async function findAltPort(
+  hostInfo: HostInfo
+): Promise<number | undefined> {
   const basePort = hostInfo.port;
   portLog(hostInfo.port, `Find another assignable port from ${basePort}...`);
 
@@ -190,7 +192,7 @@ async function findAltPort(hostInfo: HostInfo): Promise<number | undefined> {
     );
 
     // ポートを既に割り当てられているプロセスidの取得: undefined → ポートが空いている
-    if (altPid == null) return altPort;
+    if (altPid == undefined) return altPort;
   }
 
   portWarn(
@@ -199,6 +201,3 @@ async function findAltPort(hostInfo: HostInfo): Promise<number | undefined> {
   );
   return undefined;
 }
-
-export type { HostInfo };
-export { url2HostInfo, getPidFromPort, getProcessNameFromPid, findAltPort };
