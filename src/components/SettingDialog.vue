@@ -276,12 +276,13 @@
                   </q-icon>
                 </div>
                 <q-space />
+                <!-- ボタンクリックのフィードバックのためのチェックマーク -->
                 <q-icon
                   name="check"
                   size="sm"
                   color="primary-light"
                   style="margin-right: 8px"
-                  v-if="isDefaultConfirmedTips && hasResetConfirmedTip"
+                  v-if="isDefaultConfirmedTips && hasResetConfirmedTips"
                 >
                 </q-icon>
                 <q-btn
@@ -293,7 +294,7 @@
                   @click="
                     () => {
                       store.dispatch('RESET_CONFIRMED_TIPS');
-                      hasResetConfirmedTip = true;
+                      hasResetConfirmedTips = true;
                     }
                   "
                   :disable="isDefaultConfirmedTips"
@@ -887,10 +888,10 @@ const activePointScrollModeOptions: Record<
 const experimentalSetting = computed(() => store.state.experimentalSetting);
 
 // 表示済みのヒント
-const hasResetConfirmedTip = ref(false);
-
+const hasResetConfirmedTips = ref(false);
 const isDefaultConfirmedTips = computed(() => {
   const confirmedTips = store.state.confirmedTips;
+  // すべて false (= 初期値) かどうか確認
   return Object.values(confirmedTips).every((v) => !v);
 });
 
