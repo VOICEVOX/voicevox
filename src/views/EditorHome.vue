@@ -624,18 +624,16 @@ watch(allEngineState, (newEngineState) => {
 watch(
   () => [store.state.altPortInfos, store.state.isVuexReady],
   async () => {
-    const altPortInfos = store.state.altPortInfos;
-    const isVuexReady = store.state.isVuexReady;
-    const engineStartedOnAltPort =
-      store.state.confirmedTips.engineStartedOnAltPort;
-
     // この watch がエンジンが起動した時 (=> 設定ファイルを読み込む前) に発火して, "今後この通知をしない" を無視するのを防ぐ
-    if (!isVuexReady || engineStartedOnAltPort) return;
+    if (!store.state.isVuexReady) return;
+
+    // "今後この通知をしない" を考慮
+    if (store.state.confirmedTips.engineStartedOnAltPort) return;
 
     // 代替ポートをトースト通知する
     for (const engineId of store.state.engineIds) {
       const engineName = store.state.engineInfos[engineId].name;
-      const altPort = altPortInfos[engineId];
+      const altPort = store.state.altPortInfos[engineId];
       if (!altPort) return;
 
       $q.notify({
