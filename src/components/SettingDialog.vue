@@ -48,10 +48,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       GPU モードの利用には GPU が必要です。Linux は
                       NVIDIA&trade; 製 GPU のみ対応しています。
@@ -89,10 +89,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
                     </q-tooltip>
@@ -120,10 +120,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
                     </q-tooltip>
@@ -142,10 +142,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       再生位置を追従し、自動でスクロールするモードを選ぶことができます
                     </q-tooltip>
@@ -174,10 +174,10 @@
                   >
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       再生位置を追従し、自動でスクロールします。
                       {{ `「${obj.label}」モードは${obj.desc}` }}
@@ -191,10 +191,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       テキストを貼り付け時に行われる分割の挙動を変えます
                     </q-tooltip>
@@ -227,10 +227,10 @@
                   <template v-slot:splitTextPeriodAndNewLine>
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       句点と改行を基にテキストを分割します。
                     </q-tooltip>
@@ -238,10 +238,10 @@
                   <template v-slot:splitTextNewLine>
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       改行のみを基にテキストを分割します。
                     </q-tooltip>
@@ -249,10 +249,10 @@
                   <template v-slot:splitTextOFF>
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       分割を行いません。
                     </q-tooltip>
@@ -313,10 +313,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       文字コードを選ぶことができます
                     </q-tooltip>
@@ -346,10 +346,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       音声ファイルを設定したフォルダに書き出す
                     </q-tooltip>
@@ -410,10 +410,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       書き出すファイル名のパターンをカスタマイズする
                     </q-tooltip>
@@ -439,10 +439,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       上書きせずにファイルを連番で保存します
                     </q-tooltip>
@@ -463,10 +463,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       テキストをtxtファイルとして書き出します
                     </q-tooltip>
@@ -488,10 +488,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       リップシンク用のlabファイルを書き出します
                     </q-tooltip>
@@ -544,10 +544,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       エディタのフォントを変更します
                     </q-tooltip>
@@ -575,10 +575,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       テキスト欄の左側に行番号を表示します。
                     </q-tooltip>
@@ -604,10 +604,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       音声データをモノラルからステレオに変換してから再生・保存を行います
                     </q-tooltip>
@@ -628,10 +628,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       音声の再生デバイスを変更し再生を行います
                     </q-tooltip>
@@ -659,10 +659,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       プリセット機能を有効にする
                     </q-tooltip>
@@ -681,10 +681,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       キャラやスタイルの変更時にデフォルトプリセットを適用します
                     </q-tooltip>
@@ -711,10 +711,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       疑問文のとき語尾の音高を自動的に上げる
                     </q-tooltip>
@@ -738,10 +738,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       モーフィングした音声を合成可能にする
                     </q-tooltip>
@@ -762,10 +762,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       複数のVOICEVOX準拠エンジンを利用可能にする
                     </q-tooltip>
@@ -791,10 +791,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       各UIの利用率などのデータを送信してVOICEVOXの改善に役立てます。テキストデータ・音声データは送信しません。
                     </q-tooltip>
