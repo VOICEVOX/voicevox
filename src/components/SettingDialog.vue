@@ -260,10 +260,9 @@
                 </q-btn-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-surface">
-                <div>表示済みのヒントを全て再表示する</div>
+                <div>非表示にしたヒントを全て再表示する</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <!-- FIXME: なぜか tooltip が左側に出る -->
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -271,7 +270,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      過去に表示したヒントを全て再表示します。
+                      過去に非表示にしたヒントを全て再表示します。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -887,7 +886,7 @@ const activePointScrollModeOptions: Record<
 
 const experimentalSetting = computed(() => store.state.experimentalSetting);
 
-// 表示済みのヒント
+// 非表示にしたヒントの再表示
 const hasResetConfirmedTips = ref(false);
 const isDefaultConfirmedTips = computed(() => {
   const confirmedTips = store.state.confirmedTips;
