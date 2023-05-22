@@ -265,10 +265,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       過去に非表示にしたヒントを全て再表示します。
                     </q-tooltip>
@@ -516,10 +516,10 @@
                 <q-icon name="help_outline" size="sm" class="help-hover-icon">
                   <q-tooltip
                     :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
+                    anchor="center right"
+                    self="center left"
+                    transition-show="jump-right"
+                    transition-hide="jump-left"
                   >
                     エディタの色を変更します
                   </q-tooltip>
