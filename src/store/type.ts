@@ -1083,6 +1083,10 @@ export type SettingStoreTypes = {
     action(payload: { confirmedTips: ConfirmedTips }): void;
   };
 
+  RESET_CONFIRMED_TIPS: {
+    action(): void;
+  };
+
   SET_ENGINE_SETTING: {
     mutation: { engineSetting: EngineSetting; engineId: EngineId };
     action(payload: {
