@@ -1184,6 +1184,5 @@ const adjustSliderValue = (
   overflow: hidden;
   text-overflow: ellipsis;
   width: fit-content;
-  max-width: 8rem;
 }
 </style>
