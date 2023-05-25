@@ -311,7 +311,10 @@ import {
   PresetKey,
   Voice,
 } from "@/type/preload";
-import { previewSliderHelper } from "@/helpers/previewSliderHelper";
+import {
+  PreviewSliderHelper,
+  previewSliderHelper,
+} from "@/helpers/previewSliderHelper";
 import { EngineManifest } from "@/openapi";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 
@@ -339,7 +342,7 @@ const supportedFeatures = computed(
 
 type Parameter = {
   label: string;
-  slider: ReturnType<typeof previewSliderHelper>;
+  slider: PreviewSliderHelper;
   disable: boolean;
   action: Parameters<typeof store.dispatch>[0]["type"];
   actionKey: string;
