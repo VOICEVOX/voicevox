@@ -14,6 +14,7 @@ import {
   ThemeConf,
   ToolbarSetting,
   EngineId,
+  ConfirmedTips,
 } from "@/type/preload";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
@@ -343,6 +344,23 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action({ commit }, { confirmedTips }) {
       window.electron.setSetting("confirmedTips", confirmedTips);
       commit("SET_CONFIRMED_TIPS", { confirmedTips });
+    },
+  },
+
+  RESET_CONFIRMED_TIPS: {
+    async action({ state, dispatch }) {
+      const confirmedTips: { [key: string]: boolean } = {
+        ...state.confirmedTips,
+      };
+
+      // 全てのヒントを未確認にする
+      for (const key in confirmedTips) {
+        confirmedTips[key] = false;
+      }
+
+      dispatch("SET_CONFIRMED_TIPS", {
+        confirmedTips: confirmedTips as ConfirmedTips,
+      });
     },
   },
 
