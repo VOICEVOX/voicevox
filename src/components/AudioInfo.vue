@@ -165,7 +165,7 @@
       <q-separator class="q-mt-md" />
     </div>
 
-    <div class="parameters">
+    <div class="parameters q-px-md">
       <div v-for="parameter in parameters" :key="parameter.label">
         <q-input
           dense
@@ -970,7 +970,6 @@ const adjustSliderValue = (
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 0 16px;
 }
 
 .preset-select-label {
