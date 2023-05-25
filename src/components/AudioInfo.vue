@@ -172,7 +172,7 @@
           borderless
           maxlength="5"
           :class="{
-            disabled: parameter.disable,
+            disabled: parameter.slider.qSliderProps.disable.value,
           }"
           :disable="parameter.slider.qSliderProps.disable.value"
           :model-value="
@@ -343,7 +343,6 @@ const supportedFeatures = computed(
 type Parameter = {
   label: string;
   slider: PreviewSliderHelper;
-  disable: boolean;
   action: Parameters<typeof store.dispatch>[0]["type"];
   actionKey: string;
 };
@@ -351,42 +350,36 @@ const parameters = computed<Parameter[]>(() => [
   {
     label: "話速",
     slider: speedScaleSlider,
-    disable: supportedFeatures.value?.adjustSpeedScale === false,
     action: "COMMAND_SET_AUDIO_SPEED_SCALE",
     actionKey: "speedScale",
   },
   {
     label: "音高",
     slider: pitchScaleSlider,
-    disable: supportedFeatures.value?.adjustPitchScale === false,
     action: "COMMAND_SET_AUDIO_PITCH_SCALE",
     actionKey: "pitchScale",
   },
   {
     label: "抑揚",
     slider: intonationScaleSlider,
-    disable: supportedFeatures.value?.adjustIntonationScale === false,
     action: "COMMAND_SET_AUDIO_INTONATION_SCALE",
     actionKey: "intonationScale",
   },
   {
     label: "音量",
     slider: volumeScaleSlider,
-    disable: supportedFeatures.value?.adjustVolumeScale === false,
     action: "COMMAND_SET_AUDIO_VOLUME_SCALE",
     actionKey: "volumeScale",
   },
   {
     label: "開始無音",
     slider: prePhonemeLengthSlider,
-    disable: false,
     action: "COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH",
     actionKey: "prePhonemeLength",
   },
   {
     label: "終了無音",
     slider: postPhonemeLengthSlider,
-    disable: false,
     action: "COMMAND_SET_AUDIO_POST_PHONEME_LENGTH",
     actionKey: "postPhonemeLength",
   },
