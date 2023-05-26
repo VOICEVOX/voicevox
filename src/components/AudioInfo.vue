@@ -179,7 +179,7 @@
             ? speedScaleSlider.state.currentValue.value.toFixed(2)
             : speedScaleSlider.qSliderProps.min.value.toFixed(2)
         "
-        @update:model-value="handleChangeSpeedScaleInput"
+        @change="handleChangeSpeedScaleInput"
       >
         <template v-slot:before
           ><span class="text-body1 text-display">話速</span></template
@@ -217,7 +217,7 @@
             ? pitchScaleSlider.state.currentValue.value.toFixed(2)
             : pitchScaleSlider.qSliderProps.min.value.toFixed(2)
         "
-        @update:model-value="handleChangePitchScaleInput"
+        @change="handleChangePitchScaleInput"
       >
         <template v-slot:before
           ><span class="text-body1 text-display">音高</span></template
@@ -255,7 +255,7 @@
             : intonationScaleSlider.qSliderProps.min.value.toFixed(2)
         "
         :disable="intonationScaleSlider.qSliderProps.disable.value"
-        @update:model-value="handleChangeIntonationInput"
+        @change="handleChangeIntonationInput"
       >
         <template v-slot:before
           ><span class="text-body1 text-display">抑揚</span></template
@@ -293,7 +293,7 @@
             ? volumeScaleSlider.state.currentValue.value.toFixed(2)
             : volumeScaleSlider.qSliderProps.min.value.toFixed(2)
         "
-        @update:model-value="handleChangeVolumeInput"
+        @change="handleChangeVolumeInput"
       >
         <template v-slot:before
           ><span class="text-body1 text-display">音量</span></template
@@ -331,7 +331,7 @@
             ? prePhonemeLengthSlider.state.currentValue.value.toFixed(2)
             : prePhonemeLengthSlider.qSliderProps.min.value.toFixed(2)
         "
-        @update:model-value="handleChangePrePhonemeLengthInput"
+        @change="handleChangePrePhonemeLengthInput"
       >
         <template v-slot:before
           ><span class="text-body1 text-display">開始無音</span></template
@@ -369,7 +369,7 @@
             ? postPhonemeLengthSlider.state.currentValue.value.toFixed(2)
             : postPhonemeLengthSlider.qSliderProps.min.value.toFixed(2)
         "
-        @update:model-value="handleChangePostPhonemeLengthInput"
+        @change="handleChangePostPhonemeLengthInput"
       >
         <template v-slot:before
           ><span class="text-body1 text-display">終了無音</span></template
@@ -1048,9 +1048,7 @@ const updatePreset = async (fullApply: boolean) => {
   closeAllDialog();
 };
 
-const handleChangeSpeedScaleInput = (inputValue: string | number | null) => {
-  if (typeof inputValue !== "string")
-    throw new Error("typeof inputValue !== 'string'");
+const handleChangeSpeedScaleInput = (inputValue: string) => {
   const speedScale = adjustSliderValue(
     "話速入力",
     inputValue,
@@ -1063,9 +1061,7 @@ const handleChangeSpeedScaleInput = (inputValue: string | number | null) => {
   });
 };
 
-const handleChangePitchScaleInput = (inputValue: string | number | null) => {
-  if (typeof inputValue !== "string")
-    throw new Error("typeof inputValue !== 'string'");
+const handleChangePitchScaleInput = (inputValue: string) => {
   const pitchScale = adjustSliderValue(
     "音高入力",
     inputValue,
@@ -1078,9 +1074,7 @@ const handleChangePitchScaleInput = (inputValue: string | number | null) => {
   });
 };
 
-const handleChangeIntonationInput = (inputValue: string | number | null) => {
-  if (typeof inputValue !== "string")
-    throw new Error("typeof inputValue !== 'string'");
+const handleChangeIntonationInput = (inputValue: string) => {
   const intonationScale = adjustSliderValue(
     "抑揚入力",
     inputValue,
@@ -1093,9 +1087,7 @@ const handleChangeIntonationInput = (inputValue: string | number | null) => {
   });
 };
 
-const handleChangeVolumeInput = (inputValue: string | number | null) => {
-  if (typeof inputValue !== "string")
-    throw new Error("typeof inputValue !== 'string'");
+const handleChangeVolumeInput = (inputValue: string) => {
   const volumeScale = adjustSliderValue(
     "音量入力",
     inputValue,
@@ -1108,11 +1100,7 @@ const handleChangeVolumeInput = (inputValue: string | number | null) => {
   });
 };
 
-const handleChangePrePhonemeLengthInput = (
-  inputValue: string | number | null
-) => {
-  if (typeof inputValue !== "string")
-    throw new Error("typeof inputValue !== 'string'");
+const handleChangePrePhonemeLengthInput = (inputValue: string) => {
   const prePhonemeLength = adjustSliderValue(
     "開始無音",
     inputValue,
@@ -1125,11 +1113,7 @@ const handleChangePrePhonemeLengthInput = (
   });
 };
 
-const handleChangePostPhonemeLengthInput = (
-  inputValue: string | number | null
-) => {
-  if (typeof inputValue !== "string")
-    throw new Error("typeof inputValue !== 'string'");
+const handleChangePostPhonemeLengthInput = (inputValue: string) => {
   const postPhonemeLength = adjustSliderValue(
     "終了無音",
     inputValue,
