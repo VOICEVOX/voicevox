@@ -201,7 +201,7 @@
           @update:model-value="
             parameter.slider.qSliderProps['onUpdate:modelValue']
           "
-          @change="parameter.slider.qSliderProps.onChange"
+          @change="handleParameterChange(parameter, $event)"
           @wheel="parameter.slider.qSliderProps.onWheel"
           @pan="parameter.slider.qSliderProps.onPan"
         />
@@ -344,168 +344,114 @@ type Parameter = {
   label: string;
   slider: PreviewSliderHelper;
   action: Parameters<typeof store.dispatch>[0]["type"];
-  actionKey: string;
+  key: keyof Preset;
 };
 const parameters = computed<Parameter[]>(() => [
   {
     label: "話速",
-    slider: speedScaleSlider,
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.speedScale ?? null,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
+      max: () => 2,
+      min: () => 0.5,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    }),
     action: "COMMAND_SET_AUDIO_SPEED_SCALE",
-    actionKey: "speedScale",
+    key: "speedScale",
   },
   {
     label: "音高",
-    slider: pitchScaleSlider,
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.pitchScale ?? null,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
+      max: () => 0.15,
+      min: () => -0.15,
+      step: () => 0.01,
+      scrollStep: () => 0.01,
+    }),
     action: "COMMAND_SET_AUDIO_PITCH_SCALE",
-    actionKey: "pitchScale",
+    key: "pitchScale",
   },
   {
     label: "抑揚",
-    slider: intonationScaleSlider,
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.intonationScale ?? null,
+      disable: () =>
+        uiLocked.value ||
+        supportedFeatures.value?.adjustIntonationScale === false,
+      max: () => 2,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    }),
     action: "COMMAND_SET_AUDIO_INTONATION_SCALE",
-    actionKey: "intonationScale",
+    key: "intonationScale",
   },
   {
     label: "音量",
-    slider: volumeScaleSlider,
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.volumeScale ?? null,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustVolumeScale === false,
+      max: () => 2,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    }),
     action: "COMMAND_SET_AUDIO_VOLUME_SCALE",
-    actionKey: "volumeScale",
+    key: "volumeScale",
   },
   {
     label: "開始無音",
-    slider: prePhonemeLengthSlider,
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.prePhonemeLength ?? null,
+      disable: () => uiLocked.value,
+      max: () => 1.5,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    }),
     action: "COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH",
-    actionKey: "prePhonemeLength",
+    key: "prePhonemeLength",
   },
   {
     label: "終了無音",
-    slider: postPhonemeLengthSlider,
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.postPhonemeLength ?? null,
+      disable: () => uiLocked.value,
+      max: () => 1.5,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    }),
     action: "COMMAND_SET_AUDIO_POST_PHONEME_LENGTH",
-    actionKey: "postPhonemeLength",
+    key: "postPhonemeLength",
   },
 ]);
 const handleParameterChange = (
   parameter: Parameter,
   inputValue: string | number | null
 ) => {
-  if (typeof inputValue !== "string")
-    throw new Error("typeof inputValue !== 'string'");
+  if (inputValue === null) throw new Error("inputValue is null");
   const value = adjustSliderValue(
     parameter.label + "入力",
-    inputValue,
+    inputValue.toString(),
     parameter.slider.qSliderProps.min.value,
     parameter.slider.qSliderProps.max.value
   );
   store.dispatch(parameter.action, {
     audioKey: props.activeAudioKey,
-    [parameter.actionKey]: value,
+    [parameter.key]: value,
   });
 };
-
-const setAudioSpeedScale = (speedScale: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
-    audioKey: props.activeAudioKey,
-    speedScale,
-  });
-};
-
-const setAudioPitchScale = (pitchScale: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_PITCH_SCALE", {
-    audioKey: props.activeAudioKey,
-    pitchScale,
-  });
-};
-
-const setAudioIntonationScale = (intonationScale: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_INTONATION_SCALE", {
-    audioKey: props.activeAudioKey,
-    intonationScale,
-  });
-};
-
-const setAudioVolumeScale = (volumeScale: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_VOLUME_SCALE", {
-    audioKey: props.activeAudioKey,
-    volumeScale,
-  });
-};
-
-const setAudioPrePhonemeLength = (prePhonemeLength: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", {
-    audioKey: props.activeAudioKey,
-    prePhonemeLength,
-  });
-};
-
-const setAudioPostPhonemeLength = (postPhonemeLength: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", {
-    audioKey: props.activeAudioKey,
-    postPhonemeLength,
-  });
-};
-const speedScaleSlider = previewSliderHelper({
-  modelValue: () => query.value?.speedScale ?? null,
-  disable: () =>
-    uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
-  onChange: setAudioSpeedScale,
-  max: () => 2,
-  min: () => 0.5,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
-const pitchScaleSlider = previewSliderHelper({
-  modelValue: () => query.value?.pitchScale ?? null,
-  disable: () =>
-    uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
-  onChange: setAudioPitchScale,
-  max: () => 0.15,
-  min: () => -0.15,
-  step: () => 0.01,
-  scrollStep: () => 0.01,
-});
-const intonationScaleSlider = previewSliderHelper({
-  modelValue: () => query.value?.intonationScale ?? null,
-  disable: () =>
-    uiLocked.value || supportedFeatures.value?.adjustIntonationScale === false,
-  onChange: setAudioIntonationScale,
-  max: () => 2,
-  min: () => 0,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
-const volumeScaleSlider = previewSliderHelper({
-  modelValue: () => query.value?.volumeScale ?? null,
-  disable: () =>
-    uiLocked.value || supportedFeatures.value?.adjustVolumeScale === false,
-  onChange: setAudioVolumeScale,
-  max: () => 2,
-  min: () => 0,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
-const prePhonemeLengthSlider = previewSliderHelper({
-  modelValue: () => query.value?.prePhonemeLength ?? null,
-  disable: () => uiLocked.value,
-  onChange: setAudioPrePhonemeLength,
-  max: () => 1.5,
-  min: () => 0,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
-const postPhonemeLengthSlider = previewSliderHelper({
-  modelValue: () => query.value?.postPhonemeLength ?? null,
-  disable: () => uiLocked.value,
-  onChange: setAudioPostPhonemeLength,
-  max: () => 1.5,
-  min: () => 0,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
 
 // モーフィング
 const shouldShowMorphing = computed(
@@ -853,22 +799,22 @@ const checkRewritePreset = async () => {
 // 入力パラメータから、name以外のPresetを取得
 const presetPartsFromParameter = computed<Omit<Preset, "name">>(() => {
   if (
-    speedScaleSlider.state.currentValue.value == null ||
-    pitchScaleSlider.state.currentValue.value == null ||
-    intonationScaleSlider.state.currentValue.value == null ||
-    volumeScaleSlider.state.currentValue.value == null ||
-    prePhonemeLengthSlider.state.currentValue.value == null ||
-    postPhonemeLengthSlider.state.currentValue.value == null
+    parameters.value.some(
+      (parameter) => parameter.slider.state.currentValue.value == undefined
+    )
   )
     throw new Error("slider value is null");
 
   return {
-    speedScale: speedScaleSlider.state.currentValue.value,
-    pitchScale: pitchScaleSlider.state.currentValue.value,
-    intonationScale: intonationScaleSlider.state.currentValue.value,
-    volumeScale: volumeScaleSlider.state.currentValue.value,
-    prePhonemeLength: prePhonemeLengthSlider.state.currentValue.value,
-    postPhonemeLength: postPhonemeLengthSlider.state.currentValue.value,
+    ...parameters.value.reduce(
+      (acc, parameter) => ({
+        ...acc,
+        [parameter.key]: parameter.slider.state.currentValue.value,
+      }),
+      {} as {
+        [K in typeof parameters.value[number]["key"]]: number;
+      }
+    ),
     morphingInfo:
       morphingTargetStyleInfo.value &&
       morphingTargetCharacterInfo.value &&
