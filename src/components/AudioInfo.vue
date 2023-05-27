@@ -1048,7 +1048,9 @@ const updatePreset = async (fullApply: boolean) => {
   closeAllDialog();
 };
 
-const handleChangeSpeedScaleInput = (inputValue: string) => {
+const handleChangeSpeedScaleInput = (inputValue: unknown) => {
+  if (typeof inputValue !== "string")
+    throw new Error("typeof inputValue !== 'string'");
   const speedScale = adjustSliderValue(
     "話速入力",
     inputValue,
@@ -1061,7 +1063,9 @@ const handleChangeSpeedScaleInput = (inputValue: string) => {
   });
 };
 
-const handleChangePitchScaleInput = (inputValue: string) => {
+const handleChangePitchScaleInput = (inputValue: unknown) => {
+  if (typeof inputValue !== "string")
+    throw new Error("typeof inputValue !== 'string'");
   const pitchScale = adjustSliderValue(
     "音高入力",
     inputValue,
@@ -1074,7 +1078,9 @@ const handleChangePitchScaleInput = (inputValue: string) => {
   });
 };
 
-const handleChangeIntonationInput = (inputValue: string) => {
+const handleChangeIntonationInput = (inputValue: unknown) => {
+  if (typeof inputValue !== "string")
+    throw new Error("typeof inputValue !== 'string'");
   const intonationScale = adjustSliderValue(
     "抑揚入力",
     inputValue,
@@ -1087,7 +1093,9 @@ const handleChangeIntonationInput = (inputValue: string) => {
   });
 };
 
-const handleChangeVolumeInput = (inputValue: string) => {
+const handleChangeVolumeInput = (inputValue: unknown) => {
+  if (typeof inputValue !== "string")
+    throw new Error("typeof inputValue !== 'string'");
   const volumeScale = adjustSliderValue(
     "音量入力",
     inputValue,
@@ -1100,7 +1108,9 @@ const handleChangeVolumeInput = (inputValue: string) => {
   });
 };
 
-const handleChangePrePhonemeLengthInput = (inputValue: string) => {
+const handleChangePrePhonemeLengthInput = (inputValue: unknown) => {
+  if (typeof inputValue !== "string")
+    throw new Error("typeof inputValue !== 'string'");
   const prePhonemeLength = adjustSliderValue(
     "開始無音",
     inputValue,
@@ -1113,7 +1123,9 @@ const handleChangePrePhonemeLengthInput = (inputValue: string) => {
   });
 };
 
-const handleChangePostPhonemeLengthInput = (inputValue: string) => {
+const handleChangePostPhonemeLengthInput = (inputValue: unknown) => {
+  if (typeof inputValue !== "string")
+    throw new Error("typeof inputValue !== 'string'");
   const postPhonemeLength = adjustSliderValue(
     "終了無音",
     inputValue,
