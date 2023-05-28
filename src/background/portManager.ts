@@ -66,7 +66,14 @@ export async function getPidFromPort(
   const parse4windows = (stdout: string): string | undefined => {
     // それぞれのループバックアドレスに対して pid を取得
     const loopbackAddr = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]"];
-    if (loopbackAddr.includes(hostInfo.hostname)) {
+    if (!loopbackAddr.includes(hostInfo.hostname)) {
+      portLog(
+        hostInfo.port,
+        `Hostname is not loopback address; Getting process id from ${hostInfo.hostname}...`,
+        isNested
+      );
+      return netstatStdout2pid(stdout, hostInfo)?.toString();
+    } else {
       portLog(
         hostInfo.port,
         "Hostname is loopback address; Getting process id from all loopback addresses...",
@@ -176,13 +183,13 @@ export async function findAltPort(
   hostInfo: HostInfo
 ): Promise<number | undefined> {
   const basePort = hostInfo.port;
-  portLog(hostInfo.port, `Find another assignable port from ${basePort}...`);
+  portLog(basePort, `Find another assignable port from ${basePort}...`);
 
   // エンジン指定のポート + 100番までを探索  エフェメラルポートの範囲の最大は超えないようにする
   const altPortMax = Math.min(basePort + 100, 65535);
 
   for (let altPort = basePort + 1; altPort <= altPortMax; altPort++) {
-    portLog(hostInfo.port, `Trying whether port ${altPort} is assignable...`);
+    portLog(basePort, `Trying whether port ${altPort} is assignable...`);
     const altPid = await getPidFromPort(
       {
         hostname: hostInfo.hostname,
@@ -195,9 +202,6 @@ export async function findAltPort(
     if (altPid == undefined) return altPort;
   }
 
-  portWarn(
-    hostInfo.port,
-    `No alternative port found! ${basePort}...${altPortMax}`
-  );
+  portWarn(basePort, `No alternative port found! ${basePort}...${altPortMax}`);
   return undefined;
 }
