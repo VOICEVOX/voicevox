@@ -344,7 +344,7 @@ type Parameter = {
   label: string;
   slider: PreviewSliderHelper;
   action: Parameters<typeof store.dispatch>[0]["type"];
-  key: keyof Preset;
+  key: keyof Omit<Preset, "name" | "morphingInfo">;
 };
 const parameters = computed<Parameter[]>(() => [
   {
