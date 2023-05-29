@@ -31,6 +31,26 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
+  SET_ENGINE_INFO: {
+    mutation(state, { engineId, engineInfo }) {
+      state.engineInfos[engineId] = engineInfo;
+    },
+  },
+
+  GET_ONLY_ENGINE_INFOS: {
+    async action({ commit }, { engineIds }) {
+      const engineInfos = await window.electron.engineInfos();
+      for (const engineInfo of engineInfos) {
+        if (engineIds.includes(engineInfo.uuid)) {
+          commit("SET_ENGINE_INFO", {
+            engineId: engineInfo.uuid,
+            engineInfo,
+          });
+        }
+      }
+    },
+  },
+
   GET_SORTED_ENGINE_INFOS: {
     getter: (state) => {
       return Object.values(state.engineInfos).sort((a, b) => {
@@ -44,6 +64,13 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       });
     },
   },
+
+  GET_ALT_PORT_INFOS: {
+    async action() {
+      return await window.electron.getAltPortInfos();
+    },
+  },
+
   SET_ENGINE_INFOS: {
     mutation(
       state,
@@ -180,6 +207,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           }
         })
       );
+
+      await dispatch("GET_ONLY_ENGINE_INFOS", { engineIds });
 
       const result = await dispatch("POST_ENGINE_START", {
         engineIds,

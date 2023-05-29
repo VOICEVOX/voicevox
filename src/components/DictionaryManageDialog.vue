@@ -163,7 +163,7 @@
                     :accent-phrase="accentPhrase"
                     :accent-phrase-index="0"
                     :ui-locked="uiLocked"
-                    @changeAccent="changeAccent"
+                    :onChangeAccent="changeAccent"
                   />
                   <template
                     v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -378,7 +378,7 @@ const accentPhraseTable = ref<HTMLElement>();
 
 const convertHankakuToZenkaku = (text: string) => {
   // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える
-  text = text.replace(/\p{Z}/u, () => String.fromCharCode(0x3000));
+  text = text.replace(/\p{Z}/gu, () => String.fromCharCode(0x3000));
 
   // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
   return text.replace(/[\u0021-\u007e]/g, (s) => {

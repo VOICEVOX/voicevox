@@ -75,6 +75,7 @@ describe("store/vuex.js test", () => {
           availableThemes: [],
         },
         editorFont: "default",
+        showTextLineNumber: false,
         isPinned: false,
         isFullscreen: false,
         presetItems: {},
@@ -134,6 +135,7 @@ describe("store/vuex.js test", () => {
         },
         confirmedTips: {
           tweakableSliderByScroll: false,
+          engineStartedOnAltPort: false,
         },
         progress: -1,
         defaultPresetKeys: {},
@@ -241,6 +243,7 @@ describe("store/vuex.js test", () => {
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
+    assert.equal(store.state.showTextLineNumber, false);
     assert.propertyVal(
       store.state.splitterPosition,
       "audioDetailPaneHeight",
@@ -248,5 +251,7 @@ describe("store/vuex.js test", () => {
     );
     assert.propertyVal(store.state.splitterPosition, "audioInfoPaneWidth", 20);
     assert.propertyVal(store.state.splitterPosition, "portraitPaneWidth", 50);
+    assert.equal(store.state.confirmedTips.tweakableSliderByScroll, false);
+    assert.equal(store.state.confirmedTips.engineStartedOnAltPort, false);
   });
 });

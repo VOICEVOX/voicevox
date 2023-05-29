@@ -89,6 +89,7 @@
                     >
                       <draggable
                         class="audio-cells"
+                        ref="cellsRef"
                         :modelValue="audioKeys"
                         @update:modelValue="updateAudioKeys"
                         :itemKey="itemKey"
@@ -166,7 +167,7 @@
 
 <script setup lang="ts">
 import path from "path";
-import { computed, onBeforeUpdate, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver, useQuasar } from "quasar";
 import cloneDeep from "clone-deep";
@@ -353,12 +354,12 @@ const updateAudioDetailPane = async (height: number) => {
   audioDetailPaneHeight.value = height;
   await updateSplitterPosition("audioDetailPaneHeight", height);
 };
-
 // component
-let audioCellRefs: Record<AudioKey, typeof AudioCell> = {};
-const addAudioCellRef = (audioCellRef: typeof AudioCell) => {
-  if (audioCellRef) {
-    audioCellRefs[audioCellRef.audioKey] = audioCellRef;
+let audioCellRefs: Record<AudioKey, InstanceType<typeof AudioCell>> = {};
+const addAudioCellRef: VNodeRef = (audioCellRef) => {
+  if (audioCellRef && !(audioCellRef instanceof Element)) {
+    const typedAudioCellRef = audioCellRef as InstanceType<typeof AudioCell>;
+    audioCellRefs[typedAudioCellRef.audioKey] = typedAudioCellRef;
   }
 };
 onBeforeUpdate(() => {
@@ -479,6 +480,38 @@ const disableDefaultUndoRedo = (event: KeyboardEvent) => {
   }
 };
 
+const userOrderedCharacterInfos = computed(
+  () => store.state.userCharacterOrder
+);
+const audioItems = computed(() => store.state.audioItems);
+// 並び替え後、テキスト欄が１つで空欄なら話者を更新
+// 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
+watch(userOrderedCharacterInfos, (newValue, oldValue) => {
+  if (newValue === oldValue || newValue.length < 1) return;
+
+  if (audioKeys.value.length === 1) {
+    const first = audioKeys.value[0] as AudioKey;
+    const audioItem = audioItems.value[first];
+    if (audioItem.text.length > 0) {
+      return;
+    }
+
+    const speakerId = newValue[0];
+    const defaultStyleId = store.state.defaultStyleIds.find(
+      (styleId) => styleId.speakerUuid === speakerId
+    );
+    if (!defaultStyleId) return;
+
+    const voice: Voice = {
+      engineId: defaultStyleId.engineId,
+      speakerId: defaultStyleId.speakerUuid,
+      styleId: defaultStyleId.defaultStyleId,
+    };
+
+    store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
+  }
+});
+
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
 onMounted(async () => {
@@ -544,6 +577,38 @@ onMounted(async () => {
     store.state.acceptTerms !== "Accepted";
 
   isCompletedInitialStartup.value = true;
+
+  // 代替ポートをトースト通知する
+  // FIXME: トーストが何度も出るようにする（altPortInfoをstateに持たせてwatchする）
+  if (!store.state.confirmedTips.engineStartedOnAltPort) {
+    const altPortInfo = await store.dispatch("GET_ALT_PORT_INFOS");
+    for (const engineId of store.state.engineIds) {
+      const engineName = store.state.engineInfos[engineId].name;
+      const altPort = altPortInfo[engineId];
+
+      if (!altPort) return;
+      $q.notify({
+        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+        color: "toast",
+        textColor: "toast-display",
+        icon: "compare_arrows",
+        timeout: 5000,
+        actions: [
+          {
+            label: "今後この通知をしない",
+            textColor: "toast-button-display",
+            handler: () =>
+              store.dispatch("SET_CONFIRMED_TIPS", {
+                confirmedTips: {
+                  ...store.state.confirmedTips,
+                  engineStartedOnAltPort: true,
+                },
+              }),
+          },
+        ],
+      });
+    }
+  }
 });
 
 // エンジン待機
@@ -691,8 +756,8 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
 
 // ドラッグ＆ドロップ
 const dragEventCounter = ref(0);
-const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
-  if (!event || event.dataTransfer.files.length === 0) return;
+const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
+  if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
   switch (path.extname(file.name)) {
     case ".txt":
@@ -714,6 +779,28 @@ const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
       });
   }
 };
+
+// AudioCellの自動スクロール
+const cellsRef = ref<InstanceType<typeof draggable> | undefined>();
+watch(activeAudioKey, (audioKey) => {
+  if (audioKey == undefined) return;
+  const activeCellElement = audioCellRefs[audioKey].$el;
+  const cellsElement = cellsRef.value?.$el;
+  if (
+    !(activeCellElement instanceof Element) ||
+    !(cellsElement instanceof Element)
+  )
+    throw new Error(
+      `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`
+    );
+  const activeCellRect = activeCellElement.getBoundingClientRect();
+  const cellsRect = cellsElement.getBoundingClientRect();
+  const overflowTop = activeCellRect.top <= cellsRect.top;
+  const overflowBottom = activeCellRect.bottom >= cellsRect.bottom;
+  if (overflowTop || overflowBottom) {
+    activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
+  }
+});
 </script>
 
 <style scoped lang="scss">

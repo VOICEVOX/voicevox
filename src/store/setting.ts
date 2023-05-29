@@ -14,6 +14,7 @@ import {
   ThemeConf,
   ToolbarSetting,
   EngineId,
+  ConfirmedTips,
 } from "@/type/preload";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
@@ -40,6 +41,7 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   editorFont: "default",
+  showTextLineNumber: false,
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -56,6 +58,7 @@ export const settingStoreState: SettingStoreState = {
   },
   confirmedTips: {
     tweakableSliderByScroll: false,
+    engineStartedOnAltPort: false,
   },
   engineSettings: {},
 };
@@ -81,6 +84,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           currentTheme: theme.currentTheme,
         });
       }
+
+      dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
+        showTextLineNumber: await window.electron.getSetting(
+          "showTextLineNumber"
+        ),
+      });
 
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
         acceptRetrieveTelemetry: await window.electron.getSetting(
@@ -252,6 +261,18 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
+  SET_SHOW_TEXT_LINE_NUMBER: {
+    mutation(state, { showTextLineNumber }) {
+      state.showTextLineNumber = showTextLineNumber;
+    },
+    action({ commit }, { showTextLineNumber }) {
+      window.electron.setSetting("showTextLineNumber", showTextLineNumber);
+      commit("SET_SHOW_TEXT_LINE_NUMBER", {
+        showTextLineNumber,
+      });
+    },
+  },
+
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
     mutation(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
@@ -326,6 +347,23 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
+  RESET_CONFIRMED_TIPS: {
+    async action({ state, dispatch }) {
+      const confirmedTips: { [key: string]: boolean } = {
+        ...state.confirmedTips,
+      };
+
+      // 全てのヒントを未確認にする
+      for (const key in confirmedTips) {
+        confirmedTips[key] = false;
+      }
+
+      dispatch("SET_CONFIRMED_TIPS", {
+        confirmedTips: confirmedTips as ConfirmedTips,
+      });
+    },
+  },
+
   SET_ENGINE_SETTING: {
     mutation(state, { engineSetting, engineId }) {
       state.engineSettings[engineId] = engineSetting;
@@ -383,6 +421,26 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         }
       }
     ),
+  },
+
+  GET_RECENTLY_USED_PROJECTS: {
+    async action() {
+      return await window.electron.getSetting("recentlyUsedProjects");
+    },
+  },
+
+  APPEND_RECENTLY_USED_PROJECT: {
+    async action({ dispatch }, { filePath }) {
+      const recentlyUsedProjects = await dispatch("GET_RECENTLY_USED_PROJECTS");
+      const newRecentlyUsedProjects = [
+        filePath,
+        ...recentlyUsedProjects.filter((value) => value != filePath),
+      ].slice(0, 10);
+      await window.electron.setSetting(
+        "recentlyUsedProjects",
+        newRecentlyUsedProjects
+      );
+    },
   },
 });
 

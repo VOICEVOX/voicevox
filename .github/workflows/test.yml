@@ -7,38 +7,51 @@ on:
       - "**"
   workflow_dispatch:
 
+env:
+  VOICEVOX_ENGINE_VERSION: 0.14.4
+
 jobs:
-  build:
+  build-test:
     runs-on: windows-latest
-    env:
-      ELECTRON_CACHE: .cache/electron
-      ELECTRON_BUILDER_CACHE: .cache/electron-builder
-      cache-version: v2
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: ".node-version"
-          cache: "npm"
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+      - run: npm run electron:build_pnever
 
-      - name: Cache Electron
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.ELECTRON_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
 
-      - name: Cache Electron-Builder
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.ELECTRON_BUILDER_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
+      - run: npm run test:unit
 
-      - run: npm ci
+      - name: Download VOICEVOX ENGINE
+        id: download-engine
+        uses: ./.github/actions/download-engine
+        with:
+          version: ${{ env.VOICEVOX_ENGINE_VERSION }}
+          dest: ${{ github.workspace }}/voicevox_engine
+
+      - name: Run npm run test:e2e
+        shell: bash
+        run: |
+          cp .env.test .env
+          sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env
+          if [ -n "${{ runner.debug }}" ]; then
+            DEBUG=pw:browser* npm run test:e2e
+          else
+            npm run test:e2e
+          fi
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
 
       - name: Disallowed licenses check
         run: npm run license:generate -- -o voicevox_licenses.json
@@ -46,5 +59,3 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run markdownlint
-      - run: npm run test:unit
-      - run: npm run electron:build_pnever

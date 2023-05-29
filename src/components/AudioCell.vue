@@ -7,6 +7,13 @@
       size="sm"
       class="absolute active-arrow"
     />
+    <div
+      class="line-number"
+      :class="{ active: isActiveAudioCell }"
+      v-if="showTextLineNumber"
+    >
+      {{ textLineNumberIndex }}
+    </div>
     <character-button
       :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
@@ -72,6 +79,9 @@ defineExpose({
   focusTextField: () => {
     textfield.value?.focus();
   },
+  removeCell: () => {
+    removeCell();
+  },
 });
 
 const store = useStore();
@@ -120,7 +130,8 @@ const isActiveAudioCell = computed(
 
 const audioTextBuffer = ref(audioItem.value.text);
 const isChangeFlag = ref(false);
-const setAudioTextBuffer = (text: string) => {
+const setAudioTextBuffer = (text: string | number | null) => {
+  if (typeof text !== "string") throw new Error("typeof text !== 'string'");
   audioTextBuffer.value = text;
   isChangeFlag.value = true;
 };
@@ -185,6 +196,19 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
     }
   }
 };
+
+// 行番号を表示するかどうか
+const showTextLineNumber = computed(() => store.state.showTextLineNumber);
+// 行番号
+const textLineNumberIndex = computed(
+  () => audioKeys.value.indexOf(props.audioKey) + 1
+);
+// 行番号の幅: 2桁はデフォで入るように, 3桁以上は1remずつ広げる
+const textLineNumberWidth = computed(() => {
+  const indexDigits = String(audioKeys.value.length).length;
+  if (indexDigits <= 2) return "1.5rem";
+  return `${indexDigits - 0.5}rem`;
+});
 
 // 上下に移動
 const audioKeys = computed(() => store.state.audioKeys);
@@ -273,6 +297,21 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   .active-arrow {
     left: -5px;
     height: 2rem;
+  }
+
+  .line-number {
+    height: 2rem;
+    width: v-bind(textLineNumberWidth);
+    line-height: 2rem;
+    margin-right: -0.3rem;
+    opacity: 0.6;
+    text-align: right;
+    color: colors.$display;
+    &.active {
+      opacity: 1;
+      font-weight: bold;
+      color: colors.$primary-light;
+    }
   }
 
   .q-input {

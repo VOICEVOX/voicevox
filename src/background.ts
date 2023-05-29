@@ -179,6 +179,7 @@ try {
     },
   });
 } catch (e) {
+  log.error(e);
   dialog.showErrorBox(
     "設定ファイルの読み込みに失敗しました。",
     `${app.getPath(
@@ -469,7 +470,7 @@ async function createWindow() {
     projectFilePath;
 
   if (process.env.VITE_DEV_SERVER_URL) {
-    await win.loadURL((process.env.VITE_DEV_SERVER_URL as string) + parameter);
+    await win.loadURL(process.env.VITE_DEV_SERVER_URL + parameter);
   } else {
     protocol.registerFileProtocol("app", (request, callback) => {
       const filePath = new URL(request.url).pathname;
@@ -477,7 +478,7 @@ async function createWindow() {
     });
     win.loadURL("app://./index.html" + parameter);
   }
-  if (isDevelopment) win.webContents.openDevTools();
+  if (isDevelopment && !isTest) win.webContents.openDevTools();
 
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
@@ -596,6 +597,10 @@ ipcMainHandle("GET_Q_AND_A_TEXT", () => {
 
 ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
   return privacyPolicyText;
+});
+
+ipcMainHandle("GET_ALT_PORT_INFOS", () => {
+  return engineManager.altPortInfo;
 });
 
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
@@ -1006,6 +1011,7 @@ app.on("ready", async () => {
   // 多重起動防止
   if (
     !isDevelopment &&
+    !isTest &&
     !app.requestSingleInstanceLock({
       filePath,
     } as SingleInstanceLockData)

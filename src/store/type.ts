@@ -80,6 +80,8 @@ export type Command = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
+export type AltPortInfos = Record<EngineId, { from: number; to: number }>; // ポートが塞がれていたときの代替ポート
+
 export type SaveResult =
   | "SUCCESS"
   | "WRITE_ERROR"
@@ -357,11 +359,6 @@ export type AudioStoreTypes = {
       data: number;
       type: MoraDataType;
     };
-  };
-
-  APPLY_AUDIO_PRESET_TO_AUDIO_ITEM: {
-    mutation: { audioItem: AudioItem };
-    action(payload: { audioItem: AudioItem }): void;
   };
 
   APPLY_AUDIO_PRESET: {
@@ -738,8 +735,20 @@ export type EngineStoreTypes = {
     action(): void;
   };
 
+  SET_ENGINE_INFO: {
+    mutation: { engineId: EngineId; engineInfo: EngineInfo };
+  };
+
+  GET_ONLY_ENGINE_INFOS: {
+    action: (payload: { engineIds: EngineId[] }) => Promise<void>;
+  };
+
   GET_SORTED_ENGINE_INFOS: {
     getter: EngineInfo[];
+  };
+
+  GET_ALT_PORT_INFOS: {
+    action(): Promise<AltPortInfos>;
   };
 
   SET_ENGINE_MANIFESTS: {
@@ -998,6 +1007,7 @@ export type SettingStoreState = {
   engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
   editorFont: EditorFontType;
+  showTextLineNumber: boolean;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
@@ -1036,6 +1046,11 @@ export type SettingStoreTypes = {
     action(payload: { editorFont: EditorFontType }): void;
   };
 
+  SET_SHOW_TEXT_LINE_NUMBER: {
+    mutation: { showTextLineNumber: boolean };
+    action(payload: { showTextLineNumber: boolean }): void;
+  };
+
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
     mutation: { acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus };
     action(payload: {
@@ -1068,6 +1083,10 @@ export type SettingStoreTypes = {
     action(payload: { confirmedTips: ConfirmedTips }): void;
   };
 
+  RESET_CONFIRMED_TIPS: {
+    action(): void;
+  };
+
   SET_ENGINE_SETTING: {
     mutation: { engineSetting: EngineSetting; engineId: EngineId };
     action(payload: {
@@ -1078,6 +1097,14 @@ export type SettingStoreTypes = {
 
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean; engineId: EngineId }): Promise<void>;
+  };
+
+  GET_RECENTLY_USED_PROJECTS: {
+    action(): Promise<string[]>;
+  };
+
+  APPEND_RECENTLY_USED_PROJECT: {
+    action(payload: { filePath: string }): Promise<void>;
   };
 };
 
@@ -1263,6 +1290,9 @@ export type PresetStoreState = {
 };
 
 export type PresetStoreTypes = {
+  DEFAULT_PRESET_KEY_SETS: {
+    getter: Set<PresetKey>;
+  };
   SET_PRESET_ITEMS: {
     mutation: {
       presetItems: Record<PresetKey, Preset>;

@@ -1,6 +1,6 @@
-import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
+import { AltPortInfos } from "@/store/type";
 
 export const isMac =
   typeof process === "undefined"
@@ -143,6 +143,7 @@ export interface Sandbox {
   getQAndAText(): Promise<string>;
   getContactText(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
+  getAltPortInfos(): Promise<AltPortInfos>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
   showAudioSaveDialog(obj: {
@@ -187,8 +188,8 @@ export interface Sandbox {
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
-    listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
-  ): IpcRenderer;
+    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void
+  ): void;
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
@@ -436,7 +437,8 @@ export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
 export const toolbarSettingSchema = toolbarButtonTagSchema;
 export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>[];
 
-export type NativeThemeType = typeof nativeTheme["themeSource"];
+// base: typeof electron.nativeTheme["themeSource"];
+export type NativeThemeType = "system" | "light" | "dark";
 
 export type MoraDataType =
   | "consonant"
@@ -494,6 +496,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
+  engineStartedOnAltPort: boolean; // エンジンのポート変更の通知
 };
 
 export const electronStoreSchema = z
@@ -568,6 +571,7 @@ export const electronStoreSchema = z
     defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
+    showTextLineNumber: z.boolean().default(false),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
@@ -582,10 +586,12 @@ export const electronStoreSchema = z
     confirmedTips: z
       .object({
         tweakableSliderByScroll: z.boolean().default(false),
+        engineStartedOnAltPort: z.boolean().default(false),
       })
       .passthrough()
       .default({}),
     registeredEngineDirs: z.string().array().default([]),
+    recentlyUsedProjects: z.string().array().default([]),
   })
   .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
@@ -619,3 +625,12 @@ export type EngineDirValidationResult =
   | "alreadyExists";
 
 export type VvppFilePathValidationResult = "ok" | "fileNotFound";
+
+// base: Electron.MessageBoxReturnValue
+// FIXME: MessageBoxUIの戻り値として使用したい値が決まったら書き換える
+export interface MessageBoxReturnValue {
+  response: number;
+  checkboxChecked: boolean;
+}
+
+export const SandboxKey = "electron" as const;

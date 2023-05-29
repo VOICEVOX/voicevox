@@ -51,7 +51,13 @@
                 @start="toolbarButtonDragging = true"
                 @end="toolbarButtonDragging = false"
               >
-                <template v-slot:item="{ element: button }">
+                <template
+                  v-slot:item="{
+                    element: button,
+                  }: {
+                    element: ToolbarButtonTagType,
+                  }"
+                >
                   <q-btn
                     unelevated
                     color="toolbar-button"
@@ -64,10 +70,10 @@
                     {{ getToolbarButtonName(button) }}
                     <q-tooltip
                       :delay="800"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                       :style="{
                         display: toolbarButtonDragging ? 'none' : 'block',
                       }"

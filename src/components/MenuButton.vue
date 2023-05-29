@@ -13,12 +13,12 @@
     :disable="disable"
     @click="
       (menudata.type === 'button' || menudata.type === 'root') &&
-        menudata.onClick()
+        menudata.onClick?.()
     "
   >
     {{ menudata.label }}
     <q-menu
-      v-if="menudata.subMenu"
+      v-if="'subMenu' in menudata"
       transition-show="none"
       transition-hide="none"
       :fit="true"
@@ -29,7 +29,9 @@
           v-for="(menu, index) of menudata.subMenu"
           :key="index"
           :menudata="menu"
-          :disable="uiLocked && menu.disableWhenUiLocked"
+          :disable="
+            uiLocked && menu.type !== 'separator' && menu.disableWhenUiLocked
+          "
           v-model:selected="subMenuOpenFlags[index]"
           @mouseenter="reassignSubMenuOpen(index)"
           @mouseleave="reassignSubMenuOpen.cancel()"

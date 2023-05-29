@@ -11,7 +11,9 @@ import {
   NativeThemeType,
   EngineSetting,
   EngineId,
+  MessageBoxReturnValue,
 } from "@/type/preload";
+import { AltPortInfos } from "@/store/type";
 
 /**
  * invoke, handle
@@ -67,6 +69,11 @@ export type IpcIHData = {
     return: string;
   };
 
+  GET_ALT_PORT_INFOS: {
+    args: [];
+    return: AltPortInfos;
+  };
+
   SHOW_AUDIO_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
@@ -110,7 +117,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   SHOW_QUESTION_DIALOG: {
@@ -134,7 +141,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   SHOW_ERROR_DIALOG: {
@@ -144,7 +151,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   OPEN_TEXT_EDIT_CONTEXT_MENU: {

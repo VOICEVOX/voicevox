@@ -228,7 +228,15 @@ const hotkeyFilter = ref("");
 
 const hotkeySettings = computed(() => store.state.hotkeySettings);
 
-const hotkeyColumns = ref([
+// FIXME: satisfiesを使うなどで型を表現したい
+const hotkeyColumns = ref<
+  {
+    name: string;
+    align: "left" | "right" | "center" | undefined;
+    label: string;
+    field: string;
+  }[]
+>([
   {
     name: "action",
     align: "left",
@@ -273,7 +281,8 @@ const duplicatedHotkey = computed(() => {
   );
 });
 
-const deleteHotkey = (action: HotkeyAction) => {
+// FIXME: actionはHotkeyAction型にすべき
+const deleteHotkey = (action: string) => {
   changeHotkeySettings(action, "");
 };
 
