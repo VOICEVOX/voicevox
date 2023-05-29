@@ -4,7 +4,7 @@
 
 ## Q. 動作環境を教えてください
 
-### CPU版
+### CPU 版
 
 Windows／Mac／Linux 搭載の PC に対応しています。
 
@@ -12,7 +12,7 @@ Windows／Mac／Linux 搭載の PC に対応しています。
 ※Mac：macOS Catalina 以降  
 ※Linux：Ubuntu 20.04
 
-### GPU版
+### GPU 版
 
 GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
 
@@ -45,11 +45,11 @@ GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応して
 
 デフォルトのインストール先は下記の場所です。
 
-#### Windows版のインストール先
+#### Windows 版のインストール先
 
 `C:\Users\(ユーザー名)\AppData\Local\Programs\VOICEVOX`
 
-#### Mac版のインストール先
+#### Mac 版のインストール先
 
 `/Applications/VOICEVOX` もしくは `/Users/(ユーザー名)/Applications/VOICEVOX`
 
@@ -87,11 +87,11 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 設定がなにか問題を起こしている可能性があります。ソフトウェアを終了して後述のパスにある設定ファイルを消去してもう一度起動してみてください。
 
-#### Windows版の設定ファイル
+#### Windows 版の設定ファイル
 
 `C:\Users\(ユーザー名)\AppData\Roaming\voicevox\config.json`
 
-#### Mac版の設定ファイル
+#### Mac 版の設定ファイル
 
 `/Users/(ユーザー名)/Library/Application Support/voicevox/config.json`
 
@@ -131,11 +131,11 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 以下のフォルダに保存されています。
 
-#### Windows版
+#### Windows 版
 
 `C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs`
 
-#### Mac版
+#### Mac 版
 
 `/Users/(ユーザー名)/Library/Application Support/voicevox/logs`
 
@@ -165,7 +165,13 @@ sudo apt install libfuse2
 音声の最初や最後に音声クレジットを挿入してください。  
 キャラクターの利用規約に案内がある場合はそちらを優先してください。
 
-### Q. 会社や学校で使いたいです
+### Q. 音楽配信サービスなどで公開する場合のクレジット表記はどうすれば良いですか？
+
+概要欄の無い楽曲投稿系プラットフォームの場合、タイトルやアーティストなどの欄にクレジットを記載するか、楽曲中に音声クレジットを挿入してください。  
+タイトルの例「タイトル (VOICEVOX:キャラクター名)」「タイトル feat. キャラクター名(VOICEVOX)」など  
+アーティストの例「キャラクター名(VOICEVOX)」「VOICEVOX:キャラクター名」など
+
+### Q. 会社や学校で使いたいです。
 
 VOICEVOX で作成された音声は、クレジット表記をして頂ければ商用・非商用問わず使用できます。  
 詳しくは VOICEVOX の利用規約及び各キャラクターの利用規約をご確認ください。
