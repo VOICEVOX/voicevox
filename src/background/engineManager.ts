@@ -243,7 +243,7 @@ export class EngineManager {
 
     // ポートを既に割り当てているプロセスidの取得: undefined → ポートが空いている
     const pid = await getPidFromPort(engineHostInfo);
-    if (pid != null) {
+    if (pid != undefined) {
       const processName = await getProcessNameFromPid(engineHostInfo, pid);
       log.warn(
         `ENGINE ${engineId}: Port ${engineHostInfo.port} has already been assigned by ${processName} (pid=${pid})`
@@ -270,7 +270,7 @@ export class EngineManager {
       };
 
       // 代替ポートを設定
-      engineInfo.host = `http://${engineHostInfo.hostname}:${altPort}`;
+      engineInfo.host = `${engineHostInfo}://${engineHostInfo.hostname}:${altPort}`;
       log.warn(
         `ENGINE ${engineId}: Applied Alternative Port: ${engineHostInfo.port} -> ${altPort}`
       );

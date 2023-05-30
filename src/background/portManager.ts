@@ -4,6 +4,7 @@ import log from "electron-log";
 const isWindows = process.platform === "win32";
 
 export type HostInfo = {
+  protocol: string;
   hostname: string;
   port: number;
 };
@@ -13,8 +14,9 @@ const portLog = (port: number, message: string, isNested = false) =>
 const portWarn = (port: number, message: string, isNested = false) =>
   log.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 
-export function url2HostInfo(url: URL) {
+export function url2HostInfo(url: URL): HostInfo {
   return {
+    protocol: url.protocol,
     hostname: url.hostname,
     port: Number(url.port),
   };
@@ -84,6 +86,7 @@ export async function getPidFromPort(
       loopbackAddr.forEach((hostname) => {
         // netstat の stdout から pid を取得
         const pid = netstatStdout2pid(stdout, {
+          protocol: hostInfo.protocol,
           hostname,
           port: hostInfo.port,
         });
@@ -192,6 +195,7 @@ export async function findAltPort(
     portLog(basePort, `Trying whether port ${altPort} is assignable...`);
     const altPid = await getPidFromPort(
       {
+        protocol: hostInfo.protocol,
         hostname: hostInfo.hostname,
         port: altPort,
       },
