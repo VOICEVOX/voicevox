@@ -270,7 +270,7 @@ export class EngineManager {
       };
 
       // 代替ポートを設定
-      engineInfo.host = `${engineHostInfo}://${engineHostInfo.hostname}:${altPort}`;
+      engineInfo.host = `${engineHostInfo.protocol}//${engineHostInfo.hostname}:${altPort}`;
       log.warn(
         `ENGINE ${engineId}: Applied Alternative Port: ${engineHostInfo.port} -> ${altPort}`
       );
