@@ -23,8 +23,7 @@ export function url2HostInfo(url: URL): HostInfo {
 }
 
 /**
- * "netstat -ano" の stdout から, 指定したポートを使用しているプロセスの process id を取得します.
- * また, TCPの状態が TIME_WAIT のときはポートが割り当て可能だとみなします.
+ * "netstat -ano" の stdout から, 指定したポートを LISTENING しているプロセスの id を取得します.
  *
  * ex) stdout:
  * ``` cmd
@@ -50,10 +49,7 @@ function netstatStdout2pid(
       const pid = parts[parts.length - 1];
       const tcpState = parts[parts.length - 2];
 
-      // 他のプロセスが割り当てをしているとみなすTCPの状態
-      if (["LISTENING", "ESTABLISHED", "CLOSE_WAIT"].includes(tcpState)) {
-        return Number(pid);
-      }
+      if (tcpState === "LISTENING") return Number(pid);
     }
   }
 
