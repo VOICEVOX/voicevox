@@ -524,8 +524,8 @@ async function start() {
   }
   store.set("engineSettings", engineSettings);
 
-  await createWindow();
   await engineManager.runEngineAll(win);
+  await createWindow();
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
