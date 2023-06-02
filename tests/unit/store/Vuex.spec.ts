@@ -25,6 +25,7 @@ describe("store/vuex.js test", () => {
           [engineId]: "STARTING",
         },
         engineSupportedDevices: {},
+        altPortInfos: {},
         characterInfos: {},
         morphableTargetsInfo: {},
         defaultStyleIds: [],
@@ -138,6 +139,7 @@ describe("store/vuex.js test", () => {
           engineStartedOnAltPort: false,
         },
         progress: -1,
+        isVuexReady: false,
         defaultPresetKeys: {},
       },
       getters: {
