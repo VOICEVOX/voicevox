@@ -35,8 +35,10 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を
 Fork して `git clone` し、次のコマンドを実行してください。
 
-Node.js の管理ツール ([nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など)を利用すると、
+Node.js の管理ツール ([nvs](https://github.com/jasongin/nvs)など)を利用すると、
 [.node-version](.node-version) を簡単にインストールすることができます。
+
+また[Volta](https://volta.sh)による自動切り替えも使うことができます。
 
 ```bash
 npm ci
