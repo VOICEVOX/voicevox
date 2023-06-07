@@ -27,18 +27,15 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 
 ### デザインガイドライン
 
-[UX・UIデザインの方針](./docs/UX・UIデザインの方針.md)をご参照ください。
+[UX・UI デザインの方針](./docs/UX・UIデザインの方針.md)をご参照ください。
 
 ## 環境構築
 
-[.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
+[.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。  
+Node.js の管理ツール ([nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など)を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
+
 Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を
 Fork して `git clone` し、次のコマンドを実行してください。
-
-Node.js の管理ツール ([nvs](https://github.com/jasongin/nvs)など)を利用すると、
-[.node-version](.node-version) を簡単にインストールすることができます。
-
-また[Volta](https://volta.sh)による自動切り替えも使うことができます。
 
 ```bash
 npm ci
@@ -50,17 +47,17 @@ npm ci
 
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
 
-Windowsの場合でもパスの区切り文字は`\`ではなく`/`なのでご注意ください。
+Windows の場合でもパスの区切り文字は`\`ではなく`/`なのでご注意ください。
 
-また、macOS向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Contents/MacOS/run`を指定してください。
+また、macOS 向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Contents/MacOS/run`を指定してください。
 
-Linuxの場合は、[Releases](https://github.com/VOICEVOX/voicevox/releases/)から入手できるtar.gz版に含まれる`run`コマンドを指定してください。
-AppImage版の場合は`$ /path/to/VOICEVOX.AppImage --appimage-mount`でファイルシステムをマウントできます。
+Linux の場合は、[Releases](https://github.com/VOICEVOX/voicevox/releases/)から入手できる tar.gz 版に含まれる`run`コマンドを指定してください。
+AppImage 版の場合は`$ /path/to/VOICEVOX.AppImage --appimage-mount`でファイルシステムをマウントできます。
 
-VOICEVOXエディタの実行とは別にエンジンAPIのサーバを立てている場合は`executionFilePath`を指定する必要はありません。
-これは製品版VOICEVOXを起動している場合もあてはまります。
+VOICEVOX エディタの実行とは別にエンジン API のサーバを立てている場合は`executionFilePath`を指定する必要はありません。
+これは製品版 VOICEVOX を起動している場合もあてはまります。
 
-また、エンジンAPIの宛先エンドポイントを変更する場合は`DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
+また、エンジン API の宛先エンドポイントを変更する場合は`DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
 
 ```bash
 npm run electron:serve
@@ -120,8 +117,8 @@ typos
 
 ## 型チェック
 
-TypeScriptの型チェックを行います。
-※ 現在チェック方法は2種類ありますが、将来的に1つになります。
+TypeScript の型チェックを行います。
+※ 現在チェック方法は 2 種類ありますが、将来的に 1 つになります。
 
 ```bash
 # .tsのみ型チェック
