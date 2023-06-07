@@ -2,8 +2,6 @@ name: Check version
 
 on:
   pull_request:
-    branches:
-      - "**"
     paths:
       - "/.node-version"
       - "/package.json"
