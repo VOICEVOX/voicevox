@@ -38,6 +38,8 @@ Fork して `git clone` し、次のコマンドを実行してください。
 Node.js の管理ツール ([nvs](https://github.com/jasongin/nvs)など)を利用すると、
 [.node-version](.node-version) を簡単にインストールすることができます。
 
+また[Volta](https://volta.sh)による自動切り替えも使うことができます。
+
 ```bash
 npm ci
 ```
