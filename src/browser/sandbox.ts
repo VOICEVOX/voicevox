@@ -1,4 +1,6 @@
-import { IpcSOData } from "@/type/ipc";
+import { v4 } from "uuid";
+import type { WorkerToMainMessage } from "./type";
+import { IpcIHData, IpcSOData } from "@/type/ipc";
 import {
   ElectronStoreType,
   EngineId,
@@ -10,67 +12,112 @@ import {
 
 const worker = new Worker(new URL("./background.ts", import.meta.url));
 
+const invoker = <K extends keyof IpcIHData>(
+  type: K,
+  args: IpcIHData[K]["args"]
+): Promise<IpcIHData[K]["return"]> => {
+  return new Promise((resolve) => {
+    const eventId = v4();
+    const cb = (ev: MessageEvent<WorkerToMainMessage>) => {
+      if (ev.data.type === type && ev.data.eventId === eventId) {
+        worker.removeEventListener("message", cb);
+        resolve(ev.data.return);
+      }
+    };
+    worker.addEventListener("message", cb); // 他のeventが届いた時にresolveしない様に、onceは使用していない
+    worker.postMessage({ type, args, eventId } /** MainToWorkerMessage */);
+  });
+};
+
+let tempDir: string;
+
 export const api: typeof window[typeof SandboxKey] = {
   getAppInfos() {
-    throw new Error("Not Implemented");
+    return invoker("GET_APP_INFOS", []);
   },
   getHowToUseText() {
-    throw new Error("Not Implemented");
+    return invoker("GET_HOW_TO_USE_TEXT", []);
   },
   getPolicyText() {
-    throw new Error("Not Implemented");
+    return invoker("GET_POLICY_TEXT", []);
   },
   getOssLicenses() {
-    throw new Error("Not Implemented");
+    return invoker("GET_OSS_LICENSES", []);
   },
   getUpdateInfos() {
-    throw new Error("Not Implemented");
+    return invoker("GET_UPDATE_INFOS", []);
   },
   getOssCommunityInfos() {
-    throw new Error("Not Implemented");
+    return invoker("GET_OSS_COMMUNITY_INFOS", []);
   },
   getQAndAText() {
-    throw new Error("Not Implemented");
+    return invoker("GET_Q_AND_A_TEXT", []);
   },
   getContactText() {
-    throw new Error("Not Implemented");
+    return invoker("GET_CONTACT_TEXT", []);
   },
   getPrivacyPolicyText() {
-    throw new Error("Not Implemented");
+    return invoker("GET_PRIVACY_POLICY_TEXT", []);
   },
   getAltPortInfos() {
-    throw new Error("Not Implemented");
+    return invoker("GET_ALT_PORT_INFOS", []);
   },
-  saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }) {
-    throw new Error("Not Implemented");
+  async saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }) {
+    if (!tempDir) {
+      tempDir = await invoker("GET_TEMP_DIR", []);
+    }
+    const tempFilePath = await invoker("JOIN_PATH", [
+      {
+        pathArray: [tempDir, obj.relativePath],
+      },
+    ]);
+    await invoker("WRITE_FILE", [
+      {
+        filePath: tempFilePath,
+        buffer: obj.buffer,
+      },
+    ]);
   },
-  loadTempFile() {
-    throw new Error("Not Implemented");
+  async loadTempFile() {
+    if (!tempDir) {
+      tempDir = await invoker("GET_TEMP_DIR", []);
+    }
+    const tempFilePath = await invoker("JOIN_PATH", [
+      {
+        pathArray: [tempDir, "hoge.txt"],
+      },
+    ]);
+    const buf = await invoker("READ_FILE", [
+      {
+        filePath: tempFilePath,
+      },
+    ]);
+    return new TextDecoder().decode(buf);
   },
   showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
-    throw new Error("Not Implemented");
+    return invoker("SHOW_AUDIO_SAVE_DIALOG", [obj]);
   },
   showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
-    throw new Error("Not Implemented");
+    return invoker("SHOW_TEXT_SAVE_DIALOG", [obj]);
   },
   showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
-    throw new Error("Not Implemented");
+    return invoker("SHOW_VVPP_OPEN_DIALOG", [obj]);
   },
   showOpenDirectoryDialog(obj: { title: string }) {
-    throw new Error("Not Implemented");
+    return invoker("SHOW_OPEN_DIRECTORY_DIALOG", [obj]);
   },
   showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
-    throw new Error("Not Implemented");
+    return invoker("SHOW_PROJECT_SAVE_DIALOG", [obj]);
   },
   showProjectLoadDialog(obj: { title: string }) {
-    throw new Error("Not Implemented");
+    return invoker("SHOW_PROJECT_LOAD_DIALOG", [obj]);
   },
   showMessageDialog(obj: {
     type: "none" | "info" | "error" | "question" | "warning";
     title: string;
     message: string;
   }) {
-    throw new Error("Not Implemented");
+    return invoker("SHOW_MESSAGE_DIALOG", [obj]);
   },
   showQuestionDialog(obj: {
     type: "none" | "info" | "error" | "question" | "warning";
@@ -80,25 +127,25 @@ export const api: typeof window[typeof SandboxKey] = {
     cancelId?: number;
     defaultId?: number;
   }) {
-    throw new Error("Not Implemented");
+    return invoker("SHOW_QUESTION_DIALOG", [obj]);
   },
   showImportFileDialog(obj: { title: string }) {
-    throw new Error("Not Implemented");
+    return invoker("SHOW_IMPORT_FILE_DIALOG", [obj]);
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
-    throw new Error("Not Implemented");
+    return invoker("WRITE_FILE", [obj]);
   },
   readFile(obj: { filePath: string }) {
-    throw new Error("Not Implemented");
+    return invoker("READ_FILE", [obj]);
   },
   openTextEditContextMenu() {
-    throw new Error("Not Implemented");
+    return invoker("OPEN_TEXT_EDIT_CONTEXT_MENU", []);
   },
   isAvailableGPUMode() {
-    throw new Error("Not Implemented");
+    return invoker("IS_AVAILABLE_GPU_MODE", []);
   },
   isMaximizedWindow() {
-    throw new Error("Not Implemented");
+    return invoker("IS_MAXIMIZED_WINDOW", []);
   },
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
@@ -112,78 +159,83 @@ export const api: typeof window[typeof SandboxKey] = {
     });
   },
   closeWindow() {
-    throw new Error("Not Implemented");
+    return invoker("CLOSE_WINDOW", []);
   },
   minimizeWindow() {
-    throw new Error("Not Implemented");
+    return invoker("MINIMIZE_WINDOW", []);
   },
   maximizeWindow() {
-    throw new Error("Not Implemented");
+    return invoker("MAXIMIZE_WINDOW", []);
   },
   logError(...params: unknown[]) {
-    throw new Error("Not Implemented");
+    console.error(...params);
+    return invoker("LOG_ERROR", [params]);
   },
   logWarn(...params: unknown[]) {
-    throw new Error("Not Implemented");
+    console.warn(...params);
+    return invoker("LOG_WARN", [params]);
   },
   logInfo(...params: unknown[]) {
-    throw new Error("Not Implemented");
+    console.info(...params);
+    return invoker("LOG_INFO", [params]);
   },
   engineInfos() {
-    throw new Error("Not Implemented");
+    return invoker("ENGINE_INFOS", []);
   },
   restartEngine(engineId: EngineId) {
-    throw new Error("Not Implemented");
+    return invoker("RESTART_ENGINE", [{ engineId }]);
   },
   openEngineDirectory(engineId: EngineId) {
-    throw new Error("Not Implemented");
+    return invoker("OPEN_ENGINE_DIRECTORY", [{ engineId }]);
   },
   hotkeySettings(newData?: HotkeySetting) {
-    throw new Error("Not Implemented");
+    return invoker("HOTKEY_SETTINGS", [{ newData }]);
   },
   checkFileExists(file: string) {
-    throw new Error("Not Implemented");
+    return invoker("CHECK_FILE_EXISTS", [{ file }]);
   },
   changePinWindow() {
-    throw new Error("Not Implemented");
+    return invoker("CHANGE_PIN_WINDOW", []);
   },
   getDefaultHotkeySettings() {
-    throw new Error("Not Implemented");
+    return invoker("GET_DEFAULT_HOTKEY_SETTINGS", []);
   },
   getDefaultToolbarSetting() {
-    throw new Error("Not Implemented");
+    return invoker("GET_DEFAULT_TOOLBAR_SETTING", []);
   },
   setNativeTheme(source: NativeThemeType) {
-    throw new Error("Not Implemented");
+    return invoker("SET_NATIVE_THEME", [source]);
   },
   theme(newData?: string) {
-    throw new Error("Not Implemented");
+    return invoker("THEME", [{ newData }]);
   },
   vuexReady() {
-    throw new Error("Not Implemented");
+    return invoker("ON_VUEX_READY", []);
   },
   getSetting<Key extends keyof ElectronStoreType>(key: Key) {
-    throw new Error("Not Implemented");
+    return invoker("GET_SETTING", [key]) as Promise<
+      ElectronStoreType[typeof key]
+    >;
   },
   setSetting<Key extends keyof ElectronStoreType>(
     key: Key,
     newValue: ElectronStoreType[Key]
   ) {
-    throw new Error("Not Implemented");
+    return invoker("SET_SETTING", [key, newValue]) as Promise<typeof newValue>;
   },
   setEngineSetting(engineId: EngineId, engineSetting: EngineSetting) {
-    throw new Error("Not Implemented");
+    return invoker("SET_ENGINE_SETTING", [engineId, engineSetting]);
   },
-  installVvppEngine(path: string) {
-    throw new Error("Not Implemented");
+  async installVvppEngine(path: string) {
+    return invoker("INSTALL_VVPP_ENGINE", [path]);
   },
-  uninstallVvppEngine(engineId: EngineId) {
-    throw new Error("Not Implemented");
+  async uninstallVvppEngine(engineId: EngineId) {
+    return invoker("UNINSTALL_VVPP_ENGINE", [engineId]);
   },
   validateEngineDir(engineDir: string) {
-    throw new Error("Not Implemented");
+    return invoker("VALIDATE_ENGINE_DIR", [{ engineDir }]);
   },
   restartApp(obj: { isMultiEngineOffMode: boolean }) {
-    throw new Error("Not Implemented");
+    return invoker("RESTART_APP", [obj]);
   },
 };
