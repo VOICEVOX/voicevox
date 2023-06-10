@@ -8,6 +8,10 @@
     "node": ">=18.13.0 <19",
     "npm": ">=8.19.3 <9"
   },
+  "volta": {
+    "node": "18.13.0",
+    "npm": "8.19.3"
+  },
   "scripts": {
     "serve": "cross-env VITE_IS_ELECTRON=false vite",
     "build": "cross-env VITE_IS_ELECTRON=false vite build",
@@ -114,7 +118,7 @@
     "vite-plugin-node-polyfills": "0.7.0",
     "vite-tsconfig-paths": "4.0.5",
     "vitest": "0.28.5",
-    "vue-tsc": "0.40.13",
+    "vue-tsc": "1.4.2",
     "yargs": "17.2.1"
   }
 }

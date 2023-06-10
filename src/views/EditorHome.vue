@@ -578,38 +578,6 @@ onMounted(async () => {
     store.state.acceptTerms !== "Accepted";
 
   isCompletedInitialStartup.value = true;
-
-  // 代替ポートをトースト通知する
-  // FIXME: トーストが何度も出るようにする（altPortInfoをstateに持たせてwatchする）
-  if (!store.state.confirmedTips.engineStartedOnAltPort) {
-    const altPortInfo = await store.dispatch("GET_ALT_PORT_INFOS");
-    for (const engineId of store.state.engineIds) {
-      const engineName = store.state.engineInfos[engineId].name;
-      const altPort = altPortInfo[engineId];
-
-      if (!altPort) return;
-      $q.notify({
-        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
-        color: "toast",
-        textColor: "toast-display",
-        icon: "compare_arrows",
-        timeout: 5000,
-        actions: [
-          {
-            label: "今後この通知をしない",
-            textColor: "toast-button-display",
-            handler: () =>
-              store.dispatch("SET_CONFIRMED_TIPS", {
-                confirmedTips: {
-                  ...store.state.confirmedTips,
-                  engineStartedOnAltPort: true,
-                },
-              }),
-          },
-        ],
-      });
-    }
-  }
 });
 
 // エンジン待機
@@ -652,6 +620,47 @@ watch(allEngineState, (newEngineState) => {
     isEngineWaitingLong.value = false;
   }
 });
+
+// 代替ポート情報の変更を監視
+watch(
+  () => [store.state.altPortInfos, store.state.isVuexReady],
+  async () => {
+    // この watch がエンジンが起動した時 (=> 設定ファイルを読み込む前) に発火して, "今後この通知をしない" を無視するのを防ぐ
+    if (!store.state.isVuexReady) return;
+
+    // "今後この通知をしない" を考慮
+    if (store.state.confirmedTips.engineStartedOnAltPort) return;
+
+    // 代替ポートをトースト通知する
+    for (const engineId of store.state.engineIds) {
+      const engineName = store.state.engineInfos[engineId].name;
+      const altPort = store.state.altPortInfos[engineId];
+      if (!altPort) return;
+
+      $q.notify({
+        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+        color: "toast",
+        textColor: "toast-display",
+        icon: "compare_arrows",
+        timeout: 5000,
+        actions: [
+          {
+            label: "今後この通知をしない",
+            textColor: "toast-button-display",
+            handler: () =>
+              store.dispatch("SET_CONFIRMED_TIPS", {
+                confirmedTips: {
+                  ...store.state.confirmedTips,
+                  engineStartedOnAltPort: true,
+                },
+              }),
+          },
+        ],
+      });
+    }
+  }
+);
+
 const restartAppWithMultiEngineOffMode = () => {
   store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
 };
