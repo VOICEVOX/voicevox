@@ -15,7 +15,7 @@
       color="red"
       class="title-bar-buttons"
       @click="closeWindow()"
-      aria-label="ウィンドウを閉じる"
+      aria-label="閉じる"
     ></q-btn>
     <q-btn
       dense
@@ -26,7 +26,7 @@
       color="yellow"
       class="title-bar-buttons"
       @click="minimizeWindow()"
-      aria-label="ウィンドウを最小化"
+      aria-label="最小化"
     ></q-btn>
     <q-btn
       dense
@@ -37,7 +37,7 @@
       color="green"
       class="title-bar-buttons"
       @click="maximizeWindow()"
-      aria-label="ウィンドウを最大化"
+      aria-label="最大化"
     ></q-btn>
   </q-badge>
   <q-badge
@@ -58,7 +58,7 @@
       icon="minimize"
       class="title-bar-buttons"
       @click="minimizeWindow()"
-      aria-label="ウィンドウを最小化"
+      aria-label="最小化"
     ></q-btn>
 
     <q-btn
@@ -68,7 +68,7 @@
       icon="crop_square"
       class="title-bar-buttons"
       @click="maximizeWindow()"
-      aria-label="ウィンドウを最大化"
+      aria-label="最大化"
     ></q-btn>
     <q-btn
       v-else
@@ -77,7 +77,7 @@
       :icon="mdiWindowRestore"
       class="title-bar-buttons"
       @click="maximizeWindow()"
-      aria-label="ウィンドウを最大化"
+      aria-label="最大化"
     >
     </q-btn>
 
@@ -87,7 +87,7 @@
       icon="close"
       class="title-bar-buttons close"
       @click="closeWindow()"
-      aria-label="ウィンドウを閉じる"
+      aria-label="閉じる"
     ></q-btn>
   </q-badge>
 </template>
