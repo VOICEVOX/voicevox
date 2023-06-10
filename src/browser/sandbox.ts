@@ -10,7 +10,9 @@ import {
   SandboxKey,
 } from "@/type/preload";
 
-const worker = new Worker(new URL("./background.ts", import.meta.url));
+const worker = new Worker(new URL("./background.ts", import.meta.url), {
+  type: "module",
+});
 
 const invoker = <K extends keyof IpcIHData>(
   type: K,
