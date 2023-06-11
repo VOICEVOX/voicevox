@@ -7,6 +7,7 @@ import type { EngineId, EngineInfo } from "@/type/preload";
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
   engineSupportedDevices: {},
+  altPortInfos: {},
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
@@ -66,8 +67,16 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   GET_ALT_PORT_INFOS: {
-    async action() {
-      return await window.electron.getAltPortInfos();
+    async action({ commit }) {
+      const altPortInfos = await window.electron.getAltPortInfos();
+      commit("SET_ALT_PORT_INFOS", { altPortInfos });
+      return altPortInfos;
+    },
+  },
+
+  SET_ALT_PORT_INFOS: {
+    mutation(state, { altPortInfos }) {
+      state.altPortInfos = altPortInfos;
     },
   },
 
@@ -220,6 +229,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   POST_ENGINE_START: {
     async action({ state, dispatch }, { engineIds }) {
+      await dispatch("GET_ALT_PORT_INFOS");
       const result = await Promise.all(
         engineIds.map(async (engineId) => {
           if (state.engineStates[engineId] === "STARTING") {

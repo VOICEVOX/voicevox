@@ -3,7 +3,8 @@
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
-    <!-- <q-badge
+    <!--
+    <q-badge
       class="value-label"
       color="primary-light"
       text-color="display-on-primary"
@@ -16,7 +17,8 @@
           ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
           : undefined
       }}
-    </q-badge> デバッグ用、↓を入力可能にする-->
+    </q-badge>
+    -->
     <div>
       <q-input
         dense
@@ -89,7 +91,6 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
-    verticalOffset: 0,
   }
 );
 
@@ -112,8 +113,6 @@ const emit =
   }>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) => {
-  console.log("newValue:" + newValue);
-  console.log("MoraDataType:" + type);
   emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue, type);
 };
 
@@ -158,7 +157,6 @@ const handleMouseHover = (isOver: boolean) => {
   }
 };
 
-// テキスト入力された数値の検証とフォーマットを行う
 const formatValue = (
   value: number | null,
   defaultMinValue: number,
