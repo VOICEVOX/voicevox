@@ -27,7 +27,7 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage<typeof e.data.type>(v)
       );
     case "GET_TEMP_DIR":
-      console.dir(e.data);
+      console.error("Not Implemented, it should not be called from VOICEVOX");
       postMessage({ type: e.data.type, return: [], eventId: e.data.eventId });
       break;
     case "GET_HOW_TO_USE_TEXT":
