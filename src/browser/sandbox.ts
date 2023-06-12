@@ -31,8 +31,6 @@ const invoker = <K extends keyof IpcIHData>(
   });
 };
 
-let tempDir: string;
-
 export const api: typeof window[typeof SandboxKey] = {
   getAppInfos() {
     return invoker("GET_APP_INFOS", []);
@@ -65,36 +63,16 @@ export const api: typeof window[typeof SandboxKey] = {
     return invoker("GET_ALT_PORT_INFOS", []);
   },
   async saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }) {
-    if (!tempDir) {
-      tempDir = await invoker("GET_TEMP_DIR", []);
-    }
-    const tempFilePath = await invoker("JOIN_PATH", [
-      {
-        pathArray: [tempDir, obj.relativePath],
-      },
-    ]);
-    await invoker("WRITE_FILE", [
-      {
-        filePath: tempFilePath,
-        buffer: obj.buffer,
-      },
-    ]);
+    // DELETE_ME: もう使ってなさそう
+    throw new Error(
+      `not implemented: saveTempAudioFile is already obsoleted: ${JSON.stringify(
+        obj
+      )}`
+    );
   },
   async loadTempFile() {
-    if (!tempDir) {
-      tempDir = await invoker("GET_TEMP_DIR", []);
-    }
-    const tempFilePath = await invoker("JOIN_PATH", [
-      {
-        pathArray: [tempDir, "hoge.txt"],
-      },
-    ]);
-    const buf = await invoker("READ_FILE", [
-      {
-        filePath: tempFilePath,
-      },
-    ]);
-    return new TextDecoder().decode(buf);
+    // DELETE_ME: もう使ってなさそう
+    throw new Error(`not implemented: loadTempFile is already obsoleted`);
   },
   showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
     return invoker("SHOW_AUDIO_SAVE_DIALOG", [obj]);
