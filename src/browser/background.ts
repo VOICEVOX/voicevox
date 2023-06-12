@@ -8,6 +8,7 @@ import {
   getPrivacyPolicyTextImpl,
   getQAndATextImpl,
   getUpdateInfosImpl,
+  themeImpl,
 } from "./backgroundImpl";
 import type { MainToWorkerMessage } from "./type";
 import type { IpcIHData } from "@/type/ipc";
@@ -92,7 +93,14 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "HOTKEY_SETTINGS":
     case "GET_DEFAULT_HOTKEY_SETTINGS":
     case "GET_DEFAULT_TOOLBAR_SETTING":
+      console.dir(e.data);
+      postMessage({ type: e.data.type, return: [], eventId: e.data.eventId });
+      break;
     case "THEME":
+      // TODO: 実際のcurrentThemeを設定して返す
+      return themeImpl(e.data.args).then((v) =>
+        typedPostMessage<typeof e.data.type>(v)
+      );
     case "ON_VUEX_READY":
     case "GET_SETTING":
     case "SET_SETTING":

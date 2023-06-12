@@ -62,3 +62,17 @@ export const getOssLicensesImpl: SandboxImpl["GET_OSS_LICENSES"] = () => {
 export const getUpdateInfosImpl: SandboxImpl["GET_UPDATE_INFOS"] = () => {
   return fetch(toStaticPath(UpdateInfosJsonFileName)).then((v) => v.json());
 };
+
+// FIXME: 簡単のため、currentThemeを固定値にしている
+// 呼び出し元で実際の値でoverrideする
+export const themeImpl: SandboxImpl["THEME"] = () => {
+  return Promise.all(
+    // FIXME: themeファイルのいい感じのパスの設定
+    ["/themes/default.json", "/themes/dark.json"].map((url) =>
+      fetch(url).then((res) => res.json())
+    )
+  ).then((v) => ({
+    currentTheme: "Default",
+    availableThemes: v,
+  }));
+};
