@@ -7,7 +7,9 @@ import {
   getPolicyTextImpl,
   getPrivacyPolicyTextImpl,
   getQAndATextImpl,
+  getSettingImpl,
   getUpdateInfosImpl,
+  setSettingImpl,
   themeImpl,
 } from "./backgroundImpl";
 import type { MainToWorkerMessage } from "./type";
@@ -102,8 +104,17 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage<typeof e.data.type>(v)
       );
     case "ON_VUEX_READY":
+      console.dir(e.data);
+      postMessage({ type: e.data.type, return: [], eventId: e.data.eventId });
+      break;
     case "GET_SETTING":
+      return getSettingImpl(e.data.args).then((v) =>
+        typedPostMessage<typeof e.data.type>(v)
+      );
     case "SET_SETTING":
+      return setSettingImpl(e.data.args).then((v) =>
+        typedPostMessage<typeof e.data.type>(v)
+      );
     case "SET_ENGINE_SETTING":
     case "SET_NATIVE_THEME":
     case "INSTALL_VVPP_ENGINE":

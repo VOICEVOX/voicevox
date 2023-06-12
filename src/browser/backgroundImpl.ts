@@ -1,4 +1,5 @@
 import type { IpcIHData } from "@/type/ipc";
+import { electronStoreSchema } from "@/type/preload";
 import {
   ContactTextFileName,
   HowToUseTextFileName,
@@ -75,4 +76,92 @@ export const themeImpl: SandboxImpl["THEME"] = () => {
     currentTheme: "Default",
     availableThemes: v,
   }));
+};
+
+const dbName = "voicevox-web";
+// FIXME: DBのバージョンを何かしらの形で行いたい
+const dbVersion = 1;
+
+const openDB = () =>
+  new Promise<IDBDatabase>((resolve, reject) => {
+    const request = indexedDB.open(dbName, dbVersion);
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      // TODO: handling
+      reject(request.error);
+    };
+    request.onupgradeneeded = (ev) => {
+      if (ev.oldVersion === 0) {
+        // Initialize
+        const db = request.result;
+        const baseSchema = electronStoreSchema.parse({});
+        Object.entries(baseSchema).forEach(([key, value]) => {
+          db.createObjectStore(key, { autoIncrement: true }).add(value);
+        });
+      }
+      // TODO: migrate
+    };
+  });
+
+let db: IDBDatabase | null = null;
+
+export const getSettingImpl: SandboxImpl["GET_SETTING"] = async ([key]) => {
+  if (db === null) {
+    db = await openDB();
+  }
+
+  if (db === null) {
+    throw new Error("db is null");
+  }
+
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const transaction = db!.transaction(key, "readonly");
+    const store = transaction.objectStore(key);
+    const request = store.get(key);
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export const setSettingImpl: SandboxImpl["SET_SETTING"] = async ([
+  key,
+  value,
+]) => {
+  if (db === null) {
+    db = await openDB();
+  }
+
+  if (db === null) {
+    throw new Error("db is null");
+  }
+
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const transaction = db!.transaction(key, "readwrite");
+    const store = transaction.objectStore(key);
+    const request = store.put(value, key);
+    request.onsuccess = () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const readRequest = db!
+        .transaction(key, "readonly")
+        .objectStore(key)
+        .get(key);
+      readRequest.onsuccess = () => {
+        resolve(readRequest.result);
+      };
+      readRequest.onerror = () => {
+        reject(readRequest.error);
+      };
+    };
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
 };
