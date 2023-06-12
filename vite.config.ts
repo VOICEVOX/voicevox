@@ -97,6 +97,12 @@ export default defineConfig((options) => {
         }),
       isBrowser && injectBrowserPreloadPlugin(),
     ],
+    define: {
+      [`process.env`]: {
+        APP_NAME: JSON.stringify(process.env.npm_package_name),
+        APP_VERSION: JSON.stringify(process.env.npm_package_version),
+      },
+    },
   };
 });
 
