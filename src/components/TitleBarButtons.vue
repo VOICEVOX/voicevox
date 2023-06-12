@@ -19,7 +19,7 @@
       aria-label="最前面固定を解除"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に固定
+        最前面固定を解除
       </q-tooltip>
     </q-btn>
     <q-btn
@@ -35,7 +35,7 @@
       aria-label="最前面に固定"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面固定を解除
+        最前面に固定
       </q-tooltip>
     </q-btn>
   </q-badge>
@@ -64,7 +64,7 @@
       aria-label="最前面固定を解除"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に固定
+        最前面固定を解除
       </q-tooltip>
     </q-btn>
     <q-btn
@@ -79,7 +79,7 @@
       aria-label="最前面に固定"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面固定を解除
+        最前面に固定
       </q-tooltip>
     </q-btn>
   </q-badge>
