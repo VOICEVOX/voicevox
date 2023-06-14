@@ -1,5 +1,10 @@
 import type { IpcIHData } from "@/type/ipc";
-import { EngineId, EngineInfo, electronStoreSchema } from "@/type/preload";
+import {
+  EngineId,
+  EngineInfo,
+  electronStoreSchema,
+  engineSettingSchema,
+} from "@/type/preload";
 import {
   ContactTextFileName,
   HowToUseTextFileName,
@@ -146,7 +151,19 @@ const openDB = () =>
         const db = request.result;
         const baseSchema = electronStoreSchema.parse({});
         Object.entries(baseSchema).forEach(([key, value]) => {
-          db.createObjectStore(key).add(value, entryKey);
+          const k = key as keyof typeof baseSchema;
+          if (k !== "engineSettings") {
+            db.createObjectStore(key).add(value, entryKey);
+            return;
+          }
+          // defaultのEngineSettingを追加
+          const defaultVoicevoxEngineId = EngineId(defaultEngine.uuid);
+          db.createObjectStore(key).add(
+            {
+              [defaultVoicevoxEngineId]: engineSettingSchema.parse({}),
+            },
+            entryKey
+          );
         });
       }
       // TODO: migrate
