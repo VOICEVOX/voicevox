@@ -3,6 +3,8 @@ import {
   EngineId,
   EngineInfo,
   ThemeConf,
+  defaultHotkeySettings,
+  defaultToolbarButtonSetting,
   electronStoreSchema,
   engineSettingSchema,
 } from "@/type/preload";
@@ -128,6 +130,16 @@ export const hotkeySettingsImpl: SandboxImpl["HOTKEY_SETTINGS"] = async ([
   }
   return getSettingImpl(["hotkeySettings"]) as Promise<HotkeySettingType>;
 };
+
+export const getDefaultHotkeySettingsImpl: SandboxImpl["GET_DEFAULT_HOTKEY_SETTINGS"] =
+  () => {
+    return Promise.resolve(defaultHotkeySettings);
+  };
+
+export const getDefaultToolbarSettingImpl: SandboxImpl["GET_DEFAULT_TOOLBAR_SETTING"] =
+  () => {
+    return Promise.resolve(defaultToolbarButtonSetting);
+  };
 
 export const themeImpl: SandboxImpl["THEME"] = async ([{ newData }]) => {
   if (newData !== undefined) {

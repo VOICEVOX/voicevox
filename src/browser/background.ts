@@ -3,6 +3,8 @@ import {
   getAltPortInfosImpl,
   getAppInfosImpl,
   getContactTextImpl,
+  getDefaultHotkeySettingsImpl,
+  getDefaultToolbarSettingImpl,
   getHowToUseTextImpl,
   getOssCommunityInfosImpl,
   getOssLicensesImpl,
@@ -124,10 +126,13 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_DEFAULT_HOTKEY_SETTINGS":
+      return getDefaultHotkeySettingsImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "GET_DEFAULT_TOOLBAR_SETTING":
-      console.dir(e.data);
-      postMessage({ type: type, return: [], eventId: e.data.eventId });
-      break;
+      return getDefaultToolbarSettingImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "THEME":
       return themeImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
