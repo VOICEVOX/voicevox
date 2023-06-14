@@ -8,6 +8,7 @@ import {
   getPrivacyPolicyTextImpl,
   getQAndATextImpl,
   getSettingImpl,
+  getTempDirImpl,
   getUpdateInfosImpl,
   setSettingImpl,
   themeImpl,
@@ -33,9 +34,9 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_TEMP_DIR":
-      console.error("Not Implemented, it should not be called from VOICEVOX");
-      postMessage({ type, return: [], eventId: e.data.eventId });
-      break;
+      return getTempDirImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "GET_HOW_TO_USE_TEXT":
       return getHowToUseTextImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
