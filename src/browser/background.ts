@@ -1,4 +1,5 @@
 import {
+  getAltPortInfosImpl,
   getAppInfosImpl,
   getContactTextImpl,
   getHowToUseTextImpl,
@@ -70,6 +71,9 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_ALT_PORT_INFOS":
+      return getAltPortInfosImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "SHOW_AUDIO_SAVE_DIALOG":
     case "SHOW_TEXT_SAVE_DIALOG":
     case "SHOW_VVPP_OPEN_DIALOG":

@@ -72,6 +72,13 @@ export const getUpdateInfosImpl: SandboxImpl["GET_UPDATE_INFOS"] = () => {
   return fetch(toStaticPath(UpdateInfosJsonFileName)).then((v) => v.json());
 };
 
+/**
+ * @deprecated ブラウザ版ではサポートされていません
+ */
+export const getAltPortInfosImpl: SandboxImpl["GET_ALT_PORT_INFOS"] = () => {
+  return Promise.resolve({});
+};
+
 export const themeImpl: SandboxImpl["THEME"] = async () => {
   return Promise.all(
     // FIXME: themeファイルのいい感じのパスの設定
