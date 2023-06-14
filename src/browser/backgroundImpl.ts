@@ -108,6 +108,27 @@ export const engineInfosImpl: SandboxImpl["ENGINE_INFOS"] = async () => {
   return [defaultEngine];
 };
 
+export const hotkeySettingsImpl: SandboxImpl["HOTKEY_SETTINGS"] = async ([
+  { newData },
+]) => {
+  type HotkeySettingType = ReturnType<
+    typeof electronStoreSchema["parse"]
+  >["hotkeySettings"];
+  if (newData !== undefined) {
+    const hotkeySettings = (await getSettingImpl([
+      "hotkeySettings",
+    ])) as HotkeySettingType;
+    const hotkeySetting = hotkeySettings.find(
+      (hotkey) => hotkey.action == newData.action
+    );
+    if (hotkeySetting !== undefined) {
+      hotkeySetting.combination = newData.combination;
+    }
+    await setSettingImpl(["hotkeySettings", hotkeySettings]);
+  }
+  return getSettingImpl(["hotkeySettings"]) as Promise<HotkeySettingType>;
+};
+
 export const themeImpl: SandboxImpl["THEME"] = async ([{ newData }]) => {
   if (newData !== undefined) {
     await setSettingImpl(["currentTheme", newData]);

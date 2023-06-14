@@ -12,6 +12,7 @@ import {
   getSettingImpl,
   getTempDirImpl,
   getUpdateInfosImpl,
+  hotkeySettingsImpl,
   openTextEditContextMenuImpl,
   setSettingImpl,
   themeImpl,
@@ -115,7 +116,13 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "OPEN_ENGINE_DIRECTORY":
     case "CHECK_FILE_EXISTS":
     case "CHANGE_PIN_WINDOW":
+      console.dir(e.data);
+      postMessage({ type: type, return: [], eventId: e.data.eventId });
+      break;
     case "HOTKEY_SETTINGS":
+      return hotkeySettingsImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "GET_DEFAULT_HOTKEY_SETTINGS":
     case "GET_DEFAULT_TOOLBAR_SETTING":
       console.dir(e.data);
