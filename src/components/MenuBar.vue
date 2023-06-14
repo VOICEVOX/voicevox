@@ -132,7 +132,9 @@ const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndSaveAllAudioWithDialog({
       encoding: store.state.savingSetting.fileEncoding,
+      confirmedTips: store.state.confirmedTips,
       quasarDialog: $q.dialog,
+      quasarNotify: $q.notify,
       dispatch: store.dispatch,
     });
   }
@@ -142,8 +144,10 @@ const generateAndConnectAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndConnectAndSaveAudioWithDialog({
       quasarDialog: $q.dialog,
+      quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
+      confirmedTips: store.state.confirmedTips,
     });
   }
 };
@@ -169,6 +173,8 @@ const generateAndSaveOneAudio = async () => {
     audioKey: activeAudioKey,
     encoding: store.state.savingSetting.fileEncoding,
     quasarDialog: $q.dialog,
+    quasarNotify: $q.notify,
+    confirmedTips: store.state.confirmedTips,
     dispatch: store.dispatch,
   });
 };
@@ -177,8 +183,10 @@ const connectAndExportText = async () => {
   if (!uiLocked.value) {
     await connectAndExportTextWithDialog({
       quasarDialog: $q.dialog,
+      quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
+      confirmedTips: store.state.confirmedTips,
     });
   }
 };

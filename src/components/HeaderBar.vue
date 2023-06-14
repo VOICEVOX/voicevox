@@ -135,22 +135,28 @@ const generateAndSaveOneAudio = async () => {
   await generateAndSaveOneAudioWithDialog({
     audioKey: activeAudioKey.value,
     quasarDialog: $q.dialog,
+    quasarNotify: $q.notify,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
+    confirmedTips: store.state.confirmedTips,
   });
 };
 const generateAndSaveAllAudio = async () => {
   await generateAndSaveAllAudioWithDialog({
     quasarDialog: $q.dialog,
+    quasarNotify: $q.notify,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
+    confirmedTips: store.state.confirmedTips,
   });
 };
 const generateAndConnectAndSaveAudio = async () => {
   await generateAndConnectAndSaveAudioWithDialog({
     quasarDialog: $q.dialog,
     dispatch: store.dispatch,
+    quasarNotify: $q.notify,
     encoding: store.state.savingSetting.fileEncoding,
+    confirmedTips: store.state.confirmedTips,
   });
 };
 const saveProject = async () => {
