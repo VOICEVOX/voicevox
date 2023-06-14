@@ -18,52 +18,55 @@ import type { IpcIHData } from "@/type/ipc";
 type MessageReturnTypes = { [K in keyof IpcIHData]: IpcIHData[K]["return"] };
 
 const typedPostMessage = <K extends keyof MessageReturnTypes>(
-  message: MessageReturnTypes[K]
+  type: K,
+  message: MessageReturnTypes[K],
+  eventId: string
 ) => {
-  postMessage(message);
+  postMessage({ type, return: message, eventId });
 };
 
 onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
-  switch (e.data.type) {
+  const type = e.data.type;
+  switch (type) {
     case "GET_APP_INFOS":
       return getAppInfosImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_TEMP_DIR":
       console.error("Not Implemented, it should not be called from VOICEVOX");
-      postMessage({ type: e.data.type, return: [], eventId: e.data.eventId });
+      postMessage({ type, return: [], eventId: e.data.eventId });
       break;
     case "GET_HOW_TO_USE_TEXT":
       return getHowToUseTextImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_POLICY_TEXT":
       return getPolicyTextImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_OSS_LICENSES":
       return getOssLicensesImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_UPDATE_INFOS":
       return getUpdateInfosImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_OSS_COMMUNITY_INFOS":
       return getOssCommunityInfosImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_CONTACT_TEXT":
       return getContactTextImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_Q_AND_A_TEXT":
       return getQAndATextImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_PRIVACY_POLICY_TEXT":
       return getPrivacyPolicyTextImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_ALT_PORT_INFOS":
     case "SHOW_AUDIO_SAVE_DIALOG":
@@ -96,24 +99,23 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "GET_DEFAULT_HOTKEY_SETTINGS":
     case "GET_DEFAULT_TOOLBAR_SETTING":
       console.dir(e.data);
-      postMessage({ type: e.data.type, return: [], eventId: e.data.eventId });
+      postMessage({ type: type, return: [], eventId: e.data.eventId });
       break;
     case "THEME":
-      // TODO: 実際のcurrentThemeを設定して返す
       return themeImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "ON_VUEX_READY":
       console.dir(e.data);
-      postMessage({ type: e.data.type, return: [], eventId: e.data.eventId });
+      postMessage({ type, return: [], eventId: e.data.eventId });
       break;
     case "GET_SETTING":
       return getSettingImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "SET_SETTING":
       return setSettingImpl(e.data.args).then((v) =>
-        typedPostMessage<typeof e.data.type>(v)
+        typedPostMessage(type, v, e.data.eventId)
       );
     case "SET_ENGINE_SETTING":
     case "SET_NATIVE_THEME":
@@ -125,7 +127,7 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "WRITE_FILE":
     case "READ_FILE":
       console.dir(e.data);
-      postMessage({ type: e.data.type, return: [], eventId: e.data.eventId });
+      postMessage({ type, return: [], eventId: e.data.eventId });
       break;
   }
 };
