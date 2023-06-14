@@ -1,4 +1,5 @@
 import {
+  engineInfosImpl,
   getAltPortInfosImpl,
   getAppInfosImpl,
   getContactTextImpl,
@@ -102,7 +103,13 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "LOG_ERROR":
     case "LOG_WARN":
     case "LOG_INFO":
+      console.dir(e.data);
+      postMessage({ type: type, return: [], eventId: e.data.eventId });
+      break;
     case "ENGINE_INFOS":
+      return engineInfosImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "RESTART_ENGINE_ALL":
     case "RESTART_ENGINE":
     case "OPEN_ENGINE_DIRECTORY":

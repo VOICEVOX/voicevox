@@ -1,5 +1,5 @@
 import type { IpcIHData } from "@/type/ipc";
-import { electronStoreSchema } from "@/type/preload";
+import { EngineId, EngineInfo, electronStoreSchema } from "@/type/preload";
 import {
   ContactTextFileName,
   HowToUseTextFileName,
@@ -86,6 +86,21 @@ export const openTextEditContextMenuImpl: SandboxImpl["OPEN_TEXT_EDIT_CONTEXT_ME
   () => {
     return Promise.resolve();
   };
+
+const defaultEngine: EngineInfo = {
+  uuid: EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d"),
+  host: "http://127.0.0.1:50021",
+  name: "VOICEVOX Engine",
+  path: undefined,
+  executionEnabled: false,
+  executionFilePath: "",
+  executionArgs: [],
+  type: "default",
+};
+
+export const engineInfosImpl: SandboxImpl["ENGINE_INFOS"] = async () => {
+  return [defaultEngine];
+};
 
 export const themeImpl: SandboxImpl["THEME"] = async () => {
   return Promise.all(
