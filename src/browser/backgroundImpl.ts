@@ -89,6 +89,8 @@ export const themeImpl: SandboxImpl["THEME"] = async () => {
 const dbName = "voicevox-web";
 // FIXME: DBのバージョンを何かしらの形で行いたい
 const dbVersion = 1;
+// NOTE: settingを複数持つことはないと仮定して、keyを固定してしまう
+const entryKey = "value";
 
 const openDB = () =>
   new Promise<IDBDatabase>((resolve, reject) => {
@@ -106,7 +108,7 @@ const openDB = () =>
         const db = request.result;
         const baseSchema = electronStoreSchema.parse({});
         Object.entries(baseSchema).forEach(([key, value]) => {
-          db.createObjectStore(key, { autoIncrement: true }).add(value);
+          db.createObjectStore(key).add(value, entryKey);
         });
       }
       // TODO: migrate
@@ -128,7 +130,7 @@ export const getSettingImpl: SandboxImpl["GET_SETTING"] = async ([key]) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const transaction = db!.transaction(key, "readonly");
     const store = transaction.objectStore(key);
-    const request = store.get(key);
+    const request = store.get(entryKey);
     request.onsuccess = () => {
       resolve(request.result);
     };
