@@ -79,6 +79,14 @@ export const getAltPortInfosImpl: SandboxImpl["GET_ALT_PORT_INFOS"] = () => {
   return Promise.resolve({});
 };
 
+/**
+ * @deprecated ブラウザ版では不要です
+ */
+export const openTextEditContextMenuImpl: SandboxImpl["OPEN_TEXT_EDIT_CONTEXT_MENU"] =
+  () => {
+    return Promise.resolve();
+  };
+
 export const themeImpl: SandboxImpl["THEME"] = async () => {
   return Promise.all(
     // FIXME: themeファイルのいい感じのパスの設定

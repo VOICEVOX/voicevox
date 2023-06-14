@@ -11,6 +11,7 @@ import {
   getSettingImpl,
   getTempDirImpl,
   getUpdateInfosImpl,
+  openTextEditContextMenuImpl,
   setSettingImpl,
   themeImpl,
 } from "./backgroundImpl";
@@ -85,7 +86,14 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "SHOW_QUESTION_DIALOG":
     case "SHOW_WARNING_DIALOG":
     case "SHOW_ERROR_DIALOG":
+      // TODO: DIALOG周りの実装は要検討
+      console.dir(e.data);
+      postMessage({ type, return: [], eventId: e.data.eventId });
+      break;
     case "OPEN_TEXT_EDIT_CONTEXT_MENU":
+      return openTextEditContextMenuImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "IS_AVAILABLE_GPU_MODE":
     case "IS_MAXIMIZED_WINDOW":
     case "CLOSE_WINDOW":
