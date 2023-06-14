@@ -2,6 +2,7 @@ import type { IpcIHData } from "@/type/ipc";
 import {
   EngineId,
   EngineInfo,
+  ThemeConf,
   electronStoreSchema,
   engineSettingSchema,
 } from "@/type/preload";
@@ -107,7 +108,11 @@ export const engineInfosImpl: SandboxImpl["ENGINE_INFOS"] = async () => {
   return [defaultEngine];
 };
 
-export const themeImpl: SandboxImpl["THEME"] = async () => {
+export const themeImpl: SandboxImpl["THEME"] = async ([{ newData }]) => {
+  if (newData !== undefined) {
+    await setSettingImpl(["currentTheme", newData]);
+    return;
+  }
   return Promise.all(
     // FIXME: themeファイルのいい感じのパスの設定
     ["/themes/default.json", "/themes/dark.json"].map((url) =>
@@ -124,7 +129,7 @@ export const themeImpl: SandboxImpl["THEME"] = async () => {
           ({
             ...v,
             currentTheme,
-          } as { currentTheme: string; availableThemes: any[] }) // FIXME: typing
+          } as { currentTheme: string; availableThemes: ThemeConf[] })
       )
     );
 };
