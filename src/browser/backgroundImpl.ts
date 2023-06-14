@@ -171,13 +171,13 @@ export const setSettingImpl: SandboxImpl["SET_SETTING"] = async ([
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const transaction = db!.transaction(key, "readwrite");
     const store = transaction.objectStore(key);
-    const request = store.put(value, key);
+    const request = store.put(value, entryKey);
     request.onsuccess = () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const readRequest = db!
         .transaction(key, "readonly")
         .objectStore(key)
-        .get(key);
+        .get(entryKey);
       readRequest.onsuccess = () => {
         resolve(readRequest.result);
       };
