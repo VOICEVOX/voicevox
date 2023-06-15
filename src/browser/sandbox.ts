@@ -545,8 +545,82 @@ export const api: typeof window[typeof SandboxKey] = {
         } as WriteFileErrorResult;
       });
   },
-  readFile(obj: { filePath: string }) {
-    return invoker("READ_FILE", [obj]);
+  async readFile(obj: { filePath: string }) {
+    if (
+      directoryHandlerMap.get(lastSelectedDirectoryHandlerSymbol) ===
+        undefined &&
+      obj.filePath.indexOf(sep) === -1
+    ) {
+      return Promise.reject(
+        new Error("ディレクトリへのアクセス許可がありません")
+      );
+    }
+
+    let directoryHandler = directoryHandlerMap.get(
+      lastSelectedDirectoryHandlerSymbol
+    );
+
+    /** FIXME: 以下のファイル名に関する処理は切り出して checkFile などでも再利用する */
+    let path = obj.filePath;
+
+    if (path.includes(sep)) {
+      const maybeDirectoryHandlerName = path.split(sep)[0];
+      if (directoryHandlerMap.has(maybeDirectoryHandlerName)) {
+        path = path.slice(maybeDirectoryHandlerName.length + sep.length);
+        directoryHandler = directoryHandlerMap.get(maybeDirectoryHandlerName);
+      } else {
+        const db = await openDB();
+        const maybeFixedDirectory = await new Promise<
+          FileSystemDirectoryHandle | undefined
+        >((resolve, reject) => {
+          const transaction = db.transaction(
+            directoryHandlerStoreKey,
+            "readonly"
+          );
+          const store = transaction.objectStore(directoryHandlerStoreKey);
+          const request = store.get(maybeDirectoryHandlerName);
+          request.onsuccess = () => {
+            resolve(request.result);
+          };
+          request.onerror = () => {
+            reject(request.error);
+          };
+        }).catch((e) => {
+          console.error(e);
+          // 握り潰してる
+          return undefined;
+        });
+
+        if (maybeFixedDirectory === undefined) {
+          return Promise.reject(
+            new Error("ディレクトリへのアクセス許可がありません")
+          );
+        }
+
+        if (
+          !(await maybeFixedDirectory.requestPermission({ mode: "readwrite" }))
+        ) {
+          return Promise.reject(
+            new Error("ディレクトリへのアクセス許可がありません")
+          );
+        }
+
+        directoryHandlerMap.set(maybeDirectoryHandlerName, maybeFixedDirectory);
+        directoryHandler = maybeFixedDirectory;
+      }
+    }
+
+    if (directoryHandler === undefined) {
+      return Promise.reject(
+        new Error("ディレクトリへのアクセス許可がありません")
+      );
+    }
+
+    return directoryHandler.getFileHandle(path).then((fileHandle) => {
+      return fileHandle.getFile().then((file) => {
+        return file.arrayBuffer();
+      });
+    });
   },
   openTextEditContextMenu() {
     return invoker("OPEN_TEXT_EDIT_CONTEXT_MENU", []);
