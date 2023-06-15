@@ -148,15 +148,12 @@ export const api: typeof window[typeof SandboxKey] = {
     return invoker("MAXIMIZE_WINDOW", []);
   },
   logError(...params: unknown[]) {
-    console.error(...params);
     return invoker("LOG_ERROR", [params]);
   },
   logWarn(...params: unknown[]) {
-    console.warn(...params);
     return invoker("LOG_WARN", [params]);
   },
   logInfo(...params: unknown[]) {
-    console.info(...params);
     return invoker("LOG_INFO", [params]);
   },
   engineInfos() {

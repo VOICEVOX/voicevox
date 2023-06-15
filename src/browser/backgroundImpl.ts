@@ -95,6 +95,21 @@ export const openTextEditContextMenuImpl: SandboxImpl["OPEN_TEXT_EDIT_CONTEXT_ME
     return Promise.resolve();
   };
 
+export const logErrorImpl: SandboxImpl["LOG_ERROR"] = ([...params]) => {
+  console.error(...params);
+  return Promise.resolve();
+};
+
+export const logWarnImpl: SandboxImpl["LOG_ERROR"] = ([...params]) => {
+  console.warn(...params);
+  return Promise.resolve();
+};
+
+export const logInfoImpl: SandboxImpl["LOG_ERROR"] = ([...params]) => {
+  console.info(...params);
+  return Promise.resolve();
+};
+
 const defaultEngine: EngineInfo = {
   uuid: EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d"),
   host: "http://127.0.0.1:50021",

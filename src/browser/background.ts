@@ -15,6 +15,9 @@ import {
   getTempDirImpl,
   getUpdateInfosImpl,
   hotkeySettingsImpl,
+  logErrorImpl,
+  logInfoImpl,
+  logWarnImpl,
   openTextEditContextMenuImpl,
   setSettingImpl,
   themeImpl,
@@ -103,12 +106,20 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "CLOSE_WINDOW":
     case "MINIMIZE_WINDOW":
     case "MAXIMIZE_WINDOW":
+      // NOTE: Browser版ではサポートしない
+      return typedPostMessage(type, void 0, e.data.eventId);
     case "LOG_ERROR":
+      return logErrorImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "LOG_WARN":
+      return logWarnImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "LOG_INFO":
-      console.dir(e.data);
-      postMessage({ type: type, return: [], eventId: e.data.eventId });
-      break;
+      return logInfoImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "ENGINE_INFOS":
       return engineInfosImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
