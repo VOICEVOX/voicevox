@@ -1,5 +1,4 @@
 import {
-  checkFileExistsImpl,
   engineInfosImpl,
   getAltPortInfosImpl,
   getAppInfosImpl,
@@ -24,11 +23,9 @@ import {
   logWarnImpl,
   onVuexReadyImpl,
   openTextEditContextMenuImpl,
-  readFileImpl,
   setEngineSettingImpl,
   setSettingImpl,
   themeImpl,
-  writeFileImpl,
 } from "./backgroundImpl";
 import type { MainToWorkerMessage } from "./type";
 import type { IpcIHData } from "@/type/ipc";
@@ -101,11 +98,7 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "SHOW_QUESTION_DIALOG":
     case "SHOW_WARNING_DIALOG":
     case "SHOW_ERROR_DIALOG":
-      // TODO: DIALOG周りの実装は要検討
-      console.group(type);
-      console.dir(e.data);
-      console.groupEnd();
-      postMessage({ type, return: [], eventId: e.data.eventId });
+      // NOTE: DialogはWorker側では処理しない
       break;
     case "OPEN_TEXT_EDIT_CONTEXT_MENU":
       return openTextEditContextMenuImpl(e.data.args).then((v) =>
@@ -157,9 +150,8 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
       console.groupEnd();
       return typedPostMessage(type, void 0, e.data.eventId);
     case "CHECK_FILE_EXISTS":
-      return checkFileExistsImpl(e.data.args).then((v) =>
-        typedPostMessage(type, v, e.data.eventId)
-      );
+      // NOTE: FileI/OはWorker側では処理しない
+      break;
     case "CHANGE_PIN_WINDOW":
       // NOTE: Browser版ではサポートしない
       console.group(type);
@@ -226,12 +218,8 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage(type, v, e.data.eventId)
       );
     case "WRITE_FILE":
-      return writeFileImpl(e.data.args).then((v) =>
-        typedPostMessage(type, v, e.data.eventId)
-      );
     case "READ_FILE":
-      return readFileImpl(e.data.args).then((v) =>
-        typedPostMessage(type, v, e.data.eventId)
-      );
+      // NOTE: FileI/OはWorker側では処理しない
+      break;
   }
 };

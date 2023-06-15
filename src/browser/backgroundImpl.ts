@@ -128,14 +128,6 @@ export const engineInfosImpl: SandboxImpl["ENGINE_INFOS"] = async () => {
   return [defaultEngine];
 };
 
-export const checkFileExistsImpl: SandboxImpl["CHECK_FILE_EXISTS"] = async ([
-  { file },
-]) => {
-  // TODO: Impl
-  console.error(`Not Implemented, check: ${file}`);
-  return Promise.resolve(false);
-};
-
 export const hotkeySettingsImpl: SandboxImpl["HOTKEY_SETTINGS"] = async ([
   { newData },
 ]) => {
@@ -279,20 +271,4 @@ export const setEngineSettingImpl: SandboxImpl["SET_ENGINE_SETTING"] = async ([
 export const joinPathImpl: SandboxImpl["JOIN_PATH"] = () => {
   console.error("Not Implemented, it should not be called from VOICEVOX");
   return Promise.resolve("");
-};
-
-export const writeFileImpl: SandboxImpl["WRITE_FILE"] = async ([
-  { filePath, buffer },
-]) => {
-  // TODO: Impl
-  console.error(`Not Implemented, write: ${filePath}`, buffer);
-  return Promise.resolve(undefined);
-};
-
-export const readFileImpl: SandboxImpl["READ_FILE"] = async ([
-  { filePath },
-]) => {
-  // TODO: Impl
-  console.error(`Not Implemented, read: ${filePath}`);
-  return Promise.resolve(new ArrayBuffer(0));
 };
