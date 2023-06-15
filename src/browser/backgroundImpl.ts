@@ -96,6 +96,20 @@ export const openTextEditContextMenuImpl: SandboxImpl["OPEN_TEXT_EDIT_CONTEXT_ME
     return Promise.resolve();
   };
 
+/**
+ * @fixme canvasでWebGLから調べたり、WebGPUがサポートされているかを調べたりで判断は出来そう
+ * @todo WebAssembly版をサポートする時に実装する
+ */
+export const isAvailableGpuModeImpl: SandboxImpl["IS_AVAILABLE_GPU_MODE"] =
+  () => {
+    return Promise.resolve(false);
+  };
+
+// NOTE: UIの表示状態の制御のためだけなので固定値を返している
+export const isMaximizedWindowImpl: SandboxImpl["IS_MAXIMIZED_WINDOW"] = () => {
+  return Promise.resolve(true);
+};
+
 export const logErrorImpl: SandboxImpl["LOG_ERROR"] = ([...params]) => {
   console.error(...params);
   return Promise.resolve();
@@ -124,6 +138,14 @@ const defaultEngine: EngineInfo = {
 
 export const engineInfosImpl: SandboxImpl["ENGINE_INFOS"] = async () => {
   return [defaultEngine];
+};
+
+export const checkFileExistsImpl: SandboxImpl["CHECK_FILE_EXISTS"] = async ([
+  { file },
+]) => {
+  // TODO: Impl
+  console.error(`Not Implemented, check: ${file}`);
+  return Promise.resolve(false);
 };
 
 export const hotkeySettingsImpl: SandboxImpl["HOTKEY_SETTINGS"] = async ([
@@ -181,6 +203,11 @@ export const themeImpl: SandboxImpl["THEME"] = async ([{ newData }]) => {
           } as { currentTheme: string; availableThemes: ThemeConf[] })
       )
     );
+};
+
+export const onVuexReadyImpl: SandboxImpl["ON_VUEX_READY"] = async () => {
+  // NOTE: 何もしなくて良さそう
+  return Promise.resolve();
 };
 
 const dbName = "voicevox-web";
@@ -295,4 +322,28 @@ export const setEngineSettingImpl: SandboxImpl["SET_ENGINE_SETTING"] = async ([
   engineSettings[engineId] = newData;
   await setSettingImpl(["engineSettings", engineSettings]);
   return;
+};
+
+/**
+ * @deprecated ブラウザ版では使用されていないはずです
+ */
+export const joinPathImpl: SandboxImpl["JOIN_PATH"] = () => {
+  console.error("Not Implemented, it should not be called from VOICEVOX");
+  return Promise.resolve("");
+};
+
+export const writeFileImpl: SandboxImpl["WRITE_FILE"] = async ([
+  { filePath, buffer },
+]) => {
+  // TODO: Impl
+  console.error(`Not Implemented, write: ${filePath}`, buffer);
+  return Promise.resolve(undefined);
+};
+
+export const readFileImpl: SandboxImpl["READ_FILE"] = async ([
+  { filePath },
+]) => {
+  // TODO: Impl
+  console.error(`Not Implemented, read: ${filePath}`);
+  return Promise.resolve(new ArrayBuffer(0));
 };

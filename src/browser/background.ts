@@ -1,4 +1,5 @@
 import {
+  checkFileExistsImpl,
   engineInfosImpl,
   getAltPortInfosImpl,
   getAppInfosImpl,
@@ -15,13 +16,19 @@ import {
   getTempDirImpl,
   getUpdateInfosImpl,
   hotkeySettingsImpl,
+  isAvailableGpuModeImpl,
+  isMaximizedWindowImpl,
+  joinPathImpl,
   logErrorImpl,
   logInfoImpl,
   logWarnImpl,
+  onVuexReadyImpl,
   openTextEditContextMenuImpl,
+  readFileImpl,
   setEngineSettingImpl,
   setSettingImpl,
   themeImpl,
+  writeFileImpl,
 } from "./backgroundImpl";
 import type { MainToWorkerMessage } from "./type";
 import type { IpcIHData } from "@/type/ipc";
@@ -95,7 +102,9 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "SHOW_WARNING_DIALOG":
     case "SHOW_ERROR_DIALOG":
       // TODO: DIALOG周りの実装は要検討
+      console.group(type);
       console.dir(e.data);
+      console.groupEnd();
       postMessage({ type, return: [], eventId: e.data.eventId });
       break;
     case "OPEN_TEXT_EDIT_CONTEXT_MENU":
@@ -103,11 +112,20 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage(type, v, e.data.eventId)
       );
     case "IS_AVAILABLE_GPU_MODE":
+      return isAvailableGpuModeImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "IS_MAXIMIZED_WINDOW":
+      return isMaximizedWindowImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "CLOSE_WINDOW":
     case "MINIMIZE_WINDOW":
     case "MAXIMIZE_WINDOW":
       // NOTE: Browser版ではサポートしない
+      console.group(type);
+      console.dir(e.data);
+      console.groupEnd();
       return typedPostMessage(type, void 0, e.data.eventId);
     case "LOG_ERROR":
       return logErrorImpl(e.data.args).then((v) =>
@@ -127,12 +145,27 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
       );
     case "RESTART_ENGINE_ALL":
     case "RESTART_ENGINE":
-    case "OPEN_ENGINE_DIRECTORY":
-    case "CHECK_FILE_EXISTS":
-    case "CHANGE_PIN_WINDOW":
+      // NOTE: Browser版ではサポートしない
+      console.group(type);
       console.dir(e.data);
-      postMessage({ type: type, return: [], eventId: e.data.eventId });
-      break;
+      console.groupEnd();
+      return typedPostMessage(type, void 0, e.data.eventId);
+    case "OPEN_ENGINE_DIRECTORY":
+      // NOTE: Browser版ではサポートしない
+      console.group(type);
+      console.dir(e.data);
+      console.groupEnd();
+      return typedPostMessage(type, void 0, e.data.eventId);
+    case "CHECK_FILE_EXISTS":
+      return checkFileExistsImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
+    case "CHANGE_PIN_WINDOW":
+      // NOTE: Browser版ではサポートしない
+      console.group(type);
+      console.dir(e.data);
+      console.groupEnd();
+      return typedPostMessage(type, void 0, e.data.eventId);
     case "HOTKEY_SETTINGS":
       return hotkeySettingsImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
@@ -150,9 +183,9 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage(type, v, e.data.eventId)
       );
     case "ON_VUEX_READY":
-      console.dir(e.data);
-      postMessage({ type, return: [], eventId: e.data.eventId });
-      break;
+      return onVuexReadyImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "GET_SETTING":
       return getSettingImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
@@ -166,15 +199,39 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage(type, v, e.data.eventId)
       );
     case "SET_NATIVE_THEME":
+      // NOTE: Browser版ではサポートしない
+      console.group(type);
+      console.dir(e.data);
+      console.groupEnd();
+      postMessage({ type: type, return: [], eventId: e.data.eventId });
+      break;
     case "INSTALL_VVPP_ENGINE":
     case "UNINSTALL_VVPP_ENGINE":
     case "VALIDATE_ENGINE_DIR":
-    case "RESTART_APP":
-    case "JOIN_PATH":
-    case "WRITE_FILE":
-    case "READ_FILE":
+      // NOTE: Browser版ではサポートしない
+      console.group(type);
       console.dir(e.data);
-      postMessage({ type, return: [], eventId: e.data.eventId });
+      console.groupEnd();
+      postMessage({ type: type, return: [], eventId: e.data.eventId });
       break;
+    case "RESTART_APP":
+      // NOTE: Browser版ではサポートしない
+      console.group(type);
+      console.dir(e.data);
+      console.groupEnd();
+      postMessage({ type: type, return: [], eventId: e.data.eventId });
+      break;
+    case "JOIN_PATH":
+      return joinPathImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
+    case "WRITE_FILE":
+      return writeFileImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
+    case "READ_FILE":
+      return readFileImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
   }
 };
