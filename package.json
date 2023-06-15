@@ -83,6 +83,7 @@
     "@types/semver": "7.3.9",
     "@types/unzipper": "0.10.5",
     "@types/uuid": "8.3.4",
+    "@types/wicg-file-system-access": "2020.9.6",
     "@typescript-eslint/eslint-plugin": "5.38.1",
     "@typescript-eslint/parser": "5.38.1",
     "@vitejs/plugin-vue": "4.0.0",
