@@ -288,6 +288,8 @@ export const setSettingImpl: SandboxImpl["SET_SETTING"] = async ([
     throw new Error("db is null");
   }
 
+  // TODO: Schemaに合っているか保存時にvalidationしたい
+
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const transaction = db!.transaction(key, "readwrite");
