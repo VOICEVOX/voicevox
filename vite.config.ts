@@ -99,8 +99,8 @@ export default defineConfig((options) => {
     ],
     define: {
       [`process.env`]: {
-        APP_NAME: JSON.stringify(process.env.npm_package_name),
-        APP_VERSION: JSON.stringify(process.env.npm_package_version),
+        APP_NAME: process.env.npm_package_name,
+        APP_VERSION: process.env.npm_package_version,
       },
     },
   };
