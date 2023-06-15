@@ -2,6 +2,7 @@ import type { IpcIHData } from "@/type/ipc";
 import {
   EngineId,
   EngineInfo,
+  EngineSettings,
   ThemeConf,
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
@@ -282,4 +283,16 @@ export const setSettingImpl: SandboxImpl["SET_SETTING"] = async ([
       reject(request.error);
     };
   });
+};
+
+export const setEngineSettingImpl: SandboxImpl["SET_ENGINE_SETTING"] = async ([
+  engineId,
+  newData,
+]) => {
+  const engineSettings = (await getSettingImpl([
+    "engineSettings",
+  ])) as EngineSettings;
+  engineSettings[engineId] = newData;
+  await setSettingImpl(["engineSettings", engineSettings]);
+  return;
 };

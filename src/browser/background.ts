@@ -19,6 +19,7 @@ import {
   logInfoImpl,
   logWarnImpl,
   openTextEditContextMenuImpl,
+  setEngineSettingImpl,
   setSettingImpl,
   themeImpl,
 } from "./backgroundImpl";
@@ -161,6 +162,9 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
         typedPostMessage(type, v, e.data.eventId)
       );
     case "SET_ENGINE_SETTING":
+      return setEngineSettingImpl(e.data.args).then((v) =>
+        typedPostMessage(type, v, e.data.eventId)
+      );
     case "SET_NATIVE_THEME":
     case "INSTALL_VVPP_ENGINE":
     case "UNINSTALL_VVPP_ENGINE":
