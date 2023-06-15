@@ -6,7 +6,8 @@ import {
 } from "@/type/preload";
 
 const dbName = "voicevox-web";
-// FIXME: DBのバージョンを何かしらの形で行いたい
+// FIXME: DBのschemaを変更したら、dbVersionを上げる
+// TODO: 気づけるようにしたい
 const dbVersion = 1;
 // NOTE: settingを複数持つことはないと仮定して、keyを固定してしまう
 export const entryKey = "value";
