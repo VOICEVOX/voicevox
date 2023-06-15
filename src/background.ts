@@ -941,6 +941,8 @@ app.on("before-quit", async (event) => {
 
       appState.willRestart = false;
       appState.willQuit = false;
+      // エンジンの追加と削除を反映させるためEngineInfoを再生成する。
+      engineManager.resetEngineInfos();
 
       start();
     } else {
