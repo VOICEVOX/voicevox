@@ -1,13 +1,12 @@
+import { defaultEngine } from "./contract";
+import { entryKey, openDB } from "./store";
 import type { IpcIHData } from "@/type/ipc";
 import {
-  EngineId,
-  EngineInfo,
   EngineSettings,
   ThemeConf,
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
   electronStoreSchema,
-  engineSettingSchema,
 } from "@/type/preload";
 import {
   ContactTextFileName,
@@ -125,17 +124,6 @@ export const logInfoImpl: SandboxImpl["LOG_ERROR"] = ([...params]) => {
   return Promise.resolve();
 };
 
-const defaultEngine: EngineInfo = {
-  uuid: EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d"),
-  host: "http://127.0.0.1:50021",
-  name: "VOICEVOX Engine",
-  path: undefined,
-  executionEnabled: false,
-  executionFilePath: "",
-  executionArgs: [],
-  type: "default",
-};
-
 export const engineInfosImpl: SandboxImpl["ENGINE_INFOS"] = async () => {
   return [defaultEngine];
 };
@@ -209,47 +197,6 @@ export const onVuexReadyImpl: SandboxImpl["ON_VUEX_READY"] = async () => {
   // NOTE: 何もしなくて良さそう
   return Promise.resolve();
 };
-
-const dbName = "voicevox-web";
-// FIXME: DBのバージョンを何かしらの形で行いたい
-const dbVersion = 1;
-// NOTE: settingを複数持つことはないと仮定して、keyを固定してしまう
-const entryKey = "value";
-
-const openDB = () =>
-  new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open(dbName, dbVersion);
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-    request.onerror = () => {
-      // TODO: handling
-      reject(request.error);
-    };
-    request.onupgradeneeded = (ev) => {
-      if (ev.oldVersion === 0) {
-        // Initialize
-        const db = request.result;
-        const baseSchema = electronStoreSchema.parse({});
-        Object.entries(baseSchema).forEach(([key, value]) => {
-          const k = key as keyof typeof baseSchema;
-          if (k !== "engineSettings") {
-            db.createObjectStore(key).add(value, entryKey);
-            return;
-          }
-          // defaultのEngineSettingを追加
-          const defaultVoicevoxEngineId = EngineId(defaultEngine.uuid);
-          db.createObjectStore(key).add(
-            {
-              [defaultVoicevoxEngineId]: engineSettingSchema.parse({}),
-            },
-            entryKey
-          );
-        });
-      }
-      // TODO: migrate
-    };
-  });
 
 let db: IDBDatabase | null = null;
 
