@@ -1,4 +1,4 @@
-import { defaultEngine } from "./contract";
+import { defaultEngine, directoryHandlerStoreKey } from "./contract";
 import {
   EngineId,
   electronStoreSchema,
@@ -41,6 +41,9 @@ export const openDB = () =>
             entryKey
           );
         });
+
+        // DirectoryHandlerも格納する
+        db.createObjectStore(directoryHandlerStoreKey);
       }
       // TODO: migrate
     };

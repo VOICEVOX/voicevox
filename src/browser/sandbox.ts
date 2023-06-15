@@ -1,5 +1,8 @@
+import { sep } from "path";
 import { v4 } from "uuid";
+import { directoryHandlerStoreKey } from "./contract";
 import type { WorkerToMainMessage } from "./type";
+import { openDB } from "./store";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 import {
   ElectronStoreType,
@@ -32,7 +35,13 @@ const invoker = <K extends keyof IpcIHData>(
   });
 };
 
-let directoryHandler: FileSystemDirectoryHandle | undefined = undefined;
+const lastSelectedDirectoryHandlerSymbol = Symbol(
+  "lastSelectedDirectoryHandler"
+);
+const directoryHandlerMap: Map<
+  string | typeof lastSelectedDirectoryHandlerSymbol,
+  FileSystemDirectoryHandle
+> = new Map();
 
 export const api: typeof window[typeof SandboxKey] = {
   getAppInfos() {
@@ -78,9 +87,11 @@ export const api: typeof window[typeof SandboxKey] = {
     throw new Error(`not implemented: loadTempFile is already obsoleted`);
   },
   async showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
-    // Wave File以外のものを同一ディレクトリに保存したり、名前を変えて保存するためにDirectoryのPickerを使用している
-    // FIXME: 途中でディレクトリを変えたいとかには対応できない…
-    if (directoryHandler === undefined) {
+    if (
+      directoryHandlerMap.get(lastSelectedDirectoryHandlerSymbol) === undefined
+    ) {
+      // Wave File以外のものを同一ディレクトリに保存したり、名前を変えて保存するためにDirectoryのPickerを使用している
+      // FIXME: 途中でディレクトリを変えたいとかには対応できない…
       const _directoryHandler = await window
         .showDirectoryPicker({
           mode: "readwrite",
@@ -90,7 +101,29 @@ export const api: typeof window[typeof SandboxKey] = {
         return undefined;
       }
 
-      directoryHandler = _directoryHandler;
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+          directoryHandlerStoreKey,
+          "readwrite"
+        );
+        const store = transaction.objectStore(directoryHandlerStoreKey);
+        const request = store.put(_directoryHandler, _directoryHandler.name);
+        request.onsuccess = () => {
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      }).catch((e) => {
+        console.error(e);
+        // 握り潰してる
+      });
+
+      directoryHandlerMap.set(
+        lastSelectedDirectoryHandlerSymbol,
+        _directoryHandler
+      );
     }
 
     const { defaultPath } = obj;
@@ -111,6 +144,8 @@ export const api: typeof window[typeof SandboxKey] = {
     if (fileHandle === undefined) {
       return undefined;
     }
+
+    // NOTE: ディレクトリのハンドラと異なるディレクトリを選択されても検知できない
     return fileHandle.name;
   },
   showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
@@ -129,7 +164,24 @@ export const api: typeof window[typeof SandboxKey] = {
       return undefined;
     }
 
-    directoryHandler = _directoryHandler;
+    const db = await openDB();
+    await new Promise((resolve, reject) => {
+      const transaction = db.transaction(directoryHandlerStoreKey, "readwrite");
+      const store = transaction.objectStore(directoryHandlerStoreKey);
+      const request = store.put(_directoryHandler, _directoryHandler.name);
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        reject(request.error);
+      };
+    }).catch((e) => {
+      console.error(e);
+      // 握り潰してる
+    });
+
+    // NOTE: 同一のディレクトリ名だった場合、後で選択されたディレクトリがそれ移行の処理で使用されるため、意図しない保存が発生するかもしれない
+    directoryHandlerMap.set(_directoryHandler.name, _directoryHandler);
     return _directoryHandler.name;
   },
   showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
@@ -158,8 +210,74 @@ export const api: typeof window[typeof SandboxKey] = {
   showImportFileDialog(obj: { title: string }) {
     return invoker("SHOW_IMPORT_FILE_DIALOG", [obj]);
   },
-  writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
-    // FIXME: fixedDirectoryが設定されている場合は、絶対パスでの指定になるためディレクトリへの権限が得られていない状態になり失敗する
+  async writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
+    if (
+      directoryHandlerMap.get(lastSelectedDirectoryHandlerSymbol) ===
+        undefined &&
+      obj.filePath.indexOf(sep) === -1
+    ) {
+      return Promise.resolve({
+        code: undefined,
+        message: "ディレクトリへのアクセス許可がありません",
+      });
+    }
+
+    let directoryHandler = directoryHandlerMap.get(
+      lastSelectedDirectoryHandlerSymbol
+    );
+
+    /** FIXME: 以下のファイル名に関する処理は切り出して checkFile などでも再利用する */
+    let path = obj.filePath;
+
+    if (path.includes(sep)) {
+      const maybeDirectoryHandlerName = path.split(sep)[0];
+      if (directoryHandlerMap.has(maybeDirectoryHandlerName)) {
+        path = path.slice(maybeDirectoryHandlerName.length + sep.length);
+        directoryHandler = directoryHandlerMap.get(maybeDirectoryHandlerName);
+      } else {
+        const db = await openDB();
+        const maybeFixedDirectory = await new Promise<
+          FileSystemDirectoryHandle | undefined
+        >((resolve, reject) => {
+          const transaction = db.transaction(
+            directoryHandlerStoreKey,
+            "readonly"
+          );
+          const store = transaction.objectStore(directoryHandlerStoreKey);
+          const request = store.get(maybeDirectoryHandlerName);
+          request.onsuccess = () => {
+            resolve(request.result);
+          };
+          request.onerror = () => {
+            reject(request.error);
+          };
+        }).catch((e) => {
+          console.error(e);
+          // 握り潰してる
+          return undefined;
+        });
+
+        if (maybeFixedDirectory === undefined) {
+          return Promise.resolve({
+            code: undefined,
+            message: "ディレクトリへのアクセス許可がありません",
+          });
+        }
+
+        if (
+          !(await maybeFixedDirectory.requestPermission({ mode: "readwrite" }))
+        ) {
+          return Promise.resolve({
+            code: undefined,
+            message: "ディレクトリへのアクセス許可がありません",
+          });
+        }
+
+        directoryHandlerMap.set(maybeDirectoryHandlerName, maybeFixedDirectory);
+        directoryHandler = maybeFixedDirectory;
+      }
+    }
+
     if (directoryHandler === undefined) {
       return Promise.resolve({
         code: undefined,
@@ -167,18 +285,8 @@ export const api: typeof window[typeof SandboxKey] = {
       });
     }
 
-    /** FIXME: 以下のファイル名に関する処理は切り出して checkFile などでも再利用する */
-    let path = obj.filePath;
-
-    // FIXME: / や \ は OS 依存のため、どうにかする
-    if (path.includes("/") || path.includes("\\")) {
-      if (path.startsWith(directoryHandler.name)) {
-        path = path.slice(directoryHandler.name.length + 1 /* / or \ */);
-      }
-    }
-
     return directoryHandler
-      ?.getFileHandle(path, { create: true })
+      .getFileHandle(path, { create: true })
       .then((fileHandle) => {
         return fileHandle.createWritable().then((writable) => {
           return writable.write(obj.buffer).then(() => writable.close());
@@ -248,6 +356,65 @@ export const api: typeof window[typeof SandboxKey] = {
     return invoker("HOTKEY_SETTINGS", [{ newData }]);
   },
   async checkFileExists(file: string) {
+    if (
+      directoryHandlerMap.get(lastSelectedDirectoryHandlerSymbol) ===
+        undefined &&
+      file.indexOf(sep) === -1
+    ) {
+      // FIXME: trueだとloopするはず
+      return Promise.resolve(false);
+    }
+
+    let directoryHandler = directoryHandlerMap.get(
+      lastSelectedDirectoryHandlerSymbol
+    );
+
+    /** FIXME: 以下のファイル名に関する処理は切り出して checkFile などでも再利用する */
+    let path = file;
+
+    if (path.includes(sep)) {
+      const maybeDirectoryHandlerName = path.split(sep)[0];
+      if (directoryHandlerMap.has(maybeDirectoryHandlerName)) {
+        path = path.slice(maybeDirectoryHandlerName.length + sep.length);
+        directoryHandler = directoryHandlerMap.get(maybeDirectoryHandlerName);
+      } else {
+        const db = await openDB();
+        const maybeFixedDirectory = await new Promise<
+          FileSystemDirectoryHandle | undefined
+        >((resolve, reject) => {
+          const transaction = db.transaction(
+            directoryHandlerStoreKey,
+            "readonly"
+          );
+          const store = transaction.objectStore(directoryHandlerStoreKey);
+          const request = store.get(maybeDirectoryHandlerName);
+          request.onsuccess = () => {
+            resolve(request.result);
+          };
+          request.onerror = () => {
+            reject(request.error);
+          };
+        }).catch((e) => {
+          console.error(e);
+          // 握り潰してる
+          return undefined;
+        });
+
+        if (maybeFixedDirectory === undefined) {
+          return Promise.resolve(false);
+        }
+
+        if (
+          !(await maybeFixedDirectory.requestPermission({ mode: "readwrite" }))
+        ) {
+          return Promise.resolve(false);
+        }
+
+        directoryHandlerMap.set(maybeDirectoryHandlerName, maybeFixedDirectory);
+        directoryHandler = maybeFixedDirectory;
+      }
+    }
+
     if (directoryHandler === undefined) {
       // FIXME: trueだとloopするはず
       return Promise.resolve(false);
@@ -260,15 +427,6 @@ export const api: typeof window[typeof SandboxKey] = {
     ] of directoryHandler.entries()) {
       if (entry.kind === "file") {
         fileEntries.push(fileOrDirectoryName);
-      }
-    }
-
-    let path = file;
-
-    // FIXME: / や \ は OS 依存のため、どうにかする
-    if (path.includes("/") || path.includes("\\")) {
-      if (path.startsWith(directoryHandler.name)) {
-        path = path.slice(directoryHandler.name.length + 1 /* / or \ */);
       }
     }
 
