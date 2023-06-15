@@ -190,20 +190,11 @@ export const onVuexReadyImpl: SandboxImpl["ON_VUEX_READY"] = async () => {
   return Promise.resolve();
 };
 
-let db: IDBDatabase | null = null;
-
 export const getSettingImpl: SandboxImpl["GET_SETTING"] = async ([key]) => {
-  if (db === null) {
-    db = await openDB();
-  }
-
-  if (db === null) {
-    throw new Error("db is null");
-  }
+  const db = await openDB();
 
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const transaction = db!.transaction(key, "readonly");
+    const transaction = db.transaction(key, "readonly");
     const store = transaction.objectStore(key);
     const request = store.get(entryKey);
     request.onsuccess = () => {
@@ -219,24 +210,15 @@ export const setSettingImpl: SandboxImpl["SET_SETTING"] = async ([
   key,
   value,
 ]) => {
-  if (db === null) {
-    db = await openDB();
-  }
-
-  if (db === null) {
-    throw new Error("db is null");
-  }
+  const db = await openDB();
 
   // TODO: Schemaに合っているか保存時にvalidationしたい
-
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const transaction = db!.transaction(key, "readwrite");
+    const transaction = db.transaction(key, "readwrite");
     const store = transaction.objectStore(key);
     const request = store.put(value, entryKey);
     request.onsuccess = () => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const readRequest = db!
+      const readRequest = db
         .transaction(key, "readonly")
         .objectStore(key)
         .get(entryKey);
