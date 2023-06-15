@@ -318,7 +318,6 @@ export const api: typeof window[typeof SandboxKey] = {
     channel: T,
     listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void
   ) {
-    console.dir(`channel: ${channel}, listener: ${listener}`);
     window.addEventListener("message", (event) => {
       if (event.data.channel === channel) {
         listener(event.data.args);
