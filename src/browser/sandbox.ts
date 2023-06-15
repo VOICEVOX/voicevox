@@ -8,6 +8,7 @@ import {
   HotkeySetting,
   NativeThemeType,
   SandboxKey,
+  WriteFileErrorResult,
 } from "@/type/preload";
 
 const worker = new Worker(new URL("./background.ts", import.meta.url), {
@@ -30,6 +31,8 @@ const invoker = <K extends keyof IpcIHData>(
     worker.postMessage({ type, args, eventId } /** MainToWorkerMessage */);
   });
 };
+
+let directoryHandler: FileSystemDirectoryHandle | undefined = undefined;
 
 export const api: typeof window[typeof SandboxKey] = {
   getAppInfos() {
@@ -74,8 +77,41 @@ export const api: typeof window[typeof SandboxKey] = {
     // DELETE_ME: もう使ってなさそう
     throw new Error(`not implemented: loadTempFile is already obsoleted`);
   },
-  showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return invoker("SHOW_AUDIO_SAVE_DIALOG", [obj]);
+  async showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
+    // Wave File以外のものを同一ディレクトリに保存したり、名前を変えて保存するためにDirectoryのPickerを使用している
+    // FIXME: 途中でディレクトリを変えたいとかには対応できない…
+    if (directoryHandler === undefined) {
+      const _directoryHandler = await window
+        .showDirectoryPicker({
+          mode: "readwrite",
+        })
+        .catch(() => undefined);
+      if (_directoryHandler === undefined) {
+        return undefined;
+      }
+
+      directoryHandler = _directoryHandler;
+    }
+
+    const { defaultPath } = obj;
+    const fileHandle = await window
+      .showSaveFilePicker({
+        types: [
+          {
+            description: "Wave File",
+            accept: {
+              "audio/wav": [".wav"],
+            },
+          },
+        ],
+        excludeAcceptAllOption: true,
+        suggestedName: defaultPath,
+      })
+      .catch(() => undefined);
+    if (fileHandle === undefined) {
+      return undefined;
+    }
+    return fileHandle.name;
   },
   showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
     return invoker("SHOW_TEXT_SAVE_DIALOG", [obj]);
@@ -83,8 +119,18 @@ export const api: typeof window[typeof SandboxKey] = {
   showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
     return invoker("SHOW_VVPP_OPEN_DIALOG", [obj]);
   },
-  showOpenDirectoryDialog(obj: { title: string }) {
-    return invoker("SHOW_OPEN_DIRECTORY_DIALOG", [obj]);
+  async showOpenDirectoryDialog(/** obj: { title: string } */) {
+    const _directoryHandler = await window
+      .showDirectoryPicker({
+        mode: "readwrite",
+      })
+      .catch(() => undefined);
+    if (_directoryHandler === undefined) {
+      return undefined;
+    }
+
+    directoryHandler = _directoryHandler;
+    return _directoryHandler.name;
   },
   showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
     return invoker("SHOW_PROJECT_SAVE_DIALOG", [obj]);
@@ -113,7 +159,40 @@ export const api: typeof window[typeof SandboxKey] = {
     return invoker("SHOW_IMPORT_FILE_DIALOG", [obj]);
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
-    return invoker("WRITE_FILE", [obj]);
+    // FIXME: fixedDirectoryが設定されている場合は、絶対パスでの指定になるためディレクトリへの権限が得られていない状態になり失敗する
+    if (directoryHandler === undefined) {
+      return Promise.resolve({
+        code: undefined,
+        message: "ディレクトリへのアクセス許可がありません",
+      });
+    }
+
+    /** FIXME: 以下のファイル名に関する処理は切り出して checkFile などでも再利用する */
+    let path = obj.filePath;
+
+    // FIXME: / や \ は OS 依存のため、どうにかする
+    if (path.includes("/") || path.includes("\\")) {
+      if (path.startsWith(directoryHandler.name)) {
+        path = path.slice(directoryHandler.name.length + 1 /* / or \ */);
+      }
+    }
+
+    return directoryHandler
+      ?.getFileHandle(path, { create: true })
+      .then((fileHandle) => {
+        return fileHandle.createWritable().then((writable) => {
+          return writable.write(obj.buffer).then(() => writable.close());
+        });
+      })
+      .then(() => undefined)
+      .catch((e) => {
+        // FIXME
+        console.error(e);
+        return {
+          code: undefined,
+          message: e.message as string,
+        } as WriteFileErrorResult;
+      });
   },
   readFile(obj: { filePath: string }) {
     return invoker("READ_FILE", [obj]);
@@ -168,8 +247,32 @@ export const api: typeof window[typeof SandboxKey] = {
   hotkeySettings(newData?: HotkeySetting) {
     return invoker("HOTKEY_SETTINGS", [{ newData }]);
   },
-  checkFileExists(file: string) {
-    return invoker("CHECK_FILE_EXISTS", [{ file }]);
+  async checkFileExists(file: string) {
+    if (directoryHandler === undefined) {
+      // FIXME: trueだとloopするはず
+      return Promise.resolve(false);
+    }
+    // NOTE: fixedDirectoryが設定されている場合、filePathが名前だけでなくディレクトリも含んでいるため、失敗する
+    const fileEntries = [];
+    for await (const [
+      fileOrDirectoryName,
+      entry,
+    ] of directoryHandler.entries()) {
+      if (entry.kind === "file") {
+        fileEntries.push(fileOrDirectoryName);
+      }
+    }
+
+    let path = file;
+
+    // FIXME: / や \ は OS 依存のため、どうにかする
+    if (path.includes("/") || path.includes("\\")) {
+      if (path.startsWith(directoryHandler.name)) {
+        path = path.slice(directoryHandler.name.length + 1 /* / or \ */);
+      }
+    }
+
+    return Promise.resolve(fileEntries.includes(path));
   },
   changePinWindow() {
     return invoker("CHANGE_PIN_WINDOW", []);
