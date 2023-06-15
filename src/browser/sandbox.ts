@@ -148,11 +148,74 @@ export const api: typeof window[typeof SandboxKey] = {
     // NOTE: ディレクトリのハンドラと異なるディレクトリを選択されても検知できない
     return fileHandle.name;
   },
-  showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return invoker("SHOW_TEXT_SAVE_DIALOG", [obj]);
+  // FIXME: showSaveFilePickerのtypesが違うだけなので、いい感じにする
+  async showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
+    if (
+      directoryHandlerMap.get(lastSelectedDirectoryHandlerSymbol) === undefined
+    ) {
+      // Wave File以外のものを同一ディレクトリに保存したり、名前を変えて保存するためにDirectoryのPickerを使用している
+      // FIXME: 途中でディレクトリを変えたいとかには対応できない…
+      const _directoryHandler = await window
+        .showDirectoryPicker({
+          mode: "readwrite",
+        })
+        .catch(() => undefined);
+      if (_directoryHandler === undefined) {
+        return undefined;
+      }
+
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+          directoryHandlerStoreKey,
+          "readwrite"
+        );
+        const store = transaction.objectStore(directoryHandlerStoreKey);
+        const request = store.put(_directoryHandler, _directoryHandler.name);
+        request.onsuccess = () => {
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      }).catch((e) => {
+        console.error(e);
+        // 握り潰してる
+      });
+
+      directoryHandlerMap.set(
+        lastSelectedDirectoryHandlerSymbol,
+        _directoryHandler
+      );
+    }
+
+    const { defaultPath } = obj;
+    const fileHandle = await window
+      .showSaveFilePicker({
+        types: [
+          {
+            description: "Text File",
+            accept: {
+              "text/plain": [".txt"],
+            },
+          },
+        ],
+        excludeAcceptAllOption: true,
+        suggestedName: defaultPath,
+      })
+      .catch(() => undefined);
+    if (fileHandle === undefined) {
+      return undefined;
+    }
+
+    // NOTE: ディレクトリのハンドラと異なるディレクトリを選択されても検知できない
+    return fileHandle.name;
   },
   showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
-    return invoker("SHOW_VVPP_OPEN_DIALOG", [obj]);
+    // NOTE: 今後接続先を変える手段としてVvppが使われるかもしれないので、そのタイミングで実装する
+    throw new Error(
+      `not implemented: showVvppOpenDialog, request: ${JSON.stringify(obj)}`
+    );
   },
   async showOpenDirectoryDialog(/** obj: { title: string } */) {
     const _directoryHandler = await window
@@ -184,18 +247,139 @@ export const api: typeof window[typeof SandboxKey] = {
     directoryHandlerMap.set(_directoryHandler.name, _directoryHandler);
     return _directoryHandler.name;
   },
-  showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return invoker("SHOW_PROJECT_SAVE_DIALOG", [obj]);
+  // FIXME: showSaveFilePickerのtypesが違うだけなので、いい感じにする
+  async showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
+    if (
+      directoryHandlerMap.get(lastSelectedDirectoryHandlerSymbol) === undefined
+    ) {
+      // Wave File以外のものを同一ディレクトリに保存したり、名前を変えて保存するためにDirectoryのPickerを使用している
+      // FIXME: 途中でディレクトリを変えたいとかには対応できない…
+      const _directoryHandler = await window
+        .showDirectoryPicker({
+          mode: "readwrite",
+        })
+        .catch(() => undefined);
+      if (_directoryHandler === undefined) {
+        return undefined;
+      }
+
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+          directoryHandlerStoreKey,
+          "readwrite"
+        );
+        const store = transaction.objectStore(directoryHandlerStoreKey);
+        const request = store.put(_directoryHandler, _directoryHandler.name);
+        request.onsuccess = () => {
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      }).catch((e) => {
+        console.error(e);
+        // 握り潰してる
+      });
+
+      directoryHandlerMap.set(
+        lastSelectedDirectoryHandlerSymbol,
+        _directoryHandler
+      );
+    }
+
+    const { defaultPath } = obj;
+    const fileHandle = await window
+      .showSaveFilePicker({
+        types: [
+          {
+            description: "VOICEVOX Project file",
+            accept: {
+              "application/json": [".vvproj"],
+            },
+          },
+        ],
+        excludeAcceptAllOption: true,
+        suggestedName: defaultPath,
+      })
+      .catch(() => undefined);
+    if (fileHandle === undefined) {
+      return undefined;
+    }
+
+    // NOTE: ディレクトリのハンドラと異なるディレクトリを選択されても検知できない
+    return fileHandle.name;
   },
-  showProjectLoadDialog(obj: { title: string }) {
-    return invoker("SHOW_PROJECT_LOAD_DIALOG", [obj]);
+  // FIXME: showSaveFilePickerのtypesが違うだけなので、いい感じにする
+  async showProjectLoadDialog(/** obj: { title: string } */) {
+    if (
+      directoryHandlerMap.get(lastSelectedDirectoryHandlerSymbol) === undefined
+    ) {
+      // Wave File以外のものを同一ディレクトリに保存したり、名前を変えて保存するためにDirectoryのPickerを使用している
+      // FIXME: 途中でディレクトリを変えたいとかには対応できない…
+      const _directoryHandler = await window
+        .showDirectoryPicker({
+          mode: "readwrite",
+        })
+        .catch(() => undefined);
+      if (_directoryHandler === undefined) {
+        return undefined;
+      }
+
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+          directoryHandlerStoreKey,
+          "readwrite"
+        );
+        const store = transaction.objectStore(directoryHandlerStoreKey);
+        const request = store.put(_directoryHandler, _directoryHandler.name);
+        request.onsuccess = () => {
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      }).catch((e) => {
+        console.error(e);
+        // 握り潰してる
+      });
+
+      directoryHandlerMap.set(
+        lastSelectedDirectoryHandlerSymbol,
+        _directoryHandler
+      );
+    }
+
+    const fileHandle = await window
+      .showOpenFilePicker({
+        types: [
+          {
+            description: "VOICEVOX Project file",
+            accept: {
+              "application/json": [".vvproj"],
+            },
+          },
+        ],
+        excludeAcceptAllOption: true,
+        multiple: false,
+      })
+      .catch(() => undefined);
+    if (fileHandle === undefined) {
+      return undefined;
+    }
+
+    return fileHandle.map((v) => v.name);
   },
   showMessageDialog(obj: {
     type: "none" | "info" | "error" | "question" | "warning";
     title: string;
     message: string;
   }) {
-    return invoker("SHOW_MESSAGE_DIALOG", [obj]);
+    window.alert(`${obj.title}\n${obj.message}`);
+    // NOTE: どの呼び出し元も、return valueを使用していないので雑に対応している
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return Promise.resolve({} as any);
   },
   showQuestionDialog(obj: {
     type: "none" | "info" | "error" | "question" | "warning";
@@ -205,10 +389,69 @@ export const api: typeof window[typeof SandboxKey] = {
     cancelId?: number;
     defaultId?: number;
   }) {
+    // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
     return invoker("SHOW_QUESTION_DIALOG", [obj]);
   },
-  showImportFileDialog(obj: { title: string }) {
-    return invoker("SHOW_IMPORT_FILE_DIALOG", [obj]);
+  // FilePath, textDialogと一緒でいいかも, description text
+  async showImportFileDialog(/** obj: { title: string } */) {
+    if (
+      directoryHandlerMap.get(lastSelectedDirectoryHandlerSymbol) === undefined
+    ) {
+      // Wave File以外のものを同一ディレクトリに保存したり、名前を変えて保存するためにDirectoryのPickerを使用している
+      // FIXME: 途中でディレクトリを変えたいとかには対応できない…
+      const _directoryHandler = await window
+        .showDirectoryPicker({
+          mode: "readwrite",
+        })
+        .catch(() => undefined);
+      if (_directoryHandler === undefined) {
+        return undefined;
+      }
+
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+          directoryHandlerStoreKey,
+          "readwrite"
+        );
+        const store = transaction.objectStore(directoryHandlerStoreKey);
+        const request = store.put(_directoryHandler, _directoryHandler.name);
+        request.onsuccess = () => {
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      }).catch((e) => {
+        console.error(e);
+        // 握り潰してる
+      });
+
+      directoryHandlerMap.set(
+        lastSelectedDirectoryHandlerSymbol,
+        _directoryHandler
+      );
+    }
+
+    const fileHandle = await window
+      .showOpenFilePicker({
+        types: [
+          {
+            description: "Text",
+            accept: {
+              "text/plain": [".txt"],
+            },
+          },
+        ],
+        excludeAcceptAllOption: true,
+        multiple: false,
+      })
+      .catch(() => undefined);
+    if (fileHandle === undefined) {
+      return undefined;
+    }
+
+    return fileHandle[0].name;
   },
   async writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
     if (
