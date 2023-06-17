@@ -1,5 +1,9 @@
 import { QVueGlobals } from "quasar";
-import { AudioKey, Encoding as EncodingType } from "@/type/preload";
+import {
+  AudioKey,
+  ConfirmedTips,
+  Encoding as EncodingType,
+} from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
@@ -10,19 +14,24 @@ import { Dispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 
 type QuasarDialog = QVueGlobals["dialog"];
+type QuasarNotify = QVueGlobals["notify"];
 
 export async function generateAndSaveOneAudioWithDialog({
   audioKey,
   quasarDialog,
+  quasarNotify,
   dispatch,
   filePath,
   encoding,
+  confirmedTips,
 }: {
   audioKey: AudioKey;
   quasarDialog: QuasarDialog;
+  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
+  confirmedTips: ConfirmedTips;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
     dispatch("GENERATE_AND_SAVE_AUDIO", {
@@ -33,7 +42,37 @@ export async function generateAndSaveOneAudioWithDialog({
     dispatch
   );
 
-  if (result.result === "SUCCESS" || result.result === "CANCELED") return;
+  if (result.result === "CANCELED") return;
+
+  if (result.result === "SUCCESS") {
+    // "今後この通知をしない" 有効時
+    if (confirmedTips.notifyOnGenerateAudio) return;
+
+    // 書き出し成功時に通知をする
+    quasarNotify({
+      message: "音声を書き出しました",
+      color: "toast",
+      textColor: "toast-display",
+      icon: "info",
+      timeout: 5000,
+      actions: [
+        {
+          label: "今後この通知をしない",
+          textColor: "toast-button-display",
+          handler: () => {
+            dispatch("SET_CONFIRMED_TIPS", {
+              confirmedTips: {
+                ...confirmedTips,
+                notifyOnGenerateAudio: true,
+              },
+            });
+          },
+        },
+      ],
+    });
+    return;
+  }
+
   let msg = "";
 
   switch (result.result) {
@@ -66,14 +105,18 @@ export async function generateAndSaveOneAudioWithDialog({
 
 export async function generateAndSaveAllAudioWithDialog({
   quasarDialog,
+  quasarNotify,
   dispatch,
   dirPath,
   encoding,
+  confirmedTips,
 }: {
   quasarDialog: QuasarDialog;
+  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   dirPath?: string;
   encoding?: EncodingType;
+  confirmedTips: ConfirmedTips;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
@@ -115,6 +158,34 @@ export async function generateAndSaveAllAudioWithDialog({
     }
   }
 
+  if (successArray.length === result?.length) {
+    // "今後この通知をしない" 有効時
+    if (confirmedTips.notifyOnGenerateAudio) return;
+
+    // 書き出し成功時に通知をする
+    quasarNotify({
+      message: "音声を書き出しました",
+      color: "toast",
+      textColor: "toast-display",
+      icon: "info",
+      timeout: 5000,
+      actions: [
+        {
+          label: "今後この通知をしない",
+          textColor: "toast-button-display",
+          handler: () => {
+            dispatch("SET_CONFIRMED_TIPS", {
+              confirmedTips: {
+                ...confirmedTips,
+                notifyOnGenerateAudio: true,
+              },
+            });
+          },
+        },
+      ],
+    });
+  }
+
   if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
     quasarDialog({
       component: SaveAllResultDialog,
@@ -129,14 +200,18 @@ export async function generateAndSaveAllAudioWithDialog({
 
 export async function generateAndConnectAndSaveAudioWithDialog({
   quasarDialog,
+  quasarNotify,
   dispatch,
   filePath,
   encoding,
+  confirmedTips,
 }: {
   quasarDialog: QuasarDialog;
+  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
+  confirmedTips: ConfirmedTips;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
@@ -148,12 +223,36 @@ export async function generateAndConnectAndSaveAudioWithDialog({
     dispatch
   );
 
-  if (
-    result === undefined ||
-    result.result === "SUCCESS" ||
-    result.result === "CANCELED"
-  )
+  if (result === undefined || result.result === "CANCELED") return;
+
+  if (result.result === "SUCCESS") {
+    // "今後この通知をしない" 有効時
+    if (confirmedTips.notifyOnGenerateAudio) return;
+
+    // 書き出し成功時に通知をする
+    quasarNotify({
+      message: "音声を書き出しました",
+      color: "toast",
+      textColor: "toast-display",
+      icon: "info",
+      timeout: 5000,
+      actions: [
+        {
+          label: "今後この通知をしない",
+          textColor: "toast-button-display",
+          handler: () => {
+            dispatch("SET_CONFIRMED_TIPS", {
+              confirmedTips: {
+                ...confirmedTips,
+                notifyOnGenerateAudio: true,
+              },
+            });
+          },
+        },
+      ],
+    });
     return;
+  }
 
   let msg = "";
   switch (result.result) {
@@ -187,26 +286,54 @@ export async function generateAndConnectAndSaveAudioWithDialog({
 
 export async function connectAndExportTextWithDialog({
   quasarDialog,
+  quasarNotify,
   dispatch,
   filePath,
   encoding,
+  confirmedTips,
 }: {
   quasarDialog: QuasarDialog;
+  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
+  confirmedTips: ConfirmedTips;
 }): Promise<void> {
   const result = await dispatch("CONNECT_AND_EXPORT_TEXT", {
     filePath,
     encoding,
   });
 
-  if (
-    result === undefined ||
-    result.result === "SUCCESS" ||
-    result.result === "CANCELED"
-  )
+  if (result === undefined || result.result === "CANCELED") return;
+
+  if (result.result === "SUCCESS") {
+    // "今後この通知をしない" 有効時
+    if (confirmedTips.notifyOnGenerateAudio) return;
+
+    // 書き出し成功時に通知をする
+    quasarNotify({
+      message: "テキストを書き出しました",
+      color: "toast",
+      textColor: "toast-display",
+      icon: "info",
+      timeout: 5000,
+      actions: [
+        {
+          label: "今後この通知をしない",
+          textColor: "toast-button-display",
+          handler: () => {
+            dispatch("SET_CONFIRMED_TIPS", {
+              confirmedTips: {
+                ...confirmedTips,
+                notifyOnGenerateAudio: true,
+              },
+            });
+          },
+        },
+      ],
+    });
     return;
+  }
 
   let msg = "";
   switch (result.result) {
