@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  typos:
     runs-on: ubuntu-latest
 
     steps:
