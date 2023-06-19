@@ -324,12 +324,6 @@ async function uninstallVvppEngine(engineId: EngineId) {
   }
 }
 
-// temp dir
-const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir);
-}
-
 // 使い方テキストの読み込み
 const howToUseText = fs.readFileSync(
   path.join(__static, "howtouse.md"),
@@ -561,10 +555,6 @@ ipcMainHandle("GET_APP_INFOS", () => {
     name,
     version,
   };
-});
-
-ipcMainHandle("GET_TEMP_DIR", () => {
-  return tempDir;
 });
 
 ipcMainHandle("GET_HOW_TO_USE_TEXT", () => {
@@ -873,10 +863,6 @@ ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
   }
 
   return undefined;
-});
-
-ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
-  return path.join(...pathArray);
 });
 
 ipcMainHandle("READ_FILE", (_, { filePath }) => {
