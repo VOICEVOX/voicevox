@@ -24,11 +24,6 @@ export type IpcIHData = {
     return: AppInfos;
   };
 
-  GET_TEMP_DIR: {
-    args: [];
-    return: string;
-  };
-
   GET_HOW_TO_USE_TEXT: {
     args: [];
     return: string;
@@ -295,11 +290,6 @@ export type IpcIHData = {
   RESTART_APP: {
     args: [obj: { isMultiEngineOffMode: boolean }];
     return: void;
-  };
-
-  JOIN_PATH: {
-    args: [obj: { pathArray: string[] }];
-    return: string;
   };
 
   WRITE_FILE: {

@@ -144,8 +144,6 @@ export interface Sandbox {
   getContactText(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
   getAltPortInfos(): Promise<AltPortInfos>;
-  saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
-  loadTempFile(): Promise<string>;
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
