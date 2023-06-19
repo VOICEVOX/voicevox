@@ -124,6 +124,7 @@ export const api: typeof window[typeof SandboxKey] = {
     cancelId?: number;
     defaultId?: number;
   }) {
+    // FIXME
     // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
     return invoker("SHOW_QUESTION_DIALOG", [obj]);
   },
