@@ -7,8 +7,12 @@ on:
       - '**'
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+    
 jobs:
-  build:
+  typos:
     runs-on: ubuntu-latest
 
     steps:
