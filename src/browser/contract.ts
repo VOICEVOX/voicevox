@@ -11,4 +11,4 @@ export const defaultEngine: EngineInfo = {
   type: "default",
 };
 
-export const directoryHandlerStoreKey = "directoryHandler";
+export const directoryHandleStoreKey = "directoryHandle";
