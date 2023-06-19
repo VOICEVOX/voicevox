@@ -246,7 +246,7 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
     if (isRootPathButDirectoryNotSelected(obj.filePath)) {
       return Promise.resolve({
         code: undefined,
-        message: "ディレクトリへのアクセス許可がありません",
+        message: "フォルダへのアクセス許可がありません",
       });
     }
 
@@ -267,7 +267,7 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
         if (maybeFixedDirectory === undefined) {
           return Promise.resolve({
             code: undefined,
-            message: `ディレクトリへのアクセス許可がありません。アクセスしようとしたディレクトリ名: ${maybeDirectoryHandleName}`,
+            message: `フォルダへのアクセス許可がありません。アクセスしようとしたフォルダ名: ${maybeDirectoryHandleName}`,
           });
         }
 
@@ -277,7 +277,7 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
           return Promise.resolve({
             code: undefined,
             message:
-              "ディレクトリへのアクセス許可がありません。ファイルの書き込みのために書き込み許可が必要です。",
+              "フォルダへのアクセス許可がありません。ファイルの書き込みのために書き込み許可が必要です。",
           });
         }
 
@@ -291,7 +291,7 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
     if (directoryHandle === undefined) {
       return Promise.resolve({
         code: undefined,
-        message: "ディレクトリへのアクセス許可がありません",
+        message: "フォルダへのアクセス許可がありません",
       });
     }
 
@@ -316,9 +316,7 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
 export const readFileImpl: typeof window[typeof SandboxKey]["readFile"] =
   async (obj: { filePath: string }) => {
     if (isRootPathButDirectoryNotSelected(obj.filePath)) {
-      return Promise.reject(
-        new Error("ディレクトリへのアクセス許可がありません")
-      );
+      return Promise.reject(new Error("フォルダへのアクセス許可がありません"));
     }
 
     let directoryHandle = getLatestSelectedDirectoryHandle();
@@ -337,7 +335,7 @@ export const readFileImpl: typeof window[typeof SandboxKey]["readFile"] =
         if (maybeFixedDirectory === undefined) {
           return Promise.reject(
             new Error(
-              `ディレクトリへのアクセス許可がありません。アクセスしようとしたディレクトリ名: ${maybeDirectoryHandleName}`
+              `フォルダへのアクセス許可がありません。アクセスしようとしたフォルダ名: ${maybeDirectoryHandleName}`
             )
           );
         }
@@ -347,7 +345,7 @@ export const readFileImpl: typeof window[typeof SandboxKey]["readFile"] =
         ) {
           return Promise.reject(
             new Error(
-              "ディレクトリへのアクセス許可がありません。ファイルの読み書きのために許可が必要です。"
+              "フォルダへのアクセス許可がありません。ファイルの読み書きのために許可が必要です。"
             )
           );
         }
@@ -360,9 +358,7 @@ export const readFileImpl: typeof window[typeof SandboxKey]["readFile"] =
     }
 
     if (directoryHandle === undefined) {
-      return Promise.reject(
-        new Error("ディレクトリへのアクセス許可がありません")
-      );
+      return Promise.reject(new Error("フォルダへのアクセス許可がありません"));
     }
 
     return directoryHandle.getFileHandle(path).then(async (fileHandle) => {
