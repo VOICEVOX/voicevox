@@ -5,6 +5,7 @@
     ref="buttonRef"
     :disable="uiLocked"
     :class="{ opaque: loading }"
+    aria-haspopup="menu"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
     <div class="icon-container">
@@ -12,6 +13,7 @@
         v-if="selectedStyleInfo != undefined"
         class="q-pa-none q-ma-none"
         :src="selectedStyleInfo.iconPath"
+        :alt="selectedVoiceInfoText"
       />
       <q-avatar v-else-if="!emptiable" rounded size="2rem" color="primary"
         ><span color="text-display-on-primary">?</span></q-avatar
@@ -110,6 +112,10 @@
                 "
                 @mouseover="reassignSubMenuOpen(characterIndex)"
                 @mouseleave="reassignSubMenuOpen.cancel()"
+                v-on:keyup.right="reassignSubMenuOpen(characterIndex)"
+                role="application"
+                :aria-label="`${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`"
+                tabindex="0"
               >
                 <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
                 <q-menu
@@ -132,6 +138,11 @@
                         selectedVoice != undefined &&
                         style.styleId === selectedVoice.styleId
                       "
+                      :aria-pressed="
+                        selectedVoice != undefined &&
+                        style.styleId === selectedVoice.styleId
+                      "
+                      role="button"
                       @click="
                         $emit('update:selectedVoice', {
                           engineId: style.engineId,
@@ -230,6 +241,18 @@ const selectedCharacter = computed(() => {
       )
   );
   return character;
+});
+
+const selectedVoiceInfoText = computed(() => {
+  if (!selectedCharacter.value) {
+    return "キャラクター未選択";
+  }
+
+  if (!selectedStyleInfo.value) {
+    return selectedCharacter.value.metas.speakerName;
+  }
+
+  return `${selectedCharacter.value.metas.speakerName} (${selectedStyleInfo.value.styleName})`;
 });
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>
