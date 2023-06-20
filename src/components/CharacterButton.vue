@@ -13,7 +13,7 @@
         v-if="selectedStyleInfo != undefined"
         class="q-pa-none q-ma-none"
         :src="selectedStyleInfo.iconPath"
-        alt="ボイス設定"
+        :alt="selectedVoiceInfoText"
       />
       <q-avatar v-else-if="!emptiable" rounded size="2rem" color="primary"
         ><span color="text-display-on-primary">?</span></q-avatar
@@ -241,6 +241,18 @@ const selectedCharacter = computed(() => {
       )
   );
   return character;
+});
+
+const selectedVoiceInfoText = computed(() => {
+  if (!selectedCharacter.value) {
+    return "ボイス未設定";
+  }
+
+  if (!selectedStyleInfo.value) {
+    return selectedCharacter.value.metas.speakerName;
+  }
+
+  return `${selectedCharacter.value.metas.speakerName} (${selectedStyleInfo.value.styleName})`;
 });
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>
