@@ -35,14 +35,6 @@ export const getAppInfosImpl: SandboxImpl["GET_APP_INFOS"] = () => {
   return Promise.resolve(appInfo);
 };
 
-/**
- * @deprecated ブラウザ版では使用されていないはずです
- */
-export const getTempDirImpl: SandboxImpl["GET_TEMP_DIR"] = () => {
-  console.error("Not Implemented, it should not be called from VOICEVOX");
-  return Promise.resolve("");
-};
-
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
 
@@ -245,12 +237,4 @@ export const setEngineSettingImpl: SandboxImpl["SET_ENGINE_SETTING"] = async ([
   engineSettings[engineId] = newData;
   await setSettingImpl(["engineSettings", engineSettings]);
   return;
-};
-
-/**
- * @deprecated ブラウザ版では使用されていないはずです
- */
-export const joinPathImpl: SandboxImpl["JOIN_PATH"] = () => {
-  console.error("Not Implemented, it should not be called from VOICEVOX");
-  return Promise.resolve("");
 };

@@ -12,12 +12,10 @@ import {
   getPrivacyPolicyTextImpl,
   getQAndATextImpl,
   getSettingImpl,
-  getTempDirImpl,
   getUpdateInfosImpl,
   hotkeySettingsImpl,
   isAvailableGpuModeImpl,
   isMaximizedWindowImpl,
-  joinPathImpl,
   logErrorImpl,
   logInfoImpl,
   logWarnImpl,
@@ -45,10 +43,6 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
   switch (type) {
     case "GET_APP_INFOS":
       return getAppInfosImpl(e.data.args).then((v) =>
-        typedPostMessage(type, v, e.data.eventId)
-      );
-    case "GET_TEMP_DIR":
-      return getTempDirImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
       );
     case "GET_HOW_TO_USE_TEXT":
@@ -213,10 +207,6 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
       console.groupEnd();
       postMessage({ type: type, return: [], eventId: e.data.eventId });
       break;
-    case "JOIN_PATH":
-      return joinPathImpl(e.data.args).then((v) =>
-        typedPostMessage(type, v, e.data.eventId)
-      );
     case "WRITE_FILE":
     case "READ_FILE":
       // NOTE: FileI/OはWorker側では処理しない

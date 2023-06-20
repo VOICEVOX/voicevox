@@ -73,18 +73,6 @@ export const api: typeof window[typeof SandboxKey] = {
   getAltPortInfos() {
     return invoker("GET_ALT_PORT_INFOS", []);
   },
-  async saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }) {
-    // DELETE_ME: もう使ってなさそう
-    throw new Error(
-      `not implemented: saveTempAudioFile is already obsoleted: ${JSON.stringify(
-        obj
-      )}`
-    );
-  },
-  async loadTempFile() {
-    // DELETE_ME: もう使ってなさそう
-    throw new Error(`not implemented: loadTempFile is already obsoleted`);
-  },
   showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
     return showAudioSaveDialogImpl(obj);
   },
