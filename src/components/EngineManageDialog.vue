@@ -458,6 +458,7 @@ const getFeatureName = (name: keyof SupportedFeatures) => {
     adjustVolumeScale: "全体の音量の調整",
     interrogativeUpspeak: "疑問文の自動調整",
     synthesisMorphing: "2人の話者でモーフィングした音声を合成",
+    manageLibrary: "音声ライブラリ(vvlib)の管理",
   };
   return featureNameMap[name];
 };
