@@ -488,7 +488,12 @@ const audioItems = computed(() => store.state.audioItems);
 // 並び替え後、テキスト欄が１つで空欄なら話者を更新
 // 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
 watch(userOrderedCharacterInfos, (newValue, oldValue) => {
-  if (newValue === oldValue || newValue.length < 1) return;
+  if (
+    newValue.length < 1 ||
+    (oldValue.length > 0 && newValue[0] === oldValue[0])
+  ) {
+    return;
+  }
 
   if (audioKeys.value.length === 1) {
     const first = audioKeys.value[0] as AudioKey;
@@ -501,7 +506,7 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
     const defaultStyleId = store.state.defaultStyleIds.find(
       (styleId) => styleId.speakerUuid === speakerId
     );
-    if (!defaultStyleId) return;
+    if (!defaultStyleId || audioItem.voice.speakerId === speakerId) return;
 
     const voice: Voice = {
       engineId: defaultStyleId.engineId,
@@ -509,6 +514,7 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
       styleId: defaultStyleId.defaultStyleId,
     };
 
+    // FIXME: UNDOができてしまうのでできれば直したい
     store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
   }
 });
