@@ -213,6 +213,17 @@
                 }"
               />
             </div>
+            <div class="row q-pl-md q-pt-lg text-h6">この単語を共有する</div>
+            <div class="row q-pl-md desc-row">
+              このスイッチをオンにすることで、他のユーザーにもこの単語が共有されます。<br />
+              辞書の質を向上させるために、ぜひご協力ください。
+            </div>
+            <q-checkbox
+              v-model="isShared"
+              class="q-px-md"
+              :disable="uiLocked"
+              label="この単語を共有する"
+            />
             <div class="row q-px-md save-delete-reset-buttons">
               <q-space />
               <q-btn
@@ -539,7 +550,8 @@ const isWordChanged = computed(() => {
     (dictData.surface !== surface.value ||
       dictData.yomi !== yomi.value ||
       dictData.accentType !== computeRegisteredAccent() ||
-      dictData.priority !== wordPriority.value)
+      dictData.priority !== wordPriority.value ||
+      dictData.isShared !== isShared.value)
   );
 });
 const saveWord = async () => {
@@ -553,6 +565,7 @@ const saveWord = async () => {
         pronunciation: yomi.value,
         accentType: accent,
         priority: wordPriority.value,
+        isShared: isShared.value,
       });
     } catch {
       $q.dialog({
@@ -574,6 +587,7 @@ const saveWord = async () => {
           pronunciation: yomi.value,
           accentType: accent,
           priority: wordPriority.value,
+          isShared: isShared.value,
         })
       );
     } catch {
@@ -690,6 +704,7 @@ const selectWord = (id: string) => {
   surface.value = userDict.value[id].surface;
   setYomi(userDict.value[id].yomi, true);
   wordPriority.value = userDict.value[id].priority;
+  isShared.value = !!userDict.value[id].isShared;
   toWordSelectedState();
 };
 const cancel = () => {
@@ -698,6 +713,9 @@ const cancel = () => {
 const closeDialog = () => {
   toDialogClosedState();
 };
+
+// 収集
+const isShared = ref(false);
 
 // ステートの移動
 // 初期状態
