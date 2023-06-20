@@ -114,7 +114,7 @@
                           text-color="display-on-primary"
                           :disable="uiLocked"
                           @click="addAudioItem"
-                          aria-label="行を追加"
+                          aria-label="テキストを追加"
                         ></q-btn>
                       </div>
                     </div>
