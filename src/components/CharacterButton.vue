@@ -245,7 +245,7 @@ const selectedCharacter = computed(() => {
 
 const selectedVoiceInfoText = computed(() => {
   if (!selectedCharacter.value) {
-    return "ボイス未設定";
+    return "キャラクター未選択";
   }
 
   if (!selectedStyleInfo.value) {
