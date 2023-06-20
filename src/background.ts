@@ -40,11 +40,11 @@ import {
   ContactTextFileName,
   HowToUseTextFileName,
   OssCommunityInfosFileName,
-  OssLicensesFileName,
+  OssLicensesJsonFileName,
   PolicyTextFileName,
   PrivacyPolicyTextFileName,
   QAndATextFileName,
-  UpdateInfosFileName,
+  UpdateInfosJsonFileName,
 } from "./type/staticResources";
 
 import EngineManager from "./background/engineManager";
@@ -360,7 +360,7 @@ const policyText = fs.readFileSync(
 
 // OSSライセンス情報の読み込み
 const ossLicenses = JSON.parse(
-  fs.readFileSync(path.join(__static, OssLicensesFileName), {
+  fs.readFileSync(path.join(__static, OssLicensesJsonFileName), {
     encoding: "utf-8",
   })
 );
@@ -379,7 +379,7 @@ const qAndAText = fs.readFileSync(
 
 // アップデート情報の読み込み
 const updateInfos = JSON.parse(
-  fs.readFileSync(path.join(__static, UpdateInfosFileName), {
+  fs.readFileSync(path.join(__static, UpdateInfosJsonFileName), {
     encoding: "utf-8",
   })
 );
