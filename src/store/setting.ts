@@ -86,6 +86,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       }
 
+      dispatch("SET_EDITOR_FONT", {
+        editorFont: await window.electron.getSetting("editorFont"),
+      });
+
       dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
         showTextLineNumber: await window.electron.getSetting(
           "showTextLineNumber"
