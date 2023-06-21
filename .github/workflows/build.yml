@@ -43,6 +43,8 @@ jobs:
       ELECTRON_CACHE: .cache/electron
       ELECTRON_BUILDER_CACHE: .cache/electron-builder
       cache-version: v2
+      # GNUコマンド
+      sed: ${{ startsWith(matrix.os, 'macos-') && 'gsed' || 'sed' }}
     strategy:
       fail-fast: false
       matrix:
@@ -130,7 +132,6 @@ jobs:
         if: startsWith(matrix.os, 'macos-')
         run: |
           brew install gnu-sed
-          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
 
       # Rename executable file
       # NOTE: If the CPU/DirectML/GPU builds have the same package name,
@@ -141,10 +142,10 @@ jobs:
       #       so different package/product names should be used for CPU/DirectML/GPU builds.
       - name: Replace package name & version
         run: |
-          sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+          $sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          # $sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
-          sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
+          $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -195,13 +196,13 @@ jobs:
       - name: Overwrite .env.production for Linux and macOS
         if: startsWith(matrix.os, 'ubuntu-') || startsWith(matrix.os, 'macos-')
         run: |
-          sed -i 's|run.exe|./run|g' .env.production
+          $sed -i 's|run.exe|./run|g' .env.production
 
       - name: Replace .env.production infomations
         run: |
           # GTM ID
           gtm_id=$(jq -r '.gtm_container_id' resource/editor/metas.json)
-          sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
+          $sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
         run: npm run license:generate -- -o public/licenses.json
