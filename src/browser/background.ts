@@ -110,9 +110,6 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "MINIMIZE_WINDOW":
     case "MAXIMIZE_WINDOW":
       // NOTE: Browser版ではサポートしない
-      console.group(type);
-      console.dir(e.data);
-      console.groupEnd();
       return typedPostMessage(type, void 0, e.data.eventId);
     case "LOG_ERROR":
       return logErrorImpl(e.data.args).then((v) =>
@@ -133,24 +130,15 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
     case "RESTART_ENGINE_ALL":
     case "RESTART_ENGINE":
       // NOTE: Browser版ではサポートしない
-      console.group(type);
-      console.dir(e.data);
-      console.groupEnd();
       return typedPostMessage(type, void 0, e.data.eventId);
     case "OPEN_ENGINE_DIRECTORY":
       // NOTE: Browser版ではサポートしない
-      console.group(type);
-      console.dir(e.data);
-      console.groupEnd();
       return typedPostMessage(type, void 0, e.data.eventId);
     case "CHECK_FILE_EXISTS":
       // NOTE: FileI/OはWorker側では処理しない
       break;
     case "CHANGE_PIN_WINDOW":
       // NOTE: Browser版ではサポートしない
-      console.group(type);
-      console.dir(e.data);
-      console.groupEnd();
       return typedPostMessage(type, void 0, e.data.eventId);
     case "HOTKEY_SETTINGS":
       return hotkeySettingsImpl(e.data.args).then((v) =>
@@ -186,25 +174,16 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
       );
     case "SET_NATIVE_THEME":
       // NOTE: Browser版ではサポートしない
-      console.group(type);
-      console.dir(e.data);
-      console.groupEnd();
       postMessage({ type: type, return: [], eventId: e.data.eventId });
       break;
     case "INSTALL_VVPP_ENGINE":
     case "UNINSTALL_VVPP_ENGINE":
     case "VALIDATE_ENGINE_DIR":
       // NOTE: Browser版ではサポートしない
-      console.group(type);
-      console.dir(e.data);
-      console.groupEnd();
       postMessage({ type: type, return: [], eventId: e.data.eventId });
       break;
     case "RESTART_APP":
       // NOTE: Browser版ではサポートしない
-      console.group(type);
-      console.dir(e.data);
-      console.groupEnd();
       postMessage({ type: type, return: [], eventId: e.data.eventId });
       break;
     case "WRITE_FILE":
