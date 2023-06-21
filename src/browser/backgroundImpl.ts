@@ -101,6 +101,7 @@ export const isMaximizedWindowImpl: SandboxImpl["IS_MAXIMIZED_WINDOW"] = () => {
   return Promise.resolve(true);
 };
 
+/* eslint-disable no-console */ // ログの吐き出し先は console ぐらいしかないので、ここでは特例で許可している
 export const logErrorImpl: SandboxImpl["LOG_ERROR"] = ([...params]) => {
   console.error(...params);
   return Promise.resolve();
@@ -115,6 +116,7 @@ export const logInfoImpl: SandboxImpl["LOG_ERROR"] = ([...params]) => {
   console.info(...params);
   return Promise.resolve();
 };
+/* eslint-enable no-console */
 
 export const engineInfosImpl: SandboxImpl["ENGINE_INFOS"] = async () => {
   return [defaultEngine];
