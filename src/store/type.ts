@@ -1090,6 +1090,10 @@ export type SettingStoreTypes = {
     action(payload: { confirmedTips: ConfirmedTips }): void;
   };
 
+  SET_CONFIRMED_TIP: {
+    action(payload: { confirmedTip: Partial<ConfirmedTips> }): void;
+  };
+
   RESET_CONFIRMED_TIPS: {
     action(): void;
   };

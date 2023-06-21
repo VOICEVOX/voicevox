@@ -348,6 +348,19 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
+  SET_CONFIRMED_TIP: {
+    action({ state, dispatch }, { confirmedTip }) {
+      const confirmedTips = {
+        ...state.confirmedTips,
+        ...confirmedTip,
+      };
+
+      dispatch("SET_CONFIRMED_TIPS", {
+        confirmedTips: confirmedTips as ConfirmedTips,
+      });
+    },
+  },
+
   RESET_CONFIRMED_TIPS: {
     async action({ state, dispatch }) {
       const confirmedTips: { [key: string]: boolean } = {

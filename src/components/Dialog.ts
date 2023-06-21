@@ -1,9 +1,5 @@
 import { QVueGlobals } from "quasar";
-import {
-  AudioKey,
-  ConfirmedTips,
-  Encoding as EncodingType,
-} from "@/type/preload";
+import { AudioKey, Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
@@ -23,7 +19,7 @@ export async function generateAndSaveOneAudioWithDialog({
   dispatch,
   filePath,
   encoding,
-  confirmedTips,
+  notifyOnGenerateAudio,
 }: {
   audioKey: AudioKey;
   quasarDialog: QuasarDialog;
@@ -31,7 +27,7 @@ export async function generateAndSaveOneAudioWithDialog({
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
-  confirmedTips: ConfirmedTips;
+  notifyOnGenerateAudio: boolean;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
     dispatch("GENERATE_AND_SAVE_AUDIO", {
@@ -46,7 +42,7 @@ export async function generateAndSaveOneAudioWithDialog({
 
   if (result.result === "SUCCESS") {
     // "今後この通知をしない" 有効時
-    if (confirmedTips.notifyOnGenerateAudio) return;
+    if (notifyOnGenerateAudio) return;
 
     // 書き出し成功時に通知をする
     quasarNotify({
@@ -60,9 +56,8 @@ export async function generateAndSaveOneAudioWithDialog({
           label: "今後この通知をしない",
           textColor: "toast-button-display",
           handler: () => {
-            dispatch("SET_CONFIRMED_TIPS", {
-              confirmedTips: {
-                ...confirmedTips,
+            dispatch("SET_CONFIRMED_TIP", {
+              confirmedTip: {
                 notifyOnGenerateAudio: true,
               },
             });
@@ -109,14 +104,14 @@ export async function generateAndSaveAllAudioWithDialog({
   dispatch,
   dirPath,
   encoding,
-  confirmedTips,
+  notifyOnGenerateAudio,
 }: {
   quasarDialog: QuasarDialog;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   dirPath?: string;
   encoding?: EncodingType;
-  confirmedTips: ConfirmedTips;
+  notifyOnGenerateAudio: boolean;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
@@ -160,7 +155,7 @@ export async function generateAndSaveAllAudioWithDialog({
 
   if (successArray.length === result?.length) {
     // "今後この通知をしない" 有効時
-    if (confirmedTips.notifyOnGenerateAudio) return;
+    if (notifyOnGenerateAudio) return;
 
     // 書き出し成功時に通知をする
     quasarNotify({
@@ -174,9 +169,8 @@ export async function generateAndSaveAllAudioWithDialog({
           label: "今後この通知をしない",
           textColor: "toast-button-display",
           handler: () => {
-            dispatch("SET_CONFIRMED_TIPS", {
-              confirmedTips: {
-                ...confirmedTips,
+            dispatch("SET_CONFIRMED_TIP", {
+              confirmedTip: {
                 notifyOnGenerateAudio: true,
               },
             });
@@ -204,14 +198,14 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   dispatch,
   filePath,
   encoding,
-  confirmedTips,
+  notifyOnGenerateAudio,
 }: {
   quasarDialog: QuasarDialog;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
-  confirmedTips: ConfirmedTips;
+  notifyOnGenerateAudio: boolean;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
@@ -227,7 +221,7 @@ export async function generateAndConnectAndSaveAudioWithDialog({
 
   if (result.result === "SUCCESS") {
     // "今後この通知をしない" 有効時
-    if (confirmedTips.notifyOnGenerateAudio) return;
+    if (notifyOnGenerateAudio) return;
 
     // 書き出し成功時に通知をする
     quasarNotify({
@@ -241,9 +235,8 @@ export async function generateAndConnectAndSaveAudioWithDialog({
           label: "今後この通知をしない",
           textColor: "toast-button-display",
           handler: () => {
-            dispatch("SET_CONFIRMED_TIPS", {
-              confirmedTips: {
-                ...confirmedTips,
+            dispatch("SET_CONFIRMED_TIP", {
+              confirmedTip: {
                 notifyOnGenerateAudio: true,
               },
             });
@@ -290,14 +283,14 @@ export async function connectAndExportTextWithDialog({
   dispatch,
   filePath,
   encoding,
-  confirmedTips,
+  notifyOnGenerateAudio,
 }: {
   quasarDialog: QuasarDialog;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
-  confirmedTips: ConfirmedTips;
+  notifyOnGenerateAudio: boolean;
 }): Promise<void> {
   const result = await dispatch("CONNECT_AND_EXPORT_TEXT", {
     filePath,
@@ -308,7 +301,7 @@ export async function connectAndExportTextWithDialog({
 
   if (result.result === "SUCCESS") {
     // "今後この通知をしない" 有効時
-    if (confirmedTips.notifyOnGenerateAudio) return;
+    if (notifyOnGenerateAudio) return;
 
     // 書き出し成功時に通知をする
     quasarNotify({
@@ -322,9 +315,8 @@ export async function connectAndExportTextWithDialog({
           label: "今後この通知をしない",
           textColor: "toast-button-display",
           handler: () => {
-            dispatch("SET_CONFIRMED_TIPS", {
-              confirmedTips: {
-                ...confirmedTips,
+            dispatch("SET_CONFIRMED_TIP", {
+              confirmedTip: {
                 notifyOnGenerateAudio: true,
               },
             });

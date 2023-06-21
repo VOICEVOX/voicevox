@@ -15,6 +15,7 @@
       (menudata.type === 'button' || menudata.type === 'root') &&
         menudata.onClick?.()
     "
+    aria-haspopup="menu"
   >
     {{ menudata.label }}
     <q-menu

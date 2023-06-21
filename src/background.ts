@@ -36,6 +36,16 @@ import {
   engineSettingSchema,
   EngineId,
 } from "./type/preload";
+import {
+  ContactTextFileName,
+  HowToUseTextFileName,
+  OssCommunityInfosFileName,
+  OssLicensesJsonFileName,
+  PolicyTextFileName,
+  PrivacyPolicyTextFileName,
+  QAndATextFileName,
+  UpdateInfosJsonFileName,
+} from "./type/staticResources";
 
 import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
@@ -324,47 +334,52 @@ async function uninstallVvppEngine(engineId: EngineId) {
   }
 }
 
-// temp dir
-const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir);
-}
-
 // 使い方テキストの読み込み
 const howToUseText = fs.readFileSync(
-  path.join(__static, "howtouse.md"),
+  path.join(__static, HowToUseTextFileName),
   "utf-8"
 );
 
 // OSSコミュニティ情報の読み込み
 const ossCommunityInfos = fs.readFileSync(
-  path.join(__static, "ossCommunityInfos.md"),
+  path.join(__static, OssCommunityInfosFileName),
   "utf-8"
 );
 
 // 利用規約テキストの読み込み
-const policyText = fs.readFileSync(path.join(__static, "policy.md"), "utf-8");
+const policyText = fs.readFileSync(
+  path.join(__static, PolicyTextFileName),
+  "utf-8"
+);
 
 // OSSライセンス情報の読み込み
 const ossLicenses = JSON.parse(
-  fs.readFileSync(path.join(__static, "licenses.json"), { encoding: "utf-8" })
+  fs.readFileSync(path.join(__static, OssLicensesJsonFileName), {
+    encoding: "utf-8",
+  })
 );
 
 // 問い合わせの読み込み
-const contactText = fs.readFileSync(path.join(__static, "contact.md"), "utf-8");
+const contactText = fs.readFileSync(
+  path.join(__static, ContactTextFileName),
+  "utf-8"
+);
 
 // Q&Aの読み込み
-const qAndAText = fs.readFileSync(path.join(__static, "qAndA.md"), "utf-8");
+const qAndAText = fs.readFileSync(
+  path.join(__static, QAndATextFileName),
+  "utf-8"
+);
 
 // アップデート情報の読み込み
 const updateInfos = JSON.parse(
-  fs.readFileSync(path.join(__static, "updateInfos.json"), {
+  fs.readFileSync(path.join(__static, UpdateInfosJsonFileName), {
     encoding: "utf-8",
   })
 );
 
 const privacyPolicyText = fs.readFileSync(
-  path.join(__static, "privacyPolicy.md"),
+  path.join(__static, PrivacyPolicyTextFileName),
   "utf-8"
 );
 
@@ -561,10 +576,6 @@ ipcMainHandle("GET_APP_INFOS", () => {
     name,
     version,
   };
-});
-
-ipcMainHandle("GET_TEMP_DIR", () => {
-  return tempDir;
 });
 
 ipcMainHandle("GET_HOW_TO_USE_TEXT", () => {
@@ -873,10 +884,6 @@ ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
   }
 
   return undefined;
-});
-
-ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
-  return path.join(...pathArray);
 });
 
 ipcMainHandle("READ_FILE", (_, { filePath }) => {

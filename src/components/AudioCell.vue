@@ -38,6 +38,7 @@
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @mouseup.right="onRightClickTextField"
+      :aria-label="`${textLineNumberIndex}行目`"
     >
       <template v-slot:error>
         文章が長いと正常に動作しない可能性があります。
@@ -51,6 +52,7 @@
           size="0.8rem"
           :disable="uiLocked"
           @click="removeCell"
+          :aria-label="`${textLineNumberIndex}行目を削除`"
         />
       </template>
     </q-input>
