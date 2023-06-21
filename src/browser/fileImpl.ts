@@ -92,9 +92,7 @@ const requestSaveFileNameWithDirectoryPermission = async ({
       return undefined;
     }
 
-    await storeDirectoryHandle(_directoryHandler).catch((e) =>
-      console.error(e)
-    );
+    await storeDirectoryHandle(_directoryHandler);
 
     updateLatestSelectedDirectoryHandle(_directoryHandler);
   }
@@ -124,9 +122,7 @@ const requestLoadFileNameWithDirectoryPermission = async ({
       return undefined;
     }
 
-    await storeDirectoryHandle(_directoryHandler).catch((e) =>
-      console.error(e)
-    );
+    await storeDirectoryHandle(_directoryHandler);
 
     updateLatestSelectedDirectoryHandle(_directoryHandler);
   }
@@ -170,9 +166,7 @@ export const showOpenDirectoryDialogImpl: typeof window[typeof SandboxKey]["show
       return undefined;
     }
 
-    await storeDirectoryHandle(_directoryHandler).catch((e) =>
-      console.error(e)
-    );
+    await storeDirectoryHandle(_directoryHandler);
 
     // NOTE: 同一のディレクトリ名だった場合、後で選択されたディレクトリがそれ移行の処理で使用されるため、意図しない保存が発生するかもしれない
     directoryHandleMap.set(_directoryHandler.name, _directoryHandler);
@@ -234,9 +228,8 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
         reject(request.error);
       };
     }
-  ).catch((e) => {
-    console.error(e);
-    // 握り潰してる
+  ).catch(() => {
+    // FIXME: 握り潰してる
     return undefined;
   });
 };
@@ -304,8 +297,6 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
       })
       .then(() => undefined)
       .catch((e) => {
-        // FIXME
-        console.error(e);
         return {
           code: undefined,
           message: e.message as string,
