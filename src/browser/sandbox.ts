@@ -10,14 +10,13 @@ import {
   showTextSaveDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
-import { entryKey, openDB } from "./storeImpl";
+import { getSettingEntry, setSettingEntry } from "./storeImpl";
 
 import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
   electronStoreSchema,
-  ElectronStoreType,
   EngineId,
   EngineSetting,
   EngineSettings,
@@ -249,48 +248,11 @@ export const api: typeof window[typeof SandboxKey] = {
     // NOTE: 何もしなくて良さそう
     return Promise.resolve();
   },
-  async getSetting<Key extends keyof ElectronStoreType>(key: Key) {
-    const db = await openDB();
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(key, "readonly");
-      const store = transaction.objectStore(key);
-      const request = store.get(entryKey);
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-      request.onerror = () => {
-        reject(request.error);
-      };
-    });
+  getSetting(key) {
+    return getSettingEntry(key);
   },
-  async setSetting<Key extends keyof ElectronStoreType>(
-    key: Key,
-    newValue: ElectronStoreType[Key]
-  ) {
-    const db = await openDB();
-
-    // TODO: Schemaに合っているか保存時にvalidationしたい
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(key, "readwrite");
-      const store = transaction.objectStore(key);
-      const request = store.put(newValue, entryKey);
-      request.onsuccess = () => {
-        const readRequest = db
-          .transaction(key, "readonly")
-          .objectStore(key)
-          .get(entryKey);
-        readRequest.onsuccess = () => {
-          resolve(readRequest.result);
-        };
-        readRequest.onerror = () => {
-          reject(readRequest.error);
-        };
-      };
-      request.onerror = () => {
-        reject(request.error);
-      };
-    });
+  setSetting(key, newValue) {
+    return setSettingEntry(key, newValue).then(() => getSettingEntry(key));
   },
   async setEngineSetting(engineId: EngineId, engineSetting: EngineSetting) {
     const engineSettings = (await this.getSetting(

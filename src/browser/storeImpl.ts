@@ -1,7 +1,9 @@
 import { defaultEngine, directoryHandleStoreKey } from "./contract";
+
 import {
-  EngineId,
   electronStoreSchema,
+  ElectronStoreType,
+  EngineId,
   engineSettingSchema,
 } from "@/type/preload";
 
@@ -49,3 +51,41 @@ export const openDB = () =>
       // TODO: migrate
     };
   });
+
+export const setSettingEntry = async <Key extends keyof ElectronStoreType>(
+  key: Key,
+  newValue: ElectronStoreType[Key]
+) => {
+  const db = await openDB();
+
+  // TODO: Schemaに合っているか保存時にvalidationしたい
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(key, "readwrite");
+    const store = transaction.objectStore(key);
+    const request = store.put(newValue, entryKey);
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export const getSettingEntry = async <Key extends keyof ElectronStoreType>(
+  key: Key
+): Promise<ElectronStoreType[Key]> => {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(key, "readonly");
+    const store = transaction.objectStore(key);
+    const request = store.get(entryKey);
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
