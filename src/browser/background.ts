@@ -81,19 +81,6 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
       return getAltPortInfosImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
       );
-    case "SHOW_AUDIO_SAVE_DIALOG":
-    case "SHOW_TEXT_SAVE_DIALOG":
-    case "SHOW_VVPP_OPEN_DIALOG":
-    case "SHOW_OPEN_DIRECTORY_DIALOG":
-    case "SHOW_IMPORT_FILE_DIALOG":
-    case "SHOW_PROJECT_SAVE_DIALOG":
-    case "SHOW_PROJECT_LOAD_DIALOG":
-    case "SHOW_MESSAGE_DIALOG":
-    case "SHOW_QUESTION_DIALOG":
-    case "SHOW_WARNING_DIALOG":
-    case "SHOW_ERROR_DIALOG":
-      // NOTE: DialogはWorker側では処理しない
-      break;
     case "OPEN_TEXT_EDIT_CONTEXT_MENU":
       return openTextEditContextMenuImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
@@ -106,11 +93,6 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
       return isMaximizedWindowImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
       );
-    case "CLOSE_WINDOW":
-    case "MINIMIZE_WINDOW":
-    case "MAXIMIZE_WINDOW":
-      // NOTE: Browser版ではサポートしない
-      return typedPostMessage(type, void 0, e.data.eventId);
     case "LOG_ERROR":
       return logErrorImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
@@ -127,19 +109,6 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
       return engineInfosImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
       );
-    case "RESTART_ENGINE_ALL":
-    case "RESTART_ENGINE":
-      // NOTE: Browser版ではサポートしない
-      return typedPostMessage(type, void 0, e.data.eventId);
-    case "OPEN_ENGINE_DIRECTORY":
-      // NOTE: Browser版ではサポートしない
-      return typedPostMessage(type, void 0, e.data.eventId);
-    case "CHECK_FILE_EXISTS":
-      // NOTE: FileI/OはWorker側では処理しない
-      break;
-    case "CHANGE_PIN_WINDOW":
-      // NOTE: Browser版ではサポートしない
-      return typedPostMessage(type, void 0, e.data.eventId);
     case "HOTKEY_SETTINGS":
       return hotkeySettingsImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
@@ -172,23 +141,7 @@ onmessage = (e: MessageEvent<MainToWorkerMessage>) => {
       return setEngineSettingImpl(e.data.args).then((v) =>
         typedPostMessage(type, v, e.data.eventId)
       );
-    case "SET_NATIVE_THEME":
-      // NOTE: Browser版ではサポートしない
-      postMessage({ type: type, return: [], eventId: e.data.eventId });
-      break;
-    case "INSTALL_VVPP_ENGINE":
-    case "UNINSTALL_VVPP_ENGINE":
-    case "VALIDATE_ENGINE_DIR":
-      // NOTE: Browser版ではサポートしない
-      postMessage({ type: type, return: [], eventId: e.data.eventId });
-      break;
-    case "RESTART_APP":
-      // NOTE: Browser版ではサポートしない
-      postMessage({ type: type, return: [], eventId: e.data.eventId });
-      break;
-    case "WRITE_FILE":
-    case "READ_FILE":
-      // NOTE: FileI/OはWorker側では処理しない
-      break;
+    default:
+      throw new Error(`Not implemented: ${type}`);
   }
 };
