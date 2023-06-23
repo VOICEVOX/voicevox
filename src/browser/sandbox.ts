@@ -17,7 +17,6 @@ import {
   EngineId,
   EngineSetting,
   HotkeySetting,
-  NativeThemeType,
   SandboxKey,
 } from "@/type/preload";
 
@@ -186,8 +185,9 @@ export const api: typeof window[typeof SandboxKey] = {
   getDefaultToolbarSetting() {
     return invoker("GET_DEFAULT_TOOLBAR_SETTING", []);
   },
-  setNativeTheme(source: NativeThemeType) {
-    return invoker("SET_NATIVE_THEME", [source]);
+  setNativeTheme(/* source: NativeThemeType */) {
+    // TODO: Impl
+    return;
   },
   theme(newData?: string) {
     return invoker("THEME", [{ newData }]);
