@@ -10,7 +10,7 @@ import {
   showTextSaveDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
-import { entryKey, openDB } from "./store";
+import { entryKey, openDB } from "./storeImpl";
 
 import { IpcSOData } from "@/type/ipc";
 import {

@@ -1,6 +1,6 @@
 import { sep } from "path";
 import { directoryHandleStoreKey } from "./contract";
-import { openDB } from "./store";
+import { openDB } from "./storeImpl";
 import { SandboxKey, WriteFileErrorResult } from "@/type/preload";
 
 const showWritableDirectoryPicker = async (): Promise<
