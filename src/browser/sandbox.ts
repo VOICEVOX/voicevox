@@ -1,4 +1,29 @@
-import { v4 } from "uuid";
+import {
+  engineInfosImpl,
+  getAltPortInfosImpl,
+  getAppInfosImpl,
+  getContactTextImpl,
+  getDefaultHotkeySettingsImpl,
+  getDefaultToolbarSettingImpl,
+  getHowToUseTextImpl,
+  getOssCommunityInfosImpl,
+  getOssLicensesImpl,
+  getPolicyTextImpl,
+  getPrivacyPolicyTextImpl,
+  getQAndATextImpl,
+  getSettingImpl,
+  getUpdateInfosImpl,
+  hotkeySettingsImpl,
+  isAvailableGpuModeImpl,
+  isMaximizedWindowImpl,
+  logErrorImpl,
+  logInfoImpl,
+  logWarnImpl,
+  onVuexReadyImpl,
+  openTextEditContextMenuImpl,
+  setSettingImpl,
+  themeImpl,
+} from "./backgroundImpl";
 import {
   checkFileExistsImpl,
   readFileImpl,
@@ -10,67 +35,40 @@ import {
   showTextSaveDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
-import type { WorkerToMainMessage } from "./type";
-import { IpcIHData, IpcSOData } from "@/type/ipc";
-import {
-  ElectronStoreType,
-  EngineId,
-  EngineSetting,
-  HotkeySetting,
-  SandboxKey,
-} from "@/type/preload";
 
-const worker = new Worker(new URL("./background.ts", import.meta.url), {
-  type: "module",
-});
-
-const invoker = <K extends keyof IpcIHData>(
-  type: K,
-  args: IpcIHData[K]["args"]
-): Promise<IpcIHData[K]["return"]> => {
-  return new Promise((resolve) => {
-    const eventId = v4();
-    const cb = (ev: MessageEvent<WorkerToMainMessage>) => {
-      if (ev.data.type === type && ev.data.eventId === eventId) {
-        worker.removeEventListener("message", cb);
-        resolve(ev.data.return);
-      }
-    };
-    worker.addEventListener("message", cb); // 他のeventが届いた時にresolveしない様に、onceは使用していない
-    worker.postMessage({ type, args, eventId } /** MainToWorkerMessage */);
-  });
-};
+import { IpcSOData } from "@/type/ipc";
+import { ElectronStoreType, HotkeySetting, SandboxKey } from "@/type/preload";
 
 export const api: typeof window[typeof SandboxKey] = {
   getAppInfos() {
-    return invoker("GET_APP_INFOS", []);
+    return getAppInfosImpl([]);
   },
   getHowToUseText() {
-    return invoker("GET_HOW_TO_USE_TEXT", []);
+    return getHowToUseTextImpl([]);
   },
   getPolicyText() {
-    return invoker("GET_POLICY_TEXT", []);
+    return getPolicyTextImpl([]);
   },
   getOssLicenses() {
-    return invoker("GET_OSS_LICENSES", []);
+    return getOssLicensesImpl([]);
   },
   getUpdateInfos() {
-    return invoker("GET_UPDATE_INFOS", []);
+    return getUpdateInfosImpl([]);
   },
   getOssCommunityInfos() {
-    return invoker("GET_OSS_COMMUNITY_INFOS", []);
+    return getOssCommunityInfosImpl([]);
   },
   getQAndAText() {
-    return invoker("GET_Q_AND_A_TEXT", []);
+    return getQAndATextImpl([]);
   },
   getContactText() {
-    return invoker("GET_CONTACT_TEXT", []);
+    return getContactTextImpl([]);
   },
   getPrivacyPolicyText() {
-    return invoker("GET_PRIVACY_POLICY_TEXT", []);
+    return getPrivacyPolicyTextImpl([]);
   },
-  getAltPortInfos() {
-    return invoker("GET_ALT_PORT_INFOS", []);
+  async getAltPortInfos() {
+    return getAltPortInfosImpl([]);
   },
   showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
     return showAudioSaveDialogImpl(obj);
@@ -113,7 +111,9 @@ export const api: typeof window[typeof SandboxKey] = {
   }) {
     // FIXME
     // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
-    return invoker("SHOW_QUESTION_DIALOG", [obj]);
+    throw new Error(
+      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`
+    );
   },
   showImportFileDialog(obj: { title: string }) {
     return showImportFileDialogImpl(obj);
@@ -125,13 +125,13 @@ export const api: typeof window[typeof SandboxKey] = {
     return readFileImpl(obj);
   },
   openTextEditContextMenu() {
-    return invoker("OPEN_TEXT_EDIT_CONTEXT_MENU", []);
+    return openTextEditContextMenuImpl([]);
   },
   isAvailableGPUMode() {
-    return invoker("IS_AVAILABLE_GPU_MODE", []);
+    return isAvailableGpuModeImpl([]);
   },
   isMaximizedWindow() {
-    return invoker("IS_MAXIMIZED_WINDOW", []);
+    return isMaximizedWindowImpl([]);
   },
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
@@ -144,81 +144,79 @@ export const api: typeof window[typeof SandboxKey] = {
     });
   },
   closeWindow() {
-    return invoker("CLOSE_WINDOW", []);
+    throw new Error(`Not supported on Browser version: closeWindow`);
   },
   minimizeWindow() {
-    return invoker("MINIMIZE_WINDOW", []);
+    throw new Error(`Not supported on Browser version: minimizeWindow`);
   },
   maximizeWindow() {
-    return invoker("MAXIMIZE_WINDOW", []);
+    throw new Error(`Not supported on Browser version: maximizeWindow`);
   },
   logError(...params: unknown[]) {
-    return invoker("LOG_ERROR", [params]);
+    return logErrorImpl(params);
   },
   logWarn(...params: unknown[]) {
-    return invoker("LOG_WARN", [params]);
+    return logWarnImpl(params);
   },
   logInfo(...params: unknown[]) {
-    return invoker("LOG_INFO", [params]);
+    return logInfoImpl(params);
   },
   engineInfos() {
-    return invoker("ENGINE_INFOS", []);
+    return engineInfosImpl([]);
   },
-  restartEngine(engineId: EngineId) {
-    return invoker("RESTART_ENGINE", [{ engineId }]);
+  restartEngine(/* engineId: EngineId */) {
+    throw new Error(`Not supported on Browser version: restartEngine`);
   },
-  openEngineDirectory(engineId: EngineId) {
-    return invoker("OPEN_ENGINE_DIRECTORY", [{ engineId }]);
+  openEngineDirectory(/* engineId: EngineId */) {
+    throw new Error(`Not supported on Browser version: openEngineDirectory`);
   },
   hotkeySettings(newData?: HotkeySetting) {
-    return invoker("HOTKEY_SETTINGS", [{ newData }]);
+    return hotkeySettingsImpl([{ newData }]);
   },
   checkFileExists(file: string) {
     return checkFileExistsImpl(file);
   },
   changePinWindow() {
-    return invoker("CHANGE_PIN_WINDOW", []);
+    throw new Error(`Not supported on Browser version: changePinWindow`);
   },
   getDefaultHotkeySettings() {
-    return invoker("GET_DEFAULT_HOTKEY_SETTINGS", []);
+    return getDefaultHotkeySettingsImpl([]);
   },
   getDefaultToolbarSetting() {
-    return invoker("GET_DEFAULT_TOOLBAR_SETTING", []);
+    return getDefaultToolbarSettingImpl([]);
   },
   setNativeTheme(/* source: NativeThemeType */) {
     // TODO: Impl
     return;
   },
   theme(newData?: string) {
-    return invoker("THEME", [{ newData }]);
+    return themeImpl([{ newData }]);
   },
   vuexReady() {
-    return invoker("ON_VUEX_READY", []);
+    return onVuexReadyImpl([]);
   },
   getSetting<Key extends keyof ElectronStoreType>(key: Key) {
-    return invoker("GET_SETTING", [key]) as Promise<
-      ElectronStoreType[typeof key]
-    >;
+    return getSettingImpl([key]) as Promise<ElectronStoreType[typeof key]>;
   },
   setSetting<Key extends keyof ElectronStoreType>(
     key: Key,
     newValue: ElectronStoreType[Key]
   ) {
-    return invoker("SET_SETTING", [key, newValue]) as Promise<typeof newValue>;
+    return setSettingImpl([key, newValue]) as Promise<typeof newValue>;
   },
-  setEngineSetting(engineId: EngineId, engineSetting: EngineSetting) {
-    return invoker("SET_ENGINE_SETTING", [engineId, engineSetting]);
+  setEngineSetting(/* engineId: EngineId, engineSetting: EngineSetting */) {
+    throw new Error(`Not supported on Browser version: setEngineSetting`);
   },
-  async installVvppEngine(path: string) {
-    return invoker("INSTALL_VVPP_ENGINE", [path]);
+  installVvppEngine(/* path: string */) {
+    throw new Error(`Not supported on Browser version: installVvppEngine`);
   },
-  async uninstallVvppEngine(engineId: EngineId) {
-    return invoker("UNINSTALL_VVPP_ENGINE", [engineId]);
+  uninstallVvppEngine(/* engineId: EngineId */) {
+    throw new Error(`Not supported on Browser version: uninstallVvppEngine`);
   },
-  validateEngineDir(engineDir: string) {
-    return invoker("VALIDATE_ENGINE_DIR", [{ engineDir }]);
+  validateEngineDir(/* engineDir: string */) {
+    throw new Error(`Not supported on Browser version: validateEngineDir`);
   },
-  restartApp(obj: { isMultiEngineOffMode: boolean }) {
-    return invoker("RESTART_APP", [obj]);
+  restartApp(/* obj: { isMultiEngineOffMode: boolean } */) {
+    throw new Error(`Not supported on Browser version: restartApp`);
   },
 };
