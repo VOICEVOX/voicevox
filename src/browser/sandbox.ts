@@ -1,29 +1,4 @@
-import {
-  engineInfosImpl,
-  getAltPortInfosImpl,
-  getAppInfosImpl,
-  getContactTextImpl,
-  getDefaultHotkeySettingsImpl,
-  getDefaultToolbarSettingImpl,
-  getHowToUseTextImpl,
-  getOssCommunityInfosImpl,
-  getOssLicensesImpl,
-  getPolicyTextImpl,
-  getPrivacyPolicyTextImpl,
-  getQAndATextImpl,
-  getSettingImpl,
-  getUpdateInfosImpl,
-  hotkeySettingsImpl,
-  isAvailableGpuModeImpl,
-  isMaximizedWindowImpl,
-  logErrorImpl,
-  logInfoImpl,
-  logWarnImpl,
-  onVuexReadyImpl,
-  openTextEditContextMenuImpl,
-  setSettingImpl,
-  themeImpl,
-} from "./backgroundImpl";
+import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
   readFileImpl,
@@ -35,40 +10,72 @@ import {
   showTextSaveDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
+import { entryKey, openDB } from "./store";
 
 import { IpcSOData } from "@/type/ipc";
-import { ElectronStoreType, HotkeySetting, SandboxKey } from "@/type/preload";
+import {
+  defaultHotkeySettings,
+  defaultToolbarButtonSetting,
+  electronStoreSchema,
+  ElectronStoreType,
+  EngineId,
+  EngineSetting,
+  EngineSettings,
+  HotkeySetting,
+  SandboxKey,
+  ThemeConf,
+} from "@/type/preload";
+import {
+  ContactTextFileName,
+  HowToUseTextFileName,
+  OssCommunityInfosFileName,
+  OssLicensesJsonFileName,
+  PolicyTextFileName,
+  PrivacyPolicyTextFileName,
+  QAndATextFileName,
+  UpdateInfosJsonFileName,
+} from "@/type/staticResources";
+
+// TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
+const toStaticPath = (fileName: string) => `/${fileName}`;
 
 export const api: typeof window[typeof SandboxKey] = {
   getAppInfos() {
-    return getAppInfosImpl([]);
+    /* eslint-disable @typescript-eslint/no-non-null-assertion */
+    const appInfo = {
+      name: process.env.APP_NAME!,
+      version: process.env.APP_VERSION!,
+    };
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
+    return Promise.resolve(appInfo);
   },
   getHowToUseText() {
-    return getHowToUseTextImpl([]);
+    return fetch(toStaticPath(HowToUseTextFileName)).then((v) => v.text());
   },
   getPolicyText() {
-    return getPolicyTextImpl([]);
+    return fetch(toStaticPath(PolicyTextFileName)).then((v) => v.text());
   },
   getOssLicenses() {
-    return getOssLicensesImpl([]);
+    return fetch(toStaticPath(OssLicensesJsonFileName)).then((v) => v.json());
   },
   getUpdateInfos() {
-    return getUpdateInfosImpl([]);
+    return fetch(toStaticPath(UpdateInfosJsonFileName)).then((v) => v.json());
   },
   getOssCommunityInfos() {
-    return getOssCommunityInfosImpl([]);
+    return fetch(toStaticPath(OssCommunityInfosFileName)).then((v) => v.text());
   },
   getQAndAText() {
-    return getQAndATextImpl([]);
+    return fetch(toStaticPath(QAndATextFileName)).then((v) => v.text());
   },
   getContactText() {
-    return getContactTextImpl([]);
+    return fetch(toStaticPath(ContactTextFileName)).then((v) => v.text());
   },
   getPrivacyPolicyText() {
-    return getPrivacyPolicyTextImpl([]);
+    return fetch(toStaticPath(PrivacyPolicyTextFileName)).then((v) => v.text());
   },
-  async getAltPortInfos() {
-    return getAltPortInfosImpl([]);
+  getAltPortInfos() {
+    // NOTE: ブラウザ版ではサポートされていません
+    return Promise.resolve({});
   },
   showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
     return showAudioSaveDialogImpl(obj);
@@ -125,13 +132,17 @@ export const api: typeof window[typeof SandboxKey] = {
     return readFileImpl(obj);
   },
   openTextEditContextMenu() {
-    return openTextEditContextMenuImpl([]);
+    // NOTE: ブラウザ版では不要
+    return Promise.resolve();
   },
   isAvailableGPUMode() {
-    return isAvailableGpuModeImpl([]);
+    // TODO: WebAssembly版をサポートする時に実装する
+    // FIXME: canvasでWebGLから調べたり、WebGPUがサポートされているかを調べたりで判断は出来そう
+    return Promise.resolve(false);
   },
   isMaximizedWindow() {
-    return isMaximizedWindowImpl([]);
+    // NOTE: UIの表示状態の制御のためだけなので固定値を返している
+    return Promise.resolve(true);
   },
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
@@ -152,17 +163,22 @@ export const api: typeof window[typeof SandboxKey] = {
   maximizeWindow() {
     throw new Error(`Not supported on Browser version: maximizeWindow`);
   },
+  /* eslint-disable no-console */ // ログの吐き出し先は console ぐらいしかないので、ここでは特例で許可している
   logError(...params: unknown[]) {
-    return logErrorImpl(params);
+    console.error(...params);
+    return;
   },
   logWarn(...params: unknown[]) {
-    return logWarnImpl(params);
+    console.warn(...params);
+    return;
   },
   logInfo(...params: unknown[]) {
-    return logInfoImpl(params);
+    console.info(...params);
+    return;
   },
+  /* eslint-enable no-console */
   engineInfos() {
-    return engineInfosImpl([]);
+    return Promise.resolve([defaultEngine]);
   },
   restartEngine(/* engineId: EngineId */) {
     throw new Error(`Not supported on Browser version: restartEngine`);
@@ -170,8 +186,23 @@ export const api: typeof window[typeof SandboxKey] = {
   openEngineDirectory(/* engineId: EngineId */) {
     throw new Error(`Not supported on Browser version: openEngineDirectory`);
   },
-  hotkeySettings(newData?: HotkeySetting) {
-    return hotkeySettingsImpl([{ newData }]);
+  async hotkeySettings(newData?: HotkeySetting) {
+    type HotkeySettingType = ReturnType<
+      typeof electronStoreSchema["parse"]
+    >["hotkeySettings"];
+    if (newData !== undefined) {
+      const hotkeySettings = (await this.getSetting(
+        "hotkeySettings"
+      )) as HotkeySettingType;
+      const hotkeySetting = hotkeySettings.find(
+        (hotkey) => hotkey.action == newData.action
+      );
+      if (hotkeySetting !== undefined) {
+        hotkeySetting.combination = newData.combination;
+      }
+      await this.setSetting("hotkeySettings", hotkeySettings);
+    }
+    return this.getSetting("hotkeySettings") as Promise<HotkeySettingType>;
   },
   checkFileExists(file: string) {
     return checkFileExistsImpl(file);
@@ -180,32 +211,94 @@ export const api: typeof window[typeof SandboxKey] = {
     throw new Error(`Not supported on Browser version: changePinWindow`);
   },
   getDefaultHotkeySettings() {
-    return getDefaultHotkeySettingsImpl([]);
+    return Promise.resolve(defaultHotkeySettings);
   },
   getDefaultToolbarSetting() {
-    return getDefaultToolbarSettingImpl([]);
+    return Promise.resolve(defaultToolbarButtonSetting);
   },
   setNativeTheme(/* source: NativeThemeType */) {
     // TODO: Impl
     return;
   },
-  theme(newData?: string) {
-    return themeImpl([{ newData }]);
+  async theme(newData?: string) {
+    if (newData !== undefined) {
+      await this.setSetting("currentTheme", newData);
+      return;
+    }
+    return Promise.all(
+      // FIXME: themeファイルのいい感じのパスの設定
+      ["/themes/default.json", "/themes/dark.json"].map((url) =>
+        fetch(url).then((res) => res.json())
+      )
+    )
+      .then((v) => ({
+        currentTheme: "Default",
+        availableThemes: v,
+      }))
+      .then((v) =>
+        this.getSetting("currentTheme").then(
+          (currentTheme) =>
+            ({
+              ...v,
+              currentTheme,
+            } as { currentTheme: string; availableThemes: ThemeConf[] })
+        )
+      );
   },
   vuexReady() {
-    return onVuexReadyImpl([]);
+    // NOTE: 何もしなくて良さそう
+    return Promise.resolve();
   },
-  getSetting<Key extends keyof ElectronStoreType>(key: Key) {
-    return getSettingImpl([key]) as Promise<ElectronStoreType[typeof key]>;
+  async getSetting<Key extends keyof ElectronStoreType>(key: Key) {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(key, "readonly");
+      const store = transaction.objectStore(key);
+      const request = store.get(entryKey);
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
   },
-  setSetting<Key extends keyof ElectronStoreType>(
+  async setSetting<Key extends keyof ElectronStoreType>(
     key: Key,
     newValue: ElectronStoreType[Key]
   ) {
-    return setSettingImpl([key, newValue]) as Promise<typeof newValue>;
+    const db = await openDB();
+
+    // TODO: Schemaに合っているか保存時にvalidationしたい
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(key, "readwrite");
+      const store = transaction.objectStore(key);
+      const request = store.put(newValue, entryKey);
+      request.onsuccess = () => {
+        const readRequest = db
+          .transaction(key, "readonly")
+          .objectStore(key)
+          .get(entryKey);
+        readRequest.onsuccess = () => {
+          resolve(readRequest.result);
+        };
+        readRequest.onerror = () => {
+          reject(readRequest.error);
+        };
+      };
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
   },
-  setEngineSetting(/* engineId: EngineId, engineSetting: EngineSetting */) {
-    throw new Error(`Not supported on Browser version: setEngineSetting`);
+  async setEngineSetting(engineId: EngineId, engineSetting: EngineSetting) {
+    const engineSettings = (await this.getSetting(
+      "engineSettings"
+    )) as EngineSettings;
+    engineSettings[engineId] = engineSetting;
+    await this.setSetting("engineSettings", engineSettings);
+    return;
   },
   installVvppEngine(/* path: string */) {
     throw new Error(`Not supported on Browser version: installVvppEngine`);
