@@ -11,6 +11,7 @@ import { withProgress } from "@/store/ui";
 
 type QuasarDialog = QVueGlobals["dialog"];
 type QuasarNotify = QVueGlobals["notify"];
+type MediaType = "audio" | "text";
 
 export async function generateAndSaveOneAudioWithDialog({
   audioKey,
@@ -41,29 +42,12 @@ export async function generateAndSaveOneAudioWithDialog({
   if (result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
-    // "今後この通知をしない" 有効時
-    if (notifyOnGenerateAudio) return;
-
     // 書き出し成功時に通知をする
-    quasarNotify({
-      message: "音声を書き出しました",
-      color: "toast",
-      textColor: "toast-display",
-      icon: "info",
-      timeout: 5000,
-      actions: [
-        {
-          label: "今後この通知をしない",
-          textColor: "toast-button-display",
-          handler: () => {
-            dispatch("SET_CONFIRMED_TIP", {
-              confirmedTip: {
-                notifyOnGenerateAudio: true,
-              },
-            });
-          },
-        },
-      ],
+    showNotify({
+      mediaType: "audio",
+      notifyOnGenerateAudio,
+      quasarNotify,
+      dispatch,
     });
     return;
   }
@@ -154,29 +138,12 @@ export async function generateAndSaveAllAudioWithDialog({
   }
 
   if (successArray.length === result?.length) {
-    // "今後この通知をしない" 有効時
-    if (notifyOnGenerateAudio) return;
-
     // 書き出し成功時に通知をする
-    quasarNotify({
-      message: "音声を書き出しました",
-      color: "toast",
-      textColor: "toast-display",
-      icon: "info",
-      timeout: 5000,
-      actions: [
-        {
-          label: "今後この通知をしない",
-          textColor: "toast-button-display",
-          handler: () => {
-            dispatch("SET_CONFIRMED_TIP", {
-              confirmedTip: {
-                notifyOnGenerateAudio: true,
-              },
-            });
-          },
-        },
-      ],
+    showNotify({
+      mediaType: "audio",
+      notifyOnGenerateAudio,
+      quasarNotify,
+      dispatch,
     });
   }
 
@@ -220,29 +187,12 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   if (result === undefined || result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
-    // "今後この通知をしない" 有効時
-    if (notifyOnGenerateAudio) return;
-
     // 書き出し成功時に通知をする
-    quasarNotify({
-      message: "音声を書き出しました",
-      color: "toast",
-      textColor: "toast-display",
-      icon: "info",
-      timeout: 5000,
-      actions: [
-        {
-          label: "今後この通知をしない",
-          textColor: "toast-button-display",
-          handler: () => {
-            dispatch("SET_CONFIRMED_TIP", {
-              confirmedTip: {
-                notifyOnGenerateAudio: true,
-              },
-            });
-          },
-        },
-      ],
+    showNotify({
+      mediaType: "audio",
+      notifyOnGenerateAudio,
+      quasarNotify,
+      dispatch,
     });
     return;
   }
@@ -300,29 +250,11 @@ export async function connectAndExportTextWithDialog({
   if (result === undefined || result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
-    // "今後この通知をしない" 有効時
-    if (notifyOnGenerateAudio) return;
-
-    // 書き出し成功時に通知をする
-    quasarNotify({
-      message: "テキストを書き出しました",
-      color: "toast",
-      textColor: "toast-display",
-      icon: "info",
-      timeout: 5000,
-      actions: [
-        {
-          label: "今後この通知をしない",
-          textColor: "toast-button-display",
-          handler: () => {
-            dispatch("SET_CONFIRMED_TIP", {
-              confirmedTip: {
-                notifyOnGenerateAudio: true,
-              },
-            });
-          },
-        },
-      ],
+    showNotify({
+      mediaType: "text",
+      notifyOnGenerateAudio,
+      quasarNotify,
+      dispatch,
     });
     return;
   }
@@ -345,3 +277,45 @@ export async function connectAndExportTextWithDialog({
     },
   });
 }
+
+// 成功時の通知を表示
+const showNotify = ({
+  mediaType,
+  notifyOnGenerateAudio,
+  quasarNotify,
+  dispatch,
+}: {
+  mediaType: MediaType;
+  notifyOnGenerateAudio: boolean;
+  quasarNotify: QuasarNotify;
+  dispatch: Dispatch<AllActions>;
+}): void => {
+  // "今後この通知をしない" 有効時
+  if (notifyOnGenerateAudio) return;
+
+  const mediaTypeNames: Record<MediaType, string> = {
+    audio: "音声",
+    text: "テキスト",
+  };
+
+  quasarNotify({
+    message: `${mediaTypeNames[mediaType]}を書き出しました`,
+    color: "toast",
+    textColor: "toast-display",
+    icon: "info",
+    timeout: 5000,
+    actions: [
+      {
+        label: "今後この通知をしない",
+        textColor: "toast-button-display",
+        handler: () => {
+          dispatch("SET_CONFIRMED_TIP", {
+            confirmedTip: {
+              notifyOnGenerateAudio: true,
+            },
+          });
+        },
+      },
+    ],
+  });
+};
