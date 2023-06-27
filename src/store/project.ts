@@ -88,11 +88,24 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         const projectFileErrorMsg = `VOICEVOX Project file "${filePath}" is a invalid file.`;
 
+        let buf: ArrayBuffer;
+        try {
+          buf = await window.electron.readFile({ filePath });
+        } catch (e) {
+          await window.electron.showMessageDialog({
+            type: "error",
+            title: "エラー",
+            message: "プロジェクトファイルの読み込みに失敗しました。",
+          });
+          await context.dispatch("LOG_ERROR", {
+            message: String(e),
+          });
+          return false;
+        }
         try {
           await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
             filePath,
           });
-          const buf = await window.electron.readFile({ filePath });
           const text = new TextDecoder("utf-8").decode(buf).trim();
           const projectData = JSON.parse(text);
 
