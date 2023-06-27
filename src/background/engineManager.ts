@@ -320,7 +320,7 @@ export class EngineManager {
       log.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
     });
 
-    // onErrorを一度だけ呼ぶためのフラグ。"error"と"close"がどちらも呼ばれることがある。
+    // onEngineProcessErrorを一度だけ呼ぶためのフラグ。"error"と"close"がどちらも呼ばれることがある。
     // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
     let errorNotified = false;
 
@@ -343,7 +343,10 @@ export class EngineManager {
           engineInfos.length === 1
             ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
             : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
-        this.onEngineProcessError(engineInfo, new Error(errorMessage));
+        if (!errorNotified) {
+          errorNotified = true;
+          this.onEngineProcessError(engineInfo, new Error(errorMessage));
+        }
       }
     });
   }
