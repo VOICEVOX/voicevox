@@ -443,11 +443,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
   GET_RECENTLY_USED_PROJECTS: {
     async action() {
-      const projects = await window.electron.getSetting("recentlyUsedProjects");
-      const exists = await Promise.all(
-        projects.map((value) => window.electron.checkFileExists(value))
-      );
-      return projects.filter((_, index) => exists[index]);
+      return await window.electron.getSetting("recentlyUsedProjects");
     },
   },
 

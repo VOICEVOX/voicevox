@@ -539,6 +539,17 @@ async function start() {
   }
   store.set("engineSettings", engineSettings);
 
+  const recentlyUsedProjects = store.get("recentlyUsedProjects");
+  const projectFileExists = await Promise.all(
+    recentlyUsedProjects.map(
+      async (project) => await fs.promises.stat(project).catch(() => false)
+    )
+  );
+  store.set(
+    "recentlyUsedProjects",
+    recentlyUsedProjects.filter((_, index) => projectFileExists[index])
+  );
+
   await engineManager.runEngineAll(win);
   await createWindow();
 }
