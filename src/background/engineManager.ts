@@ -5,7 +5,7 @@ import treeKill from "tree-kill";
 import Store from "electron-store";
 import shlex from "shlex";
 
-import { app, BrowserWindow, dialog } from "electron";
+import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
 import log from "electron-log";
 import { z } from "zod";
@@ -15,7 +15,6 @@ import {
   getProcessNameFromPid,
   url2HostInfo,
 } from "./portManager";
-import { ipcMainSend } from "@/electron/ipc";
 
 import {
   EngineInfo,
@@ -69,6 +68,7 @@ export class EngineManager {
   store: Store<ElectronStoreType>;
   defaultEngineDir: string;
   vvppEngineDir: string;
+  onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
 
   defaultEngineInfos: EngineInfo[];
   engineProcessContainers: Record<EngineId, EngineProcessContainer>;
@@ -79,14 +79,17 @@ export class EngineManager {
     store,
     defaultEngineDir,
     vvppEngineDir,
+    onEngineProcessError,
   }: {
     store: Store<ElectronStoreType>;
     defaultEngineDir: string;
     vvppEngineDir: string;
+    onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
   }) {
     this.store = store; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
+    this.onEngineProcessError = onEngineProcessError;
 
     this.defaultEngineInfos = createDefaultEngineInfos(defaultEngineDir);
     this.engineProcessContainers = {};
@@ -197,23 +200,21 @@ export class EngineManager {
 
   /**
    * 全てのエンジンを起動する。
-   * FIXME: winを受け取らなくても良いようにする
    */
-  async runEngineAll(win: BrowserWindow) {
+  async runEngineAll() {
     const engineInfos = this.fetchEngineInfos();
     log.info(`Starting ${engineInfos.length} engine/s...`);
 
     for (const engineInfo of engineInfos) {
       log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
-      await this.runEngine(engineInfo.uuid, win);
+      await this.runEngine(engineInfo.uuid);
     }
   }
 
   /**
    * エンジンを起動する。
-   * FIXME: winを受け取らなくても良いようにする
    */
-  async runEngine(engineId: EngineId, win: BrowserWindow) {
+  async runEngine(engineId: EngineId) {
     const engineInfos = this.fetchEngineInfos();
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId
@@ -319,14 +320,16 @@ export class EngineManager {
       log.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
     });
 
+    // onErrorを一度だけ呼ぶためのフラグ。"error"と"close"がどちらも呼ばれることがある。
+    // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
+    let errorNotified = false;
+
     engineProcess.on("error", (err) => {
       log.error(`ENGINE ${engineId} ERROR: ${err}`);
-      // FIXME: "close"イベントでダイアログが表示されて２回表示されてしまうのを防ぐ
-      // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
-      dialog.showErrorBox(
-        "音声合成エンジンエラー",
-        `音声合成エンジンが異常終了しました。${err}`
-      );
+      if (!errorNotified) {
+        errorNotified = true;
+        this.onEngineProcessError(engineInfo, err);
+      }
     });
 
     engineProcess.on("close", (code, signal) => {
@@ -336,12 +339,11 @@ export class EngineManager {
       log.info(`ENGINE ${engineId}: Process exited with code ${code}`);
 
       if (!engineProcessContainer.willQuitEngine) {
-        ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
-        const dialogMessage =
+        const errorMessage =
           engineInfos.length === 1
             ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
             : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
-        dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
+        this.onEngineProcessError(engineInfo, new Error(errorMessage));
       }
     });
   }
@@ -427,9 +429,8 @@ export class EngineManager {
 
   /**
    * エンジンを再起動する。
-   * FIXME: winを受け取らなくても良いようにする
    */
-  async restartEngine(engineId: EngineId, win: BrowserWindow) {
+  async restartEngine(engineId: EngineId) {
     // FIXME: killEngine関数を使い回すようにする
     await new Promise<void>((resolve, reject) => {
       const engineProcessContainer: EngineProcessContainer | undefined =
@@ -450,7 +451,7 @@ export class EngineManager {
           `ENGINE ${engineId}: Process is not started yet or already killed. Starting process...`
         );
 
-        this.runEngine(engineId, win);
+        this.runEngine(engineId);
         resolve();
         return;
       }
@@ -463,7 +464,7 @@ export class EngineManager {
       const restartEngineOnProcessClosedCallback = () => {
         log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
-        this.runEngine(engineId, win);
+        this.runEngine(engineId);
         resolve();
       };
 
