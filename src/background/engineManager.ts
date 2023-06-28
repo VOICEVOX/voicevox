@@ -70,8 +70,8 @@ export class EngineManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
 
-  defaultEngineInfos: EngineInfo[];
-  additionalEngineInfos: EngineInfo[];
+  defaultEngineInfos: EngineInfo[] = [];
+  additionalEngineInfos: EngineInfo[] = [];
   engineProcessContainers: Record<EngineId, EngineProcessContainer>;
 
   public altPortInfo: AltPortInfos = {};
@@ -89,8 +89,7 @@ export class EngineManager {
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
 
-    this.defaultEngineInfos = createDefaultEngineInfos(defaultEngineDir);
-    this.additionalEngineInfos = this.createAdditionalEngineInfos();
+    this.initializeEngineInfosAndAltPortInfo();
     this.engineProcessContainers = {};
   }
 
