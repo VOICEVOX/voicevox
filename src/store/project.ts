@@ -98,7 +98,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             message: "プロジェクトファイルの読み込みに失敗しました。",
           });
           await context.dispatch("LOG_ERROR", {
-            message: String(e),
+            error: e,
           });
           return false;
         }
