@@ -14,7 +14,6 @@
   },
   "scripts": {
     "serve": "cross-env VITE_IS_ELECTRON=false vite",
-    "serve:browser": "cross-env VITE_IS_ELECTRON=false VITE_IS_BROWSER=true vite",
     "build": "cross-env VITE_IS_ELECTRON=false vite build",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
@@ -30,6 +29,7 @@
     "electron:build_pnever": "cross-env VITE_IS_ELECTRON=true vite build && electron-builder --config electron-builder.config.js --publish never",
     "electron:build_pnever_prepackaged": "cross-var electron-builder --config electron-builder.config.js --publish never --prepackaged $PREPACKAGED",
     "electron:serve": "cross-env VITE_IS_ELECTRON=true vite",
+    "browser:serve": "cross-env VITE_IS_ELECTRON=false VITE_IS_BROWSER=true vite",
     "postinstall": "electron-builder install-app-deps && node build/download7z.js",
     "postuninstall": "electron-builder install-app-deps",
     "license:generate": "node build/generateLicenses.js",
