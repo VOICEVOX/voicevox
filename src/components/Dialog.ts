@@ -21,7 +21,7 @@ export async function generateAndSaveOneAudioWithDialog({
   dispatch,
   filePath,
   encoding,
-  notifyOnGenerateAudio,
+  disableNotifyOnGenerate,
 }: {
   audioKey: AudioKey;
   quasarDialog: QuasarDialog;
@@ -29,7 +29,7 @@ export async function generateAndSaveOneAudioWithDialog({
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
-  notifyOnGenerateAudio: boolean;
+  disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
     dispatch("GENERATE_AND_SAVE_AUDIO", {
@@ -43,10 +43,10 @@ export async function generateAndSaveOneAudioWithDialog({
   if (result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
+    if (disableNotifyOnGenerate) return;
     // 書き出し成功時に通知をする
     showNotify({
       mediaType: "audio",
-      notifyOnGenerateAudio,
       quasarNotify,
       dispatch,
     });
@@ -61,14 +61,14 @@ export async function generateAndSaveAllAudioWithDialog({
   dispatch,
   dirPath,
   encoding,
-  notifyOnGenerateAudio,
+  disableNotifyOnGenerate,
 }: {
   quasarDialog: QuasarDialog;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   dirPath?: string;
   encoding?: EncodingType;
-  notifyOnGenerateAudio: boolean;
+  disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
@@ -104,10 +104,10 @@ export async function generateAndSaveAllAudioWithDialog({
     );
 
   if (successArray.length === result.length) {
+    if (disableNotifyOnGenerate) return;
     // 書き出し成功時に通知をする
     showNotify({
       mediaType: "audio",
-      notifyOnGenerateAudio,
       quasarNotify,
       dispatch,
     });
@@ -131,14 +131,14 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   dispatch,
   filePath,
   encoding,
-  notifyOnGenerateAudio,
+  disableNotifyOnGenerate,
 }: {
   quasarDialog: QuasarDialog;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
-  notifyOnGenerateAudio: boolean;
+  disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
@@ -153,9 +153,9 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   if (result === undefined || result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
+    if (disableNotifyOnGenerate) return;
     showNotify({
       mediaType: "audio",
-      notifyOnGenerateAudio,
       quasarNotify,
       dispatch,
     });
@@ -170,14 +170,14 @@ export async function connectAndExportTextWithDialog({
   dispatch,
   filePath,
   encoding,
-  notifyOnGenerateAudio,
+  disableNotifyOnGenerate,
 }: {
   quasarDialog: QuasarDialog;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
-  notifyOnGenerateAudio: boolean;
+  disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await dispatch("CONNECT_AND_EXPORT_TEXT", {
     filePath,
@@ -187,9 +187,9 @@ export async function connectAndExportTextWithDialog({
   if (result === undefined || result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
+    if (disableNotifyOnGenerate) return;
     showNotify({
       mediaType: "text",
-      notifyOnGenerateAudio,
       quasarNotify,
       dispatch,
     });
@@ -201,18 +201,13 @@ export async function connectAndExportTextWithDialog({
 // 成功時の通知を表示
 const showNotify = ({
   mediaType,
-  notifyOnGenerateAudio,
   quasarNotify,
   dispatch,
 }: {
   mediaType: MediaType;
-  notifyOnGenerateAudio: boolean;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
 }): void => {
-  // "今後この通知をしない" 有効時
-  if (notifyOnGenerateAudio) return;
-
   const mediaTypeNames: Record<MediaType, string> = {
     audio: "音声",
     text: "テキスト",
@@ -231,7 +226,7 @@ const showNotify = ({
         handler: () => {
           dispatch("SET_CONFIRMED_TIP", {
             confirmedTip: {
-              notifyOnGenerateAudio: true,
+              notifyOnGenerate: true,
             },
           });
         },
@@ -250,7 +245,7 @@ const showDialog = ({
   result: SaveResultObject;
   quasarDialog: QuasarDialog;
 }) => {
-  if (result.result === "WRITE_ERROR" && mediaType === "text") {
+  if (mediaType === "text") {
     // テキスト書き出し時のエラーを出力
     quasarDialog({
       title: "テキストの書き出しに失敗しました。",
@@ -262,24 +257,23 @@ const showDialog = ({
         textColor: "secondary",
       },
     });
-    return;
+  } else {
+    const defaultErrorMessages: Partial<Record<SaveResult, string>> = {
+      WRITE_ERROR:
+        "何らかの理由で書き出しに失敗しました。ログを参照してください。",
+      ENGINE_ERROR:
+        "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。",
+    };
+
+    // 音声書き出し時のエラーを出力
+    quasarDialog({
+      title: "書き出しに失敗しました。",
+      message: result.errorMessage ?? defaultErrorMessages[result.result],
+      ok: {
+        label: "閉じる",
+        flat: true,
+        textColor: "secondary",
+      },
+    });
   }
-
-  const defaultErrorMessages: Partial<Record<SaveResult, string>> = {
-    WRITE_ERROR:
-      "何らかの理由で書き出しに失敗しました。ログを参照してください。",
-    ENGINE_ERROR:
-      "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。",
-  };
-
-  // 音声書き出し時のエラーを出力
-  quasarDialog({
-    title: "書き出しに失敗しました。",
-    message: result.errorMessage ?? defaultErrorMessages[result.result],
-    ok: {
-      label: "閉じる",
-      flat: true,
-      textColor: "secondary",
-    },
-  });
 };
