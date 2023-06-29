@@ -924,27 +924,30 @@ app.on("before-quit", async (event) => {
 
   // すべてのエンジンプロセスが停止している
   if (numLivingEngineProcess === 0) {
-    log.info(
-      "All ENGINE processes are killed, running post engine kill process"
-    );
-    if (appState.willRestart) {
+    if (appState.willRestart || vvppManager.hasMarkedEngineDirs()) {
+      log.info(
+        "All ENGINE processes are killed, running post engine kill process"
+      );
       // awaitする前にevent.preventDefault()を呼び出さないとアプリがそのまま終了してしまう
       event.preventDefault();
-    }
 
-    // エンジン終了後の処理を実行
-    await vvppManager.handleMarkedEngineDirs();
+      // エンジン終了後の処理を実行
+      await vvppManager.handleMarkedEngineDirs();
 
-    if (appState.willRestart) {
-      // 再起動フラグが立っている場合はフラグを戻して再起動する
-      log.info(
-        "Post engine kill process done. Now restarting app because of willRestart flag"
-      );
+      if (appState.willRestart) {
+        // 再起動フラグが立っている場合はフラグを戻して再起動する
+        log.info(
+          "Post engine kill process done. Now restarting app because of willRestart flag"
+        );
 
-      appState.willRestart = false;
-      appState.willQuit = false;
+        appState.willRestart = false;
+        appState.willQuit = false;
 
-      start();
+        start();
+      } else {
+        // アプリケーションの終了をを再試行する
+        app.quit();
+      }
     } else {
       log.info("Post engine kill process done. Now quit app");
     }

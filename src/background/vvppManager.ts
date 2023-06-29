@@ -343,6 +343,12 @@ export class VvppManager {
     this.willReplaceEngineDirs = [];
   }
 
+  hasMarkedEngineDirs() {
+    return (
+      this.willReplaceEngineDirs.length > 0 || this.willDeleteEngineIds.size > 0
+    );
+  }
+
   private async detectFileFormat(
     filePath: string
   ): Promise<"zip" | "7z" | undefined> {
