@@ -92,6 +92,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         try {
           buf = await window.electron.readFile({ filePath });
         } catch (e) {
+          // "Error: Error invoking remote method 'READ_FILE': Error: ENOENT: no such file or directory, open '/tmp/Untitled.vvproj'" といったメッセージになる。
+          // "Error: ENOENT:" は変わらないはずなので、それで判定する。
           if (e instanceof Error && e.message.includes("Error: ENOENT:")) {
             await window.electron.showMessageDialog({
               type: "error",
