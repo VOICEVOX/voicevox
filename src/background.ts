@@ -529,6 +529,8 @@ async function createWindow() {
 
 // UI処理を開始。その他の準備が完了した後に呼ばれる。
 async function start() {
+  // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
+  engineManager.initializeEngineInfosAndAltPortInfo();
   const engineInfos = engineManager.fetchEngineInfos();
   const engineSettings = store.get("engineSettings");
   for (const engineInfo of engineInfos) {
