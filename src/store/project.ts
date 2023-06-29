@@ -92,11 +92,25 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         try {
           buf = await window.electron.readFile({ filePath });
         } catch (e) {
-          await window.electron.showMessageDialog({
-            type: "error",
-            title: "エラー",
-            message: "プロジェクトファイルの読み込みに失敗しました。",
-          });
+          if (
+            e &&
+            typeof e === "object" &&
+            "code" in e &&
+            e.code === "ENOENT"
+          ) {
+            await window.electron.showMessageDialog({
+              type: "error",
+              title: "読み込み失敗",
+              message:
+                "プロジェクトファイルが見付かりませんでした。ファイルが移動、または削除された可能性があります。",
+            });
+          } else {
+            await window.electron.showMessageDialog({
+              type: "error",
+              title: "読み込み失敗",
+              message: "プロジェクトファイルの読み込みに失敗しました。",
+            });
+          }
           await context.dispatch("LOG_ERROR", {
             error: e,
           });
