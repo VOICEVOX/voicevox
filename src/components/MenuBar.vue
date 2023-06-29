@@ -132,7 +132,7 @@ const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndSaveAllAudioWithDialog({
       encoding: store.state.savingSetting.fileEncoding,
-      notifyOnGenerateAudio: store.state.confirmedTips.notifyOnGenerateAudio,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
       quasarDialog: $q.dialog,
       quasarNotify: $q.notify,
       dispatch: store.dispatch,
@@ -147,7 +147,7 @@ const generateAndConnectAndSaveAllAudio = async () => {
       quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
-      notifyOnGenerateAudio: store.state.confirmedTips.notifyOnGenerateAudio,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
 };
@@ -174,7 +174,7 @@ const generateAndSaveOneAudio = async () => {
     encoding: store.state.savingSetting.fileEncoding,
     quasarDialog: $q.dialog,
     quasarNotify: $q.notify,
-    notifyOnGenerateAudio: store.state.confirmedTips.notifyOnGenerateAudio,
+    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     dispatch: store.dispatch,
   });
 };
@@ -186,7 +186,7 @@ const connectAndExportText = async () => {
       quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
-      notifyOnGenerateAudio: store.state.confirmedTips.notifyOnGenerateAudio,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
 };
