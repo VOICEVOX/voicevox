@@ -69,6 +69,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   LOAD_PROJECT_FILE: {
     /**
      * プロジェクトファイルを読み込む。読み込めたかの成否が返る。
+     * エラー発生時はダイアログが表示される。
      */
     action: createUILockAction(
       async (
@@ -373,7 +374,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   SAVE_PROJECT_FILE: {
     /**
-     * プロジェクトファイルを保存する。保存の成否が返る。
+     * プロジェクトファイルを保存する。
+     * 保存に成功した場合はtrueが、キャンセルされた場合はfalseが返る。
+     * 失敗した場合はエラーが投げられる。
      */
     action: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
@@ -428,8 +431,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           buffer: buf,
         });
         if (writeFileResult) {
-          window.electron.logError(new Error(writeFileResult.message));
-          return false;
+          throw new Error(writeFileResult.message);
         }
         context.commit("SET_PROJECT_FILEPATH", { filePath });
         context.commit(
@@ -444,7 +446,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   /**
    * プロジェクトファイルを保存するか破棄するかキャンセルするかのダイアログを出して、保存する場合は保存する。
    * 何を選択したかが返る。
-   * 保存に失敗した場合はキャンセル扱いになる。
+   * 保存に失敗した場合はエラーを投げる。
    */
   SAVE_OR_DISCARD_PROJECT_FILE: {
     action: createUILockAction(async ({ dispatch }, { additionalMessage }) => {
