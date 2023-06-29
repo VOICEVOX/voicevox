@@ -196,7 +196,7 @@ export class EngineManager {
   }
 
   /**
-   * EngineInfosを初期化する。
+   * EngineInfosとAltPortInfoを初期化する。
    */
   initializeEngineInfosAndAltPortInfo() {
     this.defaultEngineInfos = createDefaultEngineInfos(this.defaultEngineDir);
