@@ -364,7 +364,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await window.electron.showMessageDialog({
             type: "error",
             title: "エラー",
-            message,
+            message: `プロジェクトファイルの読み込みに失敗しました。\n${message}`,
           });
           return false;
         }
@@ -406,7 +406,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             context.state.projectFilePath &&
             context.state.projectFilePath != filePath
           ) {
-            window.electron.showMessageDialog({
+            await window.electron.showMessageDialog({
               type: "info",
               title: "保存",
               message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
