@@ -374,71 +374,85 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   SAVE_PROJECT_FILE: {
     /**
-     * プロジェクトファイルを保存する。
-     * 保存に成功した場合はtrueが、キャンセルされた場合はfalseが返る。
-     * 失敗した場合はエラーが投げられる。
+     * プロジェクトファイルを保存する。保存の成否が返る。
+     * エラー発生時はダイアログが表示される。
      */
     action: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
-        if (!overwrite || !filePath) {
-          let defaultPath: string;
+        try {
+          if (!overwrite || !filePath) {
+            let defaultPath: string;
 
-          if (!filePath) {
-            // if new project: use generated name
-            defaultPath = buildProjectFileName(context.state, "vvproj");
-          } else {
-            // if saveAs for existing project: use current project path
-            defaultPath = filePath;
+            if (!filePath) {
+              // if new project: use generated name
+              defaultPath = buildProjectFileName(context.state, "vvproj");
+            } else {
+              // if saveAs for existing project: use current project path
+              defaultPath = filePath;
+            }
+
+            // Write the current status to a project file.
+            const ret = await window.electron.showProjectSaveDialog({
+              title: "プロジェクトファイルの保存",
+              defaultPath,
+            });
+            if (ret == undefined) {
+              return false;
+            }
+            filePath = ret;
+          }
+          if (
+            context.state.projectFilePath &&
+            context.state.projectFilePath != filePath
+          ) {
+            window.electron.showMessageDialog({
+              type: "info",
+              title: "保存",
+              message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+            });
           }
 
-          // Write the current status to a project file.
-          const ret = await window.electron.showProjectSaveDialog({
-            title: "プロジェクトファイルの保存",
-            defaultPath,
+          await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
+            filePath,
           });
-          if (ret == undefined) {
-            return false;
+          const appInfos = await window.electron.getAppInfos();
+          const { audioItems, audioKeys } = context.state;
+          const projectData: ProjectType = {
+            appVersion: appInfos.version,
+            audioKeys,
+            audioItems,
+          };
+          const buf = new TextEncoder().encode(
+            JSON.stringify(projectData)
+          ).buffer;
+          const writeFileResult = await window.electron.writeFile({
+            filePath,
+            buffer: buf,
+          });
+          if (writeFileResult) {
+            throw new Error(writeFileResult.message);
           }
-          filePath = ret;
-        }
-        if (
-          context.state.projectFilePath &&
-          context.state.projectFilePath != filePath
-        ) {
-          window.electron.showMessageDialog({
-            type: "info",
-            title: "保存",
-            message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+          context.commit("SET_PROJECT_FILEPATH", { filePath });
+          context.commit(
+            "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
+            context.getters.LAST_COMMAND_UNIX_MILLISEC
+          );
+          return true;
+        } catch (err) {
+          window.electron.logError(err);
+          const message = (() => {
+            if (typeof err === "string") return err;
+            if (!(err instanceof Error)) return "エラーが発生しました。";
+            return err.message;
+          })();
+          await window.electron.showMessageDialog({
+            type: "error",
+            title: "エラー",
+            message: `プロジェクトファイルの保存に失敗しました。\n${message}`,
           });
+          return false;
         }
-
-        await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
-          filePath,
-        });
-        const appInfos = await window.electron.getAppInfos();
-        const { audioItems, audioKeys } = context.state;
-        const projectData: ProjectType = {
-          appVersion: appInfos.version,
-          audioKeys,
-          audioItems,
-        };
-        const buf = new TextEncoder().encode(
-          JSON.stringify(projectData)
-        ).buffer;
-        const writeFileResult = await window.electron.writeFile({
-          filePath,
-          buffer: buf,
-        });
-        if (writeFileResult) {
-          throw new Error(writeFileResult.message);
-        }
-        context.commit("SET_PROJECT_FILEPATH", { filePath });
-        context.commit(
-          "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
-          context.getters.LAST_COMMAND_UNIX_MILLISEC
-        );
-        return true;
       }
     ),
   },
@@ -446,7 +460,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   /**
    * プロジェクトファイルを保存するか破棄するかキャンセルするかのダイアログを出して、保存する場合は保存する。
    * 何を選択したかが返る。
-   * 保存に失敗した場合はエラーを投げる。
+   * 保存に失敗した場合はキャンセル扱いになる。
    */
   SAVE_OR_DISCARD_PROJECT_FILE: {
     action: createUILockAction(async ({ dispatch }, { additionalMessage }) => {
