@@ -92,12 +92,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         try {
           buf = await window.electron.readFile({ filePath });
         } catch (e) {
-          if (
-            e &&
-            typeof e === "object" &&
-            "code" in e &&
-            e.code === "ENOENT"
-          ) {
+          if (e instanceof Error && e.message.includes("Error: ENOENT:")) {
             await window.electron.showMessageDialog({
               type: "error",
               title: "読み込み失敗",
