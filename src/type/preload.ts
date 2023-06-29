@@ -176,6 +176,11 @@ export interface Sandbox {
     defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
+  /**
+   * ファイル書き出しする。
+   * 成功した場合はundefinedを返す。
+   * 失敗した場合はエラーの内容をWriteFileErrorResultとして返す。
+   */
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
