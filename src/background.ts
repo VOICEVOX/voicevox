@@ -972,7 +972,7 @@ app.on("before-quit", async (event) => {
 
   // エンジン終了後の処理を実行
   log.info(
-    "All ENGINE process kill operations done. running post engine kill process"
+    "All ENGINE process kill operations done. Running post engine kill process"
   );
   await vvppManager.handleMarkedEngineDirs();
 
