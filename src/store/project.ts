@@ -91,29 +91,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         let buf: ArrayBuffer;
         try {
           buf = await window.electron.readFile({ filePath });
-        } catch (e) {
-          // "Error: Error invoking remote method 'READ_FILE': Error: ENOENT: no such file or directory, open '/tmp/Untitled.vvproj'" といったメッセージになる。
-          // "Error: ENOENT:" は変わらないはずなので、それで判定する。
-          if (e instanceof Error && e.message.includes("Error: ENOENT:")) {
-            await window.electron.showMessageDialog({
-              type: "error",
-              title: "読み込み失敗",
-              message:
-                "プロジェクトファイルが見付かりませんでした。ファイルが移動、または削除された可能性があります。",
-            });
-          } else {
-            await window.electron.showMessageDialog({
-              type: "error",
-              title: "読み込み失敗",
-              message: "プロジェクトファイルの読み込みに失敗しました。",
-            });
-          }
-          await context.dispatch("LOG_ERROR", {
-            error: e,
-          });
-          return false;
-        }
-        try {
           await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
             filePath,
           });
@@ -380,6 +357,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const message = (() => {
             if (typeof err === "string") return err;
             if (!(err instanceof Error)) return "エラーが発生しました。";
+            if (err.message.includes("Error: ENOENT:"))
+              return "プロジェクトファイルが見付かりませんでした。ファイルが移動、または削除された可能性があります。";
             if (err.message.startsWith(projectFileErrorMsg))
               return "ファイルフォーマットが正しくありません。";
             return err.message;
