@@ -991,7 +991,7 @@ app.once("will-finish-launching", () => {
 });
 
 app.on("ready", async () => {
-  if (isDevelopment) {
+  if (isDevelopment && !isTest) {
     try {
       await installExtension(VUEJS_DEVTOOLS);
     } catch (e: unknown) {
