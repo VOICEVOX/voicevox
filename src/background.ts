@@ -12,7 +12,7 @@ import {
   shell,
   nativeTheme,
 } from "electron";
-import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
+import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Store, { Schema } from "electron-store";
 import dotenv from "dotenv";
 
@@ -993,7 +993,7 @@ app.once("will-finish-launching", () => {
 app.on("ready", async () => {
   if (isDevelopment) {
     try {
-      await installExtension(VUEJS3_DEVTOOLS);
+      await installExtension(VUEJS_DEVTOOLS);
     } catch (e: unknown) {
       if (e instanceof Error) {
         log.error("Vue Devtools failed to install:", e.toString());
