@@ -1567,13 +1567,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           return { result: "ENGINE_ERROR", path: filePath };
         }
 
-        try {
-          window.electron.writeFile({
-            filePath,
-            buffer: await connectedWav.arrayBuffer(),
-          });
-        } catch (e) {
-          window.electron.logError(e);
+        const writeFileResult = await window.electron.writeFile({
+          filePath,
+          buffer: await connectedWav.arrayBuffer(),
+        });
+        if (writeFileResult) {
+          window.electron.logError(new Error(writeFileResult.message));
           return { result: "WRITE_ERROR", path: filePath };
         }
 
@@ -1586,14 +1585,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             type: "text/plain;charset=UTF-8",
           });
 
-          try {
-            window.electron.writeFile({
-              filePath: filePath.replace(/\.wav$/, ".lab"),
-              buffer: await labBlob.arrayBuffer(),
-            });
-          } catch (e) {
-            window.electron.logError(e);
-
+          const writeFileResult = await window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".lab"),
+            buffer: await labBlob.arrayBuffer(),
+          });
+          if (writeFileResult) {
+            window.electron.logError(new Error(writeFileResult.message));
             return { result: "WRITE_ERROR", path: filePath };
           }
         }
@@ -1616,13 +1613,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             });
           })();
 
-          try {
-            window.electron.writeFile({
-              filePath: filePath.replace(/\.wav$/, ".txt"),
-              buffer: await textBlob.arrayBuffer(),
-            });
-          } catch (e) {
-            window.electron.logError(e);
+          const writeFileResult = await window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".txt"),
+            buffer: await textBlob.arrayBuffer(),
+          });
+          if (writeFileResult) {
+            window.electron.logError(new Error(writeFileResult.message));
             return { result: "WRITE_ERROR", path: filePath };
           }
         }
@@ -1712,13 +1708,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
         })();
 
-        try {
-          window.electron.writeFile({
-            filePath: filePath,
-            buffer: await textBlob.arrayBuffer(),
-          });
-        } catch (e) {
-          window.electron.logError(e);
+        const writeFileResult = await window.electron.writeFile({
+          filePath,
+          buffer: await textBlob.arrayBuffer(),
+        });
+        if (writeFileResult) {
+          window.electron.logError(new Error(writeFileResult.message));
           return { result: "WRITE_ERROR", path: filePath };
         }
 

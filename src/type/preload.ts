@@ -176,6 +176,11 @@ export interface Sandbox {
     defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
+  /**
+   * ファイル書き出しする。
+   * 成功した場合はundefinedを返す。
+   * 失敗した場合はエラーの内容をWriteFileErrorResultとして返す。
+   */
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
@@ -495,7 +500,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
   engineStartedOnAltPort: boolean; // エンジンのポート変更の通知
-  notifyOnGenerateAudio: boolean; // 音声書き出し時の通知
+  notifyOnGenerate: boolean; // 音声書き出し時の通知
 };
 
 export const electronStoreSchema = z
@@ -586,7 +591,7 @@ export const electronStoreSchema = z
       .object({
         tweakableSliderByScroll: z.boolean().default(false),
         engineStartedOnAltPort: z.boolean().default(false),
-        notifyOnGenerateAudio: z.boolean().default(false),
+        notifyOnGenerate: z.boolean().default(false),
       })
       .passthrough()
       .default({}),
