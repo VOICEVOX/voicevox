@@ -111,6 +111,28 @@ export interface UserDictWord {
     accentAssociativeRule: string;
 }
 
+/**
+ * Check if a given object implements the UserDictWord interface.
+ */
+export function instanceOfUserDictWord(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "surface" in value;
+    isInstance = isInstance && "priority" in value;
+    isInstance = isInstance && "partOfSpeech" in value;
+    isInstance = isInstance && "partOfSpeechDetail1" in value;
+    isInstance = isInstance && "partOfSpeechDetail2" in value;
+    isInstance = isInstance && "partOfSpeechDetail3" in value;
+    isInstance = isInstance && "inflectionalType" in value;
+    isInstance = isInstance && "inflectionalForm" in value;
+    isInstance = isInstance && "stem" in value;
+    isInstance = isInstance && "yomi" in value;
+    isInstance = isInstance && "pronunciation" in value;
+    isInstance = isInstance && "accentType" in value;
+    isInstance = isInstance && "accentAssociativeRule" in value;
+
+    return isInstance;
+}
+
 export function UserDictWordFromJSON(json: any): UserDictWord {
     return UserDictWordFromJSONTyped(json, false);
 }

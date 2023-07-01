@@ -33,6 +33,17 @@ export interface SpeakerStyle {
     id: number;
 }
 
+/**
+ * Check if a given object implements the SpeakerStyle interface.
+ */
+export function instanceOfSpeakerStyle(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "id" in value;
+
+    return isInstance;
+}
+
 export function SpeakerStyleFromJSON(json: any): SpeakerStyle {
     return SpeakerStyleFromJSONTyped(json, false);
 }

@@ -27,6 +27,16 @@ export interface MorphableTargetInfo {
     isMorphable: boolean;
 }
 
+/**
+ * Check if a given object implements the MorphableTargetInfo interface.
+ */
+export function instanceOfMorphableTargetInfo(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "isMorphable" in value;
+
+    return isInstance;
+}
+
 export function MorphableTargetInfoFromJSON(json: any): MorphableTargetInfo {
     return MorphableTargetInfoFromJSONTyped(json, false);
 }

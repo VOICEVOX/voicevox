@@ -75,6 +75,23 @@ export interface SupportedFeatures {
     manageLibrary?: boolean;
 }
 
+/**
+ * Check if a given object implements the SupportedFeatures interface.
+ */
+export function instanceOfSupportedFeatures(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "adjustMoraPitch" in value;
+    isInstance = isInstance && "adjustPhonemeLength" in value;
+    isInstance = isInstance && "adjustSpeedScale" in value;
+    isInstance = isInstance && "adjustPitchScale" in value;
+    isInstance = isInstance && "adjustIntonationScale" in value;
+    isInstance = isInstance && "adjustVolumeScale" in value;
+    isInstance = isInstance && "interrogativeUpspeak" in value;
+    isInstance = isInstance && "synthesisMorphing" in value;
+
+    return isInstance;
+}
+
 export function SupportedFeaturesFromJSON(json: any): SupportedFeatures {
     return SupportedFeaturesFromJSONTyped(json, false);
 }
