@@ -197,15 +197,15 @@ const importTextFile = () => {
   }
 };
 
-const saveProject = () => {
+const saveProject = async () => {
   if (!uiLocked.value) {
-    store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+    await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
   }
 };
 
-const saveProjectAs = () => {
+const saveProjectAs = async () => {
   if (!uiLocked.value) {
-    store.dispatch("SAVE_PROJECT_FILE", {});
+    await store.dispatch("SAVE_PROJECT_FILE", {});
   }
 };
 
@@ -301,16 +301,16 @@ const menudata = ref<MenuItemData[]>([
       {
         type: "button",
         label: "プロジェクトを上書き保存",
-        onClick: () => {
-          saveProject();
+        onClick: async () => {
+          await saveProject();
         },
         disableWhenUiLocked: true,
       },
       {
         type: "button",
         label: "プロジェクトを名前を付けて保存",
-        onClick: () => {
-          saveProjectAs();
+        onClick: async () => {
+          await saveProjectAs();
         },
         disableWhenUiLocked: true,
       },
