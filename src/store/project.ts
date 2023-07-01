@@ -435,7 +435,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             filePath,
             buffer: buf,
           });
-          if (writeFileResult) {
+          if (!writeFileResult.ok) {
             throw new Error(writeFileResult.message);
           }
           context.commit("SET_PROJECT_FILEPATH", { filePath });
