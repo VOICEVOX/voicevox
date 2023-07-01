@@ -34,12 +34,12 @@ import {
   MorphingInfo,
   Preset,
   PresetKey,
+  Result,
   SpeakerId,
   StyleId,
   StyleInfo,
   unwrap,
   Voice,
-  WriteFileResult,
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
@@ -157,7 +157,7 @@ function buildFileName(state: State, audioKey: AudioKey) {
   });
 }
 
-function generateWriteErrorMessage(writeFileResult: WriteFileResult) {
+function generateWriteErrorMessage(writeFileResult: Result<undefined>) {
   if (writeFileResult.ok) return undefined;
   if (writeFileResult.code) {
     const code = writeFileResult.code.toUpperCase();

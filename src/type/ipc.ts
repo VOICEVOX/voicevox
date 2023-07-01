@@ -7,7 +7,6 @@ import {
   ThemeSetting,
   ToolbarSetting,
   UpdateInfo,
-  WriteFileResult,
   NativeThemeType,
   EngineSetting,
   EngineId,
@@ -295,7 +294,7 @@ export type IpcIHData = {
 
   WRITE_FILE: {
     args: [obj: { filePath: string; buffer: ArrayBuffer }];
-    return: WriteFileResult;
+    return: Result<undefined>;
   };
 
   READ_FILE: {

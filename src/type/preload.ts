@@ -645,8 +645,6 @@ export type ErrResult<E extends string> = {
   message: string;
 };
 
-export type WriteFileResult = Result<undefined, string>;
-
 export type EngineDirValidationResult =
   | "ok"
   | "directoryNotFound"
