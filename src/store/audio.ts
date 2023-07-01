@@ -37,8 +37,9 @@ import {
   SpeakerId,
   StyleId,
   StyleInfo,
+  unwrap,
   Voice,
-  WriteFileErrorResult,
+  WriteFileResult,
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
@@ -156,9 +157,10 @@ function buildFileName(state: State, audioKey: AudioKey) {
   });
 }
 
-function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
-  if (writeFileErrorResult.code) {
-    const code = writeFileErrorResult.code.toUpperCase();
+function generateWriteErrorMessage(writeFileResult: WriteFileResult) {
+  if (writeFileResult.ok) return undefined;
+  if (writeFileResult.code) {
+    const code = writeFileResult.code.toUpperCase();
 
     if (code.startsWith("ENOSPC")) {
       return "空き容量が足りません。";
@@ -169,7 +171,7 @@ function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
     }
   }
 
-  return `何らかの理由で失敗しました。${writeFileErrorResult.message}`;
+  return `何らかの理由で失敗しました。${writeFileResult.message}`;
 }
 
 // TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
@@ -1331,8 +1333,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         let writeFileResult = await window.electron.writeFile({
           filePath,
           buffer: await blob.arrayBuffer(),
-        }); // 失敗した場合、WriteFileErrorResultオブジェクトが返り、成功時はundefinedが反る
-        if (writeFileResult) {
+        });
+        if (!writeFileResult.ok) {
           window.electron.logError(new Error(writeFileResult.message));
           return {
             result: "WRITE_ERROR",
@@ -1359,7 +1361,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             filePath: filePath.replace(/\.wav$/, ".lab"),
             buffer: await labBlob.arrayBuffer(),
           });
-          if (writeFileResult) {
+          if (!writeFileResult.ok) {
             window.electron.logError(new Error(writeFileResult.message));
             return {
               result: "WRITE_ERROR",
@@ -1390,7 +1392,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             filePath: filePath.replace(/\.wav$/, ".txt"),
             buffer: await textBlob.arrayBuffer(),
           });
-          if (writeFileResult) {
+          if (!writeFileResult.ok) {
             window.electron.logError(new Error(writeFileResult.message));
             return {
               result: "WRITE_ERROR",
@@ -2773,11 +2775,11 @@ export const audioCommandStore = transformCommandStore(
             if (!filePath) return;
           }
           let body = new TextDecoder("utf-8").decode(
-            await window.electron.readFile({ filePath })
+            await window.electron.readFile({ filePath }).then(unwrap)
           );
           if (body.indexOf("\ufffd") > -1) {
             body = new TextDecoder("shift-jis").decode(
-              await window.electron.readFile({ filePath })
+              await window.electron.readFile({ filePath }).then(unwrap)
             );
           }
           const audioItems: AudioItem[] = [];

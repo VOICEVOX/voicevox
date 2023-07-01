@@ -35,6 +35,8 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  ok,
+  err,
 } from "./type/preload";
 import {
   ContactTextFileName,
@@ -877,17 +879,23 @@ ipcMainHandle("RESTART_APP", async (_, { isMultiEngineOffMode }) => {
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
   try {
     fs.writeFileSync(filePath, new DataView(buffer));
+    return ok(undefined);
   } catch (e) {
     // throwだと`.code`の情報が消えるのでreturn
     const a = e as SystemError;
-    return { code: a.code, message: a.message };
+    return err(a.code || "UNKNOWN", a.message);
   }
-
-  return undefined;
 });
 
-ipcMainHandle("READ_FILE", (_, { filePath }) => {
-  return fs.promises.readFile(filePath);
+ipcMainHandle("READ_FILE", async (_, { filePath }) => {
+  try {
+    const result = await fs.promises.readFile(filePath);
+    return ok(result);
+  } catch (e) {
+    // throwだと`.code`の情報が消えるのでreturn
+    const a = e as SystemError;
+    return err(a.code || "UNKNOWN", a.message);
+  }
 });
 
 // app callback

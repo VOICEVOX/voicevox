@@ -179,8 +179,8 @@ export interface Sandbox {
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
-  }): Promise<WriteFileErrorResult | undefined>;
-  readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
+  }): Promise<Result<undefined>>;
+  readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
@@ -611,10 +611,41 @@ export class SystemError extends Error {
   }
 }
 
-export type WriteFileErrorResult = {
-  code: string | undefined;
+export type Result<T, E extends string = string> = OkResult<T> | ErrResult<E>;
+export const ok = <T>(value: T): OkResult<T> => ({ ok: true, value });
+export type OkResult<T> = { ok: true; value: T };
+export const err = <E extends string>(
+  code: E,
+  message: string
+): ErrResult<E> => ({
+  ok: false,
+  code,
+  message,
+});
+export class ResultError<E extends string> extends Error {
+  public code: E;
+
+  constructor(public readonly result: ErrResult<E>) {
+    super(`${result.code}: ${result.message}`);
+    this.code = result.code;
+  }
+}
+export const unwrap = <T, E extends string>(
+  result: Result<T, E>
+): T | never => {
+  if (result.ok) {
+    return result.value;
+  } else {
+    throw new ResultError(result);
+  }
+};
+export type ErrResult<E extends string> = {
+  ok: false;
+  code: E;
   message: string;
 };
+
+export type WriteFileResult = Result<undefined, string>;
 
 export type EngineDirValidationResult =
   | "ok"

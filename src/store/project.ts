@@ -11,8 +11,10 @@ import {
   audioKeySchema,
   EngineId,
   engineIdSchema,
+  ResultError,
   speakerIdSchema,
   styleIdSchema,
+  unwrap,
 } from "@/type/preload";
 
 const DEFAULT_SAMPLING_RATE = 24000;
@@ -90,7 +92,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         let buf: ArrayBuffer;
         try {
-          buf = await window.electron.readFile({ filePath });
+          buf = await window.electron.readFile({ filePath }).then(unwrap);
           await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
             filePath,
           });
@@ -357,7 +359,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const message = (() => {
             if (typeof err === "string") return err;
             if (!(err instanceof Error)) return "エラーが発生しました。";
-            if (err.message.includes("Error: ENOENT:"))
+            if (err instanceof ResultError && err.code === "ENOENT")
               return "プロジェクトファイルが見付かりませんでした。ファイルが移動、または削除された可能性があります。";
             if (err.message.startsWith(projectFileErrorMsg))
               return "ファイルフォーマットが正しくありません。";

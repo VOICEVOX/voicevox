@@ -7,11 +7,12 @@ import {
   ThemeSetting,
   ToolbarSetting,
   UpdateInfo,
-  WriteFileErrorResult,
+  WriteFileResult,
   NativeThemeType,
   EngineSetting,
   EngineId,
   MessageBoxReturnValue,
+  Result,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 
@@ -294,12 +295,12 @@ export type IpcIHData = {
 
   WRITE_FILE: {
     args: [obj: { filePath: string; buffer: ArrayBuffer }];
-    return: WriteFileErrorResult | undefined;
+    return: WriteFileResult;
   };
 
   READ_FILE: {
     args: [obj: { filePath: string }];
-    return: ArrayBuffer;
+    return: Result<ArrayBuffer>;
   };
 };
 
