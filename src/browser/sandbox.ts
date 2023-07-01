@@ -21,7 +21,7 @@ import {
   EngineSetting,
   EngineSettings,
   HotkeySetting,
-  SandboxKey,
+  Sandbox,
   ThemeConf,
 } from "@/type/preload";
 import {
@@ -38,7 +38,7 @@ import {
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
 
-export const api: typeof window[typeof SandboxKey] = {
+export const api: Sandbox = {
   getAppInfos() {
     /* eslint-disable @typescript-eslint/no-non-null-assertion */
     const appInfo = {
