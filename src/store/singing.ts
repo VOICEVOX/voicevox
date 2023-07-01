@@ -1,5 +1,8 @@
 import {
+  AudioEvent,
+  AudioPlayer,
   AudioRenderer,
+  AudioSequence,
   Context,
   NoteEvent,
   NoteSequence,
@@ -21,7 +24,14 @@ import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import { WriteFileErrorResult } from "@/type/preload";
 import { Midi } from "@tonejs/midi";
-import { getDoremiFromMidi, round } from "@/helpers/singHelper";
+import {
+  getDoremiFromMidi,
+  midiToFrequency,
+  round,
+} from "@/helpers/singHelper";
+import { AudioQuery } from "@/openapi";
+import { v4 as uuidv4 } from "uuid";
+import { uuid } from "systeminformation";
 
 const ticksToSecondsForConstantBpm = (
   resolution: number,
@@ -100,16 +110,91 @@ const secondsToTicks = (
   );
 };
 
+const generateNoteEvents = (
+  resolution: number,
+  tempos: Tempo[],
+  notes: Note[]
+) => {
+  return notes.map((value): NoteEvent => {
+    const noteOnPos = value.position;
+    const noteOffPos = value.position + value.duration;
+    return {
+      midi: value.midi,
+      noteOnTime: ticksToSeconds(resolution, tempos, noteOnPos),
+      noteOffTime: ticksToSeconds(resolution, tempos, noteOffPos),
+    };
+  });
+};
+
+const copyScore = (score: Score): Score => {
+  return {
+    resolution: score.resolution,
+    tempos: score.tempos.map((value) => ({ ...value })),
+    timeSignatures: score.timeSignatures.map((value) => ({ ...value })),
+    notes: score.notes.map((value) => ({ ...value })),
+  };
+};
+
+const _generateHash = async <T>(obj: T) => {
+  const textEncoder = new TextEncoder();
+  const data = textEncoder.encode(JSON.stringify(obj));
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+const createPromiseThatResolvesWhen = (
+  condition: () => boolean,
+  interval = 200
+) => {
+  return new Promise<void>((resolve) => {
+    const checkCondition = () => {
+      if (condition()) {
+        resolve();
+      }
+      window.setTimeout(checkCondition, interval);
+    };
+    checkCondition();
+  });
+};
+
+type Singer = {
+  readonly engineId: string;
+  readonly styleId: number;
+};
+
+type Phrase = {
+  readonly singer: Singer | undefined;
+  readonly score: Score;
+  // renderingが進むに連れてデータが代入されていく
+  query?: AudioQuery;
+  queryHash?: string; // queryの変更を検知するためのハッシュ
+  buffer?: AudioBuffer;
+  startTime?: number;
+};
+
+const generateSingerAndScoreHash = async (obj: {
+  singer: Singer | undefined;
+  score: Score;
+}) => {
+  return _generateHash(obj);
+};
+
+const generateAudioQueryHash = async (obj: AudioQuery) => {
+  return _generateHash(obj);
+};
+
 type ChannelOptions = {
   readonly volume: number;
 };
 
 class SingChannel {
   private readonly context: Context;
-  private readonly synth: Synth;
   private readonly gainNode: GainNode;
 
-  private sequence?: SoundSequence;
+  private phrases: Phrase[] = [];
+  private sequences: SoundSequence[] = [];
 
   get volume() {
     return this.gainNode.gain.value;
@@ -123,28 +208,58 @@ class SingChannel {
     this.context = context;
     const audioContext = context.audioContext;
 
-    this.synth = new Synth(context);
     this.gainNode = audioContext.createGain();
-
-    this.synth.connect(this.gainNode);
     this.gainNode.connect(audioContext.destination);
-
     this.gainNode.gain.value = options.volume;
   }
 
-  setNoteEvents(noteEvents: NoteEvent[]) {
-    if (this.sequence) {
-      this.context.transport.removeSequence(this.sequence);
+  addPhrase(phrase: Phrase) {
+    this.phrases.push(phrase);
+
+    let sequence: SoundSequence | undefined;
+    if (phrase.startTime !== undefined && phrase.buffer) {
+      const audioEvents: AudioEvent[] = [
+        {
+          time: phrase.startTime,
+          buffer: phrase.buffer,
+        },
+      ];
+      const audioPlayer = new AudioPlayer(this.context);
+      audioPlayer.connect(this.gainNode);
+      sequence = new AudioSequence(audioPlayer, audioEvents);
+    } else {
+      const noteEvents = generateNoteEvents(
+        phrase.score.resolution,
+        phrase.score.tempos,
+        phrase.score.notes
+      );
+      const synth = new Synth(this.context);
+      synth.connect(this.gainNode);
+      sequence = new NoteSequence(synth, noteEvents);
     }
-    const sequence = new NoteSequence(this.synth, noteEvents);
+
     this.context.transport.addSequence(sequence);
-    this.sequence = sequence;
+    this.sequences.push(sequence);
+  }
+
+  removePhrase(phrase: Phrase) {
+    const index = this.phrases.findIndex((value) => {
+      return value === phrase;
+    });
+    if (index === -1) {
+      throw new Error("The specified phrase does not exist.");
+    }
+    this.phrases.splice(index, 1);
+
+    const sequence = this.sequences[index];
+    this.context.transport.removeSequence(sequence);
+    this.sequences.splice(index, 1);
   }
 
   dispose() {
-    if (this.sequence) {
-      this.context.transport.removeSequence(this.sequence);
-    }
+    this.sequences.forEach((value) => {
+      this.context.transport.removeSequence(value);
+    });
   }
 }
 
@@ -180,23 +295,6 @@ const isValidNote = (note: Note) => {
   );
 };
 
-/**
- * ノートオンの時間とノートオフの時間を計算し、ノートイベントを生成します。
- */
-const generateNoteEvents = (score: Score, notes: Note[]) => {
-  const resolution = score.resolution;
-  const tempos = score.tempos;
-  return notes.map((value): NoteEvent => {
-    const noteOnPos = value.position;
-    const noteOffPos = value.position + value.duration;
-    return {
-      midi: value.midi,
-      noteOnTime: ticksToSeconds(resolution, tempos, noteOnPos),
-      noteOffTime: ticksToSeconds(resolution, tempos, noteOffPos),
-    };
-  });
-};
-
 const getFromOptional = <T>(value: T | undefined): T => {
   if (value === undefined) {
     throw new Error("The value is undefined.");
@@ -221,12 +319,14 @@ if (window.AudioContext) {
 }
 
 let playbackPosition = 0;
+const allPhrases = new Map<string, Phrase>();
+
+const audioBufferCache = new Map<string, AudioBuffer>();
 
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
   styleId: undefined,
   score: undefined,
-  renderPhrases: [],
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,
@@ -234,11 +334,15 @@ export const singingStoreState: SingingStoreState = {
   sequencerScrollY: 60, // Y軸 midi number
   sequencerScrollX: 0, // X軸 midi duration(仮)
   sequencerSnapSize: 120, // スナップサイズ 試行用で1/18(ppq=480)のmidi durationで固定
-  selectedNotes: new Set<number>(), // 選択中のノート
+  selectedNoteIds: [], // 選択中のノート
   nowPlaying: false,
   volume: 0,
   leftLocatorPosition: 0,
   rightLocatorPosition: 0,
+  renderingEnabled: false,
+  startRenderingRequested: false,
+  stopRenderingRequested: false,
+  nowRendering: false,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -261,10 +365,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.engineId = engineId;
       state.styleId = styleId;
     },
-    async action(
-      { state, getters, dispatch, commit },
-      payload: { engineId?: string; styleId?: number }
-    ) {
+    async action({ state, getters, dispatch, commit }, payload) {
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
       if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
@@ -297,6 +398,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       } finally {
         commit("SET_SINGER", { engineId, styleId });
+
+        dispatch("RENDER");
       }
     },
   },
@@ -331,20 +434,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.score = score;
     },
     async action({ state, getters, commit, dispatch }, { score }) {
-      console.log(score);
-      if (!transport || !singChannel) {
-        throw new Error("transport or singChannel is undefined.");
+      if (!transport) {
+        throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
         await dispatch("SING_STOP_AUDIO");
       }
-
       commit("SET_SCORE", { score });
 
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
-
       transport.time = getters.POSITION_TO_TIME(playbackPosition);
+
+      dispatch("RENDER");
     },
   },
 
@@ -356,13 +456,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       score.tempos = tempos;
     },
     // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
-    async action({ state, getters, commit }, { tempo }) {
+    async action({ state, getters, commit, dispatch }, { tempo }) {
       const score = state.score;
       if (score === undefined || score.tempos.length === 0) {
         throw new Error("Score is not initialized.");
       }
-      if (!transport || !singChannel) {
-        throw new Error("transport or singChannel is undefined.");
+      if (!transport) {
+        throw new Error("transport is undefined.");
       }
       if (!isValidTempo(tempo)) {
         throw new Error("The tempo is invalid.");
@@ -386,10 +486,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_TEMPO", { index, tempo });
 
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
-
       transport.time = getters.POSITION_TO_TIME(playbackPosition);
+
+      dispatch("RENDER");
     },
   },
 
@@ -409,8 +508,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (score === undefined || score.tempos.length === 0) {
         throw new Error("Score is not initialized.");
       }
-      if (!transport || !singChannel) {
-        throw new Error("transport or singChannel is undefined.");
+      if (!transport) {
+        throw new Error("transport is undefined.");
       }
       const index = score.tempos.findIndex((value) => {
         return value.position === position;
@@ -426,10 +525,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         commit("SET_TEMPO", { index, tempo: defaultTempo });
       }
 
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
-
       transport.time = getters.POSITION_TO_TIME(playbackPosition);
+
+      dispatch("RENDER");
     },
   },
 
@@ -501,103 +599,82 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_SELECTED_NOTES: {
-    mutation(state, { noteIndices }: { noteIndices: Set<number> }) {
-      if (state.score) {
-        state.selectedNotes = noteIndices;
-      }
-    },
-    async action(
-      { state, commit },
-      { noteIndices }: { noteIndices: Set<number> }
-    ) {
-      if (state.score === undefined) {
-        throw new Error("Score is not initialized.");
-      }
-      commit("SET_SELECTED_NOTES", { noteIndices });
-    },
-  },
-
-  CLEAR_SELECTED_NOTES: {
-    mutation(state) {
-      if (state.score) {
-        state.selectedNotes.clear();
-      }
-    },
-    async action({ commit }) {
-      commit("CLEAR_SELECTED_NOTES");
-    },
-  },
-
   ADD_NOTE: {
     mutation(state, { note }: { note: Note }) {
       if (state.score) {
-        const notes = state.score.notes.concat(note).sort((a, b) => {
-          return a.position - b.position;
-        });
-        const addIndex = notes.indexOf(note);
-        state.selectedNotes.add(addIndex);
-        state.score.notes = notes;
+        state.selectedNoteIds.push(note.id);
+        state.score.notes = [...state.score.notes, note].sort(
+          (a, b) => a.position - b.position
+        );
       }
     },
     // ノートを追加する
     // NOTE: 重複削除など別途追加
-    async action({ state, commit }, { note }: { note: Note }) {
+    async action({ state, commit, dispatch }, { note }) {
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
-      }
-      if (!singChannel) {
-        throw new Error("singChannel is undefined.");
       }
       if (!isValidNote(note)) {
         throw new Error("The note is invalid.");
       }
-
       commit("ADD_NOTE", { note });
-
-      const score = getFromOptional(state.score);
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      dispatch("RENDER");
     },
   },
 
   UPDATE_NOTE: {
-    mutation(state, { index, note }: { index: number; note: Note }) {
+    mutation(state, { note, index }: { note: Note; index: number }) {
       if (state.score) {
-        const notes = [...state.score.notes];
-        notes.splice(index, 0, note);
-        state.score.notes = notes;
+        state.score.notes.splice(index, 0, note);
       }
     },
-    async action(
-      { state, commit },
-      { index, note }: { index: number; note: Note }
-    ) {
+    async action({ state, commit, dispatch }, { note }) {
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
-      }
-      if (!singChannel) {
-        throw new Error("singChannel is undefined.");
       }
       if (!isValidNote(note)) {
         throw new Error("The note is invalid.");
       }
 
-      commit("UPDATE_NOTE", { index, note });
+      const index = state.score.notes.findIndex((value) => {
+        return value.id === note.id;
+      });
 
-      const score = getFromOptional(state.score);
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      if (index !== -1) {
+        commit("UPDATE_NOTE", { note, index });
+      }
+
+      dispatch("RENDER");
     },
   },
 
-  SET_NOTES: {
+  REMOVE_NOTE: {
+    mutation(state, { id }: { id: string }) {
+      if (state.score) {
+        state.score.notes = state.score.notes.filter((note) => note.id !== id);
+        state.selectedNoteIds = state.selectedNoteIds.filter(
+          (selectedId) => selectedId !== id
+        );
+      }
+    },
+    async action({ state, commit, dispatch }, { id }) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+
+      commit("REMOVE_NOTE", { id });
+
+      dispatch("RENDER");
+    },
+  },
+
+  REPLACE_ALL_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
       if (state.score) {
         state.score.notes = notes;
       }
     },
-    async action({ state, commit }, { notes }: { notes: Note[] }) {
+    async action({ state, commit, dispatch }, { notes }: { notes: Note[] }) {
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
@@ -607,34 +684,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (notes.some((note) => !isValidNote(note))) {
         throw new Error("Invalid notes");
       }
-      commit("SET_NOTES", { notes });
+      commit("REPLACE_ALL_NOTES", { notes });
 
-      const score = getFromOptional(state.score);
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      dispatch("RENDER");
     },
   },
 
-  REMOVE_NOTE: {
-    mutation(state, { index }: { index: number }) {
-      if (state.score) {
-        state.score.notes.splice(index, 1);
-        state.selectedNotes.delete(index);
-      }
+  SET_SELECTED_NOTE_IDS: {
+    mutation(state, { noteIds }: { noteIds: string[] }) {
+      state.selectedNoteIds = noteIds;
     },
-    async action({ state, commit }, { index }: { index: number }) {
+    async action({ state, commit }, { noteIds }: { noteIds: string[] }) {
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
-      if (!singChannel) {
-        throw new Error("singChannel is undefined.");
-      }
+      commit("SET_SELECTED_NOTE_IDS", { noteIds });
+    },
+  },
 
-      commit("REMOVE_NOTE", { index });
-
-      const score = getFromOptional(state.score);
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+  CLEAR_SELECTED_NOTE_IDS: {
+    mutation(state) {
+      state.selectedNoteIds = [];
+    },
+    async action({ commit }) {
+      commit("CLEAR_SELECTED_NOTE_IDS");
     },
   },
 
@@ -642,23 +715,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REMOVE_SELECTED_NOTES: {
     mutation(state) {
       if (state.score) {
-        const notes = state.score.notes.filter(
-          (_, index) => !state.selectedNotes.has(index)
+        state.score.notes = state.score.notes.filter(
+          (note) => !state.selectedNoteIds.includes(note.id)
         );
-        state.score.notes = notes;
       }
     },
-    async action({ state, commit }) {
+    async action({ commit, dispatch }) {
       if (!singChannel) {
         throw new Error("singChannel is undefined.");
       }
 
       commit("REMOVE_SELECTED_NOTES");
-      commit("CLEAR_SELECTED_NOTES");
+      commit("CLEAR_SELECTED_NOTE_IDS");
 
-      const score = getFromOptional(state.score);
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      dispatch("RENDER");
     },
   },
 
@@ -811,6 +881,382 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_START_RENDERING_REQUESTED: {
+    mutation(state, { startRenderingRequested }) {
+      state.startRenderingRequested = startRenderingRequested;
+    },
+  },
+
+  SET_STOP_RENDERING_REQUESTED: {
+    mutation(state, { stopRenderingRequested }) {
+      state.stopRenderingRequested = stopRenderingRequested;
+    },
+  },
+
+  SET_NOW_RENDERING: {
+    mutation(state, { nowRendering }) {
+      state.nowRendering = nowRendering;
+    },
+  },
+
+  /**
+   * レンダリングを行う。レンダリング中だった場合は停止して再レンダリングする。
+   */
+  RENDER: {
+    async action({ state, getters, commit, dispatch }) {
+      const preProcessing = (score: Score) => {
+        const resolution = score.resolution;
+        const tempos = score.tempos;
+        const notes = score.notes;
+
+        // 重複するノートを除く
+        for (let i = 0; i < notes.length; i++) {
+          const note = notes[i];
+          if (i === 0) continue;
+          const lastNote = notes[i - 1];
+          if (note.position < lastNote.position + lastNote.duration) {
+            notes.splice(i, 1);
+            i--;
+          }
+        }
+
+        // 長いノートを短くする
+        const maxNoteTime = 0.26;
+        for (let i = 0; i < notes.length; i++) {
+          const note = notes[i];
+          const noteOnPos = note.position;
+          const noteOffPos = note.position + note.duration;
+          const noteOnTime = ticksToSeconds(resolution, tempos, noteOnPos);
+          const noteOffTime = ticksToSeconds(resolution, tempos, noteOffPos);
+
+          if (noteOffTime - noteOnTime > maxNoteTime) {
+            let noteOffPos = secondsToTicks(
+              resolution,
+              tempos,
+              noteOnTime + maxNoteTime
+            );
+            noteOffPos = Math.max(note.position + 1, Math.floor(noteOffPos));
+            note.duration = noteOffPos - note.position;
+          }
+        }
+      };
+
+      const searchPhrases = async (
+        singer: Singer | undefined,
+        score: Score
+      ) => {
+        const notes = score.notes;
+        const foundPhrases = new Map<string, Phrase>();
+        let phraseNotes: Note[] = [];
+        for (let i = 0; i < notes.length; i++) {
+          const note = notes[i];
+
+          phraseNotes.push(note);
+
+          if (
+            i === notes.length - 1 ||
+            note.position + note.duration !== notes[i + 1].position
+          ) {
+            const phraseScore = {
+              ...score,
+              notes: phraseNotes,
+            };
+            const hash = await generateSingerAndScoreHash({
+              singer,
+              score: phraseScore, // NOTE: とりあえず拍子も含めてハッシュ生成する
+            });
+            foundPhrases.set(hash, {
+              singer,
+              score: phraseScore,
+            });
+
+            phraseNotes = [];
+          }
+        }
+        return foundPhrases;
+      };
+
+      const generateAndEditQuery = async (singer: Singer, score: Score) => {
+        if (!getters.IS_ENGINE_READY(singer.engineId)) {
+          throw new Error("Engine not ready.");
+        }
+
+        const text = score.notes
+          .map((value) => value.lyric)
+          .map((value) => value.replace("は", "ハ")) // TODO: 助詞の扱いはあとで考える
+          .map((value) => value.replace("へ", "ヘ")) // TODO: 助詞の扱いはあとで考える
+          .join("");
+
+        const query = await dispatch("FETCH_AUDIO_QUERY", {
+          text,
+          engineId: singer.engineId,
+          styleId: singer.styleId,
+        });
+
+        const moras = query.accentPhrases.map((value) => value.moras).flat();
+
+        if (moras.length !== score.notes.length) {
+          throw new Error(
+            "The number of moras and the number of notes do not match."
+          );
+        }
+
+        // 音素を表示
+        const phonemes = moras
+          .map((value) => {
+            if (value.consonant === undefined) {
+              return [value.vowel];
+            } else {
+              return [value.consonant, value.vowel];
+            }
+          })
+          .flat()
+          .join(" ");
+        window.electron.logInfo(`  phonemes: ${phonemes}`);
+
+        // クエリを編集
+        let noteIndex = 0;
+        for (let i = 0; i < query.accentPhrases.length; i++) {
+          const accentPhrase = query.accentPhrases[i];
+          const moras = accentPhrase.moras;
+          for (let j = 0; j < moras.length; j++) {
+            const mora = moras[j];
+            const note = score.notes[noteIndex];
+
+            const noteOnTime = ticksToSeconds(
+              score.resolution,
+              score.tempos,
+              note.position
+            );
+            const noteOffTime = ticksToSeconds(
+              score.resolution,
+              score.tempos,
+              note.position + note.duration
+            );
+
+            // 長さを編集
+            let vowelLength = noteOffTime - noteOnTime;
+            if (j !== moras.length - 1) {
+              const nextMora = moras[j + 1];
+              if (nextMora.consonantLength !== undefined) {
+                vowelLength -= nextMora.consonantLength;
+              }
+            } else if (i !== query.accentPhrases.length - 1) {
+              const nextAccentPhrase = query.accentPhrases[i + 1];
+              const nextMora = nextAccentPhrase.moras[0];
+              if (nextMora.consonantLength !== undefined) {
+                vowelLength -= nextMora.consonantLength;
+              }
+            }
+            mora.vowelLength = Math.max(0.001, vowelLength);
+
+            // 音高を編集
+            const freq = midiToFrequency(note.midi);
+            mora.pitch = Math.log(freq);
+
+            noteIndex++;
+          }
+        }
+
+        return query;
+      };
+
+      const calculateStartTime = (score: Score, query: AudioQuery) => {
+        const firstMora = query.accentPhrases[0].moras[0];
+        let startTime = ticksToSeconds(
+          score.resolution,
+          score.tempos,
+          score.notes[0].position
+        );
+        startTime -= query.prePhonemeLength;
+        startTime -= firstMora.consonantLength ?? 0;
+        return startTime;
+      };
+
+      const synthesize = async (singer: Singer, query: AudioQuery) => {
+        if (!getters.IS_ENGINE_READY(singer.engineId)) {
+          throw new Error("Engine not ready.");
+        }
+
+        const blob = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId: singer.engineId,
+        }).then((instance) => {
+          return instance.invoke("synthesisSynthesisPost")({
+            audioQuery: query,
+            speaker: singer.styleId,
+            enableInterrogativeUpspeak:
+              state.experimentalSetting.enableInterrogativeUpspeak,
+          });
+        });
+        return blob;
+      };
+
+      const getSinger = (): Singer | undefined => {
+        if (state.engineId === undefined || state.styleId === undefined) {
+          return undefined;
+        }
+        return { engineId: state.engineId, styleId: state.styleId };
+      };
+
+      // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
+      const startRenderingRequested = () => state.startRenderingRequested;
+      const stopRenderingRequested = () => state.stopRenderingRequested;
+
+      const render = async () => {
+        if (!state.score || !singChannel || !audioRenderer) {
+          throw new Error(
+            "score or singChannel or audioRenderer is undefined."
+          );
+        }
+        const singChannelRef = singChannel;
+        const audioRendererRef = audioRenderer;
+
+        // レンダリング中に変更される可能性のあるデータをコピーする
+        const score = copyScore(state.score);
+        const singer = getSinger();
+
+        preProcessing(score);
+
+        // Score -> Phrases
+
+        window.electron.logInfo("Updating phrases...");
+
+        const foundPhrases = await searchPhrases(singer, score);
+        for (const [hash, phrase] of foundPhrases) {
+          if (!allPhrases.has(hash)) {
+            allPhrases.set(hash, phrase);
+            singChannelRef.addPhrase(phrase);
+          }
+        }
+        for (const [hash, phrase] of allPhrases) {
+          if (!foundPhrases.has(hash)) {
+            allPhrases.delete(hash);
+            singChannelRef.removePhrase(phrase);
+          }
+        }
+
+        window.electron.logInfo("Phrases updated.");
+
+        if (startRenderingRequested() || stopRenderingRequested()) {
+          return;
+        }
+
+        for (const phrase of allPhrases.values()) {
+          if (!phrase.singer) {
+            continue;
+          }
+
+          // Phrase -> AudioQuery
+
+          if (!phrase.query) {
+            window.electron.logInfo(`Generating query...`);
+
+            phrase.query = await generateAndEditQuery(
+              phrase.singer,
+              phrase.score
+            );
+
+            window.electron.logInfo(`Query generated.`);
+          }
+
+          if (startRenderingRequested() || stopRenderingRequested()) {
+            return;
+          }
+
+          // AudioQuery -> AudioBuffer
+          // Phrase & AudioQuery -> startTime
+
+          const queryHash = await generateAudioQueryHash(phrase.query);
+          // クエリが変更されていたら再合成
+          if (queryHash !== phrase.queryHash) {
+            phrase.buffer = audioBufferCache.get(queryHash);
+            if (phrase.buffer) {
+              window.electron.logInfo(`Loaded audio buffer from cache.`);
+            } else {
+              window.electron.logInfo(`Synthesizing...`);
+
+              const blob = await synthesize(phrase.singer, phrase.query);
+              phrase.buffer = await audioRendererRef.createAudioBuffer(blob);
+              audioBufferCache.set(queryHash, phrase.buffer);
+
+              window.electron.logInfo(`Synthesized.`);
+            }
+            phrase.queryHash = queryHash;
+            phrase.startTime = calculateStartTime(phrase.score, phrase.query);
+
+            // NoteSequenceが削除される
+            singChannelRef.removePhrase(phrase);
+            // AudioBufferとstartTimeを元にAudioSequenceが作成され、追加される
+            // TODO: 分かりにくいのでリファクタリングする
+            singChannelRef.addPhrase(phrase);
+          }
+
+          if (startRenderingRequested() || stopRenderingRequested()) {
+            return;
+          }
+        }
+      };
+
+      commit("SET_START_RENDERING_REQUESTED", {
+        startRenderingRequested: true,
+      });
+      if (!state.renderingEnabled || state.nowRendering) {
+        return;
+      }
+
+      commit("SET_NOW_RENDERING", { nowRendering: true });
+      try {
+        while (startRenderingRequested()) {
+          commit("SET_START_RENDERING_REQUESTED", {
+            startRenderingRequested: false,
+          });
+          await render();
+          if (stopRenderingRequested()) {
+            break;
+          }
+        }
+      } catch (e) {
+        window.electron.logError(e);
+        throw e;
+      } finally {
+        commit("SET_STOP_RENDERING_REQUESTED", {
+          stopRenderingRequested: false,
+        });
+        commit("SET_NOW_RENDERING", { nowRendering: false });
+      }
+    },
+  },
+
+  /**
+   * レンダリング停止をリクエストし、停止するまで待機する。
+   */
+  STOP_RENDERING: {
+    action: createUILockAction(async ({ state, commit }) => {
+      if (state.nowRendering) {
+        window.electron.logInfo("Waiting for rendering to stop...");
+        commit("SET_STOP_RENDERING_REQUESTED", {
+          stopRenderingRequested: true,
+        });
+        await createPromiseThatResolvesWhen(() => !state.nowRendering);
+        window.electron.logInfo("Rendering stopped.");
+      }
+    }),
+  },
+
+  SET_RENDERING_ENABLED: {
+    mutation(state, { renderingEnabled }) {
+      state.renderingEnabled = renderingEnabled;
+    },
+    async action({ commit, dispatch }, { renderingEnabled }) {
+      if (renderingEnabled) {
+        dispatch("RENDER");
+      } else {
+        await dispatch("STOP_RENDERING");
+      }
+      commit("SET_RENDERING_ENABLED", { renderingEnabled });
+    },
+  },
+
   IMPORT_MIDI_FILE: {
     action: createUILockAction(
       async ({ dispatch }, { filePath }: { filePath?: string }) => {
@@ -846,6 +1292,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // ひとまず1トラック目のみを読み込む
         midi.tracks[0].notes
           .map((note) => ({
+            id: uuidv4(),
             position: convertToPosBasedOnRes(note.ticks),
             duration: convertToDurationBasedOnRes(
               note.ticks,
@@ -1138,6 +1585,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             duration: duration,
             midi: noteNumber,
             lyric: lyric,
+            id: uuidv4(),
           };
 
           if (tie) {
@@ -1289,10 +1737,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // TODO: ファイル名を設定できるようにする
         const fileName = "test_export.wav";
 
-        const score = getFromOptional(state.score);
         const leftLocatorPos = state.leftLocatorPosition;
         const rightLocatorPos = state.rightLocatorPosition;
-
         const renderStartTime = getters.POSITION_TO_TIME(leftLocatorPos);
         const renderEndTime = getters.POSITION_TO_TIME(rightLocatorPos);
         const renderDuration = renderEndTime - renderStartTime;
@@ -1304,6 +1750,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         if (state.nowPlaying) {
           await dispatch("SING_STOP_AUDIO");
+        }
+        if (state.nowRendering) {
+          await dispatch("STOP_RENDERING");
         }
 
         if (state.savingSetting.fixedExportEnabled) {
@@ -1338,8 +1787,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             // コンテキストにはノードや発音が登録されているので問題なくレンダリングされます
             // TODO: 分かりにくいので後でリファクタリングしたい
             const channel = new SingChannel(context);
-            const noteEvents = generateNoteEvents(score, score.notes);
-            channel.setNoteEvents(noteEvents);
+            allPhrases.forEach((value) => channel.addPhrase(value));
           }
         );
         const waveFileData = convertToWavFileData(audioBuffer);

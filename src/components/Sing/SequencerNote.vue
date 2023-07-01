@@ -91,11 +91,11 @@ export default defineComponent({
     const barHeight = computed(() => sizeY * zoomY.value);
     const barWidth = computed(() => (props.note.duration / 4) * zoomX.value);
     const isSelected = computed(() => {
-      return store.state.selectedNotes.has(props.index);
+      return store.state.selectedNoteIds.includes(props.note.id);
     });
 
     const removeNote = () => {
-      store.dispatch("REMOVE_NOTE", { index: props.index });
+      store.dispatch("REMOVE_NOTE", { id: props.note.id });
     };
 
     const setLyric = (event: InputEvent) => {
@@ -103,10 +103,8 @@ export default defineComponent({
         return;
       }
       if (event.target.value) {
-        const index = props.index;
         const lyric = event.target.value;
         store.dispatch("UPDATE_NOTE", {
-          index,
           note: {
             ...props.note,
             lyric,
@@ -120,11 +118,10 @@ export default defineComponent({
     };
 
     const handleMouseDown = (event: MouseEvent) => {
-      if (!store.state.selectedNotes.has(props.index)) {
-        const newSelectedNotes = new Set(store.state.selectedNotes);
-        newSelectedNotes.add(props.index);
-        store.dispatch("SET_SELECTED_NOTES", {
-          noteIndices: newSelectedNotes,
+      if (!store.state.selectedNoteIds.includes(props.note.id)) {
+        const noteIds = [...store.state.selectedNoteIds, props.note.id];
+        store.dispatch("SET_SELECTED_NOTE_IDS", {
+          noteIds,
         });
       } else {
         emit("handleDragMoveStart", event);
@@ -132,19 +129,17 @@ export default defineComponent({
     };
 
     const handleDragRightStart = (event: MouseEvent) => {
-      const newSelectedNotes = new Set(store.state.selectedNotes);
-      newSelectedNotes.add(props.index);
-      store.dispatch("SET_SELECTED_NOTES", {
-        noteIndices: newSelectedNotes,
+      const noteIds = [...store.state.selectedNoteIds, props.note.id];
+      store.dispatch("SET_SELECTED_NOTE_IDS", {
+        noteIds,
       });
       emit("handleDragRightStart", event);
     };
 
     const handleDragLeftStart = (event: MouseEvent) => {
-      const newSelectedNotes = new Set(store.state.selectedNotes);
-      newSelectedNotes.add(props.index);
-      store.dispatch("SET_SELECTED_NOTES", {
-        noteIndices: newSelectedNotes,
+      const noteIds = [...store.state.selectedNoteIds, props.note.id];
+      store.dispatch("SET_SELECTED_NOTE_IDS", {
+        noteIds,
       });
       emit("handleDragLeftStart", event);
     };

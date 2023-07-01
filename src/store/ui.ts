@@ -530,6 +530,14 @@ export const uiStore = createPartialStore<UiStoreTypes>({
           return;
         }
       }
+    },
+  },
+
+  PROCESS_BEFORE_QUITTING: {
+    async action({ dispatch }) {
+      await dispatch("SING_STOP_AUDIO");
+      await dispatch("CHECK_EDITED_AND_NOT_SAVE");
+      await dispatch("STOP_RENDERING");
 
       window.electron.closeWindow();
     },

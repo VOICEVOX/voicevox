@@ -95,8 +95,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    const closeWindow = async () => {
-      store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
+    const closeWindow = () => {
+      store.dispatch("PROCESS_BEFORE_QUITTING");
     };
     const minimizeWindow = () => window.electron.minimizeWindow();
     const maximizeWindow = () => window.electron.maximizeWindow();

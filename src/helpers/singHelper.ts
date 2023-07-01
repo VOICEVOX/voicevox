@@ -65,15 +65,11 @@ export const midiKeys = [...Array(128)]
 export const BASE_GRID_SIZE_X = 30;
 export const BASE_GRID_SIZE_Y = 30;
 
-export enum DragMode {
-  NONE = "NONE",
-  MOVE = "MOVE",
-  NOTE_RIGHT = "NOTE_RIGHT",
-  NOTE_LEFT = "NOTE_LEFT",
-  SELECT = "SELECT",
-}
-
 export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;
+}
+
+export function midiToFrequency(midi: number) {
+  return 440 * 2 ** ((midi - 69) / 12);
 }

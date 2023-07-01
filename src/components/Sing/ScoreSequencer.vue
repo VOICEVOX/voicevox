@@ -6,6 +6,7 @@
     @mousemove="handleMouseMove"
     @mouseup="handleMouseUp"
     @dblclick="addNote"
+    @dblclick.prevent.stop="removeNote"
   >
     <!-- 鍵盤 -->
     <sequencer-keys />
@@ -19,6 +20,7 @@
         xmlns="http://www.w3.org/2000/svg"
         class="sequencer-grids"
       >
+        <!-- パターングリッド -->
         <defs>
           <pattern
             id="sequencer-grid-16"
@@ -115,6 +117,7 @@
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
+import { v4 as uuidv4 } from "uuid";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import {
@@ -123,7 +126,6 @@ import {
   getDoremiFromMidi,
   BASE_GRID_SIZE_X as sizeX,
   BASE_GRID_SIZE_Y as sizeY,
-  DragMode,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
@@ -133,6 +135,13 @@ export default defineComponent({
     SequencerNote,
   },
   setup() {
+    enum DragMode {
+      NONE = "NONE",
+      MOVE = "MOVE",
+      NOTE_RIGHT = "NOTE_RIGHT",
+      NOTE_LEFT = "NOTE_LEFT",
+      SELECT = "SELECT",
+    }
     const store = useStore();
     const state = store.state;
     // カーソルポジション
@@ -179,7 +188,7 @@ export default defineComponent({
     // スクロール位置
     // const scrollX = computed(() => state.sequencerScrollX);
     const scrollY = computed(() => state.sequencerScrollY);
-    const selectedNotes = computed(() => state.selectedNotes);
+    const selectedNoteIds = computed(() => state.selectedNoteIds);
 
     // ノートの追加
     const addNote = (event: MouseEvent) => {
@@ -194,8 +203,11 @@ export default defineComponent({
       // NOTE: ノートの追加は1/8をベース
       const duration = gridXSize * 2;
       const lyric = getDoremiFromMidi(midi);
+      // NOTE: 仮ID
+      const id = uuidv4();
       store.dispatch("ADD_NOTE", {
         note: {
+          id,
           position,
           midi,
           duration,
@@ -206,9 +218,9 @@ export default defineComponent({
 
     // マウスダウン
     // 選択中のノートがある場合は選択リセット
-    const handleMouseDown = (event: MouseEvent) => {
-      if (0 < selectedNotes.value.size) {
-        store.dispatch("CLEAR_SELECTED_NOTES");
+    const handleMouseDown = () => {
+      if (0 < selectedNoteIds.value.length) {
+        store.dispatch("CLEAR_SELECTED_NOTE_IDS");
       }
     };
 
@@ -222,7 +234,7 @@ export default defineComponent({
     };
 
     // マウスアップ
-    // ドラッグしていなければノート追加 / ドラッグしていた場合はドラッグを終了
+    // ドラッグしていた場合はドラッグを終了
     const handleMouseUp = () => {
       if (dragMode.value !== DragMode.NONE) {
         cancelAnimationFrame(dragId.value);
@@ -234,7 +246,7 @@ export default defineComponent({
     // ドラッグでのノートの移動
     const dragMove = () => {
       if (!state.score) {
-        return;
+        throw new Error("Score is undefined.");
       }
       if (dragMode.value !== DragMode.MOVE) {
         cancelAnimationFrame(dragId.value);
@@ -264,8 +276,8 @@ export default defineComponent({
 
       // 選択中のノートのpositionとmidiを変更
       let isNotesChanged = false;
-      const newNotes = [...state.score.notes].map((note, index) => {
-        if (selectedNotes.value.has(index)) {
+      const newNotes = [...state.score.notes].map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
           if (amountPositionX === 0 && amountPositionY === 0) {
             return note;
           }
@@ -288,14 +300,14 @@ export default defineComponent({
         return;
       }
       if (isNotesChanged) {
-        store.dispatch("SET_NOTES", { notes: newNotes });
+        store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
       }
       dragId.value = requestAnimationFrame(dragMove);
     };
 
     // ノートドラッグ開始
     const handleDragMoveStart = (event: MouseEvent) => {
-      if (state.selectedNotes.size > 0) {
+      if (selectedNoteIds.value.length > 0) {
         dragMode.value = DragMode.MOVE;
         setTimeout(() => {
           dragMoveCurrentX.value = event.clientX;
@@ -306,9 +318,10 @@ export default defineComponent({
     };
 
     // ノート右ドラッグ
+    // FIXME: 左右ドラッグロジックを統一する
     const dragRight = () => {
       if (!state.score) {
-        return;
+        throw new Error("Score is undefined.");
       }
       if (dragMode.value !== DragMode.NOTE_RIGHT) {
         cancelAnimationFrame(dragId.value);
@@ -317,8 +330,8 @@ export default defineComponent({
       const distanceX = cursorX.value - dragDurationCurrentX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
         let isNotesChanged = false;
-        const newNotes = [...state.score.notes].map((note, index) => {
-          if (selectedNotes.value.has(index)) {
+        const newNotes = [...state.score.notes].map((note) => {
+          if (selectedNoteIds.value.includes(note.id)) {
             const duration =
               note.duration +
               (0 < distanceX ? snapSize.value : -snapSize.value);
@@ -341,7 +354,7 @@ export default defineComponent({
         dragDurationCurrentX.value = dragDurationCurrentXNext;
         dragId.value = requestAnimationFrame(dragRight);
         if (isNotesChanged) {
-          store.dispatch("SET_NOTES", { notes: newNotes });
+          store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
         }
       }
       dragId.value = requestAnimationFrame(dragRight);
@@ -357,9 +370,10 @@ export default defineComponent({
     };
 
     // ノート左ドラッグ
+    // FIXME: 左右ドラッグロジックを統一する
     const dragLeft = () => {
       if (!state.score) {
-        return;
+        throw new Error("Score is undefined.");
       }
       if (dragMode.value !== DragMode.NOTE_LEFT) {
         cancelAnimationFrame(dragId.value);
@@ -368,8 +382,8 @@ export default defineComponent({
       const distanceX = cursorX.value - dragDurationCurrentX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
         let isNotesChanged = false;
-        const newNotes = [...state.score.notes].map((note, index) => {
-          if (selectedNotes.value.has(index)) {
+        const newNotes = [...state.score.notes].map((note) => {
+          if (selectedNoteIds.value.includes(note.id)) {
             const position =
               note.position +
               (0 < distanceX ? snapSize.value : -snapSize.value);
@@ -396,7 +410,7 @@ export default defineComponent({
         dragDurationCurrentX.value = dragDurationCurrentXNext;
         dragId.value = requestAnimationFrame(dragLeft);
         if (isNotesChanged) {
-          store.dispatch("SET_NOTES", { notes: newNotes });
+          store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
         }
       }
       dragId.value = requestAnimationFrame(dragLeft);
@@ -434,10 +448,10 @@ export default defineComponent({
     // キーボードイベント
     const handleNotesArrowUp = () => {
       if (!state.score) {
-        return;
+        throw new Error("Score is undefined.");
       }
-      const newNotes = state.score.notes.map((note, index) => {
-        if (selectedNotes.value.has(index)) {
+      const newNotes = state.score.notes.map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
           const midi = Math.min(note.midi + 1, 127);
           return {
             ...note,
@@ -450,15 +464,15 @@ export default defineComponent({
       if (newNotes.some((note) => note.midi > 127)) {
         return;
       }
-      store.dispatch("SET_NOTES", { notes: newNotes });
+      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
     };
 
     const handleNotesArrowDown = () => {
       if (!state.score) {
-        return;
+        throw new Error("Score is undefined.");
       }
-      const newNotes = state.score.notes.map((note, index) => {
-        if (selectedNotes.value.has(index)) {
+      const newNotes = state.score.notes.map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
           const midi = Math.max(note.midi - 1, 0);
           return {
             ...note,
@@ -471,15 +485,15 @@ export default defineComponent({
       if (newNotes.some((note) => note.midi < 0)) {
         return;
       }
-      store.dispatch("SET_NOTES", { notes: newNotes });
+      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
     };
 
     const handleNotesArrowRight = () => {
       if (!state.score) {
-        return;
+        throw new Error("Score is undefined.");
       }
-      const newNotes = state.score.notes.map((note, index) => {
-        if (selectedNotes.value.has(index)) {
+      const newNotes = state.score.notes.map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
           const position = note.position + snapSize.value;
           return {
             ...note,
@@ -489,15 +503,15 @@ export default defineComponent({
           return note;
         }
       });
-      store.dispatch("SET_NOTES", { notes: newNotes });
+      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
     };
 
     const handleNotesArrowLeft = () => {
       if (!state.score) {
-        return;
+        throw new Error("Score is undefined.");
       }
-      const newNotes = state.score.notes.map((note, index) => {
-        if (selectedNotes.value.has(index)) {
+      const newNotes = state.score.notes.map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
           const position = note.position - snapSize.value;
           return {
             ...note,
@@ -510,7 +524,7 @@ export default defineComponent({
       if (newNotes.some((note) => note.position < 0)) {
         return;
       }
-      store.dispatch("SET_NOTES", { notes: newNotes });
+      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
     };
 
     const handleNotesBackspaceOrDelete = () => {
