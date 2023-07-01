@@ -13,6 +13,7 @@ import {
   EngineId,
   MessageBoxReturnValue,
 } from "@/type/preload";
+import { ContextMenuType } from "@/type/contextMenu";
 import { AltPortInfos } from "@/store/type";
 
 /**
@@ -149,8 +150,12 @@ export type IpcIHData = {
     return: MessageBoxReturnValue;
   };
 
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    args: [];
+  OPEN_CONTEXT_MENU: {
+    args: [
+      obj: {
+        type: ContextMenuType;
+      }
+    ];
     return: void;
   };
 

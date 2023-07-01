@@ -51,6 +51,7 @@ import {
   AudioKey,
   PresetKey,
 } from "@/type/preload";
+import { ContextMenuType } from "@/type/contextMenu";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
 /**
@@ -469,8 +470,8 @@ export type AudioStoreTypes = {
     action(): void;
   };
 
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    action(): void;
+  OPEN_CONTEXT_MENU: {
+    action(payload: { type: ContextMenuType }): void;
   };
 
   CHECK_FILE_EXISTS: {
