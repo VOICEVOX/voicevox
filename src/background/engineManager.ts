@@ -70,7 +70,8 @@ export class EngineManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
 
-  defaultEngineInfos: EngineInfo[];
+  defaultEngineInfos: EngineInfo[] = [];
+  additionalEngineInfos: EngineInfo[] = [];
   engineProcessContainers: Record<EngineId, EngineProcessContainer>;
 
   public altPortInfo: AltPortInfos = {};
@@ -88,15 +89,15 @@ export class EngineManager {
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
 
-    this.defaultEngineInfos = createDefaultEngineInfos(defaultEngineDir);
+    this.initializeEngineInfosAndAltPortInfo();
     this.engineProcessContainers = {};
   }
 
   /**
-   * 追加エンジンの一覧を取得する。
+   * 追加エンジンの一覧を作成する。
    * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
    */
-  fetchAdditionalEngineInfos(): EngineInfo[] {
+  private createAdditionalEngineInfos(): EngineInfo[] {
     const engines: EngineInfo[] = [];
     const addEngine = (engineDir: string, type: "vvpp" | "path") => {
       const manifestPath = path.join(engineDir, "engine_manifest.json");
@@ -164,8 +165,7 @@ export class EngineManager {
    * 全てのエンジンの一覧を取得する。デフォルトエンジン＋追加エンジン。
    */
   fetchEngineInfos(): EngineInfo[] {
-    const additionalEngineInfos = this.fetchAdditionalEngineInfos();
-    return [...this.defaultEngineInfos, ...additionalEngineInfos];
+    return [...this.defaultEngineInfos, ...this.additionalEngineInfos];
   }
 
   /**
@@ -193,6 +193,15 @@ export class EngineManager {
     }
 
     return engineDirectory;
+  }
+
+  /**
+   * EngineInfosとAltPortInfoを初期化する。
+   */
+  initializeEngineInfosAndAltPortInfo() {
+    this.defaultEngineInfos = createDefaultEngineInfos(this.defaultEngineDir);
+    this.additionalEngineInfos = this.createAdditionalEngineInfos();
+    this.altPortInfo = {};
   }
 
   /**
