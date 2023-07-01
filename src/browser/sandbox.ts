@@ -38,6 +38,11 @@ import {
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
 
+/**
+ * Browser版のSandBox実装
+ * src/type/preload.tsのSandboxを変更した場合は、interfaceに追従した変更が必要
+ * まだ開発中のため、Browser版の実装も同時に行えない場合は、メソッドを追加して throw new Error() する
+ */
 export const api: Sandbox = {
   getAppInfos() {
     /* eslint-disable @typescript-eslint/no-non-null-assertion */
