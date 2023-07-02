@@ -361,7 +361,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             if (typeof err === "string") return err;
             if (!(err instanceof Error)) return "エラーが発生しました。";
             if (err instanceof ResultError && err.code === "ENOENT")
-              return "プロジェクトファイルが見付かりませんでした。ファイルが移動、または削除された可能性があります。";
+              return "プロジェクトファイルが見つかりませんでした。ファイルが移動、または削除された可能性があります。";
             if (err.message.startsWith(projectFileErrorMsg))
               return "ファイルフォーマットが正しくありません。";
             return err.message;
