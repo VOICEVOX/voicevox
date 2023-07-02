@@ -3,6 +3,7 @@ import { AudioKey, Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
+  SaveResult,
   ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
@@ -11,6 +12,7 @@ import { withProgress } from "@/store/ui";
 
 type QuasarDialog = QVueGlobals["dialog"];
 type QuasarNotify = QVueGlobals["notify"];
+type MediaType = "audio" | "text";
 
 export async function generateAndSaveOneAudioWithDialog({
   audioKey,
@@ -19,7 +21,7 @@ export async function generateAndSaveOneAudioWithDialog({
   dispatch,
   filePath,
   encoding,
-  notifyOnGenerateAudio,
+  disableNotifyOnGenerate,
 }: {
   audioKey: AudioKey;
   quasarDialog: QuasarDialog;
@@ -27,7 +29,7 @@ export async function generateAndSaveOneAudioWithDialog({
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
-  notifyOnGenerateAudio: boolean;
+  disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
     dispatch("GENERATE_AND_SAVE_AUDIO", {
@@ -41,61 +43,16 @@ export async function generateAndSaveOneAudioWithDialog({
   if (result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
-    // "今後この通知をしない" 有効時
-    if (notifyOnGenerateAudio) return;
-
+    if (disableNotifyOnGenerate) return;
     // 書き出し成功時に通知をする
-    quasarNotify({
-      message: "音声を書き出しました",
-      color: "toast",
-      textColor: "toast-display",
-      icon: "info",
-      timeout: 5000,
-      actions: [
-        {
-          label: "今後この通知をしない",
-          textColor: "toast-button-display",
-          handler: () => {
-            dispatch("SET_CONFIRMED_TIP", {
-              confirmedTip: {
-                notifyOnGenerateAudio: true,
-              },
-            });
-          },
-        },
-      ],
+    showNotify({
+      mediaType: "audio",
+      quasarNotify,
+      dispatch,
     });
-    return;
+  } else {
+    showDialog({ mediaType: "audio", result, quasarDialog });
   }
-
-  let msg = "";
-
-  switch (result.result) {
-    case "WRITE_ERROR":
-      if (result.errorMessage) {
-        msg = result.errorMessage;
-      } else {
-        msg = "何らかの理由で書き出しに失敗しました。ログを参照してください。";
-      }
-      break;
-    case "ENGINE_ERROR":
-      if (result.errorMessage) {
-        msg = result.errorMessage;
-      } else {
-        msg =
-          "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-      }
-      break;
-  }
-  quasarDialog({
-    title: "書き出しに失敗しました。",
-    message: msg,
-    ok: {
-      label: "閉じる",
-      flat: true,
-      textColor: "secondary",
-    },
-  });
 }
 
 export async function generateAndSaveAllAudioWithDialog({
@@ -104,14 +61,14 @@ export async function generateAndSaveAllAudioWithDialog({
   dispatch,
   dirPath,
   encoding,
-  notifyOnGenerateAudio,
+  disableNotifyOnGenerate,
 }: {
   quasarDialog: QuasarDialog;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   dirPath?: string;
   encoding?: EncodingType;
-  notifyOnGenerateAudio: boolean;
+  disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
@@ -123,60 +80,36 @@ export async function generateAndSaveAllAudioWithDialog({
     dispatch
   );
 
-  const successArray: Array<string | undefined> = [];
-  const writeErrorArray: Array<ErrorTypeForSaveAllResultDialog> = [];
-  const engineErrorArray: Array<ErrorTypeForSaveAllResultDialog> = [];
+  if (result === undefined) return;
 
-  if (result) {
-    for (const item of result) {
-      let msg = "";
-      if (item.errorMessage) {
-        msg = item.errorMessage;
-      }
+  // 書き出し成功時の出力先パスを配列に格納
+  const successArray: Array<string | undefined> = result.flatMap((result) =>
+    result.result === "SUCCESS" ? result.path : []
+  );
 
-      let path = "";
-      if (item.path) {
-        path = item.path;
-      }
+  // 書き込みエラーを配列に格納
+  const writeErrorArray: Array<ErrorTypeForSaveAllResultDialog> =
+    result.flatMap((result) =>
+      result.result === "WRITE_ERROR"
+        ? { path: result.path ?? "", message: result.errorMessage ?? "" }
+        : []
+    );
 
-      switch (item.result) {
-        case "SUCCESS":
-          successArray.push(path);
-          break;
-        case "WRITE_ERROR":
-          writeErrorArray.push({ path: path, message: msg });
-          break;
-        case "ENGINE_ERROR":
-          engineErrorArray.push({ path: path, message: msg });
-          break;
-      }
-    }
-  }
+  // エンジンエラーを配列に格納
+  const engineErrorArray: Array<ErrorTypeForSaveAllResultDialog> =
+    result.flatMap((result) =>
+      result.result === "ENGINE_ERROR"
+        ? { path: result.path ?? "", message: result.errorMessage ?? "" }
+        : []
+    );
 
-  if (successArray.length === result?.length) {
-    // "今後この通知をしない" 有効時
-    if (notifyOnGenerateAudio) return;
-
+  if (successArray.length === result.length) {
+    if (disableNotifyOnGenerate) return;
     // 書き出し成功時に通知をする
-    quasarNotify({
-      message: "音声を書き出しました",
-      color: "toast",
-      textColor: "toast-display",
-      icon: "info",
-      timeout: 5000,
-      actions: [
-        {
-          label: "今後この通知をしない",
-          textColor: "toast-button-display",
-          handler: () => {
-            dispatch("SET_CONFIRMED_TIP", {
-              confirmedTip: {
-                notifyOnGenerateAudio: true,
-              },
-            });
-          },
-        },
-      ],
+    showNotify({
+      mediaType: "audio",
+      quasarNotify,
+      dispatch,
     });
   }
 
@@ -198,14 +131,14 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   dispatch,
   filePath,
   encoding,
-  notifyOnGenerateAudio,
+  disableNotifyOnGenerate,
 }: {
   quasarDialog: QuasarDialog;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
-  notifyOnGenerateAudio: boolean;
+  disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
@@ -220,61 +153,15 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   if (result === undefined || result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
-    // "今後この通知をしない" 有効時
-    if (notifyOnGenerateAudio) return;
-
-    // 書き出し成功時に通知をする
-    quasarNotify({
-      message: "音声を書き出しました",
-      color: "toast",
-      textColor: "toast-display",
-      icon: "info",
-      timeout: 5000,
-      actions: [
-        {
-          label: "今後この通知をしない",
-          textColor: "toast-button-display",
-          handler: () => {
-            dispatch("SET_CONFIRMED_TIP", {
-              confirmedTip: {
-                notifyOnGenerateAudio: true,
-              },
-            });
-          },
-        },
-      ],
+    if (disableNotifyOnGenerate) return;
+    showNotify({
+      mediaType: "audio",
+      quasarNotify,
+      dispatch,
     });
-    return;
+  } else {
+    showDialog({ mediaType: "audio", result, quasarDialog });
   }
-
-  let msg = "";
-  switch (result.result) {
-    case "WRITE_ERROR":
-      if (result.errorMessage != undefined) {
-        msg = result.errorMessage;
-      } else {
-        msg = "何らかの理由で書き出しに失敗しました。ログを参照してください。";
-      }
-      break;
-    case "ENGINE_ERROR":
-      if (result.errorMessage != undefined) {
-        msg = result.errorMessage;
-      } else {
-        msg =
-          "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-      }
-      break;
-  }
-
-  quasarDialog({
-    title: "書き出しに失敗しました。",
-    message: msg,
-    ok: {
-      label: "閉じる",
-      flat: true,
-      textColor: "secondary",
-    },
-  });
 }
 
 export async function connectAndExportTextWithDialog({
@@ -283,14 +170,14 @@ export async function connectAndExportTextWithDialog({
   dispatch,
   filePath,
   encoding,
-  notifyOnGenerateAudio,
+  disableNotifyOnGenerate,
 }: {
   quasarDialog: QuasarDialog;
   quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
-  notifyOnGenerateAudio: boolean;
+  disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await dispatch("CONNECT_AND_EXPORT_TEXT", {
     filePath,
@@ -300,48 +187,93 @@ export async function connectAndExportTextWithDialog({
   if (result === undefined || result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
-    // "今後この通知をしない" 有効時
-    if (notifyOnGenerateAudio) return;
-
-    // 書き出し成功時に通知をする
-    quasarNotify({
-      message: "テキストを書き出しました",
-      color: "toast",
-      textColor: "toast-display",
-      icon: "info",
-      timeout: 5000,
-      actions: [
-        {
-          label: "今後この通知をしない",
-          textColor: "toast-button-display",
-          handler: () => {
-            dispatch("SET_CONFIRMED_TIP", {
-              confirmedTip: {
-                notifyOnGenerateAudio: true,
-              },
-            });
-          },
-        },
-      ],
+    if (disableNotifyOnGenerate) return;
+    showNotify({
+      mediaType: "text",
+      quasarNotify,
+      dispatch,
     });
-    return;
+  } else {
+    showDialog({ mediaType: "text", result, quasarDialog });
   }
-
-  let msg = "";
-  switch (result.result) {
-    case "WRITE_ERROR":
-      msg =
-        "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-      break;
-  }
-
-  quasarDialog({
-    title: "テキストの書き出しに失敗しました。",
-    message: msg,
-    ok: {
-      label: "閉じる",
-      flat: true,
-      textColor: "secondary",
-    },
-  });
 }
+
+// 成功時の通知を表示
+const showNotify = ({
+  mediaType,
+  quasarNotify,
+  dispatch,
+}: {
+  mediaType: MediaType;
+  quasarNotify: QuasarNotify;
+  dispatch: Dispatch<AllActions>;
+}): void => {
+  const mediaTypeNames: Record<MediaType, string> = {
+    audio: "音声",
+    text: "テキスト",
+  };
+
+  quasarNotify({
+    message: `${mediaTypeNames[mediaType]}を書き出しました`,
+    color: "toast",
+    textColor: "toast-display",
+    icon: "info",
+    timeout: 5000,
+    actions: [
+      {
+        label: "今後この通知をしない",
+        textColor: "toast-button-display",
+        handler: () => {
+          dispatch("SET_CONFIRMED_TIP", {
+            confirmedTip: {
+              notifyOnGenerate: true,
+            },
+          });
+        },
+      },
+    ],
+  });
+};
+
+// 書き出し失敗時のダイアログを表示
+const showDialog = ({
+  mediaType,
+  result,
+  quasarDialog,
+}: {
+  mediaType: MediaType;
+  result: SaveResultObject;
+  quasarDialog: QuasarDialog;
+}) => {
+  if (mediaType === "text") {
+    // テキスト書き出し時のエラーを出力
+    quasarDialog({
+      title: "テキストの書き出しに失敗しました。",
+      message:
+        "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。",
+      ok: {
+        label: "閉じる",
+        flat: true,
+        textColor: "secondary",
+      },
+    });
+  } else {
+    const defaultErrorMessages: Partial<Record<SaveResult, string>> = {
+      WRITE_ERROR:
+        "何らかの理由で書き出しに失敗しました。ログを参照してください。",
+      ENGINE_ERROR:
+        "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。",
+    };
+
+    // 音声書き出し時のエラーを出力
+    quasarDialog({
+      title: "書き出しに失敗しました。",
+      message: result.errorMessage ?? defaultErrorMessages[result.result],
+      ok: {
+        label: "閉じる",
+        flat: true,
+        textColor: "secondary",
+      },
+    });
+  }
+};

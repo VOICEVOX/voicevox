@@ -137,7 +137,7 @@ describe("store/vuex.js test", () => {
         confirmedTips: {
           tweakableSliderByScroll: false,
           engineStartedOnAltPort: false,
-          notifyOnGenerateAudio: false,
+          notifyOnGenerate: false,
         },
         progress: -1,
         isVuexReady: false,
@@ -256,6 +256,6 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.splitterPosition, "portraitPaneWidth", 50);
     assert.equal(store.state.confirmedTips.tweakableSliderByScroll, false);
     assert.equal(store.state.confirmedTips.engineStartedOnAltPort, false);
-    assert.equal(store.state.confirmedTips.notifyOnGenerateAudio, false);
+    assert.equal(store.state.confirmedTips.notifyOnGenerate, false);
   });
 });
