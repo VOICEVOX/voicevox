@@ -152,7 +152,6 @@ shellcheck ./build/*.sh
 なお、2023/07/02現在、openapi-generatorの最新版に[パッチ](https://github.com/OpenAPITools/openapi-generator/pull/15943)を当てたものを使わないと更新できない状態になっています。  
 詳細は[こちら](https://github.com/VOICEVOX/voicevox/pull/1361)
 
-
 ```bash
 curl http://127.0.0.1:50021/openapi.json >openapi.json
 
