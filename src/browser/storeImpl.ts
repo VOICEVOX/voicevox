@@ -47,8 +47,14 @@ export const openDB = () =>
 
         // DirectoryHandleも格納する
         db.createObjectStore(directoryHandleStoreKey);
+      } else if (ev.newVersion !== null && ev.newVersion > ev.oldVersion) {
+        // TODO: migrate
+        /* eslint-disable no-console */ // logger みたいなパッケージに切り出して、それに依存する形でもいいかも
+        console.error(
+          `マイグレーション処理が必要です。${ev.oldVersion} => ${ev.newVersion}`
+        );
+        /* eslint-enable no-console */
       }
-      // TODO: migrate
     };
   });
 
