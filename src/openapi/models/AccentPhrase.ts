@@ -13,12 +13,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { Mora } from './Mora';
 import {
-    Mora,
     MoraFromJSON,
     MoraFromJSONTyped,
     MoraToJSON,
-} from './';
+} from './Mora';
 
 /**
  * アクセント句ごとの情報
@@ -43,13 +43,24 @@ export interface AccentPhrase {
      * @type {Mora}
      * @memberof AccentPhrase
      */
-    pauseMora?: Mora | null;
+    pauseMora?: Mora;
     /**
      * 
      * @type {boolean}
      * @memberof AccentPhrase
      */
     isInterrogative?: boolean;
+}
+
+/**
+ * Check if a given object implements the AccentPhrase interface.
+ */
+export function instanceOfAccentPhrase(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "moras" in value;
+    isInstance = isInstance && "accent" in value;
+
+    return isInstance;
 }
 
 export function AccentPhraseFromJSON(json: any): AccentPhrase {

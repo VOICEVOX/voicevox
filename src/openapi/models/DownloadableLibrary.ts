@@ -13,12 +13,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { LibrarySpeaker } from './LibrarySpeaker';
 import {
-    LibrarySpeaker,
     LibrarySpeakerFromJSON,
     LibrarySpeakerFromJSONTyped,
     LibrarySpeakerToJSON,
-} from './';
+} from './LibrarySpeaker';
 
 /**
  * ダウンロード可能な音声ライブラリの情報
@@ -62,6 +62,21 @@ export interface DownloadableLibrary {
      * @memberof DownloadableLibrary
      */
     speakers: Array<LibrarySpeaker>;
+}
+
+/**
+ * Check if a given object implements the DownloadableLibrary interface.
+ */
+export function instanceOfDownloadableLibrary(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "uuid" in value;
+    isInstance = isInstance && "version" in value;
+    isInstance = isInstance && "downloadUrl" in value;
+    isInstance = isInstance && "bytes" in value;
+    isInstance = isInstance && "speakers" in value;
+
+    return isInstance;
 }
 
 export function DownloadableLibraryFromJSON(json: any): DownloadableLibrary {

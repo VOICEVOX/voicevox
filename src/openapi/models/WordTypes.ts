@@ -12,20 +12,22 @@
  * Do not edit the class manually.
  */
 
+
 /**
  * 
-    fastapiでword_type引数を検証する時に使用するクラス
-    
+ *     fastapiでword_type引数を検証する時に使用するクラス
+ *     
  * @export
- * @enum {string}
  */
-export enum WordTypes {
-    ProperNoun = 'PROPER_NOUN',
-    CommonNoun = 'COMMON_NOUN',
-    Verb = 'VERB',
-    Adjective = 'ADJECTIVE',
-    Suffix = 'SUFFIX'
-}
+export const WordTypes = {
+    ProperNoun: 'PROPER_NOUN',
+    CommonNoun: 'COMMON_NOUN',
+    Verb: 'VERB',
+    Adjective: 'ADJECTIVE',
+    Suffix: 'SUFFIX'
+} as const;
+export type WordTypes = typeof WordTypes[keyof typeof WordTypes];
+
 
 export function WordTypesFromJSON(json: any): WordTypes {
     return WordTypesFromJSONTyped(json, false);

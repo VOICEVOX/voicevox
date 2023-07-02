@@ -81,6 +81,25 @@ export interface Preset {
     postPhonemeLength: number;
 }
 
+/**
+ * Check if a given object implements the Preset interface.
+ */
+export function instanceOfPreset(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "id" in value;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "speakerUuid" in value;
+    isInstance = isInstance && "styleId" in value;
+    isInstance = isInstance && "speedScale" in value;
+    isInstance = isInstance && "pitchScale" in value;
+    isInstance = isInstance && "intonationScale" in value;
+    isInstance = isInstance && "volumeScale" in value;
+    isInstance = isInstance && "prePhonemeLength" in value;
+    isInstance = isInstance && "postPhonemeLength" in value;
+
+    return isInstance;
+}
+
 export function PresetFromJSON(json: any): Preset {
     return PresetFromJSONTyped(json, false);
 }

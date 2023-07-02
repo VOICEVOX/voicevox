@@ -13,12 +13,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { LibrarySpeaker } from './LibrarySpeaker';
 import {
-    LibrarySpeaker,
     LibrarySpeakerFromJSON,
     LibrarySpeakerFromJSONTyped,
     LibrarySpeakerToJSON,
-} from './';
+} from './LibrarySpeaker';
 
 /**
  * インストール済み音声ライブラリの情報
@@ -68,6 +68,22 @@ export interface InstalledLibrary {
      * @memberof InstalledLibrary
      */
     uninstallable: boolean;
+}
+
+/**
+ * Check if a given object implements the InstalledLibrary interface.
+ */
+export function instanceOfInstalledLibrary(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "uuid" in value;
+    isInstance = isInstance && "version" in value;
+    isInstance = isInstance && "downloadUrl" in value;
+    isInstance = isInstance && "bytes" in value;
+    isInstance = isInstance && "speakers" in value;
+    isInstance = isInstance && "uninstallable" in value;
+
+    return isInstance;
 }
 
 export function InstalledLibraryFromJSON(json: any): InstalledLibrary {

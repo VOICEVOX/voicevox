@@ -39,6 +39,17 @@ export interface UpdateInfo {
     contributors?: Array<string>;
 }
 
+/**
+ * Check if a given object implements the UpdateInfo interface.
+ */
+export function instanceOfUpdateInfo(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "version" in value;
+    isInstance = isInstance && "descriptions" in value;
+
+    return isInstance;
+}
+
 export function UpdateInfoFromJSON(json: any): UpdateInfo {
     return UpdateInfoFromJSONTyped(json, false);
 }

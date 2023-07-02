@@ -63,6 +63,22 @@ export interface VvlibManifest {
     engineUuid: string;
 }
 
+/**
+ * Check if a given object implements the VvlibManifest interface.
+ */
+export function instanceOfVvlibManifest(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "manifestVersion" in value;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "version" in value;
+    isInstance = isInstance && "uuid" in value;
+    isInstance = isInstance && "brandName" in value;
+    isInstance = isInstance && "engineName" in value;
+    isInstance = isInstance && "engineUuid" in value;
+
+    return isInstance;
+}
+
 export function VvlibManifestFromJSON(json: any): VvlibManifest {
     return VvlibManifestFromJSONTyped(json, false);
 }
