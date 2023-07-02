@@ -1,7 +1,7 @@
 import path from "path";
 import { Platform } from "quasar";
 import { State } from "@/store/type";
-import { ToolbarButtonTagType } from "@/type/preload";
+import { ToolbarButtonTagType, isMac } from "@/type/preload";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
@@ -193,3 +193,8 @@ export const getBaseName = (filePath: string) => {
 
   return basename;
 };
+
+export const isMacCommandOrOtherOSCtrlKeyDown = (event: {
+  metaKey: boolean;
+  ctrlKey: boolean;
+}) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);

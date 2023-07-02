@@ -1,5 +1,7 @@
 import { ref, computed, Ref, Events } from "vue";
 import { QSliderProps, debounce } from "quasar";
+import { isMacCommandOrOtherOSCtrlKeyDown } from "@/store/utility";
+
 export type Props = {
   onPan?: QSliderProps["onPan"];
   onChange?: QSliderProps["onChange"];
@@ -153,8 +155,9 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
       return;
     event.preventDefault();
     const deltaY = event.deltaY;
-    const ctrlKey = event.ctrlKey;
-    const step = ctrlKey ? scrollMinStep.value : scrollStep.value;
+    const step = isMacCommandOrOtherOSCtrlKeyDown(event)
+      ? scrollMinStep.value
+      : scrollStep.value;
     const diff = -step * Math.sign(deltaY);
     const nextValue = Math.min(
       Math.max(currentValue.value + diff, min.value),
