@@ -8,6 +8,7 @@ import {
 } from "@/type/preload";
 
 const dbName = "voicevox-web";
+const electronStoreKey = "electronStore";
 // FIXME: DBのschemaを変更したら、dbVersionを上げる
 // TODO: 気づけるようにしたい
 const dbVersion = 1;
@@ -29,21 +30,12 @@ export const openDB = () =>
         // Initialize
         const db = request.result;
         const baseSchema = electronStoreSchema.parse({});
-        Object.entries(baseSchema).forEach(([key, value]) => {
-          const k = key as keyof typeof baseSchema;
-          if (k !== "engineSettings") {
-            db.createObjectStore(key).add(value, entryKey);
-            return;
-          }
-          // defaultのEngineSettingを追加
-          const defaultVoicevoxEngineId = EngineId(defaultEngine.uuid);
-          db.createObjectStore(key).add(
-            {
-              [defaultVoicevoxEngineId]: engineSettingSchema.parse({}),
-            },
-            entryKey
-          );
-        });
+
+        const defaultVoicevoxEngineId = EngineId(defaultEngine.uuid);
+        baseSchema.engineSettings = {
+          [defaultVoicevoxEngineId]: engineSettingSchema.parse({}),
+        };
+        db.createObjectStore(electronStoreKey).add(baseSchema, entryKey);
 
         // DirectoryHandleも格納する
         db.createObjectStore(directoryHandleStoreKey);
@@ -66,14 +58,23 @@ export const setSettingEntry = async <Key extends keyof ElectronStoreType>(
 
   // TODO: Schemaに合っているか保存時にvalidationしたい
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(key, "readwrite");
-    const store = transaction.objectStore(key);
-    const request = store.put(newValue, entryKey);
-    request.onsuccess = () => {
-      resolve(request.result);
+    const transaction = db.transaction(electronStoreKey, "readwrite");
+    const store = transaction.objectStore(electronStoreKey);
+    const getRequest = store.get(entryKey);
+    getRequest.onsuccess = () => {
+      const baseSchema = electronStoreSchema.parse(getRequest.result);
+      baseSchema[key] = newValue;
+      const validatedSchema = electronStoreSchema.parse(baseSchema);
+      const putRequest = store.put(validatedSchema, entryKey);
+      putRequest.onsuccess = () => {
+        resolve(putRequest.result);
+      };
+      putRequest.onerror = () => {
+        reject(putRequest.error);
+      };
     };
-    request.onerror = () => {
-      reject(request.error);
+    getRequest.onerror = () => {
+      reject(getRequest.error);
     };
   });
 };
@@ -84,11 +85,11 @@ export const getSettingEntry = async <Key extends keyof ElectronStoreType>(
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(key, "readonly");
-    const store = transaction.objectStore(key);
+    const transaction = db.transaction(electronStoreKey, "readonly");
+    const store = transaction.objectStore(electronStoreKey);
     const request = store.get(entryKey);
     request.onsuccess = () => {
-      resolve(request.result);
+      resolve(request.result[key]);
     };
     request.onerror = () => {
       reject(request.error);
