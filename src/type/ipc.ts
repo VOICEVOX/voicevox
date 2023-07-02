@@ -153,7 +153,7 @@ export type IpcIHData = {
   OPEN_CONTEXT_MENU: {
     args: [
       obj: {
-        type: ContextMenuType;
+        menuType: ContextMenuType;
       }
     ];
     return: void;

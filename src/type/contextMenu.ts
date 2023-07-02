@@ -1,23 +1,10 @@
-import { z } from "zod";
-
-export const textEditContextMenuActionSchema = z.enum([
-  "切り取り",
-  "コピー",
-  "貼り付け",
-  "全選択",
-]);
-export type TextEditContextMenuAction = z.infer<
-  typeof textEditContextMenuActionSchema
->;
+export type ContextMenuActionRecord = {
+  TEXT_EDIT: "切り取り" | "コピー" | "貼り付け" | "全選択";
+};
+export type ContextMenuType = keyof ContextMenuActionRecord;
 
 // 新たに追加したい場合はここに & で繋げる
-export type ContextMenuAction = TextEditContextMenuAction;
-
-export const ContextMenuTypeShema = z.object({
-  TEXT_EDIT: textEditContextMenuActionSchema,
-});
-const ContextMenuTypes = ContextMenuTypeShema.keyof();
-export type ContextMenuType = z.infer<typeof ContextMenuTypes>;
+export type ContextMenuAction = ContextMenuActionRecord["TEXT_EDIT"];
 
 // 現在未使用、将来クリック時の動作を変える機能を実装する際に必要になりそうな型
 // FIXME: electronからimportができないため、いくつかの型をunknownとしている

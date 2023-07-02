@@ -471,7 +471,7 @@ export type AudioStoreTypes = {
   };
 
   OPEN_CONTEXT_MENU: {
-    action(payload: { type: ContextMenuType }): void;
+    action(payload: { menuType: ContextMenuType }): void;
   };
 
   CHECK_FILE_EXISTS: {

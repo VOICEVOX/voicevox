@@ -134,8 +134,8 @@ const api: Sandbox = {
     return await ipcRendererInvoke("READ_FILE", { filePath });
   },
 
-  openContextMenu: async ({ type }) => {
-    await ipcRendererInvoke("OPEN_CONTEXT_MENU", { type });
+  openContextMenu: async ({ menuType }) => {
+    await ipcRendererInvoke("OPEN_CONTEXT_MENU", { menuType });
   },
 
   isAvailableGPUMode: () => {

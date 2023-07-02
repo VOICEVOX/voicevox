@@ -735,8 +735,8 @@ ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {
   })?.[0];
 });
 
-ipcMainHandle("OPEN_CONTEXT_MENU", (_, { type }) => {
-  popupContextMenu(type, { window: win });
+ipcMainHandle("OPEN_CONTEXT_MENU", (_, { menuType }) => {
+  popupContextMenu(menuType, { window: win });
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
