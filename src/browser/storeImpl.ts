@@ -37,7 +37,10 @@ export const openDB = () =>
         };
         db.createObjectStore(electronStoreKey).add(baseSchema, entryKey);
 
-        // DirectoryHandleも格納する
+        // NOTE: fixedExportDirectoryを使用してファイルの書き出しをする際、
+        // audio.tsの現在の実装では、ディレクトリを選択するモーダルを表示しないようになっている
+        // ディレクトリへの書き出し権限の要求は、モーダルの表示かディレクトリを指定したファイルの書き出しの時のみで、
+        // directoryHandleがないと権限の要求が出来ないため、directoryHandleを永続化しておく
         db.createObjectStore(directoryHandleStoreKey);
       } else if (ev.newVersion !== null && ev.newVersion > ev.oldVersion) {
         // TODO: migrate
