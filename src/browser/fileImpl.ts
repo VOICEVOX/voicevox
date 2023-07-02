@@ -246,6 +246,10 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
     let directoryHandle = getLatestSelectedDirectoryHandle();
     let path = obj.filePath;
 
+    // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
+    // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
+    // FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、以下の if 文で separator を除去している
+    // また separator 以前の文字列はディレクトリ名として扱われ、それを key として directoryHandleMap からハンドラを取得したり、set している
     if (path.includes(sep)) {
       const maybeDirectoryHandleName = path.split(sep)[0];
       if (directoryHandleMap.has(maybeDirectoryHandleName)) {
