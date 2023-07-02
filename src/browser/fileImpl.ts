@@ -10,7 +10,8 @@ const showWritableDirectoryPicker = async (): Promise<
     .showDirectoryPicker({
       mode: "readwrite",
     })
-    .catch(() => undefined);
+    // キャンセルするとエラーが投げられる
+    .catch(() => undefined); // FIXME: このままだとダイアログ表示エラーと見分けがつかない
 
 const storeDirectoryHandle = async (
   directoryHandle: FileSystemDirectoryHandle
