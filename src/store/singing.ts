@@ -625,7 +625,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   UPDATE_NOTE: {
     mutation(state, { note, index }: { note: Note; index: number }) {
       if (state.score) {
-        state.score.notes.splice(index, 0, note);
+        const notes = [...state.score.notes];
+        notes.splice(index, 1, note);
+        state.score.notes = notes;
       }
     },
     async action({ state, commit, dispatch }, { note }) {
@@ -642,17 +644,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       if (index !== -1) {
         commit("UPDATE_NOTE", { note, index });
+        dispatch("RENDER");
+      } else {
+        throw new Error("The note is not found.");
       }
-
-      dispatch("RENDER");
     },
   },
 
   REMOVE_NOTE: {
     mutation(state, { id }: { id: string }) {
       if (state.score) {
-        state.score.notes = state.score.notes.filter((note) => note.id !== id);
-        state.selectedNoteIds = state.selectedNoteIds.filter(
+        state.score.notes = [...state.score.notes].filter(
+          (note) => note.id !== id
+        );
+        state.selectedNoteIds = [...state.selectedNoteIds].filter(
           (selectedId) => selectedId !== id
         );
       }
@@ -663,7 +668,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       commit("REMOVE_NOTE", { id });
-
       dispatch("RENDER");
     },
   },
@@ -715,7 +719,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REMOVE_SELECTED_NOTES: {
     mutation(state) {
       if (state.score) {
-        state.score.notes = state.score.notes.filter(
+        state.score.notes = [...state.score.notes].filter(
           (note) => !state.selectedNoteIds.includes(note.id)
         );
       }
