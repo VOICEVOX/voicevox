@@ -11,7 +11,7 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "types": ["vitest/globals", "@types/wicg-file-system-access"],
+    "types": ["vitest/globals"],
     "paths": {
       "@/*": ["src/*"]
     },
