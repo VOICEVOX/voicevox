@@ -426,12 +426,13 @@ watch(
           if (version.startsWith('"') && version.endsWith('"')) {
             return version.slice(1, -1);
           }
+          return version;
         })
         .catch(() => null);
       if (!version) continue;
       engineVersions.value = {
         ...engineVersions.value,
-        [id]: JSON.parse(version),
+        [id]: version,
       };
     }
   },
