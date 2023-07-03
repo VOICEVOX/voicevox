@@ -30,20 +30,7 @@ const storeDirectoryHandle = async (
   });
 };
 
-const lastSelectedDirectoryHandleSymbol = Symbol("lastSelectedDirectoryHandle");
-const directoryHandleMap: Map<
-  string | typeof lastSelectedDirectoryHandleSymbol,
-  FileSystemDirectoryHandle
-> = new Map();
-
-const updateLatestSelectedDirectoryHandle = (
-  handle: FileSystemDirectoryHandle
-) => {
-  directoryHandleMap.set(lastSelectedDirectoryHandleSymbol, handle);
-};
-
-const getLatestSelectedDirectoryHandle = () =>
-  directoryHandleMap.get(lastSelectedDirectoryHandleSymbol);
+const directoryHandleMap: Map<string, FileSystemDirectoryHandle> = new Map();
 
 type AcceptFileType = {
   description: string;
@@ -85,19 +72,6 @@ const requestSaveFileNameWithDirectoryPermission = async ({
   suggestedName?: string;
   fileType: AcceptFileType;
 }) => {
-  if (directoryHandleMap.get(lastSelectedDirectoryHandleSymbol) === undefined) {
-    // Wave File以外のものを同一ディレクトリに保存したり、名前を変えて保存するためにDirectoryのPickerを使用している
-    // FIXME: 途中でディレクトリを変えたいとかには対応できない…
-    const _directoryHandler = await showWritableDirectoryPicker();
-    if (_directoryHandler === undefined) {
-      return undefined;
-    }
-
-    await storeDirectoryHandle(_directoryHandler);
-
-    updateLatestSelectedDirectoryHandle(_directoryHandler);
-  }
-
   const fileHandle = await showWritableFilePicker({
     suggestedName,
     fileType,
@@ -115,19 +89,6 @@ const requestLoadFileNameWithDirectoryPermission = async ({
 }: {
   fileType: AcceptFileType;
 }) => {
-  if (directoryHandleMap.get(lastSelectedDirectoryHandleSymbol) === undefined) {
-    // Wave File以外のものを同一ディレクトリに保存したり、名前を変えて保存するためにDirectoryのPickerを使用している
-    // FIXME: 途中でディレクトリを変えたいとかには対応できない…
-    const _directoryHandler = await showWritableDirectoryPicker();
-    if (_directoryHandler === undefined) {
-      return undefined;
-    }
-
-    await storeDirectoryHandle(_directoryHandler);
-
-    updateLatestSelectedDirectoryHandle(_directoryHandler);
-  }
-
   const fileHandle = await showLoadableFilePicker({
     fileType,
   });
@@ -211,10 +172,6 @@ export const showImportFileDialogImpl: typeof window[typeof SandboxKey]["showImp
     }).then((v) => v?.[0]);
   };
 
-const isRootPathButDirectoryNotSelected = (path: string) =>
-  directoryHandleMap.get(lastSelectedDirectoryHandleSymbol) === undefined &&
-  path.indexOf(sep) === -1;
-
 const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
   const db = await openDB();
   return new Promise<FileSystemDirectoryHandle | undefined>(
@@ -237,21 +194,20 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
 
 export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
   async (obj: { filePath: string; buffer: ArrayBuffer }) => {
-    if (isRootPathButDirectoryNotSelected(obj.filePath)) {
-      return Promise.resolve({
-        code: undefined,
-        message: "フォルダへのアクセス許可がありません",
-      });
-    }
-
-    let directoryHandle = getLatestSelectedDirectoryHandle();
+    let directoryHandle: FileSystemDirectoryHandle | undefined = undefined;
     let path = obj.filePath;
 
-    // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
-    // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
-    // FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、以下の if 文で separator を除去している
-    // また separator 以前の文字列はディレクトリ名として扱われ、それを key として directoryHandleMap からハンドラを取得したり、set している
-    if (path.includes(sep)) {
+    if (path.indexOf(sep) === -1) {
+      return Promise.resolve({
+        code: undefined,
+        message:
+          "フォルダへのアクセス許可がありません、ブラウザ版ではファイル単体の書き出しをサポートしていません",
+      });
+    } else {
+      // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
+      // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
+      // FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、以下の if 文で separator を除去している
+      // また separator 以前の文字列はディレクトリ名として扱われ、それを key として directoryHandleMap からハンドラを取得したり、set している
       const maybeDirectoryHandleName = path.split(sep)[0];
       if (directoryHandleMap.has(maybeDirectoryHandleName)) {
         path = path.slice(maybeDirectoryHandleName.length + sep.length);
@@ -289,7 +245,8 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
     if (directoryHandle === undefined) {
       return Promise.resolve({
         code: undefined,
-        message: "フォルダへのアクセス許可がありません",
+        message:
+          "フォルダへのアクセス許可がありません、ブラウザ版ではファイル単体の書き出しをサポートしていません",
       });
     }
 
@@ -311,14 +268,16 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
 
 export const readFileImpl: typeof window[typeof SandboxKey]["readFile"] =
   async (obj: { filePath: string }) => {
-    if (isRootPathButDirectoryNotSelected(obj.filePath)) {
-      return Promise.reject(new Error("フォルダへのアクセス許可がありません"));
-    }
-
-    let directoryHandle = getLatestSelectedDirectoryHandle();
+    let directoryHandle: FileSystemDirectoryHandle | undefined = undefined;
     let path = obj.filePath;
 
-    if (path.includes(sep)) {
+    if (path.indexOf(sep) === -1) {
+      return Promise.reject(
+        new Error(
+          "フォルダへのアクセス許可がありません、ブラウザ版ではファイル単体の読み込みをサポートしていません"
+        )
+      );
+    } else {
       const maybeDirectoryHandleName = path.split(sep)[0];
       if (directoryHandleMap.has(maybeDirectoryHandleName)) {
         path = path.slice(maybeDirectoryHandleName.length + sep.length);
@@ -365,15 +324,13 @@ export const readFileImpl: typeof window[typeof SandboxKey]["readFile"] =
 
 export const checkFileExistsImpl: typeof window[typeof SandboxKey]["checkFileExists"] =
   async (file) => {
-    if (isRootPathButDirectoryNotSelected(file)) {
-      // FIXME: trueだとloopするはず
-      return Promise.resolve(false);
-    }
-
-    let directoryHandle = getLatestSelectedDirectoryHandle();
+    let directoryHandle: FileSystemDirectoryHandle | undefined = undefined;
     let path = file;
 
-    if (path.includes(sep)) {
+    if (path.indexOf(sep) === -1) {
+      // FIXME: trueだとloopするはず
+      return Promise.resolve(false);
+    } else {
       const maybeDirectoryHandleName = path.split(sep)[0];
       if (directoryHandleMap.has(maybeDirectoryHandleName)) {
         path = path.slice(maybeDirectoryHandleName.length + sep.length);
