@@ -3,16 +3,6 @@ import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./storeImpl";
 import { SandboxKey, WriteFileErrorResult } from "@/type/preload";
 
-const showWritableDirectoryPicker = async (): Promise<
-  FileSystemDirectoryHandle | undefined
-> =>
-  window
-    .showDirectoryPicker({
-      mode: "readwrite",
-    })
-    // キャンセルするとエラーが投げられる
-    .catch(() => undefined); // FIXME: このままだとダイアログ表示エラーと見分けがつかない
-
 const storeDirectoryHandle = async (
   directoryHandle: FileSystemDirectoryHandle
 ): Promise<void> => {
@@ -30,12 +20,42 @@ const storeDirectoryHandle = async (
   });
 };
 
+const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
+  const db = await openDB();
+  return new Promise<FileSystemDirectoryHandle | undefined>(
+    (resolve, reject) => {
+      const transaction = db.transaction(directoryHandleStoreKey, "readonly");
+      const store = transaction.objectStore(directoryHandleStoreKey);
+      const request = store.get(maybeDirectoryHandleName);
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        reject(request.error);
+      };
+    }
+  ).catch(() => {
+    // FIXME: 握り潰してる
+    return undefined;
+  });
+};
+
 const directoryHandleMap: Map<string, FileSystemDirectoryHandle> = new Map();
 
 type AcceptFileType = {
   description: string;
   accept: Record<string /** MIME Type */, string[] /** extension */>;
 };
+
+const showWritableDirectoryPicker = async (): Promise<
+  FileSystemDirectoryHandle | undefined
+> =>
+  window
+    .showDirectoryPicker({
+      mode: "readwrite",
+    })
+    // キャンセルするとエラーが投げられる
+    .catch(() => undefined); // FIXME: このままだとダイアログ表示エラーと見分けがつかない
 
 const showWritableFilePicker = async ({
   suggestedName,
@@ -171,26 +191,6 @@ export const showImportFileDialogImpl: typeof window[typeof SandboxKey]["showImp
       },
     }).then((v) => v?.[0]);
   };
-
-const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
-  const db = await openDB();
-  return new Promise<FileSystemDirectoryHandle | undefined>(
-    (resolve, reject) => {
-      const transaction = db.transaction(directoryHandleStoreKey, "readonly");
-      const store = transaction.objectStore(directoryHandleStoreKey);
-      const request = store.get(maybeDirectoryHandleName);
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-      request.onerror = () => {
-        reject(request.error);
-      };
-    }
-  ).catch(() => {
-    // FIXME: 握り潰してる
-    return undefined;
-  });
-};
 
 export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
   async (obj: { filePath: string; buffer: ArrayBuffer }) => {
