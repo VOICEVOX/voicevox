@@ -37,7 +37,6 @@
       @focus="setActiveAudioKey()"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
-      @mouseup.right="onRightClickTextField"
       :aria-label="`${textLineNumberIndex}行目`"
     >
       <template v-slot:error>
@@ -55,6 +54,7 @@
           :aria-label="`${textLineNumberIndex}行目を削除`"
         />
       </template>
+      <context-menu :menudata="contextMenudata" />
     </q-input>
   </div>
 </template>
@@ -62,7 +62,8 @@
 <script setup lang="ts">
 import { computed, watch, ref } from "vue";
 import { QInput } from "quasar";
-import CharacterButton from "./CharacterButton.vue";
+import CharacterButton from "@/components/CharacterButton.vue";
+import ContextMenu, { ContextMenuItemData } from "@/components/ContextMenu.vue";
 import { useStore } from "@/store";
 import { AudioKey, Voice } from "@/type/preload";
 
@@ -258,9 +259,42 @@ const deleteButtonEnable = computed(() => {
 });
 
 // テキスト編集エリアの右クリック
-const onRightClickTextField = () => {
-  store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU");
-};
+const contextMenudata = ref<ContextMenuItemData[]>([
+  {
+    type: "button",
+    label: "切り取り",
+    onClick: () => {
+      throw new Error("切り取りは未実装です");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "コピー",
+    onClick: () => {
+      throw new Error("コピーは未実装です");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "貼り付け",
+    onClick: () => {
+      throw new Error("貼り付けは未実装です");
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "全選択",
+    onClick: () => {
+      throw new Error("全選択は未実装です");
+    },
+    disableWhenUiLocked: true,
+  },
+]);
+// TODO: store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU"); 不使用となったのでそれ関連を削除
 
 const blurCell = (event?: KeyboardEvent) => {
   if (event?.isComposing) {
