@@ -8,7 +8,7 @@ import {
 } from "@/type/preload";
 
 const dbName = "voicevox-web";
-const electronStoreKey = "electronStore";
+const settingStoreKey = "electronStore";
 // FIXME: DBのschemaを変更したら、dbVersionを上げる
 // TODO: 気づけるようにしたい
 const dbVersion = 1;
@@ -35,7 +35,7 @@ export const openDB = () =>
         baseSchema.engineSettings = {
           [defaultVoicevoxEngineId]: engineSettingSchema.parse({}),
         };
-        db.createObjectStore(electronStoreKey).add(baseSchema, entryKey);
+        db.createObjectStore(settingStoreKey).add(baseSchema, entryKey);
 
         // NOTE: fixedExportDirectoryを使用してファイルの書き出しをする際、
         // audio.tsの現在の実装では、ディレクトリを選択するモーダルを表示しないようになっている
@@ -61,8 +61,8 @@ export const setSettingEntry = async <Key extends keyof ElectronStoreType>(
 
   // TODO: Schemaに合っているか保存時にvalidationしたい
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(electronStoreKey, "readwrite");
-    const store = transaction.objectStore(electronStoreKey);
+    const transaction = db.transaction(settingStoreKey, "readwrite");
+    const store = transaction.objectStore(settingStoreKey);
     const getRequest = store.get(entryKey);
     getRequest.onsuccess = () => {
       const baseSchema = electronStoreSchema.parse(getRequest.result);
@@ -88,8 +88,8 @@ export const getSettingEntry = async <Key extends keyof ElectronStoreType>(
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(electronStoreKey, "readonly");
-    const store = transaction.objectStore(electronStoreKey);
+    const transaction = db.transaction(settingStoreKey, "readonly");
+    const store = transaction.objectStore(settingStoreKey);
     const request = store.get(entryKey);
     request.onsuccess = () => {
       resolve(request.result[key]);
