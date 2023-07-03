@@ -194,7 +194,13 @@ export const getBaseName = (filePath: string) => {
   return basename;
 };
 
-export const isMacCommandOrOtherOSCtrlKeyDown = (event: {
+/**
+ * Macでの`command`キー、またはその他OSでの`Ctrl`キーが押されているなら`true`を返します。
+ */
+// ctrlKey = windowsのCtrl = macのControl
+// metaKey = windowsのWin = macのCommand
+// altKey = windowsのAlt = macのOption(問題なし)
+export const isOnCommandOrCtrlKeyDown = (event: {
   metaKey: boolean;
   ctrlKey: boolean;
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
