@@ -34,10 +34,7 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
         reject(request.error);
       };
     }
-  ).catch(() => {
-    // FIXME: 握り潰してる
-    return undefined;
-  });
+  );
 };
 
 const directoryHandleMap: Map<string, FileSystemDirectoryHandle> = new Map();
