@@ -1,6 +1,6 @@
 <template>
   <q-menu touch-position context-menu>
-    <q-list>
+    <q-list dense>
       <menu-item
         v-for="(menu, index) of menudata"
         :key="index"
