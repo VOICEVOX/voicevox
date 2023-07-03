@@ -189,10 +189,51 @@ export const showImportFileDialogImpl: typeof window[typeof SandboxKey]["showImp
     }).then((v) => v?.[0]);
   };
 
+// separator 以前の文字列はディレクトリ名として扱う
+const resolveDirectoryName = (path: string) => path.split(sep)[0];
+
+// FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、ファイル名のみを抽出している
+const resolveFileName = (path: string) => {
+  const maybeDirectoryHandleName = resolveDirectoryName(path);
+  return path.slice(maybeDirectoryHandleName.length + sep.length);
+};
+
+// FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、以下の if 文で separator を除去している
+// また separator 以前の文字列はディレクトリ名として扱われ、それを key として directoryHandleMap からハンドラを取得したり、set している
+const getDirectoryHandleFromDirectoryPath = async (
+  maybeDirectoryPathKey: string
+): Promise<FileSystemDirectoryHandle> => {
+  const maybeHandle = directoryHandleMap.get(maybeDirectoryPathKey);
+
+  if (maybeHandle !== undefined) {
+    return maybeHandle;
+  } else {
+    // NOTE: fixedDirectoryの場合こっちに落ちる場合がある
+    const maybeFixedDirectory = await fetchStoredDirectoryHandle(
+      maybeDirectoryPathKey
+    );
+
+    if (maybeFixedDirectory === undefined) {
+      throw new Error(
+        `フォルダへのアクセス許可がありません。アクセスしようとしたフォルダ名: ${maybeDirectoryPathKey}`
+      );
+    }
+
+    if (!(await maybeFixedDirectory.requestPermission({ mode: "readwrite" }))) {
+      throw new Error(
+        "フォルダへのアクセス許可がありません。ファイルの読み書きのためにアクセス許可が必要です。"
+      );
+    }
+
+    return maybeFixedDirectory;
+  }
+};
+
+// NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
+// また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
 export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
   async (obj: { filePath: string; buffer: ArrayBuffer }) => {
-    let directoryHandle: FileSystemDirectoryHandle | undefined = undefined;
-    let path = obj.filePath;
+    const path = obj.filePath;
 
     if (path.indexOf(sep) === -1) {
       return Promise.resolve({
@@ -200,55 +241,19 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
         message:
           "フォルダへのアクセス許可がありません、ブラウザ版ではファイル単体の書き出しをサポートしていません",
       });
-    } else {
-      // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
-      // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
-      // FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、以下の if 文で separator を除去している
-      // また separator 以前の文字列はディレクトリ名として扱われ、それを key として directoryHandleMap からハンドラを取得したり、set している
-      const maybeDirectoryHandleName = path.split(sep)[0];
-      if (directoryHandleMap.has(maybeDirectoryHandleName)) {
-        path = path.slice(maybeDirectoryHandleName.length + sep.length);
-        directoryHandle = directoryHandleMap.get(maybeDirectoryHandleName);
-      } else {
-        // NOTE: fixedDirectoryの場合こっちに落ちる場合がある
-        const maybeFixedDirectory = await fetchStoredDirectoryHandle(
-          maybeDirectoryHandleName
-        );
-
-        if (maybeFixedDirectory === undefined) {
-          return Promise.resolve({
-            code: undefined,
-            message: `フォルダへのアクセス許可がありません。アクセスしようとしたフォルダ名: ${maybeDirectoryHandleName}`,
-          });
-        }
-
-        if (
-          !(await maybeFixedDirectory.requestPermission({ mode: "readwrite" }))
-        ) {
-          return Promise.resolve({
-            code: undefined,
-            message:
-              "フォルダへのアクセス許可がありません。ファイルの書き込みのために書き込み許可が必要です。",
-          });
-        }
-
-        directoryHandleMap.set(maybeDirectoryHandleName, maybeFixedDirectory);
-
-        path = path.slice(maybeDirectoryHandleName.length + sep.length);
-        directoryHandle = maybeFixedDirectory;
-      }
     }
 
-    if (directoryHandle === undefined) {
-      return Promise.resolve({
-        code: undefined,
-        message:
-          "フォルダへのアクセス許可がありません、ブラウザ版ではファイル単体の書き出しをサポートしていません",
-      });
-    }
+    const fileName = resolveFileName(path);
+    const maybeDirectoryHandleName = resolveDirectoryName(path);
+
+    const directoryHandle = await getDirectoryHandleFromDirectoryPath(
+      maybeDirectoryHandleName
+    );
+
+    directoryHandleMap.set(maybeDirectoryHandleName, directoryHandle);
 
     return directoryHandle
-      .getFileHandle(path, { create: true })
+      .getFileHandle(fileName, { create: true })
       .then(async (fileHandle) => {
         const writable = await fileHandle.createWritable();
         await writable.write(obj.buffer);
@@ -265,44 +270,22 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
 
 export const checkFileExistsImpl: typeof window[typeof SandboxKey]["checkFileExists"] =
   async (file) => {
-    let directoryHandle: FileSystemDirectoryHandle | undefined = undefined;
-    let path = file;
+    const path = file;
 
     if (path.indexOf(sep) === -1) {
-      // FIXME: trueだとloopするはず
-      return Promise.resolve(false);
-    } else {
-      const maybeDirectoryHandleName = path.split(sep)[0];
-      if (directoryHandleMap.has(maybeDirectoryHandleName)) {
-        path = path.slice(maybeDirectoryHandleName.length + sep.length);
-        directoryHandle = directoryHandleMap.get(maybeDirectoryHandleName);
-      } else {
-        // NOTE: fixedDirectoryの場合こっちに落ちる場合がある
-        const maybeFixedDirectory = await fetchStoredDirectoryHandle(
-          maybeDirectoryHandleName
-        );
-
-        if (maybeFixedDirectory === undefined) {
-          return Promise.resolve(false);
-        }
-
-        if (
-          !(await maybeFixedDirectory.requestPermission({ mode: "readwrite" }))
-        ) {
-          return Promise.resolve(false);
-        }
-
-        directoryHandleMap.set(maybeDirectoryHandleName, maybeFixedDirectory);
-
-        path = path.slice(maybeDirectoryHandleName.length + sep.length);
-        directoryHandle = maybeFixedDirectory;
-      }
+      throw new Error(
+        "ブラウザ版ではフォルダを固定しないファイルへのアクセスをサポートしていません"
+      );
     }
 
-    if (directoryHandle === undefined) {
-      // FIXME: trueだとloopするはず
-      return Promise.resolve(false);
-    }
+    const fileName = resolveFileName(path);
+    const maybeDirectoryHandleName = resolveDirectoryName(path);
+
+    const directoryHandle = await getDirectoryHandleFromDirectoryPath(
+      maybeDirectoryHandleName
+    );
+
+    directoryHandleMap.set(maybeDirectoryHandleName, directoryHandle);
 
     const fileEntries = [];
     for await (const [
@@ -314,5 +297,5 @@ export const checkFileExistsImpl: typeof window[typeof SandboxKey]["checkFileExi
       }
     }
 
-    return Promise.resolve(fileEntries.includes(path));
+    return Promise.resolve(fileEntries.includes(fileName));
   };
