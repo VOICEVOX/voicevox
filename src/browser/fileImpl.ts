@@ -266,62 +266,6 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
       });
   };
 
-export const readFileImpl: typeof window[typeof SandboxKey]["readFile"] =
-  async (obj: { filePath: string }) => {
-    let directoryHandle: FileSystemDirectoryHandle | undefined = undefined;
-    let path = obj.filePath;
-
-    if (path.indexOf(sep) === -1) {
-      return Promise.reject(
-        new Error(
-          "フォルダへのアクセス許可がありません、ブラウザ版ではファイル単体の読み込みをサポートしていません"
-        )
-      );
-    } else {
-      const maybeDirectoryHandleName = path.split(sep)[0];
-      if (directoryHandleMap.has(maybeDirectoryHandleName)) {
-        path = path.slice(maybeDirectoryHandleName.length + sep.length);
-        directoryHandle = directoryHandleMap.get(maybeDirectoryHandleName);
-      } else {
-        const maybeFixedDirectory = await fetchStoredDirectoryHandle(
-          maybeDirectoryHandleName
-        );
-
-        if (maybeFixedDirectory === undefined) {
-          return Promise.reject(
-            new Error(
-              `フォルダへのアクセス許可がありません。アクセスしようとしたフォルダ名: ${maybeDirectoryHandleName}`
-            )
-          );
-        }
-
-        if (
-          !(await maybeFixedDirectory.requestPermission({ mode: "readwrite" }))
-        ) {
-          return Promise.reject(
-            new Error(
-              "フォルダへのアクセス許可がありません。ファイルの読み書きのために許可が必要です。"
-            )
-          );
-        }
-
-        directoryHandleMap.set(maybeDirectoryHandleName, maybeFixedDirectory);
-
-        path = path.slice(maybeDirectoryHandleName.length + sep.length);
-        directoryHandle = maybeFixedDirectory;
-      }
-    }
-
-    if (directoryHandle === undefined) {
-      return Promise.reject(new Error("フォルダへのアクセス許可がありません"));
-    }
-
-    return directoryHandle.getFileHandle(path).then(async (fileHandle) => {
-      const file = await fileHandle.getFile();
-      return file.arrayBuffer();
-    });
-  };
-
 export const checkFileExistsImpl: typeof window[typeof SandboxKey]["checkFileExists"] =
   async (file) => {
     let directoryHandle: FileSystemDirectoryHandle | undefined = undefined;

@@ -1,7 +1,6 @@
 import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
-  readFileImpl,
   showAudioSaveDialogImpl,
   showImportFileDialogImpl,
   showOpenDirectoryDialogImpl,
@@ -132,8 +131,10 @@ export const api: Sandbox = {
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
     return writeFileImpl(obj);
   },
-  readFile(obj: { filePath: string }) {
-    return readFileImpl(obj);
+  readFile(/* obj: { filePath: string } */) {
+    throw new Error(
+      "ブラウザ版では現在ファイルの読み込みをサポートしていません"
+    );
   },
   openTextEditContextMenu() {
     // NOTE: ブラウザ版では不要
