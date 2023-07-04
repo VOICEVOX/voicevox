@@ -236,11 +236,15 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
     const path = obj.filePath;
 
     if (path.indexOf(sep) === -1) {
-      return Promise.resolve({
-        code: undefined,
-        message:
-          "フォルダへのアクセス許可がありません、ブラウザ版ではファイル単体の書き出しをサポートしていません",
-      });
+      const aTag = document.createElement("a");
+      const blob = URL.createObjectURL(new Blob([obj.buffer]));
+      aTag.href = blob;
+      aTag.download = path;
+      document.body.appendChild(aTag);
+      aTag.click();
+      document.body.removeChild(aTag);
+      URL.revokeObjectURL(blob);
+      return;
     }
 
     const fileName = resolveFileName(path);
@@ -273,9 +277,7 @@ export const checkFileExistsImpl: typeof window[typeof SandboxKey]["checkFileExi
     const path = file;
 
     if (path.indexOf(sep) === -1) {
-      throw new Error(
-        "ブラウザ版ではフォルダを固定しないファイルへのアクセスをサポートしていません"
-      );
+      return Promise.resolve(false);
     }
 
     const fileName = resolveFileName(path);
