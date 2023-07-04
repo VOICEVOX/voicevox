@@ -8,10 +8,10 @@
     <menu-button
       v-for="(root, index) of menudata"
       :key="index"
-      :menudata="root"
       v-model:selected="subMenuOpenFlags[index]"
+      :menudata="root"
       :disable="menubarLocked"
-      @mouseover="reassignSubMenuOpen(index)"
+      @mouse-over="reassignSubMenuOpen(index)"
       @mouseleave="
         root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
       "

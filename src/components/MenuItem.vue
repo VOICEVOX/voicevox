@@ -1,22 +1,22 @@
 <template>
-  <q-separator class="bg-surface" v-if="menudata.type === 'separator'" />
+  <q-separator v-if="menudata.type === 'separator'" class="bg-surface" />
   <q-item
-    class="bg-background"
     v-else-if="menudata.type === 'root'"
+    class="bg-background"
     clickable
     dense
     :disable="menudata.disabled"
     :class="selected && 'active-menu'"
     @click="menudata.onClick"
   >
-    <q-item-section side class="q-py-2" v-if="menudata.icon">
+    <q-item-section v-if="menudata.icon" side class="q-py-2">
       <img :src="menudata.icon" class="engine-icon" />
     </q-item-section>
 
     <q-item-section>{{ menudata.label }}</q-item-section>
     <q-item-section
-      side
       v-if="menudata.label != undefined && getMenuBarHotkey(menudata.label)"
+      side
     >
       {{ getMenuBarHotkey(menudata.label) }}
     </q-item-section>
@@ -26,34 +26,34 @@
     </q-item-section>
 
     <q-menu
+      v-model="selectedComputed"
       anchor="top end"
       transition-show="none"
       transition-hide="none"
-      v-model="selectedComputed"
       :target="!uiLocked"
     >
       <menu-item
         v-for="(menu, i) of menudata.subMenu"
         :key="i"
-        :menudata="menu"
         v-model:selected="subMenuOpenFlags[i]"
-        @mouseover="reassignSubMenuOpen(i)"
+        :menudata="menu"
+        @mouse-over="reassignSubMenuOpen(i)"
       />
     </q-menu>
   </q-item>
   <q-item
     v-else
-    dense
-    clickable
     v-ripple
     v-close-popup
+    dense
+    clickable
     class="bg-background"
     :disable="menudata.disabled"
     @click="menudata.onClick"
   >
     <q-item-section
-      avatar
       v-if="'icon' in menudata && menudata.icon != undefined"
+      avatar
     >
       <q-avatar>
         <img :src="menudata.icon" />
@@ -62,8 +62,8 @@
 
     <q-item-section>{{ menudata.label }}</q-item-section>
     <q-item-section
-      side
       v-if="menudata.label != undefined && getMenuBarHotkey(menudata.label)"
+      side
     >
       {{ getMenuBarHotkey(menudata.label) }}
     </q-item-section>

@@ -13,7 +13,7 @@
         >
           <!-- エンジンが一つだけの場合は名前を表示しない -->
           <template v-if="engineInfos.size > 1">
-            <q-separator spaced v-if="engineIndex > 0" />
+            <q-separator v-if="engineIndex > 0" spaced />
             <q-item-label header>{{
               mapUndefinedPipe(engineInfos.get(engineId), (v) => v.name)
             }}</q-item-label>
@@ -61,23 +61,8 @@
             )
           }}
         </div>
-        <div
-          class="markdown"
-          v-html="
-            convertMarkdown(
-              undefinedToDefault(
-                '',
-                mapUndefinedPipe(
-                  engineInfos.get(selectedInfo.engine),
-                  (v) => v.characterInfos,
-                  (v) =>
-                    mapUndefinedPipe(selectedInfo, (i) => v.get(i.character)),
-                  (v) => v.metas.policy
-                )
-              )
-            )
-          "
-        ></div>
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <div class="markdown" v-html="policy"></div>
       </div>
     </div>
   </q-page>
@@ -118,9 +103,20 @@ const engineInfos = computed(
     )
 );
 
-const convertMarkdown = (text: string) => {
-  return md.render(text);
-};
+const policy = computed<string>(() =>
+  md.render(
+    undefinedToDefault(
+      "",
+      mapUndefinedPipe(
+        selectedInfo.value,
+        (v) => engineInfos.value.get(v.engine),
+        (v) => v.characterInfos,
+        (v) => mapUndefinedPipe(selectedInfo.value, (i) => v.get(i.character)),
+        (v) => v.metas.policy
+      )
+    )
+  )
+);
 
 const selectedInfo = ref<DetailKey | undefined>(undefined);
 

@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="settingDialogOpenedComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="setting-dialog transparent-backdrop"
-    v-model="settingDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container class="root">
@@ -33,10 +33,10 @@
                 <template v-if="engineIds.length > 1">
                   <q-space />
                   <q-select
+                    v-model="selectedEngineId"
                     borderless
                     dense
                     name="engine"
-                    v-model="selectedEngineId"
                     :options="engineIds"
                     :option-label="renderEngineNameLabel"
                   />
@@ -60,9 +60,9 @@
                 </div>
                 <q-space />
                 <q-btn-toggle
+                  v-model="engineUseGpu"
                   padding="xs md"
                   unelevated
-                  v-model="engineUseGpu"
                   color="background"
                   text-color="display"
                   toggle-color="primary"
@@ -100,9 +100,9 @@
                 </div>
                 <q-space />
                 <q-select
+                  v-model="outputSamplingRate"
                   borderless
                   name="samplingRate"
-                  v-model="outputSamplingRate"
                   :options="samplingRateOptions"
                   :option-label="renderSamplingRateLabel"
                 >
@@ -205,7 +205,6 @@
                   padding="xs md"
                   unelevated
                   :model-value="splitTextWhenPaste"
-                  @update:model-value="changeSplitTextWhenPaste($event)"
                   color="background"
                   text-color="display"
                   toggle-color="primary"
@@ -223,8 +222,9 @@
                     },
                     { label: 'オフ', value: 'OFF', slot: 'splitTextOFF' },
                   ]"
+                  @update:model-value="changeSplitTextWhenPaste($event)"
                 >
-                  <template v-slot:splitTextPeriodAndNewLine>
+                  <template #splitTextPeriodAndNewLine>
                     <q-tooltip
                       :delay="500"
                       anchor="center right"
@@ -235,7 +235,7 @@
                       句点と改行を基にテキストを分割します。
                     </q-tooltip>
                   </template>
-                  <template v-slot:splitTextNewLine>
+                  <template #splitTextNewLine>
                     <q-tooltip
                       :delay="500"
                       anchor="center right"
@@ -246,7 +246,7 @@
                       改行のみを基にテキストを分割します。
                     </q-tooltip>
                   </template>
-                  <template v-slot:splitTextOFF>
+                  <template #splitTextOFF>
                     <q-tooltip
                       :delay="500"
                       anchor="center right"
@@ -277,11 +277,11 @@
                 <q-space />
                 <!-- ボタンクリックのフィードバックのためのチェックマーク -->
                 <q-icon
+                  v-if="isDefaultConfirmedTips && hasResetConfirmedTips"
                   name="check"
                   size="sm"
                   color="primary-light"
                   style="margin-right: 8px"
-                  v-if="isDefaultConfirmedTips && hasResetConfirmedTips"
                 >
                 </q-icon>
                 <q-btn
@@ -290,13 +290,13 @@
                   color="background"
                   text-color="display"
                   class="text-no-wrap q-mr-sm"
+                  :disable="isDefaultConfirmedTips"
                   @click="
                     () => {
                       store.dispatch('RESET_CONFIRMED_TIPS');
                       hasResetConfirmedTips = true;
                     }
                   "
-                  :disable="isDefaultConfirmedTips"
                 >
                 </q-btn>
               </q-card-actions>
@@ -326,9 +326,6 @@
                   padding="xs md"
                   unelevated
                   :model-value="savingSetting.fileEncoding"
-                  @update:model-value="
-                    handleSavingSettingChange('fileEncoding', $event)
-                  "
                   color="background"
                   text-color="display"
                   toggle-color="primary"
@@ -337,6 +334,9 @@
                     { label: 'UTF-8', value: 'UTF-8' },
                     { label: 'Shift_JIS', value: 'Shift_JIS' },
                   ]"
+                  @update:model-value="
+                    handleSavingSettingChange('fileEncoding', $event)
+                  "
                 />
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
@@ -356,8 +356,8 @@
                 </div>
                 <q-space />
                 <q-input
-                  dense
                   v-if="savingSetting.fixedExportEnabled"
+                  dense
                   maxheight="10px"
                   label="書き出し先のフォルダ"
                   hide-bottom-space
@@ -375,7 +375,7 @@
                     }
                   "
                 >
-                  <template v-slot:append>
+                  <template #append>
                     <q-btn
                       square
                       dense
@@ -526,13 +526,13 @@
                 </q-icon>
                 <q-space />
                 <q-btn-toggle
+                  v-model="currentThemeNameComputed"
                   unelevated
                   padding="xs md"
                   color="background"
                   text-color="display"
                   toggle-color="primary"
                   toggle-text-color="display-on-primary"
-                  v-model="currentThemeNameComputed"
                   :options="availableThemeNameComputed"
                 />
               </q-card-actions>
@@ -557,7 +557,6 @@
                   padding="xs md"
                   unelevated
                   :model-value="editorFont"
-                  @update:model-value="changeEditorFont($event)"
                   color="background"
                   text-color="display"
                   toggle-color="primary"
@@ -566,6 +565,7 @@
                     { label: 'デフォルト', value: 'default' },
                     { label: 'OS標準', value: 'os' },
                   ]"
+                  @update:model-value="changeEditorFont($event)"
                 />
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
@@ -638,8 +638,8 @@
                 </div>
                 <q-space />
                 <q-select
-                  dense
                   v-model="currentAudioOutputDeviceComputed"
+                  dense
                   label="再生デバイス"
                   :options="availableAudioOutputDevices"
                   class="col-7"
@@ -694,13 +694,13 @@
                   :model-value="
                     experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
                   "
+                  :disable="!experimentalSetting.enablePreset"
                   @update:model-value="
                     changeExperimentalSetting(
                       'shouldApplyDefaultPresetOnVoiceChanged',
                       $event
                     )
                   "
-                  :disable="!experimentalSetting.enablePreset"
                 >
                 </q-toggle>
               </q-card-actions>

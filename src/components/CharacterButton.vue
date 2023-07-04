@@ -1,8 +1,8 @@
 <template>
   <q-btn
+    ref="buttonRef"
     flat
     class="q-pa-none character-button"
-    ref="buttonRef"
     :disable="uiLocked"
     :class="{ opaque: loading }"
     aria-haspopup="menu"
@@ -48,9 +48,9 @@
         </q-item>
         <q-item v-if="emptiable" class="to-unselect-item q-pa-none">
           <q-btn
+            v-close-popup
             flat
             no-caps
-            v-close-popup
             class="full-width"
             :class="selectedCharacter == undefined && 'selected-background'"
             @click="$emit('update:selectedVoice', undefined)"
@@ -66,12 +66,12 @@
         >
           <q-btn-group flat class="col full-width">
             <q-btn
+              v-close-popup
               flat
               no-caps
-              v-close-popup
               class="col-grow"
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
-              @mouseover="reassignSubMenuOpen(-1)"
+              @mouse-over="reassignSubMenuOpen(-1)"
               @mouseleave="reassignSubMenuOpen.cancel()"
             >
               <q-avatar rounded size="2rem" class="q-mr-md">
@@ -85,9 +85,9 @@
                   "
                 />
                 <q-avatar
+                  v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
                   class="engine-icon"
                   rounded
-                  v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
                 >
                   <img
                     :src="
@@ -110,29 +110,29 @@
                 :class="
                   subMenuOpenFlags[characterIndex] && 'selected-background'
                 "
-                @mouseover="reassignSubMenuOpen(characterIndex)"
-                @mouseleave="reassignSubMenuOpen.cancel()"
-                v-on:keyup.right="reassignSubMenuOpen(characterIndex)"
                 role="application"
                 :aria-label="`${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`"
                 tabindex="0"
+                @mouse-over="reassignSubMenuOpen(characterIndex)"
+                @mouseleave="reassignSubMenuOpen.cancel()"
+                @keyup.right="reassignSubMenuOpen(characterIndex)"
               >
                 <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
                 <q-menu
+                  v-model="subMenuOpenFlags[characterIndex]"
                   no-parent-event
                   anchor="top end"
                   self="top start"
                   transition-show="none"
                   transition-hide="none"
                   class="character-menu"
-                  v-model="subMenuOpenFlags[characterIndex]"
                 >
                   <q-list style="min-width: max-content">
                     <q-item
                       v-for="(style, styleIndex) in characterInfo.metas.styles"
                       :key="styleIndex"
-                      clickable
                       v-close-popup
+                      clickable
                       active-class="selected-style-item"
                       :active="
                         selectedVoice != undefined &&
@@ -159,9 +159,9 @@
                           :src="characterInfo.metas.styles[styleIndex].iconPath"
                         />
                         <q-avatar
+                          v-if="showEngineInfo"
                           rounded
                           class="engine-icon"
-                          v-if="showEngineInfo"
                         >
                           <img
                             :src="

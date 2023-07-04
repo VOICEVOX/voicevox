@@ -27,13 +27,13 @@
               <q-separator spaced />
               エンジン起動に時間がかかっています。<br />
               <q-btn
+                v-if="isMultipleEngine"
                 outline
                 @click="restartAppWithMultiEngineOffMode"
-                v-if="isMultipleEngine"
               >
                 マルチエンジンをオフにして再起動する</q-btn
               >
-              <q-btn outline @click="openFaq" v-else>FAQを見る</q-btn>
+              <q-btn v-else outline @click="openFaq">FAQを見る</q-btn>
             </template>
           </div>
         </div>
@@ -88,21 +88,21 @@
                       "
                     >
                       <draggable
-                        class="audio-cells"
                         ref="cellsRef"
-                        :modelValue="audioKeys"
-                        @update:modelValue="updateAudioKeys"
-                        :itemKey="itemKey"
+                        class="audio-cells"
+                        :model-value="audioKeys"
+                        :item-key="itemKey"
                         ghost-class="ghost"
                         filter="input"
-                        :preventOnFilter="false"
+                        :prevent-on-filter="false"
+                        @update:model-value="updateAudioKeys"
                       >
-                        <template v-slot:item="{ element }">
+                        <template #item="{ element }">
                           <audio-cell
-                            class="draggable-cursor"
-                            :audioKey="element"
                             :ref="addAudioCellRef"
-                            @focusCell="focusCell"
+                            class="draggable-cursor"
+                            :audio-key="element"
+                            @focus-cell="focusCell"
                           />
                         </template>
                       </draggable>
@@ -113,8 +113,8 @@
                           color="primary-light"
                           text-color="display-on-primary"
                           :disable="uiLocked"
-                          @click="addAudioItem"
                           aria-label="テキストを追加"
+                          @click="addAudioItem"
                         ></q-btn>
                       </div>
                     </div>
@@ -122,7 +122,7 @@
                   <template #after>
                     <audio-info
                       v-if="activeAudioKey != undefined"
-                      :activeAudioKey="activeAudioKey"
+                      :active-audio-key="activeAudioKey"
                     />
                   </template>
                 </q-splitter>
@@ -132,7 +132,7 @@
           <template #after>
             <audio-detail
               v-if="activeAudioKey != undefined"
-              :activeAudioKey="activeAudioKey"
+              :active-audio-key="activeAudioKey"
             />
           </template>
         </q-splitter>
@@ -150,13 +150,13 @@
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
     v-if="orderedAllCharacterInfos.length > 0"
-    :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
+    :character-infos="orderedAllCharacterInfos"
   />
   <default-style-list-dialog
     v-if="orderedAllCharacterInfos.length > 0"
-    :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
+    :character-infos="orderedAllCharacterInfos"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />

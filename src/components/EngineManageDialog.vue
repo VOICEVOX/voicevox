@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="engineManageDialogOpenedComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="setting-dialog transparent-backdrop"
-    v-model="engineManageDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container>
@@ -20,13 +20,13 @@
               flat
               icon="close"
               color="display"
-              @click="toDialogClosedState"
               :disabled="isAddingEngine || uiLocked"
+              @click="toDialogClosedState"
             />
           </q-toolbar>
         </q-header>
         <q-page class="row">
-          <div class="ui-lock-popup" v-if="uiLockedState">
+          <div v-if="uiLockedState" class="ui-lock-popup">
             <div class="q-pa-md">
               <q-spinner color="primary" size="2.5rem" />
               <div class="q-mt-xs">
@@ -48,8 +48,8 @@
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="toAddEngineState"
                   :disable="uiLocked"
+                  @click="toAddEngineState"
                   >追加</q-btn
                 >
               </div>
@@ -68,19 +68,19 @@
                 <q-item
                   v-for="id in engineIds"
                   :key="id"
-                  tag="label"
                   v-ripple
+                  tag="label"
                   clickable
-                  @click="selectEngine(id)"
                   :active="selectedId === id"
                   active-class="active-engine"
+                  @click="selectEngine(id)"
                 >
                   <q-item-section avatar>
                     <q-avatar rounded color="primary">
                       <img
+                        v-if="engineIcons[id]"
                         :src="engineIcons[id]"
                         :alt="engineInfos[id].name"
-                        v-if="engineIcons[id]"
                       />
                       <span v-else class="text-display-on-primary"> ? </span>
                     </q-avatar>
@@ -110,11 +110,11 @@
 
               <div class="q-ma-sm">
                 <q-btn-toggle
+                  v-model="engineLoaderType"
                   :options="[
                     { value: 'vvpp', label: 'VVPPファイル' },
                     { value: 'dir', label: '既存エンジン' },
                   ]"
-                  v-model="engineLoaderType"
                   color="surface"
                   unelevated
                   text-color="display"
@@ -124,7 +124,7 @@
               </div>
             </div>
 
-            <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'vvpp'">
+            <div v-if="engineLoaderType === 'vvpp'" class="no-wrap q-pl-md">
               <div class="q-ma-sm">
                 VVPPファイルでエンジンをインストールします。
               </div>
@@ -137,7 +137,7 @@
                   placeholder="VVPPファイルの場所"
                   @click="selectVvppFile"
                 >
-                  <template v-slot:append>
+                  <template #append>
                     <q-btn
                       square
                       dense
@@ -151,7 +151,7 @@
                       </q-tooltip>
                     </q-btn>
                   </template>
-                  <template v-slot:error>
+                  <template #error>
                     {{
                       newEngineDirValidationState
                         ? getEngineDirValidationMessage(
@@ -163,7 +163,7 @@
                 </q-input>
               </div>
             </div>
-            <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'dir'">
+            <div v-if="engineLoaderType === 'dir'" class="no-wrap q-pl-md">
               <div class="q-ma-sm">PC内にあるエンジンを追加します。</div>
               <div class="q-ma-sm">
                 <q-input
@@ -178,7 +178,7 @@
                   placeholder="エンジンフォルダの場所"
                   @click="selectEngineDir"
                 >
-                  <template v-slot:append>
+                  <template #append>
                     <q-btn
                       square
                       dense
@@ -192,7 +192,7 @@
                       </q-tooltip>
                     </q-btn>
                   </template>
-                  <template v-slot:error>
+                  <template #error>
                     {{
                       newEngineDirValidationState
                         ? getEngineDirValidationMessage(
@@ -218,8 +218,8 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="addEngine"
                 :disabled="!canAddEngine"
+                @click="addEngine"
                 >追加</q-btn
               >
             </div>
@@ -235,7 +235,7 @@
                 :alt="engineInfos[selectedId].name"
                 class="engine-icon"
               />
-              <div class="q-mt-sm inline-block" v-else>
+              <div v-else class="q-mt-sm inline-block">
                 <q-avatar rounded color="primary" size="2rem">
                   <span class="text-display-on-primary"> ? </span>
                 </q-avatar>
@@ -311,27 +311,27 @@
                 outline
                 text-color="warning"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="deleteEngine"
                 :disable="
                   uiLocked ||
                   !['path', 'vvpp'].includes(engineInfos[selectedId].type)
                 "
+                @click="deleteEngine"
                 >削除</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="openSelectedEngineDirectory"
                 :disable="uiLocked || !engineInfos[selectedId].path"
+                @click="openSelectedEngineDirectory"
                 >フォルダを開く</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="restartSelectedEngine"
                 :disable="uiLocked || engineStates[selectedId] === 'STARTING'"
+                @click="restartSelectedEngine"
                 >再起動</q-btn
               >
             </div>
