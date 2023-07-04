@@ -34,15 +34,14 @@ import {
   MorphingInfo,
   Preset,
   PresetKey,
-  Result,
   SpeakerId,
   StyleId,
   StyleInfo,
-  unwrap,
   Voice,
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
+import { getValueOrThrow, Result } from "@/type/result";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -171,7 +170,7 @@ function generateWriteErrorMessage(writeFileResult: Result<undefined>) {
     }
   }
 
-  return `何らかの理由で失敗しました。${writeFileResult.message}`;
+  return `何らかの理由で失敗しました。${writeFileResult.error.message}`;
 }
 
 // TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
@@ -1330,18 +1329,21 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
 
-        let writeFileResult = await window.electron.writeFile({
-          filePath,
-          buffer: await blob.arrayBuffer(),
-        });
-        if (!writeFileResult.ok) {
-          window.electron.logError(new Error(writeFileResult.message));
-          return {
-            result: "WRITE_ERROR",
-            path: filePath,
-            errorMessage: generateWriteErrorMessage(writeFileResult),
-          };
-        }
+        await window.electron
+          .writeFile({
+            filePath,
+            buffer: await blob.arrayBuffer(),
+          })
+          .then((result) => {
+            if (result.ok) return;
+
+            window.electron.logError(result.error);
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: generateWriteErrorMessage(result),
+            };
+          });
 
         if (state.savingSetting.exportLab) {
           const labString = await dispatch("GENERATE_LAB", { audioKey });
@@ -1357,18 +1359,21 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             type: "text/plain;charset=UTF-8",
           });
 
-          writeFileResult = await window.electron.writeFile({
-            filePath: filePath.replace(/\.wav$/, ".lab"),
-            buffer: await labBlob.arrayBuffer(),
-          });
-          if (!writeFileResult.ok) {
-            window.electron.logError(new Error(writeFileResult.message));
-            return {
-              result: "WRITE_ERROR",
-              path: filePath,
-              errorMessage: generateWriteErrorMessage(writeFileResult),
-            };
-          }
+          await window.electron
+            .writeFile({
+              filePath: filePath.replace(/\.wav$/, ".lab"),
+              buffer: await labBlob.arrayBuffer(),
+            })
+            .then((result) => {
+              if (result.ok) return;
+
+              window.electron.logError(result.error);
+              return {
+                result: "WRITE_ERROR",
+                path: filePath,
+                errorMessage: generateWriteErrorMessage(result),
+              };
+            });
         }
 
         if (state.savingSetting.exportText) {
@@ -1388,18 +1393,21 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             });
           })();
 
-          writeFileResult = await window.electron.writeFile({
-            filePath: filePath.replace(/\.wav$/, ".txt"),
-            buffer: await textBlob.arrayBuffer(),
-          });
-          if (!writeFileResult.ok) {
-            window.electron.logError(new Error(writeFileResult.message));
-            return {
-              result: "WRITE_ERROR",
-              path: filePath,
-              errorMessage: generateWriteErrorMessage(writeFileResult),
-            };
-          }
+          await window.electron
+            .writeFile({
+              filePath: filePath.replace(/\.wav$/, ".txt"),
+              buffer: await textBlob.arrayBuffer(),
+            })
+            .then((result) => {
+              if (result.ok) return;
+
+              window.electron.logError(result.error);
+              return {
+                result: "WRITE_ERROR",
+                path: filePath,
+                errorMessage: generateWriteErrorMessage(result),
+              };
+            });
         }
 
         return { result: "SUCCESS", path: filePath };
@@ -1567,14 +1575,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           return { result: "ENGINE_ERROR", path: filePath };
         }
 
-        const writeFileResult = await window.electron.writeFile({
-          filePath,
-          buffer: await connectedWav.arrayBuffer(),
-        });
-        if (!writeFileResult.ok) {
-          window.electron.logError(new Error(writeFileResult.message));
-          return { result: "WRITE_ERROR", path: filePath };
-        }
+        await window.electron
+          .writeFile({
+            filePath,
+            buffer: await connectedWav.arrayBuffer(),
+          })
+          .then(getValueOrThrow);
 
         if (state.savingSetting.exportLab) {
           // GENERATE_LABで生成される文字列はすべて改行で終わるので、改行なしに結合する
@@ -1585,14 +1591,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             type: "text/plain;charset=UTF-8",
           });
 
-          const writeFileResult = await window.electron.writeFile({
-            filePath: filePath.replace(/\.wav$/, ".lab"),
-            buffer: await labBlob.arrayBuffer(),
-          });
-          if (!writeFileResult.ok) {
-            window.electron.logError(new Error(writeFileResult.message));
-            return { result: "WRITE_ERROR", path: filePath };
-          }
+          await window.electron
+            .writeFile({
+              filePath: filePath.replace(/\.wav$/, ".lab"),
+              buffer: await labBlob.arrayBuffer(),
+            })
+            .then((result) => {
+              if (result.ok) return;
+              window.electron.logError(result.error);
+              return { result: "WRITE_ERROR", path: filePath };
+            });
         }
 
         if (state.savingSetting.exportText) {
@@ -1613,14 +1621,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             });
           })();
 
-          const writeFileResult = await window.electron.writeFile({
-            filePath: filePath.replace(/\.wav$/, ".txt"),
-            buffer: await textBlob.arrayBuffer(),
-          });
-          if (!writeFileResult.ok) {
-            window.electron.logError(new Error(writeFileResult.message));
-            return { result: "WRITE_ERROR", path: filePath };
-          }
+          await window.electron
+            .writeFile({
+              filePath: filePath.replace(/\.wav$/, ".txt"),
+              buffer: await textBlob.arrayBuffer(),
+            })
+            .then((result) => {
+              if (result.ok) return;
+              window.electron.logError(result.error);
+              return { result: "WRITE_ERROR", path: filePath };
+            });
         }
 
         return { result: "SUCCESS", path: filePath };
@@ -1708,14 +1718,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
         })();
 
-        const writeFileResult = await window.electron.writeFile({
-          filePath,
-          buffer: await textBlob.arrayBuffer(),
-        });
-        if (!writeFileResult.ok) {
-          window.electron.logError(new Error(writeFileResult.message));
-          return { result: "WRITE_ERROR", path: filePath };
-        }
+        await window.electron
+          .writeFile({
+            filePath,
+            buffer: await textBlob.arrayBuffer(),
+          })
+          .then((result) => {
+            if (result.ok) return;
+            window.electron.logError(result.error);
+            return { result: "WRITE_ERROR", path: filePath };
+          });
 
         return { result: "SUCCESS", path: filePath };
       }
@@ -2770,11 +2782,11 @@ export const audioCommandStore = transformCommandStore(
             if (!filePath) return;
           }
           let body = new TextDecoder("utf-8").decode(
-            await window.electron.readFile({ filePath }).then(unwrap)
+            await window.electron.readFile({ filePath }).then(getValueOrThrow)
           );
           if (body.indexOf("\ufffd") > -1) {
             body = new TextDecoder("shift-jis").decode(
-              await window.electron.readFile({ filePath }).then(unwrap)
+              await window.electron.readFile({ filePath }).then(getValueOrThrow)
             );
           }
           const audioItems: AudioItem[] = [];

@@ -11,11 +11,10 @@ import {
   audioKeySchema,
   EngineId,
   engineIdSchema,
-  ResultError,
   speakerIdSchema,
   styleIdSchema,
-  unwrap,
 } from "@/type/preload";
+import { getValueOrThrow, ResultError } from "@/type/result";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -93,7 +92,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         let buf: ArrayBuffer;
         try {
-          buf = await window.electron.readFile({ filePath }).then(unwrap);
+          buf = await window.electron
+            .readFile({ filePath })
+            .then(getValueOrThrow);
+
           await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
             filePath,
           });
@@ -431,13 +433,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const buf = new TextEncoder().encode(
             JSON.stringify(projectData)
           ).buffer;
-          const writeFileResult = await window.electron.writeFile({
-            filePath,
-            buffer: buf,
-          });
-          if (!writeFileResult.ok) {
-            throw new Error(writeFileResult.message);
-          }
+          await window.electron
+            .writeFile({
+              filePath,
+              buffer: buf,
+            })
+            .then(getValueOrThrow);
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit(
             "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",

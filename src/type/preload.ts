@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
 export const isMac =
   typeof process === "undefined"
@@ -176,11 +177,6 @@ export interface Sandbox {
     defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
-  /**
-   * ファイル書き出しする。
-   * 成功した場合はundefinedを返す。
-   * 失敗した場合はエラーの内容をWriteFileErrorResultとして返す。
-   */
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
@@ -615,40 +611,6 @@ export class SystemError extends Error {
     }
   }
 }
-
-export type Result<T, E extends string = string> = OkResult<T> | ErrResult<E>;
-export const ok = <T>(value: T): OkResult<T> => ({ ok: true, value });
-export type OkResult<T> = { ok: true; value: T };
-export const err = <E extends string>(
-  code: E,
-  message: string
-): ErrResult<E> => ({
-  ok: false,
-  code,
-  message,
-});
-export class ResultError<E extends string> extends Error {
-  public code: E;
-
-  constructor(public readonly result: ErrResult<E>) {
-    super(`${result.code}: ${result.message}`);
-    this.code = result.code;
-  }
-}
-export const unwrap = <T, E extends string>(
-  result: Result<T, E>
-): T | never => {
-  if (result.ok) {
-    return result.value;
-  } else {
-    throw new ResultError(result);
-  }
-};
-export type ErrResult<E extends string> = {
-  ok: false;
-  code: E;
-  message: string;
-};
 
 export type EngineDirValidationResult =
   | "ok"

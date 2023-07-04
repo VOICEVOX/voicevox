@@ -11,9 +11,9 @@ import {
   EngineSetting,
   EngineId,
   MessageBoxReturnValue,
-  Result,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
 /**
  * invoke, handle
