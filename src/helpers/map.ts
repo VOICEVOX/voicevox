@@ -13,13 +13,6 @@ export function mapUndefinedPipe<T, U1, U2, U3>(
   fn2: (_: NonNullable<U1>) => U2 | undefined,
   fn3: (_: NonNullable<U2>) => U3 | undefined
 ): U3 | undefined;
-export function mapUndefinedPipe<T, U1, U2, U3, U4>(
-  source: T | undefined,
-  fn1: (_: NonNullable<T>) => U1 | undefined,
-  fn2: (_: NonNullable<U1>) => U2 | undefined,
-  fn3: (_: NonNullable<U2>) => U3 | undefined,
-  fn4: (_: NonNullable<U3>) => U4 | undefined
-): U4 | undefined;
 /**
  * 一連の関数を実行する。途中でundefinedを返すとその後undefinedを返す。
  */
