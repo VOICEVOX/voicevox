@@ -73,7 +73,7 @@ import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
-import { mapUndefinedPipe, undefinedToDefault } from "@/helpers/map";
+import { mapUndefinedPipe } from "@/helpers/map";
 
 type DetailKey = { engine: EngineId; character: SpeakerId };
 
@@ -114,7 +114,7 @@ const policy = computed<string | undefined>(() => {
   );
   if (characterInfo == undefined) return undefined;
 
-  return characterInfo.metas.policy;
+  return md.render(characterInfo.metas.policy);
 });
 
 const selectedInfo = ref<DetailKey | undefined>(undefined);
