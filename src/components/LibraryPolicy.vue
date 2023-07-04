@@ -62,7 +62,7 @@
           }}
         </div>
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="markdown" v-html="policy"></div>
+        <div v-if="policy" class="markdown" v-html="policy"></div>
       </div>
     </div>
   </q-page>
@@ -103,20 +103,19 @@ const engineInfos = computed(
     )
 );
 
-const policy = computed<string>(() =>
-  md.render(
-    undefinedToDefault(
-      "",
-      mapUndefinedPipe(
-        selectedInfo.value,
-        (v) => engineInfos.value.get(v.engine),
-        (v) => v.characterInfos,
-        (v) => mapUndefinedPipe(selectedInfo.value, (i) => v.get(i.character)),
-        (v) => v.metas.policy
-      )
-    )
-  )
-);
+const policy = computed<string | undefined>(() => {
+  if (selectedInfo.value == undefined) return undefined;
+
+  const engineInfo = engineInfos.value.get(selectedInfo.value.engine);
+  if (engineInfo == undefined) return undefined;
+
+  const characterInfo = engineInfo.characterInfos.get(
+    selectedInfo.value.character
+  );
+  if (characterInfo == undefined) return undefined;
+
+  return characterInfo.metas.policy;
+});
 
 const selectedInfo = ref<DetailKey | undefined>(undefined);
 
