@@ -13,6 +13,7 @@ import {
   findAltPort,
   getPidFromPort,
   getProcessNameFromPid,
+  isAssignablePort,
   url2HostInfo,
 } from "./portManager";
 import { ipcMainSend } from "@/electron/ipc";
@@ -250,13 +251,20 @@ export class EngineManager {
       `ENGINE ${engineId}: Checking whether port ${engineHostInfo.port} is assignable...`
     );
 
-    // ポートを既に割り当てているプロセスidの取得: undefined → ポートが空いている
-    const pid = await getPidFromPort(engineHostInfo);
-    if (pid != undefined) {
-      const processName = await getProcessNameFromPid(engineHostInfo, pid);
-      log.warn(
-        `ENGINE ${engineId}: Port ${engineHostInfo.port} has already been assigned by ${processName} (pid=${pid})`
-      );
+    if (!(await isAssignablePort(engineHostInfo))) {
+      // ポートを既に割り当てているプロセスidの取得
+      const pid = await getPidFromPort(engineHostInfo);
+      if (pid != undefined) {
+        const processName = await getProcessNameFromPid(engineHostInfo, pid);
+        log.warn(
+          `ENGINE ${engineId}: Port ${engineHostInfo.port} has already been assigned by ${processName} (pid=${pid})`
+        );
+      } else {
+        // ポートは使用不可能だがプロセスidは見つからなかった
+        log.warn(
+          `ENGINE ${engineId}: Port ${engineHostInfo.port} was unavailable`
+        );
+      }
 
       // 代替ポートの検索
       const altPort = await findAltPort(engineHostInfo);

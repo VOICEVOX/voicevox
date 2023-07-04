@@ -1,4 +1,5 @@
 import { execFileSync } from "child_process";
+import { createServer } from "net";
 import log from "electron-log";
 
 const isWindows = process.platform === "win32";
@@ -173,6 +174,31 @@ export async function getProcessNameFromPid(
 }
 
 /**
+ * ポートが割り当て可能かどうか実際にlistenして確認します。
+ * @param hostInfo ホスト情報
+ * @returns 割り当て不能だった場合`undefined`を返します。割り当て可能だった場合ポート番号を返します。
+ */
+function testPort(hostInfo: HostInfo): Promise<number | undefined> {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.on("error", () => {
+      server.close();
+      resolve(undefined);
+    });
+    server.on("listening", () => {
+      const address = server.address();
+      server.close();
+      if (address == undefined || typeof address === "string") {
+        reject(new Error("'address' is null or string"));
+        return;
+      }
+      resolve(address.port);
+    });
+    server.listen(hostInfo.port, hostInfo.hostname);
+  });
+}
+
+/**
  * 割り当て可能な他のポートを探します
  *
  * @param hostInfo ホスト情報
@@ -182,26 +208,30 @@ export async function findAltPort(
   hostInfo: HostInfo
 ): Promise<number | undefined> {
   const basePort = hostInfo.port;
-  portLog(basePort, `Find another assignable port from ${basePort}...`);
-
-  // エンジン指定のポート + 100番までを探索  エフェメラルポートの範囲の最大は超えないようにする
-  const altPortMax = Math.min(basePort + 100, 65535);
-
-  for (let altPort = basePort + 1; altPort <= altPortMax; altPort++) {
-    portLog(basePort, `Trying whether port ${altPort} is assignable...`);
-    const altPid = await getPidFromPort(
-      {
-        protocol: hostInfo.protocol,
-        hostname: hostInfo.hostname,
-        port: altPort,
-      },
-      true
-    );
-
-    // ポートを既に割り当てられているプロセスidの取得: undefined → ポートが空いている
-    if (altPid == undefined) return altPort;
+  portLog(basePort, "Find another assignable port");
+  const altPort = await testPort({
+    protocol: hostInfo.protocol,
+    hostname: hostInfo.hostname,
+    port: 0,
+  });
+  if (altPort == undefined) {
+    portWarn(basePort, "No alternative port found!");
+  } else {
+    portLog(altPort, "Assignable");
   }
+  return altPort;
+}
 
-  portWarn(basePort, `No alternative port found! ${basePort}...${altPortMax}`);
-  return undefined;
+/**
+ * ポートが割り当て可能か確認します
+ * @param hostInfo ホスト情報
+ */
+export async function isAssignablePort(hostInfo: HostInfo) {
+  const isAssignable = (await testPort(hostInfo)) != undefined;
+  if (isAssignable) {
+    portLog(hostInfo.port, "Assignable");
+  } else {
+    portWarn(hostInfo.port, "Nonassignable");
+  }
+  return isAssignable;
 }
