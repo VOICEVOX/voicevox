@@ -179,7 +179,7 @@
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
-              @mouse-over="handleHoverText(true, accentPhraseIndex, moraIndex)"
+              @mouseover="handleHoverText(true, accentPhraseIndex, moraIndex)"
               @mouseleave="handleHoverText(false, accentPhraseIndex, moraIndex)"
               @click.stop="
                 uiLocked ||

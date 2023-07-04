@@ -37,7 +37,7 @@
         :key="i"
         v-model:selected="subMenuOpenFlags[i]"
         :menudata="menu"
-        @mouse-over="reassignSubMenuOpen(i)"
+        @mouseover="reassignSubMenuOpen(i)"
       />
     </q-menu>
   </q-item>

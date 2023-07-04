@@ -11,7 +11,7 @@
       v-model:selected="subMenuOpenFlags[index]"
       :menudata="root"
       :disable="menubarLocked"
-      @mouse-over="reassignSubMenuOpen(index)"
+      @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
         root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
       "

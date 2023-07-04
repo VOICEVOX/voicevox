@@ -71,7 +71,7 @@
               no-caps
               class="col-grow"
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
-              @mouse-over="reassignSubMenuOpen(-1)"
+              @mouseover="reassignSubMenuOpen(-1)"
               @mouseleave="reassignSubMenuOpen.cancel()"
             >
               <q-avatar rounded size="2rem" class="q-mr-md">
@@ -113,7 +113,7 @@
                 role="application"
                 :aria-label="`${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`"
                 tabindex="0"
-                @mouse-over="reassignSubMenuOpen(characterIndex)"
+                @mouseover="reassignSubMenuOpen(characterIndex)"
                 @mouseleave="reassignSubMenuOpen.cancel()"
                 @keyup.right="reassignSubMenuOpen(characterIndex)"
               >
