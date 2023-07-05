@@ -55,9 +55,9 @@
             スライダーを微調整できます。
           </p>
           ホイール: ±0.1<br />
-          <span v-if="_isMac">Command</span><span v-else>Ctrl</span> + ホイール:
+          <span v-if="isMac">Command</span><span v-else>Ctrl</span> + ホイール:
           ±0.01<br />
-          <span v-if="_isMac">Option</span><span v-else>Alt</span> + ホイール:
+          <span v-if="isMac">Option</span><span v-else>Alt</span> + ホイール:
           一括調整
         </tool-tip>
         <div
@@ -292,8 +292,6 @@ const props =
 
 const store = useStore();
 const $q = useQuasar();
-
-const _isMac = computed(() => isMac);
 
 const supportedFeatures = computed(
   () =>
