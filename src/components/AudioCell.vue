@@ -32,11 +32,12 @@
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
       @update:model-value="setAudioTextBuffer"
-      @change="willRemove || pushAudioText()"
+      @blur="willRemove || pushAudioText()"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
+      @keydown.prevent.enter.exact="willRemove || pushAudioText()"
       :aria-label="`${textLineNumberIndex}行目`"
     >
       <template v-slot:error>
@@ -267,6 +268,8 @@ const deleteButtonEnable = computed(() => {
 });
 
 // テキスト編集エリアの右クリック
+// input.valueをスクリプトから変更しない場合は@changeが発火しないため、
+// @blurと@keydown.prevent.enter.exactに分けている
 const contextMenudata = ref<ContextMenuItemData[]>([
   {
     type: "button",
@@ -326,8 +329,8 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     disableWhenUiLocked: true,
   },
 ]);
-// TODO: store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU"); 不使用となったのでそれ関連を削除
-// TODO: コンテキストメニューを開いたときに選択範囲が外れる現象の原因調査・修正
+// TODO: (MUST)store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU"); 不使用となったのでそれ関連を削除
+// TODO: (MAY)コンテキストメニューを開いたときに選択範囲が外れる現象の原因調査・修正
 
 const blurCell = (event?: KeyboardEvent) => {
   if (event?.isComposing) {
