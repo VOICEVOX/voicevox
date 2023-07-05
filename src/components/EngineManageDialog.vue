@@ -421,12 +421,18 @@ watch(
       const version = await store
         .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
         .then((instance) => instance.invoke("versionVersionGet")({}))
+        .then((version) => {
+          // OpenAPIのバグで"latest"のようにダブルクォーテーションで囲まれていることがあるので外す
+          if (version.startsWith('"') && version.endsWith('"')) {
+            return version.slice(1, -1);
+          }
+          return version;
+        })
         .catch(() => null);
       if (!version) continue;
-      // "latest"のようにダブルクォーテーションで囲まれているので、JSON.parseで外す。
       engineVersions.value = {
         ...engineVersions.value,
-        [id]: JSON.parse(version),
+        [id]: version,
       };
     }
   },
