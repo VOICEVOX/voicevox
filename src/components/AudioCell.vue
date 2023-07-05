@@ -162,7 +162,7 @@ const pushAudioText = async () => {
 };
 
 let willSelectAll = false;
-// NOTE: コンテキストメニューのonClick実行後も再フォーカスされるため発火する
+// NOTE: コンテキストメニューアイテムのonClick実行後も再フォーカスされるため発火する
 const setActiveAudioKey = () => {
   if (willSelectAll) {
     willSelectAll = false;
