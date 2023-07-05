@@ -32,12 +32,12 @@
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
       @update:model-value="setAudioTextBuffer"
-      @blur="willRemove || pushAudioText()"
+      @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
-      @keydown.prevent.enter.exact="willRemove || pushAudioText()"
+      @keydown.prevent.enter.exact="pushAudioTextIfNeeded()"
       :aria-label="`${textLineNumberIndex}行目`"
     >
       <template v-slot:error>
@@ -151,8 +151,8 @@ watch(
   }
 );
 
-const pushAudioText = async () => {
-  if (isChangeFlag.value) {
+const pushAudioTextIfNeeded = async () => {
+  if (!willRemove.value && isChangeFlag.value) {
     isChangeFlag.value = false;
     await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
       audioKey: props.audioKey,
@@ -195,7 +195,7 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
         const text = texts.shift();
         if (text == undefined) return;
         setAudioTextBuffer(text);
-        await pushAudioText();
+        await pushAudioTextIfNeeded();
       }
 
       const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
