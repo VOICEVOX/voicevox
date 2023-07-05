@@ -4,9 +4,10 @@ export type Result<T, E extends string = string> =
 export const success = <T>(value: T): SuccessResult<T> => ({ ok: true, value });
 export type SuccessResult<T> = { ok: true; value: T };
 type Failure = {
-  (code: undefined, error: Error): FailureResult<typeof unknownCode>;
   (error: Error): FailureResult<typeof unknownCode>;
-  <C extends string>(code: C, error: Error): FailureResult<C>;
+  <C extends string | undefined>(code: C, error: Error): FailureResult<
+    C extends string ? C : typeof unknownCode
+  >;
 };
 const unknownCode = "UNKNOWN" as const;
 export const failure: Failure = <C extends string>(
@@ -23,7 +24,7 @@ export const failure: Failure = <C extends string>(
         ok: false as const,
         code: unknownCode,
         error: error,
-      } as FailureResult<typeof unknownCode>;
+      };
     }
     case "string": {
       if (error === undefined) {
@@ -40,7 +41,7 @@ export const failure: Failure = <C extends string>(
         ok: false as const,
         code: unknownCode,
         error: codeOrError,
-      } as FailureResult<typeof unknownCode>;
+      };
     }
     default: {
       throw new Error("Error must be specified");
