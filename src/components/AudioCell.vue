@@ -60,12 +60,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref } from "vue";
+import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import ContextMenu, { ContextMenuItemData } from "@/components/ContextMenu.vue";
 import { useStore } from "@/store";
 import { AudioKey, Voice } from "@/type/preload";
+import { QInputSelectionHelper } from "@/helpers/QInputSelectionHelper";
 
 const props =
   defineProps<{
@@ -159,7 +160,14 @@ const pushAudioText = async () => {
   }
 };
 
+let willSelectAll = false;
+// NOTE: コンテキストメニューのアクション実行時も再フォーカスされるため発火する
 const setActiveAudioKey = () => {
+  if (willSelectAll) {
+    willSelectAll = false;
+    textfield.value?.select();
+  }
+
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
 const isEnableSplitText = computed(() => store.state.splitTextWhenPaste);
@@ -263,8 +271,17 @@ const contextMenudata = ref<ContextMenuItemData[]>([
   {
     type: "button",
     label: "切り取り",
-    onClick: () => {
-      throw new Error("切り取りは未実装です");
+    onClick: async () => {
+      const text = textfieldSelection.getAsString();
+      if (text.length === 0) return;
+
+      const start = textfieldSelection.start;
+      setAudioTextBuffer(textfieldSelection.getReplacedStringTo(""));
+      await navigator.clipboard.writeText(text);
+      // FIXME: <input>への反映までにラグがあるのを、
+      //        裏技的に上の行にawaitを追加して、await後に実行することで回避している。
+      //        await nextTick()を利用すべきだがなぜか意図したとおりに動かない。
+      textfieldSelection.setCursorPosition(start);
     },
     disableWhenUiLocked: true,
   },
@@ -272,15 +289,27 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     type: "button",
     label: "コピー",
     onClick: () => {
-      throw new Error("コピーは未実装です");
+      const text = textfieldSelection.getAsString();
+      if (text.length === 0) return;
+
+      navigator.clipboard.writeText(text);
     },
     disableWhenUiLocked: true,
   },
   {
     type: "button",
     label: "貼り付け",
-    onClick: () => {
-      throw new Error("貼り付けは未実装です");
+    onClick: async () => {
+      // TODO: pasteOnAudioCellを通す
+      const text = await navigator.clipboard.readText();
+      const beforeLength = textfieldSelection.nativeEl.value.length;
+      const end = textfieldSelection.end ?? 0;
+      setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text, true));
+      await nextTick();
+      textfieldSelection.setCursorPosition(
+        // 自動的に削除される改行などの文字数を念のため考慮している
+        end + textfieldSelection.nativeEl.value.length - beforeLength
+      );
     },
     disableWhenUiLocked: true,
   },
@@ -288,13 +317,17 @@ const contextMenudata = ref<ContextMenuItemData[]>([
   {
     type: "button",
     label: "全選択",
-    onClick: () => {
-      throw new Error("全選択は未実装です");
+    onClick: async () => {
+      // コンテキストメニューを閉じた場合、Quasarの内部処理的として
+      // コンテキストメニューを開いた時点の選択範囲が復元(再選択)される模様。
+      // その後に選択範囲を変更しないと反映されないため、フラグを立てて後から処理する。
+      willSelectAll = true;
     },
     disableWhenUiLocked: true,
   },
 ]);
 // TODO: store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU"); 不使用となったのでそれ関連を削除
+// TODO: コンテキストメニューを開いたときに選択範囲が外れる現象の原因調査・修正
 
 const blurCell = (event?: KeyboardEvent) => {
   if (event?.isComposing) {
@@ -307,6 +340,8 @@ const blurCell = (event?: KeyboardEvent) => {
 
 // フォーカス
 const textfield = ref<QInput>();
+
+const textfieldSelection = new QInputSelectionHelper(textfield);
 
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
