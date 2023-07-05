@@ -41,7 +41,7 @@ import {
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { getValueOrThrow, Result } from "@/type/result";
+import { getValueOrThrow, ResultError } from "@/type/result";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -156,8 +156,7 @@ function buildFileName(state: State, audioKey: AudioKey) {
   });
 }
 
-function generateWriteErrorMessage(writeFileResult: Result<undefined>) {
-  if (writeFileResult.ok) return undefined;
+function generateWriteErrorMessage(writeFileResult: ResultError) {
   if (writeFileResult.code) {
     const code = writeFileResult.code.toUpperCase();
 
@@ -170,7 +169,7 @@ function generateWriteErrorMessage(writeFileResult: Result<undefined>) {
     }
   }
 
-  return `何らかの理由で失敗しました。${writeFileResult.error.message}`;
+  return `何らかの理由で失敗しました。${writeFileResult.message}`;
 }
 
 // TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
@@ -1329,88 +1328,79 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
 
-        await window.electron
-          .writeFile({
-            filePath,
-            buffer: await blob.arrayBuffer(),
-          })
-          .then((result) => {
-            if (result.ok) return;
-
-            window.electron.logError(result.error);
-            return {
-              result: "WRITE_ERROR",
-              path: filePath,
-              errorMessage: generateWriteErrorMessage(result),
-            };
-          });
-
-        if (state.savingSetting.exportLab) {
-          const labString = await dispatch("GENERATE_LAB", { audioKey });
-          if (labString === undefined)
-            return {
-              result: "WRITE_ERROR",
-              path: filePath,
-              errorMessage: "labの生成に失敗しました。",
-            };
-
-          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-          const labBlob = new Blob([bom, labString], {
-            type: "text/plain;charset=UTF-8",
-          });
-
+        try {
           await window.electron
             .writeFile({
-              filePath: filePath.replace(/\.wav$/, ".lab"),
-              buffer: await labBlob.arrayBuffer(),
+              filePath,
+              buffer: await blob.arrayBuffer(),
             })
-            .then((result) => {
-              if (result.ok) return;
+            .then(getValueOrThrow);
 
-              window.electron.logError(result.error);
+          if (state.savingSetting.exportLab) {
+            const labString = await dispatch("GENERATE_LAB", { audioKey });
+            if (labString === undefined)
               return {
                 result: "WRITE_ERROR",
                 path: filePath,
-                errorMessage: generateWriteErrorMessage(result),
+                errorMessage: "labの生成に失敗しました。",
               };
-            });
-        }
 
-        if (state.savingSetting.exportText) {
-          const textBlob = ((): Blob => {
-            if (!encoding || encoding === "UTF-8") {
-              const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-              return new Blob([bom, state.audioItems[audioKey].text], {
-                type: "text/plain;charset=UTF-8",
+            const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+            const labBlob = new Blob([bom, labString], {
+              type: "text/plain;charset=UTF-8",
+            });
+
+            await window.electron
+              .writeFile({
+                filePath: filePath.replace(/\.wav$/, ".lab"),
+                buffer: await labBlob.arrayBuffer(),
+              })
+              .then(getValueOrThrow);
+          }
+
+          if (state.savingSetting.exportText) {
+            const textBlob = ((): Blob => {
+              if (!encoding || encoding === "UTF-8") {
+                const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+                return new Blob([bom, state.audioItems[audioKey].text], {
+                  type: "text/plain;charset=UTF-8",
+                });
+              }
+              const sjisArray = Encoding.convert(
+                Encoding.stringToCode(state.audioItems[audioKey].text),
+                { to: "SJIS", type: "arraybuffer" }
+              );
+              return new Blob([new Uint8Array(sjisArray)], {
+                type: "text/plain;charset=Shift_JIS",
               });
-            }
-            const sjisArray = Encoding.convert(
-              Encoding.stringToCode(state.audioItems[audioKey].text),
-              { to: "SJIS", type: "arraybuffer" }
-            );
-            return new Blob([new Uint8Array(sjisArray)], {
-              type: "text/plain;charset=Shift_JIS",
-            });
-          })();
+            })();
 
-          await window.electron
-            .writeFile({
-              filePath: filePath.replace(/\.wav$/, ".txt"),
-              buffer: await textBlob.arrayBuffer(),
-            })
-            .then((result) => {
-              if (result.ok) return;
+            await window.electron
+              .writeFile({
+                filePath: filePath.replace(/\.wav$/, ".txt"),
+                buffer: await textBlob.arrayBuffer(),
+              })
+              .then(getValueOrThrow);
+          }
 
-              window.electron.logError(result.error);
-              return {
-                result: "WRITE_ERROR",
-                path: filePath,
-                errorMessage: generateWriteErrorMessage(result),
-              };
-            });
+          return { result: "SUCCESS", path: filePath };
+        } catch (e) {
+          window.electron.logError(e);
+          if (e instanceof ResultError) {
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: generateWriteErrorMessage(e),
+            };
+          }
+          return {
+            result: "UNKNOWN_ERROR",
+            path: filePath,
+            errorMessage:
+              (e instanceof Error ? e.message : String(e)) ||
+              "不明なエラーが発生しました。",
+          };
         }
-
-        return { result: "SUCCESS", path: filePath };
       }
     ),
   },
