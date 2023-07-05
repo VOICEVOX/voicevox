@@ -161,7 +161,7 @@ const pushAudioText = async () => {
 };
 
 let willSelectAll = false;
-// NOTE: コンテキストメニューのアクション実行時も再フォーカスされるため発火する
+// NOTE: コンテキストメニューのonClick実行後も再フォーカスされるため発火する
 const setActiveAudioKey = () => {
   if (willSelectAll) {
     willSelectAll = false;
@@ -318,7 +318,7 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     type: "button",
     label: "全選択",
     onClick: async () => {
-      // コンテキストメニューを閉じた場合、Quasarの内部処理的として
+      // コンテキストメニューを閉じた場合、多分Quasarの内部処理として
       // コンテキストメニューを開いた時点の選択範囲が復元(再選択)される模様。
       // その後に選択範囲を変更しないと反映されないため、フラグを立てて後から処理する。
       willSelectAll = true;
