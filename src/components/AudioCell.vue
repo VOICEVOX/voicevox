@@ -329,7 +329,6 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     disableWhenUiLocked: true,
   },
 ]);
-// TODO: (MUST)store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU"); 不使用となったのでそれ関連を削除
 // TODO: (MAY)コンテキストメニューを開いたときに選択範囲が外れる現象の原因調査・修正
 
 const blurCell = (event?: KeyboardEvent) => {
