@@ -16,7 +16,7 @@ export const failure: Failure = <C extends string>(
 ) => {
   switch (typeof codeOrError) {
     case "undefined": {
-      if (typeof error === "undefined") {
+      if (error === undefined) {
         throw new Error("Error must be specified");
       }
 
