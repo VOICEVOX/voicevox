@@ -174,11 +174,16 @@ export async function getProcessNameFromPid(
 }
 
 /**
- * ポートが割り当て可能かどうか実際にlistenして確認します。
- * @param hostInfo ホスト情報
+ * ポートが割り当て可能かどうか実際にlistenして接続したポート番号を返します。
+ * 0番ポートを指定した場合はランダムな接続可能ポート番号を返します。
+ * @param port 確認するポート番号
+ * @param hostname 確認するホスト名
  * @returns 割り当て不能だった場合`undefined`を返します。割り当て可能だった場合ポート番号を返します。
  */
-function testPort(hostInfo: HostInfo): Promise<number | undefined> {
+function findOrCheckPort(
+  port: number,
+  hostname: string
+): Promise<number | undefined> {
   return new Promise((resolve, reject) => {
     const server = createServer();
     server.on("error", () => {
@@ -194,7 +199,7 @@ function testPort(hostInfo: HostInfo): Promise<number | undefined> {
       }
       resolve(address.port);
     });
-    server.listen(hostInfo.port, hostInfo.hostname);
+    server.listen(port, hostname);
   });
 }
 
@@ -209,11 +214,7 @@ export async function findAltPort(
 ): Promise<number | undefined> {
   const basePort = hostInfo.port;
   portLog(basePort, "Find another assignable port");
-  const altPort = await testPort({
-    protocol: hostInfo.protocol,
-    hostname: hostInfo.hostname,
-    port: 0,
-  });
+  const altPort = await findOrCheckPort(0, hostInfo.hostname);
   if (altPort == undefined) {
     portWarn(basePort, "No alternative port found!");
   } else {
@@ -227,7 +228,8 @@ export async function findAltPort(
  * @param hostInfo ホスト情報
  */
 export async function isAssignablePort(hostInfo: HostInfo) {
-  const isAssignable = (await testPort(hostInfo)) != undefined;
+  const isAssignable =
+    (await findOrCheckPort(hostInfo.port, hostInfo.hostname)) != undefined;
   if (isAssignable) {
     portLog(hostInfo.port, "Assignable");
   } else {
