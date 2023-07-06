@@ -20,6 +20,8 @@ import {
   convertLongVowel,
   createKanaRegex,
   currentDateString,
+  textExportToEngine,
+  textExportToText,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -1678,12 +1680,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
 
-        const ExportToText = (text: string): string => {
-          let resolvedText = text.replace(/\(.*?\)/g, "");
-          resolvedText = resolvedText.replace(/\[(.*?)\]/g, "$1");
-          return resolvedText;
-        };
-
         const texts: string[] = [];
         for (const audioKey of state.audioKeys) {
           const styleId = state.audioItems[audioKey].voice.styleId;
@@ -1696,7 +1692,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 
-          const resolvedText = ExportToText(state.audioItems[audioKey].text);
+          const resolvedText = textExportToText(
+            state.audioItems[audioKey].text
+          );
           texts.push(speakerName + resolvedText);
         }
 
@@ -2005,12 +2003,17 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
+<<<<<<< HEAD
         const ExportToEngine = (targettext: string): string => {
           let resolvedText = targettext.replace(/\[.*?\]/g, "");
           resolvedText = resolvedText.replace(/\((.*?)\)/g, "$1");
           return resolvedText;
         };
         const resolvedText = ExportToEngine(text);
+=======
+
+        const resolvedText = textExportToEngine(text);
+>>>>>>> 7942e9c7fdb1ec92ba29ac673540e63ca9f72b0b
 
         try {
           if (query !== undefined) {
