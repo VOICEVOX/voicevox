@@ -1565,12 +1565,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           return { result: "ENGINE_ERROR", path: filePath };
         }
 
-        await window.electron
-          .writeFile({
-            filePath,
-            buffer: await connectedWav.arrayBuffer(),
-          })
-          .then(getValueOrThrow);
+        const writeFileResult = await window.electron.writeFile({
+          filePath,
+          buffer: await connectedWav.arrayBuffer(),
+        });
+        if (!writeFileResult.ok) {
+          window.electron.logError(writeFileResult.error);
+          return { result: "WRITE_ERROR", path: filePath };
+        }
 
         if (state.savingSetting.exportLab) {
           // GENERATE_LABで生成される文字列はすべて改行で終わるので、改行なしに結合する
