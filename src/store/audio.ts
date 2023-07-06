@@ -2003,17 +2003,7 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
-<<<<<<< HEAD
-        const ExportToEngine = (targettext: string): string => {
-          let resolvedText = targettext.replace(/\[.*?\]/g, "");
-          resolvedText = resolvedText.replace(/\((.*?)\)/g, "$1");
-          return resolvedText;
-        };
-        const resolvedText = ExportToEngine(text);
-=======
-
         const resolvedText = textExportToEngine(text);
->>>>>>> 7942e9c7fdb1ec92ba29ac673540e63ca9f72b0b
 
         try {
           if (query !== undefined) {
