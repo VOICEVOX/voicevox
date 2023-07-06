@@ -601,7 +601,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      右下のテキスト追加ボタンを非表示にします。
+                      右下のテキスト追加ボタンを表示します。
                     </q-tooltip>
                   </q-icon>
                 </div>
