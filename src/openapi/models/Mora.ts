@@ -57,6 +57,19 @@ export interface Mora {
     pitch: number;
 }
 
+/**
+ * Check if a given object implements the Mora interface.
+ */
+export function instanceOfMora(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "text" in value;
+    isInstance = isInstance && "vowel" in value;
+    isInstance = isInstance && "vowelLength" in value;
+    isInstance = isInstance && "pitch" in value;
+
+    return isInstance;
+}
+
 export function MoraFromJSON(json: any): Mora {
     return MoraFromJSONTyped(json, false);
 }

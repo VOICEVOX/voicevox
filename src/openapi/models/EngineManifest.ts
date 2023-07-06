@@ -13,20 +13,24 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { LicenseInfo } from './LicenseInfo';
 import {
-    LicenseInfo,
     LicenseInfoFromJSON,
     LicenseInfoFromJSONTyped,
     LicenseInfoToJSON,
-    SupportedFeatures,
+} from './LicenseInfo';
+import type { SupportedFeatures } from './SupportedFeatures';
+import {
     SupportedFeaturesFromJSON,
     SupportedFeaturesFromJSONTyped,
     SupportedFeaturesToJSON,
-    UpdateInfo,
+} from './SupportedFeatures';
+import type { UpdateInfo } from './UpdateInfo';
+import {
     UpdateInfoFromJSON,
     UpdateInfoFromJSONTyped,
     UpdateInfoToJSON,
-} from './';
+} from './UpdateInfo';
 
 /**
  * エンジン自体に関する情報
@@ -105,7 +109,27 @@ export interface EngineManifest {
      * @type {SupportedFeatures}
      * @memberof EngineManifest
      */
-    supportedFeatures: SupportedFeatures | null;
+    supportedFeatures: SupportedFeatures;
+}
+
+/**
+ * Check if a given object implements the EngineManifest interface.
+ */
+export function instanceOfEngineManifest(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "manifestVersion" in value;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "brandName" in value;
+    isInstance = isInstance && "uuid" in value;
+    isInstance = isInstance && "url" in value;
+    isInstance = isInstance && "icon" in value;
+    isInstance = isInstance && "defaultSamplingRate" in value;
+    isInstance = isInstance && "termsOfService" in value;
+    isInstance = isInstance && "updateInfos" in value;
+    isInstance = isInstance && "dependencyLicenses" in value;
+    isInstance = isInstance && "supportedFeatures" in value;
+
+    return isInstance;
 }
 
 export function EngineManifestFromJSON(json: any): EngineManifest {

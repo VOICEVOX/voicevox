@@ -138,7 +138,7 @@ const generateAndSaveOneAudio = async () => {
     quasarNotify: $q.notify,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
-    notifyOnGenerateAudio: store.state.confirmedTips.notifyOnGenerateAudio,
+    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
   });
 };
 const generateAndSaveAllAudio = async () => {
@@ -147,7 +147,7 @@ const generateAndSaveAllAudio = async () => {
     quasarNotify: $q.notify,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
-    notifyOnGenerateAudio: store.state.confirmedTips.notifyOnGenerateAudio,
+    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
   });
 };
 const generateAndConnectAndSaveAudio = async () => {
@@ -156,7 +156,7 @@ const generateAndConnectAndSaveAudio = async () => {
     dispatch: store.dispatch,
     quasarNotify: $q.notify,
     encoding: store.state.savingSetting.fileEncoding,
-    notifyOnGenerateAudio: store.state.confirmedTips.notifyOnGenerateAudio,
+    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
   });
 };
 const saveProject = async () => {

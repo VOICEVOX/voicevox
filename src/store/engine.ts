@@ -310,23 +310,15 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
      * 指定した話者（スタイルID）がエンジン側で初期化されているか
      */
     async action({ dispatch }, { engineId, styleId }) {
-      // FIXME: なぜかbooleanではなくstringが返ってくる。
-      // おそらくエンジン側のresponse_modelをBaseModel継承にしないといけない。
-      const isInitialized: string = await dispatch(
-        "INSTANTIATE_ENGINE_CONNECTOR",
-        {
-          engineId,
-        }
-      ).then(
-        (instance) =>
-          instance.invoke("isInitializedSpeakerIsInitializedSpeakerGet")({
-            speaker: styleId,
-          }) as unknown as string
+      const isInitialized = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+        engineId,
+      }).then((instance) =>
+        instance.invoke("isInitializedSpeakerIsInitializedSpeakerGet")({
+          speaker: styleId,
+        })
       );
-      if (isInitialized !== "true" && isInitialized !== "false")
-        throw new Error(`Failed to get isInitialized.`);
 
-      return isInitialized === "true";
+      return isInitialized;
     },
   },
 
