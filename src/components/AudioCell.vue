@@ -271,7 +271,7 @@ const deleteButtonEnable = computed(() => {
 });
 
 // テキスト編集エリアの右クリック
-// input.valueをスクリプトから変更しない場合は@changeが発火しないため、
+// input.valueをスクリプトから変更した場合は@changeが発火しないため、
 // @blurと@keydown.prevent.enter.exactに分けている
 const contextMenudata = ref<ContextMenuItemData[]>([
   {
@@ -306,7 +306,7 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     type: "button",
     label: "貼り付け",
     onClick: async () => {
-      // TODO: pasteOnAudioCellを通す
+      // TODO: pasteOnAudioCell を通す
       const text = await navigator.clipboard.readText();
       const beforeLength = textfieldSelection.nativeEl.value.length;
       const end = textfieldSelection.end ?? 0;
