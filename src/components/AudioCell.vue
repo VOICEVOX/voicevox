@@ -22,6 +22,7 @@
       v-model:selected-voice="selectedVoice"
     />
     <q-input
+      :hint="AudioCellHint"
       ref="textfield"
       filled
       dense
@@ -198,6 +199,15 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
     }
   }
 };
+
+// テキスト欄下側に表示するヒント
+const AudioCellHint = computed(() => {
+  // テキスト欄追加ヒント
+  if (isActiveAudioCell.value && !store.state.showAddAudioItemButton) {
+    return "Shift + Enterで改行";
+  }
+  return "";
+});
 
 // 行番号を表示するかどうか
 const showTextLineNumber = computed(() => store.state.showTextLineNumber);

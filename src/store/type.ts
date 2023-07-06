@@ -1015,6 +1015,7 @@ export type SettingStoreState = {
   themeSetting: ThemeSetting;
   editorFont: EditorFontType;
   showTextLineNumber: boolean;
+  showAddAudioItemButton: boolean;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
@@ -1056,6 +1057,11 @@ export type SettingStoreTypes = {
   SET_SHOW_TEXT_LINE_NUMBER: {
     mutation: { showTextLineNumber: boolean };
     action(payload: { showTextLineNumber: boolean }): void;
+  };
+
+  SET_SHOW_ADD_AUDIO_ITEM_BUTTON: {
+    mutation: { showAddAudioItemButton: boolean };
+    action(payload: { showAddAudioItemButton: boolean }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

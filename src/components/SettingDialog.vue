@@ -590,6 +590,28 @@
                 >
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>テキスト追加ボタンの表示</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      右下のテキスト追加ボタンを非表示にします。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="showAddAudioItemButton"
+                  @update:model-value="changeShowAddAudioItemButton($event)"
+                >
+                </q-toggle>
+              </q-card-actions>
             </q-card>
 
             <!-- Experimental Card -->
@@ -919,6 +941,15 @@ const showTextLineNumber = computed(() => store.state.showTextLineNumber);
 const changeShowTextLineNumber = (showTextLineNumber: boolean) => {
   store.dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
     showTextLineNumber,
+  });
+};
+
+const showAddAudioItemButton = computed(
+  () => store.state.showAddAudioItemButton
+);
+const changeShowAddAudioItemButton = (showAddAudioItemButton: boolean) => {
+  store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+    showAddAudioItemButton,
   });
 };
 
