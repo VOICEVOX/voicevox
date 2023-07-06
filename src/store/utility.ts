@@ -25,6 +25,18 @@ export function sanitizeFileName(fileName: string): string {
   return fileName.replace(sanitizer, "");
 }
 
+export function textExportToText(targettext: string): string {
+  let resolvedText = targettext.replace(/\{.*?\}/g, "");
+  resolvedText = resolvedText.replace(/\[(.*?)\]/g, "$1");
+  return resolvedText;
+}
+
+export function textExportToEngine(targettext: string): string {
+  let resolvedText = targettext.replace(/\[.*?\]/g, "");
+  resolvedText = resolvedText.replace(/\{(.*?)\}/g, "$1");
+  return resolvedText;
+}
+
 export function buildProjectFileName(state: State, extension?: string): string {
   const headItemText = state.audioItems[state.audioKeys[0]].text;
 
