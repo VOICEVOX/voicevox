@@ -32,7 +32,7 @@ export function buildProjectFileName(state: State, extension?: string): string {
     state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
 
   const headTailItemText =
-    state.audioKeys.length === 0
+    state.audioKeys.length === 1
       ? headItemText
       : headItemText + "..." + tailItemText;
 
