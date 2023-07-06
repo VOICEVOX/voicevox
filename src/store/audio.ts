@@ -1678,6 +1678,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
 
+        const ExportToText = (text: string): string => {
+          let resolvedText = text.replace(/\(.*?\)/g, "");
+          resolvedText = resolvedText.replace(/\[(.*?)\]/g, "$1");
+          return resolvedText;
+        };
+
         const texts: string[] = [];
         for (const audioKey of state.audioKeys) {
           const styleId = state.audioItems[audioKey].voice.styleId;
@@ -1690,7 +1696,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 
-          texts.push(speakerName + state.audioItems[audioKey].text);
+          const resolvedText = ExportToText(state.audioItems[audioKey].text);
+          texts.push(speakerName + resolvedText);
         }
 
         const textBlob = ((): Blob => {
@@ -1997,12 +2004,19 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
+        const ExportToEngine = (targettext: string): string => {
+          let resolvedText = targettext.replace(/\[.*?\]/g, "");
+          resolvedText = resolvedText.replace(/\{(.*?)\}/g, "$1");
+          return resolvedText;
+        };
+        const resolvedText = ExportToEngine(text);
+
         try {
           if (query !== undefined) {
             const accentPhrases: AccentPhrase[] = await dispatch(
               "FETCH_ACCENT_PHRASES",
               {
-                text,
+                text: resolvedText,
                 engineId,
                 styleId,
               }
