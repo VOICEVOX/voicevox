@@ -188,25 +188,28 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
 
     if (texts.length > 1) {
       event.preventDefault();
-      blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
-
-      const prevAudioKey = props.audioKey;
-      if (audioTextBuffer.value == "") {
-        const text = texts.shift();
-        if (text == undefined) return;
-        setAudioTextBuffer(text);
-        await pushAudioTextIfNeeded();
-      }
-
-      const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
-        texts,
-        voice: audioItem.value.voice,
-        prevAudioKey,
-      });
-      if (audioKeys)
-        emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
+      await putMultilineText(texts);
     }
   }
+};
+const putMultilineText = async (texts: string[]) => {
+  blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
+
+  const prevAudioKey = props.audioKey;
+  if (audioTextBuffer.value == "") {
+    const text = texts.shift();
+    if (text == undefined) return;
+    setAudioTextBuffer(text);
+    await pushAudioTextIfNeeded();
+  }
+
+  const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
+    texts,
+    voice: audioItem.value.voice,
+    prevAudioKey,
+  });
+  if (audioKeys)
+    emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
 };
 
 // 行番号を表示するかどうか
