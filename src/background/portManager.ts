@@ -121,9 +121,17 @@ export async function getPidFromPort(
     isNested
   );
 
-  const stdout = execFileSync(exec.cmd, exec.args, {
-    shell: true,
-  }).toString();
+  // lsofは、ポートを使用しているプロセスが存在しない場合は
+  // エラーを返すので、エラーを無視して割り当て可能として扱う
+  let stdout: string;
+  try {
+    stdout = execFileSync(exec.cmd, exec.args, {
+      shell: true,
+    }).toString();
+  } catch (e) {
+    portLog(hostInfo.port, "Assignable; Nobody uses this port!", isNested);
+    return undefined;
+  }
 
   // Windows の場合は, lsof のように port と pid が 1to1 で取れないので, netstat の stdout をパース
   const pid = isWindows ? parse4windows(stdout) : stdout;
