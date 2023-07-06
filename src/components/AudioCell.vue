@@ -306,7 +306,6 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     type: "button",
     label: "貼り付け",
     onClick: async () => {
-      // TODO: pasteOnAudioCell を通す
       const text = await navigator.clipboard.readText();
 
       if (textSplitType.value !== "OFF") {
