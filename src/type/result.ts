@@ -4,12 +4,9 @@ export type Result<T, E extends string = string> =
 export const success = <T>(value: T): SuccessResult<T> => ({ ok: true, value });
 export type SuccessResult<T> = { ok: true; value: T };
 type Failure = {
-  (error: Error): FailureResult<typeof unknownCode>;
-  <C extends string | undefined>(code: C, error: Error): FailureResult<
-    C extends string ? C : typeof unknownCode
-  >;
+  (error: Error): FailureResult<undefined>;
+  <C extends string | undefined>(code: C, error: Error): FailureResult<C>;
 };
-const unknownCode = "UNKNOWN" as const;
 export const failure: Failure = <C extends string>(
   codeOrError: C | undefined | Error,
   error?: Error
@@ -22,7 +19,7 @@ export const failure: Failure = <C extends string>(
 
       return {
         ok: false as const,
-        code: unknownCode,
+        code: undefined,
         error: error,
       };
     }
@@ -36,7 +33,7 @@ export const failure: Failure = <C extends string>(
     case "object": {
       return {
         ok: false as const,
-        code: unknownCode,
+        code: undefined,
         error: codeOrError,
       };
     }
