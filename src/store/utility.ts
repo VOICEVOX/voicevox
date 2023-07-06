@@ -32,9 +32,9 @@ export function buildProjectFileName(state: State, extension?: string): string {
     state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
 
   const headTailItemText =
-    headItemText !== tailItemText
-      ? headItemText + "..." + tailItemText
-      : headItemText;
+    state.audioKeys.length === 0
+      ? headItemText
+      : headItemText + "..." + tailItemText;
 
   let defaultFileNameStem = sanitizeFileName(headTailItemText);
 
