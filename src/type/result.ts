@@ -37,7 +37,7 @@
  * const value = await asyncGenerateString().then(getValueOrThrow);
  * console.log(value); // -> "ok string"
  */
-export type Result<T, E extends string = string> =
+export type Result<T, E extends string | undefined = string | undefined> =
   | SuccessResult<T>
   | FailureResult<E>;
 export const success = <T>(value: T): SuccessResult<T> => ({ ok: true, value });
@@ -81,7 +81,9 @@ export const failure: Failure = <C extends string>(
     }
   }
 };
-export class ResultError<E extends string = string> extends Error {
+export class ResultError<
+  E extends string | undefined = string | undefined
+> extends Error {
   public code: E;
 
   constructor(public readonly result: FailureResult<E>) {
