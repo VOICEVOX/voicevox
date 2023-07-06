@@ -308,6 +308,15 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     onClick: async () => {
       // TODO: pasteOnAudioCell を通す
       const text = await navigator.clipboard.readText();
+
+      if (textSplitType.value !== "OFF") {
+        const texts = textSplitter[textSplitType.value](text);
+        if (texts.length > 1) {
+          await putMultilineText(texts);
+          return;
+        }
+      }
+
       const beforeLength = textfieldSelection.nativeEl.value.length;
       const end = textfieldSelection.end ?? 0;
       setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text, true));
