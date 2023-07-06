@@ -66,7 +66,7 @@ import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import ContextMenu, { ContextMenuItemData } from "@/components/ContextMenu.vue";
 import { useStore } from "@/store";
-import { AudioKey, Voice } from "@/type/preload";
+import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { QInputSelectionHelper } from "@/helpers/QInputSelectionHelper";
 
 const props =
@@ -171,20 +171,20 @@ const setActiveAudioKey = () => {
 
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
-const isEnableSplitText = computed(() => store.state.splitTextWhenPaste);
+
 // コピペしたときに句点と改行で区切る
+const textSplitType = computed(() => store.state.splitTextWhenPaste);
+const textSplitter: Record<SplitTextWhenPasteType, (text: string) => string[]> =
+  {
+    PERIOD_AND_NEW_LINE: (text) =>
+      text.replaceAll("。", "。\n\r").split(/[\n\r]/),
+    NEW_LINE: (text) => text.split(/[\n\r]/),
+    OFF: (text) => [text],
+  };
 const pasteOnAudioCell = async (event: ClipboardEvent) => {
-  if (event.clipboardData && isEnableSplitText.value !== "OFF") {
-    let texts: string[] = [];
+  if (event.clipboardData && textSplitType.value !== "OFF") {
     const clipBoardData = event.clipboardData.getData("text/plain");
-    switch (isEnableSplitText.value) {
-      case "PERIOD_AND_NEW_LINE":
-        texts = clipBoardData.replaceAll("。", "。\n\r").split(/[\n\r]/);
-        break;
-      case "NEW_LINE":
-        texts = clipBoardData.split(/[\n\r]/);
-        break;
-    }
+    const texts = textSplitter[textSplitType.value](clipBoardData);
 
     if (texts.length > 1) {
       event.preventDefault();
