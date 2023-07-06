@@ -194,7 +194,7 @@ function findOrCheckPort(
       const address = server.address();
       server.close();
       if (address == undefined || typeof address === "string") {
-        reject(new Error("'address' is null or string"));
+        reject(new Error(`'address' is null or string: ${address}`));
         return;
       }
       resolve(address.port);
