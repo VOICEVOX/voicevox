@@ -2007,7 +2007,7 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         const ExportToEngine = (targettext: string): string => {
           let resolvedText = targettext.replace(/\[.*?\]/g, "");
-          resolvedText = resolvedText.replace(/\{(.*?)\}/g, "$1");
+          resolvedText = resolvedText.replace(/\((.*?)\)/g, "$1");
           return resolvedText;
         };
         const resolvedText = ExportToEngine(text);
