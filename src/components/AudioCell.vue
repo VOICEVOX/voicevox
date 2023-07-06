@@ -204,7 +204,7 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
 const AudioCellHint = computed(() => {
   // テキスト欄追加ヒント
   if (isActiveAudioCell.value && !store.state.showAddAudioItemButton) {
-    return "Shift + Enterで改行";
+    return "Shift + Enterでテキスト欄を追加";
   }
   return "";
 });
