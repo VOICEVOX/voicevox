@@ -34,9 +34,6 @@ export const failure: Failure = <C extends string>(
       return { ok: false as const, code: codeOrError, error };
     }
     case "object": {
-      if (codeOrError === null) {
-        throw new Error("Error must be specified");
-      }
       return {
         ok: false as const,
         code: unknownCode,
