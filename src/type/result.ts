@@ -40,47 +40,53 @@
 export type Result<T, E extends string | undefined = string | undefined> =
   | SuccessResult<T>
   | FailureResult<E>;
-export const success = <T>(value: T): SuccessResult<T> => ({ ok: true, value });
+
+/**
+ * 成功Result
+ */
 export type SuccessResult<T> = { ok: true; value: T };
+
+/**
+ * 失敗Result
+ */
+export type FailureResult<E> = {
+  ok: false;
+  code: E;
+  error: Error;
+};
+
+/**
+ * 成功Resultを返す
+ */
+export const success = <T>(value: T): SuccessResult<T> => ({ ok: true, value });
 type Failure = {
   (error: Error): FailureResult<undefined>;
   <C extends string | undefined>(code: C, error: Error): FailureResult<C>;
 };
+
+/**
+ * 失敗Resultを返す
+ */
 export const failure: Failure = <C extends string>(
   codeOrError: C | undefined | Error,
   error?: Error
 ) => {
-  switch (typeof codeOrError) {
-    case "undefined": {
-      if (error === undefined) {
-        throw new Error("Error must be specified");
-      }
-
-      return {
-        ok: false as const,
-        code: undefined,
-        error: error,
-      };
-    }
-    case "string": {
-      if (error === undefined) {
-        throw new Error("Error must be specified");
-      }
-
-      return { ok: false as const, code: codeOrError, error };
-    }
-    case "object": {
-      return {
-        ok: false as const,
-        code: undefined,
-        error: codeOrError,
-      };
-    }
-    default: {
+  if (codeOrError instanceof Error) {
+    return {
+      ok: false as const,
+      code: undefined,
+      error: codeOrError,
+    };
+  } else if (codeOrError == undefined || typeof codeOrError === "string") {
+    if (error === undefined) {
       throw new Error("Error must be specified");
     }
+    return { ok: false as const, code: codeOrError, error };
+  } else {
+    throw new Error("Error must be specified");
   }
 };
+
 export class ResultError<
   E extends string | undefined = string | undefined
 > extends Error {
@@ -91,6 +97,7 @@ export class ResultError<
     this.code = result.code;
   }
 }
+
 /*
  * resultがSuccessResultの場合はvalueを返す
  * resultがFailureResultの場合はResultErrorをthrowする
@@ -101,9 +108,4 @@ export const getValueOrThrow = <T>(result: Result<T>): T | never => {
   } else {
     throw new ResultError(result);
   }
-};
-export type FailureResult<E> = {
-  ok: false;
-  code: E;
-  error: Error;
 };
