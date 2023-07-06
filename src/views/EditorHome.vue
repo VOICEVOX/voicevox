@@ -200,6 +200,7 @@ import {
   SplitterPosition,
   Voice,
 } from "@/type/preload";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 const props =
@@ -474,7 +475,7 @@ const focusCell = ({ audioKey }: { audioKey: AudioKey }) => {
 const disableDefaultUndoRedo = (event: KeyboardEvent) => {
   // ctrl+z, ctrl+shift+z, ctrl+y
   if (
-    event.ctrlKey &&
+    isOnCommandOrCtrlKeyDown(event) &&
     (event.key == "z" || (!event.shiftKey && event.key == "y"))
   ) {
     event.preventDefault();
