@@ -203,18 +203,33 @@ function findOrCheckPort(
   });
 }
 
+type Address = Omit<HostInfo, "protocol">;
+
 /**
  * 割り当て可能な他のポートを探します
  *
- * @param hostInfo ホスト情報
+ * @param address ホスト情報
  * @returns 割り当て可能なポート番号 or `undefined` (割り当て可能なポートが見つからなかったとき)
  */
 export async function findAltPort(
-  hostInfo: HostInfo
+  address: Address
 ): Promise<number | undefined> {
-  const basePort = hostInfo.port;
-  portLog(basePort, "Find another assignable port");
-  const altPort = await findOrCheckPort(0, hostInfo.hostname);
+  const basePort = address.port;
+  portLog(basePort, `Find another assignable port from ${basePort}...`);
+
+  // エンジン指定のポート + 100番までを探索  エフェメラルポートの範囲の最大は超えないようにする
+  const altPortMax = Math.min(basePort + 100, 65535);
+
+  for (let altPort = basePort + 1; altPort <= altPortMax; altPort++) {
+    portLog(basePort, `Trying whether port ${altPort} is assignable...`);
+    if (await isAssignablePort({ port: altPort, hostname: address.hostname })) {
+      return altPort;
+    }
+  }
+
+  // 指定のポート + 100番まで見つからなかった場合ランダムなポートを使用する
+  portWarn(basePort, `No alternative port found! ${basePort}...${altPortMax}`);
+  const altPort = await findOrCheckPort(0, address.hostname);
   if (altPort == undefined) {
     portWarn(basePort, "No alternative port found!");
   } else {
@@ -225,15 +240,15 @@ export async function findAltPort(
 
 /**
  * ポートが割り当て可能か確認します
- * @param hostInfo ホスト情報
+ * @param address ホスト情報
  */
-export async function isAssignablePort(hostInfo: HostInfo) {
+export async function isAssignablePort(address: Address) {
   const isAssignable =
-    (await findOrCheckPort(hostInfo.port, hostInfo.hostname)) != undefined;
+    (await findOrCheckPort(address.port, address.hostname)) != undefined;
   if (isAssignable) {
-    portLog(hostInfo.port, "Assignable");
+    portLog(address.port, "Assignable");
   } else {
-    portWarn(hostInfo.port, "Nonassignable");
+    portWarn(address.port, "Nonassignable");
   }
   return isAssignable;
 }
