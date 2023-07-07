@@ -166,7 +166,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
         await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId }).then(
           (instance) => {
             // マージ処理で削除された項目をエンジンから削除する。
-            Promise.all(
+            return Promise.all(
               [...removedDictIdSet].map((id) =>
                 instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")(
                   {

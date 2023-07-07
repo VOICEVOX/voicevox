@@ -9,7 +9,7 @@ import { storeKey } from "@/store";
 
 const store = createStore({
   actions: {
-    GET_HOW_TO_USE_TEXT: async () => {
+    GET_HOW_TO_USE_TEXT: () => {
       return "test string";
     },
   },

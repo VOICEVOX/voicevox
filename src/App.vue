@@ -12,14 +12,14 @@ import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
 
 const store = useStore();
-store.dispatch("INIT_VUEX");
+void store.dispatch("INIT_VUEX");
 
 // URLパラメータに従ってマルチエンジンをオフにする
 const route = useRoute();
 const query = computed(() => route.query);
 watch(query, (newQuery) => {
   if (newQuery) {
-    store.dispatch(
+    void store.dispatch(
       "SET_IS_MULTI_ENGINE_OFF_MODE",
       newQuery["isMultiEngineOffMode"] === "true"
     );
