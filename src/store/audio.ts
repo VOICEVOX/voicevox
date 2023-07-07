@@ -20,7 +20,8 @@ import {
   convertLongVowel,
   createKanaRegex,
   currentDateString,
-  replaceSkipWord,
+  replaceSkipWordForEngine,
+  replaceSkipWordForTextFile,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -1691,9 +1692,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 
-          const ignoreText = replaceSkipWord(
+          const ignoreText = replaceSkipWordForTextFile(
             state.audioItems[audioKey].text
-          ).skipInCurlyBrackets;
+          );
           texts.push(speakerName + ignoreText);
         }
 
@@ -2002,7 +2003,7 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
-        const ignoreText = replaceSkipWord(text).skipInBrackets;
+        const ignoreText = replaceSkipWordForEngine(text);
 
         try {
           if (query !== undefined) {

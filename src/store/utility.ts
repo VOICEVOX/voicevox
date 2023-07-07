@@ -92,17 +92,18 @@ function replaceTag(
   return result;
 }
 
-export function replaceSkipWord(targettext: string): {
-  skipInCurlyBrackets: string;
-  skipInBrackets: string;
-} {
+export function replaceSkipWordForTextFile(targettext: string): string {
   // {}をスキップ
-  const skipInCurlyBrackets = targettext.replace(/\[(.*?)\]\{.*?\}/g, "$1");
+  let resolvedText = targettext.replace(/\{.*?\}/g, "");
+  resolvedText = resolvedText.replace(/\[(.*?)\]/g, "$1");
+  return resolvedText;
+}
 
+export function replaceSkipWordForEngine(targettext: string): string {
   // []をスキップ
-  let skipInBrackets = targettext.replace(/\[(.*?)\]/g, "");
-  skipInBrackets = skipInBrackets.replace(/\{(.*?)\}/g, "$1");
-  return { skipInCurlyBrackets, skipInBrackets };
+  let resolvedText = targettext.replace(/\[.*?\]/g, "");
+  resolvedText = resolvedText.replace(/\{(.*?)\}/g, "$1");
+  return resolvedText;
 }
 
 export function buildFileNameFromRawData(
