@@ -11,29 +11,29 @@
     "
     :class="selected ? 'active-menu' : 'bg-transparent'"
     :disable="disable"
+    aria-haspopup="menu"
     @click="
       (menudata.type === 'button' || menudata.type === 'root') &&
         menudata.onClick?.()
     "
-    aria-haspopup="menu"
   >
     {{ menudata.label }}
     <q-menu
       v-if="'subMenu' in menudata"
+      v-model="selectedComputed"
       transition-show="none"
       transition-hide="none"
       :fit="true"
-      v-model="selectedComputed"
     >
       <q-list dense>
         <menu-item
           v-for="(menu, index) of menudata.subMenu"
           :key="index"
+          v-model:selected="subMenuOpenFlags[index]"
           :menudata="menu"
           :disable="
             uiLocked && menu.type !== 'separator' && menu.disableWhenUiLocked
           "
-          v-model:selected="subMenuOpenFlags[index]"
           @mouseenter="reassignSubMenuOpen(index)"
           @mouseleave="reassignSubMenuOpen.cancel()"
         />

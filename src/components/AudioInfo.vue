@@ -1,5 +1,5 @@
 <template>
-  <div class="root full-height q-py-md" v-if="query">
+  <div v-if="query" class="root full-height q-py-md">
     <div v-if="enablePreset" class="q-px-md">
       <div class="row items-center no-wrap q-mb-xs">
         <div class="text-body1">プリセット</div>
@@ -7,8 +7,8 @@
           <q-menu transition-duration="100">
             <q-list>
               <q-item
-                clickable
                 v-close-popup
+                clickable
                 @click="registerPreset({ overwrite: false })"
               >
                 <q-item-section avatar>
@@ -23,8 +23,8 @@
                 </q-item-section>
               </q-item>
               <q-item
-                clickable
                 v-close-popup
+                clickable
                 @click="showsPresetEditDialog = true"
               >
                 <q-item-section avatar>
@@ -56,12 +56,12 @@
           transition-hide="none"
           :disable="uiLocked"
         >
-          <template v-slot:selected-item="scope">
+          <template #selected-item="scope">
             <div class="preset-select-label">
               {{ scope.opt.label }}
             </div>
           </template>
-          <template v-slot:no-option>
+          <template #no-option>
             <q-item>
               <q-item-section class="text-grey">
                 プリセットはありません
@@ -71,13 +71,13 @@
         </q-select>
 
         <q-btn
+          v-show="!isRegisteredPreset || isChangedPreset"
           dense
           outline
           class="col-auto q-ml-xs"
           size="sm"
           text-color="display"
           :label="isRegisteredPreset ? '再登録' : '登録'"
-          v-show="!isRegisteredPreset || isChangedPreset"
           @click="registerPreset({ overwrite: isRegisteredPreset })"
         />
       </div>
@@ -110,10 +110,10 @@
 
             <q-card-actions align="right">
               <q-btn
+                v-close-popup
                 flat
                 label="キャンセル"
                 @click="closeAllDialog"
-                v-close-popup
               />
               <q-btn flat type="submit" label="確定" />
             </q-card-actions>
@@ -147,10 +147,10 @@
                 <q-item-section> プリセットの再登録のみ行う </q-item-section>
               </q-item>
               <q-item
+                v-close-popup
                 clickable
                 class="no-margin"
                 @click="closeAllDialog"
-                v-close-popup
               >
                 <q-item-section avatar>
                   <q-avatar icon="arrow_forward" text-color="blue" />
@@ -182,7 +182,7 @@
           "
           @change="handleParameterChange(parameter, $event)"
         >
-          <template v-slot:before
+          <template #before
             ><span class="text-body1 text-display">{{
               parameter.label
             }}</span></template
@@ -192,7 +192,7 @@
           dense
           snap
           color="primary-light"
-          trackSize="2px"
+          track-size="2px"
           :min="parameter.slider.qSliderProps.min.value"
           :max="parameter.slider.qSliderProps.max.value"
           :step="parameter.slider.qSliderProps.step.value"
@@ -218,12 +218,12 @@
       <span class="text-body1 q-mb-xs">モーフィング</span>
       <div class="row no-wrap items-center">
         <character-button
+          v-model:selected-voice="morphingTargetVoice"
           class="q-my-xs"
           :character-infos="morphingTargetCharacters"
           :show-engine-info="morphingTargetEngines.length >= 2"
           :emptiable="true"
           :ui-locked="uiLocked"
-          v-model:selected-voice="morphingTargetVoice"
         />
         <div class="q-pl-xs row overflow-hidden">
           <div class="text-body2 ellipsis overflow-hidden">
@@ -275,7 +275,7 @@
           dense
           snap
           color="primary-light"
-          trackSize="2px"
+          track-size="2px"
           :min="morphingRateSlider.qSliderProps.min.value"
           :max="morphingRateSlider.qSliderProps.max.value"
           :step="morphingRateSlider.qSliderProps.step.value"

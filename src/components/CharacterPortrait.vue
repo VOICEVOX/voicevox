@@ -1,7 +1,7 @@
 <template>
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
-    <span class="character-engine-name" v-if="isMultipleEngine">{{
+    <span v-if="isMultipleEngine" class="character-engine-name">{{
       engineName
     }}</span>
     <img :src="portraitPath" class="character-portrait" :alt="characterName" />

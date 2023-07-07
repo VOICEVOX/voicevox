@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="dictionaryManageDialogOpenedComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="setting-dialog transparent-backdrop"
-    v-model="dictionaryManageDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container>
@@ -52,24 +52,24 @@
                   outline
                   text-color="warning"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="deleteWord"
                   :disable="uiLocked || !isDeletable"
+                  @click="deleteWord"
                   >削除</q-btn
                 >
                 <q-btn
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="editWord"
                   :disable="uiLocked || !selectedId"
+                  @click="editWord"
                   >編集</q-btn
                 >
                 <q-btn
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="newWord"
                   :disable="uiLocked"
+                  @click="newWord"
                   >追加</q-btn
                 >
               </div>
@@ -78,13 +78,13 @@
               <q-item
                 v-for="(value, key) in userDict"
                 :key="key"
-                tag="label"
                 v-ripple
+                tag="label"
                 clickable
-                @click="selectWord(key)"
-                @dblclick="editWord"
                 :active="selectedId === key"
                 active-class="active-word"
+                @click="selectWord(key)"
+                @dblclick="editWord"
               >
                 <q-item-section>
                   <q-item-label class="text-display">{{
@@ -105,27 +105,27 @@
               <div class="text-h6">単語</div>
               <q-input
                 ref="surfaceInput"
-                class="word-input"
                 v-model="surface"
-                @blur="setSurface(surface)"
-                @keydown="yomiFocusWhenEnter"
+                class="word-input"
                 dense
                 :disable="uiLocked"
+                @blur="setSurface(surface)"
+                @keydown="yomiFocusWhenEnter"
               />
             </div>
             <div class="row q-pl-md q-pt-sm">
               <div class="text-h6">読み</div>
               <q-input
                 ref="yomiInput"
-                class="word-input q-pb-none"
                 v-model="yomi"
-                @blur="setYomi(yomi)"
-                @keydown="setYomiWhenEnter"
+                class="word-input q-pb-none"
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
+                @blur="setYomi(yomi)"
+                @keydown="setYomiWhenEnter"
               >
-                <template v-slot:error>
+                <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
                 </template>
               </q-input>
@@ -150,8 +150,8 @@
                   color="primary-light"
                   text-color="display-on-primary"
                   icon="stop"
-                  @click="stop"
                   :disable="nowGenerating"
+                  @click="stop"
                 />
               </div>
               <div
@@ -163,7 +163,7 @@
                     :accent-phrase="accentPhrase"
                     :accent-phrase-index="0"
                     :ui-locked="uiLocked"
-                    :onChangeAccent="changeAccent"
+                    :on-change-accent="changeAccent"
                   />
                   <template
                     v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -220,24 +220,24 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="resetWord"
                 :disable="uiLocked || !isWordChanged"
+                @click="resetWord"
                 >リセット</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="discardOrNotDialog(cancel)"
                 :disable="uiLocked"
+                @click="discardOrNotDialog(cancel)"
                 >キャンセル</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="saveWord"
                 :disable="uiLocked || !isWordChanged"
+                @click="saveWord"
                 >保存</q-btn
               >
             </div>

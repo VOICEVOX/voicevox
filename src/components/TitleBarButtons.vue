@@ -8,15 +8,15 @@
   >
     <q-btn
       v-if="isPinned"
+      id="pinned-btn"
       dense
       flat
       round
       icon="push_pin"
       color="teal"
       class="title-bar-buttons"
-      id="pinned-btn"
-      @click="changePinWindow()"
       aria-label="最前面固定を解除"
+      @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
         最前面固定を解除
@@ -24,15 +24,15 @@
     </q-btn>
     <q-btn
       v-else
+      id="pinned-btn"
       dense
       flat
       round
       icon="push_pin"
       color="display"
       class="title-bar-buttons rotate-45"
-      id="pinned-btn"
-      @click="changePinWindow()"
       aria-label="最前面に固定"
+      @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
         最前面に固定
@@ -53,15 +53,15 @@
   >
     <q-btn
       v-if="isPinned"
+      id="pinned-btn"
       dense
       flat
       round
       icon="push_pin"
       color="teal"
       class="title-bar-buttons"
-      id="pinned-btn"
-      @click="changePinWindow()"
       aria-label="最前面固定を解除"
+      @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
         最前面固定を解除
@@ -69,14 +69,14 @@
     </q-btn>
     <q-btn
       v-else
+      id="pinned-btn"
       dense
       flat
       round
       icon="push_pin"
       class="title-bar-buttons rotate-45"
-      id="pinned-btn"
-      @click="changePinWindow()"
       aria-label="最前面に固定"
+      @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
         最前面に固定
