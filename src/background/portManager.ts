@@ -242,11 +242,5 @@ export async function findAltPort(
  * @param hostname 確認するホスト名
  */
 export async function isAssignablePort(port: number, hostname: string) {
-  const isAssignable = (await findOrCheckPort(port, hostname)) != undefined;
-  if (isAssignable) {
-    portLog(port, "Assignable");
-  } else {
-    portWarn(port, "Nonassignable");
-  }
-  return isAssignable;
+  return (await findOrCheckPort(port, hostname)) != undefined;
 }
