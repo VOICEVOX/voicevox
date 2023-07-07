@@ -251,7 +251,9 @@ export class EngineManager {
       `ENGINE ${engineId}: Checking whether port ${engineHostInfo.port} is assignable...`
     );
 
-    if (!(await isAssignablePort(engineHostInfo))) {
+    if (
+      !(await isAssignablePort(engineHostInfo.port, engineHostInfo.hostname))
+    ) {
       // ポートを既に割り当てているプロセスidの取得
       const pid = await getPidFromPort(engineHostInfo);
       if (pid != undefined) {
@@ -267,7 +269,10 @@ export class EngineManager {
       }
 
       // 代替ポートの検索
-      const altPort = await findAltPort(engineHostInfo);
+      const altPort = await findAltPort(
+        engineHostInfo.port,
+        engineHostInfo.hostname
+      );
 
       // 代替ポートが見つからないとき
       if (altPort == undefined) {
