@@ -278,9 +278,9 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     type: "button",
     label: "切り取り",
     onClick: async () => {
-      const text = textfieldSelection.getAsString();
-      if (text.length === 0) return;
+      if (textfieldSelection.isEmpty) return;
 
+      const text = textfieldSelection.getAsString();
       const start = textfieldSelection.start;
       setAudioTextBuffer(textfieldSelection.getReplacedStringTo(""));
       await navigator.clipboard.writeText(text);
@@ -295,10 +295,9 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     type: "button",
     label: "コピー",
     onClick: () => {
-      const text = textfieldSelection.getAsString();
-      if (text.length === 0) return;
+      if (textfieldSelection.isEmpty) return;
 
-      navigator.clipboard.writeText(text);
+      navigator.clipboard.writeText(textfieldSelection.getAsString());
     },
     disableWhenUiLocked: true,
   },
@@ -308,6 +307,7 @@ const contextMenudata = ref<ContextMenuItemData[]>([
     onClick: async () => {
       const text = await navigator.clipboard.readText();
 
+      // 複数行貼り付け
       if (textSplitType.value !== "OFF") {
         const texts = textSplitter[textSplitType.value](text);
         if (texts.length > 1) {
