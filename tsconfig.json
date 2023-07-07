@@ -18,6 +18,8 @@
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
   },
   "include": [
+    "*.ts",
+    "*.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
