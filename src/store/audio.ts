@@ -20,8 +20,7 @@ import {
   convertLongVowel,
   createKanaRegex,
   currentDateString,
-  textExportToEngine,
-  textExportToText,
+  replaceSkipWord,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -1692,10 +1691,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 
-          const resolvedText = textExportToText(
+          const ignoreText = replaceSkipWord(
             state.audioItems[audioKey].text
-          );
-          texts.push(speakerName + resolvedText);
+          ).skipInCurlyBrackets;
+          texts.push(speakerName + ignoreText);
         }
 
         const textBlob = ((): Blob => {
@@ -2003,14 +2002,14 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
-        const resolvedText = textExportToEngine(text);
+        const ignoreText = replaceSkipWord(text).skipInBrackets;
 
         try {
           if (query !== undefined) {
             const accentPhrases: AccentPhrase[] = await dispatch(
               "FETCH_ACCENT_PHRASES",
               {
-                text: resolvedText,
+                text: ignoreText,
                 engineId,
                 styleId,
               }
