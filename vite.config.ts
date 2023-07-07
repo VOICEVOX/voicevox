@@ -17,6 +17,17 @@ const isElectron = process.env.VITE_IS_ELECTRON === "true";
 
 export default defineConfig((options) => {
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+
+  if (
+    process.platform != "win32" &&
+    process.platform != "linux" &&
+    process.platform != "darwin"
+  ) {
+    throw new Error(
+      `process.platform is ${process.platform}, but it should be win32, linux, darwin.`
+    );
+  }
+
   process.env.VITE_7Z_BIN_NAME =
     (options.mode === "development"
       ? path.join(__dirname, "build", "vendored", "7z") + path.sep
@@ -75,15 +86,16 @@ export default defineConfig((options) => {
         electron({
           entry: ["./src/background.ts", "./src/electron/preload.ts"],
           // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
-          onstart: ({ startup }) => {
+          onstart: async ({ startup }) => {
             // @ts-expect-error vite-electron-pluginはprocess.electronAppにelectronのプロセスを格納している。
             //   しかし、型定義はないので、ts-expect-errorで回避する。
-            const pid = process.electronApp?.pid;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            const pid: number = process.electronApp?.pid as number;
             if (pid) {
               treeKill(pid);
             }
             if (options.mode !== "test") {
-              startup([".", "--no-sandbox"]);
+              await startup([".", "--no-sandbox"]);
             }
           },
           vite: {
