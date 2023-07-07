@@ -497,7 +497,7 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
   }
 
   if (audioKeys.value.length === 1) {
-    const first = audioKeys.value[0] as AudioKey;
+    const first = audioKeys.value[0];
     const audioItem = audioItems.value[first];
     if (audioItem.text.length > 0) {
       return;
