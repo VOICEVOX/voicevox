@@ -14,6 +14,7 @@ import {
   speakerIdSchema,
   styleIdSchema,
 } from "@/type/preload";
+import { getValueOrThrow, ResultError } from "@/type/result";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -89,11 +90,15 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         const projectFileErrorMsg = `VOICEVOX Project file "${filePath}" is a invalid file.`;
 
+        let buf: ArrayBuffer;
         try {
+          buf = await window.electron
+            .readFile({ filePath })
+            .then(getValueOrThrow);
+
           await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
             filePath,
           });
-          const buf = await window.electron.readFile({ filePath });
           const text = new TextDecoder("utf-8").decode(buf).trim();
           const projectData = JSON.parse(text);
 
@@ -357,6 +362,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const message = (() => {
             if (typeof err === "string") return err;
             if (!(err instanceof Error)) return "エラーが発生しました。";
+            if (err instanceof ResultError && err.code === "ENOENT")
+              return "プロジェクトファイルが見つかりませんでした。ファイルが移動、または削除された可能性があります。";
             if (err.message.startsWith(projectFileErrorMsg))
               return "ファイルフォーマットが正しくありません。";
             return err.message;
@@ -426,13 +433,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const buf = new TextEncoder().encode(
             JSON.stringify(projectData)
           ).buffer;
-          const writeFileResult = await window.electron.writeFile({
-            filePath,
-            buffer: buf,
-          });
-          if (writeFileResult) {
-            throw new Error(writeFileResult.message);
-          }
+          await window.electron
+            .writeFile({
+              filePath,
+              buffer: buf,
+            })
+            .then(getValueOrThrow);
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit(
             "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",

@@ -49,6 +49,7 @@ import {
 import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
+import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 type SingleInstanceLockData = {
@@ -874,17 +875,23 @@ ipcMainHandle("RESTART_APP", async (_, { isMultiEngineOffMode }) => {
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
   try {
     fs.writeFileSync(filePath, new DataView(buffer));
+    return success(undefined);
   } catch (e) {
     // throwだと`.code`の情報が消えるのでreturn
     const a = e as SystemError;
-    return { code: a.code, message: a.message };
+    return failure(a.code, a);
   }
-
-  return undefined;
 });
 
-ipcMainHandle("READ_FILE", (_, { filePath }) => {
-  return fs.promises.readFile(filePath);
+ipcMainHandle("READ_FILE", async (_, { filePath }) => {
+  try {
+    const result = await fs.promises.readFile(filePath);
+    return success(result);
+  } catch (e) {
+    // throwだと`.code`の情報が消えるのでreturn
+    const a = e as SystemError;
+    return failure(a.code, a);
+  }
 });
 
 // app callback

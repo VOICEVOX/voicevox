@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="transparent-backdrop"
-    v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -55,8 +55,8 @@
               <q-item
                 v-for="speakerUuid of sampleCharacterOrder"
                 :key="speakerUuid"
-                clickable
                 v-ripple="isHoverableItem"
+                clickable
                 class="q-pa-none character-item"
                 :class="[
                   isHoverableItem && 'hoverable-character-item',
@@ -95,13 +95,13 @@
                       icon="chevron_left"
                       text-color="display"
                       class="style-select-button"
+                      aria-label="前のスタイル"
                       @mouseenter="isHoverableItem = false"
                       @mouseleave="isHoverableItem = true"
                       @click.stop="
                         selectCharacter(speakerUuid);
                         rollStyleIndex(speakerUuid, -1);
                       "
-                      aria-label="前のスタイル"
                     />
                     <span aria-live="polite">{{
                       selectedStyles[speakerUuid].styleName || "ノーマル"
@@ -112,13 +112,13 @@
                       icon="chevron_right"
                       text-color="display"
                       class="style-select-button"
+                      aria-label="次のスタイル"
                       @mouseenter="isHoverableItem = false"
                       @mouseleave="isHoverableItem = true"
                       @click.stop="
                         selectCharacter(speakerUuid);
                         rollStyleIndex(speakerUuid, 1);
                       "
-                      aria-label="次のスタイル"
                     />
                   </div>
                   <div class="voice-samples">
@@ -138,6 +138,7 @@
                       "
                       color="primary-light"
                       class="voice-sample-btn"
+                      :aria-label="`サンプルボイス${voiceSampleIndex + 1}`"
                       @mouseenter="isHoverableItem = false"
                       @mouseleave="isHoverableItem = true"
                       @click.stop="
@@ -148,7 +149,6 @@
                           voiceSampleIndex
                         );
                       "
-                      :aria-label="`サンプルボイス${voiceSampleIndex + 1}`"
                     />
                   </div>
                   <div
@@ -167,13 +167,13 @@
               キャラクター並び替え
             </div>
             <draggable
-              class="character-order q-px-sm"
               v-model="characterOrder"
+              class="character-order q-px-sm"
               :item-key="keyOfCharacterOrderItem"
               @start="characterOrderDragging = true"
               @end="characterOrderDragging = false"
             >
-              <template v-slot:item="{ element }">
+              <template #item="{ element }">
                 <div
                   class="character-order-item q-py-sm"
                   :class="[
