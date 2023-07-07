@@ -22,7 +22,7 @@
       v-model:selected-voice="selectedVoice"
     />
     <q-input
-      :hint="AudioCellHint"
+      :hint="audioCellHint"
       ref="textfield"
       filled
       dense
@@ -201,8 +201,8 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
 };
 
 // テキスト欄下側に表示するヒント
-const AudioCellHint = computed(() => {
-  // テキスト欄追加ヒント
+const audioCellHint = computed(() => {
+  // テキスト欄追加ショートカットの案内
   if (isActiveAudioCell.value && !store.state.showAddAudioItemButton) {
     return "Shift + Enterでテキスト欄を追加";
   }
