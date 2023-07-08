@@ -39,7 +39,6 @@
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.prevent.enter.exact="pushAudioTextIfNeeded()"
-      :aria-label="`${textLineNumberIndex}行目`"
     >
       <template #error>
         文章が長いと正常に動作しない可能性があります。
