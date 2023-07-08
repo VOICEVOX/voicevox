@@ -12,7 +12,7 @@ import {
   shell,
   nativeTheme,
 } from "electron";
-import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
+import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Store, { Schema } from "electron-store";
 import dotenv from "dotenv";
 
@@ -50,6 +50,7 @@ import {
 import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
+import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 type SingleInstanceLockData = {
@@ -879,17 +880,23 @@ ipcMainHandle("RESTART_APP", async (_, { isMultiEngineOffMode }) => {
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
   try {
     fs.writeFileSync(filePath, new DataView(buffer));
+    return success(undefined);
   } catch (e) {
     // throwだと`.code`の情報が消えるのでreturn
     const a = e as SystemError;
-    return { code: a.code, message: a.message };
+    return failure(a.code, a);
   }
-
-  return undefined;
 });
 
-ipcMainHandle("READ_FILE", (_, { filePath }) => {
-  return fs.promises.readFile(filePath);
+ipcMainHandle("READ_FILE", async (_, { filePath }) => {
+  try {
+    const result = await fs.promises.readFile(filePath);
+    return success(result);
+  } catch (e) {
+    // throwだと`.code`の情報が消えるのでreturn
+    const a = e as SystemError;
+    return failure(a.code, a);
+  }
 });
 
 // app callback
@@ -991,9 +998,9 @@ app.once("will-finish-launching", () => {
 });
 
 app.on("ready", async () => {
-  if (isDevelopment) {
+  if (isDevelopment && !isTest) {
     try {
-      await installExtension(VUEJS3_DEVTOOLS);
+      await installExtension(VUEJS_DEVTOOLS);
     } catch (e: unknown) {
       if (e instanceof Error) {
         log.error("Vue Devtools failed to install:", e.toString());

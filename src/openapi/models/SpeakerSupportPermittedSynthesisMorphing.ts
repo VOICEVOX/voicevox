@@ -12,16 +12,18 @@
  * Do not edit the class manually.
  */
 
+
 /**
  * An enumeration.
  * @export
- * @enum {string}
  */
-export enum SpeakerSupportPermittedSynthesisMorphing {
-    All = 'ALL',
-    SelfOnly = 'SELF_ONLY',
-    Nothing = 'NOTHING'
-}
+export const SpeakerSupportPermittedSynthesisMorphing = {
+    All: 'ALL',
+    SelfOnly: 'SELF_ONLY',
+    Nothing: 'NOTHING'
+} as const;
+export type SpeakerSupportPermittedSynthesisMorphing = typeof SpeakerSupportPermittedSynthesisMorphing[keyof typeof SpeakerSupportPermittedSynthesisMorphing];
+
 
 export function SpeakerSupportPermittedSynthesisMorphingFromJSON(json: any): SpeakerSupportPermittedSynthesisMorphing {
     return SpeakerSupportPermittedSynthesisMorphingFromJSONTyped(json, false);

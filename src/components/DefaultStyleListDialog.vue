@@ -12,11 +12,11 @@
     :character-info="selectedCharacterInfo"
   />
   <q-dialog
+    v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="transparent-backdrop"
-    v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -49,8 +49,8 @@
               <q-item
                 v-for="speaker of speakerWithMultipleStyles"
                 :key="speaker.metas.speakerUuid"
-                clickable
                 v-ripple="isHoverableItem"
+                clickable
                 class="q-pa-none character-item"
                 :class="[isHoverableItem && 'hoverable-character-item']"
                 @click="openStyleSelectDialog(speaker)"

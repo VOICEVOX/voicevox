@@ -39,6 +39,18 @@ export interface ValidationError {
     type: string;
 }
 
+/**
+ * Check if a given object implements the ValidationError interface.
+ */
+export function instanceOfValidationError(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "loc" in value;
+    isInstance = isInstance && "msg" in value;
+    isInstance = isInstance && "type" in value;
+
+    return isInstance;
+}
+
 export function ValidationErrorFromJSON(json: any): ValidationError {
     return ValidationErrorFromJSONTyped(json, false);
 }

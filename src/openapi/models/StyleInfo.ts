@@ -45,6 +45,18 @@ export interface StyleInfo {
     voiceSamples: Array<string>;
 }
 
+/**
+ * Check if a given object implements the StyleInfo interface.
+ */
+export function instanceOfStyleInfo(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "id" in value;
+    isInstance = isInstance && "icon" in value;
+    isInstance = isInstance && "voiceSamples" in value;
+
+    return isInstance;
+}
+
 export function StyleInfoFromJSON(json: any): StyleInfo {
     return StyleInfoFromJSONTyped(json, false);
 }

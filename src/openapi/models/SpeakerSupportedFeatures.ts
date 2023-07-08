@@ -13,12 +13,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { SpeakerSupportPermittedSynthesisMorphing } from './SpeakerSupportPermittedSynthesisMorphing';
 import {
-    SpeakerSupportPermittedSynthesisMorphing,
     SpeakerSupportPermittedSynthesisMorphingFromJSON,
     SpeakerSupportPermittedSynthesisMorphingFromJSONTyped,
     SpeakerSupportPermittedSynthesisMorphingToJSON,
-} from './';
+} from './SpeakerSupportPermittedSynthesisMorphing';
 
 /**
  * 話者の対応機能の情報
@@ -31,7 +31,16 @@ export interface SpeakerSupportedFeatures {
      * @type {SpeakerSupportPermittedSynthesisMorphing}
      * @memberof SpeakerSupportedFeatures
      */
-    permittedSynthesisMorphing?: SpeakerSupportPermittedSynthesisMorphing | null;
+    permittedSynthesisMorphing?: SpeakerSupportPermittedSynthesisMorphing;
+}
+
+/**
+ * Check if a given object implements the SpeakerSupportedFeatures interface.
+ */
+export function instanceOfSpeakerSupportedFeatures(value: object): boolean {
+    let isInstance = true;
+
+    return isInstance;
 }
 
 export function SpeakerSupportedFeaturesFromJSON(json: any): SpeakerSupportedFeatures {
