@@ -65,6 +65,14 @@ npm run electron:serve
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
 
+### ブラウザ版の実行（開発中）
+
+別途音声合成エンジンを起動し、以下を実行して表示された localhost へアクセスします。
+
+```bash
+npm run browser:serve
+```
+
 ## ビルド
 
 ```bash
