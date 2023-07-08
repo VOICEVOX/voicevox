@@ -57,11 +57,13 @@
         />
       </template>
       <context-menu :menudata="contextMenudata">
-        <span v-if="header" class="text-weight-bold">{{ header }}</span>
-        <span v-else
-          ><span class="text-weight-bold">{{ headerStartFragment }}</span> ...
-          <span class="text-weight-bold">{{ headerEndFragment }}</span></span
-        >
+        <template v-if="isRangeSelected" #header>
+          <span v-if="header" class="text-weight-bold">{{ header }}</span>
+          <span v-else
+            ><span class="text-weight-bold">{{ headerStartFragment }}</span> ...
+            <span class="text-weight-bold">{{ headerEndFragment }}</span></span
+          >
+        </template>
       </context-menu>
     </q-input>
   </div>
@@ -285,6 +287,7 @@ const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 // input.valueをスクリプトから変更した場合は@changeが発火しないため、
 // @blurと@keydown.prevent.enter.exactに分けている
 let isCapturingChanges = true;
+const isRangeSelected = ref(false);
 const header = ref<string | undefined>("");
 const headerStartFragment = ref("");
 const headerEndFragment = ref("");
@@ -292,7 +295,10 @@ const readyForContextMenu = () => {
   isCapturingChanges = false;
 
   const selectionText = textfieldSelection.getAsString();
-  if (selectionText.length > MAX_HEADER_LENGTH) {
+  if (selectionText.length === 0) {
+    isRangeSelected.value = false;
+  } else if (selectionText.length > MAX_HEADER_LENGTH) {
+    isRangeSelected.value = true;
     // 長すぎる場合適度な長さで省略
     header.value = undefined;
     headerStartFragment.value = selectionText.substring(
@@ -303,6 +309,7 @@ const readyForContextMenu = () => {
       selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
     );
   } else {
+    isRangeSelected.value = true;
     header.value = selectionText;
   }
 };

@@ -1,20 +1,20 @@
 <template>
   <q-menu touch-position context-menu>
     <q-list dense>
-      <q-item v-if="slots.default" dense class="bg-background">
+      <q-item v-if="slots.header" dense class="bg-background">
         <q-item-section>
-          <slot></slot>
+          <slot name="header"></slot>
         </q-item-section>
       </q-item>
       <menu-item
-        v-if="header"
+        v-if="slots.header"
         :key="1"
         :menudata="separator"
         color="primary-light"
       ></menu-item>
       <menu-item
         v-for="(menu, index) of menudata"
-        :key="index + (header ? 2 : 0)"
+        :key="index + (slots.default ? 2 : 0)"
         :menudata="menu"
         :disable="
           uiLocked && menu.type !== 'separator' && menu.disableWhenUiLocked
@@ -31,7 +31,6 @@ import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
 defineProps<{
-  header?: boolean;
   menudata: ContextMenuItemData[];
 }>();
 
