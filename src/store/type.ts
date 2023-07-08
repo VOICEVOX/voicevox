@@ -88,6 +88,7 @@ export type SaveResult =
   | "SUCCESS"
   | "WRITE_ERROR"
   | "ENGINE_ERROR"
+  | "UNKNOWN_ERROR"
   | "CANCELED";
 export type SaveResultObject = {
   result: SaveResult;

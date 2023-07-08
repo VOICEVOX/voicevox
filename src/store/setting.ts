@@ -59,7 +59,7 @@ export const settingStoreState: SettingStoreState = {
   confirmedTips: {
     tweakableSliderByScroll: false,
     engineStartedOnAltPort: false,
-    notifyOnGenerateAudio: false,
+    notifyOnGenerate: false,
   },
   engineSettings: {},
 };
@@ -85,6 +85,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           currentTheme: theme.currentTheme,
         });
       }
+
+      dispatch("SET_EDITOR_FONT", {
+        editorFont: await window.electron.getSetting("editorFont"),
+      });
 
       dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
         showTextLineNumber: await window.electron.getSetting(

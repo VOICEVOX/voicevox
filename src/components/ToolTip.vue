@@ -1,11 +1,11 @@
 <template>
   <div v-if="!tipConfirmed" style="z-index: 10">
     <q-banner class="bg-surface text-display" dense rounded inline-actions>
-      <template v-slot:avatar>
+      <template #avatar>
         <q-icon name="info" color="primary" />
       </template>
       <slot></slot>
-      <template v-slot:action>
+      <template #action>
         <q-btn
           color="primary"
           text-color="display-on-primary"

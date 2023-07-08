@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="accept-retrieve-telemetry-dialog transparent-backdrop"
-    v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -54,6 +54,7 @@
             </q-card-section>
 
             <q-card-section class="text-body1">
+              <!-- eslint-disable-next-line vue/no-v-html -->
               <div v-html="privacyPolicy"></div>
             </q-card-section>
           </q-card>

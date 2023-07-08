@@ -1,10 +1,11 @@
 <template>
   <q-btn
+    ref="buttonRef"
     flat
     class="q-pa-none character-button"
-    ref="buttonRef"
     :disable="uiLocked"
     :class="{ opaque: loading }"
+    aria-haspopup="menu"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
     <div class="icon-container">
@@ -12,6 +13,7 @@
         v-if="selectedStyleInfo != undefined"
         class="q-pa-none q-ma-none"
         :src="selectedStyleInfo.iconPath"
+        :alt="selectedVoiceInfoText"
       />
       <q-avatar v-else-if="!emptiable" rounded size="2rem" color="primary"
         ><span color="text-display-on-primary">?</span></q-avatar
@@ -46,9 +48,9 @@
         </q-item>
         <q-item v-if="emptiable" class="to-unselect-item q-pa-none">
           <q-btn
+            v-close-popup
             flat
             no-caps
-            v-close-popup
             class="full-width"
             :class="selectedCharacter == undefined && 'selected-background'"
             @click="$emit('update:selectedVoice', undefined)"
@@ -64,9 +66,9 @@
         >
           <q-btn-group flat class="col full-width">
             <q-btn
+              v-close-popup
               flat
               no-caps
-              v-close-popup
               class="col-grow"
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
               @mouseover="reassignSubMenuOpen(-1)"
@@ -83,9 +85,9 @@
                   "
                 />
                 <q-avatar
+                  v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
                   class="engine-icon"
                   rounded
-                  v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
                 >
                   <img
                     :src="
@@ -108,30 +110,39 @@
                 :class="
                   subMenuOpenFlags[characterIndex] && 'selected-background'
                 "
+                role="application"
+                :aria-label="`${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`"
+                tabindex="0"
                 @mouseover="reassignSubMenuOpen(characterIndex)"
                 @mouseleave="reassignSubMenuOpen.cancel()"
+                @keyup.right="reassignSubMenuOpen(characterIndex)"
               >
                 <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
                 <q-menu
+                  v-model="subMenuOpenFlags[characterIndex]"
                   no-parent-event
                   anchor="top end"
                   self="top start"
                   transition-show="none"
                   transition-hide="none"
                   class="character-menu"
-                  v-model="subMenuOpenFlags[characterIndex]"
                 >
                   <q-list style="min-width: max-content">
                     <q-item
                       v-for="(style, styleIndex) in characterInfo.metas.styles"
                       :key="styleIndex"
-                      clickable
                       v-close-popup
+                      clickable
                       active-class="selected-style-item"
                       :active="
                         selectedVoice != undefined &&
                         style.styleId === selectedVoice.styleId
                       "
+                      :aria-pressed="
+                        selectedVoice != undefined &&
+                        style.styleId === selectedVoice.styleId
+                      "
+                      role="button"
                       @click="
                         $emit('update:selectedVoice', {
                           engineId: style.engineId,
@@ -148,9 +159,9 @@
                           :src="characterInfo.metas.styles[styleIndex].iconPath"
                         />
                         <q-avatar
+                          v-if="showEngineInfo"
                           rounded
                           class="engine-icon"
-                          v-if="showEngineInfo"
                         >
                           <img
                             :src="
@@ -230,6 +241,18 @@ const selectedCharacter = computed(() => {
       )
   );
   return character;
+});
+
+const selectedVoiceInfoText = computed(() => {
+  if (!selectedCharacter.value) {
+    return "キャラクター未選択";
+  }
+
+  if (!selectedStyleInfo.value) {
+    return selectedCharacter.value.metas.speakerName;
+  }
+
+  return `${selectedCharacter.value.metas.speakerName} (${selectedStyleInfo.value.styleName})`;
 });
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>

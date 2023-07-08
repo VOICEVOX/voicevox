@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
 export const isMac =
   typeof process === "undefined"
@@ -179,8 +180,8 @@ export interface Sandbox {
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
-  }): Promise<WriteFileErrorResult | undefined>;
-  readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
+  }): Promise<Result<undefined>>;
+  readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
@@ -495,7 +496,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
   engineStartedOnAltPort: boolean; // エンジンのポート変更の通知
-  notifyOnGenerateAudio: boolean; // 音声書き出し時の通知
+  notifyOnGenerate: boolean; // 音声書き出し時の通知
 };
 
 export const electronStoreSchema = z
@@ -586,7 +587,7 @@ export const electronStoreSchema = z
       .object({
         tweakableSliderByScroll: z.boolean().default(false),
         engineStartedOnAltPort: z.boolean().default(false),
-        notifyOnGenerateAudio: z.boolean().default(false),
+        notifyOnGenerate: z.boolean().default(false),
       })
       .passthrough()
       .default({}),
@@ -610,11 +611,6 @@ export class SystemError extends Error {
     }
   }
 }
-
-export type WriteFileErrorResult = {
-  code: string | undefined;
-  message: string;
-};
 
 export type EngineDirValidationResult =
   | "ok"

@@ -156,7 +156,9 @@ shellcheck ./build/*.sh
 
 ## OpenAPI generator
 
-音声合成エンジンが起動している状態で以下のコマンドを実行してください。
+音声合成エンジンが起動している状態で以下のコマンドを実行してください。  
+なお、2023/07/02現在、openapi-generatorの最新版に[パッチ](https://github.com/OpenAPITools/openapi-generator/pull/15943)を当てたものを使わないと更新できない状態になっています。  
+詳細は[こちら](https://github.com/VOICEVOX/voicevox/pull/1361)
 
 ```bash
 curl http://127.0.0.1:50021/openapi.json >openapi.json

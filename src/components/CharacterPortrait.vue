@@ -1,10 +1,10 @@
 <template>
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
-    <span class="character-engine-name" v-if="isMultipleEngine">{{
+    <span v-if="isMultipleEngine" class="character-engine-name">{{
       engineName
     }}</span>
-    <img :src="portraitPath" class="character-portrait" />
+    <img :src="portraitPath" class="character-portrait" :alt="characterName" />
     <div v-if="isInitializingSpeaker" class="loading">
       <q-spinner color="primary" size="5rem" :thickness="4" />
     </div>
