@@ -9,8 +9,7 @@
       <menu-item
         v-if="slots.header"
         :key="1"
-        :menudata="separator"
-        color="primary-light"
+        :menudata="{ type: 'separator' }"
       ></menu-item>
       <menu-item
         v-for="(menu, index) of menudata"
@@ -37,8 +36,6 @@ defineProps<{
 const store = useStore();
 const slots = useSlots();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-const separator: MenuItemSeparator = { type: "separator" };
 
 export type ContextMenuItemData = MenuItemSeparator | MenuItemButton;
 </script>

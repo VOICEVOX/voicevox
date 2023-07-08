@@ -280,12 +280,12 @@ const deleteButtonEnable = computed(() => {
   return 1 < audioKeys.value.length;
 });
 
-const MAX_HEADER_LENGTH = 15;
-const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
-
 // テキスト編集エリアの右クリック
 // input.valueをスクリプトから変更した場合は@changeが発火しないため、
 // @blurと@keydown.prevent.enter.exactに分けている
+const MAX_HEADER_LENGTH = 15;
+const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
+
 let isCapturingChanges = true;
 const isRangeSelected = ref(false);
 const header = ref<string | undefined>("");
