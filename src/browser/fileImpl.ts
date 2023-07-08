@@ -54,21 +54,6 @@ const showWritableDirectoryPicker = async (): Promise<
     // キャンセルするとエラーが投げられる
     .catch(() => undefined); // FIXME: このままだとダイアログ表示エラーと見分けがつかない
 
-const showWritableFilePicker = async ({
-  suggestedName,
-  fileType,
-}: {
-  suggestedName?: string;
-  fileType: AcceptFileType;
-}) =>
-  window
-    .showSaveFilePicker({
-      types: [fileType],
-      excludeAcceptAllOption: true,
-      suggestedName,
-    })
-    .catch(() => undefined);
-
 const showLoadableFilePicker = async ({
   fileType,
 }: {
@@ -81,25 +66,6 @@ const showLoadableFilePicker = async ({
       multiple: false,
     })
     .catch(() => undefined);
-
-const requestSaveFileNameWithDirectoryPermission = async ({
-  suggestedName,
-  fileType,
-}: {
-  suggestedName?: string;
-  fileType: AcceptFileType;
-}) => {
-  const fileHandle = await showWritableFilePicker({
-    suggestedName,
-    fileType,
-  });
-  if (fileHandle === undefined) {
-    return undefined;
-  }
-
-  // NOTE: ディレクトリのハンドラと異なるディレクトリを選択されても検知できない
-  return fileHandle.name;
-};
 
 const requestLoadFileNameWithDirectoryPermission = async ({
   fileType,
@@ -117,27 +83,6 @@ const requestLoadFileNameWithDirectoryPermission = async ({
   return fileHandle.map((v) => v.name);
 };
 
-export const showAudioSaveDialogImpl: typeof window[typeof SandboxKey]["showAudioSaveDialog"] =
-  async (obj: { title: string; defaultPath?: string }) => {
-    return requestSaveFileNameWithDirectoryPermission({
-      suggestedName: obj.defaultPath,
-      fileType: { description: "Wave File", accept: { "audio/wav": [".wav"] } },
-    });
-  };
-
-export const showTextSaveDialogImpl: typeof window[typeof SandboxKey]["showTextSaveDialog"] =
-  async (obj: { title: string; defaultPath?: string }) => {
-    return requestSaveFileNameWithDirectoryPermission({
-      suggestedName: obj.defaultPath,
-      fileType: {
-        description: "Text File",
-        accept: {
-          "text/plain": [".txt"],
-        },
-      },
-    });
-  };
-
 export const showOpenDirectoryDialogImpl: typeof window[typeof SandboxKey]["showOpenDirectoryDialog"] =
   async () => {
     const _directoryHandler = await showWritableDirectoryPicker();
@@ -150,19 +95,6 @@ export const showOpenDirectoryDialogImpl: typeof window[typeof SandboxKey]["show
     // NOTE: 同一のディレクトリ名だった場合、後で選択されたディレクトリがそれ移行の処理で使用されるため、意図しない保存が発生するかもしれない
     directoryHandleMap.set(_directoryHandler.name, _directoryHandler);
     return _directoryHandler.name;
-  };
-
-export const showProjectSaveDialogImpl: typeof window[typeof SandboxKey]["showProjectSaveDialog"] =
-  async (obj: { title: string; defaultPath?: string }) => {
-    return requestSaveFileNameWithDirectoryPermission({
-      suggestedName: obj.defaultPath,
-      fileType: {
-        description: "VOICEVOX Project file",
-        accept: {
-          "application/json": [".vvproj"],
-        },
-      },
-    });
   };
 
 export const showProjectLoadDialogImpl: typeof window[typeof SandboxKey]["showProjectLoadDialog"] =

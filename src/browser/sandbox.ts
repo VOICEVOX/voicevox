@@ -1,12 +1,9 @@
 import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
-  showAudioSaveDialogImpl,
   showImportFileDialogImpl,
   showOpenDirectoryDialogImpl,
   showProjectLoadDialogImpl,
-  showProjectSaveDialogImpl,
-  showTextSaveDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
 import { getSettingEntry, setSettingEntry } from "./storeImpl";
@@ -81,10 +78,32 @@ export const api: Sandbox = {
     return Promise.resolve({});
   },
   showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return showAudioSaveDialogImpl(obj);
+    return new Promise((resolve, reject) => {
+      if (obj.defaultPath === undefined) {
+        reject(
+          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
+          new Error(
+            "ブラウザ版ではファイルの保存機能が一部サポートされていません。"
+          )
+        );
+      } else {
+        resolve(obj.defaultPath);
+      }
+    });
   },
   showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return showTextSaveDialogImpl(obj);
+    return new Promise((resolve, reject) => {
+      if (obj.defaultPath === undefined) {
+        reject(
+          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
+          new Error(
+            "ブラウザ版ではファイルの保存機能が一部サポートされていません。"
+          )
+        );
+      } else {
+        resolve(obj.defaultPath);
+      }
+    });
   },
   showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
     // NOTE: 今後接続先を変える手段としてVvppが使われるかもしれないので、そのタイミングで実装する
@@ -96,7 +115,18 @@ export const api: Sandbox = {
     return showOpenDirectoryDialogImpl(obj);
   },
   showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return showProjectSaveDialogImpl(obj);
+    return new Promise((resolve, reject) => {
+      if (obj.defaultPath === undefined) {
+        reject(
+          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
+          new Error(
+            "ブラウザ版ではファイルの保存機能が一部サポートされていません。"
+          )
+        );
+      } else {
+        resolve(obj.defaultPath);
+      }
+    });
   },
   showProjectLoadDialog(obj: { title: string }) {
     return showProjectLoadDialogImpl(obj);
