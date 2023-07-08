@@ -1,8 +1,10 @@
 <template>
   <q-menu touch-position context-menu>
     <q-list dense>
-      <q-item v-if="header" dense class="bg-background">
-        <q-item-section class="text-weight-bold">{{ header }}</q-item-section>
+      <q-item v-if="slots.default" dense class="bg-background">
+        <q-item-section>
+          <slot></slot>
+        </q-item-section>
       </q-item>
       <menu-item
         v-if="header"
@@ -24,17 +26,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, useSlots } from "vue";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
-
 defineProps<{
-  header?: string;
+  header?: boolean;
   menudata: ContextMenuItemData[];
 }>();
 
 const store = useStore();
+const slots = useSlots();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const separator: MenuItemSeparator = { type: "separator" };

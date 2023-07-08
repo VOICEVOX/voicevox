@@ -56,7 +56,13 @@
           @click="removeCell"
         />
       </template>
-      <context-menu :header="selectionText" :menudata="contextMenudata" />
+      <context-menu :menudata="contextMenudata">
+        <span v-if="header" class="text-weight-bold">{{ header }}</span>
+        <span v-else
+          ><span class="text-weight-bold">{{ headerStartFragment }}</span> ...
+          <span class="text-weight-bold">{{ headerEndFragment }}</span></span
+        >
+      </context-menu>
     </q-input>
   </div>
 </template>
@@ -279,20 +285,26 @@ const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 // input.valueをスクリプトから変更した場合は@changeが発火しないため、
 // @blurと@keydown.prevent.enter.exactに分けている
 let isCapturingChanges = true;
-const selectionText = ref("");
+const header = ref<string | undefined>("");
+const headerStartFragment = ref("");
+const headerEndFragment = ref("");
 const readyForContextMenu = () => {
   isCapturingChanges = false;
-  const nextSelectionText = textfieldSelection.getAsString();
-  // 長すぎる場合適度な長さで省略
-  selectionText.value =
-    nextSelectionText.length <= MAX_HEADER_LENGTH
-      ? nextSelectionText
-      : `${nextSelectionText.substring(
-          0,
-          SHORTED_HEADER_FRAGMENT_LENGTH
-        )} ... ${nextSelectionText.substring(
-          nextSelectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
-        )}`;
+
+  const selectionText = textfieldSelection.getAsString();
+  if (selectionText.length > MAX_HEADER_LENGTH) {
+    // 長すぎる場合適度な長さで省略
+    header.value = undefined;
+    headerStartFragment.value = selectionText.substring(
+      0,
+      SHORTED_HEADER_FRAGMENT_LENGTH
+    );
+    headerEndFragment.value = selectionText.substring(
+      selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
+    );
+  } else {
+    header.value = selectionText;
+  }
 };
 const contextMenudata = ref<ContextMenuItemData[]>([
   {
