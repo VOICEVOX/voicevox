@@ -123,6 +123,7 @@ export async function getPidFromPort(
 
   // lsofは、ポートを使用しているプロセスが存在しない場合は
   // エラーを返すので、エラーを無視して割り当て可能として扱う
+  // FIXME: lsof以外のエラーだった場合のエラーハンドリングを追加する
   let stdout: string;
   try {
     stdout = execFileSync(exec.cmd, exec.args, {
