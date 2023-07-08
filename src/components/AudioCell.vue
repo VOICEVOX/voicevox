@@ -73,7 +73,8 @@
 import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
-import ContextMenu, { ContextMenuItemData } from "@/components/ContextMenu.vue";
+import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
+import ContextMenu from "@/components/ContextMenu.vue";
 import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { QInputSelectionHelper } from "@/helpers/QInputSelectionHelper";
@@ -318,7 +319,15 @@ const readyForContextMenu = () => {
     }
   }
 };
-const contextMenudata = ref<ContextMenuItemData[]>([
+const contextMenudata = ref<
+  [
+    MenuItemButton,
+    MenuItemButton,
+    MenuItemButton,
+    MenuItemSeparator,
+    MenuItemButton
+  ]
+>([
   {
     type: "button",
     label: "切り取り",

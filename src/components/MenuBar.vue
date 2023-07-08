@@ -44,7 +44,6 @@ import { base64ImageToUri } from "@/helpers/imageHelper";
 export type MenuItemBase<T extends string> = {
   type: T;
   label?: string;
-  disabled?: boolean;
 };
 
 export type MenuItemSeparator = MenuItemBase<"separator">;
