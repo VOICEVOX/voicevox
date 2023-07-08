@@ -1,7 +1,8 @@
 import { sep } from "path";
 import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./storeImpl";
-import { SandboxKey, WriteFileErrorResult } from "@/type/preload";
+import { SandboxKey } from "@/type/preload";
+import { failure, success } from "@/type/result";
 
 const storeDirectoryHandle = async (
   directoryHandle: FileSystemDirectoryHandle
@@ -176,7 +177,7 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
       aTag.click();
       document.body.removeChild(aTag);
       URL.revokeObjectURL(blob);
-      return;
+      return success(undefined);
     }
 
     const fileName = resolveFileName(path);
@@ -195,12 +196,9 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
         await writable.write(obj.buffer);
         return writable.close();
       })
-      .then(() => undefined)
+      .then(() => success(undefined))
       .catch((e) => {
-        return {
-          code: undefined,
-          message: e.message as string,
-        } as WriteFileErrorResult;
+        return failure(e);
       });
   };
 
