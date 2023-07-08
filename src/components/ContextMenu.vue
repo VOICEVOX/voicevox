@@ -16,7 +16,7 @@
         :key="index + (slots.default ? 2 : 0)"
         :menudata="menu"
         :disable="
-          menu.disabled ||
+          (menu.type !== 'separator' && menu.disabled) ||
           (uiLocked && menu.type !== 'separator' && menu.disableWhenUiLocked)
         "
       >
