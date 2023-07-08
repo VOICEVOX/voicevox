@@ -297,20 +297,25 @@ const readyForContextMenu = () => {
   const selectionText = textfieldSelection.getAsString();
   if (selectionText.length === 0) {
     isRangeSelected.value = false;
-  } else if (selectionText.length > MAX_HEADER_LENGTH) {
-    isRangeSelected.value = true;
-    // 長すぎる場合適度な長さで省略
-    header.value = undefined;
-    headerStartFragment.value = selectionText.substring(
-      0,
-      SHORTED_HEADER_FRAGMENT_LENGTH
-    );
-    headerEndFragment.value = selectionText.substring(
-      selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
-    );
+    contextMenudata.value[0].disabled = true;
+    contextMenudata.value[1].disabled = true;
   } else {
     isRangeSelected.value = true;
-    header.value = selectionText;
+    contextMenudata.value[0].disabled = false;
+    contextMenudata.value[1].disabled = false;
+    if (selectionText.length > MAX_HEADER_LENGTH) {
+      // 長すぎる場合適度な長さで省略
+      header.value = undefined;
+      headerStartFragment.value = selectionText.substring(
+        0,
+        SHORTED_HEADER_FRAGMENT_LENGTH
+      );
+      headerEndFragment.value = selectionText.substring(
+        selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
+      );
+    } else {
+      header.value = selectionText;
+    }
   }
 };
 const contextMenudata = ref<ContextMenuItemData[]>([
