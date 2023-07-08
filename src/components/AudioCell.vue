@@ -32,6 +32,7 @@
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
+      @contextmenu="stopChangesCapturing()"
       @update:model-value="setAudioTextBuffer"
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
@@ -152,7 +153,7 @@ watch(
 );
 
 const pushAudioTextIfNeeded = async () => {
-  if (!willRemove.value && isChangeFlag.value) {
+  if (!willRemove.value && isChangeFlag.value && !hasStopChangesCapturing) {
     isChangeFlag.value = false;
     await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
       audioKey: props.audioKey,
@@ -164,6 +165,7 @@ const pushAudioTextIfNeeded = async () => {
 let willSelectAll = false;
 // NOTE: コンテキストメニューアイテムのonClick実行後も再フォーカスされるため発火する
 const setActiveAudioKey = () => {
+  hasStopChangesCapturing = false;
   if (willSelectAll) {
     willSelectAll = false;
     textfield.value?.select();
@@ -273,6 +275,10 @@ const deleteButtonEnable = computed(() => {
 // テキスト編集エリアの右クリック
 // input.valueをスクリプトから変更した場合は@changeが発火しないため、
 // @blurと@keydown.prevent.enter.exactに分けている
+let hasStopChangesCapturing = false;
+const stopChangesCapturing = () => {
+  hasStopChangesCapturing = true;
+};
 const contextMenudata = ref<ContextMenuItemData[]>([
   {
     type: "button",
