@@ -32,7 +32,7 @@
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
-      @contextmenu="stopChangesCapturing()"
+      @contextmenu="readyForContextMenu()"
       @update:model-value="setAudioTextBuffer"
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
@@ -56,7 +56,7 @@
           @click="removeCell"
         />
       </template>
-      <context-menu :menudata="contextMenudata" />
+      <context-menu :header="selectionText" :menudata="contextMenudata" />
     </q-input>
   </div>
 </template>
@@ -272,12 +272,27 @@ const deleteButtonEnable = computed(() => {
   return 1 < audioKeys.value.length;
 });
 
+const MAX_HEADER_LENGTH = 15;
+const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
+
 // テキスト編集エリアの右クリック
 // input.valueをスクリプトから変更した場合は@changeが発火しないため、
 // @blurと@keydown.prevent.enter.exactに分けている
 let isCapturingChanges = true;
-const stopChangesCapturing = () => {
+const selectionText = ref("");
+const readyForContextMenu = () => {
   isCapturingChanges = false;
+  const nextSelectionText = textfieldSelection.getAsString();
+  // 長すぎる場合適度な長さで省略
+  selectionText.value =
+    nextSelectionText.length <= MAX_HEADER_LENGTH
+      ? nextSelectionText
+      : `${nextSelectionText.substring(
+          0,
+          SHORTED_HEADER_FRAGMENT_LENGTH
+        )} ... ${nextSelectionText.substring(
+          nextSelectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
+        )}`;
 };
 const contextMenudata = ref<ContextMenuItemData[]>([
   {

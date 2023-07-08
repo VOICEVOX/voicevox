@@ -1,14 +1,24 @@
 <template>
-  <q-menu touch-position context-menu no-focus>
+  <q-menu touch-position context-menu>
     <q-list dense>
+      <q-item v-if="header" dense class="bg-background">
+        <q-item-section class="text-weight-bold">{{ header }}</q-item-section>
+      </q-item>
+      <menu-item
+        v-if="header"
+        :key="1"
+        :menudata="separator"
+        color="primary-light"
+      ></menu-item>
       <menu-item
         v-for="(menu, index) of menudata"
-        :key="index"
+        :key="index + (header ? 2 : 0)"
         :menudata="menu"
         :disable="
           uiLocked && menu.type !== 'separator' && menu.disableWhenUiLocked
         "
-      ></menu-item>
+      >
+      </menu-item>
     </q-list>
   </q-menu>
 </template>
@@ -20,11 +30,14 @@ import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
 
 defineProps<{
+  header?: string;
   menudata: ContextMenuItemData[];
 }>();
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const separator: MenuItemSeparator = { type: "separator" };
 
 export type ContextMenuItemData = MenuItemSeparator | MenuItemButton;
 </script>
