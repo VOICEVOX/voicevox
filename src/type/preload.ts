@@ -182,7 +182,6 @@ export interface Sandbox {
     buffer: ArrayBuffer;
   }): Promise<Result<undefined>>;
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
-  openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
