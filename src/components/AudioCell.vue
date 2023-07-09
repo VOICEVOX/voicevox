@@ -36,7 +36,7 @@
       @update:model-value="setAudioTextBuffer"
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
-      @focus="setActiveAudioKey()"
+      @focus="onFocus()"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.prevent.enter.exact="pushAudioTextIfNeeded()"
@@ -172,14 +172,19 @@ const pushAudioTextIfNeeded = async () => {
 };
 
 let willSelectAll = false;
-// NOTE: コンテキストメニューアイテムのonClick実行後も再フォーカスされるため発火する
-const setActiveAudioKey = () => {
+const onFocus = () => {
+  // NOTE: コンテキストメニューアイテムのonClick実行後も再フォーカスされるため発火する
+  onCloseContextmenu();
+  setActiveAudioKey();
+};
+const onCloseContextmenu = () => {
   isCapturingChanges = true;
   if (willSelectAll) {
     willSelectAll = false;
     textfield.value?.select();
   }
-
+};
+const setActiveAudioKey = () => {
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
 
