@@ -338,7 +338,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     }
   }
 
-  &:not(:hover) > .q-input > :deep(.q-field__after) {
+  &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
     // アクセシビリティのためdisplay:none は避ける
     clip: rect(0 0 0 0);
     clip-path: inset(50%);
