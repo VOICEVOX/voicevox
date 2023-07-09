@@ -20,6 +20,7 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
+      @focus="setActiveAudioKey()"
     />
     <q-input
       ref="textfield"
