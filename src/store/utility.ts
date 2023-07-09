@@ -92,17 +92,9 @@ function replaceTag(
   return result;
 }
 
-export function replaceSkipWordInCurlyBrackets(targettext: string): string {
-  // {}をスキップ
-  let resolvedText = targettext.replace(/\{.*?\}/g, "");
-  resolvedText = resolvedText.replace(/\[(.*?)\]/g, "$1");
-  return resolvedText;
-}
-
 export function replaceSkipWordInBrackets(targettext: string): string {
   // []をスキップ
-  let resolvedText = targettext.replace(/\[.*?\]/g, "");
-  resolvedText = resolvedText.replace(/\{(.*?)\}/g, "$1");
+  const resolvedText = targettext.replace(/\[.*?\]/g, "");
   return resolvedText;
 }
 
