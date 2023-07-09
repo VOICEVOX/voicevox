@@ -58,7 +58,7 @@
       </template>
       <context-menu
         :menudata="contextMenudata"
-        @hide="doDelayedContextmenuAction()"
+        @before-hide="doDelayedContextmenuAction()"
       >
         <template v-if="isRangeSelected" #header>
           <span v-if="header" class="text-weight-bold">{{ header }}</span>
@@ -378,7 +378,6 @@ const contextMenudata = ref<
     type: "button",
     label: "全選択",
     onClick: async () => {
-      console.log("click");
       willSelectAll = true;
     },
     disableWhenUiLocked: true,
@@ -393,7 +392,6 @@ const contextMenudata = ref<
 let willSelectAll = false;
 let cursorPosition: number | null = null;
 const doDelayedContextmenuAction = () => {
-  console.log("hidden");
   if (cursorPosition) {
     textfieldSelection.setCursorPosition(cursorPosition);
     cursorPosition = null;
