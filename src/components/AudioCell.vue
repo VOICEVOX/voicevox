@@ -280,6 +280,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/visually-hidden' as visually-hidden;
 @use '@/styles/colors' as colors;
 
 .audio-cell {
@@ -339,15 +340,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   }
 
   &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
-    // アクセシビリティのためdisplay:none は避ける
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    height: 1px;
-    overflow: hidden;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
-    // ここまで
+    @include visually-hidden.visually-hidden;
   }
 
   :deep(input) {
