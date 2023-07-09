@@ -36,7 +36,7 @@
       @update:model-value="setAudioTextBuffer"
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
-      @focus="onFocus()"
+      @focus="setActiveAudioKey()"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.prevent.enter.exact="pushAudioTextIfNeeded()"
@@ -56,7 +56,10 @@
           @click="removeCell"
         />
       </template>
-      <context-menu :menudata="contextMenudata">
+      <context-menu
+        :menudata="contextMenudata"
+        @hide="doDelayedContextmenuAction()"
+      >
         <template v-if="isRangeSelected" #header>
           <span v-if="header" class="text-weight-bold">{{ header }}</span>
           <span v-else
@@ -70,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref, nextTick } from "vue";
+import { computed, watch, ref } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
@@ -171,20 +174,9 @@ const pushAudioTextIfNeeded = async () => {
   }
 };
 
-let willSelectAll = false;
-const onFocus = () => {
-  // NOTE: コンテキストメニューアイテムのonClick実行後も再フォーカスされるため発火する
-  onCloseContextmenu();
-  setActiveAudioKey();
-};
-const onCloseContextmenu = () => {
-  isCapturingChanges = true;
-  if (willSelectAll) {
-    willSelectAll = false;
-    textfield.value?.select();
-  }
-};
+// NOTE: コンテキストメニューアイテムのonClick実行後も再フォーカスされるため発火する
 const setActiveAudioKey = () => {
+  isCapturingChanges = true;
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
 
@@ -342,11 +334,8 @@ const contextMenudata = ref<
       const text = textfieldSelection.getAsString();
       const start = textfieldSelection.start;
       setAudioTextBuffer(textfieldSelection.getReplacedStringTo(""));
-      await navigator.clipboard.writeText(text);
-      // FIXME: <input>への反映までにラグがあるのを、
-      //        裏技的に上の行にawaitを追加して、await後に実行することで回避している。
-      //        await nextTick()を利用すべきだがなぜか意図したとおりに動かない。
-      textfieldSelection.setCursorPosition(start);
+      navigator.clipboard.writeText(text);
+      cursorPosition = start;
     },
     disableWhenUiLocked: true,
   },
@@ -378,11 +367,9 @@ const contextMenudata = ref<
       const beforeLength = textfieldSelection.nativeEl.value.length;
       const end = textfieldSelection.end ?? 0;
       setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text, true));
-      await nextTick();
-      textfieldSelection.setCursorPosition(
-        // 自動的に削除される改行などの文字数を念のため考慮している
-        end + textfieldSelection.nativeEl.value.length - beforeLength
-      );
+      // 自動的に削除される改行などの文字数を念のため考慮している
+      cursorPosition =
+        end + textfieldSelection.nativeEl.value.length - beforeLength;
     },
     disableWhenUiLocked: true,
   },
@@ -391,15 +378,31 @@ const contextMenudata = ref<
     type: "button",
     label: "全選択",
     onClick: async () => {
-      // コンテキストメニューを閉じた場合、多分Quasarの内部処理として
-      // コンテキストメニューを開いた時点の選択範囲が復元(再選択)される模様。
-      // その後に選択範囲を変更しないと反映されないため、フラグを立てて後から処理する。
+      console.log("click");
       willSelectAll = true;
     },
     disableWhenUiLocked: true,
   },
 ]);
 // TODO: (MAY)コンテキストメニューを開いたときに選択範囲が外れる現象の原因調査・修正
+
+// コンテキストメニューが閉じた後の処理
+// NOTE: コンテキストメニューを閉じた場合、多分Quasarの内部処理として
+//       コンテキストメニューを開いた時点の選択範囲が復元(再選択)される模様。
+//       その後に選択範囲を変更しないと反映されないため、フラグを立てて後から処理する。
+let willSelectAll = false;
+let cursorPosition: number | null = null;
+const doDelayedContextmenuAction = () => {
+  console.log("hidden");
+  if (cursorPosition) {
+    textfieldSelection.setCursorPosition(cursorPosition);
+    cursorPosition = null;
+  }
+  if (willSelectAll) {
+    willSelectAll = false;
+    textfield.value?.select();
+  }
+};
 
 const blurCell = (event?: KeyboardEvent) => {
   if (event?.isComposing) {
@@ -410,9 +413,8 @@ const blurCell = (event?: KeyboardEvent) => {
   }
 };
 
-// フォーカス
+// 入力欄
 const textfield = ref<QInput>();
-
 const textfieldSelection = new QInputSelectionHelper(textfield);
 
 // 複数エンジン
