@@ -330,7 +330,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
-      display: none;
     }
 
     &.q-field--filled.q-field--highlighted :deep(.q-field__control):before {
@@ -338,8 +337,16 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     }
   }
 
-  &:hover > .q-input > :deep(.q-field__after) {
-    display: flex;
+  &:not(:hover) > .q-input > :deep(.q-field__after) {
+    // アクセシビリティのためdisplay:none は避ける
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+    // ここまで
   }
 
   :deep(input) {
