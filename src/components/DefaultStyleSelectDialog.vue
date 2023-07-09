@@ -157,7 +157,7 @@ const isModified = computed(() => {
 });
 
 // ダイアログが開かれたときに初期値を求める
-watch([() => props.isOpen], async ([newValue]) => {
+watch([() => props.isOpen], ([newValue]) => {
   if (newValue) {
     firstSelectedStyleIndex.value = props.selectedStyleIndex;
   }
@@ -201,7 +201,7 @@ const play = (
   if (audio.src !== "") stop();
 
   audio.src = voiceSamplePaths[index];
-  audio.play();
+  void audio.play();
   playing.value = { speakerUuid, styleId, index };
 };
 const stop = () => {
@@ -214,27 +214,30 @@ const stop = () => {
 
 // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
 const closeDialog = () => {
+  stop();
+
   const defaultStyleIds = JSON.parse(
     JSON.stringify(store.state.defaultStyleIds)
   ) as DefaultStyleId[];
-  store.dispatch("SET_DEFAULT_STYLE_IDS", [
-    ...defaultStyleIds.filter(
-      (defaultStyleId) =>
-        defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid
-    ),
-    {
-      speakerUuid: props.characterInfo.metas.speakerUuid,
-      defaultStyleId:
-        props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
-          .styleId,
-      engineId:
-        props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
-          .engineId,
-    },
-  ]);
-
-  stop();
-  isOpenComputed.value = false;
+  store
+    .dispatch("SET_DEFAULT_STYLE_IDS", [
+      ...defaultStyleIds.filter(
+        (defaultStyleId) =>
+          defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid
+      ),
+      {
+        speakerUuid: props.characterInfo.metas.speakerUuid,
+        defaultStyleId:
+          props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
+            .styleId,
+        engineId:
+          props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
+            .engineId,
+      },
+    ])
+    .finally(() => {
+      isOpenComputed.value = false;
+    });
 };
 </script>
 

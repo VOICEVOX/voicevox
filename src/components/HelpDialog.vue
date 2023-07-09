@@ -118,19 +118,19 @@ const modelValueComputed = computed({
 const store = useStore();
 
 const updateInfos = ref<UpdateInfoObject[]>();
-store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
+void store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
 const isCheckingFinished = ref<boolean>(false);
 
 // 最新版があるか調べる
 const currentVersion = ref("");
 const latestVersion = ref("");
-window.electron
+void window.electron
   .getAppInfos()
   .then((obj) => {
     currentVersion.value = obj.version;
   })
-  .then(() => {
+  .then(() =>
     fetch("https://api.github.com/repos/VOICEVOX/voicevox/releases", {
       method: "GET",
       headers: {
@@ -138,29 +138,29 @@ window.electron
         Accept: "application/json",
       },
     })
-      .then((response) => {
-        if (!response.ok) throw new Error("Network response was not ok.");
-        return response.json();
-      })
-      .then((json) => {
-        const newerVersion = json.find(
-          (item: { prerelease: boolean; tag_name: string }) => {
-            return (
-              !item.prerelease &&
-              semver.valid(currentVersion.value) &&
-              semver.valid(item.tag_name) &&
-              semver.lt(currentVersion.value, item.tag_name)
-            );
-          }
+  )
+  .then((response) => {
+    if (!response.ok) throw new Error("Network response was not ok.");
+    return response.json() as Promise<{
+      prerelease: boolean;
+      tag_name: string;
+    }[]>;
+  })
+  .then((json) => {
+    const newerVersion = json.find(
+      (item: { prerelease: boolean; tag_name: string }) => {
+        return (
+          !item.prerelease &&
+          semver.valid(currentVersion.value) &&
+          semver.valid(item.tag_name) &&
+          semver.lt(currentVersion.value, item.tag_name)
         );
-        if (newerVersion) {
-          latestVersion.value = newerVersion.tag_name;
-        }
-        isCheckingFinished.value = true;
-      })
-      .catch((err) => {
-        throw new Error(err);
-      });
+      }
+    );
+    if (newerVersion) {
+      latestVersion.value = newerVersion.tag_name;
+    }
+    isCheckingFinished.value = true;
   });
 
 const isUpdateAvailable = computed(() => {
@@ -169,10 +169,10 @@ const isUpdateAvailable = computed(() => {
 
 // エディタのOSSライセンス取得
 const licenses = ref<Record<string, string>[]>();
-store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
+void store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
 
 const policy = ref<string>();
-store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
+void store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
 
 const pagedata = computed(() => {
   const data: PageData[] = [
@@ -233,7 +233,7 @@ const pagedata = computed(() => {
     for (const id of store.getters.GET_SORTED_ENGINE_INFOS.map((m) => m.uuid)) {
       const manifest = store.state.engineManifests[id];
       if (!manifest) {
-        store.dispatch("LOG_WARN", `manifest not found: ${id}`);
+        void store.dispatch("LOG_WARN", `manifest not found: ${id}`);
         continue;
       }
 

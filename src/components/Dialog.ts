@@ -12,6 +12,7 @@ import { withProgress } from "@/store/ui";
 
 type QuasarDialog = QVueGlobals["dialog"];
 type QuasarNotify = QVueGlobals["notify"];
+
 type MediaType = "audio" | "text";
 
 export async function generateAndSaveOneAudioWithDialog({
@@ -145,7 +146,7 @@ export async function generateAndConnectAndSaveAudioWithDialog({
       filePath,
       encoding,
       callback: (finishedCount, totalCount) =>
-        dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
+        void dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
     }),
     dispatch
   );
@@ -224,7 +225,7 @@ const showNotify = ({
         label: "今後この通知をしない",
         textColor: "toast-button-display",
         handler: () => {
-          dispatch("SET_CONFIRMED_TIP", {
+          void dispatch("SET_CONFIRMED_TIP", {
             confirmedTip: {
               notifyOnGenerate: true,
             },

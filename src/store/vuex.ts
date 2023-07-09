@@ -147,7 +147,7 @@ export type ActionHandler<
   this: Store<S, SG, SA, SM>,
   injectee: ActionContext<S, R, SG, SA, SM>,
   payload: Parameters<SA[K]>[0]
-) => ReturnType<SA[K]>;
+) => ReturnType<SA[K]> | Promise<ReturnType<SA[K]>>;
 export interface ActionObject<
   S,
   R,
@@ -280,20 +280,26 @@ export const createPartialStore = <
       const option = options[cur];
 
       if (option.getter) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.getters[cur] = option.getter;
       }
       if (option.mutation) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.mutations[cur] = option.mutation;
       }
       if (option.action) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.actions[cur] = option.action;
       }
 
       return acc;
     },
     {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       getters: Object.create(null),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       mutations: Object.create(null),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       actions: Object.create(null),
     }
   );

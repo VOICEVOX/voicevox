@@ -67,86 +67,115 @@ export const settingStoreState: SettingStoreState = {
 export const settingStore = createPartialStore<SettingStoreTypes>({
   HYDRATE_SETTING_STORE: {
     async action({ commit, dispatch }) {
-      window.electron.hotkeySettings().then((hotkeys) => {
-        hotkeys.forEach((hotkey) => {
-          dispatch("SET_HOTKEY_SETTINGS", {
-            data: hotkey,
+      const promises: Promise<unknown>[] = [];
+
+      void window.electron
+        .hotkeySettings()
+        .then((hotkeys) =>
+          hotkeys.map((hotkey) =>
+            promises.push(dispatch("SET_HOTKEY_SETTINGS", { data: hotkey }))
+          )
+        );
+
+      void window.electron.theme().then((theme) => {
+        if (theme) {
+          commit("SET_THEME_SETTING", {
+            currentTheme: theme.currentTheme,
+            themes: theme.availableThemes,
           });
+          promises.push(
+            dispatch("SET_THEME_SETTING", {
+              currentTheme: theme.currentTheme,
+            })
+          );
+        }
+      });
+
+      void window.electron.getSetting("editorFont").then((editorFont) => {
+        promises.push(dispatch("SET_EDITOR_FONT", { editorFont }));
+      });
+
+      void window.electron
+        .getSetting("showTextLineNumber")
+        .then((showTextLineNumber) => {
+          promises.push(
+            dispatch("SET_SHOW_TEXT_LINE_NUMBER", { showTextLineNumber })
+          );
         });
-      });
 
-      const theme = await window.electron.theme();
-      if (theme) {
-        commit("SET_THEME_SETTING", {
-          currentTheme: theme.currentTheme,
-          themes: theme.availableThemes,
+      void window.electron
+        .getSetting("acceptRetrieveTelemetry")
+        .then((acceptRetrieveTelemetry) => {
+          promises.push(
+            dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+              acceptRetrieveTelemetry,
+            })
+          );
         });
-        dispatch("SET_THEME_SETTING", {
-          currentTheme: theme.currentTheme,
+
+      void window.electron.getSetting("acceptTerms").then((acceptTerms) => {
+        promises.push(dispatch("SET_ACCEPT_TERMS", { acceptTerms }));
+        promises.push(Promise.resolve());
+      });
+
+      void window.electron.getSetting("savingSetting").then((savingSetting) => {
+        commit("SET_SAVING_SETTING", { savingSetting });
+        promises.push(Promise.resolve());
+      });
+
+      void window.electron
+        .getSetting("toolbarSetting")
+        .then((toolbarSetting) => {
+          commit("SET_TOOLBAR_SETTING", { toolbarSetting });
+          promises.push(Promise.resolve());
         });
-      }
 
-      dispatch("SET_EDITOR_FONT", {
-        editorFont: await window.electron.getSetting("editorFont"),
-      });
+      void window.electron
+        .getSetting("experimentalSetting")
+        .then((experimentalSetting) => {
+          commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
+          promises.push(Promise.resolve());
+        });
 
-      dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
-        showTextLineNumber: await window.electron.getSetting(
-          "showTextLineNumber"
-        ),
-      });
+      void window.electron
+        .getSetting("splitTextWhenPaste")
+        .then((splitTextWhenPaste) => {
+          commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
+          promises.push(Promise.resolve());
+        });
 
-      dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-        acceptRetrieveTelemetry: await window.electron.getSetting(
-          "acceptRetrieveTelemetry"
-        ),
-      });
+      void window.electron
+        .getSetting("splitterPosition")
+        .then((splitterPosition) => {
+          commit("SET_SPLITTER_POSITION", { splitterPosition });
+          promises.push(Promise.resolve());
+        });
 
-      dispatch("SET_ACCEPT_TERMS", {
-        acceptTerms: await window.electron.getSetting("acceptTerms"),
-      });
-
-      commit("SET_SAVING_SETTING", {
-        savingSetting: await window.electron.getSetting("savingSetting"),
-      });
-
-      commit("SET_TOOLBAR_SETTING", {
-        toolbarSetting: await window.electron.getSetting("toolbarSetting"),
-      });
-
-      commit("SET_EXPERIMENTAL_SETTING", {
-        experimentalSetting: await window.electron.getSetting(
-          "experimentalSetting"
-        ),
-      });
-
-      commit("SET_SPLIT_TEXT_WHEN_PASTE", {
-        splitTextWhenPaste: await window.electron.getSetting(
-          "splitTextWhenPaste"
-        ),
-      });
-
-      commit("SET_SPLITTER_POSITION", {
-        splitterPosition: await window.electron.getSetting("splitterPosition"),
-      });
-
-      commit("SET_CONFIRMED_TIPS", {
-        confirmedTips: await window.electron.getSetting("confirmedTips"),
+      void window.electron.getSetting("confirmedTips").then((confirmedTips) => {
+        commit("SET_CONFIRMED_TIPS", { confirmedTips });
+        promises.push(Promise.resolve());
       });
 
       // FIXME: engineSettingsをMapにする
-      for (const [engineIdStr, engineSetting] of Object.entries(
-        await window.electron.getSetting("engineSettings")
-      )) {
-        if (engineSetting == undefined)
-          throw new Error(
-            `engineSetting is undefined. engineIdStr: ${engineIdStr}`
-          );
-        commit("SET_ENGINE_SETTING", {
-          engineId: EngineId(engineIdStr),
-          engineSetting,
+      void window.electron
+        .getSetting("engineSettings")
+        .then((engineSettings) => {
+          for (const [engineIdStr, engineSetting] of Object.entries(
+            engineSettings
+          )) {
+            if (engineSetting == undefined)
+              throw new Error(
+                `engineSetting is undefined. engineIdStr: ${engineIdStr}`
+              );
+            commit("SET_ENGINE_SETTING", {
+              engineId: EngineId(engineIdStr),
+              engineSetting,
+            });
+          }
+          promises.push(Promise.resolve());
         });
-      }
+
+      await Promise.all(promises);
     },
   },
 
@@ -154,11 +183,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { savingSetting }: { savingSetting: SavingSetting }) {
       state.savingSetting = savingSetting;
     },
-    action({ commit }, { data }: { data: SavingSetting }) {
-      const newData = window.electron.setSetting("savingSetting", data);
-      newData.then((savingSetting) => {
-        commit("SET_SAVING_SETTING", { savingSetting });
-      });
+    async action({ commit }, { data }: { data: SavingSetting }) {
+      const savingSetting = await window.electron.setSetting(
+        "savingSetting",
+        data
+      );
+      commit("SET_SAVING_SETTING", { savingSetting });
     },
   },
 
@@ -173,8 +203,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       });
       if (flag) state.hotkeySettings.push(newHotkey);
     },
-    action({ state, commit }, { data }: { data: HotkeySetting }) {
-      window.electron.hotkeySettings(data);
+    async action({ state, commit }, { data }: { data: HotkeySetting }) {
+      await window.electron.hotkeySettings(data);
       const oldHotkey = state.hotkeySettings.find((value) => {
         return value.action == data.action;
       });
@@ -202,11 +232,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { toolbarSetting }: { toolbarSetting: ToolbarSetting }) {
       state.toolbarSetting = toolbarSetting;
     },
-    action({ commit }, { data }: { data: ToolbarSetting }) {
-      const newData = window.electron.setSetting("toolbarSetting", data);
-      newData.then((toolbarSetting) => {
-        commit("SET_TOOLBAR_SETTING", { toolbarSetting });
-      });
+    async action({ commit }, { data }: { data: ToolbarSetting }) {
+      const toolbarSetting = await window.electron.setSetting(
+        "toolbarSetting",
+        data
+      );
+      commit("SET_TOOLBAR_SETTING", { toolbarSetting });
     },
   },
 
@@ -220,8 +251,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
       state.themeSetting.currentTheme = currentTheme;
     },
-    action({ state, commit }, { currentTheme }: { currentTheme: string }) {
-      window.electron.theme(currentTheme);
+    async action(
+      { state, commit },
+      { currentTheme }: { currentTheme: string }
+    ) {
+      await window.electron.theme(currentTheme);
       const theme = state.themeSetting.availableThemes.find((value) => {
         return value.name == currentTheme;
       });
@@ -260,8 +294,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { editorFont }) {
       state.editorFont = editorFont;
     },
-    action({ commit }, { editorFont }) {
-      window.electron.setSetting("editorFont", editorFont);
+    async action({ commit }, { editorFont }) {
+      await window.electron.setSetting("editorFont", editorFont);
       commit("SET_EDITOR_FONT", { editorFont });
     },
   },
@@ -270,8 +304,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { showTextLineNumber }) {
       state.showTextLineNumber = showTextLineNumber;
     },
-    action({ commit }, { showTextLineNumber }) {
-      window.electron.setSetting("showTextLineNumber", showTextLineNumber);
+    async action({ commit }, { showTextLineNumber }) {
+      await window.electron.setSetting(
+        "showTextLineNumber",
+        showTextLineNumber
+      );
       commit("SET_SHOW_TEXT_LINE_NUMBER", {
         showTextLineNumber,
       });
@@ -282,12 +319,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
     },
-    action({ commit }, { acceptRetrieveTelemetry }) {
+    async action({ commit }, { acceptRetrieveTelemetry }) {
       window.dataLayer?.push({
         event: "updateAcceptRetrieveTelemetry",
         acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
       });
-      window.electron.setSetting(
+      await window.electron.setSetting(
         "acceptRetrieveTelemetry",
         acceptRetrieveTelemetry
       );
@@ -299,12 +336,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { acceptTerms }) {
       state.acceptTerms = acceptTerms;
     },
-    action({ commit }, { acceptTerms }) {
+    async action({ commit }, { acceptTerms }) {
       window.dataLayer?.push({
         event: "updateAcceptTerms",
         acceptTerms: acceptTerms == "Accepted",
       });
-      window.electron.setSetting("acceptTerms", acceptTerms);
+      await window.electron.setSetting("acceptTerms", acceptTerms);
       commit("SET_ACCEPT_TERMS", { acceptTerms });
     },
   },
@@ -316,8 +353,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     ) {
       state.experimentalSetting = experimentalSetting;
     },
-    action({ commit }, { experimentalSetting }) {
-      window.electron.setSetting("experimentalSetting", experimentalSetting);
+    async action({ commit }, { experimentalSetting }) {
+      await window.electron.setSetting(
+        "experimentalSetting",
+        experimentalSetting
+      );
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
     },
   },
@@ -326,8 +366,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { splitTextWhenPaste }) {
       state.splitTextWhenPaste = splitTextWhenPaste;
     },
-    action({ commit }, { splitTextWhenPaste }) {
-      window.electron.setSetting("splitTextWhenPaste", splitTextWhenPaste);
+    async action({ commit }, { splitTextWhenPaste }) {
+      await window.electron.setSetting(
+        "splitTextWhenPaste",
+        splitTextWhenPaste
+      );
       commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     },
   },
@@ -336,8 +379,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { splitterPosition }) {
       state.splitterPosition = splitterPosition;
     },
-    action({ commit }, { splitterPosition }) {
-      window.electron.setSetting("splitterPosition", splitterPosition);
+    async action({ commit }, { splitterPosition }) {
+      await window.electron.setSetting("splitterPosition", splitterPosition);
       commit("SET_SPLITTER_POSITION", { splitterPosition });
     },
   },
@@ -346,20 +389,20 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { confirmedTips }) {
       state.confirmedTips = confirmedTips;
     },
-    action({ commit }, { confirmedTips }) {
-      window.electron.setSetting("confirmedTips", confirmedTips);
+    async action({ commit }, { confirmedTips }) {
+      await window.electron.setSetting("confirmedTips", confirmedTips);
       commit("SET_CONFIRMED_TIPS", { confirmedTips });
     },
   },
 
   SET_CONFIRMED_TIP: {
-    action({ state, dispatch }, { confirmedTip }) {
+    async action({ state, dispatch }, { confirmedTip }) {
       const confirmedTips = {
         ...state.confirmedTips,
         ...confirmedTip,
       };
 
-      dispatch("SET_CONFIRMED_TIPS", {
+      await dispatch("SET_CONFIRMED_TIPS", {
         confirmedTips: confirmedTips as ConfirmedTips,
       });
     },
@@ -376,7 +419,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         confirmedTips[key] = false;
       }
 
-      dispatch("SET_CONFIRMED_TIPS", {
+      await dispatch("SET_CONFIRMED_TIPS", {
         confirmedTips: confirmedTips as ConfirmedTips,
       });
     },
@@ -417,7 +460,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           }
         }
 
-        dispatch("SET_ENGINE_SETTING", {
+        await dispatch("SET_ENGINE_SETTING", {
           engineSetting: { ...state.engineSettings[engineId], useGpu },
           engineId,
         });
@@ -476,7 +519,7 @@ export const setHotkeyFunctions = (
         return value.action == hotkeyAction;
       });
       if (hotkey) {
-        store.dispatch("SET_HOTKEY_SETTINGS", { data: { ...hotkey } });
+        void store.dispatch("SET_HOTKEY_SETTINGS", { data: { ...hotkey } });
       }
     });
   }

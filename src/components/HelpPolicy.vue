@@ -17,7 +17,7 @@ const policyHtml = ref("");
 
 const md = useMarkdownIt();
 
-onMounted(async () => {
+onMounted(() => {
   policyHtml.value = md.render(props.policy);
 });
 </script>

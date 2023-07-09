@@ -217,7 +217,8 @@ import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
-import { HotkeyAction, HotkeySetting } from "@/type/preload";
+import { HotkeyAction } from "@/type/preload";
+import { quasarDialogPromiseWrapper } from "@/helpers/promise";
 
 const props =
   defineProps<{
@@ -279,8 +280,8 @@ const recordCombination = (event: KeyboardEvent) => {
   }
 };
 
-const changeHotkeySettings = (action: string, combo: string) => {
-  return store.dispatch("SET_HOTKEY_SETTINGS", {
+const changeHotkeySettings = async (action: string, combo: string) => {
+  await store.dispatch("SET_HOTKEY_SETTINGS", {
     data: {
       action: action as HotkeyAction,
       combination: combo,
@@ -297,8 +298,8 @@ const duplicatedHotkey = computed(() => {
 });
 
 // FIXME: actionはHotkeyAction型にすべき
-const deleteHotkey = (action: string) => {
-  changeHotkeySettings(action, "");
+const deleteHotkey = async (action: string) => {
+  await changeHotkeySettings(action, "");
 };
 
 const getHotkeyText = (action: string, combo: string) => {
@@ -334,10 +335,10 @@ const closeHotkeyDialog = () => {
   document.removeEventListener("keydown", recordCombination);
 };
 
-const solveDuplicated = () => {
+const solveDuplicated = async () => {
   if (duplicatedHotkey.value == undefined)
     throw new Error("duplicatedHotkey.value == undefined");
-  deleteHotkey(duplicatedHotkey.value.action);
+  await deleteHotkey(duplicatedHotkey.value.action);
   return changeHotkeySettings(lastAction.value, lastRecord.value);
 };
 
@@ -350,31 +351,31 @@ const confirmBtnEnabled = computed(() => {
   );
 });
 
-const resetHotkey = (action: string) => {
-  $q.dialog({
-    title: "ショートカットキーを初期値に戻します",
-    message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
-    html: true,
-    ok: {
-      label: "初期値に戻す",
-      flat: true,
-      textColor: "display",
-    },
-    cancel: {
-      label: "初期値に戻さない",
-      flat: true,
-      textColor: "display",
-    },
-  }).onOk(() => {
-    window.electron
-      .getDefaultHotkeySettings()
-      .then((defaultSettings: HotkeySetting[]) => {
-        const setting = defaultSettings.find((value) => value.action == action);
-        if (setting) {
-          changeHotkeySettings(action, setting.combination);
-        }
-      });
-  });
+const resetHotkey = async (action: string) => {
+  const result = await quasarDialogPromiseWrapper(
+    $q.dialog({
+      title: "ショートカットキーを初期値に戻します",
+      message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
+      html: true,
+      ok: {
+        label: "初期値に戻す",
+        flat: true,
+        textColor: "display",
+      },
+      cancel: {
+        label: "初期値に戻さない",
+        flat: true,
+        textColor: "display",
+      },
+    })
+  );
+  if (result.on != "ok") return;
+
+  const defaultSettings = await window.electron.getDefaultHotkeySettings();
+  const setting = defaultSettings.find((value) => value.action == action);
+  if (setting) {
+    await changeHotkeySettings(action, setting.combination);
+  }
 };
 </script>
 

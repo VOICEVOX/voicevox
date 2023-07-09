@@ -329,9 +329,8 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       promises.push(dispatch("HYDRATE_PRESET_STORE"));
       promises.push(dispatch("HYDRATE_SETTING_STORE"));
 
-      await Promise.all(promises).then(() => {
-        dispatch("ON_VUEX_READY");
-      });
+      await Promise.all(promises);
+      await dispatch("ON_VUEX_READY");
     },
   },
 
@@ -391,8 +390,8 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   actions: {
     ...uiStore.actions,
     ...audioStore.actions,
-    ...engineStore.actions,
     ...commandStore.actions,
+    ...engineStore.actions,
     ...projectStore.actions,
     ...settingStore.actions,
     ...audioCommandStore.actions,

@@ -7,8 +7,8 @@ import { onErrorCaptured, onMounted } from "vue";
 import { useStore } from "@/store";
 
 const store = useStore();
-const logError = (error: Error): void => {
-  store.dispatch("LOG_ERROR", error.stack);
+const logError = (error: Error) => {
+  void store.dispatch("LOG_ERROR", error.stack);
 };
 
 onMounted(() => {
@@ -19,10 +19,12 @@ onMounted(() => {
     } else if (event.reason instanceof Response) {
       logError(new Error(`HTTP ${event.reason.status} at ${event.reason.url}`));
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       logError(new Error(event.reason));
     }
   };
   window.addEventListener("error", (event: ErrorEvent) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     logError(event.error);
   });
   window.addEventListener("unhandledrejection", handlePromiseRejectionEvent);

@@ -52,9 +52,12 @@ const styleInfo = computed(() => {
 });
 
 const characterName = computed(() => {
-  return styleInfo.value?.styleName
-    ? `${characterInfo.value?.metas.speakerName} (${styleInfo.value?.styleName})`
-    : characterInfo.value?.metas.speakerName;
+  if (characterInfo.value == undefined) return undefined;
+  if (styleInfo.value == undefined)
+    return characterInfo.value.metas.speakerName;
+  return `${characterInfo.value.metas.speakerName} (${
+    styleInfo.value.styleName || "ノーマル"
+  })`;
 });
 
 const engineName = computed(() => {

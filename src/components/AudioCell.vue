@@ -119,7 +119,7 @@ const selectedVoice = computed<Voice | undefined>({
   },
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
-    store.dispatch("COMMAND_CHANGE_VOICE", {
+    void store.dispatch("COMMAND_CHANGE_VOICE", {
       audioKey: props.audioKey,
       voice,
     });
@@ -159,7 +159,7 @@ const pushAudioText = async () => {
 };
 
 const setActiveAudioKey = () => {
-  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
+  void store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
 const isEnableSplitText = computed(() => store.state.splitTextWhenPaste);
 // コピペしたときに句点と改行で区切る
@@ -231,7 +231,7 @@ const moveDownCell = (e?: KeyboardEvent) => {
 
 // 消去
 const willRemove = ref(false);
-const removeCell = async () => {
+const removeCell = () => {
   // 1つだけの時は削除せず
   if (audioKeys.value.length > 1) {
     // フォーカスを外したりREMOVEしたりすると、
@@ -246,7 +246,7 @@ const removeCell = async () => {
       emit("focusCell", { audioKey: audioKeys.value[index + 1] });
     }
 
-    store.dispatch("COMMAND_REMOVE_AUDIO_ITEM", {
+    void store.dispatch("COMMAND_REMOVE_AUDIO_ITEM", {
       audioKey: props.audioKey,
     });
   }
@@ -259,7 +259,7 @@ const deleteButtonEnable = computed(() => {
 
 // テキスト編集エリアの右クリック
 const onRightClickTextField = () => {
-  store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU");
+  void store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU");
 };
 
 const blurCell = (event?: KeyboardEvent) => {

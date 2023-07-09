@@ -122,7 +122,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
                 ])
             )
           )
-        ),
+        ) as Record<EngineId, EngineManifest>,
       });
     },
   },
@@ -204,7 +204,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           try {
             return window.electron.restartEngine(engineId);
           } catch (e) {
-            dispatch("LOG_ERROR", {
+            void dispatch("LOG_ERROR", {
               error: e,
               message: `Failed to restart engine: ${engineId}`,
             });
@@ -256,7 +256,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         anyNewCharacters: result.some((r) => r.anyNewCharacters),
       };
       if (mergedResult.anyNewCharacters) {
-        dispatch("SET_DIALOG_OPEN", {
+        void dispatch("SET_DIALOG_OPEN", {
           isCharacterOrderDialogOpen: true,
         });
       }

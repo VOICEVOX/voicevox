@@ -447,7 +447,7 @@ const handleParameterChange = (
     parameter.slider.qSliderProps.min.value,
     parameter.slider.qSliderProps.max.value
   );
-  store.dispatch(parameter.action, {
+  void store.dispatch(parameter.action, {
     audioKey: props.activeAudioKey,
     [parameter.key]: value,
   });
@@ -471,7 +471,7 @@ const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 // モーフィング可能なターゲット一覧を取得
 watchEffect(() => {
   if (audioItem.value != undefined) {
-    store.dispatch("LOAD_MORPHABLE_TARGETS", {
+    void store.dispatch("LOAD_MORPHABLE_TARGETS", {
       engineId: audioItem.value.voice.engineId,
       baseStyleId: audioItem.value.voice.styleId,
     });
@@ -551,7 +551,7 @@ const morphingTargetVoice = computed({
             targetStyleId: voice.styleId,
           }
         : undefined;
-    store.dispatch("COMMAND_SET_MORPHING_INFO", {
+    void store.dispatch("COMMAND_SET_MORPHING_INFO", {
       audioKey: props.activeAudioKey,
       morphingInfo,
     });
@@ -579,7 +579,7 @@ const setMorphingRate = (rate: number) => {
   if (info == undefined) {
     throw new Error("audioItem.value.morphingInfo == undefined");
   }
-  store.dispatch("COMMAND_SET_MORPHING_INFO", {
+  void store.dispatch("COMMAND_SET_MORPHING_INFO", {
     audioKey: props.activeAudioKey,
     morphingInfo: {
       rate,
@@ -658,7 +658,7 @@ type PresetSelectModelType = {
 
 // プリセットの変更
 const changePreset = (presetKey: PresetKey | undefined): void => {
-  store.dispatch("COMMAND_SET_AUDIO_PRESET", {
+  void store.dispatch("COMMAND_SET_AUDIO_PRESET", {
     audioKey: props.activeAudioKey,
     presetKey,
   });
@@ -882,7 +882,7 @@ const adjustSliderValue = (
 ) => {
   const inputNum = Number(inputStr);
 
-  store.dispatch("LOG_INFO", `${inputItemName}:${inputStr}`);
+  void store.dispatch("LOG_INFO", `${inputItemName}:${inputStr}`);
 
   if (isNaN(inputNum)) {
     return minimalVal;

@@ -70,10 +70,7 @@ const props = withDefaults(
     accentPhraseIndex: number;
     uiLocked: boolean;
     shiftKeyFlag?: boolean;
-    onChangeAccent: (
-      accentPhraseIndex: number,
-      accent: number
-    ) => Promise<void>;
+    onChangeAccent: (accentPhraseIndex: number, accent: number) => void;
   }>(),
   {
     shiftKeyFlag: false,

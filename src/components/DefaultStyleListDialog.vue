@@ -155,7 +155,7 @@ const selectedStyles = computed(() => {
 });
 
 // ダイアログが開かれたときに初期値を求める
-watch([() => props.modelValue], async ([newValue]) => {
+watch([() => props.modelValue], ([newValue]) => {
   if (newValue) {
     speakerWithMultipleStyles.value = store.state.userCharacterOrder
       .map((speakerUuid) => characterInfosMap.value[speakerUuid])
@@ -189,7 +189,7 @@ watch([() => props.modelValue], async ([newValue]) => {
 const isHoverableItem = ref(true);
 
 const closeDialog = () => {
-  store.dispatch(
+  void store.dispatch(
     "SET_DEFAULT_STYLE_IDS",
     Object.entries(selectedStyleIndexes.value).map(
       ([speakerUuidStr, styleIndex]) => {

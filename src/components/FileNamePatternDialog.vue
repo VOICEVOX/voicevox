@@ -187,7 +187,7 @@ const insertTagToCurrentPosition = (tag: string) => {
     currentFileNamePattern.value = newText;
 
     // キャレットの位置を挿入した後の位置にずらす
-    nextTick(() => {
+    void nextTick(() => {
       elem.selectionStart = from + tag.length;
       elem.selectionEnd = from + tag.length;
       elem.focus();

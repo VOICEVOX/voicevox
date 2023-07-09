@@ -16,12 +16,13 @@ export function mapUndefinedPipe<T, U1, U2, U3>(
 /**
  * 一連の関数を実行する。途中でundefinedを返すとその後undefinedを返す。
  */
-// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
-export function mapUndefinedPipe(source: any, ...fn: Function[]) {
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function mapUndefinedPipe<T>(source: T[], ...fn: Function[]) {
   return fn.reduce((prev, curr) => {
     if (prev === undefined) {
       return undefined;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return curr(prev);
   }, source);
 }

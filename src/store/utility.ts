@@ -81,7 +81,7 @@ function replaceTag(
   template: string,
   replacer: { [key: string]: string }
 ): string {
-  const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
+  const result = template.replace(/\$(.+?)\$/g, (match, p1: string) => {
     const replaceTagId = replaceTagStringToTagId[p1];
     if (replaceTagId === undefined) {
       return match;

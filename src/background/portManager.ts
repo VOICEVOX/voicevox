@@ -57,10 +57,10 @@ function netstatStdout2pid(
   return undefined;
 }
 
-export async function getPidFromPort(
+export function getPidFromPort(
   hostInfo: HostInfo,
   isNested = false // ログ整形用の引数
-): Promise<number | undefined> {
+): number | undefined {
   // Windows の場合は, hostname が以下のループバックアドレスが割り当てられているか確認
   const parse4windows = (stdout: string): string | undefined => {
     // それぞれのループバックアドレスに対して pid を取得
@@ -142,10 +142,7 @@ export async function getPidFromPort(
   return Number(pid);
 }
 
-export async function getProcessNameFromPid(
-  hostInfo: HostInfo,
-  pid: number
-): Promise<string> {
+export function getProcessNameFromPid(hostInfo: HostInfo, pid: number): string {
   portLog(hostInfo.port, `Getting process name from pid=${pid}...`);
   const exec = isWindows
     ? {
@@ -194,7 +191,7 @@ function findOrCheckPort(
       const address = server.address();
       server.close();
       if (address == undefined || typeof address === "string") {
-        reject(new Error(`'address' is null or string: ${address}`));
+        reject(new Error(`'address': ${address || "undefind"}`));
         return;
       }
       resolve(address.port);

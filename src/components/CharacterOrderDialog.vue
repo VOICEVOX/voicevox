@@ -324,7 +324,7 @@ const play = (
   if (audio.src !== "") stop();
 
   audio.src = voiceSamplePaths[index];
-  audio.play();
+  void audio.play();
   playing.value = { speakerUuid, styleId, index };
 };
 const stop = () => {
@@ -374,7 +374,7 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 const characterOrderDragging = ref(false);
 
 const closeDialog = () => {
-  store.dispatch(
+  void store.dispatch(
     "SET_USER_CHARACTER_ORDER",
     characterOrder.value.map((info) => info.metas.speakerUuid)
   );

@@ -420,7 +420,10 @@ export type AudioStoreTypes = {
     action(payload: {
       dirPath?: string;
       encoding?: EncodingType;
-      callback?: (finishedCount: number, totalCount: number) => void;
+      callback?: (
+        finishedCount: number,
+        totalCount: number
+      ) => void | Promise<void>;
     }): SaveResultObject[] | undefined;
   };
 
@@ -1108,7 +1111,7 @@ export type SettingStoreTypes = {
   };
 
   CHANGE_USE_GPU: {
-    action(payload: { useGpu: boolean; engineId: EngineId }): Promise<void>;
+    action(payload: { useGpu: boolean; engineId: EngineId }): void;
   };
 
   GET_RECENTLY_USED_PROJECTS: {

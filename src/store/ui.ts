@@ -13,24 +13,22 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
     context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
     payload: Parameters<A[K]>[0]
-  ) => ReturnType<A[K]> extends Promise<unknown>
-    ? ReturnType<A[K]>
-    : Promise<ReturnType<A[K]>>
+  ) => Promise<ReturnType<A[K]>>
 ): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
-  return (context, payload: Parameters<A[K]>[0]) => {
+  return ((context, payload: Parameters<A[K]>[0]) => {
     context.commit("LOCK_UI");
     return action(context, payload).finally(() => {
       context.commit("UNLOCK_UI");
     });
-  };
+  }) as Action<S, S, A, K, AllGetters, AllActions, AllMutations>; // FIXME: なぜか型が合わない
 }
 
-export function withProgress<T>(
+export async function withProgress<T>(
   action: Promise<T>,
   dispatch: Dispatch<AllActions>
 ): Promise<T> {
-  dispatch("START_PROGRESS");
-  return action.finally(() => dispatch("RESET_PROGRESS"));
+  await dispatch("START_PROGRESS");
+  return action.finally(() => void dispatch("RESET_PROGRESS"));
 }
 
 export const uiStoreState: UiStoreState = {
@@ -154,7 +152,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         state[key] = value;
       }
     },
-    async action({ state, commit }, dialogState) {
+    action({ state, commit }, dialogState) {
       for (const [key, value] of Object.entries(dialogState)) {
         if (state[key] === value) continue;
 
@@ -324,8 +322,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   START_PROGRESS: {
-    action({ dispatch }) {
-      dispatch("SET_PROGRESS", { progress: 0 });
+    async action({ dispatch }) {
+      await dispatch("SET_PROGRESS", { progress: 0 });
     },
   },
 
@@ -346,9 +344,9 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   RESET_PROGRESS: {
-    action({ dispatch }) {
+    async action({ dispatch }) {
       // -1で非表示
-      dispatch("SET_PROGRESS", { progress: -1 });
+      await dispatch("SET_PROGRESS", { progress: -1 });
     },
   },
 });

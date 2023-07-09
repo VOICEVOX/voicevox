@@ -96,8 +96,10 @@ log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
 log.transports.file.resolvePath = (variables) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return path.join(logPath, variables.fileName!);
+  if (variables.fileName == undefined) {
+    throw new Error("fileName is undefined");
+  }
+  return path.join(logPath, variables.fileName);
 };
 
 let win: BrowserWindow;
@@ -873,20 +875,19 @@ ipcMainHandle("INSTALL_VVPP_ENGINE", async (_, path: string) => {
   return await installVvppEngine(path);
 });
 
-// eslint-disable-next-line @typescript-eslint/require-await
 ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: EngineId) => {
-  return uninstallVvppEngine(engineId);
+  return Promise.resolve(uninstallVvppEngine(engineId));
 });
 
 ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
   return engineManager.validateEngineDir(engineDir);
 });
 
-// eslint-disable-next-line @typescript-eslint/require-await
 ipcMainHandle("RESTART_APP", async (_, { isMultiEngineOffMode }) => {
   appState.willRestart = true;
   appState.isMultiEngineOffMode = isMultiEngineOffMode;
   win.close();
+  return Promise.resolve();
 });
 
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
