@@ -393,7 +393,7 @@ const readyForContextMenu = () => {
 //       コンテキストメニューを開いた時点の選択範囲が復元(再選択)される模様。
 //       その後に選択範囲を変更しないと反映されないため、フラグを立てて後から処理する。
 const doDelayedContextmenuAction = () => {
-  if (cursorPosition) {
+  if (cursorPosition !== null) {
     textfieldSelection.setCursorPosition(cursorPosition);
     cursorPosition = null;
   }
