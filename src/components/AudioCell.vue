@@ -32,7 +32,6 @@
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
-      @contextmenu="readyForContextMenu()"
       @update:model-value="setAudioTextBuffer"
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
@@ -58,7 +57,9 @@
       </template>
       <context-menu
         :menudata="contextMenudata"
+        @before-show="readyForContextMenu()"
         @before-hide="doDelayedContextmenuAction()"
+        @hide="continueCapturingChanges()"
       >
         <template v-if="isRangeSelected" #header>
           <span v-if="header" class="text-weight-bold">{{ header }}</span>
@@ -176,7 +177,6 @@ const pushAudioTextIfNeeded = async () => {
 
 // NOTE: コンテキストメニューアイテムのonClick実行後も再フォーカスされるため発火する
 const setActiveAudioKey = () => {
-  isCapturingChanges = true;
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
 
@@ -285,37 +285,12 @@ const MAX_HEADER_LENGTH = 15;
 const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
 let isCapturingChanges = true;
+let willSelectAll = false;
+let cursorPosition: number | null = null;
 const isRangeSelected = ref(false);
 const header = ref<string | undefined>("");
 const headerStartFragment = ref("");
 const headerEndFragment = ref("");
-const readyForContextMenu = () => {
-  isCapturingChanges = false;
-
-  const selectionText = textfieldSelection.getAsString();
-  if (selectionText.length === 0) {
-    isRangeSelected.value = false;
-    contextMenudata.value[0].disabled = true;
-    contextMenudata.value[1].disabled = true;
-  } else {
-    isRangeSelected.value = true;
-    contextMenudata.value[0].disabled = false;
-    contextMenudata.value[1].disabled = false;
-    if (selectionText.length > MAX_HEADER_LENGTH) {
-      // 長すぎる場合適度な長さで省略
-      header.value = undefined;
-      headerStartFragment.value = selectionText.substring(
-        0,
-        SHORTED_HEADER_FRAGMENT_LENGTH
-      );
-      headerEndFragment.value = selectionText.substring(
-        selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
-      );
-    } else {
-      header.value = selectionText;
-    }
-  }
-};
 const contextMenudata = ref<
   [
     MenuItemButton,
@@ -385,12 +360,38 @@ const contextMenudata = ref<
 ]);
 // TODO: (MAY)コンテキストメニューを開いたときに選択範囲が外れる現象の原因調査・修正
 
+const readyForContextMenu = () => {
+  isCapturingChanges = false;
+
+  // 選択範囲を1行目に表示
+  const selectionText = textfieldSelection.getAsString();
+  if (selectionText.length === 0) {
+    isRangeSelected.value = false;
+    contextMenudata.value[0].disabled = true;
+    contextMenudata.value[1].disabled = true;
+  } else {
+    isRangeSelected.value = true;
+    contextMenudata.value[0].disabled = false;
+    contextMenudata.value[1].disabled = false;
+    if (selectionText.length > MAX_HEADER_LENGTH) {
+      // 長すぎる場合適度な長さで省略
+      header.value = undefined;
+      headerStartFragment.value = selectionText.substring(
+        0,
+        SHORTED_HEADER_FRAGMENT_LENGTH
+      );
+      headerEndFragment.value = selectionText.substring(
+        selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
+      );
+    } else {
+      header.value = selectionText;
+    }
+  }
+};
 // コンテキストメニューが閉じた後の処理
 // NOTE: コンテキストメニューを閉じた場合、多分Quasarの内部処理として
 //       コンテキストメニューを開いた時点の選択範囲が復元(再選択)される模様。
 //       その後に選択範囲を変更しないと反映されないため、フラグを立てて後から処理する。
-let willSelectAll = false;
-let cursorPosition: number | null = null;
 const doDelayedContextmenuAction = () => {
   if (cursorPosition) {
     textfieldSelection.setCursorPosition(cursorPosition);
@@ -400,6 +401,9 @@ const doDelayedContextmenuAction = () => {
     willSelectAll = false;
     textfield.value?.select();
   }
+};
+const continueCapturingChanges = () => {
+  isCapturingChanges = true;
 };
 
 const blurCell = (event?: KeyboardEvent) => {
