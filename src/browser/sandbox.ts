@@ -1,9 +1,7 @@
 import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
-  showImportFileDialogImpl,
   showOpenDirectoryDialogImpl,
-  showProjectLoadDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
 import { getSettingEntry, setSettingEntry } from "./storeImpl";
@@ -128,8 +126,10 @@ export const api: Sandbox = {
       }
     });
   },
-  showProjectLoadDialog(obj: { title: string }) {
-    return showProjectLoadDialogImpl(obj);
+  showProjectLoadDialog(/* obj: { title: string } */) {
+    throw new Error(
+      "ブラウザ版では現在ファイルの読み込みをサポートしていません"
+    );
   },
   showMessageDialog(obj: {
     type: "none" | "info" | "error" | "question" | "warning";
@@ -155,8 +155,10 @@ export const api: Sandbox = {
       `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`
     );
   },
-  showImportFileDialog(obj: { title: string }) {
-    return showImportFileDialogImpl(obj);
+  showImportFileDialog(/* obj: { title: string } */) {
+    throw new Error(
+      "ブラウザ版では現在ファイルの読み込みをサポートしていません"
+    );
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
     return writeFileImpl(obj);

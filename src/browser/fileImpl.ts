@@ -40,11 +40,6 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
 
 const directoryHandleMap: Map<string, FileSystemDirectoryHandle> = new Map();
 
-type AcceptFileType = {
-  description: string;
-  accept: Record<string /** MIME Type */, string[] /** extension */>;
-};
-
 const showWritableDirectoryPicker = async (): Promise<
   FileSystemDirectoryHandle | undefined
 > =>
@@ -54,35 +49,6 @@ const showWritableDirectoryPicker = async (): Promise<
     })
     // キャンセルするとエラーが投げられる
     .catch(() => undefined); // FIXME: このままだとダイアログ表示エラーと見分けがつかない
-
-const showLoadableFilePicker = async ({
-  fileType,
-}: {
-  fileType: AcceptFileType;
-}) =>
-  window
-    .showOpenFilePicker({
-      types: [fileType],
-      excludeAcceptAllOption: true,
-      multiple: false,
-    })
-    .catch(() => undefined);
-
-const requestLoadFileNameWithDirectoryPermission = async ({
-  fileType,
-}: {
-  fileType: AcceptFileType;
-}) => {
-  const fileHandle = await showLoadableFilePicker({
-    fileType,
-  });
-  if (fileHandle === undefined) {
-    return undefined;
-  }
-
-  // NOTE: ディレクトリのハンドラと異なるディレクトリを選択されても検知できない
-  return fileHandle.map((v) => v.name);
-};
 
 export const showOpenDirectoryDialogImpl: typeof window[typeof SandboxKey]["showOpenDirectoryDialog"] =
   async () => {
@@ -96,30 +62,6 @@ export const showOpenDirectoryDialogImpl: typeof window[typeof SandboxKey]["show
     // NOTE: 同一のディレクトリ名だった場合、後で選択されたディレクトリがそれ移行の処理で使用されるため、意図しない保存が発生するかもしれない
     directoryHandleMap.set(_directoryHandler.name, _directoryHandler);
     return _directoryHandler.name;
-  };
-
-export const showProjectLoadDialogImpl: typeof window[typeof SandboxKey]["showProjectLoadDialog"] =
-  async () => {
-    return requestLoadFileNameWithDirectoryPermission({
-      fileType: {
-        description: "VOICEVOX Project file",
-        accept: {
-          "application/json": [".vvproj"],
-        },
-      },
-    });
-  };
-
-export const showImportFileDialogImpl: typeof window[typeof SandboxKey]["showImportFileDialog"] =
-  async () => {
-    return requestLoadFileNameWithDirectoryPermission({
-      fileType: {
-        description: "Text",
-        accept: {
-          "text/plain": [".txt"],
-        },
-      },
-    }).then((v) => v?.[0]);
   };
 
 // separator 以前の文字列はディレクトリ名として扱う
