@@ -64,6 +64,7 @@ export type TimeSignature = {
 };
 
 export type Note = {
+  id: string;
   position: number;
   duration: number;
   midi: number;
@@ -700,6 +701,7 @@ export type SingingStoreState = {
   sequencerScrollX: number;
   sequencerScrollY: number;
   sequencerSnapSize: number;
+  selectedNoteIds: string[];
   nowPlaying: boolean;
   volume: number;
   leftLocatorPosition: number;
@@ -755,14 +757,34 @@ export type SingingStoreTypes = {
     action(payload: { note: Note }): void;
   };
 
-  CHANGE_NOTE: {
-    mutation: { index: number; note: Note };
-    action(payload: { index: number; note: Note }): void;
+  UPDATE_NOTE: {
+    mutation: { note: Note; index: number };
+    action(payload: { note: Note }): void;
   };
 
   REMOVE_NOTE: {
-    mutation: { index: number };
-    action(payload: { index: number }): void;
+    mutation: { id: string };
+    action(payload: { id: string }): void;
+  };
+
+  REPLACE_ALL_NOTES: {
+    mutation: { notes: Note[] };
+    action(payload: { notes: Note[] }): void;
+  };
+
+  SET_SELECTED_NOTE_IDS: {
+    mutation: { noteIds: string[] };
+    action(payload: { noteIds: string[] }): void;
+  };
+
+  CLEAR_SELECTED_NOTE_IDS: {
+    mutation: void;
+    action(): void;
+  };
+
+  REMOVE_SELECTED_NOTES: {
+    mutation: void;
+    action(): void;
   };
 
   SET_ZOOM_X: {
@@ -783,6 +805,11 @@ export type SingingStoreTypes = {
   SET_SCROLL_Y: {
     mutation: { scrollY: number };
     action(payload: { scrollY: number }): void;
+  };
+
+  SET_IS_DRAG: {
+    mutation: { isDrag: boolean };
+    action(payload: { isDrag: boolean }): void;
   };
 
   IMPORT_MIDI_FILE: {

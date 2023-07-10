@@ -62,6 +62,9 @@ export const midiKeys = [...Array(128)]
   })
   .reverse();
 
+export const BASE_GRID_SIZE_X = 30;
+export const BASE_GRID_SIZE_Y = 30;
+
 export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;

@@ -1,74 +1,48 @@
 <template>
-  <div class="score-sequencer" id="score-sequencer">
-    <!-- 鍵盤表示 -->
-    <svg
-      width="48"
-      v-bind:height="`${BASE_Y_SIZE * zoomY * 128}`"
-      xmlns="http://www.w3.org/2000/svg"
-      class="sequencer-keys"
-    >
-      <g v-for="(y, index) in gridY" :key="index">
-        <rect
-          x="0"
-          v-bind:y="`${BASE_Y_SIZE * zoomY * index}`"
-          v-bind:width="`${y.color === 'black' ? 30 : 48}`"
-          v-bind:height="`${BASE_Y_SIZE * zoomY}`"
-          v-bind:class="`sequencer-keys-item-${y.color}`"
-          v-bind:title="y.name"
-        />
-        <line
-          x1="0"
-          v-bind:y1="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
-          x2="48"
-          v-bind:y2="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
-          stroke-width="1"
-          v-bind:class="`sequencer-keys-item-separator ${
-            y.pitch === 'C' && 'sequencer-keys-item-separator-octave'
-          } ${y.pitch === 'F' && 'sequencer-keys-item-separator-f'}`"
-          v-if="y.pitch === 'C' || y.pitch === 'F'"
-        />
-        <text
-          font-size="10"
-          x="32"
-          v-bind:y="`${BASE_Y_SIZE * zoomY * (index + 1) - 4}`"
-          v-if="y.pitch === 'C'"
-          class="sequencer-keys-item-pitchname"
-        >
-          {{ y.name }}
-        </text>
-      </g>
-    </svg>
+  <div
+    class="score-sequencer"
+    id="score-sequencer"
+    @mousedown="handleMouseDown"
+    @mousemove="handleMouseMove"
+    @mouseup="handleMouseUp"
+    @dblclick="addNote"
+    @dblclick.prevent.stop="removeNote"
+  >
+    <!-- 鍵盤 -->
+    <sequencer-keys />
+    <!-- シーケンサ -->
     <div class="sequencer-body">
       <!-- グリッド -->
       <!-- NOTE: 現状小節+オクターブごとの罫線なし -->
       <svg
-        v-bind:height="`${BASE_Y_SIZE * zoomY * 128}`"
-        v-bind:width="`${gridX.length * BASE_X_SIZE * zoomX}`"
+        :height="`${sizeY * zoomY * 128}`"
+        :width="`${gridX.length * sizeX * zoomX}`"
         xmlns="http://www.w3.org/2000/svg"
         class="sequencer-grids"
       >
+        <!-- パターングリッド -->
         <defs>
           <pattern
             id="sequencer-grid-16"
-            v-bind:width="`${BASE_X_SIZE * zoomX}px`"
-            v-bind:height="`${12 * BASE_Y_SIZE * zoomY}px`"
+            :width="`${sizeX * zoomX}px`"
+            :height="`${12 * sizeY * zoomY}px`"
             patternUnits="userSpaceOnUse"
           >
             <rect
               v-for="(y, index) in gridY"
               :key="index"
               x="0"
-              v-bind:y="`${BASE_Y_SIZE * zoomY * index}`"
-              v-bind:width="`${BASE_X_SIZE * zoomX}`"
-              v-bind:height="`${BASE_Y_SIZE * zoomY}`"
-              v-bind:class="`sequencer-grids-col sequencer-grids-col-${y.color}`"
+              :y="`${sizeY * zoomY * index}`"
+              :width="`${sizeX * zoomX}`"
+              :height="`${sizeY * zoomY}`"
+              :class="`sequencer-grids-col sequencer-grids-col-${y.color}`"
             />
           </pattern>
           <!-- NOTE: 4/4 1小節でグリッド見た目確認目的 -->
           <pattern
             id="sequencer-grid-measure"
-            v-bind:width="`${BASE_X_SIZE * 16 * zoomX}`"
-            v-bind:height="`${12 * BASE_Y_SIZE * zoomY}`"
+            :width="`${sizeX * 16 * zoomX}`"
+            :height="`${12 * sizeY * zoomY}`"
             patternUnits="userSpaceOnUse"
           >
             <rect width="100%" height="100%" fill="url(#sequencer-grid-16)" />
@@ -90,63 +64,20 @@
           height="100%"
           id="sequencer-grid"
           fill="url(#sequencer-grid-measure)"
-          @mousedown="(e) => addNote(e)"
         />
       </svg>
-      <!-- NOTE: ノートと歌詞入力あわせコンポーネント分割予定 -->
-      <div
+      <sequencer-note
         v-for="(note, index) in notes"
         :key="index"
-        class="sequencer-note"
-        v-bind:style="{
-          transform: `translate3d(${(note.position / 4) * zoomX}px,${
-            (127 - note.midi) * BASE_Y_SIZE * zoomY
-          }px,0)`,
-        }"
-      >
-        <!-- NOTE: q-inputへの変更 / 表示面+速度面から、クリック時のみinputを表示に変更予定 -->
-        <input
-          type="text"
-          :value="note.lyric"
-          @input="(e) => setLyric(index, e)"
-          class="sequencer-note-lyric"
-        />
-        <svg
-          v-bind:height="`${BASE_Y_SIZE * zoomY}`"
-          v-bind:width="`${(note.duration / 4) * zoomX}`"
-          xmlns="http://www.w3.org/2000/svg"
-          class="sequencer-note-bar"
-        >
-          <g @dblclick="removeNote(index)">
-            <rect
-              y="0"
-              x="0"
-              height="100%"
-              width="100%"
-              stroke-width="1"
-              class="sequencer-note-bar-body"
-            />
-            <rect
-              y="0"
-              x="-4"
-              height="100%"
-              width="8"
-              fill-opacity="0"
-              draggable
-              class="sequencer-note-bar-draghandle"
-            />
-            <rect
-              y="0"
-              v-bind:x="`${(note.duration / 4) * zoomX - 4}`"
-              height="100%"
-              width="8"
-              fill-opacity="0"
-              class="sequencer-note-bar-draghandle"
-              draggable
-            />
-          </g>
-        </svg>
-      </div>
+        :note="note"
+        :index="index"
+        :cursorX="cursorX"
+        :cursorY="cursorY"
+        @handleNotesKeydown="handleNotesKeydown"
+        @handleDragMoveStart="handleDragMoveStart"
+        @handleDragRightStart="handleDragRightStart"
+        @handleDragLeftStart="handleDragLeftStart"
+      />
     </div>
     <!-- NOTE: スクロールバー+ズームレンジ仮 -->
     <input
@@ -155,7 +86,7 @@
       max="1"
       step="0.05"
       :value="zoomX"
-      @input="(e) => setZoomX(e)"
+      @input="setZoomX"
       v-bind:style="{
         position: 'fixed',
         zIndex: 10000,
@@ -170,7 +101,7 @@
       max="1"
       step="0.05"
       :value="zoomY"
-      @input="(e) => setZoomY(e)"
+      @input="setZoomY"
       v-bind:style="{
         position: 'fixed',
         zIndex: 10000,
@@ -184,24 +115,51 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onMounted } from "vue";
+import { defineComponent, computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
+import { v4 as uuidv4 } from "uuid";
+import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
+import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import {
   midiKeys,
   getPitchFromMidi,
   getDoremiFromMidi,
+  BASE_GRID_SIZE_X as sizeX,
+  BASE_GRID_SIZE_Y as sizeY,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
   name: "SingScoreSequencer",
+  components: {
+    SequencerKeys,
+    SequencerNote,
+  },
   setup() {
+    enum DragMode {
+      NONE = "NONE",
+      MOVE = "MOVE",
+      NOTE_RIGHT = "NOTE_RIGHT",
+      NOTE_LEFT = "NOTE_LEFT",
+      SELECT = "SELECT",
+    }
     const store = useStore();
+    const state = store.state;
+    // カーソルポジション
+    const cursorX = ref(0);
+    const cursorY = ref(0);
+    // ドラッグ状態
+    const dragMode = ref<DragMode>(DragMode.NONE);
+    const dragId = ref(0);
+    const dragMoveCurrentX = ref();
+    const dragMoveCurrentY = ref();
+    const dragDurationCurrentX = ref();
+    // シーケンサグリッド
     const gridY = midiKeys;
     const gridX = computed(() => {
-      const resolution = store.state.score?.resolution || 480;
+      const resolution = state.score?.resolution || 480;
       // NOTE: 最低長: 仮32小節...MIDI長さ(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
       const minDuration = resolution * 4 * 32;
-      const lastNote = store.state.score?.notes.slice(-1)[0];
+      const lastNote = state.score?.notes.slice(-1)[0];
       // Score長さ: スコア長もしくは最低長のうち長い方
       const totalDuration = lastNote
         ? Math.max(lastNote.position + lastNote.duration, minDuration)
@@ -214,36 +172,42 @@ export default defineComponent({
         (gridNum) => gridNum * gridDuration
       );
     });
-    const notes = computed(() => store.state.score?.notes);
-    const timeSignatures = computed(() => store.state.score?.timeSignatures);
-    const zoomX = computed(() => store.state.sequencerZoomX);
-    const zoomY = computed(() => store.state.sequencerZoomY);
-    const scrollX = computed(() => store.state.sequencerScrollX);
-    const scrollY = computed(() => store.state.sequencerScrollY);
-    const BASE_Y_SIZE = 30;
-    const BASE_X_SIZE = 30;
-    onMounted(() => {
-      const el = document.querySelector("#score-sequencer");
-      // C4あたりにスクロールする
-      if (el) {
-        el.scrollTop = scrollY.value * (BASE_Y_SIZE * zoomY.value);
-      }
-    });
+    // ノート
+    const notes = computed(() => state.score?.notes);
+    // 表紙
+    const timeSignatures = computed(() => state.score?.timeSignatures);
+    // ズーム状態
+    const zoomX = computed(() => state.sequencerZoomX);
+    const zoomY = computed(() => state.sequencerZoomY);
+    // スナップサイズ
+    const snapSize = computed(() => state.sequencerSnapSize);
+    const snapWidth = computed(() => (snapSize.value / 4) * zoomX.value);
+    // グリッドサイズ
+    const gridWidth = computed(() => sizeX * zoomX.value);
+    const gridHeight = computed(() => sizeY * zoomY.value);
+    // スクロール位置
+    // const scrollX = computed(() => state.sequencerScrollX);
+    const scrollY = computed(() => state.sequencerScrollY);
+    const selectedNoteIds = computed(() => state.selectedNoteIds);
+
+    // ノートの追加
     const addNote = (event: MouseEvent) => {
-      const resolution = store.state.score?.resolution;
-      const gridXSize = resolution ? resolution / 4 : 120;
+      const resolution = state.score?.resolution;
+      const gridXSize = resolution ? resolution / 4 : snapSize.value;
       const position =
-        gridXSize * Math.floor(event.offsetX / (BASE_X_SIZE * zoomX.value));
-      const midi =
-        127 - Math.floor(event.offsetY / (BASE_Y_SIZE * zoomY.value));
+        gridXSize * Math.floor(event.offsetX / (sizeX * zoomX.value));
+      const midi = 127 - Math.floor(event.offsetY / (sizeY * zoomY.value));
       if (0 > midi) {
         return;
       }
       // NOTE: ノートの追加は1/8をベース
       const duration = gridXSize * 2;
       const lyric = getDoremiFromMidi(midi);
+      // NOTE: 仮ID
+      const id = uuidv4();
       store.dispatch("ADD_NOTE", {
         note: {
+          id,
           position,
           midi,
           duration,
@@ -251,26 +215,217 @@ export default defineComponent({
         },
       });
     };
-    const removeNote = (index: number) => {
-      store.dispatch("REMOVE_NOTE", { index });
+
+    // マウスダウン
+    // 選択中のノートがある場合は選択リセット
+    const handleMouseDown = () => {
+      if (0 < selectedNoteIds.value.length) {
+        store.dispatch("CLEAR_SELECTED_NOTE_IDS");
+      }
     };
-    // NOTE: ノートのバーと歌詞入力でコンポーネント分割予定
-    const setLyric = (index: number, event: Event) => {
-      if (!(event.target instanceof HTMLInputElement)) {
+
+    // マウス移動
+    // ドラッグ中の場合はカーソル位置を保持
+    const handleMouseMove = (event: MouseEvent) => {
+      if (dragMode.value !== DragMode.NONE) {
+        cursorX.value = event.clientX;
+        cursorY.value = event.clientY;
+      }
+    };
+
+    // マウスアップ
+    // ドラッグしていた場合はドラッグを終了
+    const handleMouseUp = () => {
+      if (dragMode.value !== DragMode.NONE) {
+        cancelAnimationFrame(dragId.value);
+        dragMode.value = DragMode.NONE;
         return;
       }
-      if (event.target.value && store.state.score) {
-        const currentNote = store.state.score?.notes[index];
-        const lyric = event.target.value;
-        store.dispatch("CHANGE_NOTE", {
-          index,
-          note: {
-            ...currentNote,
-            lyric,
-          },
-        });
+    };
+
+    // ドラッグでのノートの移動
+    const dragMove = () => {
+      if (!state.score) {
+        throw new Error("Score is undefined.");
+      }
+      if (dragMode.value !== DragMode.MOVE) {
+        cancelAnimationFrame(dragId.value);
+        return;
+      }
+      // X方向, Y方向の移動距離
+      const distanceX = cursorX.value - dragMoveCurrentX.value;
+      const distanceY = cursorY.value - dragMoveCurrentY.value;
+
+      // カーソル位置に応じてノート移動量を計算
+      let amountPositionX = 0;
+      if (gridWidth.value <= Math.abs(distanceX)) {
+        amountPositionX = 0 < distanceX ? snapSize.value : -snapSize.value;
+        const dragMoveCurrentXNext =
+          dragMoveCurrentX.value +
+          (0 < amountPositionX ? gridWidth.value : -gridWidth.value);
+        dragMoveCurrentX.value = dragMoveCurrentXNext;
+      }
+      let amountPositionY = 0;
+      if (gridHeight.value <= Math.abs(distanceY)) {
+        amountPositionY = 0 < distanceY ? -1 : 1;
+        const dragMoveCurrentYNext =
+          dragMoveCurrentY.value +
+          (0 > amountPositionY ? gridHeight.value : -gridHeight.value);
+        dragMoveCurrentY.value = dragMoveCurrentYNext;
+      }
+
+      // 選択中のノートのpositionとmidiを変更
+      let isNotesChanged = false;
+      const newNotes = [...state.score.notes].map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
+          if (amountPositionX === 0 && amountPositionY === 0) {
+            return note;
+          }
+          isNotesChanged = true;
+          const position = note.position + amountPositionX;
+          const midi = note.midi + amountPositionY;
+          return {
+            ...note,
+            midi,
+            position,
+          };
+        } else {
+          return note;
+        }
+      });
+
+      // 左端より前はドラッグしない
+      if (newNotes.some((note) => note.position < 0)) {
+        dragId.value = requestAnimationFrame(dragMove);
+        return;
+      }
+      if (isNotesChanged) {
+        store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+      }
+      dragId.value = requestAnimationFrame(dragMove);
+    };
+
+    // ノートドラッグ開始
+    const handleDragMoveStart = (event: MouseEvent) => {
+      if (selectedNoteIds.value.length > 0) {
+        dragMode.value = DragMode.MOVE;
+        setTimeout(() => {
+          dragMoveCurrentX.value = event.clientX;
+          dragMoveCurrentY.value = event.clientY;
+          dragId.value = requestAnimationFrame(dragMove);
+        }, 360);
       }
     };
+
+    // ノート右ドラッグ
+    // FIXME: 左右ドラッグロジックを統一する
+    const dragRight = () => {
+      if (!state.score) {
+        throw new Error("Score is undefined.");
+      }
+      if (dragMode.value !== DragMode.NOTE_RIGHT) {
+        cancelAnimationFrame(dragId.value);
+        return;
+      }
+      const distanceX = cursorX.value - dragDurationCurrentX.value;
+      if (snapWidth.value <= Math.abs(distanceX)) {
+        let isNotesChanged = false;
+        const newNotes = [...state.score.notes].map((note) => {
+          if (selectedNoteIds.value.includes(note.id)) {
+            const duration =
+              note.duration +
+              (0 < distanceX ? snapSize.value : -snapSize.value);
+            if (duration < Math.max(snapSize.value, 0) || note.position < 0) {
+              return note;
+            } else {
+              isNotesChanged = true;
+              return {
+                ...note,
+                duration,
+              };
+            }
+          } else {
+            return note;
+          }
+        });
+        const dragDurationCurrentXNext =
+          dragDurationCurrentX.value +
+          (0 < distanceX ? snapWidth.value : -snapWidth.value);
+        dragDurationCurrentX.value = dragDurationCurrentXNext;
+        dragId.value = requestAnimationFrame(dragRight);
+        if (isNotesChanged) {
+          store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+        }
+      }
+      dragId.value = requestAnimationFrame(dragRight);
+    };
+
+    // ノート右ドラッグ開始
+    const handleDragRightStart = (event: MouseEvent) => {
+      dragMode.value = DragMode.NOTE_RIGHT;
+      setTimeout(() => {
+        dragDurationCurrentX.value = event.clientX;
+        dragId.value = requestAnimationFrame(dragRight);
+      }, 360);
+    };
+
+    // ノート左ドラッグ
+    // FIXME: 左右ドラッグロジックを統一する
+    const dragLeft = () => {
+      if (!state.score) {
+        throw new Error("Score is undefined.");
+      }
+      if (dragMode.value !== DragMode.NOTE_LEFT) {
+        cancelAnimationFrame(dragId.value);
+        return;
+      }
+      const distanceX = cursorX.value - dragDurationCurrentX.value;
+      if (snapWidth.value <= Math.abs(distanceX)) {
+        let isNotesChanged = false;
+        const newNotes = [...state.score.notes].map((note) => {
+          if (selectedNoteIds.value.includes(note.id)) {
+            const position =
+              note.position +
+              (0 < distanceX ? snapSize.value : -snapSize.value);
+            const duration =
+              note.duration +
+              (0 > distanceX ? snapSize.value : -snapSize.value);
+            if (duration < Math.max(snapSize.value, 0) || note.position < 0) {
+              return note;
+            } else {
+              isNotesChanged = true;
+              return {
+                ...note,
+                position,
+                duration,
+              };
+            }
+          } else {
+            return note;
+          }
+        });
+        const dragDurationCurrentXNext =
+          dragDurationCurrentX.value +
+          (0 < distanceX ? snapWidth.value : -snapWidth.value);
+        dragDurationCurrentX.value = dragDurationCurrentXNext;
+        dragId.value = requestAnimationFrame(dragLeft);
+        if (isNotesChanged) {
+          store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+        }
+      }
+      dragId.value = requestAnimationFrame(dragLeft);
+    };
+
+    // ノート左ドラッグ開始
+    const handleDragLeftStart = (event: MouseEvent) => {
+      dragMode.value = DragMode.NOTE_LEFT;
+      setTimeout(() => {
+        dragDurationCurrentX.value = event.clientX;
+        dragId.value = requestAnimationFrame(dragLeft);
+      }, 360);
+    };
+
+    // X軸ズーム
     const setZoomX = (event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
         return;
@@ -279,6 +434,8 @@ export default defineComponent({
         zoomX: Number(event.target.value),
       });
     };
+
+    // Y軸ズーム
     const setZoomY = (event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
         return;
@@ -287,6 +444,126 @@ export default defineComponent({
         zoomY: Number(event.target.value),
       });
     };
+
+    // キーボードイベント
+    const handleNotesArrowUp = () => {
+      if (!state.score) {
+        throw new Error("Score is undefined.");
+      }
+      const newNotes = state.score.notes.map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
+          const midi = Math.min(note.midi + 1, 127);
+          return {
+            ...note,
+            midi,
+          };
+        } else {
+          return note;
+        }
+      });
+      if (newNotes.some((note) => note.midi > 127)) {
+        return;
+      }
+      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+    };
+
+    const handleNotesArrowDown = () => {
+      if (!state.score) {
+        throw new Error("Score is undefined.");
+      }
+      const newNotes = state.score.notes.map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
+          const midi = Math.max(note.midi - 1, 0);
+          return {
+            ...note,
+            midi,
+          };
+        } else {
+          return note;
+        }
+      });
+      if (newNotes.some((note) => note.midi < 0)) {
+        return;
+      }
+      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+    };
+
+    const handleNotesArrowRight = () => {
+      if (!state.score) {
+        throw new Error("Score is undefined.");
+      }
+      const newNotes = state.score.notes.map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
+          const position = note.position + snapSize.value;
+          return {
+            ...note,
+            position,
+          };
+        } else {
+          return note;
+        }
+      });
+      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+    };
+
+    const handleNotesArrowLeft = () => {
+      if (!state.score) {
+        throw new Error("Score is undefined.");
+      }
+      const newNotes = state.score.notes.map((note) => {
+        if (selectedNoteIds.value.includes(note.id)) {
+          const position = note.position - snapSize.value;
+          return {
+            ...note,
+            position,
+          };
+        } else {
+          return note;
+        }
+      });
+      if (newNotes.some((note) => note.position < 0)) {
+        return;
+      }
+      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+    };
+
+    const handleNotesBackspaceOrDelete = () => {
+      store.dispatch("REMOVE_SELECTED_NOTES");
+    };
+
+    const handleNotesKeydown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "ArrowUp":
+          handleNotesArrowUp();
+          break;
+        case "ArrowDown":
+          handleNotesArrowDown();
+          break;
+        case "ArrowRight":
+          handleNotesArrowRight();
+          break;
+        case "ArrowLeft":
+          handleNotesArrowLeft();
+          break;
+        case "Backspace":
+          handleNotesBackspaceOrDelete();
+          break;
+        case "Delete":
+          handleNotesBackspaceOrDelete();
+          break;
+        default:
+          break;
+      }
+    };
+
+    onMounted(() => {
+      const el = document.querySelector("#score-sequencer");
+      // C4あたりにスクロールする
+      if (el) {
+        el.scrollTop = scrollY.value * (sizeY * zoomY.value);
+      }
+    });
+
     return {
       timeSignatures,
       gridY,
@@ -294,14 +571,21 @@ export default defineComponent({
       notes,
       zoomX,
       zoomY,
+      sizeX,
+      sizeY,
+      cursorX,
+      cursorY,
       getPitchFromMidi,
-      addNote,
-      removeNote,
-      setLyric,
       setZoomX,
       setZoomY,
-      BASE_X_SIZE,
-      BASE_Y_SIZE,
+      addNote,
+      handleMouseDown,
+      handleMouseMove,
+      handleMouseUp,
+      handleNotesKeydown,
+      handleDragMoveStart,
+      handleDragRightStart,
+      handleDragLeftStart,
     };
   },
 });
@@ -319,35 +603,10 @@ export default defineComponent({
   padding-bottom: 164px;
   position: relative;
   width: 100%;
-}
 
-.sequencer-keys {
-  backface-visibility: hidden;
-  background: #fff;
-  display: block;
-  position: sticky;
-  left: 0;
-  z-index: 100;
-}
-
-.sequencer-keys-item-separator-octave {
-  stroke: #bbb;
-}
-
-.sequencer-keys-item-separator-f {
-  stroke: #ddd;
-}
-
-.sequencer-keys-item-white {
-  fill: #fff;
-}
-
-.sequencer-keys-item-black {
-  fill: #555;
-}
-
-.sequencer-keys-item-pitchname {
-  fill: #555;
+  &.move {
+    cursor: move;
+  }
 }
 
 .sequencer-body {
@@ -382,47 +641,5 @@ export default defineComponent({
 .sequencer-grid-separator-line {
   backface-visibility: hidden;
   stroke: #b0b0b0;
-}
-
-.sequencer-note {
-  backface-visibility: hidden;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: 0, 0;
-}
-
-.sequencer-note-lyric {
-  background: white;
-  border: 0;
-  border-bottom: 1px solid colors.$primary-light;
-  color: colors.$display;
-  font-size: 12px;
-  font-weight: bold;
-  font-feature-settings: "palt" 1;
-  letter-spacing: 0.05em;
-  outline: none;
-  padding: 0;
-  position: absolute;
-  bottom: calc(100% - 1px);
-  left: 0;
-  width: 24px;
-}
-
-.sequencer-note-bar {
-  display: block;
-  position: relative;
-}
-.sequencer-note-bar-body {
-  fill: colors.$primary;
-  stroke: #fff;
-  stroke-opacity: 0.5;
-  position: relative;
-  top: 0;
-  left: 0;
-}
-
-.sequencer-note-bar-draghandle {
-  cursor: ew-resize;
 }
 </style>

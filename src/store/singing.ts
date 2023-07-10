@@ -30,6 +30,7 @@ import {
   round,
 } from "@/helpers/singHelper";
 import { AudioQuery } from "@/openapi";
+import { v4 as uuidv4 } from "uuid";
 
 const ticksToSecondsForConstantBpm = (
   resolution: number,
@@ -328,10 +329,11 @@ export const singingStoreState: SingingStoreState = {
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,
-  sequencerZoomY: 0.5,
+  sequencerZoomY: 0.75,
   sequencerScrollY: 60, // Y軸 midi number
   sequencerScrollX: 0, // X軸 midi duration(仮)
-  sequencerSnapSize: 120, // スナップサイズ 試行用で1/16(ppq=480)のmidi durationで固定
+  sequencerSnapSize: 120, // スナップサイズ 試行用で1/18(ppq=480)のmidi durationで固定
+  selectedNoteIds: [], // 選択中のノート
   nowPlaying: false,
   volume: 0,
   leftLocatorPosition: 0,
@@ -599,10 +601,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   ADD_NOTE: {
     mutation(state, { note }: { note: Note }) {
       if (state.score) {
-        const notes = state.score.notes.concat(note).sort((a, b) => {
-          return a.position - b.position;
-        });
-        state.score.notes = notes;
+        state.selectedNoteIds.push(note.id);
+        state.score.notes = [...state.score.notes, note].sort(
+          (a, b) => a.position - b.position
+        );
       }
     },
     // ノートを追加する
@@ -615,45 +617,119 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The note is invalid.");
       }
       commit("ADD_NOTE", { note });
-
       dispatch("RENDER");
     },
   },
 
-  CHANGE_NOTE: {
-    mutation(state, { index, note }: { index: number; note: Note }) {
+  UPDATE_NOTE: {
+    mutation(state, { note, index }: { note: Note; index: number }) {
       if (state.score) {
         const notes = [...state.score.notes];
         notes.splice(index, 1, note);
         state.score.notes = notes;
       }
     },
-    async action({ state, commit, dispatch }, { index, note }) {
+    async action({ state, commit, dispatch }, { note }) {
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
       if (!isValidNote(note)) {
         throw new Error("The note is invalid.");
       }
-      commit("CHANGE_NOTE", { index, note });
+
+      const index = state.score.notes.findIndex((value) => {
+        return value.id === note.id;
+      });
+
+      if (index !== -1) {
+        commit("UPDATE_NOTE", { note, index });
+        dispatch("RENDER");
+      } else {
+        throw new Error("The note is not found.");
+      }
+    },
+  },
+
+  REMOVE_NOTE: {
+    mutation(state, { id }: { id: string }) {
+      if (state.score) {
+        state.score.notes = [...state.score.notes].filter(
+          (note) => note.id !== id
+        );
+        state.selectedNoteIds = [...state.selectedNoteIds].filter(
+          (selectedId) => selectedId !== id
+        );
+      }
+    },
+    async action({ state, commit, dispatch }, { id }) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+
+      commit("REMOVE_NOTE", { id });
+      dispatch("RENDER");
+    },
+  },
+
+  REPLACE_ALL_NOTES: {
+    mutation(state, { notes }: { notes: Note[] }) {
+      if (state.score) {
+        state.score.notes = notes;
+      }
+    },
+    async action({ state, commit, dispatch }, { notes }: { notes: Note[] }) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+      if (!singChannel) {
+        throw new Error("singChannel is undefined.");
+      }
+      if (notes.some((note) => !isValidNote(note))) {
+        throw new Error("Invalid notes");
+      }
+      commit("REPLACE_ALL_NOTES", { notes });
 
       dispatch("RENDER");
     },
   },
 
-  REMOVE_NOTE: {
-    mutation(state, { index }: { index: number }) {
-      if (state.score) {
-        const notes = [...state.score.notes];
-        notes.splice(index, 1);
-        state.score.notes = notes;
-      }
+  SET_SELECTED_NOTE_IDS: {
+    mutation(state, { noteIds }: { noteIds: string[] }) {
+      state.selectedNoteIds = noteIds;
     },
-    async action({ state, commit, dispatch }, { index }) {
+    async action({ state, commit }, { noteIds }: { noteIds: string[] }) {
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
-      commit("REMOVE_NOTE", { index });
+      commit("SET_SELECTED_NOTE_IDS", { noteIds });
+    },
+  },
+
+  CLEAR_SELECTED_NOTE_IDS: {
+    mutation(state) {
+      state.selectedNoteIds = [];
+    },
+    async action({ commit }) {
+      commit("CLEAR_SELECTED_NOTE_IDS");
+    },
+  },
+
+  // 選択中のノートを削除する
+  REMOVE_SELECTED_NOTES: {
+    mutation(state) {
+      if (state.score) {
+        state.score.notes = [...state.score.notes].filter(
+          (note) => !state.selectedNoteIds.includes(note.id)
+        );
+      }
+    },
+    async action({ commit, dispatch }) {
+      if (!singChannel) {
+        throw new Error("singChannel is undefined.");
+      }
+
+      commit("REMOVE_SELECTED_NOTES");
+      commit("CLEAR_SELECTED_NOTE_IDS");
 
       dispatch("RENDER");
     },
@@ -794,6 +870,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_VOLUME", { volume });
 
       singChannel.volume = volume;
+    },
+  },
+
+  SET_IS_DRAG: {
+    mutation(state, { isDrag }: { isDrag: boolean }) {
+      state.isDrag = isDrag;
+    },
+    async action({ commit }, { isDrag }) {
+      commit("SET_IS_DRAG", {
+        isDrag,
+      });
     },
   },
 
@@ -1208,6 +1295,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // ひとまず1トラック目のみを読み込む
         midi.tracks[0].notes
           .map((note) => ({
+            id: uuidv4(),
             position: convertToPosBasedOnRes(note.ticks),
             duration: convertToDurationBasedOnRes(
               note.ticks,
@@ -1500,6 +1588,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             duration: duration,
             midi: noteNumber,
             lyric: lyric,
+            id: uuidv4(),
           };
 
           if (tie) {
