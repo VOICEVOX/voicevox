@@ -166,6 +166,7 @@ watch(
 );
 
 const pushAudioTextIfNeeded = async () => {
+  // NOTE: コンテキストメニューの開閉時も発火するため、その間はisCapturingChangesで抑制
   if (!willRemove.value && isChangeFlag.value && isCapturingChanges) {
     isChangeFlag.value = false;
     await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
@@ -175,7 +176,6 @@ const pushAudioTextIfNeeded = async () => {
   }
 };
 
-// NOTE: コンテキストメニューアイテムのonClick実行後も再フォーカスされるため発火する
 const setActiveAudioKey = () => {
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
