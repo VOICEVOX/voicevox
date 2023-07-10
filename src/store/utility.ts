@@ -92,7 +92,7 @@ function replaceTag(
   return result;
 }
 
-export function replaceSkipWordInBrackets(targettext: string): string {
+export function skipMemoText(targettext: string): string {
   // []をスキップ
   const resolvedText = targettext.replace(/\[.*?\]/g, "");
   return resolvedText;
