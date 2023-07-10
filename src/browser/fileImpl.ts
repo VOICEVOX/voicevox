@@ -38,6 +38,9 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
   );
 };
 
+// ディレクトリ名をキーとして、Write権限を持ったFileSystemDirectoryHandleを保持する
+// writeFileに`ディレクトリ名/ファイル名`の形式でfilePathが渡ってくるため、
+// `/`で区切ってディレクトリ名を取得し、そのディレクトリ名をキーとしてdirectoryHandleMapからハンドラを取得し、fileWriteを可能にする
 const directoryHandleMap: Map<string, FileSystemDirectoryHandle> = new Map();
 
 const showWritableDirectoryPicker = async (): Promise<
