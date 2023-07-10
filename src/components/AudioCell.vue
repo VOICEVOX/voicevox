@@ -167,7 +167,7 @@ watch(
 
 const pushAudioTextIfNeeded = async () => {
   // NOTE: コンテキストメニューの開閉時も発火するため、その間は抑制
-  if (!willRemove.value && isChangeFlag.value && isInContextmenuOperation) {
+  if (!willRemove.value && isChangeFlag.value && !isInContextmenuOperation) {
     isChangeFlag.value = false;
     await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
       audioKey: props.audioKey,
@@ -284,7 +284,7 @@ const deleteButtonEnable = computed(() => {
 const MAX_HEADER_LENGTH = 15;
 const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
-let isInContextmenuOperation = true;
+let isInContextmenuOperation = false;
 let willSelectAll = false;
 let cursorPosition: number | null = null;
 const isRangeSelected = ref(false);
@@ -361,7 +361,7 @@ const contextMenudata = ref<
 // TODO: (MAY)コンテキストメニューを開いたときに選択範囲が外れる現象の原因調査・修正
 
 const readyForContextMenu = () => {
-  isInContextmenuOperation = false;
+  isInContextmenuOperation = true;
 
   // 選択範囲を1行目に表示
   const selectionText = textfieldSelection.getAsString();
@@ -403,7 +403,7 @@ const doDelayedContextmenuAction = () => {
   }
 };
 const continueCapturingChanges = () => {
-  isInContextmenuOperation = true;
+  isInContextmenuOperation = false;
 };
 
 const blurCell = (event?: KeyboardEvent) => {
