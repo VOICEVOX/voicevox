@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref } from "vue";
+import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
@@ -328,6 +328,10 @@ const contextMenudata = ref<
     type: "button",
     label: "貼り付け",
     onClick: async () => {
+      const beforeLength = textfieldSelection.nativeEl.value.length;
+      const end = textfieldSelection.end ?? 0;
+      const startFragment = textfieldSelection.startFragment;
+      const endFragment = textfieldSelection.endFragment;
       const text = await navigator.clipboard.readText();
 
       // 複数行貼り付け
@@ -339,12 +343,14 @@ const contextMenudata = ref<
         }
       }
 
-      const beforeLength = textfieldSelection.nativeEl.value.length;
-      const end = textfieldSelection.end ?? 0;
-      setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text, true));
+      setAudioTextBuffer(`${startFragment}${text}${endFragment}`);
+      await nextTick();
       // 自動的に削除される改行などの文字数を念のため考慮している
       cursorPosition =
         end + textfieldSelection.nativeEl.value.length - beforeLength;
+      // await のため既にonhide()のタイミングは過ぎている
+      textfieldSelection.setCursorPosition(cursorPosition);
+      cursorPosition = null;
     },
     disableWhenUiLocked: true,
   },
@@ -392,7 +398,7 @@ const readyForContextMenu = () => {
 // NOTE: コンテキストメニューアイテムのクリック時付近で、多分Quasarの内部処理として
 //       コンテキストメニューを開いた時点の選択範囲が復元(再選択)される模様。
 //       その後に選択範囲を変更しないと反映されないため、フラグを立てて後から処理する。
-const doDelayedContextmenuAction = () => {
+const doDelayedContextmenuAction = async () => {
   if (cursorPosition !== null) {
     textfieldSelection.setCursorPosition(cursorPosition);
     cursorPosition = null;

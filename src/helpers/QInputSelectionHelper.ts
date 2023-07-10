@@ -21,13 +21,7 @@ export class QInputSelectionHelper {
       return this.nativeEl.value;
     }
 
-    const start = this.nativeEl.selectionStart ?? 0;
-    const end = this.nativeEl.selectionEnd ?? 0;
-
-    return `${this.nativeEl.value.substring(
-      0,
-      start
-    )}${string}${this.nativeEl.value.substring(end)}`;
+    return `${this.startFragment}${string}${this.endFragment}`;
   }
 
   getAsString() {
@@ -51,6 +45,14 @@ export class QInputSelectionHelper {
 
   get end() {
     return this.nativeEl.selectionEnd;
+  }
+
+  get startFragment() {
+    return this.nativeEl.value.substring(0, this.nativeEl.selectionStart ?? 0);
+  }
+
+  get endFragment() {
+    return this.nativeEl.value.substring(this.nativeEl.selectionEnd ?? 0);
   }
 
   get isEmpty() {
