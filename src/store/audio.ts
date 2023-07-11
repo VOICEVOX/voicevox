@@ -1601,10 +1601,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (state.savingSetting.exportText) {
           const textBlob = ((): Blob => {
             const text = texts.join("\n");
-            const skppedReadingPart = skipReadingPart(text);
+            const skippedReadingPart = skipReadingPart(text);
             if (!encoding || encoding === "UTF-8") {
               const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-              return new Blob([bom, skipMemoText(skppedReadingPart)], {
+              return new Blob([bom, skipMemoText(skippedReadingPart)], {
                 type: "text/plain;charset=UTF-8",
               });
             }
@@ -1694,11 +1694,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 
-          const skppedReadingPart = skipReadingPart(
+          const skippedReadingPart = skipReadingPart(
             state.audioItems[audioKey].text
           );
-          const skppedText = skipMemoText(skppedReadingPart);
-          texts.push(speakerName + skppedText);
+          const skippedText = skipMemoText(skippedReadingPart);
+          texts.push(speakerName + skippedText);
         }
 
         const textBlob = ((): Blob => {
@@ -2006,15 +2006,15 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
-        const skppedWriting = skipWritingPart(text);
-        const skppedText = skipMemoText(skppedWriting);
+        const skippedWriting = skipWritingPart(text);
+        const skippedText = skipMemoText(skippedWriting);
 
         try {
           if (query !== undefined) {
             const accentPhrases: AccentPhrase[] = await dispatch(
               "FETCH_ACCENT_PHRASES",
               {
-                text: skppedText,
+                text: skippedText,
                 engineId,
                 styleId,
               }
