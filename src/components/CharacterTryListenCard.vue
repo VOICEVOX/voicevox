@@ -164,8 +164,6 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
-$character-item-size: 215px;
-
 .character-item {
   box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
   border-radius: 10px;
@@ -187,7 +185,7 @@ $character-item-size: 215px;
     width: 100%;
     height: 100%;
     .style-icon {
-      $icon-size: $character-item-size / 2;
+      $icon-size: vars.$character-item-size / 2;
       width: $icon-size;
       height: $icon-size;
       border-radius: 5px;

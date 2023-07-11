@@ -301,10 +301,9 @@ const updatePortrait = (portraitPath: string) => {
   overflow-y: scroll;
 
   > div {
-    $character-item-size: 215px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, $character-item-size);
-    grid-auto-rows: $character-item-size;
+    grid-template-columns: repeat(auto-fit, vars.$character-item-size);
+    grid-auto-rows: vars.$character-item-size;
     column-gap: 10px;
     row-gap: 10px;
     align-content: center;
