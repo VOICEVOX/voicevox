@@ -92,6 +92,12 @@ function replaceTag(
   return result;
 }
 
+export function skipMemoText(targettext: string): string {
+  // []をスキップ
+  const resolvedText = targettext.replace(/\[.*?\]/g, "");
+  return resolvedText;
+}
+
 export function buildFileNameFromRawData(
   fileNamePattern = DEFAULT_FILE_NAME_TEMPLATE,
   vars = DEFAULT_FILE_NAME_VARIABLES

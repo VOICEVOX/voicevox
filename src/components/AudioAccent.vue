@@ -13,7 +13,7 @@
           snap
           dense
           color="primary-light"
-          trackSize="2px"
+          track-size="2px"
           :min="previewAccentSlider.qSliderProps.min.value"
           :max="previewAccentSlider.qSliderProps.max.value"
           :step="previewAccentSlider.qSliderProps.step.value"
@@ -42,7 +42,6 @@
   </div>
   <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
     <div
-      @click="uiLocked || changeAccent(moraIndex + 1)"
       :class="[
         'accent-select-cell',
         {
@@ -51,6 +50,7 @@
         },
       ]"
       :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+      @click="uiLocked || changeAccent(moraIndex + 1)"
     >
       <svg width="19" height="50" viewBox="0 0 19 50">
         <line x1="9" y1="0" x2="9" y2="50" stroke-width="1" />
