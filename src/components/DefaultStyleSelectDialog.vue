@@ -1,11 +1,11 @@
 <template>
   <q-dialog
+    v-model="isOpenComputed"
     maximized
     transition-show="none"
     transition-hide="none"
     transition-duration="100"
     class="default-style-select-dialog transparent-backdrop"
-    v-model="isOpenComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -51,8 +51,8 @@
               <q-item
                 v-for="(style, styleIndex) of characterInfo.metas.styles"
                 :key="styleIndex"
-                clickable
                 v-ripple="isHoverableStyleItem"
+                clickable
                 class="q-pa-none style-item"
                 :class="[
                   selectedStyleIndexComputed === styleIndex &&

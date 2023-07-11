@@ -2006,9 +2006,9 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
+
         const skppedWriting = skipWritingPart(text);
         const skppedText = skipMemoText(skppedWriting);
-
         try {
           if (query !== undefined) {
             const accentPhrases: AccentPhrase[] = await dispatch(
