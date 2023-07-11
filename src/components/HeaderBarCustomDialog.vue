@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="headerBarCustomDialogOpenComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="header-bar-custom-dialog transparent-backdrop"
-    v-model="headerBarCustomDialogOpenComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container class="root">
@@ -19,8 +19,8 @@
               color="toolbar-button"
               text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
-              @click="applyDefaultSetting"
               :disable="isDefault"
+              @click="applyDefaultSetting"
               >デフォルトに戻す</q-btn
             >
             <q-btn
@@ -28,8 +28,8 @@
               color="toolbar-button"
               text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
-              @click="saveCustomToolbar"
               :disable="!isChanged"
+              @click="saveCustomToolbar"
               >保存</q-btn
             >
             <!-- close button -->
@@ -52,11 +52,7 @@
                 @end="toolbarButtonDragging = false"
               >
                 <template
-                  v-slot:item="{
-                    element: button,
-                  }: {
-                    element: ToolbarButtonTagType,
-                  }"
+                  #item="{ element: button }: { element: ToolbarButtonTagType }"
                 >
                   <q-btn
                     unelevated
@@ -95,8 +91,8 @@
                 <q-item
                   v-for="(desc, key) in usableButtonsDesc"
                   :key="key"
-                  tag="label"
                   v-ripple
+                  tag="label"
                 >
                   <q-item-section>
                     <q-item-label>{{ getToolbarButtonName(key) }}</q-item-label>

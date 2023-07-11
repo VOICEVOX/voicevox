@@ -11,11 +11,11 @@
         <div class="full-width row wrap justify-between">
           <q-list bordered separator class="col-sm-grow">
             <draggable
-              :modelValue="previewPresetList"
-              @update:modelValue="reorderPreset"
+              :model-value="previewPresetList"
               item-key="key"
+              @update:model-value="reorderPreset"
             >
-              <template v-slot:item="{ element: item }">
+              <template #item="{ element: item }">
                 <q-item>
                   <q-item-section>{{ item.name }}</q-item-section>
                   <q-space />

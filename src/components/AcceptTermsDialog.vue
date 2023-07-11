@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="accept-terms-dialog transparent-backdrop"
-    v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -51,6 +51,7 @@
             </q-card-section>
 
             <q-card-section>
+              <!-- eslint-disable-next-line vue/no-v-html -->
               <div class="q-pa-md markdown markdown-body" v-html="terms" />
             </q-card-section>
           </q-card>
