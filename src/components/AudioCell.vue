@@ -23,7 +23,6 @@
       @focus="setActiveAudioKey()"
     />
     <q-input
-      :hint="audioCellHint"
       ref="textfield"
       filled
       dense
@@ -200,15 +199,6 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
     }
   }
 };
-
-// テキスト欄下側に表示するヒント
-const audioCellHint = computed(() => {
-  // テキスト欄追加ショートカットの案内
-  if (isActiveAudioCell.value && !store.state.showAddAudioItemButton) {
-    return "Shift + Enterでテキスト欄を追加";
-  }
-  return "";
-});
 
 // 行番号を表示するかどうか
 const showTextLineNumber = computed(() => store.state.showTextLineNumber);
