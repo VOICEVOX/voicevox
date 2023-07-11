@@ -137,9 +137,7 @@ const updatePortrait = () => {
   emit("update:portrait", portraitPath);
 };
 
-// 変更される予定はないが、script setup内ではrefを使わないと
-// エラーを吐くので、refでラップしておく
-const speakerUuid = ref(props.characterInfo.metas.speakerUuid);
+const speakerUuid = computed(() => props.characterInfo.metas.speakerUuid);
 
 // 選択中のスタイル
 const selectedStyleIndex = ref<number>(0);
