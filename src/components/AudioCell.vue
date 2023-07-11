@@ -56,9 +56,9 @@
         />
       </template>
       <context-menu
+        ref="contextMenu"
         :menudata="contextMenudata"
         @before-show="readyForContextMenu()"
-        @before-hide="doDelayedContextmenuAction()"
         @hide="continueCapturingChanges()"
       >
         <template v-if="isRangeSelected" #header>
@@ -284,9 +284,9 @@ const deleteButtonEnable = computed(() => {
 const MAX_HEADER_LENGTH = 15;
 const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+
 let isInContextmenuOperation = false;
-let willSelectAll = false;
-let cursorPosition: number | null = null;
 const isRangeSelected = ref(false);
 const header = ref<string | undefined>("");
 const headerStartFragment = ref("");
@@ -304,13 +304,15 @@ const contextMenudata = ref<
     type: "button",
     label: "切り取り",
     onClick: async () => {
+      contextMenu.value?.hide();
       if (textfieldSelection.isEmpty) return;
 
       const text = textfieldSelection.getAsString();
       const start = textfieldSelection.start;
       setAudioTextBuffer(textfieldSelection.getReplacedStringTo(""));
+      await nextTick();
       navigator.clipboard.writeText(text);
-      cursorPosition = start;
+      textfieldSelection.setCursorPosition(start);
     },
     disableWhenUiLocked: true,
   },
@@ -318,6 +320,7 @@ const contextMenudata = ref<
     type: "button",
     label: "コピー",
     onClick: () => {
+      contextMenu.value?.hide();
       if (textfieldSelection.isEmpty) return;
 
       navigator.clipboard.writeText(textfieldSelection.getAsString());
@@ -328,10 +331,9 @@ const contextMenudata = ref<
     type: "button",
     label: "貼り付け",
     onClick: async () => {
+      contextMenu.value?.hide();
       const beforeLength = textfieldSelection.nativeEl.value.length;
       const end = textfieldSelection.end ?? 0;
-      const startFragment = textfieldSelection.startFragment;
-      const endFragment = textfieldSelection.endFragment;
       const text = await navigator.clipboard.readText();
 
       // 複数行貼り付け
@@ -343,14 +345,14 @@ const contextMenudata = ref<
         }
       }
 
-      setAudioTextBuffer(`${startFragment}${text}${endFragment}`);
+      setAudioTextBuffer(
+        `${textfieldSelection.startFragment}${text}${textfieldSelection.endFragment}`
+      );
       await nextTick();
       // 自動的に削除される改行などの文字数を念のため考慮している
-      cursorPosition =
-        end + textfieldSelection.nativeEl.value.length - beforeLength;
-      // await のため既にonhide()のタイミングは過ぎている
-      textfieldSelection.setCursorPosition(cursorPosition);
-      cursorPosition = null;
+      textfieldSelection.setCursorPosition(
+        end + textfieldSelection.nativeEl.value.length - beforeLength
+      );
     },
     disableWhenUiLocked: true,
   },
@@ -359,7 +361,8 @@ const contextMenudata = ref<
     type: "button",
     label: "全選択",
     onClick: async () => {
-      willSelectAll = true;
+      contextMenu.value?.hide();
+      textfield.value?.select();
     },
     disableWhenUiLocked: true,
   },
@@ -392,20 +395,6 @@ const readyForContextMenu = () => {
     } else {
       header.value = selectionText;
     }
-  }
-};
-// コンテキストメニューが閉じる直前の処理
-// NOTE: コンテキストメニューアイテムのクリック時付近で、多分Quasarの内部処理として
-//       コンテキストメニューを開いた時点の選択範囲が復元(再選択)される模様。
-//       その後に選択範囲を変更しないと反映されないため、フラグを立てて後から処理する。
-const doDelayedContextmenuAction = async () => {
-  if (cursorPosition !== null) {
-    textfieldSelection.setCursorPosition(cursorPosition);
-    cursorPosition = null;
-  }
-  if (willSelectAll) {
-    willSelectAll = false;
-    textfield.value?.select();
   }
 };
 const continueCapturingChanges = () => {

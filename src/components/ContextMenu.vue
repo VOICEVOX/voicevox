@@ -1,5 +1,5 @@
 <template>
-  <q-menu touch-position context-menu>
+  <q-menu ref="contextmenu" touch-position context-menu>
     <q-list dense>
       <q-item v-if="slots.header" dense class="bg-background">
         <q-item-section>
@@ -26,17 +26,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots } from "vue";
+import { computed, ref, useSlots } from "vue";
+import { QMenu } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
 defineProps<{
   menudata: ContextMenuItemData[];
 }>();
-
+defineExpose({
+  hide: () => {
+    contextmenu.value?.hide();
+  },
+});
 const store = useStore();
 const slots = useSlots();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const contextmenu = ref<QMenu>();
 
 export type ContextMenuItemData = MenuItemSeparator | MenuItemButton;
 </script>
