@@ -193,22 +193,31 @@ const textSplitter: Record<SplitTextWhenPasteType, (text: string) => string[]> =
   };
 const pasteOnAudioCell = async (event: ClipboardEvent) => {
   if (event.clipboardData && textSplitType.value !== "OFF") {
-    const clipBoardData = event.clipboardData.getData("text/plain");
-    const texts = textSplitter[textSplitType.value](clipBoardData);
-
-    if (texts.length > 1) {
-      event.preventDefault();
-      await putMultilineText(texts);
-    }
+    await putMultilineText(event.clipboardData.getData("text/plain"), event);
   }
 };
-const putMultilineText = async (texts: string[]) => {
+/**
+ * 複数行貼り付け。複数行ではなかった場合は何もしません。
+ * @param event 指定した場合、必要に応じて`preventDefault()`されます
+ * @returns 複数行ではなかった場合`false`、複数行なら`true`を返します。
+ */
+const putMultilineText = async (
+  text: string,
+  event?: Event
+): Promise<boolean> => {
+  if (textSplitType.value === "OFF") return false;
+
+  const texts = textSplitter[textSplitType.value](text);
+
+  if (texts.length <= 1) return false;
+
+  event?.preventDefault();
   blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
 
   const prevAudioKey = props.audioKey;
   if (audioTextBuffer.value == "") {
     const text = texts.shift();
-    if (text == undefined) return;
+    if (text == undefined) return false;
     setAudioTextBuffer(text);
     await pushAudioTextIfNeeded();
   }
@@ -220,6 +229,7 @@ const putMultilineText = async (texts: string[]) => {
   });
   if (audioKeys)
     emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
+  return true;
 };
 
 // 行番号を表示するかどうか
@@ -337,13 +347,9 @@ const contextMenudata = ref<
       const end = textfieldSelection.end ?? 0;
       const text = await navigator.clipboard.readText();
 
-      // 複数行貼り付け
-      if (textSplitType.value !== "OFF") {
-        const texts = textSplitter[textSplitType.value](text);
-        if (texts.length > 1) {
-          await putMultilineText(texts);
-          return;
-        }
+      // 複数行貼り付けの場合
+      if (await putMultilineText(text)) {
+        return;
       }
 
       setAudioTextBuffer(
@@ -368,19 +374,24 @@ const contextMenudata = ref<
     disableWhenUiLocked: true,
   },
 ]);
-// TODO: (MAY)コンテキストメニューを開いたときに選択範囲が外れる現象の原因調査・修正
-
+const getMenuItemButton = (label: string) => {
+  const item = contextMenudata.value.find((item) => item.label === label);
+  if (item?.type !== "button") {
+    throw new Error("コンテキストメニューアイテムの取得に失敗しました");
+  }
+  return item;
+};
 const readyForContextMenu = () => {
   // 選択範囲を1行目に表示
   const selectionText = textfieldSelection.getAsString();
   if (selectionText.length === 0) {
     isRangeSelected.value = false;
-    contextMenudata.value[0].disabled = true;
-    contextMenudata.value[1].disabled = true;
+    getMenuItemButton("切り取り").disabled = true;
+    getMenuItemButton("コピー").disabled = true;
   } else {
     isRangeSelected.value = true;
-    contextMenudata.value[0].disabled = false;
-    contextMenudata.value[1].disabled = false;
+    getMenuItemButton("切り取り").disabled = false;
+    getMenuItemButton("コピー").disabled = false;
     if (selectionText.length > MAX_HEADER_LENGTH) {
       // 長すぎる場合適度な長さで省略
       header.value = undefined;
