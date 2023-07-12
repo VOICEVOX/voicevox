@@ -953,31 +953,29 @@ const changeShowAddAudioItemButton = (showAddAudioItemButton: boolean) => {
     showAddAudioItemButton,
   });
 
-  if (showAddAudioItemButton) {
-    return;
-  }
-
   // 設定をオフにする場合はヒントを表示
-  $q.dialog({
-    title: "エディタの＋ボタンを非表示にする",
-    message: "テキスト欄は Shift + Enter で追加できます",
-    persistent: true, // ダイアログ外側押下時にユーザが設定ができたと思い込むことを防止する
-    ok: {
-      flat: true,
-      label: "OK",
-      textColor: "display",
-    },
-    cancel: {
-      flat: true,
-      label: "キャンセル",
-      textColor: "display",
-    },
-  }).onCancel(() => {
-    // キャンセルしたら設定を元に戻す
-    store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
-      showAddAudioItemButton: true,
+  if (!showAddAudioItemButton) {
+    $q.dialog({
+      title: "エディタの＋ボタンを非表示にする",
+      message: "テキスト欄は Shift + Enter で追加できます",
+      persistent: true, // ダイアログ外側押下時にユーザが設定ができたと思い込むことを防止する
+      ok: {
+        flat: true,
+        label: "OK",
+        textColor: "display",
+      },
+      cancel: {
+        flat: true,
+        label: "キャンセル",
+        textColor: "display",
+      },
+    }).onCancel(() => {
+      // キャンセルしたら設定を元に戻す
+      store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+        showAddAudioItemButton: true,
+      });
     });
-  });
+  }
 };
 
 const currentAudioOutputDeviceComputed = computed<{
