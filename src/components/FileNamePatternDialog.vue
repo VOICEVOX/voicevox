@@ -15,6 +15,8 @@
         <div class="row full-width justify-between">
           <div class="col">
             <q-input
+              ref="patternInput"
+              v-model="currentFileNamePattern"
               dense
               outlined
               bg-color="background"
@@ -23,10 +25,8 @@
               :maxlength="maxLength"
               :error="hasError"
               :error-message="errorMessage"
-              v-model="currentFileNamePattern"
-              ref="patternInput"
             >
-              <template v-slot:after>
+              <template #after>
                 <q-btn
                   label="デフォルトにリセット"
                   outline

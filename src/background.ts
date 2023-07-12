@@ -12,7 +12,7 @@ import {
   shell,
   nativeTheme,
 } from "electron";
-import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
+import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Store, { Schema } from "electron-store";
 import dotenv from "dotenv";
 
@@ -36,10 +36,21 @@ import {
   engineSettingSchema,
   EngineId,
 } from "./type/preload";
+import {
+  ContactTextFileName,
+  HowToUseTextFileName,
+  OssCommunityInfosFileName,
+  OssLicensesJsonFileName,
+  PolicyTextFileName,
+  PrivacyPolicyTextFileName,
+  QAndATextFileName,
+  UpdateInfosJsonFileName,
+} from "./type/staticResources";
 
 import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
+import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 type SingleInstanceLockData = {
@@ -324,47 +335,52 @@ async function uninstallVvppEngine(engineId: EngineId) {
   }
 }
 
-// temp dir
-const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir);
-}
-
 // 使い方テキストの読み込み
 const howToUseText = fs.readFileSync(
-  path.join(__static, "howtouse.md"),
+  path.join(__static, HowToUseTextFileName),
   "utf-8"
 );
 
 // OSSコミュニティ情報の読み込み
 const ossCommunityInfos = fs.readFileSync(
-  path.join(__static, "ossCommunityInfos.md"),
+  path.join(__static, OssCommunityInfosFileName),
   "utf-8"
 );
 
 // 利用規約テキストの読み込み
-const policyText = fs.readFileSync(path.join(__static, "policy.md"), "utf-8");
+const policyText = fs.readFileSync(
+  path.join(__static, PolicyTextFileName),
+  "utf-8"
+);
 
 // OSSライセンス情報の読み込み
 const ossLicenses = JSON.parse(
-  fs.readFileSync(path.join(__static, "licenses.json"), { encoding: "utf-8" })
+  fs.readFileSync(path.join(__static, OssLicensesJsonFileName), {
+    encoding: "utf-8",
+  })
 );
 
 // 問い合わせの読み込み
-const contactText = fs.readFileSync(path.join(__static, "contact.md"), "utf-8");
+const contactText = fs.readFileSync(
+  path.join(__static, ContactTextFileName),
+  "utf-8"
+);
 
 // Q&Aの読み込み
-const qAndAText = fs.readFileSync(path.join(__static, "qAndA.md"), "utf-8");
+const qAndAText = fs.readFileSync(
+  path.join(__static, QAndATextFileName),
+  "utf-8"
+);
 
 // アップデート情報の読み込み
 const updateInfos = JSON.parse(
-  fs.readFileSync(path.join(__static, "updateInfos.json"), {
+  fs.readFileSync(path.join(__static, UpdateInfosJsonFileName), {
     encoding: "utf-8",
   })
 );
 
 const privacyPolicyText = fs.readFileSync(
-  path.join(__static, "privacyPolicy.md"),
+  path.join(__static, PrivacyPolicyTextFileName),
   "utf-8"
 );
 
@@ -514,6 +530,8 @@ async function createWindow() {
 
 // UI処理を開始。その他の準備が完了した後に呼ばれる。
 async function start() {
+  // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
+  engineManager.initializeEngineInfosAndAltPortInfo();
   const engineInfos = engineManager.fetchEngineInfos();
   const engineSettings = store.get("engineSettings");
   for (const engineInfo of engineInfos) {
@@ -561,10 +579,6 @@ ipcMainHandle("GET_APP_INFOS", () => {
     name,
     version,
   };
-});
-
-ipcMainHandle("GET_TEMP_DIR", () => {
-  return tempDir;
 });
 
 ipcMainHandle("GET_HOW_TO_USE_TEXT", () => {
@@ -866,21 +880,23 @@ ipcMainHandle("RESTART_APP", async (_, { isMultiEngineOffMode }) => {
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
   try {
     fs.writeFileSync(filePath, new DataView(buffer));
+    return success(undefined);
   } catch (e) {
     // throwだと`.code`の情報が消えるのでreturn
     const a = e as SystemError;
-    return { code: a.code, message: a.message };
+    return failure(a.code, a);
   }
-
-  return undefined;
 });
 
-ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
-  return path.join(...pathArray);
-});
-
-ipcMainHandle("READ_FILE", (_, { filePath }) => {
-  return fs.promises.readFile(filePath);
+ipcMainHandle("READ_FILE", async (_, { filePath }) => {
+  try {
+    const result = await fs.promises.readFile(filePath);
+    return success(result);
+  } catch (e) {
+    // throwだと`.code`の情報が消えるのでreturn
+    const a = e as SystemError;
+    return failure(a.code, a);
+  }
 });
 
 // app callback
@@ -914,23 +930,13 @@ app.on("before-quit", async (event) => {
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
   // すべてのエンジンプロセスが停止している
-  if (numLivingEngineProcess === 0) {
-    log.info(
-      "All ENGINE processes are killed, running post engine kill process"
-    );
-    if (appState.willRestart) {
-      // awaitする前にevent.preventDefault()を呼び出さないとアプリがそのまま終了してしまう
-      event.preventDefault();
-    }
-
-    // エンジン終了後の処理を実行
-    await vvppManager.handleMarkedEngineDirs();
-
+  if (numLivingEngineProcess === 0 && !vvppManager.hasMarkedEngineDirs()) {
     if (appState.willRestart) {
       // 再起動フラグが立っている場合はフラグを戻して再起動する
       log.info(
         "Post engine kill process done. Now restarting app because of willRestart flag"
       );
+      event.preventDefault();
 
       appState.willRestart = false;
       appState.willQuit = false;
@@ -971,10 +977,14 @@ app.on("before-quit", async (event) => {
   // すべてのエンジンプロセスキル処理が完了するまで待機
   await Promise.all(waitingKilledPromises);
 
-  // アプリケーションの終了を再試行する
+  // エンジン終了後の処理を実行
   log.info(
-    "All ENGINE process kill operations done. Attempting to quit app again"
+    "All ENGINE process kill operations done. Running post engine kill process"
   );
+  await vvppManager.handleMarkedEngineDirs();
+
+  // アプリケーションの終了を再試行する
+  log.info("Attempting to quit app again");
   app.quit();
   return;
 });
@@ -988,9 +998,9 @@ app.once("will-finish-launching", () => {
 });
 
 app.on("ready", async () => {
-  if (isDevelopment) {
+  if (isDevelopment && !isTest) {
     try {
-      await installExtension(VUEJS3_DEVTOOLS);
+      await installExtension(VUEJS_DEVTOOLS);
     } catch (e: unknown) {
       if (e instanceof Error) {
         log.error("Vue Devtools failed to install:", e.toString());

@@ -1,17 +1,18 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
 export const isMac =
   typeof process === "undefined"
     ? navigator.userAgent.includes("Mac")
     : process.platform === "darwin";
 
-export const engineIdSchema = z.string().uuid().brand<"EngineId">();
+export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
 export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
 
-export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
+export const speakerIdSchema = z.string().brand<"SpeakerId">();
 export type SpeakerId = z.infer<typeof speakerIdSchema>;
 export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
 
@@ -19,11 +20,11 @@ export const styleIdSchema = z.number().brand<"StyleId">();
 export type StyleId = z.infer<typeof styleIdSchema>;
 export const StyleId = (id: number): StyleId => styleIdSchema.parse(id);
 
-export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
+export const audioKeySchema = z.string().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
-export const presetKeySchema = z.string().uuid().brand<"PresetKey">();
+export const presetKeySchema = z.string().brand<"PresetKey">();
 export type PresetKey = z.infer<typeof presetKeySchema>;
 export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
 
@@ -144,8 +145,6 @@ export interface Sandbox {
   getContactText(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
   getAltPortInfos(): Promise<AltPortInfos>;
-  saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
-  loadTempFile(): Promise<string>;
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
@@ -181,8 +180,8 @@ export interface Sandbox {
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
-  }): Promise<WriteFileErrorResult | undefined>;
-  readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
+  }): Promise<Result<undefined>>;
+  readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
@@ -497,6 +496,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
   engineStartedOnAltPort: boolean; // エンジンのポート変更の通知
+  notifyOnGenerate: boolean; // 音声書き出し時の通知
 };
 
 export const electronStoreSchema = z
@@ -572,6 +572,7 @@ export const electronStoreSchema = z
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     showTextLineNumber: z.boolean().default(false),
+    showAddAudioItemButton: z.boolean().default(true),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
@@ -587,6 +588,7 @@ export const electronStoreSchema = z
       .object({
         tweakableSliderByScroll: z.boolean().default(false),
         engineStartedOnAltPort: z.boolean().default(false),
+        notifyOnGenerate: z.boolean().default(false),
       })
       .passthrough()
       .default({}),
@@ -610,11 +612,6 @@ export class SystemError extends Error {
     }
   }
 }
-
-export type WriteFileErrorResult = {
-  code: string | undefined;
-  message: string;
-};
 
 export type EngineDirValidationResult =
   | "ok"

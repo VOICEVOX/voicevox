@@ -42,6 +42,7 @@ export const settingStoreState: SettingStoreState = {
   },
   editorFont: "default",
   showTextLineNumber: false,
+  showAddAudioItemButton: true,
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -59,6 +60,7 @@ export const settingStoreState: SettingStoreState = {
   confirmedTips: {
     tweakableSliderByScroll: false,
     engineStartedOnAltPort: false,
+    notifyOnGenerate: false,
   },
   engineSettings: {},
 };
@@ -85,9 +87,19 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       }
 
+      dispatch("SET_EDITOR_FONT", {
+        editorFont: await window.electron.getSetting("editorFont"),
+      });
+
       dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
         showTextLineNumber: await window.electron.getSetting(
           "showTextLineNumber"
+        ),
+      });
+
+      dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+        showAddAudioItemButton: await window.electron.getSetting(
+          "showAddAudioItemButton"
         ),
       });
 
@@ -273,6 +285,21 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
+  SET_SHOW_ADD_AUDIO_ITEM_BUTTON: {
+    mutation(state, { showAddAudioItemButton }) {
+      state.showAddAudioItemButton = showAddAudioItemButton;
+    },
+    action({ commit }, { showAddAudioItemButton }) {
+      window.electron.setSetting(
+        "showAddAudioItemButton",
+        showAddAudioItemButton
+      );
+      commit("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+        showAddAudioItemButton,
+      });
+    },
+  },
+
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
     mutation(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
@@ -344,6 +371,19 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action({ commit }, { confirmedTips }) {
       window.electron.setSetting("confirmedTips", confirmedTips);
       commit("SET_CONFIRMED_TIPS", { confirmedTips });
+    },
+  },
+
+  SET_CONFIRMED_TIP: {
+    action({ state, dispatch }, { confirmedTip }) {
+      const confirmedTips = {
+        ...state.confirmedTips,
+        ...confirmedTip,
+      };
+
+      dispatch("SET_CONFIRMED_TIPS", {
+        confirmedTips: confirmedTips as ConfirmedTips,
+      });
     },
   },
 

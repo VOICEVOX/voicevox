@@ -8,8 +8,8 @@
     <menu-button
       v-for="(root, index) of menudata"
       :key="index"
-      :menudata="root"
       v-model:selected="subMenuOpenFlags[index]"
+      :menudata="root"
       :disable="menubarLocked"
       @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
@@ -132,7 +132,9 @@ const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndSaveAllAudioWithDialog({
       encoding: store.state.savingSetting.fileEncoding,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
       quasarDialog: $q.dialog,
+      quasarNotify: $q.notify,
       dispatch: store.dispatch,
     });
   }
@@ -142,8 +144,10 @@ const generateAndConnectAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndConnectAndSaveAudioWithDialog({
       quasarDialog: $q.dialog,
+      quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
 };
@@ -169,6 +173,8 @@ const generateAndSaveOneAudio = async () => {
     audioKey: activeAudioKey,
     encoding: store.state.savingSetting.fileEncoding,
     quasarDialog: $q.dialog,
+    quasarNotify: $q.notify,
+    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     dispatch: store.dispatch,
   });
 };
@@ -177,8 +183,10 @@ const connectAndExportText = async () => {
   if (!uiLocked.value) {
     await connectAndExportTextWithDialog({
       quasarDialog: $q.dialog,
+      quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
 };
@@ -189,15 +197,15 @@ const importTextFile = () => {
   }
 };
 
-const saveProject = () => {
+const saveProject = async () => {
   if (!uiLocked.value) {
-    store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+    await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
   }
 };
 
-const saveProjectAs = () => {
+const saveProjectAs = async () => {
   if (!uiLocked.value) {
-    store.dispatch("SAVE_PROJECT_FILE", {});
+    await store.dispatch("SAVE_PROJECT_FILE", {});
   }
 };
 
@@ -293,16 +301,16 @@ const menudata = ref<MenuItemData[]>([
       {
         type: "button",
         label: "プロジェクトを上書き保存",
-        onClick: () => {
-          saveProject();
+        onClick: async () => {
+          await saveProject();
         },
         disableWhenUiLocked: true,
       },
       {
         type: "button",
         label: "プロジェクトを名前を付けて保存",
-        onClick: () => {
-          saveProjectAs();
+        onClick: async () => {
+          await saveProjectAs();
         },
         disableWhenUiLocked: true,
       },

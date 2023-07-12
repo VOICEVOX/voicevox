@@ -1,7 +1,7 @@
 import path from "path";
 import { Platform } from "quasar";
 import { State } from "@/store/type";
-import { ToolbarButtonTagType } from "@/type/preload";
+import { ToolbarButtonTagType, isMac } from "@/type/preload";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
@@ -90,6 +90,21 @@ function replaceTag(
   });
 
   return result;
+}
+
+export function skipReadingPart(text: string): string {
+  // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
+  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
+}
+
+export function skipWritingPart(text: string): string {
+  // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
+  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2");
+}
+export function skipMemoText(targettext: string): string {
+  // []をスキップ
+  const resolvedText = targettext.replace(/\[.*?\]/g, "");
+  return resolvedText;
 }
 
 export function buildFileNameFromRawData(
@@ -193,3 +208,14 @@ export const getBaseName = (filePath: string) => {
 
   return basename;
 };
+
+/**
+ * Macでの`command`キー、またはその他OSでの`Ctrl`キーが押されているなら`true`を返します。
+ */
+// ctrlKey = windowsのCtrl = macのControl
+// metaKey = windowsのWin = macのCommand
+// altKey = windowsのAlt = macのOption(問題なし)
+export const isOnCommandOrCtrlKeyDown = (event: {
+  metaKey: boolean;
+  ctrlKey: boolean;
+}) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);

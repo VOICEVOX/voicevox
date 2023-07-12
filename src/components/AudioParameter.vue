@@ -5,12 +5,12 @@
   >
     <!--
     <q-badge
-      class="value-label"
-      color="primary-light"
-      text-color="display-on-primary"
       v-if="
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "
+      class="value-label"
+      color="primary-light"
+      text-color="display-on-primary"
     >
       {{
         previewSlider.state.currentValue.value
@@ -47,7 +47,7 @@
       reverse
       snap
       color="primary-light"
-      trackSize="2.5px"
+      track-size="2.5px"
       :style="clipPathComputed"
       :min="previewSlider.qSliderProps.min.value"
       :max="previewSlider.qSliderProps.max.value"

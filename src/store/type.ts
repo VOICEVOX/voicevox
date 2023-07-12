@@ -88,6 +88,7 @@ export type SaveResult =
   | "SUCCESS"
   | "WRITE_ERROR"
   | "ENGINE_ERROR"
+  | "UNKNOWN_ERROR"
   | "CANCELED";
 export type SaveResultObject = {
   result: SaveResult;
@@ -1015,6 +1016,7 @@ export type SettingStoreState = {
   themeSetting: ThemeSetting;
   editorFont: EditorFontType;
   showTextLineNumber: boolean;
+  showAddAudioItemButton: boolean;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
@@ -1058,6 +1060,11 @@ export type SettingStoreTypes = {
     action(payload: { showTextLineNumber: boolean }): void;
   };
 
+  SET_SHOW_ADD_AUDIO_ITEM_BUTTON: {
+    mutation: { showAddAudioItemButton: boolean };
+    action(payload: { showAddAudioItemButton: boolean }): void;
+  };
+
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
     mutation: { acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus };
     action(payload: {
@@ -1088,6 +1095,10 @@ export type SettingStoreTypes = {
   SET_CONFIRMED_TIPS: {
     mutation: { confirmedTips: ConfirmedTips };
     action(payload: { confirmedTips: ConfirmedTips }): void;
+  };
+
+  SET_CONFIRMED_TIP: {
+    action(payload: { confirmedTip: Partial<ConfirmedTips> }): void;
   };
 
   RESET_CONFIRMED_TIPS: {
