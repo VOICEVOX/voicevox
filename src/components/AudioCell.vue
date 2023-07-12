@@ -59,7 +59,6 @@
         ref="contextMenu"
         :menudata="contextMenudata"
         @before-show="readyForContextMenu()"
-        @hide="continueCapturingChanges()"
       >
         <template v-if="isRangeSelected" #header>
           <span v-if="header" class="text-weight-bold">{{ header }}</span>
@@ -166,8 +165,11 @@ watch(
 );
 
 const pushAudioTextIfNeeded = async () => {
-  // NOTE: コンテキストメニューの開閉時も発火するため、その間は抑制
-  if (!willRemove.value && isChangeFlag.value && !isInContextmenuOperation) {
+  if (
+    !willRemove.value &&
+    isChangeFlag.value &&
+    !contextMenu.value?.willDispatchFocusOrBlur
+  ) {
     isChangeFlag.value = false;
     await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
       audioKey: props.audioKey,
@@ -286,7 +288,6 @@ const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
-let isInContextmenuOperation = false;
 const isRangeSelected = ref(false);
 const header = ref<string | undefined>("");
 const headerStartFragment = ref("");
@@ -320,7 +321,6 @@ const contextMenudata = ref<
     type: "button",
     label: "コピー",
     onClick: () => {
-      contextMenu.value?.hide();
       if (textfieldSelection.isEmpty) return;
 
       navigator.clipboard.writeText(textfieldSelection.getAsString());
@@ -370,8 +370,6 @@ const contextMenudata = ref<
 // TODO: (MAY)コンテキストメニューを開いたときに選択範囲が外れる現象の原因調査・修正
 
 const readyForContextMenu = () => {
-  isInContextmenuOperation = true;
-
   // 選択範囲を1行目に表示
   const selectionText = textfieldSelection.getAsString();
   if (selectionText.length === 0) {
@@ -396,9 +394,6 @@ const readyForContextMenu = () => {
       header.value = selectionText;
     }
   }
-};
-const continueCapturingChanges = () => {
-  isInContextmenuOperation = false;
 };
 
 const blurCell = (event?: KeyboardEvent) => {

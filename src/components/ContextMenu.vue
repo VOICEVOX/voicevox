@@ -1,5 +1,11 @@
 <template>
-  <q-menu ref="contextmenu" touch-position context-menu>
+  <q-menu
+    ref="contextmenu"
+    touch-position
+    context-menu
+    @before-show="startOperation()"
+    @before-hide="endOperation()"
+  >
     <q-list dense>
       <q-item v-if="slots.header" dense class="bg-background">
         <q-item-section>
@@ -26,15 +32,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useSlots } from "vue";
+import { computed, nextTick, ref, useSlots } from "vue";
 import { QMenu } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
+
 defineProps<{
   menudata: ContextMenuItemData[];
 }>();
 defineExpose({
+  /**
+   * コンテキストメニューの開閉によりFocusやBlurが発生する可能性のある間は`true`。
+   */
+  // no-focus を付けた場合と付けてない場合でタイミングが異なるため、両方に対応。
+  willDispatchFocusOrBlur: computed(() => willDispatchFocusOrBlur.value),
   hide: () => {
     contextmenu.value?.hide();
   },
@@ -44,6 +56,16 @@ const slots = useSlots();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const contextmenu = ref<QMenu>();
+
+// Expose
+const willDispatchFocusOrBlur = ref(false);
+const startOperation = async () => {
+  willDispatchFocusOrBlur.value = true;
+};
+const endOperation = async () => {
+  await nextTick();
+  willDispatchFocusOrBlur.value = false;
+};
 
 export type ContextMenuItemData = MenuItemSeparator | MenuItemButton;
 </script>
