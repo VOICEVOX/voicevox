@@ -51,6 +51,7 @@ import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
+import { generateMenuTemplate } from "./background/menu";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 type SingleInstanceLockData = {
@@ -546,29 +547,11 @@ async function start() {
   await createWindow();
 }
 
-const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
-  {
-    label: "VOICEVOX",
-    submenu: [{ role: "quit" }],
-  },
-  {
-    label: "Edit",
-    submenu: [
-      { role: "cut" },
-      { role: "copy" },
-      { role: "paste" },
-      { role: "selectAll" },
-    ],
-  },
-];
-
-// For macOS, set the native menu to enable shortcut keys such as 'Cmd + V'.
-if (isMac) {
-  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplateForMac));
-} else {
-  if (!isDevelopment) {
-    Menu.setApplicationMenu(null);
-  }
+// メニュー
+if (!isDevelopment) {
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate(generateMenuTemplate({ isMac }))
+  );
 }
 
 // プロセス間通信
