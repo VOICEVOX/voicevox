@@ -217,7 +217,7 @@ const putMultilineText = async (
   const prevAudioKey = props.audioKey;
   if (audioTextBuffer.value == "") {
     const text = texts.shift();
-    if (text == undefined) return false;
+    if (text == undefined) throw new Error("予期せぬタイプエラーです。");
     setAudioTextBuffer(text);
     await pushAudioTextIfNeeded();
   }
@@ -376,9 +376,8 @@ const contextMenudata = ref<
 ]);
 const getMenuItemButton = (label: string) => {
   const item = contextMenudata.value.find((item) => item.label === label);
-  if (item?.type !== "button") {
+  if (item?.type !== "button")
     throw new Error("コンテキストメニューアイテムの取得に失敗しました");
-  }
   return item;
 };
 const readyForContextMenu = () => {
