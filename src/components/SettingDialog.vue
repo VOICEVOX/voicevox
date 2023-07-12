@@ -964,12 +964,12 @@ const changeShowAddAudioItemButton = (showAddAudioItemButton: boolean) => {
     persistent: true, // ダイアログ外側押下時にユーザが設定ができたと思い込むことを防止する
     ok: {
       flat: true,
-      label: "変更を維持",
-      textColor: "primary",
+      label: "OK",
+      textColor: "display",
     },
     cancel: {
       flat: true,
-      label: "元に戻す",
+      label: "キャンセル",
       textColor: "display",
     },
   }).onCancel(() => {
