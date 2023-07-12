@@ -1601,10 +1601,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (state.savingSetting.exportText) {
           const textBlob = ((): Blob => {
             const text = texts.join("\n");
-            const skippedReadingPart = skipReadingPart(text);
+            const skippedText = skipReadingPart(skipMemoText(text));
             if (!encoding || encoding === "UTF-8") {
               const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-              return new Blob([bom, skipMemoText(skippedReadingPart)], {
+              return new Blob([bom, skippedText], {
                 type: "text/plain;charset=UTF-8",
               });
             }
@@ -1694,10 +1694,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 
-          const skippedReadingPart = skipReadingPart(
-            state.audioItems[audioKey].text
+          const skippedText = skipReadingPart(
+            skipMemoText(state.audioItems[audioKey].text)
           );
-          const skippedText = skipMemoText(skippedReadingPart);
           texts.push(speakerName + skippedText);
         }
 
@@ -2006,8 +2005,7 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
-        const skippedWriting = skipWritingPart(text);
-        const skippedText = skipMemoText(skippedWriting);
+        const skippedText = skipWritingPart(skipMemoText(text));
 
         try {
           if (query !== undefined) {
