@@ -19,7 +19,6 @@ const menuTemplateView: Electron.MenuItemConstructorOptions = {
   submenu: [
     { role: "zoomIn" },
     { role: "zoomOut" },
-    { role: "toggleDevTools" },
   ],
 };
 
