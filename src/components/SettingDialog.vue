@@ -590,6 +590,28 @@
                 >
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>テキスト追加ボタンの表示</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      右下にテキスト追加ボタンを表示します。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="showAddAudioItemButton"
+                  @update:model-value="changeShowAddAudioItemButton($event)"
+                >
+                </q-toggle>
+              </q-card-actions>
             </q-card>
 
             <!-- Experimental Card -->
@@ -920,6 +942,40 @@ const changeShowTextLineNumber = (showTextLineNumber: boolean) => {
   store.dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
     showTextLineNumber,
   });
+};
+
+// エディタの＋ボタン表示設定
+const showAddAudioItemButton = computed(
+  () => store.state.showAddAudioItemButton
+);
+const changeShowAddAudioItemButton = (showAddAudioItemButton: boolean) => {
+  store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+    showAddAudioItemButton,
+  });
+
+  // 設定をオフにする場合はヒントを表示
+  if (!showAddAudioItemButton) {
+    $q.dialog({
+      title: "エディタの＋ボタンを非表示にする",
+      message: "テキスト欄は Shift + Enter で追加できます",
+      persistent: true, // ダイアログ外側押下時にユーザが設定ができたと思い込むことを防止する
+      ok: {
+        flat: true,
+        label: "OK",
+        textColor: "display",
+      },
+      cancel: {
+        flat: true,
+        label: "キャンセル",
+        textColor: "display",
+      },
+    }).onCancel(() => {
+      // キャンセルしたら設定を元に戻す
+      store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+        showAddAudioItemButton: true,
+      });
+    });
+  }
 };
 
 const currentAudioOutputDeviceComputed = computed<{

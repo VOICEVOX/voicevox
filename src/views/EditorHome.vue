@@ -106,7 +106,10 @@
                           />
                         </template>
                       </draggable>
-                      <div class="add-button-wrapper">
+                      <div
+                        v-if="showAddAudioItemButton"
+                        class="add-button-wrapper"
+                      >
                         <q-btn
                           fab
                           icon="add"
@@ -814,6 +817,10 @@ watch(activeAudioKey, (audioKey) => {
   if (overflowTop || overflowBottom) {
     activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
   }
+});
+
+const showAddAudioItemButton = computed(() => {
+  return store.state.showAddAudioItemButton;
 });
 </script>
 

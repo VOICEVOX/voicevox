@@ -572,6 +572,7 @@ export const electronStoreSchema = z
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     showTextLineNumber: z.boolean().default(false),
+    showAddAudioItemButton: z.boolean().default(true),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
