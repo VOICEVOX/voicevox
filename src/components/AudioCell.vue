@@ -301,6 +301,7 @@ const contextMenudata = ref<
     MenuItemButton
   ]
 >([
+  // NOTE: audioTextBuffer.value の変更が nativeEl.value に反映されるのはnextTick。
   {
     type: "button",
     label: "切り取り",
