@@ -110,7 +110,7 @@
                 dense
                 :disable="uiLocked"
                 @blur="setSurface(surface)"
-                @keydown.enter="yomiFocusWhenEnter"
+                @keydown.enter="yomiFocus"
               />
             </div>
             <div class="row q-pl-md q-pt-sm">
@@ -123,7 +123,7 @@
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
                 @blur="setYomi(yomi)"
-                @keydown.enter="setYomiWhenEnter"
+                @keydown.enter="setYomi(yomi)"
               >
                 <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
@@ -341,15 +341,8 @@ const wordEditing = ref(false);
 
 const surfaceInput = ref<QInput>();
 const yomiInput = ref<QInput>();
-const yomiFocusWhenEnter = (event: KeyboardEvent) => {
-  if (!event.isComposing) {
-    yomiInput.value?.focus();
-  }
-};
-const setYomiWhenEnter = (event: KeyboardEvent) => {
-  if (!event.isComposing) {
-    setYomi(yomi.value);
-  }
+const yomiFocus = () => {
+  yomiInput.value?.focus();
 };
 
 const selectedId = ref("");
