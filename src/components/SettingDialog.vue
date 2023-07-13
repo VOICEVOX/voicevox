@@ -51,6 +51,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -94,6 +95,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -127,6 +129,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -151,6 +154,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -197,17 +201,18 @@
               <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>テキスト分割の区切り</div>
                 <div
-                  aria-label="テキスト貼り付けの際のテキストの分割箇所が選べます。"
+                  aria-label="テキスト貼り付けの際のテキストの分割箇所を選べます。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      テキスト貼り付けの際のテキストの分割箇所が選べます。
+                      テキスト貼り付けの際のテキストの分割箇所を選べます。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -237,6 +242,7 @@
                 >
                   <template #splitTextPeriodAndNewLine>
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -248,6 +254,7 @@
                   </template>
                   <template #splitTextNewLine>
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -259,6 +266,7 @@
                   </template>
                   <template #splitTextOFF>
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -277,6 +285,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -326,6 +335,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -392,6 +402,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -412,7 +423,7 @@
                   color="background"
                   text-color="display"
                   class="text-no-wrap q-mr-sm"
-                  @click="showsFilePatternEditDialog = true"
+                  @click="fuga"
                 />
               </q-card-actions>
 
@@ -423,6 +434,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -449,6 +461,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -484,6 +497,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -511,6 +525,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -541,6 +556,7 @@
                 <div aria-label="エディタの色を選べます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -569,6 +585,7 @@
                 <div aria-label="エディタのフォントを選べます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -602,6 +619,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -626,6 +644,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -657,6 +676,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -681,6 +701,7 @@
                 <div aria-label="音声の再生デバイスを変更できます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -714,6 +735,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -738,6 +760,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -770,6 +793,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -795,17 +819,18 @@
               <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>モーフィング機能</div>
                 <div
-                  aria-label="モーフィング機能を有効にします。2つのスタイルの中間が選べるようになります。"
+                  aria-label="モーフィング機能を有効にします。2つのスタイルの中間を選べるようになります。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      モーフィング機能を有効にします。2つのスタイルの中間が選べるようになります。
+                      モーフィング機能を有効にします。2つのスタイルの中間を選べるようになります。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -825,6 +850,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -856,6 +882,7 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -950,7 +977,10 @@ const activePointScrollModeOptions: Record<
     desc: "自動でスクロールしません。",
   },
 };
-
+const hoge = ref(true);
+const fuga = () => {
+  hoge.value = !hoge.value;
+};
 const experimentalSetting = computed(() => store.state.experimentalSetting);
 
 // 非表示にしたヒントの再表示
