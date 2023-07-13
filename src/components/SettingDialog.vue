@@ -51,7 +51,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -95,7 +94,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -129,7 +127,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -160,7 +157,6 @@
                   >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -193,7 +189,6 @@
                     ]"
                   >
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -212,7 +207,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -249,7 +243,6 @@
                 >
                   <template #splitTextPeriodAndNewLine>
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -261,7 +254,6 @@
                   </template>
                   <template #splitTextNewLine>
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -273,7 +265,6 @@
                   </template>
                   <template #splitTextOFF>
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -292,7 +283,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -342,7 +332,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -409,7 +398,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -441,7 +429,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -468,7 +455,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -504,7 +490,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -532,7 +517,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -563,7 +547,6 @@
                 <div aria-label="エディタの色を選べます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -592,7 +575,6 @@
                 <div aria-label="エディタのフォントを選べます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -626,7 +608,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -651,7 +632,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -683,7 +663,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -708,7 +687,6 @@
                 <div aria-label="音声の再生デバイスを変更できます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -742,7 +720,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -767,7 +744,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -800,7 +776,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -830,7 +805,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -857,7 +831,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -889,7 +862,6 @@
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
-                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
@@ -984,7 +956,6 @@ const activePointScrollModeOptions: Record<
     desc: "自動でスクロールしません。",
   },
 };
-const hoge = ref(true);
 const experimentalSetting = computed(() => store.state.experimentalSetting);
 
 // 非表示にしたヒントの再表示
