@@ -152,6 +152,12 @@
                 <div
                   aria-label="音声再生中の、下部パネルの自動スクロールのモードを選べます。"
                 >
+                  <span
+                    v-for="(obj, key) in activePointScrollModeOptions"
+                    :key="key"
+                    class="visually-hidden"
+                    >{{ `「${obj.label}」モードの場合、${obj.desc}` }}</span
+                  >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       v-model="hoge"
@@ -194,7 +200,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      {{ `「${obj.label}」モードの場合、${obj.desc}` }}
+                      {{ obj.desc }}
                     </q-tooltip>
                   </q-radio>
                 </div>
@@ -424,7 +430,7 @@
                   color="background"
                   text-color="display"
                   class="text-no-wrap q-mr-sm"
-                  @click="fuga"
+                  @click="showsFilePatternEditDialog = true"
                 />
               </q-card-actions>
 
@@ -979,9 +985,6 @@ const activePointScrollModeOptions: Record<
   },
 };
 const hoge = ref(true);
-const fuga = () => {
-  hoge.value = !hoge.value;
-};
 const experimentalSetting = computed(() => store.state.experimentalSetting);
 
 // 非表示にしたヒントの再表示
@@ -1275,7 +1278,12 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/visually-hidden' as visually-hidden;
 @use "@/styles/colors" as colors;
+
+.visually-hidden {
+  @include visually-hidden.visually-hidden;
+}
 
 .text-h5 {
   margin: 0;
