@@ -3,7 +3,8 @@
     ref="contextmenu"
     touch-position
     context-menu
-    @before-show="startOperation()"
+    :no-focus="noFocus"
+    @before-show="startOperation"
     @before-hide="endOperation()"
   >
     <q-list dense>
@@ -56,11 +57,18 @@ const slots = useSlots();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const contextmenu = ref<QMenu>();
+const noFocus = ref(false);
 
 // Expose
 const willDispatchFocusOrBlur = ref(false);
-const startOperation = async () => {
+const startOperation = async (event: Event) => {
   willDispatchFocusOrBlur.value = true;
+  if (!(event instanceof PointerEvent)) {
+    throw new Error("不明なイベントです。");
+  }
+  // 右クリックから開いた場合は選択範囲の非表示回避のためにフォーカスされない
+  // キーボードから開いた場合はアクセシビリティ(tabキーでの操作)を考慮してフォーカスされる
+  noFocus.value = event.button === 2;
 };
 const endOperation = async () => {
   await nextTick();
