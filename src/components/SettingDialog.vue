@@ -187,6 +187,7 @@
                     ]"
                   >
                     <q-tooltip
+                      v-model="hoge"
                       :delay="500"
                       anchor="center right"
                       self="center left"
