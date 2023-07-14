@@ -57,17 +57,10 @@
       </template>
       <context-menu
         ref="contextMenu"
+        :header="contextmenuHeader"
         :menudata="contextMenudata"
         @before-show="readyForContextMenu()"
-      >
-        <template v-if="isRangeSelected" #header>
-          <span v-if="header" class="text-weight-bold">{{ header }}</span>
-          <span v-else
-            ><span class="text-weight-bold">{{ headerStartFragment }}</span> ...
-            <span class="text-weight-bold">{{ headerEndFragment }}</span></span
-          >
-        </template>
-      </context-menu>
+      />
     </q-input>
   </div>
 </template>
@@ -299,9 +292,7 @@ const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
 const isRangeSelected = ref(false);
-const header = ref<string | undefined>("");
-const headerStartFragment = ref("");
-const headerEndFragment = ref("");
+const contextmenuHeader = ref<string | undefined>("");
 const contextMenudata = ref<
   [
     MenuItemButton,
@@ -392,17 +383,19 @@ const readyForContextMenu = () => {
     getMenuItemButton("切り取り").disabled = false;
     getMenuItemButton("コピー").disabled = false;
     if (selectionText.length > MAX_HEADER_LENGTH) {
+      const nextSelectionText = textfieldSelection.getAsString();
       // 長すぎる場合適度な長さで省略
-      header.value = undefined;
-      headerStartFragment.value = selectionText.substring(
-        0,
-        SHORTED_HEADER_FRAGMENT_LENGTH
-      );
-      headerEndFragment.value = selectionText.substring(
-        selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
-      );
+      contextmenuHeader.value =
+        nextSelectionText.length <= MAX_HEADER_LENGTH
+          ? nextSelectionText
+          : `${nextSelectionText.substring(
+              0,
+              SHORTED_HEADER_FRAGMENT_LENGTH
+            )} ... ${nextSelectionText.substring(
+              nextSelectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
+            )}`;
     } else {
-      header.value = selectionText;
+      contextmenuHeader.value = selectionText;
     }
   }
 };

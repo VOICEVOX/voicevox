@@ -10,19 +10,12 @@
     @before-hide="endOperation()"
   >
     <q-list dense>
-      <q-item v-if="slots.header" dense class="bg-background">
-        <q-item-section>
-          <slot name="header"></slot>
-        </q-item-section>
+      <q-item v-if="header" dense class="bg-background">
+        <q-item-section class="text-weight-bold">{{ header }}</q-item-section>
       </q-item>
       <menu-item
-        v-if="slots.header"
-        :key="1"
-        :menudata="{ type: 'separator' }"
-      ></menu-item>
-      <menu-item
         v-for="(menu, index) of menudata"
-        :key="index + (slots.default ? 2 : 0)"
+        :key="index + 1"
         :menudata="menu"
         :disable="
           (menu.type !== 'separator' && menu.disabled) ||
@@ -35,13 +28,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, useSlots } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { QMenu } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
 
 defineProps<{
+  header?: string;
   menudata: ContextMenuItemData[];
 }>();
 defineExpose({
@@ -55,7 +49,6 @@ defineExpose({
   },
 });
 const store = useStore();
-const slots = useSlots();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const contextmenu = ref<QMenu>();
