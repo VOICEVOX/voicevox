@@ -68,9 +68,9 @@
 <script setup lang="ts">
 import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
-import CharacterButton from "@/components/CharacterButton.vue";
-import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
-import ContextMenu from "@/components/ContextMenu.vue";
+import CharacterButton from "./CharacterButton.vue";
+import { MenuItemButton, MenuItemSeparator } from "./MenuBar.vue";
+import ContextMenu from "./ContextMenu.vue";
 import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { QInputSelectionHelper } from "@/helpers/QInputSelectionHelper";
@@ -291,6 +291,7 @@ const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
+// FIXME: 可能なら`isRangeSelected`と`contextmenuHeader`をcomputedに
 const isRangeSelected = ref(false);
 const contextmenuHeader = ref<string | undefined>("");
 const contextMenudata = ref<
