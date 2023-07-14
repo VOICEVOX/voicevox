@@ -42,6 +42,7 @@ export const settingStoreState: SettingStoreState = {
   },
   editorFont: "default",
   showTextLineNumber: false,
+  showAddAudioItemButton: true,
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -109,6 +110,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           promises.push(
             dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
               acceptRetrieveTelemetry,
+            })
+          );
+        });
+
+      void window.electron
+        .getSetting("showAddAudioItemButton")
+        .then((value) => {
+          promises.push(
+            dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+              showAddAudioItemButton: value,
             })
           );
         });
@@ -311,6 +322,21 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       );
       commit("SET_SHOW_TEXT_LINE_NUMBER", {
         showTextLineNumber,
+      });
+    },
+  },
+
+  SET_SHOW_ADD_AUDIO_ITEM_BUTTON: {
+    mutation(state, { showAddAudioItemButton }) {
+      state.showAddAudioItemButton = showAddAudioItemButton;
+    },
+    action({ commit }, { showAddAudioItemButton }) {
+      window.electron.setSetting(
+        "showAddAudioItemButton",
+        showAddAudioItemButton
+      );
+      commit("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+        showAddAudioItemButton,
       });
     },
   },

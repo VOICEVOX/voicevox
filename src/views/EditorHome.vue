@@ -106,7 +106,10 @@
                           />
                         </template>
                       </draggable>
-                      <div class="add-button-wrapper">
+                      <div
+                        v-if="showAddAudioItemButton"
+                        class="add-button-wrapper"
+                      >
                         <q-btn
                           fab
                           icon="add"
@@ -488,11 +491,8 @@ const userOrderedCharacterInfos = computed(
 const audioItems = computed(() => store.state.audioItems);
 // 並び替え後、テキスト欄が１つで空欄なら話者を更新
 // 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
-watch(userOrderedCharacterInfos, (newValue, oldValue) => {
-  if (
-    newValue.length < 1 ||
-    (oldValue.length > 0 && newValue[0] === oldValue[0])
-  ) {
+watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
+  if (userOrderedCharacterInfos.length < 1) {
     return;
   }
 
@@ -503,7 +503,7 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
       return;
     }
 
-    const speakerId = newValue[0];
+    const speakerId = userOrderedCharacterInfos[0];
     const defaultStyleId = store.state.defaultStyleIds.find(
       (styleId) => styleId.speakerUuid === speakerId
     );
@@ -817,6 +817,10 @@ watch(activeAudioKey, (audioKey) => {
   if (overflowTop || overflowBottom) {
     activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
   }
+});
+
+const showAddAudioItemButton = computed(() => {
+  return store.state.showAddAudioItemButton;
 });
 </script>
 
