@@ -410,7 +410,7 @@ const blurCell = (event?: KeyboardEvent) => {
   }
 };
 
-// 入力欄
+// テキスト欄
 const textfield = ref<QInput>();
 const textfieldSelection = new QInputSelectionHelper(textfield);
 
