@@ -62,12 +62,11 @@ const contextmenu = ref<QMenu>();
 const noFocus = ref(false);
 
 const buttonCapturer = (event: Event) => {
-  if (!(event instanceof PointerEvent)) {
-    throw new Error("不明なイベントです。");
+  if (event instanceof PointerEvent) {
+    // 右クリックから開いた場合は選択範囲の非表示回避のためにフォーカスされない
+    // キーボードから開いた場合はアクセシビリティ(tabキーでの操作)を考慮してフォーカスされる
+    noFocus.value = event.button === 2;
   }
-  // 右クリックから開いた場合は選択範囲の非表示回避のためにフォーカスされない
-  // キーボードから開いた場合はアクセシビリティ(tabキーでの操作)を考慮してフォーカスされる
-  noFocus.value = event.button === 2;
 };
 const setButtonCapturer = () => {
   parent.addEventListener("contextmenu", buttonCapturer, { capture: true });
