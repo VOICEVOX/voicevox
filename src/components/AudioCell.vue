@@ -221,7 +221,10 @@ const putMultilineText = async (
   if (texts.length <= 1) return false;
 
   event?.preventDefault();
-  blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
+  // フォーカスを外して編集中のテキスト内容を確定させる
+  if (document.activeElement instanceof HTMLInputElement) {
+    document.activeElement.blur();
+  }
 
   const prevAudioKey = props.audioKey;
   if (audioTextBuffer.value == "") {
@@ -415,15 +418,6 @@ const readyForContextMenu = () => {
     } else {
       contextmenuHeader.value = selectionText;
     }
-  }
-};
-
-const blurCell = (event?: KeyboardEvent) => {
-  if (event?.isComposing) {
-    return;
-  }
-  if (document.activeElement instanceof HTMLInputElement) {
-    document.activeElement.blur();
   }
 };
 
