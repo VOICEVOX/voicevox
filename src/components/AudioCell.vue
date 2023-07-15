@@ -34,7 +34,7 @@
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
-      @focus="unselect()"
+      @focus="unselect() && setActiveAudioKey()"
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
       @keyup.prevent.tab="select"
