@@ -318,17 +318,17 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       if (obj.closeOrRefresh == "close") {
         window.electron.closeWindow();
-      } else if (obj.closeOrRefresh == "refresh") {
-        window.electron.refreshApp({
+      } else if (obj.closeOrRefresh == "reload") {
+        window.electron.reloadApp({
           isMultiEngineOffMode: obj.isMultiEngineOffMode,
         });
       }
     },
   },
 
-  REFRESH_APP: {
+  RELOAD_APP: {
     action(_, { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }) {
-      window.electron.refreshApp({
+      window.electron.reloadApp({
         isMultiEngineOffMode: !!isMultiEngineOffMode,
       });
     },

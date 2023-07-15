@@ -247,10 +247,10 @@ async function installVvppEngine(vvppPath: string) {
  */
 async function installVvppEngineWithWarning({
   vvppPath,
-  refreshNeeded,
+  reloadNeeded,
 }: {
   vvppPath: string;
-  refreshNeeded: boolean;
+  reloadNeeded: boolean;
 }) {
   const result = dialog.showMessageBoxSync(win, {
     type: "warning",
@@ -266,7 +266,7 @@ async function installVvppEngineWithWarning({
 
   await installVvppEngine(vvppPath);
 
-  if (refreshNeeded) {
+  if (reloadNeeded) {
     dialog
       .showMessageBox(win, {
         type: "info",
@@ -280,7 +280,7 @@ async function installVvppEngineWithWarning({
       .then((result) => {
         if (result.response === 0) {
           ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
-            closeOrRefresh: "refresh",
+            closeOrRefresh: "reload",
           });
         }
       });
@@ -922,15 +922,15 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
   return engineManager.validateEngineDir(engineDir);
 });
 
-ipcMainHandle("REFRESH_APP", async (_, { isMultiEngineOffMode }) => {
-  log.info("Checking ENGINE status before refresh app");
+ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
+  log.info("Checking ENGINE status before reload app");
   const engineTerminateResult = terminateEngines();
 
   // エンジンの停止とエンジン終了後処理の待機
   if (engineTerminateResult != "alreadyCompleted") {
     await engineTerminateResult;
   }
-  log.info("Post engine kill process done. Now refreshing app");
+  log.info("Post engine kill process done. Now reloading app");
 
   appState.isMultiEngineOffMode = !!isMultiEngineOffMode;
   await launchEngines();
@@ -1058,7 +1058,7 @@ app.on("ready", async () => {
     if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: filePath,
-        refreshNeeded: false, // FIXME: #1399がマージされるとtrueになるが、ここはfalseが正しい。
+        reloadNeeded: false, // FIXME: #1399がマージされるとtrueになるが、ここはfalseが正しい。
       });
     }
   }
@@ -1077,7 +1077,7 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
     if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: data.filePath,
-        refreshNeeded: true,
+        reloadNeeded: true,
       });
     }
   } else if (data.filePath.endsWith(".vvproj")) {

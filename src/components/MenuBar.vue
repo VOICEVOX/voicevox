@@ -543,7 +543,7 @@ if (store.state.isMultiEngineOffMode) {
     type: "button",
     label: "マルチエンジンをオンにして再読み込み",
     onClick() {
-      store.dispatch("REFRESH_APP", {
+      store.dispatch("RELOAD_APP", {
         isMultiEngineOffMode: false,
       });
     },

@@ -29,7 +29,7 @@
               <q-btn
                 v-if="isMultipleEngine"
                 outline
-                @click="refreshAppWithMultiEngineOffMode"
+                @click="reloadAppWithMultiEngineOffMode"
               >
                 マルチエンジンをオフにして再読み込みする</q-btn
               >
@@ -668,9 +668,9 @@ watch(
   }
 );
 
-const refreshAppWithMultiEngineOffMode = () => {
+const reloadAppWithMultiEngineOffMode = () => {
   store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
-    closeOrRefresh: "refresh",
+    closeOrRefresh: "reload",
     isMultiEngineOffMode: true,
   });
 };

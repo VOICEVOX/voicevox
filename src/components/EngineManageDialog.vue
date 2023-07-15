@@ -611,7 +611,7 @@ const requireRefresh = (message: string) => {
     .onOk(() => {
       toInitialState();
       store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
-        closeOrRefresh: "refresh",
+        closeOrRefresh: "reload",
       });
     })
     .onCancel(() => {

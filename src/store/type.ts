@@ -1278,13 +1278,13 @@ export type UiStoreTypes = {
       obj:
         | { closeOrRefresh: "close" }
         | {
-            closeOrRefresh: "refresh";
+            closeOrRefresh: "reload";
             isMultiEngineOffMode?: boolean;
           }
     ): Promise<void>;
   };
 
-  REFRESH_APP: {
+  RELOAD_APP: {
     action(obj: { isMultiEngineOffMode?: boolean }): void;
   };
 
