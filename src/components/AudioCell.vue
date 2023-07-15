@@ -218,7 +218,7 @@ const putMultilineText = async (
 
   const texts = textSplitter[textSplitType.value](text);
 
-  if (texts.length <= 1) return false;
+  if (texts.length <= 1 || !texts.some((text) => text !== "")) return false;
 
   event?.preventDefault();
   // フォーカスを外して編集中のテキスト内容を確定させる
@@ -239,9 +239,7 @@ const putMultilineText = async (
     voice: audioItem.value.voice,
     prevAudioKey,
   });
-  if (audioKeys.length !== 0) {
-    emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
-  }
+  emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
   return true;
 };
 
