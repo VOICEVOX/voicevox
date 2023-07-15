@@ -20,6 +20,9 @@ import {
   convertLongVowel,
   createKanaRegex,
   currentDateString,
+  skipMemoText,
+  skipReadingPart,
+  skipWritingPart,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -1598,9 +1601,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (state.savingSetting.exportText) {
           const textBlob = ((): Blob => {
             const text = texts.join("\n");
+            const skippedText = skipReadingPart(skipMemoText(text));
             if (!encoding || encoding === "UTF-8") {
               const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-              return new Blob([bom, text], {
+              return new Blob([bom, skippedText], {
                 type: "text/plain;charset=UTF-8",
               });
             }
@@ -1690,7 +1694,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 
-          texts.push(speakerName + state.audioItems[audioKey].text);
+          const skippedText = skipReadingPart(
+            skipMemoText(state.audioItems[audioKey].text)
+          );
+          texts.push(speakerName + skippedText);
         }
 
         const textBlob = ((): Blob => {
@@ -1992,12 +1999,14 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
+        const skippedText = skipWritingPart(skipMemoText(text));
+
         try {
           if (query !== undefined) {
             const accentPhrases: AccentPhrase[] = await dispatch(
               "FETCH_ACCENT_PHRASES",
               {
-                text,
+                text: skippedText,
                 engineId,
                 styleId,
               }

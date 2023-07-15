@@ -20,6 +20,7 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
+      @focus="setActiveAudioKey()"
     />
     <q-input
       ref="textfield"
@@ -430,6 +431,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/visually-hidden' as visually-hidden;
 @use '@/styles/colors' as colors;
 
 .audio-cell {
@@ -481,7 +483,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
-      display: none;
     }
 
     &.q-field--filled.q-field--highlighted :deep(.q-field__control):before {
@@ -489,8 +490,8 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     }
   }
 
-  &:hover > .q-input > :deep(.q-field__after) {
-    display: flex;
+  &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
+    @include visually-hidden.visually-hidden;
   }
 
   :deep(input) {

@@ -6,9 +6,7 @@
     <div class="q-pa-md">
       <template v-if="props.isUpdateAvailable">
         <h3>最新バージョン {{ props.latestVersion }} が見つかりました</h3>
-        <a href="{{ props.downloadLink }}" target="_blank"
-          >ダウンロードページ</a
-        >
+        <a :href="props.downloadLink" target="_blank">ダウンロードページ</a>
         <hr />
       </template>
       <h3>アップデート履歴</h3>
