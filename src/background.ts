@@ -546,6 +546,48 @@ async function start() {
   await createWindow();
 }
 
+// エンジンの停止とエンジン終了後処理を行う。
+// 全処理が完了済みの場合 already_completed を返す。
+// そうでない場合は Promise を返す。
+function killEngineAndHandle(): Promise<void> | "already_completed" {
+  const killingProcessPromises = engineManager.killEngineAll();
+  const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
+
+  // 前処理が完了している場合
+  if (numLivingEngineProcess === 0 && !vvppManager.hasMarkedEngineDirs()) {
+    return "already_completed";
+  }
+
+  let numEngineProcessKilled = 0;
+
+  // 非同期的にすべてのエンジンプロセスをキル
+  const waitingKilledPromises: Array<Promise<void>> = Object.entries(
+    killingProcessPromises
+  ).map(([engineId, promise]) => {
+    return promise
+      .catch((error) => {
+        // TODO: 各エンジンプロセスキルの失敗をUIに通知する
+        log.error(`ENGINE ${engineId}: Error during killing process: ${error}`);
+        // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
+      })
+      .finally(() => {
+        numEngineProcessKilled++;
+        log.info(
+          `ENGINE ${engineId}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`
+        );
+      });
+  });
+
+  // すべてのエンジンプロセスキル処理が完了するまで待機
+  return Promise.all(waitingKilledPromises).then(() => {
+    // エンジン終了後の処理を実行
+    log.info(
+      "All ENGINE process kill operations done. Running post engine kill process"
+    );
+    return vvppManager.handleMarkedEngineDirs();
+  });
+}
+
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
   {
     label: "VOICEVOX",
@@ -926,11 +968,10 @@ app.on("before-quit", async (event) => {
 
   log.info("Checking ENGINE status before app quit");
 
-  const killingProcessPromises = engineManager.killEngineAll();
-  const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
+  const engineTerminateResult = killEngineAndHandle();
 
-  // すべてのエンジンプロセスが停止している
-  if (numLivingEngineProcess === 0 && !vvppManager.hasMarkedEngineDirs()) {
+  // エンジンの停止とエンジン終了後処理が完了している
+  if (engineTerminateResult == "already_completed") {
     if (appState.willRestart) {
       // 再起動フラグが立っている場合はフラグを戻して再起動する
       log.info(
@@ -954,34 +995,7 @@ app.on("before-quit", async (event) => {
   log.info("Interrupt app quit to kill ENGINE processes");
   event.preventDefault();
 
-  let numEngineProcessKilled = 0;
-
-  // 非同期的にすべてのエンジンプロセスをキル
-  const waitingKilledPromises: Array<Promise<void>> = Object.entries(
-    killingProcessPromises
-  ).map(([engineId, promise]) => {
-    return promise
-      .catch((error) => {
-        // TODO: 各エンジンプロセスキルの失敗をUIに通知する
-        log.error(`ENGINE ${engineId}: Error during killing process: ${error}`);
-        // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
-      })
-      .finally(() => {
-        numEngineProcessKilled++;
-        log.info(
-          `ENGINE ${engineId}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`
-        );
-      });
-  });
-
-  // すべてのエンジンプロセスキル処理が完了するまで待機
-  await Promise.all(waitingKilledPromises);
-
-  // エンジン終了後の処理を実行
-  log.info(
-    "All ENGINE process kill operations done. Running post engine kill process"
-  );
-  await vvppManager.handleMarkedEngineDirs();
+  await engineTerminateResult;
 
   // アプリケーションの終了を再試行する
   log.info("Attempting to quit app again");
