@@ -175,12 +175,16 @@ const pushAudioTextIfNeeded = async () => {
 
 // バグ修正用
 // see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
-const unselect = () => {
-  textfieldSelection.empty();
+const unselect = (event: KeyboardEvent) => {
+  if (!event.isComposing) {
+    textfieldSelection.empty();
+  }
   return true;
 };
 const select = () => {
-  textfield.value?.select();
+  if (!contextMenu.value?.willDispatchFocusOrBlur) {
+    textfield.value?.select();
+  }
 };
 
 const setActiveAudioKey = () => {
