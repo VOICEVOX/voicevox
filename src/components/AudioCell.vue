@@ -34,10 +34,10 @@
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
-      @focus="unselect() && setActiveAudioKey()"
+      @focus="unselect()"
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
-      @keyup.prevent.tab="select()"
+      @keyup.prevent.tab="select"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.prevent.enter.exact="pushAudioTextIfNeeded()"
@@ -175,14 +175,14 @@ const pushAudioTextIfNeeded = async () => {
 
 // バグ修正用
 // see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
-const unselect = (event: KeyboardEvent) => {
-  if (!event.isComposing) {
+const unselect = () => {
+  if (!contextMenu.value?.willDispatchFocusOrBlur) {
     textfieldSelection.empty();
   }
   return true;
 };
-const select = () => {
-  if (!contextMenu.value?.willDispatchFocusOrBlur) {
+const select = (event: KeyboardEvent) => {
+  if (!event.isComposing) {
     textfield.value?.select();
   }
 };
@@ -236,8 +236,9 @@ const putMultilineText = async (
     voice: audioItem.value.voice,
     prevAudioKey,
   });
-  if (audioKeys)
+  if (audioKeys.length !== 0) {
     emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
+  }
   return true;
 };
 
