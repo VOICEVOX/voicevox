@@ -303,7 +303,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    async action({ dispatch, getters }) {
+    /**
+     * プロジェクトファイル未保存の場合、保存するかどうかを確認する。
+     * 保存後にウィンドウを閉じるか、アプリを再読み込みする。
+     * 保存がキャンセルされた場合は何もしない。
+     */
+    async action({ dispatch, getters }, obj) {
       if (getters.IS_EDITED) {
         const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {});
         if (result == "canceled") {
@@ -311,13 +316,19 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         }
       }
 
-      window.electron.closeWindow();
+      if (obj.closeOrRefresh == "close") {
+        window.electron.closeWindow();
+      } else if (obj.closeOrRefresh == "refresh") {
+        window.electron.refreshApp({
+          isMultiEngineOffMode: obj.isMultiEngineOffMode,
+        });
+      }
     },
   },
 
-  RESTART_APP: {
+  REFRESH_APP: {
     action(_, { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }) {
-      window.electron.restartApp({
+      window.electron.refreshApp({
         isMultiEngineOffMode: !!isMultiEngineOffMode,
       });
     },

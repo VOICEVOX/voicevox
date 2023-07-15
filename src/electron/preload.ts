@@ -262,8 +262,12 @@ const api: Sandbox = {
     return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
   },
 
-  restartApp: ({ isMultiEngineOffMode }: { isMultiEngineOffMode: boolean }) => {
-    ipcRendererInvoke("RESTART_APP", { isMultiEngineOffMode });
+  /**
+   * アプリを再読み込みする。
+   * 画面以外の情報を刷新する。
+   */
+  refreshApp: ({ isMultiEngineOffMode }) => {
+    ipcRendererInvoke("REFRESH_APP", { isMultiEngineOffMode });
   },
 };
 

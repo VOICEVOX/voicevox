@@ -247,10 +247,10 @@ async function installVvppEngine(vvppPath: string) {
  */
 async function installVvppEngineWithWarning({
   vvppPath,
-  restartNeeded,
+  refreshNeeded,
 }: {
   vvppPath: string;
-  restartNeeded: boolean;
+  refreshNeeded: boolean;
 }) {
   const result = dialog.showMessageBoxSync(win, {
     type: "warning",
@@ -266,21 +266,22 @@ async function installVvppEngineWithWarning({
 
   await installVvppEngine(vvppPath);
 
-  if (restartNeeded) {
+  if (refreshNeeded) {
     dialog
       .showMessageBox(win, {
         type: "info",
-        title: "再起動が必要です",
+        title: "再読み込みが必要です",
         message:
-          "VVPPファイルを読み込みました。反映には再起動が必要です。今すぐ再起動しますか？",
-        buttons: ["再起動", "キャンセル"],
+          "VVPPファイルを読み込みました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
+        buttons: ["再読み込み", "キャンセル"],
         noLink: true,
         cancelId: 1,
       })
       .then((result) => {
         if (result.response === 0) {
-          appState.willRestart = true;
-          app.quit();
+          ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
+            closeOrRefresh: "refresh",
+          });
         }
       });
   }
@@ -428,7 +429,6 @@ migrateHotkeySettings();
 
 const appState = {
   willQuit: false,
-  willRestart: false,
   isMultiEngineOffMode: false,
 };
 let filePathOnMac: string | undefined = undefined;
@@ -512,7 +512,9 @@ async function createWindow() {
   win.on("close", (event) => {
     if (!appState.willQuit) {
       event.preventDefault();
-      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
+        closeOrRefresh: "close",
+      });
       return;
     }
   });
@@ -528,8 +530,14 @@ async function createWindow() {
   mainWindowState.manage(win);
 }
 
-// UI処理を開始。その他の準備が完了した後に呼ばれる。
+// 開始。その他の準備が完了した後に呼ばれる。
 async function start() {
+  await launchEngines();
+  await createWindow();
+}
+
+// エンジンの準備と起動
+async function launchEngines() {
   // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
   engineManager.initializeEngineInfosAndAltPortInfo();
   const engineInfos = engineManager.fetchEngineInfos();
@@ -543,19 +551,20 @@ async function start() {
   store.set("engineSettings", engineSettings);
 
   await engineManager.runEngineAll(win);
-  await createWindow();
 }
 
-// エンジンの停止とエンジン終了後処理を行う。
-// 全処理が完了済みの場合 already_completed を返す。
-// そうでない場合は Promise を返す。
-function killEngineAndHandle(): Promise<void> | "already_completed" {
+/**
+ * エンジンの停止とエンジン終了後処理を行う。
+ * 全処理が完了済みの場合 alreadyCompleted を返す。
+ * そうでない場合は Promise を返す。
+ */
+function terminateEngines(): Promise<void> | "alreadyCompleted" {
   const killingProcessPromises = engineManager.killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
   // 前処理が完了している場合
   if (numLivingEngineProcess === 0 && !vvppManager.hasMarkedEngineDirs()) {
-    return "already_completed";
+    return "alreadyCompleted";
   }
 
   let numEngineProcessKilled = 0;
@@ -913,10 +922,20 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
   return engineManager.validateEngineDir(engineDir);
 });
 
-ipcMainHandle("RESTART_APP", async (_, { isMultiEngineOffMode }) => {
-  appState.willRestart = true;
-  appState.isMultiEngineOffMode = isMultiEngineOffMode;
-  win.close();
+ipcMainHandle("REFRESH_APP", async (_, { isMultiEngineOffMode }) => {
+  log.info("Checking ENGINE status before refresh app");
+  const engineTerminateResult = terminateEngines();
+
+  // エンジンの停止とエンジン終了後処理の待機
+  if (engineTerminateResult != "alreadyCompleted") {
+    await engineTerminateResult;
+  }
+  log.info("Post engine kill process done. Now refreshing app");
+
+  appState.isMultiEngineOffMode = !!isMultiEngineOffMode;
+  await launchEngines();
+
+  win.reload();
 });
 
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
@@ -962,30 +981,16 @@ app.on("window-all-closed", () => {
 app.on("before-quit", async (event) => {
   if (!appState.willQuit) {
     event.preventDefault();
-    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { closeOrRefresh: "close" });
     return;
   }
 
   log.info("Checking ENGINE status before app quit");
-
-  const engineTerminateResult = killEngineAndHandle();
+  const engineTerminateResult = terminateEngines();
 
   // エンジンの停止とエンジン終了後処理が完了している
-  if (engineTerminateResult == "already_completed") {
-    if (appState.willRestart) {
-      // 再起動フラグが立っている場合はフラグを戻して再起動する
-      log.info(
-        "Post engine kill process done. Now restarting app because of willRestart flag"
-      );
-      event.preventDefault();
-
-      appState.willRestart = false;
-      appState.willQuit = false;
-
-      start();
-    } else {
-      log.info("Post engine kill process done. Now quit app");
-    }
+  if (engineTerminateResult == "alreadyCompleted") {
+    log.info("Post engine kill process done. Now quit app");
     return;
   }
 
@@ -1053,7 +1058,7 @@ app.on("ready", async () => {
     if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: filePath,
-        restartNeeded: false,
+        refreshNeeded: false, // FIXME: #1399がマージされるとtrueになるが、ここはfalseが正しい。
       });
     }
   }
@@ -1072,7 +1077,7 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
     if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: data.filePath,
-        restartNeeded: true,
+        refreshNeeded: true,
       });
     }
   } else if (data.filePath.endsWith(".vvproj")) {

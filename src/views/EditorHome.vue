@@ -29,9 +29,9 @@
               <q-btn
                 v-if="isMultipleEngine"
                 outline
-                @click="restartAppWithMultiEngineOffMode"
+                @click="refreshAppWithMultiEngineOffMode"
               >
-                マルチエンジンをオフにして再起動する</q-btn
+                マルチエンジンをオフにして再読み込みする</q-btn
               >
               <q-btn v-else outline @click="openFaq">FAQを見る</q-btn>
             </template>
@@ -668,8 +668,11 @@ watch(
   }
 );
 
-const restartAppWithMultiEngineOffMode = () => {
-  store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
+const refreshAppWithMultiEngineOffMode = () => {
+  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+    closeOrRefresh: "refresh",
+    isMultiEngineOffMode: true,
+  });
 };
 
 const openFaq = () => {

@@ -1274,10 +1274,17 @@ export type UiStoreTypes = {
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    action(): Promise<void>;
+    action(
+      obj:
+        | { closeOrRefresh: "close" }
+        | {
+            closeOrRefresh: "refresh";
+            isMultiEngineOffMode?: boolean;
+          }
+    ): Promise<void>;
   };
 
-  RESTART_APP: {
+  REFRESH_APP: {
     action(obj: { isMultiEngineOffMode?: boolean }): void;
   };
 

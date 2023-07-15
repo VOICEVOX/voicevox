@@ -287,8 +287,8 @@ export type IpcIHData = {
     return: EngineDirValidationResult;
   };
 
-  RESTART_APP: {
-    args: [obj: { isMultiEngineOffMode: boolean }];
+  REFRESH_APP: {
+    args: [obj: { isMultiEngineOffMode?: boolean }];
     return: void;
   };
 
@@ -348,7 +348,12 @@ export type IpcSOData = {
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    args: [];
+    args: [
+      obj: {
+        closeOrRefresh: "close" | "refresh";
+        isMultiEngineOffMode?: boolean;
+      }
+    ];
     return: void;
   };
 

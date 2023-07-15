@@ -86,7 +86,9 @@ const handler = (acceptTerms: boolean) => {
   store.dispatch("SET_ACCEPT_TERMS", {
     acceptTerms: acceptTerms ? "Accepted" : "Rejected",
   });
-  !acceptTerms ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE") : undefined;
+  !acceptTerms
+    ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrRefresh: "close" })
+    : undefined;
 
   modelValueComputed.value = false;
 };

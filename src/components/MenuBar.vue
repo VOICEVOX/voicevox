@@ -541,9 +541,9 @@ if (store.state.isMultiEngineOffMode) {
     menudata.value.find((data) => data.label === "エンジン") as MenuItemRoot
   ).subMenu.push({
     type: "button",
-    label: "マルチエンジンをオンにして再起動",
+    label: "マルチエンジンをオンにして再読み込み",
     onClick() {
-      store.dispatch("RESTART_APP", {
+      store.dispatch("REFRESH_APP", {
         isMultiEngineOffMode: false,
       });
     },
