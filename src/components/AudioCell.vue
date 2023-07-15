@@ -33,9 +33,10 @@
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
-      @focus="setActiveAudioKey()"
+      @focus="unselect() && setActiveAudioKey()"
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
+      @keyup.prevent.tab="select()"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.prevent.enter.exact="pushAudioTextIfNeeded()"
@@ -169,6 +170,16 @@ const pushAudioTextIfNeeded = async () => {
       text: audioTextBuffer.value,
     });
   }
+};
+
+// バグ修正用
+// see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
+const unselect = () => {
+  textfieldSelection.empty();
+  return true;
+};
+const select = () => {
+  textfield.value?.select();
 };
 
 const setActiveAudioKey = () => {
