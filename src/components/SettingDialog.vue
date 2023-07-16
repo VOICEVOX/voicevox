@@ -1074,6 +1074,7 @@ const acceptRetrieveTelemetryComputed = computed({
       title: "ソフトウェア利用状況のデータ収集の無効化",
       message:
         "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+      ok: "OK",
     });
   },
 });
