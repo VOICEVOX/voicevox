@@ -33,7 +33,7 @@
               >
                 マルチエンジンをオフにして再起動する</q-btn
               >
-              <q-btn v-else outline @click="openqa">Q&Aを見る</q-btn>
+              <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
             </template>
           </div>
         </div>
