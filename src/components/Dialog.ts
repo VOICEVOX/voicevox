@@ -68,7 +68,9 @@ export const showWarningDialog = async (
 };
 const setCallback = (dialog: DialogChainObject) => {
   if (commonDialogCallback) {
-    throw new Error();
+    throw new Error(
+      "alert・confirm・warningの汎用ダイアログは同時に複数開けません。"
+    );
   }
   return dialog
     .onOk(() => {
