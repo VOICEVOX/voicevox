@@ -345,6 +345,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useQuasar } from "quasar";
+import { showConfirm, showWarning } from "./Dialog";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
@@ -484,20 +485,11 @@ const getEngineDirValidationMessage = (result: EngineDirValidationResult) => {
 };
 
 const addEngine = () => {
-  $q.dialog({
+  showWarning({
     title: "エンジン追加の確認",
     message:
       "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
-    cancel: {
-      label: "キャンセル",
-      color: "display",
-      flat: true,
-    },
-    ok: {
-      label: "追加",
-      flat: true,
-      textColor: "warning",
-    },
+    actionName: "追加",
   }).onOk(async () => {
     if (engineLoaderType.value === "dir") {
       await lockUi(
@@ -524,19 +516,10 @@ const addEngine = () => {
   });
 };
 const deleteEngine = () => {
-  $q.dialog({
+  showConfirm({
     title: "確認",
     message: "選択中のエンジンを削除します。よろしいですか？",
-    cancel: {
-      label: "キャンセル",
-      color: "display",
-      flat: true,
-    },
-    ok: {
-      label: "削除",
-      flat: true,
-      textColor: "warning",
-    },
+    actionName: "削除",
   }).onOk(async () => {
     if (selectedId.value == undefined)
       throw new Error("engine is not selected");
@@ -593,20 +576,11 @@ const restartSelectedEngine = () => {
 };
 
 const requireRestart = (message: string) => {
-  $q.dialog({
+  showWarning({
     title: "再起動が必要です",
     message: message,
-    noBackdropDismiss: true,
-    cancel: {
-      label: "後で",
-      color: "display",
-      flat: true,
-    },
-    ok: {
-      label: "再起動",
-      flat: true,
-      textColor: "warning",
-    },
+    actionName: "再起動",
+    cancel: "後で",
   })
     .onOk(() => {
       toInitialState();

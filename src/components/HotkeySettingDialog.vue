@@ -215,6 +215,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
+import { showConfirm } from "./Dialog";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
@@ -351,20 +352,12 @@ const confirmBtnEnabled = computed(() => {
 });
 
 const resetHotkey = (action: string) => {
-  $q.dialog({
+  showConfirm({
     title: "ショートカットキーを初期値に戻します",
     message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
     html: true,
-    ok: {
-      label: "初期値に戻す",
-      flat: true,
-      textColor: "display",
-    },
-    cancel: {
-      label: "初期値に戻さない",
-      flat: true,
-      textColor: "display",
-    },
+    actionName: "初期値に戻す",
+    cancel: "初期値に戻さない",
   }).onOk(() => {
     window.electron
       .getDefaultHotkeySettings()

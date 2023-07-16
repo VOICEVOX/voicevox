@@ -115,6 +115,7 @@
 import { computed, ref, watch, Ref } from "vue";
 import { useQuasar } from "quasar";
 import draggable from "vuedraggable";
+import { showConfirm } from "./Dialog";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
@@ -210,20 +211,12 @@ watch(
 );
 
 const applyDefaultSetting = () => {
-  $q.dialog({
+  showConfirm({
     title: "ツールバーをデフォルトに戻します",
     message: "ツールバーをデフォルトに戻します。<br/>よろしいですか？",
     html: true,
-    ok: {
-      label: "はい",
-      flat: true,
-      textColor: "display",
-    },
-    cancel: {
-      label: "いいえ",
-      flat: true,
-      textColor: "display",
-    },
+    actionName: "はい",
+    cancel: "いいえ",
   }).onOk(() => {
     toolbarButtons.value = [...defaultSetting];
     selectedButton.value = toolbarButtons.value[0];
@@ -237,21 +230,10 @@ const saveCustomToolbar = () => {
 
 const finishOrNotDialog = () => {
   if (isChanged.value) {
-    $q.dialog({
+    showConfirm({
       title: "カスタマイズを終了しますか？",
       message: "このまま終了すると、カスタマイズは破棄されてリセットされます。",
-      persistent: true,
-      focus: "cancel",
-      ok: {
-        label: "終了",
-        flat: true,
-        textColor: "display",
-      },
-      cancel: {
-        label: "キャンセル",
-        flat: true,
-        textColor: "display",
-      },
+      actionName: "終了",
     }).onOk(() => {
       toolbarButtons.value = [...store.state.toolbarSetting];
       selectedButton.value = toolbarButtons.value[0];

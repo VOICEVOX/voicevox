@@ -46,6 +46,7 @@
 import { useQuasar } from "quasar";
 import { computed, ref } from "vue";
 import draggable from "vuedraggable";
+import { showConfirm } from "./Dialog";
 import { useStore } from "@/store";
 
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
@@ -110,10 +111,10 @@ const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
 };
 
 const deletePreset = (key: PresetKey) => {
-  $q.dialog({
+  showConfirm({
     title: "プリセット削除の確認",
     message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
-    cancel: true,
+    actionName: "削除",
   }).onOk(async () => {
     await store.dispatch("DELETE_PRESET", {
       presetKey: key,

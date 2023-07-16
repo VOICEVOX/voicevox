@@ -886,6 +886,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
+import { showAlert, showConfirm } from "./Dialog";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
@@ -1005,20 +1006,10 @@ const changeShowAddAudioItemButton = (showAddAudioItemButton: boolean) => {
 
   // 設定をオフにする場合はヒントを表示
   if (!showAddAudioItemButton) {
-    $q.dialog({
+    showConfirm({
       title: "エディタの＋ボタンを非表示にする",
       message: "テキスト欄は Shift + Enter で追加できます",
-      persistent: true, // ダイアログ外側押下時にユーザが設定ができたと思い込むことを防止する
-      ok: {
-        flat: true,
-        label: "OK",
-        textColor: "display",
-      },
-      cancel: {
-        flat: true,
-        label: "キャンセル",
-        textColor: "display",
-      },
+      actionName: "非表示",
     }).onCancel(() => {
       // キャンセルしたら設定を元に戻す
       store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
@@ -1077,14 +1068,10 @@ const acceptRetrieveTelemetryComputed = computed({
       return;
     }
 
-    $q.dialog({
+    showAlert({
       title: "ソフトウェア利用状況のデータ収集の無効化",
       message:
         "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
-      ok: {
-        flat: true,
-        textColor: "display",
-      },
     });
   },
 });
@@ -1175,22 +1162,13 @@ const outputSamplingRate = computed({
   set: async (outputSamplingRate: SamplingRateOption) => {
     if (outputSamplingRate !== "engineDefault") {
       const confirmChange = await new Promise((resolve) => {
-        $q.dialog({
+        showConfirm({
           title: "出力サンプリングレートを変更します",
           message:
             "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
           html: true,
-          persistent: true,
-          ok: {
-            label: "変更する",
-            flat: true,
-            textColor: "display",
-          },
-          cancel: {
-            label: "変更しない",
-            flat: true,
-            textColor: "display",
-          },
+          actionName: "変更する",
+          cancel: "変更しない",
         })
           .onOk(() => {
             resolve(true);

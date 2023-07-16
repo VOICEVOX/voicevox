@@ -250,7 +250,9 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { QInput, useQuasar } from "quasar";
+import { QInput } from "quasar";
+import { showAlert, showConfirm, showWarning } from "./Dialog";
+import AudioAccent from "./AudioAccent.vue";
 import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
@@ -258,7 +260,6 @@ import {
   convertLongVowel,
   createKanaRegex,
 } from "@/store/utility";
-import AudioAccent from "@/components/AudioAccent.vue";
 
 const defaultDictPriority = 5;
 
@@ -272,7 +273,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const dictionaryManageDialogOpenedComputed = computed({
   get: () => props.modelValue,
@@ -302,14 +302,9 @@ const loadingDictProcess = async () => {
       store.dispatch("LOAD_ALL_USER_DICT")
     );
   } catch {
-    $q.dialog({
+    showAlert({
       title: "辞書の取得に失敗しました",
       message: "エンジンの再起動をお試しください。",
-      ok: {
-        label: "閉じる",
-        flat: true,
-        textColor: "display",
-      },
     }).onOk(() => {
       dictionaryManageDialogOpenedComputed.value = false;
     });
@@ -318,14 +313,9 @@ const loadingDictProcess = async () => {
   try {
     await createUILockAction(store.dispatch("SYNC_ALL_USER_DICT"));
   } catch {
-    $q.dialog({
+    showAlert({
       title: "辞書の同期に失敗しました",
       message: "エンジンの再起動をお試しください。",
-      ok: {
-        label: "閉じる",
-        flat: true,
-        textColor: "display",
-      },
     });
   }
   loadingDictState.value = null;
@@ -478,14 +468,9 @@ const play = async () => {
     } catch (e) {
       window.electron.logError(e);
       nowGenerating.value = false;
-      $q.dialog({
+      showAlert({
         title: "生成に失敗しました",
         message: "エンジンの再起動をお試しください。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
       return;
     }
@@ -555,14 +540,9 @@ const saveWord = async () => {
         priority: wordPriority.value,
       });
     } catch {
-      $q.dialog({
+      showAlert({
         title: "単語の更新に失敗しました",
         message: "エンジンの再起動をお試しください。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
       return;
     }
@@ -577,14 +557,9 @@ const saveWord = async () => {
         })
       );
     } catch {
-      $q.dialog({
+      showAlert({
         title: "単語の登録に失敗しました",
         message: "エンジンの再起動をお試しください。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
       return;
     }
@@ -594,21 +569,10 @@ const saveWord = async () => {
 };
 const isDeletable = computed(() => !!selectedId.value);
 const deleteWord = () => {
-  $q.dialog({
+  showWarning({
     title: "登録された単語を削除しますか？",
     message: "削除された単語は復旧できません。",
-    persistent: true,
-    focus: "cancel",
-    ok: {
-      label: "削除",
-      flat: true,
-      textColor: "warning",
-    },
-    cancel: {
-      label: "キャンセル",
-      flat: true,
-      textColor: "display",
-    },
+    actionName: "削除",
   }).onOk(async () => {
     try {
       await createUILockAction(
@@ -617,14 +581,9 @@ const deleteWord = () => {
         })
       );
     } catch {
-      $q.dialog({
+      showAlert({
         title: "単語の削除に失敗しました",
         message: "エンジンの再起動をお試しください。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
       return;
     }
@@ -633,43 +592,21 @@ const deleteWord = () => {
   });
 };
 const resetWord = () => {
-  $q.dialog({
+  showConfirm({
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
-    persistent: true,
-    focus: "cancel",
-    ok: {
-      label: "リセット",
-      flat: true,
-      textColor: "display",
-    },
-    cancel: {
-      label: "キャンセル",
-      flat: true,
-      textColor: "display",
-    },
+    actionName: "リセット",
   }).onOk(() => {
     toWordEditingState();
   });
 };
 const discardOrNotDialog = (okCallback: () => void) => {
   if (isWordChanged.value) {
-    $q.dialog({
+    showConfirm({
       title: "単語の追加・変更を破棄しますか？",
       message:
         "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
-      persistent: true,
-      focus: "cancel",
-      ok: {
-        label: "続行",
-        flat: true,
-        textColor: "display",
-      },
-      cancel: {
-        label: "キャンセル",
-        flat: true,
-        textColor: "display",
-      },
+      actionName: "続行",
     }).onOk(okCallback);
   } else {
     okCallback();
