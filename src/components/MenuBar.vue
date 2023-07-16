@@ -27,6 +27,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { useQuasar } from "quasar";
 import {
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveAllAudioWithDialog,
@@ -67,6 +68,7 @@ export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
 export type MenuItemType = MenuItemData["type"];
 
 const store = useStore();
+const $q = useQuasar();
 const currentVersion = ref("");
 
 // デフォルトエンジンの代替先ポート
@@ -129,6 +131,8 @@ const createNewProject = async () => {
 const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndSaveAllAudioWithDialog({
+      quasarDialog: $q.dialog,
+      quasarNotify: $q.notify,
       encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
       dispatch: store.dispatch,
@@ -139,6 +143,7 @@ const generateAndSaveAllAudio = async () => {
 const generateAndConnectAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndConnectAndSaveAudioWithDialog({
+      quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
@@ -159,6 +164,7 @@ const generateAndSaveOneAudio = async () => {
   }
 
   await generateAndSaveOneAudioWithDialog({
+    quasarNotify: $q.notify,
     audioKey: activeAudioKey,
     encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
@@ -169,6 +175,7 @@ const generateAndSaveOneAudio = async () => {
 const connectAndExportText = async () => {
   if (!uiLocked.value) {
     await connectAndExportTextWithDialog({
+      quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,

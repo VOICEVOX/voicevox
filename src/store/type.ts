@@ -101,6 +101,33 @@ export type ErrorTypeForSaveAllResultDialog = {
 };
 
 export type DialogResult = "OK" | "CANCEL";
+export type DialogCallback = (
+  value: DialogResult | PromiseLike<DialogResult>
+) => void;
+export type DialogOptions = {
+  alert: {
+    title: string;
+    message: string;
+    ok?: string;
+  };
+  confirm: {
+    title: string;
+    message: string;
+    html?: boolean;
+    actionName: string;
+    cancel?: string;
+  };
+  warning: {
+    title: string;
+    message: string;
+    actionName: string;
+    cancel?: string;
+  };
+};
+export type DialogOption<T extends keyof DialogOptions> = {
+  type: T;
+  callback: DialogCallback;
+} & DialogOptions[T];
 
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
@@ -1152,6 +1179,7 @@ export type UiStoreState = {
   isFullscreen: boolean;
   progress: number;
   isVuexReady: boolean;
+  dialogCallback: DialogCallback | undefined;
 };
 
 export type UiStoreTypes = {
@@ -1300,31 +1328,29 @@ export type UiStoreTypes = {
     action(): void;
   };
 
+  SET_DIALOG_OPTION: {
+    mutation: {
+      option:
+        | DialogOption<"alert">
+        | DialogOption<"confirm">
+        | DialogOption<"warning">;
+    };
+  };
+
   SHOW_ALERT_DIALOG: {
-    action(payload: {
-      title: string;
-      message: string;
-      ok?: string;
-    }): Promise<DialogResult>;
+    action(payload: DialogOptions["alert"]): Promise<DialogResult>;
   };
 
   SHOW_CONFIRM_DIALOG: {
-    action(payload: {
-      title: string;
-      message: string;
-      html?: boolean;
-      actionName: string;
-      cancel?: string;
-    }): Promise<DialogResult>;
+    action(payload: DialogOptions["confirm"]): Promise<DialogResult>;
   };
 
   SHOW_WARNING_DIALOG: {
-    action(payload: {
-      title: string;
-      message: string;
-      actionName: string;
-      cancel?: string;
-    }): Promise<DialogResult>;
+    action(payload: DialogOptions["warning"]): Promise<DialogResult>;
+  };
+
+  CLOSE_DIALOG: {
+    action(payload: { result: DialogResult }): void;
   };
 };
 

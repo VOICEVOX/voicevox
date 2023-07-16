@@ -53,6 +53,7 @@ export const uiStoreState: UiStoreState = {
   isFullscreen: false,
   progress: -1,
   isVuexReady: false,
+  dialogCallback: undefined,
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
@@ -352,21 +353,69 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  SET_DIALOG_OPTION: {
+    mutation(state, { option }) {
+      state.dialogOption = option;
+    },
+  },
+
   SHOW_ALERT_DIALOG: {
-    async action(_, { title, message, ok }) {
-      return "OK";
+    async action({ commit }, { title, message, ok }) {
+      return new Promise((resolve) => {
+        commit("SET_DIALOG_OPTION", {
+          option: {
+            type: "alert",
+            callback: resolve,
+            title,
+            message,
+            ok,
+          },
+        });
+      });
     },
   },
 
   SHOW_CONFIRM_DIALOG: {
-    async action(_, { title, message, html, actionName, cancel }) {
-      return "OK";
+    async action({ commit }, { title, message, html, actionName, cancel }) {
+      return new Promise((resolve) => {
+        commit("SET_DIALOG_OPTION", {
+          option: {
+            type: "confirm",
+            callback: resolve,
+            title,
+            message,
+            html,
+            actionName,
+            cancel,
+          },
+        });
+      });
     },
   },
 
   SHOW_WARNING_DIALOG: {
-    async action(_, { title, message, actionName, cancel }) {
-      return "OK";
+    async action({ commit }, { title, message, actionName, cancel }) {
+      return new Promise((resolve) => {
+        commit("SET_DIALOG_OPTION", {
+          option: {
+            type: "warning",
+            callback: resolve,
+            title,
+            message,
+            actionName,
+            cancel,
+          },
+        });
+      });
+    },
+  },
+
+  CLOSE_DIALOG: {
+    async action({ state }, { result }) {
+      if (state.dialogCallback === undefined) {
+        throw new Error("ダイアログが開かれる前に閉じようとしました。");
+      }
+      state.dialogCallback(result);
     },
   },
 });
