@@ -53,7 +53,7 @@ export const uiStoreState: UiStoreState = {
   isFullscreen: false,
   progress: -1,
   isVuexReady: false,
-  dialogCallback: undefined,
+  dialogOption: undefined,
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
@@ -353,8 +353,17 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  IS_COMMON_DIALOG_OPEN: {
+    getter(state) {
+      return state.hoge !== undefined;
+    },
+  },
+
   SET_DIALOG_OPTION: {
     mutation(state, { option }) {
+      if (option !== undefined && state.dialogOption !== undefined) {
+        throw new Error("alert・confirm・warningダイアログは複数開けません。");
+      }
       state.dialogOption = option;
     },
   },
@@ -411,11 +420,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   CLOSE_DIALOG: {
-    async action({ state }, { result }) {
-      if (state.dialogCallback === undefined) {
+    async action({ state, commit }, { result }) {
+      if (state.dialogOption === undefined) {
         throw new Error("ダイアログが開かれる前に閉じようとしました。");
       }
-      state.dialogCallback(result);
+      state.dialogOption.callback(result);
+      commit("SET_DIALOG_OPTION", { option: undefined });
     },
   },
 });

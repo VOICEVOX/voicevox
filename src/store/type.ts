@@ -127,6 +127,10 @@ export type DialogOption<T extends keyof DialogOptions> = {
   type: T;
   callback: DialogCallback;
 } & DialogOptions[T];
+export type AllDiaDialogOptions =
+  | DialogOption<"alert">
+  | DialogOption<"confirm">
+  | DialogOption<"warning">;
 
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
@@ -1176,7 +1180,7 @@ export type UiStoreState = {
   isFullscreen: boolean;
   progress: number;
   isVuexReady: boolean;
-  dialogCallback: DialogCallback | undefined;
+  dialogOption: AllDiaDialogOptions | undefined;
 };
 
 export type UiStoreTypes = {
@@ -1325,12 +1329,13 @@ export type UiStoreTypes = {
     action(): void;
   };
 
+  IS_COMMON_DIALOG_OPEN: {
+    getter: boolean;
+  };
+
   SET_DIALOG_OPTION: {
     mutation: {
-      option:
-        | DialogOption<"alert">
-        | DialogOption<"confirm">
-        | DialogOption<"warning">;
+      option: AllDiaDialogOptions | undefined;
     };
   };
 

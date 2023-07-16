@@ -143,6 +143,7 @@ describe("store/vuex.js test", () => {
         progress: -1,
         isVuexReady: false,
         defaultPresetKeys: {},
+        dialogOption: undefined,
       },
       getters: {
         ...uiStore.getters,
