@@ -32,7 +32,6 @@ import {
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
   connectAndExportTextWithDialog,
-  showAlert,
 } from "./Dialog";
 import MenuButton from "./MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
@@ -152,7 +151,7 @@ const generateAndSaveOneAudio = async () => {
 
   const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
   if (activeAudioKey == undefined) {
-    showAlert({
+    store.dispatch("SHOW_ALERT_DIALOG", {
       title: "テキスト欄が選択されていません",
       message: "音声を書き出したいテキスト欄を選択してください。",
     });

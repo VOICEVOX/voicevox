@@ -351,4 +351,22 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       dispatch("SET_PROGRESS", { progress: -1 });
     },
   },
+
+  SHOW_ALERT_DIALOG: {
+    async action(_, { title, message, ok }) {
+      return "OK";
+    },
+  },
+
+  SHOW_CONFIRM_DIALOG: {
+    async action(_, { title, message, html, actionName, cancel }) {
+      return "OK";
+    },
+  },
+
+  SHOW_WARNING_DIALOG: {
+    async action(_, { title, message, actionName, cancel }) {
+      return "OK";
+    },
+  },
 });

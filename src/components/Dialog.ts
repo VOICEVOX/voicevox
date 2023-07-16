@@ -1,92 +1,29 @@
-import { useQuasar } from "quasar";
+import { QVueGlobals } from "quasar";
 import { AudioKey, Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
   SaveResult,
   ErrorTypeForSaveAllResultDialog,
+  QuasarDialog,
 } from "@/store/type";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { Dispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 
+type QuasarNotify = QVueGlobals["notify"];
 type MediaType = "audio" | "text";
-
-const $q = useQuasar();
-export const showAlert = (options: {
-  title: string;
-  message: string;
-  ok?: string;
-}) => {
-  return $q.dialog({
-    title: options.title,
-    message: options.message,
-    ok: {
-      label: options.ok ?? "閉じる",
-      flat: true,
-      textColor: "display",
-    },
-  });
-};
-
-export const showConfirm = (options: {
-  title: string;
-  message: string;
-  html?: boolean;
-  actionName: string;
-  cancel?: string;
-}) => {
-  return $q.dialog({
-    title: options.title,
-    message: options.message,
-    persistent: true, // ダイアログ外側押下時・Esc押下時にユーザが設定ができたと思い込むことを防止する
-    focus: "cancel",
-    html: options.html,
-    ok: {
-      flat: true,
-      label: options.actionName,
-      textColor: "display",
-    },
-    cancel: {
-      flat: true,
-      label: options.cancel ?? "キャンセル",
-      textColor: "display",
-    },
-  });
-};
-
-export const showWarning = (options: {
-  title: string;
-  message: string;
-  actionName: string;
-  cancel?: string;
-}) => {
-  return $q.dialog({
-    title: options.title,
-    message: options.message,
-    persistent: true,
-    focus: "cancel",
-    ok: {
-      label: options.actionName,
-      flat: true,
-      textColor: "warning",
-    },
-    cancel: {
-      label: options.cancel ?? "キャンセル",
-      flat: true,
-      textColor: "display",
-    },
-  });
-};
 
 export async function generateAndSaveOneAudioWithDialog({
   audioKey,
+  quasarNotify,
   dispatch,
   filePath,
   encoding,
   disableNotifyOnGenerate,
 }: {
   audioKey: AudioKey;
+  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
@@ -108,19 +45,24 @@ export async function generateAndSaveOneAudioWithDialog({
     // 書き出し成功時に通知をする
     showWriteSuccessNotify({
       mediaType: "audio",
+      quasarNotify,
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", result });
+    showWriteErrorDialog({ mediaType: "audio", dispatch, result });
   }
 }
 
 export async function generateAndSaveAllAudioWithDialog({
+  quasarDialog,
+  quasarNotify,
   dispatch,
   dirPath,
   encoding,
   disableNotifyOnGenerate,
 }: {
+  quasarDialog: QuasarDialog;
+  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   dirPath?: string;
   encoding?: EncodingType;
@@ -164,12 +106,13 @@ export async function generateAndSaveAllAudioWithDialog({
     // 書き出し成功時に通知をする
     showWriteSuccessNotify({
       mediaType: "audio",
+      quasarNotify,
       dispatch,
     });
   }
 
   if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-    $q.dialog({
+    quasarDialog({
       component: SaveAllResultDialog,
       componentProps: {
         successArray: successArray,
@@ -181,11 +124,13 @@ export async function generateAndSaveAllAudioWithDialog({
 }
 
 export async function generateAndConnectAndSaveAudioWithDialog({
+  quasarNotify,
   dispatch,
   filePath,
   encoding,
   disableNotifyOnGenerate,
 }: {
+  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
@@ -207,19 +152,22 @@ export async function generateAndConnectAndSaveAudioWithDialog({
     if (disableNotifyOnGenerate) return;
     showWriteSuccessNotify({
       mediaType: "audio",
+      quasarNotify,
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", result });
+    showWriteErrorDialog({ mediaType: "audio", dispatch, result });
   }
 }
 
 export async function connectAndExportTextWithDialog({
+  quasarNotify,
   dispatch,
   filePath,
   encoding,
   disableNotifyOnGenerate,
 }: {
+  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
@@ -236,18 +184,21 @@ export async function connectAndExportTextWithDialog({
     if (disableNotifyOnGenerate) return;
     showWriteSuccessNotify({
       mediaType: "text",
+      quasarNotify,
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "text", result });
+    showWriteErrorDialog({ mediaType: "text", dispatch, result });
   }
 }
 
 // 書き出し成功時の通知を表示
 const showWriteSuccessNotify = ({
+  quasarNotify,
   mediaType,
   dispatch,
 }: {
+  quasarNotify: QVueGlobals["notify"];
   mediaType: MediaType;
   dispatch: Dispatch<AllActions>;
 }): void => {
@@ -256,7 +207,7 @@ const showWriteSuccessNotify = ({
     text: "テキスト",
   };
 
-  $q.notify({
+  quasarNotify({
     message: `${mediaTypeNames[mediaType]}を書き出しました`,
     color: "toast",
     textColor: "toast-display",
@@ -281,14 +232,16 @@ const showWriteSuccessNotify = ({
 // 書き出し失敗時のダイアログを表示
 const showWriteErrorDialog = ({
   mediaType,
+  dispatch,
   result,
 }: {
   mediaType: MediaType;
+  dispatch: Dispatch<AllActions>;
   result: SaveResultObject;
 }) => {
   if (mediaType === "text") {
     // テキスト書き出し時のエラーを出力
-    showAlert({
+    dispatch("SHOW_ALERT_DIALOG", {
       title: "テキストの書き出しに失敗しました。",
       message:
         "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。",
@@ -304,7 +257,7 @@ const showWriteErrorDialog = ({
     };
 
     // 音声書き出し時のエラーを出力
-    showAlert({
+    dispatch("SHOW_ALERT_DIALOG", {
       title: "書き出しに失敗しました。",
       message: result.errorMessage ?? defaultErrorMessages[result.result] ?? "",
     });

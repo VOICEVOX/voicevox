@@ -45,7 +45,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import draggable from "vuedraggable";
-import { showConfirm } from "./Dialog";
 import { useStore } from "@/store";
 
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
@@ -108,16 +107,17 @@ const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
     .finally(() => (isPreview.value = false));
 };
 
-const deletePreset = (key: PresetKey) => {
-  showConfirm({
+const deletePreset = async (key: PresetKey) => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "プリセット削除の確認",
     message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
     actionName: "削除",
-  }).onOk(async () => {
+  });
+  if (result === "OK") {
     await store.dispatch("DELETE_PRESET", {
       presetKey: key,
     });
-  });
+  }
 };
 </script>
 

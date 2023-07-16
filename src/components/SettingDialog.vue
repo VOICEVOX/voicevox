@@ -886,7 +886,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
-import { showAlert, showConfirm } from "./Dialog";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
@@ -999,23 +998,26 @@ const changeShowTextLineNumber = (showTextLineNumber: boolean) => {
 const showAddAudioItemButton = computed(
   () => store.state.showAddAudioItemButton
 );
-const changeShowAddAudioItemButton = (showAddAudioItemButton: boolean) => {
+const changeShowAddAudioItemButton = async (
+  showAddAudioItemButton: boolean
+) => {
   store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
     showAddAudioItemButton,
   });
 
   // 設定をオフにする場合はヒントを表示
   if (!showAddAudioItemButton) {
-    showConfirm({
+    const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
       title: "エディタの＋ボタンを非表示にする",
       message: "テキスト欄は Shift + Enter で追加できます",
       actionName: "非表示",
-    }).onCancel(() => {
+    });
+    if (result === "CANCEL") {
       // キャンセルしたら設定を元に戻す
       store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
         showAddAudioItemButton: true,
       });
-    });
+    }
   }
 };
 
@@ -1068,7 +1070,7 @@ const acceptRetrieveTelemetryComputed = computed({
       return;
     }
 
-    showAlert({
+    store.dispatch("SHOW_ALERT_DIALOG", {
       title: "ソフトウェア利用状況のデータ収集の無効化",
       message:
         "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
@@ -1161,23 +1163,15 @@ const outputSamplingRate = computed({
   },
   set: async (outputSamplingRate: SamplingRateOption) => {
     if (outputSamplingRate !== "engineDefault") {
-      const confirmChange = await new Promise((resolve) => {
-        showConfirm({
-          title: "出力サンプリングレートを変更します",
-          message:
-            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
-          html: true,
-          actionName: "変更する",
-          cancel: "変更しない",
-        })
-          .onOk(() => {
-            resolve(true);
-          })
-          .onCancel(() => {
-            resolve(false);
-          });
+      const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+        title: "出力サンプリングレートを変更します",
+        message:
+          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
+        html: true,
+        actionName: "変更する",
+        cancel: "変更しない",
       });
-      if (!confirmChange) {
+      if (result !== "OK") {
         return;
       }
     }

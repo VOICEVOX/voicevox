@@ -344,7 +344,6 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { showConfirm, showWarning } from "./Dialog";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
@@ -482,13 +481,14 @@ const getEngineDirValidationMessage = (result: EngineDirValidationResult) => {
   return messageMap[result];
 };
 
-const addEngine = () => {
-  showWarning({
+const addEngine = async () => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "エンジン追加の確認",
     message:
       "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
     actionName: "追加",
-  }).onOk(async () => {
+  });
+  if (result === "OK") {
     if (engineLoaderType.value === "dir") {
       await lockUi(
         "addingEngine",
@@ -511,14 +511,15 @@ const addEngine = () => {
         );
       }
     }
-  });
+  }
 };
-const deleteEngine = () => {
-  showConfirm({
+const deleteEngine = async () => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "確認",
     message: "選択中のエンジンを削除します。よろしいですか？",
     actionName: "削除",
-  }).onOk(async () => {
+  });
+  if (result === "OK") {
     if (selectedId.value == undefined)
       throw new Error("engine is not selected");
     switch (engineInfos.value[selectedId.value].type) {
@@ -552,7 +553,7 @@ const deleteEngine = () => {
       default:
         throw new Error("assert engineInfos[selectedId.value].type");
     }
-  });
+  }
 };
 
 const selectEngine = (id: EngineId) => {
@@ -573,20 +574,19 @@ const restartSelectedEngine = () => {
   });
 };
 
-const requireRestart = (message: string) => {
-  showWarning({
+const requireRestart = async (message: string) => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "再起動が必要です",
     message: message,
     actionName: "再起動",
     cancel: "後で",
-  })
-    .onOk(() => {
-      toInitialState();
-      store.dispatch("RESTART_APP", {});
-    })
-    .onCancel(() => {
-      toInitialState();
-    });
+  });
+  if (result === "OK") {
+    toInitialState();
+    store.dispatch("RESTART_APP", {});
+  } else if (result === "CANCEL") {
+    toInitialState();
+  }
 };
 
 const newEngineDir = ref("");

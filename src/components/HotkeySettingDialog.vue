@@ -214,7 +214,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { showConfirm } from "./Dialog";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
@@ -349,14 +348,15 @@ const confirmBtnEnabled = computed(() => {
   );
 });
 
-const resetHotkey = (action: string) => {
-  showConfirm({
+const resetHotkey = async (action: string) => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "ショートカットキーを初期値に戻します",
     message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
     html: true,
     actionName: "初期値に戻す",
     cancel: "初期値に戻さない",
-  }).onOk(() => {
+  });
+  if (result === "OK") {
     window.electron
       .getDefaultHotkeySettings()
       .then((defaultSettings: HotkeySetting[]) => {
@@ -365,7 +365,7 @@ const resetHotkey = (action: string) => {
           changeHotkeySettings(action, setting.combination);
         }
       });
-  });
+  }
 };
 </script>
 

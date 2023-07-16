@@ -100,6 +100,8 @@ export type ErrorTypeForSaveAllResultDialog = {
   message: string;
 };
 
+export type DialogResult = "OK" | "CANCEL";
+
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
     ? never
@@ -1296,6 +1298,33 @@ export type UiStoreTypes = {
 
   RESET_PROGRESS: {
     action(): void;
+  };
+
+  SHOW_ALERT_DIALOG: {
+    action(payload: {
+      title: string;
+      message: string;
+      ok?: string;
+    }): Promise<DialogResult>;
+  };
+
+  SHOW_CONFIRM_DIALOG: {
+    action(payload: {
+      title: string;
+      message: string;
+      html?: boolean;
+      actionName: string;
+      cancel?: string;
+    }): Promise<DialogResult>;
+  };
+
+  SHOW_WARNING_DIALOG: {
+    action(payload: {
+      title: string;
+      message: string;
+      actionName: string;
+      cancel?: string;
+    }): Promise<DialogResult>;
   };
 };
 

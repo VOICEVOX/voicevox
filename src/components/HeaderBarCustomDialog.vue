@@ -114,7 +114,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, Ref } from "vue";
 import draggable from "vuedraggable";
-import { showConfirm } from "./Dialog";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
@@ -208,17 +207,18 @@ watch(
   }
 );
 
-const applyDefaultSetting = () => {
-  showConfirm({
+const applyDefaultSetting = async () => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "ツールバーをデフォルトに戻します",
     message: "ツールバーをデフォルトに戻します。<br/>よろしいですか？",
     html: true,
     actionName: "はい",
     cancel: "いいえ",
-  }).onOk(() => {
+  });
+  if (result === "OK") {
     toolbarButtons.value = [...defaultSetting];
     selectedButton.value = toolbarButtons.value[0];
-  });
+  }
 };
 const saveCustomToolbar = () => {
   store.dispatch("SET_TOOLBAR_SETTING", {
@@ -226,17 +226,18 @@ const saveCustomToolbar = () => {
   });
 };
 
-const finishOrNotDialog = () => {
+const finishOrNotDialog = async () => {
   if (isChanged.value) {
-    showConfirm({
+    const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
       title: "カスタマイズを終了しますか？",
       message: "このまま終了すると、カスタマイズは破棄されてリセットされます。",
       actionName: "終了",
-    }).onOk(() => {
+    });
+    if (result === "OK") {
       toolbarButtons.value = [...store.state.toolbarSetting];
       selectedButton.value = toolbarButtons.value[0];
       headerBarCustomDialogOpenComputed.value = false;
-    });
+    }
   } else {
     selectedButton.value = toolbarButtons.value[0];
     headerBarCustomDialogOpenComputed.value = false;

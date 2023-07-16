@@ -20,7 +20,6 @@
 
 <script setup lang="ts">
 import { computed, ComputedRef } from "vue";
-import { showAlert } from "./Dialog";
 import { useStore } from "@/store";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
@@ -114,7 +113,7 @@ const playContinuously = async () => {
     } else {
       window.electron.logError(e);
     }
-    showAlert({
+    store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
     });
