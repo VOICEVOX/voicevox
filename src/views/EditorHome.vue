@@ -834,7 +834,7 @@ const showDialog = {
       .onOk(() => {
         store.dispatch("CLOSE_DIALOG", { result: "OK" });
       })
-      .onDismiss(() => {
+      .onCancel(() => {
         store.dispatch("CLOSE_DIALOG", { result: "CANCEL" });
       }),
   confirm: (options: DialogOptions["confirm"]) =>
