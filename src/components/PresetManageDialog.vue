@@ -43,7 +43,6 @@
 </template>
 
 <script setup lang="ts">
-import { useQuasar } from "quasar";
 import { computed, ref } from "vue";
 import draggable from "vuedraggable";
 import { showConfirm } from "./Dialog";
@@ -64,7 +63,6 @@ const emit =
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
 const store = useStore();
-const $q = useQuasar();
 const { isDefaultPresetKey } = useDefaultPreset();
 
 const presetItems = computed(() => store.state.presetItems);

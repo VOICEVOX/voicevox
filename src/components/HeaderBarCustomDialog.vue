@@ -113,7 +113,6 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, Ref } from "vue";
-import { useQuasar } from "quasar";
 import draggable from "vuedraggable";
 import { showConfirm } from "./Dialog";
 import { useStore } from "@/store";
@@ -130,7 +129,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
 const toolbarButtons = ref([...store.state.toolbarSetting]);

@@ -344,7 +344,6 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { useQuasar } from "quasar";
 import { showConfirm, showWarning } from "./Dialog";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
@@ -363,7 +362,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const engineManageDialogOpenedComputed = computed({
   get: () => props.modelValue,

@@ -214,7 +214,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useQuasar } from "quasar";
 import { showConfirm } from "./Dialog";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
@@ -230,7 +229,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const hotkeySettingDialogOpenComputed = computed({
   get: () => props.modelValue,
