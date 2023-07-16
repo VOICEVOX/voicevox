@@ -131,10 +131,10 @@ const createNewProject = async () => {
 const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndSaveAllAudioWithDialog({
-      quasarDialog: $q.dialog,
-      quasarNotify: $q.notify,
       encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+      quasarDialog: $q.dialog,
+      quasarNotify: $q.notify,
       dispatch: store.dispatch,
     });
   }

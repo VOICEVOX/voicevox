@@ -128,8 +128,8 @@ const generateAndSaveOneAudio = async () => {
   if (activeAudioKey.value == undefined)
     throw new Error("activeAudioKey is undefined");
   await generateAndSaveOneAudioWithDialog({
-    quasarNotify: $q.notify,
     audioKey: activeAudioKey.value,
+    quasarNotify: $q.notify,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
