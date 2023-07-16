@@ -88,20 +88,20 @@ const showDialog = {
 };
 
 watch(
-  () => store.state.dialogOption,
+  () => store?.state.dialogOption,
   (dialogOption) => {
     // 分けないとtype errorになるため
-    switch (dialogOption?.type) {
+    switch (dialogOption?.dialogType) {
       case undefined:
         return;
       case "alert":
-        showDialog[dialogOption.type](dialogOption);
+        showDialog[dialogOption.dialogType](dialogOption);
         return;
       case "confirm":
-        showDialog[dialogOption.type](dialogOption);
+        showDialog[dialogOption.dialogType](dialogOption);
         return;
       case "warning":
-        showDialog[dialogOption.type](dialogOption);
+        showDialog[dialogOption.dialogType](dialogOption);
         return;
     }
   },

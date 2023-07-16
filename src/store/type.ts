@@ -124,7 +124,7 @@ export type DialogOptions = {
   };
 };
 export type DialogOption<T extends keyof DialogOptions> = {
-  type: T;
+  dialogType: T;
   callback: DialogCallback;
 } & DialogOptions[T];
 export type AllDialogOptions =

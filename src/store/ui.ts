@@ -373,7 +373,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       return new Promise((resolve) => {
         commit("SET_DIALOG_OPTION", {
           option: {
-            type: "alert",
+            dialogType: "alert",
             callback: resolve,
             title,
             message,
@@ -389,7 +389,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       return new Promise((resolve) => {
         commit("SET_DIALOG_OPTION", {
           option: {
-            type: "confirm",
+            dialogType: "confirm",
             callback: resolve,
             title,
             message,
@@ -407,7 +407,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       return new Promise((resolve) => {
         commit("SET_DIALOG_OPTION", {
           option: {
-            type: "warning",
+            dialogType: "warning",
             callback: resolve,
             title,
             message,
