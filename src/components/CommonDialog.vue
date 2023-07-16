@@ -4,10 +4,14 @@
 
 <script setup lang="ts">
 import { useQuasar } from "quasar";
+import { watch } from "vue";
 import { useStore } from "vuex";
+import { UiStoreState } from "@/store/type";
 
-defineExpose({
-  showAlert: (options: { title: string; message: string; ok?: string }) =>
+const store = useStore<UiStoreState>();
+const $q = useQuasar();
+const showDialog = {
+  alert: (options: { title: string; message: string; ok?: string }) =>
     $q
       .dialog({
         title: options.title,
@@ -21,7 +25,7 @@ defineExpose({
       .onOk(() => {
         store.dispatch("CLOSE_DIALOG", { result: "OK" });
       }),
-  showConfirm: (options: {
+  confirm: (options: {
     title: string;
     message: string;
     html?: boolean;
@@ -52,7 +56,7 @@ defineExpose({
       .onCancel(() => {
         store.dispatch("CLOSE_DIALOG", { result: "CANCEL" });
       }),
-  showWarning: (options: {
+  warning: (options: {
     title: string;
     message: string;
     actionName: string;
@@ -81,8 +85,26 @@ defineExpose({
       .onCancel(() => {
         store.dispatch("CLOSE_DIALOG", { result: "CANCEL" });
       }),
-});
+};
 
-const store = useStore();
-const $q = useQuasar();
+watch(
+  () => store.state.dialogOption,
+  (dialogOption) => {
+    // 分けないとtype errorになるため
+    switch (dialogOption?.type) {
+      case undefined:
+        return;
+      case "alert":
+        showDialog[dialogOption.type](dialogOption);
+        return;
+      case "confirm":
+        showDialog[dialogOption.type](dialogOption);
+        return;
+      case "warning":
+        showDialog[dialogOption.type](dialogOption);
+        return;
+    }
+  },
+  { immediate: true }
+);
 </script>
