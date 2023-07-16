@@ -344,6 +344,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { showConfirmDialog, showWarningDialog } from "./Dialog";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
@@ -482,7 +483,7 @@ const getEngineDirValidationMessage = (result: EngineDirValidationResult) => {
 };
 
 const addEngine = async () => {
-  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+  const result = await showWarningDialog({
     title: "エンジン追加の確認",
     message:
       "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
@@ -514,7 +515,7 @@ const addEngine = async () => {
   }
 };
 const deleteEngine = async () => {
-  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+  const result = await showConfirmDialog({
     title: "確認",
     message: "選択中のエンジンを削除します。よろしいですか？",
     actionName: "削除",
@@ -575,7 +576,7 @@ const restartSelectedEngine = () => {
 };
 
 const requireRestart = async (message: string) => {
-  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+  const result = await showWarningDialog({
     title: "再起動が必要です",
     message: message,
     actionName: "再起動",

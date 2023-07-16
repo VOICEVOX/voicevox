@@ -1,4 +1,4 @@
-import { Dialog, Notify } from "quasar";
+import { Dialog, DialogChainObject, Notify } from "quasar";
 import { AudioKey, Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
@@ -11,6 +11,81 @@ import { Dispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 
 type MediaType = "audio" | "text";
+
+export type CommonDialogResult = "OK" | "CANCEL";
+export type CommonDialogOptions = {
+  alert: {
+    title: string;
+    message: string;
+    ok?: string;
+  };
+  confirm: {
+    title: string;
+    message: string;
+    html?: boolean;
+    actionName: string;
+    cancel?: string;
+  };
+  warning: {
+    title: string;
+    message: string;
+    actionName: string;
+    cancel?: string;
+  };
+};
+export type CommonDialogType = keyof CommonDialogOptions;
+type CommonDialogCallback = (
+  value: CommonDialogResult | PromiseLike<CommonDialogResult>
+) => void;
+
+export const showAlertDialog = async (
+  options: CommonDialogOptions["alert"]
+) => {
+  return new Promise((resolve) => {
+    setCallback(createCommonDialog.alert(options));
+    commonDialogCallback = resolve;
+  });
+};
+/**
+ * htmlフラグを`true`にする場合、外部からの汚染された文字列を`title`や`message`に含めてはいけません。
+ * see https://quasar.dev/quasar-plugins/dialog#using-html
+ */
+export const showConfirmDialog = async (
+  options: CommonDialogOptions["confirm"]
+) => {
+  return new Promise((resolve) => {
+    setCallback(createCommonDialog.confirm(options));
+    commonDialogCallback = resolve;
+  });
+};
+export const showWarningDialog = async (
+  options: CommonDialogOptions["warning"]
+) => {
+  return new Promise((resolve) => {
+    setCallback(createCommonDialog.warning(options));
+    commonDialogCallback = resolve;
+  });
+};
+const setCallback = (dialog: DialogChainObject) => {
+  if (commonDialogCallback) {
+    throw new Error();
+  }
+  return dialog
+    .onOk(() => {
+      onDialogClose("OK");
+    })
+    .onCancel(() => {
+      onDialogClose("CANCEL");
+    });
+};
+const onDialogClose = (result: CommonDialogResult) => {
+  if (commonDialogCallback === undefined) {
+    throw new Error("ダイアログが開かれる前に閉じようとしました。");
+  }
+  commonDialogCallback(result);
+  commonDialogCallback = undefined;
+};
+let commonDialogCallback: CommonDialogCallback | undefined = undefined;
 
 export async function generateAndSaveOneAudioWithDialog({
   audioKey,
@@ -44,7 +119,7 @@ export async function generateAndSaveOneAudioWithDialog({
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", result, dispatch });
+    showWriteErrorDialog({ mediaType: "audio", result });
   }
 }
 
@@ -143,7 +218,7 @@ export async function generateAndConnectAndSaveAudioWithDialog({
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", result, dispatch });
+    showWriteErrorDialog({ mediaType: "audio", result });
   }
 }
 
@@ -172,7 +247,7 @@ export async function connectAndExportTextWithDialog({
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "text", result, dispatch });
+    showWriteErrorDialog({ mediaType: "text", result });
   }
 }
 
@@ -215,15 +290,13 @@ const showWriteSuccessNotify = ({
 const showWriteErrorDialog = ({
   mediaType,
   result,
-  dispatch,
 }: {
   mediaType: MediaType;
   result: SaveResultObject;
-  dispatch: Dispatch<AllActions>;
 }) => {
   if (mediaType === "text") {
     // テキスト書き出し時のエラーを出力
-    dispatch("SHOW_ALERT_DIALOG", {
+    showAlertDialog({
       title: "テキストの書き出しに失敗しました。",
       message:
         "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。",
@@ -239,9 +312,58 @@ const showWriteErrorDialog = ({
     };
 
     // 音声書き出し時のエラーを出力
-    dispatch("SHOW_ALERT_DIALOG", {
+    showAlertDialog({
       title: "書き出しに失敗しました。",
       message: result.errorMessage ?? defaultErrorMessages[result.result] ?? "",
     });
   }
+};
+
+// 汎用ダイアログ
+const createCommonDialog = {
+  alert: (options: CommonDialogOptions["alert"]) =>
+    Dialog.create({
+      title: options.title,
+      message: options.message,
+      ok: {
+        label: options.ok ?? "閉じる",
+        flat: true,
+        textColor: "display",
+      },
+    }),
+  confirm: (options: CommonDialogOptions["confirm"]) =>
+    Dialog.create({
+      title: options.title,
+      message: options.message,
+      persistent: true, // ダイアログ外側押下時・Esc押下時にユーザが設定ができたと思い込むことを防止する
+      focus: "cancel",
+      html: options.html,
+      ok: {
+        flat: true,
+        label: options.actionName,
+        textColor: "display",
+      },
+      cancel: {
+        flat: true,
+        label: options.cancel ?? "キャンセル",
+        textColor: "display",
+      },
+    }),
+  warning: (options: CommonDialogOptions["warning"]) =>
+    Dialog.create({
+      title: options.title,
+      message: options.message,
+      persistent: true,
+      focus: "cancel",
+      ok: {
+        label: options.actionName,
+        flat: true,
+        textColor: "warning",
+      },
+      cancel: {
+        label: options.cancel ?? "キャンセル",
+        flat: true,
+        textColor: "display",
+      },
+    }),
 };

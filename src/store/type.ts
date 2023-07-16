@@ -99,39 +99,6 @@ export type ErrorTypeForSaveAllResultDialog = {
   message: string;
 };
 
-export type DialogResult = "OK" | "CANCEL";
-export type DialogCallback = (
-  value: DialogResult | PromiseLike<DialogResult>
-) => void;
-export type DialogOptions = {
-  alert: {
-    title: string;
-    message: string;
-    ok?: string;
-  };
-  confirm: {
-    title: string;
-    message: string;
-    html?: boolean;
-    actionName: string;
-    cancel?: string;
-  };
-  warning: {
-    title: string;
-    message: string;
-    actionName: string;
-    cancel?: string;
-  };
-};
-export type DialogOption<T extends keyof DialogOptions> = {
-  dialogType: T;
-  callback: DialogCallback;
-} & DialogOptions[T];
-export type AllDialogOptions =
-  | DialogOption<"alert">
-  | DialogOption<"confirm">
-  | DialogOption<"warning">;
-
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
     ? never
@@ -1180,7 +1147,6 @@ export type UiStoreState = {
   isFullscreen: boolean;
   progress: number;
   isVuexReady: boolean;
-  dialogOption: AllDialogOptions | undefined;
 };
 
 export type UiStoreTypes = {
@@ -1327,28 +1293,6 @@ export type UiStoreTypes = {
 
   RESET_PROGRESS: {
     action(): void;
-  };
-
-  SET_DIALOG_OPTION: {
-    mutation: {
-      option: AllDialogOptions | undefined;
-    };
-  };
-
-  SHOW_ALERT_DIALOG: {
-    action(payload: DialogOptions["alert"]): Promise<DialogResult>;
-  };
-
-  SHOW_CONFIRM_DIALOG: {
-    action(payload: DialogOptions["confirm"]): Promise<DialogResult>;
-  };
-
-  SHOW_WARNING_DIALOG: {
-    action(payload: DialogOptions["warning"]): Promise<DialogResult>;
-  };
-
-  CLOSE_DIALOG: {
-    action(payload: { result: DialogResult }): void;
   };
 };
 

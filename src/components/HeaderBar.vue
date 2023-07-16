@@ -20,6 +20,12 @@
 
 <script setup lang="ts">
 import { computed, ComputedRef } from "vue";
+import {
+  generateAndConnectAndSaveAudioWithDialog,
+  generateAndSaveAllAudioWithDialog,
+  generateAndSaveOneAudioWithDialog,
+  showAlertDialog,
+} from "./Dialog";
 import { useStore } from "@/store";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
@@ -27,11 +33,6 @@ import {
   HotkeyReturnType,
   ToolbarButtonTagType,
 } from "@/type/preload";
-import {
-  generateAndConnectAndSaveAudioWithDialog,
-  generateAndSaveAllAudioWithDialog,
-  generateAndSaveOneAudioWithDialog,
-} from "@/components/Dialog";
 import { getToolbarButtonName } from "@/store/utility";
 
 type ButtonContent = {
@@ -113,7 +114,7 @@ const playContinuously = async () => {
     } else {
       window.electron.logError(e);
     }
-    store.dispatch("SHOW_ALERT_DIALOG", {
+    showAlertDialog({
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
     });

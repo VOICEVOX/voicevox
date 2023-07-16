@@ -53,7 +53,6 @@ export const uiStoreState: UiStoreState = {
   isFullscreen: false,
   progress: -1,
   isVuexReady: false,
-  dialogOption: undefined,
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
@@ -350,76 +349,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action({ dispatch }) {
       // -1で非表示
       dispatch("SET_PROGRESS", { progress: -1 });
-    },
-  },
-
-  SET_DIALOG_OPTION: {
-    mutation(state, { option }) {
-      if (option !== undefined && state.dialogOption !== undefined) {
-        throw new Error("alert・confirm・warningダイアログは複数開けません。");
-      }
-      state.dialogOption = option;
-    },
-  },
-
-  SHOW_ALERT_DIALOG: {
-    async action({ commit }, { title, message, ok }) {
-      return new Promise((resolve) => {
-        commit("SET_DIALOG_OPTION", {
-          option: {
-            dialogType: "alert",
-            callback: resolve,
-            title,
-            message,
-            ok,
-          },
-        });
-      });
-    },
-  },
-
-  SHOW_CONFIRM_DIALOG: {
-    async action({ commit }, { title, message, html, actionName, cancel }) {
-      return new Promise((resolve) => {
-        commit("SET_DIALOG_OPTION", {
-          option: {
-            dialogType: "confirm",
-            callback: resolve,
-            title,
-            message,
-            html,
-            actionName,
-            cancel,
-          },
-        });
-      });
-    },
-  },
-
-  SHOW_WARNING_DIALOG: {
-    async action({ commit }, { title, message, actionName, cancel }) {
-      return new Promise((resolve) => {
-        commit("SET_DIALOG_OPTION", {
-          option: {
-            dialogType: "warning",
-            callback: resolve,
-            title,
-            message,
-            actionName,
-            cancel,
-          },
-        });
-      });
-    },
-  },
-
-  CLOSE_DIALOG: {
-    async action({ state, commit }, { result }) {
-      if (state.dialogOption === undefined) {
-        throw new Error("ダイアログが開かれる前に閉じようとしました。");
-      }
-      state.dialogOption.callback(result);
-      commit("SET_DIALOG_OPTION", { option: undefined });
     },
   },
 });

@@ -886,6 +886,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
+import { showAlertDialog, showConfirmDialog } from "./Dialog";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
@@ -1007,7 +1008,7 @@ const changeShowAddAudioItemButton = async (
 
   // 設定をオフにする場合はヒントを表示
   if (!showAddAudioItemButton) {
-    const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+    const result = await showConfirmDialog({
       title: "エディタの＋ボタンを非表示にする",
       message: "テキスト欄は Shift + Enter で追加できます",
       actionName: "非表示",
@@ -1070,7 +1071,7 @@ const acceptRetrieveTelemetryComputed = computed({
       return;
     }
 
-    store.dispatch("SHOW_ALERT_DIALOG", {
+    showAlertDialog({
       title: "ソフトウェア利用状況のデータ収集の無効化",
       message:
         "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
@@ -1164,7 +1165,7 @@ const outputSamplingRate = computed({
   },
   set: async (outputSamplingRate: SamplingRateOption) => {
     if (outputSamplingRate !== "engineDefault") {
-      const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+      const result = await showConfirmDialog({
         title: "出力サンプリングレートを変更します",
         message:
           "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
