@@ -5,12 +5,12 @@ import {
   SaveResultObject,
   SaveResult,
   ErrorTypeForSaveAllResultDialog,
-  QuasarDialog,
 } from "@/store/type";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { Dispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 
+type QuasarDialog = QVueGlobals["dialog"];
 type QuasarNotify = QVueGlobals["notify"];
 type MediaType = "audio" | "text";
 

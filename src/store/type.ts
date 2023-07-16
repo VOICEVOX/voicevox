@@ -1,5 +1,4 @@
 import { Patch } from "immer";
-import { QVueGlobals } from "quasar";
 import {
   MutationTree,
   MutationsBase,
@@ -142,8 +141,6 @@ export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
       : R
     : never;
 };
-
-export type QuasarDialog = QVueGlobals["dialog"];
 
 /*
  * Audio Store Types
