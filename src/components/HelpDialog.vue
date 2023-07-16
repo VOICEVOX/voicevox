@@ -212,6 +212,7 @@ const pagedata = computed(() => {
       name: "アップデート情報",
       component: UpdateInfo,
       props: {
+        downloadLink: "https://voicevox.hiroshiba.jp/",
         updateInfos: updateInfos.value,
         isUpdateAvailable: isUpdateAvailable.value,
         latestVersion: latestVersion.value,
