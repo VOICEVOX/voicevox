@@ -818,6 +818,7 @@ const showAddAudioItemButton = computed(() => {
   return store.state.showAddAudioItemButton;
 });
 
+// 汎用ダイアログ
 const showDialog = {
   alert: (options: { title: string; message: string; ok?: string }) =>
     $q
@@ -899,7 +900,7 @@ const showDialog = {
 };
 
 watch(
-  () => store?.state.dialogOption,
+  () => store.state.dialogOption,
   (dialogOption) => {
     // 分けないとtype errorになるため
     switch (dialogOption?.dialogType) {
