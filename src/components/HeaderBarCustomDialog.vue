@@ -114,6 +114,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, Ref } from "vue";
 import draggable from "vuedraggable";
+import { showConfirmDialog } from "./Dialog";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
@@ -208,7 +209,7 @@ watch(
 );
 
 const applyDefaultSetting = async () => {
-  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+  const result = await showConfirmDialog({
     title: "ツールバーをデフォルトに戻します",
     message: "ツールバーをデフォルトに戻します。<br/>よろしいですか？",
     html: true,
@@ -228,7 +229,7 @@ const saveCustomToolbar = () => {
 
 const finishOrNotDialog = async () => {
   if (isChanged.value) {
-    const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+    const result = await showConfirmDialog({
       title: "カスタマイズを終了しますか？",
       message: "このまま終了すると、カスタマイズは破棄されてリセットされます。",
       actionName: "終了",

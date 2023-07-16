@@ -270,6 +270,7 @@ import {
   VNodeRef,
   watch,
 } from "vue";
+import { showAlertDialog } from "./Dialog";
 import ToolTip from "./ToolTip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
@@ -502,7 +503,7 @@ const play = async () => {
     } else {
       window.electron.logError(e);
     }
-    store.dispatch("SHOW_ALERT_DIALOG", {
+    showAlertDialog({
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
     });

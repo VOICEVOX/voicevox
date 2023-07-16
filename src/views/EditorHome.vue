@@ -176,6 +176,7 @@ import draggable from "vuedraggable";
 import { QResizeObserver, useQuasar } from "quasar";
 import cloneDeep from "clone-deep";
 import { useStore } from "@/store";
+import { showAlertDialog } from "@/components/Dialog";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -193,7 +194,7 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
-import { AudioItem, DialogOptions, EngineState } from "@/store/type";
+import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
   EngineId,
@@ -784,7 +785,7 @@ const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
       store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
       break;
     default:
-      store.dispatch("SHOW_ALERT_DIALOG", {
+      showAlertDialog({
         title: "対応していないファイルです",
         message:
           "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
@@ -817,97 +818,6 @@ watch(activeAudioKey, (audioKey) => {
 const showAddAudioItemButton = computed(() => {
   return store.state.showAddAudioItemButton;
 });
-
-// 汎用ダイアログ
-const showDialog = {
-  alert: (options: DialogOptions["alert"]) =>
-    $q
-      .dialog({
-        title: options.title,
-        message: options.message,
-        ok: {
-          label: options.ok ?? "閉じる",
-          flat: true,
-          textColor: "display",
-        },
-      })
-      .onOk(() => {
-        store.dispatch("CLOSE_DIALOG", { result: "OK" });
-      })
-      .onCancel(() => {
-        store.dispatch("CLOSE_DIALOG", { result: "CANCEL" });
-      }),
-  confirm: (options: DialogOptions["confirm"]) =>
-    $q
-      .dialog({
-        title: options.title,
-        message: options.message,
-        persistent: true, // ダイアログ外側押下時・Esc押下時にユーザが設定ができたと思い込むことを防止する
-        focus: "cancel",
-        html: options.html,
-        ok: {
-          flat: true,
-          label: options.actionName,
-          textColor: "display",
-        },
-        cancel: {
-          flat: true,
-          label: options.cancel ?? "キャンセル",
-          textColor: "display",
-        },
-      })
-      .onOk(() => {
-        store.dispatch("CLOSE_DIALOG", { result: "OK" });
-      })
-      .onCancel(() => {
-        store.dispatch("CLOSE_DIALOG", { result: "CANCEL" });
-      }),
-  warning: (options: DialogOptions["warning"]) =>
-    $q
-      .dialog({
-        title: options.title,
-        message: options.message,
-        persistent: true,
-        focus: "cancel",
-        ok: {
-          label: options.actionName,
-          flat: true,
-          textColor: "warning",
-        },
-        cancel: {
-          label: options.cancel ?? "キャンセル",
-          flat: true,
-          textColor: "display",
-        },
-      })
-      .onOk(() => {
-        store.dispatch("CLOSE_DIALOG", { result: "OK" });
-      })
-      .onCancel(() => {
-        store.dispatch("CLOSE_DIALOG", { result: "CANCEL" });
-      }),
-};
-
-watch(
-  () => store.state.dialogOption,
-  (dialogOption) => {
-    // 分けないとtype errorになるため
-    switch (dialogOption?.dialogType) {
-      case undefined:
-        return;
-      case "alert":
-        showDialog[dialogOption.dialogType](dialogOption);
-        return;
-      case "confirm":
-        showDialog[dialogOption.dialogType](dialogOption);
-        return;
-      case "warning":
-        showDialog[dialogOption.dialogType](dialogOption);
-        return;
-    }
-  },
-  { immediate: true }
-);
 </script>
 
 <style scoped lang="scss">
