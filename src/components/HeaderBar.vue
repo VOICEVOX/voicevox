@@ -20,6 +20,7 @@
 
 <script setup lang="ts">
 import { computed, ComputedRef } from "vue";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
@@ -45,6 +46,7 @@ type SpacerContent = {
 };
 
 const store = useStore();
+const $q = useQuasar();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 const canUndo = computed(() => store.getters.CAN_UNDO);
@@ -126,6 +128,7 @@ const generateAndSaveOneAudio = async () => {
   if (activeAudioKey.value == undefined)
     throw new Error("activeAudioKey is undefined");
   await generateAndSaveOneAudioWithDialog({
+    quasarNotify: $q.notify,
     audioKey: activeAudioKey.value,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
@@ -134,6 +137,8 @@ const generateAndSaveOneAudio = async () => {
 };
 const generateAndSaveAllAudio = async () => {
   await generateAndSaveAllAudioWithDialog({
+    quasarDialog: $q.dialog,
+    quasarNotify: $q.notify,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
@@ -141,6 +146,7 @@ const generateAndSaveAllAudio = async () => {
 };
 const generateAndConnectAndSaveAudio = async () => {
   await generateAndConnectAndSaveAudioWithDialog({
+    quasarNotify: $q.notify,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,

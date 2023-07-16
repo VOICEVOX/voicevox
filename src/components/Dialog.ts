@@ -194,12 +194,12 @@ export async function connectAndExportTextWithDialog({
 
 // 書き出し成功時の通知を表示
 const showWriteSuccessNotify = ({
-  quasarNotify,
   mediaType,
+  quasarNotify,
   dispatch,
 }: {
-  quasarNotify: QVueGlobals["notify"];
   mediaType: MediaType;
+  quasarNotify: QVueGlobals["notify"];
   dispatch: Dispatch<AllActions>;
 }): void => {
   const mediaTypeNames: Record<MediaType, string> = {
@@ -232,12 +232,12 @@ const showWriteSuccessNotify = ({
 // 書き出し失敗時のダイアログを表示
 const showWriteErrorDialog = ({
   mediaType,
-  dispatch,
   result,
+  dispatch,
 }: {
   mediaType: MediaType;
-  dispatch: Dispatch<AllActions>;
   result: SaveResultObject;
+  dispatch: Dispatch<AllActions>;
 }) => {
   if (mediaType === "text") {
     // テキスト書き出し時のエラーを出力
