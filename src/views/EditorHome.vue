@@ -672,7 +672,7 @@ const restartAppWithMultiEngineOffMode = () => {
   store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
 };
 
-const openqa = () => {
+const openQa = () => {
   window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
 };
 
