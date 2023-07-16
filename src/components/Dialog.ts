@@ -1,4 +1,4 @@
-import { QVueGlobals } from "quasar";
+import { Dialog, Notify } from "quasar";
 import { AudioKey, Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
@@ -10,20 +10,16 @@ import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { Dispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 
-type QuasarDialog = QVueGlobals["dialog"];
-type QuasarNotify = QVueGlobals["notify"];
 type MediaType = "audio" | "text";
 
 export async function generateAndSaveOneAudioWithDialog({
   audioKey,
-  quasarNotify,
   dispatch,
   filePath,
   encoding,
   disableNotifyOnGenerate,
 }: {
   audioKey: AudioKey;
-  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
@@ -45,7 +41,6 @@ export async function generateAndSaveOneAudioWithDialog({
     // 書き出し成功時に通知をする
     showWriteSuccessNotify({
       mediaType: "audio",
-      quasarNotify,
       dispatch,
     });
   } else {
@@ -54,15 +49,11 @@ export async function generateAndSaveOneAudioWithDialog({
 }
 
 export async function generateAndSaveAllAudioWithDialog({
-  quasarDialog,
-  quasarNotify,
   dispatch,
   dirPath,
   encoding,
   disableNotifyOnGenerate,
 }: {
-  quasarDialog: QuasarDialog;
-  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   dirPath?: string;
   encoding?: EncodingType;
@@ -106,13 +97,12 @@ export async function generateAndSaveAllAudioWithDialog({
     // 書き出し成功時に通知をする
     showWriteSuccessNotify({
       mediaType: "audio",
-      quasarNotify,
       dispatch,
     });
   }
 
   if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-    quasarDialog({
+    Dialog.create({
       component: SaveAllResultDialog,
       componentProps: {
         successArray: successArray,
@@ -124,13 +114,11 @@ export async function generateAndSaveAllAudioWithDialog({
 }
 
 export async function generateAndConnectAndSaveAudioWithDialog({
-  quasarNotify,
   dispatch,
   filePath,
   encoding,
   disableNotifyOnGenerate,
 }: {
-  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
@@ -152,7 +140,6 @@ export async function generateAndConnectAndSaveAudioWithDialog({
     if (disableNotifyOnGenerate) return;
     showWriteSuccessNotify({
       mediaType: "audio",
-      quasarNotify,
       dispatch,
     });
   } else {
@@ -161,13 +148,11 @@ export async function generateAndConnectAndSaveAudioWithDialog({
 }
 
 export async function connectAndExportTextWithDialog({
-  quasarNotify,
   dispatch,
   filePath,
   encoding,
   disableNotifyOnGenerate,
 }: {
-  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
   encoding?: EncodingType;
@@ -184,7 +169,6 @@ export async function connectAndExportTextWithDialog({
     if (disableNotifyOnGenerate) return;
     showWriteSuccessNotify({
       mediaType: "text",
-      quasarNotify,
       dispatch,
     });
   } else {
@@ -195,11 +179,9 @@ export async function connectAndExportTextWithDialog({
 // 書き出し成功時の通知を表示
 const showWriteSuccessNotify = ({
   mediaType,
-  quasarNotify,
   dispatch,
 }: {
   mediaType: MediaType;
-  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
 }): void => {
   const mediaTypeNames: Record<MediaType, string> = {
@@ -207,7 +189,7 @@ const showWriteSuccessNotify = ({
     text: "テキスト",
   };
 
-  quasarNotify({
+  Notify.create({
     message: `${mediaTypeNames[mediaType]}を書き出しました`,
     color: "toast",
     textColor: "toast-display",
