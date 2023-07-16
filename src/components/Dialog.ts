@@ -38,6 +38,7 @@ type CommonDialogCallback = (
   value: CommonDialogResult | PromiseLike<CommonDialogResult>
 ) => void;
 
+// 汎用ダイアログを表示
 export const showAlertDialog = async (
   options: CommonDialogOptions["alert"]
 ) => {
@@ -46,6 +47,7 @@ export const showAlertDialog = async (
     commonDialogCallback = resolve;
   });
 };
+
 /**
  * htmlフラグを`true`にする場合、外部からの汚染された文字列を`title`や`message`に含めてはいけません。
  * see https://quasar.dev/quasar-plugins/dialog#using-html
@@ -58,6 +60,7 @@ export const showConfirmDialog = async (
     commonDialogCallback = resolve;
   });
 };
+
 export const showWarningDialog = async (
   options: CommonDialogOptions["warning"]
 ) => {
@@ -66,6 +69,7 @@ export const showWarningDialog = async (
     commonDialogCallback = resolve;
   });
 };
+
 const setCallback = (dialog: DialogChainObject) => {
   if (commonDialogCallback) {
     throw new Error(
