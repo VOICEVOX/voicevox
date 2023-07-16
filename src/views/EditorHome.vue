@@ -193,7 +193,7 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
-import { AudioItem, DialogOption, DialogOptions, EngineState } from "@/store/type";
+import { AudioItem, DialogOptions, EngineState } from "@/store/type";
 import {
   AudioKey,
   EngineId,
