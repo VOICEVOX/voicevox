@@ -193,7 +193,7 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
-import { AudioItem, EngineState } from "@/store/type";
+import { AudioItem, DialogOption, DialogOptions, EngineState } from "@/store/type";
 import {
   AudioKey,
   EngineId,
@@ -820,7 +820,7 @@ const showAddAudioItemButton = computed(() => {
 
 // 汎用ダイアログ
 const showDialog = {
-  alert: (options: { title: string; message: string; ok?: string }) =>
+  alert: (options: DialogOptions["alert"]) =>
     $q
       .dialog({
         title: options.title,
@@ -837,13 +837,7 @@ const showDialog = {
       .onDismiss(() => {
         store.dispatch("CLOSE_DIALOG", { result: "CANCEL" });
       }),
-  confirm: (options: {
-    title: string;
-    message: string;
-    html?: boolean;
-    actionName: string;
-    cancel?: string;
-  }) =>
+  confirm: (options: DialogOptions["confirm"]) =>
     $q
       .dialog({
         title: options.title,
@@ -868,12 +862,7 @@ const showDialog = {
       .onCancel(() => {
         store.dispatch("CLOSE_DIALOG", { result: "CANCEL" });
       }),
-  warning: (options: {
-    title: string;
-    message: string;
-    actionName: string;
-    cancel?: string;
-  }) =>
+  warning: (options: DialogOptions["warning"]) =>
     $q
       .dialog({
         title: options.title,
