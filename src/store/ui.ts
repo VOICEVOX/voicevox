@@ -353,12 +353,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  IS_COMMON_DIALOG_OPEN: {
-    getter(state) {
-      return state.hoge !== undefined;
-    },
-  },
-
   SET_DIALOG_OPTION: {
     mutation(state, { option }) {
       if (option !== undefined && state.dialogOption !== undefined) {

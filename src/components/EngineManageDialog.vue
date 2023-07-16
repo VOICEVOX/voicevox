@@ -581,11 +581,9 @@ const requireRestart = async (message: string) => {
     actionName: "再起動",
     cancel: "後で",
   });
+  toInitialState();
   if (result === "OK") {
-    toInitialState();
     store.dispatch("RESTART_APP", {});
-  } else if (result === "CANCEL") {
-    toInitialState();
   }
 };
 

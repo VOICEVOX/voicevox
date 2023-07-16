@@ -1329,10 +1329,6 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  IS_COMMON_DIALOG_OPEN: {
-    getter: boolean;
-  };
-
   SET_DIALOG_OPTION: {
     mutation: {
       option: AllDialogOptions | undefined;

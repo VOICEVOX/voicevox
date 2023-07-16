@@ -164,9 +164,9 @@ const generateAndSaveOneAudio = async () => {
   }
 
   await generateAndSaveOneAudioWithDialog({
-    quasarNotify: $q.notify,
     audioKey: activeAudioKey,
     encoding: store.state.savingSetting.fileEncoding,
+    quasarNotify: $q.notify,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     dispatch: store.dispatch,
   });

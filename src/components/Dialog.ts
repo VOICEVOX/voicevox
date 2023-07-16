@@ -49,7 +49,7 @@ export async function generateAndSaveOneAudioWithDialog({
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", dispatch, result });
+    showWriteErrorDialog({ mediaType: "audio", result, dispatch });
   }
 }
 
@@ -156,7 +156,7 @@ export async function generateAndConnectAndSaveAudioWithDialog({
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", dispatch, result });
+    showWriteErrorDialog({ mediaType: "audio", result, dispatch });
   }
 }
 
@@ -188,7 +188,7 @@ export async function connectAndExportTextWithDialog({
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "text", dispatch, result });
+    showWriteErrorDialog({ mediaType: "text", result, dispatch });
   }
 }
 
@@ -199,7 +199,7 @@ const showWriteSuccessNotify = ({
   dispatch,
 }: {
   mediaType: MediaType;
-  quasarNotify: QVueGlobals["notify"];
+  quasarNotify: QuasarNotify;
   dispatch: Dispatch<AllActions>;
 }): void => {
   const mediaTypeNames: Record<MediaType, string> = {
