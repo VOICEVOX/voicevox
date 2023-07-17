@@ -13,8 +13,6 @@
     "npm": "8.19.3"
   },
   "scripts": {
-    "serve": "vite",
-    "build": "vite build",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
     "test:e2e": "playwright test",
