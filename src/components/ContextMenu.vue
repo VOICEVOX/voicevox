@@ -52,6 +52,11 @@ const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const contextmenu = ref<QMenu>();
+/**
+ * コンテキストメニューがフォーカスを奪うかどうかを制御する。
+ * 通常はアクセシビリティ考慮のためにフォーカスが移るが、input要素の場合は文字の選択範囲が非表示になってしまう。
+ * この挙動が不要だと考えられるユーザーに向けてはフォーカスを奪わないようにする。
+ */
 const noFocus = ref(false);
 
 const buttonCapturer = (event: Event) => {
