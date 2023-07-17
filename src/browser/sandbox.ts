@@ -168,10 +168,6 @@ export const api: Sandbox = {
       "ブラウザ版では現在ファイルの読み込みをサポートしていません"
     );
   },
-  openTextEditContextMenu() {
-    // NOTE: ブラウザ版では不要
-    return Promise.resolve();
-  },
   isAvailableGPUMode() {
     // TODO: WebAssembly版をサポートする時に実装する
     // FIXME: canvasでWebGLから調べたり、WebGPUがサポートされているかを調べたりで判断は出来そう
