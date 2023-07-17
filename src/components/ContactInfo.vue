@@ -20,7 +20,7 @@ onMounted(async () => {
     .render(await store.dispatch("GET_CONTACT_TEXT"))
     .replace(
       "<!-- ログ表示ボタン説明挿入位置 -->",
-      "</li><li>このページの右上の「ログフォルダを表示」ボタンを押すと、ログフォルダが表示されます。"
+      "（このページの右上の「ログフォルダを表示」ボタンから）"
     );
 });
 </script>
