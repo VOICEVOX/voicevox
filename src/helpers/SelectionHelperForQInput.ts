@@ -16,12 +16,8 @@ export class SelectionHelperForQInput {
     this.nativeEl.selectionStart = this.nativeEl.selectionEnd = index;
   }
 
-  getReplacedStringTo(str: string, allowInsertOnly = false) {
-    if (!allowInsertOnly && this.isEmpty) {
-      return this.nativeEl.value;
-    }
-
-    return `${this.startFragment}${str}${this.endFragment}`;
+  getReplacedStringTo(str: string) {
+    return `${this.substringBefore}${str}${this.substringAfter}`;
   }
 
   getAsString() {
@@ -47,11 +43,11 @@ export class SelectionHelperForQInput {
     return this.nativeEl.selectionEnd;
   }
 
-  get startFragment() {
+  get substringBefore() {
     return this.nativeEl.value.substring(0, this.nativeEl.selectionStart ?? 0);
   }
 
-  get endFragment() {
+  get substringAfter() {
     return this.nativeEl.value.substring(this.nativeEl.selectionEnd ?? 0);
   }
 

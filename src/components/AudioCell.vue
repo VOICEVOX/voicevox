@@ -364,9 +364,7 @@ const contextMenudata = ref<
         return;
       }
 
-      setAudioTextBuffer(
-        `${textfieldSelection.startFragment}${text}${textfieldSelection.endFragment}`
-      );
+      setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text));
       await nextTick();
       // 自動的に削除される改行などの文字数を念のため考慮している
       textfieldSelection.setCursorPosition(
