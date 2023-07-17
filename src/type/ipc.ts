@@ -194,6 +194,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  SHOW_LOG_FOLDER_IN_EXPLORER: {
+    args: [];
+    return: void;
+  };
+
   ENGINE_INFOS: {
     args: [];
     return: EngineInfo[];

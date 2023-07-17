@@ -53,6 +53,16 @@
                       ヘルプ / {{ page.parent ? page.parent + " / " : ""
                       }}{{ page.name }}
                     </q-toolbar-title>
+                    <q-btn
+                      v-if="page.component === ContactInfo"
+                      unelevated
+                      color="toolbar-button"
+                      text-color="toolbar-button-display"
+                      class="text-no-wrap text-bold q-mr-sm"
+                      @click="showLogFolderInExplorer"
+                    >
+                      ログフォルダを表示
+                    </q-btn>
                     <!-- close button -->
                     <q-btn
                       round
@@ -280,6 +290,8 @@ const pagedata = computed(() => {
 });
 
 const selectedPageIndex = ref(0);
+
+const showLogFolderInExplorer = window.electron.showLogFolderInExplorer;
 </script>
 
 <style scoped lang="scss">

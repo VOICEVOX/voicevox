@@ -773,6 +773,10 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
 });
 
+ipcMainHandle("SHOW_LOG_FOLDER_IN_EXPLORER", () => {
+  shell.showItemInFolder(app.getPath("logs"));
+});
+
 ipcMainHandle("ENGINE_INFOS", () => {
   // エンジン情報を設定ファイルに保存しないためにstoreは使わない
   return engineManager.fetchEngineInfos();
