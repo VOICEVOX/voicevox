@@ -180,7 +180,7 @@ const pushAudioTextIfNeeded = async () => {
 // see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
 const unselect = () => {
   if (!contextMenu.value?.willDispatchFocusOrBlur) {
-    textfieldSelection.empty();
+    textfieldSelection.toEmpty();
   }
 };
 const select = (event: KeyboardEvent) => {

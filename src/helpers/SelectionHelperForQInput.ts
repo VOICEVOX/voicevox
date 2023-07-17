@@ -31,7 +31,7 @@ export class SelectionHelperForQInput {
     );
   }
 
-  empty() {
+  toEmpty() {
     this.nativeEl.selectionEnd = this.nativeEl.selectionStart;
   }
 
