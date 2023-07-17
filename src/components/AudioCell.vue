@@ -404,16 +404,15 @@ const readyForContextMenu = () => {
     getMenuItemButton("切り取り").disabled = false;
     getMenuItemButton("コピー").disabled = false;
     if (selectionText.length > MAX_HEADER_LENGTH) {
-      const nextSelectionText = textfieldSelection.getAsString();
       // 長すぎる場合適度な長さで省略
       contextmenuHeader.value =
-        nextSelectionText.length <= MAX_HEADER_LENGTH
-          ? nextSelectionText
-          : `${nextSelectionText.substring(
+        selectionText.length <= MAX_HEADER_LENGTH
+          ? selectionText
+          : `${selectionText.substring(
               0,
               SHORTED_HEADER_FRAGMENT_LENGTH
-            )} ... ${nextSelectionText.substring(
-              nextSelectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
+            )} ... ${selectionText.substring(
+              selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
             )}`;
     } else {
       contextmenuHeader.value = selectionText;
