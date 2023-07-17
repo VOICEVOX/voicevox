@@ -16,12 +16,12 @@ export class QInputSelectionHelper {
     this.nativeEl.selectionStart = this.nativeEl.selectionEnd = index;
   }
 
-  getReplacedStringTo(string: string, allowInsertOnly = false) {
+  getReplacedStringTo(str: string, allowInsertOnly = false) {
     if (!allowInsertOnly && this.isEmpty) {
       return this.nativeEl.value;
     }
 
-    return `${this.startFragment}${string}${this.endFragment}`;
+    return `${this.startFragment}${str}${this.endFragment}`;
   }
 
   getAsString() {
