@@ -4,7 +4,7 @@ import { Ref } from "vue";
 /**
  * QInput の選択範囲への操作を簡単にできるようにするクラス
  */
-export class QInputSelectionHelper {
+export class SelectionHelperForQInput {
   private _nativeEl: HTMLInputElement | undefined = undefined;
 
   constructor(private textfield: Ref<QInput | undefined>) {}

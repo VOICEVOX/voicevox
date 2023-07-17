@@ -78,7 +78,7 @@ import { MenuItemButton, MenuItemSeparator } from "./MenuBar.vue";
 import ContextMenu from "./ContextMenu.vue";
 import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
-import { QInputSelectionHelper } from "@/helpers/QInputSelectionHelper";
+import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
 
 const props =
   defineProps<{
@@ -423,7 +423,7 @@ const readyForContextMenu = () => {
 
 // テキスト欄
 const textfield = ref<QInput>();
-const textfieldSelection = new QInputSelectionHelper(textfield);
+const textfieldSelection = new SelectionHelperForQInput(textfield);
 
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
