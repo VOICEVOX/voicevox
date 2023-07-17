@@ -220,7 +220,7 @@ const putMultilineText = async (
 
   const texts = textSplitter[textSplitType.value](text);
 
-  if (texts.length <= 1 || !texts.some((text) => text !== "")) return false;
+  if (texts.length <= 1 || texts.every((text) => text === "")) return false;
 
   event?.preventDefault();
   // フォーカスを外して編集中のテキスト内容を確定させる
