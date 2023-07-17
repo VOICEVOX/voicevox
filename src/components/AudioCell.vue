@@ -34,7 +34,10 @@
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
-      @focus="unselect() && setActiveAudioKey()"
+      @focus="
+        unselect();
+        setActiveAudioKey();
+      "
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
       @keyup.prevent.tab="select"
@@ -179,7 +182,6 @@ const unselect = () => {
   if (!contextMenu.value?.willDispatchFocusOrBlur) {
     textfieldSelection.empty();
   }
-  return true;
 };
 const select = (event: KeyboardEvent) => {
   if (!event.isComposing) {
