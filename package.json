@@ -28,6 +28,7 @@
     "electron:build_pnever_prepackaged": "cross-var electron-builder --config electron-builder.config.js --publish never --prepackaged $PREPACKAGED",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
+    "browser:build": "cross-env VITE_TARGET=browser vite build",
     "postinstall": "electron-builder install-app-deps && node build/download7z.js",
     "postuninstall": "electron-builder install-app-deps",
     "license:generate": "node build/generateLicenses.js",
