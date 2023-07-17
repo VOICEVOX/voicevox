@@ -195,13 +195,6 @@ const setActiveAudioKey = () => {
 
 // コピペしたときに句点と改行で区切る
 const textSplitType = computed(() => store.state.splitTextWhenPaste);
-const textSplitter: Record<SplitTextWhenPasteType, (text: string) => string[]> =
-  {
-    PERIOD_AND_NEW_LINE: (text) =>
-      text.replaceAll("。", "。\n\r").split(/[\n\r]/),
-    NEW_LINE: (text) => text.split(/[\n\r]/),
-    OFF: (text) => [text],
-  };
 const pasteOnAudioCell = async (event: ClipboardEvent) => {
   if (event.clipboardData && textSplitType.value !== "OFF") {
     await putMultilineText(event.clipboardData.getData("text/plain"), event);
@@ -218,6 +211,15 @@ const putMultilineText = async (
 ): Promise<boolean> => {
   if (textSplitType.value === "OFF") return false;
 
+  const textSplitter: Record<
+    SplitTextWhenPasteType,
+    (text: string) => string[]
+  > = {
+    PERIOD_AND_NEW_LINE: (text) =>
+      text.replaceAll("。", "。\n\r").split(/[\n\r]/),
+    NEW_LINE: (text) => text.split(/[\n\r]/),
+    OFF: (text) => [text],
+  };
   const texts = textSplitter[textSplitType.value](text);
 
   if (texts.length <= 1 || texts.every((text) => text === "")) return false;
