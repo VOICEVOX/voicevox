@@ -682,7 +682,10 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions
+                v-if="shouldShowAudioOutputDeviceSetting"
+                class="q-px-md q-py-none bg-surface"
+              >
                 <div>再生デバイス</div>
                 <div aria-label="音声の再生デバイスを変更できます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -1028,6 +1031,9 @@ const changeShowAddAudioItemButton = (showAddAudioItemButton: boolean) => {
   }
 };
 
+const shouldShowAudioOutputDeviceSetting = computed(() => {
+  return !!HTMLAudioElement.prototype.setSinkId;
+});
 const currentAudioOutputDeviceComputed = computed<{
   key: string;
   label: string;
