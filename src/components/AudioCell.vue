@@ -308,9 +308,6 @@ const deleteButtonEnable = computed(() => {
 // テキスト編集エリアの右クリック
 // input.valueをスクリプトから変更した場合は@changeが発火しないため、
 // @blurと@keydown.prevent.enter.exactに分けている
-const MAX_HEADER_LENGTH = 15;
-const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
-
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
 // FIXME: 可能なら`isRangeSelected`と`contextmenuHeader`をcomputedに
@@ -393,6 +390,9 @@ const getMenuItemButton = (label: string) => {
   return item;
 };
 const readyForContextMenu = () => {
+  const MAX_HEADER_LENGTH = 15;
+  const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
+
   // 選択範囲を1行目に表示
   const selectionText = textfieldSelection.getAsString();
   if (selectionText.length === 0) {
