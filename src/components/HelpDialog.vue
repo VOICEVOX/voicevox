@@ -70,6 +70,7 @@
                       flat
                       icon="close"
                       color="display"
+                      aria-label="ヘルプを閉じる"
                       @click="modelValueComputed = false"
                     />
                   </q-toolbar>
