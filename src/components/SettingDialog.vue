@@ -904,7 +904,6 @@ import {
   EditorFontType,
   EngineId,
 } from "@/type/preload";
-import { should } from "vitest";
 
 type SamplingRateOption = EngineSetting["outputSamplingRate"];
 
