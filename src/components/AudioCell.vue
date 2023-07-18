@@ -191,7 +191,10 @@ const setActiveAudioKey = () => {
 const textSplitType = computed(() => store.state.splitTextWhenPaste);
 const pasteOnAudioCell = async (event: ClipboardEvent) => {
   if (event.clipboardData && textSplitType.value !== "OFF") {
-    await putMultilineText(event.clipboardData.getData("text/plain"), event);
+    await putMultilineTextIfNeeded(
+      event.clipboardData.getData("text/plain"),
+      event
+    );
   }
 };
 /**
@@ -199,7 +202,7 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
  * @param event 指定した場合、必要に応じて`preventDefault()`されます
  * @returns 複数行ではなかった場合`false`、複数行なら`true`を返します。
  */
-const putMultilineText = async (
+const putMultilineTextIfNeeded = async (
   text: string,
   event?: Event
 ): Promise<boolean> => {
@@ -353,7 +356,7 @@ const contextMenudata = ref<
       const text = await navigator.clipboard.readText();
 
       // 複数行貼り付けの場合
-      if (await putMultilineText(text)) {
+      if (await putMultilineTextIfNeeded(text)) {
         return;
       }
 
