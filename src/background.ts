@@ -543,7 +543,7 @@ async function loadUrl(parameter: {
   const url = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
   return win.loadURL(`${url}${fragment}`, {
-    extraHeaders: "pragma: no-cache\n", // キャッシュを無効化しながらロード
+    extraHeaders: "pragma: no-cache\n", // Vuexのstateも破棄したいのでキャッシュ無効化してスーパーリロード
   });
 }
 
