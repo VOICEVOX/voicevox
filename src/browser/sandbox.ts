@@ -215,7 +215,7 @@ export const api: Sandbox = {
   },
   showLogFolderInExplorer() {
     // NOTE: ブラウザ版では不要
-    return;
+    return Promise.resolve();
   },
   /* eslint-enable no-console */
   engineInfos() {
