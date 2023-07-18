@@ -175,7 +175,7 @@ watch(
       // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
       characterOrder.value = store.state.userCharacterOrder
         .map((speakerUuid) => characterInfosMap.value[speakerUuid])
-        .filter((info) => info !== undefined) as CharacterInfo[];
+        .filter((info) => info !== undefined);
 
       // 含まれていないキャラクターを足す
       const notIncludesCharacterInfos = props.characterInfos.filter(
@@ -213,7 +213,7 @@ const play = (
   if (audio.src !== "") stop();
 
   audio.src = voiceSamplePaths[index];
-  audio.play();
+  void audio.play();
   playing.value = { speakerUuid, styleId, index };
 };
 const stop = () => {
@@ -246,7 +246,7 @@ const togglePlayOrStop = (
 const characterOrderDragging = ref(false);
 
 const closeDialog = () => {
-  store.dispatch(
+  void store.dispatch(
     "SET_USER_CHARACTER_ORDER",
     characterOrder.value.map((info) => info.metas.speakerUuid)
   );

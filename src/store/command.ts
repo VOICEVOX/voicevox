@@ -21,7 +21,8 @@ enableMapSet();
 enablePatchesImpl();
 enableMapSetImpl();
 // immerのPatchをmutableに適応する内部関数
-const applyPatchesImpl = getPlugin("Patches").applyPatches_;
+const plugin = getPlugin("Patches");
+const applyPatchesImpl = plugin.applyPatches_.bind(plugin);
 
 const immer = new Immer();
 immer.setAutoFreeze(false);
@@ -42,6 +43,7 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       createCommandMutation(val),
     ])
   ) as MutationTree<S, M>;
@@ -70,7 +72,7 @@ const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      toRaw(state) as S,
+      toRaw(state),
       (draft: S) => recipe(draft, payload)
     );
     return {

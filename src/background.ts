@@ -35,6 +35,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  UpdateInfo,
 } from "./type/preload";
 import {
   ContactTextFileName,
@@ -51,6 +52,7 @@ import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
+import { defaultEngineInfosEnvSchema } from "./background/type";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 type SingleInstanceLockData = {
@@ -70,7 +72,7 @@ if (isTest) {
 } else if (isDevelopment) {
   suffix = "-dev";
 }
-console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
+log.info(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
 
 // Electronの設定ファイルの保存場所を変更
 const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用
@@ -94,8 +96,10 @@ log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
 log.transports.file.resolvePath = (variables) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return path.join(logPath, variables.fileName!);
+  if (variables.fileName == undefined) {
+    throw new Error("fileName is undefined");
+  }
+  return path.join(logPath, variables.fileName);
 };
 
 let win: BrowserWindow;
@@ -159,11 +163,11 @@ try {
         // FIXME: できるならEngineManagerからEnginIDを取得したい
         if (process.env.DEFAULT_ENGINE_INFOS == undefined)
           throw new Error("DEFAULT_ENGINE_INFOS == undefined");
-        const engineId = EngineId(
-          JSON.parse(process.env.DEFAULT_ENGINE_INFOS)[0].uuid
-        );
-        if (engineId == undefined)
-          throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
+
+        const engineId = defaultEngineInfosEnvSchema.parse(
+          JSON.parse(process.env.DEFAULT_ENGINE_INFOS)
+        )[0].uuid;
+
         const prevDefaultStyleIds = store.get("defaultStyleIds");
         store.set(
           "defaultStyleIds",
@@ -174,6 +178,7 @@ try {
           }))
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const outputSamplingRate: number =
           // @ts-expect-error 削除されたパラメータ。
           store.get("savingSetting").outputSamplingRate;
@@ -216,12 +221,12 @@ const engineManager = new EngineManager({
 const vvppManager = new VvppManager({ vvppEngineDir });
 
 // エンジンのフォルダを開く
-function openEngineDirectory(engineId: EngineId) {
+async function openEngineDirectory(engineId: EngineId) {
   const engineDirectory = engineManager.fetchEngineDirectory(engineId);
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
   // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
-  shell.openPath(path.resolve(engineDirectory));
+  await shell.openPath(path.resolve(engineDirectory));
 }
 
 /**
@@ -236,7 +241,8 @@ async function installVvppEngine(vvppPath: string) {
       "インストールエラー",
       `${vvppPath} をインストールできませんでした。`
     );
-    log.error(`Failed to install ${vvppPath}, ${e}`);
+    log.error(`Failed to install ${vvppPath}`);
+    log.error(e);
     return false;
   }
 }
@@ -267,7 +273,7 @@ async function installVvppEngineWithWarning({
   await installVvppEngine(vvppPath);
 
   if (restartNeeded) {
-    dialog
+    await dialog
       .showMessageBox(win, {
         type: "info",
         title: "再起動が必要です",
@@ -308,7 +314,7 @@ function checkMultiEngineEnabled(): boolean {
  * VVPPエンジンをアンインストールする。
  * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
  */
-async function uninstallVvppEngine(engineId: EngineId) {
+function uninstallVvppEngine(engineId: EngineId) {
   let engineInfo: EngineInfo | undefined = undefined;
   try {
     engineInfo = engineManager.fetchEngineInfo(engineId);
@@ -330,7 +336,8 @@ async function uninstallVvppEngine(engineId: EngineId) {
       "アンインストールエラー",
       `${engineName} をアンインストールできませんでした。`
     );
-    log.error(`Failed to uninstall ${engineId}, ${e}`);
+    log.error(`Failed to uninstall ${engineId}`);
+    log.error(e);
     return false;
   }
 }
@@ -354,11 +361,12 @@ const policyText = fs.readFileSync(
 );
 
 // OSSライセンス情報の読み込み
+// FIXME: JSONをvalidateする
 const ossLicenses = JSON.parse(
   fs.readFileSync(path.join(__static, OssLicensesJsonFileName), {
     encoding: "utf-8",
   })
-);
+) as Record<string, string>[];
 
 // 問い合わせの読み込み
 const contactText = fs.readFileSync(
@@ -373,11 +381,12 @@ const qAndAText = fs.readFileSync(
 );
 
 // アップデート情報の読み込み
+// FIXME: JSONをvalidateする
 const updateInfos = JSON.parse(
   fs.readFileSync(path.join(__static, UpdateInfosJsonFileName), {
     encoding: "utf-8",
   })
-);
+) as UpdateInfo[];
 
 const privacyPolicyText = fs.readFileSync(
   path.join(__static, PrivacyPolicyTextFileName),
@@ -481,7 +490,7 @@ async function createWindow() {
 
   const parameter =
     "#/home?isMultiEngineOffMode=" +
-    appState.isMultiEngineOffMode +
+    JSON.stringify(appState.isMultiEngineOffMode) +
     "&projectFilePath=" +
     projectFilePath;
 
@@ -492,7 +501,7 @@ async function createWindow() {
       const filePath = new URL(request.url).pathname;
       callback(path.join(__dirname, filePath));
     });
-    win.loadURL("app://./index.html" + parameter);
+    await win.loadURL("app://./index.html" + parameter);
   }
   if (isDevelopment && !isTest) win.webContents.openDevTools();
 
@@ -787,7 +796,7 @@ ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
 });
 
 ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
-  openEngineDirectory(engineId);
+  await openEngineDirectory(engineId);
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
@@ -813,7 +822,10 @@ ipcMainHandle("THEME", (_, { newData }) => {
   const themes: ThemeConf[] = [];
   const files = fs.readdirSync(dir);
   files.forEach((file) => {
-    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
+    // FIXME: JSONをvalidateする
+    const theme = JSON.parse(
+      fs.readFileSync(path.join(dir, file)).toString()
+    ) as ThemeConf;
     themes.push(theme);
   });
   return { currentTheme: store.get("currentTheme"), availableThemes: themes };
@@ -864,7 +876,7 @@ ipcMainHandle("INSTALL_VVPP_ENGINE", async (_, path: string) => {
 });
 
 ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: EngineId) => {
-  return await uninstallVvppEngine(engineId);
+  return Promise.resolve(uninstallVvppEngine(engineId));
 });
 
 ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
@@ -875,6 +887,7 @@ ipcMainHandle("RESTART_APP", async (_, { isMultiEngineOffMode }) => {
   appState.willRestart = true;
   appState.isMultiEngineOffMode = isMultiEngineOffMode;
   win.close();
+  return Promise.resolve();
 });
 
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
@@ -904,7 +917,7 @@ app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
   contents.setWindowOpenHandler(({ url }) => {
     if (url.match(/^http/)) {
-      shell.openExternal(url);
+      void shell.openExternal(url);
       return { action: "deny" };
     }
     return { action: "allow" };
@@ -917,6 +930,8 @@ app.on("window-all-closed", () => {
 });
 
 // Called before window closing
+// FIXME: asyncは本来使えないので、preventDefaultして非同期処理完了後に再実行する
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 app.on("before-quit", async (event) => {
   if (!appState.willQuit) {
     event.preventDefault();
@@ -941,7 +956,7 @@ app.on("before-quit", async (event) => {
       appState.willRestart = false;
       appState.willQuit = false;
 
-      start();
+      void start();
     } else {
       log.info("Post engine kill process done. Now quit app");
     }
@@ -963,7 +978,8 @@ app.on("before-quit", async (event) => {
     return promise
       .catch((error) => {
         // TODO: 各エンジンプロセスキルの失敗をUIに通知する
-        log.error(`ENGINE ${engineId}: Error during killing process: ${error}`);
+        log.error(`ENGINE ${engineId}: Error during killing process`);
+        log.error(error);
         // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
       })
       .finally(() => {
@@ -997,6 +1013,8 @@ app.once("will-finish-launching", () => {
   });
 });
 
+// FIXME: asyncは本来使えないので、preventDefaultして非同期処理完了後に再実行する
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 app.on("ready", async () => {
   if (isDevelopment && !isTest) {
     try {
@@ -1027,7 +1045,7 @@ app.on("ready", async () => {
     } as SingleInstanceLockData)
   ) {
     log.info("VOICEVOX already running. Cancelling launch.");
-    log.info(`File path sent: ${filePath}`);
+    log.info(`File path sent: ${filePath ?? "undefined"}`);
     appState.willQuit = true;
     app.quit();
     return;
@@ -1044,10 +1062,12 @@ app.on("ready", async () => {
     }
   }
 
-  start();
+  void start();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
+// FIXME: asyncは本来使えないので、preventDefaultして非同期処理完了後に再実行する
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 app.on("second-instance", async (event, argv, workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
   if (!data.filePath) {

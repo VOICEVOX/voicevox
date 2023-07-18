@@ -105,11 +105,11 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   SET_DEFAULT_PRESET_MAP: {
-    action(
+    async action(
       { commit },
       { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> }
     ) {
-      window.electron.setSetting("defaultPresetKeys", defaultPresetKeys);
+      await window.electron.setSetting("defaultPresetKeys", defaultPresetKeys);
       commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeys });
     },
     mutation(
@@ -168,8 +168,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       }: { presetItems: Record<PresetKey, Preset>; presetKeys: PresetKey[] }
     ) {
       const result = await window.electron.setSetting("presets", {
-        items: JSON.parse(JSON.stringify(presetItems)),
-        keys: JSON.parse(JSON.stringify(presetKeys)),
+        items: JSON.parse(JSON.stringify(presetItems)) as typeof presetItems,
+        keys: JSON.parse(JSON.stringify(presetKeys)) as typeof presetKeys,
       });
       context.commit("SET_PRESET_ITEMS", {
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換

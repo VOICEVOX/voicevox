@@ -93,7 +93,9 @@ export class ResultError<
   public code: E;
 
   constructor(public readonly result: FailureResult<E>) {
-    super(`${result.code}: ${result.error.message}`, { cause: result.error });
+    super(`${result.code ?? "undefined"}: ${result.error.message}`, {
+      cause: result.error,
+    });
     this.code = result.code;
   }
 }

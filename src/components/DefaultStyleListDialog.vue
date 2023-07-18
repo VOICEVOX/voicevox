@@ -155,14 +155,12 @@ const selectedStyles = computed(() => {
 });
 
 // ダイアログが開かれたときに初期値を求める
-watch([() => props.modelValue], async ([newValue]) => {
+watch([() => props.modelValue], ([newValue]) => {
   if (newValue) {
     speakerWithMultipleStyles.value = store.state.userCharacterOrder
       .map((speakerUuid) => characterInfosMap.value[speakerUuid])
       .filter((characterInfo) => characterInfo !== undefined)
-      .filter(
-        (characterInfo) => characterInfo.metas.styles.length > 1
-      ) as CharacterInfo[];
+      .filter((characterInfo) => characterInfo.metas.styles.length > 1);
     // FIXME: エンジン未起動状態でデフォルトスタイル選択ダイアログを開くと
     // 未起動エンジンのキャラのデフォルトスタイルが消えてしまう
     selectedStyleIndexes.value = Object.fromEntries(
@@ -191,7 +189,7 @@ watch([() => props.modelValue], async ([newValue]) => {
 const isHoverableItem = ref(true);
 
 const closeDialog = () => {
-  store.dispatch(
+  void store.dispatch(
     "SET_DEFAULT_STYLE_IDS",
     Object.entries(selectedStyleIndexes.value).map(
       ([speakerUuidStr, styleIndex]) => {

@@ -114,8 +114,8 @@ const deletePreset = (key: PresetKey) => {
     title: "プリセット削除の確認",
     message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
     cancel: true,
-  }).onOk(async () => {
-    await store.dispatch("DELETE_PRESET", {
+  }).onOk(() => {
+    void store.dispatch("DELETE_PRESET", {
       presetKey: key,
     });
   });

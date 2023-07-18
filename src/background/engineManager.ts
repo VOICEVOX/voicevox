@@ -16,6 +16,7 @@ import {
   isAssignablePort,
   url2HostInfo,
 } from "./portManager";
+import { defaultEngineInfosEnvSchema } from "./type";
 import { ipcMainSend } from "@/electron/ipc";
 
 import {
@@ -41,18 +42,9 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
 
-  const envSchema = z
-    .object({
-      uuid: engineIdSchema,
-      host: z.string(),
-      name: z.string(),
-      executionEnabled: z.boolean(),
-      executionFilePath: z.string(),
-      executionArgs: z.array(z.string()),
-      path: z.string().optional(),
-    })
-    .array();
-  const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
+  const engines = defaultEngineInfosEnvSchema.parse(
+    JSON.parse(defaultEngineInfosEnv)
+  );
 
   return engines.map((engineInfo) => {
     return {

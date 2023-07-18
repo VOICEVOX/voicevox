@@ -259,6 +259,7 @@ import {
   createKanaRegex,
 } from "@/store/utility";
 import AudioAccent from "@/components/AudioAccent.vue";
+import { quasarDialogPromiseWrapper } from "@/helpers/promise";
 
 const defaultDictPriority = 5;
 
@@ -333,7 +334,7 @@ const loadingDictProcess = async () => {
 watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
   if (newValue) {
     await loadingDictProcess();
-    toInitialState();
+    await toInitialState();
   }
 });
 
@@ -348,11 +349,11 @@ const yomiFocusWhenEnter = (event: KeyboardEvent) => {
     yomiInput.value?.focus();
   }
 };
-const setYomiWhenEnter = (event: KeyboardEvent) => {
+const setYomiWhenEnter = async (event: KeyboardEvent) => {
   // keyCodeは非推奨で、keyが推奨だが、
   // key === "Enter"はIMEのEnterも拾ってしまうので、keyCodeを用いている
   if (event.keyCode === 13) {
-    setYomi(yomi.value);
+    await setYomi(yomi.value);
   }
 };
 
@@ -590,78 +591,61 @@ const saveWord = async () => {
     }
   }
   await loadingDictProcess();
-  toInitialState();
+  await toInitialState();
 };
 const isDeletable = computed(() => !!selectedId.value);
-const deleteWord = () => {
-  $q.dialog({
-    title: "登録された単語を削除しますか？",
-    message: "削除された単語は復旧できません。",
-    persistent: true,
-    focus: "cancel",
-    ok: {
-      label: "削除",
-      flat: true,
-      textColor: "warning",
-    },
-    cancel: {
-      label: "キャンセル",
-      flat: true,
-      textColor: "display",
-    },
-  }).onOk(async () => {
-    try {
-      await createUILockAction(
-        store.dispatch("DELETE_WORD", {
-          wordUuid: selectedId.value,
-        })
-      );
-    } catch {
-      $q.dialog({
-        title: "単語の削除に失敗しました",
-        message: "エンジンの再起動をお試しください。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
-      });
-      return;
-    }
-    await loadingDictProcess();
-    toInitialState();
-  });
-};
-const resetWord = () => {
-  $q.dialog({
-    title: "単語の変更をリセットしますか？",
-    message: "単語の変更は破棄されてリセットされます。",
-    persistent: true,
-    focus: "cancel",
-    ok: {
-      label: "リセット",
-      flat: true,
-      textColor: "display",
-    },
-    cancel: {
-      label: "キャンセル",
-      flat: true,
-      textColor: "display",
-    },
-  }).onOk(() => {
-    toWordEditingState();
-  });
-};
-const discardOrNotDialog = (okCallback: () => void) => {
-  if (isWordChanged.value) {
+const deleteWord = async () => {
+  const result = await quasarDialogPromiseWrapper(
     $q.dialog({
-      title: "単語の追加・変更を破棄しますか？",
-      message:
-        "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
+      title: "登録された単語を削除しますか？",
+      message: "削除された単語は復旧できません。",
       persistent: true,
       focus: "cancel",
       ok: {
-        label: "続行",
+        label: "削除",
+        flat: true,
+        textColor: "warning",
+      },
+      cancel: {
+        label: "キャンセル",
+        flat: true,
+        textColor: "display",
+      },
+    })
+  );
+
+  if (result.on != "ok") return;
+
+  try {
+    await createUILockAction(
+      store.dispatch("DELETE_WORD", {
+        wordUuid: selectedId.value,
+      })
+    );
+  } catch {
+    $q.dialog({
+      title: "単語の削除に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+      ok: {
+        label: "閉じる",
+        flat: true,
+        textColor: "display",
+      },
+    });
+    return;
+  }
+  await loadingDictProcess();
+  await toInitialState();
+};
+const resetWord = async () => {
+  const result = await quasarDialogPromiseWrapper(
+    $q.dialog({
+      title: "単語の変更をリセットしますか？",
+      message: "単語の変更は破棄されてリセットされます。",
+      persistent: true,
+      focus: "cancel",
+      ok: {
+        label: "リセット",
         flat: true,
         textColor: "display",
       },
@@ -670,30 +654,58 @@ const discardOrNotDialog = (okCallback: () => void) => {
         flat: true,
         textColor: "display",
       },
-    }).onOk(okCallback);
-  } else {
-    okCallback();
-  }
+    })
+  );
+
+  if (result.on != "ok") return;
+
+  toWordEditingState();
 };
-const newWord = () => {
+const discardOrNotDialog = async (okCallback: () => void) => {
+  if (isWordChanged.value) {
+    const result = await quasarDialogPromiseWrapper(
+      $q.dialog({
+        title: "単語の追加・変更を破棄しますか？",
+        message:
+          "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
+        persistent: true,
+        focus: "cancel",
+        ok: {
+          label: "続行",
+          flat: true,
+          textColor: "display",
+        },
+        cancel: {
+          label: "キャンセル",
+          flat: true,
+          textColor: "display",
+        },
+      })
+    );
+    if (result.on != "ok") return;
+  }
+
+  okCallback();
+};
+const newWord = async () => {
   selectedId.value = "";
   surface.value = "";
-  setYomi("");
+  await setYomi("");
   wordPriority.value = defaultDictPriority;
   editWord();
 };
 const editWord = () => {
   toWordEditingState();
 };
-const selectWord = (id: string) => {
+const selectWord = async (id: string) => {
   selectedId.value = id;
   surface.value = userDict.value[id].surface;
-  setYomi(userDict.value[id].yomi, true);
+  await setYomi(userDict.value[id].yomi, true);
   wordPriority.value = userDict.value[id].priority;
   toWordSelectedState();
 };
-const cancel = () => {
-  toInitialState();
+const cancel = async () => {
+  await toInitialState();
 };
 const closeDialog = () => {
   toDialogClosedState();
@@ -701,11 +713,11 @@ const closeDialog = () => {
 
 // ステートの移動
 // 初期状態
-const toInitialState = () => {
+const toInitialState = async () => {
   wordEditing.value = false;
   selectedId.value = "";
   surface.value = "";
-  setYomi("");
+  await setYomi("");
   wordPriority.value = defaultDictPriority;
 };
 // 単語が選択されているだけの状態

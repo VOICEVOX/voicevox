@@ -151,7 +151,7 @@ watch(
 );
 
 const defaultSetting: ToolbarSetting = [];
-window.electron.getDefaultToolbarSetting().then((setting) => {
+void window.electron.getDefaultToolbarSetting().then((setting) => {
   defaultSetting.push(...setting);
 });
 
@@ -229,8 +229,8 @@ const applyDefaultSetting = () => {
     selectedButton.value = toolbarButtons.value[0];
   });
 };
-const saveCustomToolbar = () => {
-  store.dispatch("SET_TOOLBAR_SETTING", {
+const saveCustomToolbar = async () => {
+  await store.dispatch("SET_TOOLBAR_SETTING", {
     data: [...toolbarButtons.value],
   });
 };

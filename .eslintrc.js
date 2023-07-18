@@ -1,3 +1,11 @@
+const vueEslintParserParams = {
+  parser: "vue-eslint-parser",
+  parserOptions: {
+    ecmaVersion: 2022,
+    parser: "@typescript-eslint/parser",
+  },
+};
+
 /** @type {import('@typescript-eslint/utils').TSESLint.Linter.Config} */
 module.exports = {
   root: true,
@@ -13,10 +21,9 @@ module.exports = {
     "@vue/eslint-config-prettier",
   ],
   plugins: ["import"],
-  parser: "vue-eslint-parser",
+  parser: vueEslintParserParams.parser,
   parserOptions: {
-    ecmaVersion: 2020,
-    parser: "@typescript-eslint/parser",
+    ...vueEslintParserParams.parserOptions,
   },
   ignorePatterns: ["dist_electron/**/*", "dist/**/*", "node_modules/**/*"],
   rules: {
@@ -59,6 +66,7 @@ module.exports = {
   },
   overrides: [
     {
+      // consoleの使用禁止、代わりにloggerを使う
       files: [
         "./src/background.ts",
         "./src/background/*.ts",
@@ -71,8 +79,8 @@ module.exports = {
         "no-console": "off",
       },
     },
-    // Electronのメインプロセス以外でelectronのimportを禁止する
     {
+      // Electronのメインプロセス以外でelectronのimportを禁止する
       files: ["./src/**/*.ts", "./src/**/*.vue"],
       excludedFiles: [
         "./src/background.ts",
@@ -92,6 +100,18 @@ module.exports = {
             ],
           },
         ],
+      },
+    },
+    {
+      // TypeScript系のみの設定
+      files: ["*.ts", "*.tsx", "*.vue"],
+      extends: [
+        "plugin:@typescript-eslint/recommended-requiring-type-checking", // Vue用がまだ無いため
+      ],
+      parser: vueEslintParserParams.parser,
+      parserOptions: {
+        ...vueEslintParserParams.parserOptions,
+        project: "tsconfig.json",
       },
     },
   ],

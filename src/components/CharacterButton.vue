@@ -252,7 +252,9 @@ const selectedVoiceInfoText = computed(() => {
     return selectedCharacter.value.metas.speakerName;
   }
 
-  return `${selectedCharacter.value.metas.speakerName} (${selectedStyleInfo.value.styleName})`;
+  return `${selectedCharacter.value.metas.speakerName} (${
+    selectedStyleInfo.value.styleName || "ノーマル"
+  })`;
 });
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>
@@ -307,13 +309,13 @@ const onSelectSpeaker = (speakerUuid: SpeakerId) => {
   });
 };
 
-const subMenuOpenFlags = ref(
-  [...Array(props.characterInfos.length)].map(() => false)
+const subMenuOpenFlags = ref<boolean[]>(
+  Array<boolean>(props.characterInfos.length).fill(false)
 );
 
 const reassignSubMenuOpen = debounce((idx: number) => {
   if (subMenuOpenFlags.value[idx]) return;
-  const arr = [...Array(props.characterInfos.length)].map(() => false);
+  const arr = Array<boolean>(props.characterInfos.length).fill(false);
   arr[idx] = true;
   subMenuOpenFlags.value = arr;
 }, 100);
@@ -325,7 +327,7 @@ const maxMenuHeight = ref(heightLimit);
 const updateMenuHeight = () => {
   if (buttonRef.value == undefined)
     throw new Error("buttonRef.value == undefined");
-  const el = buttonRef.value.$el;
+  const el: unknown = buttonRef.value.$el;
   if (!(el instanceof Element)) throw new Error("!(el instanceof Element)");
   const buttonRect = el.getBoundingClientRect();
   // QMenuは展開する方向のスペースが不足している場合、自動的に展開方向を変更してしまうためmax-heightで制限する。

@@ -159,22 +159,6 @@ function buildFileName(state: State, audioKey: AudioKey) {
   });
 }
 
-function generateWriteErrorMessage(writeFileResult: ResultError) {
-  if (writeFileResult.code) {
-    const code = writeFileResult.code.toUpperCase();
-
-    if (code.startsWith("ENOSPC")) {
-      return "空き容量が足りません。";
-    }
-
-    if (code.startsWith("EACCES")) {
-      return "ファイルにアクセスする許可がありません。";
-    }
-  }
-
-  return `何らかの理由で失敗しました。${writeFileResult.message}`;
-}
-
 // TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
 export function getCharacterInfo(
   state: State,
@@ -278,7 +262,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         return URL.createObjectURL(iconBlob);
       };
       const getStyles = function (speaker: Speaker, speakerInfo: SpeakerInfo) {
-        const styles: StyleInfo[] = new Array(speaker.styles.length);
+        const styles = new Array<StyleInfo>(speaker.styles.length);
         speaker.styles.forEach((style, i) => {
           const styleInfo = speakerInfo.styleInfos.find(
             (styleInfo) => style.id === styleInfo.id
@@ -485,7 +469,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action({ commit, dispatch }, { audioKey }: { audioKey?: AudioKey }) {
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
       // reset audio play start point
-      dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
+      void dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
     },
   },
 
@@ -1146,7 +1130,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         labString += timestamp.toFixed() + " ";
         labString += "pau" + "\n";
 
-        return labString;
+        return Promise.resolve(labString);
       }
     ),
   },
@@ -1185,7 +1169,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     async action({ dispatch, state }, { audioKey }: { audioKey: AudioKey }) {
       const audioItem: AudioItem = JSON.parse(
         JSON.stringify(state.audioItems[audioKey])
-      );
+      ) as typeof state.audioItems[AudioKey];
       return dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", { audioItem });
     },
   },
@@ -1261,9 +1245,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               requestBody: encodedBlobs,
             })
           )
-          .then(async (blob) => {
-            return blob;
-          })
           .catch((e) => {
             window.electron.logError(e);
             return null;
@@ -1390,10 +1371,26 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         } catch (e) {
           window.electron.logError(e);
           if (e instanceof ResultError) {
+            let errorMessage: string | undefined = undefined;
+
+            if (e.code && typeof e.code === "string") {
+              const code = e.code.toUpperCase();
+
+              if (code.startsWith("ENOSPC")) {
+                errorMessage = "空き容量が足りません。";
+              }
+
+              if (code.startsWith("EACCES")) {
+                errorMessage = "ファイルにアクセスする許可がありません。";
+              }
+            } else {
+              errorMessage = `何らかの理由で失敗しました。${e.message}`;
+            }
+
             return {
               result: "WRITE_ERROR",
               path: filePath,
-              errorMessage: generateWriteErrorMessage(e),
+              errorMessage,
             };
           }
           return {
@@ -1419,7 +1416,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }: {
           dirPath?: string;
           encoding?: EncodingType;
-          callback?: (finishedCount: number, totalCount: number) => void;
+          callback?: (
+            finishedCount: number,
+            totalCount: number
+          ) => void | Promise<void>;
         }
       ) => {
         if (state.savingSetting.fixedExportEnabled) {
@@ -1441,8 +1441,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               audioKey,
               filePath: path.join(_dirPath, name),
               encoding,
-            }).then((value) => {
-              callback?.(++finishedCount, totalCount);
+            }).then(async (value) => {
+              await callback?.(++finishedCount, totalCount);
               return value;
             });
           });
@@ -1689,10 +1689,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           if (!engineId) {
             throw new Error("engineId is undefined");
           }
-          const speakerName =
-            styleId !== undefined
-              ? characters.get(`${engineId}:${styleId}`) + ","
-              : "";
+
+          let speakerName = "";
+          if (styleId !== undefined) {
+            const name = characters.get(`${engineId}:${styleId}`);
+            if (name == undefined)
+              throw new Error(`name is undefined ${engineId}:${styleId}`);
+            speakerName = name + ",";
+          }
 
           const skippedText = skipReadingPart(
             skipMemoText(state.audioItems[audioKey].text)
@@ -1804,16 +1808,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               audioElem.removeEventListener("canplay", stop);
             };
             audioElem.addEventListener("canplay", stop);
-            window.electron.showMessageDialog({
+            void window.electron.showMessageDialog({
               type: "error",
               title: "エラー",
               message: "再生デバイスが見つかりません",
             });
-            throw new Error(err);
+            throw err;
           });
 
-        // 再生終了時にresolveされるPromiseを返す
-        const played = async () => {
+        // 再生終了時呼ばれる関数
+        const played = () => {
           if (audioKey) {
             commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
           }
@@ -1826,7 +1830,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             resolve(audioElem.ended);
           };
           audioElem.addEventListener("pause", paused);
-        }).finally(async () => {
+        }).finally(() => {
           audioElem.removeEventListener("play", played);
           audioElem.removeEventListener("pause", paused);
           if (audioKey) {
@@ -1834,7 +1838,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         });
 
-        audioElem.play();
+        void audioElem.play();
 
         return audioPlayPromise;
       }
@@ -1898,7 +1902,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action({ state, dispatch }) {
       for (const audioKey of state.audioKeys) {
         if (state.audioStates[audioKey].nowPlaying) {
-          dispatch("STOP_AUDIO", { audioKey });
+          void dispatch("STOP_AUDIO", { audioKey });
         }
       }
     },
@@ -1906,7 +1910,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
     action() {
-      window.electron.openTextEditContextMenu();
+      void window.electron.openTextEditContextMenu();
     },
   },
 
@@ -2177,7 +2181,7 @@ export const audioCommandStore = transformCommandStore(
         if (query !== undefined) {
           const newAccentPhrases: AccentPhrase[] = JSON.parse(
             JSON.stringify(query.accentPhrases)
-          );
+          ) as typeof query.accentPhrases;
           newAccentPhrases[accentPhraseIndex].accent = accent;
 
           try {
@@ -2239,7 +2243,7 @@ export const audioCommandStore = transformCommandStore(
         }
         const newAccentPhrases: AccentPhrase[] = JSON.parse(
           JSON.stringify(query.accentPhrases)
-        );
+        ) as typeof query.accentPhrases;
         const changeIndexes = [accentPhraseIndex];
         // toggleAccentPhrase to newAccentPhrases and record changeIndexes
         {

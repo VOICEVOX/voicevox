@@ -245,14 +245,15 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
           }
 
+          const parsedProjectData = projectSchema.parse(projectData);
           if (
             semver.satisfies(projectAppVersion, "<0.15", semverSatisfiesOptions)
           ) {
             const characterInfos = context.getters.USER_ORDERED_CHARACTER_INFOS;
             if (characterInfos == undefined)
               throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
-            for (const audioItemsKey in projectData.audioItems) {
-              const audioItem = projectData.audioItems[audioItemsKey];
+            for (const audioItemsKey in parsedProjectData.audioItems) {
+              const audioItem = parsedProjectData.audioItems[audioItemsKey];
               if (audioItem.voice == undefined) {
                 const oldEngineId = audioItem.engineId;
                 const oldStyleId = audioItem.styleId;
@@ -281,7 +282,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           // Validation check
-          const parsedProjectData = projectSchema.parse(projectData);
+          // const parsedProjectData = projectSchema.parse(projectData);
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) => audioKey in parsedProjectData.audioItems
@@ -569,7 +570,6 @@ const projectSchema = z.object({
   audioItems: z.record(audioKeySchema, audioItemSchema),
 });
 
-export type LatestProjectType = z.infer<typeof projectSchema>;
 interface ProjectType {
   appVersion: string;
   audioKeys: AudioKey[];

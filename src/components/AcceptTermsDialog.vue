@@ -83,10 +83,12 @@ const modelValueComputed = computed({
 });
 
 const handler = (acceptTerms: boolean) => {
-  store.dispatch("SET_ACCEPT_TERMS", {
+  void store.dispatch("SET_ACCEPT_TERMS", {
     acceptTerms: acceptTerms ? "Accepted" : "Rejected",
   });
-  !acceptTerms ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE") : undefined;
+  if (!acceptTerms) {
+    void store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
+  }
 
   modelValueComputed.value = false;
 };

@@ -32,7 +32,7 @@ const store = useStore();
 const tipConfirmed = computed({
   get: () => store.state.confirmedTips[props.tipKey],
   set: (value) =>
-    store.dispatch("SET_CONFIRMED_TIPS", {
+    void store.dispatch("SET_CONFIRMED_TIPS", {
       confirmedTips: {
         ...store.state.confirmedTips,
         [props.tipKey]: value,
