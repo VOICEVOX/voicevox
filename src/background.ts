@@ -485,7 +485,7 @@ async function createWindow() {
       callback(path.join(__dirname, filePath));
     });
   }
-  const loadUrlPromise = loadUrl({ projectFilePath });
+  loadUrl({ projectFilePath });
 
   if (isDevelopment && !isTest) win.webContents.openDevTools();
 
@@ -521,8 +521,6 @@ async function createWindow() {
   });
 
   mainWindowState.manage(win);
-
-  await loadUrlPromise;
 }
 
 /**
