@@ -683,8 +683,8 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions
-                v-if="shouldShowAudioOutputDeviceSetting"
                 class="q-px-md q-py-none bg-surface"
+                :class="{ disabled: !shouldEnableAudioOutputDeviceSetting }"
               >
                 <div>再生デバイス</div>
                 <div aria-label="音声の再生デバイスを変更できます。">
@@ -697,12 +697,16 @@
                       transition-hide="jump-left"
                     >
                       音声の再生デバイスを変更できます。
+                      <template v-if="!shouldEnableAudioOutputDeviceSetting">
+                        この機能はブラウザがサポートしていないため、使用できません。
+                      </template>
                     </q-tooltip>
                   </q-icon>
                 </div>
                 <q-space />
                 <q-select
                   v-model="currentAudioOutputDeviceComputed"
+                  :disable="!shouldEnableAudioOutputDeviceSetting"
                   dense
                   label="再生デバイス"
                   :options="availableAudioOutputDevices"
@@ -900,6 +904,7 @@ import {
   EditorFontType,
   EngineId,
 } from "@/type/preload";
+import { should } from "vitest";
 
 type SamplingRateOption = EngineSetting["outputSamplingRate"];
 
@@ -1031,7 +1036,7 @@ const changeShowAddAudioItemButton = (showAddAudioItemButton: boolean) => {
   }
 };
 
-const shouldShowAudioOutputDeviceSetting = computed(() => {
+const shouldEnableAudioOutputDeviceSetting = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;
 });
 const currentAudioOutputDeviceComputed = computed<{
