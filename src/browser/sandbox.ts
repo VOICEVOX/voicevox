@@ -213,6 +213,10 @@ export const api: Sandbox = {
     console.info(...params);
     return;
   },
+  showLogFolderInExplorer() {
+    // NOTE: ブラウザ版では不要
+    return;
+  },
   /* eslint-enable no-console */
   engineInfos() {
     return Promise.resolve([defaultEngine]);
