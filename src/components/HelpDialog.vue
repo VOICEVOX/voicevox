@@ -59,7 +59,6 @@
                       color="toolbar-button"
                       text-color="toolbar-button-display"
                       class="text-no-wrap text-bold q-mr-sm"
-                      aria-label="ログフォルダを表示"
                       @click="showLogFolderInExplorer"
                     >
                       ログフォルダを表示
