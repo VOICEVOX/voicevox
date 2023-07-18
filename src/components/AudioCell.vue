@@ -40,7 +40,6 @@
       "
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
-      @keyup.prevent.tab="select"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.prevent.enter.exact="pushAudioTextIfNeeded()"
@@ -181,11 +180,6 @@ const pushAudioTextIfNeeded = async () => {
 const unselect = () => {
   if (!contextMenu.value?.willDispatchFocusOrBlur) {
     textfieldSelection.toEmpty();
-  }
-};
-const select = (event: KeyboardEvent) => {
-  if (!event.isComposing) {
-    textfield.value?.select();
   }
 };
 
