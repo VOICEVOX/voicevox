@@ -31,10 +31,6 @@ export class SelectionHelperForQInput {
     this.nativeEl.selectionEnd = this.nativeEl.selectionStart;
   }
 
-  get nativeEl() {
-    return this._nativeEl ?? this.getNativeEl();
-  }
-
   get start() {
     return this.nativeEl.selectionStart;
   }
@@ -55,6 +51,10 @@ export class SelectionHelperForQInput {
     const start = this.nativeEl.selectionStart;
     const end = this.nativeEl.selectionEnd;
     return start === null || end === null || start === end;
+  }
+
+  private get nativeEl() {
+    return this._nativeEl ?? this.getNativeEl();
   }
 
   private getNativeEl() {
