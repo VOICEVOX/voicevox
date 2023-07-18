@@ -73,7 +73,8 @@ npm run electron:serve
 npm run browser:serve
 ```
 
-また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/#/home>
+また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/#/home>  
+今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド
 
