@@ -354,7 +354,7 @@ const contextMenudata = ref<
     label: "貼り付け",
     onClick: async () => {
       contextMenu.value?.hide();
-      const beforeLength = textfieldSelection.nativeEl.value.length;
+      const beforeLength = audioTextBuffer.value.length;
       const end = textfieldSelection.end ?? 0;
       const text = await navigator.clipboard.readText();
 
@@ -367,7 +367,7 @@ const contextMenudata = ref<
       await nextTick();
       // 自動的に削除される改行などの文字数を念のため考慮している
       textfieldSelection.setCursorPosition(
-        end + textfieldSelection.nativeEl.value.length - beforeLength
+        end + audioTextBuffer.value.length - beforeLength
       );
     },
     disableWhenUiLocked: true,
