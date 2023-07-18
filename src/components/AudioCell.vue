@@ -35,7 +35,7 @@
       :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
       @focus="
-        unselect();
+        clearInputSelection();
         setActiveAudioKey();
       "
       @blur="pushAudioTextIfNeeded()"
@@ -177,7 +177,7 @@ const pushAudioTextIfNeeded = async () => {
 
 // バグ修正用
 // see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
-const unselect = () => {
+const clearInputSelection = () => {
   if (!contextMenu.value?.willDispatchFocusOrBlur) {
     textfieldSelection.toEmpty();
   }
