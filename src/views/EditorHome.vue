@@ -33,7 +33,7 @@
               >
                 マルチエンジンをオフにして再読み込みする</q-btn
               >
-              <q-btn v-else outline @click="openFaq">FAQを見る</q-btn>
+              <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
             </template>
           </div>
         </div>
@@ -675,7 +675,7 @@ const reloadAppWithMultiEngineOffMode = () => {
   });
 };
 
-const openFaq = () => {
+const openQa = () => {
   window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
 };
 

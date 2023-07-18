@@ -40,7 +40,7 @@ const config: PlaywrightTestConfig = {
   // outputDir: 'test-results/',
 
   webServer: {
-    command: "cross-env VITE_IS_ELECTRON=true vite --mode test",
+    command: "cross-env VITE_TARGET=electron vite --mode test",
     port: 5173,
     reuseExistingServer: !process.env.CI,
   },
