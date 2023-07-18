@@ -330,8 +330,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { showAddAudioItemButton }) {
       state.showAddAudioItemButton = showAddAudioItemButton;
     },
-    action({ commit }, { showAddAudioItemButton }) {
-      window.electron.setSetting(
+    async action({ commit }, { showAddAudioItemButton }) {
+      await window.electron.setSetting(
         "showAddAudioItemButton",
         showAddAudioItemButton
       );
