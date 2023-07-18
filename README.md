@@ -73,7 +73,7 @@ npm run electron:serve
 npm run browser:serve
 ```
 
-また、main ブランチのこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/#/home>
+また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/#/home>
 
 ## ビルド
 
