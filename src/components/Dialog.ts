@@ -42,9 +42,21 @@ type CommonDialogCallback = (
 export const showAlertDialog = async (
   options: CommonDialogOptions["alert"]
 ) => {
-  return new Promise((resolve) => {
-    setCallback(createCommonDialog.alert(options));
-    commonDialogCallback = resolve;
+  options.ok ??= "閉じる";
+
+  return new Promise((resolve: CommonDialogCallback) => {
+    setCommonDialogCallback(
+      Dialog.create({
+        title: options.title,
+        message: options.message,
+        ok: {
+          label: options.ok,
+          flat: true,
+          textColor: "display",
+        },
+      }),
+      resolve
+    );
   });
 };
 
@@ -55,43 +67,72 @@ export const showAlertDialog = async (
 export const showConfirmDialog = async (
   options: CommonDialogOptions["confirm"]
 ) => {
-  return new Promise((resolve) => {
-    setCallback(createCommonDialog.confirm(options));
-    commonDialogCallback = resolve;
+  options.cancel ??= "キャンセル";
+
+  return new Promise((resolve: CommonDialogCallback) => {
+    setCommonDialogCallback(
+      Dialog.create({
+        title: options.title,
+        message: options.message,
+        persistent: true, // ダイアログ外側押下時・Esc押下時にユーザが設定ができたと思い込むことを防止する
+        focus: "cancel",
+        html: options.html,
+        ok: {
+          flat: true,
+          label: options.actionName,
+          textColor: "display",
+        },
+        cancel: {
+          flat: true,
+          label: options.cancel,
+          textColor: "display",
+        },
+      }),
+      resolve
+    );
   });
 };
 
 export const showWarningDialog = async (
   options: CommonDialogOptions["warning"]
 ) => {
-  return new Promise((resolve) => {
-    setCallback(createCommonDialog.warning(options));
-    commonDialogCallback = resolve;
+  options.cancel ??= "キャンセル";
+
+  return new Promise((resolve: CommonDialogCallback) => {
+    setCommonDialogCallback(
+      Dialog.create({
+        title: options.title,
+        message: options.message,
+        persistent: true,
+        focus: "cancel",
+        ok: {
+          label: options.actionName,
+          flat: true,
+          textColor: "warning",
+        },
+        cancel: {
+          label: options.cancel,
+          flat: true,
+          textColor: "display",
+        },
+      }),
+      resolve
+    );
   });
 };
 
-const setCallback = (dialog: DialogChainObject) => {
-  if (commonDialogCallback) {
-    throw new Error(
-      "alert・confirm・warningの汎用ダイアログは同時に複数開けません。"
-    );
-  }
+const setCommonDialogCallback = (
+  dialog: DialogChainObject,
+  resolve: (result: CommonDialogResult) => void
+) => {
   return dialog
     .onOk(() => {
-      onDialogClose("OK");
+      resolve("OK");
     })
     .onCancel(() => {
-      onDialogClose("CANCEL");
+      resolve("CANCEL");
     });
 };
-const onDialogClose = (result: CommonDialogResult) => {
-  if (commonDialogCallback === undefined) {
-    throw new Error("ダイアログが開かれる前に閉じようとしました。");
-  }
-  commonDialogCallback(result);
-  commonDialogCallback = undefined;
-};
-let commonDialogCallback: CommonDialogCallback | undefined = undefined;
 
 export async function generateAndSaveOneAudioWithDialog({
   audioKey,
@@ -323,53 +364,4 @@ const showWriteErrorDialog = ({
       message: result.errorMessage ?? defaultErrorMessages[result.result] ?? "",
     });
   }
-};
-
-// 汎用ダイアログ
-const createCommonDialog = {
-  alert: (options: CommonDialogOptions["alert"]) =>
-    Dialog.create({
-      title: options.title,
-      message: options.message,
-      ok: {
-        label: options.ok ?? "閉じる",
-        flat: true,
-        textColor: "display",
-      },
-    }),
-  confirm: (options: CommonDialogOptions["confirm"]) =>
-    Dialog.create({
-      title: options.title,
-      message: options.message,
-      persistent: true, // ダイアログ外側押下時・Esc押下時にユーザが設定ができたと思い込むことを防止する
-      focus: "cancel",
-      html: options.html,
-      ok: {
-        flat: true,
-        label: options.actionName,
-        textColor: "display",
-      },
-      cancel: {
-        flat: true,
-        label: options.cancel ?? "キャンセル",
-        textColor: "display",
-      },
-    }),
-  warning: (options: CommonDialogOptions["warning"]) =>
-    Dialog.create({
-      title: options.title,
-      message: options.message,
-      persistent: true,
-      focus: "cancel",
-      ok: {
-        label: options.actionName,
-        flat: true,
-        textColor: "warning",
-      },
-      cancel: {
-        label: options.cancel ?? "キャンセル",
-        flat: true,
-        textColor: "display",
-      },
-    }),
 };
