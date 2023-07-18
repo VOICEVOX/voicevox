@@ -536,16 +536,15 @@ async function loadUrl(parameter: {
   projectFilePath?: string;
 }) {
   const fragment =
-    "#/home?isMultiEngineOffMode=" +
-    (parameter.isMultiEngineOffMode ?? false) +
-    "&projectFilePath=" +
-    (parameter.projectFilePath ?? "");
+    "#/home" +
+    `?isMultiEngineOffMode=${parameter?.isMultiEngineOffMode ?? false}` +
+    `&projectFilePath=${parameter?.projectFilePath ?? ""}`;
 
-  if (process.env.VITE_DEV_SERVER_URL) {
-    return win.loadURL(process.env.VITE_DEV_SERVER_URL + fragment);
-  } else {
-    return win.loadURL("app://./index.html" + fragment);
-  }
+  const url = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
+
+  return win.loadURL(`${url}${fragment}`, {
+    extraHeaders: "pragma: no-cache\n", // キャッシュを無効化しながらロード
+  });
 }
 
 // 開始。その他の準備が完了した後に呼ばれる。
@@ -952,9 +951,7 @@ ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
 
   await launchEngines();
 
-  await loadUrl({
-    isMultiEngineOffMode: !!isMultiEngineOffMode,
-  });
+  await loadUrl({ isMultiEngineOffMode: !!isMultiEngineOffMode });
 });
 
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {

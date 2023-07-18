@@ -266,8 +266,8 @@ const api: Sandbox = {
    * アプリを再読み込みする。
    * 画面以外の情報を刷新する。
    */
-  reloadApp: ({ isMultiEngineOffMode }) => {
-    ipcRendererInvoke("RELOAD_APP", { isMultiEngineOffMode });
+  reloadApp: async ({ isMultiEngineOffMode }) => {
+    return await ipcRendererInvoke("RELOAD_APP", { isMultiEngineOffMode });
   },
 };
 

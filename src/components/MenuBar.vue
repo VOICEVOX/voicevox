@@ -528,28 +528,25 @@ async function updateEngines() {
       disableWhenUiLocked: false,
     });
   }
+  // マルチエンジンオフモードの解除
+  if (store.state.isMultiEngineOffMode) {
+    engineMenu.subMenu.push({
+      type: "button",
+      label: "マルチエンジンをオンにして再読み込み",
+      onClick() {
+        store.dispatch("RELOAD_APP", {
+          isMultiEngineOffMode: false,
+        });
+      },
+      disableWhenUiLocked: false,
+    });
+  }
 }
 // engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
 // FIXME: computedにする
 watch([engineInfos, engineManifests, enableMultiEngine], updateEngines, {
   immediate: true,
 });
-
-// マルチエンジンオフモードの解除
-if (store.state.isMultiEngineOffMode) {
-  (
-    menudata.value.find((data) => data.label === "エンジン") as MenuItemRoot
-  ).subMenu.push({
-    type: "button",
-    label: "マルチエンジンをオンにして再読み込み",
-    onClick() {
-      store.dispatch("RELOAD_APP", {
-        isMultiEngineOffMode: false,
-      });
-    },
-    disableWhenUiLocked: false,
-  });
-}
 
 // 「最近開いたプロジェクト」の更新
 async function updateRecentProjects() {

@@ -319,7 +319,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (obj.closeOrRefresh == "close") {
         window.electron.closeWindow();
       } else if (obj.closeOrRefresh == "reload") {
-        window.electron.reloadApp({
+        await dispatch("RELOAD_APP", {
           isMultiEngineOffMode: obj.isMultiEngineOffMode,
         });
       }
@@ -327,11 +327,16 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   RELOAD_APP: {
-    action(_, { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }) {
-      window.electron.reloadApp({
-        isMultiEngineOffMode: !!isMultiEngineOffMode,
-      });
-    },
+    action: createUILockAction(
+      async (
+        _,
+        { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }
+      ) => {
+        await window.electron.reloadApp({
+          isMultiEngineOffMode: !!isMultiEngineOffMode,
+        });
+      }
+    ),
   },
 
   START_PROGRESS: {
