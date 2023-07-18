@@ -16,12 +16,7 @@ const contact = ref("");
 const md = useMarkdownIt();
 
 onMounted(async () => {
-  contact.value = md
-    .render(await store.dispatch("GET_CONTACT_TEXT"))
-    .replace(
-      "<!-- ログ表示ボタン説明挿入位置 -->",
-      "（このページの右上の「ログフォルダを表示」ボタンから）"
-    );
+  contact.value = md.render(await store.dispatch("GET_CONTACT_TEXT"));
 });
 </script>
 
