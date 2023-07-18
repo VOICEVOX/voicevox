@@ -429,7 +429,6 @@ migrateHotkeySettings();
 
 const appState = {
   willQuit: false,
-  isMultiEngineOffMode: false,
 };
 let filePathOnMac: string | undefined = undefined;
 // create window
@@ -458,7 +457,7 @@ async function createWindow() {
     icon: path.join(__static, "icon.png"),
   });
 
-  let projectFilePath: string | undefined = "";
+  let projectFilePath = "";
   if (isMac) {
     if (filePathOnMac) {
       if (filePathOnMac.endsWith(".vvproj")) {
@@ -479,21 +478,15 @@ async function createWindow() {
     }
   }
 
-  const parameter =
-    "#/home?isMultiEngineOffMode=" +
-    appState.isMultiEngineOffMode +
-    "&projectFilePath=" +
-    projectFilePath;
-
-  if (process.env.VITE_DEV_SERVER_URL) {
-    await win.loadURL(process.env.VITE_DEV_SERVER_URL + parameter);
-  } else {
+  // ソフトウェア起動時はプロトコルを app にする
+  if (process.env.VITE_DEV_SERVER_URL == undefined) {
     protocol.registerFileProtocol("app", (request, callback) => {
       const filePath = new URL(request.url).pathname;
       callback(path.join(__dirname, filePath));
     });
-    win.loadURL("app://./index.html" + parameter);
   }
+  const loadUrlPromise = loadUrl({ projectFilePath });
+
   if (isDevelopment && !isTest) win.webContents.openDevTools();
 
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
@@ -528,6 +521,31 @@ async function createWindow() {
   });
 
   mainWindowState.manage(win);
+
+  await loadUrlPromise;
+}
+
+/**
+ * 画面の読み込みを開始する。
+ * @param isMultiEngineOffMode マルチエンジンオフモードにするかどうか。無指定時はfalse扱いになる。
+ * @param projectFilePath 初期化時に読み込むプロジェクトファイル。無指定時は何も読み込まない。
+ * @returns ロードの完了を待つPromise。
+ */
+async function loadUrl(parameter: {
+  isMultiEngineOffMode?: boolean;
+  projectFilePath?: string;
+}) {
+  const fragment =
+    "#/home?isMultiEngineOffMode=" +
+    (parameter.isMultiEngineOffMode ?? false) +
+    "&projectFilePath=" +
+    (parameter.projectFilePath ?? "");
+
+  if (process.env.VITE_DEV_SERVER_URL) {
+    return win.loadURL(process.env.VITE_DEV_SERVER_URL + fragment);
+  } else {
+    return win.loadURL("app://./index.html" + fragment);
+  }
 }
 
 // 開始。その他の準備が完了した後に呼ばれる。
@@ -932,10 +950,11 @@ ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
   }
   log.info("Post engine kill process done. Now reloading app");
 
-  appState.isMultiEngineOffMode = !!isMultiEngineOffMode;
   await launchEngines();
 
-  win.reload();
+  await loadUrl({
+    isMultiEngineOffMode: !!isMultiEngineOffMode,
+  });
 });
 
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
