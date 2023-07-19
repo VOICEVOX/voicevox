@@ -525,18 +525,18 @@ async function createWindow() {
 
 /**
  * 画面の読み込みを開始する。
- * @param isMultiEngineOffMode マルチエンジンオフモードにするかどうか。無指定時はfalse扱いになる。
- * @param projectFilePath 初期化時に読み込むプロジェクトファイル。無指定時は何も読み込まない。
+ * @param obj.isMultiEngineOffMode マルチエンジンオフモードにするかどうか。無指定時はfalse扱いになる。
+ * @param obj.projectFilePath 初期化時に読み込むプロジェクトファイル。無指定時は何も読み込まない。
  * @returns ロードの完了を待つPromise。
  */
-async function loadUrl(parameter: {
+async function loadUrl(obj: {
   isMultiEngineOffMode?: boolean;
   projectFilePath?: string;
 }) {
   const fragment =
     "#/home" +
-    `?isMultiEngineOffMode=${parameter?.isMultiEngineOffMode ?? false}` +
-    `&projectFilePath=${parameter?.projectFilePath ?? ""}`;
+    `?isMultiEngineOffMode=${obj?.isMultiEngineOffMode ?? false}` +
+    `&projectFilePath=${obj?.projectFilePath ?? ""}`;
 
   const url = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
