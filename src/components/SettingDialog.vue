@@ -698,7 +698,7 @@
                     >
                       音声の再生デバイスを変更できます。
                       <template v-if="!shouldEnableAudioOutputDeviceSetting">
-                        この機能はブラウザがサポートしていないため、使用できません。
+                        この機能はお使いの環境でサポートされていないため、使用できません。
                       </template>
                     </q-tooltip>
                   </q-icon>
