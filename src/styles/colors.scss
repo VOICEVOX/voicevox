@@ -48,6 +48,10 @@ $active-point-hover-rgb: var(--color-active-point-hover-rgb);
   --color-toast: rgba(var(--color-primary-light-rgb), 0.4);
   --color-toast-display: var(--color-display);
   --color-toast-button-display: rgba(var(--color-display-rgb), 0.6);
+
+  --color-toast--warning: rgba(var(--color-warning-rgb), 0.4);
+  --color-toast-display--warning: var(--color-display);
+  --color-toast-button-display--warning: rgba(var(--color-display-rgb), 0.6);
 }
 
 :root[is-dark-theme="true"] {
@@ -66,6 +70,10 @@ $active-point-hover-rgb: var(--color-active-point-hover-rgb);
   --color-toast: rgba(var(--color-primary-light-rgb), 0.4);
   --color-toast-display: var(--color-display);
   --color-toast-button-display: var(--color-primary);
+
+  --color-toast--warning: rgba(var(--color-warning-rgb), 0.4);
+  --color-toast-display--warning: var(--color-display);
+  --color-toast-button-display--warning: var(--color-warning);
 }
 
 $toolbar: var(--color-toolbar);
@@ -86,3 +94,7 @@ $warning-rgb: var(--color-warning-rgb);
 $toast: var(--color-toast);
 $toast-display: var(--color-toast-display);
 $toast-button-display: var(--color-toast-button-display);
+
+$toast--warning: var(--color-toast--warning);
+$toast-display--warning: var(--color-toast-display--warning);
+$toast-button-display--warning: var(--color-toast-button-display--warning);

@@ -1,5 +1,9 @@
-import { Dialog, DialogChainObject, Notify } from "quasar";
-import { AudioKey, Encoding as EncodingType } from "@/type/preload";
+import { Dialog, DialogChainObject, Notify, Loading } from "quasar";
+import {
+  AudioKey,
+  ConfirmedTips,
+  Encoding as EncodingType,
+} from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
@@ -310,26 +314,10 @@ const showWriteSuccessNotify = ({
     audio: "音声",
     text: "テキスト",
   };
-
-  Notify.create({
+  showNotifyAndNotShowAgainButton({
     message: `${mediaTypeNames[mediaType]}を書き出しました`,
-    color: "toast",
-    textColor: "toast-display",
-    icon: "info",
-    timeout: 5000,
-    actions: [
-      {
-        label: "今後この通知をしない",
-        textColor: "toast-button-display",
-        handler: () => {
-          dispatch("SET_CONFIRMED_TIP", {
-            confirmedTip: {
-              notifyOnGenerate: true,
-            },
-          });
-        },
-      },
-    ],
+    tipName: "notifyOnGenerate",
+    dispatch,
   });
 };
 
@@ -364,4 +352,51 @@ const showWriteErrorDialog = ({
       message: result.errorMessage ?? defaultErrorMessages[result.result] ?? "",
     });
   }
+};
+
+const NOTIFY_TIMEOUT = 5000;
+
+export const showNotifyAndNotShowAgainButton = (options: {
+  message: string;
+  isWarning?: boolean;
+  icon?: string;
+  tipName: keyof ConfirmedTips;
+  dispatch: Dispatch<AllActions>;
+}) => {
+  options.icon ??= options.isWarning ? "warning" : "info";
+
+  const suffix = options.isWarning ? "--warning" : "";
+  Notify.create({
+    message: options.message,
+    color: "toast" + suffix,
+    textColor: "toast-display" + suffix,
+    icon: options.isWarning ? "warning" : "info",
+    timeout: NOTIFY_TIMEOUT,
+    actions: [
+      {
+        label: "今後この通知をしない",
+        textColor: "toast-button-display" + suffix,
+        handler: () => {
+          options.dispatch("SET_CONFIRMED_TIP", {
+            confirmedTip: {
+              [options.tipName]: true,
+            },
+          });
+        },
+      },
+    ],
+  });
+};
+
+export const showLoading = (options: { message: string }) => {
+  Loading.show({
+    spinnerColor: "primary",
+    spinnerSize: 50,
+    boxClass: "bg-background text-display",
+    message: options.message,
+  });
+};
+
+export const hideAllLoading = () => {
+  Loading.hide();
 };

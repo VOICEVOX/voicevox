@@ -885,8 +885,12 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useQuasar } from "quasar";
-import { showAlertDialog, showConfirmDialog } from "./Dialog";
+import {
+  hideAllLoading,
+  showAlertDialog,
+  showConfirmDialog,
+  showLoading,
+} from "./Dialog";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
@@ -911,7 +915,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const settingDialogOpenedComputed = computed({
   get: () => props.modelValue,
@@ -1081,10 +1084,7 @@ const acceptRetrieveTelemetryComputed = computed({
 });
 
 const changeUseGpu = async (useGpu: boolean) => {
-  $q.loading.show({
-    spinnerColor: "primary",
-    spinnerSize: 50,
-    boxClass: "bg-background text-display",
+  showLoading({
     message: "起動モードを変更中です",
   });
 
@@ -1093,7 +1093,7 @@ const changeUseGpu = async (useGpu: boolean) => {
     engineId: selectedEngineId.value,
   });
 
-  $q.loading.hide();
+  hideAllLoading();
 };
 
 const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {

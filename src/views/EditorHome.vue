@@ -173,10 +173,13 @@
 import path from "path";
 import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
-import { QResizeObserver, useQuasar } from "quasar";
+import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
 import { useStore } from "@/store";
-import { showAlertDialog } from "@/components/Dialog";
+import {
+  showAlertDialog,
+  showNotifyAndNotShowAgainButton,
+} from "@/components/Dialog";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -213,7 +216,6 @@ const props =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -645,25 +647,11 @@ watch(
       const altPort = store.state.altPortInfos[engineId];
       if (!altPort) return;
 
-      $q.notify({
+      showNotifyAndNotShowAgainButton({
         message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
-        color: "toast",
-        textColor: "toast-display",
         icon: "compare_arrows",
-        timeout: 5000,
-        actions: [
-          {
-            label: "今後この通知をしない",
-            textColor: "toast-button-display",
-            handler: () =>
-              store.dispatch("SET_CONFIRMED_TIPS", {
-                confirmedTips: {
-                  ...store.state.confirmedTips,
-                  engineStartedOnAltPort: true,
-                },
-              }),
-          },
-        ],
+        tipName: "engineStartedOnAltPort",
+        dispatch: store.dispatch,
       });
     }
   }

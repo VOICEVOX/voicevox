@@ -247,3 +247,13 @@ img {
 .text-toast-button-display {
   color: colors.$toast-button-display;
 }
+
+.bg-toast--warning {
+  background: colors.$toast--warning;
+}
+.text-toast-display--warning {
+  color: colors.$toast-display--warning;
+}
+.text-toast-button-display--warning {
+  color: colors.$toast-button-display--warning;
+}

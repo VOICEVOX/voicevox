@@ -27,7 +27,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useQuasar } from "quasar";
 import {
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveAllAudioWithDialog,
@@ -69,7 +68,6 @@ export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
 export type MenuItemType = MenuItemData["type"];
 
 const store = useStore();
-const $q = useQuasar();
 const currentVersion = ref("");
 
 // デフォルトエンジンの代替先ポート
