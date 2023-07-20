@@ -31,11 +31,11 @@ export class SelectionHelperForQInput {
     this.nativeEl.selectionEnd = this.nativeEl.selectionStart;
   }
 
-  get start() {
+  get selectionStart() {
     return this.nativeEl.selectionStart;
   }
 
-  get end() {
+  get selectionEnd() {
     return this.nativeEl.selectionEnd;
   }
 

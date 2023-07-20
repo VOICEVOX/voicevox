@@ -22,6 +22,10 @@
       :ui-locked="uiLocked"
       @focus="setActiveAudioKey()"
     />
+    <!-- 
+      input.valueをスクリプトから変更した場合は@changeが発火しないため、
+      @blurと@keydown.prevent.enter.exactに分けている
+    -->
     <q-input
       ref="textfield"
       filled
@@ -190,38 +194,46 @@ const setActiveAudioKey = () => {
 // コピペしたときに句点と改行で区切る
 const textSplitType = computed(() => store.state.splitTextWhenPaste);
 const pasteOnAudioCell = async (event: ClipboardEvent) => {
-  if (event.clipboardData && textSplitType.value !== "OFF") {
-    await putMultilineTextIfNeeded(
-      event.clipboardData.getData("text/plain"),
-      event
-    );
-  }
+  event.preventDefault();
+  paste({ text: event.clipboardData?.getData("text/plain") });
 };
 /**
- * 複数行貼り付け。複数行ではなかった場合は何もしません。
- * @param event 指定した場合、必要に応じて`preventDefault()`されます
- * @returns 複数行ではなかった場合`false`、複数行なら`true`を返します。
+ * 貼り付け。
+ * ブラウザ版を考えるとClipboard APIをなるべく回避したいため、積極的に`options.text`を指定してください。
  */
-const putMultilineTextIfNeeded = async (
-  text: string,
-  event?: Event
-): Promise<boolean> => {
-  if (textSplitType.value === "OFF") return false;
+const paste = async (options?: { text?: string }) => {
+  const beforeLength = audioTextBuffer.value.length;
+  const end = textfieldSelection.selectionEnd ?? 0;
+  const text = options ? options.text : await navigator.clipboard.readText();
+  if (text === undefined) return;
 
-  const textSplitter: Record<
-    SplitTextWhenPasteType,
-    (text: string) => string[]
-  > = {
-    PERIOD_AND_NEW_LINE: (text) =>
-      text.replaceAll("。", "。\n\r").split(/[\n\r]/),
-    NEW_LINE: (text) => text.split(/[\n\r]/),
-    OFF: (text) => [text],
-  };
-  const texts = textSplitter[textSplitType.value](text);
+  // 複数行貼り付けできるか試す
+  if (textSplitType.value !== "OFF") {
+    const textSplitter: Record<
+      SplitTextWhenPasteType,
+      (text: string) => string[]
+    > = {
+      PERIOD_AND_NEW_LINE: (text) =>
+        text.replaceAll("。", "。\n\r").split(/[\n\r]/),
+      NEW_LINE: (text) => text.split(/[\n\r]/),
+      OFF: (text) => [text],
+    };
+    const texts = textSplitter[textSplitType.value](text);
 
-  if (texts.length <= 1 || texts.every((text) => text === "")) return false;
+    if (texts.length >= 2 && texts.some((text) => text !== "")) {
+      await putMultilineText(texts);
+      return;
+    }
+  }
 
-  event?.preventDefault();
+  setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text));
+  await nextTick();
+  // 自動的に削除される改行などの文字数を念のため考慮している
+  textfieldSelection.setCursorPosition(
+    end + audioTextBuffer.value.length - beforeLength
+  );
+};
+const putMultilineText = async (texts: string[]) => {
   // フォーカスを外して編集中のテキスト内容を確定させる
   if (document.activeElement instanceof HTMLInputElement) {
     document.activeElement.blur();
@@ -241,7 +253,6 @@ const putMultilineTextIfNeeded = async (
     prevAudioKey,
   });
   emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
-  return true;
 };
 
 // 行番号を表示するかどうか
@@ -303,8 +314,6 @@ const deleteButtonEnable = computed(() => {
 });
 
 // テキスト編集エリアの右クリック
-// input.valueをスクリプトから変更した場合は@changeが発火しないため、
-// @blurと@keydown.prevent.enter.exactに分けている
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
 // FIXME: 可能なら`isRangeSelected`と`contextmenuHeader`をcomputedに
@@ -328,7 +337,7 @@ const contextMenudata = ref<
       if (textfieldSelection.isEmpty) return;
 
       const text = textfieldSelection.getAsString();
-      const start = textfieldSelection.start;
+      const start = textfieldSelection.selectionStart;
       setAudioTextBuffer(textfieldSelection.getReplacedStringTo(""));
       await nextTick();
       navigator.clipboard.writeText(text);
@@ -351,21 +360,7 @@ const contextMenudata = ref<
     label: "貼り付け",
     onClick: async () => {
       contextMenu.value?.hide();
-      const beforeLength = audioTextBuffer.value.length;
-      const end = textfieldSelection.end ?? 0;
-      const text = await navigator.clipboard.readText();
-
-      // 複数行貼り付けの場合
-      if (await putMultilineTextIfNeeded(text)) {
-        return;
-      }
-
-      setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text));
-      await nextTick();
-      // 自動的に削除される改行などの文字数を念のため考慮している
-      textfieldSelection.setCursorPosition(
-        end + audioTextBuffer.value.length - beforeLength
-      );
+      paste();
     },
     disableWhenUiLocked: true,
   },
