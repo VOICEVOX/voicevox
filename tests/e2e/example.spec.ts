@@ -45,6 +45,7 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
     ".bin",
     "electron"
   );
+  console.log(await fs.readdir(path.dirname(executablePath)));
   const app = await electron.launch({
     args: ["."],
     timeout: process.env.CI ? 0 : 60000,
