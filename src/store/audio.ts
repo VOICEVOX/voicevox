@@ -1796,21 +1796,24 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
 
-        audioElem
-          .setSinkId(state.savingSetting.audioOutputDevice)
-          .catch((err) => {
-            const stop = () => {
-              audioElem.pause();
-              audioElem.removeEventListener("canplay", stop);
-            };
-            audioElem.addEventListener("canplay", stop);
-            window.electron.showMessageDialog({
-              type: "error",
-              title: "エラー",
-              message: "再生デバイスが見つかりません",
+        // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
+        if (audioElem.setSinkId) {
+          audioElem
+            .setSinkId(state.savingSetting.audioOutputDevice)
+            .catch((err) => {
+              const stop = () => {
+                audioElem.pause();
+                audioElem.removeEventListener("canplay", stop);
+              };
+              audioElem.addEventListener("canplay", stop);
+              window.electron.showMessageDialog({
+                type: "error",
+                title: "エラー",
+                message: "再生デバイスが見つかりません",
+              });
+              throw new Error(err);
             });
-            throw new Error(err);
-          });
+        }
 
         // 再生終了時にresolveされるPromiseを返す
         const played = async () => {
