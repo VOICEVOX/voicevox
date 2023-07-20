@@ -1159,10 +1159,11 @@ const outputSamplingRate = computed({
   },
   set: async (outputSamplingRate: SamplingRateOption) => {
     if (outputSamplingRate !== "engineDefault") {
-      const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+      const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
         title: "出力サンプリングレートを変更します",
         message:
           "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
+        html: true,
         actionName: "変更する",
         cancel: "変更しない",
       });
