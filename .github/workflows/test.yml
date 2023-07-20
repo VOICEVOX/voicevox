@@ -45,6 +45,12 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
+      - name: Install xvfb and x11-xserver-utils
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb x11-xserver-utils
+
       - name: Download VOICEVOX ENGINE
         id: download-engine
         uses: ./.github/actions/download-engine
@@ -56,8 +62,12 @@ jobs:
         run: |
           cp .env.test .env
           sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env
+
           if [ -n "${{ runner.debug }}" ]; then
-            DEBUG=pw:browser* npm run test:e2e
+            export DEBUG="pw:browser*"
+          fi
+          if [[ ${{ matrix.os }} == ubuntu-* ]]; then
+            xvfb-run --auto-servernum npm run test:e2e
           else
             npm run test:e2e
           fi
