@@ -52,8 +52,8 @@ runs:
       shell: bash
       run: |
         if [ "${{ inputs.target }}" = "" ]; then
-          OS="${{ runner.os }}"
-          TARGET="${OS,,}-cpu" # 小文字にする
+          OS=$(echo "${{ runner.os }}" | tr "[:upper:]" "[:lower:]") # 小文字にする
+          TARGET="$OS-cpu"
         else
           TARGET="${{ inputs.target }}"
         fi
