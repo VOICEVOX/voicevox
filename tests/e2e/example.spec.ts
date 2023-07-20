@@ -43,7 +43,7 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
     process.cwd(),
     "node_modules",
     ".bin",
-    "electron"
+    process.platform == "win32" ? "electron.cmd" : "electron"
   );
   console.log(await fs.readdir(path.dirname(executablePath)));
   const app = await electron.launch({
