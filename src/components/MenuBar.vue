@@ -529,18 +529,18 @@ async function updateEngines() {
     });
   }
   // マルチエンジンオフモードの解除
-  if (store.state.isMultiEngineOffMode) {
-    engineMenu.subMenu.push({
-      type: "button",
-      label: "マルチエンジンをオンにして再読み込み",
-      onClick() {
-        store.dispatch("RELOAD_APP", {
-          isMultiEngineOffMode: false,
-        });
-      },
-      disableWhenUiLocked: false,
-    });
-  }
+  // if (store.state.isMultiEngineOffMode) {
+  engineMenu.subMenu.push({
+    type: "button",
+    label: "マルチエンジンをオンにして再読み込み",
+    onClick() {
+      store.dispatch("RELOAD_APP", {
+        isMultiEngineOffMode: false,
+      });
+    },
+    disableWhenUiLocked: false,
+  });
+  // }
 }
 // engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
 // FIXME: computedにする

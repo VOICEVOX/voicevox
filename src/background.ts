@@ -938,6 +938,8 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
 });
 
 ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
+  リロード中UIを作る;
+
   log.info("Checking ENGINE status before reload app");
   const engineTerminateResult = terminateEngines();
 
