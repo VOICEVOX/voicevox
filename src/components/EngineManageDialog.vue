@@ -516,7 +516,7 @@ const addEngine = async () => {
 };
 const deleteEngine = async () => {
   const result = await showConfirmDialog({
-    title: "確認",
+    title: "エンジン削除の確認",
     message: "選択中のエンジンを削除します。よろしいですか？",
     actionName: "削除",
   });
