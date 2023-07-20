@@ -79,7 +79,7 @@ export const showConfirmDialog = async (
         title: options.title,
         message: options.message,
         persistent: true, // ダイアログ外側押下時・Esc押下時にユーザが設定ができたと思い込むことを防止する
-        focus: "cancel",
+        focus: "ok",
         html: options.html,
         ok: {
           flat: true,
