@@ -34,13 +34,6 @@ jobs:
 
       - run: npm run test:unit
 
-      - name: Download VOICEVOX ENGINE
-        id: download-engine
-        uses: ./.github/actions/download-engine
-        with:
-          version: ${{ env.VOICEVOX_ENGINE_VERSION }}
-          dest: ${{ github.workspace }}/voicevox_engine
-
   # electron の e2e テスト
   e2e-test:
     runs-on: ${{ matrix.os }}
@@ -48,6 +41,17 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
+      - uses: actions/checkout@v3
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Download VOICEVOX ENGINE
+        id: download-engine
+        uses: ./.github/actions/download-engine
+        with:
+          version: ${{ env.VOICEVOX_ENGINE_VERSION }}
+          dest: ${{ github.workspace }}/voicevox_engine
+
       - name: Run npm run test:e2e
         run: |
           cp .env.test .env
