@@ -8,6 +8,17 @@ import {
 } from "./type";
 import { createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
+import {
+  CommonDialogOptions,
+  LoadingScreenOption,
+  NotifyAndNotShowAgainButtonOption,
+  hideAllLoadingScreen,
+  showAlertDialog,
+  showConfirmDialog,
+  showLoadingScreen,
+  showNotifyAndNotShowAgainButton,
+  showWarningDialog,
+} from "@/components/Dialog";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -169,6 +180,50 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       commit("SET_DIALOG_OPEN", dialogState);
     },
+  },
+
+  SHOW_ALERT_DIALOG: {
+    action: createUILockAction(
+      async (_, payload: { title: string; message: string; ok?: string }) => {
+        return await showAlertDialog(payload);
+      }
+    ),
+  },
+
+  SHOW_CONFIRM_DIALOG: {
+    action: createUILockAction(
+      async (_, payload: CommonDialogOptions["confirm"]) => {
+        return await showConfirmDialog(payload);
+      }
+    ),
+  },
+
+  SHOW_WARNING_DIALOG: {
+    action: createUILockAction(
+      async (_, payload: CommonDialogOptions["warning"]) => {
+        return await showWarningDialog(payload);
+      }
+    ),
+  },
+
+  SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
+    action: createUILockAction(
+      async ({ dispatch }, payload: NotifyAndNotShowAgainButtonOption) => {
+        showNotifyAndNotShowAgainButton({ dispatch }, payload);
+      }
+    ),
+  },
+
+  SHOW_LOADING_SCREEN: {
+    action: createUILockAction(async (_, payload: LoadingScreenOption) => {
+      showLoadingScreen(payload);
+    }),
+  },
+
+  HIDE_ALL_LOADING_SCREEN: {
+    action: createUILockAction(async () => {
+      hideAllLoadingScreen();
+    }),
   },
 
   HYDRATE_UI_STORE: {

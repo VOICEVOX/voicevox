@@ -42,6 +42,15 @@ type CommonDialogCallback = (
   value: CommonDialogResult | PromiseLike<CommonDialogResult>
 ) => void;
 
+export type NotifyAndNotShowAgainButtonOption = {
+  message: string;
+  isWarning?: boolean;
+  icon?: string;
+  tipName: keyof ConfirmedTips;
+};
+
+export type LoadingScreenOption = { message: string };
+
 // 汎用ダイアログを表示
 export const showAlertDialog = async (
   options: CommonDialogOptions["alert"]
@@ -170,7 +179,7 @@ export async function generateAndSaveOneAudioWithDialog({
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", result });
+    showWriteErrorDialog({ mediaType: "audio", result, dispatch });
   }
 }
 
@@ -269,7 +278,7 @@ export async function generateAndConnectAndSaveAudioWithDialog({
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", result });
+    showWriteErrorDialog({ mediaType: "audio", result, dispatch });
   }
 }
 
@@ -298,7 +307,7 @@ export async function connectAndExportTextWithDialog({
       dispatch,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "text", result });
+    showWriteErrorDialog({ mediaType: "text", result, dispatch });
   }
 }
 
@@ -314,24 +323,28 @@ const showWriteSuccessNotify = ({
     audio: "音声",
     text: "テキスト",
   };
-  showNotifyAndNotShowAgainButton({
-    message: `${mediaTypeNames[mediaType]}を書き出しました`,
-    tipName: "notifyOnGenerate",
-    dispatch,
-  });
+  showNotifyAndNotShowAgainButton(
+    { dispatch },
+    {
+      message: `${mediaTypeNames[mediaType]}を書き出しました`,
+      tipName: "notifyOnGenerate",
+    }
+  );
 };
 
 // 書き出し失敗時のダイアログを表示
 const showWriteErrorDialog = ({
   mediaType,
   result,
+  dispatch,
 }: {
   mediaType: MediaType;
   result: SaveResultObject;
+  dispatch: Dispatch<AllActions>;
 }) => {
   if (mediaType === "text") {
     // テキスト書き出し時のエラーを出力
-    showAlertDialog({
+    dispatch("SHOW_ALERT_DIALOG", {
       title: "テキストの書き出しに失敗しました。",
       message:
         "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。",
@@ -347,7 +360,7 @@ const showWriteErrorDialog = ({
     };
 
     // 音声書き出し時のエラーを出力
-    showAlertDialog({
+    dispatch("SHOW_ALERT_DIALOG", {
       title: "書き出しに失敗しました。",
       message: result.errorMessage ?? defaultErrorMessages[result.result] ?? "",
     });
@@ -356,13 +369,14 @@ const showWriteErrorDialog = ({
 
 const NOTIFY_TIMEOUT = 5000;
 
-export const showNotifyAndNotShowAgainButton = (options: {
-  message: string;
-  isWarning?: boolean;
-  icon?: string;
-  tipName: keyof ConfirmedTips;
-  dispatch: Dispatch<AllActions>;
-}) => {
+export const showNotifyAndNotShowAgainButton = (
+  {
+    dispatch,
+  }: {
+    dispatch: Dispatch<AllActions>;
+  },
+  options: NotifyAndNotShowAgainButtonOption
+) => {
   options.icon ??= options.isWarning ? "warning" : "info";
 
   const suffix = options.isWarning ? "--warning" : "";
@@ -377,7 +391,7 @@ export const showNotifyAndNotShowAgainButton = (options: {
         label: "今後この通知をしない",
         textColor: "toast-button-display" + suffix,
         handler: () => {
-          options.dispatch("SET_CONFIRMED_TIP", {
+          dispatch("SET_CONFIRMED_TIP", {
             confirmedTip: {
               [options.tipName]: true,
             },
@@ -388,7 +402,7 @@ export const showNotifyAndNotShowAgainButton = (options: {
   });
 };
 
-export const showLoading = (options: { message: string }) => {
+export const showLoadingScreen = (options: LoadingScreenOption) => {
   Loading.show({
     spinnerColor: "primary",
     spinnerSize: 50,
@@ -397,6 +411,6 @@ export const showLoading = (options: { message: string }) => {
   });
 };
 
-export const hideAllLoading = () => {
+export const hideAllLoadingScreen = () => {
   Loading.hide();
 };

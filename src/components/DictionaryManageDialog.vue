@@ -251,11 +251,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
-import {
-  showAlertDialog,
-  showConfirmDialog,
-  showWarningDialog,
-} from "./Dialog";
 import AudioAccent from "./AudioAccent.vue";
 import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
@@ -306,7 +301,7 @@ const loadingDictProcess = async () => {
       store.dispatch("LOAD_ALL_USER_DICT")
     );
   } catch {
-    const result = await showAlertDialog({
+    const result = await store.dispatch("SHOW_ALERT_DIALOG", {
       title: "辞書の取得に失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
@@ -318,7 +313,7 @@ const loadingDictProcess = async () => {
   try {
     await createUILockAction(store.dispatch("SYNC_ALL_USER_DICT"));
   } catch {
-    await showAlertDialog({
+    await store.dispatch("SHOW_ALERT_DIALOG", {
       title: "辞書の同期に失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
@@ -473,7 +468,7 @@ const play = async () => {
     } catch (e) {
       window.electron.logError(e);
       nowGenerating.value = false;
-      showAlertDialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "生成に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -545,7 +540,7 @@ const saveWord = async () => {
         priority: wordPriority.value,
       });
     } catch {
-      showAlertDialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の更新に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -562,7 +557,7 @@ const saveWord = async () => {
         })
       );
     } catch {
-      showAlertDialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の登録に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -574,7 +569,7 @@ const saveWord = async () => {
 };
 const isDeletable = computed(() => !!selectedId.value);
 const deleteWord = async () => {
-  const result = await showWarningDialog({
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "登録された単語を削除しますか？",
     message: "削除された単語は復旧できません。",
     actionName: "削除",
@@ -587,7 +582,7 @@ const deleteWord = async () => {
         })
       );
     } catch {
-      showAlertDialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の削除に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -598,7 +593,7 @@ const deleteWord = async () => {
   }
 };
 const resetWord = async () => {
-  const result = await showConfirmDialog({
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
     actionName: "リセット",
@@ -609,7 +604,7 @@ const resetWord = async () => {
 };
 const discardOrNotDialog = async (okCallback: () => void) => {
   if (isWordChanged.value) {
-    const result = await showConfirmDialog({
+    const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
       title: "単語の追加・変更を破棄しますか？",
       message:
         "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",

@@ -176,10 +176,6 @@ import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
 import { useStore } from "@/store";
-import {
-  showAlertDialog,
-  showNotifyAndNotShowAgainButton,
-} from "@/components/Dialog";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -647,11 +643,10 @@ watch(
       const altPort = store.state.altPortInfos[engineId];
       if (!altPort) return;
 
-      showNotifyAndNotShowAgainButton({
+      store.dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
         message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
         icon: "compare_arrows",
         tipName: "engineStartedOnAltPort",
-        dispatch: store.dispatch,
       });
     }
   }
@@ -773,7 +768,7 @@ const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
       store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
       break;
     default:
-      showAlertDialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "対応していないファイルです",
         message:
           "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",

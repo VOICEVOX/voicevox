@@ -885,12 +885,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import {
-  hideAllLoading,
-  showAlertDialog,
-  showConfirmDialog,
-  showLoading,
-} from "./Dialog";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
@@ -1011,7 +1005,7 @@ const changeShowAddAudioItemButton = async (
 
   // 設定をオフにする場合はヒントを表示
   if (!showAddAudioItemButton) {
-    const result = await showConfirmDialog({
+    const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
       title: "エディタの＋ボタンを非表示にする",
       message: "テキスト欄は Shift + Enter で追加できます",
       actionName: "非表示",
@@ -1074,7 +1068,7 @@ const acceptRetrieveTelemetryComputed = computed({
       return;
     }
 
-    showAlertDialog({
+    store.dispatch("SHOW_ALERT_DIALOG", {
       title: "ソフトウェア利用状況のデータ収集の無効化",
       message:
         "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
@@ -1084,7 +1078,7 @@ const acceptRetrieveTelemetryComputed = computed({
 });
 
 const changeUseGpu = async (useGpu: boolean) => {
-  showLoading({
+  store.dispatch("SHOW_LOADING_SCREEN", {
     message: "起動モードを変更中です",
   });
 
@@ -1093,7 +1087,7 @@ const changeUseGpu = async (useGpu: boolean) => {
     engineId: selectedEngineId.value,
   });
 
-  hideAllLoading();
+  store.dispatch("HIDE_ALL_LOADING_SCREEN");
 };
 
 const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
@@ -1165,11 +1159,10 @@ const outputSamplingRate = computed({
   },
   set: async (outputSamplingRate: SamplingRateOption) => {
     if (outputSamplingRate !== "engineDefault") {
-      const result = await showConfirmDialog({
+      const result = await store.dispatch("SHOW_WARNING_DIALOG", {
         title: "出力サンプリングレートを変更します",
         message:
           "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
-        html: true,
         actionName: "変更する",
         cancel: "変更しない",
       });

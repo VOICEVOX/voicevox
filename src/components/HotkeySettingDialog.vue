@@ -214,7 +214,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { showConfirmDialog } from "./Dialog";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
@@ -350,7 +349,7 @@ const confirmBtnEnabled = computed(() => {
 });
 
 const resetHotkey = async (action: string) => {
-  const result = await showConfirmDialog({
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "ショートカットキーを初期値に戻します",
     message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
     html: true,
