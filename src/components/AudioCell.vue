@@ -214,8 +214,8 @@ const paste = async (options?: { text?: string }) => {
       (text: string) => string[]
     > = {
       PERIOD_AND_NEW_LINE: (text) =>
-        text.replaceAll("。", "。\n\r").split(/[\n\r]/),
-      NEW_LINE: (text) => text.split(/[\n\r]/),
+        text.replaceAll("。", "。\r\n").split(/[\r\n]/),
+      NEW_LINE: (text) => text.split(/[\r\n]/),
       OFF: (text) => [text],
     };
     const texts = textSplitter[textSplitType.value](text);
