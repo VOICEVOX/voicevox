@@ -102,7 +102,9 @@ img {
   background: transparent; // デフォルトの設定だと全画面ダイアログが出る際に黒背景がちらつく
 }
 
-// トースト通知内にあるボタン
+
+// トースト通知と通知内にあるボタン
+.text-toast-display,
 .q-notification__actions .q-btn {
   font-weight: bold;
 }
