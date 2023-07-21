@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  VOICEVOX_ENGINE_VERSION: 0.14.4
+  VOICEVOX_ENGINE_REPO: "VOICEVOX/voicevox_nemo_engine" # 軽いのでNemoを使う
+  VOICEVOX_ENGINE_VERSION: "0.14.0"
 
 defaults:
   run:
@@ -62,7 +63,7 @@ jobs:
         id: download-engine
         uses: ./.github/actions/download-engine
         with:
-          repo: VOICEVOX/voicevox_nemo_engine # 軽いのでNemoを使う
+          repo: ${{ env.VOICEVOX_ENGINE_REPO }}
           version: ${{ env.VOICEVOX_ENGINE_VERSION }}
           dest: ${{ github.workspace }}/voicevox_engine
           target: ${{ matrix.voicevox_engine_asset_name }}
