@@ -36,6 +36,7 @@ export function withProgress<T>(
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
+  reloadingLock: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
@@ -122,6 +123,18 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
     action({ commit }) {
       commit("UNLOCK_MENUBAR");
+    },
+  },
+
+  /**
+   * 再読み込み中。UNLOCKされることはない。
+   */
+  LOCK_RELOADING: {
+    mutation(state) {
+      state.reloadingLock = true;
+    },
+    action({ commit }) {
+      commit("LOCK_RELOADING");
     },
   },
 
@@ -329,9 +342,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   RELOAD_APP: {
     action: createUILockAction(
       async (
-        _,
+        { dispatch },
         { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }
       ) => {
+        await dispatch("LOCK_RELOADING");
         await window.electron.reloadApp({
           isMultiEngineOffMode: !!isMultiEngineOffMode,
         });

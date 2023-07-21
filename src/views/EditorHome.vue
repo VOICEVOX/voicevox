@@ -29,6 +29,7 @@
               <q-btn
                 v-if="isMultipleEngine"
                 outline
+                :disable="reloadingLocked"
                 @click="reloadAppWithMultiEngineOffMode"
               >
                 マルチエンジンをオフにして再読み込みする</q-btn
@@ -216,6 +217,7 @@ const $q = useQuasar();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+const reloadingLocked = computed(() => store.state.reloadingLock);
 
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 

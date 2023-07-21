@@ -54,6 +54,7 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
   icon?: string;
   disabled?: boolean;
   disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
 export type MenuItemButton = MenuItemBase<"button"> & {
@@ -61,6 +62,7 @@ export type MenuItemButton = MenuItemBase<"button"> & {
   icon?: string;
   disabled?: boolean;
   disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
 export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
@@ -529,18 +531,19 @@ async function updateEngines() {
     });
   }
   // マルチエンジンオフモードの解除
-  // if (store.state.isMultiEngineOffMode) {
-  engineMenu.subMenu.push({
-    type: "button",
-    label: "マルチエンジンをオンにして再読み込み",
-    onClick() {
-      store.dispatch("RELOAD_APP", {
-        isMultiEngineOffMode: false,
-      });
-    },
-    disableWhenUiLocked: false,
-  });
-  // }
+  if (store.state.isMultiEngineOffMode) {
+    engineMenu.subMenu.push({
+      type: "button",
+      label: "マルチエンジンをオンにして再読み込み",
+      onClick() {
+        store.dispatch("RELOAD_APP", {
+          isMultiEngineOffMode: false,
+        });
+      },
+      disableWhenUiLocked: false,
+      disablreloadingLocked: true,
+    });
+  }
 }
 // engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
 // FIXME: computedにする

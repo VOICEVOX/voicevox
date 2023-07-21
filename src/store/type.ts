@@ -1133,6 +1133,7 @@ export type SettingStoreTypes = {
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
+  reloadingLock: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
@@ -1185,6 +1186,11 @@ export type UiStoreTypes = {
   };
 
   UNLOCK_MENUBAR: {
+    mutation: undefined;
+    action(): void;
+  };
+
+  LOCK_RELOADING: {
     mutation: undefined;
     action(): void;
   };

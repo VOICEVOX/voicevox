@@ -129,9 +129,18 @@ if (isDevelopment) {
   __static = __dirname;
 }
 
+// ソフトウェア起動時はプロトコルを app にする
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
+if (process.env.VITE_DEV_SERVER_URL == undefined) {
+  // FIXME: registerFileProtocolが非推奨になったので対策を考える
+  protocol.registerFileProtocol("app", (request, callback) => {
+    const filePath = new URL(request.url).pathname;
+    callback(path.join(__dirname, filePath));
+  });
+}
+const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // 設定ファイル
 const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
@@ -478,13 +487,6 @@ async function createWindow() {
     }
   }
 
-  // ソフトウェア起動時はプロトコルを app にする
-  if (process.env.VITE_DEV_SERVER_URL == undefined) {
-    protocol.registerFileProtocol("app", (request, callback) => {
-      const filePath = new URL(request.url).pathname;
-      callback(path.join(__dirname, filePath));
-    });
-  }
   loadUrl({ projectFilePath });
 
   if (isDevelopment && !isTest) win.webContents.openDevTools();
@@ -537,12 +539,7 @@ async function loadUrl(obj: {
     "#/home" +
     `?isMultiEngineOffMode=${obj?.isMultiEngineOffMode ?? false}` +
     `&projectFilePath=${obj?.projectFilePath ?? ""}`;
-
-  const url = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
-
-  return win.loadURL(`${url}${fragment}`, {
-    extraHeaders: "pragma: no-cache\n", // Vuexのstateも破棄したいのでキャッシュ無効化してスーパーリロード
-  });
+  return win.loadURL(`${firstUrl}${fragment}`);
 }
 
 // 開始。その他の準備が完了した後に呼ばれる。
@@ -938,7 +935,8 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
 });
 
 ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
-  リロード中UIを作る;
+  // FIXME: 同じようなURLだとスーパーリロードされないことがあるので一度ダミーページを読み込む
+  await win.loadURL(firstUrl + "dummypage");
 
   log.info("Checking ENGINE status before reload app");
   const engineTerminateResult = terminateEngines();
