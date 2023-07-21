@@ -364,7 +364,7 @@ const showWriteErrorDialog = ({
   }
 };
 
-const NOTIFY_TIMEOUT = 50000000;
+const NOTIFY_TIMEOUT = 5000;
 
 export const showNotifyAndNotShowAgainButton = (
   {
