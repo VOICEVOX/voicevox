@@ -70,6 +70,8 @@ jobs:
 
       - name: Run npm run test:e2e
         run: |
+          chmod +x ${{ steps.download-engine.outputs.run_path }}
+
           cp .env.test .env
           sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env
 

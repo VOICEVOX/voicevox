@@ -97,4 +97,5 @@ runs:
         else
           echo "run_path=$DEST/run" >> $GITHUB_OUTPUT
         fi
-        cat $TEMPDIR/target.json | jq -r '.tag_name' | sed -e 's_^_version=_' >> $GITHUB_OUTPUT
+        echo "version=$(jq -r '.tag_name' $TEMPDIR/target.json)" >> $GITHUB_OUTPUT
+
