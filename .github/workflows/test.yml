@@ -57,7 +57,8 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb x11-xserver-utils
+          sudo apt-get install -y xvfb x11-xserver-utils # for electron
+          sudo apt-get install -y libsndfile1 # for engine
 
       - name: Download VOICEVOX ENGINE
         id: download-engine
