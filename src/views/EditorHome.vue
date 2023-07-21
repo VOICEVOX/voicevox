@@ -672,7 +672,7 @@ watch(
 
 const reloadAppWithMultiEngineOffMode = () => {
   store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
-    closeOrRefresh: "reload",
+    closeOrReload: "reload",
     isMultiEngineOffMode: true,
   });
 };

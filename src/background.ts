@@ -289,7 +289,7 @@ async function installVvppEngineWithWarning({
       .then((result) => {
         if (result.response === 0) {
           ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
-            closeOrRefresh: "reload",
+            closeOrReload: "reload",
           });
         }
       });
@@ -508,7 +508,7 @@ async function createWindow() {
     if (!appState.willQuit) {
       event.preventDefault();
       ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
-        closeOrRefresh: "close",
+        closeOrReload: "close",
       });
       return;
     }
@@ -995,7 +995,7 @@ app.on("window-all-closed", () => {
 app.on("before-quit", async (event) => {
   if (!appState.willQuit) {
     event.preventDefault();
-    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { closeOrRefresh: "close" });
+    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
     return;
   }
 

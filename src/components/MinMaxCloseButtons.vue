@@ -100,7 +100,7 @@ import { useStore } from "@/store";
 const store = useStore();
 
 const closeWindow = async () => {
-  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrRefresh: "close" });
+  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
 };
 const minimizeWindow = () => window.electron.minimizeWindow();
 const maximizeWindow = () => window.electron.maximizeWindow();

@@ -329,9 +329,9 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         }
       }
 
-      if (obj.closeOrRefresh == "close") {
+      if (obj.closeOrReload == "close") {
         window.electron.closeWindow();
-      } else if (obj.closeOrRefresh == "reload") {
+      } else if (obj.closeOrReload == "reload") {
         await dispatch("RELOAD_APP", {
           isMultiEngineOffMode: obj.isMultiEngineOffMode,
         });

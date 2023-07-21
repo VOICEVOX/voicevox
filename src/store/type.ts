@@ -1282,9 +1282,9 @@ export type UiStoreTypes = {
   CHECK_EDITED_AND_NOT_SAVE: {
     action(
       obj:
-        | { closeOrRefresh: "close" }
+        | { closeOrReload: "close" }
         | {
-            closeOrRefresh: "reload";
+            closeOrReload: "reload";
             isMultiEngineOffMode?: boolean;
           }
     ): Promise<void>;
