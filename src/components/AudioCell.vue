@@ -252,7 +252,9 @@ const putMultilineText = async (texts: string[]) => {
     voice: audioItem.value.voice,
     prevAudioKey,
   });
-  emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
+  if (audioKeys.length > 0) {
+    emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
+  }
 };
 
 // 行番号を表示するかどうか
