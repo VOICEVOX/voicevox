@@ -2,6 +2,10 @@ name: "Download VOICEVOX ENGINE"
 description: |
   VOICEVOX ENGINEをダウンロードし、指定したディレクトリに展開する。
 inputs:
+  repo:
+    description: "リポジトリ名。デフォルトはVOICEVOX/voicevox_engine。"
+    required: false
+    default: "VOICEVOX/voicevox_engine"
   version:
     description: "VOICEVOX ENGINEのバージョン。latest（デフォルト）、prerelease-latest、バージョン番号（例：0.14.4）で指定できる。"
     required: false
@@ -37,7 +41,7 @@ runs:
     - name: Get version
       shell: bash
       run: |
-        curl -s https://api.github.com/repos/voicevox/voicevox_engine/releases \
+        curl -s https://api.github.com/repos/${{ inputs.repo }}/releases \
             -H 'authorization: Bearer ${{ github.token }}' \
             -H 'content-type: application/json' > $TEMPDIR/releases.json
 

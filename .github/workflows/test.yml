@@ -62,6 +62,7 @@ jobs:
         id: download-engine
         uses: ./.github/actions/download-engine
         with:
+          repo: VOICEVOX/voicevox_nemo_engine # 軽いのでNemoを使う
           version: ${{ env.VOICEVOX_ENGINE_VERSION }}
           dest: ${{ github.workspace }}/voicevox_engine
           target: ${{ matrix.voicevox_engine_asset_name }}
