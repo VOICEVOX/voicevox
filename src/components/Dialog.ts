@@ -323,13 +323,10 @@ const showWriteSuccessNotify = ({
     audio: "音声",
     text: "テキスト",
   };
-  showNotifyAndNotShowAgainButton(
-    { dispatch },
-    {
-      message: `${mediaTypeNames[mediaType]}を書き出しました`,
-      tipName: "notifyOnGenerate",
-    }
-  );
+  dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
+    message: `${mediaTypeNames[mediaType]}を書き出しました`,
+    tipName: "notifyOnGenerate",
+  });
 };
 
 // 書き出し失敗時のダイアログを表示
@@ -367,7 +364,7 @@ const showWriteErrorDialog = ({
   }
 };
 
-const NOTIFY_TIMEOUT = 5000;
+const NOTIFY_TIMEOUT = 50000000;
 
 export const showNotifyAndNotShowAgainButton = (
   {

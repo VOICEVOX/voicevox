@@ -207,23 +207,21 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
-    action: createUILockAction(
-      async ({ dispatch }, payload: NotifyAndNotShowAgainButtonOption) => {
-        showNotifyAndNotShowAgainButton({ dispatch }, payload);
-      }
-    ),
+    action({ dispatch }, payload: NotifyAndNotShowAgainButtonOption) {
+      showNotifyAndNotShowAgainButton({ dispatch }, payload);
+    },
   },
 
   SHOW_LOADING_SCREEN: {
-    action: createUILockAction(async (_, payload: LoadingScreenOption) => {
+    action(_, payload: LoadingScreenOption) {
       showLoadingScreen(payload);
-    }),
+    },
   },
 
   HIDE_ALL_LOADING_SCREEN: {
-    action: createUILockAction(async () => {
+    action() {
       hideAllLoadingScreen();
-    }),
+    },
   },
 
   HYDRATE_UI_STORE: {
