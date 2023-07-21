@@ -5,8 +5,6 @@
     touch-position
     context-menu
     :no-focus="noFocus"
-    @vnode-mounted="setButtonCapturer()"
-    @vnode-unmounted="removeButtonCapturer()"
     @before-show="startOperation()"
     @before-hide="endOperation()"
     @keydown.enter.exact="selectAction()"
@@ -30,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import { QMenu } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
@@ -73,12 +71,12 @@ const buttonCapturer = (event: Event) => {
     noFocus.value = event.button !== -1;
   }
 };
-const setButtonCapturer = () => {
+onMounted(() => {
   parent.addEventListener("contextmenu", buttonCapturer, { capture: true });
-};
-const removeButtonCapturer = () => {
+});
+onUnmounted(() => {
   parent.removeEventListener("contextmenu", buttonCapturer);
-};
+});
 
 // Expose
 const willDispatchFocusOrBlur = ref(false);
