@@ -1,4 +1,5 @@
 <template>
+  <!-- mousetrapに抗うための @keydown.enter -->
   <q-menu
     ref="contextmenu"
     touch-position
@@ -8,6 +9,7 @@
     @vnode-unmounted="removeButtonCapturer()"
     @before-show="startOperation()"
     @before-hide="endOperation()"
+    @keydown.enter.exact="selectAction()"
   >
     <q-list dense>
       <q-item v-if="header" dense class="bg-background">
@@ -50,6 +52,11 @@ defineExpose({
 });
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+// mousetrapに抗う
+const selectAction = () => {
+  document.activeElement?.dispatchEvent(new Event("click"));
+};
 
 const contextmenu = ref<QMenu>();
 /**
