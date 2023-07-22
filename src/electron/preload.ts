@@ -173,6 +173,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("LOG_INFO", ...params);
   },
 
+  openLogDirectory: () => {
+    ipcRenderer.invoke("OPEN_LOG_DIRECTORY");
+  },
+
   engineInfos: () => {
     return ipcRendererInvoke("ENGINE_INFOS");
   },

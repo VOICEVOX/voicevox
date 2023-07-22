@@ -209,6 +209,9 @@ export const api: Sandbox = {
     console.info(...params);
     return;
   },
+  openLogDirectory() {
+    throw new Error(`Not supported on Browser version: openLogDirectory`);
+  },
   /* eslint-enable no-console */
   engineInfos() {
     return Promise.resolve([defaultEngine]);
