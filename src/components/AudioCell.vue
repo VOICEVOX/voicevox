@@ -387,7 +387,6 @@ const getMenuItemButton = (label: string) => {
  * コンテキストメニューの開閉によりFocusやBlurが発生する可能性のある間は`true`。
  */
 // no-focus を付けた場合と付けてない場合でタイミングが異なるため、両方に対応。
-// Expose
 const willFocusOrBlur = ref(false);
 const startContextmenuOperation = () => {
   willFocusOrBlur.value = true;
