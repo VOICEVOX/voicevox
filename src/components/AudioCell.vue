@@ -378,12 +378,6 @@ const contextMenudata = ref<
     disableWhenUiLocked: true,
   },
 ]);
-const getMenuItemButton = (label: string) => {
-  const item = contextMenudata.value.find((item) => item.label === label);
-  if (item?.type !== "button")
-    throw new Error("コンテキストメニューアイテムの取得に失敗しました。");
-  return item;
-};
 /**
  * コンテキストメニューの開閉によりFocusやBlurが発生する可能性のある間は`true`。
  */
@@ -393,6 +387,13 @@ const startContextmenuOperation = () => {
   willFocusOrBlur.value = true;
 };
 const readyForContextMenu = () => {
+  const getMenuItemButton = (label: string) => {
+    const item = contextMenudata.value.find((item) => item.label === label);
+    if (item?.type !== "button")
+      throw new Error("コンテキストメニューアイテムの取得に失敗しました。");
+    return item;
+  };
+
   const MAX_HEADER_LENGTH = 15;
   const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
