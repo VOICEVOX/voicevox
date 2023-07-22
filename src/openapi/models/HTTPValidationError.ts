@@ -13,12 +13,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { ValidationError } from './ValidationError';
 import {
-    ValidationError,
     ValidationErrorFromJSON,
     ValidationErrorFromJSONTyped,
     ValidationErrorToJSON,
-} from './';
+} from './ValidationError';
 
 /**
  * 
@@ -32,6 +32,15 @@ export interface HTTPValidationError {
      * @memberof HTTPValidationError
      */
     detail?: Array<ValidationError>;
+}
+
+/**
+ * Check if a given object implements the HTTPValidationError interface.
+ */
+export function instanceOfHTTPValidationError(value: object): boolean {
+    let isInstance = true;
+
+    return isInstance;
 }
 
 export function HTTPValidationErrorFromJSON(json: any): HTTPValidationError {

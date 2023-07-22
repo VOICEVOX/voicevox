@@ -7,7 +7,6 @@ import {
   ThemeSetting,
   ToolbarSetting,
   UpdateInfo,
-  WriteFileErrorResult,
   NativeThemeType,
   EngineSetting,
   EngineId,
@@ -15,6 +14,7 @@ import {
 } from "@/type/preload";
 import { ContextMenuType } from "@/type/contextMenu";
 import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
 /**
  * invoke, handle
@@ -299,12 +299,12 @@ export type IpcIHData = {
 
   WRITE_FILE: {
     args: [obj: { filePath: string; buffer: ArrayBuffer }];
-    return: WriteFileErrorResult | undefined;
+    return: Result<undefined>;
   };
 
   READ_FILE: {
     args: [obj: { filePath: string }];
-    return: ArrayBuffer;
+    return: Result<ArrayBuffer>;
   };
 };
 

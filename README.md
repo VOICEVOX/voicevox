@@ -65,6 +65,17 @@ npm run electron:serve
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
 
+### ブラウザ版の実行（開発中）
+
+別途音声合成エンジンを起動し、以下を実行して表示された localhost へアクセスします。
+
+```bash
+npm run browser:serve
+```
+
+また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/#/home>  
+今はローカル PC 上で音声合成エンジンを起動する必要があります。
+
 ## ビルド
 
 ```bash
@@ -148,7 +159,9 @@ shellcheck ./build/*.sh
 
 ## OpenAPI generator
 
-音声合成エンジンが起動している状態で以下のコマンドを実行してください。
+音声合成エンジンが起動している状態で以下のコマンドを実行してください。  
+なお、2023/07/02 現在、openapi-generator の最新版に[パッチ](https://github.com/OpenAPITools/openapi-generator/pull/15943)を当てたものを使わないと更新できない状態になっています。  
+詳細は[こちら](https://github.com/VOICEVOX/voicevox/pull/1361)
 
 ```bash
 curl http://127.0.0.1:50021/openapi.json >openapi.json

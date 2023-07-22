@@ -13,16 +13,18 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { Speaker } from './Speaker';
 import {
-    Speaker,
     SpeakerFromJSON,
     SpeakerFromJSONTyped,
     SpeakerToJSON,
-    SpeakerInfo,
+} from './Speaker';
+import type { SpeakerInfo } from './SpeakerInfo';
+import {
     SpeakerInfoFromJSON,
     SpeakerInfoFromJSONTyped,
     SpeakerInfoToJSON,
-} from './';
+} from './SpeakerInfo';
 
 /**
  * 音声ライブラリに含まれる話者の情報
@@ -35,13 +37,24 @@ export interface LibrarySpeaker {
      * @type {Speaker}
      * @memberof LibrarySpeaker
      */
-    speaker: Speaker | null;
+    speaker: Speaker;
     /**
      * 
      * @type {SpeakerInfo}
      * @memberof LibrarySpeaker
      */
-    speakerInfo: SpeakerInfo | null;
+    speakerInfo: SpeakerInfo;
+}
+
+/**
+ * Check if a given object implements the LibrarySpeaker interface.
+ */
+export function instanceOfLibrarySpeaker(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "speaker" in value;
+    isInstance = isInstance && "speakerInfo" in value;
+
+    return isInstance;
 }
 
 export function LibrarySpeakerFromJSON(json: any): LibrarySpeaker {

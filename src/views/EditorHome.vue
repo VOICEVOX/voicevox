@@ -27,13 +27,13 @@
               <q-separator spaced />
               エンジン起動に時間がかかっています。<br />
               <q-btn
+                v-if="isMultipleEngine"
                 outline
                 @click="restartAppWithMultiEngineOffMode"
-                v-if="isMultipleEngine"
               >
                 マルチエンジンをオフにして再起動する</q-btn
               >
-              <q-btn outline @click="openFaq" v-else>FAQを見る</q-btn>
+              <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
             </template>
           </div>
         </div>
@@ -88,33 +88,36 @@
                       "
                     >
                       <draggable
-                        class="audio-cells"
                         ref="cellsRef"
-                        :modelValue="audioKeys"
-                        @update:modelValue="updateAudioKeys"
-                        :itemKey="itemKey"
+                        class="audio-cells"
+                        :model-value="audioKeys"
+                        :item-key="itemKey"
                         ghost-class="ghost"
                         filter="input"
-                        :preventOnFilter="false"
+                        :prevent-on-filter="false"
+                        @update:model-value="updateAudioKeys"
                       >
-                        <template v-slot:item="{ element }">
+                        <template #item="{ element }">
                           <audio-cell
-                            class="draggable-cursor"
-                            :audioKey="element"
                             :ref="addAudioCellRef"
-                            @focusCell="focusCell"
+                            class="draggable-cursor"
+                            :audio-key="element"
+                            @focus-cell="focusCell"
                           />
                         </template>
                       </draggable>
-                      <div class="add-button-wrapper">
+                      <div
+                        v-if="showAddAudioItemButton"
+                        class="add-button-wrapper"
+                      >
                         <q-btn
                           fab
                           icon="add"
                           color="primary-light"
                           text-color="display-on-primary"
                           :disable="uiLocked"
-                          @click="addAudioItem"
                           aria-label="テキストを追加"
+                          @click="addAudioItem"
                         ></q-btn>
                       </div>
                     </div>
@@ -122,7 +125,7 @@
                   <template #after>
                     <audio-info
                       v-if="activeAudioKey != undefined"
-                      :activeAudioKey="activeAudioKey"
+                      :active-audio-key="activeAudioKey"
                     />
                   </template>
                 </q-splitter>
@@ -132,7 +135,7 @@
           <template #after>
             <audio-detail
               v-if="activeAudioKey != undefined"
-              :activeAudioKey="activeAudioKey"
+              :active-audio-key="activeAudioKey"
             />
           </template>
         </q-splitter>
@@ -150,13 +153,13 @@
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
     v-if="orderedAllCharacterInfos.length > 0"
-    :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
+    :character-infos="orderedAllCharacterInfos"
   />
   <default-style-list-dialog
     v-if="orderedAllCharacterInfos.length > 0"
-    :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
+    :character-infos="orderedAllCharacterInfos"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
@@ -200,6 +203,7 @@ import {
   SplitterPosition,
   Voice,
 } from "@/type/preload";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 const props =
@@ -474,7 +478,7 @@ const focusCell = ({ audioKey }: { audioKey: AudioKey }) => {
 const disableDefaultUndoRedo = (event: KeyboardEvent) => {
   // ctrl+z, ctrl+shift+z, ctrl+y
   if (
-    event.ctrlKey &&
+    isOnCommandOrCtrlKeyDown(event) &&
     (event.key == "z" || (!event.shiftKey && event.key == "y"))
   ) {
     event.preventDefault();
@@ -487,11 +491,8 @@ const userOrderedCharacterInfos = computed(
 const audioItems = computed(() => store.state.audioItems);
 // 並び替え後、テキスト欄が１つで空欄なら話者を更新
 // 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
-watch(userOrderedCharacterInfos, (newValue, oldValue) => {
-  if (
-    newValue.length < 1 ||
-    (oldValue.length > 0 && newValue[0] === oldValue[0])
-  ) {
+watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
+  if (userOrderedCharacterInfos.length < 1) {
     return;
   }
 
@@ -502,7 +503,7 @@ watch(userOrderedCharacterInfos, (newValue, oldValue) => {
       return;
     }
 
-    const speakerId = newValue[0];
+    const speakerId = userOrderedCharacterInfos[0];
     const defaultStyleId = store.state.defaultStyleIds.find(
       (styleId) => styleId.speakerUuid === speakerId
     );
@@ -671,7 +672,7 @@ const restartAppWithMultiEngineOffMode = () => {
   store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
 };
 
-const openFaq = () => {
+const openQa = () => {
   window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
 };
 
@@ -816,6 +817,10 @@ watch(activeAudioKey, (audioKey) => {
   if (overflowTop || overflowBottom) {
     activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
   }
+});
+
+const showAddAudioItemButton = computed(() => {
+  return store.state.showAddAudioItemButton;
 });
 </script>
 

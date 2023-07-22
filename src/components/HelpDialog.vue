@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="help-dialog transparent-backdrop"
-    v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff">
       <q-drawer
@@ -20,8 +20,8 @@
             <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
               <q-item
                 v-if="page.type === 'item'"
-                clickable
                 v-ripple
+                clickable
                 active-class="selected-item"
                 :active="selectedPageIndex === pageIndex"
                 @click="selectedPageIndex = pageIndex"
@@ -46,7 +46,7 @@
               :name="pageIndex"
               class="q-pa-none"
             >
-              <div class="root" v-if="page.type === 'item'">
+              <div v-if="page.type === 'item'" class="root">
                 <q-header class="q-pa-sm">
                   <q-toolbar>
                     <q-toolbar-title class="text-display">
@@ -212,6 +212,7 @@ const pagedata = computed(() => {
       name: "アップデート情報",
       component: UpdateInfo,
       props: {
+        downloadLink: "https://voicevox.hiroshiba.jp/",
         updateInfos: updateInfos.value,
         isUpdateAvailable: isUpdateAvailable.value,
         latestVersion: latestVersion.value,

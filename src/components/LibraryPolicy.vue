@@ -13,7 +13,7 @@
         >
           <!-- エンジンが一つだけの場合は名前を表示しない -->
           <template v-if="engineInfos.size > 1">
-            <q-separator spaced v-if="engineIndex > 0" />
+            <q-separator v-if="engineIndex > 0" spaced />
             <q-item-label header>{{
               mapUndefinedPipe(engineInfos.get(engineId), (v) => v.name)
             }}</q-item-label>
@@ -61,23 +61,8 @@
             )
           }}
         </div>
-        <div
-          class="markdown"
-          v-html="
-            convertMarkdown(
-              undefinedToDefault(
-                '',
-                mapUndefinedPipe(
-                  engineInfos.get(selectedInfo.engine),
-                  (v) => v.characterInfos,
-                  (v) =>
-                    mapUndefinedPipe(selectedInfo, (i) => v.get(i.character)),
-                  (v) => v.metas.policy
-                )
-              )
-            )
-          "
-        ></div>
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <div v-if="policy" class="markdown" v-html="policy"></div>
       </div>
     </div>
   </q-page>
@@ -88,7 +73,7 @@ import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
-import { mapUndefinedPipe, undefinedToDefault } from "@/helpers/map";
+import { mapUndefinedPipe } from "@/helpers/map";
 
 type DetailKey = { engine: EngineId; character: SpeakerId };
 
@@ -118,9 +103,19 @@ const engineInfos = computed(
     )
 );
 
-const convertMarkdown = (text: string) => {
-  return md.render(text);
-};
+const policy = computed<string | undefined>(() => {
+  if (selectedInfo.value == undefined) return undefined;
+
+  const engineInfo = engineInfos.value.get(selectedInfo.value.engine);
+  if (engineInfo == undefined) return undefined;
+
+  const characterInfo = engineInfo.characterInfos.get(
+    selectedInfo.value.character
+  );
+  if (characterInfo == undefined) return undefined;
+
+  return md.render(characterInfo.metas.policy);
+});
 
 const selectedInfo = ref<DetailKey | undefined>(undefined);
 

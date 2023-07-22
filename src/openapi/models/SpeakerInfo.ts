@@ -13,12 +13,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { StyleInfo } from './StyleInfo';
 import {
-    StyleInfo,
     StyleInfoFromJSON,
     StyleInfoFromJSONTyped,
     StyleInfoToJSON,
-} from './';
+} from './StyleInfo';
 
 /**
  * 話者の追加情報
@@ -44,6 +44,18 @@ export interface SpeakerInfo {
      * @memberof SpeakerInfo
      */
     styleInfos: Array<StyleInfo>;
+}
+
+/**
+ * Check if a given object implements the SpeakerInfo interface.
+ */
+export function instanceOfSpeakerInfo(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "policy" in value;
+    isInstance = isInstance && "portrait" in value;
+    isInstance = isInstance && "styleInfos" in value;
+
+    return isInstance;
 }
 
 export function SpeakerInfoFromJSON(json: any): SpeakerInfo {

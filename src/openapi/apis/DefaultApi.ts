@@ -14,50 +14,52 @@
 
 
 import * as runtime from '../runtime';
+import type {
+  AccentPhrase,
+  AudioQuery,
+  DownloadableLibrary,
+  EngineManifest,
+  HTTPValidationError,
+  InstalledLibrary,
+  MorphableTargetInfo,
+  ParseKanaBadRequest,
+  Preset,
+  Speaker,
+  SpeakerInfo,
+  SupportedDevicesInfo,
+  UserDictWord,
+  WordTypes,
+} from '../models/index';
 import {
-    AccentPhrase,
     AccentPhraseFromJSON,
     AccentPhraseToJSON,
-    AudioQuery,
     AudioQueryFromJSON,
     AudioQueryToJSON,
-    DownloadableLibrary,
     DownloadableLibraryFromJSON,
     DownloadableLibraryToJSON,
-    EngineManifest,
     EngineManifestFromJSON,
     EngineManifestToJSON,
-    HTTPValidationError,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
-    InstalledLibrary,
     InstalledLibraryFromJSON,
     InstalledLibraryToJSON,
-    MorphableTargetInfo,
     MorphableTargetInfoFromJSON,
     MorphableTargetInfoToJSON,
-    ParseKanaBadRequest,
     ParseKanaBadRequestFromJSON,
     ParseKanaBadRequestToJSON,
-    Preset,
     PresetFromJSON,
     PresetToJSON,
-    Speaker,
     SpeakerFromJSON,
     SpeakerToJSON,
-    SpeakerInfo,
     SpeakerInfoFromJSON,
     SpeakerInfoToJSON,
-    SupportedDevicesInfo,
     SupportedDevicesInfoFromJSON,
     SupportedDevicesInfoToJSON,
-    UserDictWord,
     UserDictWordFromJSON,
     UserDictWordToJSON,
-    WordTypes,
     WordTypesFromJSON,
     WordTypesToJSON,
-} from '../models';
+} from '../models/index';
 
 export interface AccentPhrasesAccentPhrasesPostRequest {
     text: string;
@@ -229,13 +231,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    accentPhrasesAccentPhrasesPostRaw(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
+    accentPhrasesAccentPhrasesPostRaw(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
     /**
      * テキストからアクセント句を得ます。 is_kanaが`true`のとき、テキストは次のようなAquesTalkライクな記法に従う読み仮名として処理されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。
      * テキストからアクセント句を得る
      */
-    accentPhrasesAccentPhrasesPost(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>>;
+    accentPhrasesAccentPhrasesPost(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
     /**
      * 新しいプリセットを追加します  Parameters ------- preset: Preset     新しいプリセット。     プリセットIDが既存のものと重複している場合は、新規のプリセットIDが採番されます。  Returns ------- id: int     追加したプリセットのプリセットID
@@ -245,13 +247,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    addPresetAddPresetPostRaw(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<number>>;
+    addPresetAddPresetPostRaw(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>>;
 
     /**
      * 新しいプリセットを追加します  Parameters ------- preset: Preset     新しいプリセット。     プリセットIDが既存のものと重複している場合は、新規のプリセットIDが採番されます。  Returns ------- id: int     追加したプリセットのプリセットID
      * Add Preset
      */
-    addPresetAddPresetPost(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit): Promise<number>;
+    addPresetAddPresetPost(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number>;
 
     /**
      * ユーザー辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_type: WordTypes, optional     PROPER_NOUN（固有名詞）、COMMON_NOUN（普通名詞）、VERB（動詞）、ADJECTIVE（形容詞）、SUFFIX（語尾）のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
@@ -265,13 +267,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>>;
+    addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>>;
 
     /**
      * ユーザー辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_type: WordTypes, optional     PROPER_NOUN（固有名詞）、COMMON_NOUN（普通名詞）、VERB（動詞）、ADJECTIVE（形容詞）、SUFFIX（語尾）のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Add User Dict Word
      */
-    addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<string>;
+    addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string>;
 
     /**
      * クエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
@@ -283,13 +285,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    audioQueryAudioQueryPostRaw(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<AudioQuery>>;
+    audioQueryAudioQueryPostRaw(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>>;
 
     /**
      * クエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリを作成する
      */
-    audioQueryAudioQueryPost(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit): Promise<AudioQuery>;
+    audioQueryAudioQueryPost(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery>;
 
     /**
      * クエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
@@ -301,13 +303,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<AudioQuery>>;
+    audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>>;
 
     /**
      * クエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリをプリセットを用いて作成する
      */
-    audioQueryFromPresetAudioQueryFromPresetPost(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit): Promise<AudioQuery>;
+    audioQueryFromPresetAudioQueryFromPresetPost(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery>;
 
     /**
      * 
@@ -319,12 +321,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    cancellableSynthesisCancellableSynthesisPostRaw(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>>;
+    cancellableSynthesisCancellableSynthesisPostRaw(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
     /**
      * 音声合成する（キャンセル可能）
      */
-    cancellableSynthesisCancellableSynthesisPost(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit): Promise<Blob>;
+    cancellableSynthesisCancellableSynthesisPost(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
     /**
      * base64エンコードされたwavデータを一纏めにし、wavファイルで返します。
@@ -334,13 +336,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    connectWavesConnectWavesPostRaw(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>>;
+    connectWavesConnectWavesPostRaw(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
     /**
      * base64エンコードされたwavデータを一纏めにし、wavファイルで返します。
      * base64エンコードされた複数のwavデータを一つに結合する
      */
-    connectWavesConnectWavesPost(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit): Promise<Blob>;
+    connectWavesConnectWavesPost(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
     /**
      * 
@@ -349,12 +351,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<string>>>;
+    coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>>;
 
     /**
      * Core Versions
      */
-    coreVersionsCoreVersionsGet(initOverrides?: RequestInit): Promise<Array<string>>;
+    coreVersionsCoreVersionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string>>;
 
     /**
      * 既存のプリセットを削除します  Parameters ------- id: int     削除するプリセットのプリセットID
@@ -364,13 +366,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    deletePresetDeletePresetPostRaw(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
+    deletePresetDeletePresetPostRaw(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
     /**
      * 既存のプリセットを削除します  Parameters ------- id: int     削除するプリセットのプリセットID
      * Delete Preset
      */
-    deletePresetDeletePresetPost(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit): Promise<void>;
+    deletePresetDeletePresetPost(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
     /**
      * ユーザー辞書に登録されている言葉を削除します。  Parameters ---------- word_uuid: str     削除する言葉のUUID
@@ -380,13 +382,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
+    deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
     /**
      * ユーザー辞書に登録されている言葉を削除します。  Parameters ---------- word_uuid: str     削除する言葉のUUID
      * Delete User Dict Word
      */
-    deleteUserDictWordUserDictWordWordUuidDelete(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit): Promise<void>;
+    deleteUserDictWordUserDictWordWordUuidDelete(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
     /**
      * ダウンロード可能な音声ライブラリの情報を返します。  Returns ------- ret_data: List[DownloadableLibrary]
@@ -395,13 +397,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<DownloadableLibrary>>>;
+    downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<DownloadableLibrary>>>;
 
     /**
      * ダウンロード可能な音声ライブラリの情報を返します。  Returns ------- ret_data: List[DownloadableLibrary]
      * Downloadable Libraries
      */
-    downloadableLibrariesDownloadableLibrariesGet(initOverrides?: RequestInit): Promise<Array<DownloadableLibrary>>;
+    downloadableLibrariesDownloadableLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<DownloadableLibrary>>;
 
     /**
      * 
@@ -410,12 +412,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    engineManifestEngineManifestGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<EngineManifest>>;
+    engineManifestEngineManifestGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EngineManifest>>;
 
     /**
      * Engine Manifest
      */
-    engineManifestEngineManifestGet(initOverrides?: RequestInit): Promise<EngineManifest>;
+    engineManifestEngineManifestGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EngineManifest>;
 
     /**
      * エンジンが保持しているプリセットの設定を返します  Returns ------- presets: List[Preset]     プリセットのリスト
@@ -424,13 +426,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    getPresetsPresetsGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<Preset>>>;
+    getPresetsPresetsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Preset>>>;
 
     /**
      * エンジンが保持しているプリセットの設定を返します  Returns ------- presets: List[Preset]     プリセットのリスト
      * Get Presets
      */
-    getPresetsPresetsGet(initOverrides?: RequestInit): Promise<Array<Preset>>;
+    getPresetsPresetsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Preset>>;
 
     /**
      * ユーザー辞書に登録されている単語の一覧を返します。 単語の表層形(surface)は正規化済みの物を返します。  Returns ------- Dict[str, UserDictWord]     単語のUUIDとその詳細
@@ -439,13 +441,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    getUserDictWordsUserDictGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<{ [key: string]: UserDictWord; }>>;
+    getUserDictWordsUserDictGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: UserDictWord; }>>;
 
     /**
      * ユーザー辞書に登録されている単語の一覧を返します。 単語の表層形(surface)は正規化済みの物を返します。  Returns ------- Dict[str, UserDictWord]     単語のUUIDとその詳細
      * Get User Dict Words
      */
-    getUserDictWordsUserDictGet(initOverrides?: RequestInit): Promise<{ [key: string]: UserDictWord; }>;
+    getUserDictWordsUserDictGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: UserDictWord; }>;
 
     /**
      * 他のユーザー辞書をインポートします。  Parameters ---------- import_dict_data: Dict[str, UserDictWord]     インポートするユーザー辞書のデータ override: bool     重複したエントリがあった場合、上書きするかどうか
@@ -456,13 +458,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
+    importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
     /**
      * 他のユーザー辞書をインポートします。  Parameters ---------- import_dict_data: Dict[str, UserDictWord]     インポートするユーザー辞書のデータ override: bool     重複したエントリがあった場合、上書きするかどうか
      * Import User Dict Words
      */
-    importUserDictWordsImportUserDictPost(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit): Promise<void>;
+    importUserDictWordsImportUserDictPost(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
     /**
      * 指定されたspeaker_idの話者を初期化します。 実行しなくても他のAPIは使用できますが、初回実行時に時間がかかることがあります。
@@ -474,13 +476,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    initializeSpeakerInitializeSpeakerPostRaw(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
+    initializeSpeakerInitializeSpeakerPostRaw(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
     /**
      * 指定されたspeaker_idの話者を初期化します。 実行しなくても他のAPIは使用できますが、初回実行時に時間がかかることがあります。
      * Initialize Speaker
      */
-    initializeSpeakerInitializeSpeakerPost(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit): Promise<void>;
+    initializeSpeakerInitializeSpeakerPost(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
     /**
      * 音声ライブラリをインストールします。 音声ライブラリのZIPファイルをリクエストボディとして送信してください。  Parameters ---------- library_uuid: str     音声ライブラリのID
@@ -490,13 +492,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
+    installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
     /**
      * 音声ライブラリをインストールします。 音声ライブラリのZIPファイルをリクエストボディとして送信してください。  Parameters ---------- library_uuid: str     音声ライブラリのID
      * Install Library
      */
-    installLibraryInstallLibraryLibraryUuidPost(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit): Promise<void>;
+    installLibraryInstallLibraryLibraryUuidPost(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
     /**
      * インストールした音声ライブラリの情報を返します。  Returns ------- ret_data: List[DownloadableLibrary]
@@ -505,13 +507,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    installedLibrariesInstalledLibrariesGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<{ [key: string]: InstalledLibrary; }>>;
+    installedLibrariesInstalledLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: InstalledLibrary; }>>;
 
     /**
      * インストールした音声ライブラリの情報を返します。  Returns ------- ret_data: List[DownloadableLibrary]
      * Installed Libraries
      */
-    installedLibrariesInstalledLibrariesGet(initOverrides?: RequestInit): Promise<{ [key: string]: InstalledLibrary; }>;
+    installedLibrariesInstalledLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: InstalledLibrary; }>;
 
     /**
      * 指定されたspeaker_idの話者が初期化されているかどうかを返します。
@@ -522,13 +524,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<boolean>>;
+    isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>>;
 
     /**
      * 指定されたspeaker_idの話者が初期化されているかどうかを返します。
      * Is Initialized Speaker
      */
-    isInitializedSpeakerIsInitializedSpeakerGet(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit): Promise<boolean>;
+    isInitializedSpeakerIsInitializedSpeakerGet(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean>;
 
     /**
      * 
@@ -540,12 +542,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
+    moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
     /**
      * アクセント句から音高・音素長を得る
      */
-    moraDataMoraDataPost(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>>;
+    moraDataMoraDataPost(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
     /**
      * 
@@ -557,12 +559,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    moraLengthMoraLengthPostRaw(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
+    moraLengthMoraLengthPostRaw(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
     /**
      * アクセント句から音素長を得る
      */
-    moraLengthMoraLengthPost(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>>;
+    moraLengthMoraLengthPost(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
     /**
      * 
@@ -574,12 +576,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
+    moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
     /**
      * アクセント句から音高を得る
      */
-    moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>>;
+    moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
     /**
      * 指定されたベース話者に対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値の話者はstring型なので注意。
@@ -590,13 +592,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>>;
+    morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>>;
 
     /**
      * 指定されたベース話者に対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値の話者はstring型なので注意。
      * 指定した話者に対してエンジン内の話者がモーフィングが可能か判定する
      */
-    morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit): Promise<Array<{ [key: string]: MorphableTargetInfo; }>>;
+    morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>>;
 
     /**
      * 
@@ -608,12 +610,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    multiSynthesisMultiSynthesisPostRaw(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>>;
+    multiSynthesisMultiSynthesisPostRaw(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
     /**
      * 複数まとめて音声合成する
      */
-    multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit): Promise<Blob>;
+    multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
     /**
      * ユーザー辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID word_type: WordTypes, optional     PROPER_NOUN（固有名詞）、COMMON_NOUN（普通名詞）、VERB（動詞）、ADJECTIVE（形容詞）、SUFFIX（語尾）のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
@@ -628,13 +630,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
+    rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
     /**
      * ユーザー辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID word_type: WordTypes, optional     PROPER_NOUN（固有名詞）、COMMON_NOUN（普通名詞）、VERB（動詞）、ADJECTIVE（形容詞）、SUFFIX（語尾）のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Rewrite User Dict Word
      */
-    rewriteUserDictWordUserDictWordWordUuidPut(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit): Promise<void>;
+    rewriteUserDictWordUserDictWordWordUuidPut(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
     /**
      * 
@@ -643,12 +645,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    settingGetSettingGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>>;
+    settingGetSettingGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>>;
 
     /**
      * Setting Get
      */
-    settingGetSettingGet(initOverrides?: RequestInit): Promise<string>;
+    settingGetSettingGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string>;
 
     /**
      * 
@@ -659,12 +661,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    settingPostSettingPostRaw(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>>;
+    settingPostSettingPostRaw(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>>;
 
     /**
      * Setting Post
      */
-    settingPostSettingPost(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit): Promise<string>;
+    settingPostSettingPost(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string>;
 
     /**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: SpeakerInfo
@@ -675,13 +677,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<SpeakerInfo>>;
+    speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>>;
 
     /**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: SpeakerInfo
      * Speaker Info
      */
-    speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit): Promise<SpeakerInfo>;
+    speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo>;
 
     /**
      * 
@@ -691,12 +693,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<Speaker>>>;
+    speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>>;
 
     /**
      * Speakers
      */
-    speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit): Promise<Array<Speaker>>;
+    speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>>;
 
     /**
      * 
@@ -706,12 +708,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    supportedDevicesSupportedDevicesGetRaw(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<SupportedDevicesInfo>>;
+    supportedDevicesSupportedDevicesGetRaw(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SupportedDevicesInfo>>;
 
     /**
      * Supported Devices
      */
-    supportedDevicesSupportedDevicesGet(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit): Promise<SupportedDevicesInfo>;
+    supportedDevicesSupportedDevicesGet(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SupportedDevicesInfo>;
 
     /**
      * 指定された2人の話者で音声を合成、指定した割合でモーフィングした音声を得ます。 モーフィングの割合は`morph_rate`で指定でき、0.0でベースの話者、1.0でターゲットの話者に近づきます。
@@ -725,13 +727,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    synthesisMorphingSynthesisMorphingPostRaw(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>>;
+    synthesisMorphingSynthesisMorphingPostRaw(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
     /**
      * 指定された2人の話者で音声を合成、指定した割合でモーフィングした音声を得ます。 モーフィングの割合は`morph_rate`で指定でき、0.0でベースの話者、1.0でターゲットの話者に近づきます。
      * 2人の話者でモーフィングした音声を合成する
      */
-    synthesisMorphingSynthesisMorphingPost(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit): Promise<Blob>;
+    synthesisMorphingSynthesisMorphingPost(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
     /**
      * 
@@ -744,12 +746,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    synthesisSynthesisPostRaw(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>>;
+    synthesisSynthesisPostRaw(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
     /**
      * 音声合成する
      */
-    synthesisSynthesisPost(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit): Promise<Blob>;
+    synthesisSynthesisPost(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
     /**
      * 音声ライブラリをアンインストールします。  Parameters ---------- library_uuid: str     音声ライブラリのID
@@ -759,13 +761,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
+    uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
     /**
      * 音声ライブラリをアンインストールします。  Parameters ---------- library_uuid: str     音声ライブラリのID
      * Uninstall Library
      */
-    uninstallLibraryUninstallLibraryLibraryUuidPost(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit): Promise<void>;
+    uninstallLibraryUninstallLibraryLibraryUuidPost(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
     /**
      * 既存のプリセットを更新します  Parameters ------- preset: Preset     更新するプリセット。     プリセットIDが更新対象と一致している必要があります。  Returns ------- id: int     更新したプリセットのプリセットID
@@ -775,13 +777,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    updatePresetUpdatePresetPostRaw(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<number>>;
+    updatePresetUpdatePresetPostRaw(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>>;
 
     /**
      * 既存のプリセットを更新します  Parameters ------- preset: Preset     更新するプリセット。     プリセットIDが更新対象と一致している必要があります。  Returns ------- id: int     更新したプリセットのプリセットID
      * Update Preset
      */
-    updatePresetUpdatePresetPost(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit): Promise<number>;
+    updatePresetUpdatePresetPost(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number>;
 
     /**
      * テキストがAquesTalkライクな記法に従っているかどうかを判定します。 従っていない場合はエラーが返ります。  Parameters ---------- text: str     判定する対象の文字列
@@ -791,13 +793,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    validateKanaValidateKanaPostRaw(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<boolean>>;
+    validateKanaValidateKanaPostRaw(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>>;
 
     /**
      * テキストがAquesTalkライクな記法に従っているかどうかを判定します。 従っていない場合はエラーが返ります。  Parameters ---------- text: str     判定する対象の文字列
      * テキストがAquesTalkライクな記法に従っているか判定する
      */
-    validateKanaValidateKanaPost(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit): Promise<boolean>;
+    validateKanaValidateKanaPost(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean>;
 
     /**
      * 
@@ -806,12 +808,12 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    versionVersionGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<any>>;
+    versionVersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>>;
 
     /**
      * Version
      */
-    versionVersionGet(initOverrides?: RequestInit): Promise<any>;
+    versionVersionGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any>;
 
 }
 
@@ -824,7 +826,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * テキストからアクセント句を得ます。 is_kanaが`true`のとき、テキストは次のようなAquesTalkライクな記法に従う読み仮名として処理されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。
      * テキストからアクセント句を得る
      */
-    async accentPhrasesAccentPhrasesPostRaw(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+    async accentPhrasesAccentPhrasesPostRaw(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
         if (requestParameters.text === null || requestParameters.text === undefined) {
             throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling accentPhrasesAccentPhrasesPost.');
         }
@@ -867,7 +869,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * テキストからアクセント句を得ます。 is_kanaが`true`のとき、テキストは次のようなAquesTalkライクな記法に従う読み仮名として処理されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。
      * テキストからアクセント句を得る
      */
-    async accentPhrasesAccentPhrasesPost(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>> {
+    async accentPhrasesAccentPhrasesPost(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
         const response = await this.accentPhrasesAccentPhrasesPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -876,7 +878,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 新しいプリセットを追加します  Parameters ------- preset: Preset     新しいプリセット。     プリセットIDが既存のものと重複している場合は、新規のプリセットIDが採番されます。  Returns ------- id: int     追加したプリセットのプリセットID
      * Add Preset
      */
-    async addPresetAddPresetPostRaw(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<number>> {
+    async addPresetAddPresetPostRaw(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
         if (requestParameters.preset === null || requestParameters.preset === undefined) {
             throw new runtime.RequiredError('preset','Required parameter requestParameters.preset was null or undefined when calling addPresetAddPresetPost.');
         }
@@ -895,14 +897,18 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             body: PresetToJSON(requestParameters.preset),
         }, initOverrides);
 
-        return new runtime.TextApiResponse(response) as any;
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<number>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * 新しいプリセットを追加します  Parameters ------- preset: Preset     新しいプリセット。     プリセットIDが既存のものと重複している場合は、新規のプリセットIDが採番されます。  Returns ------- id: int     追加したプリセットのプリセットID
      * Add Preset
      */
-    async addPresetAddPresetPost(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit): Promise<number> {
+    async addPresetAddPresetPost(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number> {
         const response = await this.addPresetAddPresetPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -911,7 +917,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ユーザー辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_type: WordTypes, optional     PROPER_NOUN（固有名詞）、COMMON_NOUN（普通名詞）、VERB（動詞）、ADJECTIVE（形容詞）、SUFFIX（語尾）のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Add User Dict Word
      */
-    async addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>> {
+    async addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         if (requestParameters.surface === null || requestParameters.surface === undefined) {
             throw new runtime.RequiredError('surface','Required parameter requestParameters.surface was null or undefined when calling addUserDictWordUserDictWordPost.');
         }
@@ -955,14 +961,18 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.TextApiResponse(response) as any;
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * ユーザー辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_type: WordTypes, optional     PROPER_NOUN（固有名詞）、COMMON_NOUN（普通名詞）、VERB（動詞）、ADJECTIVE（形容詞）、SUFFIX（語尾）のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Add User Dict Word
      */
-    async addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<string> {
+    async addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.addUserDictWordUserDictWordPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -971,7 +981,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * クエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリを作成する
      */
-    async audioQueryAudioQueryPostRaw(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<AudioQuery>> {
+    async audioQueryAudioQueryPostRaw(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
         if (requestParameters.text === null || requestParameters.text === undefined) {
             throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling audioQueryAudioQueryPost.');
         }
@@ -1010,7 +1020,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * クエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリを作成する
      */
-    async audioQueryAudioQueryPost(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit): Promise<AudioQuery> {
+    async audioQueryAudioQueryPost(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery> {
         const response = await this.audioQueryAudioQueryPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1019,7 +1029,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * クエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリをプリセットを用いて作成する
      */
-    async audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<AudioQuery>> {
+    async audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
         if (requestParameters.text === null || requestParameters.text === undefined) {
             throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling audioQueryFromPresetAudioQueryFromPresetPost.');
         }
@@ -1058,7 +1068,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * クエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリをプリセットを用いて作成する
      */
-    async audioQueryFromPresetAudioQueryFromPresetPost(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit): Promise<AudioQuery> {
+    async audioQueryFromPresetAudioQueryFromPresetPost(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery> {
         const response = await this.audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1066,7 +1076,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * 音声合成する（キャンセル可能）
      */
-    async cancellableSynthesisCancellableSynthesisPostRaw(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>> {
+    async cancellableSynthesisCancellableSynthesisPostRaw(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling cancellableSynthesisCancellableSynthesisPost.');
         }
@@ -1103,7 +1113,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * 音声合成する（キャンセル可能）
      */
-    async cancellableSynthesisCancellableSynthesisPost(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit): Promise<Blob> {
+    async cancellableSynthesisCancellableSynthesisPost(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
         const response = await this.cancellableSynthesisCancellableSynthesisPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1112,7 +1122,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * base64エンコードされたwavデータを一纏めにし、wavファイルで返します。
      * base64エンコードされた複数のwavデータを一つに結合する
      */
-    async connectWavesConnectWavesPostRaw(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>> {
+    async connectWavesConnectWavesPostRaw(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
         if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
             throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling connectWavesConnectWavesPost.');
         }
@@ -1138,7 +1148,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * base64エンコードされたwavデータを一纏めにし、wavファイルで返します。
      * base64エンコードされた複数のwavデータを一つに結合する
      */
-    async connectWavesConnectWavesPost(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit): Promise<Blob> {
+    async connectWavesConnectWavesPost(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
         const response = await this.connectWavesConnectWavesPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1146,7 +1156,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Core Versions
      */
-    async coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<string>>> {
+    async coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1164,7 +1174,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Core Versions
      */
-    async coreVersionsCoreVersionsGet(initOverrides?: RequestInit): Promise<Array<string>> {
+    async coreVersionsCoreVersionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string>> {
         const response = await this.coreVersionsCoreVersionsGetRaw(initOverrides);
         return await response.value();
     }
@@ -1173,7 +1183,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 既存のプリセットを削除します  Parameters ------- id: int     削除するプリセットのプリセットID
      * Delete Preset
      */
-    async deletePresetDeletePresetPostRaw(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
+    async deletePresetDeletePresetPostRaw(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.id === null || requestParameters.id === undefined) {
             throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling deletePresetDeletePresetPost.');
         }
@@ -1200,7 +1210,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 既存のプリセットを削除します  Parameters ------- id: int     削除するプリセットのプリセットID
      * Delete Preset
      */
-    async deletePresetDeletePresetPost(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit): Promise<void> {
+    async deletePresetDeletePresetPost(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.deletePresetDeletePresetPostRaw(requestParameters, initOverrides);
     }
 
@@ -1208,7 +1218,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ユーザー辞書に登録されている言葉を削除します。  Parameters ---------- word_uuid: str     削除する言葉のUUID
      * Delete User Dict Word
      */
-    async deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
+    async deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.wordUuid === null || requestParameters.wordUuid === undefined) {
             throw new runtime.RequiredError('wordUuid','Required parameter requestParameters.wordUuid was null or undefined when calling deleteUserDictWordUserDictWordWordUuidDelete.');
         }
@@ -1231,7 +1241,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ユーザー辞書に登録されている言葉を削除します。  Parameters ---------- word_uuid: str     削除する言葉のUUID
      * Delete User Dict Word
      */
-    async deleteUserDictWordUserDictWordWordUuidDelete(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit): Promise<void> {
+    async deleteUserDictWordUserDictWordWordUuidDelete(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters, initOverrides);
     }
 
@@ -1239,7 +1249,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ダウンロード可能な音声ライブラリの情報を返します。  Returns ------- ret_data: List[DownloadableLibrary]
      * Downloadable Libraries
      */
-    async downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<DownloadableLibrary>>> {
+    async downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<DownloadableLibrary>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1258,7 +1268,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ダウンロード可能な音声ライブラリの情報を返します。  Returns ------- ret_data: List[DownloadableLibrary]
      * Downloadable Libraries
      */
-    async downloadableLibrariesDownloadableLibrariesGet(initOverrides?: RequestInit): Promise<Array<DownloadableLibrary>> {
+    async downloadableLibrariesDownloadableLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<DownloadableLibrary>> {
         const response = await this.downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides);
         return await response.value();
     }
@@ -1266,7 +1276,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Engine Manifest
      */
-    async engineManifestEngineManifestGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<EngineManifest>> {
+    async engineManifestEngineManifestGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EngineManifest>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1284,7 +1294,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Engine Manifest
      */
-    async engineManifestEngineManifestGet(initOverrides?: RequestInit): Promise<EngineManifest> {
+    async engineManifestEngineManifestGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EngineManifest> {
         const response = await this.engineManifestEngineManifestGetRaw(initOverrides);
         return await response.value();
     }
@@ -1293,7 +1303,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * エンジンが保持しているプリセットの設定を返します  Returns ------- presets: List[Preset]     プリセットのリスト
      * Get Presets
      */
-    async getPresetsPresetsGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<Preset>>> {
+    async getPresetsPresetsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Preset>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1312,7 +1322,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * エンジンが保持しているプリセットの設定を返します  Returns ------- presets: List[Preset]     プリセットのリスト
      * Get Presets
      */
-    async getPresetsPresetsGet(initOverrides?: RequestInit): Promise<Array<Preset>> {
+    async getPresetsPresetsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Preset>> {
         const response = await this.getPresetsPresetsGetRaw(initOverrides);
         return await response.value();
     }
@@ -1321,7 +1331,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ユーザー辞書に登録されている単語の一覧を返します。 単語の表層形(surface)は正規化済みの物を返します。  Returns ------- Dict[str, UserDictWord]     単語のUUIDとその詳細
      * Get User Dict Words
      */
-    async getUserDictWordsUserDictGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<{ [key: string]: UserDictWord; }>> {
+    async getUserDictWordsUserDictGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: UserDictWord; }>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1340,7 +1350,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ユーザー辞書に登録されている単語の一覧を返します。 単語の表層形(surface)は正規化済みの物を返します。  Returns ------- Dict[str, UserDictWord]     単語のUUIDとその詳細
      * Get User Dict Words
      */
-    async getUserDictWordsUserDictGet(initOverrides?: RequestInit): Promise<{ [key: string]: UserDictWord; }> {
+    async getUserDictWordsUserDictGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: UserDictWord; }> {
         const response = await this.getUserDictWordsUserDictGetRaw(initOverrides);
         return await response.value();
     }
@@ -1349,7 +1359,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 他のユーザー辞書をインポートします。  Parameters ---------- import_dict_data: Dict[str, UserDictWord]     インポートするユーザー辞書のデータ override: bool     重複したエントリがあった場合、上書きするかどうか
      * Import User Dict Words
      */
-    async importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
+    async importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.override === null || requestParameters.override === undefined) {
             throw new runtime.RequiredError('override','Required parameter requestParameters.override was null or undefined when calling importUserDictWordsImportUserDictPost.');
         }
@@ -1383,7 +1393,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 他のユーザー辞書をインポートします。  Parameters ---------- import_dict_data: Dict[str, UserDictWord]     インポートするユーザー辞書のデータ override: bool     重複したエントリがあった場合、上書きするかどうか
      * Import User Dict Words
      */
-    async importUserDictWordsImportUserDictPost(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit): Promise<void> {
+    async importUserDictWordsImportUserDictPost(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.importUserDictWordsImportUserDictPostRaw(requestParameters, initOverrides);
     }
 
@@ -1391,7 +1401,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定されたspeaker_idの話者を初期化します。 実行しなくても他のAPIは使用できますが、初回実行時に時間がかかることがあります。
      * Initialize Speaker
      */
-    async initializeSpeakerInitializeSpeakerPostRaw(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
+    async initializeSpeakerInitializeSpeakerPostRaw(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling initializeSpeakerInitializeSpeakerPost.');
         }
@@ -1426,7 +1436,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定されたspeaker_idの話者を初期化します。 実行しなくても他のAPIは使用できますが、初回実行時に時間がかかることがあります。
      * Initialize Speaker
      */
-    async initializeSpeakerInitializeSpeakerPost(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit): Promise<void> {
+    async initializeSpeakerInitializeSpeakerPost(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.initializeSpeakerInitializeSpeakerPostRaw(requestParameters, initOverrides);
     }
 
@@ -1434,7 +1444,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声ライブラリをインストールします。 音声ライブラリのZIPファイルをリクエストボディとして送信してください。  Parameters ---------- library_uuid: str     音声ライブラリのID
      * Install Library
      */
-    async installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
+    async installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.libraryUuid === null || requestParameters.libraryUuid === undefined) {
             throw new runtime.RequiredError('libraryUuid','Required parameter requestParameters.libraryUuid was null or undefined when calling installLibraryInstallLibraryLibraryUuidPost.');
         }
@@ -1457,7 +1467,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声ライブラリをインストールします。 音声ライブラリのZIPファイルをリクエストボディとして送信してください。  Parameters ---------- library_uuid: str     音声ライブラリのID
      * Install Library
      */
-    async installLibraryInstallLibraryLibraryUuidPost(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit): Promise<void> {
+    async installLibraryInstallLibraryLibraryUuidPost(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters, initOverrides);
     }
 
@@ -1465,7 +1475,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * インストールした音声ライブラリの情報を返します。  Returns ------- ret_data: List[DownloadableLibrary]
      * Installed Libraries
      */
-    async installedLibrariesInstalledLibrariesGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<{ [key: string]: InstalledLibrary; }>> {
+    async installedLibrariesInstalledLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: InstalledLibrary; }>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1484,7 +1494,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * インストールした音声ライブラリの情報を返します。  Returns ------- ret_data: List[DownloadableLibrary]
      * Installed Libraries
      */
-    async installedLibrariesInstalledLibrariesGet(initOverrides?: RequestInit): Promise<{ [key: string]: InstalledLibrary; }> {
+    async installedLibrariesInstalledLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: InstalledLibrary; }> {
         const response = await this.installedLibrariesInstalledLibrariesGetRaw(initOverrides);
         return await response.value();
     }
@@ -1493,7 +1503,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定されたspeaker_idの話者が初期化されているかどうかを返します。
      * Is Initialized Speaker
      */
-    async isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<boolean>> {
+    async isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling isInitializedSpeakerIsInitializedSpeakerGet.');
         }
@@ -1517,14 +1527,18 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.TextApiResponse(response) as any;
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<boolean>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * 指定されたspeaker_idの話者が初期化されているかどうかを返します。
      * Is Initialized Speaker
      */
-    async isInitializedSpeakerIsInitializedSpeakerGet(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit): Promise<boolean> {
+    async isInitializedSpeakerIsInitializedSpeakerGet(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
         const response = await this.isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1532,7 +1546,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * アクセント句から音高・音素長を得る
      */
-    async moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+    async moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraDataMoraDataPost.');
         }
@@ -1569,7 +1583,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * アクセント句から音高・音素長を得る
      */
-    async moraDataMoraDataPost(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>> {
+    async moraDataMoraDataPost(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
         const response = await this.moraDataMoraDataPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1577,7 +1591,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * アクセント句から音素長を得る
      */
-    async moraLengthMoraLengthPostRaw(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+    async moraLengthMoraLengthPostRaw(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraLengthMoraLengthPost.');
         }
@@ -1614,7 +1628,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * アクセント句から音素長を得る
      */
-    async moraLengthMoraLengthPost(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>> {
+    async moraLengthMoraLengthPost(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
         const response = await this.moraLengthMoraLengthPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1622,7 +1636,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * アクセント句から音高を得る
      */
-    async moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+    async moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraPitchMoraPitchPost.');
         }
@@ -1659,7 +1673,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * アクセント句から音高を得る
      */
-    async moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>> {
+    async moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
         const response = await this.moraPitchMoraPitchPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1668,7 +1682,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定されたベース話者に対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値の話者はstring型なので注意。
      * 指定した話者に対してエンジン内の話者がモーフィングが可能か判定する
      */
-    async morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>> {
+    async morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>> {
         if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
             throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling morphableTargetsMorphableTargetsPost.');
         }
@@ -1698,7 +1712,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定されたベース話者に対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値の話者はstring型なので注意。
      * 指定した話者に対してエンジン内の話者がモーフィングが可能か判定する
      */
-    async morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit): Promise<Array<{ [key: string]: MorphableTargetInfo; }>> {
+    async morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>> {
         const response = await this.morphableTargetsMorphableTargetsPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1706,7 +1720,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * 複数まとめて音声合成する
      */
-    async multiSynthesisMultiSynthesisPostRaw(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>> {
+    async multiSynthesisMultiSynthesisPostRaw(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling multiSynthesisMultiSynthesisPost.');
         }
@@ -1743,7 +1757,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * 複数まとめて音声合成する
      */
-    async multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit): Promise<Blob> {
+    async multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
         const response = await this.multiSynthesisMultiSynthesisPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1752,7 +1766,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ユーザー辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID word_type: WordTypes, optional     PROPER_NOUN（固有名詞）、COMMON_NOUN（普通名詞）、VERB（動詞）、ADJECTIVE（形容詞）、SUFFIX（語尾）のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Rewrite User Dict Word
      */
-    async rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
+    async rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.wordUuid === null || requestParameters.wordUuid === undefined) {
             throw new runtime.RequiredError('wordUuid','Required parameter requestParameters.wordUuid was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
         }
@@ -1807,14 +1821,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ユーザー辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID word_type: WordTypes, optional     PROPER_NOUN（固有名詞）、COMMON_NOUN（普通名詞）、VERB（動詞）、ADJECTIVE（形容詞）、SUFFIX（語尾）のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Rewrite User Dict Word
      */
-    async rewriteUserDictWordUserDictWordWordUuidPut(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit): Promise<void> {
+    async rewriteUserDictWordUserDictWordWordUuidPut(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters, initOverrides);
     }
 
     /**
      * Setting Get
      */
-    async settingGetSettingGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>> {
+    async settingGetSettingGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1826,13 +1840,17 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.TextApiResponse(response) as any;
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * Setting Get
      */
-    async settingGetSettingGet(initOverrides?: RequestInit): Promise<string> {
+    async settingGetSettingGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.settingGetSettingGetRaw(initOverrides);
         return await response.value();
     }
@@ -1840,7 +1858,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Setting Post
      */
-    async settingPostSettingPostRaw(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>> {
+    async settingPostSettingPostRaw(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1875,13 +1893,17 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             body: formParams,
         }, initOverrides);
 
-        return new runtime.TextApiResponse(response) as any;
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * Setting Post
      */
-    async settingPostSettingPost(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit): Promise<string> {
+    async settingPostSettingPost(requestParameters: SettingPostSettingPostRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.settingPostSettingPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1890,7 +1912,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: SpeakerInfo
      * Speaker Info
      */
-    async speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<SpeakerInfo>> {
+    async speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
         if (requestParameters.speakerUuid === null || requestParameters.speakerUuid === undefined) {
             throw new runtime.RequiredError('speakerUuid','Required parameter requestParameters.speakerUuid was null or undefined when calling speakerInfoSpeakerInfoGet.');
         }
@@ -1921,7 +1943,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: SpeakerInfo
      * Speaker Info
      */
-    async speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit): Promise<SpeakerInfo> {
+    async speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
         const response = await this.speakerInfoSpeakerInfoGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1929,7 +1951,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Speakers
      */
-    async speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<Speaker>>> {
+    async speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
         const queryParameters: any = {};
 
         if (requestParameters.coreVersion !== undefined) {
@@ -1951,7 +1973,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Speakers
      */
-    async speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit): Promise<Array<Speaker>> {
+    async speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
         const response = await this.speakersSpeakersGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1959,7 +1981,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Supported Devices
      */
-    async supportedDevicesSupportedDevicesGetRaw(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<SupportedDevicesInfo>> {
+    async supportedDevicesSupportedDevicesGetRaw(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SupportedDevicesInfo>> {
         const queryParameters: any = {};
 
         if (requestParameters.coreVersion !== undefined) {
@@ -1981,7 +2003,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Supported Devices
      */
-    async supportedDevicesSupportedDevicesGet(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit): Promise<SupportedDevicesInfo> {
+    async supportedDevicesSupportedDevicesGet(requestParameters: SupportedDevicesSupportedDevicesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SupportedDevicesInfo> {
         const response = await this.supportedDevicesSupportedDevicesGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1990,7 +2012,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定された2人の話者で音声を合成、指定した割合でモーフィングした音声を得ます。 モーフィングの割合は`morph_rate`で指定でき、0.0でベースの話者、1.0でターゲットの話者に近づきます。
      * 2人の話者でモーフィングした音声を合成する
      */
-    async synthesisMorphingSynthesisMorphingPostRaw(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>> {
+    async synthesisMorphingSynthesisMorphingPostRaw(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
         if (requestParameters.baseSpeaker === null || requestParameters.baseSpeaker === undefined) {
             throw new runtime.RequiredError('baseSpeaker','Required parameter requestParameters.baseSpeaker was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
         }
@@ -2044,7 +2066,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定された2人の話者で音声を合成、指定した割合でモーフィングした音声を得ます。 モーフィングの割合は`morph_rate`で指定でき、0.0でベースの話者、1.0でターゲットの話者に近づきます。
      * 2人の話者でモーフィングした音声を合成する
      */
-    async synthesisMorphingSynthesisMorphingPost(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit): Promise<Blob> {
+    async synthesisMorphingSynthesisMorphingPost(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
         const response = await this.synthesisMorphingSynthesisMorphingPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -2052,7 +2074,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * 音声合成する
      */
-    async synthesisSynthesisPostRaw(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>> {
+    async synthesisSynthesisPostRaw(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling synthesisSynthesisPost.');
         }
@@ -2093,7 +2115,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * 音声合成する
      */
-    async synthesisSynthesisPost(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit): Promise<Blob> {
+    async synthesisSynthesisPost(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
         const response = await this.synthesisSynthesisPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -2102,7 +2124,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声ライブラリをアンインストールします。  Parameters ---------- library_uuid: str     音声ライブラリのID
      * Uninstall Library
      */
-    async uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
+    async uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.libraryUuid === null || requestParameters.libraryUuid === undefined) {
             throw new runtime.RequiredError('libraryUuid','Required parameter requestParameters.libraryUuid was null or undefined when calling uninstallLibraryUninstallLibraryLibraryUuidPost.');
         }
@@ -2125,7 +2147,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声ライブラリをアンインストールします。  Parameters ---------- library_uuid: str     音声ライブラリのID
      * Uninstall Library
      */
-    async uninstallLibraryUninstallLibraryLibraryUuidPost(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit): Promise<void> {
+    async uninstallLibraryUninstallLibraryLibraryUuidPost(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters, initOverrides);
     }
 
@@ -2133,7 +2155,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 既存のプリセットを更新します  Parameters ------- preset: Preset     更新するプリセット。     プリセットIDが更新対象と一致している必要があります。  Returns ------- id: int     更新したプリセットのプリセットID
      * Update Preset
      */
-    async updatePresetUpdatePresetPostRaw(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<number>> {
+    async updatePresetUpdatePresetPostRaw(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
         if (requestParameters.preset === null || requestParameters.preset === undefined) {
             throw new runtime.RequiredError('preset','Required parameter requestParameters.preset was null or undefined when calling updatePresetUpdatePresetPost.');
         }
@@ -2152,14 +2174,18 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             body: PresetToJSON(requestParameters.preset),
         }, initOverrides);
 
-        return new runtime.TextApiResponse(response) as any;
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<number>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * 既存のプリセットを更新します  Parameters ------- preset: Preset     更新するプリセット。     プリセットIDが更新対象と一致している必要があります。  Returns ------- id: int     更新したプリセットのプリセットID
      * Update Preset
      */
-    async updatePresetUpdatePresetPost(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit): Promise<number> {
+    async updatePresetUpdatePresetPost(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number> {
         const response = await this.updatePresetUpdatePresetPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -2168,7 +2194,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * テキストがAquesTalkライクな記法に従っているかどうかを判定します。 従っていない場合はエラーが返ります。  Parameters ---------- text: str     判定する対象の文字列
      * テキストがAquesTalkライクな記法に従っているか判定する
      */
-    async validateKanaValidateKanaPostRaw(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<boolean>> {
+    async validateKanaValidateKanaPostRaw(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
         if (requestParameters.text === null || requestParameters.text === undefined) {
             throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling validateKanaValidateKanaPost.');
         }
@@ -2188,14 +2214,18 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.TextApiResponse(response) as any;
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<boolean>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * テキストがAquesTalkライクな記法に従っているかどうかを判定します。 従っていない場合はエラーが返ります。  Parameters ---------- text: str     判定する対象の文字列
      * テキストがAquesTalkライクな記法に従っているか判定する
      */
-    async validateKanaValidateKanaPost(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit): Promise<boolean> {
+    async validateKanaValidateKanaPost(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
         const response = await this.validateKanaValidateKanaPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -2203,7 +2233,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     /**
      * Version
      */
-    async versionVersionGetRaw(initOverrides?: RequestInit): Promise<runtime.ApiResponse<any>> {
+    async versionVersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -2215,13 +2245,17 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.TextApiResponse(response) as any;
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * Version
      */
-    async versionVersionGet(initOverrides?: RequestInit): Promise<any> {
+    async versionVersionGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
         const response = await this.versionVersionGetRaw(initOverrides);
         return await response.value();
     }

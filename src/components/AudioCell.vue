@@ -8,18 +8,19 @@
       class="absolute active-arrow"
     />
     <div
+      v-if="showTextLineNumber"
       class="line-number"
       :class="{ active: isActiveAudioCell }"
-      v-if="showTextLineNumber"
     >
       {{ textLineNumberIndex }}
     </div>
     <character-button
+      v-model:selected-voice="selectedVoice"
       :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
-      v-model:selected-voice="selectedVoice"
+      @focus="setActiveAudioKey()"
     />
     <q-input
       ref="textfield"
@@ -31,6 +32,7 @@
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
+      :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
       @change="willRemove || pushAudioText()"
       @paste="pasteOnAudioCell"
@@ -38,21 +40,20 @@
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @mouseup.right="onRightClickTextField"
-      :aria-label="`${textLineNumberIndex}行目`"
     >
-      <template v-slot:error>
+      <template #error>
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template #after v-if="deleteButtonEnable">
+      <template v-if="deleteButtonEnable" #after>
         <q-btn
           round
           flat
           icon="delete_outline"
           size="0.8rem"
           :disable="uiLocked"
-          @click="removeCell"
           :aria-label="`${textLineNumberIndex}行目を削除`"
+          @click="removeCell"
         />
       </template>
     </q-input>
@@ -279,6 +280,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/visually-hidden' as visually-hidden;
 @use '@/styles/colors' as colors;
 
 .audio-cell {
@@ -330,7 +332,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
-      display: none;
     }
 
     &.q-field--filled.q-field--highlighted :deep(.q-field__control):before {
@@ -338,8 +339,8 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     }
   }
 
-  &:hover > .q-input > :deep(.q-field__after) {
-    display: flex;
+  &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
+    @include visually-hidden.visually-hidden;
   }
 
   :deep(input) {

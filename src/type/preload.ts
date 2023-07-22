@@ -2,17 +2,20 @@ import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { ContextMenuType } from "./contextMenu";
 import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
+export const isElectron = import.meta.env.VITE_TARGET === "electron";
+export const isBrowser = import.meta.env.VITE_TARGET === "browser";
 export const isMac =
   typeof process === "undefined"
     ? navigator.userAgent.includes("Mac")
     : process.platform === "darwin";
 
-export const engineIdSchema = z.string().uuid().brand<"EngineId">();
+export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
 export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
 
-export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
+export const speakerIdSchema = z.string().brand<"SpeakerId">();
 export type SpeakerId = z.infer<typeof speakerIdSchema>;
 export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
 
@@ -20,11 +23,11 @@ export const styleIdSchema = z.number().brand<"StyleId">();
 export type StyleId = z.infer<typeof styleIdSchema>;
 export const StyleId = (id: number): StyleId => styleIdSchema.parse(id);
 
-export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
+export const audioKeySchema = z.string().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
-export const presetKeySchema = z.string().uuid().brand<"PresetKey">();
+export const presetKeySchema = z.string().brand<"PresetKey">();
 export type PresetKey = z.infer<typeof presetKeySchema>;
 export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
 
@@ -177,15 +180,10 @@ export interface Sandbox {
     defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
-  /**
-   * ファイル書き出しする。
-   * 成功した場合はundefinedを返す。
-   * 失敗した場合はエラーの内容をWriteFileErrorResultとして返す。
-   */
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
-  }): Promise<WriteFileErrorResult | undefined>;
+  }): Promise<Result<undefined>>;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openContextMenu(obj: { menuType: ContextMenuType }): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
@@ -577,6 +575,7 @@ export const electronStoreSchema = z
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     showTextLineNumber: z.boolean().default(false),
+    showAddAudioItemButton: z.boolean().default(true),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
@@ -616,11 +615,6 @@ export class SystemError extends Error {
     }
   }
 }
-
-export type WriteFileErrorResult = {
-  code: string | undefined;
-  message: string;
-};
 
 export type EngineDirValidationResult =
   | "ok"

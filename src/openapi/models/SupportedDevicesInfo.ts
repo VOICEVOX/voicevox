@@ -39,6 +39,18 @@ export interface SupportedDevicesInfo {
     dml: boolean;
 }
 
+/**
+ * Check if a given object implements the SupportedDevicesInfo interface.
+ */
+export function instanceOfSupportedDevicesInfo(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "cpu" in value;
+    isInstance = isInstance && "cuda" in value;
+    isInstance = isInstance && "dml" in value;
+
+    return isInstance;
+}
+
 export function SupportedDevicesInfoFromJSON(json: any): SupportedDevicesInfo {
     return SupportedDevicesInfoFromJSONTyped(json, false);
 }
