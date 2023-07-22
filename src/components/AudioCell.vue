@@ -351,6 +351,7 @@ const contextMenudata = ref<
     type: "button",
     label: "コピー",
     onClick: () => {
+      contextMenu.value?.hide();
       if (textfieldSelection.isEmpty) return;
 
       navigator.clipboard.writeText(textfieldSelection.getAsString());
