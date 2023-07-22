@@ -1,6 +1,6 @@
 <template>
   <q-menu
-    ref="contextmenu"
+    ref="contextMenu"
     touch-position
     context-menu
     :no-focus="noFocus"
@@ -38,13 +38,13 @@ defineProps<{
 }>();
 defineExpose({
   hide: () => {
-    contextmenu.value?.hide();
+    contextMenu.value?.hide();
   },
 });
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const contextmenu = ref<QMenu>();
+const contextMenu = ref<QMenu>();
 /**
  * コンテキストメニューがフォーカスを奪うかどうかを制御する。
  * 通常はアクセシビリティ考慮のためにフォーカスが移るが、input要素の場合は文字の選択範囲が非表示になってしまう。

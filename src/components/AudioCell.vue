@@ -65,13 +65,13 @@
       </template>
       <context-menu
         ref="contextMenu"
-        :header="contextmenuHeader"
+        :header="contextMenuHeader"
         :menudata="contextMenudata"
         @before-show="
-          startContextmenuOperation();
+          startContextMenuOperation();
           readyForContextMenu();
         "
-        @before-hide="endContextmenuOperation()"
+        @before-hide="endContextMenuOperation()"
       />
     </q-input>
   </div>
@@ -318,9 +318,9 @@ const deleteButtonEnable = computed(() => {
 // テキスト編集エリアの右クリック
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
-// FIXME: 可能なら`isRangeSelected`と`contextmenuHeader`をcomputedに
+// FIXME: 可能なら`isRangeSelected`と`contextMenuHeader`をcomputedに
 const isRangeSelected = ref(false);
-const contextmenuHeader = ref<string | undefined>("");
+const contextMenuHeader = ref<string | undefined>("");
 const contextMenudata = ref<
   [
     MenuItemButton,
@@ -383,7 +383,7 @@ const contextMenudata = ref<
  */
 // no-focus を付けた場合と付けてない場合でタイミングが異なるため、両方に対応。
 const willFocusOrBlur = ref(false);
-const startContextmenuOperation = () => {
+const startContextMenuOperation = () => {
   willFocusOrBlur.value = true;
 };
 const readyForContextMenu = () => {
@@ -409,7 +409,7 @@ const readyForContextMenu = () => {
     getMenuItemButton("コピー").disabled = false;
     if (selectionText.length > MAX_HEADER_LENGTH) {
       // 長すぎる場合適度な長さで省略
-      contextmenuHeader.value =
+      contextMenuHeader.value =
         selectionText.length <= MAX_HEADER_LENGTH
           ? selectionText
           : `${selectionText.substring(
@@ -419,11 +419,11 @@ const readyForContextMenu = () => {
               selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
             )}`;
     } else {
-      contextmenuHeader.value = selectionText;
+      contextMenuHeader.value = selectionText;
     }
   }
 };
-const endContextmenuOperation = async () => {
+const endContextMenuOperation = async () => {
   await nextTick();
   willFocusOrBlur.value = false;
 };
