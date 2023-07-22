@@ -1,0 +1,16 @@
+/**
+ * コンテキストメニューの開閉由来のFocusやBlurの判別に使う。
+ * no-focusがついていないメニューを開く場合には機能しないため注意。
+ */
+// no-focuがついていない場合のメニューを開くとrelatedTarget === nullになるため機能しない。
+export const isRelatedToContextMenu = (event?: FocusEvent) => {
+  return event !== undefined && isMenuItemOrChild(event.relatedTarget);
+};
+
+const isMenuItemOrChild = (element: EventTarget | null) =>
+  isMenuItemChild(element) ||
+  (element instanceof HTMLDivElement && isMenuItemChild(element?.firstChild));
+
+const isMenuItemChild = (element: EventTarget | null) =>
+  element instanceof HTMLDivElement &&
+  element.classList.contains("q-focus-helper");
