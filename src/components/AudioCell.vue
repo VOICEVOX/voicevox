@@ -259,8 +259,8 @@ const deleteButtonEnable = computed(() => {
 });
 
 // テキスト編集エリアの右クリック
-const onRightClickTextField = () => {
-  store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU");
+const onRightClickTextField = async () => {
+  await store.dispatch("OPEN_CONTEXT_MENU", { menuType: "TEXT_EDIT" });
 };
 
 const blurCell = (event?: KeyboardEvent) => {

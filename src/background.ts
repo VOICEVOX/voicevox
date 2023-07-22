@@ -21,7 +21,7 @@ import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import zodToJsonSchema from "zod-to-json-schema";
 import { hasSupportedGpu } from "./electron/device";
-import { textEditContextMenu } from "./electron/contextMenu";
+import { contextMenu } from "./electron/contextMenu";
 import {
   HotkeySetting,
   ThemeConf,
@@ -208,10 +208,19 @@ if (!fs.existsSync(vvppEngineDir)) {
   fs.mkdirSync(vvppEngineDir);
 }
 
+const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
+  const engineId = engineInfo.uuid;
+  log.error(`ENGINE ${engineId} ERROR: ${error}`);
+
+  ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+  dialog.showErrorBox("音声合成エンジンエラー", error.message);
+};
+
 const engineManager = new EngineManager({
   store,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
+  onEngineProcessError,
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
 
@@ -272,7 +281,7 @@ async function installVvppEngineWithWarning({
         type: "info",
         title: "再起動が必要です",
         message:
-          "VVPPファイルを読み込みました。反映には再起動が必要です。今すぐ再起動しますか？",
+          "VVPPファイルを読み込みました。反映にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？",
         buttons: ["再起動", "キャンセル"],
         noLink: true,
         cancelId: 1,
@@ -542,7 +551,7 @@ async function start() {
   }
   store.set("engineSettings", engineSettings);
 
-  await engineManager.runEngineAll(win);
+  await engineManager.runEngineAll();
   await createWindow();
 }
 
@@ -736,8 +745,8 @@ ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {
   })?.[0];
 });
 
-ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
-  textEditContextMenu.popup({ window: win });
+ipcMainHandle("OPEN_CONTEXT_MENU", (_, { menuType }) => {
+  contextMenu[menuType].popup({ window: win });
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
@@ -773,6 +782,10 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
 });
 
+ipcMainHandle("OPEN_LOG_DIRECTORY", () => {
+  shell.openPath(app.getPath("logs"));
+});
+
 ipcMainHandle("ENGINE_INFOS", () => {
   // エンジン情報を設定ファイルに保存しないためにstoreは使わない
   return engineManager.fetchEngineInfos();
@@ -783,7 +796,7 @@ ipcMainHandle("ENGINE_INFOS", () => {
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
-  await engineManager.restartEngine(engineId, win);
+  await engineManager.restartEngine(engineId);
 });
 
 ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
@@ -1039,7 +1052,7 @@ app.on("ready", async () => {
     if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: filePath,
-        restartNeeded: false,
+        restartNeeded: true, // FIXME: 再インストールでない限り再起動は不要
       });
     }
   }
