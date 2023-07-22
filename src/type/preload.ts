@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
-import { ContextMenuType } from "./contextMenu";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
 
@@ -185,7 +184,6 @@ export interface Sandbox {
     buffer: ArrayBuffer;
   }): Promise<Result<undefined>>;
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
-  openContextMenu(obj: { menuType: ContextMenuType }): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(

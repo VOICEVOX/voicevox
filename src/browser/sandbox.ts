@@ -168,9 +168,6 @@ export const api: Sandbox = {
       "ブラウザ版では現在ファイルの読み込みをサポートしていません"
     );
   },
-  openContextMenu() {
-    throw new Error(`Not supported on Browser version: openContextMenu`);
-  },
   isAvailableGPUMode() {
     // TODO: WebAssembly版をサポートする時に実装する
     // FIXME: canvasでWebGLから調べたり、WebGPUがサポートされているかを調べたりで判断は出来そう
