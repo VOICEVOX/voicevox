@@ -2,7 +2,7 @@
  * コンテキストメニューの開閉由来のFocusやBlurの判別に使う。
  * no-focusがついていないメニューを開く場合には機能しないため注意。
  */
-// no-focuがついていない場合のメニューを開くとrelatedTarget === nullになるため機能しない。
+// no-focuがついていないメニューを開く時はrelatedTarget === nullになるため機能しない。
 export const isRelatedToContextMenu = (event?: FocusEvent) => {
   return event !== undefined && isMenuItemOrChild(event.relatedTarget);
 };
