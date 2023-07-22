@@ -184,7 +184,7 @@ export interface Sandbox {
     filePath: string;
     buffer: ArrayBuffer;
   }): Promise<Result<undefined>>;
-  readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
+  readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   openContextMenu(obj: { menuType: ContextMenuType }): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
