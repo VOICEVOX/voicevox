@@ -272,7 +272,7 @@ async function installVvppEngineWithWarning({
         type: "info",
         title: "再起動が必要です",
         message:
-          "VVPPファイルを読み込みました。反映には再起動が必要です。今すぐ再起動しますか？",
+          "VVPPファイルを読み込みました。反映にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？",
         buttons: ["再起動", "キャンセル"],
         noLink: true,
         cancelId: 1,
@@ -1043,7 +1043,7 @@ app.on("ready", async () => {
     if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: filePath,
-        restartNeeded: false,
+        restartNeeded: true, // FIXME: 再インストールでない限り再起動は不要
       });
     }
   }
