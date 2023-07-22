@@ -64,7 +64,11 @@
         ref="contextMenu"
         :header="contextmenuHeader"
         :menudata="contextMenudata"
-        @before-show="readyForContextMenu()"
+        @before-show="
+          startContextmenuOperation();
+          readyForContextMenu();
+        "
+        @before-hide="endContextmenuOperation()"
       />
     </q-input>
   </div>
@@ -163,11 +167,7 @@ watch(
 );
 
 const pushAudioTextIfNeeded = async () => {
-  if (
-    !willRemove.value &&
-    isChangeFlag.value &&
-    !contextMenu.value?.willDispatchFocusOrBlur
-  ) {
+  if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;
     await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
       audioKey: props.audioKey,
@@ -372,6 +372,15 @@ const getMenuItemButton = (label: string) => {
     throw new Error("コンテキストメニューアイテムの取得に失敗しました。");
   return item;
 };
+/**
+ * コンテキストメニューの開閉によりFocusやBlurが発生する可能性のある間は`true`。
+ */
+// no-focus を付けた場合と付けてない場合でタイミングが異なるため、両方に対応。
+// Expose
+const willFocusOrBlur = ref(false);
+const startContextmenuOperation = () => {
+  willFocusOrBlur.value = true;
+};
 const readyForContextMenu = () => {
   const MAX_HEADER_LENGTH = 15;
   const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
@@ -401,6 +410,10 @@ const readyForContextMenu = () => {
       contextmenuHeader.value = selectionText;
     }
   }
+};
+const endContextmenuOperation = async () => {
+  await nextTick();
+  willFocusOrBlur.value = false;
 };
 
 // テキスト欄

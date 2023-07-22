@@ -5,8 +5,6 @@
     touch-position
     context-menu
     :no-focus="noFocus"
-    @before-show="startOperation()"
-    @before-hide="endOperation()"
     @keydown.enter.exact="selectAction()"
   >
     <q-list dense>
@@ -28,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { QMenu } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
@@ -39,11 +37,6 @@ defineProps<{
   menudata: ContextMenuItemData[];
 }>();
 defineExpose({
-  /**
-   * コンテキストメニューの開閉によりFocusやBlurが発生する可能性のある間は`true`。
-   */
-  // no-focus を付けた場合と付けてない場合でタイミングが異なるため、両方に対応。
-  willDispatchFocusOrBlur: computed(() => willDispatchFocusOrBlur.value),
   hide: () => {
     contextmenu.value?.hide();
   },
@@ -77,16 +70,6 @@ onMounted(() => {
 onUnmounted(() => {
   parent.removeEventListener("contextmenu", buttonCapturer);
 });
-
-// Expose
-const willDispatchFocusOrBlur = ref(false);
-const startOperation = () => {
-  willDispatchFocusOrBlur.value = true;
-};
-const endOperation = async () => {
-  await nextTick();
-  willDispatchFocusOrBlur.value = false;
-};
 
 export type ContextMenuItemData = MenuItemSeparator | MenuItemButton;
 </script>
