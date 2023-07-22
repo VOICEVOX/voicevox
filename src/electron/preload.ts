@@ -177,8 +177,8 @@ const api: Sandbox = {
     return ipcRenderer.invoke("LOG_INFO", ...params);
   },
 
-  showLogFolderInExplorer: () => {
-    ipcRenderer.invoke("SHOW_LOG_FOLDER_IN_EXPLORER");
+  openLogDirectory: () => {
+    ipcRenderer.invoke("OPEN_LOG_DIRECTORY");
   },
 
   engineInfos: () => {

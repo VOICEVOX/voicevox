@@ -194,7 +194,7 @@ export type IpcIHData = {
     return: void;
   };
 
-  SHOW_LOG_FOLDER_IN_EXPLORER: {
+  OPEN_LOG_DIRECTORY: {
     args: [];
     return: void;
   };

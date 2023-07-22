@@ -59,9 +59,9 @@
                       color="toolbar-button"
                       text-color="toolbar-button-display"
                       class="text-no-wrap text-bold q-mr-sm"
-                      @click="showLogFolderInExplorer"
+                      @click="openLogDirectory"
                     >
-                      ログフォルダを表示
+                      ログフォルダを開く
                     </q-btn>
                     <!-- close button -->
                     <q-btn
@@ -292,7 +292,7 @@ const pagedata = computed(() => {
 
 const selectedPageIndex = ref(0);
 
-const showLogFolderInExplorer = window.electron.showLogFolderInExplorer;
+const openLogDirectory = window.electron.openLogDirectory;
 </script>
 
 <style scoped lang="scss">

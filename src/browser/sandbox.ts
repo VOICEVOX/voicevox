@@ -213,9 +213,8 @@ export const api: Sandbox = {
     console.info(...params);
     return;
   },
-  showLogFolderInExplorer() {
-    // NOTE: ブラウザ版では不要
-    return Promise.resolve();
+  openLogDirectory() {
+    throw new Error(`Not supported on Browser version: openLogDirectory`);
   },
   /* eslint-enable no-console */
   engineInfos() {
