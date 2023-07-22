@@ -570,6 +570,14 @@ onMounted(async () => {
     });
   }
 
+  // バグ修正用
+  // see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
+  document.addEventListener("focusin", (event: FocusEvent) => {
+    if (event.target instanceof HTMLInputElement) {
+      event.target.selectionEnd = event.target.selectionStart;
+    }
+  });
+
   // ショートカットキーの設定
   document.addEventListener("keydown", disableDefaultUndoRedo);
 
