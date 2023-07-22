@@ -1,4 +1,24 @@
-import type { PlaywrightTestConfig } from "@playwright/test";
+import type { PlaywrightTestConfig, Project } from "@playwright/test";
+
+let project: Project;
+const additionalWebServer: PlaywrightTestConfig["webServer"] = undefined;
+
+if (process.env.VITE_TARGET == undefined) {
+  throw new Error("VITE_TARGETの指定が必須です。");
+} else if (process.env.VITE_TARGET == undefined) {
+  throw new Error("VITE_TARGETの指定が必須です。");
+} else if (process.env.VITE_TARGET === "electron") {
+  project = { name: "electron" };
+} else if (process.env.VITE_TARGET === "browser") {
+  // エンジンの起動が必要
+  project = { name: "browser" };
+  additionalWebServer = {
+    command: "vite --mode test",
+    方針はこのあたり
+    https://github.com/VOICEVOX/voicevox/issues/1418#issuecomment-1646608130
+} else {
+  throw new Error(`VITE_TARGETの指定が不正です。${process.env.VITE_TARGET}`);
+}
 
 /**
  * Read environment variables from file.
@@ -34,13 +54,13 @@ const config: PlaywrightTestConfig = {
   },
 
   /* Configure projects for major browsers */
-  projects: [{ name: "electron" }],
+  projects: [project],
 
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   // outputDir: 'test-results/',
 
   webServer: {
-    command: "cross-env VITE_TARGET=electron vite --mode test",
+    command: "vite --mode test",
     port: 5173,
     reuseExistingServer: !process.env.CI,
   },
