@@ -571,8 +571,8 @@ onMounted(async () => {
     });
   }
 
-  // ショートカットキーの除外設定
-  // 除外するなら`true`を返す
+  // ショートカットキー操作を止める条件の設定
+  // 止めるなら`true`を返す
   Mousetrap.prototype.stopCallback = (
     e: Mousetrap.ExtendedKeyboardEvent, // 未使用
     element: Element,
