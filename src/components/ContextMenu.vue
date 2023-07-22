@@ -1,12 +1,5 @@
 <template>
-  <!-- mousetrapに抗うための @keydown.enter -->
-  <q-menu
-    ref="contextmenu"
-    touch-position
-    context-menu
-    :no-focus="noFocus"
-    @keydown.enter.exact="selectAction()"
-  >
+  <q-menu ref="contextmenu" touch-position context-menu :no-focus="noFocus">
     <q-list dense>
       <q-item v-if="header" dense class="bg-background">
         <q-item-section class="text-weight-bold">{{ header }}</q-item-section>
@@ -43,11 +36,6 @@ defineExpose({
 });
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-// mousetrapに抗う
-const selectAction = () => {
-  document.activeElement?.dispatchEvent(new Event("click"));
-};
 
 const contextmenu = ref<QMenu>();
 /**
