@@ -61,5 +61,3 @@ onUnmounted(() => {
 
 export type ContextMenuItemData = MenuItemSeparator | MenuItemButton;
 </script>
-
-<style lang="scss" scoped></style>
