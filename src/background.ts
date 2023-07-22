@@ -208,10 +208,19 @@ if (!fs.existsSync(vvppEngineDir)) {
   fs.mkdirSync(vvppEngineDir);
 }
 
+const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
+  const engineId = engineInfo.uuid;
+  log.error(`ENGINE ${engineId} ERROR: ${error}`);
+
+  ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+  dialog.showErrorBox("音声合成エンジンエラー", error.message);
+};
+
 const engineManager = new EngineManager({
   store,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
+  onEngineProcessError,
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
 
@@ -542,7 +551,7 @@ async function start() {
   }
   store.set("engineSettings", engineSettings);
 
-  await engineManager.runEngineAll(win);
+  await engineManager.runEngineAll();
   await createWindow();
 }
 
@@ -787,7 +796,7 @@ ipcMainHandle("ENGINE_INFOS", () => {
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
-  await engineManager.restartEngine(engineId, win);
+  await engineManager.restartEngine(engineId);
 });
 
 ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
