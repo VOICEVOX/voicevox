@@ -202,8 +202,6 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
  * ブラウザ版を考えるとClipboard APIをなるべく回避したいため、積極的に`options.text`を指定してください。
  */
 const paste = async (options?: { text?: string }) => {
-  const beforeLength = audioTextBuffer.value.length;
-  const end = textfieldSelection.selectionEnd ?? 0;
   const text = options ? options.text : await navigator.clipboard.readText();
   if (text === undefined) return;
 
@@ -226,6 +224,8 @@ const paste = async (options?: { text?: string }) => {
     }
   }
 
+  const beforeLength = audioTextBuffer.value.length;
+  const end = textfieldSelection.selectionEnd ?? 0;
   setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text));
   await nextTick();
   // 自動的に削除される改行などの文字数を念のため考慮している
