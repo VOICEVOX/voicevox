@@ -206,7 +206,6 @@ import {
 } from "@/type/preload";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
-import { isRelatedToContextMenu } from "@/helpers/contextMenu";
 
 const props =
   defineProps<{
@@ -589,17 +588,6 @@ onMounted(async () => {
       element.classList.contains("q-item")
     );
   };
-
-  // バグ修正用
-  // see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
-  document.addEventListener("focusin", (event: FocusEvent) => {
-    if (
-      event.target instanceof HTMLInputElement &&
-      !isRelatedToContextMenu(event)
-    ) {
-      event.target.selectionEnd = event.target.selectionStart;
-    }
-  });
 
   // ショートカットキーの設定
   document.addEventListener("keydown", disableDefaultUndoRedo);
