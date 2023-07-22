@@ -1,5 +1,12 @@
 <template>
-  <q-menu ref="contextmenu" touch-position context-menu :no-focus="noFocus">
+  <q-menu
+    ref="contextmenu"
+    touch-position
+    context-menu
+    :no-focus="noFocus"
+    transition-show="none"
+    transition-hide="none"
+  >
     <q-list dense>
       <q-item v-if="header" dense class="bg-background">
         <q-item-section class="text-weight-bold">{{ header }}</q-item-section>
