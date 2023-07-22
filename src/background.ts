@@ -21,7 +21,7 @@ import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import zodToJsonSchema from "zod-to-json-schema";
 import { hasSupportedGpu } from "./electron/device";
-import { textEditContextMenu } from "./electron/contextMenu";
+import { contextMenu } from "./electron/contextMenu";
 import {
   HotkeySetting,
   ThemeConf,
@@ -745,8 +745,8 @@ ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {
   })?.[0];
 });
 
-ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
-  textEditContextMenu.popup({ window: win });
+ipcMainHandle("OPEN_CONTEXT_MENU", (_, { menuType }) => {
+  contextMenu[menuType].popup({ window: win });
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {

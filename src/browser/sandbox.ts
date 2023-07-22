@@ -168,9 +168,8 @@ export const api: Sandbox = {
       "ブラウザ版では現在ファイルの読み込みをサポートしていません"
     );
   },
-  openTextEditContextMenu() {
-    // NOTE: ブラウザ版では不要
-    return Promise.resolve();
+  openContextMenu() {
+    throw new Error(`Not supported on Browser version: openContextMenu`);
   },
   isAvailableGPUMode() {
     // TODO: WebAssembly版をサポートする時に実装する

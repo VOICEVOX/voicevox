@@ -1907,9 +1907,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    action() {
-      window.electron.openTextEditContextMenu();
+  OPEN_CONTEXT_MENU: {
+    action(_, { menuType }) {
+      window.electron.openContextMenu({ menuType });
     },
   },
 
