@@ -576,14 +576,18 @@ onMounted(async () => {
   Mousetrap.prototype.stopCallback = (
     e: Mousetrap.ExtendedKeyboardEvent, // 未使用
     element: Element,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    combo: string // 未使用
+    combo: string
   ) => {
+    if (
+      element instanceof HTMLInputElement ||
+      element instanceof HTMLSelectElement ||
+      element instanceof HTMLTextAreaElement ||
+      (element instanceof HTMLElement && element.contentEditable === "true")
+    ) {
+      // 2つ以上のキーの複合なら止めない(false) 単体なら止める(true)
+      return !combo.includes("+");
+    }
     return (
-      element.tagName === "INPUT" ||
-      element.tagName === "SELECT" ||
-      element.tagName === "TEXTAREA" ||
-      (element instanceof HTMLElement && element.contentEditable === "true") ||
       // メニュー項目ではショートカットキーを無効化
       element.classList.contains("q-item")
     );
