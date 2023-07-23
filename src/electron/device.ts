@@ -13,7 +13,7 @@ export function hasSupportedGpu(platform: string): Promise<boolean> {
         (datum) =>
           platform === "win32" ||
           (platform === "linux" &&
-            datum.vendor.toUpperCase().indexOf("NVIDIA") !== -1)
+            datum.vendor.toUpperCase().includes("NVIDIA"))
       )
     )
     .catch(() => false);
