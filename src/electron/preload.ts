@@ -134,10 +134,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("READ_FILE", { filePath });
   },
 
-  openContextMenu: ({ menuType }) => {
-    return ipcRendererInvoke("OPEN_CONTEXT_MENU", { menuType });
-  },
-
   isAvailableGPUMode: () => {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },

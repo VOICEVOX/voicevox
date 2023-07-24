@@ -12,7 +12,6 @@ import {
   EngineId,
   MessageBoxReturnValue,
 } from "@/type/preload";
-import { ContextMenuType } from "@/type/contextMenu";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
 
@@ -148,15 +147,6 @@ export type IpcIHData = {
       }
     ];
     return: MessageBoxReturnValue;
-  };
-
-  OPEN_CONTEXT_MENU: {
-    args: [
-      obj: {
-        menuType: ContextMenuType;
-      }
-    ];
-    return: void;
   };
 
   IS_AVAILABLE_GPU_MODE: {
