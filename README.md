@@ -84,7 +84,7 @@ npm run electron:build
 
 ## テスト
 
-### ユニットテスト
+### 単体テスト
 
 ```bash
 npm run test:unit
@@ -93,7 +93,7 @@ npm run test-watch:unit # 監視モード
 
 ### ブラウザ End to End テスト
 
-Electron の機能が不要な UI や音声合成などの End to End テストを実行します。
+Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
 
 ```bash
 npm run test:browser-e2e
@@ -112,7 +112,7 @@ npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
 
 ### Electron End to End テスト
 
-Electron の機能が必要なエンジン起動・終了などを含めた End to End テストを実行します。
+Electron の機能が必要な、エンジン起動・終了などを含めた End to End テストを実行します。
 
 ```bash
 npm run test:electron-e2e
