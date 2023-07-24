@@ -10,6 +10,7 @@ on:
 env:
   VOICEVOX_ENGINE_REPO: "VOICEVOX/voicevox_nemo_engine" # 軽いのでNemoを使う
   VOICEVOX_ENGINE_VERSION: "0.14.0"
+  VOICEVOX_ENGINE_HOST: "http://127.0.0.1:50121"
 
 defaults:
   run:
@@ -75,6 +76,7 @@ jobs:
 
           cp .env.test .env
           sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env
+          set -i -e 's|"http://127.0.0.1:50021"|"${{ env.VOICEVOX_ENGINE_HOST }}"|' .env
 
       - name: Run npm run test:browser-e2e
         run: |
