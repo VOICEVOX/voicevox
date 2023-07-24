@@ -37,17 +37,9 @@ test.beforeAll(async () => {
 });
 
 test("起動したら「利用規約に関するお知らせ」が表示される", async () => {
-  const executablePath = path.resolve(
-    process.cwd(),
-    "node_modules",
-    ".bin",
-    process.platform == "win32" ? "electron.cmd" : "electron"
-  );
-
   const app = await electron.launch({
     args: ["."],
     timeout: process.env.CI ? 0 : 60000,
-    executablePath,
     env: {
       ...process.env,
       VITE_DEV_SERVER_URL: "http://localhost:5173",
@@ -59,7 +51,9 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
   //   （cf: https://github.com/microsoft/playwright/issues/21846#issuecomment-1479106814）
   //   正式版でタイムアウトを設定できるようになったら（cf: https://github.com/microsoft/playwright/pull/21863 ）
   //   app.firstWindowを使うようにする。
-  const sut = await app.firstWindow();
+  // const sut = await app.firstWindow();
+  let sut = app.windows()[0];
+  if (!sut) sut = await app.waitForEvent("window", { timeout: 0 });
 
   // エンジンが起動し「利用規約に関するお知らせ」が表示されるのを待つ
   await sut.waitForSelector("text=利用規約に関するお知らせ", { timeout: 0 });

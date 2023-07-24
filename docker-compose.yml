@@ -24,10 +24,10 @@ services:
     # Use Command bellow 
     # `docker logs --tail 1000 -f voicevox_test_1`
 
-    command: "npm run test-watch:unit "
+    command: "npm run test-watch:unit"
     ports:
       - 3000:3000
     volumes:
-      - .:/work:cache
+      - .:/work:cached
     tty: true
     stdin_open: true
