@@ -84,16 +84,39 @@ npm run electron:build
 
 ## テスト
 
+### ユニットテスト
+
 ```bash
 npm run test:unit
-npm run test:e2e
+npm run test-watch:unit # 監視モード
 ```
 
-### 監視モード
+### ブラウザ End to End テスト
+
+Electron の機能が不要な UI や音声合成などの End to End テストを実行します。
 
 ```bash
-npm run test-watch:unit
-npm run test-watch:e2e
+npm run test:browser-e2e
+npm run test-watch:browser-e2e # 監視モード
+npm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
+```
+
+Playwright を使用しているためテストパターンを生成することもできます。
+ブラウザ版を起動している状態で以下のコマンドを実行してください。
+
+```bash
+npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
+```
+
+詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。
+
+### Electron End to End テスト
+
+Electron の機能が必要なエンジン起動・終了などを含めた End to End テストを実行します。
+
+```bash
+npm run test:electron-e2e
+npm run test-watch:electron-e2e # 監視モード
 ```
 
 ## 依存ライブラリのライセンス情報の生成

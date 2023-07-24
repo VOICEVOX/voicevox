@@ -1,21 +1,36 @@
 import type { PlaywrightTestConfig, Project } from "@playwright/test";
+import { z } from "zod";
+
+import dotenv from "dotenv";
+dotenv.config({ override: true });
 
 let project: Project;
-const additionalWebServer: PlaywrightTestConfig["webServer"] = undefined;
+const additionalWebServer: PlaywrightTestConfig["webServer"] = [];
 
-if (process.env.VITE_TARGET == undefined) {
-  throw new Error("VITE_TARGETの指定が必須です。");
-} else if (process.env.VITE_TARGET == undefined) {
-  throw new Error("VITE_TARGETの指定が必須です。");
-} else if (process.env.VITE_TARGET === "electron") {
-  project = { name: "electron" };
+if (process.env.VITE_TARGET === "electron") {
+  project = { name: "electron", testDir: "./tests/e2e/electron" };
 } else if (process.env.VITE_TARGET === "browser") {
+  project = { name: "browser", testDir: "./tests/e2e/browser" };
+
   // エンジンの起動が必要
-  project = { name: "browser" };
-  additionalWebServer = {
-    command: "vite --mode test",
-    方針はこのあたり
-    https://github.com/VOICEVOX/voicevox/issues/1418#issuecomment-1646608130
+  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
+  const envSchema = z // FIXME: electron起動時のものと共通化したい
+    .object({
+      host: z.string(),
+      executionFilePath: z.string(),
+      executionArgs: z.array(z.string()),
+    })
+    .passthrough()
+    .array();
+  const engineInfos = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
+
+  engineInfos.forEach((info) => {
+    additionalWebServer.push({
+      command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
+      url: `${info.host}/version`,
+      reuseExistingServer: !process.env.CI,
+    });
+  });
 } else {
   throw new Error(`VITE_TARGETの指定が不正です。${process.env.VITE_TARGET}`);
 }
@@ -24,7 +39,6 @@ if (process.env.VITE_TARGET == undefined) {
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// require('dotenv').config();
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -59,11 +73,14 @@ const config: PlaywrightTestConfig = {
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   // outputDir: 'test-results/',
 
-  webServer: {
-    command: "vite --mode test",
-    port: 5173,
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: "vite --mode test",
+      port: 5173,
+      reuseExistingServer: !process.env.CI,
+    },
+    ...additionalWebServer,
+  ],
 };
 
 export default config;
