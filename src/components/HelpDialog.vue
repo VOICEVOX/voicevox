@@ -53,12 +53,23 @@
                       ヘルプ / {{ page.parent ? page.parent + " / " : ""
                       }}{{ page.name }}
                     </q-toolbar-title>
+                    <q-btn
+                      v-if="page.component === ContactInfo"
+                      unelevated
+                      color="toolbar-button"
+                      text-color="toolbar-button-display"
+                      class="text-no-wrap text-bold q-mr-sm"
+                      @click="openLogDirectory"
+                    >
+                      ログフォルダを開く
+                    </q-btn>
                     <!-- close button -->
                     <q-btn
                       round
                       flat
                       icon="close"
                       color="display"
+                      aria-label="ヘルプを閉じる"
                       @click="modelValueComputed = false"
                     />
                   </q-toolbar>
@@ -280,6 +291,8 @@ const pagedata = computed(() => {
 });
 
 const selectedPageIndex = ref(0);
+
+const openLogDirectory = window.electron.openLogDirectory;
 </script>
 
 <style scoped lang="scss">

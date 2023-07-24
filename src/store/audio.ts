@@ -1907,12 +1907,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    action() {
-      window.electron.openTextEditContextMenu();
-    },
-  },
-
   CHECK_FILE_EXISTS: {
     action(_, { file }: { file: string }) {
       return window.electron.checkFileExists(file);
