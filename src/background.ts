@@ -495,7 +495,7 @@ async function createWindow() {
     }
   }
 
-  loadUrl({ projectFilePath });
+  await loadUrl({ projectFilePath });
 
   if (isDevelopment && !isTest) win.webContents.openDevTools();
 
