@@ -570,7 +570,7 @@ async function launchEngines() {
   }
   store.set("engineSettings", engineSettings);
 
-  await engineManager.runEngineAll(win);
+  await engineManager.runEngineAll();
 }
 
 /**
