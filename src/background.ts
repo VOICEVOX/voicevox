@@ -943,6 +943,8 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
 });
 
 ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
+  win.hide(); // FIXME: ダミーページ表示のほうが良い
+
   // FIXME: 同じようなURLだとスーパーリロードされないことがあるので一度ダミーページを読み込む
   await win.loadURL(firstUrl + "dummypage");
 
@@ -958,6 +960,7 @@ ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
   await launchEngines();
 
   await loadUrl({ isMultiEngineOffMode: !!isMultiEngineOffMode });
+  win.show();
 });
 
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
