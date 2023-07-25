@@ -1907,12 +1907,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    action() {
-      window.electron.openTextEditContextMenu();
-    },
-  },
-
   CHECK_FILE_EXISTS: {
     action(_, { file }: { file: string }) {
       return window.electron.checkFileExists(file);
@@ -2788,7 +2782,7 @@ export const audioCommandStore = transformCommandStore(
           let body = new TextDecoder("utf-8").decode(
             await window.electron.readFile({ filePath }).then(getValueOrThrow)
           );
-          if (body.indexOf("\ufffd") > -1) {
+          if (body.includes("\ufffd")) {
             body = new TextDecoder("shift-jis").decode(
               await window.electron.readFile({ filePath }).then(getValueOrThrow)
             );

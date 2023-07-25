@@ -113,7 +113,7 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
   async (obj: { filePath: string; buffer: ArrayBuffer }) => {
     const path = obj.filePath;
 
-    if (path.indexOf(sep) === -1) {
+    if (!path.includes(sep)) {
       const aTag = document.createElement("a");
       const blob = URL.createObjectURL(new Blob([obj.buffer]));
       aTag.href = blob;
@@ -151,7 +151,7 @@ export const checkFileExistsImpl: typeof window[typeof SandboxKey]["checkFileExi
   async (file) => {
     const path = file;
 
-    if (path.indexOf(sep) === -1) {
+    if (!path.includes(sep)) {
       return Promise.resolve(false);
     }
 
