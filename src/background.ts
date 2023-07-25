@@ -21,7 +21,6 @@ import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import zodToJsonSchema from "zod-to-json-schema";
 import { hasSupportedGpu } from "./electron/device";
-import { textEditContextMenu } from "./electron/contextMenu";
 import {
   HotkeySetting,
   ThemeConf,
@@ -217,10 +216,19 @@ if (!fs.existsSync(vvppEngineDir)) {
   fs.mkdirSync(vvppEngineDir);
 }
 
+const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
+  const engineId = engineInfo.uuid;
+  log.error(`ENGINE ${engineId} ERROR: ${error}`);
+
+  ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+  dialog.showErrorBox("音声合成エンジンエラー", error.message);
+};
+
 const engineManager = new EngineManager({
   store,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
+  onEngineProcessError,
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
 
@@ -799,10 +807,6 @@ ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {
   })?.[0];
 });
 
-ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
-  textEditContextMenu.popup({ window: win });
-});
-
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu(process.platform);
 });
@@ -836,6 +840,10 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
 });
 
+ipcMainHandle("OPEN_LOG_DIRECTORY", () => {
+  shell.openPath(app.getPath("logs"));
+});
+
 ipcMainHandle("ENGINE_INFOS", () => {
   // エンジン情報を設定ファイルに保存しないためにstoreは使わない
   return engineManager.fetchEngineInfos();
@@ -846,7 +854,7 @@ ipcMainHandle("ENGINE_INFOS", () => {
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
-  await engineManager.restartEngine(engineId, win);
+  await engineManager.restartEngine(engineId);
 });
 
 ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
@@ -1072,7 +1080,7 @@ app.on("ready", async () => {
     if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: filePath,
-        reloadNeeded: false, // FIXME: #1399がマージされるとtrueになるが、ここはfalseが正しい。
+        reloadNeeded: false,
       });
     }
   }

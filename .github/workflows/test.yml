@@ -8,13 +8,15 @@ on:
   workflow_dispatch:
 
 env:
-  VOICEVOX_ENGINE_VERSION: 0.14.4
+  VOICEVOX_ENGINE_REPO: "VOICEVOX/voicevox_nemo_engine" # 軽いのでNemoを使う
+  VOICEVOX_ENGINE_VERSION: "0.14.0"
 
 defaults:
   run:
     shell: bash
-    
+
 jobs:
+  # ビルドのテスト
   build-test:
     runs-on: windows-latest
     steps:
@@ -23,7 +25,8 @@ jobs:
         uses: ./.github/actions/setup-environment
       - run: npm run electron:build_pnever
 
-  test:
+  # unit テスト
+  unit-test:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -32,19 +35,52 @@ jobs:
 
       - run: npm run test:unit
 
+  # electron の e2e テスト
+  e2e-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            voicevox_engine_asset_name: linux-cpu
+          - os: macos-latest
+            voicevox_engine_asset_name: macos-x64
+          - os: windows-latest
+            voicevox_engine_asset_name: windows-cpu
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Install xvfb and x11-xserver-utils
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb x11-xserver-utils # for electron
+          sudo apt-get install -y libsndfile1 # for engine
+
       - name: Download VOICEVOX ENGINE
         id: download-engine
         uses: ./.github/actions/download-engine
         with:
+          repo: ${{ env.VOICEVOX_ENGINE_REPO }}
           version: ${{ env.VOICEVOX_ENGINE_VERSION }}
           dest: ${{ github.workspace }}/voicevox_engine
+          target: ${{ matrix.voicevox_engine_asset_name }}
 
       - name: Run npm run test:e2e
         run: |
+          chmod +x ${{ steps.download-engine.outputs.run_path }}
+
           cp .env.test .env
           sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env
+
           if [ -n "${{ runner.debug }}" ]; then
-            DEBUG=pw:browser* npm run test:e2e
+            export DEBUG="pw:browser*"
+          fi
+          if [[ ${{ matrix.os }} == ubuntu-* ]]; then
+            xvfb-run --auto-servernum npm run test:e2e
           else
             npm run test:e2e
           fi

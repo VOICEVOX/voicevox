@@ -149,11 +149,6 @@ export type IpcIHData = {
     return: MessageBoxReturnValue;
   };
 
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    args: [];
-    return: void;
-  };
-
   IS_AVAILABLE_GPU_MODE: {
     args: [];
     return: boolean;
@@ -191,6 +186,11 @@ export type IpcIHData = {
 
   LOG_INFO: {
     args: [...params: unknown[]];
+    return: void;
+  };
+
+  OPEN_LOG_DIRECTORY: {
+    args: [];
     return: void;
   };
 
