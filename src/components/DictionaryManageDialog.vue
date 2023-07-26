@@ -123,7 +123,7 @@
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
                 @blur="setYomi(yomi)"
-                @keydown.enter="setYomi(yomi)"
+                @keydown.enter="setYomiWhenEnter"
               >
                 <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
@@ -341,8 +341,13 @@ const wordEditing = ref(false);
 
 const surfaceInput = ref<QInput>();
 const yomiInput = ref<QInput>();
-const yomiFocus = () => {
+const yomiFocus = (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
   yomiInput.value?.focus();
+};
+const setYomiWhenEnter = (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
+  setYomi(yomi.value);
 };
 
 const selectedId = ref("");
