@@ -345,7 +345,7 @@ const yomiFocus = (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   yomiInput.value?.focus();
 };
-const setYomiWhenEnter = (event: KeyboardEvent) => {
+const setYomiWhenEnter = (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   setYomi(yomi.value);
 };
