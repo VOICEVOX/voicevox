@@ -38,9 +38,7 @@ export type CommonDialogOptions = {
   };
 };
 export type CommonDialogType = keyof CommonDialogOptions;
-type CommonDialogCallback = (
-  value: CommonDialogResult | PromiseLike<CommonDialogResult>
-) => void;
+type CommonDialogCallback = (value: CommonDialogResult) => void;
 
 export type NotifyAndNotShowAgainButtonOption = {
   message: string;
