@@ -1361,17 +1361,18 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
 
           if (state.savingSetting.exportText) {
+            const text = extractExportText(state.audioItems[audioKey].text);
             const textBlob = ((): Blob => {
               if (!encoding || encoding === "UTF-8") {
                 const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-                return new Blob([bom, state.audioItems[audioKey].text], {
+                return new Blob([bom, text], {
                   type: "text/plain;charset=UTF-8",
                 });
               }
-              const sjisArray = Encoding.convert(
-                Encoding.stringToCode(state.audioItems[audioKey].text),
-                { to: "SJIS", type: "arraybuffer" }
-              );
+              const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
+                to: "SJIS",
+                type: "arraybuffer",
+              });
               return new Blob([new Uint8Array(sjisArray)], {
                 type: "text/plain;charset=Shift_JIS",
               });
