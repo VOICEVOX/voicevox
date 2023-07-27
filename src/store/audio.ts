@@ -20,9 +20,8 @@ import {
   convertLongVowel,
   createKanaRegex,
   currentDateString,
-  skipMemoText,
-  skipReadingPart,
-  skipWritingPart,
+  extractExportText,
+  extractYomiText,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -1555,7 +1554,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             return { result: "WRITE_ERROR", path: filePath };
           }
           labs.push(lab);
-          texts.push(state.audioItems[audioKey].text);
+          texts.push(extractExportText(state.audioItems[audioKey].text));
           // 最終音素の終了時刻を取得する
           const splitLab = lab.split(" ");
           labOffset = Number(splitLab[splitLab.length - 2]);
@@ -1601,7 +1600,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (state.savingSetting.exportText) {
           const textBlob = ((): Blob => {
             const text = texts.join("\n");
-            const skippedText = skipReadingPart(skipMemoText(text));
+            const skippedText = text;
             if (!encoding || encoding === "UTF-8") {
               const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
               return new Blob([bom, skippedText], {
@@ -1694,8 +1693,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 
-          const skippedText = skipReadingPart(
-            skipMemoText(state.audioItems[audioKey].text)
+          const skippedText = extractExportText(
+            state.audioItems[audioKey].text
           );
           texts.push(speakerName + skippedText);
         }
@@ -2002,7 +2001,7 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
-        const skippedText = skipWritingPart(skipMemoText(text));
+        const skippedText = extractYomiText(text);
 
         try {
           if (query !== undefined) {
