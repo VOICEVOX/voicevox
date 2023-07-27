@@ -129,7 +129,7 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 ### Q. エラーログはどこで確認できますか？
 
-以下のフォルダに保存されています。
+ヘルプ → お問い合わせ → ログフォルダを開くボタン から確認できます。具体的には以下のフォルダに保存されています。
 
 #### Windows 版
 

@@ -175,6 +175,7 @@ import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver, useQuasar } from "quasar";
 import cloneDeep from "clone-deep";
+import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
@@ -569,6 +570,24 @@ onMounted(async () => {
       styleId: audioItem.voice.styleId,
     });
   }
+
+  // ショートカットキー操作を止める条件の設定
+  // 止めるなら`true`を返す
+  Mousetrap.prototype.stopCallback = (
+    e: Mousetrap.ExtendedKeyboardEvent, // 未使用
+    element: Element,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    combo: string // 未使用
+  ) => {
+    return (
+      element.tagName === "INPUT" ||
+      element.tagName === "SELECT" ||
+      element.tagName === "TEXTAREA" ||
+      (element instanceof HTMLElement && element.contentEditable === "true") ||
+      // メニュー項目ではショートカットキーを無効化
+      element.classList.contains("q-item")
+    );
+  };
 
   // ショートカットキーの設定
   document.addEventListener("keydown", disableDefaultUndoRedo);

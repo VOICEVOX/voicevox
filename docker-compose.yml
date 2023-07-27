@@ -28,6 +28,6 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - .:/work:cache
+      - .:/work:cached
     tty: true
     stdin_open: true
