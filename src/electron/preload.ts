@@ -250,6 +250,14 @@ const api: Sandbox = {
     );
   },
 
+  getTempProject: async () => {
+    return await ipcRendererInvoke("GET_TEMP_PROJECT");
+  },
+
+  setTempProject: async (tempProject) => {
+    return await ipcRendererInvoke("SET_TEMP_PROJECT", tempProject);
+  },
+
   installVvppEngine: async (filePath) => {
     return await ipcRendererInvoke("INSTALL_VVPP_ENGINE", filePath);
   },

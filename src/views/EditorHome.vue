@@ -668,6 +668,14 @@ watch(
   }
 );
 
+const audioKey = computed(() => store.state.audioKeys);
+
+// audioItemsの変更を監視
+watch([audioItems.value, audioKey.value], async () => {
+  await store.dispatch("SAVE_TEMPORARY_PROJECT_FILE");
+});
+store.dispatch("HANDLE_LOAD_TEMPORARY_PROJECT_FILE");
+
 const restartAppWithMultiEngineOffMode = () => {
   store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
 };

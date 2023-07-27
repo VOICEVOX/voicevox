@@ -292,6 +292,12 @@ export const api: Sandbox = {
   setSetting(key, newValue) {
     return setSettingEntry(key, newValue).then(() => getSettingEntry(key));
   },
+  getTempProject() {
+    throw new Error("TODO");
+  },
+  setTempProject(/* tempProject: ArrayBuffer */) {
+    throw new Error("TODO");
+  },
   async setEngineSetting(engineId: EngineId, engineSetting: EngineSetting) {
     const engineSettings = (await this.getSetting(
       "engineSettings"

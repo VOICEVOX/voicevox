@@ -262,6 +262,16 @@ export type IpcIHData = {
     return: ElectronStoreType[keyof ElectronStoreType];
   };
 
+  GET_TEMP_PROJECT: {
+    args: [];
+    return: ElectronStoreType;
+  };
+
+  SET_TEMP_PROJECT: {
+    args: [tempProject: ArrayBuffer];
+    return: Result<undefined>;
+  };
+
   SET_ENGINE_SETTING: {
     args: [engineId: EngineId, engineSetting: EngineSetting];
     return: void;

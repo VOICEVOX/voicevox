@@ -215,6 +215,8 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
+  getTempProject(): object;
+  setTempProject(tempProject: ArrayBuffer): Promise<Result<undefined>>;
   setEngineSetting(
     engineId: EngineId,
     engineSetting: EngineSetting

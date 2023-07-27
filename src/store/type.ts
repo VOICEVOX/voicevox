@@ -987,6 +987,18 @@ export type ProjectStoreTypes = {
     action(payload: { overwrite?: boolean }): boolean;
   };
 
+  SAVE_TEMPORARY_PROJECT_FILE: {
+    action(): boolean;
+  };
+
+  CLEAR_TEMPORARY_PROJECT_FILE: {
+    action(): void;
+  };
+
+  HANDLE_LOAD_TEMPORARY_PROJECT_FILE: {
+    action(): boolean;
+  };
+
   SAVE_OR_DISCARD_PROJECT_FILE: {
     action(palyoad: {
       additionalMessage?: string;

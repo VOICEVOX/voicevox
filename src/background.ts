@@ -201,6 +201,27 @@ try {
   throw e;
 }
 
+const setTempProject = (tempProject: ArrayBuffer) => {
+  try {
+    const filePath = path.join(fixedUserDataDir, "temp-project.json");
+    fs.writeFileSync(filePath, new DataView(tempProject));
+    return success(undefined);
+  } catch (e) {
+    const a = e as SystemError;
+    return failure(a.code, a);
+  }
+};
+if (!fs.existsSync(path.join(fixedUserDataDir, "temp-project.json"))) {
+  const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
+  setTempProject(buf);
+}
+
+const tempProject = JSON.parse(
+  fs.readFileSync(path.join(fixedUserDataDir, "temp-project.json"), {
+    encoding: "utf-8",
+  })
+);
+
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
@@ -849,6 +870,14 @@ ipcMainHandle("GET_SETTING", (_, key) => {
 ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   store.set(key, newValue);
   return store.get(key);
+});
+
+ipcMainHandle("GET_TEMP_PROJECT", () => {
+  return tempProject;
+});
+
+ipcMainHandle("SET_TEMP_PROJECT", (_, tempProject) => {
+  return setTempProject(tempProject);
 });
 
 ipcMainHandle("SET_ENGINE_SETTING", (_, engineId, engineSetting) => {

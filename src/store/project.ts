@@ -444,6 +444,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
             context.getters.LAST_COMMAND_UNIX_MILLISEC
           );
+          // 保存時に一時ファイルをクリアする
+          await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
           return true;
         } catch (err) {
           window.electron.logError(err);
@@ -494,6 +496,81 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       } else {
         return "canceled";
       }
+    }),
+  },
+
+  /**
+   * 一時ファイルにプロイジェクトを保存する
+   */
+  SAVE_TEMPORARY_PROJECT_FILE: {
+    action: createUILockAction(async (context) => {
+      const appInfos = await window.electron.getAppInfos();
+      const { audioItems, audioKeys } = context.state;
+
+      const projectData = {
+        appVersion: appInfos.version,
+        audioKeys,
+        audioItems,
+      } as ProjectType;
+      const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
+
+      await window.electron.setTempProject(buf).then(getValueOrThrow);
+      return true;
+    }),
+  },
+
+  /**
+   * プロジェクトの一時ファイルを空にする
+   *
+   * @todo プロジェクト破棄時に呼び出す
+   */
+  CLEAR_TEMPORARY_PROJECT_FILE: {
+    async action() {
+      const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
+
+      await window.electron.setTempProject(buf).then(getValueOrThrow);
+    },
+  },
+
+  /**
+   * 一時ファイルを読み込む
+   */
+  HANDLE_LOAD_TEMPORARY_PROJECT_FILE: {
+    action: createUILockAction(async (context) => {
+      const projectData = await window.electron.getTempProject();
+
+      if (!Object.keys(projectData).length) {
+        return false;
+      }
+
+      // TODO ダイアログを表示しREGISTER_AUDIO_ITEMの出し分けをハンドリングする
+      const discardRestoredProject: number =
+        await window.electron.showQuestionDialog({
+          type: "info",
+          title: "復元されたプロジェクト",
+          message: "復元されたプロジェクトがあります。復元しますか？",
+          buttons: ["復元する", "破棄"],
+          defaultId: 0,
+          cancelId: 1,
+        });
+
+      if (discardRestoredProject) {
+        // 復元されたプロジェクトを破棄する
+        await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
+        return false;
+      }
+
+      const { audioItems, audioKeys } = projectData as ProjectType;
+
+      let prevAudioKey = undefined;
+      for (const audioKey of audioKeys) {
+        const audioItem = audioItems[audioKey];
+        prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
+          prevAudioKey,
+          audioItem,
+        });
+      }
+      return true;
     }),
   },
 
