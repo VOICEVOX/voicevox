@@ -1600,10 +1600,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (state.savingSetting.exportText) {
           const textBlob = ((): Blob => {
             const text = texts.join("\n");
-            const skippedText = text;
             if (!encoding || encoding === "UTF-8") {
               const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-              return new Blob([bom, skippedText], {
+              return new Blob([bom, text], {
                 type: "text/plain;charset=UTF-8",
               });
             }
