@@ -593,7 +593,7 @@ const deleteWord = async () => {
   }
 };
 const resetWord = async () => {
-  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
     actionName: "リセット",
@@ -604,7 +604,7 @@ const resetWord = async () => {
 };
 const discardOrNotDialog = async (okCallback: () => void) => {
   if (isWordChanged.value) {
-    const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+    const result = await store.dispatch("SHOW_WARNING_DIALOG", {
       title: "単語の追加・変更を破棄しますか？",
       message:
         "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
