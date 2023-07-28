@@ -134,10 +134,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("READ_FILE", { filePath });
   },
 
-  openTextEditContextMenu: () => {
-    return ipcRendererInvoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
-  },
-
   isAvailableGPUMode: () => {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
@@ -175,6 +171,10 @@ const api: Sandbox = {
   logInfo: (...params) => {
     console.info(...params);
     return ipcRenderer.invoke("LOG_INFO", ...params);
+  },
+
+  openLogDirectory: () => {
+    ipcRenderer.invoke("OPEN_LOG_DIRECTORY");
   },
 
   engineInfos: () => {

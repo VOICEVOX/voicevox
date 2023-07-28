@@ -344,9 +344,9 @@ const solveDuplicated = () => {
 const confirmBtnEnabled = computed(() => {
   return (
     lastRecord.value == "" ||
-    ["Ctrl", "Shift", "Alt", "Meta"].indexOf(
+    ["Ctrl", "Shift", "Alt", "Meta"].includes(
       lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
-    ) > -1
+    )
   );
 });
 
