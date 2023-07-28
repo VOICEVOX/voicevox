@@ -682,7 +682,10 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions
+                class="q-px-md q-py-none bg-surface"
+                :class="{ disabled: !canSetAudioOutputDevice }"
+              >
                 <div>再生デバイス</div>
                 <div aria-label="音声の再生デバイスを変更できます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -694,12 +697,16 @@
                       transition-hide="jump-left"
                     >
                       音声の再生デバイスを変更できます。
+                      <template v-if="!canSetAudioOutputDevice">
+                        この機能はお使いの環境でサポートされていないため、使用できません。
+                      </template>
                     </q-tooltip>
                   </q-icon>
                 </div>
                 <q-space />
                 <q-select
                   v-model="currentAudioOutputDeviceComputed"
+                  :disable="!canSetAudioOutputDevice"
                   dense
                   label="再生デバイス"
                   :options="availableAudioOutputDevices"
@@ -1019,6 +1026,9 @@ const changeShowAddAudioItemButton = async (
   }
 };
 
+const canSetAudioOutputDevice = computed(() => {
+  return !!HTMLAudioElement.prototype.setSinkId;
+});
 const currentAudioOutputDeviceComputed = computed<{
   key: string;
   label: string;

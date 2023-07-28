@@ -33,7 +33,7 @@
               >
                 マルチエンジンをオフにして再起動する</q-btn
               >
-              <q-btn v-else outline @click="openFaq">FAQを見る</q-btn>
+              <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
             </template>
           </div>
         </div>
@@ -175,6 +175,7 @@ import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
+import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
@@ -569,6 +570,24 @@ onMounted(async () => {
     });
   }
 
+  // ショートカットキー操作を止める条件の設定
+  // 止めるなら`true`を返す
+  Mousetrap.prototype.stopCallback = (
+    e: Mousetrap.ExtendedKeyboardEvent, // 未使用
+    element: Element,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    combo: string // 未使用
+  ) => {
+    return (
+      element.tagName === "INPUT" ||
+      element.tagName === "SELECT" ||
+      element.tagName === "TEXTAREA" ||
+      (element instanceof HTMLElement && element.contentEditable === "true") ||
+      // メニュー項目ではショートカットキーを無効化
+      element.classList.contains("q-item")
+    );
+  };
+
   // ショートカットキーの設定
   document.addEventListener("keydown", disableDefaultUndoRedo);
 
@@ -656,7 +675,7 @@ const restartAppWithMultiEngineOffMode = () => {
   store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
 };
 
-const openFaq = () => {
+const openQa = () => {
   window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
 };
 

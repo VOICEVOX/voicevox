@@ -498,7 +498,7 @@ const addEngine = async () => {
       );
 
       requireRestart(
-        "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+        "エンジンを追加しました。反映にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？"
       );
     } else {
       const success = await lockUi(
@@ -507,7 +507,7 @@ const addEngine = async () => {
       );
       if (success) {
         requireRestart(
-          "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+          "エンジンを追加しました。反映にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？"
         );
       }
     }
@@ -534,7 +534,7 @@ const deleteEngine = async () => {
           })
         );
         requireRestart(
-          "エンジンを削除しました。反映には再起動が必要です。今すぐ再起動しますか？"
+          "エンジンを削除しました。反映にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？"
         );
         break;
       }
@@ -545,7 +545,7 @@ const deleteEngine = async () => {
         );
         if (success) {
           requireRestart(
-            "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
+            "エンジンの削除にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？"
           );
         }
         break;
@@ -576,7 +576,7 @@ const restartSelectedEngine = () => {
 
 const requireRestart = async (message: string) => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
-    title: "再起動が必要です",
+    title: "VOICEVOXの再起動が必要です",
     message: message,
     actionName: "再起動",
     cancel: "後で",

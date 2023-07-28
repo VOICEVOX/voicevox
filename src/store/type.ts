@@ -473,10 +473,6 @@ export type AudioStoreTypes = {
     action(): void;
   };
 
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    action(): void;
-  };
-
   CHECK_FILE_EXISTS: {
     action(payload: { file: string }): Promise<boolean>;
   };
