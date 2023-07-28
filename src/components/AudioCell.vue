@@ -46,7 +46,7 @@
       @paste="pasteOnAudioCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
-      @keydown.prevent.enter.exact="pushAudioTextIfNeeded()"
+      @keydown.prevent.enter.exact="pushAudioTextIfNeeded"
     >
       <template #error>
         文章が長いと正常に動作しない可能性があります。
@@ -169,7 +169,8 @@ watch(
   }
 );
 
-const pushAudioTextIfNeeded = async () => {
+const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;
     await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
