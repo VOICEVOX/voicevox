@@ -102,6 +102,23 @@ img {
   background: transparent; // デフォルトの設定だと全画面ダイアログが出る際に黒背景がちらつく
 }
 
+// 後ろの文字が透けないように裏地を作る
+.bg-toast {
+  position: relative;
+}
+
+.bg-toast::before {
+  background-color:  colors.$background;
+  border-radius: 5px;
+  content: " ";
+  height: 100%;
+  left: 0px;
+  opacity: 0.9;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: -1;
+}
 
 // トースト通知と通知内にあるボタン
 .text-toast-display,
