@@ -103,14 +103,23 @@ img {
 }
 
 // 後ろの文字が透けないように裏地を作る
-.q-notification {
-  z-index: initial;
-}
 .bg-toast {
   position: relative;
 }
 .bg-toast::before {
   background-color:  colors.$background;
+  border-radius: 5px;
+  content: " ";
+  height: 100%;
+  left: 0;
+  opacity: 0.9;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: -1;
+}
+.bg-toast::after {
+  background-color: colors.$toast;
   border-radius: 5px;
   content: " ";
   height: 100%;
