@@ -725,7 +725,7 @@ const isHovered = (
       if (
         accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
         moraIndex === pitchHoveredInfo.moraIndex &&
-        unvoicableVowels.indexOf(vowel) > -1
+        unvoicableVowels.includes(vowel)
       ) {
         isHover = true;
       }
@@ -769,7 +769,7 @@ const handleChangeVoicing = (
 ) => {
   if (
     selectedDetail.value == "pitch" &&
-    unvoicableVowels.indexOf(mora.vowel) > -1
+    unvoicableVowels.includes(mora.vowel)
   ) {
     let data = 0;
     if (mora.pitch == 0) {

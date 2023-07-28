@@ -32,9 +32,9 @@ export function buildProjectFileName(state: State, extension?: string): string {
     state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
 
   const headTailItemText =
-    headItemText !== tailItemText
-      ? headItemText + "..." + tailItemText
-      : headItemText;
+    state.audioKeys.length === 1
+      ? headItemText
+      : headItemText + "..." + tailItemText;
 
   let defaultFileNameStem = sanitizeFileName(headTailItemText);
 
@@ -92,16 +92,21 @@ function replaceTag(
   return result;
 }
 
-export function skipReadingPart(text: string): string {
+export function extractExportText(text: string): string {
+  return skipReadingPart(skipMemoText(text));
+}
+export function extractYomiText(text: string): string {
+  return skipWritingPart(skipMemoText(text));
+}
+function skipReadingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
   return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
 }
-
-export function skipWritingPart(text: string): string {
+function skipWritingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
   return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2");
 }
-export function skipMemoText(targettext: string): string {
+function skipMemoText(targettext: string): string {
   // []をスキップ
   const resolvedText = targettext.replace(/\[.*?\]/g, "");
   return resolvedText;
