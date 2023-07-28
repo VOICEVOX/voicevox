@@ -103,28 +103,21 @@ img {
 }
 
 // 後ろの文字が透けないように裏地を作る
-.bg-toast {
+.bg-toast,
+.bg-toast--warning {
+  background: transparent;
   position: relative;
 }
-.bg-toast::before {
-  background-color:  colors.$background;
-  border-radius: 5px;
-  content: " ";
-  height: 100%;
-  left: 0;
-  opacity: 0.9;
-  position: absolute;
-  top: 0;
-  width: 100%;
-  z-index: -1;
-}
+.bg-toast::before{
+ background:  colors.$background;
+} 
+.bg-toast::before,
 .bg-toast::after {
-  background-color: colors.$toast;
   border-radius: 5px;
   content: " ";
   height: 100%;
   left: 0;
-  opacity: 0.9;
+  opacity: 0.85;
   position: absolute;
   top: 0;
   width: 100%;
@@ -269,7 +262,7 @@ img {
   background: colors.$toolbar-button-display;
 }
 
-.bg-toast {
+.bg-toast::after {
   background: colors.$toast;
 }
 .text-toast-display {
@@ -279,7 +272,7 @@ img {
   color: colors.$toast-button-display;
 }
 
-.bg-toast--warning {
+.bg-toast--warning::after {
   background: colors.$toast--warning;
 }
 .text-toast-display--warning {
