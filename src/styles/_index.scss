@@ -107,21 +107,22 @@ img {
 .bg-toast--warning {
   background: transparent;
   position: relative;
-}
-.bg-toast::before{
- background:  colors.$background;
-} 
-.bg-toast::before,
-.bg-toast::after {
-  border-radius: 5px;
-  content: " ";
-  height: 100%;
-  left: 0;
-  opacity: 0.85;
-  position: absolute;
-  top: 0;
-  width: 100%;
-  z-index: -1;
+
+  &::before {
+    background:  colors.$background;
+  } 
+  &::before,
+  &::after {
+    border-radius: 5px;
+    content: " ";
+    height: 100%;
+    left: 0;
+    opacity: 0.85;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    z-index: -1;
+  }
 }
 
 // トースト通知と通知内にあるボタン
