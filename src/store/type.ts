@@ -506,6 +506,10 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKeys: AudioKey[] }): void;
   };
 
+  COMMAND_CHANGE_DISPLAY_TEXT: {
+    action(payload: { audioKey: AudioKey; text: string }): void;
+  };
+
   COMMAND_CHANGE_AUDIO_TEXT: {
     mutation: { audioKey: AudioKey; text: string } & (
       | { update: "Text" }

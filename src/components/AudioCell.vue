@@ -328,6 +328,8 @@ const contextMenudata = ref<
     MenuItemButton,
     MenuItemButton,
     MenuItemSeparator,
+    MenuItemButton,
+    MenuItemSeparator,
     MenuItemButton
   ]
 >([
@@ -375,6 +377,21 @@ const contextMenudata = ref<
     onClick: async () => {
       contextMenu.value?.hide();
       textfield.value?.select();
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "テキストを台本のみに適用",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      isChangeFlag.value = false;
+      await store.dispatch("COMMAND_CHANGE_DISPLAY_TEXT", {
+        audioKey: props.audioKey,
+        text: audioTextBuffer.value,
+      });
+      textfield.value?.blur();
     },
     disableWhenUiLocked: true,
   },
