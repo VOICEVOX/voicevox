@@ -590,7 +590,7 @@ function terminateEngines(): Promise<void> | "alreadyCompleted" {
   let numEngineProcessKilled = 0;
 
   // 非同期的にすべてのエンジンプロセスをキル
-  const waitingKilledPromises: Array<Promise<void>> = Object.entries(
+  const waitingKilledPromises: Promise<void>[] = Object.entries(
     killingProcessPromises
   ).map(([engineId, promise]) => {
     return promise
