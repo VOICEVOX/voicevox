@@ -578,7 +578,7 @@ async function launchEngines() {
  * 全処理が完了済みの場合 alreadyCompleted を返す。
  * そうでない場合は Promise を返す。
  */
-function terminateEngines(): Promise<void> | "alreadyCompleted" {
+function cleanupEngines(): Promise<void> | "alreadyCompleted" {
   const killingProcessPromises = engineManager.killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
@@ -949,11 +949,11 @@ ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
   await win.loadURL(firstUrl + "dummypage");
 
   log.info("Checking ENGINE status before reload app");
-  const engineTerminateResult = terminateEngines();
+  const engineCleanupResult = cleanupEngines();
 
   // エンジンの停止とエンジン終了後処理の待機
-  if (engineTerminateResult != "alreadyCompleted") {
-    await engineTerminateResult;
+  if (engineCleanupResult != "alreadyCompleted") {
+    await engineCleanupResult;
   }
   log.info("Post engine kill process done. Now reloading app");
 
@@ -1011,10 +1011,10 @@ app.on("before-quit", async (event) => {
   }
 
   log.info("Checking ENGINE status before app quit");
-  const engineTerminateResult = terminateEngines();
+  const engineCleanupResult = cleanupEngines();
 
   // エンジンの停止とエンジン終了後処理が完了している
-  if (engineTerminateResult == "alreadyCompleted") {
+  if (engineCleanupResult == "alreadyCompleted") {
     log.info("Post engine kill process done. Now quit app");
     return;
   }
@@ -1025,7 +1025,7 @@ app.on("before-quit", async (event) => {
   log.info("Interrupt app quit to kill ENGINE processes");
   event.preventDefault();
 
-  await engineTerminateResult;
+  await engineCleanupResult;
 
   // アプリケーションの終了を再試行する
   log.info("Attempting to quit app again");
