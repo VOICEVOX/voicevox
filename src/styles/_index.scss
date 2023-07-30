@@ -102,29 +102,6 @@ img {
   background: transparent; // デフォルトの設定だと全画面ダイアログが出る際に黒背景がちらつく
 }
 
-// 後ろの文字が透けないように裏地を作る
-.bg-toast,
-.bg-toast--warning {
-  background: transparent;
-  position: relative;
-
-  &::before {
-    background:  colors.$background;
-  } 
-  &::before,
-  &::after {
-    border-radius: 5px;
-    content: " ";
-    height: 100%;
-    left: 0;
-    opacity: 0.85;
-    position: absolute;
-    top: 0;
-    width: 100%;
-    z-index: -1;
-  }
-}
-
 // トースト通知と通知内にあるボタン
 .text-toast-display,
 .text-toast-display--warning,
@@ -263,7 +240,7 @@ img {
   background: colors.$toolbar-button-display;
 }
 
-.bg-toast::after {
+.bg-toast {
   background: colors.$toast;
 }
 .text-toast-display {
@@ -273,7 +250,7 @@ img {
   color: colors.$toast-button-display;
 }
 
-.bg-toast--warning::after {
+.bg-toast--warning {
   background: colors.$toast--warning;
 }
 .text-toast-display--warning {
