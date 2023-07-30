@@ -199,7 +199,7 @@ try {
   });
 } catch (e) {
   log.error(e);
-  shell.openPath(app.getPath("userData")).then(() => {
+  shell.openPath(app.getPath("userData")).finally(() => {
     dialog.showErrorBox(
       "設定ファイルの読み込みに失敗しました。",
       `${app.getPath(
