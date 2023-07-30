@@ -358,10 +358,10 @@ const parameters = computed<Parameter[]>(() => [
       step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
-      onChange: (value: number) => {
+      onChange: (speedScale: number) => {
         store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
           audioKey: props.activeAudioKey,
-          speedScale: value,
+          speedScale,
         });
       },
     }),
@@ -378,10 +378,10 @@ const parameters = computed<Parameter[]>(() => [
       min: () => -0.15,
       step: () => 0.01,
       scrollStep: () => 0.01,
-      onChange: (value: number) => {
+      onChange: (pitchScale: number) => {
         store.dispatch("COMMAND_SET_AUDIO_PITCH_SCALE", {
           audioKey: props.activeAudioKey,
-          pitchScale: value,
+          pitchScale,
         });
       },
     }),
@@ -400,10 +400,10 @@ const parameters = computed<Parameter[]>(() => [
       step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
-      onChange: (value: number) => {
+      onChange: (intonationScale: number) => {
         store.dispatch("COMMAND_SET_AUDIO_INTONATION_SCALE", {
           audioKey: props.activeAudioKey,
-          intonationScale: value,
+          intonationScale,
         });
       },
     }),
@@ -421,10 +421,10 @@ const parameters = computed<Parameter[]>(() => [
       step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
-      onChange: (value: number) => {
+      onChange: (volumeScale: number) => {
         store.dispatch("COMMAND_SET_AUDIO_VOLUME_SCALE", {
           audioKey: props.activeAudioKey,
-          volumeScale: value,
+          volumeScale,
         });
       },
     }),
@@ -441,10 +441,10 @@ const parameters = computed<Parameter[]>(() => [
       step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
-      onChange: (value: number) => {
+      onChange: (prePhonemeLength: number) => {
         store.dispatch("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", {
           audioKey: props.activeAudioKey,
-          prePhonemeLength: value,
+          prePhonemeLength,
         });
       },
     }),
@@ -461,10 +461,10 @@ const parameters = computed<Parameter[]>(() => [
       step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
-      onChange: (value: number) => {
+      onChange: (postPhonemeLength: number) => {
         store.dispatch("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", {
           audioKey: props.activeAudioKey,
-          postPhonemeLength: value,
+          postPhonemeLength,
         });
       },
     }),
