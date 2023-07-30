@@ -53,6 +53,7 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
   icon?: string;
   disabled?: boolean;
   disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
 export type MenuItemButton = MenuItemBase<"button"> & {
@@ -60,6 +61,7 @@ export type MenuItemButton = MenuItemBase<"button"> & {
   icon?: string;
   disabled?: boolean;
   disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
 export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
@@ -513,28 +515,26 @@ async function updateEngines() {
       disableWhenUiLocked: false,
     });
   }
+  // マルチエンジンオフモードの解除
+  if (store.state.isMultiEngineOffMode) {
+    engineMenu.subMenu.push({
+      type: "button",
+      label: "マルチエンジンをオンにして再読み込み",
+      onClick() {
+        store.dispatch("RELOAD_APP", {
+          isMultiEngineOffMode: false,
+        });
+      },
+      disableWhenUiLocked: false,
+      disablreloadingLocked: true,
+    });
+  }
 }
 // engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
 // FIXME: computedにする
 watch([engineInfos, engineManifests, enableMultiEngine], updateEngines, {
   immediate: true,
 });
-
-// マルチエンジンオフモードの解除
-if (store.state.isMultiEngineOffMode) {
-  (
-    menudata.value.find((data) => data.label === "エンジン") as MenuItemRoot
-  ).subMenu.push({
-    type: "button",
-    label: "マルチエンジンをオンにして再起動",
-    onClick() {
-      store.dispatch("RESTART_APP", {
-        isMultiEngineOffMode: false,
-      });
-    },
-    disableWhenUiLocked: false,
-  });
-}
 
 // 「最近開いたプロジェクト」の更新
 async function updateRecentProjects() {

@@ -497,8 +497,8 @@ const addEngine = async () => {
         })
       );
 
-      requireRestart(
-        "エンジンを追加しました。反映にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？"
+      requireReload(
+        "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
       );
     } else {
       const success = await lockUi(
@@ -506,8 +506,8 @@ const addEngine = async () => {
         store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
       );
       if (success) {
-        requireRestart(
-          "エンジンを追加しました。反映にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？"
+        requireReload(
+          "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
         );
       }
     }
@@ -533,8 +533,8 @@ const deleteEngine = async () => {
             engineDir,
           })
         );
-        requireRestart(
-          "エンジンを削除しました。反映にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？"
+        requireReload(
+          "エンジンを削除しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
         );
         break;
       }
@@ -544,8 +544,8 @@ const deleteEngine = async () => {
           store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value)
         );
         if (success) {
-          requireRestart(
-            "エンジンの削除にはVOICEVOXの再起動が必要です。今すぐ再起動しますか？"
+          requireReload(
+            "エンジンの削除には再読み込みが必要です。今すぐ再読み込みしますか？"
           );
         }
         break;
@@ -576,14 +576,16 @@ const restartSelectedEngine = () => {
 
 const requireRestart = async (message: string) => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
-    title: "VOICEVOXの再起動が必要です",
+    title: "再読み込みが必要です",
     message: message,
-    actionName: "再起動",
+    actionName: "再読み込み",
     cancel: "後で",
   });
   toInitialState();
   if (result === "OK") {
-    store.dispatch("RESTART_APP", {});
+    store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+      closeOrReload: "reload",
+    });
   }
 };
 

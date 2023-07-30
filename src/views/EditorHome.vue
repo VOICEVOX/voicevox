@@ -29,9 +29,10 @@
               <q-btn
                 v-if="isMultipleEngine"
                 outline
-                @click="restartAppWithMultiEngineOffMode"
+                :disable="reloadingLocked"
+                @click="reloadAppWithMultiEngineOffMode"
               >
-                マルチエンジンをオフにして再起動する</q-btn
+                マルチエンジンをオフにして再読み込みする</q-btn
               >
               <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
             </template>
@@ -216,6 +217,7 @@ const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+const reloadingLocked = computed(() => store.state.reloadingLock);
 
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
@@ -671,8 +673,11 @@ watch(
   }
 );
 
-const restartAppWithMultiEngineOffMode = () => {
-  store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
+const reloadAppWithMultiEngineOffMode = () => {
+  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+    closeOrReload: "reload",
+    isMultiEngineOffMode: true,
+  });
 };
 
 const openQa = () => {
