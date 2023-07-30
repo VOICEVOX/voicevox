@@ -991,7 +991,7 @@ export type ProjectStoreTypes = {
     action(): void;
   };
 
-  HANDLE_LOAD_TEMPORARY_PROJECT_FILE: {
+  LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
     action(): boolean;
   };
 

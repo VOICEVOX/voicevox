@@ -500,7 +500,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 
   /**
-   * 一時ファイルにプロイジェクトを保存する
+   * プロジェクトを一時ファイルに保存する
    */
   SAVE_TEMPORARY_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
@@ -521,13 +521,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   /**
    * プロジェクトの一時ファイルを空にする
-   *
-   * @todo プロジェクト破棄時に呼び出す
    */
   CLEAR_TEMPORARY_PROJECT_FILE: {
     async action() {
       const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
-
       await window.electron.setTempProject(buf).then(getValueOrThrow);
     },
   },
@@ -535,7 +532,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   /**
    * 一時ファイルを読み込む
    */
-  HANDLE_LOAD_TEMPORARY_PROJECT_FILE: {
+  LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
       const projectData = await window.electron.getTempProject();
 
@@ -543,7 +540,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return false;
       }
 
-      // TODO ダイアログを表示しREGISTER_AUDIO_ITEMの出し分けをハンドリングする
       const discardRestoredProject: number =
         await window.electron.showQuestionDialog({
           type: "info",

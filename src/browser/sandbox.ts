@@ -292,10 +292,10 @@ export const api: Sandbox = {
     return setSettingEntry(key, newValue).then(() => getSettingEntry(key));
   },
   getTempProject() {
-    throw new Error("TODO");
+    throw new Error("Not supported on Browser version: getTempProject");
   },
   setTempProject(/* tempProject: ArrayBuffer */) {
-    throw new Error("TODO");
+    throw new Error("Not supported on Browser version: setTempProject");
   },
   async setEngineSetting(engineId: EngineId, engineSetting: EngineSetting) {
     const engineSettings = (await this.getSetting(
