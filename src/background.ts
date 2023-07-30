@@ -198,14 +198,16 @@ try {
     },
   });
 } catch (e) {
-  log.error(e);
-  dialog.showErrorBox(
-    "設定ファイルの読み込みに失敗しました。",
-    `${app.getPath(
-      "userData"
-    )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
-  );
-  app.exit(1);
+  shell.openPath(app.getPath("userData")).then(() => {
+    log.error(e);
+    dialog.showErrorBox(
+      "設定ファイルの読み込みに失敗しました。",
+      `${app.getPath(
+        "userData"
+      )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
+    );
+    app.exit(1);
+  });
   throw e;
 }
 
