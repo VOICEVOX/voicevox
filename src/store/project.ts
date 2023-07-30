@@ -492,6 +492,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
         return saved ? "saved" : "canceled";
       } else if (result == 1) {
+        await dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
         return "discarded";
       } else {
         return "canceled";
