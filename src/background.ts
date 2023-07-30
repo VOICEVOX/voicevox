@@ -11,6 +11,7 @@ import {
   Menu,
   shell,
   nativeTheme,
+  net,
 } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Store, { Schema } from "electron-store";
@@ -128,17 +129,10 @@ if (isDevelopment) {
   __static = __dirname;
 }
 
-// ソフトウェア起動時はプロトコルを app にする
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
-if (process.env.VITE_DEV_SERVER_URL == undefined) {
-  // FIXME: registerFileProtocolが非推奨になったので対策を考える
-  protocol.registerFileProtocol("app", (request, callback) => {
-    const filePath = new URL(request.url).pathname;
-    callback(path.join(__dirname, filePath));
-  });
-}
+
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // 設定ファイル
@@ -493,6 +487,14 @@ async function createWindow() {
         projectFilePath = encodeURI(filePath);
       }
     }
+  }
+
+  // ソフトウェア起動時はプロトコルを app にする
+  if (process.env.VITE_DEV_SERVER_URL == undefined) {
+    protocol.handle("app", (request) => {
+      const filePath = new URL(request.url).pathname;
+      return net.fetch(`file://${filePath}`);
+    });
   }
 
   await loadUrl({ projectFilePath });
