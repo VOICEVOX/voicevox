@@ -31,9 +31,7 @@
           :key="index"
           v-model:selected="subMenuOpenFlags[index]"
           :menudata="menu"
-          :disable="
-            uiLocked && menu.type !== 'separator' && menu.disableWhenUiLocked
-          "
+          :disable="isDisabledMenuItem(menu)"
           @mouseenter="reassignSubMenuOpen(index)"
           @mouseleave="reassignSubMenuOpen.cancel()"
         />
@@ -67,6 +65,7 @@ const emit =
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+const reloadingLocked = computed(() => store.state.reloadingLock);
 const selectedComputed = computed({
   get: () => props.selected,
   set: (val) => emit("update:selected", val),
@@ -77,6 +76,13 @@ const subMenuOpenFlags = ref(
     ? [...Array(props.menudata.subMenu.length)].map(() => false)
     : []
 );
+
+const isDisabledMenuItem = computed(() => (menu: MenuItemData) => {
+  if (menu.type === "separator") return false;
+  if (menu.disableWhenUiLocked && uiLocked.value) return true;
+  if (menu.disablreloadingLocked && reloadingLocked.value) return true;
+  return false;
+});
 
 const reassignSubMenuOpen = debounce((idx: number) => {
   if (subMenuOpenFlags.value[idx]) return;
