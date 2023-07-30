@@ -1141,6 +1141,7 @@ export type SettingStoreTypes = {
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
+  reloadingLock: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
@@ -1193,6 +1194,11 @@ export type UiStoreTypes = {
   };
 
   UNLOCK_MENUBAR: {
+    mutation: undefined;
+    action(): void;
+  };
+
+  LOCK_RELOADING: {
     mutation: undefined;
     action(): void;
   };
@@ -1282,10 +1288,17 @@ export type UiStoreTypes = {
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    action(): Promise<void>;
+    action(
+      obj:
+        | { closeOrReload: "close" }
+        | {
+            closeOrReload: "reload";
+            isMultiEngineOffMode?: boolean;
+          }
+    ): Promise<void>;
   };
 
-  RESTART_APP: {
+  RELOAD_APP: {
     action(obj: { isMultiEngineOffMode?: boolean }): void;
   };
 

@@ -507,8 +507,8 @@ const addEngine = () => {
         })
       );
 
-      requireRestart(
-        "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+      requireReload(
+        "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
       );
     } else {
       const success = await lockUi(
@@ -516,8 +516,8 @@ const addEngine = () => {
         store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
       );
       if (success) {
-        requireRestart(
-          "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+        requireReload(
+          "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
         );
       }
     }
@@ -551,8 +551,8 @@ const deleteEngine = () => {
             engineDir,
           })
         );
-        requireRestart(
-          "エンジンを削除しました。反映には再起動が必要です。今すぐ再起動しますか？"
+        requireReload(
+          "エンジンを削除しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
         );
         break;
       }
@@ -562,8 +562,8 @@ const deleteEngine = () => {
           store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value)
         );
         if (success) {
-          requireRestart(
-            "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
+          requireReload(
+            "エンジンの削除には再読み込みが必要です。今すぐ再読み込みしますか？"
           );
         }
         break;
@@ -592,9 +592,9 @@ const restartSelectedEngine = () => {
   });
 };
 
-const requireRestart = (message: string) => {
+const requireReload = (message: string) => {
   $q.dialog({
-    title: "再起動が必要です",
+    title: "再読み込みが必要です",
     message: message,
     noBackdropDismiss: true,
     cancel: {
@@ -603,14 +603,16 @@ const requireRestart = (message: string) => {
       flat: true,
     },
     ok: {
-      label: "再起動",
+      label: "再読み込み",
       flat: true,
       textColor: "warning",
     },
   })
     .onOk(() => {
       toInitialState();
-      store.dispatch("RESTART_APP", {});
+      store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+        closeOrReload: "reload",
+      });
     })
     .onCancel(() => {
       toInitialState();

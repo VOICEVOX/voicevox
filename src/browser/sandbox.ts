@@ -314,7 +314,7 @@ export const api: Sandbox = {
   validateEngineDir(/* engineDir: string */) {
     throw new Error(`Not supported on Browser version: validateEngineDir`);
   },
-  restartApp(/* obj: { isMultiEngineOffMode: boolean } */) {
-    throw new Error(`Not supported on Browser version: restartApp`);
+  reloadApp(/* obj: { isMultiEngineOffMode: boolean } */) {
+    throw new Error(`Not supported on Browser version: reloadApp`);
   },
 };
