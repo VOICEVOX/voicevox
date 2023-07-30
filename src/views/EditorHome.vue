@@ -699,8 +699,6 @@ watch([audioItems.value, audioKey.value], async () => {
   await store.dispatch("SAVE_TEMPORARY_PROJECT_FILE");
 });
 
-const restartAppWithMultiEngineOffMode = () => {
-  store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
 const reloadAppWithMultiEngineOffMode = () => {
   store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
     closeOrReload: "reload",
