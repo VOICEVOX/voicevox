@@ -10,7 +10,6 @@ import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
 import { proxyStore } from "@/store/proxy";
-import { dictionaryStore } from "@/store/dictionary";
 import { engineStore } from "@/store/engine";
 import { EngineId } from "@/type/preload";
 const isDevelopment = process.env.NODE_ENV == "development";
@@ -155,7 +154,6 @@ describe("store/vuex.js test", () => {
         ...indexStore.getters,
         ...presetStore.getters,
         ...proxyStore.getters,
-        ...dictionaryStore.getters,
       },
       mutations: {
         ...uiStore.mutations,
@@ -168,7 +166,6 @@ describe("store/vuex.js test", () => {
         ...indexStore.mutations,
         ...presetStore.mutations,
         ...proxyStore.mutations,
-        ...dictionaryStore.mutations,
       },
       actions: {
         ...uiStore.actions,
@@ -181,7 +178,6 @@ describe("store/vuex.js test", () => {
         ...indexStore.actions,
         ...presetStore.actions,
         ...proxyStore.actions,
-        ...dictionaryStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
       strict: process.env.NODE_ENV !== "production",

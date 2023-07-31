@@ -14,7 +14,6 @@ import {
   AudioQuery,
   EngineManifest,
   SupportedDevicesInfo,
-  UserDictWord,
   MorphableTargetInfo,
 } from "@/openapi";
 import {
@@ -1356,46 +1355,6 @@ export type PresetStoreTypes = {
 };
 
 /*
- * Dictionary Store Types
- */
-
-export type DictionaryStoreState = Record<string, unknown>;
-
-export type DictionaryStoreTypes = {
-  LOAD_USER_DICT: {
-    action(payload: {
-      engineId: EngineId;
-    }): Promise<Record<string, UserDictWord>>;
-  };
-  LOAD_ALL_USER_DICT: {
-    action(): Promise<Record<string, UserDictWord>>;
-  };
-  ADD_WORD: {
-    action(payload: {
-      surface: string;
-      pronunciation: string;
-      accentType: number;
-      priority: number;
-    }): Promise<void>;
-  };
-  REWRITE_WORD: {
-    action(payload: {
-      wordUuid: string;
-      surface: string;
-      pronunciation: string;
-      accentType: number;
-      priority: number;
-    }): Promise<void>;
-  };
-  DELETE_WORD: {
-    action(payload: { wordUuid: string }): Promise<void>;
-  };
-  SYNC_ALL_USER_DICT: {
-    action(): Promise<void>;
-  };
-};
-
-/*
  * Setting Store Types
  */
 
@@ -1434,7 +1393,6 @@ export type State = AudioStoreState &
   SettingStoreState &
   UiStoreState &
   PresetStoreState &
-  DictionaryStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
@@ -1446,7 +1404,6 @@ type AllStoreTypes = AudioStoreTypes &
   SettingStoreTypes &
   UiStoreTypes &
   PresetStoreTypes &
-  DictionaryStoreTypes &
   ProxyStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;

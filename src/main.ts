@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import { createPinia } from "pinia";
 import { createGtm } from "@gtm-support/vue-gtm";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
@@ -18,6 +19,7 @@ window.dataLayer = [];
 
 createApp(App)
   .use(store, storeKey)
+  .use(createPinia())
   .use(router)
   .use(
     createGtm({

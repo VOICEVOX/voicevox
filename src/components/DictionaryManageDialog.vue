@@ -252,6 +252,7 @@
 import { computed, ref, watch } from "vue";
 import { QInput, useQuasar } from "quasar";
 import { useStore } from "@/store";
+import { useDictionary } from "@/pinia-stores/dictionary";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
@@ -272,6 +273,7 @@ const emit =
   }>();
 
 const store = useStore();
+const dictionaryStore = useDictionary();
 const $q = useQuasar();
 
 const dictionaryManageDialogOpenedComputed = computed({
@@ -299,7 +301,7 @@ const loadingDictProcess = async () => {
   loadingDictState.value = "loading";
   try {
     userDict.value = await createUILockAction(
-      store.dispatch("LOAD_ALL_USER_DICT")
+      dictionaryStore.loadAllUserDict()
     );
   } catch {
     $q.dialog({
@@ -316,7 +318,7 @@ const loadingDictProcess = async () => {
   }
   loadingDictState.value = "synchronizing";
   try {
-    await createUILockAction(store.dispatch("SYNC_ALL_USER_DICT"));
+    await createUILockAction(dictionaryStore.syncAllUserDict());
   } catch {
     $q.dialog({
       title: "辞書の同期に失敗しました",
@@ -547,7 +549,7 @@ const saveWord = async () => {
   const accent = computeRegisteredAccent();
   if (selectedId.value) {
     try {
-      await store.dispatch("REWRITE_WORD", {
+      await dictionaryStore.rewriteWord({
         wordUuid: selectedId.value,
         surface: surface.value,
         pronunciation: yomi.value,
@@ -569,7 +571,7 @@ const saveWord = async () => {
   } else {
     try {
       await createUILockAction(
-        store.dispatch("ADD_WORD", {
+        dictionaryStore.addWord({
           surface: surface.value,
           pronunciation: yomi.value,
           accentType: accent,
@@ -612,7 +614,7 @@ const deleteWord = () => {
   }).onOk(async () => {
     try {
       await createUILockAction(
-        store.dispatch("DELETE_WORD", {
+        dictionaryStore.deleteWord({
           wordUuid: selectedId.value,
         })
       );
