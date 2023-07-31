@@ -193,13 +193,31 @@ try {
   });
 } catch (e) {
   log.error(e);
-  dialog.showErrorBox(
-    "設定ファイルの読み込みに失敗しました。",
-    `${app.getPath(
-      "userData"
-    )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
-  );
-  app.exit(1);
+  app.whenReady().then(() => {
+    dialog
+      .showMessageBox({
+        type: "error",
+        title: "設定ファイルの読み込みエラー",
+        message: `設定ファイルの読み込みに失敗しました。${app.getPath(
+          "userData"
+        )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。設定ファイルがあるフォルダを開きますか？`,
+        buttons: ["いいえ", "はい"],
+        noLink: true,
+        cancelId: 0,
+      })
+      .then(async ({ response }) => {
+        if (response === 1) {
+          await shell.openPath(app.getPath("userData"));
+          // 直後にexitするとフォルダが開かないため
+          await new Promise((resolve) => {
+            setTimeout(resolve, 500);
+          });
+        }
+      })
+      .finally(() => {
+        app.exit(1);
+      });
+  });
   throw e;
 }
 
