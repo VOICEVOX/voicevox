@@ -1966,6 +1966,19 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
+    COMMAND_CHANGE_DISPLAY_TEXT: {
+      /**
+       * 読みを変えずにテキストだけを変える
+       */
+      action({ commit }, payload: { audioKey: AudioKey; text: string }) {
+        commit("COMMAND_CHANGE_AUDIO_TEXT", {
+          audioKey: payload.audioKey,
+          text: payload.text,
+          update: "Text",
+        });
+      },
+    },
+
     COMMAND_CHANGE_AUDIO_TEXT: {
       mutation(
         draft,
