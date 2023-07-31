@@ -383,7 +383,7 @@ const contextMenudata = ref<
   { type: "separator" },
   {
     type: "button",
-    label: "テキストを台本のみに適用",
+    label: "内容をテキストのみに適用",
     onClick: async () => {
       contextMenu.value?.hide();
       isChangeFlag.value = false;
