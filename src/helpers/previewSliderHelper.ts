@@ -4,12 +4,12 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 export type Props = {
   onPan?: QSliderProps["onPan"];
-  onChange?: QSliderProps["onChange"];
+  onChange: (value: number) => Promise<void>;
   modelValue: () => number | null;
-  min?: () => number;
-  max?: () => number;
-  disable?: () => boolean;
+  min: () => number;
+  max: () => number;
   step?: () => number;
+  disable?: () => boolean;
   scrollStep?: () => number;
   scrollMinStep?: () => number;
   disableScroll?: () => boolean;
@@ -64,8 +64,8 @@ class CancelableFinary {
 export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   // Reactive references of each props
   const modelValue = computed(props.modelValue);
-  const min = computed(() => (props.min && props.min()) ?? 0);
-  const max = computed(() => (props.max && props.max()) ?? 100);
+  const min = computed(() => props.min());
+  const max = computed(() => props.max());
   const disable = computed(() => (props.disable && props.disable()) ?? false);
   const step = computed(() => (props.step && props.step()) ?? 1);
   const scrollStep = computed(
@@ -100,8 +100,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     if (previewValue.value === null)
       throw new Error("previewValue.value === null");
     if (modelValue.value !== previewValue.value && props.onChange) {
-      const ret: unknown = props.onChange(previewValue.value);
-      if (ret instanceof Promise) await ret;
+      await props.onChange(previewValue.value);
     }
   };
 
