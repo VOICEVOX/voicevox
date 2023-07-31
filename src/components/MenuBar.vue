@@ -27,18 +27,17 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useQuasar } from "quasar";
-import { useStore } from "@/store";
-import MenuButton from "@/components/MenuButton.vue";
-import TitleBarButtons from "@/components/TitleBarButtons.vue";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
 import {
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
   connectAndExportTextWithDialog,
-} from "@/components/Dialog";
+} from "./Dialog";
+import MenuButton from "./MenuButton.vue";
+import TitleBarButtons from "./TitleBarButtons.vue";
+import { useStore } from "@/store";
+import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import { setHotkeyFunctions } from "@/store/setting";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
 export type MenuItemBase<T extends string> = {
@@ -70,7 +69,6 @@ export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
 export type MenuItemType = MenuItemData["type"];
 
 const store = useStore();
-const $q = useQuasar();
 const currentVersion = ref("");
 
 // デフォルトエンジンの代替先ポート
@@ -135,8 +133,6 @@ const generateAndSaveAllAudio = async () => {
     await generateAndSaveAllAudioWithDialog({
       encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
-      quasarDialog: $q.dialog,
-      quasarNotify: $q.notify,
       dispatch: store.dispatch,
     });
   }
@@ -145,8 +141,6 @@ const generateAndSaveAllAudio = async () => {
 const generateAndConnectAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndConnectAndSaveAudioWithDialog({
-      quasarDialog: $q.dialog,
-      quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
@@ -159,14 +153,9 @@ const generateAndSaveOneAudio = async () => {
 
   const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
   if (activeAudioKey == undefined) {
-    $q.dialog({
+    store.dispatch("SHOW_ALERT_DIALOG", {
       title: "テキスト欄が選択されていません",
       message: "音声を書き出したいテキスト欄を選択してください。",
-      ok: {
-        label: "閉じる",
-        flat: true,
-        textColor: "secondary",
-      },
     });
     return;
   }
@@ -174,8 +163,6 @@ const generateAndSaveOneAudio = async () => {
   await generateAndSaveOneAudioWithDialog({
     audioKey: activeAudioKey,
     encoding: store.state.savingSetting.fileEncoding,
-    quasarDialog: $q.dialog,
-    quasarNotify: $q.notify,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     dispatch: store.dispatch,
   });
@@ -184,8 +171,6 @@ const generateAndSaveOneAudio = async () => {
 const connectAndExportText = async () => {
   if (!uiLocked.value) {
     await connectAndExportTextWithDialog({
-      quasarDialog: $q.dialog,
-      quasarNotify: $q.notify,
       dispatch: store.dispatch,
       encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
