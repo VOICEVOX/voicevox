@@ -6,7 +6,7 @@ export type Props = {
   onPan?: QSliderProps["onPan"];
   onChange: (value: number) => Promise<void>;
   modelValue: () => number | null;
-  min: () => number;
+  min?: () => number;
   max: () => number;
   step?: () => number;
   disable?: () => boolean;
@@ -64,7 +64,7 @@ class CancelableFinary {
 export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   // Reactive references of each props
   const modelValue = computed(props.modelValue);
-  const min = computed(() => props.min());
+  const min = computed(() => (props.min && props.min()) ?? 0);
   const max = computed(() => props.max());
   const disable = computed(() => (props.disable && props.disable()) ?? false);
   const step = computed(() => (props.step && props.step()) ?? 1);
