@@ -374,7 +374,7 @@ export const showNotifyAndNotShowAgainButton = (
 ) => {
   options.icon ??= options.isWarning ? "warning" : "info";
 
-  const suffix = options.isWarning ? "--warning" : "";
+  const suffix = options.isWarning ? "-warning" : "";
   Notify.create({
     message: options.message,
     color: "toast" + suffix,
