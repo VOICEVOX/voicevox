@@ -4,13 +4,28 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 export type Props = {
   onPan?: QSliderProps["onPan"];
+  /**
+   * スライダーの値が確定した時に呼び出される。
+   */
   onChange: (value: number) => Promise<void>;
   modelValue: () => number | null;
+  /**
+   * デフォルトは`0`。
+   */
   min?: () => number;
   max: () => number;
+  /**
+   * デフォルトは`1`。
+   */
   step?: () => number;
   disable?: () => boolean;
+  /**
+   * デフォルトは`this.step`。
+   */
   scrollStep?: () => number;
+  /**
+   * デフォルトは`this.scrollMinStep`。
+   */
   scrollMinStep?: () => number;
   disableScroll?: () => boolean;
 };
