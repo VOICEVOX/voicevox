@@ -14,22 +14,19 @@ import {
   net,
 } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-import Store, { Schema } from "electron-store";
+import Store from "electron-store";
 import dotenv from "dotenv";
 
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
-import zodToJsonSchema from "zod-to-json-schema";
 import { hasSupportedGpu } from "./electron/device";
 import {
   HotkeySetting,
   ThemeConf,
-  AcceptTermsStatus,
   EngineInfo,
   ElectronStoreType,
   SystemError,
-  electronStoreSchema,
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
@@ -52,6 +49,7 @@ import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
+import { getStore } from "@/background/store";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -136,61 +134,9 @@ protocol.registerSchemesAsPrivileged([
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // 設定ファイル
-const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
-if (!("properties" in electronStoreJsonSchema)) {
-  throw new Error("electronStoreJsonSchema must be object");
-}
 let store: Store<ElectronStoreType>;
 try {
-  store = new Store<ElectronStoreType>({
-    schema: electronStoreJsonSchema.properties as Schema<ElectronStoreType>,
-    migrations: {
-      ">=0.13": (store) => {
-        // acceptTems -> acceptTerms
-        const prevIdentifier = "acceptTems";
-        const prevValue = store.get(prevIdentifier, undefined) as
-          | AcceptTermsStatus
-          | undefined;
-        if (prevValue) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          store.delete(prevIdentifier as any);
-          store.set("acceptTerms", prevValue);
-        }
-      },
-      ">=0.14": (store) => {
-        // FIXME: できるならEngineManagerからEnginIDを取得したい
-        if (process.env.DEFAULT_ENGINE_INFOS == undefined)
-          throw new Error("DEFAULT_ENGINE_INFOS == undefined");
-        const engineId = EngineId(
-          JSON.parse(process.env.DEFAULT_ENGINE_INFOS)[0].uuid
-        );
-        if (engineId == undefined)
-          throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
-        const prevDefaultStyleIds = store.get("defaultStyleIds");
-        store.set(
-          "defaultStyleIds",
-          prevDefaultStyleIds.map((defaultStyle) => ({
-            engineId,
-            speakerUuid: defaultStyle.speakerUuid,
-            defaultStyleId: defaultStyle.defaultStyleId,
-          }))
-        );
-
-        const outputSamplingRate: number =
-          // @ts-expect-error 削除されたパラメータ。
-          store.get("savingSetting").outputSamplingRate;
-        store.set(`engineSettings.${engineId}`, {
-          useGpu: store.get("useGpu"),
-          outputSamplingRate:
-            outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
-        });
-        // @ts-expect-error 削除されたパラメータ。
-        store.delete("savingSetting.outputSamplingRate");
-        // @ts-expect-error 削除されたパラメータ。
-        store.delete("useGpu");
-      },
-    },
-  });
+  store = getStore();
 } catch (e) {
   log.error(e);
   app.whenReady().then(() => {
