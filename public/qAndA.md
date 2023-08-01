@@ -14,8 +14,7 @@ Windows／Mac／Linux 搭載の PC に対応しています。
 
 ### GPU 版
 
-DirectX12に対応するGPU 搭載の Windows 10 バージョン1903以降のPC と、VRAMが3GB以上あるNvidia 製 GPU 搭載の Linux PC に対応しています。
-※Mac 版では GPU版をご利用頂けません。
+GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
 
 ## インストールに関する質問
 
