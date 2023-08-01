@@ -128,21 +128,18 @@ const generateAndSaveOneAudio = async () => {
   await generateAndSaveOneAudioWithDialog({
     audioKey: activeAudioKey.value,
     dispatch: store.dispatch,
-    encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
   });
 };
 const generateAndSaveAllAudio = async () => {
   await generateAndSaveAllAudioWithDialog({
     dispatch: store.dispatch,
-    encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
   });
 };
 const generateAndConnectAndSaveAudio = async () => {
   await generateAndConnectAndSaveAudioWithDialog({
     dispatch: store.dispatch,
-    encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
   });
 };
