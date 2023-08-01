@@ -1,4 +1,6 @@
+import { app, dialog, shell } from "electron";
 import Store, { Schema } from "electron-store";
+import log from "electron-log";
 import zodToJsonSchema from "zod-to-json-schema";
 import {
   AcceptTermsStatus,
@@ -7,7 +9,7 @@ import {
   electronStoreSchema,
 } from "@/type/preload";
 
-export function getStore() {
+function getStore() {
   const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
   if (!("properties" in electronStoreJsonSchema)) {
     throw new Error("electronStoreJsonSchema must be object");
@@ -61,4 +63,38 @@ export function getStore() {
       },
     },
   });
+}
+
+export function getStoreWithError(): Store<ElectronStoreType> {
+  try {
+    return getStore();
+  } catch (e) {
+    log.error(e);
+    app.whenReady().then(() => {
+      dialog
+        .showMessageBox({
+          type: "error",
+          title: "設定ファイルの読み込みエラー",
+          message: `設定ファイルの読み込みに失敗しました。${app.getPath(
+            "userData"
+          )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。設定ファイルがあるフォルダを開きますか？`,
+          buttons: ["いいえ", "はい"],
+          noLink: true,
+          cancelId: 0,
+        })
+        .then(async ({ response }) => {
+          if (response === 1) {
+            await shell.openPath(app.getPath("userData"));
+            // 直後にexitするとフォルダが開かないため
+            await new Promise((resolve) => {
+              setTimeout(resolve, 500);
+            });
+          }
+        })
+        .finally(() => {
+          app.exit(1);
+        });
+    });
+    throw e;
+  }
 }

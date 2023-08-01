@@ -14,7 +14,6 @@ import {
   net,
 } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-import Store from "electron-store";
 import dotenv from "dotenv";
 
 import log from "electron-log";
@@ -25,7 +24,6 @@ import {
   HotkeySetting,
   ThemeConf,
   EngineInfo,
-  ElectronStoreType,
   SystemError,
   defaultHotkeySettings,
   isMac,
@@ -49,7 +47,7 @@ import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-import { getStore } from "@/background/store";
+import { getStoreWithError } from "@/background/store";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -134,39 +132,7 @@ protocol.registerSchemesAsPrivileged([
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // 設定ファイル
-let store: Store<ElectronStoreType>;
-try {
-  store = getStore();
-} catch (e) {
-  log.error(e);
-  app.whenReady().then(() => {
-    dialog
-      .showMessageBox({
-        type: "error",
-        title: "設定ファイルの読み込みエラー",
-        message: `設定ファイルの読み込みに失敗しました。${app.getPath(
-          "userData"
-        )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。設定ファイルがあるフォルダを開きますか？`,
-        buttons: ["いいえ", "はい"],
-        noLink: true,
-        cancelId: 0,
-      })
-      .then(async ({ response }) => {
-        if (response === 1) {
-          await shell.openPath(app.getPath("userData"));
-          // 直後にexitするとフォルダが開かないため
-          await new Promise((resolve) => {
-            setTimeout(resolve, 500);
-          });
-        }
-      })
-      .finally(() => {
-        app.exit(1);
-      });
-  });
-  throw e;
-}
-
+const store = getStoreWithError();
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
