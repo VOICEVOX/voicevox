@@ -477,6 +477,8 @@ async function createWindow() {
     trafficLightPosition: { x: 6, y: 4 },
     minWidth: 320,
     show: false,
+    backgroundColor:
+      store.get("currentTheme") === "Dark" ? "#3C3C3C" : "#DCDCDC",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
