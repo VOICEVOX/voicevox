@@ -16,6 +16,7 @@ import {
 import {
   buildFileNameFromRawData,
   buildProjectFileName,
+  checkMoraChanged,
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
@@ -2026,12 +2027,26 @@ export const audioCommandStore = transformCommandStore(
                 styleId,
               }
             );
-            commit("COMMAND_CHANGE_AUDIO_TEXT", {
-              audioKey,
-              text,
-              update: "AccentPhrases",
-              accentPhrases,
-            });
+            const isChangedMora = checkMoraChanged(
+              query.accentPhrases,
+              accentPhrases
+            );
+
+            if (isChangedMora) {
+              commit("COMMAND_CHANGE_AUDIO_TEXT", {
+                audioKey,
+                text,
+                update: "AccentPhrases",
+                accentPhrases,
+              });
+            } else {
+              commit("COMMAND_CHANGE_AUDIO_TEXT", {
+                audioKey,
+                text,
+                update: "AccentPhrases",
+                accentPhrases: query.accentPhrases,
+              });
+            }
           } else {
             const newAudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
               text,
