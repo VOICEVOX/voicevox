@@ -169,6 +169,10 @@ function generateWriteErrorMessage(writeFileResult: ResultError) {
     if (code.startsWith("EACCES")) {
       return "ファイルにアクセスする許可がありません。";
     }
+
+    if (code.startsWith("EBUSY")) {
+      return "ファイルが開かれています。";
+    }
   }
 
   return `何らかの理由で失敗しました。${writeFileResult.message}`;
