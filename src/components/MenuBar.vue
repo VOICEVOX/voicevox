@@ -528,6 +528,22 @@ async function updateEngines() {
       disableWhenUiLocked: false,
     });
   }
+  if (
+    Object.values(engineManifests.value).some(
+      (e) => e.supportedFeatures?.manageLibrary
+    )
+  ) {
+    engineMenu.subMenu.push({
+      type: "button",
+      label: "音声ライブラリのダウンロード",
+      onClick: () => {
+        store.dispatch("SET_DIALOG_OPEN", {
+          isLibraryDownloadDialogOpen: true,
+        });
+      },
+      disableWhenUiLocked: true,
+    });
+  }
 }
 // engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
 // FIXME: computedにする

@@ -105,6 +105,7 @@ const props =
       speakerUuid: SpeakerId;
       styleId: StyleId;
       index: number;
+      [key: string]: unknown;
     };
     togglePlayOrStop: (
       speakerUuid: SpeakerId,

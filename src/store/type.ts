@@ -1139,6 +1139,7 @@ export type UiStoreState = {
   isAcceptTermsDialogOpen: boolean;
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
+  isLibraryDownloadDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1199,6 +1200,7 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
+      isLibraryDownloadDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1211,6 +1213,7 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
+      isLibraryDownloadDialogOpen?: boolean;
     }): void;
   };
 
@@ -1404,7 +1407,8 @@ type IEngineConnectorFactoryActionsMapper = <
 >(
   action: K
 ) => (
-  _: Parameters<IEngineConnectorFactoryActions[K]>[0]
+  requestParameters: Parameters<IEngineConnectorFactoryActions[K]>[0],
+  initOverrides?: Parameters<IEngineConnectorFactoryActions[K]>[1]
 ) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
 export type ProxyStoreTypes = {
