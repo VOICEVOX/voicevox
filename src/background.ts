@@ -11,6 +11,7 @@ import {
   Menu,
   shell,
   nativeTheme,
+  net,
 } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Store, { Schema } from "electron-store";
@@ -128,17 +129,10 @@ if (isDevelopment) {
   __static = __dirname;
 }
 
-// ソフトウェア起動時はプロトコルを app にする
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
-if (process.env.VITE_DEV_SERVER_URL == undefined) {
-  // FIXME: registerFileProtocolが非推奨になったので対策を考える
-  protocol.registerFileProtocol("app", (request, callback) => {
-    const filePath = new URL(request.url).pathname;
-    callback(path.join(__dirname, filePath));
-  });
-}
+
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // 設定ファイル
@@ -199,13 +193,31 @@ try {
   });
 } catch (e) {
   log.error(e);
-  dialog.showErrorBox(
-    "設定ファイルの読み込みに失敗しました。",
-    `${app.getPath(
-      "userData"
-    )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
-  );
-  app.exit(1);
+  app.whenReady().then(() => {
+    dialog
+      .showMessageBox({
+        type: "error",
+        title: "設定ファイルの読み込みエラー",
+        message: `設定ファイルの読み込みに失敗しました。${app.getPath(
+          "userData"
+        )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。設定ファイルがあるフォルダを開きますか？`,
+        buttons: ["いいえ", "はい"],
+        noLink: true,
+        cancelId: 0,
+      })
+      .then(async ({ response }) => {
+        if (response === 1) {
+          await shell.openPath(app.getPath("userData"));
+          // 直後にexitするとフォルダが開かないため
+          await new Promise((resolve) => {
+            setTimeout(resolve, 500);
+          });
+        }
+      })
+      .finally(() => {
+        app.exit(1);
+      });
+  });
   throw e;
 }
 
@@ -493,6 +505,14 @@ async function createWindow() {
         projectFilePath = encodeURI(filePath);
       }
     }
+  }
+
+  // ソフトウェア起動時はプロトコルを app にする
+  if (process.env.VITE_DEV_SERVER_URL == undefined) {
+    protocol.handle("app", (request) => {
+      const filePath = new URL(request.url).pathname;
+      return net.fetch(`file://${filePath}`);
+    });
   }
 
   await loadUrl({ projectFilePath });

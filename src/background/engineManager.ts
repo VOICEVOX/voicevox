@@ -495,6 +495,8 @@ export class EngineManager {
 
       if (engineProcess === undefined)
         throw Error("engineProcess === undefined");
+      if (engineProcess.pid === undefined)
+        throw Error("engineProcess.pid === undefined");
 
       engineProcess.once("close", restartEngineOnProcessClosedCallback);
 

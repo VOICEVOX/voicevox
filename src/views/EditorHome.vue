@@ -174,7 +174,7 @@
 import path from "path";
 import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
-import { QResizeObserver, useQuasar } from "quasar";
+import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
@@ -214,7 +214,6 @@ const props =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -665,25 +664,10 @@ watch(
       const altPort = store.state.altPortInfos[engineId];
       if (!altPort) return;
 
-      $q.notify({
+      store.dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
         message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
-        color: "toast",
-        textColor: "toast-display",
         icon: "compare_arrows",
-        timeout: 5000,
-        actions: [
-          {
-            label: "今後この通知をしない",
-            textColor: "toast-button-display",
-            handler: () =>
-              store.dispatch("SET_CONFIRMED_TIPS", {
-                confirmedTips: {
-                  ...store.state.confirmedTips,
-                  engineStartedOnAltPort: true,
-                },
-              }),
-          },
-        ],
+        tipName: "engineStartedOnAltPort",
       });
     }
   }
@@ -808,15 +792,10 @@ const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
       store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
       break;
     default:
-      $q.dialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "対応していないファイルです",
         message:
           "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
   }
 };

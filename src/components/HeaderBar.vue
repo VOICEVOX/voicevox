@@ -20,7 +20,11 @@
 
 <script setup lang="ts">
 import { computed, ComputedRef } from "vue";
-import { useQuasar } from "quasar";
+import {
+  generateAndConnectAndSaveAudioWithDialog,
+  generateAndSaveAllAudioWithDialog,
+  generateAndSaveOneAudioWithDialog,
+} from "./Dialog";
 import { useStore } from "@/store";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
@@ -28,11 +32,6 @@ import {
   HotkeyReturnType,
   ToolbarButtonTagType,
 } from "@/type/preload";
-import {
-  generateAndConnectAndSaveAudioWithDialog,
-  generateAndSaveAllAudioWithDialog,
-  generateAndSaveOneAudioWithDialog,
-} from "@/components/Dialog";
 import { getToolbarButtonName } from "@/store/utility";
 
 type ButtonContent = {
@@ -46,7 +45,6 @@ type SpacerContent = {
 };
 
 const store = useStore();
-const $q = useQuasar();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 const canUndo = computed(() => store.getters.CAN_UNDO);
@@ -115,14 +113,9 @@ const playContinuously = async () => {
     } else {
       window.electron.logError(e);
     }
-    $q.dialog({
+    store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
-      ok: {
-        label: "閉じる",
-        flat: true,
-        textColor: "display",
-      },
     });
   }
 };
@@ -134,8 +127,6 @@ const generateAndSaveOneAudio = async () => {
     throw new Error("activeAudioKey is undefined");
   await generateAndSaveOneAudioWithDialog({
     audioKey: activeAudioKey.value,
-    quasarDialog: $q.dialog,
-    quasarNotify: $q.notify,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
@@ -143,8 +134,6 @@ const generateAndSaveOneAudio = async () => {
 };
 const generateAndSaveAllAudio = async () => {
   await generateAndSaveAllAudioWithDialog({
-    quasarDialog: $q.dialog,
-    quasarNotify: $q.notify,
     dispatch: store.dispatch,
     encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
@@ -152,9 +141,7 @@ const generateAndSaveAllAudio = async () => {
 };
 const generateAndConnectAndSaveAudio = async () => {
   await generateAndConnectAndSaveAudioWithDialog({
-    quasarDialog: $q.dialog,
     dispatch: store.dispatch,
-    quasarNotify: $q.notify,
     encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
   });

@@ -35,7 +35,7 @@ jobs:
 
       - run: npm run test:unit
 
-  # electron の e2e テスト
+  # e2e テスト
   e2e-test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -69,20 +69,39 @@ jobs:
           dest: ${{ github.workspace }}/voicevox_engine
           target: ${{ matrix.voicevox_engine_asset_name }}
 
-      - name: Run npm run test:e2e
+      - name: Setup
         run: |
+          # playwright
+          npx playwright install
+
+          # run.exe
           chmod +x ${{ steps.download-engine.outputs.run_path }}
 
+          # .env
           cp .env.test .env
           sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env
+          sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port=50021"],|' .env
 
+      - name: Run npm run test:browser-e2e
+        run: |
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
           fi
           if [[ ${{ matrix.os }} == ubuntu-* ]]; then
-            xvfb-run --auto-servernum npm run test:e2e
+            xvfb-run --auto-servernum npm run test:browser-e2e
           else
-            npm run test:e2e
+            npm run test:browser-e2e
+          fi
+
+      - name: Run npm run test:electron-e2e
+        run: |
+          if [ -n "${{ runner.debug }}" ]; then
+            export DEBUG="pw:browser*"
+          fi
+          if [[ ${{ matrix.os }} == ubuntu-* ]]; then
+            xvfb-run --auto-servernum npm run test:electron-e2e
+          else
+            npm run test:electron-e2e
           fi
 
   lint:
