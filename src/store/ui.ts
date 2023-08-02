@@ -48,7 +48,7 @@ export const uiStoreState: UiStoreState = {
   isAcceptTermsDialogOpen: false,
   isDictionaryManageDialogOpen: false,
   isEngineManageDialogOpen: false,
-  isLibraryDownloadDialogOpen: false,
+  isLibraryManageDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,

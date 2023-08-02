@@ -233,6 +233,9 @@ const closeAllDialog = () => {
   store.dispatch("SET_DIALOG_OPEN", {
     isDefaultStyleSelectDialogOpen: false,
   });
+  store.dispatch("SET_DIALOG_OPEN", {
+    isLibraryManageDialogOpen: false,
+  });
 };
 
 const openHelpDialog = () => {
@@ -535,10 +538,10 @@ async function updateEngines() {
   ) {
     engineMenu.subMenu.push({
       type: "button",
-      label: "音声ライブラリのダウンロード",
+      label: "音声ライブラリの管理",
       onClick: () => {
         store.dispatch("SET_DIALOG_OPEN", {
-          isLibraryDownloadDialogOpen: true,
+          isLibraryManageDialogOpen: true,
         });
       },
       disableWhenUiLocked: true,

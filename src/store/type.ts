@@ -1139,7 +1139,7 @@ export type UiStoreState = {
   isAcceptTermsDialogOpen: boolean;
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
-  isLibraryDownloadDialogOpen: boolean;
+  isLibraryManageDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1213,7 +1213,7 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
-      isLibraryDownloadDialogOpen?: boolean;
+      isLibraryManageDialogOpen?: boolean;
     }): void;
   };
 
