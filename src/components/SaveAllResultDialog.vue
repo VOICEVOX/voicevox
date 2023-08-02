@@ -89,9 +89,4 @@ const close = () => onDialogOK();
 .q-item:not(.q-item:last-child) {
   border-bottom: solid 0.1rem rgba(colors.$display-rgb, 0.15);
 }
-.q-list:not(.q-list:last-child) {
-  border-bottom: solid 0.1rem rgba(colors.$primary-rgb, 0.5);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.5rem;
-}
 </style>
