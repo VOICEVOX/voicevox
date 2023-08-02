@@ -10,7 +10,6 @@
         <q-expansion-item
           v-if="props.writeErrorArray.length > 0"
           :label="`${props.writeErrorArray.length}件の書き込みエラーによる失敗`"
-          caption="詳細情報"
           header-class="text-warning"
         >
           <q-list separator>
@@ -28,7 +27,6 @@
         <q-expansion-item
           v-if="props.engineErrorArray.length > 0"
           :label="`${props.engineErrorArray.length}件のエンジンエラーによる失敗`"
-          caption="詳細情報"
           header-class="text-warning"
         >
           <q-list separator>
@@ -45,10 +43,7 @@
             </q-item>
           </q-list>
         </q-expansion-item>
-        <q-expansion-item
-          :label="`${props.successArray.length}件の成功`"
-          caption="詳細情報"
-        >
+        <q-expansion-item :label="`${props.successArray.length}件の成功`">
           <q-list v-if="props.successArray.length > 0" separator>
             <q-item v-for="(value, index) in props.successArray" :key="index">
               <q-item-section>
