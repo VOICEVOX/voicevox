@@ -1,11 +1,19 @@
 <template>
   <q-dialog ref="dialogRef" persistent>
-    <q-layout container class="q-dialog-plugin bg-background">
-      <q-page-container>
-        <q-page class="q-px-md">
-          <h5 class="text-h5 q-my-md">音声書き出し結果</h5>
-          <q-list v-if="props.writeErrorArray.length > 0" separator>
-            <div class="text-warning">失敗（書き込みエラー）:</div>
+    <q-layout
+      container
+      view="hhh lpr fFf"
+      class="q-dialog-plugin bg-background"
+    >
+      <q-page-container class="q-px-md">
+        <h5 class="text-h5 q-my-md">音声書き出し結果</h5>
+        <q-expansion-item
+          v-if="props.writeErrorArray.length > 0"
+          :label="`${props.writeErrorArray.length}件の書き込みエラーによる失敗`"
+          caption="詳細情報"
+          header-class="text-warning"
+        >
+          <q-list separator>
             <q-item
               v-for="(value, index) in props.writeErrorArray"
               :key="index"
@@ -16,8 +24,14 @@
               </q-item-section>
             </q-item>
           </q-list>
-          <q-list v-if="props.engineErrorArray.length > 0" separator>
-            <div class="text-warning">失敗（エンジンエラー）:</div>
+        </q-expansion-item>
+        <q-expansion-item
+          v-if="props.engineErrorArray.length > 0"
+          :label="`${props.engineErrorArray.length}件のエンジンエラーによる失敗`"
+          caption="詳細情報"
+          header-class="text-warning"
+        >
+          <q-list separator>
             <q-item
               v-for="(value, index) in props.engineErrorArray"
               :key="index"
@@ -30,15 +44,19 @@
               </q-item-section>
             </q-item>
           </q-list>
+        </q-expansion-item>
+        <q-expansion-item
+          :label="`${props.successArray.length}件の成功:`"
+          caption="詳細情報"
+        >
           <q-list v-if="props.successArray.length > 0" separator>
-            <div class="text-primary">成功:</div>
             <q-item v-for="(value, index) in props.successArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
-        </q-page>
+        </q-expansion-item>
       </q-page-container>
       <q-footer>
         <q-toolbar>
@@ -68,10 +86,6 @@ const close = () => onDialogOK();
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;
 
-.q-page-container {
-  margin-top: 0;
-  padding-bottom: 34px !important;
-}
 .q-item:not(.q-item:last-child) {
   border-bottom: solid 0.1rem rgba(colors.$display-rgb, 0.15);
 }
