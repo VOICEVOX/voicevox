@@ -11,7 +11,7 @@
         <q-toolbar>
           <div class="column">
             <q-toolbar-title class="text-display"
-              >音声ライブラリのダウンロード</q-toolbar-title
+              >音声ライブラリの管理</q-toolbar-title
             >
           </div>
 
