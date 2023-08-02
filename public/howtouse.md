@@ -13,8 +13,6 @@
 
 起動しようとすると「Windows によって PC が保護されました」というダイアログが表示されるかもしれません。その際は「詳細情報」をクリックし、発行元が「Kazuyuki Hiroshiba」であることを確認してから「実行」を選んでください。
 
-
-
 <img src="res/image14.png" style="max-height: 16rem" alt="「Windows によって PC が保護されました」というダイアログ" /> → <img src="res/image15.png" style="max-height: 16rem" alt="「詳細情報」をクリックし、「実行」を選んでいる様子。" />
 
 ### Mac 版
