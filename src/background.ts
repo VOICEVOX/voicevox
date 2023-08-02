@@ -510,7 +510,7 @@ async function createWindow() {
   // ソフトウェア起動時はプロトコルを app にする
   if (process.env.VITE_DEV_SERVER_URL == undefined) {
     protocol.handle("app", (request) => {
-      const filePath = new URL(request.url).pathname;
+      const filePath = path.join(__dirname, new URL(request.url).pathname);
       return net.fetch(`file://${filePath}`);
     });
   }
