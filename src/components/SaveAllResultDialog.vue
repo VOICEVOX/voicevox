@@ -46,7 +46,7 @@
           </q-list>
         </q-expansion-item>
         <q-expansion-item
-          :label="`${props.successArray.length}件の成功:`"
+          :label="`${props.successArray.length}件の成功`"
           caption="詳細情報"
         >
           <q-list v-if="props.successArray.length > 0" separator>
