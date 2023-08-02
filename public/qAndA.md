@@ -137,7 +137,7 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 #### Mac 版
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox/logs`
+`/Users/(ユーザー名)/Library/Logs/voicevox-cpu`
 
 ### Q. Ubuntu 22.04 で動きません
 
