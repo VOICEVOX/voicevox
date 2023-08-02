@@ -1200,7 +1200,7 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
-      isLibraryDownloadDialogOpen?: boolean;
+      isLibraryManageDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;

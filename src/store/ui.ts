@@ -146,7 +146,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         isToolbarSettingDialogOpen?: boolean;
         isCharacterOrderDialogOpen?: boolean;
         isEngineManageDialogOpen?: boolean;
-        isLibraryDownloadDialogOpen?: boolean;
+        isLibraryManageDialogOpen?: boolean;
       }
     ) {
       for (const [key, value] of Object.entries(dialogState)) {
