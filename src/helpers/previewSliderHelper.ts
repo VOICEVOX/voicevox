@@ -24,7 +24,7 @@ export type Props = {
    */
   scrollStep?: () => number;
   /**
-   * デフォルトは`this.scrollMinStep`。
+   * デフォルトは`this.scrollStep`。
    */
   scrollMinStep?: () => number;
   disableScroll?: () => boolean;
