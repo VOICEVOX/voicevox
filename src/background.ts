@@ -232,7 +232,14 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   const engineId = engineInfo.uuid;
   log.error(`ENGINE ${engineId} ERROR: ${error}`);
 
-  ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+  // winが作られる前にエラーが発生した場合はwinへの通知を諦める
+  // FIXME: winが作られた後にエンジンを起動させる
+  if (win != undefined) {
+    ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+  } else {
+    log.error(`onEngineProcessError: win is undefined`);
+  }
+
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
