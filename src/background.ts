@@ -47,7 +47,7 @@ import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-import { getStoreWithError } from "@/background/store";
+import { getStoreWithError } from "@/background/electronStore";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
