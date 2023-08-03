@@ -94,18 +94,12 @@ function replaceTag(
 }
 
 export function extractExportText(text: string): string {
-  return skipReadingPart(skipMemoText(text));
+  // []をスキップし "テキスト内の全ての{漢字|かんじ}" パターンを探し、漢字部分だけを残す
+  return skipMemoText(text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1"));
 }
 export function extractYomiText(text: string): string {
-  return skipWritingPart(skipMemoText(text));
-}
-function skipReadingPart(text: string): string {
-  // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
-  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
-}
-function skipWritingPart(text: string): string {
-  // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
-  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2");
+  // []をスキップし、"テキスト内の全ての{漢字|かんじ}" パターンを探し、かんじ部分だけを残す
+  return skipMemoText(text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2"));
 }
 function skipMemoText(targettext: string): string {
   // []をスキップ
