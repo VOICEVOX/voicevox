@@ -113,12 +113,14 @@ function skipMemoText(targettext: string): string {
   return resolvedText;
 }
 
-export function checkMoraChanged(
+/**
+ * ２つのAccentPhrasesのテキスト内容が異なるかどうかを判定
+ */
+export function isAccentPhrasesTextDifferent(
   beforeAccent: AccentPhrase[],
   afterAccent: AccentPhrase[]
 ): boolean {
-  if (beforeAccent.length === 0 || beforeAccent.length !== afterAccent.length)
-    return true;
+  if (beforeAccent.length !== afterAccent.length) return true;
 
   for (let accentIndex = 0; accentIndex < beforeAccent.length; accentIndex++) {
     if (
