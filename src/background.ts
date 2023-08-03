@@ -284,6 +284,18 @@ async function uninstallVvppEngine(engineId: EngineId) {
   }
 }
 
+// テーマの読み込み
+const themes = readThemeFiles();
+function readThemeFiles() {
+  const themes: ThemeConf[] = [];
+  const dir = path.join(__static, "themes");
+  for (const file of fs.readdirSync(dir)) {
+    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
+    themes.push(theme);
+  }
+  return themes;
+}
+
 // 使い方テキストの読み込み
 const howToUseText = fs.readFileSync(
   path.join(__static, HowToUseTextFileName),
@@ -386,6 +398,10 @@ async function createWindow() {
     defaultHeight: 600,
   });
 
+  const currentTheme = store.get("currentTheme");
+  const backgroundColor = themes.find((value) => value.name == currentTheme)
+    ?.colors.background;
+
   win = new BrowserWindow({
     x: mainWindowState.x,
     y: mainWindowState.y,
@@ -396,6 +412,7 @@ async function createWindow() {
     trafficLightPosition: { x: 6, y: 4 },
     minWidth: 320,
     show: false,
+    backgroundColor,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
@@ -819,14 +836,10 @@ ipcMainHandle("THEME", (_, { newData }) => {
     store.set("currentTheme", newData);
     return;
   }
-  const dir = path.join(__static, "themes");
-  const themes: ThemeConf[] = [];
-  const files = fs.readdirSync(dir);
-  files.forEach((file) => {
-    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
-    themes.push(theme);
-  });
-  return { currentTheme: store.get("currentTheme"), availableThemes: themes };
+  return {
+    currentTheme: store.get("currentTheme"),
+    availableThemes: themes,
+  };
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {

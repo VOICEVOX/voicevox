@@ -261,6 +261,8 @@ export const api: Sandbox = {
       await this.setSetting("currentTheme", newData);
       return;
     }
+    // NOTE: Electron版では起動時にテーマ情報が必要なので、
+    //       この実装とは違って起動時に読み込んだキャッシュを返すだけになっている。
     return Promise.all(
       // FIXME: themeファイルのいい感じのパスの設定
       ["/themes/default.json", "/themes/dark.json"].map((url) =>
