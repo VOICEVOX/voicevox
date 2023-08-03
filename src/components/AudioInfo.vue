@@ -340,6 +340,7 @@ const supportedFeatures = computed(
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
 
+// FIXME: slider.onChangeとhandleParameterChangeでstate変更が２経路になっているので統一する
 type Parameter = {
   label: string;
   slider: PreviewSliderHelper;
