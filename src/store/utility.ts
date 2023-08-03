@@ -103,8 +103,7 @@ export function extractYomiText(text: string): string {
 }
 function skipMemoText(targettext: string): string {
   // []をスキップ
-  const resolvedText = targettext.replace(/\[.*?\]/g, "");
-  return resolvedText;
+  return targettext.replace(/\[.*?\]/g, "");
 }
 
 /**
