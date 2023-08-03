@@ -1,9 +1,5 @@
 import { Dialog, DialogChainObject, Notify, Loading } from "quasar";
-import {
-  AudioKey,
-  ConfirmedTips,
-  Encoding as EncodingType,
-} from "@/type/preload";
+import { AudioKey, ConfirmedTips } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
@@ -149,20 +145,17 @@ export async function generateAndSaveOneAudioWithDialog({
   audioKey,
   dispatch,
   filePath,
-  encoding,
   disableNotifyOnGenerate,
 }: {
   audioKey: AudioKey;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
-  encoding?: EncodingType;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
     dispatch("GENERATE_AND_SAVE_AUDIO", {
       audioKey,
       filePath,
-      encoding,
     }),
     dispatch
   );
@@ -184,18 +177,15 @@ export async function generateAndSaveOneAudioWithDialog({
 export async function generateAndSaveAllAudioWithDialog({
   dispatch,
   dirPath,
-  encoding,
   disableNotifyOnGenerate,
 }: {
   dispatch: Dispatch<AllActions>;
   dirPath?: string;
-  encoding?: EncodingType;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
       dirPath,
-      encoding,
       callback: (finishedCount, totalCount) =>
         dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
     }),
@@ -249,18 +239,15 @@ export async function generateAndSaveAllAudioWithDialog({
 export async function generateAndConnectAndSaveAudioWithDialog({
   dispatch,
   filePath,
-  encoding,
   disableNotifyOnGenerate,
 }: {
   dispatch: Dispatch<AllActions>;
   filePath?: string;
-  encoding?: EncodingType;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
       filePath,
-      encoding,
       callback: (finishedCount, totalCount) =>
         dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
     }),
@@ -283,17 +270,14 @@ export async function generateAndConnectAndSaveAudioWithDialog({
 export async function connectAndExportTextWithDialog({
   dispatch,
   filePath,
-  encoding,
   disableNotifyOnGenerate,
 }: {
   dispatch: Dispatch<AllActions>;
   filePath?: string;
-  encoding?: EncodingType;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await dispatch("CONNECT_AND_EXPORT_TEXT", {
     filePath,
-    encoding,
   });
 
   if (result === undefined || result.result === "CANCELED") return;
