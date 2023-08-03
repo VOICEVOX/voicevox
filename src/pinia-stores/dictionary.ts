@@ -71,7 +71,6 @@ export const useDictionary = defineStore("dictionary", () => {
   }) => {
     // 同じ単語IDで登録するために、１つのエンジンで登録したあと全エンジンに同期する。
     const engineId: EngineId | undefined = vuexStore.state.engineIds[0];
-    console.log("hoge");
     if (engineId === undefined)
       throw new Error(`No such engine registered: index == 0`);
     await vuexStore
