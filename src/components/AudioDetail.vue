@@ -467,7 +467,7 @@ const changeMoraData = (
     if (type == "pitch") {
       lastPitches.value[accentPhraseIndex][moraIndex] = data;
     }
-    store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
       audioKey: props.activeAudioKey,
       accentPhraseIndex,
       moraIndex,
@@ -478,7 +478,7 @@ const changeMoraData = (
     if (accentPhrases.value === undefined) {
       throw Error("accentPhrases.value === undefined");
     }
-    store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
+    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
       audioKey: props.activeAudioKey,
       accentPhraseIndex,
       moraIndex,
