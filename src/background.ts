@@ -11,24 +11,20 @@ import {
   Menu,
   shell,
   nativeTheme,
+  net,
 } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-import Store, { Schema } from "electron-store";
 import dotenv from "dotenv";
 
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
-import zodToJsonSchema from "zod-to-json-schema";
 import { hasSupportedGpu } from "./electron/device";
 import {
   HotkeySetting,
   ThemeConf,
-  AcceptTermsStatus,
   EngineInfo,
-  ElectronStoreType,
   SystemError,
-  electronStoreSchema,
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
@@ -51,6 +47,7 @@ import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
+import { getStoreWithError } from "@/background/electronStore";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -128,87 +125,14 @@ if (isDevelopment) {
   __static = __dirname;
 }
 
-// ソフトウェア起動時はプロトコルを app にする
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
-if (process.env.VITE_DEV_SERVER_URL == undefined) {
-  // FIXME: registerFileProtocolが非推奨になったので対策を考える
-  protocol.registerFileProtocol("app", (request, callback) => {
-    const filePath = new URL(request.url).pathname;
-    callback(path.join(__dirname, filePath));
-  });
-}
+
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // 設定ファイル
-const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
-if (!("properties" in electronStoreJsonSchema)) {
-  throw new Error("electronStoreJsonSchema must be object");
-}
-let store: Store<ElectronStoreType>;
-try {
-  store = new Store<ElectronStoreType>({
-    schema: electronStoreJsonSchema.properties as Schema<ElectronStoreType>,
-    migrations: {
-      ">=0.13": (store) => {
-        // acceptTems -> acceptTerms
-        const prevIdentifier = "acceptTems";
-        const prevValue = store.get(prevIdentifier, undefined) as
-          | AcceptTermsStatus
-          | undefined;
-        if (prevValue) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          store.delete(prevIdentifier as any);
-          store.set("acceptTerms", prevValue);
-        }
-      },
-      ">=0.14": (store) => {
-        // FIXME: できるならEngineManagerからEnginIDを取得したい
-        if (process.env.DEFAULT_ENGINE_INFOS == undefined)
-          throw new Error("DEFAULT_ENGINE_INFOS == undefined");
-        const engineId = EngineId(
-          JSON.parse(process.env.DEFAULT_ENGINE_INFOS)[0].uuid
-        );
-        if (engineId == undefined)
-          throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
-        const prevDefaultStyleIds = store.get("defaultStyleIds");
-        store.set(
-          "defaultStyleIds",
-          prevDefaultStyleIds.map((defaultStyle) => ({
-            engineId,
-            speakerUuid: defaultStyle.speakerUuid,
-            defaultStyleId: defaultStyle.defaultStyleId,
-          }))
-        );
-
-        const outputSamplingRate: number =
-          // @ts-expect-error 削除されたパラメータ。
-          store.get("savingSetting").outputSamplingRate;
-        store.set(`engineSettings.${engineId}`, {
-          useGpu: store.get("useGpu"),
-          outputSamplingRate:
-            outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
-        });
-        // @ts-expect-error 削除されたパラメータ。
-        store.delete("savingSetting.outputSamplingRate");
-        // @ts-expect-error 削除されたパラメータ。
-        store.delete("useGpu");
-      },
-    },
-  });
-} catch (e) {
-  log.error(e);
-  dialog.showErrorBox(
-    "設定ファイルの読み込みに失敗しました。",
-    `${app.getPath(
-      "userData"
-    )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
-  );
-  app.exit(1);
-  throw e;
-}
-
+const store = getStoreWithError();
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
@@ -220,7 +144,14 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   const engineId = engineInfo.uuid;
   log.error(`ENGINE ${engineId} ERROR: ${error}`);
 
-  ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+  // winが作られる前にエラーが発生した場合はwinへの通知を諦める
+  // FIXME: winが作られた後にエンジンを起動させる
+  if (win != undefined) {
+    ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+  } else {
+    log.error(`onEngineProcessError: win is undefined`);
+  }
+
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
@@ -353,6 +284,18 @@ async function uninstallVvppEngine(engineId: EngineId) {
   }
 }
 
+// テーマの読み込み
+const themes = readThemeFiles();
+function readThemeFiles() {
+  const themes: ThemeConf[] = [];
+  const dir = path.join(__static, "themes");
+  for (const file of fs.readdirSync(dir)) {
+    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
+    themes.push(theme);
+  }
+  return themes;
+}
+
 // 使い方テキストの読み込み
 const howToUseText = fs.readFileSync(
   path.join(__static, HowToUseTextFileName),
@@ -455,6 +398,10 @@ async function createWindow() {
     defaultHeight: 600,
   });
 
+  const currentTheme = store.get("currentTheme");
+  const backgroundColor = themes.find((value) => value.name == currentTheme)
+    ?.colors.background;
+
   win = new BrowserWindow({
     x: mainWindowState.x,
     y: mainWindowState.y,
@@ -465,6 +412,7 @@ async function createWindow() {
     trafficLightPosition: { x: 6, y: 4 },
     minWidth: 320,
     show: false,
+    backgroundColor,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
@@ -493,6 +441,14 @@ async function createWindow() {
         projectFilePath = encodeURI(filePath);
       }
     }
+  }
+
+  // ソフトウェア起動時はプロトコルを app にする
+  if (process.env.VITE_DEV_SERVER_URL == undefined) {
+    protocol.handle("app", (request) => {
+      const filePath = path.join(__dirname, new URL(request.url).pathname);
+      return net.fetch(`file://${filePath}`);
+    });
   }
 
   await loadUrl({ projectFilePath });
@@ -880,14 +836,10 @@ ipcMainHandle("THEME", (_, { newData }) => {
     store.set("currentTheme", newData);
     return;
   }
-  const dir = path.join(__static, "themes");
-  const themes: ThemeConf[] = [];
-  const files = fs.readdirSync(dir);
-  files.forEach((file) => {
-    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
-    themes.push(theme);
-  });
-  return { currentTheme: store.get("currentTheme"), availableThemes: themes };
+  return {
+    currentTheme: store.get("currentTheme"),
+    availableThemes: themes,
+  };
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {
