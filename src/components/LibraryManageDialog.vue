@@ -89,8 +89,8 @@
                                 (installedLibrary) =>
                                   installedLibrary.uuid === library.uuid
                               )
-                            ? `アップデート`
-                            : `インストール`
+                            ? "アップデート"
+                            : "インストール"
                         }}
                       </q-btn>
                       <q-btn
