@@ -273,14 +273,14 @@ const libraryInfoToCharacterInfos = (
           }
           return {
             styleName: style.name,
-            styleId: style.id,
+            styleId: StyleId(style.id),
             iconPath: base64ImageToUri(styleInfo.icon),
             portraitPath: styleInfo.portrait
               ? base64ImageToUri(styleInfo.portrait)
               : undefined,
             engineId,
             voiceSamplePaths: styleInfo.voiceSamples,
-          } as StyleInfo;
+          };
         }),
         policy: speaker.speakerInfo.policy,
       },
