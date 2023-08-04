@@ -245,7 +245,7 @@ const fetchStatuses = ref<
 const selectedSpeakers = ref<Record<LibraryId, SpeakerId>>({});
 
 // 選択中のライブラリ
-const selectedLibrary = ref(LibraryId(""));
+const selectedLibrary = ref<LibraryId | undefined>(undefined);
 const selectLibraryAndSpeaker = (
   libraryId: LibraryId,
   speakerId: SpeakerId
