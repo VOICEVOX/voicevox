@@ -129,6 +129,17 @@ function parseTextFile(
   return audioItems;
 }
 
+async function changeFileTailToNonExistent(filePath: string) {
+  const EXTENSION = "wav";
+  let tail = 1;
+  const name = filePath.slice(0, filePath.length - 1 - EXTENSION.length);
+  while (await window.electron.checkFileExists(filePath)) {
+    filePath = `${name}[${tail}].${EXTENSION}`;
+    tail += 1;
+  }
+  return filePath;
+}
+
 export async function writeTextFile(obj: {
   filePath: string;
   text: string;
@@ -1336,12 +1347,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          let tail = 1;
-          const name = filePath.slice(0, filePath.length - 4);
-          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
-            filePath = name + "[" + tail.toString() + "]" + ".wav";
-            tail += 1;
-          }
+          filePath = await changeFileTailToNonExistent(filePath);
         }
 
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
@@ -1489,12 +1495,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          let tail = 1;
-          const name = filePath.slice(0, filePath.length - 4);
-          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
-            filePath = name + "[" + tail.toString() + "]" + ".wav";
-            tail += 1;
-          }
+          filePath = await changeFileTailToNonExistent(filePath);
         }
 
         const encodedBlobs: string[] = [];
@@ -1613,7 +1614,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   CONNECT_AND_EXPORT_TEXT: {
     action: createUILockAction(
       async (
-        { state, dispatch, getters },
+        { state, getters },
         { filePath }: { filePath?: string }
       ): Promise<SaveResultObject> => {
         const defaultFileName = buildProjectFileName(state, "txt");
@@ -1634,12 +1635,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          let tail = 1;
-          const name = filePath.slice(0, filePath.length - 4);
-          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
-            filePath = name + "[" + tail.toString() + "]" + ".wav";
-            tail += 1;
-          }
+          filePath = await changeFileTailToNonExistent(filePath);
         }
 
         const characters = new Map<string, string>();
@@ -1862,12 +1858,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           dispatch("STOP_AUDIO", { audioKey });
         }
       }
-    },
-  },
-
-  CHECK_FILE_EXISTS: {
-    action(_, { file }: { file: string }) {
-      return window.electron.checkFileExists(file);
     },
   },
 });
