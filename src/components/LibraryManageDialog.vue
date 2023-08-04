@@ -43,7 +43,7 @@
       <q-page-container>
         <q-page class="main">
           <div
-            v-for="engineId of engineIdsWithDownloadableLibraries"
+            v-for="engineId of targetEngineIds"
             :key="engineId"
             class="q-pa-md library-items-container"
           >
@@ -189,7 +189,8 @@ const store = useStore();
 const engineIds = computed(() => store.state.engineIds);
 const engineManifests = computed(() => store.state.engineManifests);
 
-const engineIdsWithDownloadableLibraries = computed(() => {
+// ライブラリ管理機能があるエンジンIDの一覧
+const targetEngineIds = computed(() => {
   return engineIds.value.filter((engineId) => {
     return engineManifests.value[engineId]?.supportedFeatures?.manageLibrary;
   });
@@ -291,7 +292,7 @@ watch(modelValueComputed, async (newValue) => {
     return;
   }
   await Promise.all(
-    engineIdsWithDownloadableLibraries.value.map(async (engineId) => {
+    targetEngineIds.value.map(async (engineId) => {
       if (
         fetchStatuses.value[engineId] === "fetching" ||
         fetchStatuses.value[engineId] === "success"
