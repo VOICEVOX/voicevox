@@ -14,7 +14,7 @@ Windows／Mac／Linux 搭載の PC に対応しています。
 
 ### GPU 版
 
-DirectML対応のGPU を搭載した Windows 10 バージョン1903以降 及び Windows 11 と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
+DirectML対応のGPU を搭載した Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
 
 ## インストールに関する質問
 
