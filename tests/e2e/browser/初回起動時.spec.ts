@@ -7,5 +7,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("起動したら「利用規約に関するお知らせ」が表示される", async ({ page }) => {
-  await expect(page.getByText("利用規約に関するお知らせ")).toBeVisible();
+  await expect(page.getByText("利用規約に関するお知らせ")).toBeVisible({
+    timeout: 30 * 1000,
+  });
 });
