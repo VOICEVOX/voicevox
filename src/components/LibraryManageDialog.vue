@@ -587,6 +587,7 @@ const uninstallLibrary = async (
           max-width: 90%;
 
           .speaker-card {
+            height: vars.$character-item-size;
             margin: 10px;
             grid-auto-rows: vars.$character-item-size;
             min-width: vars.$character-item-size;
