@@ -23,6 +23,6 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx"
-  ],
+, "tests/e2e/browser/テキスト追加/.spec.ts"  ],
   "exclude": ["node_modules"]
 }
