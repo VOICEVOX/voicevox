@@ -1407,8 +1407,7 @@ type IEngineConnectorFactoryActionsMapper = <
 >(
   action: K
 ) => (
-  requestParameters: Parameters<IEngineConnectorFactoryActions[K]>[0],
-  initOverrides?: Parameters<IEngineConnectorFactoryActions[K]>[1]
+  _: Parameters<IEngineConnectorFactoryActions[K]>[0]
 ) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
 export type ProxyStoreTypes = {
