@@ -201,7 +201,7 @@ const modelValueComputed = computed({
   set: (val) => emit("update:modelValue", val),
 });
 
-const portraitUri = ref("");
+const portraitUri = ref<string | undefined>();
 
 const closeDialog = () => {
   stop();
@@ -244,7 +244,7 @@ const fetchStatuses = ref<
 const selectedSpeakers = ref<Record<LibraryId, SpeakerId>>({});
 
 // 選択中のライブラリ
-const selectedLibrary = ref<LibraryId | undefined>(undefined);
+const selectedLibrary = ref<LibraryId | undefined>();
 const selectLibraryAndSpeaker = (
   libraryId: LibraryId,
   speakerId: SpeakerId
