@@ -160,7 +160,6 @@ import {
   LibraryId,
   SpeakerId,
   StyleId,
-  StyleInfo,
 } from "@/type/preload";
 import { DownloadableLibrary, InstalledLibrary } from "@/openapi";
 
