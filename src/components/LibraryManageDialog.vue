@@ -70,7 +70,40 @@
                 "
               >
                 <div class="library-item-inner">
-                  <span class="text-h6 q-ma-md">{{ library.name }}</span>
+                  <div class="library-header">
+                    <div class="text-h6 q-ma-md library-title">
+                      {{ library.name }}
+                    </div>
+                    <div class="library-manage-buttons q-ma-sm">
+                      <q-btn
+                        outline
+                        text-color="display"
+                        class="text-no-wrap q-ma-sm"
+                        :disable="isLatest(engineId, library)"
+                        @click.stop="installLibrary(engineId, library)"
+                      >
+                        {{
+                          isLatest(engineId, library)
+                            ? "最新版です"
+                            : installedLibraries[engineId].find(
+                                (installedLibrary) =>
+                                  installedLibrary.uuid === library.uuid
+                              )
+                            ? `アップデート`
+                            : `インストール`
+                        }}
+                      </q-btn>
+                      <q-btn
+                        outline
+                        text-color="warning"
+                        class="text-no-wrap q-ma-sm"
+                        :disable="!isUninstallable(engineId, library)"
+                        @click.stop="uninstallLibrary(engineId, library)"
+                      >
+                        アンインストール
+                      </q-btn>
+                    </div>
+                  </div>
                   <div class="speaker-list">
                     <character-try-listen-card
                       v-for="characterInfo in library.speakers"
@@ -98,35 +131,6 @@
                           selectLibraryAndSpeaker(library.uuid, speakerUuid)
                       "
                     />
-                  </div>
-                  <div class="library-manage-buttons q-ma-sm">
-                    <q-btn
-                      outline
-                      text-color="display"
-                      class="text-no-wrap q-ma-sm"
-                      :disable="isLatest(engineId, library)"
-                      @click.stop="installLibrary(engineId, library)"
-                    >
-                      {{
-                        isLatest(engineId, library)
-                          ? "最新版です"
-                          : installedLibraries[engineId].find(
-                              (installedLibrary) =>
-                                installedLibrary.uuid === library.uuid
-                            )
-                          ? `アップデート`
-                          : `インストール`
-                      }}
-                    </q-btn>
-                    <q-btn
-                      outline
-                      text-color="warning"
-                      class="text-no-wrap q-ma-sm"
-                      :disable="!isUninstallable(engineId, library)"
-                      @click.stop="uninstallLibrary(engineId, library)"
-                    >
-                      アンインストール
-                    </q-btn>
                   </div>
                 </div>
               </q-item>
@@ -523,6 +527,25 @@ const uninstallLibrary = async (
 
   cursor: pointer;
 
+  .library-header {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+
+    > .library-title {
+      margin-right: auto;
+    }
+
+    > .library-manage-buttons {
+      display: flex;
+      flex-direction: row;
+
+      justify-content: center;
+      margin-left: auto;
+    }
+  }
+
   > div.q-circular-progress {
     margin: auto;
   }
@@ -546,6 +569,7 @@ const uninstallLibrary = async (
       }
       .library-item-inner {
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         width: 100%;
@@ -554,7 +578,11 @@ const uninstallLibrary = async (
         .speaker-list {
           display: flex;
           flex-direction: row;
-          overflow-x: scroll;
+          overflow-x: auto;
+          margin-left: auto;
+          margin-right: auto;
+          margin-bottom: 20px;
+          max-width: 90%;
 
           .speaker-card {
             margin: 10px;
@@ -565,13 +593,6 @@ const uninstallLibrary = async (
       }
     }
   }
-}
-
-.library-manage-buttons {
-  display: flex;
-  flex-direction: column;
-
-  justify-content: center;
 }
 
 .q-layout-container > :deep(.absolute-full) {
