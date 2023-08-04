@@ -288,92 +288,86 @@ const libraryInfoToCharacterInfos = (
   });
 };
 
-watch(
-  modelValueComputed,
-  async (newValue) => {
-    if (!newValue) {
-      return;
+watch(modelValueComputed, async (newValue) => {
+  if (!newValue) {
+    return;
+  }
+  const engineIdsWithNotFetchingDownloadableLibraries = [];
+  for (const engineId of engineIdsWithDownloadableLibraries.value) {
+    if (
+      fetchStatuses.value[engineId] === "fetching" ||
+      fetchStatuses.value[engineId] === "success"
+    ) {
+      continue;
     }
-    const engineIdsWithNotFetchingDownloadableLibraries = [];
-    for (const engineId of engineIdsWithDownloadableLibraries.value) {
-      if (
-        fetchStatuses.value[engineId] === "fetching" ||
-        fetchStatuses.value[engineId] === "success"
-      ) {
-        continue;
-      }
-      fetchStatuses.value[engineId] = "fetching";
-      engineIdsWithNotFetchingDownloadableLibraries.push(engineId);
-    }
-    for (const engineId of engineIdsWithNotFetchingDownloadableLibraries) {
-      const fetchResult = await store
-        .dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        })
-        .then((instance) =>
-          Promise.all([
-            instance.invoke("downloadableLibrariesDownloadableLibrariesGet")(
-              {}
-            ),
-            instance.invoke("installedLibrariesInstalledLibrariesGet")({}),
-          ])
-        )
-        .then((libraryEndpoints): [
-          BrandedDownloadableLibrary[],
-          BrandedInstalledLibrary[]
-        ] => {
-          fetchStatuses.value[engineId] = "success";
-          return [
-            libraryEndpoints[0].map((library) => {
-              return {
-                ...library,
-                uuid: LibraryId(library.uuid),
-                speakers: libraryInfoToCharacterInfos(engineId, library),
-              };
-            }),
-            Object.entries(libraryEndpoints[1]).map(([uuid, library]) => {
-              return {
-                ...library,
-                uuid: LibraryId(uuid),
-                speakers: libraryInfoToCharacterInfos(engineId, library),
-              };
-            }),
-          ];
-        })
-        .catch((e) => {
-          fetchStatuses.value[engineId] = "error";
-          store.dispatch("LOG_ERROR", e);
-        });
-
-      if (!fetchResult) return;
-
-      const [brandedDownloadableLibraries, brandedInstalledLibraries] =
-        fetchResult;
-      downloadableLibraries.value[engineId] = brandedDownloadableLibraries;
-      installedLibraries.value[engineId] = brandedInstalledLibraries;
-
-      const libraries = downloadableLibraries.value[engineId] || [];
-
-      libraries.sort((a, b) => {
-        const toPrimaryOrder = (library: BrandedDownloadableLibrary) => {
-          const localLibrary = installedLibraries.value[engineId].find(
-            (l) => l.uuid === library.uuid
-          );
-          // アップデート > 未インストール > インストール済み の順
-          if (!localLibrary) {
-            return 1;
-          } else if (semver.gt(library.version, localLibrary?.version)) {
-            return 2;
-          } else {
-            return 0;
-          }
-        };
-        return toPrimaryOrder(b) - toPrimaryOrder(a);
+    fetchStatuses.value[engineId] = "fetching";
+    engineIdsWithNotFetchingDownloadableLibraries.push(engineId);
+  }
+  for (const engineId of engineIdsWithNotFetchingDownloadableLibraries) {
+    const fetchResult = await store
+      .dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+        engineId,
+      })
+      .then((instance) =>
+        Promise.all([
+          instance.invoke("downloadableLibrariesDownloadableLibrariesGet")({}),
+          instance.invoke("installedLibrariesInstalledLibrariesGet")({}),
+        ])
+      )
+      .then((libraryEndpoints): [
+        BrandedDownloadableLibrary[],
+        BrandedInstalledLibrary[]
+      ] => {
+        fetchStatuses.value[engineId] = "success";
+        return [
+          libraryEndpoints[0].map((library) => {
+            return {
+              ...library,
+              uuid: LibraryId(library.uuid),
+              speakers: libraryInfoToCharacterInfos(engineId, library),
+            };
+          }),
+          Object.entries(libraryEndpoints[1]).map(([uuid, library]) => {
+            return {
+              ...library,
+              uuid: LibraryId(uuid),
+              speakers: libraryInfoToCharacterInfos(engineId, library),
+            };
+          }),
+        ];
+      })
+      .catch((e) => {
+        fetchStatuses.value[engineId] = "error";
+        store.dispatch("LOG_ERROR", e);
       });
-    }
-  },
-  { immediate: true }
-);
+
+    if (!fetchResult) return;
+
+    const [brandedDownloadableLibraries, brandedInstalledLibraries] =
+      fetchResult;
+    downloadableLibraries.value[engineId] = brandedDownloadableLibraries;
+    installedLibraries.value[engineId] = brandedInstalledLibraries;
+
+    const libraries = downloadableLibraries.value[engineId] || [];
+
+    libraries.sort((a, b) => {
+      const toPrimaryOrder = (library: BrandedDownloadableLibrary) => {
+        const localLibrary = installedLibraries.value[engineId].find(
+          (l) => l.uuid === library.uuid
+        );
+        // アップデート > 未インストール > インストール済み の順
+        if (!localLibrary) {
+          return 1;
+        } else if (semver.gt(library.version, localLibrary?.version)) {
+          return 2;
+        } else {
+          return 0;
+        }
+      };
+      return toPrimaryOrder(b) - toPrimaryOrder(a);
+    });
+  }
+});
 
 const updatePortrait = (portraitPath: string) => {
   portraitUri.value = portraitPath;
