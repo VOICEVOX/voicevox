@@ -19,7 +19,6 @@ import {
 import {
   CharacterInfo,
   DefaultStyleId,
-  Encoding as EncodingType,
   AcceptRetrieveTelemetryStatus,
   AcceptTermsStatus,
   HotkeySetting,
@@ -415,14 +414,12 @@ export type AudioStoreTypes = {
     action(payload: {
       audioKey: AudioKey;
       filePath?: string;
-      encoding?: EncodingType;
     }): SaveResultObject;
   };
 
   GENERATE_AND_SAVE_ALL_AUDIO: {
     action(payload: {
       dirPath?: string;
-      encoding?: EncodingType;
       callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject[] | undefined;
   };
@@ -430,16 +427,12 @@ export type AudioStoreTypes = {
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
       filePath?: string;
-      encoding?: EncodingType;
       callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject | undefined;
   };
 
   CONNECT_AND_EXPORT_TEXT: {
-    action(payload: {
-      filePath?: string;
-      encoding?: EncodingType;
-    }): SaveResultObject | undefined;
+    action(payload: { filePath?: string }): SaveResultObject | undefined;
   };
 
   PLAY_AUDIO: {

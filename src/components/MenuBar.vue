@@ -131,7 +131,6 @@ const createNewProject = async () => {
 const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndSaveAllAudioWithDialog({
-      encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
       dispatch: store.dispatch,
     });
@@ -142,7 +141,6 @@ const generateAndConnectAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndConnectAndSaveAudioWithDialog({
       dispatch: store.dispatch,
-      encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
@@ -162,7 +160,6 @@ const generateAndSaveOneAudio = async () => {
 
   await generateAndSaveOneAudioWithDialog({
     audioKey: activeAudioKey,
-    encoding: store.state.savingSetting.fileEncoding,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     dispatch: store.dispatch,
   });
@@ -172,7 +169,6 @@ const connectAndExportText = async () => {
   if (!uiLocked.value) {
     await connectAndExportTextWithDialog({
       dispatch: store.dispatch,
-      encoding: store.state.savingSetting.fileEncoding,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
