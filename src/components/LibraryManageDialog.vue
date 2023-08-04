@@ -221,6 +221,7 @@ const isLatest = (engineId: EngineId, library: BrandedDownloadableLibrary) => {
   const installedLibrary = installedLibraries.value[engineId].find(
     (installedLibrary) => installedLibrary.uuid === library.uuid
   );
+  // ライブラリがインストールされていない場合はfalseとする
   if (!installedLibrary) {
     return false;
   }
@@ -234,6 +235,7 @@ const isUninstallable = (
   const installedLibrary = installedLibraries.value[engineId].find(
     (installedLibrary) => installedLibrary.uuid === library.uuid
   );
+  // ライブラリがインストールされていない場合はfalseとする
   if (!installedLibrary) {
     return false;
   }
