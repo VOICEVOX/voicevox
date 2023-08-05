@@ -11,12 +11,14 @@ jobs:
     if: github.repository_owner == 'VOICEVOX'
     steps:
       - name: Trigger workflow_dispatch
-        uses: actions/github-script@v3
+        uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { owner, repo } = context.repo
-            await github.request(`POST /repos/${owner}/${repo}/actions/workflows/build.yml/dispatches`, {
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build.yml',
               ref: 'main',
               inputs: {
                 version: '999.999.999',
