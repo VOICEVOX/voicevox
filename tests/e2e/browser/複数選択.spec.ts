@@ -73,13 +73,54 @@ test("複数選択：Shift+クリックは前回選択していたAudioCellか�
 
   await prepareAudioCells(page, 4);
 
-  await page.locator(".audio-cell:nth-child(1)").click();
-  await page.locator(".audio-cell:nth-child(3)").click({
+  await page.locator(".audio-cell:nth-child(2)").click();
+  await page.locator(".audio-cell:nth-child(4)").click({
     modifiers: ["Shift"],
   });
 
   await page.waitForTimeout(100);
   const selectedStatus = await getSelectedStatus(page);
-  expect(selectedStatus.active).toBe(3);
-  expect(selectedStatus.selected).toEqual([1, 2, 3]);
+  expect(selectedStatus.active).toBe(4);
+  expect(selectedStatus.selected).toEqual([2, 3, 4]);
+});
+
+test("複数選択：選択してないAudioCellをCtrl+クリックすると選択範囲を追加する", async ({
+  page,
+}) => {
+  await navigateToMain(page);
+  await page.waitForTimeout(100);
+
+  await prepareAudioCells(page, 4);
+
+  await page.locator(".audio-cell:nth-child(2)").click();
+  await page.locator(".audio-cell:nth-child(4)").click({
+    modifiers: ["Control"],
+  });
+
+  await page.waitForTimeout(100);
+  const selectedStatus = await getSelectedStatus(page);
+  expect(selectedStatus.active).toBe(4);
+  expect(selectedStatus.selected).toEqual([2, 4]);
+});
+
+test("複数選択：選択してるAudioCellをCtrl+クリックすると選択範囲から削除する", async ({
+  page,
+}) => {
+  await navigateToMain(page);
+  await page.waitForTimeout(100);
+
+  await prepareAudioCells(page, 4);
+
+  await page.locator(".audio-cell:nth-child(2)").click();
+  await page.locator(".audio-cell:nth-child(4)").click({
+    modifiers: ["Shift"],
+  });
+  await page.locator(".audio-cell:nth-child(3)").click({
+    modifiers: ["Control"],
+  });
+
+  await page.waitForTimeout(100);
+  const selectedStatus = await getSelectedStatus(page);
+  expect(selectedStatus.active).toBe(4);
+  expect(selectedStatus.selected).toEqual([2, 4]);
 });
