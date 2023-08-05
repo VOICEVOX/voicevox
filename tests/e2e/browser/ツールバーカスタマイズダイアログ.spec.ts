@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto(BASE_URL);
 });
 
-test("「設定」→「ツールバーのカスタマイズ」で「設定 / ツールバーのカスタマイズ」ページが表示される", async ({
+test("ツールバーのカスタマイズでボタンを追加でき、デフォルトに戻すこともできる", async ({
   page,
 }) => {
   await navigateToMain(page);
