@@ -14,7 +14,7 @@ import {
   transformCommandStore,
 } from "./type";
 import {
-  buildFileNameFromRawData,
+  buildAudioFileNameFromRawData,
   buildProjectFileName,
   isAccentPhrasesTextDifferent,
   convertHiraToKana,
@@ -192,7 +192,7 @@ function buildFileName(state: State, audioKey: AudioKey) {
   if (style === undefined) throw new Error("assert style !== undefined");
 
   const styleName = style.styleName || "ノーマル";
-  return buildFileNameFromRawData(fileNamePattern, {
+  return buildAudioFileNameFromRawData(fileNamePattern, {
     characterName: character.metas.speakerName,
     index,
     styleName,

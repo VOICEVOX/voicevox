@@ -16,7 +16,7 @@
           <div class="col">
             <q-input
               ref="patternInput"
-              v-model="currentFileNamePattern"
+              v-model="currentBaseNamePattern"
               dense
               outlined
               bg-color="background"
@@ -80,8 +80,8 @@ import { computed, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import { useStore } from "@/store";
 import {
-  buildFileNameFromRawData,
-  DEFAULT_FILE_NAME_TEMPLATE,
+  buildAudioFileNameFromRawData,
+  DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
   replaceTagIdToTagString,
   sanitizeFileName,
 } from "@/store/utility";
@@ -105,40 +105,29 @@ const tagStrings = Object.values(replaceTagIdToTagString);
 
 const savingSetting = computed(() => store.state.savingSetting);
 
-const currentFileNamePattern = ref(savingSetting.value.fileNamePattern);
-const sanitizedFileNamePattern = computed(() =>
-  sanitizeFileName(currentFileNamePattern.value)
+const savedFileBaseNamePattern = computed(() => {
+  return savingSetting.value.fileNamePattern.replace(/\.wav$/, "");
+});
+const currentBaseNamePattern = ref(savedFileBaseNamePattern.value);
+const currentNamePattern = computed(
+  () => `${currentBaseNamePattern.value}.wav`
 );
 
-const hasInvalidChar = computed(
-  () => currentFileNamePattern.value !== sanitizedFileNamePattern.value
-);
 const hasNotIndexTagString = computed(
-  () => !currentFileNamePattern.value.includes(replaceTagIdToTagString["index"])
+  () => !currentBaseNamePattern.value.includes(replaceTagIdToTagString["index"])
 );
 const invalidChar = computed(() => {
-  if (!hasInvalidChar.value) return "";
-
-  const a = currentFileNamePattern.value;
-  const b = sanitizedFileNamePattern.value;
-
-  let diffAt = "";
-  for (let i = 0; i < a.length; i++) {
-    if (b[i] !== a[i]) {
-      diffAt = a[i];
-      break;
-    }
-  }
-
-  return diffAt;
+  const current = currentBaseNamePattern.value;
+  const sanitized = sanitizeFileName(current);
+  return Array.from(current).find((char, i) => char !== sanitized[i]);
 });
 const errorMessage = computed(() => {
-  if (currentFileNamePattern.value.length === 0) {
+  if (currentBaseNamePattern.value === "") {
     return "何か入力してください";
   }
 
   const result: string[] = [];
-  if (invalidChar.value !== "") {
+  if (invalidChar.value !== undefined) {
     result.push(`使用できない文字が含まれています：「${invalidChar.value}」`);
   }
   if (previewFileName.value.includes("$")) {
@@ -152,23 +141,18 @@ const errorMessage = computed(() => {
 const hasError = computed(() => errorMessage.value !== "");
 
 const previewFileName = computed(() =>
-  buildFileNameFromRawData(currentFileNamePattern.value + ".wav")
+  buildAudioFileNameFromRawData(currentNamePattern.value)
 );
 
-const removeExtension = (str: string) => {
-  return str.replace(/\.wav$/, "");
-};
-
 const initializeInput = () => {
-  const pattern = savingSetting.value.fileNamePattern;
-  currentFileNamePattern.value = removeExtension(pattern);
+  currentBaseNamePattern.value = savedFileBaseNamePattern.value;
 
-  if (currentFileNamePattern.value.length === 0) {
-    currentFileNamePattern.value = removeExtension(DEFAULT_FILE_NAME_TEMPLATE);
+  if (currentBaseNamePattern.value === "") {
+    currentBaseNamePattern.value = DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE;
   }
 };
 const resetToDefault = () => {
-  currentFileNamePattern.value = removeExtension(DEFAULT_FILE_NAME_TEMPLATE);
+  currentBaseNamePattern.value = DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE;
   patternInput.value?.focus();
 };
 
@@ -184,7 +168,7 @@ const insertTagToCurrentPosition = (tag: string) => {
     const from = elem.selectionStart ?? 0;
     const to = elem.selectionEnd ?? 0;
     const newText = text.substring(0, from) + tag + text.substring(to);
-    currentFileNamePattern.value = newText;
+    currentBaseNamePattern.value = newText;
 
     // キャレットの位置を挿入した後の位置にずらす
     nextTick(() => {
@@ -199,7 +183,7 @@ const submit = async () => {
   await store.dispatch("SET_SAVING_SETTING", {
     data: {
       ...savingSetting.value,
-      fileNamePattern: currentFileNamePattern.value + ".wav",
+      fileNamePattern: currentNamePattern.value,
     },
   });
   updateOpenDialog(false);

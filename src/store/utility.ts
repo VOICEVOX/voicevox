@@ -59,9 +59,10 @@ const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
   replaceTagIdToTagString
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
-export const DEFAULT_FILE_NAME_TEMPLATE =
-  "$連番$_$キャラ$（$スタイル$）_$テキスト$.wav";
-const DEFAULT_FILE_NAME_VARIABLES = {
+export const DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE =
+  "$連番$_$キャラ$（$スタイル$）_$テキスト$";
+export const DEFAULT_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
+const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
@@ -147,14 +148,14 @@ export function isAccentPhrasesTextDifferent(
   return false;
 }
 
-export function buildFileNameFromRawData(
-  fileNamePattern = DEFAULT_FILE_NAME_TEMPLATE,
-  vars = DEFAULT_FILE_NAME_VARIABLES
+export function buildAudioFileNameFromRawData(
+  fileNamePattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
+  vars = DEFAULT_AUDIO_FILE_NAME_VARIABLES
 ): string {
   let pattern = fileNamePattern;
   if (pattern === "") {
     // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
-    pattern = DEFAULT_FILE_NAME_TEMPLATE;
+    pattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE;
   }
 
   let text = sanitizeFileName(vars.text);
@@ -171,10 +172,10 @@ export function buildFileNameFromRawData(
   const date = currentDateString();
 
   return replaceTag(pattern, {
-    index,
-    characterName,
-    styleName: styleName,
     text,
+    characterName,
+    index,
+    styleName,
     date,
   });
 }
