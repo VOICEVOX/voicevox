@@ -277,6 +277,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  SELECTED_AUDIO_KEYS: {
+    getter(state) {
+      return state._selectedAudioKeys || [];
+    },
+  },
+
   HAVE_AUDIO_QUERY: {
     getter: (state) => (audioKey: AudioKey) => {
       return state.audioItems[audioKey]?.query != undefined;
@@ -519,6 +525,17 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
     action({ commit, dispatch }, { audioKey }: { audioKey?: AudioKey }) {
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
+      // reset audio play start point
+      dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
+    },
+  },
+
+  SET_SELECTED_AUDIO_KEYS: {
+    mutation(state, { audioKeys }: { audioKeys?: AudioKey[] }) {
+      state._selectedAudioKeys = audioKeys;
+    },
+    action({ commit, dispatch }, { audioKeys }: { audioKeys?: AudioKey[] }) {
+      commit("SET_SELECTED_AUDIO_KEYS", { audioKeys });
       // reset audio play start point
       dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
     },

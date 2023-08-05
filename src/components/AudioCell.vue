@@ -1,5 +1,5 @@
 <template>
-  <div class="audio-cell">
+  <div class="audio-cell" @click="onAudioCellClick">
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
@@ -20,9 +20,10 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
+      :is-selected="isSelectedAudioCell"
       @focus="setActiveAudioKey()"
     />
-    <!-- 
+    <!--
       input.valueをスクリプトから変更した場合は@changeが発火しないため、
       @blurと@keydown.prevent.enter.exactに分けている
     -->
@@ -121,6 +122,45 @@ const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
+const onAudioCellClick = (event: MouseEvent) => {
+  if (uiLocked.value) return;
+  // 選択されていたAudioCellからクリックしたところまで
+  if (event.shiftKey) {
+    const currentAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+    if (currentAudioKey) {
+      const currentAudioIndex = store.state.audioKeys.indexOf(currentAudioKey);
+      const clickedAudioIndex = store.state.audioKeys.indexOf(props.audioKey);
+      const minIndex = Math.min(currentAudioIndex, clickedAudioIndex);
+      const maxIndex = Math.max(currentAudioIndex, clickedAudioIndex);
+      const audioKeysBetween = store.state.audioKeys.slice(
+        minIndex,
+        maxIndex + 1
+      );
+      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+        audioKeys: [...store.getters.SELECTED_AUDIO_KEYS, ...audioKeysBetween],
+      });
+    }
+  } else if (event.ctrlKey) {
+    if (store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)) {
+      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+        audioKeys: store.getters.SELECTED_AUDIO_KEYS.filter(
+          (audioKey) => audioKey !== props.audioKey
+        ).filter((audioKey) => audioKey !== props.audioKey),
+      });
+      return;
+    } else {
+      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+        audioKeys: [...store.getters.SELECTED_AUDIO_KEYS, props.audioKey],
+      });
+    }
+  } else {
+    store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+      audioKeys: [props.audioKey],
+    });
+  }
+  setActiveAudioKey(false);
+};
+
 const selectedVoice = computed<Voice | undefined>({
   get() {
     const { engineId, styleId } = audioItem.value.voice;
@@ -149,6 +189,9 @@ const selectedVoice = computed<Voice | undefined>({
 
 const isActiveAudioCell = computed(
   () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY
+);
+const isSelectedAudioCell = computed(() =>
+  store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
 );
 
 const audioTextBuffer = ref(audioItem.value.text);
@@ -188,7 +231,11 @@ const clearInputSelection = () => {
   }
 };
 
-const setActiveAudioKey = () => {
+const setActiveAudioKey = (unselectOther = true) => {
+  if (unselectOther) {
+    store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
+  }
+
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
 
