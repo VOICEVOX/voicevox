@@ -534,10 +534,17 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     mutation(state, { audioKeys }: { audioKeys?: AudioKey[] }) {
       state._selectedAudioKeys = audioKeys;
     },
-    action({ commit, dispatch }, { audioKeys }: { audioKeys?: AudioKey[] }) {
+    action({ commit }, { audioKeys }: { audioKeys?: AudioKey[] }) {
       commit("SET_SELECTED_AUDIO_KEYS", { audioKeys });
-      // reset audio play start point
-      dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
+    },
+  },
+
+  SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT: {
+    mutation(state, { shouldIgnore }: { shouldIgnore: boolean }) {
+      state.shouldIgnoreNextFocusEvent = shouldIgnore;
+    },
+    action({ commit }, { shouldIgnore }: { shouldIgnore: boolean }) {
+      commit("SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT", { shouldIgnore });
     },
   },
 

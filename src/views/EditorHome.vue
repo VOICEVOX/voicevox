@@ -820,6 +820,9 @@ watch(activeAudioKey, (audioKey) => {
   if (overflowTop || overflowBottom) {
     activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
   }
+
+  // 複数選択周りのため、activeAudioKeyの変更時にfocusTextFieldを呼ぶ。
+  audioCellRefs[audioKey].focusTextField();
 });
 
 const showAddAudioItemButton = computed(() => {

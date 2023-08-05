@@ -21,7 +21,7 @@
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
       :is-selected="isSelectedAudioCell"
-      @focus="setActiveAudioKey()"
+      @focus="onInputFocus()"
     />
     <!--
       input.valueをスクリプトから変更した場合は@changeが発火しないため、
@@ -39,9 +39,10 @@
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
+      @cilck="onAudioCellClick"
       @focus="
         clearInputSelection();
-        setActiveAudioKey();
+        onInputFocus();
       "
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
@@ -122,13 +123,38 @@ const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
+let lastActiveAudioKey: AudioKey | undefined = undefined;
+let lastSelectedAudioKeys: AudioKey[] = [];
+
+const onInputFocus = () => {
+  if (store.state.shouldIgnoreNextFocusEvent) {
+    store.commit("SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT", { shouldIgnore: false });
+    return;
+  }
+  lastActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  lastSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
+  store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
+};
+
 const onAudioCellClick = (event: MouseEvent) => {
   if (uiLocked.value) return;
+  // テキストフィールドをクリックしたときはonInputFocus()が先に呼ばれるため、
+  // audioKeyが変更された後にこの関数が呼ばれる。
+  // そのため、onInputFocusでaudioKeyを変更する前の値を保持しておく必要がある。
+  // クリックした対象がinput要素かどうかでonInputFocusが呼ばれたかどうかを判定し、
+  // もし呼ばれていたらonInputFocusで保持した値を使い、呼ばれていなかったら
+  // この関数内で取得する。
+  // TODO: 少しちらつきが起こるのでなんとかする。
+  if ((event.target as HTMLElement)?.tagName !== "INPUT") {
+    lastActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+    lastSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+  }
   // 選択されていたAudioCellからクリックしたところまで
   if (event.shiftKey) {
-    const currentAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-    if (currentAudioKey) {
-      const currentAudioIndex = store.state.audioKeys.indexOf(currentAudioKey);
+    if (lastActiveAudioKey) {
+      const currentAudioIndex =
+        store.state.audioKeys.indexOf(lastActiveAudioKey);
       const clickedAudioIndex = store.state.audioKeys.indexOf(props.audioKey);
       const minIndex = Math.min(currentAudioIndex, clickedAudioIndex);
       const maxIndex = Math.max(currentAudioIndex, clickedAudioIndex);
@@ -137,20 +163,31 @@ const onAudioCellClick = (event: MouseEvent) => {
         maxIndex + 1
       );
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
-        audioKeys: [...store.getters.SELECTED_AUDIO_KEYS, ...audioKeysBetween],
+        audioKeys: [...lastSelectedAudioKeys, ...audioKeysBetween],
       });
     }
   } else if (event.ctrlKey) {
-    if (store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)) {
+    // Ctrlキーを押しながらクリックしたとき：
+    //   選択していないAudioCellならactiveを移動し、以前の選択をselectedに追加する。
+    //   選択しているAudioCellならselectedから除外する。activeは変更しない。
+    if (lastSelectedAudioKeys.includes(props.audioKey)) {
+      if (props.audioKey === lastActiveAudioKey) return;
+
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
-        audioKeys: store.getters.SELECTED_AUDIO_KEYS.filter(
+        audioKeys: lastSelectedAudioKeys.filter(
           (audioKey) => audioKey !== props.audioKey
-        ).filter((audioKey) => audioKey !== props.audioKey),
+        ),
+      });
+      store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: lastActiveAudioKey });
+      // activeAudioKeyの変更を戻すためにfocusさせるが、そうするとfocusイベントによって複数選択が
+      // 消え去ってしまう。そのため、次のfocusイベントを無視するようにする。
+      store.dispatch("SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT", {
+        shouldIgnore: true,
       });
       return;
     } else {
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
-        audioKeys: [...store.getters.SELECTED_AUDIO_KEYS, props.audioKey],
+        audioKeys: [...lastSelectedAudioKeys, props.audioKey],
       });
     }
   } else {
@@ -158,7 +195,7 @@ const onAudioCellClick = (event: MouseEvent) => {
       audioKeys: [props.audioKey],
     });
   }
-  setActiveAudioKey(false);
+  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
 
 const selectedVoice = computed<Voice | undefined>({
@@ -229,14 +266,6 @@ const clearInputSelection = () => {
   if (!willFocusOrBlur.value) {
     textfieldSelection.toEmpty();
   }
-};
-
-const setActiveAudioKey = (unselectOther = true) => {
-  if (unselectOther) {
-    store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
-  }
-
-  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
 
 // コピペしたときに句点と改行で区切る
