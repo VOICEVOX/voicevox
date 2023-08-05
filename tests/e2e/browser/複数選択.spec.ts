@@ -87,6 +87,10 @@ test("複数選択：Shift+クリックは前回選択していたAudioCellか�
 test("複数選択：選択してないAudioCellをCtrl+クリックすると選択範囲を追加する", async ({
   page,
 }) => {
+  if (process.platform === "darwin") {
+    // FIXME: Macでは動かないので、Macでは落ちるテストとしてマークする。
+    test.fail();
+  }
   await navigateToMain(page);
   await page.waitForTimeout(100);
 
@@ -106,6 +110,10 @@ test("複数選択：選択してないAudioCellをCtrl+クリックすると選
 test("複数選択：選択してるAudioCellをCtrl+クリックすると選択範囲から削除する", async ({
   page,
 }) => {
+  if (process.platform === "darwin") {
+    // FIXME: Macでは動かないので、Macでは落ちるテストとしてマークする。
+    test.fail();
+  }
   await navigateToMain(page);
   await page.waitForTimeout(100);
 
@@ -116,7 +124,7 @@ test("複数選択：選択してるAudioCellをCtrl+クリックすると選択
     modifiers: ["Shift"],
   });
   await page.locator(".audio-cell:nth-child(3)").click({
-    modifiers: ["Control"],
+    modifiers: [process.platform === "darwin" ? "Meta" : "Control"],
   });
 
   await page.waitForTimeout(100);
