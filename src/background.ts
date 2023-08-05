@@ -68,8 +68,13 @@ if (isTest) {
 }
 console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
 
+// バージョン0.14より前の設定ファイルの保存場所
+const beforeUserDataDir = app.getPath("userData"); // マイグレーション用
+
+// appnameをvoicevoxとしてsetする
+app.setName(`voicevox${suffix}`);
+
 // Electronの設定ファイルの保存場所を変更
-const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用
 const fixedUserDataDir = path.join(app.getPath("appData"), `voicevox${suffix}`);
 if (!fs.existsSync(fixedUserDataDir)) {
   fs.mkdirSync(fixedUserDataDir);
