@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto(BASE_URL);
 });
 
-test("アクセント分割したらアクセント区画が増える", async ({ page }) => {
+test("アクセント分割したらアクセント区間が増える", async ({ page }) => {
   await navigateToMain(page);
   await expect(page.locator(".audio-cell").first()).toBeVisible();
   await page.locator(".audio-cell input").first().fill("こんにちは");
