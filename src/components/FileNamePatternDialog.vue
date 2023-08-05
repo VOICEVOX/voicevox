@@ -105,10 +105,10 @@ const tagStrings = Object.values(replaceTagIdToTagString);
 
 const savingSetting = computed(() => store.state.savingSetting);
 
-const savedFileBaseNamePattern = computed(() => {
+const savedBaseNamePattern = computed(() => {
   return savingSetting.value.fileNamePattern.replace(/\.wav$/, "");
 });
-const currentBaseNamePattern = ref(savedFileBaseNamePattern.value);
+const currentBaseNamePattern = ref(savedBaseNamePattern.value);
 const currentNamePattern = computed(
   () => `${currentBaseNamePattern.value}.wav`
 );
@@ -145,7 +145,7 @@ const previewFileName = computed(() =>
 );
 
 const initializeInput = () => {
-  currentBaseNamePattern.value = savedFileBaseNamePattern.value;
+  currentBaseNamePattern.value = savedBaseNamePattern.value;
 
   if (currentBaseNamePattern.value === "") {
     currentBaseNamePattern.value = DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE;
