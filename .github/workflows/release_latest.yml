@@ -1,0 +1,26 @@
+name: Release latest
+
+on:
+  push:
+    # branches:
+    #   - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'VOICEVOX'
+    steps:
+      - name: Trigger workflow_dispatch
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.PAT_GITHUB_ACTIONS_WRITE }}
+          script: |
+            const { owner, repo } = context.repo
+            await github.request(`POST /repos/${owner}/${repo}/actions/workflows/build.yml/dispatches`, {
+              ref: 'main',
+              inputs: {
+                version: '999.999.999',
+                prerelease: true,
+                code_signing: false
+              }
+            })
