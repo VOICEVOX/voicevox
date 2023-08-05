@@ -233,6 +233,9 @@ const closeAllDialog = () => {
   store.dispatch("SET_DIALOG_OPEN", {
     isDefaultStyleSelectDialogOpen: false,
   });
+  store.dispatch("SET_DIALOG_OPEN", {
+    isLibraryManageDialogOpen: false,
+  });
 };
 
 const openHelpDialog = () => {
@@ -526,6 +529,22 @@ async function updateEngines() {
         });
       },
       disableWhenUiLocked: false,
+    });
+  }
+  if (
+    Object.values(engineManifests.value).some(
+      (e) => e.supportedFeatures?.manageLibrary
+    )
+  ) {
+    engineMenu.subMenu.push({
+      type: "button",
+      label: "音声ライブラリの管理",
+      onClick: () => {
+        store.dispatch("SET_DIALOG_OPEN", {
+          isLibraryManageDialogOpen: true,
+        });
+      },
+      disableWhenUiLocked: true,
     });
   }
 }

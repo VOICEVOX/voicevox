@@ -24,6 +24,10 @@ export const audioKeySchema = z.string().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
+export const libraryIdSchema = z.string().brand<"LibraryId">();
+export type LibraryId = z.infer<typeof libraryIdSchema>;
+export const LibraryId = (id: string): LibraryId => libraryIdSchema.parse(id);
+
 export const presetKeySchema = z.string().brand<"PresetKey">();
 export type PresetKey = z.infer<typeof presetKeySchema>;
 export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
