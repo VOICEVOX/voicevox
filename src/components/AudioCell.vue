@@ -150,6 +150,9 @@ const onAudioCellClick = (event: MouseEvent) => {
     lastActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
     lastSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
   }
+  store.dispatch("SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT", {
+    shouldIgnore: true,
+  });
   // 選択されていたAudioCellからクリックしたところまで
   if (event.shiftKey) {
     if (lastActiveAudioKey) {
@@ -179,11 +182,6 @@ const onAudioCellClick = (event: MouseEvent) => {
         ),
       });
       store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: lastActiveAudioKey });
-      // activeAudioKeyの変更を戻すためにfocusさせるが、そうするとfocusイベントによって複数選択が
-      // 消え去ってしまう。そのため、次のfocusイベントを無視するようにする。
-      store.dispatch("SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT", {
-        shouldIgnore: true,
-      });
       return;
     } else {
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
