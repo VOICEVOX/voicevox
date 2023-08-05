@@ -1,0 +1,1 @@
+export { useDictionary } from "./dictionary";

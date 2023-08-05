@@ -178,7 +178,7 @@ import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
-import { useDictionary } from "@/pinia-stores/dictionary";
+import { useDictionary } from "@/pinia-stores";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";

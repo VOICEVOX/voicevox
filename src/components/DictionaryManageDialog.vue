@@ -253,7 +253,7 @@ import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "./AudioAccent.vue";
 import { useStore } from "@/store";
-import { useDictionary } from "@/pinia-stores/dictionary";
+import { useDictionary } from "@/pinia-stores";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
