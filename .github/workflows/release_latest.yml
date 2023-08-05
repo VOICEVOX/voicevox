@@ -2,8 +2,8 @@ name: Release latest
 
 on:
   push:
-    # branches:
-    #   - main
+    branches:
+      - main
 
 jobs:
   build:
