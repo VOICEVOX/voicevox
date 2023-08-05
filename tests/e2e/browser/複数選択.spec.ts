@@ -21,10 +21,10 @@ async function getSelectedStatus(page: Page): Promise<{
     const selected: number[] = [];
     for (let i = 0; i < audioCells.length; i++) {
       const audioCell = audioCells[i];
-      if (audioCell.querySelector("i.active-arrow")) {
+      if (audioCell.classList.contains("active")) {
         active = i + 1;
       }
-      if (audioCell.querySelector(".character-button.selected")) {
+      if (audioCell.classList.contains("selected")) {
         selected.push(i + 1);
       }
     }

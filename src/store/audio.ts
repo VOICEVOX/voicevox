@@ -550,15 +550,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT: {
-    mutation(state, { shouldIgnore }: { shouldIgnore: boolean }) {
-      state.shouldIgnoreNextFocusEvent = shouldIgnore;
-    },
-    action({ commit }, { shouldIgnore }: { shouldIgnore: boolean }) {
-      commit("SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT", { shouldIgnore });
-    },
-  },
-
   SET_AUDIO_PLAY_START_POINT: {
     mutation(state, { startPoint }: { startPoint?: number }) {
       state.audioPlayStartPoint = startPoint;

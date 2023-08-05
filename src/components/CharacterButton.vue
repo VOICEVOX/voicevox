@@ -4,7 +4,6 @@
     flat
     class="q-pa-none character-button"
     :class="{
-      selected: props.isSelected,
       opaque: loading,
     }"
     :disable="uiLocked"
@@ -210,13 +209,11 @@ const props = withDefaults(
     showEngineInfo?: boolean;
     emptiable?: boolean;
     uiLocked: boolean;
-    isSelected?: boolean;
   }>(),
   {
     loading: false,
     showEngineInfo: false,
     emptiable: false,
-    isSelected: false,
   }
 );
 
@@ -344,20 +341,9 @@ const updateMenuHeight = () => {
 @use '@/styles/colors' as colors;
 
 .character-button {
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    outline-style: solid;
-    outline-width: 1px;
-    outline-color: colors.$primary-light;
-  }
-  &.selected::after {
-    outline-width: 2px;
-  }
+  border: solid 1px;
+  border-color: colors.$primary-light;
   font-size: 0;
-  box-sizing: content-box;
   height: fit-content;
 
   .icon-container {

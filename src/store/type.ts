@@ -131,7 +131,6 @@ export type AudioStoreState = {
   audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
   _selectedAudioKeys?: AudioKey[];
-  shouldIgnoreNextFocusEvent?: boolean;
   audioPlayStartPoint?: number;
   nowPlayingContinuously: boolean;
 };
@@ -201,11 +200,6 @@ export type AudioStoreTypes = {
   SET_SELECTED_AUDIO_KEYS: {
     mutation: { audioKeys?: AudioKey[] };
     action(payload: { audioKeys?: AudioKey[] }): void;
-  };
-
-  SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT: {
-    mutation: { shouldIgnore: boolean };
-    action(payload: { shouldIgnore: boolean }): void;
   };
 
   SET_AUDIO_PLAY_START_POINT: {

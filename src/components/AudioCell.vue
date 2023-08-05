@@ -1,5 +1,9 @@
 <template>
-  <div class="audio-cell" @click="onAudioCellClick">
+  <div
+    class="audio-cell"
+    :class="{ active: isActiveAudioCell, selected: isSelectedAudioCell }"
+    @click="onAudioCellClick"
+  >
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
@@ -20,7 +24,6 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
-      :is-selected="isSelectedAudioCell"
       @focus="onInputFocus()"
     />
     <!--
@@ -96,12 +99,17 @@ const props =
 
 const emit =
   defineEmits<{
-    (e: "focusCell", payload: { audioKey: AudioKey }): void;
+    (
+      e: "focusCell",
+      payload: { audioKey: AudioKey; skipFocusEvent?: boolean }
+    ): void;
   }>();
 
+let skipFocusEvent = false;
 defineExpose({
   audioKey: computed(() => props.audioKey),
-  focusTextField: () => {
+  focusTextField: (skipFocusEvent_: boolean) => {
+    skipFocusEvent = skipFocusEvent_;
     textfield.value?.focus();
   },
   removeCell: () => {
@@ -127,14 +135,16 @@ let lastActiveAudioKey: AudioKey | undefined = undefined;
 let lastSelectedAudioKeys: AudioKey[] = [];
 
 const onInputFocus = () => {
-  if (store.state.shouldIgnoreNextFocusEvent) {
-    store.commit("SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT", { shouldIgnore: false });
+  if (skipFocusEvent) {
+    skipFocusEvent = false;
     return;
   }
   lastActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
   lastSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
-  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
-  store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
+  if (lastActiveAudioKey !== props.audioKey) {
+    store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
+    store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
+  }
 };
 
 const onAudioCellClick = (event: MouseEvent) => {
@@ -150,9 +160,6 @@ const onAudioCellClick = (event: MouseEvent) => {
     lastActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
     lastSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
   }
-  store.dispatch("SET_SHOULD_IGNORE_NEXT_FOCUS_EVENT", {
-    shouldIgnore: true,
-  });
   // 選択されていたAudioCellからクリックしたところまで
   if (event.shiftKey) {
     if (lastActiveAudioKey) {
@@ -536,6 +543,10 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   display: flex;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
+  &.selected,
+  &.active {
+    background-color: rgba(colors.$primary-light-rgb, 0.1);
+  }
 
   &:first-child {
     margin-top: 0.6rem;
