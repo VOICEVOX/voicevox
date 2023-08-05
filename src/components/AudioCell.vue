@@ -91,6 +91,7 @@ import ContextMenu from "./ContextMenu.vue";
 import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 const props =
   defineProps<{
@@ -176,7 +177,7 @@ const onAudioCellClick = (event: MouseEvent) => {
         audioKeys: [...lastSelectedAudioKeys, ...audioKeysBetween],
       });
     }
-  } else if (event.ctrlKey) {
+  } else if (isOnCommandOrCtrlKeyDown(event)) {
     // Ctrlキーを押しながらクリックしたとき：
     //   選択していないAudioCellならactiveを移動し、以前の選択をselectedに追加する。
     //   選択しているAudioCellならselectedから除外する。activeは変更しない。

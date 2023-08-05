@@ -94,7 +94,7 @@ test("複数選択：選択してないAudioCellをCtrl+クリックすると選
 
   await page.locator(".audio-cell:nth-child(2)").click();
   await page.locator(".audio-cell:nth-child(4)").click({
-    modifiers: ["Control"],
+    modifiers: [process.platform === "darwin" ? "Meta" : "Control"],
   });
 
   await page.waitForTimeout(100);
