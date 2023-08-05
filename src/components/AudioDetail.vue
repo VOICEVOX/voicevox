@@ -270,7 +270,6 @@ import {
   VNodeRef,
   watch,
 } from "vue";
-import { useQuasar } from "quasar";
 import ToolTip from "./ToolTip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
@@ -291,7 +290,6 @@ const props =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const supportedFeatures = computed(
   () =>
@@ -469,7 +467,7 @@ const changeMoraData = (
     if (type == "pitch") {
       lastPitches.value[accentPhraseIndex][moraIndex] = data;
     }
-    store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
       audioKey: props.activeAudioKey,
       accentPhraseIndex,
       moraIndex,
@@ -480,7 +478,7 @@ const changeMoraData = (
     if (accentPhrases.value === undefined) {
       throw Error("accentPhrases.value === undefined");
     }
-    store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
+    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
       audioKey: props.activeAudioKey,
       accentPhraseIndex,
       moraIndex,
@@ -504,14 +502,9 @@ const play = async () => {
     } else {
       window.electron.logError(e);
     }
-    $q.dialog({
+    store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
-      ok: {
-        label: "閉じる",
-        flat: true,
-        textColor: "display",
-      },
     });
   }
 };
@@ -732,7 +725,7 @@ const isHovered = (
       if (
         accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
         moraIndex === pitchHoveredInfo.moraIndex &&
-        unvoicableVowels.indexOf(vowel) > -1
+        unvoicableVowels.includes(vowel)
       ) {
         isHover = true;
       }
@@ -776,7 +769,7 @@ const handleChangeVoicing = (
 ) => {
   if (
     selectedDetail.value == "pitch" &&
-    unvoicableVowels.indexOf(mora.vowel) > -1
+    unvoicableVowels.includes(mora.vowel)
   ) {
     let data = 0;
     if (mora.pitch == 0) {

@@ -35,6 +35,7 @@ describe("store/vuex.js test", () => {
         audioPlayStartPoint: 0,
         uiLockCount: 0,
         dialogLockCount: 0,
+        reloadingLock: false,
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],

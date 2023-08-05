@@ -168,10 +168,6 @@ export const api: Sandbox = {
       "ブラウザ版では現在ファイルの読み込みをサポートしていません"
     );
   },
-  openTextEditContextMenu() {
-    // NOTE: ブラウザ版では不要
-    return Promise.resolve();
-  },
   isAvailableGPUMode() {
     // TODO: WebAssembly版をサポートする時に実装する
     // FIXME: canvasでWebGLから調べたり、WebGPUがサポートされているかを調べたりで判断は出来そう
@@ -212,6 +208,9 @@ export const api: Sandbox = {
   logInfo(...params: unknown[]) {
     console.info(...params);
     return;
+  },
+  openLogDirectory() {
+    throw new Error(`Not supported on Browser version: openLogDirectory`);
   },
   /* eslint-enable no-console */
   engineInfos() {
@@ -262,6 +261,8 @@ export const api: Sandbox = {
       await this.setSetting("currentTheme", newData);
       return;
     }
+    // NOTE: Electron版では起動時にテーマ情報が必要なので、
+    //       この実装とは違って起動時に読み込んだキャッシュを返すだけになっている。
     return Promise.all(
       // FIXME: themeファイルのいい感じのパスの設定
       ["/themes/default.json", "/themes/dark.json"].map((url) =>
@@ -309,7 +310,7 @@ export const api: Sandbox = {
   validateEngineDir(/* engineDir: string */) {
     throw new Error(`Not supported on Browser version: validateEngineDir`);
   },
-  restartApp(/* obj: { isMultiEngineOffMode: boolean } */) {
-    throw new Error(`Not supported on Browser version: restartApp`);
+  reloadApp(/* obj: { isMultiEngineOffMode: boolean } */) {
+    throw new Error(`Not supported on Browser version: reloadApp`);
   },
 };

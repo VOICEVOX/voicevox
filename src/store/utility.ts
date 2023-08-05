@@ -2,6 +2,7 @@ import path from "path";
 import { Platform } from "quasar";
 import { State } from "@/store/type";
 import { ToolbarButtonTagType, isMac } from "@/type/preload";
+import { AccentPhrase } from "@/openapi";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
@@ -32,9 +33,9 @@ export function buildProjectFileName(state: State, extension?: string): string {
     state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
 
   const headTailItemText =
-    headItemText !== tailItemText
-      ? headItemText + "..." + tailItemText
-      : headItemText;
+    state.audioKeys.length === 1
+      ? headItemText
+      : headItemText + "..." + tailItemText;
 
   let defaultFileNameStem = sanitizeFileName(headTailItemText);
 
@@ -92,19 +93,58 @@ function replaceTag(
   return result;
 }
 
-export function skipReadingPart(text: string): string {
+export function extractExportText(text: string): string {
+  return skipReadingPart(skipMemoText(text));
+}
+export function extractYomiText(text: string): string {
+  return skipWritingPart(skipMemoText(text));
+}
+function skipReadingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
   return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
 }
-
-export function skipWritingPart(text: string): string {
+function skipWritingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
   return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2");
 }
-export function skipMemoText(targettext: string): string {
+function skipMemoText(targettext: string): string {
   // []をスキップ
   const resolvedText = targettext.replace(/\[.*?\]/g, "");
   return resolvedText;
+}
+
+/**
+ * ２つのAccentPhrasesのテキスト内容が異なるかどうかを判定
+ */
+export function isAccentPhrasesTextDifferent(
+  beforeAccent: AccentPhrase[],
+  afterAccent: AccentPhrase[]
+): boolean {
+  if (beforeAccent.length !== afterAccent.length) return true;
+
+  for (let accentIndex = 0; accentIndex < beforeAccent.length; accentIndex++) {
+    if (
+      beforeAccent[accentIndex].moras.length !==
+        afterAccent[accentIndex].moras.length ||
+      beforeAccent[accentIndex].pauseMora?.text !==
+        afterAccent[accentIndex].pauseMora?.text
+    )
+      return true;
+
+    for (
+      let moraIndex = 0;
+      moraIndex < beforeAccent[accentIndex].moras.length;
+      moraIndex++
+    ) {
+      if (
+        beforeAccent[accentIndex].moras[moraIndex].text !==
+        afterAccent[accentIndex].moras[moraIndex].text
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 export function buildFileNameFromRawData(
