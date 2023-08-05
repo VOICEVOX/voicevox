@@ -18,30 +18,29 @@
           <q-space />
 
           <div class="row items-center no-wrap">
-            <q-btn
-              round
-              flat
-              icon="close"
-              color="display"
-              @click="closeDialog"
-            />
+              <q-btn
+                round
+                flat
+                icon="close"
+                color="display"
+                @click="closeDialog"
+              />
           </div>
         </q-toolbar>
       </q-header>
 
-      <q-drawer
-        bordered
-        :model-value="true"
-        :width="$q.screen.width / 3 > 300 ? 300 : $q.screen.width / 3"
-        :breakpoint="0"
-      >
-        <div class="library-portrait-wrapper">
-          <img :src="portraitUri" class="library-portrait" />
-        </div>
-      </q-drawer>
-
       <q-page-container>
         <q-page class="main">
+          <q-drawer
+            bordered
+            :model-value="true"
+            :width="$q.screen.width / 3 > 300 ? 300 : $q.screen.width / 3"
+            :breakpoint="0"
+          >
+            <div class="library-portrait-wrapper">
+              <img :src="portraitUri" class="library-portrait" />
+            </div>
+          </q-drawer>
           <div
             v-for="engineId of targetEngineIds"
             :key="engineId"
@@ -455,7 +454,7 @@ const installLibrary = async (
     SpeakerId(library.speakers[0].metas.speakerUuid)
   );
   stop();
-  // TODO: インストール処理を追加する
+  nextPage();
 };
 
 const uninstallLibrary = async (
