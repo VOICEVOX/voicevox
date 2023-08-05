@@ -12,7 +12,7 @@
       text-color="display-on-primary"
     >
       {{
-        previewSlider.state.currentValue.value !== undefined
+        previewSlider.state.currentValue.value != undefined
           ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
           : undefined
       }}
