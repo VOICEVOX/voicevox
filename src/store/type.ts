@@ -481,10 +481,6 @@ export type AudioStoreTypes = {
   STOP_CONTINUOUSLY_AUDIO: {
     action(): void;
   };
-
-  CHECK_FILE_EXISTS: {
-    action(payload: { file: string }): Promise<boolean>;
-  };
 };
 
 /*
