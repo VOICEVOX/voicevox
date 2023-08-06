@@ -6,7 +6,7 @@ on:
     #   - main
 
 jobs:
-  build:
+  nightly-build:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'VOICEVOX'
     steps:
@@ -15,18 +15,12 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const hoge = await github.rest.repos.getLatestRelease({
+            const latest_release = await github.rest.repos.getLatestRelease({
               owner: context.repo.owner,
               repo: context.repo.repo
-            })
-            console.log(hoge.data)
+            });
 
-            const latest_version = await github.rest.repos.getLatestRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            }).tag_name;
-
-            const split_version = latest_version.split('.');
+            const split_version = latest_release.data.tag_name.split('.');
             const nightly_version = `${split_version[0]}.${parseInt(split_version[1]) + 1}.0-nightly`;
 
             github.rest.actions.createWorkflowDispatch({
