@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { navigateToMain } from "../navigators";
+import { getNewestQuasarDialog } from "../locators";
 
 test.beforeEach(async ({ page }) => {
   const BASE_URL = "http://localhost:5173/#/home";
@@ -37,8 +38,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
     await page.getByRole("button").filter({ hasText: "全部書き出し" }).count()
   ).toBe(1);
   await page.getByText("保存", { exact: true }).click();
-  await page
-    .locator("#q-portal--dialog--6")
+  await getNewestQuasarDialog(page)
     .getByRole("button")
     .filter({ hasText: "close" })
     .click();

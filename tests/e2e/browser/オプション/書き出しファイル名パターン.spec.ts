@@ -14,7 +14,9 @@ test.beforeEach(async ({ page }) => {
  */
 const moveToFilenameDialog = async (page: Page, optionDialog: Locator) => {
   await optionDialog.getByRole("button", { name: "編集する" }).click();
-  const filenameDialog = await getNewestQuasarDialog(page);
+  await page.waitForTimeout(100);
+
+  const filenameDialog = getNewestQuasarDialog(page);
   await expect(
     filenameDialog.getByText("書き出しファイル名パターン")
   ).toBeVisible();
@@ -52,6 +54,7 @@ test("「オプション」から「書き出しファイル名パターン」�
 
   // 確定するとダイアログが閉じて設定した内容が反映されている
   await doneButton.click();
+  await page.waitForTimeout(100);
   await expect(optionDialog.getByText("test$連番$.wav")).toBeVisible();
 
   // 再度開くと設定した内容が反映されている
