@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
  */
 const moveToFilenameDialog = async (page: Page, optionDialog: Locator) => {
   await optionDialog.getByRole("button", { name: "編集する" }).click();
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(500);
 
   const filenameDialog = getNewestQuasarDialog(page);
   await expect(
@@ -40,21 +40,41 @@ test("「オプション」から「書き出しファイル名パターン」�
   await expect(textbox).toHaveValue("$連番$_$キャラ$（$スタイル$）_$テキスト$");
   await expect(doneButton).toBeEnabled();
 
+  // 何も入力されていないときは確定ボタンが押せない
+  await textbox.click();
+  await textbox.fill("");
+  await textbox.press("Enter");
+  await expect(optionDialog.getByText("何か入力してください")).toBeVisible();
+  await expect(doneButton).toBeDisabled();
+
   // $連番$ が含まれていない場合は確定ボタンが押せない
   await textbox.click();
   await textbox.fill("test");
   await textbox.press("Enter");
   await expect(textbox).toHaveValue("test");
+  await expect(optionDialog.getByText("$連番$は必須です")).toBeVisible();
   await expect(doneButton).toBeDisabled();
 
+  // 無効な文字が含まれている場合は確定ボタンが押せない
+  await textbox.click();
+  await textbox.fill("$連番$\\");
+  await textbox.press("Enter");
+  await expect(doneButton).toBeDisabled();
+  await expect(
+    optionDialog.getByText("使用できない文字が含まれています：「\\」")
+  ).toBeVisible();
+
   // $連番$ を含めると確定ボタンが押せる
+  await textbox.click();
+  await textbox.fill("test");
+  await textbox.press("Enter");
   await page.getByRole("button", { name: "$連番$" }).click();
   await expect(textbox).toHaveValue("test$連番$");
   await expect(doneButton).toBeEnabled();
 
   // 確定するとダイアログが閉じて設定した内容が反映されている
   await doneButton.click();
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(500);
   await expect(optionDialog.getByText("test$連番$.wav")).toBeVisible();
 
   // 再度開くと設定した内容が反映されている

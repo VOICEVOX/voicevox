@@ -1,5 +1,5 @@
 import { expect, Page } from "@playwright/test";
-import { getNewestQuasarDialog } from "./locators";
+import { getNewestQuasarDialog, getQuasarMenu } from "./locators";
 
 /**
  * 初回起動時の確認を完了してメイン画面に移動
@@ -31,6 +31,6 @@ export async function navigateToOptionDialog(page: Page) {
   await navigateToMain(page);
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "設定" }).click();
-  await page.getByText("オプション").click();
+  await getQuasarMenu(page, "オプション").click();
   return getNewestQuasarDialog(page);
 }

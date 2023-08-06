@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { navigateToMain } from "../navigators";
-import { getNewestQuasarDialog } from "../locators";
+import { getNewestQuasarDialog, getQuasarMenu } from "../locators";
 
 test.beforeEach(async ({ page }) => {
   const BASE_URL = "http://localhost:5173/#/home";
@@ -25,7 +25,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
   // ツールバーのカスタマイズページに移動
   await page.getByText("設定").click();
   await page.waitForTimeout(100);
-  await page.getByText("ツールバーのカスタマイズ").click();
+  await getQuasarMenu(page, "ツールバーのカスタマイズ").click();
   await page.waitForTimeout(100);
   await expect(page.getByText("ツールバーのカスタマイズ")).toBeVisible();
 
@@ -56,7 +56,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
   // 再度ツールバーのカスタマイズページに移動し、デフォルトに戻すボタンを押す
   await page.getByText("設定").click();
   await page.waitForTimeout(100);
-  await page.getByText("ツールバーのカスタマイズ").click();
+  await getQuasarMenu(page, "ツールバーのカスタマイズ").click();
   await page.waitForTimeout(100);
   expect(
     await page
