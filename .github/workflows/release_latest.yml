@@ -15,6 +15,12 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const hoge = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            })
+            console.log(hoge)
+
             const latest_version = await github.rest.repos.getLatestRelease({
               owner: context.repo.owner,
               repo: context.repo.repo
