@@ -1,9 +1,9 @@
-name: Release latest
+name: Release nightly
 
 on:
   push:
-    branches:
-      - main
+    # branches:
+    #   - main
 
 jobs:
   build:
@@ -15,14 +15,21 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const latest_version = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            }).data.tag_name;
+
+            const split_version = latest_version.split('.');
+            const nightly_version = `${split_version[0]}.${parseInt(split_version[1]) + 1}.0-nightly`;
+
             github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'build.yml',
               ref: 'main',
               inputs: {
-                version: '999.999.999',
-                prerelease: true,
-                code_signing: false
+                version: nightly_version,
+                prerelease: true
               }
             })
