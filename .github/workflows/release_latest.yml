@@ -18,7 +18,7 @@ jobs:
             const latest_version = await github.rest.repos.getLatestRelease({
               owner: context.repo.owner,
               repo: context.repo.repo
-            }).data.tag_name;
+            }).tag_name;
 
             const split_version = latest_version.split('.');
             const nightly_version = `${split_version[0]}.${parseInt(split_version[1]) + 1}.0-nightly`;
