@@ -3,7 +3,12 @@ import { z } from "zod";
 import { buildProjectFileName, getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "@/store/ui";
-import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
+import {
+  AllActions,
+  AudioItem,
+  ProjectStoreState,
+  ProjectStoreTypes,
+} from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
 import {
@@ -15,6 +20,7 @@ import {
   styleIdSchema,
 } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
+import { Dispatch } from "@/store/vuex";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -535,7 +541,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
-      const projectData = await window.electron.getTempProject();
+      const projectData: Partial<ProjectType> =
+        await window.electron.getTempProject();
 
       if (!Object.keys(projectData).length) {
         return false;
@@ -557,16 +564,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return false;
       }
 
-      const { audioItems, audioKeys } = projectData as ProjectType;
-
-      let prevAudioKey = undefined;
-      for (const audioKey of audioKeys) {
-        const audioItem = audioItems[audioKey];
-        prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
-          prevAudioKey,
-          audioItem,
-        });
-      }
+      await registerAudioItems({ projectData, dispatch: context.dispatch });
       return true;
     }),
   },
@@ -586,6 +584,36 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     },
   },
 });
+
+/**
+ * projectDataをaudioItemに登録する
+ *
+ * @param projectData
+ * @param dispatch
+ * @return void
+ */
+const registerAudioItems = async ({
+  projectData,
+  dispatch,
+}: {
+  projectData: Partial<ProjectType>;
+  dispatch: Dispatch<AllActions>;
+}): Promise<void> => {
+  if (!Object.keys(projectData).length) {
+    return;
+  }
+
+  const { audioItems, audioKeys } = projectData as ProjectType;
+  let prevAudioKey: AudioKey | undefined;
+
+  for (const audioKey of audioKeys) {
+    const audioItem = audioItems[audioKey];
+    prevAudioKey = await dispatch("REGISTER_AUDIO_ITEM", {
+      prevAudioKey,
+      audioItem,
+    });
+  }
+};
 
 const moraSchema = z.object({
   text: z.string(),

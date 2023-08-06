@@ -136,23 +136,24 @@ protocol.registerSchemesAsPrivileged([
 
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
+const fixedTempProjectPath = path.join(fixedUserDataDir, "temp-project.json");
+
 const setTempProject = (tempProject: ArrayBuffer) => {
   try {
-    const filePath = path.join(fixedUserDataDir, "temp-project.json");
-    fs.writeFileSync(filePath, new DataView(tempProject));
+    fs.writeFileSync(fixedTempProjectPath, new DataView(tempProject));
     return success(undefined);
   } catch (e) {
     const a = e as SystemError;
     return failure(a.code, a);
   }
 };
-if (!fs.existsSync(path.join(fixedUserDataDir, "temp-project.json"))) {
+if (!fs.existsSync(fixedTempProjectPath)) {
   const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
   setTempProject(buf);
 }
 
 const tempProject = JSON.parse(
-  fs.readFileSync(path.join(fixedUserDataDir, "temp-project.json"), {
+  fs.readFileSync(fixedTempProjectPath, {
     encoding: "utf-8",
   })
 );
