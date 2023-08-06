@@ -1,4 +1,4 @@
-name: Release nightly
+name: Release latest dev build
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - "tests/**"
 
 jobs:
-  nightly-build:
+  latest-dev-build:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'VOICEVOX'
     steps:
@@ -24,7 +24,7 @@ jobs:
             });
 
             const split_version = latest_release.data.tag_name.split('.');
-            const nightly_version = `${split_version[0]}.${parseInt(split_version[1]) + 1}.0-nightly`;
+            const dev_version = `${split_version[0]}.${parseInt(split_version[1]) + 1}.0-dev`;
 
             github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
@@ -32,9 +32,9 @@ jobs:
               workflow_id: 'build.yml',
               ref: 'main',
               inputs: {
-                version: nightly_version,
+                version: dev_version,
                 prerelease: true
               }
             })
 
-            console.log(`Triggered workflow_dispatch for ${nightly_version}`);
+            console.log(`Triggered workflow_dispatch for ${dev_version}`);
