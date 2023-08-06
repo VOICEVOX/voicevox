@@ -2,7 +2,7 @@ import { mount, flushPromises } from "@vue/test-utils";
 import { createStore } from "vuex";
 import { describe, it } from "vitest";
 import { Quasar } from "quasar";
-import { wrapQPage } from "../utils";
+import { wrapQPage } from "../../utils";
 import HowToUse from "@/components/help/HowToUse.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 import { storeKey } from "@/store";
