@@ -18,6 +18,7 @@
           <q-space />
 
           <div class="row items-center no-wrap">
+            <template v-if="pageIndex === 0">
               <q-btn
                 round
                 flat
@@ -25,124 +26,161 @@
                 color="display"
                 @click="closeDialog"
               />
+            </template>
+            <template v-else-if="pageIndex === 1">
+              <q-btn
+                unelevated
+                label="戻る"
+                color="toolbar-button"
+                text-color="toolbar-button-display"
+                class="text-no-wrap q-mr-md"
+                @click="prevPage"
+              />
+              <q-btn
+                unelevated
+                label="利用規約に同意してインストール"
+                color="toolbar-button"
+                text-color="toolbar-button-display"
+                class="text-no-wrap"
+                @click="() => {}"
+              />
+            </template>
           </div>
         </q-toolbar>
       </q-header>
 
       <q-page-container>
         <q-page class="main">
-          <q-drawer
-            bordered
-            :model-value="true"
-            :width="$q.screen.width / 3 > 300 ? 300 : $q.screen.width / 3"
-            :breakpoint="0"
-          >
-            <div class="library-portrait-wrapper">
-              <img :src="portraitUri" class="library-portrait" />
-            </div>
-          </q-drawer>
-          <div
-            v-for="engineId of targetEngineIds"
-            :key="engineId"
-            class="q-pa-md library-items-container"
-          >
-            <span class="text-h5 q-py-md">
-              {{ engineManifests[engineId].name }}
-            </span>
-            <div
-              v-if="fetchStatuses[engineId] === 'error'"
-              class="library-list-error text-warning"
-            >
-              取得に失敗しました。
-            </div>
-
-            <div
-              v-else-if="fetchStatuses[engineId] === 'success'"
-              class="library-list"
-            >
-              <q-item
-                v-for="library of downloadableLibraries[engineId]"
-                :key="library.uuid"
-                class="q-pa-none library-item"
-                :class="
-                  selectedLibrary === library.uuid && 'selected-library-item'
-                "
+          <q-tab-panels v-model="pageIndex">
+            <!-- 試聴・ライブラリ選択画面 -->
+            <q-tab-panel :name="0">
+              <q-drawer
+                bordered
+                :model-value="true"
+                :width="$q.screen.width / 3 > 300 ? 300 : $q.screen.width / 3"
+                :breakpoint="0"
               >
-                <div class="library-item-inner">
-                  <div class="library-header">
-                    <div class="text-h6 q-ma-md library-title">
-                      {{ library.name }}
-                    </div>
-                    <div class="library-manage-buttons q-ma-sm">
-                      <q-btn
-                        outline
-                        text-color="display"
-                        class="text-no-wrap q-ma-sm"
-                        :disable="isLatest(engineId, library)"
-                        @click.stop="installLibrary(engineId, library)"
-                      >
-                        {{
-                          isLatest(engineId, library)
-                            ? "最新版です"
-                            : installedLibraries[engineId].find(
-                                (installedLibrary) =>
-                                  installedLibrary.uuid === library.uuid
-                              )
-                            ? "アップデート"
-                            : "インストール"
-                        }}
-                      </q-btn>
-                      <q-btn
-                        outline
-                        text-color="warning"
-                        class="text-no-wrap q-ma-sm"
-                        :disable="!isUninstallable(engineId, library)"
-                        @click.stop="uninstallLibrary(engineId, library)"
-                      >
-                        アンインストール
-                      </q-btn>
-                    </div>
-                  </div>
-                  <div class="speaker-list">
-                    <character-try-listen-card
-                      v-for="characterInfo in library.speakers"
-                      :key="characterInfo.metas.speakerUuid"
-                      :character-info="characterInfo"
-                      :is-selected="
-                        selectedSpeakers[library.uuid] ===
-                        characterInfo.metas.speakerUuid
-                      "
-                      :playing="playing"
-                      :toggle-play-or-stop="
-                        (speakerUuid, styleInfo, index) =>
-                          togglePlayOrStop(
-                            engineId,
-                            library.uuid,
-                            speakerUuid,
-                            styleInfo.styleId,
-                            index
-                          )
-                      "
-                      class="speaker-card"
-                      @update:portrait="updatePortrait"
-                      @update:select-character="
-                        (speakerUuid) =>
-                          selectLibraryAndSpeaker(library.uuid, speakerUuid)
-                      "
-                    />
-                  </div>
+                <div class="library-portrait-wrapper">
+                  <img :src="portraitUri" class="library-portrait" />
                 </div>
-              </q-item>
-            </div>
-            <q-circular-progress
-              v-else
-              indeterminate
-              color="primary"
-              rounded
-              :thickness="0.3"
-              size="xl"
-            />
-          </div>
+              </q-drawer>
+              <div
+                v-for="engineId of targetEngineIds"
+                :key="engineId"
+                class="q-pa-md library-items-container"
+              >
+                <span class="text-h5 q-py-md">
+                  {{ engineManifests[engineId].name }}
+                </span>
+                <div
+                  v-if="fetchStatuses[engineId] === 'error'"
+                  class="library-list-error text-warning"
+                >
+                  取得に失敗しました。
+                </div>
+
+                <div
+                  v-else-if="fetchStatuses[engineId] === 'success'"
+                  class="library-list"
+                >
+                  <q-item
+                    v-for="library of downloadableLibraries[engineId]"
+                    :key="library.uuid"
+                    class="q-pa-none library-item"
+                    :class="
+                      selectedLibrary === library.uuid &&
+                      'selected-library-item'
+                    "
+                  >
+                    <div class="library-item-inner">
+                      <div class="library-header">
+                        <div class="text-h6 q-ma-md library-title">
+                          {{ library.name }}
+                        </div>
+                        <div class="library-manage-buttons q-ma-sm">
+                          <q-btn
+                            outline
+                            text-color="display"
+                            class="text-no-wrap q-ma-sm"
+                            :disable="isLatest(engineId, library)"
+                            @click.stop="toReadPolicies(library)"
+                          >
+                            {{
+                              isLatest(engineId, library)
+                                ? "最新版です"
+                                : installedLibraries[engineId].find(
+                                    (installedLibrary) =>
+                                      installedLibrary.uuid === library.uuid
+                                  )
+                                ? "アップデート"
+                                : "インストール"
+                            }}
+                          </q-btn>
+                          <q-btn
+                            outline
+                            text-color="warning"
+                            class="text-no-wrap q-ma-sm"
+                            :disable="!isUninstallable(engineId, library)"
+                            @click.stop="uninstallLibrary(engineId, library)"
+                          >
+                            アンインストール
+                          </q-btn>
+                        </div>
+                      </div>
+                      <div class="speaker-list">
+                        <character-try-listen-card
+                          v-for="characterInfo in library.speakers"
+                          :key="characterInfo.metas.speakerUuid"
+                          :character-info="characterInfo"
+                          :is-selected="
+                            selectedSpeakers[library.uuid] ===
+                            characterInfo.metas.speakerUuid
+                          "
+                          :playing="playing"
+                          :toggle-play-or-stop="
+                            (speakerUuid, styleInfo, index) =>
+                              togglePlayOrStop(
+                                engineId,
+                                library.uuid,
+                                speakerUuid,
+                                styleInfo.styleId,
+                                index
+                              )
+                          "
+                          class="speaker-card"
+                          @update:portrait="updatePortrait"
+                          @update:select-character="
+                            (speakerUuid) =>
+                              selectLibraryAndSpeaker(library.uuid, speakerUuid)
+                          "
+                        />
+                      </div>
+                    </div>
+                  </q-item>
+                </div>
+                <q-circular-progress
+                  v-else
+                  indeterminate
+                  color="primary"
+                  rounded
+                  :thickness="0.3"
+                  size="xl"
+                />
+              </div>
+            </q-tab-panel>
+            <!-- 利用規約画面 -->
+            <q-tab-panel :name="1">
+              <div>
+                <span class="text-h5 q-pa-md text-bold">
+                  各話者・キャラクターの利用規約をお読みください。
+                </span>
+              </div>
+              <div class="markdown-body overflow-auto">
+                <!-- eslint-disable-next-line vue/no-v-html -->
+                <div class="markdown q-pa-md" v-html="policyHtml" />
+              </div>
+            </q-tab-panel>
+          </q-tab-panels>
         </q-page>
       </q-page-container>
     </q-layout>
@@ -164,6 +202,7 @@ import {
   StyleId,
 } from "@/type/preload";
 import { DownloadableLibrary, InstalledLibrary } from "@/openapi";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 type BrandedDownloadableLibrary = Omit<
   DownloadableLibrary,
@@ -175,6 +214,16 @@ type BrandedDownloadableLibrary = Omit<
 
 type BrandedInstalledLibrary = BrandedDownloadableLibrary &
   Pick<InstalledLibrary, "uninstallable">;
+
+const pageIndex = ref(0);
+const prevPage = () => {
+  stop();
+  pageIndex.value--;
+};
+const nextPage = () => {
+  stop();
+  pageIndex.value++;
+};
 
 const $q = useQuasar();
 
@@ -257,6 +306,18 @@ const selectLibraryAndSpeaker = (
   selectedLibrary.value = libraryId;
   selectedSpeakers.value[libraryId] = speakerId;
 };
+const selectedLibraryInfo = computed(() => {
+  let libraryInfo: BrandedDownloadableLibrary | undefined;
+  for (const libraries of Object.values(downloadableLibraries.value)) {
+    libraryInfo = libraries.find(
+      (library) => library.uuid === selectedLibrary.value
+    );
+  }
+  if (!libraryInfo) {
+    throw Error("libraryInfo === undefined");
+  }
+  return libraryInfo;
+});
 
 const libraryInfoToCharacterInfos = (
   engineId: EngineId,
@@ -445,10 +506,7 @@ const togglePlayOrStop = (
   }
 };
 
-const installLibrary = async (
-  engineId: EngineId,
-  library: BrandedDownloadableLibrary
-) => {
+const toReadPolicies = async (library: BrandedDownloadableLibrary) => {
   selectLibraryAndSpeaker(
     LibraryId(library.uuid),
     SpeakerId(library.speakers[0].metas.speakerUuid)
@@ -468,6 +526,15 @@ const uninstallLibrary = async (
   stop();
   // TODO: アンインストール処理を追加する
 };
+
+const md = useMarkdownIt();
+const policyHtml = computed(() => {
+  let result = "";
+  for (const characterInfo of selectedLibraryInfo.value.speakers) {
+    result += md.render(characterInfo.metas.policy);
+  }
+  return result;
+});
 </script>
 
 <style scoped lang="scss">
