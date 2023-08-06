@@ -2,6 +2,7 @@ import path from "path";
 import { Platform } from "quasar";
 import { State } from "@/store/type";
 import { ToolbarButtonTagType, isMac } from "@/type/preload";
+import { AccentPhrase } from "@/openapi";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
@@ -58,9 +59,10 @@ const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
   replaceTagIdToTagString
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
-export const DEFAULT_FILE_NAME_TEMPLATE =
-  "$連番$_$キャラ$（$スタイル$）_$テキスト$.wav";
-const DEFAULT_FILE_NAME_VARIABLES = {
+export const DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE =
+  "$連番$_$キャラ$（$スタイル$）_$テキスト$";
+export const DEFAULT_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
+const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
@@ -112,14 +114,48 @@ function skipMemoText(targettext: string): string {
   return resolvedText;
 }
 
-export function buildFileNameFromRawData(
-  fileNamePattern = DEFAULT_FILE_NAME_TEMPLATE,
-  vars = DEFAULT_FILE_NAME_VARIABLES
+/**
+ * ２つのAccentPhrasesのテキスト内容が異なるかどうかを判定
+ */
+export function isAccentPhrasesTextDifferent(
+  beforeAccent: AccentPhrase[],
+  afterAccent: AccentPhrase[]
+): boolean {
+  if (beforeAccent.length !== afterAccent.length) return true;
+
+  for (let accentIndex = 0; accentIndex < beforeAccent.length; accentIndex++) {
+    if (
+      beforeAccent[accentIndex].moras.length !==
+        afterAccent[accentIndex].moras.length ||
+      beforeAccent[accentIndex].pauseMora?.text !==
+        afterAccent[accentIndex].pauseMora?.text
+    )
+      return true;
+
+    for (
+      let moraIndex = 0;
+      moraIndex < beforeAccent[accentIndex].moras.length;
+      moraIndex++
+    ) {
+      if (
+        beforeAccent[accentIndex].moras[moraIndex].text !==
+        afterAccent[accentIndex].moras[moraIndex].text
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export function buildAudioFileNameFromRawData(
+  fileNamePattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
+  vars = DEFAULT_AUDIO_FILE_NAME_VARIABLES
 ): string {
   let pattern = fileNamePattern;
   if (pattern === "") {
     // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
-    pattern = DEFAULT_FILE_NAME_TEMPLATE;
+    pattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE;
   }
 
   let text = sanitizeFileName(vars.text);
@@ -136,10 +172,10 @@ export function buildFileNameFromRawData(
   const date = currentDateString();
 
   return replaceTag(pattern, {
-    index,
-    characterName,
-    styleName: styleName,
     text,
+    characterName,
+    index,
+    styleName,
     date,
   });
 }
