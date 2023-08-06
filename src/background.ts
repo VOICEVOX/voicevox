@@ -136,7 +136,6 @@ protocol.registerSchemesAsPrivileged([
 
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
-// 設定ファイル
 const setTempProject = (tempProject: ArrayBuffer) => {
   try {
     const filePath = path.join(fixedUserDataDir, "temp-project.json");
@@ -158,6 +157,7 @@ const tempProject = JSON.parse(
   })
 );
 
+// 設定ファイル
 const store = getStoreWithError();
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
