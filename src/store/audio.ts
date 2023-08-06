@@ -2422,7 +2422,7 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         if (query === undefined) throw new Error("assert query !== undefined");
 
-        const newAccentPhases = await dispatch("FETCH_MORA_DATA", {
+        const newAccentPhrases = await dispatch("FETCH_MORA_DATA", {
           accentPhrases: query.accentPhrases,
           engineId,
           styleId,
@@ -2430,7 +2430,7 @@ export const audioCommandStore = transformCommandStore(
 
         commit("COMMAND_CHANGE_ACCENT", {
           audioKey,
-          accentPhrases: newAccentPhases,
+          accentPhrases: newAccentPhrases,
         });
       },
     },
@@ -2446,7 +2446,7 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         if (query == undefined) throw new Error("query == undefined");
 
-        const newAccentPhases = await dispatch("FETCH_AND_COPY_MORA_DATA", {
+        const newAccentPhrases = await dispatch("FETCH_AND_COPY_MORA_DATA", {
           accentPhrases: [...query.accentPhrases],
           engineId,
           styleId,
@@ -2455,7 +2455,7 @@ export const audioCommandStore = transformCommandStore(
 
         commit("COMMAND_CHANGE_ACCENT", {
           audioKey,
-          accentPhrases: newAccentPhases,
+          accentPhrases: newAccentPhrases,
         });
       },
     },
