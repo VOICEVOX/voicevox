@@ -563,7 +563,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
         return false;
       }
-
+      await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
       await registerAudioItems({ projectData, dispatch: context.dispatch });
       return true;
     }),
