@@ -18,8 +18,8 @@ jobs:
             const hoge = await github.rest.repos.getLatestRelease({
               owner: context.repo.owner,
               repo: context.repo.repo
-            }).data
-            console.log(hoge)
+            })
+            console.log(hoge.data)
 
             const latest_version = await github.rest.repos.getLatestRelease({
               owner: context.repo.owner,
