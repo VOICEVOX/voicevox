@@ -33,3 +33,5 @@ jobs:
                 prerelease: true
               }
             })
+
+            console.log(`Triggered workflow_dispatch for ${nightly_version}`);
