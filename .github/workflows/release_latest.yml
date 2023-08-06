@@ -2,8 +2,8 @@ name: Release nightly
 
 on:
   push:
-    # branches:
-    #   - main
+    branches:
+      - main
 
 jobs:
   nightly-build:
