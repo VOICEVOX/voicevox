@@ -46,6 +46,10 @@ import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 
+export function generateAudioKey() {
+  return AudioKey(uuidv4());
+}
+
 async function generateUniqueIdAndQuery(
   state: State,
   audioItem: AudioItem
@@ -265,7 +269,6 @@ export function applyAudioPresetToAudioItem(
 }
 
 const audioBlobCache: Record<string, Blob> = {};
-const audioElements: Record<AudioKey, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
@@ -275,7 +278,6 @@ export const audioStoreState: AudioStoreState = {
   audioStates: {},
   // audio elementの再生オフセット
   audioPlayStartPoint: undefined,
-  nowPlayingContinuously: false,
 };
 
 export const audioStore = createPartialStore<AudioStoreTypes>({
@@ -297,14 +299,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   IS_ACTIVE: {
     getter: (state) => (audioKey: AudioKey) => {
       return state._activeAudioKey === audioKey;
-    },
-  },
-
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: (state) => {
-      return state._activeAudioKey !== undefined
-        ? audioElements[state._activeAudioKey]?.currentTime
-        : undefined;
     },
   },
 
@@ -485,14 +479,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  GENERATE_AUDIO_KEY: {
-    action() {
-      const audioKey = AudioKey(uuidv4());
-      audioElements[audioKey] = new Audio();
-      return audioKey;
-    },
-  },
-
   SETUP_SPEAKER: {
     /**
      * AudioItemに設定される話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
@@ -544,15 +530,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_AUDIO_NOW_PLAYING: {
-    mutation(
-      state,
-      { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean }
-    ) {
-      state.audioStates[audioKey].nowPlaying = nowPlaying;
-    },
-  },
-
   SET_AUDIO_NOW_GENERATING: {
     mutation(
       state,
@@ -562,12 +539,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       }: { audioKey: AudioKey; nowGenerating: boolean }
     ) {
       state.audioStates[audioKey].nowGenerating = nowGenerating;
-    },
-  },
-
-  SET_NOW_PLAYING_CONTINUOUSLY: {
-    mutation(state, { nowPlaying }: { nowPlaying: boolean }) {
-      state.nowPlayingContinuously = nowPlaying;
     },
   },
 
@@ -669,13 +640,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   REGISTER_AUDIO_ITEM: {
     async action(
-      { dispatch, commit },
+      { commit },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey?: AudioKey }
     ) {
-      const audioKey = await dispatch("GENERATE_AUDIO_KEY");
+      const audioKey = generateAudioKey();
       commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
       return audioKey;
     },
@@ -701,7 +672,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       state.audioKeys.splice(index, 0, audioKey);
       state.audioItems[audioKey] = audioItem;
       state.audioStates[audioKey] = {
-        nowPlaying: false,
         nowGenerating: false,
       };
     },
@@ -727,7 +697,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       for (const { audioKey, audioItem } of audioKeyItemPairs) {
         state.audioItems[audioKey] = audioItem;
         state.audioStates[audioKey] = {
-          nowPlaying: false,
           nowGenerating: false,
         };
       }
@@ -1687,122 +1656,48 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
-  PLAY_AUDIO: {
-    action: createUILockAction(
-      async ({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
-        const audioElem = audioElements[audioKey];
-        audioElem.pause();
-
-        // 音声用意
-        let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
-        if (!blob) {
+  FETCH_AUDIO: {
+    async action({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) {
+      let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
+      if (!blob) {
+        commit("SET_AUDIO_NOW_GENERATING", {
+          audioKey,
+          nowGenerating: true,
+        });
+        try {
+          blob = await withProgress(
+            dispatch("GENERATE_AUDIO", { audioKey }),
+            dispatch
+          );
+        } finally {
           commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,
-            nowGenerating: true,
+            nowGenerating: false,
           });
-          try {
-            blob = await withProgress(
-              dispatch("GENERATE_AUDIO", { audioKey }),
-              dispatch
-            );
-          } finally {
-            commit("SET_AUDIO_NOW_GENERATING", {
-              audioKey,
-              nowGenerating: false,
-            });
-          }
         }
-
-        return dispatch("PLAY_AUDIO_BLOB", {
-          audioBlob: blob,
-          audioElem,
-          audioKey,
-        });
       }
-    ),
-  },
-
-  PLAY_AUDIO_BLOB: {
-    action: createUILockAction(
-      async (
-        { state, commit, dispatch },
-        {
-          audioBlob,
-          audioElem,
-          audioKey,
-        }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: AudioKey }
-      ) => {
-        audioElem.src = URL.createObjectURL(audioBlob);
-        // 途中再生用の処理
-        if (audioKey) {
-          const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
-            audioKey,
-          });
-          if (accentPhraseOffsets.length === 0) {
-            audioElem.currentTime = 0;
-          } else {
-            const startTime =
-              accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
-            if (startTime === undefined) throw Error("startTime === undefined");
-            // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
-            // 再生に影響のない程度かつ切り捨てられない値を加算する
-            audioElem.currentTime = startTime + 10e-6;
-          }
-        }
-
-        // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
-        if (audioElem.setSinkId) {
-          audioElem
-            .setSinkId(state.savingSetting.audioOutputDevice)
-            .catch((err) => {
-              const stop = () => {
-                audioElem.pause();
-                audioElem.removeEventListener("canplay", stop);
-              };
-              audioElem.addEventListener("canplay", stop);
-              window.electron.showMessageDialog({
-                type: "error",
-                title: "エラー",
-                message: "再生デバイスが見つかりません",
-              });
-              throw new Error(err);
-            });
-        }
-
-        // 再生終了時にresolveされるPromiseを返す
-        const played = async () => {
-          if (audioKey) {
-            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
-          }
-        };
-        audioElem.addEventListener("play", played);
-
-        let paused: () => void;
-        const audioPlayPromise = new Promise<boolean>((resolve) => {
-          paused = () => {
-            resolve(audioElem.ended);
-          };
-          audioElem.addEventListener("pause", paused);
-        }).finally(async () => {
-          audioElem.removeEventListener("play", played);
-          audioElem.removeEventListener("pause", paused);
-          if (audioKey) {
-            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
-          }
-        });
-
-        audioElem.play();
-
-        return audioPlayPromise;
-      }
-    ),
-  },
-
-  STOP_AUDIO: {
-    action(_, { audioKey }: { audioKey: AudioKey }) {
-      const audioElem = audioElements[audioKey];
-      audioElem.pause();
+      return blob;
     },
+  },
+
+  FETCH_AND_PLAY_AUDIO: {
+    action: createUILockAction(
+      async ({ state, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
+        const blob = await dispatch("FETCH_AUDIO", { audioKey });
+        await dispatch("LOAD_AUDIO_PLAYER", { audioKey, blob });
+
+        // 途中再生用の処理
+        const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
+          audioKey,
+        });
+        const offset =
+          accentPhraseOffsets.length === 0
+            ? 0
+            : accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+
+        return dispatch("PLAY_AUDIO", { audioKey, offset });
+      }
+    ),
   },
 
   SET_AUDIO_PRESET_KEY: {
@@ -1821,44 +1716,37 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  PLAY_CONTINUOUSLY_AUDIO: {
-    action: createUILockAction(async ({ state, commit, dispatch }) => {
-      const currentAudioKey = state._activeAudioKey;
-      const currentAudioPlayStartPoint = state.audioPlayStartPoint;
+  PLAY_AUDIO_CONTINUOUSLY: {
+    async action({ commit, dispatch, state }, { audioKey }) {
+      const bufStartPoint = state.audioPlayStartPoint;
+      const currentAudioKey =
+        audioKey ?? state._activeAudioKey ?? state.audioKeys[0];
+      const fromIndex = state.audioKeys.indexOf(currentAudioKey);
 
-      let index = 0;
-      if (currentAudioKey !== undefined) {
-        index = state.audioKeys.findIndex((v) => v === currentAudioKey);
-      }
-
-      commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
       try {
-        for (let i = index; i < state.audioKeys.length; ++i) {
-          const audioKey = state.audioKeys[i];
-          commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
-          const isEnded = await dispatch("PLAY_AUDIO", { audioKey });
-          if (!isEnded) {
-            break;
-          }
-        }
+        await dispatch("PLAY_ALONG_PLAYLIST", {
+          audioKeys: (async function* (): AsyncGenerator<AudioKey> {
+            for (let i = fromIndex; i < state.audioKeys.length; ++i) {
+              const audioKey = state.audioKeys[i];
+              dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey });
+
+              const blob = await dispatch("FETCH_AUDIO", { audioKey });
+              await dispatch("LOAD_AUDIO_PLAYER", { audioKey, blob });
+              yield audioKey;
+            }
+          })(),
+        });
       } finally {
         commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
-        commit("SET_AUDIO_PLAY_START_POINT", {
-          startPoint: currentAudioPlayStartPoint,
-        });
-        commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
-      }
-    }),
-  },
-
-  STOP_CONTINUOUSLY_AUDIO: {
-    action({ state, dispatch }) {
-      for (const audioKey of state.audioKeys) {
-        if (state.audioStates[audioKey].nowPlaying) {
-          dispatch("STOP_AUDIO", { audioKey });
-        }
+        commit("SET_AUDIO_PLAY_START_POINT", { startPoint: bufStartPoint });
       }
     },
+  },
+
+  PLAY_AUDIO_CONTINUOUSLY_WITH_UI_LOCK: {
+    action: createUILockAction(({ dispatch }, { audioKey }) =>
+      dispatch("PLAY_AUDIO_CONTINUOUSLY", { audioKey })
+    ),
   },
 });
 
@@ -1878,7 +1766,7 @@ export const audioCommandStore = transformCommandStore(
         audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
       },
       async action(
-        { dispatch, commit },
+        { commit },
         {
           audioItem,
           prevAudioKey,
@@ -1887,7 +1775,7 @@ export const audioCommandStore = transformCommandStore(
           prevAudioKey: AudioKey | undefined;
         }
       ) {
-        const audioKey = await dispatch("GENERATE_AUDIO_KEY");
+        const audioKey = generateAudioKey();
         commit("COMMAND_REGISTER_AUDIO_ITEM", {
           audioItem,
           audioKey,
@@ -2779,7 +2667,7 @@ export const audioCommandStore = transformCommandStore(
             );
           }
           const audioKeys: AudioKey[] = await Promise.all(
-            audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
+            audioItems.map(() => generateAudioKey())
           );
           const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
             audioItem,
@@ -2832,7 +2720,7 @@ export const audioCommandStore = transformCommandStore(
           }
 
           for (const text of texts.filter((value) => value != "")) {
-            const audioKey: AudioKey = await dispatch("GENERATE_AUDIO_KEY");
+            const audioKey = generateAudioKey();
             const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
               text,
               voice,

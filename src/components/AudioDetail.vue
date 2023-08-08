@@ -491,7 +491,7 @@ const changeMoraData = (
 // audio play
 const play = async () => {
   try {
-    await store.dispatch("PLAY_AUDIO", {
+    await store.dispatch("FETCH_AND_PLAY_AUDIO", {
       audioKey: props.activeAudioKey,
     });
   } catch (e) {
@@ -513,8 +513,8 @@ const stop = () => {
   store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
 };
 
-const nowPlaying = computed(
-  () => store.state.audioStates[props.activeAudioKey]?.nowPlaying
+const nowPlaying = computed(() =>
+  store.state.nowPlayingAudioKeys.includes(props.activeAudioKey)
 );
 const nowGenerating = computed(
   () => store.state.audioStates[props.activeAudioKey]?.nowGenerating
@@ -522,7 +522,7 @@ const nowGenerating = computed(
 
 // continuously play
 const nowPlayingContinuously = computed(
-  () => store.state.nowPlayingContinuously
+  () => store.getters.NOW_PLAYING_CONTINUOUSLY
 );
 
 const audioDetail = ref<HTMLElement>();
@@ -584,7 +584,9 @@ watch(nowPlaying, async (newState) => {
     // 現在再生されているaudio elementの再生時刻を0.01秒毎に取得(監視)し、
     // それに合わせてフォーカスするアクセント句を変えていく
     focusInterval = setInterval(() => {
-      const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
+      const currentTime = store.getters.AUDIO_CURRENT_TIME(
+        props.activeAudioKey
+      );
       for (let i = 1; i < accentPhraseOffsets.length; i++) {
         if (
           currentTime !== undefined &&

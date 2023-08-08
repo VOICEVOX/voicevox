@@ -253,6 +253,7 @@ import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "./AudioAccent.vue";
 import { useStore } from "@/store";
+import { generateAudioKey } from "@/store/audio";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
@@ -432,8 +433,7 @@ const changeAccent = async (_: number, accent: number) => {
   }
 };
 
-const audioElem = new Audio();
-audioElem.pause();
+const audioKey = generateAudioKey();
 
 const play = async () => {
   if (!accentPhrase.value) return;
@@ -471,11 +471,12 @@ const play = async () => {
   }
   nowGenerating.value = false;
   nowPlaying.value = true;
-  await store.dispatch("PLAY_AUDIO_BLOB", { audioElem, audioBlob: blob });
+  await store.dispatch("LOAD_AUDIO_PLAYER", { audioKey, blob });
+  await store.dispatch("PLAY_AUDIO", { audioKey });
   nowPlaying.value = false;
 };
 const stop = () => {
-  audioElem.pause();
+  store.dispatch("STOP_AUDIO", { audioKey });
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる

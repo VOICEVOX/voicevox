@@ -73,7 +73,6 @@ export type AudioItem = {
 };
 
 export type AudioState = {
-  nowPlaying: boolean;
   nowGenerating: boolean;
 };
 
@@ -131,7 +130,6 @@ export type AudioStoreState = {
   audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
   audioPlayStartPoint?: number;
-  nowPlayingContinuously: boolean;
 };
 
 export type AudioStoreTypes = {
@@ -145,10 +143,6 @@ export type AudioStoreTypes = {
 
   IS_ACTIVE: {
     getter(audioKey: AudioKey): boolean;
-  };
-
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: number | undefined;
   };
 
   LOAD_CHARACTER: {
@@ -169,10 +163,6 @@ export type AudioStoreTypes = {
 
   USER_ORDERED_CHARACTER_INFOS: {
     getter: CharacterInfo[] | undefined;
-  };
-
-  GENERATE_AUDIO_KEY: {
-    action(): AudioKey;
   };
 
   SETUP_SPEAKER: {
@@ -197,16 +187,8 @@ export type AudioStoreTypes = {
     action(payload: { startPoint?: number }): void;
   };
 
-  SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: AudioKey; nowPlaying: boolean };
-  };
-
   SET_AUDIO_NOW_GENERATING: {
     mutation: { audioKey: AudioKey; nowGenerating: boolean };
-  };
-
-  SET_NOW_PLAYING_CONTINUOUSLY: {
-    mutation: { nowPlaying: boolean };
   };
 
   GENERATE_AUDIO_ITEM: {
@@ -435,20 +417,12 @@ export type AudioStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject | undefined;
   };
 
-  PLAY_AUDIO: {
+  FETCH_AUDIO: {
+    action(payload: { audioKey: AudioKey }): Promise<Blob>;
+  };
+
+  FETCH_AND_PLAY_AUDIO: {
     action(payload: { audioKey: AudioKey }): boolean;
-  };
-
-  PLAY_AUDIO_BLOB: {
-    action(payload: {
-      audioBlob: Blob;
-      audioElem: HTMLAudioElement;
-      audioKey?: AudioKey;
-    }): boolean;
-  };
-
-  STOP_AUDIO: {
-    action(payload: { audioKey: AudioKey }): void;
   };
 
   SET_AUDIO_PRESET_KEY: {
@@ -458,12 +432,12 @@ export type AudioStoreTypes = {
     };
   };
 
-  PLAY_CONTINUOUSLY_AUDIO: {
-    action(): void;
+  PLAY_AUDIO_CONTINUOUSLY: {
+    action(payload: { audioKey?: AudioKey }): void;
   };
 
-  STOP_CONTINUOUSLY_AUDIO: {
-    action(): void;
+  PLAY_AUDIO_CONTINUOUSLY_WITH_UI_LOCK: {
+    action(payload: { audioKey?: AudioKey }): void;
   };
 };
 
@@ -676,6 +650,52 @@ export type AudioCommandStoreTypes = {
       texts: string[];
       voice: Voice;
     }): AudioKey[];
+  };
+};
+
+/*
+ * Audio Player Store Types
+ */
+export type AudioPlayerStoreState = {
+  nowPlayingAudioKeys: AudioKey[];
+  nowPlayingContinuouslyAudioKey?: AudioKey;
+};
+
+export type AudioPlayerStoreTypes = {
+  AUDIO_CURRENT_TIME: {
+    getter: (audioKey: AudioKey) => number | undefined;
+  };
+
+  NOW_PLAYING_CONTINUOUSLY: {
+    getter: boolean;
+  };
+
+  LOAD_AUDIO_PLAYER: {
+    action(payload: { audioKey: AudioKey; blob: Blob }): void;
+  };
+
+  UNLOAD_AUDIO_PLAYER: {
+    action(payload: { audioKey?: AudioKey }): void;
+  };
+
+  PLAY_AUDIO: {
+    mutation: { audioKey: AudioKey };
+    action(payload: { audioKey: AudioKey; offset?: number }): Promise<boolean>;
+  };
+
+  STOP_AUDIO: {
+    mutation: { audioKey: AudioKey };
+    action(payload: { audioKey: AudioKey }): void;
+  };
+
+  PLAY_ALONG_PLAYLIST: {
+    mutation: { audioKey: AudioKey };
+    action(payload: { audioKeys: AsyncIterable<AudioKey> }): void;
+  };
+
+  STOP_PLAYLIST: {
+    mutation: void;
+    action(): void;
   };
 };
 
@@ -1455,6 +1475,7 @@ export type ProxyStoreTypes = {
  */
 
 export type State = AudioStoreState &
+  AudioPlayerStoreState &
   AudioCommandStoreState &
   CommandStoreState &
   EngineStoreState &
@@ -1467,6 +1488,7 @@ export type State = AudioStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
+  AudioPlayerStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
   EngineStoreTypes &

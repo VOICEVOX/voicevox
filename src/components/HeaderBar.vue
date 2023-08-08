@@ -51,7 +51,7 @@ const canUndo = computed(() => store.getters.CAN_UNDO);
 const canRedo = computed(() => store.getters.CAN_REDO);
 const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
 const nowPlayingContinuously = computed(
-  () => store.state.nowPlayingContinuously
+  () => store.getters.NOW_PLAYING_CONTINUOUSLY
 );
 
 const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
@@ -104,7 +104,7 @@ const redo = () => {
 };
 const playContinuously = async () => {
   try {
-    await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
+    await store.dispatch("PLAY_AUDIO_CONTINUOUSLY_WITH_UI_LOCK", {});
   } catch (e) {
     let msg: string | undefined;
     // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
@@ -120,7 +120,7 @@ const playContinuously = async () => {
   }
 };
 const stopContinuously = () => {
-  store.dispatch("STOP_CONTINUOUSLY_AUDIO");
+  store.dispatch("STOP_PLAYLIST");
 };
 const generateAndSaveOneAudio = async () => {
   if (activeAudioKey.value == undefined)

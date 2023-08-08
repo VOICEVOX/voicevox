@@ -13,6 +13,7 @@ import { proxyStore } from "@/store/proxy";
 import { dictionaryStore } from "@/store/dictionary";
 import { engineStore } from "@/store/engine";
 import { EngineId } from "@/type/preload";
+import { audioPlayerStore } from "@/store/audioPlayer";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -34,10 +35,10 @@ describe("store/vuex.js test", () => {
         audioKeys: [],
         audioStates: {},
         audioPlayStartPoint: 0,
+        nowPlayingAudioKeys: [],
         uiLockCount: 0,
         dialogLockCount: 0,
         reloadingLock: false,
-        nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
         inheritAudioInfo: true,
@@ -148,6 +149,7 @@ describe("store/vuex.js test", () => {
       getters: {
         ...uiStore.getters,
         ...audioStore.getters,
+        ...audioPlayerStore.getters,
         ...commandStore.getters,
         ...engineStore.getters,
         ...projectStore.getters,
@@ -161,6 +163,7 @@ describe("store/vuex.js test", () => {
       mutations: {
         ...uiStore.mutations,
         ...audioStore.mutations,
+        ...audioPlayerStore.mutations,
         ...commandStore.mutations,
         ...engineStore.mutations,
         ...projectStore.mutations,
@@ -174,6 +177,7 @@ describe("store/vuex.js test", () => {
       actions: {
         ...uiStore.actions,
         ...audioStore.actions,
+        ...audioPlayerStore.actions,
         ...commandStore.actions,
         ...engineStore.actions,
         ...projectStore.actions,
@@ -204,8 +208,9 @@ describe("store/vuex.js test", () => {
     assert.isObject(store.state.audioStates);
     assert.isEmpty(store.state.audioStates);
     assert.equal(store.state.audioPlayStartPoint, 0);
+    assert.isArray(store.state.nowPlayingAudioKeys);
+    assert.isEmpty(store.state.nowPlayingAudioKeys);
     assert.equal(store.state.uiLockCount, 0);
-    assert.equal(store.state.nowPlayingContinuously, false);
     assert.isArray(store.state.undoCommands);
     assert.isEmpty(store.state.undoCommands);
     assert.isArray(store.state.redoCommands);
