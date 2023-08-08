@@ -2666,9 +2666,7 @@ export const audioCommandStore = transformCommandStore(
               })
             );
           }
-          const audioKeys: AudioKey[] = await Promise.all(
-            audioItems.map(() => generateAudioKey())
-          );
+          const audioKeys = audioItems.map(() => generateAudioKey());
           const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
             audioItem,
             audioKey: audioKeys[index],
