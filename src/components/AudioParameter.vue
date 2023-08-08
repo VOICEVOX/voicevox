@@ -3,22 +3,6 @@
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
-    <!--
-    <q-badge
-      v-if="
-        !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
-      "
-      class="value-label"
-      color="primary-light"
-      text-color="display-on-primary"
-    >
-      {{
-        previewSlider.state.currentValue.value
-          ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
-          : undefined
-      }}
-    </q-badge>
-    -->
     <div>
       <q-input
         dense
@@ -30,8 +14,6 @@
             previewSlider.qSliderProps.max.value
           )
         "
-        @change="changeValue"
-        v-if="true"
         :style="{
           width: '25px',
           height: '20px',
@@ -39,6 +21,7 @@
           position: 'relative',
           top: `${verticalOffset}px`,
         }"
+        @change="changeValue"
       >
       </q-input>
     </div>
