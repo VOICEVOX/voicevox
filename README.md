@@ -65,6 +65,17 @@ npm run electron:serve
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
 
+### ブラウザ版の実行（開発中）
+
+別途音声合成エンジンを起動し、以下を実行して表示された localhost へアクセスします。
+
+```bash
+npm run browser:serve
+```
+
+また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/#/home>  
+今はローカル PC 上で音声合成エンジンを起動する必要があります。
+
 ## ビルド
 
 ```bash
@@ -73,16 +84,39 @@ npm run electron:build
 
 ## テスト
 
+### 単体テスト
+
 ```bash
 npm run test:unit
-npm run test:e2e
+npm run test-watch:unit # 監視モード
 ```
 
-### 監視モード
+### ブラウザ End to End テスト
+
+Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
 
 ```bash
-npm run test-watch:unit
-npm run test-watch:e2e
+npm run test:browser-e2e
+npm run test-watch:browser-e2e # 監視モード
+npm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
+```
+
+Playwright を使用しているためテストパターンを生成することもできます。
+ブラウザ版を起動している状態で以下のコマンドを実行してください。
+
+```bash
+npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
+```
+
+詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。
+
+### Electron End to End テスト
+
+Electron の機能が必要な、エンジン起動・終了などを含めた End to End テストを実行します。
+
+```bash
+npm run test:electron-e2e
+npm run test-watch:electron-e2e # 監視モード
 ```
 
 ## 依存ライブラリのライセンス情報の生成
@@ -149,7 +183,7 @@ shellcheck ./build/*.sh
 ## OpenAPI generator
 
 音声合成エンジンが起動している状態で以下のコマンドを実行してください。  
-なお、2023/07/02現在、openapi-generatorの最新版に[パッチ](https://github.com/OpenAPITools/openapi-generator/pull/15943)を当てたものを使わないと更新できない状態になっています。  
+なお、2023/07/02 現在、openapi-generator の最新版に[パッチ](https://github.com/OpenAPITools/openapi-generator/pull/15943)を当てたものを使わないと更新できない状態になっています。  
 詳細は[こちら](https://github.com/VOICEVOX/voicevox/pull/1361)
 
 ```bash

@@ -344,7 +344,6 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
@@ -362,7 +361,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const engineManageDialogOpenedComputed = computed({
   get: () => props.modelValue,
@@ -483,22 +481,14 @@ const getEngineDirValidationMessage = (result: EngineDirValidationResult) => {
   return messageMap[result];
 };
 
-const addEngine = () => {
-  $q.dialog({
+const addEngine = async () => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "エンジン追加の確認",
     message:
       "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
-    cancel: {
-      label: "キャンセル",
-      color: "display",
-      flat: true,
-    },
-    ok: {
-      label: "追加",
-      flat: true,
-      textColor: "warning",
-    },
-  }).onOk(async () => {
+    actionName: "追加",
+  });
+  if (result === "OK") {
     if (engineLoaderType.value === "dir") {
       await lockUi(
         "addingEngine",
@@ -507,8 +497,8 @@ const addEngine = () => {
         })
       );
 
-      requireRestart(
-        "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+      requireReload(
+        "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
       );
     } else {
       const success = await lockUi(
@@ -516,28 +506,20 @@ const addEngine = () => {
         store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
       );
       if (success) {
-        requireRestart(
-          "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+        requireReload(
+          "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
         );
       }
     }
-  });
+  }
 };
-const deleteEngine = () => {
-  $q.dialog({
-    title: "確認",
+const deleteEngine = async () => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+    title: "エンジン削除の確認",
     message: "選択中のエンジンを削除します。よろしいですか？",
-    cancel: {
-      label: "キャンセル",
-      color: "display",
-      flat: true,
-    },
-    ok: {
-      label: "削除",
-      flat: true,
-      textColor: "warning",
-    },
-  }).onOk(async () => {
+    actionName: "削除",
+  });
+  if (result === "OK") {
     if (selectedId.value == undefined)
       throw new Error("engine is not selected");
     switch (engineInfos.value[selectedId.value].type) {
@@ -551,8 +533,8 @@ const deleteEngine = () => {
             engineDir,
           })
         );
-        requireRestart(
-          "エンジンを削除しました。反映には再起動が必要です。今すぐ再起動しますか？"
+        requireReload(
+          "エンジンを削除しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
         );
         break;
       }
@@ -562,8 +544,8 @@ const deleteEngine = () => {
           store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value)
         );
         if (success) {
-          requireRestart(
-            "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
+          requireReload(
+            "エンジンの削除には再読み込みが必要です。今すぐ再読み込みしますか？"
           );
         }
         break;
@@ -571,7 +553,7 @@ const deleteEngine = () => {
       default:
         throw new Error("assert engineInfos[selectedId.value].type");
     }
-  });
+  }
 };
 
 const selectEngine = (id: EngineId) => {
@@ -592,29 +574,19 @@ const restartSelectedEngine = () => {
   });
 };
 
-const requireRestart = (message: string) => {
-  $q.dialog({
-    title: "再起動が必要です",
+const requireReload = async (message: string) => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+    title: "再読み込みが必要です",
     message: message,
-    noBackdropDismiss: true,
-    cancel: {
-      label: "後で",
-      color: "display",
-      flat: true,
-    },
-    ok: {
-      label: "再起動",
-      flat: true,
-      textColor: "warning",
-    },
-  })
-    .onOk(() => {
-      toInitialState();
-      store.dispatch("RESTART_APP", {});
-    })
-    .onCancel(() => {
-      toInitialState();
+    actionName: "再読み込み",
+    cancel: "後で",
+  });
+  toInitialState();
+  if (result === "OK") {
+    store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+      closeOrReload: "reload",
     });
+  }
 };
 
 const newEngineDir = ref("");

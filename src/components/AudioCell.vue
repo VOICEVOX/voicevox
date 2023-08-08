@@ -22,6 +22,10 @@
       :ui-locked="uiLocked"
       @focus="setActiveAudioKey()"
     />
+    <!-- 
+      input.valueをスクリプトから変更した場合は@changeが発火しないため、
+      @blurと@keydown.prevent.enter.exactに分けている
+    -->
     <q-input
       ref="textfield"
       filled
@@ -34,12 +38,15 @@
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
-      @change="willRemove || pushAudioText()"
+      @focus="
+        clearInputSelection();
+        setActiveAudioKey();
+      "
+      @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
-      @focus="setActiveAudioKey()"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
-      @mouseup.right="onRightClickTextField"
+      @keydown.prevent.enter.exact="pushAudioTextIfNeeded"
     >
       <template #error>
         文章が長いと正常に動作しない可能性があります。
@@ -56,16 +63,29 @@
           @click="removeCell"
         />
       </template>
+      <context-menu
+        ref="contextMenu"
+        :header="contextMenuHeader"
+        :menudata="contextMenudata"
+        @before-show="
+          startContextMenuOperation();
+          readyForContextMenu();
+        "
+        @before-hide="endContextMenuOperation()"
+      />
     </q-input>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref } from "vue";
+import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "./CharacterButton.vue";
+import { MenuItemButton, MenuItemSeparator } from "./MenuBar.vue";
+import ContextMenu from "./ContextMenu.vue";
 import { useStore } from "@/store";
-import { AudioKey, Voice } from "@/type/preload";
+import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
+import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
 
 const props =
   defineProps<{
@@ -149,8 +169,9 @@ watch(
   }
 );
 
-const pushAudioText = async () => {
-  if (isChangeFlag.value) {
+const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
+  if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;
     await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
       audioKey: props.audioKey,
@@ -159,44 +180,81 @@ const pushAudioText = async () => {
   }
 };
 
+// バグ修正用
+// see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
+const clearInputSelection = () => {
+  if (!willFocusOrBlur.value) {
+    textfieldSelection.toEmpty();
+  }
+};
+
 const setActiveAudioKey = () => {
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
-const isEnableSplitText = computed(() => store.state.splitTextWhenPaste);
+
 // コピペしたときに句点と改行で区切る
+const textSplitType = computed(() => store.state.splitTextWhenPaste);
 const pasteOnAudioCell = async (event: ClipboardEvent) => {
-  if (event.clipboardData && isEnableSplitText.value !== "OFF") {
-    let texts: string[] = [];
-    const clipBoardData = event.clipboardData.getData("text/plain");
-    switch (isEnableSplitText.value) {
-      case "PERIOD_AND_NEW_LINE":
-        texts = clipBoardData.replaceAll("。", "。\n\r").split(/[\n\r]/);
-        break;
-      case "NEW_LINE":
-        texts = clipBoardData.split(/[\n\r]/);
-        break;
+  event.preventDefault();
+  paste({ text: event.clipboardData?.getData("text/plain") });
+};
+/**
+ * 貼り付け。
+ * ブラウザ版を考えるとClipboard APIをなるべく回避したいため、積極的に`options.text`を指定してください。
+ */
+const paste = async (options?: { text?: string }) => {
+  const text = options ? options.text : await navigator.clipboard.readText();
+  if (text === undefined) return;
+
+  // 複数行貼り付けできるか試す
+  if (textSplitType.value !== "OFF") {
+    const textSplitter: Record<
+      SplitTextWhenPasteType,
+      (text: string) => string[]
+    > = {
+      PERIOD_AND_NEW_LINE: (text) =>
+        text.replaceAll("。", "。\r\n").split(/[\r\n]/),
+      NEW_LINE: (text) => text.split(/[\r\n]/),
+      OFF: (text) => [text],
+    };
+    const texts = textSplitter[textSplitType.value](text);
+
+    if (texts.length >= 2 && texts.some((text) => text !== "")) {
+      await putMultilineText(texts);
+      return;
     }
+  }
 
-    if (texts.length > 1) {
-      event.preventDefault();
-      blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
+  const beforeLength = audioTextBuffer.value.length;
+  const end = textfieldSelection.selectionEnd ?? 0;
+  setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text));
+  await nextTick();
+  // 自動的に削除される改行などの文字数を念のため考慮している
+  textfieldSelection.setCursorPosition(
+    end + audioTextBuffer.value.length - beforeLength
+  );
+};
+const putMultilineText = async (texts: string[]) => {
+  // フォーカスを外して編集中のテキスト内容を確定させる
+  if (document.activeElement instanceof HTMLInputElement) {
+    document.activeElement.blur();
+  }
 
-      const prevAudioKey = props.audioKey;
-      if (audioTextBuffer.value == "") {
-        const text = texts.shift();
-        if (text == undefined) return;
-        setAudioTextBuffer(text);
-        await pushAudioText();
-      }
+  const prevAudioKey = props.audioKey;
+  if (audioTextBuffer.value == "") {
+    const text = texts.shift();
+    if (text == undefined) throw new Error("予期せぬタイプエラーです。");
+    setAudioTextBuffer(text);
+    await pushAudioTextIfNeeded();
+  }
 
-      const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
-        texts,
-        voice: audioItem.value.voice,
-        prevAudioKey,
-      });
-      if (audioKeys)
-        emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
-    }
+  const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
+    texts,
+    voice: audioItem.value.voice,
+    prevAudioKey,
+  });
+  if (audioKeys.length > 0) {
+    emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
   }
 };
 
@@ -259,21 +317,138 @@ const deleteButtonEnable = computed(() => {
 });
 
 // テキスト編集エリアの右クリック
-const onRightClickTextField = () => {
-  store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU");
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+
+// FIXME: 可能なら`isRangeSelected`と`contextMenuHeader`をcomputedに
+const isRangeSelected = ref(false);
+const contextMenuHeader = ref<string | undefined>("");
+const contextMenudata = ref<
+  [
+    MenuItemButton,
+    MenuItemButton,
+    MenuItemButton,
+    MenuItemSeparator,
+    MenuItemButton,
+    MenuItemSeparator,
+    MenuItemButton
+  ]
+>([
+  // NOTE: audioTextBuffer.value の変更が nativeEl.value に反映されるのはnextTick。
+  {
+    type: "button",
+    label: "切り取り",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      if (textfieldSelection.isEmpty) return;
+
+      const text = textfieldSelection.getAsString();
+      const start = textfieldSelection.selectionStart;
+      setAudioTextBuffer(textfieldSelection.getReplacedStringTo(""));
+      await nextTick();
+      navigator.clipboard.writeText(text);
+      textfieldSelection.setCursorPosition(start);
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "コピー",
+    onClick: () => {
+      contextMenu.value?.hide();
+      if (textfieldSelection.isEmpty) return;
+
+      navigator.clipboard.writeText(textfieldSelection.getAsString());
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "貼り付け",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      paste();
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "全選択",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      textfield.value?.select();
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "内容をテキストのみに適用",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      isChangeFlag.value = false;
+      await store.dispatch("COMMAND_CHANGE_DISPLAY_TEXT", {
+        audioKey: props.audioKey,
+        text: audioTextBuffer.value,
+      });
+      textfield.value?.blur();
+    },
+    disableWhenUiLocked: true,
+  },
+]);
+/**
+ * コンテキストメニューの開閉によりFocusやBlurが発生する可能性のある間は`true`。
+ */
+// no-focus を付けた場合と付けてない場合でタイミングが異なるため、両方に対応。
+const willFocusOrBlur = ref(false);
+const startContextMenuOperation = () => {
+  willFocusOrBlur.value = true;
+};
+const readyForContextMenu = () => {
+  const getMenuItemButton = (label: string) => {
+    const item = contextMenudata.value.find((item) => item.label === label);
+    if (item?.type !== "button")
+      throw new Error("コンテキストメニューアイテムの取得に失敗しました。");
+    return item;
+  };
+
+  const MAX_HEADER_LENGTH = 15;
+  const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
+
+  // 選択範囲を1行目に表示
+  const selectionText = textfieldSelection.getAsString();
+  if (selectionText.length === 0) {
+    isRangeSelected.value = false;
+    getMenuItemButton("切り取り").disabled = true;
+    getMenuItemButton("コピー").disabled = true;
+  } else {
+    isRangeSelected.value = true;
+    getMenuItemButton("切り取り").disabled = false;
+    getMenuItemButton("コピー").disabled = false;
+    if (selectionText.length > MAX_HEADER_LENGTH) {
+      // 長すぎる場合適度な長さで省略
+      contextMenuHeader.value =
+        selectionText.length <= MAX_HEADER_LENGTH
+          ? selectionText
+          : `${selectionText.substring(
+              0,
+              SHORTED_HEADER_FRAGMENT_LENGTH
+            )} ... ${selectionText.substring(
+              selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
+            )}`;
+    } else {
+      contextMenuHeader.value = selectionText;
+    }
+  }
+};
+const endContextMenuOperation = async () => {
+  await nextTick();
+  willFocusOrBlur.value = false;
 };
 
-const blurCell = (event?: KeyboardEvent) => {
-  if (event?.isComposing) {
-    return;
-  }
-  if (document.activeElement instanceof HTMLInputElement) {
-    document.activeElement.blur();
-  }
-};
-
-// フォーカス
+// テキスト欄
 const textfield = ref<QInput>();
+const textfieldSelection = new SelectionHelperForQInput(textfield);
 
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);

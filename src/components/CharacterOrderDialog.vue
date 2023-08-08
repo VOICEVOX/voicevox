@@ -88,7 +88,9 @@
                   @mouseenter="
                     // ドラッグ中はバグるので無視
                     characterOrderDragging ||
-                      selectCharacter(element.metas.speakerUuid)
+                      selectCharacterWithChangePortrait(
+                        element.metas.speakerUuid
+                      )
                   "
                 >
                   {{ element.metas.speakerName }}
@@ -146,6 +148,10 @@ const sampleCharacterOrder = ref<SpeakerId[]>([]);
 const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
 const selectCharacter = (speakerUuid: SpeakerId) => {
   selectedCharacter.value = speakerUuid;
+};
+const selectCharacterWithChangePortrait = (speakerUuid: SpeakerId) => {
+  selectCharacter(speakerUuid);
+  portrait.value = characterInfosMap.value[speakerUuid].portraitPath;
 };
 
 // キャラクター表示順序

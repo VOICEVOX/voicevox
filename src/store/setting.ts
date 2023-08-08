@@ -246,6 +246,20 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           `${r}, ${g}, ${b}`
         );
       }
+      const mixColors: ThemeColorType[][] = [
+        ["primary", "background"],
+        ["warning", "background"],
+      ];
+      for (const [color1, color2] of mixColors) {
+        const color1Rgb = colors.hexToRgb(theme.colors[color1]);
+        const color2Rgb = colors.hexToRgb(theme.colors[color2]);
+        const r = Math.trunc((color1Rgb.r + color2Rgb.r) / 2);
+        const g = Math.trunc((color1Rgb.g + color2Rgb.g) / 2);
+        const b = Math.trunc((color1Rgb.b + color2Rgb.b) / 2);
+        const propertyName = `--color-mix-${color1}-${color2}-rgb`;
+        const cssColor = `${r}, ${g}, ${b}`;
+        document.documentElement.style.setProperty(propertyName, cssColor);
+      }
       Dark.set(theme.isDark);
       setCssVar("primary", theme.colors["primary"]);
       setCssVar("warning", theme.colors["warning"]);
@@ -526,11 +540,11 @@ export const parseCombo = (event: KeyboardEvent): string => {
   if (event.key === " ") {
     recordedCombo += "Space";
   } else {
-    if (["Control", "Shift", "Alt", "Meta"].indexOf(event.key) == -1) {
+    if (["Control", "Shift", "Alt", "Meta"].includes(event.key)) {
+      recordedCombo = recordedCombo.slice(0, -1);
+    } else {
       recordedCombo +=
         event.key.length > 1 ? event.key : event.key.toUpperCase();
-    } else {
-      recordedCombo = recordedCombo.slice(0, -1);
     }
   }
   return recordedCombo;

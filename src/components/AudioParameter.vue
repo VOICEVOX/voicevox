@@ -3,7 +3,7 @@
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
-    <div>
+  <div>
       <q-input
         dense
         borderless
@@ -74,6 +74,7 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
+    verticalOffset: 0,
   }
 );
 
@@ -85,7 +86,7 @@ const emit =
       moraIndex: number,
       newValue: number,
       type: MoraDataType
-    ): void;
+    ): Promise<void>;
     (
       e: "mouseOver",
       isOver: boolean,
@@ -95,9 +96,8 @@ const emit =
     ): void;
   }>();
 
-const changeValue = (newValue: number, type: MoraDataType = props.type) => {
+const changeValue = (newValue: number, type: MoraDataType = props.type) =>
   emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue, type);
-};
 
 const previewSlider = previewSliderHelper({
   modelValue: () => props.value,
