@@ -280,7 +280,9 @@ const dictionaryManageDialogOpenedComputed = computed({
 });
 const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
 const nowGenerating = ref(false);
-const nowPlaying = ref(false);
+const nowPlaying = computed(() =>
+  store.state.nowPlayingAudioKeys.includes(audioKey)
+);
 
 const loadingDictState = ref<null | "loading" | "synchronizing">("loading");
 const userDict = ref<Record<string, UserDictWord>>({});
@@ -470,10 +472,8 @@ const play = async () => {
     }
   }
   nowGenerating.value = false;
-  nowPlaying.value = true;
   await store.dispatch("LOAD_AUDIO_PLAYER", { audioKey, blob });
   await store.dispatch("PLAY_AUDIO", { audioKey });
-  nowPlaying.value = false;
 };
 const stop = () => {
   store.dispatch("STOP_AUDIO", { audioKey });
