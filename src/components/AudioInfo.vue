@@ -172,11 +172,13 @@
             {{ parameter.label }}
           </span>
           <input
-            dense
             type="number"
             :class="{
               disabled: parameter.slider.qSliderProps.disable.value,
             }"
+            :min="parameter.slider.qSliderProps.min.value"
+            :max="parameter.slider.qSliderProps.max.value"
+            :step="parameter.slider.qSliderProps.step.value"
             :disable="parameter.slider.qSliderProps.disable.value"
             :value="inputModelValue(parameter)"
             @change="handleParameterChangeText(parameter, $event)"
