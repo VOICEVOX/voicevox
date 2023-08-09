@@ -14,7 +14,6 @@ import {
   net,
 } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-import dotenv from "dotenv";
 
 import log from "electron-log";
 import dayjs from "dayjs";
@@ -120,12 +119,9 @@ let __static: string;
 if (isDevelopment) {
   // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
   appDirPath = path.resolve(__dirname, "..");
-  dotenv.config({ override: true });
   __static = path.join(appDirPath, "public");
 } else {
   appDirPath = path.dirname(app.getPath("exe"));
-  const envPath = path.join(appDirPath, ".env");
-  dotenv.config({ path: envPath });
   process.chdir(appDirPath);
   __static = __dirname;
 }

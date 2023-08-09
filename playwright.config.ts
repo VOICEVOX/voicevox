@@ -13,7 +13,7 @@ if (process.env.VITE_TARGET === "electron") {
   project = { name: "browser", testDir: "./tests/e2e/browser" };
 
   // エンジンの起動が必要
-  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
+  const defaultEngineInfosEnv = process.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
   const envSchema = z // FIXME: electron起動時のものと共通化したい
     .object({
       host: z.string(),
