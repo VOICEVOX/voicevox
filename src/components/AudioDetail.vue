@@ -757,7 +757,7 @@ const getHoveredText = (
 const shiftKeyFlag = ref(false);
 const altKeyFlag = ref(false);
 
-const keyEventListter = (event: KeyboardEvent) => {
+const keyEventListener = (event: KeyboardEvent) => {
   shiftKeyFlag.value = event.shiftKey;
   altKeyFlag.value = event.altKey;
 };
@@ -785,13 +785,13 @@ const handleChangeVoicing = (
 };
 
 onMounted(() => {
-  window.addEventListener("keyup", keyEventListter);
-  document.addEventListener("keydown", keyEventListter);
+  window.addEventListener("keyup", keyEventListener);
+  document.addEventListener("keydown", keyEventListener);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("keyup", keyEventListter);
-  document.removeEventListener("keydown", keyEventListter);
+  window.removeEventListener("keyup", keyEventListener);
+  document.removeEventListener("keydown", keyEventListener);
 });
 </script>
 

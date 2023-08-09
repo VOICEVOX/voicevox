@@ -167,27 +167,21 @@
 
     <div class="parameters q-px-md">
       <div v-for="parameter in parameters" :key="parameter.label">
-        <q-input
-          dense
-          borderless
-          maxlength="5"
-          :class="{
-            disabled: parameter.slider.qSliderProps.disable.value,
-          }"
-          :disable="parameter.slider.qSliderProps.disable.value"
-          :model-value="
-            parameter.slider.state.currentValue.value != undefined
-              ? parameter.slider.state.currentValue.value.toFixed(2)
-              : parameter.slider.qSliderProps.min.value.toFixed(2)
-          "
-          @change="handleParameterChange(parameter, $event)"
-        >
-          <template #before
-            ><span class="text-body1 text-display">{{
-              parameter.label
-            }}</span></template
-          >
-        </q-input>
+        <div class="parameter-label">
+          <span class="text-body1 text-display label">
+            {{ parameter.label }}
+          </span>
+          <input
+            dense
+            type="number"
+            :class="{
+              disabled: parameter.slider.qSliderProps.disable.value,
+            }"
+            :disable="parameter.slider.qSliderProps.disable.value"
+            :value="inputModelValue(parameter)"
+            @change="handleParameterChangeText(parameter, $event)"
+          />
+        </div>
         <q-slider
           dense
           snap
@@ -475,6 +469,23 @@ const handleParameterChange = (
   const value = adjustSliderValue(
     parameter.label + "入力",
     inputValue.toString(),
+    parameter.slider.qSliderProps.min.value,
+    parameter.slider.qSliderProps.max.value
+  );
+  store.dispatch(parameter.action, {
+    audioKey: props.activeAudioKey,
+    [parameter.key]: value,
+  });
+};
+
+const handleParameterChangeText = (parameter: Parameter, inputEvent: Event) => {
+  const targetValue =
+    inputEvent.target instanceof HTMLInputElement
+      ? inputEvent.target.value
+      : "";
+  const value = adjustSliderValue(
+    parameter.label + "入力",
+    targetValue,
     parameter.slider.qSliderProps.min.value,
     parameter.slider.qSliderProps.max.value
   );
@@ -901,6 +912,12 @@ const updatePreset = async (fullApply: boolean) => {
   closeAllDialog();
 };
 
+const inputModelValue = (parameter: Parameter): string => {
+  return parameter.slider.state.currentValue.value != undefined
+    ? parameter.slider.state.currentValue.value.toFixed(2)
+    : parameter.slider.qSliderProps.min.value.toFixed(2);
+};
+
 // プリセットの編集
 const showsPresetEditDialog = ref(false);
 
@@ -908,9 +925,9 @@ const adjustSliderValue = (
   inputItemName: string,
   inputStr: string,
   minimalVal: number,
-  maximamVal: number
+  maximumVal: number
 ) => {
-  const inputNum = Number(inputStr);
+  const inputNum = parseFloat(inputStr);
 
   store.dispatch("LOG_INFO", `${inputItemName}:${inputStr}`);
 
@@ -920,8 +937,8 @@ const adjustSliderValue = (
   if (inputNum < minimalVal) {
     return minimalVal;
   }
-  if (maximamVal < inputNum) {
-    return maximamVal;
+  if (maximumVal < inputNum) {
+    return maximumVal;
   }
 
   return inputNum;
@@ -942,6 +959,20 @@ const adjustSliderValue = (
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  .parameter-label {
+    display: flex;
+    padding: 10px;
+    input[type="number"] {
+      border-width: 0;
+      outline: none;
+      flex-grow: 1;
+      flex-shrink: 1;
+    }
+    .label {
+      flex-grow: 0;
+      flex-shrink: 0;
+    }
+  }
 }
 
 .preset-select-label {
