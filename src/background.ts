@@ -66,16 +66,17 @@ if (isTest) {
 } else if (isDevelopment) {
   suffix = "-dev";
 }
-console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
+const appName = import.meta.env.VITE_APP_NAME + suffix;
+console.log(`Environment: ${import.meta.env.MODE}, appData: ${appName}`);
 
 // バージョン0.14より前の設定ファイルの保存場所
 const beforeUserDataDir = app.getPath("userData"); // マイグレーション用
 
 // appnameをvoicevoxとしてsetする
-app.setName(`voicevox${suffix}`);
+app.setName(appName);
 
 // Electronの設定ファイルの保存場所を変更
-const fixedUserDataDir = path.join(app.getPath("appData"), `voicevox${suffix}`);
+const fixedUserDataDir = path.join(app.getPath("appData"), appName);
 if (!fs.existsSync(fixedUserDataDir)) {
   fs.mkdirSync(fixedUserDataDir);
 }

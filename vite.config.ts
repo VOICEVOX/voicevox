@@ -13,6 +13,11 @@ import { quasar } from "@quasar/vite-plugin";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
+const packageName = process.env.npm_package_name;
+const suffix = /-(cpu|cuda)$/;
+const appName = packageName.replace(suffix, "");
+process.env.VITE_APP_NAME = appName;
+
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 
