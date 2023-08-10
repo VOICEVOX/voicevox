@@ -87,15 +87,15 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from "vue";
 import semver from "semver";
-import { UpdateInfo as UpdateInfoObject } from "../type/preload";
-import HelpPolicy from "@/components/HelpPolicy.vue";
-import LibraryPolicy from "@/components/LibraryPolicy.vue";
-import HowToUse from "@/components/HowToUse.vue";
-import OssLicense from "@/components/OssLicense.vue";
-import UpdateInfo from "@/components/UpdateInfo.vue";
-import OssCommunityInfo from "@/components/OssCommunityInfo.vue";
-import QAndA from "@/components/QAndA.vue";
-import ContactInfo from "@/components/ContactInfo.vue";
+import HelpPolicy from "./HelpPolicy.vue";
+import LibraryPolicy from "./LibraryPolicy.vue";
+import HowToUse from "./HowToUse.vue";
+import OssLicense from "./OssLicense.vue";
+import UpdateInfo from "./UpdateInfo.vue";
+import OssCommunityInfo from "./OssCommunityInfo.vue";
+import QAndA from "./QAndA.vue";
+import ContactInfo from "./ContactInfo.vue";
+import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
 import { useStore } from "@/store";
 
 type PageItem = {
