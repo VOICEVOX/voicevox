@@ -60,10 +60,10 @@ export const ipcMessageReceiver: Plugin = {
     window.electron.onReceivedIPCMsg(
       "UPDATE_LIBRARY_INSTALL_STATUS",
       (_, { libraryId, status }) => {
-        // options.store.dispatch("UPDATE_LIBRARY_INSTALL_STATUS", {
-        //   libraryId,
-        //   status,
-        // });
+        options.store.dispatch("UPDATE_LIBRARY_INSTALL_STATUS", {
+          libraryId,
+          status,
+        });
       }
     );
   },

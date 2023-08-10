@@ -34,6 +34,7 @@
                 color="toolbar-button"
                 text-color="toolbar-button-display"
                 class="text-no-wrap q-mr-md"
+                :disable="isButtonDisable"
                 @click="prevPage"
               />
               <q-btn
@@ -42,7 +43,8 @@
                 color="toolbar-button"
                 text-color="toolbar-button-display"
                 class="text-no-wrap"
-                @click="() => {}"
+                :disable="isButtonDisable"
+                @click="installLibrary"
               />
             </template>
           </div>
@@ -51,6 +53,44 @@
 
       <q-page-container>
         <q-page class="main">
+          <div
+            v-if="
+              selectedLibrary &&
+              libraryInstallStatuses[selectedLibrary] &&
+              libraryInstallStatuses[selectedLibrary].status !== 'done' &&
+              libraryInstallStatuses[selectedLibrary].status !== 'error'
+            "
+            class="loading"
+          >
+            <div
+              v-if="
+                libraryInstallStatuses[selectedLibrary].status === 'downloading'
+              "
+            >
+              <q-circular-progress
+                show-value
+                font-size="0.5rem"
+                :value="downloadProgress"
+                size="2.5rem"
+                color="primary"
+                track-color="grey-3"
+              >
+                {{ downloadProgress ? downloadProgress.toFixed(1) : "" }}%
+              </q-circular-progress>
+              <div class="q-mt-xs">ダウンロード中・・・</div>
+            </div>
+            <div v-else>
+              <q-spinner color="primary" size="2.5rem" />
+              <div class="q-mt-xs">
+                {{ selectedLibrary && libraryInstallStatuses[selectedLibrary] && libraryInstallStatuses[selectedLibrary!].status === "uninstalling"
+                  ? "アンインストール中・・・"
+                  : libraryInstallStatuses[selectedLibrary!].status === "installing"
+                  ? "インストール中・・・"
+                  : "インストール待機中・・・"
+                }}
+              </div>
+            </div>
+          </div>
           <q-tab-panels v-model="pageIndex">
             <!-- 試聴・ライブラリ選択画面 -->
             <q-tab-panel :name="0">
@@ -103,7 +143,7 @@
                             text-color="display"
                             class="text-no-wrap q-ma-sm"
                             :disable="isLatest(engineId, library)"
-                            @click.stop="toReadPolicies(library)"
+                            @click.stop="toReadPolicies(engineId, library)"
                           >
                             {{
                               isLatest(engineId, library)
@@ -151,7 +191,11 @@
                           @update:portrait="updatePortrait"
                           @update:select-character="
                             (speakerUuid) =>
-                              selectLibraryAndSpeaker(library.uuid, speakerUuid)
+                              selectLibraryAndSpeakerAndEngine(
+                                library.uuid,
+                                speakerUuid,
+                                engineId
+                              )
                           "
                         />
                       </div>
@@ -188,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, toRaw, watch } from "vue";
 import semver from "semver";
 import { useQuasar } from "quasar";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
@@ -240,6 +284,16 @@ const store = useStore();
 
 const engineIds = computed(() => store.state.engineIds);
 const engineManifests = computed(() => store.state.engineManifests);
+const libraryInstallStatuses = computed(
+  () => store.state.libraryInstallStatuses
+);
+const downloadProgress = computed(() => {
+  // ダウンロード状態ではない場合はundefinedにする
+  if (!selectedLibrary.value) return undefined;
+  const status = libraryInstallStatuses.value[selectedLibrary.value];
+  if (status.status !== "downloading") return undefined;
+  return (status.downloaded / status.contentLength) * 100;
+});
 
 // ライブラリ管理機能があるエンジンIDの一覧
 const targetEngineIds = computed(() => {
@@ -260,6 +314,9 @@ const closeDialog = () => {
   modelValueComputed.value = false;
 };
 
+const downloadableLibrariesForInstall = ref<
+  Record<EngineId, DownloadableLibrary[]>
+>({});
 const downloadableLibraries = ref<
   Record<EngineId, BrandedDownloadableLibrary[]>
 >({});
@@ -290,22 +347,59 @@ const isUninstallable = (
   return installedLibrary.uninstallable;
 };
 
+const isButtonDisable = computed(() => {
+  return (
+    selectedLibrary.value &&
+    libraryInstallStatuses.value[selectedLibrary.value] &&
+    (libraryInstallStatuses.value[selectedLibrary.value].status === "pending" ||
+      libraryInstallStatuses.value[selectedLibrary.value].status ===
+        "downloading" ||
+      libraryInstallStatuses.value[selectedLibrary.value].status ===
+        "installing")
+  );
+});
+
 const fetchStatuses = ref<
   Record<EngineId, "fetching" | "success" | "error" | undefined>
 >({});
+// FIXME: エンジン毎にリロードの必要性を判断する
+const librariesReloadNeeded = ref(false);
+watch(libraryInstallStatuses, (newValue, oldValue) => {
+  let reloadNeeded = false;
+  for (const key of Object.keys(newValue)) {
+    const libraryId = LibraryId(key);
+    const oldState = oldValue[libraryId];
+    const newState = newValue[libraryId];
+
+    if (!oldState) {
+      reloadNeeded ||= true;
+      continue;
+    }
+    reloadNeeded ||=
+      oldState.status !== newState.status && newState.status === "done";
+  }
+  librariesReloadNeeded.value = reloadNeeded;
+});
 
 // 選択中の話者
 const selectedSpeakers = ref<Record<LibraryId, SpeakerId>>({});
 
 // 選択中のライブラリ
 const selectedLibrary = ref<LibraryId | undefined>();
-const selectLibraryAndSpeaker = (
+
+// 選択中のエンジン
+const selectedEngine = ref<EngineId | undefined>();
+
+const selectLibraryAndSpeakerAndEngine = (
   libraryId: LibraryId,
-  speakerId: SpeakerId
+  speakerId: SpeakerId,
+  engineId: EngineId
 ) => {
   selectedLibrary.value = libraryId;
   selectedSpeakers.value[libraryId] = speakerId;
+  selectedEngine.value = engineId;
 };
+
 const selectedLibraryInfo = computed(() => {
   let libraryInfo: BrandedDownloadableLibrary | undefined;
   for (const libraries of Object.values(downloadableLibraries.value)) {
@@ -353,86 +447,99 @@ const libraryInfoToCharacterInfos = (
   });
 };
 
-watch(modelValueComputed, async (newValue) => {
-  if (!newValue) {
-    return;
-  }
-  await Promise.all(
-    targetEngineIds.value.map(async (engineId) => {
-      if (
-        fetchStatuses.value[engineId] === "fetching" ||
-        fetchStatuses.value[engineId] === "success"
-      ) {
-        return;
-      }
-      fetchStatuses.value[engineId] = "fetching";
-      const fetchResult = await store
-        .dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        })
-        .then((instance) =>
-          Promise.all([
-            instance.invoke("downloadableLibrariesDownloadableLibrariesGet")(
-              {}
-            ),
-            instance.invoke("installedLibrariesInstalledLibrariesGet")({}),
-          ])
-        )
-        .then(([downloadableLibraries, installedLibraries]): [
-          BrandedDownloadableLibrary[],
-          BrandedInstalledLibrary[]
-        ] => {
-          fetchStatuses.value[engineId] = "success";
-          return [
-            downloadableLibraries.map((library) => {
-              return {
-                ...library,
-                uuid: LibraryId(library.uuid),
-                speakers: libraryInfoToCharacterInfos(engineId, library),
-              };
-            }),
-            Object.entries(installedLibraries).map(([uuid, library]) => {
-              return {
-                ...library,
-                uuid: LibraryId(uuid),
-                speakers: libraryInfoToCharacterInfos(engineId, library),
-              };
-            }),
-          ];
-        })
-        .catch((e) => {
-          fetchStatuses.value[engineId] = "error";
-          store.dispatch("LOG_ERROR", e);
-        });
-
-      if (!fetchResult) return;
-
-      const [brandedDownloadableLibraries, brandedInstalledLibraries] =
-        fetchResult;
-      downloadableLibraries.value[engineId] = brandedDownloadableLibraries;
-      installedLibraries.value[engineId] = brandedInstalledLibraries;
-
-      const libraries = downloadableLibraries.value[engineId] || [];
-      const toPrimaryOrder = (library: BrandedDownloadableLibrary) => {
-        const localLibrary = installedLibraries.value[engineId].find(
-          (l) => l.uuid === library.uuid
-        );
-        // アップデート > 未インストール > インストール済み の順
-        if (!localLibrary) {
-          return 1;
-        } else if (semver.gt(library.version, localLibrary?.version)) {
-          return 2;
-        } else {
-          return 0;
-        }
-      };
-
-      libraries.sort((a, b) => {
-        return toPrimaryOrder(b) - toPrimaryOrder(a);
+watch(
+  [modelValueComputed, librariesReloadNeeded],
+  async (newValue, oldValue) => {
+    const newReloadNeeded = newValue[1];
+    const oldReloadNeeded = oldValue[1];
+    if (newReloadNeeded && !oldReloadNeeded) {
+      targetEngineIds.value.map((engineId) => {
+        fetchStatuses.value[engineId] = undefined;
       });
-    })
-  );
-});
+    }
+    await Promise.all(
+      targetEngineIds.value.map(async (engineId) => {
+        if (
+          fetchStatuses.value[engineId] === "fetching" ||
+          fetchStatuses.value[engineId] === "success"
+        ) {
+          return;
+        }
+
+        // 読み込みが早すぎてアンインストール可能判定が壊れることがあるので、100ms sleepする
+        // FIXME: もう少し賢く解決したい
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        fetchStatuses.value[engineId] = "fetching";
+        const fetchResult = await store
+          .dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+            engineId,
+          })
+          .then((instance) =>
+            Promise.all([
+              instance.invoke("downloadableLibrariesDownloadableLibrariesGet")(
+                {}
+              ),
+              instance.invoke("installedLibrariesInstalledLibrariesGet")({}),
+            ])
+          )
+          .then(([downloadableLibraries, installedLibraries]): [
+            BrandedDownloadableLibrary[],
+            BrandedInstalledLibrary[]
+          ] => {
+            fetchStatuses.value[engineId] = "success";
+            downloadableLibrariesForInstall.value[engineId] =
+              downloadableLibraries;
+            return [
+              downloadableLibraries.map((library) => {
+                return {
+                  ...library,
+                  uuid: LibraryId(library.uuid),
+                  speakers: libraryInfoToCharacterInfos(engineId, library),
+                };
+              }),
+              Object.entries(installedLibraries).map(([uuid, library]) => {
+                return {
+                  ...library,
+                  uuid: LibraryId(uuid),
+                  speakers: libraryInfoToCharacterInfos(engineId, library),
+                };
+              }),
+            ];
+          })
+          .catch((e) => {
+            fetchStatuses.value[engineId] = "error";
+            store.dispatch("LOG_ERROR", e);
+          });
+
+        if (!fetchResult) return;
+
+        const [brandedDownloadableLibraries, brandedInstalledLibraries] =
+          fetchResult;
+        downloadableLibraries.value[engineId] = brandedDownloadableLibraries;
+        installedLibraries.value[engineId] = brandedInstalledLibraries;
+
+        const libraries = downloadableLibraries.value[engineId] || [];
+        const toPrimaryOrder = (library: BrandedDownloadableLibrary) => {
+          const localLibrary = installedLibraries.value[engineId].find(
+            (l) => l.uuid === library.uuid
+          );
+          // アップデート > 未インストール > インストール済み の順
+          if (!localLibrary) {
+            return 1;
+          } else if (semver.gt(library.version, localLibrary?.version)) {
+            return 2;
+          } else {
+            return 0;
+          }
+        };
+
+        libraries.sort((a, b) => {
+          return toPrimaryOrder(b) - toPrimaryOrder(a);
+        });
+      })
+    );
+  }
+);
 
 const updatePortrait = (portraitPath: string) => {
   portraitUri.value = portraitPath;
@@ -506,25 +613,146 @@ const togglePlayOrStop = (
   }
 };
 
-const toReadPolicies = async (library: BrandedDownloadableLibrary) => {
-  selectLibraryAndSpeaker(
-    LibraryId(library.uuid),
-    SpeakerId(library.speakers[0].metas.speakerUuid)
+// 利用規約閲覧画面へ遷移
+const toReadPolicies = async (
+  engineId: EngineId,
+  library: BrandedDownloadableLibrary
+) => {
+  selectLibraryAndSpeakerAndEngine(
+    library.uuid,
+    library.speakers[0].metas.speakerUuid,
+    engineId
   );
   stop();
   nextPage();
 };
 
+const installLibrary = async () => {
+  const library = selectedLibraryInfo.value;
+  const libraryId = library.uuid;
+  if (!selectedEngine.value) {
+    throw Error("selectedEngine.value is undefined");
+  }
+  const libraryForInstall = downloadableLibrariesForInstall.value[
+    selectedEngine.value
+  ].find((d) => d.uuid == libraryId.toString());
+  if (!libraryForInstall) {
+    throw Error("libraryForInstall is undefined");
+  }
+  store.dispatch("START_LIBRARY_DOWNLOAD", {
+    engineId: selectedEngine.value,
+    library: toRaw(libraryForInstall),
+  });
+};
+
+const installLibraryCompleteOrFailedDialog = () => {
+  if (!selectedLibrary.value) throw Error("electedLibrary === undefined");
+
+  const libraryName = selectedLibraryInfo.value.name;
+  if (libraryInstallStatuses.value[selectedLibrary.value].status === "done") {
+    requireRestart(
+      `${libraryName}をインストールしました。反映には再起動が必要です。今すぐ再起動しますか？`
+    );
+  } else {
+    $q.dialog({
+      title: "インストール失敗",
+      message: `${libraryName}のインストールに失敗しました。`,
+      noBackdropDismiss: true,
+      ok: {
+        label: "戻る",
+        flat: true,
+        textColor: "display",
+      },
+    });
+    pageIndex.value = 0;
+  }
+};
+watch(libraryInstallStatuses, (newValue, oldValue) => {
+  if (!selectedLibrary.value)
+    throw Error("selectedLibrary.value === undefined");
+  if (
+    (newValue[selectedLibrary.value].status === "done" ||
+      newValue[selectedLibrary.value].status === "error") &&
+    (oldValue[selectedLibrary.value].status === "downloading" ||
+      oldValue[selectedLibrary.value].status === "installing")
+  ) {
+    installLibraryCompleteOrFailedDialog();
+  }
+});
+
 const uninstallLibrary = async (
   engineId: EngineId,
   library: BrandedDownloadableLibrary
 ) => {
-  selectLibraryAndSpeaker(
-    LibraryId(library.uuid),
-    SpeakerId(library.speakers[0].metas.speakerUuid)
+  selectLibraryAndSpeakerAndEngine(
+    library.uuid,
+    library.speakers[0].metas.speakerUuid,
+    engineId
   );
   stop();
-  // TODO: アンインストール処理を追加する
+  $q.dialog({
+    title: "アンインストール",
+    message: `${library.name}をアンインストールします。よろしいですか？`,
+    noBackdropDismiss: true,
+    cancel: {
+      label: "いいえ",
+      color: "display",
+      flat: true,
+    },
+    ok: {
+      label: "はい",
+      flat: true,
+      textColor: "warning",
+    },
+  }).onOk(async () => {
+    try {
+      await store.dispatch("UNINSTALL_LIBRARY", {
+        engineId,
+        libraryId: library.uuid,
+      });
+      if (libraryInstallStatuses.value[library.uuid].status === "done") {
+        requireRestart(
+          `${library.name}をアンインストールしました。反映には再起動が必要です。今すぐ再起動しますか？`
+        );
+      }
+    } catch (e) {
+      $q.dialog({
+        title: "アンインストール失敗",
+        message: `${library.name}のアンインストールに失敗しました。`,
+        noBackdropDismiss: true,
+        ok: {
+          label: "閉じる",
+          flat: true,
+          textColor: "display",
+        },
+      });
+    }
+  });
+};
+
+const requireRestart = (message: string) => {
+  $q.dialog({
+    title: "再起動が必要です",
+    message: message,
+    noBackdropDismiss: true,
+    cancel: {
+      label: "後で",
+      color: "display",
+      flat: true,
+    },
+    ok: {
+      label: "再起動",
+      flat: true,
+      textColor: "warning",
+    },
+  })
+    .onOk(() => {
+      pageIndex.value = 0;
+      store.dispatch("RESTART_APP", {});
+    })
+    .onCancel(() => {
+      pageIndex.value = 0;
+    });
 };
 
 const md = useMarkdownIt();
@@ -567,9 +795,9 @@ const policyHtml = computed(() => {
   }
 }
 
-.installing {
+.loading {
   background-color: rgba(colors.$display-rgb, 0.15);
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 10;
   display: flex;
