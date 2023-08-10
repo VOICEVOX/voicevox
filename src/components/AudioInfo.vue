@@ -181,9 +181,21 @@
             :step="parameter.slider.qSliderProps.step.value"
             :disable="parameter.slider.qSliderProps.disable.value"
             :value="inputModelValue(parameter)"
-            @change="handleParameterChangeText(parameter, $event)"
+            @change="handleParameterChange(parameter, $event)"
           />
         </div>
+        <input
+          type="range"
+          :min="parameter.slider.qSliderProps.min.value"
+          :max="parameter.slider.qSliderProps.max.value"
+          :step="parameter.slider.qSliderProps.step.value"
+          :disable="parameter.slider.qSliderProps.disable.value"
+          :value="parameter.slider.state.currentValue.value"
+          :style="sliderBackground(parameter)"
+          @change="handleParameterChange(parameter, $event)"
+          @mousewheel.prevent="handleScrollParameter(parameter, $event)"
+        />
+        <!--
         <q-slider
           dense
           snap
@@ -201,6 +213,7 @@
           @wheel="parameter.slider.qSliderProps.onWheel"
           @pan="parameter.slider.qSliderProps.onPan"
         />
+        -->
       </div>
     </div>
     <div
@@ -463,14 +476,15 @@ const parameters = computed<Parameter[]>(() => [
     key: "postPhonemeLength",
   },
 ]);
-const handleParameterChange = (
-  parameter: Parameter,
-  inputValue: string | number | null
-) => {
-  if (inputValue === null) throw new Error("inputValue is null");
+
+const handleParameterChange = (parameter: Parameter, inputEvent: Event) => {
+  const targetValue =
+    inputEvent.target instanceof HTMLInputElement
+      ? inputEvent.target.value
+      : "";
   const value = adjustSliderValue(
     parameter.label + "入力",
-    inputValue.toString(),
+    targetValue,
     parameter.slider.qSliderProps.min.value,
     parameter.slider.qSliderProps.max.value
   );
@@ -480,14 +494,20 @@ const handleParameterChange = (
   });
 };
 
-const handleParameterChangeText = (parameter: Parameter, inputEvent: Event) => {
+const handleScrollParameter = (
+  parameter: Parameter,
+  inputEvent: WheelEvent
+) => {
   const targetValue =
     inputEvent.target instanceof HTMLInputElement
       ? inputEvent.target.value
-      : "";
+      : parameter.slider.qSliderProps.min.value.toString();
+  const newValue =
+    parseFloat(targetValue) +
+    parameter.slider.qSliderProps.step.value * Math.floor(inputEvent.deltaY);
   const value = adjustSliderValue(
     parameter.label + "入力",
-    targetValue,
+    newValue.toString(),
     parameter.slider.qSliderProps.min.value,
     parameter.slider.qSliderProps.max.value
   );
@@ -873,6 +893,24 @@ const presetPartsFromParameter = computed<Omit<Preset, "name">>(() => {
   };
 });
 
+const primaryColor = computed(() => {
+  // currentThemeのprimaryを取得
+  return store.state.themeSetting.availableThemes.find((theme) => {
+    return store.state.themeSetting.currentTheme === theme.name;
+  })?.colors.primary;
+});
+
+const sliderBackground = (parameter: Parameter): { background: string } => {
+  const props = parameter.slider.qSliderProps;
+  const progress =
+    (((props.modelValue.value ?? props.min.value) - props.min.value) /
+      (props.max.value - props.min.value)) *
+    100;
+  return {
+    background: `linear-gradient(to right, ${primaryColor.value} ${progress}%, #00000010 ${progress}%)`,
+  };
+};
+
 const createPresetData = (name: string): Preset => {
   return { name, ...presetPartsFromParameter.value };
 };
@@ -948,6 +986,7 @@ const adjustSliderValue = (
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/colors' as colors;
 .root {
   display: flex;
   flex-direction: column;
@@ -963,7 +1002,7 @@ const adjustSliderValue = (
   align-items: stretch;
   .parameter-label {
     display: flex;
-    padding: 10px;
+    padding: 10px 0;
     input[type="number"] {
       border-width: 0;
       outline: none;
@@ -973,6 +1012,28 @@ const adjustSliderValue = (
     .label {
       flex-grow: 0;
       flex-shrink: 0;
+    }
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    // background-color: colors.$primary;
+
+    &::-webkit-slider-runnable-track {
+      height: 2px;
+      border-radius: 4px;
+    }
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: colors.$primary;
+      margin-top: -8px;
     }
   }
 }
