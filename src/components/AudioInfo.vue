@@ -192,7 +192,7 @@
           :disable="parameter.slider.qSliderProps.disable.value"
           :value="parameter.slider.state.currentValue.value"
           :style="sliderBackground(parameter)"
-          @change="handleParameterChange(parameter, $event)"
+          @input="handleParameterChange(parameter, $event)"
           @mousewheel.prevent="handleScrollParameter(parameter, $event)"
         />
         <!--
