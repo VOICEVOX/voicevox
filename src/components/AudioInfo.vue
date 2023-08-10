@@ -195,25 +195,6 @@
           @input="handleParameterChange(parameter, $event)"
           @mousewheel.prevent="handleScrollParameter(parameter, $event)"
         />
-        <!--
-        <q-slider
-          dense
-          snap
-          color="primary-light"
-          track-size="2px"
-          :min="parameter.slider.qSliderProps.min.value"
-          :max="parameter.slider.qSliderProps.max.value"
-          :step="parameter.slider.qSliderProps.step.value"
-          :disable="parameter.slider.qSliderProps.disable.value"
-          :model-value="parameter.slider.qSliderProps.modelValue.value"
-          @update:model-value="
-            parameter.slider.qSliderProps['onUpdate:modelValue']
-          "
-          @change="handleParameterChange(parameter, $event)"
-          @wheel="parameter.slider.qSliderProps.onWheel"
-          @pan="parameter.slider.qSliderProps.onPan"
-        />
-        -->
       </div>
     </div>
     <div
