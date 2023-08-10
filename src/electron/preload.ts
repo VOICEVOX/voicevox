@@ -10,8 +10,10 @@ import {
   ElectronStoreType,
   EngineId,
   SandboxKey,
+  LibraryInstallStatus,
 } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
+import { DownloadableLibrary } from "@/openapi";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
   channel: T,
@@ -264,6 +266,20 @@ const api: Sandbox = {
 
   restartApp: ({ isMultiEngineOffMode }: { isMultiEngineOffMode: boolean }) => {
     ipcRendererInvoke("RESTART_APP", { isMultiEngineOffMode });
+  },
+
+  startLibraryDownload: async ({
+    engineId,
+    library,
+  }: {
+    engineId: EngineId;
+    library: DownloadableLibrary;
+    onUpdate: (status: LibraryInstallStatus) => void;
+  }) => {
+    return await ipcRendererInvoke("START_LIBRARY_DOWNLOAD", {
+      library,
+      engineId,
+    });
   },
 };
 

@@ -11,9 +11,12 @@ import {
   EngineSetting,
   EngineId,
   MessageBoxReturnValue,
+  LibraryInstallStatus,
+  LibraryId,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { DownloadableLibrary } from "@/openapi";
 
 /**
  * invoke, handle
@@ -301,6 +304,16 @@ export type IpcIHData = {
     args: [obj: { filePath: string }];
     return: Result<ArrayBuffer>;
   };
+
+  START_LIBRARY_DOWNLOAD: {
+    args: [
+      obj: {
+        library: DownloadableLibrary;
+        engineId: EngineId;
+      }
+    ];
+    return: void;
+  };
 };
 
 /**
@@ -354,6 +367,11 @@ export type IpcSOData = {
 
   DETECT_RESIZED: {
     args: [obj: { width: number; height: number }];
+    return: void;
+  };
+
+  UPDATE_LIBRARY_INSTALL_STATUS: {
+    args: [obj: { status: LibraryInstallStatus; libraryId: LibraryId }];
     return: void;
   };
 };

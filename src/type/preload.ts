@@ -2,6 +2,7 @@ import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { DownloadableLibrary } from "@/openapi";
 
 export const isMac =
   typeof process === "undefined"
@@ -225,6 +226,10 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(obj: { isMultiEngineOffMode: boolean }): void;
+  startLibraryDownload(obj: {
+    engineId: EngineId;
+    library: DownloadableLibrary;
+  }): Promise<void>;
 }
 
 export type AppInfos = {
@@ -634,3 +639,26 @@ export interface MessageBoxReturnValue {
 }
 
 export const SandboxKey = "electron" as const;
+
+export type LibraryInstallStatus =
+  | {
+      status: "pending";
+    }
+  | {
+      status: "downloading";
+      contentLength: number;
+      downloaded: number;
+    }
+  | {
+      status: "installing";
+    }
+  | {
+      status: "uninstalling";
+    }
+  | {
+      status: "done";
+    }
+  | {
+      status: "error";
+      message: string;
+    };
