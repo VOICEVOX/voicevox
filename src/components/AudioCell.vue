@@ -52,8 +52,8 @@
       "
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
-      @keydown.prevent.up.exact="moveUpCell"
-      @keydown.prevent.down.exact="moveDownCell"
+      @keydown.prevent.up="moveUpCell"
+      @keydown.prevent.down="moveDownCell"
       @keydown.prevent.enter.exact="pushAudioTextIfNeeded"
     >
       <template #error>
@@ -362,20 +362,25 @@ const textLineNumberWidth = computed(() => {
 
 // 上下に移動
 const audioKeys = computed(() => store.state.audioKeys);
-const moveUpCell = (e?: KeyboardEvent) => {
+const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   if (e && e.isComposing) return;
-  const index = audioKeys.value.indexOf(props.audioKey) - 1;
-  if (index >= 0) {
+  const index = audioKeys.value.indexOf(props.audioKey) + offset;
+  if (index >= 0 && index < audioKeys.value.length) {
+    const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
     emit("focusCell", { audioKey: audioKeys.value[index] });
+    if (e?.shiftKey) {
+      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+        audioKeys: [
+          ...selectedAudioKeys,
+          props.audioKey,
+          audioKeys.value[index],
+        ],
+      });
+    }
   }
 };
-const moveDownCell = (e?: KeyboardEvent) => {
-  if (e && e.isComposing) return;
-  const index = audioKeys.value.indexOf(props.audioKey) + 1;
-  if (index < audioKeys.value.length) {
-    emit("focusCell", { audioKey: audioKeys.value[index] });
-  }
-};
+const moveUpCell = moveCell(-1);
+const moveDownCell = moveCell(1);
 
 // 消去
 const willRemove = ref(false);
