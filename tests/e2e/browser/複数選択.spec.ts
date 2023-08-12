@@ -7,6 +7,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto(BASE_URL);
 });
 
+const ctrlLike = process.platform === "darwin" ? "Meta" : "Control";
 /**
  * アクティブなAudioCellと選択されているAudioCellを取得する。
  * 戻り値のインデックスは1から始まる。（nth-childのインデックスと揃えるため）
@@ -74,9 +75,9 @@ test("複数選択：Shift+クリックは前回選択していたAudioCellか�
   await prepareAudioCells(page, 4);
 
   await page.locator(".audio-cell:nth-child(2)").click();
-  await page.locator(".audio-cell:nth-child(4)").click({
-    modifiers: ["Shift"],
-  });
+  await page.keyboard.down("Shift");
+  await page.locator(".audio-cell:nth-child(4)").click();
+  await page.keyboard.up("Shift");
 
   await page.waitForTimeout(100);
   const selectedStatus = await getSelectedStatus(page);
@@ -97,9 +98,9 @@ test("複数選択：選択してないAudioCellをCtrl+クリックすると選
   await prepareAudioCells(page, 4);
 
   await page.locator(".audio-cell:nth-child(2)").click();
-  await page.locator(".audio-cell:nth-child(4)").click({
-    modifiers: [process.platform === "darwin" ? "Meta" : "Control"],
-  });
+  await page.keyboard.down(ctrlLike);
+  await page.locator(".audio-cell:nth-child(4)").click();
+  await page.keyboard.up(ctrlLike);
 
   await page.waitForTimeout(100);
   const selectedStatus = await getSelectedStatus(page);
@@ -120,12 +121,12 @@ test("複数選択：選択してるAudioCellをCtrl+クリックすると選択
   await prepareAudioCells(page, 4);
 
   await page.locator(".audio-cell:nth-child(2)").click();
-  await page.locator(".audio-cell:nth-child(4)").click({
-    modifiers: ["Shift"],
-  });
-  await page.locator(".audio-cell:nth-child(3)").click({
-    modifiers: [process.platform === "darwin" ? "Meta" : "Control"],
-  });
+  await page.keyboard.down("Shift");
+  await page.locator(".audio-cell:nth-child(4)").click();
+  await page.keyboard.up("Shift");
+  await page.keyboard.down(ctrlLike);
+  await page.locator(".audio-cell:nth-child(3)").click();
+  await page.keyboard.up(ctrlLike);
 
   await page.waitForTimeout(100);
   const selectedStatus = await getSelectedStatus(page);
