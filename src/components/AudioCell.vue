@@ -2,8 +2,12 @@
   <div
     class="audio-cell"
     :class="{ active: isActiveAudioCell, selected: isSelectedAudioCell }"
-    @click="onAudioCellClick"
   >
+    <div
+      v-if="isCtrlOrCommandKeyDown || isShiftKeyDown"
+      class="click-hitbox"
+      @click="onClickWithModifierKey"
+    />
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
@@ -42,7 +46,6 @@
       :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
-      @cilck="onAudioCellClick"
       @focus="
         clearInputSelection();
         onInputFocus();
@@ -83,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref, nextTick } from "vue";
+import { computed, watch, ref, nextTick, onMounted, onUnmounted } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "./CharacterButton.vue";
 import { MenuItemButton, MenuItemSeparator } from "./MenuBar.vue";
@@ -132,36 +135,20 @@ const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-let lastActiveAudioKey: AudioKey | undefined = undefined;
-let lastSelectedAudioKeys: AudioKey[] = [];
-
 const onInputFocus = () => {
   if (skipFocusEvent) {
     skipFocusEvent = false;
     return;
   }
-  lastActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-  lastSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
-  if (lastActiveAudioKey !== props.audioKey) {
+  if (store.getters.ACTIVE_AUDIO_KEY !== props.audioKey) {
     store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
     store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
   }
 };
-
-const onAudioCellClick = (event: MouseEvent) => {
+const onClickWithModifierKey = (event: MouseEvent) => {
   if (uiLocked.value) return;
-  // テキストフィールドをクリックしたときはonInputFocus()が先に呼ばれるため、
-  // audioKeyが変更された後にこの関数が呼ばれる。
-  // そのため、onInputFocusでaudioKeyを変更する前の値を保持しておく必要がある。
-  // クリックした対象がinput要素かどうかでonInputFocusが呼ばれたかどうかを判定し、
-  // もし呼ばれていたらonInputFocusで保持した値を使い、呼ばれていなかったら
-  // この関数内で取得する。
-  // TODO: 少しちらつきが起こるのでなんとかする。
-  if ((event.target as HTMLElement)?.tagName !== "INPUT") {
-    lastActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-    lastSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
-  }
-  // 選択されていたAudioCellからクリックしたところまで
+  const lastActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  const lastSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
   if (event.shiftKey) {
     if (lastActiveAudioKey) {
       const currentAudioIndex =
@@ -203,6 +190,26 @@ const onAudioCellClick = (event: MouseEvent) => {
   }
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
+
+const isCtrlOrCommandKeyDown = ref(false);
+const isShiftKeyDown = ref(false);
+
+const onKeydown = (e: KeyboardEvent) => {
+  isCtrlOrCommandKeyDown.value = isOnCommandOrCtrlKeyDown(e);
+  isShiftKeyDown.value = e.shiftKey;
+};
+const onKeyup = (e: KeyboardEvent) => {
+  isCtrlOrCommandKeyDown.value = isOnCommandOrCtrlKeyDown(e);
+  isShiftKeyDown.value = e.shiftKey;
+};
+onMounted(() => {
+  window.addEventListener("keydown", onKeydown);
+  window.addEventListener("keyup", onKeyup);
+});
+onUnmounted(() => {
+  window.removeEventListener("keydown", onKeydown);
+  window.removeEventListener("keyup", onKeyup);
+});
 
 const selectedVoice = computed<Voice | undefined>({
   get() {
@@ -542,6 +549,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
 .audio-cell {
   display: flex;
+  position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
   &.selected,
@@ -560,7 +568,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   gap: 0px 1rem;
 
   .active-arrow {
-    left: -5px;
+    left: -1rem;
     height: 2rem;
   }
 
@@ -607,6 +615,20 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   :deep(input) {
     caret-color: colors.$display;
     color: colors.$display;
+  }
+}
+
+.click-hitbox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: none;
+  z-index: 1;
+  cursor: pointer;
+  &:hover {
+    background-color: rgba(colors.$primary-light-rgb, 0.05);
   }
 }
 </style>
