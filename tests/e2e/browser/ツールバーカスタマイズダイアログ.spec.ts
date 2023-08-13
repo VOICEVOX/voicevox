@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { navigateToMain } from "../navigators";
+import { getNewestQuasarDialog, getQuasarMenu } from "../locators";
 
 test.beforeEach(async ({ page }) => {
   const BASE_URL = "http://localhost:5173/#/home";
@@ -24,7 +25,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
   // ツールバーのカスタマイズページに移動
   await page.getByText("設定").click();
   await page.waitForTimeout(100);
-  await page.getByText("ツールバーのカスタマイズ").click();
+  await getQuasarMenu(page, "ツールバーのカスタマイズ").click();
   await page.waitForTimeout(100);
   await expect(page.getByText("ツールバーのカスタマイズ")).toBeVisible();
 
@@ -37,8 +38,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
     await page.getByRole("button").filter({ hasText: "全部書き出し" }).count()
   ).toBe(1);
   await page.getByText("保存", { exact: true }).click();
-  await page
-    .locator("#q-portal--dialog--6")
+  await getNewestQuasarDialog(page)
     .getByRole("button")
     .filter({ hasText: "close" })
     .click();
@@ -56,7 +56,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
   // 再度ツールバーのカスタマイズページに移動し、デフォルトに戻すボタンを押す
   await page.getByText("設定").click();
   await page.waitForTimeout(100);
-  await page.getByText("ツールバーのカスタマイズ").click();
+  await getQuasarMenu(page, "ツールバーのカスタマイズ").click();
   await page.waitForTimeout(100);
   expect(
     await page
