@@ -666,7 +666,7 @@ export type AudioPlayerStoreTypes = {
     getter: (audioKey: AudioKey) => number | undefined;
   };
 
-  NOW_PLAYING_CONTINUOUSLY: {
+  IS_PLAYING_CONTINUOUSLY: {
     getter: boolean;
   };
 

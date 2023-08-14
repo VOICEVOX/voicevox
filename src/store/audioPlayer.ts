@@ -18,7 +18,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         : undefined,
   },
 
-  NOW_PLAYING_CONTINUOUSLY: {
+  IS_PLAYING_CONTINUOUSLY: {
     getter(state) {
       return state.nowPlayingContinuouslyAudioKey !== undefined;
     },

@@ -522,7 +522,7 @@ const nowGenerating = computed(
 
 // continuously play
 const nowPlayingContinuously = computed(
-  () => store.getters.NOW_PLAYING_CONTINUOUSLY
+  () => store.getters.IS_PLAYING_CONTINUOUSLY
 );
 
 const audioDetail = ref<HTMLElement>();

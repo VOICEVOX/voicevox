@@ -51,7 +51,7 @@ const canUndo = computed(() => store.getters.CAN_UNDO);
 const canRedo = computed(() => store.getters.CAN_REDO);
 const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
 const nowPlayingContinuously = computed(
-  () => store.getters.NOW_PLAYING_CONTINUOUSLY
+  () => store.getters.IS_PLAYING_CONTINUOUSLY
 );
 
 const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
