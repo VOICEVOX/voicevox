@@ -2,9 +2,10 @@
   <div
     class="audio-cell"
     :class="{ active: isActiveAudioCell, selected: isSelectedAudioCell }"
+    :data-is-multi-select-enabled="isMultiSelectEnabled"
   >
     <div
-      v-if="isCtrlOrCommandKeyDown || isShiftKeyDown"
+      v-if="(isCtrlOrCommandKeyDown || isShiftKeyDown) && isMultiSelectEnabled"
       class="click-hitbox"
       @click="onClickWithModifierKey"
     />
@@ -134,6 +135,10 @@ const isInitializingSpeaker = computed(
 const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const isMultiSelectEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiSelect
+);
 
 const onInputFocus = () => {
   if (skipFocusEvent) {
@@ -368,7 +373,7 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   if (index >= 0 && index < audioKeys.value.length) {
     const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
     emit("focusCell", { audioKey: audioKeys.value[index] });
-    if (e?.shiftKey) {
+    if (isMultiSelectEnabled.value && e?.shiftKey) {
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: [
           ...selectedAudioKeys,
@@ -557,8 +562,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
-  &.selected,
-  &.active {
+  &[data-is-multiple-engine="true"]:is(.selected, .active) {
     background-color: rgba(colors.$primary-light-rgb, 0.1);
   }
 

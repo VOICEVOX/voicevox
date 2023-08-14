@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { navigateToMain } from "../navigators";
+import { enableSetting, navigateToMain } from "../navigators";
 
 test.beforeEach(async ({ page }) => {
   const BASE_URL = "http://localhost:5173/#/home";
@@ -55,6 +55,7 @@ test("複数選択：ただのクリックはactiveAudioKeyとselectedAudioKeys�
 }) => {
   await navigateToMain(page);
   await page.waitForTimeout(100);
+  await enableSetting(page, "複数選択");
 
   await prepareAudioCells(page, 4);
 
@@ -71,6 +72,7 @@ test("複数選択：Shift+クリックは前回選択していたAudioCellか�
 }) => {
   await navigateToMain(page);
   await page.waitForTimeout(100);
+  await enableSetting(page, "複数選択");
 
   await prepareAudioCells(page, 4);
 
@@ -94,6 +96,7 @@ test("複数選択：選択してないAudioCellをCtrl+クリックすると選
   }
   await navigateToMain(page);
   await page.waitForTimeout(100);
+  await enableSetting(page, "複数選択");
 
   await prepareAudioCells(page, 4);
 
@@ -117,6 +120,7 @@ test("複数選択：選択してるAudioCellをCtrl+クリックすると選択
   }
   await navigateToMain(page);
   await page.waitForTimeout(100);
+  await enableSetting(page, "複数選択");
 
   await prepareAudioCells(page, 4);
 
