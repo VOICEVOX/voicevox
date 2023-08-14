@@ -1716,7 +1716,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  PLAY_AUDIO_CONTINUOUSLY: {
+  FETCH_AND_PLAY_AUDIO_CONTINUOUSLY: {
     async action({ commit, dispatch, state }, { audioKey }) {
       const bufStartPoint = state.audioPlayStartPoint;
       const currentAudioKey =
@@ -1743,9 +1743,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  PLAY_AUDIO_CONTINUOUSLY_WITH_UI_LOCK: {
+  FETCH_AND_PLAY_AUDIO_CONTINUOUSLY_WITH_UI_LOCK: {
     action: createUILockAction(({ dispatch }, { audioKey }) =>
-      dispatch("PLAY_AUDIO_CONTINUOUSLY", { audioKey })
+      dispatch("FETCH_AND_PLAY_AUDIO_CONTINUOUSLY", { audioKey })
     ),
   },
 });

@@ -432,11 +432,11 @@ export type AudioStoreTypes = {
     };
   };
 
-  PLAY_AUDIO_CONTINUOUSLY: {
+  FETCH_AND_PLAY_AUDIO_CONTINUOUSLY: {
     action(payload: { audioKey?: AudioKey }): void;
   };
 
-  PLAY_AUDIO_CONTINUOUSLY_WITH_UI_LOCK: {
+  FETCH_AND_PLAY_AUDIO_CONTINUOUSLY_WITH_UI_LOCK: {
     action(payload: { audioKey?: AudioKey }): void;
   };
 };
