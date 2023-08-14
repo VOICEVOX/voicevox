@@ -12,10 +12,12 @@ const audioElements: Map<AudioKey, HTMLAudioElement> = new Map();
 
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   AUDIO_CURRENT_TIME: {
-    getter: (state) => (audioKey: AudioKey) =>
-      state.nowPlayingAudioKeys.includes(audioKey)
-        ? audioElements.get(audioKey)?.currentTime ?? undefined
-        : undefined,
+    getter: () => (audioKey: AudioKey) => {
+      const audioElement = audioElements.get(audioKey);
+      if (audioElement === undefined)
+        throw new Error("audioElement === undefined");
+      return audioElement.currentTime;
+    },
   },
 
   IS_PLAYING_CONTINUOUSLY: {
