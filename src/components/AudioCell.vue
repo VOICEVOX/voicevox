@@ -104,17 +104,12 @@ const props =
 
 const emit =
   defineEmits<{
-    (
-      e: "focusCell",
-      payload: { audioKey: AudioKey; skipFocusEvent?: boolean }
-    ): void;
+    (e: "focusCell", payload: { audioKey: AudioKey }): void;
   }>();
 
-let skipFocusEvent = false;
 defineExpose({
   audioKey: computed(() => props.audioKey),
-  focusTextField: (skipFocusEvent_: boolean) => {
-    skipFocusEvent = skipFocusEvent_;
+  focusTextField: () => {
     textfield.value?.focus();
   },
   removeCell: () => {
@@ -141,10 +136,6 @@ const isMultiSelectEnabled = computed(
 );
 
 const onInputFocus = () => {
-  if (skipFocusEvent) {
-    skipFocusEvent = false;
-    return;
-  }
   if (store.getters.ACTIVE_AUDIO_KEY !== props.audioKey) {
     store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
     store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });

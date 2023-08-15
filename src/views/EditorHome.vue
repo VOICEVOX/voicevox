@@ -472,14 +472,8 @@ watch(shouldShowPanes, (val, old) => {
 });
 
 // セルをフォーカス
-const focusCell = ({
-  audioKey,
-  skipFocusEvent,
-}: {
-  audioKey: AudioKey;
-  skipFocusEvent?: boolean;
-}) => {
-  audioCellRefs[audioKey].focusTextField(!!skipFocusEvent);
+const focusCell = ({ audioKey }: { audioKey: AudioKey }) => {
+  audioCellRefs[audioKey].focusTextField();
 };
 
 // Electronのデフォルトのundo/redoを無効化
