@@ -2,7 +2,7 @@ import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
 import type { EngineManifest } from "@/openapi";
-import { LibraryId, EngineId, EngineInfo } from "@/type/preload";
+import type { EngineId, EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
