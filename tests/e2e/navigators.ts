@@ -14,9 +14,9 @@ export async function navigateToMain(page: Page) {
 }
 
 /**
- * 特定の設定を有効にする。
+ * 特定の設定をトグルする
  */
-export async function enableSetting(page: Page, settingName: string) {
+export async function toggleSetting(page: Page, settingName: string) {
   await page.getByRole("button", { name: "設定" }).click();
   await page.waitForTimeout(100);
   // FIXME: なぜかariaで取得できない
