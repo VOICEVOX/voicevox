@@ -10,7 +10,6 @@ import {
   ElectronStoreType,
   EngineId,
   SandboxKey,
-  LibraryInstallStatus,
 } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 import { DownloadableLibrary } from "@/openapi";
