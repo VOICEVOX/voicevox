@@ -43,7 +43,6 @@
 </template>
 
 <script setup lang="ts">
-import { useQuasar } from "quasar";
 import { computed, ref } from "vue";
 import draggable from "vuedraggable";
 import { useStore } from "@/store";
@@ -63,7 +62,6 @@ const emit =
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
 const store = useStore();
-const $q = useQuasar();
 const { isDefaultPresetKey } = useDefaultPreset();
 
 const presetItems = computed(() => store.state.presetItems);
@@ -109,16 +107,17 @@ const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
     .finally(() => (isPreview.value = false));
 };
 
-const deletePreset = (key: PresetKey) => {
-  $q.dialog({
+const deletePreset = async (key: PresetKey) => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "プリセット削除の確認",
     message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
-    cancel: true,
-  }).onOk(async () => {
+    actionName: "削除",
+  });
+  if (result === "OK") {
     await store.dispatch("DELETE_PRESET", {
       presetKey: key,
     });
-  });
+  }
 };
 </script>
 

@@ -214,7 +214,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
@@ -229,7 +228,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const hotkeySettingDialogOpenComputed = computed({
   get: () => props.modelValue,
@@ -344,28 +342,21 @@ const solveDuplicated = () => {
 const confirmBtnEnabled = computed(() => {
   return (
     lastRecord.value == "" ||
-    ["Ctrl", "Shift", "Alt", "Meta"].indexOf(
+    ["Ctrl", "Shift", "Alt", "Meta"].includes(
       lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
-    ) > -1
+    )
   );
 });
 
-const resetHotkey = (action: string) => {
-  $q.dialog({
+const resetHotkey = async (action: string) => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "ショートカットキーを初期値に戻します",
     message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
     html: true,
-    ok: {
-      label: "初期値に戻す",
-      flat: true,
-      textColor: "display",
-    },
-    cancel: {
-      label: "初期値に戻さない",
-      flat: true,
-      textColor: "display",
-    },
-  }).onOk(() => {
+    actionName: "初期値に戻す",
+    cancel: "初期値に戻さない",
+  });
+  if (result === "OK") {
     window.electron
       .getDefaultHotkeySettings()
       .then((defaultSettings: HotkeySetting[]) => {
@@ -374,7 +365,7 @@ const resetHotkey = (action: string) => {
           changeHotkeySettings(action, setting.combination);
         }
       });
-  });
+  }
 };
 </script>
 
