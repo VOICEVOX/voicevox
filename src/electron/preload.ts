@@ -278,7 +278,6 @@ const api: Sandbox = {
   }: {
     engineId: EngineId;
     library: DownloadableLibrary;
-    onUpdate: (status: LibraryInstallStatus) => void;
   }) => {
     return await ipcRendererInvoke("START_LIBRARY_DOWNLOAD", {
       library,
