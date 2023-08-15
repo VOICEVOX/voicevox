@@ -29,7 +29,7 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
-      @focus="onInputFocus()"
+      @focus="setActiveAudioKey()"
     />
     <!--
       input.valueをスクリプトから変更した場合は@changeが発火しないため、
@@ -49,7 +49,7 @@
       @update:model-value="setAudioTextBuffer"
       @focus="
         clearInputSelection();
-        onInputFocus();
+        setActiveAudioKey();
       "
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
@@ -135,7 +135,7 @@ const isMultiSelectEnabled = computed(
   () => store.state.experimentalSetting.enableMultiSelect
 );
 
-const onInputFocus = () => {
+const setActiveAudioKey = () => {
   if (store.getters.ACTIVE_AUDIO_KEY !== props.audioKey) {
     store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
     store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
