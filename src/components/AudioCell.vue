@@ -554,7 +554,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
   &[data-is-multi-select-enabled="true"]:is(.selected, .active) {
-    background-color: rgba(colors.$primary-light-rgb, 0.1);
+    background-color: rgba(colors.$active-point-focus-rgb, 0.2);
   }
 
   &:first-child {
@@ -627,8 +627,5 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   background: none;
   z-index: 1;
   cursor: default;
-  &:hover {
-    background-color: rgba(colors.$primary-light-rgb, 0.05);
-  }
 }
 </style>
