@@ -24,13 +24,13 @@ if (process.env.VITE_TARGET === "electron") {
     .array();
   const engineInfos = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
-  engineInfos.forEach((info) => {
-    additionalWebServer.push({
-      command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
-      url: `${info.host}/version`,
-      reuseExistingServer: !process.env.CI,
-    });
-  });
+  // engineInfos.forEach((info) => {
+  //   additionalWebServer.push({
+  //     command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
+  //     url: `${info.host}/version`,
+  //     reuseExistingServer: !process.env.CI,
+  //   });
+  // });
 } else {
   throw new Error(`VITE_TARGETの指定が不正です。${process.env.VITE_TARGET}`);
 }
