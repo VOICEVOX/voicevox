@@ -145,6 +145,7 @@ export class LibraryManager {
         status: "error",
         message: `ライブラリのインストールに失敗しました。エラー内容：${e}`,
       });
+    } finally {
       tempFile.close();
       log.log(prefix + "Removing temp file");
       await fs.promises.rm(tempFilePath);
