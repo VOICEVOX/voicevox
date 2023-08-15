@@ -748,7 +748,7 @@ const requireRestart = (message: string) => {
   })
     .onOk(() => {
       pageIndex.value = 0;
-      store.dispatch("RESTART_APP", {});
+      store.dispatch("RELOAD_APP", {});
     })
     .onCancel(() => {
       pageIndex.value = 0;
