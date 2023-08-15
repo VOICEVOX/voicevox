@@ -3,9 +3,7 @@
     ref="buttonRef"
     flat
     class="q-pa-none character-button"
-    :class="{
-      opaque: loading,
-    }"
+    :class="{ opaque: loading }"
     :disable="uiLocked"
     aria-haspopup="menu"
   >
