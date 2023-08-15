@@ -11,7 +11,7 @@ export class LibraryManager {
   engineManager: EngineManager;
   tempDir: string;
   lock: AsyncLock = new AsyncLock();
-  engineApis: Record<EngineId, DefaultApi> = {};
+  engineApis: Record<EngineId, DefaultApi> = {}; // ライブラリ管理のためだけに使う
 
   constructor({
     engineManager,
