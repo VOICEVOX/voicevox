@@ -727,7 +727,6 @@ export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
   altPortInfos: AltPortInfos;
-  libraryInstallStatuses: Record<LibraryId, LibraryInstallStatus>;
 };
 
 export type EngineStoreTypes = {
@@ -852,7 +851,17 @@ export type EngineStoreTypes = {
   ENGINE_CAN_USE_GPU: {
     getter: (engineId: EngineId) => boolean;
   };
+};
 
+/*
+ * Library Store Types
+ */
+
+export type LibraryStoreState = {
+  libraryInstallStatuses: Record<LibraryId, LibraryInstallStatus>;
+};
+
+export type LibraryStoreTypes = {
   START_LIBRARY_DOWNLOAD: {
     action(payload: {
       library: DownloadableLibrary;
@@ -1490,6 +1499,7 @@ export type State = AudioStoreState &
   AudioCommandStoreState &
   CommandStoreState &
   EngineStoreState &
+  LibraryStoreState &
   IndexStoreState &
   ProjectStoreState &
   SettingStoreState &
@@ -1502,6 +1512,7 @@ type AllStoreTypes = AudioStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
   EngineStoreTypes &
+  LibraryStoreTypes &
   IndexStoreTypes &
   ProjectStoreTypes &
   SettingStoreTypes &

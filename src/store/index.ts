@@ -25,6 +25,7 @@ import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { engineStoreState, engineStore } from "./engine";
+import { libraryStoreState, libraryStore } from "./library";
 import {
   DefaultStyleId,
   EngineId,
@@ -351,6 +352,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioStoreState,
     ...commandStoreState,
     ...engineStoreState,
+    ...libraryStoreState,
     ...projectStoreState,
     ...settingStoreState,
     ...audioCommandStoreState,
@@ -365,6 +367,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioStore.getters,
     ...commandStore.getters,
     ...engineStore.getters,
+    ...libraryStore.getters,
     ...projectStore.getters,
     ...settingStore.getters,
     ...presetStore.getters,
@@ -379,6 +382,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioStore.mutations,
     ...commandStore.mutations,
     ...engineStore.mutations,
+    ...libraryStore.mutations,
     ...projectStore.mutations,
     ...settingStore.mutations,
     ...audioCommandStore.mutations,
@@ -392,6 +396,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...uiStore.actions,
     ...audioStore.actions,
     ...engineStore.actions,
+    ...libraryStore.actions,
     ...commandStore.actions,
     ...projectStore.actions,
     ...settingStore.actions,
