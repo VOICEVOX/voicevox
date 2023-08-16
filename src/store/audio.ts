@@ -1724,7 +1724,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const fromIndex = state.audioKeys.indexOf(currentAudioKey);
 
       try {
-        await dispatch("PLAY_ALONG_PLAYLIST", {
+        await dispatch("PLAY_AUDIOS", {
           audioKeys: (async function* (): AsyncGenerator<AudioKey> {
             for (let i = fromIndex; i < state.audioKeys.length; ++i) {
               const audioKey = state.audioKeys[i];
