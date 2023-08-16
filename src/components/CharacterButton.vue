@@ -3,8 +3,8 @@
     ref="buttonRef"
     flat
     class="q-pa-none character-button"
-    :class="{ opaque: loading }"
     :disable="uiLocked"
+    :class="{ opaque: loading }"
     aria-haspopup="menu"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
