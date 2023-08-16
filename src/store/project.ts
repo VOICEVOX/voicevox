@@ -1,6 +1,6 @@
 import semver from "semver";
 import { z } from "zod";
-import { buildProjectFileName, getBaseName } from "./utility";
+import { getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "@/store/ui";
 import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
@@ -393,7 +393,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
             if (!filePath) {
               // if new project: use generated name
-              defaultPath = buildProjectFileName(context.state, "vvproj");
+              defaultPath = `${context.getters.DEFAULT_PROJECT_FILE_BASE_NAME}.vvproj`;
             } else {
               // if saveAs for existing project: use current project path
               defaultPath = filePath;

@@ -14,8 +14,7 @@ import {
   transformCommandStore,
 } from "./type";
 import {
-  buildFileNameFromRawData,
-  buildProjectFileName,
+  buildAudioFileNameFromRawData,
   isAccentPhrasesTextDifferent,
   convertHiraToKana,
   convertLongVowel,
@@ -23,6 +22,7 @@ import {
   currentDateString,
   extractExportText,
   extractYomiText,
+  sanitizeFileName,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -171,36 +171,6 @@ export async function writeTextFile(obj: {
   });
 }
 
-// TODO: GETTERに移動する
-function buildFileName(state: State, audioKey: AudioKey) {
-  const fileNamePattern = state.savingSetting.fileNamePattern;
-
-  const index = state.audioKeys.indexOf(audioKey);
-  const audioItem = state.audioItems[audioKey];
-
-  const character = getCharacterInfo(
-    state,
-    audioItem.voice.engineId,
-    audioItem.voice.styleId
-  );
-  if (character === undefined)
-    throw new Error("assert character !== undefined");
-
-  const style = character.metas.styles.find(
-    (style) => style.styleId === audioItem.voice.styleId
-  );
-  if (style === undefined) throw new Error("assert style !== undefined");
-
-  const styleName = style.styleName || "ノーマル";
-  return buildFileNameFromRawData(fileNamePattern, {
-    characterName: character.metas.speakerName,
-    index,
-    styleName,
-    text: audioItem.text,
-    date: currentDateString(),
-  });
-}
-
 function generateWriteErrorMessage(writeFileResult: ResultError) {
   if (writeFileResult.code) {
     const code = writeFileResult.code.toUpperCase();
@@ -221,7 +191,7 @@ function generateWriteErrorMessage(writeFileResult: ResultError) {
   return `何らかの理由で失敗しました。${writeFileResult.message}`;
 }
 
-// TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
+// TODO: GETTERに移動する。
 export function getCharacterInfo(
   state: State,
   engineId: EngineId,
@@ -1153,6 +1123,55 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  DEFAULT_PROJECT_FILE_BASE_NAME: {
+    getter: (state) => {
+      const headItemText = state.audioItems[state.audioKeys[0]].text;
+
+      const tailItemText =
+        state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
+
+      const headTailItemText =
+        state.audioKeys.length === 1
+          ? headItemText
+          : headItemText + "..." + tailItemText;
+
+      const defaultFileBaseName = sanitizeFileName(headTailItemText);
+
+      return defaultFileBaseName === "" ? "Untitled" : defaultFileBaseName;
+    },
+  },
+
+  DEFAULT_AUDIO_FILE_NAME: {
+    getter: (state) => (audioKey) => {
+      const fileNamePattern = state.savingSetting.fileNamePattern;
+
+      const index = state.audioKeys.indexOf(audioKey);
+      const audioItem = state.audioItems[audioKey];
+
+      const character = getCharacterInfo(
+        state,
+        audioItem.voice.engineId,
+        audioItem.voice.styleId
+      );
+      if (character === undefined)
+        throw new Error("assert character !== undefined");
+
+      const style = character.metas.styles.find(
+        (style) => style.styleId === audioItem.voice.styleId
+      );
+      if (style === undefined) throw new Error("assert style !== undefined");
+
+      const styleName = style.styleName || "ノーマル";
+      return buildAudioFileNameFromRawData(fileNamePattern, {
+        characterName: character.metas.speakerName,
+        index,
+        styleName,
+        text: audioItem.text,
+        date: currentDateString(),
+      });
+    },
+  },
+
   GENERATE_LAB: {
     action: createUILockAction(
       async (
@@ -1337,7 +1356,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   GENERATE_AND_SAVE_AUDIO: {
     action: createUILockAction(
       async (
-        { state, dispatch },
+        { state, getters, dispatch },
         {
           audioKey,
           filePath,
@@ -1346,15 +1365,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           filePath?: string;
         }
       ): Promise<SaveResultObject> => {
+        const defaultAudioFileName = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
-            buildFileName(state, audioKey)
+            defaultAudioFileName
           );
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を保存",
-            defaultPath: buildFileName(state, audioKey),
+            defaultPath: defaultAudioFileName,
           });
         }
 
@@ -1442,7 +1462,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   GENERATE_AND_SAVE_ALL_AUDIO: {
     action: createUILockAction(
       async (
-        { state, dispatch },
+        { state, getters, dispatch },
         {
           dirPath,
           callback,
@@ -1465,7 +1485,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let finishedCount = 0;
 
           const promises = state.audioKeys.map((audioKey) => {
-            const name = buildFileName(state, audioKey);
+            const name = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
               filePath: path.join(_dirPath, name),
@@ -1483,7 +1503,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action: createUILockAction(
       async (
-        { state, dispatch },
+        { state, getters, dispatch },
         {
           filePath,
           callback,
@@ -1492,7 +1512,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           callback?: (finishedCount: number, totalCount: number) => void;
         }
       ): Promise<SaveResultObject> => {
-        const defaultFileName = buildProjectFileName(state, "wav");
+        const defaultFileName = `${getters.DEFAULT_PROJECT_FILE_BASE_NAME}.wav`;
 
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
@@ -1633,7 +1653,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { state, getters },
         { filePath }: { filePath?: string }
       ): Promise<SaveResultObject> => {
-        const defaultFileName = buildProjectFileName(state, "txt");
+        const defaultFileName = `${getters.DEFAULT_PROJECT_FILE_BASE_NAME}.txt`;
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
@@ -2438,7 +2458,7 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         if (query === undefined) throw new Error("assert query !== undefined");
 
-        const newAccentPhases = await dispatch("FETCH_MORA_DATA", {
+        const newAccentPhrases = await dispatch("FETCH_MORA_DATA", {
           accentPhrases: query.accentPhrases,
           engineId,
           styleId,
@@ -2446,7 +2466,7 @@ export const audioCommandStore = transformCommandStore(
 
         commit("COMMAND_CHANGE_ACCENT", {
           audioKey,
-          accentPhrases: newAccentPhases,
+          accentPhrases: newAccentPhrases,
         });
       },
     },
@@ -2462,7 +2482,7 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         if (query == undefined) throw new Error("query == undefined");
 
-        const newAccentPhases = await dispatch("FETCH_AND_COPY_MORA_DATA", {
+        const newAccentPhrases = await dispatch("FETCH_AND_COPY_MORA_DATA", {
           accentPhrases: [...query.accentPhrases],
           engineId,
           styleId,
@@ -2471,7 +2491,7 @@ export const audioCommandStore = transformCommandStore(
 
         commit("COMMAND_CHANGE_ACCENT", {
           audioKey,
-          accentPhrases: newAccentPhases,
+          accentPhrases: newAccentPhrases,
         });
       },
     },
