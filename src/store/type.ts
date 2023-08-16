@@ -988,7 +988,7 @@ export type ProjectStoreTypes = {
   };
 
   SAVE_TEMPORARY_PROJECT_FILE: {
-    action(): boolean;
+    action(): void;
   };
 
   CLEAR_TEMPORARY_PROJECT_FILE: {

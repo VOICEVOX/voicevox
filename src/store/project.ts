@@ -510,9 +510,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    * プロジェクトを一時ファイルに保存する
    */
   SAVE_TEMPORARY_PROJECT_FILE: {
-    action: createUILockAction(async (context) => {
+    async action({ state }) {
       const appInfos = await window.electron.getAppInfos();
-      const { audioItems, audioKeys } = context.state;
+      const { audioItems, audioKeys } = state;
 
       const projectData = {
         appVersion: appInfos.version,
@@ -522,8 +522,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
 
       await window.electron.setTempProject(buf).then(getValueOrThrow);
-      return true;
-    }),
+    },
   },
 
   /**
