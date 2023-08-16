@@ -30,7 +30,11 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
-      @focus="setActiveAudioKey()"
+      @focus="
+        if (activeAudioKey !== props.audioKey) {
+          selectAndSetActiveAudioKey();
+        }
+      "
     />
     <!--
       input.valueをスクリプトから変更した場合は@changeが発火しないため、
@@ -50,7 +54,11 @@
       @update:model-value="setAudioTextBuffer"
       @focus="
         clearInputSelection();
-        setActiveAudioKey();
+        // focusは画面外から切り換えてきた場合にも発火するため、
+        // activeAudioKeyが同じなら何もしない
+        if (activeAudioKey !== props.audioKey) {
+          selectAndSetActiveAudioKey();
+        }
       "
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
@@ -130,26 +138,29 @@ const isInitializingSpeaker = computed(
 );
 const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
+const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
+
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultiSelectEnabled = computed(
   () => store.state.experimentalSetting.enableMultiSelect
 );
 
-const setActiveAudioKey = () => {
-  if (store.getters.ACTIVE_AUDIO_KEY !== props.audioKey) {
-    store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
-    store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
-  }
+const selectAndSetActiveAudioKey = () => {
+  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
+  store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
 };
 const onClickWithModifierKey = (event: MouseEvent) => {
   if (uiLocked.value) return;
-  const lastActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-  const lastSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+  const currentActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  const currentSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+  let newActiveAudioKey: AudioKey | undefined = currentActiveAudioKey;
+  let newSelectedAudioKeys: AudioKey[] = [...currentSelectedAudioKeys];
   if (event.shiftKey) {
-    if (lastActiveAudioKey) {
-      const currentAudioIndex =
-        store.state.audioKeys.indexOf(lastActiveAudioKey);
+    if (currentActiveAudioKey) {
+      const currentAudioIndex = store.state.audioKeys.indexOf(
+        currentActiveAudioKey
+      );
       const clickedAudioIndex = store.state.audioKeys.indexOf(props.audioKey);
       const minIndex = Math.min(currentAudioIndex, clickedAudioIndex);
       const maxIndex = Math.max(currentAudioIndex, clickedAudioIndex);
@@ -157,33 +168,27 @@ const onClickWithModifierKey = (event: MouseEvent) => {
         minIndex,
         maxIndex + 1
       );
-      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
-        audioKeys: [...lastSelectedAudioKeys, ...audioKeysBetween],
-      });
+      newActiveAudioKey = props.audioKey;
+      newSelectedAudioKeys = [...currentSelectedAudioKeys, ...audioKeysBetween];
     }
   } else if (isOnCommandOrCtrlKeyDown(event)) {
     // Ctrlキーを押しながらクリックしたとき：
     //   選択していないAudioCellならactiveを移動し、以前の選択をselectedに追加する。
     //   選択しているAudioCellならselectedから除外する。activeは変更しない。
-    if (lastSelectedAudioKeys.includes(props.audioKey)) {
-      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
-        audioKeys: lastSelectedAudioKeys.filter(
-          (audioKey) => audioKey !== props.audioKey
-        ),
-      });
-      store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: lastActiveAudioKey });
-      return;
+    if (currentSelectedAudioKeys.includes(props.audioKey)) {
+      newActiveAudioKey = currentActiveAudioKey;
+      newSelectedAudioKeys = currentSelectedAudioKeys.filter(
+        (audioKey) => audioKey !== props.audioKey
+      );
     } else {
-      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
-        audioKeys: [...lastSelectedAudioKeys, props.audioKey],
-      });
+      newActiveAudioKey = props.audioKey;
+      newSelectedAudioKeys = [...currentSelectedAudioKeys, props.audioKey];
     }
-  } else {
-    store.dispatch("SET_SELECTED_AUDIO_KEYS", {
-      audioKeys: [props.audioKey],
-    });
   }
-  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
+  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: newActiveAudioKey });
+  store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+    audioKeys: newSelectedAudioKeys,
+  });
 };
 
 const isCtrlOrCommandKeyDown = ref(false);
