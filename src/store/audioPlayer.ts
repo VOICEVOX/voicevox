@@ -14,7 +14,7 @@ export const audioPlayerStoreState: AudioPlayerStoreState = {
 const audioElements: Map<AudioKey, HTMLAudioElement> = new Map();
 
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
-  AUDIO_CURRENT_TIME: {
+  CALC_AUDIO_CURRENT_TIME: {
     getter: () => (audioKey: AudioKey) => {
       const audioElement = audioElements.get(audioKey);
       if (audioElement === undefined)

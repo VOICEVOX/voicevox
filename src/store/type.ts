@@ -658,7 +658,7 @@ export type AudioPlayerStoreState = {
 };
 
 export type AudioPlayerStoreTypes = {
-  AUDIO_CURRENT_TIME: {
+  CALC_AUDIO_CURRENT_TIME: {
     getter: (audioKey: AudioKey) => number | undefined;
   };
 

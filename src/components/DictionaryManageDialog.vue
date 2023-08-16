@@ -476,7 +476,7 @@ const play = async () => {
   await store.dispatch("PLAY_AUDIO", { audioKey });
 };
 const stop = () => {
-  store.dispatch("STOP_AUDIO", { audioKey });
+  store.dispatch("STOP_AUDIO", { nowPlayingAudioKey: audioKey });
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる

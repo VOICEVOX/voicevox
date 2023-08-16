@@ -510,7 +510,7 @@ const play = async () => {
 };
 
 const stop = () => {
-  store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
+  store.dispatch("STOP_AUDIO", { nowPlayingAudioKey: props.activeAudioKey });
 };
 
 const nowPlaying = computed(() =>
@@ -584,7 +584,7 @@ watch(nowPlaying, async (newState) => {
     // 現在再生されているaudio elementの再生時刻を0.01秒毎に取得(監視)し、
     // それに合わせてフォーカスするアクセント句を変えていく
     focusInterval = setInterval(() => {
-      const currentTime = store.getters.AUDIO_CURRENT_TIME(
+      const currentTime = store.getters.CALC_AUDIO_CURRENT_TIME(
         props.activeAudioKey
       );
       for (let i = 1; i < accentPhraseOffsets.length; i++) {
