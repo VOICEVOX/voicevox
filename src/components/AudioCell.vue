@@ -4,6 +4,7 @@
     :class="{ active: isActiveAudioCell, selected: isSelectedAudioCell }"
     :data-is-multi-select-enabled="isMultiSelectEnabled"
   >
+    <!-- 複数選択用のヒットボックス -->
     <div
       v-if="(isCtrlOrCommandKeyDown || isShiftKeyDown) && isMultiSelectEnabled"
       class="click-hitbox"
