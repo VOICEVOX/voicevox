@@ -435,10 +435,6 @@ export type AudioStoreTypes = {
   FETCH_AND_PLAY_AUDIO_CONTINUOUSLY: {
     action(payload: { audioKey?: AudioKey }): void;
   };
-
-  FETCH_AND_PLAY_AUDIO_CONTINUOUSLY_WITH_UI_LOCK: {
-    action(payload: { audioKey?: AudioKey }): void;
-  };
 };
 
 /*

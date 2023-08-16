@@ -1717,35 +1717,31 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   FETCH_AND_PLAY_AUDIO_CONTINUOUSLY: {
-    async action({ commit, dispatch, state }, { audioKey }) {
-      const bufStartPoint = state.audioPlayStartPoint;
-      const currentAudioKey =
-        audioKey ?? state._activeAudioKey ?? state.audioKeys[0];
-      const fromIndex = state.audioKeys.indexOf(currentAudioKey);
+    action: createUILockAction(
+      async ({ commit, dispatch, state }, { audioKey }) => {
+        const bufStartPoint = state.audioPlayStartPoint;
+        const currentAudioKey =
+          audioKey ?? state._activeAudioKey ?? state.audioKeys[0];
+        const fromIndex = state.audioKeys.indexOf(currentAudioKey);
 
-      try {
-        await dispatch("PLAY_AUDIOS", {
-          audioKeys: (async function* (): AsyncGenerator<AudioKey> {
-            for (let i = fromIndex; i < state.audioKeys.length; ++i) {
-              const audioKey = state.audioKeys[i];
-              dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey });
+        try {
+          await dispatch("PLAY_AUDIOS", {
+            audioKeys: (async function* (): AsyncGenerator<AudioKey> {
+              for (let i = fromIndex; i < state.audioKeys.length; ++i) {
+                const audioKey = state.audioKeys[i];
+                dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey });
 
-              const blob = await dispatch("FETCH_AUDIO", { audioKey });
-              await dispatch("LOAD_AUDIO_PLAYER", { audioKey, blob });
-              yield audioKey;
-            }
-          })(),
-        });
-      } finally {
-        commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
-        commit("SET_AUDIO_PLAY_START_POINT", { startPoint: bufStartPoint });
+                const blob = await dispatch("FETCH_AUDIO", { audioKey });
+                await dispatch("LOAD_AUDIO_PLAYER", { audioKey, blob });
+                yield audioKey;
+              }
+            })(),
+          });
+        } finally {
+          commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
+          commit("SET_AUDIO_PLAY_START_POINT", { startPoint: bufStartPoint });
+        }
       }
-    },
-  },
-
-  FETCH_AND_PLAY_AUDIO_CONTINUOUSLY_WITH_UI_LOCK: {
-    action: createUILockAction(({ dispatch }, { audioKey }) =>
-      dispatch("FETCH_AND_PLAY_AUDIO_CONTINUOUSLY", { audioKey })
     ),
   },
 });
