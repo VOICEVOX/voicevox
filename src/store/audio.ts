@@ -1693,7 +1693,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const offset =
           accentPhraseOffsets.length === 0
             ? 0
-            : accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+            : // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
+              // 再生に影響のない程度かつ切り捨てられない値を加算する
+              accentPhraseOffsets[state.audioPlayStartPoint ?? 0] + 10e-6;
 
         return dispatch("PLAY_AUDIO", { audioKey, offset });
       }
