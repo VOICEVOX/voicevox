@@ -387,6 +387,14 @@ export type AudioStoreTypes = {
     }): Promise<AccentPhrase[]>;
   };
 
+  DEFAULT_PROJECT_FILE_BASE_NAME: {
+    getter: string;
+  };
+
+  DEFAULT_AUDIO_FILE_NAME: {
+    getter(audioKey: AudioKey): string;
+  };
+
   GENERATE_LAB: {
     action(payload: {
       audioKey: AudioKey;
