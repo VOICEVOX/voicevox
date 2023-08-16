@@ -165,8 +165,6 @@ const onClickWithModifierKey = (event: MouseEvent) => {
     //   選択していないAudioCellならactiveを移動し、以前の選択をselectedに追加する。
     //   選択しているAudioCellならselectedから除外する。activeは変更しない。
     if (lastSelectedAudioKeys.includes(props.audioKey)) {
-      if (props.audioKey === lastActiveAudioKey) return;
-
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: lastSelectedAudioKeys.filter(
           (audioKey) => audioKey !== props.audioKey
@@ -553,7 +551,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
-  &[data-is-multi-select-enabled="true"]:is(.selected, .active) {
+  &[data-is-multi-select-enabled="true"].selected {
     background-color: rgba(colors.$active-point-focus-rgb, 0.5);
   }
 
