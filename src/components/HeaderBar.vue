@@ -120,7 +120,7 @@ const playContinuously = async () => {
   }
 };
 const stopContinuously = () => {
-  store.dispatch("STOP_PLAYLIST");
+  store.dispatch("STOP_AUDIOS");
 };
 const generateAndSaveOneAudio = async () => {
   if (activeAudioKey.value == undefined)

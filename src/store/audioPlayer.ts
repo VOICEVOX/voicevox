@@ -50,7 +50,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       ) {
         return;
       }
-      dispatch("STOP_AUDIO", { audioKey });
+      dispatch("STOP_AUDIO", { nowPlayingAudioKey: audioKey });
       audioElement.removeAttribute("src");
       audioElements.delete(audioKey);
     },
@@ -111,7 +111,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         audioElem.removeEventListener("play", played);
         audioElem.removeEventListener("pause", paused);
         if (audioKey) {
-          commit("STOP_AUDIO", { audioKey });
+          commit("STOP_AUDIO", { nowPlayingAudioKey: audioKey });
         }
       });
 
@@ -122,21 +122,24 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   },
 
   STOP_AUDIO: {
-    mutation(state, { audioKey }: { audioKey: AudioKey }) {
+    mutation(state, { nowPlayingAudioKey }: { nowPlayingAudioKey: AudioKey }) {
       const audioKeys = state.nowPlayingAudioKeys;
-      if (audioKeys.includes(audioKey)) {
-        delete audioKeys[audioKeys.indexOf(audioKey)];
+      if (audioKeys.includes(nowPlayingAudioKey)) {
+        delete audioKeys[audioKeys.indexOf(nowPlayingAudioKey)];
       }
     },
-    action({ commit }, { audioKey }: { audioKey: AudioKey }) {
-      const audioElem = audioElements.get(audioKey);
+    action(
+      { commit },
+      { nowPlayingAudioKey }: { nowPlayingAudioKey: AudioKey }
+    ) {
+      const audioElem = audioElements.get(nowPlayingAudioKey);
       if (audioElem === undefined) throw new Error("audioElem === undefined");
       audioElem.pause();
-      commit("STOP_AUDIO", { audioKey });
+      commit("STOP_AUDIO", { nowPlayingAudioKey });
     },
   },
 
-  PLAY_ALONG_PLAYLIST: {
+  PLAY_AUDIOS: {
     mutation(state, { audioKey }: { audioKey: AudioKey }) {
       state.nowPlayingContinuouslyAudioKey = audioKey;
     },
@@ -144,28 +147,28 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       const offset = 0;
       try {
         for await (const audioKey of audioKeys) {
-          commit("PLAY_ALONG_PLAYLIST", { audioKey });
+          commit("PLAY_AUDIOS", { audioKey });
           const isEnded = await dispatch("PLAY_AUDIO", { audioKey, offset });
           if (!isEnded) {
             break;
           }
         }
       } finally {
-        commit("STOP_PLAYLIST");
+        commit("STOP_AUDIOS");
       }
     },
   },
 
-  STOP_PLAYLIST: {
+  STOP_AUDIOS: {
     mutation(state) {
       state.nowPlayingContinuouslyAudioKey = undefined;
     },
     action({ state, commit, dispatch }) {
-      const audioKey = state.nowPlayingContinuouslyAudioKey;
-      if (audioKey !== undefined) {
-        dispatch("STOP_AUDIO", { audioKey });
+      const nowPlayingAudioKey = state.nowPlayingContinuouslyAudioKey;
+      if (nowPlayingAudioKey !== undefined) {
+        dispatch("STOP_AUDIO", { nowPlayingAudioKey });
       }
-      commit("STOP_PLAYLIST");
+      commit("STOP_AUDIOS");
     },
   },
 });

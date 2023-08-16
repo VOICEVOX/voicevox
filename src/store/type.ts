@@ -684,16 +684,16 @@ export type AudioPlayerStoreTypes = {
   };
 
   STOP_AUDIO: {
-    mutation: { audioKey: AudioKey };
-    action(payload: { audioKey: AudioKey }): void;
+    mutation: { nowPlayingAudioKey: AudioKey };
+    action(payload: { nowPlayingAudioKey: AudioKey }): void;
   };
 
-  PLAY_ALONG_PLAYLIST: {
+  PLAY_AUDIOS: {
     mutation: { audioKey: AudioKey };
     action(payload: { audioKeys: AsyncIterable<AudioKey> }): void;
   };
 
-  STOP_PLAYLIST: {
+  STOP_AUDIOS: {
     mutation: void;
     action(): void;
   };
