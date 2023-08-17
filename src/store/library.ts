@@ -3,6 +3,7 @@ import { createPartialStore } from "./vuex";
 
 export const libraryStoreState: LibraryStoreState = {
   libraryInstallStatuses: {},
+  libraryFetchStatuses: {},
 };
 
 export const libraryStore = createPartialStore<LibraryStoreTypes>({
@@ -72,6 +73,18 @@ export const libraryStore = createPartialStore<LibraryStoreTypes>({
         libraryId,
         status: { status: "done" },
       });
+    },
+  },
+
+  SET_LIBRARY_FETCH_STATUS: {
+    action: ({ commit }, { engineId, status }) => {
+      commit("SET_LIBRARY_FETCH_STATUS", { engineId, status });
+    },
+    mutation: async (state, { engineId, status }) => {
+      state.libraryFetchStatuses = {
+        ...state.libraryFetchStatuses,
+        [engineId]: status,
+      };
     },
   },
 

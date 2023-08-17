@@ -273,10 +273,7 @@ const isUninstallable = (
   return installedLibrary.uninstallable;
 };
 
-const fetchStatuses = ref<
-  Record<EngineId, "fetching" | "success" | "error" | undefined>
->({});
-
+const fetchStatuses = computed(() => store.state.libraryFetchStatuses);
 // 選択中の話者
 const selectedSpeakers = ref<Record<LibraryId, SpeakerId>>({});
 
@@ -338,7 +335,10 @@ watch(modelValueComputed, async (newValue) => {
         return;
       }
 
-      fetchStatuses.value[engineId] = "fetching";
+      await store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+        engineId,
+        status: "fetching",
+      });
       const fetchResult = await store
         .dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
@@ -355,7 +355,10 @@ watch(modelValueComputed, async (newValue) => {
           BrandedDownloadableLibrary[],
           BrandedInstalledLibrary[]
         ] => {
-          fetchStatuses.value[engineId] = "success";
+          store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+            engineId,
+            status: "success",
+          });
           return [
             downloadableLibraries.map((library) => {
               return {
@@ -374,7 +377,10 @@ watch(modelValueComputed, async (newValue) => {
           ];
         })
         .catch((e) => {
-          fetchStatuses.value[engineId] = "error";
+          store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+            engineId,
+            status: "error",
+          });
           store.dispatch("LOG_ERROR", e);
         });
 

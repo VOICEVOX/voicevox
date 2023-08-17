@@ -863,9 +863,15 @@ export type LibraryData = {
   libraryDownloadUrl: string;
   characterInfos: CharacterInfo[];
 };
+export type LibraryFetchStatus =
+  | "fetching"
+  | "success"
+  | "error"
+  | undefined;
 
 export type LibraryStoreState = {
   libraryInstallStatuses: Record<LibraryId, LibraryInstallStatus>;
+  libraryFetchStatuses: Record<EngineId, LibraryFetchStatus>;
   selectedLibrary?: LibraryData;
 };
 
@@ -895,6 +901,11 @@ export type LibraryStoreTypes = {
 
   UNINSTALL_LIBRARY: {
     action(payload: { libraryId: LibraryId; engineId: EngineId }): void;
+  };
+
+  SET_LIBRARY_FETCH_STATUS: {
+    action(payload: { engineId: EngineId; status: LibraryFetchStatus }): void;
+    mutation: { engineId: EngineId; status: LibraryFetchStatus };
   };
 
   SET_SELECTED_LIBRARY: {
