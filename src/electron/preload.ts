@@ -10,7 +10,6 @@ import {
   ElectronStoreType,
   EngineId,
   SandboxKey,
-  LibraryId,
 } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
@@ -271,23 +270,8 @@ const api: Sandbox = {
     return await ipcRendererInvoke("RELOAD_APP", { isMultiEngineOffMode });
   },
 
-  startLibraryDownload: async ({
-    engineId,
-    libraryId,
-    libraryName,
-    libraryDownloadUrl,
-  }: {
-    engineId: EngineId;
-    libraryId: LibraryId;
-    libraryName: string;
-    libraryDownloadUrl: string;
-  }) => {
-    return await ipcRendererInvoke("START_LIBRARY_DOWNLOAD", {
-      engineId,
-      libraryId,
-      libraryName,
-      libraryDownloadUrl,
-    });
+  startLibraryDownload: async (obj) => {
+    return await ipcRendererInvoke("START_LIBRARY_DOWNLOAD", obj);
   },
 };
 
