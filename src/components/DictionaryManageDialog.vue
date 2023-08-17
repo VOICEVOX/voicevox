@@ -472,7 +472,7 @@ const play = async () => {
     }
   }
   nowGenerating.value = false;
-  await store.dispatch("LOAD_AUDIO_PLAYER", { audioKey, blob });
+  await store.dispatch("PREPARE_AUDIO_PLAYER", { audioKey, blob });
   await store.dispatch("PLAY_AUDIO", { audioKey });
 };
 const stop = () => {

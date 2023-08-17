@@ -30,17 +30,17 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   },
 
   /**
-   * Audioインスタンスを作成して音声blobをセットし、`audioElements`へ登録する。
+   * 音声blobをセットする。また、必要ならセット前にAudioインスタンスを作成して`audioElements`へ登録する。
    */
   PREPARE_AUDIO_PLAYER: {
     action(_, { audioKey, blob }: { audioKey: AudioKey; blob: Blob }) {
       let audioElement = audioElements.get(audioKey);
       if (audioElement === undefined) {
         audioElement = new Audio();
+        audioElements.set(audioKey, audioElement);
       }
       audioElement.pause();
       audioElement.src = URL.createObjectURL(blob);
-      audioElements.set(audioKey, audioElement);
     },
   },
 
@@ -70,7 +70,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       const audioElem = audioElements.get(audioKey);
       if (audioElem === undefined)
         throw new Error(
-          "音声の読み込み前に再生されようとしました。先に LOAD_AUDIO_PLAYER を行ってください。"
+          "音声の読み込み前に再生されようとしました。先に PREPARE_AUDIO_PLAYER を行ってください。"
         );
 
       if (offset !== undefined) {

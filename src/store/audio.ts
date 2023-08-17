@@ -1687,7 +1687,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action: createUILockAction(
       async ({ state, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
         const blob = await dispatch("FETCH_AUDIO", { audioKey });
-        await dispatch("LOAD_AUDIO_PLAYER", { audioKey, blob });
+        await dispatch("PREPARE_AUDIO_PLAYER", { audioKey, blob });
 
         // 途中再生用の処理
         const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
@@ -1737,7 +1737,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
                 dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey });
 
                 const blob = await dispatch("FETCH_AUDIO", { audioKey });
-                await dispatch("LOAD_AUDIO_PLAYER", { audioKey, blob });
+                await dispatch("PREPARE_AUDIO_PLAYER", { audioKey, blob });
                 yield audioKey;
               }
             })(),

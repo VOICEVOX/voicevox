@@ -666,7 +666,7 @@ export type AudioPlayerStoreTypes = {
     getter: boolean;
   };
 
-  LOAD_AUDIO_PLAYER: {
+  PREPARE_AUDIO_PLAYER: {
     action(payload: { audioKey: AudioKey; blob: Blob }): void;
   };
 
