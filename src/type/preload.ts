@@ -3,6 +3,8 @@ import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
 
+export const isElectron = import.meta.env.VITE_TARGET === "electron";
+export const isBrowser = import.meta.env.VITE_TARGET === "browser";
 export const isMac =
   typeof process === "undefined"
     ? navigator.userAgent.includes("Mac")
@@ -186,7 +188,6 @@ export interface Sandbox {
     buffer: ArrayBuffer;
   }): Promise<Result<undefined>>;
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
-  openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
@@ -199,6 +200,7 @@ export interface Sandbox {
   logError(...params: unknown[]): void;
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
+  openLogDirectory(): void;
   engineInfos(): Promise<EngineInfo[]>;
   restartEngine(engineId: EngineId): Promise<void>;
   openEngineDirectory(engineId: EngineId): void;
@@ -224,7 +226,7 @@ export interface Sandbox {
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
-  restartApp(obj: { isMultiEngineOffMode: boolean }): void;
+  reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
 }
 
 export type AppInfos = {
@@ -576,6 +578,7 @@ export const electronStoreSchema = z
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     showTextLineNumber: z.boolean().default(false),
+    showAddAudioItemButton: z.boolean().default(true),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])

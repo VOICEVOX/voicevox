@@ -6,6 +6,7 @@ import { moveFile } from "move-file";
 import { app, dialog } from "electron";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
+import AsyncLock from "async-lock";
 import {
   EngineId,
   EngineInfo,
@@ -41,18 +42,19 @@ export const isVvppFile = (filePath: string) => {
   );
 };
 
+const lockKey = "lock-key-for-vvpp-manager";
+
 // # 軽い概要
 //
 // フォルダ名："エンジン名+UUID"
 // エンジン名にフォルダ名に使用できない文字が含まれている場合は"_"に置換する。連続する"_"は1つにする。
 // 拡張子は".vvpp"または".vvppp"。".vvppp"は分割されているファイルであることを示す。
 // engine.0.vvppp、engine.1.vvppp、engine.2.vvppp、...というように分割されている。
-// UUIDはengine_manifest.jsonのuuidを使用する
+// UUIDはengine_manifest.jsonのuuidを使用し、同一エンジンの判定にはこれを使用する。
 //
 // 追加：
 // * エンジンを仮フォルダ（vvpp-engines/.tmp/現在の時刻）に展開する
 // * エンジンが既に存在しているか確認する
-//   最後のUUIDで比較する
 //   - 存在していた場合：上書き処理を行う
 //   - 存在していなかった場合：仮フォルダをvvpp-engines/エンジン名+UUIDに移動する
 //
@@ -71,6 +73,8 @@ export class VvppManager {
 
   willDeleteEngineIds: Set<EngineId>;
   willReplaceEngineDirs: Array<{ from: string; to: string }>;
+
+  private lock = new AsyncLock();
 
   constructor({ vvppEngineDir }: { vvppEngineDir: string }) {
     this.vvppEngineDir = vvppEngineDir;
@@ -115,7 +119,7 @@ export class VvppManager {
     return true;
   }
 
-  async extractVvpp(
+  private async extractVvpp(
     vvppLikeFilePath: string
   ): Promise<{ outputDir: string; manifest: MinimumEngineManifest }> {
     const nonce = new Date().getTime().toString();
@@ -257,7 +261,13 @@ export class VvppManager {
     }
   }
 
+  /**
+   * 追加
+   */
   async install(vvppPath: string) {
+    await this.lock.acquire(lockKey, () => this._install(vvppPath));
+  }
+  private async _install(vvppPath: string) {
     const { outputDir, manifest } = await this.extractVvpp(vvppPath);
     const dirName = this.toValidDirName(manifest);
     const engineDirectory = path.join(this.vvppEngineDir, dirName);
@@ -280,6 +290,9 @@ export class VvppManager {
   }
 
   async handleMarkedEngineDirs() {
+    await this.lock.acquire(lockKey, () => this._handleMarkedEngineDirs());
+  }
+  private async _handleMarkedEngineDirs() {
     await Promise.all(
       [...this.willDeleteEngineIds].map(async (engineId) => {
         let deletingEngineDir: string | undefined = undefined;

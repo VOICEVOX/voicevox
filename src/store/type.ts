@@ -1,5 +1,4 @@
 import { Patch } from "immer";
-import { QVueGlobals } from "quasar";
 import {
   MutationTree,
   MutationsBase,
@@ -20,7 +19,6 @@ import {
 import {
   CharacterInfo,
   DefaultStyleId,
-  Encoding as EncodingType,
   AcceptRetrieveTelemetryStatus,
   AcceptTermsStatus,
   HotkeySetting,
@@ -52,6 +50,12 @@ import {
   PresetKey,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
+import {
+  CommonDialogOptions,
+  CommonDialogResult,
+  NotifyAndNotShowAgainButtonOption,
+  LoadingScreenOption,
+} from "@/components/Dialog";
 
 /**
  * エディタ用のAudioQuery
@@ -113,8 +117,6 @@ export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
       : R
     : never;
 };
-
-export type QuasarDialog = QVueGlobals["dialog"];
 
 /*
  * Audio Store Types
@@ -385,6 +387,14 @@ export type AudioStoreTypes = {
     }): Promise<AccentPhrase[]>;
   };
 
+  DEFAULT_PROJECT_FILE_BASE_NAME: {
+    getter: string;
+  };
+
+  DEFAULT_AUDIO_FILE_NAME: {
+    getter(audioKey: AudioKey): string;
+  };
+
   GENERATE_LAB: {
     action(payload: {
       audioKey: AudioKey;
@@ -412,14 +422,12 @@ export type AudioStoreTypes = {
     action(payload: {
       audioKey: AudioKey;
       filePath?: string;
-      encoding?: EncodingType;
     }): SaveResultObject;
   };
 
   GENERATE_AND_SAVE_ALL_AUDIO: {
     action(payload: {
       dirPath?: string;
-      encoding?: EncodingType;
       callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject[] | undefined;
   };
@@ -427,16 +435,12 @@ export type AudioStoreTypes = {
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
       filePath?: string;
-      encoding?: EncodingType;
       callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject | undefined;
   };
 
   CONNECT_AND_EXPORT_TEXT: {
-    action(payload: {
-      filePath?: string;
-      encoding?: EncodingType;
-    }): SaveResultObject | undefined;
+    action(payload: { filePath?: string }): SaveResultObject | undefined;
   };
 
   PLAY_AUDIO: {
@@ -469,14 +473,6 @@ export type AudioStoreTypes = {
   STOP_CONTINUOUSLY_AUDIO: {
     action(): void;
   };
-
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    action(): void;
-  };
-
-  CHECK_FILE_EXISTS: {
-    action(payload: { file: string }): Promise<boolean>;
-  };
 };
 
 /*
@@ -508,6 +504,10 @@ export type AudioCommandStoreTypes = {
   COMMAND_SET_AUDIO_KEYS: {
     mutation: { audioKeys: AudioKey[] };
     action(payload: { audioKeys: AudioKey[] }): void;
+  };
+
+  COMMAND_CHANGE_DISPLAY_TEXT: {
+    action(payload: { audioKey: AudioKey; text: string }): void;
   };
 
   COMMAND_CHANGE_AUDIO_TEXT: {
@@ -1016,6 +1016,7 @@ export type SettingStoreState = {
   themeSetting: ThemeSetting;
   editorFont: EditorFontType;
   showTextLineNumber: boolean;
+  showAddAudioItemButton: boolean;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
@@ -1057,6 +1058,11 @@ export type SettingStoreTypes = {
   SET_SHOW_TEXT_LINE_NUMBER: {
     mutation: { showTextLineNumber: boolean };
     action(payload: { showTextLineNumber: boolean }): void;
+  };
+
+  SET_SHOW_ADD_AUDIO_ITEM_BUTTON: {
+    mutation: { showAddAudioItemButton: boolean };
+    action(payload: { showAddAudioItemButton: boolean }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
@@ -1127,6 +1133,7 @@ export type SettingStoreTypes = {
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
+  reloadingLock: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
@@ -1184,6 +1191,11 @@ export type UiStoreTypes = {
     action(): void;
   };
 
+  LOCK_RELOADING: {
+    mutation: undefined;
+    action(): void;
+  };
+
   SHOULD_SHOW_PANES: {
     getter: boolean;
   };
@@ -1215,6 +1227,30 @@ export type UiStoreTypes = {
       isEngineManageDialogOpen?: boolean;
       isLibraryManageDialogOpen?: boolean;
     }): void;
+  };
+
+  SHOW_ALERT_DIALOG: {
+    action(payload: CommonDialogOptions["alert"]): CommonDialogResult;
+  };
+
+  SHOW_CONFIRM_DIALOG: {
+    action(payload: CommonDialogOptions["confirm"]): CommonDialogResult;
+  };
+
+  SHOW_WARNING_DIALOG: {
+    action(payload: CommonDialogOptions["warning"]): CommonDialogResult;
+  };
+
+  SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
+    action(payload: NotifyAndNotShowAgainButtonOption): void;
+  };
+
+  SHOW_LOADING_SCREEN: {
+    action(payload: LoadingScreenOption): void;
+  };
+
+  HIDE_ALL_LOADING_SCREEN: {
+    action(): void;
   };
 
   ON_VUEX_READY: {
@@ -1271,10 +1307,17 @@ export type UiStoreTypes = {
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    action(): Promise<void>;
+    action(
+      obj:
+        | { closeOrReload: "close" }
+        | {
+            closeOrReload: "reload";
+            isMultiEngineOffMode?: boolean;
+          }
+    ): Promise<void>;
   };
 
-  RESTART_APP: {
+  RELOAD_APP: {
     action(obj: { isMultiEngineOffMode?: boolean }): void;
   };
 
