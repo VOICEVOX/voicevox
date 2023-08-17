@@ -293,18 +293,6 @@ const selectLibraryAndSpeakerAndEngine = (
   selectedSpeakers.value[libraryId] = speakerId;
 };
 
-const selectedLibraryInfo = computed(() => {
-  let libraryInfo: BrandedDownloadableLibrary | undefined;
-  for (const libraries of Object.values(downloadableLibraries.value)) {
-    libraryInfo = libraries.find(
-      (library) => library.uuid === selectedLibrary.value
-    );
-  }
-  if (!libraryInfo) {
-    throw Error("libraryInfo === undefined");
-  }
-  return libraryInfo;
-});
 
 const libraryInfoToCharacterInfos = (
   engineId: EngineId,
