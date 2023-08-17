@@ -507,40 +507,6 @@ const toReadPolicies = async (
   toInstallDialog();
 };
 
-const installLibraryCompleteOrFailedDialog = () => {
-  if (!selectedLibrary.value) throw Error("electedLibrary === undefined");
-
-  const libraryName = selectedLibraryInfo.value.name;
-  if (libraryInstallStatuses.value[selectedLibrary.value].status === "done") {
-    requireRestart(
-      `${libraryName}をインストールしました。反映には再起動が必要です。今すぐ再起動しますか？`
-    );
-  } else {
-    $q.dialog({
-      title: "インストール失敗",
-      message: `${libraryName}のインストールに失敗しました。`,
-      noBackdropDismiss: true,
-      ok: {
-        label: "戻る",
-        flat: true,
-        textColor: "display",
-      },
-    });
-  }
-};
-watch(libraryInstallStatuses, (newValue, oldValue) => {
-  if (!selectedLibrary.value)
-    throw Error("selectedLibrary.value === undefined");
-  if (
-    (newValue[selectedLibrary.value].status === "done" ||
-      newValue[selectedLibrary.value].status === "error") &&
-    (oldValue[selectedLibrary.value].status === "downloading" ||
-      oldValue[selectedLibrary.value].status === "installing")
-  ) {
-    installLibraryCompleteOrFailedDialog();
-  }
-});
-
 const uninstallLibrary = async (
   engineId: EngineId,
   library: BrandedDownloadableLibrary
