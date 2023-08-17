@@ -38,7 +38,8 @@ type EngineProcessContainer = {
  */
 function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
+  const defaultEngineInfosEnv =
+    import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
 
   const envSchema = z
     .object({
@@ -331,6 +332,7 @@ export class EngineManager {
 
     const engineProcess = spawn(enginePath, args, {
       cwd: path.dirname(enginePath),
+      env: { ...process.env, VV_OUTPUT_LOG_UTF8: "1" },
     });
     engineProcessContainer.engineProcess = engineProcess;
 
