@@ -49,6 +49,7 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
     .filter({ hasText: "単語" })
     .locator(".q-field__native")
     .evaluate((e: HTMLInputElement) => e.value);
+  await page.waitForTimeout(100);
   expect(word).toBe("ａｂｓ");
 
   await page
@@ -59,6 +60,7 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
       e.value = "アブス";
       e.dispatchEvent(new Event("input"));
     });
+  await page.waitForTimeout(100);
   await page
     .locator(".word-editor .row")
     .filter({ hasText: "読み" })
@@ -75,13 +77,17 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
 
   // 保存して設定画面を閉じる
   await page.getByText("保存", { exact: true }).click();
+  await page.waitForTimeout(100);
   await getNewestQuasarDialog(page)
     .getByRole("button")
     .filter({ hasText: "close" })
     .click();
+  await page.waitForTimeout(100);
   // 辞書が登録されているかどうかを確認
   await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.waitForTimeout(100);
   await page.locator(".audio-cell input").last().fill("abs");
+  await page.waitForTimeout(100);
   await page.locator(".audio-cell input").last().press("Enter");
   await page.waitForTimeout(100);
   const afterAddText = (await page.locator(".text-cell").allInnerTexts()).join(
@@ -90,7 +96,6 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   expect(afterAddText).toBe("アブス");
 
   // もう一度設定を開き
-  await page.waitForTimeout(100);
   await page.getByRole("button", { name: "設定" }).click();
   await page.waitForTimeout(100);
   await page.getByText("読み方＆アクセント辞書").click();
@@ -100,24 +105,30 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
 
   // 辞書からabsを削除
   await page.getByRole("listitem").filter({ hasText: "ａｂｓ" }).click();
+  await page.waitForTimeout(100);
   await page
     .locator(".word-list-header")
     .getByRole("button")
     .filter({ hasText: "削除" })
     .click();
+  await page.waitForTimeout(100);
   await getNewestQuasarDialog(page)
     .getByRole("button")
     .filter({ hasText: "削除" })
     .click();
+  await page.waitForTimeout(100);
 
   await getNewestQuasarDialog(page)
     .getByRole("button")
     .filter({ hasText: "close" })
     .click();
+  await page.waitForTimeout(100);
 
   // 辞書から削除されていることを確認
   await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.waitForTimeout(100);
   await page.locator(".audio-cell input").last().fill("abs");
+  await page.waitForTimeout(100);
   await page.locator(".audio-cell input").last().press("Enter");
   await page.waitForTimeout(100);
   const afterDeleteText = (
