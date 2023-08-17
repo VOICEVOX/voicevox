@@ -293,7 +293,6 @@ const selectLibraryAndSpeakerAndEngine = (
   selectedSpeakers.value[libraryId] = speakerId;
 };
 
-
 const libraryInfoToCharacterInfos = (
   engineId: EngineId,
   libraryInfo: DownloadableLibrary | InstalledLibrary
@@ -334,7 +333,10 @@ watch(modelValueComputed, async (newValue) => {
   }
   await Promise.all(
     targetEngineIds.value.map(async (engineId) => {
-      if (fetchStatuses.value[engineId] === "fetching") {
+      if (
+        fetchStatuses.value[engineId] === "fetching" ||
+        fetchStatuses.value[engineId] === "success"
+      ) {
         return;
       }
 
@@ -505,64 +507,45 @@ const uninstallLibrary = async (
     engineId
   );
   stop();
-  $q.dialog({
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "アンインストール",
     message: `${library.name}をアンインストールします。よろしいですか？`,
-    noBackdropDismiss: true,
-    cancel: {
-      label: "いいえ",
-      color: "display",
-      flat: true,
-    },
-    ok: {
-      label: "はい",
-      flat: true,
-      textColor: "warning",
-    },
-  }).onOk(async () => {
+    actionName: "はい",
+    cancel: "いいえ",
+  });
+  if (result === "OK") {
     try {
       await store.dispatch("UNINSTALL_LIBRARY", {
         engineId,
         libraryId: library.uuid,
       });
       if (libraryInstallStatuses.value[library.uuid].status === "done") {
-        requireRestart(
-          `${library.name}をアンインストールしました。反映には再起動が必要です。今すぐ再起動しますか？`
+        await requireReload(
+          `${library.name}をアンインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`
         );
       }
     } catch (e) {
-      $q.dialog({
-        title: "アンインストール失敗",
-        message: `${library.name}のアンインストールに失敗しました。`,
-        noBackdropDismiss: true,
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
+      await store.dispatch("SHOW_ALERT_DIALOG", {
+        title: "インストール失敗",
+        message: `${library.name}のアンインストールに失敗しました。: ${e}`,
+        ok: "閉じる",
       });
     }
-  });
+  }
 };
 
-const requireRestart = (message: string) => {
-  $q.dialog({
-    title: "再起動が必要です",
+const requireReload = async (message: string) => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+    title: "再読み込みが必要です",
     message: message,
-    noBackdropDismiss: true,
-    cancel: {
-      label: "後で",
-      color: "display",
-      flat: true,
-    },
-    ok: {
-      label: "再起動",
-      flat: true,
-      textColor: "warning",
-    },
-  }).onOk(() => {
-    store.dispatch("RELOAD_APP", {});
+    actionName: "再読み込み",
+    cancel: "後で",
   });
+  if (result === "OK") {
+    store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+      closeOrReload: "reload",
+    });
+  }
 };
 </script>
 

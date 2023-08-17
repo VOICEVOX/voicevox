@@ -102,11 +102,8 @@
 
 <script setup lang="ts">
 import { computed, watch } from "vue";
-import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-
-const $q = useQuasar();
 
 const props =
   defineProps<{
@@ -171,26 +168,21 @@ const installLibrary = async () => {
   });
 };
 
-const installLibraryCompleteOrFailedDialog = () => {
+const installLibraryCompleteOrFailedDialog = async () => {
   if (!selectedLibraryData.value)
     throw Error("selectedLibraryData === undefined");
 
   const libraryName = selectedLibraryData.value.libraryName;
   const libraryId = selectedLibraryData.value.libraryId;
   if (libraryInstallStatuses.value[libraryId].status === "done") {
-    requireRestart(
-      `${libraryName}をインストールしました。反映には再起動が必要です。今すぐ再起動しますか？`
+    await requireReload(
+      `${libraryName}をインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`
     );
   } else {
-    $q.dialog({
+    await store.dispatch("SHOW_ALERT_DIALOG", {
       title: "インストール失敗",
       message: `${libraryName}のインストールに失敗しました。`,
-      noBackdropDismiss: true,
-      ok: {
-        label: "戻る",
-        flat: true,
-        textColor: "display",
-      },
+      ok: "戻る",
     });
     prevPage();
   }
@@ -210,24 +202,20 @@ watch(libraryInstallStatuses, (newValue, oldValue) => {
   }
 });
 
-const requireRestart = (message: string) => {
-  $q.dialog({
-    title: "再起動が必要です",
+const requireReload = async (message: string) => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+    title: "再読み込みが必要です",
     message: message,
-    noBackdropDismiss: true,
-    cancel: {
-      label: "後で",
-      color: "display",
-      flat: true,
-    },
-    ok: {
-      label: "再起動",
-      flat: true,
-      textColor: "warning",
-    },
-  }).onOk(() => {
-    store.dispatch("RELOAD_APP", {});
+    actionName: "再読み込み",
+    cancel: "後で",
   });
+  if (result === "OK") {
+    store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+      closeOrReload: "reload",
+    });
+  } else {
+    prevPage();
+  }
 };
 
 const md = useMarkdownIt();
