@@ -10,10 +10,10 @@ export const isBrowser = import.meta.env.VITE_TARGET === "browser";
 function checkIsMac(): boolean {
   let isMac: boolean | undefined = undefined;
   if (process?.platform) {
-    // electron用
+    // electronのメインプロセス用
     isMac = process.platform === "darwin";
   } else if (navigator?.userAgentData) {
-    // ブラウザ用、実験的機能
+    // electronのレンダラープロセス用、Chrome系統が実装する実験的機能
     isMac = navigator.userAgentData.platform.toLowerCase().includes("mac");
   } else if (navigator?.platform) {
     // ブラウザ用、非推奨機能
