@@ -149,8 +149,7 @@
                         (speakerUuid) =>
                           selectLibraryAndSpeakerAndEngine(
                             library.uuid,
-                            speakerUuid,
-                            engineId
+                            speakerUuid
                           )
                       "
                     />
@@ -286,8 +285,7 @@ const selectedLibrary = ref<LibraryId | undefined>();
 
 const selectLibraryAndSpeakerAndEngine = (
   libraryId: LibraryId,
-  speakerId: SpeakerId,
-  engineId: EngineId
+  speakerId: SpeakerId
 ) => {
   selectedLibrary.value = libraryId;
   selectedSpeakers.value[libraryId] = speakerId;
@@ -501,11 +499,6 @@ const uninstallLibrary = async (
   engineId: EngineId,
   library: BrandedDownloadableLibrary
 ) => {
-  selectLibraryAndSpeakerAndEngine(
-    library.uuid,
-    library.speakers[0].metas.speakerUuid,
-    engineId
-  );
   stop();
   const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "アンインストール",
