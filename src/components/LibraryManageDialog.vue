@@ -322,10 +322,7 @@ const libraryInfoToCharacterInfos = (
   });
 };
 
-watch(modelValueComputed, async (newValue) => {
-  if (!newValue) {
-    return;
-  }
+const loadLibraries = async () => {
   await Promise.all(
     targetEngineIds.value.map(async (engineId) => {
       if (
@@ -411,6 +408,13 @@ watch(modelValueComputed, async (newValue) => {
       });
     })
   );
+}
+
+watch(modelValueComputed, async (newValue) => {
+  if (!newValue) {
+    return;
+  }
+  await loadLibraries();
 });
 
 const updatePortrait = (portraitPath: string) => {
@@ -520,7 +524,8 @@ const uninstallLibrary = async (
       });
       if (libraryInstallStatuses.value[library.uuid].status === "done") {
         await requireReload(
-          `${library.name}をアンインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`
+          `${library.name}をアンインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`,
+          engineId
         );
       }
     } catch (e) {
@@ -533,17 +538,23 @@ const uninstallLibrary = async (
   }
 };
 
-const requireReload = async (message: string) => {
+const requireReload = async (message: string, engineId: EngineId) => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "再読み込みが必要です",
     message: message,
     actionName: "再読み込み",
     cancel: "後で",
   });
+  await store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+    engineId,
+    status: "reloadNeeded",
+  });
   if (result === "OK") {
     store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
       closeOrReload: "reload",
     });
+  } else {
+    await loadLibraries();
   }
 };
 </script>

@@ -866,6 +866,7 @@ export type LibraryData = {
 export type LibraryFetchStatus =
   | "fetching"
   | "success"
+  | "reloadNeeded"
   | "error"
   | undefined;
 

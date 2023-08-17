@@ -104,6 +104,7 @@
 import { computed, watch } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+import { EngineId } from "@/type/preload";
 
 const props =
   defineProps<{
@@ -174,9 +175,11 @@ const installLibraryCompleteOrFailedDialog = async () => {
 
   const libraryName = selectedLibraryData.value.libraryName;
   const libraryId = selectedLibraryData.value.libraryId;
+  const engineId = selectedLibraryData.value.engineId;
   if (libraryInstallStatuses.value[libraryId].status === "done") {
     await requireReload(
-      `${libraryName}をインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`
+      `${libraryName}をインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`,
+      engineId
     );
   } else {
     await store.dispatch("SHOW_ALERT_DIALOG", {
@@ -202,12 +205,16 @@ watch(libraryInstallStatuses, (newValue, oldValue) => {
   }
 });
 
-const requireReload = async (message: string) => {
+const requireReload = async (message: string, engineId: EngineId) => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "再読み込みが必要です",
     message: message,
     actionName: "再読み込み",
     cancel: "後で",
+  });
+  await store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+    engineId,
+    status: "reloadNeeded",
   });
   if (result === "OK") {
     store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
