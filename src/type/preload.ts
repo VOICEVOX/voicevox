@@ -5,10 +5,24 @@ import { Result } from "@/type/result";
 
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
-export const isMac =
-  typeof process === "undefined"
-    ? navigator.userAgent.includes("Mac")
-    : process.platform === "darwin";
+
+// Electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なmacOS判定
+function checkIsMac() {
+  let isMac: boolean | undefined = undefined;
+
+  if (process?.platform) {
+    isMac = process.platform === "darwin";
+  } else if (navigator?.userAgentData) {
+    isMac = navigator.userAgentData.platform.toLowerCase().includes("mac");
+  } else if (navigator?.platform) {
+    isMac = navigator.platform.toLowerCase().includes("mac");
+  } else {
+    isMac = navigator.userAgent.toLowerCase().includes("mac");
+  }
+
+  return isMac;
+}
+export const isMac = checkIsMac();
 
 export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
