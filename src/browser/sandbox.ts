@@ -313,7 +313,9 @@ export const api: Sandbox = {
   reloadApp(/* obj: { isMultiEngineOffMode: boolean } */) {
     throw new Error(`Not supported on Browser version: reloadApp`);
   },
-  startLibraryDownload(/* obj: { engineId: EngineId; library: DownloadableLibrary; } */) {
-    throw new Error(`Not supported on Browser version: startLibraryDownload`);
+  startLibraryDownloadAndInstall(/* obj: { engineId: EngineId; library: DownloadableLibrary; } */) {
+    throw new Error(
+      `Not supported on Browser version: startLibraryDownloadAndInstall`
+    );
   },
 };

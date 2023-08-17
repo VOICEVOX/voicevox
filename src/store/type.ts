@@ -877,7 +877,7 @@ export type LibraryStoreState = {
 };
 
 export type LibraryStoreTypes = {
-  START_LIBRARY_DOWNLOAD: {
+  START_LIBRARY_DOWNLOAD_AND_INSTALL: {
     action(payload: {
       engineId: EngineId;
       libraryId: LibraryId;

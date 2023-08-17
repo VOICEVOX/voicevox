@@ -161,7 +161,7 @@ const installLibrary = async () => {
   const libraryId = library.libraryId;
   const libraryName = library.libraryName;
   const libraryDownloadUrl = library.libraryDownloadUrl;
-  store.dispatch("START_LIBRARY_DOWNLOAD", {
+  store.dispatch("START_LIBRARY_DOWNLOAD_AND_INSTALL", {
     engineId,
     libraryId,
     libraryName,

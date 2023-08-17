@@ -304,7 +304,7 @@ export type IpcIHData = {
     return: Result<ArrayBuffer>;
   };
 
-  START_LIBRARY_DOWNLOAD: {
+  START_LIBRARY_DOWNLOAD_AND_INSTALL: {
     args: [
       obj: {
         engineId: EngineId;

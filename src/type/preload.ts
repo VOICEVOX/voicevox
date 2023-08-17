@@ -227,7 +227,7 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
-  startLibraryDownload(obj: {
+  startLibraryDownloadAndInstall(obj: {
     engineId: EngineId;
     libraryId: LibraryId;
     libraryName: string;

@@ -7,7 +7,7 @@ export const libraryStoreState: LibraryStoreState = {
 };
 
 export const libraryStore = createPartialStore<LibraryStoreTypes>({
-  START_LIBRARY_DOWNLOAD: {
+  START_LIBRARY_DOWNLOAD_AND_INSTALL: {
     async action(
       { dispatch },
       { engineId, libraryId, libraryName, libraryDownloadUrl }
@@ -18,7 +18,7 @@ export const libraryStore = createPartialStore<LibraryStoreTypes>({
           status: "pending",
         },
       });
-      await window.electron.startLibraryDownload({
+      await window.electron.startLibraryDownloadAndInstall({
         engineId,
         libraryId,
         libraryName,

@@ -949,7 +949,7 @@ ipcMainHandle("READ_FILE", async (_, { filePath }) => {
 });
 
 ipcMainHandle(
-  "START_LIBRARY_DOWNLOAD",
+  "START_LIBRARY_DOWNLOAD_AND_INSTALL",
   (_, { engineId, libraryId, libraryName, libraryDownloadUrl }) => {
     libraryManager.startLibraryDownloadAndInstall(
       engineId,
