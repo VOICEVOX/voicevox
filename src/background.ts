@@ -979,6 +979,34 @@ ipcMainHandle(
   }
 );
 
+ipcMainHandle(
+  "UNINSTALL_LIBRARY",
+  async (_, { engineId, libraryId, libraryName }) => {
+    await libraryManager.uninstallLibrary(
+      engineId,
+      libraryId,
+      libraryName,
+      (status: LibraryInstallStatus) => {
+        if (status.status === "uninstalling") {
+          win.setProgressBar(2);
+        } else if (status.status === "error") {
+          win.setProgressBar(-1);
+          dialog.showErrorBox(
+            "ライブラリのインストールに失敗しました",
+            status.message
+          );
+        } else {
+          win.setProgressBar(-1);
+        }
+        ipcMainSend(win, "UPDATE_LIBRARY_INSTALL_STATUS", {
+          libraryId,
+          status,
+        });
+      }
+    );
+  }
+);
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く

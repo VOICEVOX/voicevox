@@ -315,6 +315,17 @@ export type IpcIHData = {
     ];
     return: void;
   };
+
+  UNINSTALL_LIBRARY: {
+    args: [
+      obj: {
+        engineId: EngineId;
+        libraryId: LibraryId;
+        libraryName: string;
+      }
+    ];
+    return: void;
+  };
 };
 
 /**

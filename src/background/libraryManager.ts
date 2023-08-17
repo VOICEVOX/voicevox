@@ -152,6 +152,44 @@ export class LibraryManager {
       await fs.promises.rm(tempFilePath);
     }
   }
+
+  async uninstallLibrary(
+    engineId: EngineId,
+    libraryId: LibraryId,
+    libraryName: string,
+    onUpdate: (status: LibraryInstallStatus) => void
+  ) {
+    const engine = this.engineManager.fetchEngineInfo(engineId);
+    const prefix = `LIBRARY UNINSTALL ${libraryName}: `;
+    log.log(prefix + `Started ${libraryName}, Engine: ${engine.name}`);
+
+    onUpdate({
+      status: "uninstalling",
+    });
+    log.log(prefix + "Waiting for lock");
+
+    try {
+      await this.lock.acquire(`${engineId}`, async () => {
+        log.log(prefix + "Uninstalling library");
+        await this.engineApis[
+          engineId
+        ].uninstallLibraryUninstallLibraryLibraryUuidPost({
+          libraryUuid: libraryId,
+        });
+        log.log(prefix + "Library uninstalled");
+      });
+      onUpdate({
+        status: "done",
+      });
+    } catch (e) {
+      log.error(prefix + "Failed to uninstall library");
+      log.error(e);
+      onUpdate({
+        status: "error",
+        message: `ライブラリのアンインストールに失敗しました。エラー内容：${e}`,
+      });
+    }
+  }
 }
 
 export default LibraryManager;

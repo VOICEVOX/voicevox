@@ -901,7 +901,11 @@ export type LibraryStoreTypes = {
   };
 
   UNINSTALL_LIBRARY: {
-    action(payload: { libraryId: LibraryId; engineId: EngineId }): void;
+    action(payload: {
+      engineId: EngineId;
+      libraryId: LibraryId;
+      libraryName: string;
+    }): void;
   };
 
   SET_LIBRARY_FETCH_STATUS: {

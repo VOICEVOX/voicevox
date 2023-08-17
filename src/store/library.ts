@@ -43,35 +43,15 @@ export const libraryStore = createPartialStore<LibraryStoreTypes>({
   },
 
   UNINSTALL_LIBRARY: {
-    action: async ({ dispatch }, { engineId, libraryId }) => {
+    action: async ({ dispatch }, { engineId, libraryId, libraryName }) => {
       await dispatch("UPDATE_LIBRARY_INSTALL_STATUS", {
         libraryId,
-        status: { status: "uninstalling" },
+        status: { status: "pending" },
       });
-
-      await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+      await window.electron.uninstallLibrary({
         engineId,
-      })
-        .then((instance) =>
-          instance.invoke("uninstallLibraryUninstallLibraryLibraryUuidPost")({
-            libraryUuid: libraryId,
-          })
-        )
-        .catch((error) => {
-          window.electron.logError(
-            error,
-            `Failed uninstalling library: ${libraryId}`
-          );
-          dispatch("UPDATE_LIBRARY_INSTALL_STATUS", {
-            libraryId,
-            status: { status: "error", message: error },
-          });
-          throw error;
-        });
-
-      await dispatch("UPDATE_LIBRARY_INSTALL_STATUS", {
         libraryId,
-        status: { status: "done" },
+        libraryName,
       });
     },
   },

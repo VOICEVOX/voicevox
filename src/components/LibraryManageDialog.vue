@@ -521,6 +521,7 @@ const uninstallLibrary = async (
       await store.dispatch("UNINSTALL_LIBRARY", {
         engineId,
         libraryId: library.uuid,
+        libraryName: library.name,
       });
       if (libraryInstallStatuses.value[library.uuid].status === "done") {
         await requireReload(

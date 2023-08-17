@@ -318,4 +318,7 @@ export const api: Sandbox = {
       `Not supported on Browser version: startLibraryDownloadAndInstall`
     );
   },
+  uninstallLibrary(/* pbj: { engineId: EngineId; libraryId: LibraryId; libraryName: string; } */) {
+    throw new Error(`Not supported on Browser version: uninstallLibrary`);
+  },
 };
