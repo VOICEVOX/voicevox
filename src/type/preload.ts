@@ -6,16 +6,20 @@ import { Result } from "@/type/result";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
 
-// Electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なmacOS判定
+// electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なmacOS判定
 function checkIsMac(): boolean {
   let isMac: boolean | undefined = undefined;
   if (process?.platform) {
+    // electron用
     isMac = process.platform === "darwin";
   } else if (navigator?.userAgentData) {
+    // ブラウザ用、実験的機能
     isMac = navigator.userAgentData.platform.toLowerCase().includes("mac");
   } else if (navigator?.platform) {
+    // ブラウザ用、非推奨機能
     isMac = navigator.platform.toLowerCase().includes("mac");
   } else {
+    // ブラウザ用、不正確
     isMac = navigator.userAgent.toLowerCase().includes("mac");
   }
   return isMac;
