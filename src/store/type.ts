@@ -856,8 +856,17 @@ export type EngineStoreTypes = {
  * Library Store Types
  */
 
+export type LibraryData = {
+  engineId: EngineId;
+  libraryId: LibraryId;
+  libraryName: string;
+  libraryDownloadUrl: string;
+  characterInfos: CharacterInfo[];
+};
+
 export type LibraryStoreState = {
   libraryInstallStatuses: Record<LibraryId, LibraryInstallStatus>;
+  selectedLibrary?: LibraryData;
 };
 
 export type LibraryStoreTypes = {
@@ -886,6 +895,11 @@ export type LibraryStoreTypes = {
 
   UNINSTALL_LIBRARY: {
     action(payload: { libraryId: LibraryId; engineId: EngineId }): void;
+  };
+
+  SET_SELECTED_LIBRARY: {
+    action(payload?: LibraryData): void;
+    mutation: LibraryData | undefined;
   };
 };
 
@@ -1178,6 +1192,7 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isLibraryManageDialogOpen: boolean;
+  isLibraryInstallDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1244,6 +1259,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isLibraryManageDialogOpen?: boolean;
+      isLibraryInstallDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1257,6 +1273,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isLibraryManageDialogOpen?: boolean;
+      isLibraryInstallDialogOpen?: boolean;
     }): void;
   };
 

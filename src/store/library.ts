@@ -74,4 +74,13 @@ export const libraryStore = createPartialStore<LibraryStoreTypes>({
       });
     },
   },
+
+  SET_SELECTED_LIBRARY: {
+    action({ commit }, payload) {
+      commit("SET_SELECTED_LIBRARY", payload);
+    },
+    mutation: (state, obj) => {
+      state.selectedLibrary = obj;
+    },
+  },
 });
