@@ -29,7 +29,10 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     },
   },
 
-  LOAD_AUDIO_PLAYER: {
+  /**
+   * Audioインスタンスを作成して音声blobをセットし、`audioElements`へ登録する。
+   */
+  PREPARE_AUDIO_PLAYER: {
     action(_, { audioKey, blob }: { audioKey: AudioKey; blob: Blob }) {
       let audioElement = audioElements.get(audioKey);
       if (audioElement === undefined) {
