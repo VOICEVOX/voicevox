@@ -34,7 +34,7 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
     .filter({ hasText: "単語" })
     .locator(".q-field__native")
     .evaluate((e: HTMLInputElement) => {
-      e.value = "ａｂｓ";
+      e.value = "abs";
       e.dispatchEvent(new Event("input"));
     });
   await page
@@ -80,8 +80,48 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
     .filter({ hasText: "close" })
     .click();
   // 辞書が登録されているかどうかを確認
+  await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.locator(".audio-cell input").last().fill("abs");
+  await page.locator(".audio-cell input").last().press("Enter");
+  await page.waitForTimeout(100);
   const afterAddText = (await page.locator(".text-cell").allInnerTexts()).join(
     ""
   );
   expect(afterAddText).toBe("アブス");
+
+  // もう一度設定を開き
+  await page.waitForTimeout(100);
+  await page.getByRole("button", { name: "設定" }).click();
+  await page.waitForTimeout(100);
+  await page.getByText("読み方＆アクセント辞書").click();
+  await page.waitForTimeout(100);
+  await expect(page.getByText("読み方＆アクセント辞書")).toBeVisible();
+  await expect(page.getByText("単語一覧")).toBeVisible();
+
+  // 辞書からabsを削除
+  await page.getByRole("listitem").filter({ hasText: "ａｂｓ" }).click();
+  await page
+    .locator(".word-list-header")
+    .getByRole("button")
+    .filter({ hasText: "削除" })
+    .click();
+  await getNewestQuasarDialog(page)
+    .getByRole("button")
+    .filter({ hasText: "削除" })
+    .click();
+
+  await getNewestQuasarDialog(page)
+    .getByRole("button")
+    .filter({ hasText: "close" })
+    .click();
+
+  // 辞書から削除されていることを確認
+  await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.locator(".audio-cell input").last().fill("abs");
+  await page.locator(".audio-cell input").last().press("Enter");
+  await page.waitForTimeout(100);
+  const afterDeleteText = (
+    await page.locator(".text-cell").allInnerTexts()
+  ).join("");
+  expect(afterDeleteText).toBe("エエビイエス");
 });
