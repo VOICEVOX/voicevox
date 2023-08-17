@@ -408,7 +408,7 @@ const loadLibraries = async () => {
       });
     })
   );
-}
+};
 
 watch(modelValueComputed, async (newValue) => {
   if (!newValue) {
