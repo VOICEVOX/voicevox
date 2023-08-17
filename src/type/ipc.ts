@@ -16,7 +16,6 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
-import { DownloadableLibrary } from "@/openapi";
 
 /**
  * invoke, handle
@@ -308,8 +307,10 @@ export type IpcIHData = {
   START_LIBRARY_DOWNLOAD: {
     args: [
       obj: {
-        library: DownloadableLibrary;
         engineId: EngineId;
+        libraryId: LibraryId;
+        libraryName: string;
+        libraryDownloadUrl: string;
       }
     ];
     return: void;

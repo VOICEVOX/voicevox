@@ -15,7 +15,6 @@ import {
   SupportedDevicesInfo,
   UserDictWord,
   MorphableTargetInfo,
-  DownloadableLibrary,
 } from "@/openapi";
 import {
   CharacterInfo,
@@ -864,8 +863,10 @@ export type LibraryStoreState = {
 export type LibraryStoreTypes = {
   START_LIBRARY_DOWNLOAD: {
     action(payload: {
-      library: DownloadableLibrary;
       engineId: EngineId;
+      libraryId: LibraryId;
+      libraryName: string;
+      libraryDownloadUrl: string;
     }): Promise<void>;
   };
 

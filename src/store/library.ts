@@ -1,6 +1,5 @@
 import { LibraryStoreState, LibraryStoreTypes } from "./type";
 import { createPartialStore } from "./vuex";
-import { LibraryId } from "@/type/preload";
 
 export const libraryStoreState: LibraryStoreState = {
   libraryInstallStatuses: {},
@@ -8,16 +7,21 @@ export const libraryStoreState: LibraryStoreState = {
 
 export const libraryStore = createPartialStore<LibraryStoreTypes>({
   START_LIBRARY_DOWNLOAD: {
-    async action({ dispatch }, { engineId, library }) {
+    async action(
+      { dispatch },
+      { engineId, libraryId, libraryName, libraryDownloadUrl }
+    ) {
       await dispatch("UPDATE_LIBRARY_INSTALL_STATUS", {
-        libraryId: LibraryId(library.uuid),
+        libraryId,
         status: {
           status: "pending",
         },
       });
       await window.electron.startLibraryDownload({
         engineId,
-        library,
+        libraryId,
+        libraryName,
+        libraryDownloadUrl,
       });
     },
   },

@@ -31,7 +31,6 @@ import {
   engineSettingSchema,
   EngineId,
   LibraryInstallStatus,
-  LibraryId,
 } from "./type/preload";
 import {
   ContactTextFileName,
@@ -949,31 +948,36 @@ ipcMainHandle("READ_FILE", async (_, { filePath }) => {
   }
 });
 
-ipcMainHandle("START_LIBRARY_DOWNLOAD", (_, { engineId, library }) => {
-  libraryManager.startLibraryDownload(
-    engineId,
-    library,
-    (status: LibraryInstallStatus) => {
-      if (status.status === "downloading" && status.contentLength) {
-        win.setProgressBar(status.downloaded / status.contentLength);
-      } else if (status.status === "installing") {
-        win.setProgressBar(2);
-      } else if (status.status === "error") {
-        win.setProgressBar(-1);
-        dialog.showErrorBox(
-          "ライブラリのインストールに失敗しました",
-          status.message
-        );
-      } else {
-        win.setProgressBar(-1);
+ipcMainHandle(
+  "START_LIBRARY_DOWNLOAD",
+  (_, { engineId, libraryId, libraryName, libraryDownloadUrl }) => {
+    libraryManager.startLibraryDownload(
+      engineId,
+      libraryId,
+      libraryName,
+      libraryDownloadUrl,
+      (status: LibraryInstallStatus) => {
+        if (status.status === "downloading" && status.contentLength) {
+          win.setProgressBar(status.downloaded / status.contentLength);
+        } else if (status.status === "installing") {
+          win.setProgressBar(2);
+        } else if (status.status === "error") {
+          win.setProgressBar(-1);
+          dialog.showErrorBox(
+            "ライブラリのインストールに失敗しました",
+            status.message
+          );
+        } else {
+          win.setProgressBar(-1);
+        }
+        ipcMainSend(win, "UPDATE_LIBRARY_INSTALL_STATUS", {
+          libraryId,
+          status,
+        });
       }
-      ipcMainSend(win, "UPDATE_LIBRARY_INSTALL_STATUS", {
-        libraryId: LibraryId(library.uuid),
-        status,
-      });
-    }
-  );
-});
+    );
+  }
+);
 
 // app callback
 app.on("web-contents-created", (e, contents) => {

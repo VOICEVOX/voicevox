@@ -2,7 +2,6 @@ import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
-import { DownloadableLibrary } from "@/openapi";
 
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
@@ -230,7 +229,9 @@ export interface Sandbox {
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   startLibraryDownload(obj: {
     engineId: EngineId;
-    library: DownloadableLibrary;
+    libraryId: LibraryId;
+    libraryName: string;
+    libraryDownloadUrl: string;
   }): Promise<void>;
 }
 

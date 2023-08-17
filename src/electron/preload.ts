@@ -10,9 +10,9 @@ import {
   ElectronStoreType,
   EngineId,
   SandboxKey,
+  LibraryId,
 } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
-import { DownloadableLibrary } from "@/openapi";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
   channel: T,
@@ -273,14 +273,20 @@ const api: Sandbox = {
 
   startLibraryDownload: async ({
     engineId,
-    library,
+    libraryId,
+    libraryName,
+    libraryDownloadUrl,
   }: {
     engineId: EngineId;
-    library: DownloadableLibrary;
+    libraryId: LibraryId;
+    libraryName: string;
+    libraryDownloadUrl: string;
   }) => {
     return await ipcRendererInvoke("START_LIBRARY_DOWNLOAD", {
-      library,
       engineId,
+      libraryId,
+      libraryName,
+      libraryDownloadUrl,
     });
   },
 };

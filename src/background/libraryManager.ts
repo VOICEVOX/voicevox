@@ -5,7 +5,7 @@ import log from "electron-log";
 import AsyncLock from "async-lock";
 import EngineManager from "./engineManager";
 import { EngineId, LibraryId, LibraryInstallStatus } from "@/type/preload";
-import { Configuration, DefaultApi, DownloadableLibrary } from "@/openapi";
+import { Configuration, DefaultApi } from "@/openapi";
 
 export class LibraryManager {
   engineManager: EngineManager;
@@ -26,17 +26,18 @@ export class LibraryManager {
 
   async startLibraryDownload(
     engineId: EngineId,
-    library: DownloadableLibrary,
+    libraryId: LibraryId,
+    libraryName: string,
+    libraryDownloadUrl: string,
     onUpdate: (status: LibraryInstallStatus) => void
   ): Promise<Buffer | undefined> {
     const engine = this.engineManager.fetchEngineInfo(engineId);
-    const libraryUuid = LibraryId(library.uuid);
-    const prefix = `LIBRARY INSTALL ${library.name}: `;
+    const prefix = `LIBRARY INSTALL ${libraryName}: `;
     log.log(
       prefix +
-        `Started ${library.name}, Engine: ${engine.name}, URL: ${library.downloadUrl}`
+        `Started ${libraryName}, Engine: ${engine.name}, URL: ${libraryDownloadUrl}`
     );
-    const downloadRes = await fetch(library.downloadUrl);
+    const downloadRes = await fetch(libraryDownloadUrl);
     if (!downloadRes.ok) {
       log.error(
         prefix +
@@ -57,7 +58,7 @@ export class LibraryManager {
     }
     const tempFilePath = path.join(
       this.tempDir,
-      `vv-temp-${engineId}-${library.uuid}`
+      `vv-temp-${engineId}-${libraryId}`
     );
     log.log(prefix + `Writing to ${tempFilePath}`);
 
@@ -126,7 +127,7 @@ export class LibraryManager {
           engineId
         ].installLibraryInstallLibraryLibraryUuidPost(
           {
-            libraryUuid,
+            libraryUuid: libraryId,
           },
           {
             body: libraryBuffer,
