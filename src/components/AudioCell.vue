@@ -150,6 +150,7 @@ const selectAndSetActiveAudioKey = () => {
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
   store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
 };
+// 複数選択のクリック判定
 const onClickWithModifierKey = (event: MouseEvent) => {
   if (uiLocked.value) return;
   const currentActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
