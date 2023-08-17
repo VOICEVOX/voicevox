@@ -24,7 +24,7 @@ export class LibraryManager {
     this.tempDir = tempDir;
   }
 
-  async startLibraryDownload(
+  async startLibraryDownloadAndInstall(
     engineId: EngineId,
     libraryId: LibraryId,
     libraryName: string,

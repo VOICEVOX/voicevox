@@ -951,7 +951,7 @@ ipcMainHandle("READ_FILE", async (_, { filePath }) => {
 ipcMainHandle(
   "START_LIBRARY_DOWNLOAD",
   (_, { engineId, libraryId, libraryName, libraryDownloadUrl }) => {
-    libraryManager.startLibraryDownload(
+    libraryManager.startLibraryDownloadAndInstall(
       engineId,
       libraryId,
       libraryName,
