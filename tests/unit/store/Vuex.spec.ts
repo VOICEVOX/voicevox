@@ -36,6 +36,7 @@ describe("store/vuex.js test", () => {
         audioPlayStartPoint: 0,
         uiLockCount: 0,
         dialogLockCount: 0,
+        reloadingLock: false,
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
@@ -78,6 +79,7 @@ describe("store/vuex.js test", () => {
         },
         editorFont: "default",
         showTextLineNumber: false,
+        showAddAudioItemButton: true,
         isPinned: false,
         isFullscreen: false,
         presetItems: {},
@@ -249,6 +251,7 @@ describe("store/vuex.js test", () => {
       false
     );
     assert.equal(store.state.showTextLineNumber, false);
+    assert.equal(store.state.showAddAudioItemButton, true);
     assert.propertyVal(
       store.state.splitterPosition,
       "audioDetailPaneHeight",

@@ -14,7 +14,7 @@ Windows／Mac／Linux 搭載の PC に対応しています。
 
 ### GPU 版
 
-GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
+DirectML 対応の GPU を搭載した Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
 
 ## インストールに関する質問
 
@@ -129,7 +129,7 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 ### Q. エラーログはどこで確認できますか？
 
-以下のフォルダに保存されています。
+ヘルプ → お問い合わせ → ログフォルダを開くボタン から確認できます。具体的には以下のフォルダに保存されています。
 
 #### Windows 版
 
@@ -137,7 +137,7 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 #### Mac 版
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox/logs`
+`/Users/(ユーザー名)/Library/Logs/voicevox-cpu`
 
 ### Q. Ubuntu 22.04 で動きません
 

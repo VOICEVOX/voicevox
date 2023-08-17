@@ -14,13 +14,15 @@ import {
   transformCommandStore,
 } from "./type";
 import {
-  buildFileNameFromRawData,
-  buildProjectFileName,
+  buildAudioFileNameFromRawData,
+  isAccentPhrasesTextDifferent,
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
   currentDateString,
-  skipMemoText,
+  extractExportText,
+  extractYomiText,
+  sanitizeFileName,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -127,33 +129,45 @@ function parseTextFile(
   return audioItems;
 }
 
-// TODO: GETTERに移動する
-function buildFileName(state: State, audioKey: AudioKey) {
-  const fileNamePattern = state.savingSetting.fileNamePattern;
+async function changeFileTailToNonExistent(filePath: string) {
+  const EXTENSION = "wav";
+  let tail = 1;
+  const name = filePath.slice(0, filePath.length - 1 - EXTENSION.length);
+  while (await window.electron.checkFileExists(filePath)) {
+    filePath = `${name}[${tail}].${EXTENSION}`;
+    tail += 1;
+  }
+  return filePath;
+}
 
-  const index = state.audioKeys.indexOf(audioKey);
-  const audioItem = state.audioItems[audioKey];
+export async function writeTextFile(obj: {
+  filePath: string;
+  text: string;
+  encoding?: EncodingType;
+}) {
+  obj.encoding ??= "UTF-8";
 
-  const character = getCharacterInfo(
-    state,
-    audioItem.voice.engineId,
-    audioItem.voice.styleId
-  );
-  if (character === undefined)
-    throw new Error("assert character !== undefined");
+  const textBlob = {
+    "UTF-8": (text: string) => {
+      const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+      return new Blob([bom, text], {
+        type: "text/plain;charset=UTF-8",
+      });
+    },
+    Shift_JIS: (text: string) => {
+      const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
+        to: "SJIS",
+        type: "arraybuffer",
+      });
+      return new Blob([new Uint8Array(sjisArray)], {
+        type: "text/plain;charset=Shift_JIS",
+      });
+    },
+  }[obj.encoding](obj.text);
 
-  const style = character.metas.styles.find(
-    (style) => style.styleId === audioItem.voice.styleId
-  );
-  if (style === undefined) throw new Error("assert style !== undefined");
-
-  const styleName = style.styleName || "ノーマル";
-  return buildFileNameFromRawData(fileNamePattern, {
-    characterName: character.metas.speakerName,
-    index,
-    styleName,
-    text: audioItem.text,
-    date: currentDateString(),
+  return window.electron.writeFile({
+    filePath: obj.filePath,
+    buffer: await textBlob.arrayBuffer(),
   });
 }
 
@@ -168,12 +182,16 @@ function generateWriteErrorMessage(writeFileResult: ResultError) {
     if (code.startsWith("EACCES")) {
       return "ファイルにアクセスする許可がありません。";
     }
+
+    if (code.startsWith("EBUSY")) {
+      return "ファイルが開かれています。";
+    }
   }
 
   return `何らかの理由で失敗しました。${writeFileResult.message}`;
 }
 
-// TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
+// TODO: GETTERに移動する。
 export function getCharacterInfo(
   state: State,
   engineId: EngineId,
@@ -1089,6 +1107,55 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  DEFAULT_PROJECT_FILE_BASE_NAME: {
+    getter: (state) => {
+      const headItemText = state.audioItems[state.audioKeys[0]].text;
+
+      const tailItemText =
+        state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
+
+      const headTailItemText =
+        state.audioKeys.length === 1
+          ? headItemText
+          : headItemText + "..." + tailItemText;
+
+      const defaultFileBaseName = sanitizeFileName(headTailItemText);
+
+      return defaultFileBaseName === "" ? "Untitled" : defaultFileBaseName;
+    },
+  },
+
+  DEFAULT_AUDIO_FILE_NAME: {
+    getter: (state) => (audioKey) => {
+      const fileNamePattern = state.savingSetting.fileNamePattern;
+
+      const index = state.audioKeys.indexOf(audioKey);
+      const audioItem = state.audioItems[audioKey];
+
+      const character = getCharacterInfo(
+        state,
+        audioItem.voice.engineId,
+        audioItem.voice.styleId
+      );
+      if (character === undefined)
+        throw new Error("assert character !== undefined");
+
+      const style = character.metas.styles.find(
+        (style) => style.styleId === audioItem.voice.styleId
+      );
+      if (style === undefined) throw new Error("assert style !== undefined");
+
+      const styleName = style.styleName || "ノーマル";
+      return buildAudioFileNameFromRawData(fileNamePattern, {
+        characterName: character.metas.speakerName,
+        index,
+        styleName,
+        text: audioItem.text,
+        date: currentDateString(),
+      });
+    },
+  },
+
   GENERATE_LAB: {
     action: createUILockAction(
       async (
@@ -1273,26 +1340,25 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   GENERATE_AND_SAVE_AUDIO: {
     action: createUILockAction(
       async (
-        { state, dispatch },
+        { state, getters, dispatch },
         {
           audioKey,
           filePath,
-          encoding,
         }: {
           audioKey: AudioKey;
           filePath?: string;
-          encoding?: EncodingType;
         }
       ): Promise<SaveResultObject> => {
+        const defaultAudioFileName = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
-            buildFileName(state, audioKey)
+            defaultAudioFileName
           );
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を保存",
-            defaultPath: buildFileName(state, audioKey),
+            defaultPath: defaultAudioFileName,
           });
         }
 
@@ -1301,12 +1367,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          let tail = 1;
-          const name = filePath.slice(0, filePath.length - 4);
-          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
-            filePath = name + "[" + tail.toString() + "]" + ".wav";
-            tail += 1;
-          }
+          filePath = await changeFileTailToNonExistent(filePath);
         }
 
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
@@ -1346,42 +1407,18 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
                 errorMessage: "labの生成に失敗しました。",
               };
 
-            const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-            const labBlob = new Blob([bom, labString], {
-              type: "text/plain;charset=UTF-8",
-            });
-
-            await window.electron
-              .writeFile({
-                filePath: filePath.replace(/\.wav$/, ".lab"),
-                buffer: await labBlob.arrayBuffer(),
-              })
-              .then(getValueOrThrow);
+            await writeTextFile({
+              text: labString,
+              filePath: filePath.replace(/\.wav$/, ".lab"),
+            }).then(getValueOrThrow);
           }
 
           if (state.savingSetting.exportText) {
-            const textBlob = ((): Blob => {
-              if (!encoding || encoding === "UTF-8") {
-                const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-                return new Blob([bom, state.audioItems[audioKey].text], {
-                  type: "text/plain;charset=UTF-8",
-                });
-              }
-              const sjisArray = Encoding.convert(
-                Encoding.stringToCode(state.audioItems[audioKey].text),
-                { to: "SJIS", type: "arraybuffer" }
-              );
-              return new Blob([new Uint8Array(sjisArray)], {
-                type: "text/plain;charset=Shift_JIS",
-              });
-            })();
-
-            await window.electron
-              .writeFile({
-                filePath: filePath.replace(/\.wav$/, ".txt"),
-                buffer: await textBlob.arrayBuffer(),
-              })
-              .then(getValueOrThrow);
+            await writeTextFile({
+              text: extractExportText(state.audioItems[audioKey].text),
+              filePath: filePath.replace(/\.wav$/, ".txt"),
+              encoding: state.savingSetting.fileEncoding,
+            }).then(getValueOrThrow);
           }
 
           return { result: "SUCCESS", path: filePath };
@@ -1409,14 +1446,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   GENERATE_AND_SAVE_ALL_AUDIO: {
     action: createUILockAction(
       async (
-        { state, dispatch },
+        { state, getters, dispatch },
         {
           dirPath,
-          encoding,
           callback,
         }: {
           dirPath?: string;
-          encoding?: EncodingType;
           callback?: (finishedCount: number, totalCount: number) => void;
         }
       ) => {
@@ -1434,11 +1469,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let finishedCount = 0;
 
           const promises = state.audioKeys.map((audioKey) => {
-            const name = buildFileName(state, audioKey);
+            const name = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
               filePath: path.join(_dirPath, name),
-              encoding,
             }).then((value) => {
               callback?.(++finishedCount, totalCount);
               return value;
@@ -1453,18 +1487,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action: createUILockAction(
       async (
-        { state, dispatch },
+        { state, getters, dispatch },
         {
           filePath,
-          encoding,
           callback,
         }: {
           filePath?: string;
-          encoding?: EncodingType;
           callback?: (finishedCount: number, totalCount: number) => void;
         }
       ): Promise<SaveResultObject> => {
-        const defaultFileName = buildProjectFileName(state, "wav");
+        const defaultFileName = `${getters.DEFAULT_PROJECT_FILE_BASE_NAME}.wav`;
 
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
@@ -1483,12 +1515,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          let tail = 1;
-          const name = filePath.slice(0, filePath.length - 4);
-          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
-            filePath = name + "[" + tail.toString() + "]" + ".wav";
-            tail += 1;
-          }
+          filePath = await changeFileTailToNonExistent(filePath);
         }
 
         const encodedBlobs: string[] = [];
@@ -1553,7 +1580,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             return { result: "WRITE_ERROR", path: filePath };
           }
           labs.push(lab);
-          texts.push(state.audioItems[audioKey].text);
+          texts.push(extractExportText(state.audioItems[audioKey].text));
           // 最終音素の終了時刻を取得する
           const splitLab = lab.split(" ");
           labOffset = Number(splitLab[splitLab.length - 2]);
@@ -1576,54 +1603,27 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.exportLab) {
-          // GENERATE_LABで生成される文字列はすべて改行で終わるので、改行なしに結合する
-          const labString = labs.join("");
-
-          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-          const labBlob = new Blob([bom, labString], {
-            type: "text/plain;charset=UTF-8",
+          const labResult = await writeTextFile({
+            // GENERATE_LABで生成される文字列はすべて改行で終わるので、追加で改行を挟む必要はない
+            text: labs.join(""),
+            filePath: filePath.replace(/\.wav$/, ".lab"),
           });
-
-          await window.electron
-            .writeFile({
-              filePath: filePath.replace(/\.wav$/, ".lab"),
-              buffer: await labBlob.arrayBuffer(),
-            })
-            .then((result) => {
-              if (result.ok) return;
-              window.electron.logError(result.error);
-              return { result: "WRITE_ERROR", path: filePath };
-            });
+          if (!labResult.ok) {
+            window.electron.logError(labResult.error);
+            return { result: "WRITE_ERROR", path: filePath };
+          }
         }
 
         if (state.savingSetting.exportText) {
-          const textBlob = ((): Blob => {
-            const text = texts.join("\n");
-            if (!encoding || encoding === "UTF-8") {
-              const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-              return new Blob([bom, skipMemoText(text)], {
-                type: "text/plain;charset=UTF-8",
-              });
-            }
-            const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
-              to: "SJIS",
-              type: "arraybuffer",
-            });
-            return new Blob([new Uint8Array(sjisArray)], {
-              type: "text/plain;charset=Shift_JIS",
-            });
-          })();
-
-          await window.electron
-            .writeFile({
-              filePath: filePath.replace(/\.wav$/, ".txt"),
-              buffer: await textBlob.arrayBuffer(),
-            })
-            .then((result) => {
-              if (result.ok) return;
-              window.electron.logError(result.error);
-              return { result: "WRITE_ERROR", path: filePath };
-            });
+          const textResult = await writeTextFile({
+            text: texts.join("\n"),
+            filePath: filePath.replace(/\.wav$/, ".txt"),
+            encoding: state.savingSetting.fileEncoding,
+          });
+          if (!textResult.ok) {
+            window.electron.logError(textResult.error);
+            return { result: "WRITE_ERROR", path: filePath };
+          }
         }
 
         return { result: "SUCCESS", path: filePath };
@@ -1634,10 +1634,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   CONNECT_AND_EXPORT_TEXT: {
     action: createUILockAction(
       async (
-        { state, dispatch, getters },
-        { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
+        { state, getters },
+        { filePath }: { filePath?: string }
       ): Promise<SaveResultObject> => {
-        const defaultFileName = buildProjectFileName(state, "txt");
+        const defaultFileName = `${getters.DEFAULT_PROJECT_FILE_BASE_NAME}.txt`;
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
@@ -1655,12 +1655,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          let tail = 1;
-          const name = filePath.slice(0, filePath.length - 4);
-          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
-            filePath = name + "[" + tail.toString() + "]" + ".wav";
-            tail += 1;
-          }
+          filePath = await changeFileTailToNonExistent(filePath);
         }
 
         const characters = new Map<string, string>();
@@ -1691,37 +1686,21 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 
-          const skppedText = skipMemoText(state.audioItems[audioKey].text);
-          texts.push(speakerName + skppedText);
+          const skippedText = extractExportText(
+            state.audioItems[audioKey].text
+          );
+          texts.push(speakerName + skippedText);
         }
 
-        const textBlob = ((): Blob => {
-          const text = texts.join("\n");
-          if (!encoding || encoding === "UTF-8") {
-            const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-            return new Blob([bom, text], {
-              type: "text/plain;charset=UTF-8",
-            });
-          }
-          const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
-            to: "SJIS",
-            type: "arraybuffer",
-          });
-          return new Blob([new Uint8Array(sjisArray)], {
-            type: "text/plain;charset=Shift_JIS",
-          });
-        })();
-
-        await window.electron
-          .writeFile({
-            filePath,
-            buffer: await textBlob.arrayBuffer(),
-          })
-          .then((result) => {
-            if (result.ok) return;
-            window.electron.logError(result.error);
-            return { result: "WRITE_ERROR", path: filePath };
-          });
+        const result = await writeTextFile({
+          text: texts.join("\n"),
+          encoding: state.savingSetting.fileEncoding,
+          filePath,
+        });
+        if (!result.ok) {
+          window.electron.logError(result.error);
+          return { result: "WRITE_ERROR", path: filePath };
+        }
 
         return { result: "SUCCESS", path: filePath };
       }
@@ -1791,21 +1770,24 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
 
-        audioElem
-          .setSinkId(state.savingSetting.audioOutputDevice)
-          .catch((err) => {
-            const stop = () => {
-              audioElem.pause();
-              audioElem.removeEventListener("canplay", stop);
-            };
-            audioElem.addEventListener("canplay", stop);
-            window.electron.showMessageDialog({
-              type: "error",
-              title: "エラー",
-              message: "再生デバイスが見つかりません",
+        // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
+        if (audioElem.setSinkId) {
+          audioElem
+            .setSinkId(state.savingSetting.audioOutputDevice)
+            .catch((err) => {
+              const stop = () => {
+                audioElem.pause();
+                audioElem.removeEventListener("canplay", stop);
+              };
+              audioElem.addEventListener("canplay", stop);
+              window.electron.showMessageDialog({
+                type: "error",
+                title: "エラー",
+                message: "再生デバイスが見つかりません",
+              });
+              throw new Error(err);
             });
-            throw new Error(err);
-          });
+        }
 
         // 再生終了時にresolveされるPromiseを返す
         const played = async () => {
@@ -1898,18 +1880,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       }
     },
   },
-
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    action() {
-      window.electron.openTextEditContextMenu();
-    },
-  },
-
-  CHECK_FILE_EXISTS: {
-    action(_, { file }: { file: string }) {
-      return window.electron.checkFileExists(file);
-    },
-  },
 });
 
 export const audioCommandStoreState: AudioCommandStoreState = {};
@@ -1965,6 +1935,19 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
+    COMMAND_CHANGE_DISPLAY_TEXT: {
+      /**
+       * 読みを変えずにテキストだけを変える
+       */
+      action({ commit }, payload: { audioKey: AudioKey; text: string }) {
+        commit("COMMAND_CHANGE_AUDIO_TEXT", {
+          audioKey: payload.audioKey,
+          text: payload.text,
+          update: "Text",
+        });
+      },
+    },
+
     COMMAND_CHANGE_AUDIO_TEXT: {
       mutation(
         draft,
@@ -2000,23 +1983,31 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
-        const skppedText = skipMemoText(text);
+        const skippedText = extractYomiText(text);
 
         try {
           if (query !== undefined) {
             const accentPhrases: AccentPhrase[] = await dispatch(
               "FETCH_ACCENT_PHRASES",
               {
-                text: skppedText,
+                text: skippedText,
                 engineId,
                 styleId,
               }
+            );
+
+            // 読みの内容が変わっていなければテキストだけ変更
+            const isChangedMora = isAccentPhrasesTextDifferent(
+              query.accentPhrases,
+              accentPhrases
             );
             commit("COMMAND_CHANGE_AUDIO_TEXT", {
               audioKey,
               text,
               update: "AccentPhrases",
-              accentPhrases,
+              accentPhrases: isChangedMora
+                ? accentPhrases
+                : query.accentPhrases,
             });
           } else {
             const newAudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
@@ -2451,7 +2442,7 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         if (query === undefined) throw new Error("assert query !== undefined");
 
-        const newAccentPhases = await dispatch("FETCH_MORA_DATA", {
+        const newAccentPhrases = await dispatch("FETCH_MORA_DATA", {
           accentPhrases: query.accentPhrases,
           engineId,
           styleId,
@@ -2459,7 +2450,7 @@ export const audioCommandStore = transformCommandStore(
 
         commit("COMMAND_CHANGE_ACCENT", {
           audioKey,
-          accentPhrases: newAccentPhases,
+          accentPhrases: newAccentPhrases,
         });
       },
     },
@@ -2475,7 +2466,7 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         if (query == undefined) throw new Error("query == undefined");
 
-        const newAccentPhases = await dispatch("FETCH_AND_COPY_MORA_DATA", {
+        const newAccentPhrases = await dispatch("FETCH_AND_COPY_MORA_DATA", {
           accentPhrases: [...query.accentPhrases],
           engineId,
           styleId,
@@ -2484,7 +2475,7 @@ export const audioCommandStore = transformCommandStore(
 
         commit("COMMAND_CHANGE_ACCENT", {
           audioKey,
-          accentPhrases: newAccentPhases,
+          accentPhrases: newAccentPhrases,
         });
       },
     },
@@ -2780,7 +2771,7 @@ export const audioCommandStore = transformCommandStore(
           let body = new TextDecoder("utf-8").decode(
             await window.electron.readFile({ filePath }).then(getValueOrThrow)
           );
-          if (body.indexOf("\ufffd") > -1) {
+          if (body.includes("\ufffd")) {
             body = new TextDecoder("shift-jis").decode(
               await window.electron.readFile({ filePath }).then(getValueOrThrow)
             );
