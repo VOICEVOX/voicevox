@@ -7,9 +7,8 @@ export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
 
 // Electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なmacOS判定
-function checkIsMac() {
+function checkIsMac(): boolean {
   let isMac: boolean | undefined = undefined;
-
   if (process?.platform) {
     isMac = process.platform === "darwin";
   } else if (navigator?.userAgentData) {
@@ -19,7 +18,6 @@ function checkIsMac() {
   } else {
     isMac = navigator.userAgent.toLowerCase().includes("mac");
   }
-
   return isMac;
 }
 export const isMac = checkIsMac();
