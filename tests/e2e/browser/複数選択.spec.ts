@@ -35,18 +35,13 @@ async function getSelectedStatus(page: Page): Promise<{
         selected.push(i + 1);
       }
     }
+    if (active === undefined) {
+      throw new Error("No active audio cell");
+    }
 
     return { active, selected };
   });
-  if (selectedAudioKeys.active === undefined) {
-    throw new Error("No active audio cell");
-  }
-  // return selectedAudioKeys; だと何故か型エラーを出すので、一旦オブジェクトを作って返す
-  // FIXME: なんとかする
-  return {
-    active: selectedAudioKeys.active,
-    selected: selectedAudioKeys.selected,
-  };
+  return selectedAudioKeys;
 }
 
 async function prepareAudioCells(page: Page, count: number) {
@@ -56,95 +51,86 @@ async function prepareAudioCells(page: Page, count: number) {
   }
 }
 
-test("複数選択：ただのクリックはactiveAudioKeyとselectedAudioKeysをクリックしたAudioCellだけにする", async ({
-  page,
-}) => {
-  await page.locator(".audio-cell:nth-child(1)").click();
-  await page.keyboard.down("Shift");
-  await page.locator(".audio-cell:nth-child(3)").click();
-  await page.keyboard.up("Shift");
-
-  await page.locator(".audio-cell:nth-child(2)").click();
-
-  await page.waitForTimeout(100);
-  const selectedStatus = await getSelectedStatus(page);
-  expect(selectedStatus.active).toBe(2);
-  expect(selectedStatus.selected).toEqual([2]);
-});
-
-test("複数選択：Shift+クリックは前回選択していたAudioCellから今回クリックしたAudioCellまでを選択する", async ({
-  page,
-}) => {
+test("複数選択：マウス周り", async ({ page }) => {
+  // Shift+クリックは前回選択していたAudioCellから今回クリックしたAudioCellまでを選択する
   await page.locator(".audio-cell:nth-child(2)").click();
   await page.keyboard.down("Shift");
   await page.locator(".audio-cell:nth-child(4)").click();
   await page.keyboard.up("Shift");
 
   await page.waitForTimeout(100);
-  const selectedStatus = await getSelectedStatus(page);
-  expect(selectedStatus.active).toBe(4);
-  expect(selectedStatus.selected).toEqual([2, 3, 4]);
-});
+  const selectedStatus1 = await getSelectedStatus(page);
+  expect(selectedStatus1.active).toBe(4);
+  expect(selectedStatus1.selected).toEqual([2, 3, 4]);
 
-test("複数選択：選択してないAudioCellをCtrl+クリックすると選択範囲を追加する", async ({
-  page,
-}) => {
-  if (process.platform === "darwin") {
-    // FIXME: Macでは動かないので、Macでは落ちるテストとしてマークする。
-    test.fail();
+  // ただのクリックはactiveAudioKeyとselectedAudioKeysをクリックしたAudioCellだけにする
+  await page.locator(".audio-cell:nth-child(2)").click();
+
+  await page.waitForTimeout(100);
+  const selectedStatus2 = await getSelectedStatus(page);
+  expect(selectedStatus2.active).toBe(2);
+  expect(selectedStatus2.selected).toEqual([2]);
+
+  // Ctrl関係はMacでは落ちるので、Macではテストをスキップする
+
+  if (process.platform !== "darwin") {
+    // Ctrl+クリックは選択範囲を追加する
+    await page.keyboard.down(ctrlLike);
+    await page.locator(".audio-cell:nth-child(4)").click();
+    await page.keyboard.up(ctrlLike);
+    await page.waitForTimeout(100);
+
+    const selectedStatus3 = await getSelectedStatus(page);
+    expect(selectedStatus3.active).toBe(4);
+    expect(selectedStatus3.selected).toEqual([2, 4]);
+
+    // Ctrl+クリックは選択範囲から削除する
+    await page.keyboard.down(ctrlLike);
+    await page.locator(".audio-cell:nth-child(4)").click();
+    await page.keyboard.up(ctrlLike);
+    await page.waitForTimeout(100);
+
+    const selectedStatus4 = await getSelectedStatus(page);
+    expect(selectedStatus4.active).toBe(4);
+    expect(selectedStatus4.selected).toEqual([2]);
   }
-  await page.locator(".audio-cell:nth-child(2)").click();
-  await page.keyboard.down(ctrlLike);
-  await page.locator(".audio-cell:nth-child(4)").click();
-  await page.keyboard.up(ctrlLike);
-
-  await page.waitForTimeout(100);
-  const selectedStatus = await getSelectedStatus(page);
-  expect(selectedStatus.active).toBe(4);
-  expect(selectedStatus.selected).toEqual([2, 4]);
 });
 
-test("複数選択：選択してるAudioCellをCtrl+クリックすると選択範囲から削除する", async ({
-  page,
-}) => {
-  if (process.platform === "darwin") {
-    // FIXME: Macでは動かないので、Macでは落ちるテストとしてマークする。
-    test.fail();
-  }
-  await page.locator(".audio-cell:nth-child(2)").click();
-  await page.keyboard.down("Shift");
-  await page.locator(".audio-cell:nth-child(4)").click();
-  await page.keyboard.up("Shift");
-  await page.keyboard.down(ctrlLike);
-  await page.locator(".audio-cell:nth-child(3)").click();
-  await page.keyboard.up(ctrlLike);
-
-  await page.waitForTimeout(100);
-  const selectedStatus = await getSelectedStatus(page);
-  expect(selectedStatus.active).toBe(4);
-  expect(selectedStatus.selected).toEqual([2, 4]);
-});
-
-test("複数選択：Shift+下で下方向を選択範囲にする", async ({ page }) => {
+test("複数選択：キーボード", async ({ page }) => {
+  // Shift+下で下方向を選択範囲にする
   await page.locator(".audio-cell:nth-child(2)").click();
   await page.keyboard.down("Shift");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.up("Shift");
   await page.waitForTimeout(100);
 
-  const selectedStatus = await getSelectedStatus(page);
-  expect(selectedStatus.active).toBe(3);
-  expect(selectedStatus.selected).toEqual([2, 3]);
-});
+  const selectedStatus1 = await getSelectedStatus(page);
+  expect(selectedStatus1.active).toBe(3);
+  expect(selectedStatus1.selected).toEqual([2, 3]);
 
-test("複数選択：Shift+上で上方向を選択範囲にする", async ({ page }) => {
-  await page.locator(".audio-cell:nth-child(2)").click();
+  // ただの下で下方向をactiveにして他の選択を解除する
+  await page.keyboard.press("ArrowDown");
+
+  await page.waitForTimeout(100);
+  const selectedStatus2 = await getSelectedStatus(page);
+  expect(selectedStatus2.active).toBe(4);
+  expect(selectedStatus2.selected).toEqual([4]);
+
+  // Shift+上で上方向を選択範囲にする
   await page.keyboard.down("Shift");
   await page.keyboard.press("ArrowUp");
   await page.keyboard.up("Shift");
   await page.waitForTimeout(100);
 
-  const selectedStatus = await getSelectedStatus(page);
-  expect(selectedStatus.active).toBe(1);
-  expect(selectedStatus.selected).toEqual([1, 2]);
+  const selectedStatus3 = await getSelectedStatus(page);
+  expect(selectedStatus3.active).toBe(3);
+  expect(selectedStatus3.selected).toEqual([3, 4]);
+
+  // ただの上で上方向をactiveにして他の選択を解除する
+  await page.keyboard.press("ArrowUp");
+  await page.waitForTimeout(100);
+
+  const selectedStatus4 = await getSelectedStatus(page);
+  expect(selectedStatus4.active).toBe(2);
+  expect(selectedStatus4.selected).toEqual([2]);
 });
