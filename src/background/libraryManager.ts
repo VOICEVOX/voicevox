@@ -43,9 +43,39 @@ export class LibraryManager {
         prefix +
           `Failed to download library: Server returned ${downloadRes.status}`
       );
+      let reason: string;
+      if (downloadRes.status >= 400 && downloadRes.status < 500) {
+        switch (downloadRes.status) {
+          case 401:
+          case 403:
+            reason = "ダウンロードが拒否された";
+            break;
+          case 404:
+            reason = "ダウンロードするライブラリが見つからない";
+            break;
+          default:
+            reason = "アクセスに失敗した";
+            break;
+        }
+      } else if (downloadRes.status >= 500) {
+        switch (downloadRes.status) {
+          case 502:
+          case 503:
+            reason = "サーバーがダウンしている";
+            break;
+          case 504:
+            reason = "サーバーが時間内に応答しなかった";
+            break;
+          default:
+            reason = "サーバーでエラーが発生した";
+            break;
+        }
+      } else {
+        reason = "ダウンロード先のサーバーが不明なエラーを返した";
+      }
       onUpdate({
         status: "error",
-        message: `ダウンロード先のサーバーが${downloadRes.status}エラーを返しました`,
+        message: `${reason}(ステータスコード: ${downloadRes.status})ため、現在このライブラリをダウンロードできません。`,
       });
       return;
     } else if (downloadRes.body === null) {
