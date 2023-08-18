@@ -139,7 +139,9 @@ const precisionComputed = computed(() => {
 });
 
 // クリックでアクセント句が選択されないように@click.stopに渡す
-const stopPropagation = undefined;
+const stopPropagation = () => {
+  //
+};
 </script>
 
 <style scoped lang="scss">
