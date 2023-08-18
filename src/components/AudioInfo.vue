@@ -227,24 +227,7 @@
         />
         <div class="q-pl-xs row overflow-hidden">
           <div class="text-body2 ellipsis overflow-hidden">
-            {{
-              morphingTargetCharacterInfo
-                ? morphingTargetCharacterInfo.metas.speakerName
-                : "未設定"
-            }}
-          </div>
-          <div
-            v-if="
-              morphingTargetCharacterInfo &&
-              morphingTargetCharacterInfo.metas.styles.length >= 2
-            "
-            class="text-body2 ellipsis overflow-hidden"
-          >
-            （{{
-              morphingTargetStyleInfo
-                ? morphingTargetStyleInfo.styleName
-                : undefined
-            }}）
+            {{ selectedMorphingCharacterStyleName }}
           </div>
         </div>
       </div>
@@ -302,6 +285,7 @@ import { QSelectProps } from "quasar";
 import CharacterButton from "./CharacterButton.vue";
 import PresetManageDialog from "./PresetManageDialog.vue";
 import { useStore } from "@/store";
+import { DEFAULT_STYLE_NAME } from "@/store/utility";
 
 import {
   AudioKey,
@@ -603,6 +587,22 @@ const morphingTargetStyleInfo = computed(() => {
       style.engineId === targetVoice?.engineId &&
       style.styleId === targetVoice.styleId
   );
+});
+
+const selectedMorphingCharacterStyleName = computed(() => {
+  const characterInfo = morphingTargetCharacterInfo.value;
+  if (characterInfo === undefined) {
+    return "未設定";
+  }
+
+  const characterName = characterInfo.metas.speakerName;
+  if (characterInfo.metas.styles.length === 1) {
+    return characterName;
+  }
+
+  const styleName =
+    morphingTargetStyleInfo.value?.styleName ?? DEFAULT_STYLE_NAME;
+  return `${characterName} (${styleName})`;
 });
 
 const setMorphingRate = (rate: number) => {
