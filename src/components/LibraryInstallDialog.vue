@@ -192,6 +192,8 @@ const installLibraryCompleteOrFailedDialog = async () => {
 };
 
 watch(libraryInstallStatuses, (newValue, oldValue) => {
+  // このダイアログが開かれていないときは何もしない
+  if (!modelValueComputed.value) return;
   if (!selectedLibraryData.value)
     throw Error("selectedLibraryData.value === undefined");
   const libraryId = selectedLibraryData.value.libraryId;
