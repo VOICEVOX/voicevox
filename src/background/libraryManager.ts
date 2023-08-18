@@ -168,6 +168,12 @@ export class LibraryManager {
     });
     log.log(prefix + "Waiting for lock");
 
+    if (this.engineApis[engineId] === undefined) {
+      this.engineApis[engineId] = new DefaultApi(
+        new Configuration({ basePath: engine.host })
+      );
+    }
+
     try {
       await this.lock.acquire(`${engineId}`, async () => {
         log.log(prefix + "Uninstalling library");
