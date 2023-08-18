@@ -8,20 +8,22 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-import { BuildOptions, defineConfig, Plugin } from "vite";
+import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
-
-const packageName = process.env.npm_package_name;
-const suffix = /-(cpu|cuda)$/;
-const appName = packageName.replace(suffix, "");
-process.env.VITE_APP_NAME = appName;
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 
 export default defineConfig((options) => {
+  const package_name = process.env.npm_package_name;
+  const env = loadEnv(options.mode, __dirname);
+  if (!package_name.startsWith(env.VITE_APP_NAME)) {
+    throw new Error(
+      `"pacage.json"の"name":"${package_name}"が"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まりません`
+    );
+  }
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
   process.env.VITE_7Z_BIN_NAME =
     (options.mode === "development"
