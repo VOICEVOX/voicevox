@@ -192,7 +192,7 @@
       </q-card-section>
       <q-card-section align="center" class="column">
         <q-btn
-          padding="sm"
+          padding="xs"
           label="デフォルトに戻す"
           unelevated
           icon="settings_backup_restore"
@@ -202,7 +202,7 @@
           @click="resetDialogHotkey(targetAction)"
         />
         <q-btn
-          padding="sm"
+          padding="xs"
           label="未割り当てにする"
           unelevated
           icon="delete"
