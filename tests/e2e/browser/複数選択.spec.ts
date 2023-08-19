@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
   await page.waitForTimeout(100);
   await toggleSetting(page, "複数選択");
 
-  await prepareAudioCells(page, 4);
+  await addAudioCells(page, 3);
 });
 
 const ctrlLike = process.platform === "darwin" ? "Meta" : "Control";
@@ -44,8 +44,8 @@ async function getSelectedStatus(page: Page): Promise<{
   return selectedAudioKeys;
 }
 
-async function prepareAudioCells(page: Page, count: number) {
-  for (let i = 1; i < count; i++) {
+async function addAudioCells(page: Page, count: number) {
+  for (let i = 0; i < count; i++) {
     await page.getByRole("button", { name: "テキストを追加" }).click();
     await page.waitForTimeout(100);
   }
