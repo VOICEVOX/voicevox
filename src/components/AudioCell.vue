@@ -213,21 +213,17 @@ const onClickWithModifierKey = (event: MouseEvent) => {
 const isCtrlOrCommandKeyDown = ref(false);
 const isShiftKeyDown = ref(false);
 
-const onKeydown = (e: KeyboardEvent) => {
-  isCtrlOrCommandKeyDown.value = isOnCommandOrCtrlKeyDown(e);
-  isShiftKeyDown.value = e.shiftKey;
-};
-const onKeyup = (e: KeyboardEvent) => {
+const keyEventListener = (e: KeyboardEvent) => {
   isCtrlOrCommandKeyDown.value = isOnCommandOrCtrlKeyDown(e);
   isShiftKeyDown.value = e.shiftKey;
 };
 onMounted(() => {
-  window.addEventListener("keydown", onKeydown);
-  window.addEventListener("keyup", onKeyup);
+  window.addEventListener("keydown", keyEventListener);
+  window.addEventListener("keyup", keyEventListener);
 });
 onUnmounted(() => {
-  window.removeEventListener("keydown", onKeydown);
-  window.removeEventListener("keyup", onKeyup);
+  window.removeEventListener("keydown", keyEventListener);
+  window.removeEventListener("keyup", keyEventListener);
 });
 
 const selectedVoice = computed<Voice | undefined>({
