@@ -71,29 +71,25 @@ test("複数選択：マウス周り", async ({ page }) => {
   expect(selectedStatus2.active).toBe(2);
   expect(selectedStatus2.selected).toEqual([2]);
 
-  // Ctrl関係はMacでは落ちるので、Macではテストをスキップする
+  // Ctrl+クリックは選択範囲を追加する
+  await page.keyboard.down(ctrlLike);
+  await page.locator(".audio-cell:nth-child(4)").click();
+  await page.keyboard.up(ctrlLike);
+  await page.waitForTimeout(100);
 
-  if (process.platform !== "darwin") {
-    // Ctrl+クリックは選択範囲を追加する
-    await page.keyboard.down(ctrlLike);
-    await page.locator(".audio-cell:nth-child(4)").click();
-    await page.keyboard.up(ctrlLike);
-    await page.waitForTimeout(100);
+  const selectedStatus3 = await getSelectedStatus(page);
+  expect(selectedStatus3.active).toBe(4);
+  expect(selectedStatus3.selected).toEqual([2, 4]);
 
-    const selectedStatus3 = await getSelectedStatus(page);
-    expect(selectedStatus3.active).toBe(4);
-    expect(selectedStatus3.selected).toEqual([2, 4]);
+  // Ctrl+クリックは選択範囲から削除する
+  await page.keyboard.down(ctrlLike);
+  await page.locator(".audio-cell:nth-child(4)").click();
+  await page.keyboard.up(ctrlLike);
+  await page.waitForTimeout(100);
 
-    // Ctrl+クリックは選択範囲から削除する
-    await page.keyboard.down(ctrlLike);
-    await page.locator(".audio-cell:nth-child(4)").click();
-    await page.keyboard.up(ctrlLike);
-    await page.waitForTimeout(100);
-
-    const selectedStatus4 = await getSelectedStatus(page);
-    expect(selectedStatus4.active).toBe(4);
-    expect(selectedStatus4.selected).toEqual([2]);
-  }
+  const selectedStatus4 = await getSelectedStatus(page);
+  expect(selectedStatus4.active).toBe(4);
+  expect(selectedStatus4.selected).toEqual([2]);
 });
 
 test("複数選択：キーボード", async ({ page }) => {
