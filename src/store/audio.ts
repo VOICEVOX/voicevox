@@ -260,7 +260,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   SELECTED_AUDIO_KEYS: {
     getter(state) {
-      return state._selectedAudioKeys || [];
+      return (
+        state._selectedAudioKeys?.filter((audioKey) =>
+          state.audioKeys.includes(audioKey)
+        ) || []
+      );
     },
   },
 
