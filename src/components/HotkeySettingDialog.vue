@@ -7,7 +7,7 @@
     class="hotkey-setting-dialog transparent-backdrop"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm">
+      <q-header class="q-py-sm header-spacer">
         <q-toolbar>
           <q-toolbar-title class="text-display"
             >設定 / キー割り当て</q-toolbar-title
@@ -71,7 +71,10 @@
             </template>
 
             <template #body="tableProps">
-              <q-tr :props="tableProps">
+              <q-tr
+                :props="tableProps"
+                @click="openHotkeyDialog(tableProps.row.action)"
+              >
                 <q-td
                   :key="tableProps.cols[0].name"
                   no-hover
@@ -104,19 +107,35 @@
                         })
                         .join(' + ')
                     "
-                    @click="openHotkeyDialog(tableProps.row.action)"
                   />
-                  <q-btn
-                    rounded
-                    flat
-                    icon="settings_backup_restore"
-                    padding="none sm"
-                    size="1em"
-                    :disable="checkHotkeyReadonly(tableProps.row.action)"
-                    @click="resetHotkey(tableProps.row.action)"
-                  >
-                    <q-tooltip :delay="500">デフォルトに戻す</q-tooltip>
-                  </q-btn>
+                  <div class="buttons">
+                    <q-btn
+                      rounded
+                      flat
+                      icon="settings_backup_restore"
+                      padding="none sm"
+                      size="1em"
+                      :disable="checkHotkeyReadonly(tableProps.row.action)"
+                      @click.stop="
+                        resetHotkeyWithConfirm(tableProps.row.action)
+                      "
+                    >
+                      <q-tooltip :delay="500">デフォルトに戻す</q-tooltip>
+                    </q-btn>
+                    <q-btn
+                      rounded
+                      flat
+                      icon="delete"
+                      padding="none sm"
+                      size="1em"
+                      :disable="checkHotkeyReadonly(tableProps.row.action)"
+                      @click.stop="
+                        deleteHotkeyWithConfirm(tableProps.row.action)
+                      "
+                    >
+                      <q-tooltip :delay="500">未割り当てにする</q-tooltip>
+                    </q-btn>
+                  </div>
                 </q-td>
               </q-tr>
             </template>
@@ -136,20 +155,32 @@
   >
     <q-card class="q-py-sm q-px-md">
       <q-card-section align="center">
-        <div class="text-h6">ショートカットキーを入力してください</div>
+        <div class="text-h6">「{{ targetAction }}」</div>
       </q-card-section>
       <q-card-section align="center">
-        <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
+        <div class="text-md">ショートカットキーを入力してください</div>
+      </q-card-section>
+      <q-card-section align="center">
+        <template
+          v-for="(hotkey, index) in targetRecord.split(' ')"
+          :key="index"
+        >
           <span v-if="index !== 0"> + </span>
           <!--
           Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
           Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
           -->
           <q-chip :ripple="false" color="surface">
-            {{ hotkey === "Meta" ? "Cmd" : hotkey }}
+            {{
+              hotkey === "Meta"
+                ? "Cmd"
+                : hotkey === ""
+                ? EMPTY_COMBO_NAME
+                : hotkey
+            }}
           </q-chip>
         </template>
-        <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
+        <span v-if="isOnlyModifierKey"> +</span>
         <div v-if="duplicatedHotkey != undefined" class="text-warning q-mt-lg">
           <div class="text-warning">
             ショートカットキーが次の操作と重複しています
@@ -158,6 +189,28 @@
             「{{ duplicatedHotkey.action }}」
           </div>
         </div>
+      </q-card-section>
+      <q-card-section align="center" class="column">
+        <q-btn
+          padding="sm"
+          label="デフォルトに戻す"
+          unelevated
+          icon="settings_backup_restore"
+          size="1em"
+          color="surface"
+          text-color="display"
+          @click="resetDialogHotkey(targetAction)"
+        />
+        <q-btn
+          padding="sm"
+          label="未割り当てにする"
+          unelevated
+          icon="delete"
+          size="1em"
+          color="surface"
+          text-color="display"
+          @click="targetRecord = ''"
+        />
       </q-card-section>
       <q-card-actions align="center">
         <q-btn
@@ -170,18 +223,6 @@
           @click="closeHotkeyDialog"
         />
         <q-btn
-          padding="xs md"
-          label="ショートカットキーを未設定にする"
-          unelevated
-          color="surface"
-          text-color="display"
-          class="q-mt-sm"
-          @click="
-            deleteHotkey(lastAction);
-            closeHotkeyDialog();
-          "
-        />
-        <q-btn
           v-if="duplicatedHotkey == undefined"
           padding="xs md"
           label="OK"
@@ -189,10 +230,10 @@
           color="primary"
           text-color="display-on-primary"
           class="q-mt-sm"
-          :disabled="confirmBtnEnabled"
+          :disabled="confirmBtnDisabled"
           @click="
-            changeHotkeySettings(lastAction, lastRecord).then(() =>
-              closeHotkeyDialog()
+            changeHotkeySettings(targetAction, targetRecord).then(
+              closeHotkeyDialog
             )
           "
         />
@@ -204,8 +245,8 @@
           color="primary"
           text-color="display-on-primary"
           class="q-mt-sm"
-          :disabled="confirmBtnEnabled"
-          @click="solveDuplicated().then(() => closeHotkeyDialog())"
+          :disabled="confirmBtnDisabled"
+          @click="solveDuplicated().then(closeHotkeyDialog)"
         />
       </q-card-actions>
     </q-card>
@@ -216,7 +257,7 @@
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
-import { HotkeyAction, HotkeySetting } from "@/type/preload";
+import { HotkeySetting } from "@/type/preload";
 
 const props =
   defineProps<{
@@ -233,8 +274,6 @@ const hotkeySettingDialogOpenComputed = computed({
   get: () => props.modelValue,
   set: (val) => emit("update:modelValue", val),
 });
-
-const isHotkeyDialogOpened = ref(false);
 
 const hotkeyPagination = ref({ rowsPerPage: 0 });
 const hotkeyFilter = ref("");
@@ -264,45 +303,25 @@ const hotkeyColumns = ref<
   },
 ]);
 
-const lastAction = ref("");
-const lastRecord = ref("");
+// FIXME: actionはHotkeyAction型にすべき
+const changeHotkeySettings = (action: string, combination: string) => {
+  // FIXME: しないよりはマシなので存在チェック
+  const _action = findHotkeySetting(hotkeySettings.value, action).action;
 
-const recordCombination = (event: KeyboardEvent) => {
-  if (!isHotkeyDialogOpened.value) {
-    return;
-  } else {
-    const recordedCombo = parseCombo(event);
-    lastRecord.value = recordedCombo;
-    event.preventDefault();
-  }
-};
-
-const changeHotkeySettings = (action: string, combo: string) => {
   return store.dispatch("SET_HOTKEY_SETTINGS", {
     data: {
-      action: action as HotkeyAction,
-      combination: combo,
+      action: _action,
+      combination,
     },
   });
 };
 
-const duplicatedHotkey = computed(() => {
-  if (lastRecord.value == "") return undefined;
-  return hotkeySettings.value.find(
-    (item) =>
-      item.combination == lastRecord.value && item.action != lastAction.value
-  );
-});
-
-// FIXME: actionはHotkeyAction型にすべき
-const deleteHotkey = (action: string) => {
-  changeHotkeySettings(action, "");
-};
-
+const EMPTY_COMBO_NAME = "(未割り当て)";
 const getHotkeyText = (action: string, combo: string) => {
-  if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
-  if (combo == "") return "未設定";
-  else return combo;
+  if (checkHotkeyReadonly(action)) {
+    combo = "(読み取り専用) " + combo;
+  }
+  return combo == "" ? EMPTY_COMBO_NAME : combo;
 };
 
 // for later developers, in case anyone wants to add a readonly hotkey
@@ -318,54 +337,105 @@ const checkHotkeyReadonly = (action: string) => {
   return flag;
 };
 
+const findHotkeySetting = (hotkeySettings: HotkeySetting[], action: string) => {
+  const hotkeySetting = hotkeySettings.find(
+    (hotkeySetting) => hotkeySetting.action === action
+  );
+  if (hotkeySetting === undefined)
+    throw new Error(`「${action}」は存在しないHotkey Actionです。`);
+  return hotkeySetting;
+};
+const getCurrentHotkeyCombination = (action: string) =>
+  findHotkeySetting(hotkeySettings.value, action).combination;
+const getDefaultHotkeyCombination = async (action: string) =>
+  findHotkeySetting(await window.electron.getDefaultHotkeySettings(), action)
+    .combination;
+
+const getDuplicatedHotkey = (action: string, combination: string) =>
+  hotkeySettings.value.find(
+    (item) => item.combination === combination && item.action !== action
+  );
+
+const resetHotkeyWithConfirm = async (action: string) => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+    title: "ショートカットキーの初期化",
+    message: `「${action}」のショートカットキーを初期値に戻します。<br>本当に戻しますか？`,
+    html: true,
+    actionName: "初期値に戻す",
+  });
+  if (result === "OK") {
+    const combination = await getDefaultHotkeyCombination(action);
+    changeHotkeySettings(action, combination);
+  }
+};
+
+const deleteHotkeyWithConfirm = async (action: string) => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+    title: "ショートカットキーの割り当ての解除",
+    message: `「${action}」のショートカットキーを未割り当てにします。<br>本当に解除しますか？`,
+    html: true,
+    actionName: "解除する",
+  });
+  if (result === "OK") {
+    changeHotkeySettings(action, "");
+  }
+};
+
+// 個別設定ダイアログ
+const isHotkeyDialogOpened = ref(false);
+const targetAction = ref("");
+const targetRecord = ref("");
+
+const duplicatedHotkey = computed(() =>
+  targetRecord.value == ""
+    ? undefined
+    : getDuplicatedHotkey(targetRecord.value, targetAction.value)
+);
+
+const isOnlyModifierKey = computed(() =>
+  ["Ctrl", "Shift", "Alt", "Meta"].includes(
+    targetRecord.value.split(" ")[targetRecord.value.split(" ").length - 1]
+  )
+);
+const confirmBtnDisabled = computed(() => {
+  const isChangedRecord =
+    getCurrentHotkeyCombination(targetAction.value) !== targetRecord.value;
+  return !isChangedRecord || isOnlyModifierKey.value;
+});
+
+const recordCombination = (event: KeyboardEvent) => {
+  if (!isHotkeyDialogOpened.value) {
+    return;
+  } else {
+    const recordedCombo = parseCombo(event);
+    targetRecord.value = recordedCombo;
+    event.preventDefault();
+  }
+};
+
 const openHotkeyDialog = (action: string) => {
-  lastAction.value = action;
-  lastRecord.value = "";
+  targetAction.value = action;
+  targetRecord.value = getCurrentHotkeyCombination(action);
   isHotkeyDialogOpened.value = true;
   document.addEventListener("keydown", recordCombination);
 };
 
 const closeHotkeyDialog = () => {
-  lastAction.value = "";
-  lastRecord.value = "";
+  targetAction.value = "";
+  targetRecord.value = "";
   isHotkeyDialogOpened.value = false;
   document.removeEventListener("keydown", recordCombination);
 };
 
-const solveDuplicated = () => {
+const solveDuplicated = async () => {
   if (duplicatedHotkey.value == undefined)
     throw new Error("duplicatedHotkey.value == undefined");
-  deleteHotkey(duplicatedHotkey.value.action);
-  return changeHotkeySettings(lastAction.value, lastRecord.value);
+  await changeHotkeySettings(duplicatedHotkey.value.action, "");
+  await changeHotkeySettings(targetAction.value, targetRecord.value);
 };
 
-const confirmBtnEnabled = computed(() => {
-  return (
-    lastRecord.value == "" ||
-    ["Ctrl", "Shift", "Alt", "Meta"].includes(
-      lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
-    )
-  );
-});
-
-const resetHotkey = async (action: string) => {
-  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
-    title: "ショートカットキーを初期値に戻します",
-    message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
-    html: true,
-    actionName: "初期値に戻す",
-    cancel: "初期値に戻さない",
-  });
-  if (result === "OK") {
-    window.electron
-      .getDefaultHotkeySettings()
-      .then((defaultSettings: HotkeySetting[]) => {
-        const setting = defaultSettings.find((value) => value.action == action);
-        if (setting) {
-          changeHotkeySettings(action, setting.combination);
-        }
-      });
-  }
+const resetDialogHotkey = async (action: string) => {
+  targetRecord.value = await getDefaultHotkeyCombination(action);
 };
 </script>
 
@@ -375,6 +445,10 @@ const resetHotkey = async (action: string) => {
 
 .search-box {
   width: 200px;
+}
+
+.header-spacer {
+  padding-left: calc(50% - 25rem);
 }
 
 .hotkey-table {
@@ -387,14 +461,24 @@ const resetHotkey = async (action: string) => {
   > :deep(.scroll) {
     overflow-y: scroll;
     overflow-x: hidden;
+
+    > .q-table {
+      margin: auto;
+      max-width: 50rem;
+    }
   }
 
   tbody tr {
-    td button:last-child {
+    cursor: pointer;
+
+    &:hover td::before {
+      content: "";
+    }
+    td .buttons {
       float: right;
       display: none;
     }
-    &:hover td button:last-child {
+    &:hover td .buttons {
       display: inline-flex;
       color: colors.$display;
       opacity: 0.5;
