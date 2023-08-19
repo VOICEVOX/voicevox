@@ -83,13 +83,24 @@ test("複数選択：マウス周り", async ({ page }) => {
 
   // Ctrl+クリックは選択範囲から削除する
   await page.keyboard.down(ctrlLike);
-  await page.locator(".audio-cell:nth-child(4)").click();
+  await page.locator(".audio-cell:nth-child(2)").click();
   await page.keyboard.up(ctrlLike);
   await page.waitForTimeout(100);
 
   const selectedStatus4 = await getSelectedStatus(page);
   expect(selectedStatus4.active).toBe(4);
-  expect(selectedStatus4.selected).toEqual([2]);
+  expect(selectedStatus4.selected).toEqual([4]);
+
+  // activeのAudioCellをCtrl+クリックすると選択範囲から削除して次のselectedのAudioCellをactiveにする
+  await page.keyboard.down(ctrlLike);
+  await page.locator(".audio-cell:nth-child(2)").click();
+  await page.locator(".audio-cell:nth-child(2)").click();
+  await page.keyboard.up(ctrlLike);
+  await page.waitForTimeout(100);
+
+  const selectedStatus5 = await getSelectedStatus(page);
+  expect(selectedStatus5.active).toBe(4);
+  expect(selectedStatus5.selected).toEqual([4]);
 });
 
 test("複数選択：キーボード", async ({ page }) => {
