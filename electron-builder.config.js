@@ -79,10 +79,6 @@ const builderOptions = {
       to: extraFilePrefix + "README.txt",
     },
     {
-      from: ".env.production",
-      to: extraFilePrefix + ".env",
-    },
-    {
       from: VOICEVOX_ENGINE_DIR,
       to: extraFilePrefix,
     },
