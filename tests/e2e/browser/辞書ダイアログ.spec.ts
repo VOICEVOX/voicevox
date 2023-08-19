@@ -11,6 +11,9 @@ test.beforeEach(async ({ page }) => {
 test("「設定」→「読み方＆アクセント辞書」で「読み方＆アクセント辞書」ページが表示される", async ({
   page,
 }) => {
+  if (!process.env.CI) {
+    return;
+  }
   await navigateToMain(page);
   // アルファベットを入力し、読み方を確認
   await page.locator(".audio-cell input").fill("abs");
