@@ -175,8 +175,24 @@ const onClickWithModifierKey = (event: MouseEvent) => {
   } else if (isOnCommandOrCtrlKeyDown(event)) {
     // Ctrlキーを押しながらクリックしたとき：
     //   選択していないAudioCellならactiveを移動し、以前の選択をselectedに追加する。
+    //   activeなAudioCellなら：
+    //     selectedが複数ある場合はactiveを次のselectedに移動し、selectedから除外する。
+    //     selectedが1つの場合はなにもしない。
     //   選択しているAudioCellならselectedから除外する。activeは変更しない。
-    if (currentSelectedAudioKeys.includes(props.audioKey)) {
+    if (props.audioKey === currentActiveAudioKey) {
+      if (currentSelectedAudioKeys.length > 1) {
+        const currentAudioIndex = currentSelectedAudioKeys.indexOf(
+          currentActiveAudioKey
+        );
+        newActiveAudioKey =
+          currentSelectedAudioKeys[
+            (currentAudioIndex + 1) % currentSelectedAudioKeys.length
+          ];
+        newSelectedAudioKeys = currentSelectedAudioKeys.filter(
+          (audioKey) => audioKey !== props.audioKey
+        );
+      }
+    } else if (currentSelectedAudioKeys.includes(props.audioKey)) {
       newActiveAudioKey = currentActiveAudioKey;
       newSelectedAudioKeys = currentSelectedAudioKeys.filter(
         (audioKey) => audioKey !== props.audioKey

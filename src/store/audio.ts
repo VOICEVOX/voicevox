@@ -260,8 +260,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   SELECTED_AUDIO_KEYS: {
     getter(state) {
-      const base = new Set(state._selectedAudioKeys || []);
-      return Array.from(base);
+      return state._selectedAudioKeys || [];
     },
   },
 
@@ -516,8 +515,18 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     mutation(state, { audioKeys }: { audioKeys?: AudioKey[] }) {
       state._selectedAudioKeys = audioKeys;
     },
-    action({ commit }, { audioKeys }: { audioKeys?: AudioKey[] }) {
-      commit("SET_SELECTED_AUDIO_KEYS", { audioKeys });
+    action(
+      { state, commit, getters },
+      { audioKeys }: { audioKeys?: AudioKey[] }
+    ) {
+      const uniqueAudioKeys = new Set(audioKeys);
+      if (getters.ACTIVE_AUDIO_KEY) {
+        uniqueAudioKeys.add(getters.ACTIVE_AUDIO_KEY);
+      }
+      const sortedAudioKeys = state.audioKeys.filter((audioKey) =>
+        uniqueAudioKeys.has(audioKey)
+      );
+      commit("SET_SELECTED_AUDIO_KEYS", { audioKeys: sortedAudioKeys });
     },
   },
 
