@@ -1,8 +1,10 @@
 <template>
   <div
     class="audio-cell"
-    :class="{ active: isActiveAudioCell, selected: isSelectedAudioCell }"
-    :data-is-multi-select-enabled="isMultiSelectEnabled"
+    :class="{
+      active: isActiveAudioCell,
+      selected: isSelectedAudioCell && isMultiSelectEnabled,
+    }"
   >
     <!-- 複数選択用のヒットボックス -->
     <div
@@ -574,7 +576,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
-  &[data-is-multi-select-enabled="true"].selected {
+  &.selected {
     background-color: rgba(colors.$active-point-focus-rgb, 0.5);
   }
 
