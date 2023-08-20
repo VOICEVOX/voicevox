@@ -104,7 +104,7 @@ const redo = () => {
 };
 const playContinuously = async () => {
   try {
-    await store.dispatch("FETCH_AND_PLAY_AUDIO_CONTINUOUSLY", {});
+    await store.dispatch("PREPARE_AND_PLAY_AUDIO_CONTINUOUSLY", {});
   } catch (e) {
     let msg: string | undefined;
     // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する

@@ -1656,7 +1656,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
-  FETCH_AUDIO: {
+  PREPARE_AUDIO: {
     async action({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) {
       let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
       if (!blob) {
@@ -1680,10 +1680,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  FETCH_AND_PLAY_AUDIO: {
+  PREPARE_AND_PLAY_AUDIO: {
     action: createUILockAction(
       async ({ state, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
-        const blob = await dispatch("FETCH_AUDIO", { audioKey });
+        const blob = await dispatch("PREPARE_AUDIO", { audioKey });
         await dispatch("PREPARE_AUDIO_PLAYER", { audioKey, blob });
 
         // 途中再生用の処理
@@ -1718,7 +1718,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  FETCH_AND_PLAY_AUDIO_CONTINUOUSLY: {
+  PREPARE_AND_PLAY_AUDIO_CONTINUOUSLY: {
     action: createUILockAction(
       async ({ commit, dispatch, state }, { audioKey }) => {
         const bufStartPoint = state.audioPlayStartPoint;
@@ -1733,7 +1733,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
                 const audioKey = state.audioKeys[i];
                 dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey });
 
-                const blob = await dispatch("FETCH_AUDIO", { audioKey });
+                const blob = await dispatch("PREPARE_AUDIO", { audioKey });
                 await dispatch("PREPARE_AUDIO_PLAYER", { audioKey, blob });
                 yield audioKey;
               }

@@ -491,7 +491,7 @@ const changeMoraData = (
 // audio play
 const play = async () => {
   try {
-    await store.dispatch("FETCH_AND_PLAY_AUDIO", {
+    await store.dispatch("PREPARE_AND_PLAY_AUDIO", {
       audioKey: props.activeAudioKey,
     });
   } catch (e) {

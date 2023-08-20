@@ -417,11 +417,11 @@ export type AudioStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject | undefined;
   };
 
-  FETCH_AUDIO: {
+  PREPARE_AUDIO: {
     action(payload: { audioKey: AudioKey }): Promise<Blob>;
   };
 
-  FETCH_AND_PLAY_AUDIO: {
+  PREPARE_AND_PLAY_AUDIO: {
     action(payload: { audioKey: AudioKey }): boolean;
   };
 
@@ -432,7 +432,7 @@ export type AudioStoreTypes = {
     };
   };
 
-  FETCH_AND_PLAY_AUDIO_CONTINUOUSLY: {
+  PREPARE_AND_PLAY_AUDIO_CONTINUOUSLY: {
     action(payload: { audioKey?: AudioKey }): void;
   };
 };
