@@ -686,7 +686,10 @@ export type AudioPlayerStoreTypes = {
 
   PLAY_AUDIOS: {
     mutation: { audioKey: AudioKey };
-    action(payload: { audioKeys: AsyncIterable<AudioKey> }): void;
+    action(payload: {
+      audioKeys: AudioKey[];
+      beforePlayFn: (audioKey: AudioKey) => Promise<void>;
+    }): void;
   };
 
   STOP_AUDIOS: {

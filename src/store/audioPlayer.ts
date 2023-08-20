@@ -144,10 +144,20 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     mutation(state, { audioKey }: { audioKey: AudioKey }) {
       state.nowPlayingContinuouslyAudioKey = audioKey;
     },
-    async action({ commit, dispatch }, { audioKeys }) {
+    async action(
+      { commit, dispatch },
+      {
+        audioKeys,
+        beforePlayFn,
+      }: {
+        audioKeys: AudioKey[];
+        beforePlayFn: (audioKey: AudioKey) => Promise<void>;
+      }
+    ) {
       const offset = 0;
       try {
-        for await (const audioKey of audioKeys) {
+        for (const audioKey of audioKeys) {
+          await beforePlayFn(audioKey);
           commit("PLAY_AUDIOS", { audioKey });
           const isEnded = await dispatch("PLAY_AUDIO", { audioKey, offset });
           if (!isEnded) {

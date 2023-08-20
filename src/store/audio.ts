@@ -1728,16 +1728,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         try {
           await dispatch("PLAY_AUDIOS", {
-            audioKeys: (async function* (): AsyncGenerator<AudioKey> {
-              for (let i = fromIndex; i < state.audioKeys.length; ++i) {
-                const audioKey = state.audioKeys[i];
-                dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey });
+            audioKeys: state.audioKeys.slice(fromIndex),
+            beforePlayFn: async (audioKey: AudioKey) => {
+              dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey });
 
-                const blob = await dispatch("PREPARE_AUDIO", { audioKey });
-                await dispatch("PREPARE_AUDIO_PLAYER", { audioKey, blob });
-                yield audioKey;
-              }
-            })(),
+              const blob = await dispatch("PREPARE_AUDIO", { audioKey });
+              await dispatch("PREPARE_AUDIO_PLAYER", { audioKey, blob });
+            },
           });
         } finally {
           commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
