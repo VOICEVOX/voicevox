@@ -112,7 +112,9 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         delete audioKeys[audioKeys.indexOf(nowPlayingAudioKey)];
       } else {
         // もしかするとユーザー操作と自動停止が同時に実行されるかもしれないので警告出力に留めておく
-        console.warn("再生中でないオーディオが停止されようとしました。");
+        window.electron.logWarn(
+          "再生中でないオーディオが停止されようとしました。"
+        );
       }
     },
     action(_, { nowPlayingAudioKey }: { nowPlayingAudioKey: AudioKey }) {
