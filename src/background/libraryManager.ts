@@ -75,7 +75,7 @@ export class LibraryManager {
       }
       onUpdate({
         status: "error",
-        message: `${reason}(ステータスコード: ${downloadRes.status})ため、現在このライブラリをダウンロードできません。`,
+        message: `${reason}ため、現在このライブラリをダウンロードできません。（ステータスコード：${downloadRes.status}）`,
       });
       return;
     } else if (downloadRes.body === null) {
