@@ -1197,29 +1197,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   GENERATE_AUDIO: {
-    async action(
-      { dispatch, commit, state },
-      { audioKey }: { audioKey: AudioKey }
-    ) {
+    async action({ dispatch, state }, { audioKey }: { audioKey: AudioKey }) {
       const audioItem: AudioItem = JSON.parse(
         JSON.stringify(state.audioItems[audioKey])
       );
-      commit("SET_AUDIO_NOW_GENERATING", {
-        audioKey,
-        nowGenerating: true,
-      });
-      let resultBlob;
-      try {
-        resultBlob = await dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
-          audioItem,
-        });
-      } finally {
-        commit("SET_AUDIO_NOW_GENERATING", {
-          audioKey,
-          nowGenerating: false,
-        });
-      }
-      return resultBlob;
+      return dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", { audioItem });
     },
   },
 
@@ -1675,11 +1657,26 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   FETCH_AUDIO: {
-    async action({ dispatch }, { audioKey }: { audioKey: AudioKey }) {
-      return (
-        (await dispatch("GET_AUDIO_CACHE", { audioKey })) ??
-        (await withProgress(dispatch("GENERATE_AUDIO", { audioKey }), dispatch))
-      );
+    async action({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) {
+      let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
+      if (!blob) {
+        commit("SET_AUDIO_NOW_GENERATING", {
+          audioKey,
+          nowGenerating: true,
+        });
+        try {
+          blob = await withProgress(
+            dispatch("GENERATE_AUDIO", { audioKey }),
+            dispatch
+          );
+        } finally {
+          commit("SET_AUDIO_NOW_GENERATING", {
+            audioKey,
+            nowGenerating: false,
+          });
+        }
+      }
+      return blob;
     },
   },
 
