@@ -7,7 +7,7 @@ import {
   engineSettingSchema,
 } from "@/type/preload";
 
-const dbName = "voicevox-web";
+const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "electronStore";
 // FIXME: DBのschemaを変更したら、dbVersionを上げる
 // TODO: 気づけるようにしたい
