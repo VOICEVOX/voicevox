@@ -21,7 +21,7 @@ export default defineConfig((options) => {
   const env = loadEnv(options.mode, __dirname);
   if (!package_name.startsWith(env.VITE_APP_NAME)) {
     throw new Error(
-      `"pacage.json"の"name":"${package_name}"が"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まりません`
+      `"package.json"の"name":"${package_name}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`
     );
   }
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
