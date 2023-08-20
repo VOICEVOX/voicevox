@@ -111,9 +111,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       }).finally(async () => {
         audioElem.removeEventListener("play", played);
         audioElem.removeEventListener("pause", paused);
-        if (audioKey) {
-          commit("STOP_AUDIO", { nowPlayingAudioKey: audioKey });
-        }
+        commit("STOP_AUDIO", { nowPlayingAudioKey: audioKey });
       });
 
       audioElem.play();
@@ -127,16 +125,16 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       const audioKeys = state.nowPlayingAudioKeys;
       if (audioKeys.includes(nowPlayingAudioKey)) {
         delete audioKeys[audioKeys.indexOf(nowPlayingAudioKey)];
+      } else {
+        // もしかするとユーザー操作と自動停止が同時に実行されるかもしれないので警告出力に留めておく
+        console.warn("再生中でないオーディオが停止されようとしました。");
       }
     },
-    action(
-      { commit },
-      { nowPlayingAudioKey }: { nowPlayingAudioKey: AudioKey }
-    ) {
+    action(_, { nowPlayingAudioKey }: { nowPlayingAudioKey: AudioKey }) {
       const audioElem = audioElements.get(nowPlayingAudioKey);
       if (audioElem === undefined) throw new Error("audioElem === undefined");
       audioElem.pause();
-      commit("STOP_AUDIO", { nowPlayingAudioKey });
+      // PLAY_AUDIO 時に"pause"イベントでcommitされるよう登録してあるため追加で何かする必要はない
     },
   },
 
