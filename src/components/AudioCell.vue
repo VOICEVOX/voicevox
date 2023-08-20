@@ -33,7 +33,7 @@
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
       @focus="
-        if (activeAudioKey !== props.audioKey) {
+        if (!isSelectedAudioCell) {
           selectAndSetActiveAudioKey();
         }
       "
