@@ -44,21 +44,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     },
   },
 
-  UNLOAD_AUDIO_PLAYER: {
-    action({ dispatch }, { audioKey }: { audioKey?: AudioKey }) {
-      let audioElement;
-      if (
-        audioKey === undefined ||
-        (audioElement = audioElements.get(audioKey)) === undefined
-      ) {
-        return;
-      }
-      dispatch("STOP_AUDIO", { nowPlayingAudioKey: audioKey });
-      audioElement.removeAttribute("src");
-      audioElements.delete(audioKey);
-    },
-  },
-
   PLAY_AUDIO: {
     mutation(state, { audioKey }: { audioKey: AudioKey }) {
       state.nowPlayingAudioKeys.push(audioKey);

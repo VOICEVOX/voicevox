@@ -670,10 +670,6 @@ export type AudioPlayerStoreTypes = {
     action(payload: { audioKey: AudioKey; blob: Blob }): void;
   };
 
-  UNLOAD_AUDIO_PLAYER: {
-    action(payload: { audioKey?: AudioKey }): void;
-  };
-
   PLAY_AUDIO: {
     mutation: { audioKey: AudioKey };
     action(payload: { audioKey: AudioKey; offset?: number }): Promise<boolean>;
