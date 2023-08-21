@@ -192,28 +192,6 @@
           </div>
         </div>
       </q-card-section>
-      <q-card-section align="center" class="column">
-        <q-btn
-          padding="xs"
-          label="デフォルトに戻す"
-          unelevated
-          icon="settings_backup_restore"
-          size="1em"
-          color="surface"
-          text-color="display"
-          @click="resetDialogHotkey(targetAction)"
-        />
-        <q-btn
-          padding="xs"
-          label="未割り当てにする"
-          unelevated
-          icon="delete"
-          size="1em"
-          color="surface"
-          text-color="display"
-          @click="targetRecord = ''"
-        />
-      </q-card-section>
       <q-card-actions align="center">
         <q-btn
           padding="xs md"
@@ -434,10 +412,6 @@ const solveDuplicated = async () => {
     throw new Error("duplicatedHotkey.value == undefined");
   await changeHotkeySettings(duplicatedHotkey.value.action, "");
   await changeHotkeySettings(targetAction.value, targetRecord.value);
-};
-
-const resetDialogHotkey = async (action: string) => {
-  targetRecord.value = await getDefaultHotkeyCombination(action);
 };
 </script>
 
