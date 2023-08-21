@@ -799,3 +799,19 @@ FunctionEnd
     ${endif}
   FunctionEnd
 !macroend
+
+!macro customRemoveFiles
+  ; アンインストール時に設定が保存されるディレクトリを削除するか確認する
+  ${ifNot} ${isUpdated}
+    MessageBox MB_YESNO|MB_ICONQUESTION "設定とインストールしたVVPPエンジンを削除しますか？" /SD IDNO IDNO skip
+    ${if} $installMode == "all"
+      SetShellVarContext current
+    ${endif}
+    RMDir /r "$APPDATA\$%VITE_APP_NAME%"
+    RMDir /r "$APPDATA\${APP_PACKAGE_NAME}"
+    ${if} $installMode == "all"
+      SetShellVarContext all
+    ${endif}
+    skip:
+  ${endif}
+!macroend
