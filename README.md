@@ -94,8 +94,8 @@ npm run test-watch:unit # 監視モード
 ### ブラウザ End to End テスト
 
 Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
-> **Warning**
-> 一部のテストはエンジンの設定を書き換える可能性があります。
+> **Note**
+> 一部のエンジンの設定を書き換えるテストは、CI(Github Actions)上でのみ実行されるようになっています。
 
 ```bash
 npm run test:browser-e2e
