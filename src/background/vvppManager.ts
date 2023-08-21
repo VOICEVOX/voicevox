@@ -196,7 +196,7 @@ export class VvppManager {
 
         const args = ["x", "-o" + outputDir, archiveFile, "-t" + format];
 
-        let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME as string;
+        let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME;
         if (!sevenZipPath) {
           throw new Error("7z path is not defined");
         }

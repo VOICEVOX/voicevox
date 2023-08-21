@@ -30,7 +30,7 @@ test.beforeAll(async () => {
   if (!appData) {
     throw new Error("Unsupported platform");
   }
-  await fs.rm(path.resolve(appData, "voicevox-test"), {
+  await fs.rm(path.resolve(appData, `${process.env.VITE_APP_NAME}-test`), {
     recursive: true,
     force: true,
   });
