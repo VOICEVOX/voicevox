@@ -158,7 +158,9 @@
         <div class="text-h6">「{{ targetAction }}」</div>
       </q-card-section>
       <q-card-section align="center">
-        <div class="text-md">ショートカットキーを入力してください</div>
+        <div class="text-md">
+          上記の操作に対応させる<br />ショートカットキーを入力してください
+        </div>
       </q-card-section>
       <q-card-section align="center">
         <template
