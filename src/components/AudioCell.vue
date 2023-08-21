@@ -152,7 +152,7 @@ const selectAndSetActiveAudioKey = () => {
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
   store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
 };
-// 複数選択のクリック判定
+// 複数選択：Ctrl（Cmd）またはShiftキーが押されている時のクリック処理
 const onClickWithModifierKey = (event: MouseEvent) => {
   if (uiLocked.value) return;
   const currentActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
@@ -176,10 +176,10 @@ const onClickWithModifierKey = (event: MouseEvent) => {
     }
   } else if (isOnCommandOrCtrlKeyDown(event)) {
     // Ctrlキーを押しながらクリックしたとき：
-    //   選択していないAudioCellならactiveを移動し、以前の選択をselectedに追加する。
     //   activeなAudioCellなら：
     //     selectedが複数ある場合はactiveを次のselectedに移動し、selectedから除外する。
     //     selectedが1つの場合はなにもしない。
+    //   選択していないAudioCellならactiveを移動し、以前の選択をselectedに追加する。
     //   選択しているAudioCellならselectedから除外する。activeは変更しない。
     if (props.audioKey === currentActiveAudioKey) {
       if (currentSelectedAudioKeys.length > 1) {
