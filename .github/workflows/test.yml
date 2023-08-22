@@ -95,6 +95,7 @@ jobs:
         continue-on-error: true
 
       - name: Run npm run test:electron-e2e
+        id: browser-e2e
         run: |
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
@@ -105,10 +106,16 @@ jobs:
             npm run test:electron-e2e
           fi
       - name: Archive Report
+        if: steps.browser-e2e.outcome == 'failure'
         uses: actions/upload-artifact@v3
         with:
           name: output-reporter
           path: playwright-report
+      - name: Check Browser e2e failure
+        run: |
+          if [[ ${{ steps.browser-e2e.outcome }} == "failure" ]]; then
+            exit 1
+          fi
 
   lint:
     runs-on: ubuntu-latest
