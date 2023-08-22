@@ -1669,12 +1669,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
         for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
+          const speakerName = characterInfo.metas.speakerName;
           for (const style of characterInfo.metas.styles) {
             characters.set(
               `${style.engineId}:${style.styleId}`, // FIXME: 入れ子のMapにする
-              `${characterInfo.metas.speakerName}(${
-                style.styleName || DEFAULT_STYLE_NAME
-              })`
+              `${speakerName}(${style.styleName || DEFAULT_STYLE_NAME})`
             );
           }
         }
