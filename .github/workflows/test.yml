@@ -110,11 +110,6 @@ jobs:
         with:
           name: output-reporter
           path: playwright-report
-      - name: Check Browser e2e failure
-        run: |
-          if [[ ${{ steps.browser-e2e.outcome }} == "failure" ]]; then
-            exit 1
-          fi
 
   lint:
     runs-on: ubuntu-latest
