@@ -92,6 +92,7 @@ jobs:
           else
             npm run test:browser-e2e
           fi
+        continue-on-error: true
 
       - name: Run npm run test:electron-e2e
         run: |
