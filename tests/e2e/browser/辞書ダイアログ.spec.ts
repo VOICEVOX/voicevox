@@ -8,6 +8,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto(BASE_URL);
 });
 
+// 「abs」を入力して読み方を確認する
 async function validateAbsYomi(
   page: Page,
   expectedText: string
