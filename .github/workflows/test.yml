@@ -92,7 +92,6 @@ jobs:
           else
             npm run test:browser-e2e
           fi
-        continue-on-error: true
 
       - name: Run npm run test:electron-e2e
         id: browser-e2e
@@ -106,7 +105,7 @@ jobs:
             npm run test:electron-e2e
           fi
       - name: Archive Report
-        if: steps.browser-e2e.outcome == 'failure'
+        if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: output-reporter
