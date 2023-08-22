@@ -3,6 +3,8 @@ import { Platform } from "quasar";
 import { ToolbarButtonTagType, isMac } from "@/type/preload";
 import { AccentPhrase } from "@/openapi";
 
+export const DEFAULT_STYLE_NAME = "ノーマル";
+
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
   //   \x00: Null
@@ -43,7 +45,7 @@ const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
-  styleName: "ノーマル",
+  styleName: DEFAULT_STYLE_NAME,
   date: currentDateString(),
 };
 
