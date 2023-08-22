@@ -79,7 +79,7 @@
                       >{{
                         selectedStyles[speaker.metas.speakerUuid]
                           ? selectedStyles[speaker.metas.speakerUuid].styleName
-                          : "ノーマル"
+                          : DEFAULT_STYLE_NAME
                       }}（{{
                         characterInfosMap[speaker.metas.speakerUuid].metas
                           .styles.length
@@ -99,6 +99,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
+import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 
