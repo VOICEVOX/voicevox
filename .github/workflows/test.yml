@@ -103,6 +103,11 @@ jobs:
           else
             npm run test:electron-e2e
           fi
+      - name: Archive Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: output-reporter
+          path: playwright-report
 
   lint:
     runs-on: ubuntu-latest
