@@ -248,11 +248,12 @@ const selectedVoiceInfoText = computed(() => {
     return "キャラクター未選択";
   }
 
+  const speakerName = selectedCharacter.value.metas.speakerName;
   if (!selectedStyleInfo.value) {
-    return selectedCharacter.value.metas.speakerName;
+    return speakerName;
   }
 
-  return `${selectedCharacter.value.metas.speakerName} (${selectedStyleInfo.value.styleName})`;
+  return `${speakerName} (${selectedStyleInfo.value.styleName})`;
 });
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>
