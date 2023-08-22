@@ -253,7 +253,8 @@ const selectedVoiceInfoText = computed(() => {
     return speakerName;
   }
 
-  return `${speakerName} (${selectedStyleInfo.value.styleName})`;
+  const styleName = selectedStyleInfo.value.styleName;
+  return `${speakerName} (${styleName})`;
 });
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>
