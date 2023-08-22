@@ -52,7 +52,12 @@ const styleInfo = computed(() => {
 });
 
 const characterName = computed(() => {
-  const speakerName = characterInfo.value?.metas.speakerName;
+  // 初期化前・未選択時
+  if (characterInfo.value == undefined) {
+    return "";
+  }
+
+  const speakerName = characterInfo.value.metas.speakerName;
   const styleName = styleInfo.value?.styleName;
   return styleName ? `${speakerName} (${styleName})` : speakerName;
 });
