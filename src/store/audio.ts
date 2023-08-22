@@ -24,6 +24,7 @@ import {
   extractYomiText,
   sanitizeFileName,
   DEFAULT_STYLE_NAME,
+  formatCharacterStyleName,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -104,12 +105,14 @@ function parseTextFile(
     for (const style of characterInfo.metas.styles) {
       const styleName = style.styleName || DEFAULT_STYLE_NAME;
       const voice = {
-          engineId: style.engineId,
-          speakerId: characterInfo.metas.speakerUuid,
-          styleId: style.styleId,
+        engineId: style.engineId,
+        speakerId: characterInfo.metas.speakerUuid,
+        styleId: style.styleId,
       };
+      name2Voice.set(formatCharacterStyleName(characterName, styleName), voice);
+      // 古いフォーマットにも対応するため
       name2Voice.set(`${characterName}(${styleName})`, voice);
-        }
+    }
   }
   if (!name2Voice.size) return [];
 
