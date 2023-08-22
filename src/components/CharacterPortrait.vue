@@ -52,10 +52,9 @@ const styleInfo = computed(() => {
 });
 
 const characterName = computed(() => {
+  const speakerName = characterInfo.value?.metas.speakerName;
   const styleName = styleInfo.value?.styleName;
-  return styleName
-    ? `${characterInfo.value?.metas.speakerName} (${styleName})`
-    : characterInfo.value?.metas.speakerName;
+  return styleName ? `${speakerName} (${styleName})` : speakerName;
 });
 
 const engineName = computed(() => {
