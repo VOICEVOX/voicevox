@@ -441,8 +441,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       );
       if (style === undefined) throw new Error("assert style !== undefined");
 
+      const speakerName = characterInfo.metas.speakerName;
       const styleName = style.styleName || DEFAULT_STYLE_NAME;
-      return `${characterInfo.metas.speakerName}(${styleName})`;
+      return `${speakerName}(${styleName})`;
     },
   },
 
