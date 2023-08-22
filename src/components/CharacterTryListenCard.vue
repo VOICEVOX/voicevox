@@ -40,7 +40,7 @@
           "
         />
         <span aria-live="polite">{{
-          selectedStyle.styleName || DEFAULT_STYLE_NAME
+          selectedStyle.styleName || "ノーマル"
         }}</span>
         <q-btn
           flat
@@ -95,7 +95,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
-import { DEFAULT_STYLE_NAME } from "@/store/utility";
 
 const props =
   defineProps<{

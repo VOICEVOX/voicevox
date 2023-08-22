@@ -25,8 +25,6 @@ export function sanitizeFileName(fileName: string): string {
   return fileName.replace(sanitizer, "");
 }
 
-export const DEFAULT_STYLE_NAME = "ノーマル";
-
 export const replaceTagIdToTagString = {
   index: "連番",
   characterName: "キャラ",
@@ -45,7 +43,7 @@ const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
-  styleName: DEFAULT_STYLE_NAME,
+  styleName: "ノーマル",
   date: currentDateString(),
 };
 
