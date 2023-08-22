@@ -103,11 +103,12 @@ jobs:
           else
             npm run test:electron-e2e
           fi
-      - name: Archive Report
+
+      - name: Uplaod playwright report to artifact
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: output-reporter
+          name: playwright-report
           path: playwright-report
 
   lint:
