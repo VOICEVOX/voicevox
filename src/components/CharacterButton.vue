@@ -173,9 +173,9 @@
                         </q-avatar>
                       </q-avatar>
                       <q-item-section v-if="style.styleName"
-                        >{{ characterInfo.metas.speakerName }} ({{
+                        >{{ characterInfo.metas.speakerName }}（{{
                           style.styleName
-                        }})</q-item-section
+                        }}）</q-item-section
                       >
                       <q-item-section v-else>{{
                         characterInfo.metas.speakerName
