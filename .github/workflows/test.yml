@@ -94,7 +94,6 @@ jobs:
           fi
 
       - name: Run npm run test:electron-e2e
-        id: browser-e2e
         run: |
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
