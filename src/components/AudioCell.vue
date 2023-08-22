@@ -1,15 +1,21 @@
 <template>
   <div
+    ref="root"
     class="audio-cell"
+    tabindex="0"
     :class="{
       active: isActiveAudioCell,
       selected: isSelectedAudioCell && isMultiSelectEnabled,
     }"
+    @keydown.prevent.up="moveUpCell"
+    @keydown.prevent.down="moveDownCell"
+    @focus="onRootFocus"
   >
     <!-- 複数選択用のヒットボックス -->
     <div
       v-if="(isCtrlOrCommandKeyDown || isShiftKeyDown) && isMultiSelectEnabled"
       class="click-hitbox"
+      tabindex="-1"
       @click="onClickWithModifierKey"
     />
     <q-icon
@@ -56,16 +62,10 @@
       @update:model-value="setAudioTextBuffer"
       @focus="
         clearInputSelection();
-        // focusは画面外から切り換えてきた場合にも発火するため、
-        // activeAudioKeyが同じなら何もしない
-        if (activeAudioKey !== props.audioKey) {
-          selectAndSetActiveAudioKey();
-        }
+        selectAndSetActiveAudioKey();
       "
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
-      @keydown.prevent.up="moveUpCell"
-      @keydown.prevent.down="moveDownCell"
       @keydown.prevent.enter.exact="pushAudioTextIfNeeded"
     >
       <template #error>
@@ -115,13 +115,20 @@ const props =
 
 const emit =
   defineEmits<{
-    (e: "focusCell", payload: { audioKey: AudioKey }): void;
+    (
+      e: "focusCell",
+      payload: { audioKey: AudioKey; focusTextField: boolean }
+    ): void;
   }>();
 
 defineExpose({
   audioKey: computed(() => props.audioKey),
-  focusTextField: () => {
-    textfield.value?.focus();
+  focusCell: ({ focusTextField }: { focusTextField: boolean }) => {
+    if (focusTextField) {
+      textfield.value?.focus();
+    } else {
+      root.value?.focus();
+    }
   },
   removeCell: () => {
     removeCell();
@@ -140,8 +147,6 @@ const isInitializingSpeaker = computed(
 );
 const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
-const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
-
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultiSelectEnabled = computed(
@@ -151,6 +156,10 @@ const isMultiSelectEnabled = computed(
 const selectAndSetActiveAudioKey = () => {
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
   store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
+};
+
+const onRootFocus = () => {
+  selectAndSetActiveAudioKey();
 };
 // 複数選択：Ctrl（Cmd）またはShiftキーが押されている時のクリック処理
 const onClickWithModifierKey = (event: MouseEvent) => {
@@ -358,7 +367,10 @@ const putMultilineText = async (texts: string[]) => {
     prevAudioKey,
   });
   if (audioKeys.length > 0) {
-    emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
+    emit("focusCell", {
+      audioKey: audioKeys[audioKeys.length - 1],
+      focusTextField: true,
+    });
   }
 };
 
@@ -382,7 +394,10 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
     const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
-    emit("focusCell", { audioKey: audioKeys.value[index] });
+    emit("focusCell", {
+      audioKey: audioKeys.value[index],
+      focusTextField: false,
+    });
     if (isMultiSelectEnabled.value && e?.shiftKey) {
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: [
@@ -409,9 +424,15 @@ const removeCell = async () => {
 
     const index = audioKeys.value.indexOf(props.audioKey);
     if (index > 0) {
-      emit("focusCell", { audioKey: audioKeys.value[index - 1] });
+      emit("focusCell", {
+        audioKey: audioKeys.value[index - 1],
+        focusTextField: true,
+      });
     } else {
-      emit("focusCell", { audioKey: audioKeys.value[index + 1] });
+      emit("focusCell", {
+        audioKey: audioKeys.value[index + 1],
+        focusTextField: true,
+      });
     }
 
     store.dispatch("COMMAND_REMOVE_AUDIO_ITEM", {
@@ -555,6 +576,8 @@ const endContextMenuOperation = async () => {
   willFocusOrBlur.value = false;
 };
 
+const root = ref<HTMLElement>();
+
 // テキスト欄
 const textfield = ref<QInput>();
 const textfieldSelection = new SelectionHelperForQInput(textfield);
@@ -572,6 +595,9 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
+  &:focus {
+    outline: none;
+  }
   &.selected {
     background-color: rgba(colors.$active-point-focus-rgb, 0.5);
   }
