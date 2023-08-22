@@ -396,7 +396,7 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
     const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
     emit("focusCell", {
       audioKey: audioKeys.value[index],
-      focusTextField: false,
+      focusTextField: true,
     });
     if (isMultiSelectEnabled.value && e?.shiftKey) {
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
