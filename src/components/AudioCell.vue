@@ -596,6 +596,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
   &:focus {
+    // divはフォーカスするとデフォルトで青い枠が出るので消す
     outline: none;
   }
   &.selected {
