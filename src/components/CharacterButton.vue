@@ -198,6 +198,7 @@ import { computed, Ref, ref } from "vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
+import { formatCharacterStyleName } from "@/store/utility";
 
 const props = withDefaults(
   defineProps<{
@@ -254,7 +255,7 @@ const selectedVoiceInfoText = computed(() => {
   }
 
   const styleName = selectedStyleInfo.value.styleName;
-  return `${speakerName} (${styleName})`;
+  return formatCharacterStyleName(speakerName, styleName);
 });
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>

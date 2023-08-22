@@ -15,6 +15,7 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { AudioKey } from "@/type/preload";
+import { formatCharacterStyleName } from "@/store/utility";
 
 const store = useStore();
 
@@ -59,7 +60,9 @@ const characterName = computed(() => {
 
   const speakerName = characterInfo.value.metas.speakerName;
   const styleName = styleInfo.value?.styleName;
-  return styleName ? `${speakerName} (${styleName})` : speakerName;
+  return styleName
+    ? formatCharacterStyleName(speakerName, styleName)
+    : speakerName;
 });
 
 const engineName = computed(() => {
