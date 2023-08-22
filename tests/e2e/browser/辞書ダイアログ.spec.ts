@@ -8,7 +8,10 @@ test.beforeEach(async ({ page }) => {
   await page.goto(BASE_URL);
 });
 
-async function validateAbsYomi(page: Page, expectedText: string): Promise<void> {
+async function validateAbsYomi(
+  page: Page,
+  expectedText: string
+): Promise<void> {
   await page.locator(".audio-cell input").last().fill("abs");
   await page.waitForTimeout(100);
   await page.locator(".audio-cell input").last().press("Enter");
