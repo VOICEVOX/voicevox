@@ -18,5 +18,4 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   await page.waitForTimeout(100);
   await expect(page.getByText("読み方＆アクセント辞書")).toBeVisible();
   await expect(page.getByText("単語一覧")).toBeVisible();
-  expect(1).toBe(2);
 });
