@@ -104,7 +104,7 @@ jobs:
             npm run test:electron-e2e
           fi
 
-      - name: Uplaod playwright report to artifact
+      - name: Upload playwright report to artifact
         if: failure()
         uses: actions/upload-artifact@v3
         with:
