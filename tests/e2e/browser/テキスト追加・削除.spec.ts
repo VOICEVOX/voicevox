@@ -19,7 +19,6 @@ test("+ボタンを押したら行が追加され、ゴミ箱のボタンを押�
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.getByRole("button").filter({ hasText: "add" }).click();
-  await page.waitForTimeout(100);
   expect(await page.locator(".audio-cell").count()).toBe(4);
   await (await page.locator(".audio-cell").all())[0].hover();
   await (
