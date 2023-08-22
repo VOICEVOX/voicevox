@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto(BASE_URL);
 });
 
-async function validateYomi(page: Page, expectedText: string): Promise<void> {
+async function validateAbsYomi(page: Page, expectedText: string): Promise<void> {
   await page.locator(".audio-cell input").last().fill("abs");
   await page.waitForTimeout(100);
   await page.locator(".audio-cell input").last().press("Enter");
@@ -29,12 +29,12 @@ async function openDictDialog(page: Page): Promise<void> {
 async function validateInputTag(
   page: Page,
   inputTag: Locator,
-  afterEvent: string
+  expectedWord: string
 ) {
   await inputTag.press("Enter");
   await page.waitForTimeout(100);
   const text = await inputTag.evaluate((e: HTMLInputElement) => e.value);
-  expect(text).toBe(afterEvent);
+  expect(text).toBe(expectedWord);
 }
 
 test("「設定」→「読み方＆アクセント辞書」で「読み方＆アクセント辞書」ページが表示される", async ({
@@ -43,7 +43,7 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   test.skip(!process.env.CI, "環境変数CIが未設定のためスキップします");
   await navigateToMain(page);
   // アルファベットを入力し、読み方を確認
-  await validateYomi(page, "エエビイエス");
+  await validateAbsYomi(page, "エエビイエス");
 
   // 読み方の設定画面を開く
   await openDictDialog(page);
@@ -84,7 +84,7 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   // 辞書が登録されているかどうかを確認
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
-  await validateYomi(page, "アブス");
+  await validateAbsYomi(page, "アブス");
 
   // もう一度設定を開き辞書からabsを削除
   await openDictDialog(page);
@@ -111,5 +111,5 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   // 辞書から削除されていることを確認
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
-  await validateYomi(page, "エエビイエス");
+  await validateAbsYomi(page, "エエビイエス");
 });
