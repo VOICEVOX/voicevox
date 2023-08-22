@@ -100,18 +100,16 @@ function parseTextFile(
   }
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
+    const characterName = characterInfo.metas.speakerName;
     for (const style of characterInfo.metas.styles) {
-      name2Voice.set(
-        `${characterInfo.metas.speakerName}(${
-          style.styleName || DEFAULT_STYLE_NAME
-        })`,
-        {
+      const styleName = style.styleName || DEFAULT_STYLE_NAME;
+      const voice = {
           engineId: style.engineId,
           speakerId: characterInfo.metas.speakerUuid,
           styleId: style.styleId,
+      };
+      name2Voice.set(`${characterName}(${styleName})`, voice);
         }
-      );
-    }
   }
   if (!name2Voice.size) return [];
 
