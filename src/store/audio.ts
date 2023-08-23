@@ -23,6 +23,7 @@ import {
   extractExportText,
   extractYomiText,
   sanitizeFileName,
+  DEFAULT_STYLE_NAME,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -101,7 +102,9 @@ function parseTextFile(
   for (const characterInfo of userOrderedCharacterInfos) {
     for (const style of characterInfo.metas.styles) {
       name2Voice.set(
-        `${characterInfo.metas.speakerName}(${style.styleName || "ノーマル"})`,
+        `${characterInfo.metas.speakerName}(${
+          style.styleName || DEFAULT_STYLE_NAME
+        })`,
         {
           engineId: style.engineId,
           speakerId: characterInfo.metas.speakerUuid,
@@ -437,7 +440,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       );
       if (style === undefined) throw new Error("assert style !== undefined");
 
-      const styleName = style.styleName || "ノーマル";
+      const styleName = style.styleName || DEFAULT_STYLE_NAME;
       return `${characterInfo.metas.speakerName}(${styleName})`;
     },
   },
@@ -1145,7 +1148,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       );
       if (style === undefined) throw new Error("assert style !== undefined");
 
-      const styleName = style.styleName || "ノーマル";
+      const styleName = style.styleName || DEFAULT_STYLE_NAME;
       return buildAudioFileNameFromRawData(fileNamePattern, {
         characterName: character.metas.speakerName,
         index,
@@ -1668,7 +1671,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             characters.set(
               `${style.engineId}:${style.styleId}`, // FIXME: 入れ子のMapにする
               `${characterInfo.metas.speakerName}(${
-                style.styleName || "ノーマル"
+                style.styleName || DEFAULT_STYLE_NAME
               })`
             );
           }
