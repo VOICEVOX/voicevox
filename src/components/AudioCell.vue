@@ -49,7 +49,7 @@
       @blurと@keydown.prevent.enter.exactに分けている
     -->
     <q-input
-      ref="textfield"
+      ref="textField"
       filled
       dense
       hide-bottom-space
@@ -117,15 +117,15 @@ const emit =
   defineEmits<{
     (
       e: "focusCell",
-      payload: { audioKey: AudioKey; focusTextField: boolean }
+      payload: { audioKey: AudioKey; focusTarget: "textField" | "root" }
     ): void;
   }>();
 
 defineExpose({
   audioKey: computed(() => props.audioKey),
-  focusCell: ({ focusTextField }: { focusTextField: boolean }) => {
-    if (focusTextField) {
-      textfield.value?.focus();
+  focusCell: ({ focusTarget }: { focusTarget: "textField" | "root" }) => {
+    if (focusTarget === "textField") {
+      textField.value?.focus();
     } else {
       root.value?.focus();
     }
@@ -301,7 +301,7 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
 // see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
 const clearInputSelection = () => {
   if (!willFocusOrBlur.value) {
-    textfieldSelection.toEmpty();
+    textFieldSelection.toEmpty();
   }
 };
 
@@ -339,11 +339,11 @@ const paste = async (options?: { text?: string }) => {
   }
 
   const beforeLength = audioTextBuffer.value.length;
-  const end = textfieldSelection.selectionEnd ?? 0;
-  setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text));
+  const end = textFieldSelection.selectionEnd ?? 0;
+  setAudioTextBuffer(textFieldSelection.getReplacedStringTo(text));
   await nextTick();
   // 自動的に削除される改行などの文字数を念のため考慮している
-  textfieldSelection.setCursorPosition(
+  textFieldSelection.setCursorPosition(
     end + audioTextBuffer.value.length - beforeLength
   );
 };
@@ -369,7 +369,7 @@ const putMultilineText = async (texts: string[]) => {
   if (audioKeys.length > 0) {
     emit("focusCell", {
       audioKey: audioKeys[audioKeys.length - 1],
-      focusTextField: true,
+      focusTarget: "textField",
     });
   }
 };
@@ -396,7 +396,7 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
     const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
     emit("focusCell", {
       audioKey: audioKeys.value[index],
-      focusTextField: true,
+      focusTarget: "textField",
     });
     if (isMultiSelectEnabled.value && e?.shiftKey) {
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
@@ -426,12 +426,12 @@ const removeCell = async () => {
     if (index > 0) {
       emit("focusCell", {
         audioKey: audioKeys.value[index - 1],
-        focusTextField: true,
+        focusTarget: "textField",
       });
     } else {
       emit("focusCell", {
         audioKey: audioKeys.value[index + 1],
-        focusTextField: true,
+        focusTarget: "textField",
       });
     }
 
@@ -469,14 +469,14 @@ const contextMenudata = ref<
     label: "切り取り",
     onClick: async () => {
       contextMenu.value?.hide();
-      if (textfieldSelection.isEmpty) return;
+      if (textFieldSelection.isEmpty) return;
 
-      const text = textfieldSelection.getAsString();
-      const start = textfieldSelection.selectionStart;
-      setAudioTextBuffer(textfieldSelection.getReplacedStringTo(""));
+      const text = textFieldSelection.getAsString();
+      const start = textFieldSelection.selectionStart;
+      setAudioTextBuffer(textFieldSelection.getReplacedStringTo(""));
       await nextTick();
       navigator.clipboard.writeText(text);
-      textfieldSelection.setCursorPosition(start);
+      textFieldSelection.setCursorPosition(start);
     },
     disableWhenUiLocked: true,
   },
@@ -485,9 +485,9 @@ const contextMenudata = ref<
     label: "コピー",
     onClick: () => {
       contextMenu.value?.hide();
-      if (textfieldSelection.isEmpty) return;
+      if (textFieldSelection.isEmpty) return;
 
-      navigator.clipboard.writeText(textfieldSelection.getAsString());
+      navigator.clipboard.writeText(textFieldSelection.getAsString());
     },
     disableWhenUiLocked: true,
   },
@@ -506,7 +506,7 @@ const contextMenudata = ref<
     label: "全選択",
     onClick: async () => {
       contextMenu.value?.hide();
-      textfield.value?.select();
+      textField.value?.select();
     },
     disableWhenUiLocked: true,
   },
@@ -521,7 +521,7 @@ const contextMenudata = ref<
         audioKey: props.audioKey,
         text: audioTextBuffer.value,
       });
-      textfield.value?.blur();
+      textField.value?.blur();
     },
     disableWhenUiLocked: true,
   },
@@ -546,7 +546,7 @@ const readyForContextMenu = () => {
   const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
   // 選択範囲を1行目に表示
-  const selectionText = textfieldSelection.getAsString();
+  const selectionText = textFieldSelection.getAsString();
   if (selectionText.length === 0) {
     isRangeSelected.value = false;
     getMenuItemButton("切り取り").disabled = true;
@@ -579,8 +579,8 @@ const endContextMenuOperation = async () => {
 const root = ref<HTMLElement>();
 
 // テキスト欄
-const textfield = ref<QInput>();
-const textfieldSelection = new SelectionHelperForQInput(textfield);
+const textField = ref<QInput>();
+const textFieldSelection = new SelectionHelperForQInput(textField);
 
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);

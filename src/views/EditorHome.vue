@@ -227,7 +227,7 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
     "テキスト欄にフォーカスを戻す",
     () => {
       if (activeAudioKey.value !== undefined) {
-        focusCell({ audioKey: activeAudioKey.value, focusTextField: true });
+        focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
       }
       return false; // this is the same with event.preventDefault()
     },
@@ -406,7 +406,7 @@ const addAudioItem = async () => {
     audioItem,
     prevAudioKey: activeAudioKey.value,
   });
-  audioCellRefs[newAudioKey].focusCell({ focusTextField: true });
+  audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
 };
 const duplicateAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
@@ -420,7 +420,7 @@ const duplicateAudioItem = async () => {
     audioItem: cloneDeep(prevAudioItem),
     prevAudioKey: activeAudioKey.value,
   });
-  audioCellRefs[newAudioKey].focusCell({ focusTextField: true });
+  audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
 };
 
 // Pane
@@ -474,12 +474,12 @@ watch(shouldShowPanes, (val, old) => {
 // セルをフォーカス
 const focusCell = ({
   audioKey,
-  focusTextField,
+  focusTarget,
 }: {
   audioKey: AudioKey;
-  focusTextField: boolean;
+  focusTarget: "root" | "textField";
 }) => {
-  audioCellRefs[audioKey].focusCell({ focusTextField });
+  audioCellRefs[audioKey].focusCell({ focusTarget });
 };
 
 // Electronのデフォルトのundo/redoを無効化
@@ -568,7 +568,7 @@ onMounted(async () => {
     const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
       audioItem,
     });
-    focusCell({ audioKey: newAudioKey, focusTextField: true });
+    focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
 
     // 最初の話者を初期化
     store.dispatch("SETUP_SPEAKER", {
