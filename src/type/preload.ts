@@ -466,7 +466,6 @@ export type MoraDataType =
 
 export type ThemeColorType =
   | "primary"
-  | "primary-light"
   | "display"
   | "display-on-primary"
   | "display-hyperlink"

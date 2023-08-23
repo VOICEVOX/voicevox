@@ -139,7 +139,7 @@
                 <q-btn
                   v-if="!nowPlaying && !nowGenerating"
                   fab
-                  color="primary-light"
+                  color="primary"
                   text-color="display-on-primary"
                   icon="play_arrow"
                   @click="play"
@@ -147,7 +147,7 @@
                 <q-btn
                   v-else
                   fab
-                  color="primary-light"
+                  color="primary"
                   text-color="display-on-primary"
                   icon="stop"
                   :disable="nowGenerating"
@@ -202,7 +202,7 @@
                 v-model="wordPriority"
                 snap
                 dense
-                color="primary-light"
+                color="primary"
                 markers
                 :min="0"
                 :max="10"
