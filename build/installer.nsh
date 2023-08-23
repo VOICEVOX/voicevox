@@ -800,18 +800,92 @@ FunctionEnd
   FunctionEnd
 !macroend
 
-!macro customRemoveFiles
+!ifdef BUILD_UNINSTALLER
+  Var removeUserDataCheckBox
+  Var removeUserDataCheckBoxState
+  Var removeAdditionalEngineCheckBox
+  Var removeAdditionalEngineCheckBoxState
+!endif
+
+!macro customUninstallPage
   ; アンインストール時に設定が保存されるディレクトリを削除するか確認する
-  ${ifNot} ${isUpdated}
-    MessageBox MB_YESNO|MB_ICONQUESTION "設定とインストールしたVVPPエンジンを削除しますか？" /SD IDNO IDNO skip
-    ${if} $installMode == "all"
-      SetShellVarContext current
-    ${endif}
-    RMDir /r "$APPDATA\$%VITE_APP_NAME%"
-    RMDir /r "$APPDATA\${APP_PACKAGE_NAME}"
-    ${if} $installMode == "all"
-      SetShellVarContext all
-    ${endif}
-    skip:
-  ${endif}
+  UninstPage custom un.removeUserDataPage un.removeUserDataPageLeave
+
+  Function un.removeUserDataPage
+    Push $R0
+
+    nsDialogs::Create 1018
+    Pop $R0
+
+    ${If} $R0 == error
+      Abort
+    ${EndIf}
+
+    ; 既にアンインストールは完了してしまっているためキャンセルボタンは無効化する
+    GetDlgItem $R0 $HWNDPARENT 2
+    EnableWindow $R0 0
+
+    ${NSD_CreateCheckBox} 0 0 100% 12u "設定ファイルを削除する"
+    Pop $removeUserDataCheckBox
+
+    ${NSD_CreateCheckBox} 0 13u 100% 12u "追加エンジンを削除する"
+    Pop $removeAdditionalEngineCheckBox
+    ${NSD_Check} $removeAdditionalEngineCheckBox
+
+    ${NSD_OnClick} $removeUserDataCheckBox un.removeUserDataCheckBoxChange
+    ${NSD_OnClick} $removeAdditionalEngineCheckBox un.removeAdditionalEngineCheckBoxChange
+
+    nsDialogs::Show
+
+    Pop $R0
+  FunctionEnd
+
+  Function un.removeUserDataCheckBoxChange
+    ; 設定を削除するにチェックをつけたらエンジンを削除するにチェックをつける
+    ${NSD_GetState} $removeUserDataCheckBox $removeUserDataCheckBoxState
+    ${If} $removeUserDataCheckBoxState == ${BST_CHECKED}
+      ${NSD_Check} $removeAdditionalEngineCheckBox
+    ${EndIf}
+  FunctionEnd
+
+  Function un.removeAdditionalEngineCheckBoxChange
+    ; エンジンを削除するのチェックを外したら設定を削除するのチェックを外す
+    ${NSD_GetState} $removeAdditionalEngineCheckBox $removeAdditionalEngineCheckBoxState
+    ${If} $removeAdditionalEngineCheckBoxState == ${BST_UNCHECKED}
+      ${NSD_Uncheck} $removeUserDataCheckBox
+    ${EndIf}
+  FunctionEnd
+
+  Function un.removeUserDataPageLeave
+    ; 最終確認と削除の処理
+    ${NSD_GetState} $removeUserDataCheckBox $removeUserDataCheckBoxState
+    ${NSD_GetState} $removeAdditionalEngineCheckBox $removeAdditionalEngineCheckBoxState
+    ${If} $removeUserDataCheckBoxState == ${BST_CHECKED}
+    ${OrIf} $removeAdditionalEngineCheckBoxState == ${BST_CHECKED}
+      MessageBox MB_YESNO|MB_ICONEXCLAMATION "本当に削除しますか？" IDYES +2
+      Abort
+      ${if} $installMode == "all"
+        SetShellVarContext current
+      ${endif}
+      ${If} $removeUserDataCheckBoxState == ${BST_CHECKED}
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%"
+        RMDir /r "$APPDATA\${APP_PACKAGE_NAME}"
+      ${Else}
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%\vvpp-engines"
+      ${EndIf}
+      ${if} $installMode == "all"
+        SetShellVarContext all
+      ${endif}
+    ${EndIf}
+  FunctionEnd
+
+  ; MUI_UNPAGE_FINISHの戻るボタンを無効化する
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW un.disableBack
+
+  Function un.disableBack
+    Push $0
+    GetDlgItem $0 $HWNDPARENT 3
+    EnableWindow $0 0
+    Pop $0
+  FunctionEnd
 !macroend
