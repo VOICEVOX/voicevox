@@ -257,11 +257,11 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
     align-content: center;
     justify-content: center;
     .character-item {
-      box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
+      box-shadow: 0 0 0 1px rgba(colors.$primary-rgb, 0.5);
       border-radius: 10px;
       overflow: hidden;
       &.selected-character-item {
-        box-shadow: 0 0 0 2px colors.$primary-light;
+        box-shadow: 0 0 0 2px colors.$primary;
       }
       &:hover :deep(.q-focus-helper) {
         opacity: 0 !important;

@@ -340,7 +340,7 @@ const updateMenuHeight = () => {
 
 .character-button {
   border: solid 1px;
-  border-color: colors.$primary-light;
+  border-color: colors.$primary;
   font-size: 0;
   height: fit-content;
 
