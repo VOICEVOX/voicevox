@@ -263,14 +263,22 @@
         無効な設定です
       </div>
       <div :class="{ disabled: morphingTargetStyleInfo == undefined }">
-        <span class="text-body1 q-mb-xs"
-          >割合
-          {{
-            morphingRateSlider.state.currentValue.value != undefined
-              ? morphingRateSlider.state.currentValue.value.toFixed(2)
-              : undefined
-          }}</span
-        >
+        <div class="morphing-input">
+          <span class="text-body1 q-mb-xs morphing-label">割合</span>
+          <q-input
+            dense
+            borderless
+            :class="{ disabled: morphingTargetStyleInfo == undefined }"
+            :disable="morphingTargetStyleInfo == undefined"
+            max-length="5"
+            :model-value="
+              morphingRateSlider.state.currentValue.value != null
+                ? morphingRateSlider.state.currentValue.value!.toFixed(2)
+                : null
+            "
+            @change="handleMorphingChange($event)"
+          />
+        </div>
         <q-slider
           dense
           snap
@@ -481,6 +489,29 @@ const handleParameterChange = (
   store.dispatch(parameter.action, {
     audioKey: props.activeAudioKey,
     [parameter.key]: value,
+  });
+};
+
+const handleMorphingChange = (inputValue: string | number | null) => {
+  if (inputValue === null) throw new Error("inputValue is null");
+  const value = adjustSliderValue(
+    "モーフィング入力",
+    inputValue.toString(),
+    morphingRateSlider.qSliderProps.min.value,
+    morphingRateSlider.qSliderProps.max.value
+  );
+  const info = audioItem.value.morphingInfo;
+  if (info == undefined) {
+    throw new Error("audioItem.value.morphingInfo == undefined");
+  }
+  store.dispatch("COMMAND_SET_MORPHING_INFO", {
+    audioKey: props.activeAudioKey,
+    morphingInfo: {
+      rate: value,
+      targetEngineId: info.targetEngineId,
+      targetSpeakerId: info.targetSpeakerId,
+      targetStyleId: info.targetStyleId,
+    },
   });
 };
 
@@ -949,5 +980,14 @@ const adjustSliderValue = (
   overflow: hidden;
   text-overflow: ellipsis;
   width: fit-content;
+}
+
+.morphing-input {
+  display: flex;
+  .morphing-label {
+    flex: 0 0 calc(2.25rem + 0.03125em);
+    display: flex;
+    align-items: center;
+  }
 }
 </style>
