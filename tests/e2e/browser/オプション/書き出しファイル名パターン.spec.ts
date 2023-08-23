@@ -74,7 +74,7 @@ test("「オプション」から「書き出しファイル名パターン」�
 
   // 確定するとダイアログが閉じて設定した内容が反映されている
   await doneButton.click();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(700);
   await expect(optionDialog.getByText("test$連番$.wav")).toBeVisible();
 
   // 再度開くと設定した内容が反映されている

@@ -64,7 +64,7 @@
                 <div class="style-item-inner">
                   <img :src="style.iconPath" class="style-icon" />
                   <span class="text-subtitle1 q-ma-sm">{{
-                    style.styleName || "ノーマル"
+                    style.styleName || DEFAULT_STYLE_NAME
                   }}</span>
                   <div class="voice-samples">
                     <q-btn
@@ -123,6 +123,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
+import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import {
   CharacterInfo,
   DefaultStyleId,
