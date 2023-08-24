@@ -116,9 +116,8 @@ const props =
 const emit =
   defineEmits<{
     // focusTarget：
-    //   textField: テキストフィールドにフォーカス。特別な理由がない限りはこちらを使う。
-    //   root: AudioCell自体にフォーカス。テキストフィールドにはフォーカスしない。
-    //         selectedAudioKeysをactiveAudioKeyだけにしたくない時に使う。
+    //   textField: テキストフィールドにフォーカス。複数選択が解除される。特別な理由がない限りはこちらを使う。
+    //   root: AudioCell自体にフォーカス。こちらは複数選択を解除しない。
     (
       e: "focusCell",
       payload: { audioKey: AudioKey; focusTarget?: "textField" | "root" }
