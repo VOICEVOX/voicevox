@@ -477,9 +477,11 @@ const focusCell = ({
   focusTarget,
 }: {
   audioKey: AudioKey;
-  focusTarget: "root" | "textField";
+  focusTarget?: "root" | "textField";
 }) => {
-  audioCellRefs[audioKey].focusCell({ focusTarget });
+  audioCellRefs[audioKey].focusCell({
+    focusTarget: focusTarget ?? "textField",
+  });
 };
 
 // Electronのデフォルトのundo/redoを無効化

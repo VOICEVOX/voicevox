@@ -115,9 +115,13 @@ const props =
 
 const emit =
   defineEmits<{
+    // focusTarget：
+    //   textField: テキストフィールドにフォーカス。特別な理由がない限りはこちらを使う。
+    //   root: AudioCell自体にフォーカス。テキストフィールドにはフォーカスしない。
+    //         selectedAudioKeysをactiveAudioKeyだけにしたくない時に使う。
     (
       e: "focusCell",
-      payload: { audioKey: AudioKey; focusTarget: "textField" | "root" }
+      payload: { audioKey: AudioKey; focusTarget?: "textField" | "root" }
     ): void;
   }>();
 
@@ -369,7 +373,6 @@ const putMultilineText = async (texts: string[]) => {
   if (audioKeys.length > 0) {
     emit("focusCell", {
       audioKey: audioKeys[audioKeys.length - 1],
-      focusTarget: "textField",
     });
   }
 };
@@ -431,12 +434,10 @@ const removeCell = async () => {
     if (index > 0) {
       emit("focusCell", {
         audioKey: audioKeys.value[index - 1],
-        focusTarget: "textField",
       });
     } else {
       emit("focusCell", {
         audioKey: audioKeys.value[index + 1],
-        focusTarget: "textField",
       });
     }
 
