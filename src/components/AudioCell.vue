@@ -2,7 +2,7 @@
   <div
     ref="root"
     class="audio-cell"
-    tabindex="0"
+    tabindex="-1"
     :class="{
       active: isActiveAudioCell,
       selected: isSelectedAudioCell && isMultiSelectEnabled,
@@ -394,17 +394,22 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
     const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
-    emit("focusCell", {
-      audioKey: audioKeys.value[index],
-      focusTarget: "textField",
-    });
     if (isMultiSelectEnabled.value && e?.shiftKey) {
+      emit("focusCell", {
+        audioKey: audioKeys.value[index],
+        focusTarget: "root",
+      });
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: [
           ...selectedAudioKeys,
           props.audioKey,
           audioKeys.value[index],
         ],
+      });
+    } else {
+      emit("focusCell", {
+        audioKey: audioKeys.value[index],
+        focusTarget: "textField",
       });
     }
   }
