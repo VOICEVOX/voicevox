@@ -801,8 +801,8 @@ FunctionEnd
 !macroend
 
 !ifdef BUILD_UNINSTALLER
-  Var removeUserDataCheckBox
-  Var removeUserDataCheckBoxState
+  Var removeAllUserDataCheckBox
+  Var removeAllUserDataCheckBoxState
   Var removeAdditionalEngineCheckBox
   Var removeAdditionalEngineCheckBoxState
 !endif
@@ -825,14 +825,14 @@ FunctionEnd
     GetDlgItem $R0 $HWNDPARENT 2
     EnableWindow $R0 0
 
-    ${NSD_CreateCheckBox} 0 0 100% 12u "設定ファイルを削除する"
-    Pop $removeUserDataCheckBox
+    ${NSD_CreateCheckBox} 0 0 100% 12u "全ての設定ファイルを削除する"
+    Pop $removeAllUserDataCheckBox
 
-    ${NSD_CreateCheckBox} 0 13u 100% 12u "追加エンジンを削除する"
+    ${NSD_CreateCheckBox} 0 13u 100% 12u "追加エンジンのみ削除する"
     Pop $removeAdditionalEngineCheckBox
     ${NSD_Check} $removeAdditionalEngineCheckBox
 
-    ${NSD_OnClick} $removeUserDataCheckBox un.removeUserDataCheckBoxChange
+    ${NSD_OnClick} $removeAllUserDataCheckBox un.removeAllUserDataCheckBoxChange
     ${NSD_OnClick} $removeAdditionalEngineCheckBox un.removeAdditionalEngineCheckBoxChange
 
     nsDialogs::Show
@@ -840,10 +840,10 @@ FunctionEnd
     Pop $R0
   FunctionEnd
 
-  Function un.removeUserDataCheckBoxChange
+  Function un.removeAllUserDataCheckBoxChange
     ; 設定を削除するにチェックをつけたらエンジンを削除するにチェックをつける
-    ${NSD_GetState} $removeUserDataCheckBox $removeUserDataCheckBoxState
-    ${If} $removeUserDataCheckBoxState == ${BST_CHECKED}
+    ${NSD_GetState} $removeAllUserDataCheckBox $removeAllUserDataCheckBoxState
+    ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
       ${NSD_Check} $removeAdditionalEngineCheckBox
     ${EndIf}
   FunctionEnd
@@ -852,27 +852,33 @@ FunctionEnd
     ; エンジンを削除するのチェックを外したら設定を削除するのチェックを外す
     ${NSD_GetState} $removeAdditionalEngineCheckBox $removeAdditionalEngineCheckBoxState
     ${If} $removeAdditionalEngineCheckBoxState == ${BST_UNCHECKED}
-      ${NSD_Uncheck} $removeUserDataCheckBox
+      ${NSD_Uncheck} $removeAllUserDataCheckBox
     ${EndIf}
   FunctionEnd
 
   Function un.removeUserDataPageLeave
     ; 最終確認と削除の処理
-    ${NSD_GetState} $removeUserDataCheckBox $removeUserDataCheckBoxState
+    ${NSD_GetState} $removeAllUserDataCheckBox $removeAllUserDataCheckBoxState
     ${NSD_GetState} $removeAdditionalEngineCheckBox $removeAdditionalEngineCheckBoxState
-    ${If} $removeUserDataCheckBoxState == ${BST_CHECKED}
-    ${OrIf} $removeAdditionalEngineCheckBoxState == ${BST_CHECKED}
-      MessageBox MB_YESNO|MB_ICONEXCLAMATION "本当に削除しますか？" IDYES +2
+
+    ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
+      MessageBox MB_YESNO|MB_ICONEXCLAMATION "全ての設定ファイルを削除します。本当によろしいでしょうか。" IDYES +2
       Abort
+    ${EndIf}
+
+    ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
+    ${OrIf} $removeAdditionalEngineCheckBoxState == ${BST_CHECKED}
       ${if} $installMode == "all"
         SetShellVarContext current
       ${endif}
-      ${If} $removeUserDataCheckBoxState == ${BST_CHECKED}
+
+      ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
         RMDir /r "$APPDATA\$%VITE_APP_NAME%"
         RMDir /r "$APPDATA\${APP_PACKAGE_NAME}"
       ${Else}
         RMDir /r "$APPDATA\$%VITE_APP_NAME%\vvpp-engines"
       ${EndIf}
+
       ${if} $installMode == "all"
         SetShellVarContext all
       ${endif}
