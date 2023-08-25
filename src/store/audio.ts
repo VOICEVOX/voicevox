@@ -529,9 +529,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         getters.ACTIVE_AUDIO_KEY &&
         !uniqueAudioKeys.has(getters.ACTIVE_AUDIO_KEY)
       ) {
-        throw new Error(
-          "Assertion failed: audioKeys.includes(getters.ACTIVE_AUDIO_KEY)"
-        );
+        throw new Error("selectedAudioKeys must include activeAudioKey");
       }
       const sortedAudioKeys = state.audioKeys.filter((audioKey) =>
         uniqueAudioKeys.has(audioKey)
