@@ -126,7 +126,12 @@ const emit =
 
 defineExpose({
   audioKey: computed(() => props.audioKey),
-  focusCell: ({ focusTarget }: { focusTarget: "textField" | "root" }) => {
+  focusCell: ({
+    focusTarget: baseFocusTarget,
+  }: {
+    focusTarget?: "textField" | "root";
+  }) => {
+    const focusTarget = baseFocusTarget ?? "textField";
     if (focusTarget === "textField") {
       textField.value?.focus();
     } else {
