@@ -1821,9 +1821,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   STOP_AUDIO: {
-    action(_, { audioKey }: { audioKey: AudioKey }) {
-      const audioElem = audioElement;
-      audioElem.pause();
+    action() {
+      audioElement.pause();
     },
   },
 
@@ -1877,7 +1876,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action({ state, dispatch }) {
       for (const audioKey of state.audioKeys) {
         if (state.audioStates[audioKey].nowPlaying) {
-          dispatch("STOP_AUDIO", { audioKey });
+          dispatch("STOP_AUDIO");
         }
       }
     },

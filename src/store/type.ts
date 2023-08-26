@@ -456,7 +456,7 @@ export type AudioStoreTypes = {
   };
 
   STOP_AUDIO: {
-    action(payload: { audioKey: AudioKey }): void;
+    action(): void;
   };
 
   SET_AUDIO_PRESET_KEY: {
