@@ -432,9 +432,6 @@ const changeAccent = async (_: number, accent: number) => {
   }
 };
 
-const audioElem = new Audio();
-audioElem.pause();
-
 const play = async () => {
   if (!accentPhrase.value) return;
 
