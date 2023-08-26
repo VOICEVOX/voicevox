@@ -475,7 +475,7 @@ const play = async () => {
   nowPlaying.value = false;
 };
 const stop = () => {
-  audioElem.pause();
+  store.dispatch("STOP_AUDIO");
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
