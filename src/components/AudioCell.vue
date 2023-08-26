@@ -3,7 +3,7 @@
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
-      color="primary-light"
+      color="primary"
       size="sm"
       class="absolute active-arrow"
     />
@@ -32,7 +32,7 @@
       dense
       hide-bottom-space
       class="full-width"
-      color="primary-light"
+      color="primary"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
@@ -489,7 +489,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     &.active {
       opacity: 1;
       font-weight: bold;
-      color: colors.$primary-light;
+      color: colors.$primary;
     }
   }
 
@@ -497,7 +497,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     :deep(.q-field__control) {
       height: 2rem;
       background: none;
-      border-bottom: 1px solid colors.$primary-light;
+      border-bottom: 1px solid colors.$primary;
 
       &::before {
         border-bottom: none;

@@ -340,7 +340,7 @@ const updatePortrait = (portraitPath: string) => {
       text-align: center;
       cursor: grab;
       &.selected-character-order-item {
-        border: 2px solid colors.$primary-light;
+        border: 2px solid colors.$primary;
       }
     }
   }

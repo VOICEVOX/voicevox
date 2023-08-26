@@ -21,7 +21,7 @@
         <div class="q-mb-md">
           <q-btn
             outline
-            color="primary-light"
+            color="primary"
             icon="keyboard_arrow_left"
             label="戻る"
             @click="selectLicenseIndex(undefined)"
