@@ -238,7 +238,7 @@ export function applyAudioPresetToAudioItem(
 }
 
 const audioBlobCache: Record<string, Blob> = {};
-const audioElements: Record<AudioKey, HTMLAudioElement> = {};
+const audioElement = new Audio();
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
@@ -276,7 +276,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: (state) => {
       return state._activeAudioKey !== undefined
-        ? audioElements[state._activeAudioKey]?.currentTime
+        ? audioElement.currentTime
         : undefined;
     },
   },
@@ -461,7 +461,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   GENERATE_AUDIO_KEY: {
     action() {
       const audioKey = AudioKey(uuidv4());
-      audioElements[audioKey] = new Audio();
       return audioKey;
     },
   },
@@ -1713,7 +1712,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   PLAY_AUDIO: {
     action: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
-        const audioElem = audioElements[audioKey];
+        const audioElem = audioElement;
         audioElem.pause();
 
         // 音声用意
@@ -1823,7 +1822,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   STOP_AUDIO: {
     action(_, { audioKey }: { audioKey: AudioKey }) {
-      const audioElem = audioElements[audioKey];
+      const audioElem = audioElement;
       audioElem.pause();
     },
   },
