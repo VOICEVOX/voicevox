@@ -1747,10 +1747,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action: createUILockAction(
       async (
         { state, commit, dispatch },
-        {
-          audioBlob,
-          audioKey,
-        }: { audioBlob: Blob; audioKey?: AudioKey }
+        { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
         audioElement.src = URL.createObjectURL(audioBlob);
         // 途中再生用の処理
