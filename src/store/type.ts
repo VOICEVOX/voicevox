@@ -171,6 +171,10 @@ export type AudioStoreTypes = {
     getter: CharacterInfo[] | undefined;
   };
 
+  INITIALIZE_AUDIO_ELEMENT: {
+    action(): void;
+  };
+
   GENERATE_AUDIO_KEY: {
     action(): AudioKey;
   };

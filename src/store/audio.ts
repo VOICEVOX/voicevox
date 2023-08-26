@@ -238,7 +238,7 @@ export function applyAudioPresetToAudioItem(
 }
 
 const audioBlobCache: Record<string, Blob> = {};
-const audioElement = new Audio();
+let audioElement: HTMLAudioElement;
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
@@ -455,6 +455,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               state.userCharacterOrder.indexOf(b.metas.speakerUuid)
           )
         : undefined;
+    },
+  },
+
+  INITIALIZE_AUDIO_ELEMENT: {
+    action() {
+      audioElement = new Audio();
     },
   },
 
