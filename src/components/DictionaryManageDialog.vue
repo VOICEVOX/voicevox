@@ -471,7 +471,7 @@ const play = async () => {
   }
   nowGenerating.value = false;
   nowPlaying.value = true;
-  await store.dispatch("PLAY_AUDIO_BLOB", { audioElem, audioBlob: blob });
+  await store.dispatch("PLAY_AUDIO_BLOB", { audioBlob: blob });
   nowPlaying.value = false;
 };
 const stop = () => {

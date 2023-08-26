@@ -1737,7 +1737,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         return dispatch("PLAY_AUDIO_BLOB", {
           audioBlob: blob,
-          audioElem,
           audioKey,
         });
       }
@@ -1750,9 +1749,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { state, commit, dispatch },
         {
           audioBlob,
-          audioElem,
           audioKey,
-        }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: AudioKey }
+        }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
         audioElement.src = URL.createObjectURL(audioBlob);
         // 途中再生用の処理

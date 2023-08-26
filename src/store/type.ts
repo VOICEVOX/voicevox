@@ -450,7 +450,6 @@ export type AudioStoreTypes = {
   PLAY_AUDIO_BLOB: {
     action(payload: {
       audioBlob: Blob;
-      audioElem: HTMLAudioElement;
       audioKey?: AudioKey;
     }): boolean;
   };
