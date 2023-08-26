@@ -83,7 +83,7 @@ test("複数選択：マウス周り", async ({ page }) => {
   expect(selectedStatus.active).toBe(2);
   expect(selectedStatus.selected).toEqual([2]);
 
-  if (process.platform === "darwin") {
+  if (process.platform === "darwin" && !!process.env.CI) {
     // なぜかCmd(Meta)+クリックが動かないのでスキップする
     // FIXME: 動くようにする
     return;
