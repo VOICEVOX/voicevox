@@ -12,7 +12,7 @@
           v-if="accentPhrase.moras.length > 1"
           snap
           dense
-          color="primary-light"
+          color="primary"
           track-size="2px"
           :min="previewAccentSlider.qSliderProps.min.value"
           :max="previewAccentSlider.qSliderProps.max.value"
@@ -149,7 +149,7 @@ div {
     text-align: center;
     cursor: pointer;
     svg line {
-      stroke: colors.$primary-light;
+      stroke: colors.$primary;
       stroke-dasharray: 3;
     }
   }

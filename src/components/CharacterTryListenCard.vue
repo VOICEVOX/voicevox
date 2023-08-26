@@ -40,7 +40,7 @@
           "
         />
         <span aria-live="polite">{{
-          selectedStyle.styleName || "ノーマル"
+          selectedStyle.styleName || DEFAULT_STYLE_NAME
         }}</span>
         <q-btn
           flat
@@ -71,7 +71,7 @@
               ? 'stop'
               : 'play_arrow'
           "
-          color="primary-light"
+          color="primary"
           class="voice-sample-btn"
           :aria-label="`サンプルボイス${voiceSampleIndex + 1}`"
           @mouseenter="isHoverableItem = false"
@@ -95,6 +95,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
+import { DEFAULT_STYLE_NAME } from "@/store/utility";
 
 const props =
   defineProps<{
@@ -165,11 +166,11 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 @use '@/styles/colors' as colors;
 
 .character-item {
-  box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
+  box-shadow: 0 0 0 1px rgba(colors.$primary-rgb, 0.5);
   border-radius: 10px;
   overflow: hidden;
   &.selected-character-item {
-    box-shadow: 0 0 0 2px colors.$primary-light;
+    box-shadow: 0 0 0 2px colors.$primary;
   }
   &:hover :deep(.q-focus-helper) {
     opacity: 0 !important;
@@ -204,7 +205,7 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
       justify-content: center;
     }
     .new-character-item {
-      color: colors.$primary-light;
+      color: colors.$primary;
       position: absolute;
       left: 0px;
       top: 0px;

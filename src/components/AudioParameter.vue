@@ -8,7 +8,7 @@
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "
       class="value-label"
-      color="primary-light"
+      color="primary"
       text-color="display-on-primary"
     >
       {{
@@ -21,7 +21,7 @@
       vertical
       reverse
       snap
-      color="primary-light"
+      color="primary"
       track-size="2.5px"
       :style="clipPathComputed"
       :min="previewSlider.qSliderProps.min.value"
@@ -139,7 +139,9 @@ const precisionComputed = computed(() => {
 });
 
 // クリックでアクセント句が選択されないように@click.stopに渡す
-const stopPropagation = undefined;
+const stopPropagation = () => {
+  // fn is not a function エラーを回避するために何もしない関数を渡す
+};
 </script>
 
 <style scoped lang="scss">

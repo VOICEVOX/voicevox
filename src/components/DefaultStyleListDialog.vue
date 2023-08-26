@@ -79,7 +79,7 @@
                       >{{
                         selectedStyles[speaker.metas.speakerUuid]
                           ? selectedStyles[speaker.metas.speakerUuid].styleName
-                          : "ノーマル"
+                          : DEFAULT_STYLE_NAME
                       }}（{{
                         characterInfosMap[speaker.metas.speakerUuid].metas
                           .styles.length
@@ -99,6 +99,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
+import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 
@@ -256,11 +257,11 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
     align-content: center;
     justify-content: center;
     .character-item {
-      box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
+      box-shadow: 0 0 0 1px rgba(colors.$primary-rgb, 0.5);
       border-radius: 10px;
       overflow: hidden;
       &.selected-character-item {
-        box-shadow: 0 0 0 2px colors.$primary-light;
+        box-shadow: 0 0 0 2px colors.$primary;
       }
       &:hover :deep(.q-focus-helper) {
         opacity: 0 !important;

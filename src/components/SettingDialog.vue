@@ -299,7 +299,7 @@
                   v-if="isDefaultConfirmedTips && hasResetConfirmedTips"
                   name="check"
                   size="sm"
-                  color="primary-light"
+                  color="primary"
                   style="margin-right: 8px"
                 >
                 </q-icon>
