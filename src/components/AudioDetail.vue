@@ -510,7 +510,7 @@ const play = async () => {
 };
 
 const stop = () => {
-  store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
+  store.dispatch("STOP_AUDIO");
 };
 
 const nowPlaying = computed(
