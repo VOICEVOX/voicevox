@@ -6,7 +6,7 @@ import {
   Context,
   NoteEvent,
   NoteSequence,
-  SoundSequence,
+  Sequence,
   Synth,
   Transport,
 } from "@/infrastructures/AudioRenderer";
@@ -193,7 +193,7 @@ class SingChannel {
   private readonly gainNode: GainNode;
 
   private phrases: Phrase[] = [];
-  private sequences: SoundSequence[] = [];
+  private sequences: Sequence[] = [];
 
   get volume() {
     return this.gainNode.gain.value;
@@ -215,7 +215,6 @@ class SingChannel {
   addPhrase(phrase: Phrase) {
     this.phrases.push(phrase);
 
-    let sequence: SoundSequence | undefined;
     if (phrase.startTime !== undefined && phrase.buffer) {
       const audioEvents: AudioEvent[] = [
         {
@@ -225,7 +224,13 @@ class SingChannel {
       ];
       const audioPlayer = new AudioPlayer(this.context);
       audioPlayer.connect(this.gainNode);
-      sequence = new AudioSequence(audioPlayer, audioEvents);
+      const audioSequence: AudioSequence = {
+        type: "audio",
+        audioPlayer,
+        audioEvents,
+      };
+      this.context.transport.addSequence(audioSequence);
+      this.sequences.push(audioSequence);
     } else {
       const noteEvents = generateNoteEvents(
         phrase.score.resolution,
@@ -234,11 +239,14 @@ class SingChannel {
       );
       const synth = new Synth(this.context);
       synth.connect(this.gainNode);
-      sequence = new NoteSequence(synth, noteEvents);
+      const noteSequence: NoteSequence = {
+        type: "note",
+        instrument: synth,
+        noteEvents,
+      };
+      this.context.transport.addSequence(noteSequence);
+      this.sequences.push(noteSequence);
     }
-
-    this.context.transport.addSequence(sequence);
-    this.sequences.push(sequence);
   }
 
   removePhrase(phrase: Phrase) {
