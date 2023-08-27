@@ -593,9 +593,12 @@ watch(nowPlaying, async (newState) => {
           (currentOffset) => currentTime < currentOffset
         ) - 1;
       if (playingAccentPhraseIndex === -1) {
+        // accentPhraseOffsets[0] は必ず 0 なので到達しないはず
         throw new Error("playingAccentPhraseIndex === -1");
       }
       if (playingAccentPhraseIndex === -2) {
+        // データと音声ファイルの長さに誤差があるため許容
+        // see https://github.com/VOICEVOX/voicevox/issues/785
         return;
       }
       activePoint.value = playingAccentPhraseIndex;
