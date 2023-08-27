@@ -574,7 +574,6 @@ const scrollToActivePoint = () => {
   }
 };
 
-// NodeJS.Timeout型が直接指定できないので、typeofとReturnTypeで取ってきている
 let requestId: number | undefined;
 watch(nowPlaying, async (newState) => {
   if (newState) {
