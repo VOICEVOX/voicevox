@@ -588,16 +588,19 @@ watch(nowPlaying, async (newState) => {
       if (currentTime === undefined) {
         throw new Error("currentTime === undefined)");
       }
-      for (let i = 1; i < accentPhraseOffsets.length; i++) {
-        if (
-          accentPhraseOffsets[i - 1] <= currentTime &&
-          currentTime < accentPhraseOffsets[i]
-        ) {
-          activePoint.value = i - 1;
-          scrollToActivePoint();
-          requestId = window.requestAnimationFrame(focusAccentPhrase);
-        }
+      const playingAccentPhraseIndex =
+        accentPhraseOffsets.findIndex(
+          (currentOffset) => currentTime < currentOffset
+        ) - 1;
+      if (playingAccentPhraseIndex === -1) {
+        throw new Error("playingAccentPhraseIndex === -1");
       }
+      if (playingAccentPhraseIndex === -2) {
+        return;
+      }
+      activePoint.value = playingAccentPhraseIndex;
+      scrollToActivePoint();
+      requestId = window.requestAnimationFrame(focusAccentPhrase);
     };
     requestId = window.requestAnimationFrame(focusAccentPhrase);
   } else if (requestId !== undefined) {
