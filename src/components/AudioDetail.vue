@@ -585,9 +585,11 @@ watch(nowPlaying, async (newState) => {
     // それに合わせてフォーカスするアクセント句を変えていく
     const focusAccentPhrase = () => {
       const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
+      if (currentTime === undefined) {
+        throw new Error("currentTime === undefined)");
+      }
       for (let i = 1; i < accentPhraseOffsets.length; i++) {
         if (
-          currentTime !== undefined &&
           accentPhraseOffsets[i - 1] <= currentTime &&
           currentTime < accentPhraseOffsets[i]
         ) {
