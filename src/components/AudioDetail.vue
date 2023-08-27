@@ -575,15 +575,15 @@ const scrollToActivePoint = () => {
 };
 
 // NodeJS.Timeout型が直接指定できないので、typeofとReturnTypeで取ってきている
-let focusInterval: ReturnType<typeof setInterval> | undefined;
+let requestId: number | undefined;
 watch(nowPlaying, async (newState) => {
   if (newState) {
     const accentPhraseOffsets = await store.dispatch("GET_AUDIO_PLAY_OFFSETS", {
       audioKey: props.activeAudioKey,
     });
-    // 現在再生されているaudio elementの再生時刻を0.01秒毎に取得(監視)し、
+    // 現在再生されているaudio elementの再生時刻を描画毎に取得(監視)し、
     // それに合わせてフォーカスするアクセント句を変えていく
-    focusInterval = setInterval(() => {
+    const focusAccentPhrase = () => {
       const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
       for (let i = 1; i < accentPhraseOffsets.length; i++) {
         if (
@@ -593,12 +593,14 @@ watch(nowPlaying, async (newState) => {
         ) {
           activePoint.value = i - 1;
           scrollToActivePoint();
+          requestId = window.requestAnimationFrame(focusAccentPhrase);
         }
       }
-    }, 10);
-  } else if (focusInterval !== undefined) {
-    clearInterval(focusInterval);
-    focusInterval = undefined;
+    };
+    requestId = window.requestAnimationFrame(focusAccentPhrase);
+  } else if (requestId !== undefined) {
+    window.cancelAnimationFrame(requestId);
+    requestId = undefined;
     // startPointがundefinedの場合、一旦最初のアクセント句までスクロール、その後activePointの選択を解除(undefinedに)する
     activePoint.value = startPoint.value ?? 0;
     scrollToActivePoint();
