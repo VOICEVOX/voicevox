@@ -70,7 +70,10 @@
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
                   separator-class="home-splitter"
-                  :separator-style="{ width: shouldShowPanes ? '3px' : '0' }"
+                  :separator-style="{
+                    width: shouldShowPanes ? '3px' : '0',
+                    padding: '6px',
+                  }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
                   :model-value="audioInfoPaneWidth"
