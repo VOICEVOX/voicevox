@@ -823,10 +823,51 @@ FunctionEnd
   Function un.removeUserDataPage
     Push $R0
 
+    Var /GLOBAL skipRemoveUserDataPage
+    StrCpy $skipRemoveUserDataPage "0"
+    Var /GLOBAL isExistEngine
+    StrCpy $isExistEngine "1"
+
+    ${If} $installMode == "all"
+      SetShellVarContext current
+    ${EndIf}
+
+    ; エンジンが残っているかの確認と空ディレクトリの削除
+    ${DirState} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp" $R0
+    ${If} $R0 == 0
+      RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp"
+    ${EndIf}
+    ${DirState} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines" $R0
+    ${If} $R0 != 1
+      ${If} $R0 == 0
+        RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines"
+      ${EndIf}
+      StrCpy $isExistEngine "0"
+    ${EndIf}
+
+    ; 設定ディレクトリが無いか空の場合はページをスキップ
+    ${DirState} "$APPDATA\$%VITE_APP_NAME%" $R0
+    ${If} $R0 != 1
+      ${If} $R0 == 0
+        RMDir "$APPDATA\$%VITE_APP_NAME%"
+      ${EndIf}
+      StrCpy $skipRemoveUserDataPage "1"
+    ${EndIf}
+
+    ${If} $installMode == "all"
+      SetShellVarContext all
+    ${EndIf}
+
+    ${If} $skipRemoveUserDataPage == "1"
+      Pop $R0
+      Abort
+    ${EndIf}
+
     nsDialogs::Create 1018
     Pop $R0
 
     ${If} $R0 == error
+      Pop $R0
       Abort
     ${EndIf}
 
@@ -843,6 +884,11 @@ FunctionEnd
 
     ${NSD_OnClick} $removeAllUserDataCheckBox un.removeAllUserDataCheckBoxChange
     ${NSD_OnClick} $removeAdditionalEngineCheckBox un.removeAdditionalEngineCheckBoxChange
+
+    ; エンジンがない場合はチェックボックスを無効化する
+    ${If} $isExistEngine == "0"
+      EnableWindow $removeAdditionalEngineCheckBox 0
+    ${EndIf}
 
     nsDialogs::Show
 
