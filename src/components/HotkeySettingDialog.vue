@@ -300,7 +300,7 @@ const deleteHotkey = (action: string) => {
 };
 
 const getHotkeyText = (action: string, combo: string) => {
-  if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
+  if (checkHotkeyReadonly(action)) combo = "（読み取り専用）" + combo;
   if (combo == "") return "未設定";
   else return combo;
 };

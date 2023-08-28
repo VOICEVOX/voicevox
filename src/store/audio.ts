@@ -24,6 +24,7 @@ import {
   extractYomiText,
   sanitizeFileName,
   DEFAULT_STYLE_NAME,
+  formatCharacterStyleName,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -100,16 +101,19 @@ function parseTextFile(
   }
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
+    const characterName = characterInfo.metas.speakerName;
     for (const style of characterInfo.metas.styles) {
+      const styleName = style.styleName;
+      const voice = {
+        engineId: style.engineId,
+        speakerId: characterInfo.metas.speakerUuid,
+        styleId: style.styleId,
+      };
+      name2Voice.set(formatCharacterStyleName(characterName, styleName), voice);
+      // 古いフォーマットにも対応するため
       name2Voice.set(
-        `${characterInfo.metas.speakerName}(${
-          style.styleName || DEFAULT_STYLE_NAME
-        })`,
-        {
-          engineId: style.engineId,
-          speakerId: characterInfo.metas.speakerUuid,
-          styleId: style.styleId,
-        }
+        `${characterName}(${styleName || DEFAULT_STYLE_NAME})`,
+        voice
       );
     }
   }
@@ -449,8 +453,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       );
       if (style === undefined) throw new Error("assert style !== undefined");
 
-      const styleName = style.styleName || DEFAULT_STYLE_NAME;
-      return `${characterInfo.metas.speakerName}(${styleName})`;
+      const speakerName = characterInfo.metas.speakerName;
+      const styleName = style.styleName;
+      return formatCharacterStyleName(speakerName, styleName);
     },
   },
 
@@ -1675,12 +1680,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
         for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
+          const speakerName = characterInfo.metas.speakerName;
           for (const style of characterInfo.metas.styles) {
             characters.set(
               `${style.engineId}:${style.styleId}`, // FIXME: 入れ子のMapにする
-              `${characterInfo.metas.speakerName}(${
-                style.styleName || DEFAULT_STYLE_NAME
-              })`
+              formatCharacterStyleName(speakerName, style.styleName)
             );
           }
         }

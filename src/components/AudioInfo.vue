@@ -233,6 +233,7 @@
                 : "未設定"
             }}
           </div>
+          <!-- 横幅が狭い場合に改行させるため分割 -->
           <div
             v-if="
               morphingTargetCharacterInfo &&
