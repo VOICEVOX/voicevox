@@ -103,7 +103,7 @@ function parseTextFile(
   for (const characterInfo of userOrderedCharacterInfos) {
     const characterName = characterInfo.metas.speakerName;
     for (const style of characterInfo.metas.styles) {
-      const styleName = style.styleName || DEFAULT_STYLE_NAME;
+      const styleName = style.styleName;
       const voice = {
         engineId: style.engineId,
         speakerId: characterInfo.metas.speakerUuid,
@@ -111,7 +111,10 @@ function parseTextFile(
       };
       name2Voice.set(formatCharacterStyleName(characterName, styleName), voice);
       // 古いフォーマットにも対応するため
-      name2Voice.set(`${characterName}(${styleName})`, voice);
+      name2Voice.set(
+        `${characterName}(${styleName || DEFAULT_STYLE_NAME})`,
+        voice
+      );
     }
   }
   if (!name2Voice.size) return [];
