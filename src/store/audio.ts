@@ -238,7 +238,16 @@ export function applyAudioPresetToAudioItem(
 }
 
 const audioBlobCache: Record<string, Blob> = {};
-let audioElement: HTMLAudioElement;
+// ユニットテストが落ちるのを回避するための遅延読み込み
+const getAudioElement = (() => {
+  let audioElement: HTMLAudioElement | undefined = undefined;
+  return () => {
+    if (audioElement == undefined) {
+      audioElement = new Audio();
+    }
+    return audioElement;
+  };
+})();
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
@@ -276,7 +285,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: (state) => {
       return state._activeAudioKey !== undefined
-        ? audioElement.currentTime
+        ? getAudioElement().currentTime
         : undefined;
     },
   },
@@ -455,12 +464,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               state.userCharacterOrder.indexOf(b.metas.speakerUuid)
           )
         : undefined;
-    },
-  },
-
-  INITIALIZE_AUDIO_ELEMENT: {
-    action() {
-      audioElement = new Audio();
     },
   },
 
@@ -1718,7 +1721,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   PLAY_AUDIO: {
     action: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
-        audioElement.pause();
+        getAudioElement().pause();
 
         // 音声用意
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
@@ -1754,34 +1757,34 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { state, commit, dispatch },
         { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
-        audioElement.src = URL.createObjectURL(audioBlob);
+        getAudioElement().src = URL.createObjectURL(audioBlob);
         // 途中再生用の処理
         if (audioKey) {
           const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
             audioKey,
           });
           if (accentPhraseOffsets.length === 0) {
-            audioElement.currentTime = 0;
+            getAudioElement().currentTime = 0;
           } else {
             const startTime =
               accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
             if (startTime === undefined) throw Error("startTime === undefined");
             // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
             // 再生に影響のない程度かつ切り捨てられない値を加算する
-            audioElement.currentTime = startTime + 10e-6;
+            getAudioElement().currentTime = startTime + 10e-6;
           }
         }
 
         // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
-        if (audioElement.setSinkId) {
-          audioElement
+        if (getAudioElement().setSinkId) {
+          getAudioElement()
             .setSinkId(state.savingSetting.audioOutputDevice)
             .catch((err) => {
               const stop = () => {
-                audioElement.pause();
-                audioElement.removeEventListener("canplay", stop);
+                getAudioElement().pause();
+                getAudioElement().removeEventListener("canplay", stop);
               };
-              audioElement.addEventListener("canplay", stop);
+              getAudioElement().addEventListener("canplay", stop);
               window.electron.showMessageDialog({
                 type: "error",
                 title: "エラー",
@@ -1797,23 +1800,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
           }
         };
-        audioElement.addEventListener("play", played);
+        getAudioElement().addEventListener("play", played);
 
         let paused: () => void;
         const audioPlayPromise = new Promise<boolean>((resolve) => {
           paused = () => {
-            resolve(audioElement.ended);
+            resolve(getAudioElement().ended);
           };
-          audioElement.addEventListener("pause", paused);
+          getAudioElement().addEventListener("pause", paused);
         }).finally(async () => {
-          audioElement.removeEventListener("play", played);
-          audioElement.removeEventListener("pause", paused);
+          getAudioElement().removeEventListener("play", played);
+          getAudioElement().removeEventListener("pause", paused);
           if (audioKey) {
             commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
           }
         });
 
-        audioElement.play();
+        getAudioElement().play();
 
         return audioPlayPromise;
       }
@@ -1822,7 +1825,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   STOP_AUDIO: {
     action() {
-      audioElement.pause();
+      getAudioElement().pause();
     },
   },
 

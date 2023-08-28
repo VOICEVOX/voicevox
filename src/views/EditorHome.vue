@@ -605,9 +605,6 @@ onMounted(async () => {
     store.state.acceptTerms !== "Accepted";
 
   isCompletedInitialStartup.value = true;
-
-  // audioElementの初期化
-  store.dispatch("INITIALIZE_AUDIO_ELEMENT");
 });
 
 // エンジン待機
