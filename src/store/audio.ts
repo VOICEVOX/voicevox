@@ -132,12 +132,14 @@ function parseTextFile(
   return audioItems;
 }
 
-async function changeFileTailToNonExistent(filePath: string) {
-  const EXTENSION = "wav";
+async function changeFileTailToNonExistent(
+  filePath: string,
+  extension: string
+) {
   let tail = 1;
-  const name = filePath.slice(0, filePath.length - 1 - EXTENSION.length);
+  const name = filePath.slice(0, filePath.length - 1 - extension.length);
   while (await window.electron.checkFileExists(filePath)) {
-    filePath = `${name}[${tail}].${EXTENSION}`;
+    filePath = `${name}[${tail}].${extension}`;
     tail += 1;
   }
   return filePath;
@@ -1370,7 +1372,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath);
+          filePath = await changeFileTailToNonExistent(filePath, "wav");
         }
 
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
@@ -1518,7 +1520,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath);
+          filePath = await changeFileTailToNonExistent(filePath, "wav");
         }
 
         const encodedBlobs: string[] = [];
@@ -1658,7 +1660,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath);
+          filePath = await changeFileTailToNonExistent(filePath, "txt");
         }
 
         const characters = new Map<string, string>();
