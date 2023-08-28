@@ -800,6 +800,14 @@ FunctionEnd
   FunctionEnd
 !macroend
 
+; "%VITE_APP_NAME%"が空の状態でビルドすると他のソフトのファイルを消してしまうためビルドエラーにする。
+!ifndef $%VITE_APP_NAME%
+  !error 'The environment variable "%VITE_APP_NAME%" is undefined.'
+!endif
+!if "$%VITE_APP_NAME%" == ""
+  !error 'The environment variable "%VITE_APP_NAME%" is empty.'
+!endif
+
 !ifdef BUILD_UNINSTALLER
   Var removeAllUserDataCheckBox
   Var removeAllUserDataCheckBoxState
