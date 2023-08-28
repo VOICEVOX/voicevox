@@ -448,15 +448,11 @@ export type AudioStoreTypes = {
   };
 
   PLAY_AUDIO_BLOB: {
-    action(payload: {
-      audioBlob: Blob;
-      audioElem: HTMLAudioElement;
-      audioKey?: AudioKey;
-    }): boolean;
+    action(payload: { audioBlob: Blob; audioKey?: AudioKey }): boolean;
   };
 
   STOP_AUDIO: {
-    action(payload: { audioKey: AudioKey }): void;
+    action(): void;
   };
 
   SET_AUDIO_PRESET_KEY: {
