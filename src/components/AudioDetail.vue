@@ -600,8 +600,10 @@ watch(nowPlaying, async (newState) => {
         // see https://github.com/VOICEVOX/voicevox/issues/785
         return;
       }
-      activePoint.value = playingAccentPhraseIndex;
-      scrollToActivePoint();
+      if (activePoint.value !== playingAccentPhraseIndex) {
+        activePoint.value = playingAccentPhraseIndex;
+        scrollToActivePoint();
+      }
       requestId = window.requestAnimationFrame(focusAccentPhrase);
     };
     requestId = window.requestAnimationFrame(focusAccentPhrase);
