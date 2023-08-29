@@ -261,6 +261,7 @@ export const audioStoreState: AudioStoreState = {
   audioStates: {},
   // audio elementの再生オフセット
   audioPlayStartPoint: undefined,
+  nowPlayingAudioKey: undefined,
   nowPlayingContinuously: false,
 };
 
@@ -535,7 +536,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       state,
       { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean }
     ) {
-      state.audioStates[audioKey].nowPlaying = nowPlaying;
+      state.nowPlayingAudioKey = nowPlaying ? audioKey : undefined;
     },
   },
 
@@ -687,7 +688,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       state.audioKeys.splice(index, 0, audioKey);
       state.audioItems[audioKey] = audioItem;
       state.audioStates[audioKey] = {
-        nowPlaying: false,
         nowGenerating: false,
       };
     },
@@ -713,7 +713,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       for (const { audioKey, audioItem } of audioKeyItemPairs) {
         state.audioItems[audioKey] = audioItem;
         state.audioStates[audioKey] = {
-          nowPlaying: false,
           nowGenerating: false,
         };
       }
@@ -1882,7 +1881,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   STOP_CONTINUOUSLY_AUDIO: {
     action({ state, dispatch }) {
       for (const audioKey of state.audioKeys) {
-        if (state.audioStates[audioKey].nowPlaying) {
+        if (state.nowPlayingAudioKey === audioKey) {
           dispatch("STOP_AUDIO");
         }
       }

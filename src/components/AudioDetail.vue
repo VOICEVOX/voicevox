@@ -514,7 +514,7 @@ const stop = () => {
 };
 
 const nowPlaying = computed(
-  () => store.state.audioStates[props.activeAudioKey]?.nowPlaying
+  () => props.activeAudioKey === store.state.nowPlayingAudioKey
 );
 const nowGenerating = computed(
   () => store.state.audioStates[props.activeAudioKey]?.nowGenerating

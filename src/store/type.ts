@@ -73,7 +73,6 @@ export type AudioItem = {
 };
 
 export type AudioState = {
-  nowPlaying: boolean;
   nowGenerating: boolean;
 };
 
@@ -131,6 +130,7 @@ export type AudioStoreState = {
   audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
   audioPlayStartPoint?: number;
+  nowPlayingAudioKey?: AudioKey;
   nowPlayingContinuously: boolean;
 };
 
