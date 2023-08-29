@@ -14,7 +14,6 @@ import {
   net,
 } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-import dotenv from "dotenv";
 
 import log from "electron-log";
 import dayjs from "dayjs";
@@ -66,16 +65,17 @@ if (isTest) {
 } else if (isDevelopment) {
   suffix = "-dev";
 }
-console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
+const appName = import.meta.env.VITE_APP_NAME + suffix;
+console.log(`Environment: ${import.meta.env.MODE}, appData: ${appName}`);
 
 // バージョン0.14より前の設定ファイルの保存場所
 const beforeUserDataDir = app.getPath("userData"); // マイグレーション用
 
 // appnameをvoicevoxとしてsetする
-app.setName(`voicevox${suffix}`);
+app.setName(appName);
 
 // Electronの設定ファイルの保存場所を変更
-const fixedUserDataDir = path.join(app.getPath("appData"), `voicevox${suffix}`);
+const fixedUserDataDir = path.join(app.getPath("appData"), appName);
 if (!fs.existsSync(fixedUserDataDir)) {
   fs.mkdirSync(fixedUserDataDir);
 }
@@ -108,24 +108,15 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-// .envから設定をprocess.envに読み込み
 let appDirPath: string;
 let __static: string;
 
-// NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
-//       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
-//       Linux・macOS ではそのディレクトリはカレントディレクトリとはならないため、.env ファイルの
-//       パスを明示的に指定する必要がある。Windows の配布パッケージ版でもこの設定で起動できるため、
-//       全 OS で共通の条件分岐とした。
 if (isDevelopment) {
   // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
   appDirPath = path.resolve(__dirname, "..");
-  dotenv.config({ override: true });
   __static = path.join(appDirPath, "public");
 } else {
   appDirPath = path.dirname(app.getPath("exe"));
-  const envPath = path.join(appDirPath, ".env");
-  dotenv.config({ path: envPath });
   process.chdir(appDirPath);
   __static = __dirname;
 }

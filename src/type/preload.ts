@@ -5,10 +5,26 @@ import { Result } from "@/type/result";
 
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
-export const isMac =
-  typeof process === "undefined"
-    ? navigator.userAgent.includes("Mac")
-    : process.platform === "darwin";
+
+// electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なmacOS判定
+function checkIsMac(): boolean {
+  let isMac: boolean | undefined = undefined;
+  if (process?.platform) {
+    // electronのメインプロセス用
+    isMac = process.platform === "darwin";
+  } else if (navigator?.userAgentData) {
+    // electronのレンダラープロセス用、Chrome系統が実装する実験的機能
+    isMac = navigator.userAgentData.platform.toLowerCase().includes("mac");
+  } else if (navigator?.platform) {
+    // ブラウザ用、非推奨機能
+    isMac = navigator.platform.toLowerCase().includes("mac");
+  } else {
+    // ブラウザ用、不正確
+    isMac = navigator.userAgent.toLowerCase().includes("mac");
+  }
+  return isMac;
+}
+export const isMac = checkIsMac();
 
 export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
@@ -450,7 +466,6 @@ export type MoraDataType =
 
 export type ThemeColorType =
   | "primary"
-  | "primary-light"
   | "display"
   | "display-on-primary"
   | "display-hyperlink"

@@ -3,8 +3,12 @@
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
-  <div>
+    <div>
       <q-input
+        v-if="
+          !disable &&
+          (valueLabel.visible || previewSlider.state.isPanning.value)
+        "
         dense
         borderless
         :model-value="
@@ -29,7 +33,7 @@
       vertical
       reverse
       snap
-      color="primary-light"
+      color="primary"
       track-size="2.5px"
       :style="clipPathComputed"
       :min="previewSlider.qSliderProps.min.value"
@@ -169,7 +173,9 @@ const formatValue = (
 };
 
 // クリックでアクセント句が選択されないように@click.stopに渡す
-const stopPropagation = undefined;
+const stopPropagation = () => {
+  // fn is not a function エラーを回避するために何もしない関数を渡す
+};
 </script>
 
 <style scoped lang="scss">

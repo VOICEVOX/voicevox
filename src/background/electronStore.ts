@@ -31,13 +31,13 @@ function getStore() {
       },
       ">=0.14": (store) => {
         // FIXME: できるならEngineManagerからEnginIDを取得したい
-        if (process.env.DEFAULT_ENGINE_INFOS == undefined)
-          throw new Error("DEFAULT_ENGINE_INFOS == undefined");
+        if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined)
+          throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
         const engineId = EngineId(
-          JSON.parse(process.env.DEFAULT_ENGINE_INFOS)[0].uuid
+          JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
         );
         if (engineId == undefined)
-          throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
+          throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
         const prevDefaultStyleIds = store.get("defaultStyleIds");
         store.set(
           "defaultStyleIds",

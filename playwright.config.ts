@@ -13,7 +13,7 @@ if (process.env.VITE_TARGET === "electron") {
   project = { name: "browser", testDir: "./tests/e2e/browser" };
 
   // エンジンの起動が必要
-  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
+  const defaultEngineInfosEnv = process.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
   const envSchema = z // FIXME: electron起動時のものと共通化したい
     .object({
       host: z.string(),
@@ -58,6 +58,14 @@ const config: PlaywrightTestConfig = {
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
+  reporter: [
+    [
+      "html",
+      {
+        open: process.env.CI ? "never" : "on-failure",
+      },
+    ],
+  ],
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   use: {
@@ -65,6 +73,9 @@ const config: PlaywrightTestConfig = {
     actionTimeout: 0,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
+    video: {
+      mode: "retain-on-failure",
+    },
   },
 
   /* Configure projects for major browsers */

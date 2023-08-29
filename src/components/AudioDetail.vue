@@ -26,7 +26,7 @@
             <q-btn
               v-if="!nowPlaying && !nowGenerating"
               fab
-              color="primary-light"
+              color="primary"
               text-color="display-on-primary"
               icon="play_arrow"
               @click="play"
@@ -34,7 +34,7 @@
             <q-btn
               v-else
               fab
-              color="primary-light"
+              color="primary"
               text-color="display-on-primary"
               icon="stop"
               :disable="nowGenerating"
@@ -511,7 +511,7 @@ const play = async () => {
 };
 
 const stop = () => {
-  store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
+  store.dispatch("STOP_AUDIO");
 };
 
 const nowPlaying = computed(
@@ -820,9 +820,9 @@ $pitch-label-height: 24px;
     flex-direction: column;
     justify-content: space-between;
     .detail-selector .q-tab--active {
-      background-color: rgba(colors.$primary-light-rgb, 0.3);
+      background-color: rgba(colors.$primary-rgb, 0.3);
       :deep(.q-tab__indicator) {
-        background-color: colors.$primary-light;
+        background-color: colors.$primary;
       }
     }
     .play-button-wrapper {

@@ -15,6 +15,7 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { AudioKey } from "@/type/preload";
+import { formatCharacterStyleName } from "@/store/utility";
 
 const store = useStore();
 
@@ -52,9 +53,16 @@ const styleInfo = computed(() => {
 });
 
 const characterName = computed(() => {
-  return styleInfo.value?.styleName
-    ? `${characterInfo.value?.metas.speakerName} (${styleInfo.value?.styleName})`
-    : characterInfo.value?.metas.speakerName;
+  // 初期化前・未選択時
+  if (characterInfo.value == undefined) {
+    return "（表示エラー）";
+  }
+
+  const speakerName = characterInfo.value.metas.speakerName;
+  const styleName = styleInfo.value?.styleName;
+  return styleName
+    ? formatCharacterStyleName(speakerName, styleName)
+    : speakerName;
 });
 
 const engineName = computed(() => {

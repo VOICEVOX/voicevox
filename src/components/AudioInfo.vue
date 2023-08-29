@@ -14,7 +14,7 @@
                 <q-item-section avatar>
                   <q-avatar
                     icon="add_circle_outline"
-                    color="primary-light"
+                    color="primary"
                     text-color="display-on-primary"
                   ></q-avatar>
                 </q-item-section>
@@ -30,7 +30,7 @@
                 <q-item-section avatar>
                   <q-avatar
                     icon="edit_note"
-                    color="primary-light"
+                    color="primary"
                     text-color="display-on-primary"
                   ></q-avatar>
                 </q-item-section>
@@ -48,7 +48,7 @@
           v-model="presetSelectModel"
           :options="selectablePresetList"
           class="col overflow-hidden"
-          color="primary-light"
+          color="primary"
           text-color="display-on-primary"
           outlined
           dense
@@ -98,7 +98,7 @@
                 autofocus
                 hide-selected
                 label="タイトル"
-                color="primary-light"
+                color="primary"
                 use-input
                 input-debounce="0"
                 :model-value="presetName"
@@ -191,7 +191,7 @@
         <q-slider
           dense
           snap
-          color="primary-light"
+          color="primary"
           track-size="2px"
           :min="parameter.slider.qSliderProps.min.value"
           :max="parameter.slider.qSliderProps.max.value"
@@ -233,6 +233,7 @@
                 : "未設定"
             }}
           </div>
+          <!-- 横幅が狭い場合に改行させるため分割 -->
           <div
             v-if="
               morphingTargetCharacterInfo &&
@@ -274,7 +275,7 @@
         <q-slider
           dense
           snap
-          color="primary-light"
+          color="primary"
           track-size="2px"
           :min="morphingRateSlider.qSliderProps.min.value"
           :max="morphingRateSlider.qSliderProps.max.value"

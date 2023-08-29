@@ -32,7 +32,7 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 ## 環境構築
 
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。  
-Node.js の管理ツール ([nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など)を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
+Node.js の管理ツール（[nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など）を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
 
 Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を
 Fork して `git clone` し、次のコマンドを実行してください。
@@ -43,7 +43,7 @@ npm ci
 
 ## 実行
 
-`.env.production`をコピーして`.env`を作成し、`DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`のフルパスを指定します。
+`.env.production`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`のフルパスを指定します。
 
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
 
@@ -57,7 +57,7 @@ AppImage 版の場合は`$ /path/to/VOICEVOX.AppImage --appimage-mount`でファ
 VOICEVOX エディタの実行とは別にエンジン API のサーバを立てている場合は`executionFilePath`を指定する必要はありません。
 これは製品版 VOICEVOX を起動している場合もあてはまります。
 
-また、エンジン API の宛先エンドポイントを変更する場合は`DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
+また、エンジン API の宛先エンドポイントを変更する場合は`VITE_DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
 
 ```bash
 npm run electron:serve
@@ -94,6 +94,8 @@ npm run test-watch:unit # 監視モード
 ### ブラウザ End to End テスト
 
 Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
+> **Note**
+> 一部のエンジンの設定を書き換えるテストは、CI(Github Actions)上でのみ実行されるようになっています。
 
 ```bash
 npm run test:browser-e2e

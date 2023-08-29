@@ -114,7 +114,7 @@
                         <q-btn
                           fab
                           icon="add"
-                          color="primary-light"
+                          color="primary"
                           text-color="display-on-primary"
                           :disable="uiLocked"
                           aria-label="テキストを追加"
