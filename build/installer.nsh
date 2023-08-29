@@ -880,7 +880,6 @@ FunctionEnd
 
     ${NSD_CreateCheckBox} 0 13u 100% 12u "追加エンジンのみ削除する"
     Pop $removeAdditionalEngineCheckBox
-    ${NSD_Check} $removeAdditionalEngineCheckBox
 
     ${NSD_OnClick} $removeAllUserDataCheckBox un.removeAllUserDataCheckBoxChange
     ${NSD_OnClick} $removeAdditionalEngineCheckBox un.removeAdditionalEngineCheckBoxChange
@@ -888,6 +887,8 @@ FunctionEnd
     ; エンジンがない場合はチェックボックスを無効化する
     ${If} $isExistEngine == "0"
       EnableWindow $removeAdditionalEngineCheckBox 0
+    ${Else}
+      ${NSD_Check} $removeAdditionalEngineCheckBox
     ${EndIf}
 
     nsDialogs::Show
@@ -899,6 +900,7 @@ FunctionEnd
     ; 設定を削除するにチェックをつけたらエンジンを削除するにチェックをつける
     ${NSD_GetState} $removeAllUserDataCheckBox $removeAllUserDataCheckBoxState
     ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
+    ${AndIf} $isExistEngine == "1"
       ${NSD_Check} $removeAdditionalEngineCheckBox
     ${EndIf}
   FunctionEnd
@@ -923,21 +925,71 @@ FunctionEnd
 
     ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
     ${OrIf} $removeAdditionalEngineCheckBoxState == ${BST_CHECKED}
-      ${if} $installMode == "all"
+      ${If} $installMode == "all"
         SetShellVarContext current
-      ${endif}
-
-      ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%"
-        RMDir /r "$APPDATA\${APP_PACKAGE_NAME}"
-      ${Else}
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%\vvpp-engines"
       ${EndIf}
 
-      ${if} $installMode == "all"
+      ${If} $removeAdditionalEngineCheckBoxState == ${BST_CHECKED}
+        ${Locate} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp" "/L=D /M=????????????? /G=0" un.removeVvppTmp
+        RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp"
+        ${Locate} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines" "/L=D /M=*+????????-????-????-????-???????????? /G=0" un.removeVvppEngines
+        RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines"
+        ; 未知のファイルが残っている場合削除されずにエラーフラグが立つのでクリアする
+        ClearErrors
+      ${EndIf}
+
+      ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
+        ; ログの削除
+        ${Locate} "$APPDATA\$%VITE_APP_NAME%\logs" "/L=F /M=????????_??????_error.log /G=0" un.removeLogFile
+        RMDir "$APPDATA\$%VITE_APP_NAME%\logs"
+
+        ; 設定ファイルの削除
+        Delete "$APPDATA\$%VITE_APP_NAME%\config.json"
+        Delete "$APPDATA\$%VITE_APP_NAME%\window-state.json"
+
+        ; SessionDataの削除
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%\blob_storage"
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Cache"
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Code Cache"
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%\DawnCache"
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%\GPUCache"
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Local Storage"
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Network"
+        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Session Storage"
+        Delete "$APPDATA\$%VITE_APP_NAME%\Local State"
+        Delete "$APPDATA\$%VITE_APP_NAME%\Preferences"
+
+        ; 空になったはずのディレクトリを削除
+        RMDir "$APPDATA\$%VITE_APP_NAME%"
+
+        ; electron-logによって作成される"%APPDATA%\voicevox-[cpu|cuda]\logs"の空ディレクトリを削除
+        RMDir "$APPDATA\${APP_PACKAGE_NAME}\logs"
+        RMDir "$APPDATA\${APP_PACKAGE_NAME}"
+        ClearErrors
+      ${EndIf}
+
+      ${If} $installMode == "all"
         SetShellVarContext all
-      ${endif}
+      ${EndIf}
     ${EndIf}
+  FunctionEnd
+
+  Function un.removeVvppTmp
+    RMDir /r "$R9"
+    Push ""
+  FunctionEnd
+
+  Function un.removeVvppEngines
+    ; "engine_manifest.json"があるか確認してから削除する。
+    IfFileExists "$R9\engine_manifest.json" 0 +3
+    RMDir /r "$R9"
+    ClearErrors
+    Push ""
+  FunctionEnd
+
+  Function un.removeLogFile
+    Delete "$R9"
+    Push ""
   FunctionEnd
 
   ; MUI_UNPAGE_FINISHの戻るボタンを無効化する
