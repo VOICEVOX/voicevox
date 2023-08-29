@@ -465,10 +465,6 @@ export type AudioStoreTypes = {
   PLAY_CONTINUOUSLY_AUDIO: {
     action(): void;
   };
-
-  STOP_CONTINUOUSLY_AUDIO: {
-    action(): void;
-  };
 };
 
 /*

@@ -1877,16 +1877,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       }
     }),
   },
-
-  STOP_CONTINUOUSLY_AUDIO: {
-    action({ state, dispatch }) {
-      for (const audioKey of state.audioKeys) {
-        if (state.nowPlayingAudioKey === audioKey) {
-          dispatch("STOP_AUDIO");
-        }
-      }
-    },
-  },
 });
 
 export const audioCommandStoreState: AudioCommandStoreState = {};
