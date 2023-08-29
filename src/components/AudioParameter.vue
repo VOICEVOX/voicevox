@@ -17,7 +17,7 @@
         :style="{
           width: '25px',
           height: '20px',
-          'font-size': 'xx-small',
+          'font-size': 'x-small',
           position: 'relative',
           top: `${verticalOffset}px`,
         }"
@@ -177,7 +177,7 @@ $value-label-height: 24px;
 
 div {
   position: absolute;
-  top: 8px;
+  top: 0px;
   bottom: 8px;
   .q-slider {
     height: calc(100% - #{$value-label-height + 12px});
