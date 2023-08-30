@@ -947,19 +947,8 @@ FunctionEnd
         Delete "$APPDATA\$%VITE_APP_NAME%\config.json"
         Delete "$APPDATA\$%VITE_APP_NAME%\window-state.json"
 
-        ; SessionDataの削除
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%\blob_storage"
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Cache"
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Code Cache"
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%\DawnCache"
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%\GPUCache"
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Local Storage"
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Network"
-        RMDir /r "$APPDATA\$%VITE_APP_NAME%\Session Storage"
-        Delete "$APPDATA\$%VITE_APP_NAME%\Local State"
-        Delete "$APPDATA\$%VITE_APP_NAME%\Preferences"
-
         ; 空になったはずのディレクトリを削除
+        ; FIXME: sessionDataのファイルを削除していないため削除されない
         RMDir "$APPDATA\$%VITE_APP_NAME%"
 
         ; electron-logによって作成される"%APPDATA%\voicevox-[cpu|cuda]\logs"の空ディレクトリを削除
