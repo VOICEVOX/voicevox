@@ -130,6 +130,7 @@ export type AudioStoreState = {
   audioKeys: AudioKey[];
   audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
+  _selectedAudioKeys?: AudioKey[];
   audioPlayStartPoint?: number;
   nowPlayingContinuously: boolean;
 };
@@ -137,6 +138,10 @@ export type AudioStoreState = {
 export type AudioStoreTypes = {
   ACTIVE_AUDIO_KEY: {
     getter: AudioKey | undefined;
+  };
+
+  SELECTED_AUDIO_KEYS: {
+    getter: AudioKey[];
   };
 
   HAVE_AUDIO_QUERY: {
@@ -190,6 +195,11 @@ export type AudioStoreTypes = {
   SET_ACTIVE_AUDIO_KEY: {
     mutation: { audioKey?: AudioKey };
     action(payload: { audioKey?: AudioKey }): void;
+  };
+
+  SET_SELECTED_AUDIO_KEYS: {
+    mutation: { audioKeys?: AudioKey[] };
+    action(payload: { audioKeys?: AudioKey[] }): void;
   };
 
   SET_AUDIO_PLAY_START_POINT: {

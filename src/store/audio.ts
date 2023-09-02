@@ -274,6 +274,17 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  SELECTED_AUDIO_KEYS: {
+    getter(state) {
+      return (
+        //  undo/redoで消えていることがあるためフィルタする
+        state._selectedAudioKeys?.filter((audioKey) =>
+          state.audioKeys.includes(audioKey)
+        ) || []
+      );
+    },
+  },
+
   HAVE_AUDIO_QUERY: {
     getter: (state) => (audioKey: AudioKey) => {
       return state.audioItems[audioKey]?.query != undefined;
@@ -518,6 +529,28 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
       // reset audio play start point
       dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
+    },
+  },
+
+  SET_SELECTED_AUDIO_KEYS: {
+    mutation(state, { audioKeys }: { audioKeys?: AudioKey[] }) {
+      state._selectedAudioKeys = audioKeys;
+    },
+    action(
+      { state, commit, getters },
+      { audioKeys }: { audioKeys?: AudioKey[] }
+    ) {
+      const uniqueAudioKeys = new Set(audioKeys);
+      if (
+        getters.ACTIVE_AUDIO_KEY &&
+        !uniqueAudioKeys.has(getters.ACTIVE_AUDIO_KEY)
+      ) {
+        throw new Error("selectedAudioKeys must include activeAudioKey");
+      }
+      const sortedAudioKeys = state.audioKeys.filter((audioKey) =>
+        uniqueAudioKeys.has(audioKey)
+      );
+      commit("SET_SELECTED_AUDIO_KEYS", { audioKeys: sortedAudioKeys });
     },
   },
 
