@@ -54,16 +54,13 @@ test("音声パラメータ引き継ぎの設定", async ({ page }) => {
   await validateValue(inputTag, "1.00");
 
   // スライダーからパラメータの変更ができるかどうかを確認
-  const sliderThumbBox = (await page
+  const sliderThumbBox = await page
     .locator(".q-slider__thumb")
     .first()
-    .boundingBox()) || { x: 0, y: 0, width: 0, height: 0 };
-  const sliderBox = (await page.locator(".q-slider").first().boundingBox()) || {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  };
+    .boundingBox();
+  if (!sliderThumbBox) throw new Error("sliderThumbBox is null");
+  const sliderBox = await page.locator(".q-slider").first().boundingBox();
+  if (!sliderBox) throw new Error("sliderBox is null");
   await page.mouse.move(
     sliderThumbBox.x + sliderThumbBox.width / 2,
     sliderThumbBox.y + sliderThumbBox.height / 2
