@@ -305,7 +305,7 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
   [
     "再生/停止",
     () => {
-      if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+      if (!nowPlaying.value && !uiLocked.value) {
         play();
       } else {
         stop();
