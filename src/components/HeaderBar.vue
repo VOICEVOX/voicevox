@@ -83,10 +83,10 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
   [
     "連続再生/停止",
     () => {
-      if (nowPlayingContinuously.value) {
-        stopContinuously();
-      } else if (!uiLocked.value) {
+      if (!nowPlayingContinuously.value && !uiLocked.value) {
         playContinuously();
+      } else {
+        stopContinuously();
       }
     },
   ],
