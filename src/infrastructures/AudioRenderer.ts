@@ -254,6 +254,10 @@ export type AudioEvent = {
   readonly buffer: AudioBuffer;
 };
 
+/**
+ * オーディオイベントをスケジュールします。
+ * 使い捨てで、startメソッドは一度しか呼び出せません。
+ */
 class AudioEventScheduler implements EventScheduler {
   private readonly player: AudioPlayer;
   private readonly events: AudioEvent[];
@@ -328,6 +332,10 @@ export type NoteEvent = {
   readonly midi: number;
 };
 
+/**
+ * ノートイベントをスケジュールします。
+ * 使い捨てで、startメソッドは一度しか呼び出せません。
+ */
 class NoteEventScheduler implements EventScheduler {
   private readonly instrument: Instrument;
   private readonly events: NoteEvent[];
