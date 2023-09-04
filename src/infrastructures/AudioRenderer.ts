@@ -105,20 +105,16 @@ export class Transport implements BaseTransport {
     return this.startTime + elapsedTime;
   }
 
-  private createScheduler(sequence: Sequence) {
-    let scheduler: EventScheduler | undefined;
+  private createScheduler(sequence: Sequence): EventScheduler {
     if (sequence.type === "audio") {
-      scheduler = new AudioEventScheduler(
-        sequence.audioPlayer,
-        sequence.audioEvents
-      );
+      const player = sequence.audioPlayer;
+      const events = sequence.audioEvents;
+      return new AudioEventScheduler(player, events);
     } else {
-      scheduler = new NoteEventScheduler(
-        sequence.instrument,
-        sequence.noteEvents
-      );
+      const instrument = sequence.instrument;
+      const events = sequence.noteEvents;
+      return new NoteEventScheduler(instrument, events);
     }
-    return scheduler;
   }
 
   private schedule(contextTime: number) {
@@ -209,20 +205,16 @@ export class Transport implements BaseTransport {
 export class OfflineTransport implements BaseTransport {
   private schedulers = new Map<Sequence, EventScheduler>();
 
-  private createScheduler(sequence: Sequence) {
-    let scheduler: EventScheduler | undefined;
+  private createScheduler(sequence: Sequence): EventScheduler {
     if (sequence.type === "audio") {
-      scheduler = new AudioEventScheduler(
-        sequence.audioPlayer,
-        sequence.audioEvents
-      );
+      const player = sequence.audioPlayer;
+      const events = sequence.audioEvents;
+      return new AudioEventScheduler(player, events);
     } else {
-      scheduler = new NoteEventScheduler(
-        sequence.instrument,
-        sequence.noteEvents
-      );
+      const instrument = sequence.instrument;
+      const events = sequence.noteEvents;
+      return new NoteEventScheduler(instrument, events);
     }
-    return scheduler;
   }
 
   addSequence(sequence: Sequence) {
@@ -282,9 +274,11 @@ class AudioEventScheduler implements EventScheduler {
     this.startTime = time;
     this.index = this.events.length;
 
+    // 最初にスケジュールするイベントのインデックスを調べて設定する
     for (let i = 0; i < this.events.length; i++) {
       const event = this.events[i];
-      if (event.time + event.buffer.duration > time) {
+      const eventEndTime = event.time + event.buffer.duration;
+      if (eventEndTime > time) {
         this.index = i;
         break;
       }
@@ -360,6 +354,7 @@ class NoteEventScheduler implements EventScheduler {
     this.startTime = time;
     this.index = this.events.length;
 
+    // 最初にスケジュールするイベントのインデックスを調べて設定する
     for (let i = 0; i < this.events.length; i++) {
       if (this.events[i].noteOffTime > time) {
         this.index = i;
