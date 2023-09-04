@@ -959,7 +959,10 @@ ipcMainHandle(
       (status: LibraryInstallStatus) => {
         if (status.status === "downloading" && status.contentLength) {
           win.setProgressBar(status.downloaded / status.contentLength);
-        } else if (status.status === "installing") {
+        } else if (
+          status.status === "pending" ||
+          status.status === "installing"
+        ) {
           win.setProgressBar(2);
         } else if (status.status === "error") {
           win.setProgressBar(-1);
@@ -967,8 +970,11 @@ ipcMainHandle(
             "ライブラリのインストールに失敗しました",
             status.message
           );
-        } else {
+        } else if (status.status === "done") {
           win.setProgressBar(-1);
+        } else {
+          // status.status === "uninstalling"
+          throw Error(`Invalid status: ${status.status}`);
         }
         ipcMainSend(win, "UPDATE_LIBRARY_INSTALL_STATUS", {
           libraryId,
