@@ -17,64 +17,29 @@ class Timer {
   }
 }
 
-type SchedulableEvent = {
-  readonly time: number;
-  readonly schedule: (contextTime: number) => void;
+export type AudioSequence = {
+  readonly type: "audio";
+  readonly audioPlayer: AudioPlayer;
+  readonly audioEvents: AudioEvent[];
 };
 
-export interface SoundSequence {
-  generateEvents(startTime: number): SchedulableEvent[];
-  scheduleStop(contextTime: number): void;
-}
+export type NoteSequence = {
+  readonly type: "note";
+  readonly instrument: Instrument;
+  readonly noteEvents: NoteEvent[];
+};
 
-class SoundScheduler {
-  readonly sequence: SoundSequence;
-  private readonly startContextTime: number;
-  private readonly startTime: number;
-  private readonly events: SchedulableEvent[];
+export type Sequence = AudioSequence | NoteSequence;
 
-  private index = 0;
-
-  constructor(
-    sequence: SoundSequence,
-    startContextTime: number,
-    startTime: number
-  ) {
-    this.sequence = sequence;
-    this.startContextTime = startContextTime;
-    this.startTime = startTime;
-    this.events = this.sequence.generateEvents(startTime);
-  }
-
-  private calculateContextTime(time: number) {
-    return this.startContextTime + (time - this.startTime);
-  }
-
-  // `time`から`time + period`までの範囲のイベントをスケジュールする
-  scheduleEvents(time: number, period: number) {
-    if (time < this.startTime) {
-      throw new Error("The specified time is invalid.");
-    }
-
-    while (this.index < this.events.length) {
-      const event = this.events[this.index];
-      const eventContextTime = this.calculateContextTime(event.time);
-
-      if (event.time < time + period) {
-        event.schedule(eventContextTime);
-        this.index++;
-      } else break;
-    }
-  }
-
-  stop(contextTime: number) {
-    this.sequence.scheduleStop(contextTime);
-  }
+interface EventScheduler {
+  start(contextTime: number, time: number): void;
+  schedule(untilTime: number): void;
+  stop(contextTime: number): void;
 }
 
 export interface BaseTransport {
-  addSequence(sequence: SoundSequence): void;
-  removeSequence(sequence: SoundSequence): void;
+  addSequence(sequence: Sequence): void;
+  removeSequence(sequence: Sequence): void;
 }
 
 /**
@@ -87,12 +52,11 @@ export class Transport implements BaseTransport {
 
   private _state: "started" | "stopped" = "stopped";
   private _time = 0;
-  private sequences: SoundSequence[] = [];
+  private sequences = new Set<Sequence>();
 
   private startContextTime = 0;
   private startTime = 0;
-  private schedulers: SoundScheduler[] = [];
-  private schedulersToBeStopped: SoundScheduler[] = [];
+  private schedulers = new Map<Sequence, EventScheduler>();
 
   get state() {
     return this._state;
@@ -131,7 +95,7 @@ export class Transport implements BaseTransport {
     this.timer = new Timer(interval * 1000, () => {
       if (this._state === "started") {
         const contextTime = this.audioContext.currentTime;
-        this.scheduleEvents(contextTime);
+        this.schedule(contextTime);
       }
     });
   }
@@ -141,64 +105,65 @@ export class Transport implements BaseTransport {
     return this.startTime + elapsedTime;
   }
 
-  private getScheduler(sequence: SoundSequence) {
-    return this.schedulers.find((value) => {
-      return value.sequence === sequence;
-    });
+  private createScheduler(sequence: Sequence): EventScheduler {
+    if (sequence.type === "audio") {
+      const player = sequence.audioPlayer;
+      const events = sequence.audioEvents;
+      return new AudioEventScheduler(player, events);
+    } else {
+      const instrument = sequence.instrument;
+      const events = sequence.noteEvents;
+      return new NoteEventScheduler(instrument, events);
+    }
   }
 
-  private scheduleEvents(contextTime: number) {
+  private schedule(contextTime: number) {
     const time = this.calculateTime(contextTime);
 
-    this.schedulersToBeStopped.forEach((value) => {
-      value.stop(contextTime);
-    });
-    this.schedulersToBeStopped = [];
-
-    this.sequences.forEach((value) => {
-      let scheduler = this.getScheduler(value);
-      if (!scheduler) {
-        scheduler = new SoundScheduler(value, contextTime, time);
-        this.schedulers.push(scheduler);
+    // シーケンスの削除を反映
+    const removedSequences: Sequence[] = [];
+    this.schedulers.forEach((scheduler, sequence) => {
+      if (!this.sequences.has(sequence)) {
+        scheduler.stop(contextTime);
+        removedSequences.push(sequence);
       }
-      scheduler.scheduleEvents(time, this.lookAhead);
+    });
+    removedSequences.forEach((sequence) => {
+      this.schedulers.delete(sequence);
+    });
+
+    // シーケンスの追加を反映
+    this.sequences.forEach((sequence) => {
+      if (!this.schedulers.has(sequence)) {
+        const scheduler = this.createScheduler(sequence);
+        scheduler.start(contextTime, time);
+        this.schedulers.set(sequence, scheduler);
+      }
+    });
+
+    this.schedulers.forEach((scheduler) => {
+      scheduler.schedule(time + this.lookAhead);
     });
   }
 
   /**
    * シーケンスを追加します。再生中に追加した場合は、次のスケジューリングで反映されます。
    */
-  addSequence(sequence: SoundSequence) {
-    const exists = this.sequences.some((value) => {
-      return value === sequence;
-    });
-    if (exists) {
-      throw new Error("The specified sequence has already been added.");
+  addSequence(sequence: Sequence) {
+    if (this.sequences.has(sequence)) {
+      throw new Error("The sequence has already been added.");
     }
-    this.sequences.push(sequence);
+    this.sequences.add(sequence);
   }
 
   /**
    * シーケンスを削除します。再生中に削除した場合は、次のスケジューリングで反映されます。
    */
-  removeSequence(sequence: SoundSequence) {
-    const index = this.sequences.findIndex((value) => {
-      return value === sequence;
-    });
-    if (index === -1) {
-      throw new Error("The specified sequence does not exist.");
+  removeSequence(sequence: Sequence) {
+    if (!this.sequences.has(sequence)) {
+      throw new Error("The sequence does not exist.");
     }
-    this.sequences.splice(index, 1);
-
-    if (this.state === "started") {
-      const index = this.schedulers.findIndex((value) => {
-        return value.sequence === sequence;
-      });
-      if (index === -1) return;
-
-      const removedScheduler = this.schedulers.splice(index, 1)[0];
-      this.schedulersToBeStopped.push(removedScheduler);
-    }
+    this.sequences.delete(sequence);
   }
 
   start() {
@@ -209,10 +174,8 @@ export class Transport implements BaseTransport {
 
     this.startContextTime = contextTime;
     this.startTime = this._time;
-    this.schedulers = [];
-    this.schedulersToBeStopped = [];
 
-    this.scheduleEvents(contextTime);
+    this.schedule(contextTime);
   }
 
   stop() {
@@ -225,9 +188,7 @@ export class Transport implements BaseTransport {
     this.schedulers.forEach((value) => {
       value.stop(contextTime);
     });
-    this.schedulersToBeStopped.forEach((value) => {
-      value.stop(contextTime);
-    });
+    this.schedulers.clear();
   }
 
   dispose() {
@@ -242,32 +203,39 @@ export class Transport implements BaseTransport {
  * 登録されているシーケンスのイベントをスケジュールします。主に保存用途です。
  */
 export class OfflineTransport implements BaseTransport {
-  private sequences: SoundSequence[] = [];
+  private schedulers = new Map<Sequence, EventScheduler>();
 
-  addSequence(sequence: SoundSequence) {
-    const exists = this.sequences.some((value) => {
-      return value === sequence;
-    });
-    if (exists) {
-      throw new Error("The specified sequence has already been added.");
+  private createScheduler(sequence: Sequence): EventScheduler {
+    if (sequence.type === "audio") {
+      const player = sequence.audioPlayer;
+      const events = sequence.audioEvents;
+      return new AudioEventScheduler(player, events);
+    } else {
+      const instrument = sequence.instrument;
+      const events = sequence.noteEvents;
+      return new NoteEventScheduler(instrument, events);
     }
-    this.sequences.push(sequence);
   }
 
-  removeSequence(sequence: SoundSequence) {
-    const index = this.sequences.findIndex((value) => {
-      return value === sequence;
-    });
-    if (index === -1) {
-      throw new Error("The specified sequence does not exist.");
+  addSequence(sequence: Sequence) {
+    if (this.schedulers.has(sequence)) {
+      throw new Error("The sequence has already been added.");
     }
-    this.sequences.splice(index, 1);
+    const scheduler = this.createScheduler(sequence);
+    this.schedulers.set(sequence, scheduler);
   }
 
-  scheduleEvents(startTime: number, period: number) {
-    this.sequences.forEach((value) => {
-      const scheduler = new SoundScheduler(value, 0, startTime);
-      scheduler.scheduleEvents(0, period);
+  removeSequence(sequence: Sequence) {
+    if (!this.schedulers.has(sequence)) {
+      throw new Error("The sequence does not exist.");
+    }
+    this.schedulers.delete(sequence);
+  }
+
+  schedule(startTime: number, period: number) {
+    this.schedulers.forEach((scheduler) => {
+      scheduler.start(0, startTime);
+      scheduler.schedule(period);
       scheduler.stop(period);
     });
   }
@@ -278,37 +246,71 @@ export type AudioEvent = {
   readonly buffer: AudioBuffer;
 };
 
-export class AudioSequence implements SoundSequence {
-  private readonly audioPlayer: AudioPlayer;
-  private readonly audioEvents: AudioEvent[];
+/**
+ * オーディオイベントをスケジュールします。
+ * 使い捨てで、startメソッドは一度しか呼び出せません。
+ */
+class AudioEventScheduler implements EventScheduler {
+  private readonly player: AudioPlayer;
+  private readonly events: AudioEvent[];
+
+  private isStarted = false;
+  private startContextTime = 0;
+  private startTime = 0;
+  private index = 0;
 
   constructor(audioPlayer: AudioPlayer, audioEvents: AudioEvent[]) {
-    this.audioPlayer = audioPlayer;
-    this.audioEvents = audioEvents;
+    this.player = audioPlayer;
+    this.events = [...audioEvents];
+    this.events.sort((a, b) => a.time - b.time);
   }
 
-  // スケジュール可能なイベントを生成する
-  generateEvents(startTime: number) {
-    return this.audioEvents
-      .sort((a, b) => a.time - b.time)
-      .filter((value) => {
-        const audioEndTime = value.time + value.buffer.duration;
-        return audioEndTime > startTime;
-      })
-      .map((value): SchedulableEvent => {
-        const offset = Math.max(startTime - value.time, 0);
-        return {
-          time: Math.max(value.time, startTime),
-          schedule: (contextTime: number) => {
-            this.audioPlayer.play(contextTime, offset, value.buffer);
-          },
-        };
-      });
+  start(contextTime: number, time: number) {
+    if (this.isStarted) {
+      throw new Error("Already started.");
+    }
+
+    this.startContextTime = contextTime;
+    this.startTime = time;
+    this.index = this.events.length;
+
+    // 最初にスケジュールするイベントのインデックスを調べて設定する
+    for (let i = 0; i < this.events.length; i++) {
+      const event = this.events[i];
+      const eventEndTime = event.time + event.buffer.duration;
+      if (eventEndTime > time) {
+        this.index = i;
+        break;
+      }
+    }
+
+    this.isStarted = true;
   }
 
-  // シーケンスの停止をスケジュールする
-  scheduleStop(contextTime: number) {
-    this.audioPlayer.allStop(contextTime);
+  schedule(untilTime: number) {
+    if (!this.isStarted) {
+      throw new Error("Not started.");
+    }
+
+    while (this.index < this.events.length) {
+      const event = this.events[this.index];
+      const offset = Math.max(this.startTime - event.time, 0);
+      const contextTime =
+        this.startContextTime + (event.time + offset - this.startTime);
+
+      if (event.time < untilTime) {
+        this.player.play(contextTime, offset, event.buffer);
+        this.index++;
+      } else break;
+    }
+  }
+
+  stop(contextTime: number) {
+    if (!this.isStarted) {
+      throw new Error("Not started.");
+    }
+
+    this.player.allStop(contextTime);
   }
 }
 
@@ -324,40 +326,71 @@ export type NoteEvent = {
   readonly midi: number;
 };
 
-export class NoteSequence implements SoundSequence {
+/**
+ * ノートイベントをスケジュールします。
+ * 使い捨てで、startメソッドは一度しか呼び出せません。
+ */
+class NoteEventScheduler implements EventScheduler {
   private readonly instrument: Instrument;
-  private readonly noteEvents: NoteEvent[];
+  private readonly events: NoteEvent[];
+
+  private isStarted = false;
+  private startContextTime = 0;
+  private startTime = 0;
+  private index = 0;
 
   constructor(instrument: Instrument, noteEvents: NoteEvent[]) {
     this.instrument = instrument;
-    this.noteEvents = noteEvents;
+    this.events = [...noteEvents];
+    this.events.sort((a, b) => a.noteOnTime - b.noteOnTime);
   }
 
-  // スケジュール可能なイベントを生成する
-  generateEvents(startTime: number) {
-    return this.noteEvents
-      .sort((a, b) => a.noteOnTime - b.noteOnTime)
-      .filter((value) => value.noteOffTime > startTime)
-      .map((value): SchedulableEvent[] => [
-        {
-          time: Math.max(value.noteOnTime, startTime),
-          schedule: (contextTime: number) => {
-            this.instrument.noteOn(contextTime, value.midi);
-          },
-        },
-        {
-          time: value.noteOffTime,
-          schedule: (contextTime: number) => {
-            this.instrument.noteOff(contextTime, value.midi);
-          },
-        },
-      ])
-      .flat()
-      .sort((a, b) => a.time - b.time);
+  start(contextTime: number, time: number) {
+    if (this.isStarted) {
+      throw new Error("Already started.");
+    }
+
+    this.startContextTime = contextTime;
+    this.startTime = time;
+    this.index = this.events.length;
+
+    // 最初にスケジュールするイベントのインデックスを調べて設定する
+    for (let i = 0; i < this.events.length; i++) {
+      if (this.events[i].noteOffTime > time) {
+        this.index = i;
+        break;
+      }
+    }
+
+    this.isStarted = true;
   }
 
-  // シーケンスの停止をスケジュールする
-  scheduleStop(contextTime: number) {
+  schedule(untilTime: number) {
+    if (!this.isStarted) {
+      throw new Error("Not started.");
+    }
+
+    while (this.index < this.events.length) {
+      const event = this.events[this.index];
+      const noteOnTime = Math.max(event.noteOnTime, this.startTime);
+      const noteOnContextTime =
+        this.startContextTime + (noteOnTime - this.startTime);
+      const noteOffContextTime =
+        this.startContextTime + (event.noteOffTime - this.startTime);
+
+      if (event.noteOnTime < untilTime) {
+        this.instrument.noteOn(noteOnContextTime, event.midi);
+        this.instrument.noteOff(noteOffContextTime, event.midi);
+        this.index++;
+      } else break;
+    }
+  }
+
+  stop(contextTime: number) {
+    if (!this.isStarted) {
+      throw new Error("Not started.");
+    }
+
     this.instrument.allSoundOff(contextTime);
   }
 }
@@ -696,7 +729,7 @@ export class AudioRenderer {
     const transport = new OfflineTransport();
 
     callback({ audioContext, transport });
-    transport.scheduleEvents(startTime, duration);
+    transport.schedule(startTime, duration);
     const audioBuffer = await audioContext.startRendering();
     return audioBuffer;
   }
