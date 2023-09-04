@@ -1787,13 +1787,19 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
+  SET_AUDIO_SOURCE: {
+    mutation(_, { audioBlob }: { audioBlob: Blob }) {
+      getAudioElement().src = URL.createObjectURL(audioBlob);
+    },
+  },
+
   PLAY_AUDIO_BLOB: {
     action: createUILockAction(
       async (
         { state, commit, dispatch },
         { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
-        getAudioElement().src = URL.createObjectURL(audioBlob);
+        commit("SET_AUDIO_SOURCE", { audioBlob });
         // 途中再生用の処理
         if (audioKey) {
           const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
