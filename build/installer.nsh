@@ -809,158 +809,110 @@ FunctionEnd
   !error 'The environment variable "%VITE_APP_NAME%" is empty.'
 !endif
 
-!ifdef BUILD_UNINSTALLER
-  Var removeAllUserDataCheckBox
-  Var removeAllUserDataCheckBoxState
-  Var removeAdditionalEngineCheckBox
-  Var removeAdditionalEngineCheckBoxState
-!endif
+!macro locateVvppTmp callbacks
+  ${Locate} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp" "/L=D /M=????????????? /G=0" ${callbacks}
+!macroend
+
+!macro locateVvppEngines callbacks
+  ${Locate} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines" "/L=D /M=*+????????-????-????-????-???????????? /G=0" ${callbacks}
+!macroend
 
 !macro customUninstallPage
   ; アンインストール時に設定が保存されるディレクトリを削除するか確認する
   UninstPage custom un.removeUserDataPage un.removeUserDataPageLeave
 
   Function un.removeUserDataPage
-    Push $R0
+    Push $0
 
-    Var /GLOBAL skipRemoveUserDataPage
-    StrCpy $skipRemoveUserDataPage "0"
     Var /GLOBAL isExistEngine
-    StrCpy $isExistEngine "1"
+    StrCpy $isExistEngine "0"
 
     ${If} $installMode == "all"
       SetShellVarContext current
     ${EndIf}
 
-    ; エンジンが残っているかの確認と空ディレクトリの削除
-    ${DirState} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp" $R0
-    ${If} $R0 == 0
+    Push $R0
+
+    StrCpy $R0 "0"
+    !insertmacro locateVvppTmp un.isExistVvppTmp
+    ${If} $R0 == "1"
+      StrCpy $isExistEngine "1"
+    ${Else}
       RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp"
     ${EndIf}
-    ${DirState} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines" $R0
-    ${If} $R0 != 1
-      ${If} $R0 == 0
+    ClearErrors
+
+    ${If} $isExistEngine == "0"
+      StrCpy $R0 "0"
+      !insertmacro locateVvppEngines un.isExistVvppEngines
+      ${If} $R0 == "1"
+        StrCpy $isExistEngine "1"
+      ${Else}
         RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines"
       ${EndIf}
-      StrCpy $isExistEngine "0"
+      ClearErrors
     ${EndIf}
 
-    ; 設定ディレクトリが無いか空の場合はページをスキップ
-    ${DirState} "$APPDATA\$%VITE_APP_NAME%" $R0
-    ${If} $R0 != 1
-      ${If} $R0 == 0
-        RMDir "$APPDATA\$%VITE_APP_NAME%"
-      ${EndIf}
-      StrCpy $skipRemoveUserDataPage "1"
-    ${EndIf}
+    Pop $R0
 
     ${If} $installMode == "all"
       SetShellVarContext all
     ${EndIf}
 
-    ${If} $skipRemoveUserDataPage == "1"
-      Pop $R0
+    ${If} $isExistEngine == "0"
+      Pop $0
       Abort
     ${EndIf}
 
     nsDialogs::Create 1018
-    Pop $R0
+    Pop $0
 
-    ${If} $R0 == error
-      Pop $R0
+    ${If} $0 == "error"
+      Pop $0
       Abort
     ${EndIf}
 
     ; 既にアンインストールは完了してしまっているためキャンセルボタンは無効化する
-    GetDlgItem $R0 $HWNDPARENT 2
-    EnableWindow $R0 0
+    GetDlgItem $0 $HWNDPARENT 2
+    EnableWindow $0 0
 
-    ${NSD_CreateCheckBox} 0 0 100% 12u "全ての設定ファイルを削除する"
-    Pop $removeAllUserDataCheckBox
-
-    ${NSD_CreateCheckBox} 0 13u 100% 12u "追加エンジンのみ削除する"
+    ${NSD_CreateCheckBox} 0 0 100% 12u "追加エンジンを削除する"
+    Var /GLOBAL removeAdditionalEngineCheckBox
     Pop $removeAdditionalEngineCheckBox
-
-    ${NSD_OnClick} $removeAllUserDataCheckBox un.removeAllUserDataCheckBoxChange
-    ${NSD_OnClick} $removeAdditionalEngineCheckBox un.removeAdditionalEngineCheckBoxChange
-
-    ; エンジンがない場合はチェックボックスを無効化する
-    ${If} $isExistEngine == "0"
-      EnableWindow $removeAdditionalEngineCheckBox 0
-    ${Else}
-      ${NSD_Check} $removeAdditionalEngineCheckBox
-    ${EndIf}
 
     nsDialogs::Show
 
-    Pop $R0
-  FunctionEnd
-
-  Function un.removeAllUserDataCheckBoxChange
-    ; 設定を削除するにチェックをつけたらエンジンを削除するにチェックをつける
-    ${NSD_GetState} $removeAllUserDataCheckBox $removeAllUserDataCheckBoxState
-    ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
-    ${AndIf} $isExistEngine == "1"
-      ${NSD_Check} $removeAdditionalEngineCheckBox
-    ${EndIf}
-  FunctionEnd
-
-  Function un.removeAdditionalEngineCheckBoxChange
-    ; エンジンを削除するのチェックを外したら設定を削除するのチェックを外す
-    ${NSD_GetState} $removeAdditionalEngineCheckBox $removeAdditionalEngineCheckBoxState
-    ${If} $removeAdditionalEngineCheckBoxState == ${BST_UNCHECKED}
-      ${NSD_Uncheck} $removeAllUserDataCheckBox
-    ${EndIf}
+    Pop $0
   FunctionEnd
 
   Function un.removeUserDataPageLeave
-    ; 最終確認と削除の処理
-    ${NSD_GetState} $removeAllUserDataCheckBox $removeAllUserDataCheckBoxState
-    ${NSD_GetState} $removeAdditionalEngineCheckBox $removeAdditionalEngineCheckBoxState
+    Push $0
+    ; 削除の処理
+    ${NSD_GetState} $removeAdditionalEngineCheckBox $0
 
-    ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
-      MessageBox MB_YESNO|MB_ICONEXCLAMATION "全ての設定ファイルを削除します。本当によろしいでしょうか。" IDYES +2
-      Abort
-    ${EndIf}
-
-    ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
-    ${OrIf} $removeAdditionalEngineCheckBoxState == ${BST_CHECKED}
+    ${If} $0 == ${BST_CHECKED}
       ${If} $installMode == "all"
         SetShellVarContext current
       ${EndIf}
 
-      ${If} $removeAdditionalEngineCheckBoxState == ${BST_CHECKED}
-        ${Locate} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp" "/L=D /M=????????????? /G=0" un.removeVvppTmp
-        RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp"
-        ${Locate} "$APPDATA\$%VITE_APP_NAME%\vvpp-engines" "/L=D /M=*+????????-????-????-????-???????????? /G=0" un.removeVvppEngines
-        RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines"
-        ; 未知のファイルが残っている場合削除されずにエラーフラグが立つのでクリアする
-        ClearErrors
-      ${EndIf}
-
-      ${If} $removeAllUserDataCheckBoxState == ${BST_CHECKED}
-        ; ログの削除
-        ${Locate} "$APPDATA\$%VITE_APP_NAME%\logs" "/L=F /M=????????_??????_error.log /G=0" un.removeLogFile
-        RMDir "$APPDATA\$%VITE_APP_NAME%\logs"
-
-        ; 設定ファイルの削除
-        Delete "$APPDATA\$%VITE_APP_NAME%\config.json"
-        Delete "$APPDATA\$%VITE_APP_NAME%\window-state.json"
-
-        ; 空になったはずのディレクトリを削除
-        ; FIXME: sessionDataのファイルを削除していないため削除されない
-        RMDir "$APPDATA\$%VITE_APP_NAME%"
-
-        ; electron-logによって作成される"%APPDATA%\voicevox-[cpu|cuda]\logs"の空ディレクトリを削除
-        RMDir "$APPDATA\${APP_PACKAGE_NAME}\logs"
-        RMDir "$APPDATA\${APP_PACKAGE_NAME}"
-        ClearErrors
-      ${EndIf}
+      !insertmacro locateVvppTmp  un.removeVvppTmp
+      RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines\.tmp"
+      !insertmacro locateVvppEngines un.removeVvppEngines
+      RMDir "$APPDATA\$%VITE_APP_NAME%\vvpp-engines"
+      ; 未知のファイルが残っている場合削除されずにエラーフラグが立つのでクリアする
+      ClearErrors
 
       ${If} $installMode == "all"
         SetShellVarContext all
       ${EndIf}
     ${EndIf}
+    Pop $0
+  FunctionEnd
+
+  Function un.isExistVvppTmp
+    ; 実行された場合は"$R0"に"1"を代入する。
+    StrCpy $R0 "1"
+    Push "StopLocate"
   FunctionEnd
 
   Function un.removeVvppTmp
@@ -968,16 +920,22 @@ FunctionEnd
     Push ""
   FunctionEnd
 
-  Function un.removeVvppEngines
-    ; "engine_manifest.json"があるか確認してから削除する。
-    IfFileExists "$R9\engine_manifest.json" 0 +3
-    RMDir /r "$R9"
-    ClearErrors
-    Push ""
+  Function un.isExistVvppEngines
+    ; "engine_manifest.json"がある場合"$R0"に"1"を代入する。
+    ${If} ${FileExists} "$R9\engine_manifest.json"
+      StrCpy $R0 "1"
+      Push "StopLocate"
+    ${Else}
+      Push ""
+    ${EndIf}
   FunctionEnd
 
-  Function un.removeLogFile
-    Delete "$R9"
+  Function un.removeVvppEngines
+    ; "engine_manifest.json"があるか確認してから削除する。
+    ${If} ${FileExists} "$R9\engine_manifest.json"
+      RMDir /r "$R9"
+      ClearErrors
+    ${EndIf}
     Push ""
   FunctionEnd
 
