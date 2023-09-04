@@ -315,6 +315,8 @@ class AudioEventScheduler implements EventScheduler {
 }
 
 export interface Instrument {
+  connect(destination: AudioNode): void;
+  disconnect(): void;
   noteOn(contextTime: number, midi: number): void;
   noteOff(contextTime: number, midi: number): void;
   allSoundOff(contextTime?: number): void;
@@ -672,6 +674,43 @@ export class Synth implements Instrument {
         value.soundOff(contextTime);
       });
     }
+  }
+}
+
+export type ChannelStripOptions = {
+  readonly volume: number;
+};
+
+export class ChannelStrip {
+  private readonly gainNode: GainNode;
+
+  get inputNode(): AudioNode {
+    return this.gainNode;
+  }
+
+  get volume() {
+    return this.gainNode.gain.value;
+  }
+
+  set volume(value: number) {
+    this.gainNode.gain.value = value;
+  }
+
+  constructor(
+    context: Context,
+    options: ChannelStripOptions = { volume: 0.1 }
+  ) {
+    const audioContext = context.audioContext;
+    this.gainNode = audioContext.createGain();
+    this.gainNode.gain.value = options.volume;
+  }
+
+  connect(destination: AudioNode) {
+    this.gainNode.connect(destination);
+  }
+
+  disconnect() {
+    this.gainNode.disconnect();
   }
 }
 
