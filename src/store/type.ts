@@ -180,10 +180,6 @@ export type AudioStoreTypes = {
     getter: CharacterInfo[] | undefined;
   };
 
-  GENERATE_AUDIO_KEY: {
-    action(): AudioKey;
-  };
-
   SETUP_SPEAKER: {
     action(payload: {
       audioKey: AudioKey;
