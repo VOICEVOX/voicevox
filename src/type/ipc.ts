@@ -311,6 +311,7 @@ export type IpcIHData = {
         libraryId: LibraryId;
         libraryName: string;
         libraryDownloadUrl: string;
+        librarySize: number;
       }
     ];
     return: void;

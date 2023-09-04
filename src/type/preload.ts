@@ -232,6 +232,7 @@ export interface Sandbox {
     libraryId: LibraryId;
     libraryName: string;
     libraryDownloadUrl: string;
+    librarySize: number;
   }): Promise<void>;
   uninstallLibrary(obj: {
     engineId: EngineId;

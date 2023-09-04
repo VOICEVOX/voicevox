@@ -500,6 +500,7 @@ const toReadPolicies = async (
     libraryId: library.uuid,
     libraryName: library.name,
     libraryDownloadUrl: library.downloadUrl,
+    librarySize: library.bytes,
     characterInfos: library.speakers,
   });
   toInstallDialog();

@@ -869,6 +869,7 @@ export type LibraryData = {
   libraryId: LibraryId;
   libraryName: string;
   libraryDownloadUrl: string;
+  librarySize: number;
   characterInfos: CharacterInfo[];
 };
 export type LibraryFetchStatus =
@@ -891,6 +892,7 @@ export type LibraryStoreTypes = {
       libraryId: LibraryId;
       libraryName: string;
       libraryDownloadUrl: string;
+      librarySize: number;
     }): Promise<void>;
   };
 

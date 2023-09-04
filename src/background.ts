@@ -2,7 +2,7 @@
 
 import path from "path";
 
-import fs from "fs";
+import fs, { stat } from "fs";
 import {
   app,
   protocol,
@@ -950,15 +950,23 @@ ipcMainHandle("READ_FILE", async (_, { filePath }) => {
 
 ipcMainHandle(
   "START_LIBRARY_DOWNLOAD_AND_INSTALL",
-  (_, { engineId, libraryId, libraryName, libraryDownloadUrl }) => {
+  (
+    _,
+    { engineId, libraryId, libraryName, libraryDownloadUrl, librarySize }
+  ) => {
     libraryManager.startLibraryDownloadAndInstall(
       engineId,
       libraryId,
       libraryName,
       libraryDownloadUrl,
       (status: LibraryInstallStatus) => {
-        if (status.status === "downloading" && status.contentLength) {
-          win.setProgressBar(status.downloaded / status.contentLength);
+        if (status.status === "downloading") {
+          // contentLengthが0になる場合のための処理
+          if (status.contentLength === 0) {
+            win.setProgressBar(status.downloaded / librarySize);
+          } else {
+            win.setProgressBar(status.downloaded / status.contentLength);
+          }
         } else if (
           status.status === "pending" ||
           status.status === "installing"

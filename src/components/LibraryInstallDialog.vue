@@ -131,6 +131,10 @@ const downloadProgress = computed(() => {
   const libraryId = selectedLibraryData.value.libraryId;
   const status = libraryInstallStatuses.value[libraryId];
   if (status.status !== "downloading") return undefined;
+  // contentLengthが0になる場合のための処理
+  if (status.contentLength === 0) {
+    return (status.downloaded / selectedLibraryData.value.librarySize) * 100;
+  }
   return (status.downloaded / status.contentLength) * 100;
 });
 
@@ -157,15 +161,12 @@ const selectedLibraryData = computed(() => store.state.selectedLibrary);
 const installLibrary = async () => {
   const library = selectedLibraryData.value;
   if (!library) throw Error("selectedLibraryData.value === undefined");
-  const engineId = library.engineId;
-  const libraryId = library.libraryId;
-  const libraryName = library.libraryName;
-  const libraryDownloadUrl = library.libraryDownloadUrl;
   store.dispatch("START_LIBRARY_DOWNLOAD_AND_INSTALL", {
-    engineId,
-    libraryId,
-    libraryName,
-    libraryDownloadUrl,
+    engineId: library.engineId,
+    libraryId: library.libraryId,
+    libraryName: library.libraryName,
+    libraryDownloadUrl: library.libraryDownloadUrl,
+    librarySize: library.librarySize,
   });
 };
 

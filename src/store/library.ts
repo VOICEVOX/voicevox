@@ -10,7 +10,7 @@ export const libraryStore = createPartialStore<LibraryStoreTypes>({
   START_LIBRARY_DOWNLOAD_AND_INSTALL: {
     async action(
       { dispatch },
-      { engineId, libraryId, libraryName, libraryDownloadUrl }
+      { engineId, libraryId, libraryName, libraryDownloadUrl, librarySize }
     ) {
       await dispatch("UPDATE_LIBRARY_INSTALL_STATUS", {
         libraryId,
@@ -23,6 +23,7 @@ export const libraryStore = createPartialStore<LibraryStoreTypes>({
         libraryId,
         libraryName,
         libraryDownloadUrl,
+        librarySize,
       });
     },
   },
