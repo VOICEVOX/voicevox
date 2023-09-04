@@ -1757,7 +1757,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   PLAY_AUDIO: {
     action: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
-        getAudioElement().pause();
+        await dispatch("STOP_AUDIO");
 
         // 音声用意
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
