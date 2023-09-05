@@ -1806,15 +1806,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             audioKey,
           });
           if (accentPhraseOffsets.length === 0) {
-            getAudioElement().currentTime = 0;
-          } else {
+            throw new Error("accentPhraseOffsets.length === 0");
+          }
             const startTime =
               accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
             if (startTime === undefined) throw Error("startTime === undefined");
             // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
             // 再生に影響のない程度かつ切り捨てられない値を加算する
             getAudioElement().currentTime = startTime + 10e-6;
-          }
         }
 
         // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
