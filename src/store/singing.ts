@@ -240,6 +240,8 @@ if (window.AudioContext) {
   audioRenderer = new AudioRenderer();
   transport = audioRenderer.transport;
   channelStrip = new ChannelStrip(audioRenderer.context);
+
+  channelStrip.connect(audioRenderer.audioContext.destination);
 }
 
 let playbackPosition = 0;
