@@ -22,25 +22,23 @@
           </q-tabs>
         </div>
         <div class="play-button-wrapper">
-          <template v-if="!nowPlayingContinuously">
-            <q-btn
-              v-if="!nowPlaying && !nowGenerating"
-              fab
-              color="primary"
-              text-color="display-on-primary"
-              icon="play_arrow"
-              @click="play"
-            ></q-btn>
-            <q-btn
-              v-else
-              fab
-              color="primary"
-              text-color="display-on-primary"
-              icon="stop"
-              :disable="nowGenerating"
-              @click="stop"
-            ></q-btn>
-          </template>
+          <q-btn
+            v-if="!nowPlaying && !nowGenerating"
+            fab
+            color="primary"
+            text-color="display-on-primary"
+            icon="play_arrow"
+            @click="play"
+          ></q-btn>
+          <q-btn
+            v-else
+            fab
+            color="primary"
+            text-color="display-on-primary"
+            icon="stop"
+            :disable="nowGenerating"
+            @click="stop"
+          ></q-btn>
         </div>
       </div>
 
@@ -513,16 +511,9 @@ const stop = () => {
   store.dispatch("STOP_AUDIO");
 };
 
-const nowPlaying = computed(
-  () => props.activeAudioKey === store.state.nowPlayingAudioKey
-);
+const nowPlaying = computed(() => store.getters.NOW_PLAYING);
 const nowGenerating = computed(
   () => store.state.audioStates[props.activeAudioKey]?.nowGenerating
-);
-
-// continuously play
-const nowPlayingContinuously = computed(
-  () => store.state.nowPlayingContinuously
 );
 
 const audioDetail = ref<HTMLElement>();

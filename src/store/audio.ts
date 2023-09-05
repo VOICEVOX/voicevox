@@ -300,6 +300,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  NOW_PLAYING: {
+    getter(state, getters) {
+      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
+      return (
+        activeAudioKey != undefined &&
+        activeAudioKey === state.nowPlayingAudioKey
+      );
+    },
+  },
+
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: (state) => {
       return state._activeAudioKey !== undefined

@@ -85,7 +85,7 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
     () => {
       if (!uiLocked.value) {
         if (nowPlayingContinuously.value) {
-          stopContinuously();
+          stop();
         } else {
           playContinuously();
         }
@@ -119,7 +119,7 @@ const playContinuously = async () => {
     });
   }
 };
-const stopContinuously = () => {
+const stop = () => {
   store.dispatch("STOP_AUDIO");
 };
 const generateAndSaveOneAudio = async () => {
@@ -159,8 +159,8 @@ const usableButtons: Record<
     disable: uiLocked,
   },
   STOP: {
-    click: stopContinuously,
-    disable: computed(() => !nowPlayingContinuously.value),
+    click: stop,
+    disable: computed(() => !store.getters.NOW_PLAYING),
   },
   EXPORT_AUDIO_ONE: {
     click: generateAndSaveOneAudio,
