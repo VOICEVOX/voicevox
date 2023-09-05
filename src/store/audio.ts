@@ -1815,20 +1815,22 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           offset = startTime + 10e-6;
         }
 
+        const audioElement = getAudioElement();
+
         if (offset !== undefined) {
-          getAudioElement().currentTime = offset;
+          audioElement.currentTime = offset;
         }
 
         // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
-        if (getAudioElement().setSinkId) {
-          getAudioElement()
+        if (audioElement.setSinkId) {
+          audioElement
             .setSinkId(state.savingSetting.audioOutputDevice)
             .catch((err) => {
               const stop = () => {
-                getAudioElement().pause();
-                getAudioElement().removeEventListener("canplay", stop);
+                audioElement.pause();
+                audioElement.removeEventListener("canplay", stop);
               };
-              getAudioElement().addEventListener("canplay", stop);
+              audioElement.addEventListener("canplay", stop);
               window.electron.showMessageDialog({
                 type: "error",
                 title: "エラー",
@@ -1844,23 +1846,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
           }
         };
-        getAudioElement().addEventListener("play", played);
+        audioElement.addEventListener("play", played);
 
         let paused: () => void;
         const audioPlayPromise = new Promise<boolean>((resolve) => {
           paused = () => {
-            resolve(getAudioElement().ended);
+            resolve(audioElement.ended);
           };
-          getAudioElement().addEventListener("pause", paused);
+          audioElement.addEventListener("pause", paused);
         }).finally(async () => {
-          getAudioElement().removeEventListener("play", played);
-          getAudioElement().removeEventListener("pause", paused);
+          audioElement.removeEventListener("play", played);
+          audioElement.removeEventListener("pause", paused);
           if (audioKey) {
             commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
           }
         });
 
-        getAudioElement().play();
+        audioElement.play();
 
         return audioPlayPromise;
       }
