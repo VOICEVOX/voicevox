@@ -1800,6 +1800,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
         commit("SET_AUDIO_SOURCE", { audioBlob });
+        let offset: number | undefined;
         // 途中再生用の処理
         if (audioKey) {
           const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
@@ -1811,7 +1812,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           if (startTime === undefined) throw Error("startTime === undefined");
           // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
           // 再生に影響のない程度かつ切り捨てられない値を加算する
-          getAudioElement().currentTime = startTime + 10e-6;
+          offset = startTime + 10e-6;
+        }
+
+        if (offset !== undefined) {
+          getAudioElement().currentTime = offset;
         }
 
         // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
