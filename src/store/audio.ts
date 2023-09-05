@@ -1869,6 +1869,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
+  PLAY_AUDIO_PLAYER: {
+    async action(
+      { state, commit },
+      { offset, audioKey }: { offset?: number; audioKey?: AudioKey }
+    ) {
+      //
+    },
+  },
+
   STOP_AUDIO: {
     action() {
       // PLAY_ でonpause時の処理が設定されているため、pauseするだけで良い
