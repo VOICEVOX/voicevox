@@ -511,9 +511,7 @@ const stop = () => {
   store.dispatch("STOP_AUDIO");
 };
 
-const nowPlaying = computed(
-  () => props.activeAudioKey === store.state.nowPlayingAudioKey
-);
+const nowPlaying = computed(() => store.getters.IS_PLAYING);
 const nowGenerating = computed(
   () => store.state.audioStates[props.activeAudioKey]?.nowGenerating
 );

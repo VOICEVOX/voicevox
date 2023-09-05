@@ -152,6 +152,10 @@ export type AudioStoreTypes = {
     getter(audioKey: AudioKey): boolean;
   };
 
+  IS_PLAYING: {
+    getter: boolean;
+  };
+
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
   };
