@@ -152,7 +152,7 @@ export type AudioStoreTypes = {
     getter(audioKey: AudioKey): boolean;
   };
 
-  IS_PLAYING: {
+  NOW_PLAYING: {
     getter: boolean;
   };
 

@@ -160,7 +160,7 @@ const usableButtons: Record<
   },
   STOP: {
     click: stop,
-    disable: computed(() => !store.getters.IS_PLAYING),
+    disable: computed(() => !store.getters.NOW_PLAYING),
   },
   EXPORT_AUDIO_ONE: {
     click: generateAndSaveOneAudio,

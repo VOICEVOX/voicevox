@@ -298,7 +298,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  IS_PLAYING: {
+  NOW_PLAYING: {
     getter(state, getters) {
       const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
       return (
