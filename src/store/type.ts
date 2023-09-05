@@ -466,7 +466,7 @@ export type AudioStoreTypes = {
   };
 
   PLAY_AUDIO_PLAYER: {
-    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<void>;
+    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
   };
 
   STOP_AUDIO: {

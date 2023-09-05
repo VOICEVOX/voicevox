@@ -1864,7 +1864,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         audioElement.play();
 
-        return audioPlayPromise;
+        return dispatch("PLAY_AUDIO_PLAYER", { offset, audioKey });
       }
     ),
   },
