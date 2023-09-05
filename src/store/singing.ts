@@ -1131,6 +1131,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrase.queryHash = queryHash;
             phrase.startTime = calculateStartTime(phrase.score, phrase.query);
 
+            // 音源とシーケンスを作成し直して、再接続する
             if (phrase.source) {
               phrase.source.disconnect();
             }
@@ -1138,20 +1139,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               transportRef.removeSequence(phrase.sequence);
             }
 
+            const context = audioRendererRef.context;
+            const audioPlayer = new AudioPlayer(context);
             const audioEvents: AudioEvent[] = [
               {
                 time: phrase.startTime,
                 buffer: phrase.buffer,
               },
             ];
-            const context = audioRendererRef.context;
-            const audioPlayer = new AudioPlayer(context);
-            audioPlayer.connect(channelStripRef.inputNode);
             const audioSequence: AudioSequence = {
               type: "audio",
               audioPlayer,
               audioEvents,
             };
+            audioPlayer.connect(channelStripRef.inputNode);
             transportRef.addSequence(audioSequence);
 
             phrase.source = audioPlayer;
