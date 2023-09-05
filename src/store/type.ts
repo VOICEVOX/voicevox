@@ -73,7 +73,6 @@ export type AudioItem = {
 };
 
 export type AudioState = {
-  nowPlaying: boolean;
   nowGenerating: boolean;
 };
 
@@ -130,7 +129,9 @@ export type AudioStoreState = {
   audioKeys: AudioKey[];
   audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
+  _selectedAudioKeys?: AudioKey[];
   audioPlayStartPoint?: number;
+  nowPlayingAudioKey?: AudioKey;
   nowPlayingContinuously: boolean;
 };
 
@@ -139,12 +140,20 @@ export type AudioStoreTypes = {
     getter: AudioKey | undefined;
   };
 
+  SELECTED_AUDIO_KEYS: {
+    getter: AudioKey[];
+  };
+
   HAVE_AUDIO_QUERY: {
     getter(audioKey: AudioKey): boolean;
   };
 
   IS_ACTIVE: {
     getter(audioKey: AudioKey): boolean;
+  };
+
+  NOW_PLAYING: {
+    getter: boolean;
   };
 
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
@@ -190,6 +199,11 @@ export type AudioStoreTypes = {
   SET_ACTIVE_AUDIO_KEY: {
     mutation: { audioKey?: AudioKey };
     action(payload: { audioKey?: AudioKey }): void;
+  };
+
+  SET_SELECTED_AUDIO_KEYS: {
+    mutation: { audioKeys?: AudioKey[] };
+    action(payload: { audioKeys?: AudioKey[] }): void;
   };
 
   SET_AUDIO_PLAY_START_POINT: {
@@ -463,10 +477,6 @@ export type AudioStoreTypes = {
   };
 
   PLAY_CONTINUOUSLY_AUDIO: {
-    action(): void;
-  };
-
-  STOP_CONTINUOUSLY_AUDIO: {
     action(): void;
   };
 };
