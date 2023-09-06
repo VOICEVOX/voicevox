@@ -818,7 +818,8 @@ FunctionEnd
 !macroend
 
 !macro customUninstallPage
-  ; アンインストール時に設定が保存されるディレクトリを削除するか確認する
+  ; エンジンディレクトリが存在する場合は、消去するかのチェックボックスを案内する
+  ; 存在しない場合はそのまま終了する
   UninstPage custom un.removeUserDataPage un.removeUserDataPageLeave
 
   Function un.removeUserDataPage
