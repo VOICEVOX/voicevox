@@ -5,18 +5,13 @@
   >
     <div>
       <q-input
-        v-if="
-          !disable &&
-          (valueLabel.visible || previewSlider.state.isPanning.value)
-        "
+        v-if="!disable"
         dense
         borderless
         :model-value="
-          formatValue(
-            previewSlider.qSliderProps.modelValue.value,
-            previewSlider.qSliderProps.min.value,
-            previewSlider.qSliderProps.max.value
-          )
+          previewSlider.qSliderProps.modelValue.value
+            ? previewSlider.qSliderProps.modelValue.value.toFixed(2)
+            : previewSlider.qSliderProps.min.value
         "
         :style="{
           width: '25px',
@@ -100,8 +95,16 @@ const emit =
     ): void;
   }>();
 
-const changeValue = (newValue: number, type: MoraDataType = props.type) =>
-  emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue, type);
+const changeValue = (newValue: number, type: MoraDataType = props.type) => {
+  newValue = formatValue(newValue, props.min, props.max);
+  return emit(
+    "changeValue",
+    props.accentPhraseIndex,
+    props.moraIndex,
+    newValue,
+    type
+  );
+};
 
 const previewSlider = previewSliderHelper({
   modelValue: () => props.value,
@@ -148,28 +151,31 @@ const formatValue = (
   value: number | null,
   defaultMinValue: number,
   defaultMaxValue: number
-) => {
+): number => {
+  // デバッグ用
+  console.log(value + ":" + defaultMinValue + ":" + defaultMaxValue);
+
   if (typeof value === "number") {
-    return value.toFixed(2);
+    return parseFloat(value.toFixed(2));
   }
 
   if (value === null) {
-    return defaultMinValue.toFixed(2);
+    return parseFloat(defaultMinValue.toFixed(2));
   }
 
   const tmp = Number(value);
   if (Number.isNaN(tmp)) {
-    return defaultMinValue.toFixed(2);
+    return parseFloat(defaultMinValue.toFixed(2));
   }
 
   if (tmp <= defaultMinValue) {
-    return defaultMinValue.toFixed(2);
+    return parseFloat(defaultMinValue.toFixed(2));
   }
   if (defaultMaxValue <= tmp) {
-    return defaultMaxValue.toFixed(2);
+    return parseFloat(defaultMaxValue.toFixed(2));
   }
 
-  return tmp.toFixed(2);
+  return parseFloat(tmp.toFixed(2));
 };
 
 // クリックでアクセント句が選択されないように@click.stopに渡す
