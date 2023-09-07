@@ -22,25 +22,23 @@
           </q-tabs>
         </div>
         <div class="play-button-wrapper">
-          <template v-if="!nowPlayingContinuously">
-            <q-btn
-              v-if="!nowPlaying && !nowGenerating"
-              fab
-              color="primary"
-              text-color="display-on-primary"
-              icon="play_arrow"
-              @click="play"
-            ></q-btn>
-            <q-btn
-              v-else
-              fab
-              color="primary"
-              text-color="display-on-primary"
-              icon="stop"
-              :disable="nowGenerating"
-              @click="stop"
-            ></q-btn>
-          </template>
+          <q-btn
+            v-if="!nowPlaying && !nowGenerating"
+            fab
+            color="primary"
+            text-color="display-on-primary"
+            icon="play_arrow"
+            @click="play"
+          ></q-btn>
+          <q-btn
+            v-else
+            fab
+            color="primary"
+            text-color="display-on-primary"
+            icon="stop"
+            :disable="nowGenerating"
+            @click="stop"
+          ></q-btn>
         </div>
       </div>
 
@@ -513,16 +511,9 @@ const stop = () => {
   store.dispatch("STOP_AUDIO");
 };
 
-const nowPlaying = computed(
-  () => store.state.audioStates[props.activeAudioKey]?.nowPlaying
-);
+const nowPlaying = computed(() => store.getters.NOW_PLAYING);
 const nowGenerating = computed(
   () => store.state.audioStates[props.activeAudioKey]?.nowGenerating
-);
-
-// continuously play
-const nowPlayingContinuously = computed(
-  () => store.state.nowPlayingContinuously
 );
 
 const audioDetail = ref<HTMLElement>();
@@ -574,31 +565,42 @@ const scrollToActivePoint = () => {
   }
 };
 
-// NodeJS.Timeout型が直接指定できないので、typeofとReturnTypeで取ってきている
-let focusInterval: ReturnType<typeof setInterval> | undefined;
+let requestId: number | undefined;
 watch(nowPlaying, async (newState) => {
   if (newState) {
     const accentPhraseOffsets = await store.dispatch("GET_AUDIO_PLAY_OFFSETS", {
       audioKey: props.activeAudioKey,
     });
-    // 現在再生されているaudio elementの再生時刻を0.01秒毎に取得(監視)し、
+    // 現在再生されているaudio elementの再生時刻を描画毎に取得(監視)し、
     // それに合わせてフォーカスするアクセント句を変えていく
-    focusInterval = setInterval(() => {
+    const focusAccentPhrase = () => {
       const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
-      for (let i = 1; i < accentPhraseOffsets.length; i++) {
-        if (
-          currentTime !== undefined &&
-          accentPhraseOffsets[i - 1] <= currentTime &&
-          currentTime < accentPhraseOffsets[i]
-        ) {
-          activePoint.value = i - 1;
-          scrollToActivePoint();
-        }
+      if (currentTime === undefined) {
+        throw new Error("currentTime === undefined)");
       }
-    }, 10);
-  } else if (focusInterval !== undefined) {
-    clearInterval(focusInterval);
-    focusInterval = undefined;
+      const playingAccentPhraseIndex =
+        accentPhraseOffsets.findIndex(
+          (currentOffset) => currentTime < currentOffset
+        ) - 1;
+      if (playingAccentPhraseIndex === -1) {
+        // accentPhraseOffsets[0] は必ず 0 なので到達しないはず
+        throw new Error("playingAccentPhraseIndex === -1");
+      }
+      if (playingAccentPhraseIndex === -2) {
+        // データと音声ファイルの長さに誤差があるため許容
+        // see https://github.com/VOICEVOX/voicevox/issues/785
+        return;
+      }
+      if (activePoint.value !== playingAccentPhraseIndex) {
+        activePoint.value = playingAccentPhraseIndex;
+        scrollToActivePoint();
+      }
+      requestId = window.requestAnimationFrame(focusAccentPhrase);
+    };
+    requestId = window.requestAnimationFrame(focusAccentPhrase);
+  } else if (requestId !== undefined) {
+    window.cancelAnimationFrame(requestId);
+    requestId = undefined;
     // startPointがundefinedの場合、一旦最初のアクセント句までスクロール、その後activePointの選択を解除(undefinedに)する
     activePoint.value = startPoint.value ?? 0;
     scrollToActivePoint();

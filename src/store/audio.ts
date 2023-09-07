@@ -136,12 +136,14 @@ function parseTextFile(
   return audioItems;
 }
 
-async function changeFileTailToNonExistent(filePath: string) {
-  const EXTENSION = "wav";
+async function changeFileTailToNonExistent(
+  filePath: string,
+  extension: string
+) {
   let tail = 1;
-  const name = filePath.slice(0, filePath.length - 1 - EXTENSION.length);
+  const name = filePath.slice(0, filePath.length - 1 - extension.length);
   while (await window.electron.checkFileExists(filePath)) {
-    filePath = `${name}[${tail}].${EXTENSION}`;
+    filePath = `${name}[${tail}].${extension}`;
     tail += 1;
   }
   return filePath;
@@ -261,6 +263,7 @@ export const audioStoreState: AudioStoreState = {
   audioStates: {},
   // audio elementの再生オフセット
   audioPlayStartPoint: undefined,
+  nowPlayingAudioKey: undefined,
   nowPlayingContinuously: false,
 };
 
@@ -294,6 +297,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   IS_ACTIVE: {
     getter: (state) => (audioKey: AudioKey) => {
       return state._activeAudioKey === audioKey;
+    },
+  },
+
+  NOW_PLAYING: {
+    getter(state, getters) {
+      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
+      return (
+        activeAudioKey != undefined &&
+        activeAudioKey === state.nowPlayingAudioKey
+      );
     },
   },
 
@@ -568,7 +581,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       state,
       { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean }
     ) {
-      state.audioStates[audioKey].nowPlaying = nowPlaying;
+      state.nowPlayingAudioKey = nowPlaying ? audioKey : undefined;
     },
   },
 
@@ -720,7 +733,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       state.audioKeys.splice(index, 0, audioKey);
       state.audioItems[audioKey] = audioItem;
       state.audioStates[audioKey] = {
-        nowPlaying: false,
         nowGenerating: false,
       };
     },
@@ -746,7 +758,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       for (const { audioKey, audioItem } of audioKeyItemPairs) {
         state.audioItems[audioKey] = audioItem;
         state.audioStates[audioKey] = {
-          nowPlaying: false,
           nowGenerating: false,
         };
       }
@@ -1416,7 +1427,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath);
+          filePath = await changeFileTailToNonExistent(filePath, "wav");
         }
 
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
@@ -1564,7 +1575,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath);
+          filePath = await changeFileTailToNonExistent(filePath, "wav");
         }
 
         const encodedBlobs: string[] = [];
@@ -1704,7 +1715,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath);
+          filePath = await changeFileTailToNonExistent(filePath, "txt");
         }
 
         const characters = new Map<string, string>();
@@ -1862,6 +1873,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   STOP_AUDIO: {
     action() {
+      // PLAY_ でonpause時の処理が設定されているため、pauseするだけで良い
       getAudioElement().pause();
     },
   },
@@ -1910,16 +1922,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
       }
     }),
-  },
-
-  STOP_CONTINUOUSLY_AUDIO: {
-    action({ state, dispatch }) {
-      for (const audioKey of state.audioKeys) {
-        if (state.audioStates[audioKey].nowPlaying) {
-          dispatch("STOP_AUDIO");
-        }
-      }
-    },
   },
 });
 
