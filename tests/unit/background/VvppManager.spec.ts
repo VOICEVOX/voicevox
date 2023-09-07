@@ -30,6 +30,7 @@ test<VvppManagerTestContext>("追加エンジンのディレクトリ名は想�
   manager,
 }) => {
   const dirName = manager.toValidDirName(dummyMinimumManifest);
+  // TODO: パターンを変更する場合アンインストーラーのコードを変更する必要がある
   const pattern = /^.+\+.{8}-.{4}-.{4}-.{4}-.{12}$/;
 
   expect(dirName).toMatch(pattern);
