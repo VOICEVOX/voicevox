@@ -67,7 +67,6 @@
                 :value="downloadProgress"
                 size="2.5rem"
                 color="primary"
-                track-color="grey-3"
               >
                 {{ downloadProgress ? downloadProgress.toFixed(1) : "" }}%
               </q-circular-progress>
