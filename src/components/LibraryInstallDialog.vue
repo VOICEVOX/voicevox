@@ -46,10 +46,12 @@
             v-if="
               selectedLibraryData &&
               libraryInstallStatuses[selectedLibraryData.libraryId] &&
-              libraryInstallStatuses[selectedLibraryData.libraryId].status !==
-                'done' &&
-              libraryInstallStatuses[selectedLibraryData.libraryId].status !==
-                'error'
+              libraryInstallStatuses[selectedLibraryData.libraryId].status ===
+                'pending' &&
+              libraryInstallStatuses[selectedLibraryData.libraryId].status ===
+                'downloading' &&
+              libraryInstallStatuses[selectedLibraryData.libraryId].status ===
+                'installing'
             "
             class="loading"
           >
@@ -80,7 +82,7 @@
                   libraryInstallStatuses[selectedLibraryData.libraryId]
                     .status === "installing"
                     ? "インストール中・・・"
-                    : "インストール待機中・・・"
+                    : "インストール待機中・・・" // status == pending
                 }}
               </div>
             </div>
