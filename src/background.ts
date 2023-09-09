@@ -2,7 +2,7 @@
 
 import path from "path";
 
-import fs, { stat } from "fs";
+import fs from "fs";
 import {
   app,
   protocol,
