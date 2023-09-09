@@ -25,7 +25,7 @@
               text-color="toolbar-button-display"
               class="text-no-wrap q-mr-md"
               :disable="isInstallInProgress"
-              @click="prevPage"
+              @click="backToManageDialog"
             />
             <q-btn
               unelevated
@@ -118,7 +118,7 @@ const emit =
 
 const store = useStore();
 
-const prevPage = () => {
+const backToManageDialog = () => {
   store.dispatch("SET_DIALOG_OPEN", { isLibraryManageDialogOpen: true });
   modelValueComputed.value = false;
 };
@@ -189,7 +189,7 @@ const installLibraryCompleteOrFailedDialog = async () => {
       message: `${libraryName}のインストールに失敗しました。`,
       ok: "戻る",
     });
-    prevPage();
+    backToManageDialog();
   }
 };
 
@@ -225,7 +225,7 @@ const requireReload = async (message: string, engineId: EngineId) => {
       closeOrReload: "reload",
     });
   } else {
-    prevPage();
+    backToManageDialog();
   }
 };
 
