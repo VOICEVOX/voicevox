@@ -119,6 +119,7 @@ export class LibraryManager {
       downloaded,
     });
     const tempFile = fs.createWriteStream(tempFilePath);
+    let tempFileClosed = false;
     try {
       const progressInterval = 1024 * 1024;
       let lastProgress = 0;
@@ -156,6 +157,7 @@ export class LibraryManager {
         downloadRes.body.on("end", resolve);
       });
       tempFile.close();
+      tempFileClosed = true;
       log.log(prefix + "Download complete");
 
       this.setEngineApi(engineId, engine.host);
@@ -194,9 +196,13 @@ export class LibraryManager {
         message: `ライブラリのインストールに失敗しました。エラー内容：${e}`,
       });
     } finally {
-      tempFile.close();
-      log.log(prefix + "Removing temp file");
-      await fs.promises.rm(tempFilePath);
+      if (!tempFileClosed) {
+        tempFile.close();
+      }
+      if (fs.existsSync(tempFilePath)) {
+        log.log(prefix + "Removing temp file");
+        await fs.promises.rm(tempFilePath);
+      }
     }
   }
 
