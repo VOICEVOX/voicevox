@@ -37,7 +37,7 @@ export class LibraryManager {
     libraryName: string,
     libraryDownloadUrl: string,
     onUpdate: (status: LibraryInstallStatus) => void
-  ): Promise<Buffer | undefined> {
+  ): Promise<void> {
     const engine = this.engineManager.fetchEngineInfo(engineId);
     const prefix = `LIBRARY INSTALL ${libraryName}: `;
     log.log(
@@ -198,7 +198,7 @@ export class LibraryManager {
     libraryId: LibraryId,
     libraryName: string,
     onUpdate: (status: LibraryInstallStatus) => void
-  ) {
+  ): Promise<void> {
     const engine = this.engineManager.fetchEngineInfo(engineId);
     const prefix = `LIBRARY UNINSTALL ${libraryName}: `;
     log.log(prefix + `Started ${libraryName}, Engine: ${engine.name}`);
