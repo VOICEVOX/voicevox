@@ -180,7 +180,9 @@ export class LibraryManager {
         );
         log.log(prefix + "Library installed");
       });
-      await fs.promises.rm(tempFilePath);
+      if (fs.existsSync(tempFilePath)) {
+        await fs.promises.rm(tempFilePath);
+      }
       onUpdate({
         status: "done",
       });
