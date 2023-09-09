@@ -81,7 +81,7 @@
                   libraryInstallStatuses[selectedLibraryData.libraryId]
                     .status === "installing"
                     ? "インストール中・・・"
-                    : "インストール待機中・・・" // status == pending
+                    : "インストール待機中・・・"
                 }}
               </div>
             </div>
