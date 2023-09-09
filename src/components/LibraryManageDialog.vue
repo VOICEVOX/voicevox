@@ -147,10 +147,7 @@
                       @update:portrait="updatePortrait"
                       @update:select-character="
                         (speakerUuid) =>
-                          selectLibraryAndSpeakerAndEngine(
-                            library.uuid,
-                            speakerUuid
-                          )
+                          selectLibraryAndSpeaker(library.uuid, speakerUuid)
                       "
                     />
                   </div>
@@ -280,7 +277,7 @@ const selectedSpeakers = ref<Record<LibraryId, SpeakerId>>({});
 // 選択中のライブラリ
 const selectedLibrary = ref<LibraryId | undefined>();
 
-const selectLibraryAndSpeakerAndEngine = (
+const selectLibraryAndSpeaker = (
   libraryId: LibraryId,
   speakerId: SpeakerId
 ) => {
