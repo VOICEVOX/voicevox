@@ -36,6 +36,10 @@ export class LibraryManager {
     }
   }
 
+  private async lockByEngineId(engineId: EngineId, fn: () => Promise<void>) {
+    await this.lock.acquire(`${engineId}`, fn);
+  }
+
   /**
    * 成功時・失敗時ともにステータス情報をonUpdateで通知して正常終了
    */
@@ -162,7 +166,7 @@ export class LibraryManager {
       });
       log.log(prefix + "Waiting for lock");
 
-      await this.lock.acquire(`${engineId}`, async () => {
+      await this.lockByEngineId(engineId, async () => {
         log.log(prefix + "Installing library");
         await this.engineApis[
           engineId
@@ -215,7 +219,7 @@ export class LibraryManager {
     this.setEngineApi(engineId, engine.host);
 
     try {
-      await this.lock.acquire(`${engineId}`, async () => {
+      await this.lockByEngineId(engineId, async () => {
         log.log(prefix + "Uninstalling library");
         await this.engineApis[
           engineId
