@@ -7,6 +7,10 @@ import EngineManager from "./engineManager";
 import { EngineId, LibraryId, LibraryInstallStatus } from "@/type/preload";
 import { Configuration, DefaultApi } from "@/openapi";
 
+/**
+ * 音声ライブラリのダウンロードとインストール、アンインストールを行う
+ * インストール状況などの状態は持たない
+ */
 export class LibraryManager {
   engineManager: EngineManager;
   tempDir: string;
@@ -24,6 +28,9 @@ export class LibraryManager {
     this.tempDir = tempDir;
   }
 
+  /**
+   * 成功時・失敗時ともにステータス情報をonUpdateで通知して正常終了
+   */
   async startLibraryDownloadAndInstall(
     engineId: EngineId,
     libraryId: LibraryId,
@@ -183,6 +190,9 @@ export class LibraryManager {
     }
   }
 
+  /**
+   * 成功時・失敗時ともにステータス情報をonUpdateで通知して正常終了
+   */
   async uninstallLibrary(
     engineId: EngineId,
     libraryId: LibraryId,
