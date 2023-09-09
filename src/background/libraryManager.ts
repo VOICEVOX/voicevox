@@ -28,6 +28,14 @@ export class LibraryManager {
     this.tempDir = tempDir;
   }
 
+  private setEngineApi(engineId: EngineId, engineHost: string): void {
+    if (this.engineApis[engineId] === undefined) {
+      this.engineApis[engineId] = new DefaultApi(
+        new Configuration({ basePath: engineHost })
+      );
+    }
+  }
+
   /**
    * 成功時・失敗時ともにステータス情報をonUpdateで通知して正常終了
    */
@@ -146,11 +154,7 @@ export class LibraryManager {
       tempFile.close();
       log.log(prefix + "Download complete");
 
-      if (this.engineApis[engineId] === undefined) {
-        this.engineApis[engineId] = new DefaultApi(
-          new Configuration({ basePath: engine.host })
-        );
-      }
+      this.setEngineApi(engineId, engine.host);
       const libraryBuffer = await fs.promises.readFile(tempFilePath);
 
       onUpdate({
@@ -208,11 +212,7 @@ export class LibraryManager {
     });
     log.log(prefix + "Waiting for lock");
 
-    if (this.engineApis[engineId] === undefined) {
-      this.engineApis[engineId] = new DefaultApi(
-        new Configuration({ basePath: engine.host })
-      );
-    }
+    this.setEngineApi(engineId, engine.host);
 
     try {
       await this.lock.acquire(`${engineId}`, async () => {
