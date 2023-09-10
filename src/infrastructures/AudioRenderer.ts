@@ -681,6 +681,9 @@ export type ChannelStripOptions = {
   readonly volume: number;
 };
 
+/**
+ * ミキサーの1チャンネル分の機能を持つモジュールです。
+ */
 export class ChannelStrip {
   private readonly gainNode: GainNode;
 
