@@ -108,7 +108,6 @@ const emit =
 const store = useStore();
 
 const backToManageDialog = () => {
-  store.dispatch("SET_DIALOG_OPEN", { isLibraryManageDialogOpen: true });
   modelValueComputed.value = false;
 };
 

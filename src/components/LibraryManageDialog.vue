@@ -6,6 +6,7 @@
     transition-hide="jump-down"
     class="transparent-backdrop"
   >
+    <library-install-dialog v-model="isInstallDialogOpenComputed" />
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
@@ -174,6 +175,7 @@ import { computed, ref, watch } from "vue";
 import semver from "semver";
 import { useQuasar } from "quasar";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
+import LibraryInstallDialog from "./LibraryInstallDialog.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import {
@@ -196,10 +198,16 @@ type BrandedDownloadableLibrary = Omit<
 type BrandedInstalledLibrary = BrandedDownloadableLibrary &
   Pick<InstalledLibrary, "uninstallable">;
 
+const isInstallDialogOpen = ref(false);
+// emit("update:modelValue")で更新できるようにcomputedにする
+const isInstallDialogOpenComputed = computed({
+  get: () => isInstallDialogOpen.value,
+  set: (val) => (isInstallDialogOpen.value = val),
+});
+
 const toInstallDialog = () => {
   stop();
-  store.dispatch("SET_DIALOG_OPEN", { isLibraryInstallDialogOpen: true });
-  closeDialog();
+  isInstallDialogOpenComputed.value = true;
 };
 
 const $q = useQuasar();

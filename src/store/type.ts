@@ -1219,7 +1219,6 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isLibraryManageDialogOpen: boolean;
-  isLibraryInstallDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1286,7 +1285,6 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isLibraryManageDialogOpen?: boolean;
-      isLibraryInstallDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1300,7 +1298,6 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isLibraryManageDialogOpen?: boolean;
-      isLibraryInstallDialogOpen?: boolean;
     }): void;
   };
 
