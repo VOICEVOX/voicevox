@@ -6,6 +6,7 @@ import AsyncLock from "async-lock";
 import EngineManager from "./engineManager";
 import { EngineId, LibraryId, LibraryInstallStatus } from "@/type/preload";
 import { Configuration, DefaultApi } from "@/openapi";
+import { Result, failure, success } from "@/type/result";
 
 /**
  * 音声ライブラリのダウンロードとインストール、アンインストールを行う
@@ -49,7 +50,7 @@ export class LibraryManager {
     libraryName: string,
     libraryDownloadUrl: string,
     onUpdate: (status: LibraryInstallStatus) => void
-  ): Promise<void> {
+  ): Promise<Result<undefined>> {
     const engine = this.engineManager.fetchEngineInfo(engineId);
     const prefix = `LIBRARY INSTALL ${libraryName}: `;
     log.log(
@@ -96,14 +97,17 @@ export class LibraryManager {
         status: "error",
         message: `${reason}ため、現在このライブラリをダウンロードできません。（ステータスコード：${downloadRes.status}）`,
       });
-      return;
+      return failure(
+        "download",
+        new Error(`status code: ${downloadRes.status}`)
+      );
     } else if (downloadRes.body === null) {
       log.error(prefix + `Failed to download library: No body`);
       onUpdate({
         status: "error",
         message: `ダウンロード先のサーバーがライブラリを返しませんでした`,
       });
-      return;
+      return failure("download", new Error("library not returned from server"));
     }
     const tempFilePath = path.join(
       this.tempDir,
@@ -120,6 +124,8 @@ export class LibraryManager {
     });
     const tempFile = fs.createWriteStream(tempFilePath);
     let tempFileClosed = false;
+
+    let result: Result<undefined>;
     try {
       const progressInterval = 1024 * 1024;
       let lastProgress = 0;
@@ -188,6 +194,7 @@ export class LibraryManager {
       onUpdate({
         status: "done",
       });
+      result = success(undefined);
     } catch (e) {
       log.error(prefix + "Failed to install library");
       log.error(e);
@@ -195,6 +202,7 @@ export class LibraryManager {
         status: "error",
         message: `ライブラリのインストールに失敗しました。エラー内容：${e}`,
       });
+      result = failure("install", new Error("failed to install library"));
     } finally {
       if (!tempFileClosed) {
         tempFile.close();
@@ -204,6 +212,7 @@ export class LibraryManager {
         await fs.promises.rm(tempFilePath);
       }
     }
+    return result;
   }
 
   /**
@@ -214,7 +223,7 @@ export class LibraryManager {
     libraryId: LibraryId,
     libraryName: string,
     onUpdate: (status: LibraryInstallStatus) => void
-  ): Promise<void> {
+  ): Promise<Result<undefined>> {
     const engine = this.engineManager.fetchEngineInfo(engineId);
     const prefix = `LIBRARY UNINSTALL ${libraryName}: `;
     log.log(prefix + `Started ${libraryName}, Engine: ${engine.name}`);
@@ -239,6 +248,7 @@ export class LibraryManager {
       onUpdate({
         status: "done",
       });
+      return success(undefined);
     } catch (e) {
       log.error(prefix + "Failed to uninstall library");
       log.error(e);
@@ -246,6 +256,7 @@ export class LibraryManager {
         status: "error",
         message: `ライブラリのアンインストールに失敗しました。エラー内容：${e}`,
       });
+      return failure("uninstall", new Error("failed to uninstall library"));
     }
   }
 }

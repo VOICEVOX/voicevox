@@ -42,23 +42,12 @@
 
       <q-page-container>
         <q-page class="main">
-          <div
-            v-if="
-              selectedLibraryData &&
-              libraryInstallStatuses[selectedLibraryData.libraryId] &&
-              libraryInstallStatuses[selectedLibraryData.libraryId].status ===
-                'pending' &&
-              libraryInstallStatuses[selectedLibraryData.libraryId].status ===
-                'downloading' &&
-              libraryInstallStatuses[selectedLibraryData.libraryId].status ===
-                'installing'
-            "
-            class="loading"
-          >
+          <div v-if="isInstallInProgress" class="loading">
             <div
               v-if="
+                selectedLibraryData &&
                 libraryInstallStatuses[selectedLibraryData.libraryId].status ===
-                'downloading'
+                  'downloading'
               "
             >
               <q-circular-progress
@@ -102,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from "vue";
+import { computed } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId } from "@/type/preload";
@@ -162,52 +151,24 @@ const selectedLibraryData = computed(() => store.state.selectedLibrary);
 const installLibrary = async () => {
   const library = selectedLibraryData.value;
   if (!library) throw Error("selectedLibraryData.value === undefined");
-  store.dispatch("START_LIBRARY_DOWNLOAD_AND_INSTALL", {
+  const result = await store.dispatch("START_LIBRARY_DOWNLOAD_AND_INSTALL", {
     engineId: library.engineId,
     libraryId: library.libraryId,
     libraryName: library.libraryName,
     libraryDownloadUrl: library.libraryDownloadUrl,
     librarySize: library.librarySize,
   });
-};
-
-const installLibraryCompleteOrFailedDialog = async () => {
-  if (!selectedLibraryData.value)
-    throw Error("selectedLibraryData === undefined");
-
-  const libraryName = selectedLibraryData.value.libraryName;
-  const libraryId = selectedLibraryData.value.libraryId;
-  const engineId = selectedLibraryData.value.engineId;
-  if (libraryInstallStatuses.value[libraryId].status === "done") {
+  if (result.ok) {
     await requireReload(
-      `${libraryName}をインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`,
-      engineId
+      `${library.libraryName}をインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`,
+      library.engineId
     );
   } else {
-    await store.dispatch("SHOW_ALERT_DIALOG", {
-      title: "インストール失敗",
-      message: `${libraryName}のインストールに失敗しました。`,
-      ok: "戻る",
-    });
+    // インストール失敗時はmainプロセス側でダイアログが出るので
+    // そのままライブラリ管理画面に戻る
     backToManageDialog();
   }
 };
-
-watch(libraryInstallStatuses, (newValue, oldValue) => {
-  // このダイアログが開かれていないときは何もしない
-  if (!modelValueComputed.value) return;
-  if (!selectedLibraryData.value)
-    throw Error("selectedLibraryData.value === undefined");
-  const libraryId = selectedLibraryData.value.libraryId;
-  if (
-    (newValue[libraryId].status === "done" ||
-      newValue[libraryId].status === "error") &&
-    (oldValue[libraryId].status === "downloading" ||
-      oldValue[libraryId].status === "installing")
-  ) {
-    installLibraryCompleteOrFailedDialog();
-  }
-});
 
 const requireReload = async (message: string, engineId: EngineId) => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {

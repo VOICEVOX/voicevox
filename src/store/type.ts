@@ -58,6 +58,7 @@ import {
   NotifyAndNotShowAgainButtonOption,
   LoadingScreenOption,
 } from "@/components/Dialog";
+import { Result } from "@/type/result";
 
 /**
  * エディタ用のAudioQuery
@@ -893,7 +894,7 @@ export type LibraryStoreTypes = {
       libraryName: string;
       libraryDownloadUrl: string;
       librarySize: number;
-    }): Promise<void>;
+    }): Promise<Result<undefined>>;
   };
 
   UPDATE_LIBRARY_INSTALL_STATUS: {
@@ -915,7 +916,7 @@ export type LibraryStoreTypes = {
       engineId: EngineId;
       libraryId: LibraryId;
       libraryName: string;
-    }): void;
+    }): Promise<Result<undefined>>;
   };
 
   SET_LIBRARY_FETCH_STATUS: {

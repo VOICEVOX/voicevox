@@ -950,11 +950,11 @@ ipcMainHandle("READ_FILE", async (_, { filePath }) => {
 
 ipcMainHandle(
   "START_LIBRARY_DOWNLOAD_AND_INSTALL",
-  (
+  async (
     _,
     { engineId, libraryId, libraryName, libraryDownloadUrl, librarySize }
   ) => {
-    libraryManager.startLibraryDownloadAndInstall(
+    return await libraryManager.startLibraryDownloadAndInstall(
       engineId,
       libraryId,
       libraryName,
@@ -996,7 +996,7 @@ ipcMainHandle(
 ipcMainHandle(
   "UNINSTALL_LIBRARY",
   async (_, { engineId, libraryId, libraryName }) => {
-    await libraryManager.uninstallLibrary(
+    return await libraryManager.uninstallLibrary(
       engineId,
       libraryId,
       libraryName,

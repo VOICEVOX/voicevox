@@ -314,7 +314,7 @@ export type IpcIHData = {
         librarySize: number;
       }
     ];
-    return: void;
+    return: Result<undefined>;
   };
 
   UNINSTALL_LIBRARY: {
@@ -325,7 +325,7 @@ export type IpcIHData = {
         libraryName: string;
       }
     ];
-    return: void;
+    return: Result<undefined>;
   };
 };
 

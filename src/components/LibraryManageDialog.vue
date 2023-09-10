@@ -515,22 +515,20 @@ const uninstallLibrary = async (
     cancel: "いいえ",
   });
   if (result === "OK") {
-    try {
-      await store.dispatch("UNINSTALL_LIBRARY", {
-        engineId,
-        libraryId: library.uuid,
-        libraryName: library.name,
-      });
-      if (libraryInstallStatuses.value[library.uuid].status === "done") {
-        await requireReload(
-          `${library.name}をアンインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`,
-          engineId
-        );
-      }
-    } catch (e) {
+    const result = await store.dispatch("UNINSTALL_LIBRARY", {
+      engineId,
+      libraryId: library.uuid,
+      libraryName: library.name,
+    });
+    if (result.ok) {
+      await requireReload(
+        `${library.name}をアンインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`,
+        engineId
+      );
+    } else {
       await store.dispatch("SHOW_ALERT_DIALOG", {
         title: "インストール失敗",
-        message: `${library.name}のアンインストールに失敗しました。: ${e}`,
+        message: `${library.name}のアンインストールに失敗しました。: ${result.error}`,
         ok: "閉じる",
       });
     }
