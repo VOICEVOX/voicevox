@@ -70,14 +70,14 @@
               {{ engineManifests[engineId].name }}
             </span>
             <div
-              v-if="fetchStatuses[engineId] === 'error'"
+              v-if="libraryInfoFetchStatuses[engineId] === 'error'"
               class="library-list-error text-warning"
             >
               取得に失敗しました。
             </div>
 
             <div
-              v-else-if="fetchStatuses[engineId] === 'success'"
+              v-else-if="libraryInfoFetchStatuses[engineId] === 'success'"
               class="library-list"
             >
               <q-item
@@ -270,7 +270,9 @@ const isUninstallable = (
   return installedLibrary.uninstallable;
 };
 
-const fetchStatuses = computed(() => store.state.libraryFetchStatuses);
+const libraryInfoFetchStatuses = computed(
+  () => store.state.libraryInfoFetchStatuses
+);
 // 選択中の話者
 const selectedSpeakers = ref<Record<LibraryId, SpeakerId>>({});
 
@@ -323,13 +325,13 @@ const loadLibraries = async () => {
   await Promise.all(
     targetEngineIds.value.map(async (engineId) => {
       if (
-        fetchStatuses.value[engineId] === "fetching" ||
-        fetchStatuses.value[engineId] === "success"
+        libraryInfoFetchStatuses.value[engineId] === "fetching" ||
+        libraryInfoFetchStatuses.value[engineId] === "success"
       ) {
         return;
       }
 
-      await store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+      await store.dispatch("SET_LIBRARY_INFO_FETCH_STATUS", {
         engineId,
         status: "fetching",
       });
@@ -349,7 +351,7 @@ const loadLibraries = async () => {
           BrandedDownloadableLibrary[],
           BrandedInstalledLibrary[]
         ] => {
-          store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+          store.dispatch("SET_LIBRARY_INFO_FETCH_STATUS", {
             engineId,
             status: "success",
           });
@@ -371,7 +373,7 @@ const loadLibraries = async () => {
           ];
         })
         .catch((e) => {
-          store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+          store.dispatch("SET_LIBRARY_INFO_FETCH_STATUS", {
             engineId,
             status: "error",
           });
@@ -542,7 +544,7 @@ const requireReload = async (message: string, engineId: EngineId) => {
     actionName: "再読み込み",
     cancel: "後で",
   });
-  await store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+  await store.dispatch("SET_LIBRARY_INFO_FETCH_STATUS", {
     engineId,
     status: "reloadNeeded",
   });

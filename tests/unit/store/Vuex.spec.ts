@@ -28,7 +28,7 @@ describe("store/vuex.js test", () => {
         engineSupportedDevices: {},
         altPortInfos: {},
         libraryInstallStatuses: {},
-        libraryFetchStatuses: {},
+        libraryInfoFetchStatuses: {},
         characterInfos: {},
         morphableTargetsInfo: {},
         defaultStyleIds: [],

@@ -882,7 +882,7 @@ export type LibraryFetchStatus =
 
 export type LibraryStoreState = {
   libraryInstallStatuses: Record<LibraryId, LibraryInstallStatus>;
-  libraryFetchStatuses: Record<EngineId, LibraryFetchStatus>;
+  libraryInfoFetchStatuses: Record<EngineId, LibraryFetchStatus>;
   selectedLibrary?: LibraryData;
 };
 
@@ -919,7 +919,7 @@ export type LibraryStoreTypes = {
     }): Promise<Result<undefined>>;
   };
 
-  SET_LIBRARY_FETCH_STATUS: {
+  SET_LIBRARY_INFO_FETCH_STATUS: {
     action(payload: { engineId: EngineId; status: LibraryFetchStatus }): void;
     mutation: { engineId: EngineId; status: LibraryFetchStatus };
   };

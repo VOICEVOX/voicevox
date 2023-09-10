@@ -177,7 +177,7 @@ const requireReload = async (message: string, engineId: EngineId) => {
     actionName: "再読み込み",
     cancel: "後で",
   });
-  await store.dispatch("SET_LIBRARY_FETCH_STATUS", {
+  await store.dispatch("SET_LIBRARY_INFO_FETCH_STATUS", {
     engineId,
     status: "reloadNeeded",
   });
