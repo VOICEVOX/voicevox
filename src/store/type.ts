@@ -883,7 +883,6 @@ export type LibraryFetchStatus =
 export type LibraryStoreState = {
   libraryInstallStatuses: Record<LibraryId, LibraryInstallStatus>;
   libraryInfoFetchStatuses: Record<EngineId, LibraryFetchStatus>;
-  selectedLibrary?: LibraryData;
 };
 
 export type LibraryStoreTypes = {
@@ -922,11 +921,6 @@ export type LibraryStoreTypes = {
   SET_LIBRARY_INFO_FETCH_STATUS: {
     action(payload: { engineId: EngineId; status: LibraryFetchStatus }): void;
     mutation: { engineId: EngineId; status: LibraryFetchStatus };
-  };
-
-  SET_SELECTED_LIBRARY: {
-    action(payload?: LibraryData): void;
-    mutation: LibraryData | undefined;
   };
 };
 

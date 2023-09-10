@@ -45,9 +45,8 @@
           <div v-if="isInstallInProgress" class="loading">
             <div
               v-if="
-                selectedLibraryData &&
-                libraryInstallStatuses[selectedLibraryData.libraryId].status ===
-                  'downloading'
+                props.libraryInstallStatus &&
+                props.libraryInstallStatus.status === 'downloading'
               "
             >
               <q-circular-progress
@@ -65,10 +64,8 @@
               <q-spinner color="primary" size="2.5rem" />
               <div class="q-mt-xs">
                 {{
-                  selectedLibraryData &&
-                  libraryInstallStatuses[selectedLibraryData.libraryId] &&
-                  libraryInstallStatuses[selectedLibraryData.libraryId]
-                    .status === "installing"
+                  libraryInstallStatus &&
+                  libraryInstallStatus.status === "installing"
                     ? "インストール中・・・"
                     : "インストール待機中・・・"
                 }}
@@ -94,11 +91,14 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-import { EngineId } from "@/type/preload";
+import { EngineId, LibraryInstallStatus } from "@/type/preload";
+import { LibraryData } from "@/store/type";
 
 const props =
   defineProps<{
     modelValue: boolean;
+    libraryData: LibraryData;
+    libraryInstallStatus: LibraryInstallStatus | undefined;
   }>();
 const emit =
   defineEmits<{
@@ -111,18 +111,13 @@ const backToManageDialog = () => {
   modelValueComputed.value = false;
 };
 
-const libraryInstallStatuses = computed(
-  () => store.state.libraryInstallStatuses
-);
 const downloadProgress = computed(() => {
   // ダウンロード状態ではない場合はundefinedにする
-  if (!selectedLibraryData.value) return undefined;
-  const libraryId = selectedLibraryData.value.libraryId;
-  const status = libraryInstallStatuses.value[libraryId];
-  if (status.status !== "downloading") return undefined;
+  const status = props.libraryInstallStatus;
+  if (status === undefined || status.status !== "downloading") return undefined;
   // contentLengthが0になる場合のための処理
   if (status.contentLength === 0) {
-    return (status.downloaded / selectedLibraryData.value.librarySize) * 100;
+    return (status.downloaded / props.libraryData.librarySize) * 100;
   }
   return (status.downloaded / status.contentLength) * 100;
 });
@@ -133,23 +128,17 @@ const modelValueComputed = computed({
 });
 
 const isInstallInProgress = computed(() => {
-  if (!selectedLibraryData.value)
-    throw Error("selectedLibraryData.value === undefined");
-  const libraryId = selectedLibraryData.value.libraryId;
+  const status = props.libraryInstallStatus;
   return (
-    libraryInstallStatuses.value[libraryId] &&
-    (libraryInstallStatuses.value[libraryId].status === "pending" ||
-      libraryInstallStatuses.value[libraryId].status === "downloading" ||
-      libraryInstallStatuses.value[libraryId].status === "installing")
+    status &&
+    (status.status === "pending" ||
+      status.status === "downloading" ||
+      status.status === "installing")
   );
 });
 
-// 選択中のライブラリ情報
-const selectedLibraryData = computed(() => store.state.selectedLibrary);
-
 const installLibrary = async () => {
-  const library = selectedLibraryData.value;
-  if (!library) throw Error("selectedLibraryData.value === undefined");
+  const library = props.libraryData;
   const result = await store.dispatch("START_LIBRARY_DOWNLOAD_AND_INSTALL", {
     engineId: library.engineId,
     libraryId: library.libraryId,
@@ -192,11 +181,7 @@ const requireReload = async (message: string, engineId: EngineId) => {
 const md = useMarkdownIt();
 const policyHtml = computed(() => {
   let result = "";
-  const libraryData = selectedLibraryData.value;
-  if (!libraryData) {
-    throw Error("selectedLibraryData == undefined");
-  }
-  for (const characterInfo of libraryData.characterInfos) {
+  for (const characterInfo of props.libraryData.characterInfos) {
     result += md.render(characterInfo.metas.policy);
   }
   return result;
