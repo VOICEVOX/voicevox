@@ -1,4 +1,3 @@
-import { toRaw } from "vue";
 import { LibraryStoreState, LibraryStoreTypes } from "./type";
 import { createPartialStore } from "./vuex";
 
@@ -19,7 +18,6 @@ export const libraryStore = createPartialStore<LibraryStoreTypes>({
           status: "pending",
         },
       });
-      console.log(toRaw(state.libraryInstallStatuses));
       return await window.electron.startLibraryDownloadAndInstall({
         engineId,
         libraryId,
