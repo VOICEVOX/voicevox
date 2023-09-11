@@ -544,11 +544,7 @@ const uninstallLibrary = async (
         engineId
       );
     } else {
-      await store.dispatch("SHOW_ALERT_DIALOG", {
-        title: "インストール失敗",
-        message: `${library.name}のアンインストールに失敗しました。: ${result.error}`,
-        ok: "閉じる",
-      });
+      // アンインストール失敗時はmainプロセス側でダイアログが出るので何もしない
     }
   }
 };
