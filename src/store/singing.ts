@@ -3,7 +3,8 @@ import {
   AudioPlayer,
   AudioRenderer,
   AudioSequence,
-  Context,
+  ChannelStrip,
+  Instrument,
   NoteEvent,
   NoteSequence,
   Sequence,
@@ -171,6 +172,8 @@ type Phrase = {
   queryHash?: string; // queryの変更を検知するためのハッシュ
   buffer?: AudioBuffer;
   startTime?: number;
+  source?: Instrument | AudioPlayer; // ひとまずPhraseに持たせる
+  sequence?: Sequence; // ひとまずPhraseに持たせる
 };
 
 const generateSingerAndScoreHash = async (obj: {
@@ -183,92 +186,6 @@ const generateSingerAndScoreHash = async (obj: {
 const generateAudioQueryHash = async (obj: AudioQuery) => {
   return _generateHash(obj);
 };
-
-type ChannelOptions = {
-  readonly volume: number;
-};
-
-class SingChannel {
-  private readonly context: Context;
-  private readonly gainNode: GainNode;
-
-  private phrases: Phrase[] = [];
-  private sequences: Sequence[] = [];
-
-  get volume() {
-    return this.gainNode.gain.value;
-  }
-
-  set volume(value: number) {
-    this.gainNode.gain.value = value;
-  }
-
-  constructor(context: Context, options: ChannelOptions = { volume: 0.1 }) {
-    this.context = context;
-    const audioContext = context.audioContext;
-
-    this.gainNode = audioContext.createGain();
-    this.gainNode.connect(audioContext.destination);
-    this.gainNode.gain.value = options.volume;
-  }
-
-  addPhrase(phrase: Phrase) {
-    this.phrases.push(phrase);
-
-    if (phrase.startTime !== undefined && phrase.buffer) {
-      const audioEvents: AudioEvent[] = [
-        {
-          time: phrase.startTime,
-          buffer: phrase.buffer,
-        },
-      ];
-      const audioPlayer = new AudioPlayer(this.context);
-      audioPlayer.connect(this.gainNode);
-      const audioSequence: AudioSequence = {
-        type: "audio",
-        audioPlayer,
-        audioEvents,
-      };
-      this.context.transport.addSequence(audioSequence);
-      this.sequences.push(audioSequence);
-    } else {
-      const noteEvents = generateNoteEvents(
-        phrase.score.resolution,
-        phrase.score.tempos,
-        phrase.score.notes
-      );
-      const synth = new Synth(this.context);
-      synth.connect(this.gainNode);
-      const noteSequence: NoteSequence = {
-        type: "note",
-        instrument: synth,
-        noteEvents,
-      };
-      this.context.transport.addSequence(noteSequence);
-      this.sequences.push(noteSequence);
-    }
-  }
-
-  removePhrase(phrase: Phrase) {
-    const index = this.phrases.findIndex((value) => {
-      return value === phrase;
-    });
-    if (index === -1) {
-      throw new Error("The specified phrase does not exist.");
-    }
-    this.phrases.splice(index, 1);
-
-    const sequence = this.sequences[index];
-    this.context.transport.removeSequence(sequence);
-    this.sequences.splice(index, 1);
-  }
-
-  dispose() {
-    this.sequences.forEach((value) => {
-      this.context.transport.removeSequence(value);
-    });
-  }
-}
 
 const isValidTempo = (tempo: Tempo) => {
   return (
@@ -316,13 +233,15 @@ const DEFAULT_BEAT_TYPE = 4;
 
 let audioRenderer: AudioRenderer | undefined;
 let transport: Transport | undefined;
-let singChannel: SingChannel | undefined;
+let channelStrip: ChannelStrip | undefined;
 
 // テスト時はAudioContextが存在しないのでAudioRendererを作らない
 if (window.AudioContext) {
   audioRenderer = new AudioRenderer();
   transport = audioRenderer.transport;
-  singChannel = new SingChannel(audioRenderer.context);
+  channelStrip = new ChannelStrip(audioRenderer.context);
+
+  channelStrip.connect(audioRenderer.audioContext.destination);
 }
 
 let playbackPosition = 0;
@@ -689,9 +608,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
-      if (!singChannel) {
-        throw new Error("singChannel is undefined.");
-      }
       if (notes.some((note) => !isValidNote(note))) {
         throw new Error("Invalid notes");
       }
@@ -732,10 +648,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
     },
     async action({ commit, dispatch }) {
-      if (!singChannel) {
-        throw new Error("singChannel is undefined.");
-      }
-
       commit("REMOVE_SELECTED_NOTES");
       commit("CLEAR_SELECTED_NOTE_IDS");
 
@@ -872,12 +784,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.volume = volume;
     },
     async action({ commit }, { volume }) {
-      if (!singChannel) {
-        throw new Error("singChannel is undefined.");
+      if (!channelStrip) {
+        throw new Error("channelStrip is undefined.");
       }
       commit("SET_VOLUME", { volume });
 
-      singChannel.volume = volume;
+      channelStrip.volume = volume;
     },
   },
 
@@ -1114,13 +1026,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const stopRenderingRequested = () => state.stopRenderingRequested;
 
       const render = async () => {
-        if (!state.score || !singChannel || !audioRenderer) {
+        if (!state.score || !audioRenderer || !transport || !channelStrip) {
           throw new Error(
-            "score or singChannel or audioRenderer is undefined."
+            "score or audioRenderer or transport or channelStrip is undefined."
           );
         }
-        const singChannelRef = singChannel;
         const audioRendererRef = audioRenderer;
+        const transportRef = transport;
+        const channelStripRef = channelStrip;
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         const score = copyScore(state.score);
@@ -1136,13 +1049,36 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         for (const [hash, phrase] of foundPhrases) {
           if (!allPhrases.has(hash)) {
             allPhrases.set(hash, phrase);
-            singChannelRef.addPhrase(phrase);
+            // フレーズ追加時の処理
+            const noteEvents = generateNoteEvents(
+              phrase.score.resolution,
+              phrase.score.tempos,
+              phrase.score.notes
+            );
+            const context = audioRendererRef.context;
+            const synth = new Synth(context);
+            synth.connect(channelStripRef.inputNode);
+            const noteSequence: NoteSequence = {
+              type: "note",
+              instrument: synth,
+              noteEvents,
+            };
+            transportRef.addSequence(noteSequence);
+
+            phrase.source = synth;
+            phrase.sequence = noteSequence;
           }
         }
         for (const [hash, phrase] of allPhrases) {
           if (!foundPhrases.has(hash)) {
             allPhrases.delete(hash);
-            singChannelRef.removePhrase(phrase);
+            // フレーズ削除時の処理
+            if (phrase.source) {
+              phrase.source.disconnect();
+            }
+            if (phrase.sequence) {
+              transportRef.removeSequence(phrase.sequence);
+            }
           }
         }
 
@@ -1195,11 +1131,32 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrase.queryHash = queryHash;
             phrase.startTime = calculateStartTime(phrase.score, phrase.query);
 
-            // NoteSequenceが削除される
-            singChannelRef.removePhrase(phrase);
-            // AudioBufferとstartTimeを元にAudioSequenceが作成され、追加される
-            // TODO: 分かりにくいのでリファクタリングする
-            singChannelRef.addPhrase(phrase);
+            // 音源とシーケンスを作成し直して、再接続する
+            if (phrase.source) {
+              phrase.source.disconnect();
+            }
+            if (phrase.sequence) {
+              transportRef.removeSequence(phrase.sequence);
+            }
+
+            const context = audioRendererRef.context;
+            const audioPlayer = new AudioPlayer(context);
+            const audioEvents: AudioEvent[] = [
+              {
+                time: phrase.startTime,
+                buffer: phrase.buffer,
+              },
+            ];
+            const audioSequence: AudioSequence = {
+              type: "audio",
+              audioPlayer,
+              audioEvents,
+            };
+            audioPlayer.connect(channelStripRef.inputNode);
+            transportRef.addSequence(audioSequence);
+
+            phrase.source = audioPlayer;
+            phrase.sequence = audioSequence;
           }
 
           if (startRenderingRequested() || stopRenderingRequested()) {
@@ -1794,11 +1751,43 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           renderStartTime,
           renderDuration,
           (context) => {
-            // SingChannelインスタンスはこの関数を抜けると解放されますが、
-            // コンテキストにはノードや発音が登録されているので問題なくレンダリングされます
-            // TODO: 分かりにくいので後でリファクタリングしたい
-            const channel = new SingChannel(context);
-            allPhrases.forEach((value) => channel.addPhrase(value));
+            const channelStrip = new ChannelStrip(context);
+            for (const phrase of allPhrases.values()) {
+              // TODO: この辺りの処理を共通化する
+              if (phrase.startTime !== undefined && phrase.buffer) {
+                // レンダリング済みのフレーズの場合
+                const audioEvents: AudioEvent[] = [
+                  {
+                    time: phrase.startTime,
+                    buffer: phrase.buffer,
+                  },
+                ];
+                const audioPlayer = new AudioPlayer(context);
+                audioPlayer.connect(channelStrip.inputNode);
+                const audioSequence: AudioSequence = {
+                  type: "audio",
+                  audioPlayer,
+                  audioEvents,
+                };
+                context.transport.addSequence(audioSequence);
+              } else {
+                // レンダリング未完了のフレーズの場合
+                const noteEvents = generateNoteEvents(
+                  phrase.score.resolution,
+                  phrase.score.tempos,
+                  phrase.score.notes
+                );
+                const synth = new Synth(context);
+                synth.connect(channelStrip.inputNode);
+                const noteSequence: NoteSequence = {
+                  type: "note",
+                  instrument: synth,
+                  noteEvents,
+                };
+                context.transport.addSequence(noteSequence);
+              }
+            }
+            channelStrip.connect(context.audioContext.destination);
           }
         );
         const waveFileData = convertToWavFileData(audioBuffer);
