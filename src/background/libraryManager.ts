@@ -199,7 +199,11 @@ export class LibraryManager {
       log.error(prefix + "Failed to install library");
       let errorMessage: unknown;
       if (e instanceof ResponseError) {
-        errorMessage = (await e.response.json()).detail;
+        try {
+          errorMessage = (await e.response.json()).detail;
+        } catch (e) {
+          errorMessage = undefined;
+        }
         if (!errorMessage) {
           errorMessage = e.response.statusText;
         }
@@ -262,7 +266,11 @@ export class LibraryManager {
       log.error(prefix + "Failed to uninstall library");
       let errorMessage: unknown;
       if (e instanceof ResponseError) {
-        errorMessage = (await e.response.json()).detail;
+        try {
+          errorMessage = (await e.response.json()).detail;
+        } catch (e) {
+          errorMessage = undefined;
+        }
         if (!errorMessage) {
           errorMessage = e.response.statusText;
         }
