@@ -5,7 +5,7 @@ import log from "electron-log";
 import AsyncLock from "async-lock";
 import EngineManager from "./engineManager";
 import { EngineId, LibraryId, LibraryInstallStatus } from "@/type/preload";
-import { Configuration, DefaultApi } from "@/openapi";
+import { Configuration, DefaultApi, ResponseError } from "@/openapi";
 import { Result, failure, success } from "@/type/result";
 
 /**
@@ -197,10 +197,16 @@ export class LibraryManager {
       result = success(undefined);
     } catch (e) {
       log.error(prefix + "Failed to install library");
-      log.error(e);
+      let errorMessage: unknown;
+      if (e instanceof ResponseError && e.response.statusText) {
+        errorMessage = e.response.statusText;
+      } else {
+        errorMessage = e;
+      }
+      log.error(errorMessage);
       onUpdate({
         status: "error",
-        message: `ライブラリのインストールに失敗しました。エラー内容：${e}`,
+        message: `ライブラリのインストールに失敗しました。エラー内容：${errorMessage}`,
       });
       result = failure("install", new Error("failed to install library"));
     } finally {
@@ -251,10 +257,16 @@ export class LibraryManager {
       return success(undefined);
     } catch (e) {
       log.error(prefix + "Failed to uninstall library");
-      log.error(e);
+      let errorMessage: unknown;
+      if (e instanceof ResponseError && e.response.statusText) {
+        errorMessage = e.response.statusText;
+      } else {
+        errorMessage = e;
+      }
+      log.error(errorMessage);
       onUpdate({
         status: "error",
-        message: `ライブラリのアンインストールに失敗しました。エラー内容：${e}`,
+        message: `ライブラリのアンインストールに失敗しました。エラー内容：${errorMessage}`,
       });
       return failure("uninstall", new Error("failed to uninstall library"));
     }
