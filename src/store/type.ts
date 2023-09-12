@@ -865,14 +865,6 @@ export type EngineStoreTypes = {
  * Library Store Types
  */
 
-export type LibraryData = {
-  engineId: EngineId;
-  libraryId: LibraryId;
-  libraryName: string;
-  libraryDownloadUrl: string;
-  librarySize: number;
-  characterInfos: CharacterInfo[];
-};
 export type LibraryFetchStatus =
   | "fetching"
   | "success"

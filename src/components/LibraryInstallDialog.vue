@@ -92,8 +92,21 @@ import { useDialogPluginComponent } from "quasar";
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-import { EngineId, LibraryInstallStatus } from "@/type/preload";
-import { LibraryData } from "@/store/type";
+import {
+  CharacterInfo,
+  EngineId,
+  LibraryId,
+  LibraryInstallStatus,
+} from "@/type/preload";
+
+type LibraryData = {
+  engineId: EngineId;
+  libraryId: LibraryId;
+  libraryName: string;
+  libraryDownloadUrl: string;
+  librarySize: number;
+  characterInfos: CharacterInfo[];
+};
 
 const props =
   defineProps<{
