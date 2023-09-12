@@ -6,14 +6,6 @@
     transition-hide="jump-down"
     class="transparent-backdrop"
   >
-    <library-install-dialog
-      v-if="selectedLibraryData"
-      v-model="isInstallDialogOpenComputed"
-      :library-data="selectedLibraryData"
-      :library-install-status="
-        libraryInstallStatuses[selectedLibraryData.libraryId]
-      "
-    />
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
@@ -192,7 +184,6 @@ import {
   SpeakerId,
   StyleId,
 } from "@/type/preload";
-import { LibraryData } from "@/store/type";
 import { DownloadableLibrary, InstalledLibrary } from "@/openapi";
 
 type BrandedDownloadableLibrary = Omit<
@@ -205,13 +196,6 @@ type BrandedDownloadableLibrary = Omit<
 
 type BrandedInstalledLibrary = BrandedDownloadableLibrary &
   Pick<InstalledLibrary, "uninstallable">;
-
-const isInstallDialogOpen = ref(false);
-// emit("update:modelValue")で更新できるようにcomputedにする
-const isInstallDialogOpenComputed = computed({
-  get: () => isInstallDialogOpen.value,
-  set: (val) => (isInstallDialogOpen.value = val),
-});
 
 const $q = useQuasar();
 
@@ -423,13 +407,6 @@ const loadLibraries = async () => {
 watch(modelValueComputed, async () => {
   await loadLibraries();
 });
-// インストールダイアログが閉じられたときにloadLibrariesを呼び出す
-watch(isInstallDialogOpenComputed, async (newValue) => {
-  if (newValue) {
-    return;
-  }
-  await loadLibraries();
-});
 
 const updatePortrait = (portraitPath: string) => {
   portraitUri.value = portraitPath;
@@ -503,22 +480,27 @@ const togglePlayOrStop = (
   }
 };
 
-const selectedLibraryData = ref<LibraryData | undefined>(undefined);
 // 利用規約閲覧画面へ遷移
 const toReadPolicies = async (
   engineId: EngineId,
   library: BrandedDownloadableLibrary
 ) => {
   stop();
-  selectedLibraryData.value = {
-    engineId,
-    libraryId: library.uuid,
-    libraryName: library.name,
-    libraryDownloadUrl: library.downloadUrl,
-    librarySize: library.bytes,
-    characterInfos: library.speakers,
-  };
-  isInstallDialogOpenComputed.value = true;
+  $q.dialog({
+    component: LibraryInstallDialog,
+    componentProps: {
+      libraryData: {
+        engineId,
+        libraryId: library.uuid,
+        libraryName: library.name,
+        libraryDownloadUrl: library.downloadUrl,
+        librarySize: library.bytes,
+        characterInfos: library.speakers,
+      },
+    },
+  }).onOk(() => {
+    loadLibraries();
+  });
 };
 
 const uninstallLibrary = async (

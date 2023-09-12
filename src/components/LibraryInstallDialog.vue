@@ -1,6 +1,6 @@
 <template>
   <q-dialog
-    v-model="modelValueComputed"
+    ref="dialogRef"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
@@ -25,7 +25,7 @@
               text-color="toolbar-button-display"
               class="text-no-wrap q-mr-md"
               :disable="isInstallInProgress"
-              @click="backToManageDialog"
+              @click="onDialogCancel"
             />
             <q-btn
               unelevated
@@ -45,8 +45,8 @@
           <div v-if="isInstallInProgress" class="loading">
             <div
               v-if="
-                props.libraryInstallStatus &&
-                props.libraryInstallStatus.status === 'downloading'
+                libraryInstallStatus &&
+                libraryInstallStatus.status === 'downloading'
               "
             >
               <q-circular-progress
@@ -88,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+import { useDialogPluginComponent } from "quasar";
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
@@ -96,24 +97,22 @@ import { LibraryData } from "@/store/type";
 
 const props =
   defineProps<{
-    modelValue: boolean;
     libraryData: LibraryData;
-    libraryInstallStatus: LibraryInstallStatus | undefined;
   }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+
+defineEmits([...useDialogPluginComponent.emits]);
 
 const store = useStore();
+const { dialogRef, onDialogOK, onDialogHide, onDialogCancel } =
+  useDialogPluginComponent();
 
-const backToManageDialog = () => {
-  modelValueComputed.value = false;
-};
+const libraryInstallStatus = computed<LibraryInstallStatus | undefined>(
+  () => store.state.libraryInstallStatuses[props.libraryData.libraryId]
+);
 
 const downloadProgress = computed(() => {
   // ダウンロード状態ではない場合はundefinedにする
-  const status = props.libraryInstallStatus;
+  const status = libraryInstallStatus.value;
   if (status === undefined || status.status !== "downloading") return undefined;
   // contentLengthが0になる場合のための処理
   if (status.contentLength === 0) {
@@ -122,13 +121,8 @@ const downloadProgress = computed(() => {
   return (status.downloaded / status.contentLength) * 100;
 });
 
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
-
 const isInstallInProgress = computed(() => {
-  const status = props.libraryInstallStatus;
+  const status = libraryInstallStatus.value;
   return (
     status &&
     (status.status === "pending" ||
@@ -154,7 +148,7 @@ const installLibrary = async () => {
   } else {
     // インストール失敗時はmainプロセス側でダイアログが出るので
     // そのままライブラリ管理画面に戻る
-    backToManageDialog();
+    onDialogCancel();
   }
 };
 
@@ -170,11 +164,14 @@ const requireReload = async (message: string, engineId: EngineId) => {
     status: "reloadNeeded",
   });
   if (result === "OK") {
+    onDialogHide();
     store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
       closeOrReload: "reload",
     });
   } else {
-    backToManageDialog();
+    // ライブラリ管理ダイアログのライブラリ一覧を更新する
+    // コールバックを呼び出すため、ここだけ`onDialogOK`を使う
+    onDialogOK();
   }
 };
 
