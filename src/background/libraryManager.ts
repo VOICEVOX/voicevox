@@ -215,7 +215,10 @@ export class LibraryManager {
         status: "error",
         message: `ライブラリのインストールに失敗しました。エラー内容：${errorMessage}`,
       });
-      result = failure("install", new Error("failed to install library"));
+      result = failure(
+        "install",
+        new Error(`failed to install library: ${errorMessage}`)
+      );
     } finally {
       if (!tempFileClosed) {
         tempFile.close();
@@ -282,7 +285,10 @@ export class LibraryManager {
         status: "error",
         message: `ライブラリのアンインストールに失敗しました。エラー内容：${errorMessage}`,
       });
-      return failure("uninstall", new Error("failed to uninstall library"));
+      return failure(
+        "uninstall",
+        new Error(`failed to uninstall library: ${errorMessage}`)
+      );
     }
   }
 }
