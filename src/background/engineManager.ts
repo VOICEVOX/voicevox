@@ -8,7 +8,6 @@ import shlex from "shlex";
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
 import log from "electron-log";
-import { z } from "zod";
 import {
   findAltPort,
   getPidFromPort,
@@ -23,8 +22,8 @@ import {
   EngineDirValidationResult,
   MinimumEngineManifest,
   EngineId,
-  engineIdSchema,
   minimumEngineManifestSchema,
+  envEngineInfoSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 
@@ -41,17 +40,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   const defaultEngineInfosEnv =
     import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
 
-  const envSchema = z
-    .object({
-      uuid: engineIdSchema,
-      host: z.string(),
-      name: z.string(),
-      executionEnabled: z.boolean(),
-      executionFilePath: z.string(),
-      executionArgs: z.array(z.string()),
-      path: z.string().optional(),
-    })
-    .array();
+  const envSchema = envEngineInfoSchema.array();
   const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
   return engines.map((engineInfo) => {

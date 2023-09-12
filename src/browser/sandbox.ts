@@ -1,4 +1,4 @@
-import { defaultEngine } from "./contract";
+import { engineInfos } from "./contract";
 import {
   checkFileExistsImpl,
   showOpenDirectoryDialogImpl,
@@ -214,7 +214,7 @@ export const api: Sandbox = {
   },
   /* eslint-enable no-console */
   engineInfos() {
-    return Promise.resolve([defaultEngine]);
+    return Promise.resolve(engineInfos);
   },
   restartEngine(/* engineId: EngineId */) {
     throw new Error(`Not supported on Browser version: restartEngine`);

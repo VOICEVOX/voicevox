@@ -1,9 +1,9 @@
-import { defaultEngine, directoryHandleStoreKey } from "./contract";
+import { engineInfos, directoryHandleStoreKey } from "./contract";
 
 import {
   electronStoreSchema,
   ElectronStoreType,
-  EngineId,
+  EngineSetting,
   engineSettingSchema,
 } from "@/type/preload";
 
@@ -31,10 +31,10 @@ export const openDB = () =>
         const db = request.result;
         const baseSchema = electronStoreSchema.parse({});
 
-        const defaultVoicevoxEngineId = EngineId(defaultEngine.uuid);
-        baseSchema.engineSettings = {
-          [defaultVoicevoxEngineId]: engineSettingSchema.parse({}),
-        };
+        baseSchema.engineSettings = engineInfos.reduce((acc, v) => {
+          acc[v.uuid] = engineSettingSchema.parse({});
+          return acc;
+        }, {} as Record<string, EngineSetting>);
         db.createObjectStore(settingStoreKey).add(baseSchema, entryKey);
 
         // NOTE: fixedExportDirectoryを使用してファイルの書き出しをする際、

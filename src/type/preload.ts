@@ -347,6 +347,18 @@ export const minimumEngineManifestSchema = z
 
 export type MinimumEngineManifest = z.infer<typeof minimumEngineManifestSchema>;
 
+export const envEngineInfoSchema = z.object({
+  uuid: engineIdSchema,
+  host: z.string(),
+  name: z.string(),
+  executionEnabled: z.boolean(),
+  executionFilePath: z.string(),
+  executionArgs: z.array(z.string()),
+  path: z.string().optional(),
+});
+
+export type EnvEngineInfo = z.infer<typeof envEngineInfoSchema>;
+
 export type EngineInfo = {
   uuid: EngineId;
   host: string;
