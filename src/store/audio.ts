@@ -257,6 +257,7 @@ const getAudioElement = (() => {
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
+  audioKeysInitializingSpeaker: [],
   morphableTargetsInfo: {},
   audioItems: {},
   audioKeys: [],
@@ -507,30 +508,30 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     /**
      * AudioItemに設定される話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
      */
-    async action({ commit, dispatch }, { engineId, audioKey, styleId }) {
+    async action({ commit, dispatch }, { engineId, audioKeys, styleId }) {
       const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
         engineId,
         styleId,
       });
       if (isInitialized) return;
 
-      commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
-        audioKey,
+      commit("SET_AUDIO_KEYS_INITIALIZING_SPEAKER", {
+        audioKeys,
       });
       await dispatch("INITIALIZE_ENGINE_SPEAKER", {
         engineId,
         styleId,
       }).finally(() => {
-        commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
-          audioKey: undefined,
+        commit("SET_AUDIO_KEYS_INITIALIZING_SPEAKER", {
+          audioKeys: [],
         });
       });
     },
   },
 
-  SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
-    mutation(state, { audioKey }: { audioKey?: AudioKey }) {
-      state.audioKeyInitializingSpeaker = audioKey;
+  SET_AUDIO_KEYS_INITIALIZING_SPEAKER: {
+    mutation(state, { audioKeys }: { audioKeys: AudioKey[] }) {
+      state.audioKeysInitializingSpeaker = audioKeys;
     },
   },
 
@@ -963,9 +964,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_AUDIO_VOICE: {
-    mutation(state, { audioKey, voice }: { audioKey: AudioKey; voice: Voice }) {
-      state.audioItems[audioKey].voice = voice;
+  SET_AUDIOS_VOICE: {
+    mutation(
+      state,
+      { audioKeys, voice }: { audioKeys: AudioKey[]; voice: Voice }
+    ) {
+      for (const audioKey of audioKeys) {
+        state.audioItems[audioKey].voice = voice;
+      }
     },
   },
 
@@ -2076,10 +2082,10 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_CHANGE_VOICE: {
+    COMMAND_CHANGE_VOICES: {
       mutation(
         draft,
-        payload: { audioKey: AudioKey; voice: Voice } & (
+        payload: { audioKeys: AudioKey[]; voice: Voice } & (
           | { update: "RollbackStyleId" }
           | {
               update: "AccentPhrases";
@@ -2091,93 +2097,98 @@ export const audioCommandStore = transformCommandStore(
             }
         )
       ) {
-        audioStore.mutations.SET_AUDIO_VOICE(draft, {
-          audioKey: payload.audioKey,
+        audioStore.mutations.SET_AUDIOS_VOICE(draft, {
+          audioKeys: payload.audioKeys,
           voice: payload.voice,
         });
 
         if (payload.update === "RollbackStyleId") return;
 
-        const presetKey = draft.audioItems[payload.audioKey].presetKey;
+        for (const audioKey of payload.audioKeys) {
+          const presetKey = draft.audioItems[audioKey].presetKey;
 
-        const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
-          draft,
-          payload.voice,
-          presetKey,
-          "changeVoice"
-        );
+          const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
+            draft,
+            payload.voice,
+            presetKey,
+            "changeVoice"
+          );
 
-        audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-          audioKey: payload.audioKey,
-          presetKey: nextPresetKey,
-        });
-
-        if (payload.update == "AccentPhrases") {
-          audioStore.mutations.SET_ACCENT_PHRASES(draft, {
-            audioKey: payload.audioKey,
-            accentPhrases: payload.accentPhrases,
+          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+            audioKey,
+            presetKey: nextPresetKey,
           });
-        } else if (payload.update == "AudioQuery") {
-          audioStore.mutations.SET_AUDIO_QUERY(draft, {
-            audioKey: payload.audioKey,
-            audioQuery: payload.query,
-          });
-        }
 
-        if (shouldApplyPreset) {
-          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
-            audioKey: payload.audioKey,
-          });
+          if (payload.update == "AccentPhrases") {
+            audioStore.mutations.SET_ACCENT_PHRASES(draft, {
+              audioKey,
+              accentPhrases: payload.accentPhrases,
+            });
+          } else if (payload.update == "AudioQuery") {
+            audioStore.mutations.SET_AUDIO_QUERY(draft, {
+              audioKey,
+              audioQuery: payload.query,
+            });
+          }
+
+          if (shouldApplyPreset) {
+            audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+              audioKey,
+            });
+          }
         }
       },
       async action(
-        { state, dispatch, commit },
-        { audioKey, voice }: { audioKey: AudioKey; voice: Voice }
+        { dispatch, commit, state },
+        { audioKeys, voice }: { audioKeys: AudioKey[]; voice: Voice }
       ) {
-        const query = state.audioItems[audioKey].query;
         const engineId = voice.engineId;
         const styleId = voice.styleId;
-        try {
-          await dispatch("SETUP_SPEAKER", { audioKey, engineId, styleId });
-
-          if (query !== undefined) {
-            const accentPhrases = query.accentPhrases;
-            const newAccentPhrases: AccentPhrase[] = await dispatch(
-              "FETCH_MORA_DATA",
-              {
-                accentPhrases,
-                engineId,
-                styleId,
+        await dispatch("SETUP_SPEAKER", { audioKeys, engineId, styleId });
+        await Promise.all(
+          audioKeys.map(async (audioKey) => {
+            try {
+              const query = state.audioItems[audioKey].query;
+              if (query !== undefined) {
+                const accentPhrases = query.accentPhrases;
+                const newAccentPhrases: AccentPhrase[] = await dispatch(
+                  "FETCH_MORA_DATA",
+                  {
+                    accentPhrases,
+                    engineId,
+                    styleId,
+                  }
+                );
+                commit("COMMAND_CHANGE_VOICES", {
+                  audioKeys,
+                  voice,
+                  update: "AccentPhrases",
+                  accentPhrases: newAccentPhrases,
+                });
+              } else {
+                const text = state.audioItems[audioKey].text;
+                const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
+                  text: text,
+                  engineId,
+                  styleId,
+                });
+                commit("COMMAND_CHANGE_VOICES", {
+                  audioKeys,
+                  voice,
+                  update: "AudioQuery",
+                  query,
+                });
               }
-            );
-            commit("COMMAND_CHANGE_VOICE", {
-              audioKey,
-              voice,
-              update: "AccentPhrases",
-              accentPhrases: newAccentPhrases,
-            });
-          } else {
-            const text = state.audioItems[audioKey].text;
-            const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
-              text: text,
-              engineId,
-              styleId,
-            });
-            commit("COMMAND_CHANGE_VOICE", {
-              audioKey,
-              voice,
-              update: "AudioQuery",
-              query,
-            });
-          }
-        } catch (error) {
-          commit("COMMAND_CHANGE_VOICE", {
-            audioKey,
-            voice,
-            update: "RollbackStyleId",
-          });
-          throw error;
-        }
+            } catch (error) {
+              commit("COMMAND_CHANGE_VOICES", {
+                audioKeys,
+                voice,
+                update: "RollbackStyleId",
+              });
+              throw error;
+            }
+          })
+        );
       },
     },
 

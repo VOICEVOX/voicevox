@@ -82,7 +82,10 @@ const portraitPath = computed(
 
 const isInitializingSpeaker = computed(() => {
   const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-  return store.state.audioKeyInitializingSpeaker === activeAudioKey;
+  return (
+    activeAudioKey &&
+    store.state.audioKeysInitializingSpeaker.includes(activeAudioKey)
+  );
 });
 
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
