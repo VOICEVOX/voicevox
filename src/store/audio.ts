@@ -2838,15 +2838,13 @@ export const audioCommandStore = transformCommandStore(
               })
             );
           }
-          const audioKeys = audioItems.map(() => generateAudioKey());
-          const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
+          const audioKeyItemPairs = audioItems.map((audioItem) => ({
             audioItem,
-            audioKey: audioKeys[index],
+            audioKey: generateAudioKey(),
           }));
           commit("COMMAND_IMPORT_FROM_FILE", {
             audioKeyItemPairs,
           });
-          return audioKeys;
         }
       ),
     },
