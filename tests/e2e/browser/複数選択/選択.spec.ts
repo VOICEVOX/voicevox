@@ -1,6 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 import { toggleSetting, navigateToMain } from "../../navigators";
-import { ctrlLike, addAudioCells } from "./common";
+import { ctrlLike, addAudioCells } from "./utils";
 
 test.beforeEach(async ({ page }) => {
   const BASE_URL = "http://localhost:5173/#/home";
