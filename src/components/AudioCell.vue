@@ -262,7 +262,7 @@ const selectedVoice = computed<Voice | undefined>({
   },
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
-    store.dispatch("COMMAND_CHANGE_VOICES", {
+    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
       audioKeys: isMultiSelectEnabled.value
         ? store.getters.SELECTED_AUDIO_KEYS
         : [props.audioKey],

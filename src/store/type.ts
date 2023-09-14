@@ -525,7 +525,7 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: AudioKey; text: string }): void;
   };
 
-  COMMAND_CHANGE_VOICES: {
+  COMMAND_MULTI_CHANGE_VOICE: {
     mutation: { audioKeys: AudioKey[]; voice: Voice } & (
       | { update: "RollbackStyleId" }
       | {

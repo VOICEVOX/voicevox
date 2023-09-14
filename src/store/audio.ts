@@ -2082,7 +2082,7 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_CHANGE_VOICES: {
+    COMMAND_MULTI_CHANGE_VOICE: {
       mutation(
         draft,
         payload: { audioKeys: AudioKey[]; voice: Voice } & (
@@ -2159,7 +2159,7 @@ export const audioCommandStore = transformCommandStore(
                     styleId,
                   }
                 );
-                commit("COMMAND_CHANGE_VOICES", {
+                commit("COMMAND_MULTI_CHANGE_VOICE", {
                   audioKeys,
                   voice,
                   update: "AccentPhrases",
@@ -2172,7 +2172,7 @@ export const audioCommandStore = transformCommandStore(
                   engineId,
                   styleId,
                 });
-                commit("COMMAND_CHANGE_VOICES", {
+                commit("COMMAND_MULTI_CHANGE_VOICE", {
                   audioKeys,
                   voice,
                   update: "AudioQuery",
@@ -2180,7 +2180,7 @@ export const audioCommandStore = transformCommandStore(
                 });
               }
             } catch (error) {
-              commit("COMMAND_CHANGE_VOICES", {
+              commit("COMMAND_MULTI_CHANGE_VOICE", {
                 audioKeys,
                 voice,
                 update: "RollbackStyleId",
