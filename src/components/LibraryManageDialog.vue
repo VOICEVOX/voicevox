@@ -511,7 +511,7 @@ const uninstallLibrary = async (
   const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "アンインストール",
     message: `${library.name}をアンインストールします。よろしいですか？`,
-    actionName: "はい",
+    actionName: "アンインストール",
     cancel: "いいえ",
   });
   if (result === "OK") {
