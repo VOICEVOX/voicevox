@@ -313,12 +313,22 @@ export const api: Sandbox = {
   reloadApp(/* obj: { isMultiEngineOffMode: boolean } */) {
     throw new Error(`Not supported on Browser version: reloadApp`);
   },
-  startLibraryDownloadAndInstall(/* obj: { engineId: EngineId; library: DownloadableLibrary; } */) {
+  startLibraryDownloadAndInstall(/* obj: {
+    engineId: EngineId;
+    libraryId: LibraryId;
+    libraryName: string;
+    libraryDownloadUrl: string;
+    librarySize: number;
+  } */) {
     throw new Error(
       `Not supported on Browser version: startLibraryDownloadAndInstall`
     );
   },
-  uninstallLibrary(/* pbj: { engineId: EngineId; libraryId: LibraryId; libraryName: string; } */) {
+  uninstallLibrary(/* obj: {
+    engineId: EngineId;
+    libraryId: LibraryId;
+    libraryName: string;
+  } */) {
     throw new Error(`Not supported on Browser version: uninstallLibrary`);
   },
 };
