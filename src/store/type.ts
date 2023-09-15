@@ -911,8 +911,8 @@ export type LibraryStoreTypes = {
   };
 
   SET_LIBRARY_INFO_FETCH_STATUS: {
-    action(payload: { engineId: EngineId; status: LibraryFetchStatus }): void;
     mutation: { engineId: EngineId; status: LibraryFetchStatus };
+    action(payload: { engineId: EngineId; status: LibraryFetchStatus }): void;
   };
 };
 

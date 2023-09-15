@@ -58,14 +58,14 @@ export const libraryStore = createPartialStore<LibraryStoreTypes>({
   },
 
   SET_LIBRARY_INFO_FETCH_STATUS: {
-    action: ({ commit }, { engineId, status }) => {
-      commit("SET_LIBRARY_INFO_FETCH_STATUS", { engineId, status });
-    },
     mutation: async (state, { engineId, status }) => {
       state.libraryInfoFetchStatuses = {
         ...state.libraryInfoFetchStatuses,
         [engineId]: status,
       };
+    },
+    action: ({ commit }, { engineId, status }) => {
+      commit("SET_LIBRARY_INFO_FETCH_STATUS", { engineId, status });
     },
   },
 });
