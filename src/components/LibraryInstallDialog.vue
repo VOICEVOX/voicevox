@@ -116,8 +116,7 @@ const props =
 defineEmits([...useDialogPluginComponent.emits]);
 
 const store = useStore();
-const { dialogRef, onDialogOK, onDialogHide, onDialogCancel } =
-  useDialogPluginComponent();
+const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const libraryInstallStatus = computed<LibraryInstallStatus | undefined>(
   () => store.state.libraryInstallStatuses[props.libraryData.libraryId]
