@@ -453,11 +453,9 @@ const toggleAccentPhraseSplit = (
   });
 };
 const deleteAccentPhrase = (phraseIndex: number) => {
-  store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+  store.dispatch("COMMAND_DELETE_ACCENT_PHRASE", {
     audioKey: props.activeAudioKey,
-    newPronunciation: "",
     accentPhraseIndex: phraseIndex,
-    popUntilPause: false,
   });
 };
 

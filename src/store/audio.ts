@@ -2357,6 +2357,55 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
+    COMMAND_DELETE_ACCENT_PHRASE: {
+      async action(
+        { state, dispatch, commit },
+        {
+          audioKey,
+          accentPhraseIndex,
+        }: {
+          audioKey: AudioKey;
+          accentPhraseIndex: number;
+        }
+      ) {
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
+
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+
+        const originAccentPhrases = query.accentPhrases;
+
+        // https://github.com/VOICEVOX/voicevox/issues/248
+        // newAccentPhrasesSegmentは1つの文章として合成されているためMoraDataが不自然になる。
+        // MoraDataを正しく計算する為MoraDataだけを文章全体で再計算する。
+        const newAccentPhrases = [
+          ...originAccentPhrases.slice(0, accentPhraseIndex),
+          ...originAccentPhrases.slice(accentPhraseIndex + 1),
+        ];
+
+        try {
+          const resultAccentPhrases: AccentPhrase[] = await dispatch(
+            "FETCH_MORA_DATA",
+            {
+              accentPhrases: newAccentPhrases,
+              engineId,
+              styleId,
+            }
+          );
+          commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+            audioKey,
+            accentPhrases: resultAccentPhrases,
+          });
+        } catch (error) {
+          commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+            audioKey,
+            accentPhrases: newAccentPhrases,
+          });
+        }
+      },
+    },
+
     COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
       mutation(
         draft,

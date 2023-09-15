@@ -555,6 +555,10 @@ export type AudioCommandStoreTypes = {
     ): void;
   };
 
+  COMMAND_DELETE_ACCENT_PHRASE: {
+    action(payload: { audioKey: AudioKey; accentPhraseIndex: number }): void;
+  };
+
   COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
     mutation: { audioKey: AudioKey; accentPhrases: AccentPhrase[] };
     action(payload: {
