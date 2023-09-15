@@ -155,7 +155,7 @@ const installLibrary = async () => {
     librarySize: library.librarySize,
   });
   if (result.ok) {
-    await requireReload(
+    await reloadAppOrCloseDialog(
       `${library.libraryName}をインストールしました。反映には再読み込みが必要です。今すぐ再読み込みしますか？`,
       library.engineId
     );
@@ -166,7 +166,7 @@ const installLibrary = async () => {
   }
 };
 
-const requireReload = async (message: string, engineId: EngineId) => {
+const reloadAppOrCloseDialog = async (message: string, engineId: EngineId) => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "再読み込みが必要です",
     message: message,
