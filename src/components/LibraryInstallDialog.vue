@@ -128,10 +128,11 @@ const downloadProgress = computed(() => {
   const status = libraryInstallStatus.value;
   if (status === undefined || status.status !== "downloading") return undefined;
   // contentLengthが0になる場合のための処理
-  if (status.contentLength === 0) {
-    return (status.downloaded / props.libraryData.librarySize) * 100;
-  }
-  return (status.downloaded / status.contentLength) * 100;
+  const contentLength =
+    status.contentLength > 0
+      ? status.contentLength
+      : props.libraryData.librarySize;
+  return (status.downloaded / contentLength) * 100;
 });
 
 const isInstallInProgress = computed(() => {
