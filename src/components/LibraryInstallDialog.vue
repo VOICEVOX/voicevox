@@ -74,7 +74,7 @@
           </div>
           <div class="q-px-md q-pt-md">
             <span class="text-h5 text-bold">
-              各話者・キャラクターの利用規約をお読みください。
+              各キャラクターの利用規約をお読みください。
             </span>
           </div>
           <div class="markdown-body">
