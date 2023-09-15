@@ -76,6 +76,8 @@
               :ui-locked="uiLocked"
               :shift-key-flag="shiftKeyFlag"
               :on-change-accent="changeAccent"
+              :editable="true"
+              @delete="deleteAccentPhrase(accentPhraseIndex)"
             />
           </template>
           <template v-if="selectedDetail === 'pitch'">
@@ -448,6 +450,14 @@ const toggleAccentPhraseSplit = (
     audioKey: props.activeAudioKey,
     accentPhraseIndex,
     ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
+  });
+};
+const deleteAccentPhrase = (phraseIndex: number) => {
+  store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+    audioKey: props.activeAudioKey,
+    newPronunciation: "",
+    accentPhraseIndex: phraseIndex,
+    popUntilPause: false,
   });
 };
 
