@@ -48,6 +48,10 @@ import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 
+function generateAudioKey() {
+  return AudioKey(uuidv4());
+}
+
 async function generateUniqueIdAndQuery(
   state: State,
   audioItem: AudioItem
@@ -496,13 +500,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  GENERATE_AUDIO_KEY: {
-    action() {
-      const audioKey = AudioKey(uuidv4());
-      return audioKey;
-    },
-  },
-
   SETUP_SPEAKER: {
     /**
      * AudioItemに設定される話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
@@ -701,13 +698,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   REGISTER_AUDIO_ITEM: {
     async action(
-      { dispatch, commit },
+      { commit },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey?: AudioKey }
     ) {
-      const audioKey = await dispatch("GENERATE_AUDIO_KEY");
+      const audioKey = generateAudioKey();
       commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
       return audioKey;
     },
@@ -1941,7 +1938,7 @@ export const audioCommandStore = transformCommandStore(
         audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
       },
       async action(
-        { dispatch, commit },
+        { commit },
         {
           audioItem,
           prevAudioKey,
@@ -1950,7 +1947,7 @@ export const audioCommandStore = transformCommandStore(
           prevAudioKey: AudioKey | undefined;
         }
       ) {
-        const audioKey = await dispatch("GENERATE_AUDIO_KEY");
+        const audioKey = generateAudioKey();
         commit("COMMAND_REGISTER_AUDIO_ITEM", {
           audioItem,
           audioKey,
@@ -2841,17 +2838,13 @@ export const audioCommandStore = transformCommandStore(
               })
             );
           }
-          const audioKeys: AudioKey[] = await Promise.all(
-            audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
-          );
-          const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
+          const audioKeyItemPairs = audioItems.map((audioItem) => ({
             audioItem,
-            audioKey: audioKeys[index],
+            audioKey: generateAudioKey(),
           }));
           commit("COMMAND_IMPORT_FROM_FILE", {
             audioKeyItemPairs,
           });
-          return audioKeys;
         }
       ),
     },
@@ -2895,7 +2888,7 @@ export const audioCommandStore = transformCommandStore(
           }
 
           for (const text of texts.filter((value) => value != "")) {
-            const audioKey: AudioKey = await dispatch("GENERATE_AUDIO_KEY");
+            const audioKey = generateAudioKey();
             const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
               text,
               voice,
