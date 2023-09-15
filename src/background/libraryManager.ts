@@ -140,8 +140,6 @@ export class LibraryManager {
       downloaded,
     });
     const tempFile = fs.createWriteStream(tempFilePath);
-    let tempFileClosed = false;
-
     try {
       const progressInterval = 1024 * 1024;
       let lastProgress = 0;
@@ -179,7 +177,6 @@ export class LibraryManager {
         downloadRes.body.on("end", resolve);
       });
       tempFile.close();
-      tempFileClosed = true;
       log.log(prefix + "Download complete");
 
       this.setupEngineApiIfNeeded(engineId, engine.host);
@@ -224,7 +221,7 @@ export class LibraryManager {
         new Error(`failed to install library: ${errorMessage}`)
       );
     } finally {
-      if (!tempFileClosed) {
+      if (!tempFile.closed) {
         tempFile.close();
       }
       if (fs.existsSync(tempFilePath)) {
