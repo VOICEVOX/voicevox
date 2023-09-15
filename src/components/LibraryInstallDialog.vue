@@ -178,7 +178,6 @@ const reloadAppOrCloseDialog = async (message: string, engineId: EngineId) => {
     status: "reloadNeeded",
   });
   if (result === "OK") {
-    onDialogHide();
     store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
       closeOrReload: "reload",
     });
