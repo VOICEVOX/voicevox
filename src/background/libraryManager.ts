@@ -41,6 +41,23 @@ export class LibraryManager {
     await this.lock.acquire(`${engineId}`, fn);
   }
 
+  private async extractErrorMessage(e: unknown): Promise<unknown> {
+    let errorMessage: unknown;
+    if (e instanceof ResponseError) {
+      try {
+        errorMessage = (await e.response.json()).detail;
+      } catch (e) {
+        errorMessage = undefined;
+      }
+      if (!errorMessage) {
+        errorMessage = e.response.statusText;
+      }
+    } else {
+      errorMessage = e;
+    }
+    return errorMessage;
+  }
+
   /**
    * 成功時・失敗時ともにステータス情報をonUpdateで通知して正常終了
    */
@@ -196,19 +213,7 @@ export class LibraryManager {
       return success(undefined);
     } catch (e) {
       log.error(prefix + "Failed to install library");
-      let errorMessage: unknown;
-      if (e instanceof ResponseError) {
-        try {
-          errorMessage = (await e.response.json()).detail;
-        } catch (e) {
-          errorMessage = undefined;
-        }
-        if (!errorMessage) {
-          errorMessage = e.response.statusText;
-        }
-      } else {
-        errorMessage = e;
-      }
+      const errorMessage = await this.extractErrorMessage(e);
       log.error(errorMessage);
       onUpdate({
         status: "error",
@@ -265,19 +270,7 @@ export class LibraryManager {
       return success(undefined);
     } catch (e) {
       log.error(prefix + "Failed to uninstall library");
-      let errorMessage: unknown;
-      if (e instanceof ResponseError) {
-        try {
-          errorMessage = (await e.response.json()).detail;
-        } catch (e) {
-          errorMessage = undefined;
-        }
-        if (!errorMessage) {
-          errorMessage = e.response.statusText;
-        }
-      } else {
-        errorMessage = e;
-      }
+      const errorMessage = await this.extractErrorMessage(e);
       log.error(errorMessage);
       onUpdate({
         status: "error",
