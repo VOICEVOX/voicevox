@@ -29,7 +29,7 @@ export class LibraryManager {
     this.tempDir = tempDir;
   }
 
-  private setEngineApi(engineId: EngineId, engineHost: string): void {
+  private setupEngineApiIfNeeded(engineId: EngineId, engineHost: string): void {
     if (this.engineApis[engineId] === undefined) {
       this.engineApis[engineId] = new DefaultApi(
         new Configuration({ basePath: engineHost })
@@ -165,7 +165,7 @@ export class LibraryManager {
       tempFileClosed = true;
       log.log(prefix + "Download complete");
 
-      this.setEngineApi(engineId, engine.host);
+      this.setupEngineApiIfNeeded(engineId, engine.host);
       const libraryBuffer = await fs.promises.readFile(tempFilePath);
 
       onUpdate({
@@ -247,7 +247,7 @@ export class LibraryManager {
     });
     log.log(prefix + "Waiting for lock");
 
-    this.setEngineApi(engineId, engine.host);
+    this.setupEngineApiIfNeeded(engineId, engine.host);
 
     try {
       await this.lockByEngineId(engineId, async () => {
