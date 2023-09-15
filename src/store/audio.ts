@@ -1879,6 +1879,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   STOP_AUDIO: {
+    // 停止中でも呼び出して問題ない
     action() {
       // PLAY_ でonpause時の処理が設定されているため、pauseするだけで良い
       getAudioElement().pause();
