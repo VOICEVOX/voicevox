@@ -233,12 +233,12 @@ export interface Sandbox {
     libraryName: string;
     libraryDownloadUrl: string;
     librarySize: number;
-  }): Promise<Result<undefined>>;
+  }): Promise<Result<undefined, "download" | "install">>;
   uninstallLibrary(obj: {
     engineId: EngineId;
     libraryId: LibraryId;
     libraryName: string;
-  }): Promise<Result<undefined>>;
+  }): Promise<Result<undefined, "uninstall">>;
 }
 
 export type AppInfos = {

@@ -50,7 +50,7 @@ export class LibraryManager {
     libraryName: string,
     libraryDownloadUrl: string,
     onUpdate: (status: LibraryInstallStatus) => void
-  ): Promise<Result<undefined>> {
+  ): Promise<Result<undefined, "download" | "install">> {
     const engine = this.engineManager.fetchEngineInfo(engineId);
     const prefix = `LIBRARY INSTALL ${libraryName}: `;
     log.log(
@@ -125,7 +125,6 @@ export class LibraryManager {
     const tempFile = fs.createWriteStream(tempFilePath);
     let tempFileClosed = false;
 
-    let result: Result<undefined>;
     try {
       const progressInterval = 1024 * 1024;
       let lastProgress = 0;
@@ -194,7 +193,7 @@ export class LibraryManager {
       onUpdate({
         status: "done",
       });
-      result = success(undefined);
+      return success(undefined);
     } catch (e) {
       log.error(prefix + "Failed to install library");
       let errorMessage: unknown;
@@ -215,7 +214,7 @@ export class LibraryManager {
         status: "error",
         message: `ライブラリのインストールに失敗しました。エラー内容：${errorMessage}`,
       });
-      result = failure(
+      return failure(
         "install",
         new Error(`failed to install library: ${errorMessage}`)
       );
@@ -228,7 +227,6 @@ export class LibraryManager {
         await fs.promises.rm(tempFilePath);
       }
     }
-    return result;
   }
 
   /**
@@ -239,7 +237,7 @@ export class LibraryManager {
     libraryId: LibraryId,
     libraryName: string,
     onUpdate: (status: LibraryInstallStatus) => void
-  ): Promise<Result<undefined>> {
+  ): Promise<Result<undefined, "uninstall">> {
     const engine = this.engineManager.fetchEngineInfo(engineId);
     const prefix = `LIBRARY UNINSTALL ${libraryName}: `;
     log.log(prefix + `Started ${libraryName}, Engine: ${engine.name}`);

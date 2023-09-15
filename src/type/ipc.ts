@@ -314,7 +314,7 @@ export type IpcIHData = {
         librarySize: number;
       }
     ];
-    return: Result<undefined>;
+    return: Result<undefined, "download" | "install">;
   };
 
   UNINSTALL_LIBRARY: {
@@ -325,7 +325,7 @@ export type IpcIHData = {
         libraryName: string;
       }
     ];
-    return: Result<undefined>;
+    return: Result<undefined, "uninstall">;
   };
 };
 
