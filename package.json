@@ -110,7 +110,6 @@
     "markdownlint": "0.23.1",
     "markdownlint-cli": "0.28.1",
     "mousetrap": "1.6.5",
-    "node-fetch": "3.3.1",
     "optionator": "0.9.1",
     "prettier": "2.3.0",
     "sass": "1.32.13",
