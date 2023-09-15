@@ -508,7 +508,7 @@ const uninstallLibrary = async (
   library: BrandedDownloadableLibrary
 ) => {
   stop();
-  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "アンインストール",
     message: `${library.name}をアンインストールします。よろしいですか？`,
     actionName: "アンインストール",
