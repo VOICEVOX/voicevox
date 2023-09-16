@@ -64,14 +64,10 @@
                     "
                     class="style-icon"
                   />
-                  <span
-                    class="text-subtitle1 q-ma-sm"
-                    style="font-weight: bold; margin-bottom: 20px"
-                    >{{
-                      characterInfosMap[speaker.metas.speakerUuid].metas
-                        .speakerName
-                    }}</span
-                  >
+                  <span class="text-subtitle1 q-my-md text-weight-bold">{{
+                    characterInfosMap[speaker.metas.speakerUuid].metas
+                      .speakerName
+                  }}</span>
                   <div
                     v-if="
                       characterInfosMap[speaker.metas.speakerUuid].metas.styles
@@ -84,7 +80,7 @@
                         ? selectedStyles[speaker.metas.speakerUuid].styleName
                         : DEFAULT_STYLE_NAME
                     }}</span
-                    ><span style="font-size: 0.8rem"
+                    ><span class="text-caption"
                       >全{{
                         characterInfosMap[speaker.metas.speakerUuid].metas
                           .styles.length
