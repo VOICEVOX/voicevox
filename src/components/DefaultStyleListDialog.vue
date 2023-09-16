@@ -64,10 +64,14 @@
                     "
                     class="style-icon"
                   />
-                  <span class="text-subtitle1 q-ma-sm">{{
-                    characterInfosMap[speaker.metas.speakerUuid].metas
-                      .speakerName
-                  }}</span>
+                  <span
+                    class="text-subtitle1 q-ma-sm"
+                    style="font-weight: bold; margin-bottom: 20px"
+                    >{{
+                      characterInfosMap[speaker.metas.speakerUuid].metas
+                        .speakerName
+                    }}</span
+                  >
                   <div
                     v-if="
                       characterInfosMap[speaker.metas.speakerUuid].metas.styles
@@ -75,15 +79,16 @@
                     "
                     class="style-select-container"
                   >
-                    <span
-                      >{{
-                        selectedStyles[speaker.metas.speakerUuid]
-                          ? selectedStyles[speaker.metas.speakerUuid].styleName
-                          : DEFAULT_STYLE_NAME
-                      }}（{{
+                    <span>{{
+                      selectedStyles[speaker.metas.speakerUuid]
+                        ? selectedStyles[speaker.metas.speakerUuid].styleName
+                        : DEFAULT_STYLE_NAME
+                    }}</span
+                    ><span style="font-size: 0.8rem"
+                      >全{{
                         characterInfosMap[speaker.metas.speakerUuid].metas
                           .styles.length
-                      }}スタイル）</span
+                      }}スタイル</span
                     >
                   </div>
                 </div>
@@ -284,7 +289,7 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
         }
         .style-select-container {
           display: flex;
-          flex-direction: row;
+          flex-direction: column;
           justify-content: center;
           align-items: center;
           margin-top: -1rem;
