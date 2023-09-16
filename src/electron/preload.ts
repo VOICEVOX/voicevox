@@ -158,6 +158,18 @@ const api: Sandbox = {
     ipcRenderer.invoke("MAXIMIZE_WINDOW");
   },
 
+  zoomIn: () => {
+    ipcRenderer.invoke("ZOOM_IN");
+  },
+
+  zoomOut: () => {
+    ipcRenderer.invoke("ZOOM_OUT");
+  },
+
+  zoomReset: () => {
+    ipcRenderer.invoke("ZOOM_RESET");
+  },
+
   logError: (...params) => {
     console.error(...params);
     return ipcRenderer.invoke("LOG_ERROR", ...params);

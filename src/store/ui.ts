@@ -368,6 +368,22 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  ZOOM_IN: {
+    action() {
+      window.electron.zoomIn();
+    },
+  },
+  ZOOM_OUT: {
+    action() {
+      window.electron.zoomOut();
+    },
+  },
+  ZOOM_RESET: {
+    action() {
+      window.electron.zoomReset();
+    },
+  },
+
   CHECK_EDITED_AND_NOT_SAVE: {
     /**
      * プロジェクトファイル未保存の場合、保存するかどうかを確認する。

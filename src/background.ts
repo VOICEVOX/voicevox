@@ -780,6 +780,25 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   }
 });
 
+/*
+ * UIスケールを拡大縮小する。
+ * 拡縮段階や上限下限については要検討
+ */
+ipcMainHandle("ZOOM_IN", () => {
+  setWebContentZoomFactor(0.05);
+});
+ipcMainHandle("ZOOM_OUT", () => {
+  setWebContentZoomFactor(-0.05);
+});
+ipcMainHandle("ZOOM_RESET", () => {
+  win.webContents.setZoomFactor(1);
+});
+function setWebContentZoomFactor(delta: number) {
+  const currentZoomFactor = win.webContents.getZoomFactor();
+  const newZoomFactor = Math.min(Math.max(currentZoomFactor + delta, 0.5), 3);
+  win.webContents.setZoomFactor(newZoomFactor);
+}
+
 ipcMainHandle("LOG_ERROR", (_, ...params) => {
   log.error(...params);
 });
