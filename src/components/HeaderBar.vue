@@ -82,19 +82,19 @@ const zoomInOutHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
   [
     "拡大",
     () => {
-      zoom_in();
+      zoomIn();
     },
   ],
   [
     "縮小",
     () => {
-      zoom_out();
+      zoomOut();
     },
   ],
   [
     "ズームのリセット",
     () => {
-      zoom_reset();
+      zoomReset();
     },
   ],
 ]);
@@ -124,13 +124,13 @@ const undo = () => {
 const redo = () => {
   store.dispatch("REDO");
 };
-const zoom_in = () => {
+const zoomIn = () => {
   store.dispatch("ZOOM_IN");
 };
-const zoom_out = () => {
+const zoomOut = () => {
   store.dispatch("ZOOM_OUT");
 };
-const zoom_reset = () => {
+const zoomReset = () => {
   store.dispatch("ZOOM_RESET");
 };
 const playContinuously = async () => {
