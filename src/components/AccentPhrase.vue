@@ -98,10 +98,7 @@
   </template>
   <!-- スライダーここまで -->
   <!-- 読みテキスト・アクセント句の分割と結合ここから -->
-  <template
-    v-for="(mora, moraIndex) in accentPhrase.moras"
-    :key="moraIndex"
-  >
+  <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
     <div
       class="text-cell"
       :class="{
@@ -117,8 +114,7 @@
       @mouseover="handleHoverText(true, accentPhraseIndex, moraIndex)"
       @mouseleave="handleHoverText(false, accentPhraseIndex, moraIndex)"
       @click.stop="
-        uiLocked ||
-          handleChangeVoicing(mora, accentPhraseIndex, moraIndex)
+        uiLocked || handleChangeVoicing(mora, accentPhraseIndex, moraIndex)
       "
     >
       <span class="text-cell-inner">
@@ -156,15 +152,13 @@
         'splitter-cell',
         {
           'splitter-cell-accent': selectedDetail == 'accent',
-          'splitter-cell-be-split':
-            moraIndex == accentPhrase.moras.length - 1,
+          'splitter-cell-be-split': moraIndex == accentPhrase.moras.length - 1,
           'splitter-cell-be-split-pause': accentPhrase.pauseMora,
         },
       ]"
       :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
       @click.stop="
-        uiLocked ||
-          toggleAccentPhraseSplit(accentPhraseIndex, false, moraIndex)
+        uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, false, moraIndex)
       "
     />
   </template>
@@ -175,14 +169,8 @@
       </span>
     </div>
     <div
-      class="
-        splitter-cell
-        splitter-cell-be-split
-        splitter-cell-be-split-pause
-      "
-      @click.stop="
-        uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)
-      "
+      class="splitter-cell splitter-cell-be-split splitter-cell-be-split-pause"
+      @click.stop="uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)"
     />
   </template>
   <!-- 読みテキスト・アクセント句の分割と結合ここまで -->
