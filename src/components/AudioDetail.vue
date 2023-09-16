@@ -69,7 +69,7 @@
           ]"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
         >
-          <accent-phrase />
+          <accent-phrase :selected-detail="selectedDetail" />
         </div>
       </div>
     </div>

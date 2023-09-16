@@ -177,6 +177,12 @@
 </template>
 
 <script setup lang="ts">
+const props =
+  defineProps<{
+    selectedDetail: DetailTypes;
+  }>();
+
+type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
 </script>
 
 <style scoped lang="scss">
