@@ -244,3 +244,9 @@ export const isOnCommandOrCtrlKeyDown = (event: {
   metaKey: boolean;
   ctrlKey: boolean;
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
+
+export const joinTextsInAccentPhrases = (
+  accentPhrase: AccentPhrase
+): string => {
+  return accentPhrase.moras.map((mora) => mora.text).join("");
+};

@@ -25,6 +25,7 @@ import {
   sanitizeFileName,
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
+  joinTextsInAccentPhrases,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -47,6 +48,7 @@ import {
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
+import { diffArrays } from "diff";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -2040,17 +2042,42 @@ export const audioCommandStore = transformCommandStore(
             );
 
             // 読みの内容が変わっていなければテキストだけ変更
-            const isChangedMora = isAccentPhrasesTextDifferent(
+            const isTextDifferent = isAccentPhrasesTextDifferent(
               query.accentPhrases,
               accentPhrases
             );
+            let newAccentPhrases: AccentPhrase[] = [];
+            if (isTextDifferent) {
+              const diff = diffArrays(
+                query.accentPhrases.map(joinTextsInAccentPhrases),
+                accentPhrases.map(joinTextsInAccentPhrases)
+              );
+              const flatDiff = diff.flatMap((d) =>
+                d.value.filter((v) => v !== "").map((v) => ({ ...d, value: v }))
+              );
+              const indexedDiff = flatDiff.map((d, i) => ({ ...d, index: i }));
+              const indexToOldAccentPhrase = indexedDiff
+                .filter((d) => !d.added)
+                .reduce(
+                  (acc, d, i) => ({
+                    ...acc,
+                    [d.index]: query.accentPhrases[i],
+                  }),
+                  {} as { [index: number]: AccentPhrase }
+                );
+              newAccentPhrases = indexedDiff
+                .filter((d) => !d.removed)
+                .map(
+                  (d, i) => indexToOldAccentPhrase[d.index] ?? accentPhrases[i]
+                );
+            } else {
+              newAccentPhrases = query.accentPhrases;
+            }
             commit("COMMAND_CHANGE_AUDIO_TEXT", {
               audioKey,
               text,
               update: "AccentPhrases",
-              accentPhrases: isChangedMora
-                ? accentPhrases
-                : query.accentPhrases,
+              accentPhrases: newAccentPhrases,
             });
           } else {
             const newAudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
