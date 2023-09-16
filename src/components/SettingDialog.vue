@@ -884,6 +884,35 @@
                 >
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>同じ読みのアクセント句内のパラメータの保持</div>
+                <div
+                  aria-label="テキスト変更時、同じ読みのアクセント句内のパラメータを保持します。"
+                >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      テキスト変更時、同じ読みのアクセント句内のパラメータを保持します。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.shouldKeepAudioParameter"
+                  @update:model-value="
+                    changeExperimentalSetting(
+                      'shouldKeepAudioParameter',
+                      $event
+                    )
+                  "
+                >
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>

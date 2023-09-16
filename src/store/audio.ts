@@ -1,6 +1,7 @@
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import Encoding from "encoding-japanese";
+import { diffArrays } from "diff";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -48,7 +49,6 @@ import {
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
-import { diffArrays } from "diff";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -2048,28 +2048,38 @@ export const audioCommandStore = transformCommandStore(
             );
             let newAccentPhrases: AccentPhrase[] = [];
             if (isTextDifferent) {
-              const diff = diffArrays(
-                query.accentPhrases.map(joinTextsInAccentPhrases),
-                accentPhrases.map(joinTextsInAccentPhrases)
-              );
-              const flatDiff = diff.flatMap((d) =>
-                d.value.filter((v) => v !== "").map((v) => ({ ...d, value: v }))
-              );
-              const indexedDiff = flatDiff.map((d, i) => ({ ...d, index: i }));
-              const indexToOldAccentPhrase = indexedDiff
-                .filter((d) => !d.added)
-                .reduce(
-                  (acc, d, i) => ({
-                    ...acc,
-                    [d.index]: query.accentPhrases[i],
-                  }),
-                  {} as { [index: number]: AccentPhrase }
+              if (state.experimentalSetting.shouldKeepAudioParameter) {
+                const diff = diffArrays(
+                  query.accentPhrases.map(joinTextsInAccentPhrases),
+                  accentPhrases.map(joinTextsInAccentPhrases)
                 );
-              newAccentPhrases = indexedDiff
-                .filter((d) => !d.removed)
-                .map(
-                  (d, i) => indexToOldAccentPhrase[d.index] ?? accentPhrases[i]
+                const flatDiff = diff.flatMap((d) =>
+                  d.value
+                    .filter((v) => v !== "")
+                    .map((v) => ({ ...d, value: v }))
                 );
+                const indexedDiff = flatDiff.map((d, i) => ({
+                  ...d,
+                  index: i,
+                }));
+                const indexToOldAccentPhrase = indexedDiff
+                  .filter((d) => !d.added)
+                  .reduce(
+                    (acc, d, i) => ({
+                      ...acc,
+                      [d.index]: query.accentPhrases[i],
+                    }),
+                    {} as { [index: number]: AccentPhrase }
+                  );
+                newAccentPhrases = indexedDiff
+                  .filter((d) => !d.removed)
+                  .map(
+                    (d, i) =>
+                      indexToOldAccentPhrase[d.index] ?? accentPhrases[i]
+                  );
+              } else {
+                newAccentPhrases = accentPhrases;
+              }
             } else {
               newAccentPhrases = query.accentPhrases;
             }
