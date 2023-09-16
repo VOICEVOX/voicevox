@@ -1787,6 +1787,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
+  // NOTE: リファクタリング中、別ファイルに移動予定
   SET_AUDIO_SOURCE: {
     mutation(_, { audioBlob }: { audioBlob: Blob }) {
       getAudioElement().src = URL.createObjectURL(audioBlob);
@@ -1820,6 +1821,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
+  // NOTE: リファクタリング中、別ファイルに移動予定
   PLAY_AUDIO_PLAYER: {
     async action(
       { state, commit },
