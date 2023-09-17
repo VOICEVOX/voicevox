@@ -137,11 +137,7 @@
       </q-popup-edit>
     </div>
     <div
-      v-if="
-        accentPhrases != undefined &&
-        (!isLast ||
-          moraIndex < accentPhrase.moras.length - 1)
-      "
+      v-if="!isLast || moraIndex < accentPhrase.moras.length - 1"
       :class="[
         'splitter-cell',
         {
@@ -204,10 +200,7 @@ const handleChangePronounce = (newPronunciation: string) => {
   newPronunciation = newPronunciation.replace(",", "、");
   if (accentPhrases.value == undefined)
     throw new Error("accentPhrases.value == undefined");
-  if (
-    newPronunciation.slice(-1) == "、" &&
-    !props.isLast
-  ) {
+  if (newPronunciation.slice(-1) == "、" && !props.isLast) {
     newPronunciation += pronunciationByPhrase.value[props.index + 1];
     popUntilPause = true;
   }
