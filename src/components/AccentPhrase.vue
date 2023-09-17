@@ -104,21 +104,20 @@
       :class="{
         'text-cell-hovered': isHovered(
           mora.vowel,
-          accentPhraseIndex,
           moraIndex
         ),
       }"
       :style="{
         'grid-column': `${moraIndex * 2 + 1} / span 1`,
       }"
-      @mouseover="handleHoverText(true, accentPhraseIndex, moraIndex)"
-      @mouseleave="handleHoverText(false, accentPhraseIndex, moraIndex)"
+      @mouseover="handleHoverText(true, moraIndex)"
+      @mouseleave="handleHoverText(false, moraIndex)"
       @click.stop="
-        uiLocked || handleChangeVoicing(mora, accentPhraseIndex, moraIndex)
+        uiLocked || handleChangeVoicing(mora, moraIndex)
       "
     >
       <span class="text-cell-inner">
-        {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
+        {{ getHoveredText(mora, moraIndex) }}
       </span>
       <q-popup-edit
         v-if="selectedDetail == 'accent' && !uiLocked"
@@ -127,7 +126,7 @@
         auto-save
         transition-show="none"
         transition-hide="none"
-        @save="handleChangePronounce($event, accentPhraseIndex)"
+        @save="handleChangePronounce($event)"
       >
         <q-input
           v-model="scope.value"
@@ -158,7 +157,7 @@
       ]"
       :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
       @click.stop="
-        uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, false, moraIndex)
+        uiLocked || toggleAccentPhraseSplit(false, moraIndex)
       "
     />
   </template>
@@ -170,7 +169,7 @@
     </div>
     <div
       class="splitter-cell splitter-cell-be-split splitter-cell-be-split-pause"
-      @click.stop="uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)"
+      @click.stop="uiLocked || toggleAccentPhraseSplit(true)"
     />
   </template>
   <!-- 読みテキスト・アクセント句の分割と結合ここまで -->
@@ -207,8 +206,7 @@ const pronunciation = computed(() => {
 });
 
 const handleChangePronounce = (
-  newPronunciation: string,
-  phraseIndex: number
+  newPronunciation: string
 ) => {
   let popUntilPause = false;
   newPronunciation = newPronunciation.replace(",", "、");
@@ -254,7 +252,6 @@ const lengthHoveredInfo = reactive<hoveredInfoType>({
 
 const handleHoverText = (
   isOver: boolean,
-  phraseIndex: number,
   moraIndex: number
 ) => {
   if (props.selectedDetail == "accent") {
@@ -297,7 +294,6 @@ const unvoicableVowels = ["U", "I", "i", "u"];
 
 const isHovered = (
   vowel: string,
-  accentPhraseIndex: number,
   moraIndex: number
 ) => {
   let isHover = false;
@@ -321,7 +317,6 @@ const isHovered = (
 
 const getHoveredText = (
   mora: Mora,
-  accentPhraseIndex: number,
   moraIndex: number
 ) => {
   if (props.selectedDetail != "length") return mora.text;
@@ -346,7 +341,6 @@ const changeAccent = (accentPhraseIndex: number, accent: number) =>
     accent,
   });
 const toggleAccentPhraseSplit = (
-  accentPhraseIndex: number,
   isPause: boolean,
   moraIndex?: number
 ) => {
@@ -391,7 +385,6 @@ const changeMoraData = (
 
 const handleChangeVoicing = (
   mora: Mora,
-  accentPhraseIndex: number,
   moraIndex: number
 ) => {
   if (
