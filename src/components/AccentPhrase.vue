@@ -343,6 +343,59 @@ const getHoveredText = (
     return mora.text;
   }
 };
+
+const changeAccent = (accentPhraseIndex: number, accent: number) =>
+  store.dispatch("COMMAND_CHANGE_ACCENT", {
+    audioKey: props.activeAudioKey,
+    accentPhraseIndex,
+    accent,
+  });
+const toggleAccentPhraseSplit = (
+  accentPhraseIndex: number,
+  isPause: boolean,
+  moraIndex?: number
+) => {
+  store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
+    audioKey: props.activeAudioKey,
+    accentPhraseIndex,
+    ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
+  });
+};
+
+const maxPitch = 6.5;
+const minPitch = 3;
+const maxMoraLength = 0.3;
+const minMoraLength = 0;
+const changeMoraData = (
+  accentPhraseIndex: number,
+  moraIndex: number,
+  data: number,
+  type: MoraDataType
+) => {
+  if (!altKeyFlag.value) {
+    if (type == "pitch") {
+      lastPitches.value[accentPhraseIndex][moraIndex] = data;
+    }
+    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+      audioKey: props.activeAudioKey,
+      accentPhraseIndex,
+      moraIndex,
+      data,
+      type,
+    });
+  } else {
+    if (accentPhrases.value === undefined) {
+      throw Error("accentPhrases.value === undefined");
+    }
+    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
+      audioKey: props.activeAudioKey,
+      accentPhraseIndex,
+      moraIndex,
+      data,
+      type,
+    });
+  }
+};
 </script>
 
 <style scoped lang="scss">
