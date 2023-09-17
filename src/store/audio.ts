@@ -2136,7 +2136,7 @@ export const audioCommandStore = transformCommandStore(
         }
       },
       async action(
-        { dispatch, commit, state },
+        { state, dispatch, commit },
         { audioKeys, voice }: { audioKeys: AudioKey[]; voice: Voice }
       ) {
         const engineId = voice.engineId;
