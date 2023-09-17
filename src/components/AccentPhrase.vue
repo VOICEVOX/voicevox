@@ -222,10 +222,8 @@ type hoveredType = "vowel" | "consonant";
 const hoveredMoraIndex = ref<number | undefined>(undefined);
 
 const lengthHoveredInfo = reactive<{
-  moraIndex: number | undefined;
   type: hoveredType;
 }>({
-  moraIndex: undefined,
   type: "vowel",
 });
 
@@ -244,7 +242,7 @@ const handleLengthHoverText = (
     throw new Error("phoneme != hoveredType");
   lengthHoveredInfo.type = phoneme;
   // the pause and pitch templates don't emit a mouseOver event
-  lengthHoveredInfo.moraIndex = isOver ? moraIndex : undefined;
+  hoveredMoraIndex.value = isOver ? moraIndex : undefined;
 };
 
 const unvoicableVowels = ["U", "I", "i", "u"];
@@ -258,7 +256,7 @@ const isHovered = (vowel: string, moraIndex: number) =>
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
-  if (moraIndex === lengthHoveredInfo.moraIndex) {
+  if (moraIndex === hoveredMoraIndex.value) {
     if (lengthHoveredInfo.type == "vowel") {
       return mora.vowel.toUpperCase();
     } else {
