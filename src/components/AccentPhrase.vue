@@ -206,7 +206,7 @@ const handleChangePronounce = (newPronunciation: string) => {
     popUntilPause = true;
   }
   store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
-    audioKey: props.activeAudioKey,
+    audioKey: props.audioKey,
     newPronunciation,
     accentPhraseIndex: props.index,
     popUntilPause,
@@ -313,13 +313,13 @@ const getHoveredText = (mora: Mora, moraIndex: number) => {
 
 const changeAccent = (accentPhraseIndex: number, accent: number) =>
   store.dispatch("COMMAND_CHANGE_ACCENT", {
-    audioKey: props.activeAudioKey,
+    audioKey: props.audioKey,
     accentPhraseIndex,
     accent,
   });
 const toggleAccentPhraseSplit = (isPause: boolean, moraIndex?: number) => {
   store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
-    audioKey: props.activeAudioKey,
+    audioKey: props.audioKey,
     accentPhraseIndex: props.index,
     ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
   });
@@ -340,7 +340,7 @@ const changeMoraData = (
       lastPitches.value[accentPhraseIndex][moraIndex] = data;
     }
     return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-      audioKey: props.activeAudioKey,
+      audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
       data,
@@ -348,7 +348,7 @@ const changeMoraData = (
     });
   } else {
     return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
-      audioKey: props.activeAudioKey,
+      audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
       data,
