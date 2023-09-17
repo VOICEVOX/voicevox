@@ -20,7 +20,6 @@
     >
       <audio-parameter
         :mora-index="moraIndex"
-        :accent-phrase-index="index"
         :value="mora.pitch"
         :ui-locked="uiLocked"
         :min="minPitch"
@@ -46,7 +45,6 @@
       <audio-parameter
         v-if="mora.consonant && mora.consonantLength != undefined"
         :mora-index="moraIndex"
-        :accent-phrase-index="index"
         :value="mora.consonantLength"
         :ui-locked="uiLocked"
         :min="minMoraLength"
@@ -61,7 +59,6 @@
       <!-- vowel length -->
       <audio-parameter
         :mora-index="moraIndex"
-        :accent-phrase-index="index"
         :value="mora.vowelLength"
         :ui-locked="uiLocked"
         :min="minMoraLength"
@@ -84,7 +81,6 @@
       <!-- pause length -->
       <audio-parameter
         :mora-index="accentPhrase.moras.length"
-        :accent-phrase-index="index"
         :value="accentPhrase.pauseMora.vowelLength"
         :ui-locked="uiLocked"
         :min="0"
@@ -248,7 +244,6 @@ const handleHoverText = (isOver: boolean, moraIndex: number) => {
 const handleLengthHoverText = (
   isOver: boolean,
   phoneme: MoraDataType,
-  phraseIndex: number,
   moraIndex?: number
 ) => {
   if (phoneme !== "vowel" && phoneme !== "consonant")

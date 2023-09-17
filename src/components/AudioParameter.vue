@@ -46,7 +46,6 @@ import { MoraDataType } from "@/type/preload";
 const props = withDefaults(
   defineProps<{
     value: number;
-    accentPhraseIndex: number;
     moraIndex: number;
     uiLocked: boolean;
     min?: number;
@@ -80,7 +79,6 @@ const emit =
       e: "mouseOver",
       isOver: boolean,
       type: MoraDataType,
-      accentPhraseIndex: number,
       moraIndex: number
     ): void;
   }>();
@@ -123,7 +121,6 @@ const handleMouseHover = (isOver: boolean) => {
       "mouseOver",
       isOver,
       props.type,
-      props.accentPhraseIndex,
       props.moraIndex
     );
   }
