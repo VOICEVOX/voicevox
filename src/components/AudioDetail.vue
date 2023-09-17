@@ -190,7 +190,7 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
 setHotkeyFunctions(hotkeyMap, true);
 
 // detail selector
-type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
+type DetailTypes = "accent" | "pitch" | "length";
 const selectedDetail = ref<DetailTypes>("accent");
 
 // accent phrase

@@ -180,7 +180,7 @@ const props =
     altKeyFlag: boolean;
   }>();
 
-type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
+type DetailTypes = "accent" | "pitch" | "length";
 
 const store = useStore();
 
