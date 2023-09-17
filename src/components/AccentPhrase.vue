@@ -327,6 +327,10 @@ const toggleAccentPhraseSplit = (isPause: boolean, moraIndex?: number) => {
   });
 };
 
+const lastPitches = computed(() =>
+  props.accentPhrase.moras.map((mora) => mora.pitch)
+);
+
 const maxPitch = 6.5;
 const minPitch = 3;
 const maxMoraLength = 0.3;
@@ -339,7 +343,7 @@ const changeMoraData = (
 ) => {
   if (!props.altKeyFlag) {
     if (type == "pitch") {
-      lastPitches.value[accentPhraseIndex][moraIndex] = data;
+      lastPitches.value[moraIndex] = data;
     }
     return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
       audioKey: props.audioKey,
@@ -366,11 +370,11 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   ) {
     let data = 0;
     if (mora.pitch == 0) {
-      if (lastPitches.value[props.index][moraIndex] == 0) {
+      if (lastPitches.value[moraIndex] == 0) {
         // 元々無声だった場合、適当な値を代入
         data = 5.5;
       } else {
-        data = lastPitches.value[props.index][moraIndex];
+        data = lastPitches.value[moraIndex];
       }
     }
     changeMoraData(props.index, moraIndex, data, "voicing");
