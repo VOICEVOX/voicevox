@@ -72,6 +72,7 @@
           <accent-phrase
             :selected-detail="selectedDetail"
             :shift-key-flag="shiftKeyFlag"
+            :alt-key-flag="altKeyFlag"
           />
         </div>
       </div>

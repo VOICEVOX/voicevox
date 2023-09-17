@@ -187,6 +187,7 @@ const props =
   defineProps<{
     selectedDetail: DetailTypes;
     shiftKeyFlag: boolean;
+    altKeyFlag: boolean;
   }>();
 
 type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
