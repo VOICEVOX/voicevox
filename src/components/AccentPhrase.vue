@@ -378,6 +378,11 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/variables' as vars;
+@use '@/styles/colors' as colors;
+
+$pitch-label-height: 24px;
+
 .text-cell {
   min-width: 20px;
   max-width: 20px;

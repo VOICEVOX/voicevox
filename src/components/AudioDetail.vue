@@ -402,10 +402,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
-
-$pitch-label-height: 24px;
 
 .tip-tweakable-slider-by-scroll {
   position: absolute;
