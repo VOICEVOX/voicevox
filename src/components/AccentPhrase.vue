@@ -242,7 +242,7 @@ const handleHoverText = (isOver: boolean, moraIndex: number) => {
 const handleLengthHoverText = (
   isOver: boolean,
   phoneme: MoraDataType,
-  moraIndex?: number
+  moraIndex: number
 ) => {
   if (phoneme !== "vowel" && phoneme !== "consonant")
     throw new Error("phoneme != hoveredType");
