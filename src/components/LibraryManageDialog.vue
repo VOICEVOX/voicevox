@@ -36,8 +36,7 @@
         :breakpoint="0"
       >
         <div class="library-portrait-wrapper">
-          <!-- インターネット上の画像を読み込む場合があるため、srcではなくv-lazyを使う。 -->
-          <img v-lazy="portraitUri" class="library-portrait" />
+          <img :src="portraitUri" class="library-portrait" />
         </div>
       </q-drawer>
 

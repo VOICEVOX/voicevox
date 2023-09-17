@@ -13,10 +13,9 @@
     "
   >
     <div class="character-item-inner">
-      <!-- ライブラリ管理機能により、インターネット上の画像を
-        読み込む場合があるため、srcではなくv-lazyを使う。 -->
       <img
-        v-lazy="characterInfo.metas.styles[selectedStyleIndex || 0].iconPath"
+        loading="lazy"
+        :src="characterInfo.metas.styles[selectedStyleIndex || 0].iconPath"
         :alt="characterInfo.metas.speakerName"
         class="style-icon"
       />
