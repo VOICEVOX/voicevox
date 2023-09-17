@@ -1089,7 +1089,7 @@ const updateAudioOutputDevices = async () => {
       return { label: device.label, key: device.deviceId };
     });
 };
-navigator.mediaDevices.addEventListener(
+navigator.mediaDevices?.addEventListener(
   "devicechange",
   updateAudioOutputDevices
 );
