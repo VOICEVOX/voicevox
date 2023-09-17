@@ -461,68 +461,6 @@ $pitch-label-height: 24px;
       &:last-child {
         padding-right: 20px;
       }
-
-      div {
-        padding: 0px;
-        &.text-cell {
-          min-width: 20px;
-          max-width: 20px;
-          grid-row-start: 3;
-          text-align: center;
-          white-space: nowrap;
-          color: colors.$display;
-          position: relative;
-
-          .text-cell-inner {
-            position: absolute;
-            transform: translateX(-50%);
-            z-index: 10;
-          }
-        }
-        &.text-cell-hovered {
-          font-weight: bold;
-          cursor: pointer;
-        }
-        &.splitter-cell {
-          min-width: 20px;
-          max-width: 20px;
-          grid-row: 3 / span 1;
-          z-index: vars.$detail-view-splitter-cell-z-index;
-        }
-        &.splitter-cell-accent {
-          @extend.splitter-cell;
-          grid-row: 2 / 4;
-        }
-        &.splitter-cell:hover {
-          background-color: colors.$text-splitter-hover;
-          cursor: pointer;
-        }
-        &.splitter-cell-be-split {
-          min-width: 40px;
-          max-width: 40px;
-          grid-row: 1 / span 3;
-        }
-        &.splitter-cell-be-split-pause {
-          min-width: 20px;
-          max-width: 20px;
-        }
-        &.accent-cell {
-          grid-row: 2 / span 1;
-          div {
-            min-width: 20px + 20px;
-            max-width: 20px + 20px;
-            display: inline-block;
-            cursor: pointer;
-          }
-        }
-        &.pitch-cell {
-          grid-row: 1 / span 2;
-          min-width: 20px;
-          max-width: 20px;
-          display: inline-block;
-          position: relative;
-        }
-      }
     }
 
     .mora-table-hover:hover {
