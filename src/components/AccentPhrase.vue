@@ -393,6 +393,28 @@ const changeMoraData = (
     });
   }
 };
+
+const handleChangeVoicing = (
+  mora: Mora,
+  accentPhraseIndex: number,
+  moraIndex: number
+) => {
+  if (
+    selectedDetail.value == "pitch" &&
+    unvoicableVowels.includes(mora.vowel)
+  ) {
+    let data = 0;
+    if (mora.pitch == 0) {
+      if (lastPitches.value[accentPhraseIndex][moraIndex] == 0) {
+        // 元々無声だった場合、適当な値を代入
+        data = 5.5;
+      } else {
+        data = lastPitches.value[accentPhraseIndex][moraIndex];
+      }
+    }
+    changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
+  }
+};
 </script>
 
 <style scoped lang="scss">
