@@ -18,7 +18,6 @@
       class="q-mb-sm pitch-cell"
       :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
     >
-      <!-- div for input width -->
       <audio-parameter
         :mora-index="moraIndex"
         :accent-phrase-index="accentPhraseIndex"
