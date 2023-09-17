@@ -231,10 +231,7 @@ type hoveredInfoType = {
 
 const isAccentHovered = ref(false);
 
-const pitchHoveredInfo = reactive<hoveredInfoType>({
-  accentPhraseIndex: undefined,
-  moraIndex: undefined,
-});
+const hoveredPitchMoraIndex = ref<number | undefined>(undefined);
 
 const lengthHoveredInfo = reactive<hoveredInfoType>({
   accentPhraseIndex: undefined,
@@ -246,13 +243,7 @@ const handleHoverText = (isOver: boolean, moraIndex: number) => {
   if (props.selectedDetail == "accent") {
     isAccentHovered.value = isOver;
   } else if (props.selectedDetail == "pitch") {
-    if (isOver) {
-      pitchHoveredInfo.accentPhraseIndex = props.index;
-      pitchHoveredInfo.moraIndex = moraIndex;
-    } else {
-      pitchHoveredInfo.accentPhraseIndex = undefined;
-      pitchHoveredInfo.moraIndex = undefined;
-    }
+    hoveredPitchMoraIndex.value = isOver ? moraIndex : undefined;
   }
 };
 
@@ -286,8 +277,7 @@ const isHovered = (vowel: string, moraIndex: number) => {
       }
     } else if (props.selectedDetail == "pitch") {
       if (
-        props.index === pitchHoveredInfo.accentPhraseIndex &&
-        moraIndex === pitchHoveredInfo.moraIndex &&
+        moraIndex === hoveredPitchMoraIndex.value &&
         unvoicableVowels.includes(vowel)
       ) {
         isHover = true;
