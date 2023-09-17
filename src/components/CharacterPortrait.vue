@@ -84,7 +84,7 @@ const isInitializingSpeaker = computed(() => {
   const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
   return (
     activeAudioKey &&
-    store.state.audioKeysInitializingSpeaker.includes(activeAudioKey)
+    store.state.audioKeysWithInitializingSpeaker.includes(activeAudioKey)
   );
 });
 

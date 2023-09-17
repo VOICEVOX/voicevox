@@ -257,7 +257,7 @@ const getAudioElement = (() => {
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
-  audioKeysInitializingSpeaker: [],
+  audioKeysWithInitializingSpeaker: [],
   morphableTargetsInfo: {},
   audioItems: {},
   audioKeys: [],
@@ -515,23 +515,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       });
       if (isInitialized) return;
 
-      commit("SET_AUDIO_KEYS_INITIALIZING_SPEAKER", {
+      commit("SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER", {
         audioKeys,
       });
       await dispatch("INITIALIZE_ENGINE_SPEAKER", {
         engineId,
         styleId,
       }).finally(() => {
-        commit("SET_AUDIO_KEYS_INITIALIZING_SPEAKER", {
+        commit("SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER", {
           audioKeys: [],
         });
       });
     },
   },
 
-  SET_AUDIO_KEYS_INITIALIZING_SPEAKER: {
+  SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER: {
     mutation(state, { audioKeys }: { audioKeys: AudioKey[] }) {
-      state.audioKeysInitializingSpeaker = audioKeys;
+      state.audioKeysWithInitializingSpeaker = audioKeys;
     },
   },
 

@@ -124,7 +124,7 @@ export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
 export type AudioStoreState = {
   characterInfos: Record<EngineId, CharacterInfo[]>;
   morphableTargetsInfo: Record<EngineId, MorphableTargetInfoTable>;
-  audioKeysInitializingSpeaker: AudioKey[];
+  audioKeysWithInitializingSpeaker: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;
   audioKeys: AudioKey[];
   audioStates: Record<AudioKey, AudioState>;
@@ -192,7 +192,7 @@ export type AudioStoreTypes = {
     }): void;
   };
 
-  SET_AUDIO_KEYS_INITIALIZING_SPEAKER: {
+  SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER: {
     mutation: { audioKeys: AudioKey[] };
   };
 

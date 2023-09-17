@@ -27,7 +27,7 @@ describe("store/vuex.js test", () => {
         engineSupportedDevices: {},
         altPortInfos: {},
         characterInfos: {},
-        audioKeysInitializingSpeaker: [],
+        audioKeysWithInitializingSpeaker: [],
         morphableTargetsInfo: {},
         defaultStyleIds: [],
         userCharacterOrder: [],

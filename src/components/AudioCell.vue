@@ -151,7 +151,7 @@ const userOrderedCharacterInfos = computed(() => {
   return infos;
 });
 const isInitializingSpeaker = computed(() =>
-  store.state.audioKeysInitializingSpeaker.includes(props.audioKey)
+  store.state.audioKeysWithInitializingSpeaker.includes(props.audioKey)
 );
 const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
