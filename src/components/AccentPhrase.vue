@@ -183,6 +183,7 @@ import { useStore } from "@/store";
 const props =
   defineProps<{
     selectedDetail: DetailTypes;
+    shiftKeyFlag: boolean;
   }>();
 
 type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";

@@ -69,7 +69,10 @@
           ]"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
         >
-          <accent-phrase :selected-detail="selectedDetail" />
+          <accent-phrase
+            :selected-detail="selectedDetail"
+            :shift-key-flag="shiftKeyFlag"
+          />
         </div>
       </div>
     </div>
