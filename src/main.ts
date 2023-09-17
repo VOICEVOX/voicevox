@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import { createGtm } from "@gtm-support/vue-gtm";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
+import VueLazyLoad from "vue3-lazyload";
 import App from "./App.vue";
 import router from "./router";
 import { store, storeKey } from "./store";
@@ -44,4 +45,5 @@ createApp(App)
   })
   .use(ipcMessageReceiver, { store })
   .use(markdownItPlugin)
+  .use(VueLazyLoad)
   .mount("#app");

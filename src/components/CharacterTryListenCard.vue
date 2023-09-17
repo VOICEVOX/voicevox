@@ -14,7 +14,7 @@
   >
     <div class="character-item-inner">
       <img
-        :src="characterInfo.metas.styles[selectedStyleIndex || 0].iconPath"
+        v-lazy="characterInfo.metas.styles[selectedStyleIndex || 0].iconPath"
         :alt="characterInfo.metas.speakerName"
         class="style-icon"
       />

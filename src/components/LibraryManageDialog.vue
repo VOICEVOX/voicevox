@@ -36,7 +36,7 @@
         :breakpoint="0"
       >
         <div class="library-portrait-wrapper">
-          <img :src="portraitUri" class="library-portrait" />
+          <img v-lazy="portraitUri" class="library-portrait" />
         </div>
       </q-drawer>
 
@@ -259,13 +259,25 @@ const selectLibraryAndSpeaker = (
   selectedSpeakers.value[libraryId] = speakerId;
 };
 
+const isValidHttpUrl = (url: string): boolean => {
+  try {
+    const newUrl = new URL(url);
+    return newUrl.protocol === "http:" || newUrl.protocol === "https:";
+  } catch (e) {
+    return false;
+  }
+};
+
 const libraryInfoToCharacterInfos = (
   engineId: EngineId,
   libraryInfo: DownloadableLibrary | InstalledLibrary
 ): CharacterInfo[] => {
   return libraryInfo.speakers.map((speaker) => {
+    const portrait = speaker.speakerInfo.portrait;
     return {
-      portraitPath: base64ImageToUri(speaker.speakerInfo.portrait),
+      portraitPath: isValidHttpUrl(portrait)
+        ? portrait
+        : base64ImageToUri(portrait),
       metas: {
         speakerUuid: SpeakerId(speaker.speaker.speakerUuid),
         speakerName: speaker.speaker.name,
@@ -276,13 +288,17 @@ const libraryInfoToCharacterInfos = (
           if (styleInfo === undefined) {
             throw Error("styleInfo === undefined");
           }
+          let portraitPath = styleInfo.portrait;
+          if (portraitPath && !isValidHttpUrl(portraitPath)) {
+            portraitPath = base64ImageToUri(portraitPath);
+          }
           return {
             styleName: style.name,
             styleId: StyleId(style.id),
-            iconPath: base64ImageToUri(styleInfo.icon),
-            portraitPath: styleInfo.portrait
-              ? base64ImageToUri(styleInfo.portrait)
-              : undefined,
+            iconPath: isValidHttpUrl(styleInfo.icon)
+              ? styleInfo.icon
+              : base64ImageToUri(styleInfo.icon),
+            portraitPath,
             engineId,
             voiceSamplePaths: styleInfo.voiceSamples,
           };
@@ -407,8 +423,12 @@ const play = (
 
   const styleInfo = speaker.metas.styles.find((s) => s.styleId === styleId);
   if (!styleInfo) throw new Error("style not found");
-  const voiceSamples = styleInfo.voiceSamplePaths;
-  audio.src = "data:audio/wav;base64," + voiceSamples[index];
+  const voiceSample = styleInfo.voiceSamplePaths[index];
+  if (isValidHttpUrl(voiceSample)) {
+    audio.src = voiceSample;
+  } else {
+    audio.src = "data:audio/wav;base64," + voiceSample;
+  }
   audio.play();
   playing.value = {
     speakerUuid,
