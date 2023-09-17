@@ -177,8 +177,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, reactive } from "vue";
 import { useStore } from "@/store";
+import { MoraDataType } from "@/type/preload";
+import { Mora } from "@/openapi/models/Mora";
+import { AccentPhrase } from "@/openapi";
 
 const props =
   defineProps<{
@@ -258,13 +261,13 @@ const handleHoverText = (
   phraseIndex: number,
   moraIndex: number
 ) => {
-  if (selectedDetail.value == "accent") {
+  if (props.selectedDetail == "accent") {
     if (isOver) {
       accentHoveredInfo.accentPhraseIndex = phraseIndex;
     } else {
       accentHoveredInfo.accentPhraseIndex = undefined;
     }
-  } else if (selectedDetail.value == "pitch") {
+  } else if (props.selectedDetail == "pitch") {
     if (isOver) {
       pitchHoveredInfo.accentPhraseIndex = phraseIndex;
       pitchHoveredInfo.moraIndex = moraIndex;
@@ -303,11 +306,11 @@ const isHovered = (
 ) => {
   let isHover = false;
   if (!uiLocked.value) {
-    if (selectedDetail.value == "accent") {
+    if (props.selectedDetail == "accent") {
       if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
         isHover = true;
       }
-    } else if (selectedDetail.value == "pitch") {
+    } else if (props.selectedDetail == "pitch") {
       if (
         accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
         moraIndex === pitchHoveredInfo.moraIndex &&
@@ -325,7 +328,7 @@ const getHoveredText = (
   accentPhraseIndex: number,
   moraIndex: number
 ) => {
-  if (selectedDetail.value != "length") return mora.text;
+  if (props.selectedDetail != "length") return mora.text;
   if (
     accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
     moraIndex === lengthHoveredInfo.moraIndex
