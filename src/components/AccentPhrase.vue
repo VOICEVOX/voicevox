@@ -3,7 +3,7 @@
   <!-- ｱｸｾﾝﾄ項目のスライダー -->
   <template v-if="selectedDetail === 'accent'">
     <audio-accent
-      :accent-phrase-index="accentPhraseIndex"
+      :accent-phrase-index="index"
       :accent-phrase="accentPhrase"
       :ui-locked="uiLocked"
       :shift-key-flag="shiftKeyFlag"
@@ -20,7 +20,7 @@
     >
       <audio-parameter
         :mora-index="moraIndex"
-        :accent-phrase-index="accentPhraseIndex"
+        :accent-phrase-index="index"
         :value="mora.pitch"
         :ui-locked="uiLocked"
         :min="minPitch"
@@ -46,7 +46,7 @@
       <audio-parameter
         v-if="mora.consonant && mora.consonantLength != undefined"
         :mora-index="moraIndex"
-        :accent-phrase-index="accentPhraseIndex"
+        :accent-phrase-index="index"
         :value="mora.consonantLength"
         :ui-locked="uiLocked"
         :min="minMoraLength"
@@ -61,7 +61,7 @@
       <!-- vowel length -->
       <audio-parameter
         :mora-index="moraIndex"
-        :accent-phrase-index="accentPhraseIndex"
+        :accent-phrase-index="index"
         :value="mora.vowelLength"
         :ui-locked="uiLocked"
         :min="minMoraLength"
@@ -84,7 +84,7 @@
       <!-- pause length -->
       <audio-parameter
         :mora-index="accentPhrase.moras.length"
-        :accent-phrase-index="accentPhraseIndex"
+        :accent-phrase-index="index"
         :value="accentPhrase.pauseMora.vowelLength"
         :ui-locked="uiLocked"
         :min="0"
@@ -145,7 +145,7 @@
     <div
       v-if="
         accentPhrases != undefined &&
-        (accentPhraseIndex < accentPhrases.length - 1 ||
+        (index < accentPhrases.length - 1 ||
           moraIndex < accentPhrase.moras.length - 1)
       "
       :class="[
@@ -216,15 +216,15 @@ const handleChangePronounce = (
     throw new Error("accentPhrases.value == undefined");
   if (
     newPronunciation.slice(-1) == "、" &&
-    accentPhrases.value.length - 1 != phraseIndex
+    accentPhrases.value.length - 1 != props.index
   ) {
-    newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
+    newPronunciation += pronunciationByPhrase.value[props.index + 1];
     popUntilPause = true;
   }
   store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
     audioKey: props.activeAudioKey,
     newPronunciation,
-    accentPhraseIndex: phraseIndex,
+    accentPhraseIndex: props.index,
     popUntilPause,
   });
 };
@@ -259,13 +259,13 @@ const handleHoverText = (
 ) => {
   if (props.selectedDetail == "accent") {
     if (isOver) {
-      accentHoveredInfo.accentPhraseIndex = phraseIndex;
+      accentHoveredInfo.accentPhraseIndex = props.index;
     } else {
       accentHoveredInfo.accentPhraseIndex = undefined;
     }
   } else if (props.selectedDetail == "pitch") {
     if (isOver) {
-      pitchHoveredInfo.accentPhraseIndex = phraseIndex;
+      pitchHoveredInfo.accentPhraseIndex = props.index;
       pitchHoveredInfo.moraIndex = moraIndex;
     } else {
       pitchHoveredInfo.accentPhraseIndex = undefined;
@@ -303,12 +303,12 @@ const isHovered = (
   let isHover = false;
   if (!uiLocked.value) {
     if (props.selectedDetail == "accent") {
-      if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
+      if (props.index === accentHoveredInfo.accentPhraseIndex) {
         isHover = true;
       }
     } else if (props.selectedDetail == "pitch") {
       if (
-        accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
+        props.index === pitchHoveredInfo.accentPhraseIndex &&
         moraIndex === pitchHoveredInfo.moraIndex &&
         unvoicableVowels.includes(vowel)
       ) {
@@ -326,7 +326,7 @@ const getHoveredText = (
 ) => {
   if (props.selectedDetail != "length") return mora.text;
   if (
-    accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
+    props.index === lengthHoveredInfo.accentPhraseIndex &&
     moraIndex === lengthHoveredInfo.moraIndex
   ) {
     if (lengthHoveredInfo.type == "vowel") {
@@ -352,7 +352,7 @@ const toggleAccentPhraseSplit = (
 ) => {
   store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
     audioKey: props.activeAudioKey,
-    accentPhraseIndex,
+    accentPhraseIndex: props.index,
     ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
   });
 };
@@ -400,14 +400,14 @@ const handleChangeVoicing = (
   ) {
     let data = 0;
     if (mora.pitch == 0) {
-      if (lastPitches.value[accentPhraseIndex][moraIndex] == 0) {
+      if (lastPitches.value[props.index][moraIndex] == 0) {
         // 元々無声だった場合、適当な値を代入
         data = 5.5;
       } else {
-        data = lastPitches.value[accentPhraseIndex][moraIndex];
+        data = lastPitches.value[props.index][moraIndex];
       }
     }
-    changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
+    changeMoraData(props.index, moraIndex, data, "voicing");
   }
 };
 </script>
