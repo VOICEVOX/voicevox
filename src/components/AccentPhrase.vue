@@ -123,7 +123,7 @@
       <q-popup-edit
         v-if="selectedDetail == 'accent' && !uiLocked"
         v-slot="scope"
-        :model-value="pronunciationByPhrase[accentPhraseIndex]"
+        :model-value="pronunciation"
         auto-save
         transition-show="none"
         transition-hide="none"
@@ -196,19 +196,12 @@ const store = useStore();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const pronunciationByPhrase = computed(() => {
-  const textArray: Array<string> = [];
-  accentPhrases.value?.forEach((accentPhrase) => {
-    let textString = "";
-    accentPhrase.moras.forEach((mora) => {
-      textString += mora.text;
-    });
-    if (accentPhrase.pauseMora) {
-      textString += "、";
-    }
-    textArray.push(textString);
-  });
-  return textArray;
+const pronunciation = computed(() => {
+  let textString = props.accentPhrase.moras.map((mora) => mora.text).join("");
+  if (props.accentPhrase.pauseMora) {
+    textString += "、";
+  }
+  return textString;
 });
 
 const handleChangePronounce = (
