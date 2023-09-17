@@ -36,6 +36,7 @@
         :breakpoint="0"
       >
         <div class="library-portrait-wrapper">
+          <!-- インターネット上の画像を読み込む場合があるため、srcではなくv-lazyを使う。 -->
           <img v-lazy="portraitUri" class="library-portrait" />
         </div>
       </q-drawer>
@@ -424,6 +425,7 @@ const play = (
   const styleInfo = speaker.metas.styles.find((s) => s.styleId === styleId);
   if (!styleInfo) throw new Error("style not found");
   const voiceSample = styleInfo.voiceSamplePaths[index];
+  // インターネット上の音声はそのままsrcに設定する
   if (isValidHttpUrl(voiceSample)) {
     audio.src = voiceSample;
   } else {
