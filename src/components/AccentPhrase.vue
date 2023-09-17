@@ -185,6 +185,8 @@ import { AccentPhrase } from "@/openapi";
 
 const props =
   defineProps<{
+    accentPhrase: AccentPhrase;
+    index: number;
     selectedDetail: DetailTypes;
     shiftKeyFlag: boolean;
     altKeyFlag: boolean;
