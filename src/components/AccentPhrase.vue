@@ -400,7 +400,7 @@ const handleChangeVoicing = (
   moraIndex: number
 ) => {
   if (
-    selectedDetail.value == "pitch" &&
+    props.selectedDetail == "pitch" &&
     unvoicableVowels.includes(mora.vowel)
   ) {
     let data = 0;
