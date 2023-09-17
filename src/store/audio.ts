@@ -964,14 +964,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_AUDIOS_VOICE: {
-    mutation(
-      state,
-      { audioKeys, voice }: { audioKeys: AudioKey[]; voice: Voice }
-    ) {
-      for (const audioKey of audioKeys) {
-        state.audioItems[audioKey].voice = voice;
-      }
+  SET_AUDIO_VOICE: {
+    mutation(state, { audioKey, voice }: { audioKey: AudioKey; voice: Voice }) {
+      state.audioItems[audioKey].voice = voice;
     },
   },
 
@@ -2097,10 +2092,12 @@ export const audioCommandStore = transformCommandStore(
             }
         )
       ) {
-        audioStore.mutations.SET_AUDIOS_VOICE(draft, {
-          audioKeys: payload.audioKeys,
-          voice: payload.voice,
-        });
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_VOICE(draft, {
+            audioKey,
+            voice: payload.voice,
+          });
+        }
 
         if (payload.update === "RollbackStyleId") return;
 

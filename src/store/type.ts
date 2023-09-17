@@ -345,8 +345,8 @@ export type AudioStoreTypes = {
     }): Promise<AudioQuery>;
   };
 
-  SET_AUDIOS_VOICE: {
-    mutation: { audioKeys: AudioKey[]; voice: Voice };
+  SET_AUDIO_VOICE: {
+    mutation: { audioKey: AudioKey; voice: Voice };
   };
 
   SET_ACCENT_PHRASES: {
