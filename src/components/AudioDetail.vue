@@ -93,14 +93,11 @@ import {
   onBeforeUpdate,
   onMounted,
   onUnmounted,
-  reactive,
   ref,
   VNodeRef,
   watch,
 } from "vue";
 import ToolTip from "./ToolTip.vue";
-import AudioAccent from "./AudioAccent.vue";
-import AudioParameter from "./AudioParameter.vue";
 import AccentPhrase from "./AccentPhrase.vue";
 import { useStore } from "@/store";
 import {
@@ -108,10 +105,9 @@ import {
   HotkeyAction,
   HotkeyReturnType,
   isMac,
-  MoraDataType,
 } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { EngineManifest, Mora } from "@/openapi/models";
+import { EngineManifest } from "@/openapi/models";
 
 const props =
   defineProps<{
