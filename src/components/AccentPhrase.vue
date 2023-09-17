@@ -165,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from "vue";
+import { computed, reactive, ref } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { useStore } from "@/store";
@@ -229,9 +229,7 @@ type hoveredInfoType = {
   type?: hoveredType;
 };
 
-const accentHoveredInfo = reactive<hoveredInfoType>({
-  accentPhraseIndex: undefined,
-});
+const isAccentHovered = ref(false);
 
 const pitchHoveredInfo = reactive<hoveredInfoType>({
   accentPhraseIndex: undefined,
@@ -246,11 +244,7 @@ const lengthHoveredInfo = reactive<hoveredInfoType>({
 
 const handleHoverText = (isOver: boolean, moraIndex: number) => {
   if (props.selectedDetail == "accent") {
-    if (isOver) {
-      accentHoveredInfo.accentPhraseIndex = props.index;
-    } else {
-      accentHoveredInfo.accentPhraseIndex = undefined;
-    }
+    isAccentHovered.value = isOver;
   } else if (props.selectedDetail == "pitch") {
     if (isOver) {
       pitchHoveredInfo.accentPhraseIndex = props.index;
@@ -287,7 +281,7 @@ const isHovered = (vowel: string, moraIndex: number) => {
   let isHover = false;
   if (!uiLocked.value) {
     if (props.selectedDetail == "accent") {
-      if (props.index === accentHoveredInfo.accentPhraseIndex) {
+      if (isAccentHovered.value) {
         isHover = true;
       }
     } else if (props.selectedDetail == "pitch") {
