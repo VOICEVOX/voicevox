@@ -219,16 +219,14 @@ const handleChangePronounce = (newPronunciation: string) => {
 
 type hoveredType = "vowel" | "consonant";
 
-type hoveredInfoType = {
-  moraIndex?: number | undefined;
-  type?: hoveredType;
-};
-
 const isAccentHovered = ref(false);
 
 const hoveredPitchMoraIndex = ref<number | undefined>(undefined);
 
-const lengthHoveredInfo = reactive<hoveredInfoType>({
+const lengthHoveredInfo = reactive<{
+  moraIndex: number | undefined;
+  type: hoveredType;
+}>({
   moraIndex: undefined,
   type: "vowel",
 });
@@ -276,9 +274,7 @@ const isHovered = (vowel: string, moraIndex: number) => {
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
-  if (
-    moraIndex === lengthHoveredInfo.moraIndex
-  ) {
+  if (moraIndex === lengthHoveredInfo.moraIndex) {
     if (lengthHoveredInfo.type == "vowel") {
       return mora.vowel.toUpperCase();
     } else {

@@ -117,12 +117,7 @@ const clipPathComputed = computed((): string => {
 const handleMouseHover = (isOver: boolean) => {
   valueLabel.visible = isOver;
   if (props.type == "consonant" || props.type == "vowel") {
-    emit(
-      "mouseOver",
-      isOver,
-      props.type,
-      props.moraIndex
-    );
+    emit("mouseOver", isOver, props.type, props.moraIndex);
   }
 };
 
