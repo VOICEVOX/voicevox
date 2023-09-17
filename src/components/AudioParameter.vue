@@ -72,7 +72,6 @@ const emit =
   defineEmits<{
     (
       e: "changeValue",
-      accentPhraseIndex: number,
       moraIndex: number,
       newValue: number,
       type: MoraDataType
@@ -87,7 +86,7 @@ const emit =
   }>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) =>
-  emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue, type);
+  emit("changeValue", props.moraIndex, newValue, type);
 
 const previewSlider = previewSliderHelper({
   modelValue: () => props.value,

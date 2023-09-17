@@ -166,6 +166,7 @@
 
 <script setup lang="ts">
 import { computed, reactive } from "vue";
+import AudioParameter from "./AudioParameter.vue";
 import { useStore } from "@/store";
 import { MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
@@ -329,11 +330,11 @@ const minPitch = 3;
 const maxMoraLength = 0.3;
 const minMoraLength = 0;
 const changeMoraData = (
-  accentPhraseIndex: number,
   moraIndex: number,
   data: number,
   type: MoraDataType
 ) => {
+  const accentPhraseIndex = props.index;
   if (!props.altKeyFlag) {
     if (type == "pitch") {
       lastPitches.value[accentPhraseIndex][moraIndex] = data;
@@ -370,7 +371,7 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
         data = lastPitches.value[props.index][moraIndex];
       }
     }
-    changeMoraData(props.index, moraIndex, data, "voicing");
+    changeMoraData(moraIndex, data, "voicing");
   }
 };
 </script>

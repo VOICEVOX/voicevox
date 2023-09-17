@@ -100,7 +100,6 @@ import {
 } from "vue";
 import ToolTip from "./ToolTip.vue";
 import AudioAccent from "./AudioAccent.vue";
-import AudioParameter from "./AudioParameter.vue";
 import AccentPhrase from "./AccentPhrase.vue";
 import { useStore } from "@/store";
 import {
