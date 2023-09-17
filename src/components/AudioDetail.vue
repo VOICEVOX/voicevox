@@ -69,6 +69,8 @@
           ]"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
         >
+          <!-- スライダーここから -->
+          <!-- ｱｸｾﾝﾄ項目のスライダー -->
           <template v-if="selectedDetail === 'accent'">
             <audio-accent
               :accent-phrase-index="accentPhraseIndex"
@@ -78,6 +80,7 @@
               :on-change-accent="changeAccent"
             />
           </template>
+          <!-- ｲﾝﾄﾈｰｼｮﾝ項目のスライダー -->
           <template v-if="selectedDetail === 'pitch'">
             <div
               v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -102,6 +105,7 @@
             </div>
             <div v-if="accentPhrase.pauseMora" />
           </template>
+          <!-- 長さ項目のスライダー -->
           <template v-if="selectedDetail === 'length'">
             <div
               v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -141,28 +145,30 @@
                 @mouse-over="handleLengthHoverText"
               />
             </div>
+            <div
+              v-if="accentPhrase.pauseMora"
+              class="q-mb-sm pitch-cell"
+              :style="{
+                'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
+              }"
+            >
+              <!-- pause length -->
+              <audio-parameter
+                :mora-index="accentPhrase.moras.length"
+                :accent-phrase-index="accentPhraseIndex"
+                :value="accentPhrase.pauseMora.vowelLength"
+                :ui-locked="uiLocked"
+                :min="0"
+                :max="1.0"
+                :step="0.01"
+                :type="'pause'"
+                :shift-key-flag="shiftKeyFlag"
+                @change-value="changeMoraData"
+              />
+            </div>
           </template>
-          <div
-            v-if="accentPhrase.pauseMora && selectedDetail == 'length'"
-            class="q-mb-sm pitch-cell"
-            :style="{
-              'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
-            }"
-          >
-            <!-- pause length -->
-            <audio-parameter
-              :mora-index="accentPhrase.moras.length"
-              :accent-phrase-index="accentPhraseIndex"
-              :value="accentPhrase.pauseMora.vowelLength"
-              :ui-locked="uiLocked"
-              :min="0"
-              :max="1.0"
-              :step="0.01"
-              :type="'pause'"
-              :shift-key-flag="shiftKeyFlag"
-              @change-value="changeMoraData"
-            />
-          </div>
+          <!-- スライダーここまで -->
+          <!-- 読みテキスト・アクセント句の分割と結合ここから -->
           <template
             v-for="(mora, moraIndex) in accentPhrase.moras"
             :key="moraIndex"
@@ -250,6 +256,7 @@
               "
             />
           </template>
+          <!-- 読みテキスト・アクセント句の分割と結合ここまで -->
         </div>
       </div>
     </div>
