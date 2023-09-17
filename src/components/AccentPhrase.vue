@@ -166,6 +166,7 @@
 
 <script setup lang="ts">
 import { computed, reactive } from "vue";
+import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { useStore } from "@/store";
 import { MoraDataType } from "@/type/preload";
