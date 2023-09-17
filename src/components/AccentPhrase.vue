@@ -372,7 +372,7 @@ const changeMoraData = (
   data: number,
   type: MoraDataType
 ) => {
-  if (!altKeyFlag.value) {
+  if (!props.altKeyFlag) {
     if (type == "pitch") {
       lastPitches.value[accentPhraseIndex][moraIndex] = data;
     }
@@ -384,9 +384,6 @@ const changeMoraData = (
       type,
     });
   } else {
-    if (accentPhrases.value === undefined) {
-      throw Error("accentPhrases.value === undefined");
-    }
     return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
       audioKey: props.activeAudioKey,
       accentPhraseIndex,
