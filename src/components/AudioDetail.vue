@@ -245,20 +245,12 @@ const setPlayAndStartPoint = (accentPhraseIndex: number) => {
   }
 };
 
-const lastPitches = ref<number[][]>([]);
-watch(accentPhrases, async (newPhrases) => {
+watch(accentPhrases, async () => {
   activePoint.value = startPoint.value;
   // 連続再生時に、最初に選択されていた場所に戻るためにscrollToActivePointを呼ぶ必要があるが、
   // DOMの描画が少し遅いので、nextTickをはさむ
   await nextTick();
   scrollToActivePoint();
-  if (newPhrases) {
-    lastPitches.value = newPhrases.map((phrase) =>
-      phrase.moras.map((mora) => mora.pitch)
-    );
-  } else {
-    lastPitches.value = [];
-  }
 });
 
 // audio play
