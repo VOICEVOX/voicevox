@@ -177,12 +177,19 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+import { useStore } from "@/store";
+
 const props =
   defineProps<{
     selectedDetail: DetailTypes;
   }>();
 
 type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
+
+const store = useStore();
+
+const uiLocked = computed(() => store.getters.UI_LOCKED);
 </script>
 
 <style scoped lang="scss">
