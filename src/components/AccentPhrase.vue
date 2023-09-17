@@ -424,15 +424,6 @@ $pitch-label-height: 24px;
   min-width: 20px;
   max-width: 20px;
 }
-.accent-cell {
-  grid-row: 2 / span 1;
-  div {
-    min-width: 20px + 20px;
-    max-width: 20px + 20px;
-    display: inline-block;
-    cursor: pointer;
-  }
-}
 .pitch-cell {
   grid-row: 1 / span 2;
   min-width: 20px;
