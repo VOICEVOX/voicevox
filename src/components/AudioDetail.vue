@@ -70,6 +70,12 @@
           @click="setPlayAndStartPoint(accentPhraseIndex)"
         >
           <accent-phrase
+            :accent-phrase="accentPhrase"
+            :index="accentPhraseIndex"
+            :is-last="
+              accentPhrases !== undefined &&
+              accentPhrases.length - 1 === accentPhraseIndex
+            "
             :selected-detail="selectedDetail"
             :shift-key-flag="shiftKeyFlag"
             :alt-key-flag="altKeyFlag"

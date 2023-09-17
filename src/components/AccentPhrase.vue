@@ -139,7 +139,7 @@
     <div
       v-if="
         accentPhrases != undefined &&
-        (index < accentPhrases.length - 1 ||
+        (!isLast ||
           moraIndex < accentPhrase.moras.length - 1)
       "
       :class="[
@@ -179,6 +179,7 @@ const props =
   defineProps<{
     accentPhrase: AccentPhrase;
     index: number;
+    isLast: boolean;
     selectedDetail: DetailTypes;
     shiftKeyFlag: boolean;
     altKeyFlag: boolean;
@@ -205,7 +206,7 @@ const handleChangePronounce = (newPronunciation: string) => {
     throw new Error("accentPhrases.value == undefined");
   if (
     newPronunciation.slice(-1) == "、" &&
-    accentPhrases.value.length - 1 != props.index
+    !props.isLast
   ) {
     newPronunciation += pronunciationByPhrase.value[props.index + 1];
     popUntilPause = true;
