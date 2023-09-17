@@ -191,6 +191,154 @@ type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
 const store = useStore();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const pronunciationByPhrase = computed(() => {
+  const textArray: Array<string> = [];
+  accentPhrases.value?.forEach((accentPhrase) => {
+    let textString = "";
+    accentPhrase.moras.forEach((mora) => {
+      textString += mora.text;
+    });
+    if (accentPhrase.pauseMora) {
+      textString += "、";
+    }
+    textArray.push(textString);
+  });
+  return textArray;
+});
+
+const handleChangePronounce = (
+  newPronunciation: string,
+  phraseIndex: number
+) => {
+  let popUntilPause = false;
+  newPronunciation = newPronunciation.replace(",", "、");
+  if (accentPhrases.value == undefined)
+    throw new Error("accentPhrases.value == undefined");
+  if (
+    newPronunciation.slice(-1) == "、" &&
+    accentPhrases.value.length - 1 != phraseIndex
+  ) {
+    newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
+    popUntilPause = true;
+  }
+  store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+    audioKey: props.activeAudioKey,
+    newPronunciation,
+    accentPhraseIndex: phraseIndex,
+    popUntilPause,
+  });
+};
+
+type hoveredType = "vowel" | "consonant";
+
+type hoveredInfoType = {
+  accentPhraseIndex: number | undefined;
+  moraIndex?: number | undefined;
+  type?: hoveredType;
+};
+
+const accentHoveredInfo = reactive<hoveredInfoType>({
+  accentPhraseIndex: undefined,
+});
+
+const pitchHoveredInfo = reactive<hoveredInfoType>({
+  accentPhraseIndex: undefined,
+  moraIndex: undefined,
+});
+
+const lengthHoveredInfo = reactive<hoveredInfoType>({
+  accentPhraseIndex: undefined,
+  moraIndex: undefined,
+  type: "vowel",
+});
+
+const handleHoverText = (
+  isOver: boolean,
+  phraseIndex: number,
+  moraIndex: number
+) => {
+  if (selectedDetail.value == "accent") {
+    if (isOver) {
+      accentHoveredInfo.accentPhraseIndex = phraseIndex;
+    } else {
+      accentHoveredInfo.accentPhraseIndex = undefined;
+    }
+  } else if (selectedDetail.value == "pitch") {
+    if (isOver) {
+      pitchHoveredInfo.accentPhraseIndex = phraseIndex;
+      pitchHoveredInfo.moraIndex = moraIndex;
+    } else {
+      pitchHoveredInfo.accentPhraseIndex = undefined;
+      pitchHoveredInfo.moraIndex = undefined;
+    }
+  }
+};
+
+const handleLengthHoverText = (
+  isOver: boolean,
+  phoneme: MoraDataType,
+  phraseIndex: number,
+  moraIndex?: number
+) => {
+  if (phoneme !== "vowel" && phoneme !== "consonant")
+    throw new Error("phoneme != hoveredType");
+  lengthHoveredInfo.type = phoneme;
+  // the pause and pitch templates don't emit a mouseOver event
+  if (isOver) {
+    lengthHoveredInfo.accentPhraseIndex = phraseIndex;
+    lengthHoveredInfo.moraIndex = moraIndex;
+  } else {
+    lengthHoveredInfo.accentPhraseIndex = undefined;
+    lengthHoveredInfo.moraIndex = undefined;
+  }
+};
+
+const unvoicableVowels = ["U", "I", "i", "u"];
+
+const isHovered = (
+  vowel: string,
+  accentPhraseIndex: number,
+  moraIndex: number
+) => {
+  let isHover = false;
+  if (!uiLocked.value) {
+    if (selectedDetail.value == "accent") {
+      if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
+        isHover = true;
+      }
+    } else if (selectedDetail.value == "pitch") {
+      if (
+        accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
+        moraIndex === pitchHoveredInfo.moraIndex &&
+        unvoicableVowels.includes(vowel)
+      ) {
+        isHover = true;
+      }
+    }
+  }
+  return isHover;
+};
+
+const getHoveredText = (
+  mora: Mora,
+  accentPhraseIndex: number,
+  moraIndex: number
+) => {
+  if (selectedDetail.value != "length") return mora.text;
+  if (
+    accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
+    moraIndex === lengthHoveredInfo.moraIndex
+  ) {
+    if (lengthHoveredInfo.type == "vowel") {
+      return mora.vowel.toUpperCase();
+    } else {
+      return mora.consonant?.toUpperCase();
+    }
+  } else {
+    return mora.text;
+  }
+};
 </script>
 
 <style scoped lang="scss">
