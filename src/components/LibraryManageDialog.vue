@@ -225,7 +225,8 @@ const isLatest = (engineId: EngineId, library: BrandedDownloadableLibrary) => {
   if (!installedLibrary) {
     return false;
   }
-  return semver.gte(library.version, installedLibrary.version);
+  // installedLibrary.versionがlibrary.versionと等しいか、それより大きい場合はlatest
+  return semver.gte(installedLibrary.version, library.version);
 };
 
 const isUninstallable = (
