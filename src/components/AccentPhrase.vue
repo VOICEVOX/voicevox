@@ -219,9 +219,7 @@ const handleChangePronounce = (newPronunciation: string) => {
 
 type hoveredType = "vowel" | "consonant";
 
-const isAccentHovered = ref(false);
-
-const hoveredPitchMoraIndex = ref<number | undefined>(undefined);
+const hoveredMoraIndex = ref<number | undefined>(undefined);
 
 const lengthHoveredInfo = reactive<{
   moraIndex: number | undefined;
@@ -232,10 +230,8 @@ const lengthHoveredInfo = reactive<{
 });
 
 const handleHoverText = (isOver: boolean, moraIndex: number) => {
-  if (props.selectedDetail == "accent") {
-    isAccentHovered.value = isOver;
-  } else if (props.selectedDetail == "pitch") {
-    hoveredPitchMoraIndex.value = isOver ? moraIndex : undefined;
+  if (props.selectedDetail == "accent" || props.selectedDetail == "pitch") {
+    hoveredMoraIndex.value = isOver ? moraIndex : undefined;
   }
 };
 
@@ -253,24 +249,12 @@ const handleLengthHoverText = (
 
 const unvoicableVowels = ["U", "I", "i", "u"];
 
-const isHovered = (vowel: string, moraIndex: number) => {
-  let isHover = false;
-  if (!uiLocked.value) {
-    if (props.selectedDetail == "accent") {
-      if (isAccentHovered.value) {
-        isHover = true;
-      }
-    } else if (props.selectedDetail == "pitch") {
-      if (
-        moraIndex === hoveredPitchMoraIndex.value &&
-        unvoicableVowels.includes(vowel)
-      ) {
-        isHover = true;
-      }
-    }
-  }
-  return isHover;
-};
+const isHovered = (vowel: string, moraIndex: number) =>
+  !uiLocked.value &&
+  ((props.selectedDetail == "accent" && hoveredMoraIndex.value !== undefined) ||
+    (props.selectedDetail == "pitch" &&
+      moraIndex === hoveredMoraIndex.value &&
+      unvoicableVowels.includes(vowel)));
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
