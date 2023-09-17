@@ -169,12 +169,13 @@ import { computed, reactive } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { useStore } from "@/store";
-import { MoraDataType } from "@/type/preload";
+import { AudioKey, MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
 import { AccentPhrase } from "@/openapi";
 
 const props =
   defineProps<{
+    audioKey: AudioKey;
     accentPhrase: AccentPhrase;
     index: number;
     isLast: boolean;
@@ -200,8 +201,6 @@ const pronunciation = computed(() => {
 const handleChangePronounce = (newPronunciation: string) => {
   let popUntilPause = false;
   newPronunciation = newPronunciation.replace(",", "、");
-  if (accentPhrases.value == undefined)
-    throw new Error("accentPhrases.value == undefined");
   if (newPronunciation.slice(-1) == "、" && !props.isLast) {
     newPronunciation += pronunciationByPhrase.value[props.index + 1];
     popUntilPause = true;
