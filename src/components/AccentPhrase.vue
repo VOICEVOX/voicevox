@@ -102,19 +102,14 @@
     <div
       class="text-cell"
       :class="{
-        'text-cell-hovered': isHovered(
-          mora.vowel,
-          moraIndex
-        ),
+        'text-cell-hovered': isHovered(mora.vowel, moraIndex),
       }"
       :style="{
         'grid-column': `${moraIndex * 2 + 1} / span 1`,
       }"
       @mouseover="handleHoverText(true, moraIndex)"
       @mouseleave="handleHoverText(false, moraIndex)"
-      @click.stop="
-        uiLocked || handleChangeVoicing(mora, moraIndex)
-      "
+      @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
     >
       <span class="text-cell-inner">
         {{ getHoveredText(mora, moraIndex) }}
@@ -156,9 +151,7 @@
         },
       ]"
       :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
-      @click.stop="
-        uiLocked || toggleAccentPhraseSplit(false, moraIndex)
-      "
+      @click.stop="uiLocked || toggleAccentPhraseSplit(false, moraIndex)"
     />
   </template>
   <template v-if="accentPhrase.pauseMora">
@@ -205,9 +198,7 @@ const pronunciation = computed(() => {
   return textString;
 });
 
-const handleChangePronounce = (
-  newPronunciation: string
-) => {
+const handleChangePronounce = (newPronunciation: string) => {
   let popUntilPause = false;
   newPronunciation = newPronunciation.replace(",", "、");
   if (accentPhrases.value == undefined)
@@ -250,10 +241,7 @@ const lengthHoveredInfo = reactive<hoveredInfoType>({
   type: "vowel",
 });
 
-const handleHoverText = (
-  isOver: boolean,
-  moraIndex: number
-) => {
+const handleHoverText = (isOver: boolean, moraIndex: number) => {
   if (props.selectedDetail == "accent") {
     if (isOver) {
       accentHoveredInfo.accentPhraseIndex = props.index;
@@ -292,10 +280,7 @@ const handleLengthHoverText = (
 
 const unvoicableVowels = ["U", "I", "i", "u"];
 
-const isHovered = (
-  vowel: string,
-  moraIndex: number
-) => {
+const isHovered = (vowel: string, moraIndex: number) => {
   let isHover = false;
   if (!uiLocked.value) {
     if (props.selectedDetail == "accent") {
@@ -315,10 +300,7 @@ const isHovered = (
   return isHover;
 };
 
-const getHoveredText = (
-  mora: Mora,
-  moraIndex: number
-) => {
+const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
   if (
     props.index === lengthHoveredInfo.accentPhraseIndex &&
@@ -340,10 +322,7 @@ const changeAccent = (accentPhraseIndex: number, accent: number) =>
     accentPhraseIndex,
     accent,
   });
-const toggleAccentPhraseSplit = (
-  isPause: boolean,
-  moraIndex?: number
-) => {
+const toggleAccentPhraseSplit = (isPause: boolean, moraIndex?: number) => {
   store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
     audioKey: props.activeAudioKey,
     accentPhraseIndex: props.index,
@@ -383,10 +362,7 @@ const changeMoraData = (
   }
 };
 
-const handleChangeVoicing = (
-  mora: Mora,
-  moraIndex: number
-) => {
+const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   if (
     props.selectedDetail == "pitch" &&
     unvoicableVowels.includes(mora.vowel)
