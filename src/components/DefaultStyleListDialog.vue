@@ -64,10 +64,13 @@
                     "
                     class="style-icon"
                   />
-                  <span class="text-subtitle1 q-my-md text-weight-bold">{{
-                    characterInfosMap[speaker.metas.speakerUuid].metas
-                      .speakerName
-                  }}</span>
+                  <span
+                    class="text-subtitle1 q-mt-sm q-mb-xs text-weight-bold"
+                    >{{
+                      characterInfosMap[speaker.metas.speakerUuid].metas
+                        .speakerName
+                    }}</span
+                  >
                   <div
                     v-if="
                       characterInfosMap[speaker.metas.speakerUuid].metas.styles
@@ -288,7 +291,6 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          margin-top: -1rem;
         }
       }
     }
