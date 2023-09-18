@@ -457,8 +457,16 @@ export type AudioStoreTypes = {
     action(payload: { audioKey: AudioKey }): boolean;
   };
 
+  SET_AUDIO_SOURCE: {
+    mutation: { audioBlob: Blob };
+  };
+
   PLAY_AUDIO_BLOB: {
     action(payload: { audioBlob: Blob; audioKey?: AudioKey }): boolean;
+  };
+
+  PLAY_AUDIO_PLAYER: {
+    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
   };
 
   STOP_AUDIO: {
