@@ -351,8 +351,6 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
-$pitch-label-height: 24px;
-
 .text-cell {
   min-width: 20px;
   max-width: 20px;
