@@ -1,4 +1,5 @@
 <template>
+  <context-menu :menudata="contextMenudata" />
   <!-- スライダーここから -->
   <!-- ｱｸｾﾝﾄ項目のスライダー -->
   <template v-if="selectedDetail === 'accent'">
@@ -164,6 +165,8 @@
 import { computed, ref } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import ContextMenu from "./ContextMenu.vue";
+import { MenuItemButton } from "./MenuBar.vue";
 import { useStore } from "@/store";
 import { AudioKey, MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
@@ -185,6 +188,20 @@ type DetailTypes = "accent" | "pitch" | "length";
 const store = useStore();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const contextMenudata = ref<[MenuItemButton]>([
+  {
+    type: "button",
+    label: "削除",
+    onClick: () => {
+      store.dispatch("COMMAND_DELETE_ACCENT_PHRASE", {
+        audioKey: props.audioKey,
+        accentPhraseIndex: props.index,
+      });
+    },
+    disableWhenUiLocked: true,
+  },
+]);
 
 const pronunciation = computed(() => {
   let textString = props.accentPhrase.moras.map((mora) => mora.text).join("");

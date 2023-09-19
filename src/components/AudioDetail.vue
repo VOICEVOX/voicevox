@@ -81,7 +81,6 @@
             :shift-key-flag="shiftKeyFlag"
             :alt-key-flag="altKeyFlag"
           />
-          <context-menu :menudata="accentPhraseMenudata(accentPhraseIndex)" />
         </div>
       </div>
     </div>
@@ -101,8 +100,6 @@ import {
 } from "vue";
 import ToolTip from "./ToolTip.vue";
 import AccentPhrase from "./AccentPhrase.vue";
-import ContextMenu from "./ContextMenu.vue";
-import { MenuItemButton } from "./MenuBar.vue";
 import { useStore } from "@/store";
 import {
   AudioKey,
