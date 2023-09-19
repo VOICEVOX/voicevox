@@ -19,7 +19,10 @@ test("詳細調整欄のコンテキストメニュー", async ({ page }) => {
   await page.getByText("サンジュウ").click({
     button: "right",
   });
-  await page.getByText("削除").click();
+  await page
+    .getByRole("listitem")
+    .filter({ has: page.getByText("削除") })
+    .click();
   await page.waitForTimeout(100);
   await expect(page.getByText("サンジュウ")).not.toBeVisible();
   await expect(page.getByText("ニヒャク")).toBeVisible();
