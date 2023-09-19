@@ -57,13 +57,10 @@
       </svg>
     </div>
   </template>
-  <context-menu v-if="props.editable" :menudata="contextMenudata" />
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import ContextMenu from "./ContextMenu.vue";
-import { MenuItemButton } from "./MenuBar.vue";
+import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { AccentPhrase } from "@/openapi";
 
@@ -73,7 +70,6 @@ const props = withDefaults(
     accentPhraseIndex: number;
     uiLocked: boolean;
     shiftKeyFlag?: boolean;
-    editable?: boolean;
     onChangeAccent: (
       accentPhraseIndex: number,
       accent: number
@@ -81,14 +77,8 @@ const props = withDefaults(
   }>(),
   {
     shiftKeyFlag: false,
-    editable: false,
   }
 );
-
-const emit =
-  defineEmits<{
-    (e: "delete"): void;
-  }>();
 
 const changeAccent = (accent: number) =>
   props.onChangeAccent(props.accentPhraseIndex, accent);
@@ -114,17 +104,6 @@ const accentLine = computed(() => {
     )
     .toString();
 });
-
-const contextMenudata = ref<[MenuItemButton]>([
-  {
-    type: "button",
-    label: "削除",
-    onClick: async () => {
-      emit("delete");
-    },
-    disableWhenUiLocked: true,
-  },
-]);
 
 // クリックでアクセント句が選択されないように、@click.stopに渡す
 const stopPropagation = undefined;
