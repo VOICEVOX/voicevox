@@ -177,6 +177,8 @@ type BrandedDownloadableLibrary = Omit<
 type BrandedInstalledLibrary = BrandedDownloadableLibrary &
   Pick<InstalledLibrary, "uninstallable">;
 
+type BrandedLibrary = BrandedDownloadableLibrary | BrandedInstalledLibrary;
+
 const $q = useQuasar();
 
 const props =
@@ -212,15 +214,10 @@ const closeDialog = () => {
   modelValueComputed.value = false;
 };
 
-const allLibraries = ref<
-  Record<EngineId, (BrandedDownloadableLibrary | BrandedInstalledLibrary)[]>
->({});
+const allLibraries = ref<Record<EngineId, BrandedLibrary[]>>({});
 const installedLibraries = ref<Record<EngineId, BrandedInstalledLibrary[]>>({});
 
-const isLatest = (
-  engineId: EngineId,
-  library: BrandedDownloadableLibrary | BrandedInstalledLibrary
-) => {
+const isLatest = (engineId: EngineId, library: BrandedLibrary) => {
   const installedLibrary = installedLibraries.value[engineId].find(
     (installedLibrary) => installedLibrary.uuid === library.uuid
   );
@@ -232,10 +229,7 @@ const isLatest = (
   return semver.gte(installedLibrary.version, library.version);
 };
 
-const isUninstallable = (
-  engineId: EngineId,
-  library: BrandedDownloadableLibrary | BrandedInstalledLibrary
-) => {
+const isUninstallable = (engineId: EngineId, library: BrandedLibrary) => {
   // ダウンロード可能でないライブラリ(ローカルのみに存在するライブラリ)は
   // そのままアンインストールの可否を返す
   if ("uninstallable" in library) {
