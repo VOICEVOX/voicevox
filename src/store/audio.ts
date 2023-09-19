@@ -48,6 +48,10 @@ import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 
+function generateAudioKey() {
+  return AudioKey(uuidv4());
+}
+
 async function generateUniqueIdAndQuery(
   state: State,
   audioItem: AudioItem
@@ -497,13 +501,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  GENERATE_AUDIO_KEY: {
-    action() {
-      const audioKey = AudioKey(uuidv4());
-      return audioKey;
-    },
-  },
-
   SETUP_SPEAKER: {
     /**
      * AudioItemに設定される話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
@@ -702,13 +699,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   REGISTER_AUDIO_ITEM: {
     async action(
-      { dispatch, commit },
+      { commit },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey?: AudioKey }
     ) {
-      const audioKey = await dispatch("GENERATE_AUDIO_KEY");
+      const audioKey = generateAudioKey();
       commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
       return audioKey;
     },
@@ -1770,7 +1767,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   PLAY_AUDIO: {
     action: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
-        getAudioElement().pause();
+        await dispatch("STOP_AUDIO");
 
         // 音声用意
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
@@ -1800,79 +1797,101 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
+  // NOTE: リファクタリング中、別ファイルに移動予定
+  SET_AUDIO_SOURCE: {
+    mutation(_, { audioBlob }: { audioBlob: Blob }) {
+      getAudioElement().src = URL.createObjectURL(audioBlob);
+    },
+  },
+
   PLAY_AUDIO_BLOB: {
     action: createUILockAction(
       async (
         { state, commit, dispatch },
         { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
-        getAudioElement().src = URL.createObjectURL(audioBlob);
+        commit("SET_AUDIO_SOURCE", { audioBlob });
+        let offset: number | undefined;
         // 途中再生用の処理
         if (audioKey) {
           const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
             audioKey,
           });
-          if (accentPhraseOffsets.length === 0) {
-            getAudioElement().currentTime = 0;
-          } else {
-            const startTime =
-              accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
-            if (startTime === undefined) throw Error("startTime === undefined");
-            // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
-            // 再生に影響のない程度かつ切り捨てられない値を加算する
-            getAudioElement().currentTime = startTime + 10e-6;
-          }
+          if (accentPhraseOffsets.length === 0)
+            throw new Error("accentPhraseOffsets.length === 0");
+          const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+          if (startTime === undefined) throw Error("startTime === undefined");
+          // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
+          // 再生に影響のない程度かつ切り捨てられない値を加算する
+          offset = startTime + 10e-6;
         }
 
-        // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
-        if (getAudioElement().setSinkId) {
-          getAudioElement()
-            .setSinkId(state.savingSetting.audioOutputDevice)
-            .catch((err) => {
-              const stop = () => {
-                getAudioElement().pause();
-                getAudioElement().removeEventListener("canplay", stop);
-              };
-              getAudioElement().addEventListener("canplay", stop);
-              window.electron.showMessageDialog({
-                type: "error",
-                title: "エラー",
-                message: "再生デバイスが見つかりません",
-              });
-              throw new Error(err);
-            });
-        }
-
-        // 再生終了時にresolveされるPromiseを返す
-        const played = async () => {
-          if (audioKey) {
-            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
-          }
-        };
-        getAudioElement().addEventListener("play", played);
-
-        let paused: () => void;
-        const audioPlayPromise = new Promise<boolean>((resolve) => {
-          paused = () => {
-            resolve(getAudioElement().ended);
-          };
-          getAudioElement().addEventListener("pause", paused);
-        }).finally(async () => {
-          getAudioElement().removeEventListener("play", played);
-          getAudioElement().removeEventListener("pause", paused);
-          if (audioKey) {
-            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
-          }
-        });
-
-        getAudioElement().play();
-
-        return audioPlayPromise;
+        return dispatch("PLAY_AUDIO_PLAYER", { offset, audioKey });
       }
     ),
   },
 
+  // NOTE: リファクタリング中、別ファイルに移動予定
+  PLAY_AUDIO_PLAYER: {
+    async action(
+      { state, commit },
+      { offset, audioKey }: { offset?: number; audioKey?: AudioKey }
+    ) {
+      const audioElement = getAudioElement();
+
+      if (offset !== undefined) {
+        audioElement.currentTime = offset;
+      }
+
+      // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
+      if (audioElement.setSinkId) {
+        audioElement
+          .setSinkId(state.savingSetting.audioOutputDevice)
+          .catch((err) => {
+            const stop = () => {
+              audioElement.pause();
+              audioElement.removeEventListener("canplay", stop);
+            };
+            audioElement.addEventListener("canplay", stop);
+            window.electron.showMessageDialog({
+              type: "error",
+              title: "エラー",
+              message: "再生デバイスが見つかりません",
+            });
+            throw new Error(err);
+          });
+      }
+
+      // 再生終了時にresolveされるPromiseを返す
+      const played = async () => {
+        if (audioKey) {
+          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+        }
+      };
+      audioElement.addEventListener("play", played);
+
+      let paused: () => void;
+      const audioPlayPromise = new Promise<boolean>((resolve) => {
+        paused = () => {
+          resolve(audioElement.ended);
+        };
+        audioElement.addEventListener("pause", paused);
+      }).finally(async () => {
+        audioElement.removeEventListener("play", played);
+        audioElement.removeEventListener("pause", paused);
+        if (audioKey) {
+          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+        }
+      });
+
+      audioElement.play();
+
+      return audioPlayPromise;
+    },
+  },
+
   STOP_AUDIO: {
+    // 停止中でも呼び出して問題ない
     action() {
       // PLAY_ でonpause時の処理が設定されているため、pauseするだけで良い
       getAudioElement().pause();
@@ -1942,7 +1961,7 @@ export const audioCommandStore = transformCommandStore(
         audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
       },
       async action(
-        { dispatch, commit },
+        { commit },
         {
           audioItem,
           prevAudioKey,
@@ -1951,7 +1970,7 @@ export const audioCommandStore = transformCommandStore(
           prevAudioKey: AudioKey | undefined;
         }
       ) {
-        const audioKey = await dispatch("GENERATE_AUDIO_KEY");
+        const audioKey = generateAudioKey();
         commit("COMMAND_REGISTER_AUDIO_ITEM", {
           audioItem,
           audioKey,
@@ -2849,17 +2868,13 @@ export const audioCommandStore = transformCommandStore(
               })
             );
           }
-          const audioKeys: AudioKey[] = await Promise.all(
-            audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
-          );
-          const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
+          const audioKeyItemPairs = audioItems.map((audioItem) => ({
             audioItem,
-            audioKey: audioKeys[index],
+            audioKey: generateAudioKey(),
           }));
           commit("COMMAND_IMPORT_FROM_FILE", {
             audioKeyItemPairs,
           });
-          return audioKeys;
         }
       ),
     },
@@ -2903,7 +2918,7 @@ export const audioCommandStore = transformCommandStore(
           }
 
           for (const text of texts.filter((value) => value != "")) {
-            const audioKey: AudioKey = await dispatch("GENERATE_AUDIO_KEY");
+            const audioKey = generateAudioKey();
             const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
               text,
               voice,

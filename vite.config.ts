@@ -62,6 +62,14 @@ export default defineConfig((options) => {
         path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
       ],
       environment: "happy-dom",
+      environmentMatchGlobs: [
+        [
+          path
+            .resolve(__dirname, "tests/unit/background/**/*.spec.ts")
+            .replace(/\\/g, "/"),
+          "node",
+        ],
+      ],
       globals: true,
     },
 
