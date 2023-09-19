@@ -200,10 +200,18 @@ const pronunciation = computed(() => {
 
 const handleChangePronounce = (newPronunciation: string) => {
   let popUntilPause = false;
-  newPronunciation = newPronunciation.replace(",", "、");
-  if (newPronunciation.slice(-1) == "、" && !props.isLast) {
-    newPronunciation += pronunciationByPhrase.value[props.index + 1];
-    popUntilPause = true;
+  const lastMora = newPronunciation.at(-1);
+  if (lastMora == "、" || lastMora == ",") {
+    if (props.isLast) {
+      // 末尾の句点を削除
+      const pronunciation = newPronunciation.match(/(.*?)(?:、|,)+$/)?.[1];
+      if (pronunciation == null) throw new Error("pronunciation == null");
+      newPronunciation = pronunciation;
+    } else {
+      // 生成エラー回避
+      newPronunciation += "ア";
+      popUntilPause = true;
+    }
   }
   store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
     audioKey: props.audioKey,
