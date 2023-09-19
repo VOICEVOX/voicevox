@@ -122,5 +122,6 @@ jobs:
         run: npm run license:generate -- -o voicevox_licenses.json
 
       - run: npm run typecheck
+      - run: npm run typecheck:vue-tsc
       - run: npm run lint
       - run: npm run markdownlint

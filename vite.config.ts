@@ -84,8 +84,7 @@ export default defineConfig((options) => {
             lintCommand: "eslint --ext .ts,.vue .",
           },
           typescript: true,
-          // FIXME: vue-tscの型エラーを解決したら有効化する
-          // vueTsc: true,
+          vueTsc: true,
         }),
       isElectron &&
         electron({
