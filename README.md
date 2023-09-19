@@ -154,15 +154,9 @@ typos
 ## 型チェック
 
 TypeScript の型チェックを行います。
-※ 現在チェック方法は 2 種類ありますが、将来的に 1 つになります。
 
 ```bash
-# .tsのみ型チェック
 npm run typecheck
-
-# .vueも含めて型チェック
-# ※ 現状、大量にエラーが検出されます。
-npm run typecheck:vue-tsc
 ```
 
 ## Markdownlint
