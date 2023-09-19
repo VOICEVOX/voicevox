@@ -62,7 +62,7 @@
               class="library-list"
             >
               <q-item
-                v-for="library of downloadableLibraries[engineId]"
+                v-for="library of allLibraries[engineId]"
                 :key="library.uuid"
                 class="q-pa-none library-item"
                 :class="
@@ -212,12 +212,15 @@ const closeDialog = () => {
   modelValueComputed.value = false;
 };
 
-const downloadableLibraries = ref<
-  Record<EngineId, BrandedDownloadableLibrary[]>
+const allLibraries = ref<
+  Record<EngineId, (BrandedDownloadableLibrary | BrandedInstalledLibrary)[]>
 >({});
 const installedLibraries = ref<Record<EngineId, BrandedInstalledLibrary[]>>({});
 
-const isLatest = (engineId: EngineId, library: BrandedDownloadableLibrary) => {
+const isLatest = (
+  engineId: EngineId,
+  library: BrandedDownloadableLibrary | BrandedInstalledLibrary
+) => {
   const installedLibrary = installedLibraries.value[engineId].find(
     (installedLibrary) => installedLibrary.uuid === library.uuid
   );
@@ -231,8 +234,13 @@ const isLatest = (engineId: EngineId, library: BrandedDownloadableLibrary) => {
 
 const isUninstallable = (
   engineId: EngineId,
-  library: BrandedDownloadableLibrary
+  library: BrandedDownloadableLibrary | BrandedInstalledLibrary
 ) => {
+  // ダウンロード可能でないライブラリ(ローカルのみに存在するライブラリ)は
+  // そのままアンインストールの可否を返す
+  if ("uninstallable" in library) {
+    return library.uninstallable;
+  }
   const installedLibrary = installedLibraries.value[engineId].find(
     (installedLibrary) => installedLibrary.uuid === library.uuid
   );
@@ -366,10 +374,19 @@ watch(modelValueComputed, async (newValue) => {
 
       const [brandedDownloadableLibraries, brandedInstalledLibraries] =
         fetchResult;
-      downloadableLibraries.value[engineId] = brandedDownloadableLibraries;
+      // downloadableLibrariesとinstalledLibrariesを、重複を除いて合成する
+      allLibraries.value[engineId] = brandedDownloadableLibraries;
+      for (const installedLibrary of brandedInstalledLibraries) {
+        const isLibraryFound = allLibraries.value[engineId].find(
+          (library) => library.uuid === installedLibrary.uuid
+        );
+        if (!isLibraryFound) {
+          allLibraries.value[engineId].push(installedLibrary);
+        }
+      }
       installedLibraries.value[engineId] = brandedInstalledLibraries;
 
-      const libraries = downloadableLibraries.value[engineId] || [];
+      const libraries = allLibraries.value[engineId] || [];
       const toPrimaryOrder = (library: BrandedDownloadableLibrary) => {
         const localLibrary = installedLibraries.value[engineId].find(
           (l) => l.uuid === library.uuid
@@ -417,7 +434,7 @@ const play = (
 ) => {
   if (audio.src !== "") stop();
 
-  const speaker = downloadableLibraries.value[engineId]
+  const speaker = allLibraries.value[engineId]
     .find((l) => l.uuid === libraryId)
     ?.speakers.find((s) => s.metas.speakerUuid === speakerUuid);
   if (!speaker) throw new Error("speaker not found");
