@@ -13,7 +13,7 @@
     "
   >
     <div class="character-item-inner">
-      <!-- ライブラリ管理機能により、インターネット上の画像を
+      <!-- ライブラリ管理機能により、インターネット上の画像を大量に
         読み込む場合があるため、loading="lazy"を使う。 -->
       <img
         loading="lazy"
