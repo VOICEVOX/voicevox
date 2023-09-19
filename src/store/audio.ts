@@ -2387,6 +2387,35 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
+    COMMAND_DELETE_ACCENT_PHRASE: {
+      async action(
+        { state, commit },
+        {
+          audioKey,
+          accentPhraseIndex,
+        }: {
+          audioKey: AudioKey;
+          accentPhraseIndex: number;
+        }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+
+        const originAccentPhrases = query.accentPhrases;
+
+        const newAccentPhrases = [
+          ...originAccentPhrases.slice(0, accentPhraseIndex),
+          ...originAccentPhrases.slice(accentPhraseIndex + 1),
+        ];
+
+        // 自動再調整は行わない
+        commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+          audioKey,
+          accentPhrases: newAccentPhrases,
+        });
+      },
+    },
+
     COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
       mutation(
         draft,

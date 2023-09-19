@@ -69,6 +69,7 @@
           ]"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
         >
+          <context-menu :menudata="accentPhraseMenudata(accentPhraseIndex)" />
           <!-- スライダーここから -->
           <!-- ｱｸｾﾝﾄ項目のスライダー -->
           <template v-if="selectedDetail === 'accent'">
@@ -278,6 +279,8 @@ import {
 import ToolTip from "./ToolTip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import ContextMenu from "./ContextMenu.vue";
+import { MenuItemButton } from "./MenuBar.vue";
 import { useStore } from "@/store";
 import {
   AudioKey,
@@ -424,6 +427,22 @@ const setPlayAndStartPoint = (accentPhraseIndex: number) => {
   }
 };
 
+// accentPhraseIndexごとにcontext-menuの内容を用意する
+const accentPhraseMenudata = computed(() => (accentPhraseIndex: number): [
+  MenuItemButton
+] => {
+  return [
+    {
+      type: "button",
+      label: "削除",
+      onClick: async () => {
+        deleteAccentPhrase(accentPhraseIndex);
+      },
+      disableWhenUiLocked: true,
+    },
+  ];
+});
+
 const lastPitches = ref<number[][]>([]);
 watch(accentPhrases, async (newPhrases) => {
   activePoint.value = startPoint.value;
@@ -455,6 +474,12 @@ const toggleAccentPhraseSplit = (
     audioKey: props.activeAudioKey,
     accentPhraseIndex,
     ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
+  });
+};
+const deleteAccentPhrase = (phraseIndex: number) => {
+  store.dispatch("COMMAND_DELETE_ACCENT_PHRASE", {
+    audioKey: props.activeAudioKey,
+    accentPhraseIndex: phraseIndex,
   });
 };
 
