@@ -30,6 +30,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  LibraryInstallStatus,
 } from "./type/preload";
 import {
   ContactTextFileName,
@@ -46,6 +47,7 @@ import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
+import LibraryManager from "./background/libraryManager";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { getStoreWithError } from "@/background/electronStore";
 
@@ -167,6 +169,10 @@ const engineManager = new EngineManager({
   onEngineProcessError,
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
+const libraryManager = new LibraryManager({
+  engineManager,
+  tempDir: app.getPath("temp"),
+});
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
@@ -941,6 +947,82 @@ ipcMainHandle("READ_FILE", async (_, { filePath }) => {
     return failure(a.code, a);
   }
 });
+
+ipcMainHandle(
+  "START_LIBRARY_DOWNLOAD_AND_INSTALL",
+  async (
+    _,
+    { engineId, libraryId, libraryName, libraryDownloadUrl, librarySize }
+  ) => {
+    return await libraryManager.startLibraryDownloadAndInstall(
+      engineId,
+      libraryId,
+      libraryName,
+      libraryDownloadUrl,
+      (status: LibraryInstallStatus) => {
+        if (status.status === "downloading") {
+          // contentLengthが0になる場合のための処理
+          if (status.contentLength === 0) {
+            win.setProgressBar(status.downloaded / librarySize);
+          } else {
+            win.setProgressBar(status.downloaded / status.contentLength);
+          }
+        } else if (
+          status.status === "pending" ||
+          status.status === "installing"
+        ) {
+          win.setProgressBar(2);
+        } else if (status.status === "error") {
+          win.setProgressBar(-1);
+          dialog.showErrorBox(
+            "ライブラリのインストールに失敗しました",
+            status.message
+          );
+        } else if (status.status === "done") {
+          win.setProgressBar(-1);
+        } else {
+          // status.status === "uninstalling"
+          throw Error(`Invalid status: ${status.status}`);
+        }
+        ipcMainSend(win, "UPDATE_LIBRARY_INSTALL_STATUS", {
+          libraryId,
+          status,
+        });
+      }
+    );
+  }
+);
+
+ipcMainHandle(
+  "UNINSTALL_LIBRARY",
+  async (_, { engineId, libraryId, libraryName }) => {
+    return await libraryManager.uninstallLibrary(
+      engineId,
+      libraryId,
+      libraryName,
+      (status: LibraryInstallStatus) => {
+        if (status.status === "pending" || status.status === "uninstalling") {
+          win.setProgressBar(2);
+        } else if (status.status === "error") {
+          win.setProgressBar(-1);
+          dialog.showErrorBox(
+            "ライブラリのインストールに失敗しました",
+            status.message
+          );
+        } else if (status.status === "done") {
+          win.setProgressBar(-1);
+        } else {
+          // status.status === "downloading" || status.status === "installing"
+          throw Error(`Invalid status: ${status.status}`);
+        }
+        ipcMainSend(win, "UPDATE_LIBRARY_INSTALL_STATUS", {
+          libraryId,
+          status,
+        });
+      }
+    );
+  }
+);
 
 // app callback
 app.on("web-contents-created", (e, contents) => {

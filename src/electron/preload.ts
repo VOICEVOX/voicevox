@@ -269,6 +269,14 @@ const api: Sandbox = {
   reloadApp: async ({ isMultiEngineOffMode }) => {
     return await ipcRendererInvoke("RELOAD_APP", { isMultiEngineOffMode });
   },
+
+  startLibraryDownloadAndInstall: async (obj) => {
+    return await ipcRendererInvoke("START_LIBRARY_DOWNLOAD_AND_INSTALL", obj);
+  },
+
+  uninstallLibrary: async (obj) => {
+    return await ipcRendererInvoke("UNINSTALL_LIBRARY", obj);
+  },
 };
 
 contextBridge.exposeInMainWorld(SandboxKey, api);

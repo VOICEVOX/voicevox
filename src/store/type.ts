@@ -48,6 +48,8 @@ import {
   StyleId,
   AudioKey,
   PresetKey,
+  LibraryInstallStatus,
+  LibraryId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -56,6 +58,7 @@ import {
   NotifyAndNotShowAgainButtonOption,
   LoadingScreenOption,
 } from "@/components/Dialog";
+import { Result } from "@/type/result";
 
 /**
  * エディタ用のAudioQuery
@@ -859,6 +862,61 @@ export type EngineStoreTypes = {
 };
 
 /*
+ * Library Store Types
+ */
+
+export type LibraryFetchStatus =
+  | "fetching"
+  | "success"
+  | "reloadNeeded"
+  | "error"
+  | undefined;
+
+export type LibraryStoreState = {
+  libraryInstallStatuses: Record<LibraryId, LibraryInstallStatus>;
+  libraryInfoFetchStatuses: Record<EngineId, LibraryFetchStatus>;
+};
+
+export type LibraryStoreTypes = {
+  START_LIBRARY_DOWNLOAD_AND_INSTALL: {
+    action(payload: {
+      engineId: EngineId;
+      libraryId: LibraryId;
+      libraryName: string;
+      libraryDownloadUrl: string;
+      librarySize: number;
+    }): Promise<Result<undefined>>;
+  };
+
+  UPDATE_LIBRARY_INSTALL_STATUS: {
+    action(payload: {
+      libraryId: LibraryId;
+      status: LibraryInstallStatus;
+    }): void;
+  };
+
+  SET_LIBRARY_INSTALL_STATUS: {
+    mutation: {
+      libraryId: LibraryId;
+      status: LibraryInstallStatus;
+    };
+  };
+
+  UNINSTALL_LIBRARY: {
+    action(payload: {
+      engineId: EngineId;
+      libraryId: LibraryId;
+      libraryName: string;
+    }): Promise<Result<undefined>>;
+  };
+
+  SET_LIBRARY_INFO_FETCH_STATUS: {
+    mutation: { engineId: EngineId; status: LibraryFetchStatus };
+    action(payload: { engineId: EngineId; status: LibraryFetchStatus }): void;
+  };
+};
+
+/*
  * Index Store Types
  */
 
@@ -1469,6 +1527,7 @@ export type State = AudioStoreState &
   AudioCommandStoreState &
   CommandStoreState &
   EngineStoreState &
+  LibraryStoreState &
   IndexStoreState &
   ProjectStoreState &
   SettingStoreState &
@@ -1481,6 +1540,7 @@ type AllStoreTypes = AudioStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
   EngineStoreTypes &
+  LibraryStoreTypes &
   IndexStoreTypes &
   ProjectStoreTypes &
   SettingStoreTypes &

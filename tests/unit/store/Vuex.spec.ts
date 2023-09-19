@@ -13,6 +13,7 @@ import { proxyStore } from "@/store/proxy";
 import { dictionaryStore } from "@/store/dictionary";
 import { engineStore } from "@/store/engine";
 import { EngineId } from "@/type/preload";
+import { libraryStore } from "@/store/library";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -26,6 +27,8 @@ describe("store/vuex.js test", () => {
         },
         engineSupportedDevices: {},
         altPortInfos: {},
+        libraryInstallStatuses: {},
+        libraryInfoFetchStatuses: {},
         characterInfos: {},
         morphableTargetsInfo: {},
         defaultStyleIds: [],
@@ -152,6 +155,7 @@ describe("store/vuex.js test", () => {
         ...audioStore.getters,
         ...commandStore.getters,
         ...engineStore.getters,
+        ...libraryStore.getters,
         ...projectStore.getters,
         ...settingStore.getters,
         ...audioCommandStore.getters,
@@ -165,6 +169,7 @@ describe("store/vuex.js test", () => {
         ...audioStore.mutations,
         ...commandStore.mutations,
         ...engineStore.mutations,
+        ...libraryStore.mutations,
         ...projectStore.mutations,
         ...settingStore.mutations,
         ...audioCommandStore.mutations,
@@ -178,6 +183,7 @@ describe("store/vuex.js test", () => {
         ...audioStore.actions,
         ...commandStore.actions,
         ...engineStore.actions,
+        ...libraryStore.actions,
         ...projectStore.actions,
         ...settingStore.actions,
         ...audioCommandStore.actions,

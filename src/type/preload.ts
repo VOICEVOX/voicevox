@@ -227,6 +227,18 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
+  startLibraryDownloadAndInstall(obj: {
+    engineId: EngineId;
+    libraryId: LibraryId;
+    libraryName: string;
+    libraryDownloadUrl: string;
+    librarySize: number;
+  }): Promise<Result<undefined, "download" | "install">>;
+  uninstallLibrary(obj: {
+    engineId: EngineId;
+    libraryId: LibraryId;
+    libraryName: string;
+  }): Promise<Result<undefined, "uninstall">>;
 }
 
 export type AppInfos = {
@@ -637,3 +649,26 @@ export interface MessageBoxReturnValue {
 }
 
 export const SandboxKey = "electron" as const;
+
+export type LibraryInstallStatus =
+  | {
+      status: "pending";
+    }
+  | {
+      status: "downloading";
+      contentLength: number;
+      downloaded: number;
+    }
+  | {
+      status: "installing";
+    }
+  | {
+      status: "uninstalling";
+    }
+  | {
+      status: "done";
+    }
+  | {
+      status: "error";
+      message: string;
+    };

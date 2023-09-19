@@ -11,6 +11,8 @@ import {
   EngineSetting,
   EngineId,
   MessageBoxReturnValue,
+  LibraryInstallStatus,
+  LibraryId,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -301,6 +303,30 @@ export type IpcIHData = {
     args: [obj: { filePath: string }];
     return: Result<ArrayBuffer>;
   };
+
+  START_LIBRARY_DOWNLOAD_AND_INSTALL: {
+    args: [
+      obj: {
+        engineId: EngineId;
+        libraryId: LibraryId;
+        libraryName: string;
+        libraryDownloadUrl: string;
+        librarySize: number;
+      }
+    ];
+    return: Result<undefined, "download" | "install">;
+  };
+
+  UNINSTALL_LIBRARY: {
+    args: [
+      obj: {
+        engineId: EngineId;
+        libraryId: LibraryId;
+        libraryName: string;
+      }
+    ];
+    return: Result<undefined, "uninstall">;
+  };
 };
 
 /**
@@ -359,6 +385,11 @@ export type IpcSOData = {
 
   DETECT_RESIZED: {
     args: [obj: { width: number; height: number }];
+    return: void;
+  };
+
+  UPDATE_LIBRARY_INSTALL_STATUS: {
+    args: [obj: { status: LibraryInstallStatus; libraryId: LibraryId }];
     return: void;
   };
 };

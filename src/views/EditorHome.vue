@@ -770,7 +770,7 @@ const isDictionaryManageDialogOpenComputed = computed({
     }),
 });
 
-// 音声ライブラリのダウンロード
+// 音声ライブラリの管理
 const isLibraryManageDialogOpenComputed = computed({
   get: () => store.state.isLibraryManageDialogOpen,
   set: (val) =>
