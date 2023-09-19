@@ -13,7 +13,10 @@
     "
   >
     <div class="character-item-inner">
+      <!-- ライブラリ管理機能により、インターネット上の画像を大量に
+        読み込む場合があるため、loading="lazy"を使う。 -->
       <img
+        loading="lazy"
         :src="characterInfo.metas.styles[selectedStyleIndex || 0].iconPath"
         :alt="characterInfo.metas.speakerName"
         class="style-icon"
