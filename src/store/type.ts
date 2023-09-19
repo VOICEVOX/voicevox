@@ -124,7 +124,7 @@ export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
 export type AudioStoreState = {
   characterInfos: Record<EngineId, CharacterInfo[]>;
   morphableTargetsInfo: Record<EngineId, MorphableTargetInfoTable>;
-  audioKeyInitializingSpeaker?: string;
+  audioKeysWithInitializingSpeaker: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;
   audioKeys: AudioKey[];
   audioStates: Record<AudioKey, AudioState>;
@@ -182,14 +182,14 @@ export type AudioStoreTypes = {
 
   SETUP_SPEAKER: {
     action(payload: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       engineId: EngineId;
       styleId: StyleId;
     }): void;
   };
 
-  SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
-    mutation: { audioKey?: AudioKey };
+  SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER: {
+    mutation: { audioKeys: AudioKey[] };
   };
 
   SET_ACTIVE_AUDIO_KEY: {
@@ -529,8 +529,8 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: AudioKey; text: string }): void;
   };
 
-  COMMAND_CHANGE_VOICE: {
-    mutation: { audioKey: AudioKey; voice: Voice } & (
+  COMMAND_MULTI_CHANGE_VOICE: {
+    mutation: { audioKeys: AudioKey[]; voice: Voice } & (
       | { update: "RollbackStyleId" }
       | {
           update: "AccentPhrases";
@@ -541,7 +541,7 @@ export type AudioCommandStoreTypes = {
           query: AudioQuery;
         }
     );
-    action(payload: { audioKey: AudioKey; voice: Voice }): void;
+    action(payload: { audioKeys: AudioKey[]; voice: Voice }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {
