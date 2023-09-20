@@ -8,7 +8,7 @@ import {
   NoteEvent,
   NoteSequence,
   Sequence,
-  Synth,
+  PolySynth,
   Transport,
 } from "@/infrastructures/AudioRenderer";
 import {
@@ -241,7 +241,8 @@ if (window.AudioContext) {
   transport = audioRenderer.transport;
   channelStrip = new ChannelStrip(audioRenderer.context);
 
-  channelStrip.connect(audioRenderer.audioContext.destination);
+  const destination = audioRenderer.audioContext.destination;
+  channelStrip.output.connect(destination);
 }
 
 let playbackPosition = 0;
@@ -1056,16 +1057,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.score.notes
             );
             const context = audioRendererRef.context;
-            const synth = new Synth(context);
-            synth.connect(channelStripRef.inputNode);
+            const polySynth = new PolySynth(context);
+            polySynth.output.connect(channelStripRef.input);
             const noteSequence: NoteSequence = {
               type: "note",
-              instrument: synth,
+              instrument: polySynth,
               noteEvents,
             };
             transportRef.addSequence(noteSequence);
 
-            phrase.source = synth;
+            phrase.source = polySynth;
             phrase.sequence = noteSequence;
           }
         }
@@ -1074,7 +1075,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             allPhrases.delete(hash);
             // フレーズ削除時の処理
             if (phrase.source) {
-              phrase.source.disconnect();
+              phrase.source.output.disconnect();
             }
             if (phrase.sequence) {
               transportRef.removeSequence(phrase.sequence);
@@ -1133,7 +1134,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
             // 音源とシーケンスを作成し直して、再接続する
             if (phrase.source) {
-              phrase.source.disconnect();
+              phrase.source.output.disconnect();
             }
             if (phrase.sequence) {
               transportRef.removeSequence(phrase.sequence);
@@ -1152,7 +1153,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               audioPlayer,
               audioEvents,
             };
-            audioPlayer.connect(channelStripRef.inputNode);
+            audioPlayer.output.connect(channelStripRef.input);
             transportRef.addSequence(audioSequence);
 
             phrase.source = audioPlayer;
@@ -1763,7 +1764,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   },
                 ];
                 const audioPlayer = new AudioPlayer(context);
-                audioPlayer.connect(channelStrip.inputNode);
+                audioPlayer.output.connect(channelStrip.input);
                 const audioSequence: AudioSequence = {
                   type: "audio",
                   audioPlayer,
@@ -1777,17 +1778,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   phrase.score.tempos,
                   phrase.score.notes
                 );
-                const synth = new Synth(context);
-                synth.connect(channelStrip.inputNode);
+                const polySynth = new PolySynth(context);
+                polySynth.output.connect(channelStrip.input);
                 const noteSequence: NoteSequence = {
                   type: "note",
-                  instrument: synth,
+                  instrument: polySynth,
                   noteEvents,
                 };
                 context.transport.addSequence(noteSequence);
               }
             }
-            channelStrip.connect(context.audioContext.destination);
+            const destination = context.audioContext.destination;
+            channelStrip.output.connect(destination);
           }
         );
         const waveFileData = convertToWavFileData(audioBuffer);
