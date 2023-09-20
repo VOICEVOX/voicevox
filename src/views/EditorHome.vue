@@ -526,7 +526,10 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
     };
 
     // FIXME: UNDOができてしまうのでできれば直したい
-    store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
+    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+      audioKeys: [first],
+      voice: voice,
+    });
   }
 });
 
@@ -574,7 +577,7 @@ onMounted(async () => {
 
     // 最初の話者を初期化
     store.dispatch("SETUP_SPEAKER", {
-      audioKey: newAudioKey,
+      audioKeys: [newAudioKey],
       engineId: audioItem.voice.engineId,
       styleId: audioItem.voice.styleId,
     });

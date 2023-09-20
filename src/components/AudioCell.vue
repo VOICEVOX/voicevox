@@ -150,8 +150,8 @@ const userOrderedCharacterInfos = computed(() => {
     throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
   return infos;
 });
-const isInitializingSpeaker = computed(
-  () => store.state.audioKeyInitializingSpeaker === props.audioKey
+const isInitializingSpeaker = computed(() =>
+  store.state.audioKeysWithInitializingSpeaker.includes(props.audioKey)
 );
 const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
@@ -262,8 +262,10 @@ const selectedVoice = computed<Voice | undefined>({
   },
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
-    store.dispatch("COMMAND_CHANGE_VOICE", {
-      audioKey: props.audioKey,
+    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+      audioKeys: isMultiSelectEnabled.value
+        ? store.getters.SELECTED_AUDIO_KEYS
+        : [props.audioKey],
       voice,
     });
   },

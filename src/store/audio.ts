@@ -261,6 +261,7 @@ const getAudioElement = (() => {
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
+  audioKeysWithInitializingSpeaker: [],
   morphableTargetsInfo: {},
   audioItems: {},
   audioKeys: [],
@@ -504,30 +505,30 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     /**
      * AudioItemに設定される話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
      */
-    async action({ commit, dispatch }, { engineId, audioKey, styleId }) {
+    async action({ commit, dispatch }, { engineId, audioKeys, styleId }) {
       const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
         engineId,
         styleId,
       });
       if (isInitialized) return;
 
-      commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
-        audioKey,
+      commit("SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER", {
+        audioKeys,
       });
       await dispatch("INITIALIZE_ENGINE_SPEAKER", {
         engineId,
         styleId,
       }).finally(() => {
-        commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
-          audioKey: undefined,
+        commit("SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER", {
+          audioKeys: [],
         });
       });
     },
   },
 
-  SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
-    mutation(state, { audioKey }: { audioKey?: AudioKey }) {
-      state.audioKeyInitializingSpeaker = audioKey;
+  SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER: {
+    mutation(state, { audioKeys }: { audioKeys: AudioKey[] }) {
+      state.audioKeysWithInitializingSpeaker = audioKeys;
     },
   },
 
@@ -1766,7 +1767,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   PLAY_AUDIO: {
     action: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
-        getAudioElement().pause();
+        await dispatch("STOP_AUDIO");
 
         // 音声用意
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
@@ -1796,79 +1797,101 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
+  // NOTE: リファクタリング中、別ファイルに移動予定
+  SET_AUDIO_SOURCE: {
+    mutation(_, { audioBlob }: { audioBlob: Blob }) {
+      getAudioElement().src = URL.createObjectURL(audioBlob);
+    },
+  },
+
   PLAY_AUDIO_BLOB: {
     action: createUILockAction(
       async (
         { state, commit, dispatch },
         { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
-        getAudioElement().src = URL.createObjectURL(audioBlob);
+        commit("SET_AUDIO_SOURCE", { audioBlob });
+        let offset: number | undefined;
         // 途中再生用の処理
         if (audioKey) {
           const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
             audioKey,
           });
-          if (accentPhraseOffsets.length === 0) {
-            getAudioElement().currentTime = 0;
-          } else {
-            const startTime =
-              accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
-            if (startTime === undefined) throw Error("startTime === undefined");
-            // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
-            // 再生に影響のない程度かつ切り捨てられない値を加算する
-            getAudioElement().currentTime = startTime + 10e-6;
-          }
+          if (accentPhraseOffsets.length === 0)
+            throw new Error("accentPhraseOffsets.length === 0");
+          const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+          if (startTime === undefined) throw Error("startTime === undefined");
+          // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
+          // 再生に影響のない程度かつ切り捨てられない値を加算する
+          offset = startTime + 10e-6;
         }
 
-        // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
-        if (getAudioElement().setSinkId) {
-          getAudioElement()
-            .setSinkId(state.savingSetting.audioOutputDevice)
-            .catch((err) => {
-              const stop = () => {
-                getAudioElement().pause();
-                getAudioElement().removeEventListener("canplay", stop);
-              };
-              getAudioElement().addEventListener("canplay", stop);
-              window.electron.showMessageDialog({
-                type: "error",
-                title: "エラー",
-                message: "再生デバイスが見つかりません",
-              });
-              throw new Error(err);
-            });
-        }
-
-        // 再生終了時にresolveされるPromiseを返す
-        const played = async () => {
-          if (audioKey) {
-            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
-          }
-        };
-        getAudioElement().addEventListener("play", played);
-
-        let paused: () => void;
-        const audioPlayPromise = new Promise<boolean>((resolve) => {
-          paused = () => {
-            resolve(getAudioElement().ended);
-          };
-          getAudioElement().addEventListener("pause", paused);
-        }).finally(async () => {
-          getAudioElement().removeEventListener("play", played);
-          getAudioElement().removeEventListener("pause", paused);
-          if (audioKey) {
-            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
-          }
-        });
-
-        getAudioElement().play();
-
-        return audioPlayPromise;
+        return dispatch("PLAY_AUDIO_PLAYER", { offset, audioKey });
       }
     ),
   },
 
+  // NOTE: リファクタリング中、別ファイルに移動予定
+  PLAY_AUDIO_PLAYER: {
+    async action(
+      { state, commit },
+      { offset, audioKey }: { offset?: number; audioKey?: AudioKey }
+    ) {
+      const audioElement = getAudioElement();
+
+      if (offset !== undefined) {
+        audioElement.currentTime = offset;
+      }
+
+      // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
+      if (audioElement.setSinkId) {
+        audioElement
+          .setSinkId(state.savingSetting.audioOutputDevice)
+          .catch((err) => {
+            const stop = () => {
+              audioElement.pause();
+              audioElement.removeEventListener("canplay", stop);
+            };
+            audioElement.addEventListener("canplay", stop);
+            window.electron.showMessageDialog({
+              type: "error",
+              title: "エラー",
+              message: "再生デバイスが見つかりません",
+            });
+            throw new Error(err);
+          });
+      }
+
+      // 再生終了時にresolveされるPromiseを返す
+      const played = async () => {
+        if (audioKey) {
+          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+        }
+      };
+      audioElement.addEventListener("play", played);
+
+      let paused: () => void;
+      const audioPlayPromise = new Promise<boolean>((resolve) => {
+        paused = () => {
+          resolve(audioElement.ended);
+        };
+        audioElement.addEventListener("pause", paused);
+      }).finally(async () => {
+        audioElement.removeEventListener("play", played);
+        audioElement.removeEventListener("pause", paused);
+        if (audioKey) {
+          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+        }
+      });
+
+      audioElement.play();
+
+      return audioPlayPromise;
+    },
+  },
+
   STOP_AUDIO: {
+    // 停止中でも呼び出して問題ない
     action() {
       // PLAY_ でonpause時の処理が設定されているため、pauseするだけで良い
       getAudioElement().pause();
@@ -2073,10 +2096,10 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_CHANGE_VOICE: {
+    COMMAND_MULTI_CHANGE_VOICE: {
       mutation(
         draft,
-        payload: { audioKey: AudioKey; voice: Voice } & (
+        payload: { audioKeys: AudioKey[]; voice: Voice } & (
           | { update: "RollbackStyleId" }
           | {
               update: "AccentPhrases";
@@ -2088,93 +2111,100 @@ export const audioCommandStore = transformCommandStore(
             }
         )
       ) {
-        audioStore.mutations.SET_AUDIO_VOICE(draft, {
-          audioKey: payload.audioKey,
-          voice: payload.voice,
-        });
-
-        if (payload.update === "RollbackStyleId") return;
-
-        const presetKey = draft.audioItems[payload.audioKey].presetKey;
-
-        const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
-          draft,
-          payload.voice,
-          presetKey,
-          "changeVoice"
-        );
-
-        audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-          audioKey: payload.audioKey,
-          presetKey: nextPresetKey,
-        });
-
-        if (payload.update == "AccentPhrases") {
-          audioStore.mutations.SET_ACCENT_PHRASES(draft, {
-            audioKey: payload.audioKey,
-            accentPhrases: payload.accentPhrases,
-          });
-        } else if (payload.update == "AudioQuery") {
-          audioStore.mutations.SET_AUDIO_QUERY(draft, {
-            audioKey: payload.audioKey,
-            audioQuery: payload.query,
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_VOICE(draft, {
+            audioKey,
+            voice: payload.voice,
           });
         }
 
-        if (shouldApplyPreset) {
-          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
-            audioKey: payload.audioKey,
+        if (payload.update === "RollbackStyleId") return;
+
+        for (const audioKey of payload.audioKeys) {
+          const presetKey = draft.audioItems[audioKey].presetKey;
+
+          const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
+            draft,
+            payload.voice,
+            presetKey,
+            "changeVoice"
+          );
+
+          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+            audioKey,
+            presetKey: nextPresetKey,
           });
+
+          if (payload.update == "AccentPhrases") {
+            audioStore.mutations.SET_ACCENT_PHRASES(draft, {
+              audioKey,
+              accentPhrases: payload.accentPhrases,
+            });
+          } else if (payload.update == "AudioQuery") {
+            audioStore.mutations.SET_AUDIO_QUERY(draft, {
+              audioKey,
+              audioQuery: payload.query,
+            });
+          }
+
+          if (shouldApplyPreset) {
+            audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+              audioKey,
+            });
+          }
         }
       },
       async action(
         { state, dispatch, commit },
-        { audioKey, voice }: { audioKey: AudioKey; voice: Voice }
+        { audioKeys, voice }: { audioKeys: AudioKey[]; voice: Voice }
       ) {
-        const query = state.audioItems[audioKey].query;
         const engineId = voice.engineId;
         const styleId = voice.styleId;
-        try {
-          await dispatch("SETUP_SPEAKER", { audioKey, engineId, styleId });
-
-          if (query !== undefined) {
-            const accentPhrases = query.accentPhrases;
-            const newAccentPhrases: AccentPhrase[] = await dispatch(
-              "FETCH_MORA_DATA",
-              {
-                accentPhrases,
-                engineId,
-                styleId,
+        await dispatch("SETUP_SPEAKER", { audioKeys, engineId, styleId });
+        await Promise.all(
+          audioKeys.map(async (audioKey) => {
+            try {
+              const query = state.audioItems[audioKey].query;
+              if (query !== undefined) {
+                const accentPhrases = query.accentPhrases;
+                const newAccentPhrases: AccentPhrase[] = await dispatch(
+                  "FETCH_MORA_DATA",
+                  {
+                    accentPhrases,
+                    engineId,
+                    styleId,
+                  }
+                );
+                commit("COMMAND_MULTI_CHANGE_VOICE", {
+                  audioKeys,
+                  voice,
+                  update: "AccentPhrases",
+                  accentPhrases: newAccentPhrases,
+                });
+              } else {
+                const text = state.audioItems[audioKey].text;
+                const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
+                  text: text,
+                  engineId,
+                  styleId,
+                });
+                commit("COMMAND_MULTI_CHANGE_VOICE", {
+                  audioKeys,
+                  voice,
+                  update: "AudioQuery",
+                  query,
+                });
               }
-            );
-            commit("COMMAND_CHANGE_VOICE", {
-              audioKey,
-              voice,
-              update: "AccentPhrases",
-              accentPhrases: newAccentPhrases,
-            });
-          } else {
-            const text = state.audioItems[audioKey].text;
-            const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
-              text: text,
-              engineId,
-              styleId,
-            });
-            commit("COMMAND_CHANGE_VOICE", {
-              audioKey,
-              voice,
-              update: "AudioQuery",
-              query,
-            });
-          }
-        } catch (error) {
-          commit("COMMAND_CHANGE_VOICE", {
-            audioKey,
-            voice,
-            update: "RollbackStyleId",
-          });
-          throw error;
-        }
+            } catch (error) {
+              commit("COMMAND_MULTI_CHANGE_VOICE", {
+                audioKeys,
+                voice,
+                update: "RollbackStyleId",
+              });
+              throw error;
+            }
+          })
+        );
       },
     },
 
@@ -2354,6 +2384,35 @@ export const audioCommandStore = transformCommandStore(
           });
           throw error;
         }
+      },
+    },
+
+    COMMAND_DELETE_ACCENT_PHRASE: {
+      async action(
+        { state, commit },
+        {
+          audioKey,
+          accentPhraseIndex,
+        }: {
+          audioKey: AudioKey;
+          accentPhraseIndex: number;
+        }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+
+        const originAccentPhrases = query.accentPhrases;
+
+        const newAccentPhrases = [
+          ...originAccentPhrases.slice(0, accentPhraseIndex),
+          ...originAccentPhrases.slice(accentPhraseIndex + 1),
+        ];
+
+        // 自動再調整は行わない
+        commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+          audioKey,
+          accentPhrases: newAccentPhrases,
+        });
       },
     },
 
