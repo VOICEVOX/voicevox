@@ -1,6 +1,13 @@
+/**
+ * スケジューリングで使用するタイマーです。
+ */
 class Timer {
   private timeoutId?: number;
 
+  /**
+   * @param interval 関数の呼び出し間隔（ミリ秒）
+   * @param callback 呼び出される関数
+   */
   constructor(interval: number, callback: () => void) {
     const tick = () => {
       callback();
@@ -9,6 +16,9 @@ class Timer {
     tick();
   }
 
+  /**
+   * 破棄します。
+   */
   dispose() {
     if (this.timeoutId !== undefined) {
       window.clearTimeout(this.timeoutId);
@@ -31,24 +41,56 @@ export type NoteSequence = {
 
 export type Sequence = AudioSequence | NoteSequence;
 
+/**
+ * イベントのスケジューリングを行うスケジューラーを表します。
+ * スケジューリングの開始位置と停止位置をまたぐイベントも適切にスケジュールされます。
+ */
 interface EventScheduler {
+  /**
+   * スケジューリングを開始します。
+   * @param contextTime スケジューリングを開始する時刻（コンテキスト時間）
+   * @param time スケジューリングの開始位置
+   */
   start(contextTime: number, time: number): void;
+
+  /**
+   * 指定された位置までスケジューリングを行います。
+   * @param untilTime どこまでスケジューリングを行うかを表す位置
+   */
   schedule(untilTime: number): void;
+
+  /**
+   * スケジューリングを停止します。
+   * @param contextTime スケジューリングを停止する時刻（コンテキスト時間）
+   */
   stop(contextTime: number): void;
 }
 
+/**
+ * 複数のシーケンスのスケジューリングを行うトランスポートを表します。
+ */
 export interface BaseTransport {
+  /**
+   * シーケンスを追加します。
+   * @param sequence 追加するシーケンス
+   */
   addSequence(sequence: Sequence): void;
+
+  /**
+   * シーケンスを削除します。
+   * @param sequence 削除するシーケンス
+   */
   removeSequence(sequence: Sequence): void;
 }
 
 /**
- * 登録されているシーケンスのイベントをスケジュールし、再生を行います。
+ * 複数のシーケンスのスケジューリングを行います。
+ * 再生、停止、再生位置の変更などの機能を提供します。
  */
 export class Transport implements BaseTransport {
   private readonly audioContext: AudioContext;
   private readonly timer: Timer;
-  private readonly lookAhead: number;
+  private readonly scheduleAheadTime: number;
 
   private _state: "started" | "stopped" = "stopped";
   private _time = 0;
@@ -62,10 +104,15 @@ export class Transport implements BaseTransport {
     return this._state;
   }
 
+  /**
+   * 再生位置（秒）
+   */
   get time() {
     if (this._state === "started") {
+      // 再生中の場合は、現在時刻から再生位置を計算する
       const contextTime = this.audioContext.currentTime;
-      this._time = this.calculateTime(contextTime);
+      const elapsedTime = contextTime - this.startContextTime;
+      this._time = this.startTime + elapsedTime;
     }
     return this._time;
   }
@@ -81,30 +128,35 @@ export class Transport implements BaseTransport {
   }
 
   /**
-   * @param audioContext コンテキスト時間の取得に使用するAudioContext。
-   * @param interval スケジューリングを行う間隔。
-   * @param lookAhead スケジューリングで先読みする時間。スケジューリングが遅れた場合でも正しく再生されるように、スケジューリングを行う間隔より長く設定する必要があります。
+   * @param audioContext 音声コンテキスト
+   * @param lookahead スケジューリングの間隔（秒）
+   * @param scheduleAheadTime 先読みする時間（秒）（スケジューリングの間隔より長く設定する必要があります）
    */
-  constructor(audioContext: AudioContext, interval: number, lookAhead: number) {
-    if (lookAhead <= interval) {
-      throw new Error("Look-ahead time must be longer than the interval.");
+  constructor(
+    audioContext: AudioContext,
+    lookahead: number,
+    scheduleAheadTime: number
+  ) {
+    if (scheduleAheadTime <= lookahead) {
+      throw new Error(
+        "The scheduleAheadTime must be longer than the lookahead."
+      );
     }
 
     this.audioContext = audioContext;
-    this.lookAhead = lookAhead;
-    this.timer = new Timer(interval * 1000, () => {
+    this.scheduleAheadTime = scheduleAheadTime;
+    this.timer = new Timer(lookahead * 1000, () => {
       if (this._state === "started") {
-        const contextTime = this.audioContext.currentTime;
-        this.schedule(contextTime);
+        this.schedule(this.audioContext.currentTime);
       }
     });
   }
 
-  private calculateTime(contextTime: number) {
-    const elapsedTime = contextTime - this.startContextTime;
-    return this.startTime + elapsedTime;
-  }
-
+  /**
+   * スケジューラーを作成します。
+   * @param sequence スケジューラーでスケジューリングを行うシーケンス
+   * @returns 作成したスケジューラー
+   */
   private createScheduler(sequence: Sequence): EventScheduler {
     if (sequence.type === "audio") {
       const player = sequence.audioPlayer;
@@ -117,8 +169,14 @@ export class Transport implements BaseTransport {
     }
   }
 
+  /**
+   * スケジューリングを行います。
+   * @param contextTime スケジューリングを行う時刻（コンテキスト時間）
+   */
   private schedule(contextTime: number) {
-    const time = this.calculateTime(contextTime);
+    // 再生位置を計算
+    const elapsedTime = contextTime - this.startContextTime;
+    const time = this.startTime + elapsedTime;
 
     // シーケンスの削除を反映
     const removedSequences: Sequence[] = [];
@@ -142,12 +200,13 @@ export class Transport implements BaseTransport {
     });
 
     this.schedulers.forEach((scheduler) => {
-      scheduler.schedule(time + this.lookAhead);
+      scheduler.schedule(time + this.scheduleAheadTime);
     });
   }
 
   /**
    * シーケンスを追加します。再生中に追加した場合は、次のスケジューリングで反映されます。
+   * @param sequence 追加するシーケンス
    */
   addSequence(sequence: Sequence) {
     if (this.sequences.has(sequence)) {
@@ -158,6 +217,7 @@ export class Transport implements BaseTransport {
 
   /**
    * シーケンスを削除します。再生中に削除した場合は、次のスケジューリングで反映されます。
+   * @param sequence 削除するシーケンス
    */
   removeSequence(sequence: Sequence) {
     if (!this.sequences.has(sequence)) {
@@ -166,6 +226,9 @@ export class Transport implements BaseTransport {
     this.sequences.delete(sequence);
   }
 
+  /**
+   * 再生を開始します。すでに再生中の場合は何も行いません。
+   */
   start() {
     if (this._state === "started") return;
     const contextTime = this.audioContext.currentTime;
@@ -178,10 +241,16 @@ export class Transport implements BaseTransport {
     this.schedule(contextTime);
   }
 
+  /**
+   * 再生を停止します。すでに停止している場合は何も行いません。
+   */
   stop() {
     if (this._state === "stopped") return;
     const contextTime = this.audioContext.currentTime;
-    this._time = this.calculateTime(contextTime);
+
+    // 停止する前に再生位置を更新する
+    const elapsedTime = contextTime - this.startContextTime;
+    this._time = this.startTime + elapsedTime;
 
     this._state = "stopped";
 
@@ -191,6 +260,9 @@ export class Transport implements BaseTransport {
     this.schedulers.clear();
   }
 
+  /**
+   * 破棄します。
+   */
   dispose() {
     if (this.state === "started") {
       this.stop();
@@ -200,11 +272,17 @@ export class Transport implements BaseTransport {
 }
 
 /**
- * 登録されているシーケンスのイベントをスケジュールします。主に保存用途です。
+ * 複数のシーケンスのスケジューリングを行います。
+ * オフラインレンダリングで使用します。
  */
 export class OfflineTransport implements BaseTransport {
   private schedulers = new Map<Sequence, EventScheduler>();
 
+  /**
+   * スケジューラーを作成します。
+   * @param sequence スケジューラーでスケジューリングを行うシーケンス
+   * @returns 作成したスケジューラー
+   */
   private createScheduler(sequence: Sequence): EventScheduler {
     if (sequence.type === "audio") {
       const player = sequence.audioPlayer;
@@ -217,6 +295,10 @@ export class OfflineTransport implements BaseTransport {
     }
   }
 
+  /**
+   * シーケンスを追加します。
+   * @param sequence 追加するシーケンス
+   */
   addSequence(sequence: Sequence) {
     if (this.schedulers.has(sequence)) {
       throw new Error("The sequence has already been added.");
@@ -225,6 +307,10 @@ export class OfflineTransport implements BaseTransport {
     this.schedulers.set(sequence, scheduler);
   }
 
+  /**
+   * シーケンスを削除します。
+   * @param sequence 削除するシーケンス
+   */
   removeSequence(sequence: Sequence) {
     if (!this.schedulers.has(sequence)) {
       throw new Error("The sequence does not exist.");
@@ -232,11 +318,16 @@ export class OfflineTransport implements BaseTransport {
     this.schedulers.delete(sequence);
   }
 
-  schedule(startTime: number, period: number) {
+  /**
+   * スケジューリングを行います。
+   * @param startTime スケジューリングの開始位置（秒）
+   * @param duration スケジューリングの長さ（秒）
+   */
+  schedule(startTime: number, duration: number) {
     this.schedulers.forEach((scheduler) => {
       scheduler.start(0, startTime);
-      scheduler.schedule(period);
-      scheduler.stop(period);
+      scheduler.schedule(duration);
+      scheduler.stop(duration);
     });
   }
 }
@@ -247,8 +338,8 @@ export type AudioEvent = {
 };
 
 /**
- * オーディオイベントをスケジュールします。
- * 使い捨てで、startメソッドは一度しか呼び出せません。
+ * オーディオイベントのスケジューリングを行うスケジューラーです。
+ * スケジューリングの開始位置と停止位置をまたぐイベントも適切にスケジュールされます。
  */
 class AudioEventScheduler implements EventScheduler {
   private readonly player: AudioPlayer;
@@ -265,6 +356,12 @@ class AudioEventScheduler implements EventScheduler {
     this.events.sort((a, b) => a.time - b.time);
   }
 
+  /**
+   * スケジューリングを開始します。
+   * このメソッドは一度しか呼び出せません。
+   * @param contextTime スケジューリングを開始する時刻（コンテキスト時間）
+   * @param time スケジューリングの開始位置
+   */
   start(contextTime: number, time: number) {
     if (this.isStarted) {
       throw new Error("Already started.");
@@ -287,6 +384,10 @@ class AudioEventScheduler implements EventScheduler {
     this.isStarted = true;
   }
 
+  /**
+   * 指定された位置までスケジューリングを行います。
+   * @param untilTime どこまでスケジューリングを行うかを表す位置
+   */
   schedule(untilTime: number) {
     if (!this.isStarted) {
       throw new Error("Not started.");
@@ -305,6 +406,10 @@ class AudioEventScheduler implements EventScheduler {
     }
   }
 
+  /**
+   * スケジューリングを停止します。
+   * @param contextTime スケジューリングを停止する時刻（コンテキスト時間）
+   */
   stop(contextTime: number) {
     if (!this.isStarted) {
       throw new Error("Not started.");
@@ -314,12 +419,36 @@ class AudioEventScheduler implements EventScheduler {
   }
 }
 
+/**
+ * 楽器を表します。
+ */
 export interface Instrument {
-  connect(destination: AudioNode): void;
-  disconnect(): void;
+  readonly output: AudioNode;
+
+  /**
+   * ノートオンをスケジュールします。
+   * すでに指定されたノート番号でノートオンがスケジュールされている場合は何も行いません。
+   * @param contextTime ノートオンを行う時刻（コンテキスト時間）
+   * @param midi MIDIノート番号
+   */
   noteOn(contextTime: number, midi: number): void;
+
+  /**
+   * ノートオフをスケジュールします。
+   * すでに指定されたノート番号でノートオフがスケジュールされている場合は何も行いません。
+   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   * @param midi MIDIノート番号
+   */
   noteOff(contextTime: number, midi: number): void;
-  allSoundOff(contextTime?: number): void;
+
+  /**
+   * 発音中のすべての音に対して、ノートオフのスケジュールを行います。
+   * すでにノートオフがスケジュールされている音の場合は、
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
+   * 指定された時刻で再スケジュールを行います。
+   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   */
+  allNotesOff(contextTime: number): void;
 }
 
 export type NoteEvent = {
@@ -329,8 +458,8 @@ export type NoteEvent = {
 };
 
 /**
- * ノートイベントをスケジュールします。
- * 使い捨てで、startメソッドは一度しか呼び出せません。
+ * ノートイベントのスケジューリングを行うスケジューラーです。
+ * スケジューリングの開始位置と停止位置をまたぐイベントも適切にスケジュールされます。
  */
 class NoteEventScheduler implements EventScheduler {
   private readonly instrument: Instrument;
@@ -347,6 +476,12 @@ class NoteEventScheduler implements EventScheduler {
     this.events.sort((a, b) => a.noteOnTime - b.noteOnTime);
   }
 
+  /**
+   * スケジューリングを開始します。
+   * このメソッドは一度しか呼び出せません。
+   * @param contextTime スケジューリングを開始する時刻（コンテキスト時間）
+   * @param time スケジューリングの開始位置
+   */
   start(contextTime: number, time: number) {
     if (this.isStarted) {
       throw new Error("Already started.");
@@ -367,6 +502,10 @@ class NoteEventScheduler implements EventScheduler {
     this.isStarted = true;
   }
 
+  /**
+   * 指定された位置までスケジューリングを行います。
+   * @param untilTime どこまでスケジューリングを行うかを表す位置
+   */
   schedule(untilTime: number) {
     if (!this.isStarted) {
       throw new Error("Not started.");
@@ -388,21 +527,32 @@ class NoteEventScheduler implements EventScheduler {
     }
   }
 
+  /**
+   * スケジューリングを停止します。
+   * @param contextTime スケジューリングを停止する時刻（コンテキスト時間）
+   */
   stop(contextTime: number) {
     if (!this.isStarted) {
       throw new Error("Not started.");
     }
 
-    this.instrument.allSoundOff(contextTime);
+    this.instrument.allNotesOff(contextTime);
   }
 }
 
+/**
+ * オーディオプレイヤーのボイスです。音声の再生を行います。
+ */
 class AudioPlayerVoice {
   private readonly audioBufferSourceNode: AudioBufferSourceNode;
   private readonly buffer: AudioBuffer;
 
   private _isStopped = false;
   private stopContextTime?: number;
+
+  get output(): AudioNode {
+    return this.audioBufferSourceNode;
+  }
 
   get isStopped() {
     return this._isStopped;
@@ -417,22 +567,34 @@ class AudioPlayerVoice {
     this.buffer = buffer;
   }
 
-  connect(destination: AudioNode) {
-    this.audioBufferSourceNode.connect(destination);
-  }
-
+  /**
+   * 音声の再生をスケジュールします。
+   * このメソッドは一度しか呼び出せません。
+   * @param contextTime 再生を行う時刻（コンテキスト時間）
+   * @param offset オフセット（秒）
+   */
   play(contextTime: number, offset: number) {
+    if (this.stopContextTime !== undefined) {
+      throw new Error("Already started.");
+    }
     this.audioBufferSourceNode.start(contextTime, offset);
     this.stopContextTime = contextTime + this.buffer.duration;
   }
 
-  stop(contextTime?: number) {
+  /**
+   * 音声の停止をスケジュールします。
+   * すでに停止がスケジュールされている場合は、
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
+   * 指定された時刻で再スケジュールを行います。
+   * @param contextTime 停止する時刻（コンテキスト時間）
+   */
+  stop(contextTime: number) {
     if (this.stopContextTime === undefined) {
       throw new Error("Not started.");
     }
-    if (contextTime === undefined || contextTime < this.stopContextTime) {
+    if (contextTime < this.stopContextTime) {
       this.audioBufferSourceNode.stop(contextTime);
-      this.stopContextTime = contextTime ?? 0;
+      this.stopContextTime = contextTime;
     }
   }
 }
@@ -441,11 +603,19 @@ export type AudioPlayerOptions = {
   readonly volume: number;
 };
 
+/**
+ * 同時に複数の音声を再生することが可能なプレイヤーです。
+ * ボイス（AudioPlayerVoice）の作成・管理を行います。
+ */
 export class AudioPlayer {
   private readonly audioContext: BaseAudioContext;
   private readonly gainNode: GainNode;
 
   private voices: AudioPlayerVoice[] = [];
+
+  get output(): AudioNode {
+    return this.gainNode;
+  }
 
   constructor(context: Context, options: AudioPlayerOptions = { volume: 1.0 }) {
     this.audioContext = context.audioContext;
@@ -454,35 +624,33 @@ export class AudioPlayer {
     this.gainNode.gain.value = options.volume;
   }
 
-  connect(destination: AudioNode) {
-    this.gainNode.connect(destination);
-  }
-
-  disconnect() {
-    this.gainNode.disconnect();
-  }
-
+  /**
+   * 音声の再生をスケジュールします。
+   * @param contextTime 再生を行う時刻（コンテキスト時間）
+   * @param offset オフセット（秒）
+   * @param buffer 再生する音声バッファ
+   */
   play(contextTime: number, offset: number, buffer: AudioBuffer) {
     const voice = new AudioPlayerVoice(this.audioContext, buffer);
     this.voices = this.voices.filter((value) => {
       return !value.isStopped;
     });
     this.voices.push(voice);
-    voice.connect(this.gainNode);
+    voice.output.connect(this.gainNode);
     voice.play(contextTime, offset);
   }
 
-  allStop(contextTime?: number) {
-    if (contextTime === undefined) {
-      this.voices.forEach((value) => {
-        value.stop();
-      });
-      this.voices = [];
-    } else {
-      this.voices.forEach((value) => {
-        value.stop(contextTime);
-      });
-    }
+  /**
+   * 再生中のすべての音声の停止をスケジュールします。
+   * すでに停止がスケジュールされている音声の場合は、
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
+   * 指定された時刻で再スケジュールを行います。
+   * @param contextTime 停止する時刻（コンテキスト時間）
+   */
+  allStop(contextTime: number) {
+    this.voices.forEach((value) => {
+      value.stop(contextTime);
+    });
   }
 }
 
@@ -493,12 +661,15 @@ export type Envelope = {
   readonly release: number;
 };
 
-type SynthVoiceOptions = {
+type SynthVoiceParams = {
   readonly midi: number;
   readonly oscillatorType: OscillatorType;
   readonly envelope: Envelope;
 };
 
+/**
+ * シンセサイザーのボイスです。音を合成します。
+ */
 class SynthVoice {
   readonly midi: number;
   private readonly oscillatorNode: OscillatorNode;
@@ -509,6 +680,10 @@ class SynthVoice {
   private _isStopped = false;
   private stopContextTime?: number;
 
+  get output(): AudioNode {
+    return this.gainNode;
+  }
+
   get isActive() {
     return this._isActive;
   }
@@ -517,33 +692,39 @@ class SynthVoice {
     return this._isStopped;
   }
 
-  constructor(audioContext: BaseAudioContext, options: SynthVoiceOptions) {
-    this.midi = options.midi;
-    this.envelope = options.envelope;
+  constructor(audioContext: BaseAudioContext, params: SynthVoiceParams) {
+    this.midi = params.midi;
+    this.envelope = params.envelope;
 
     this.oscillatorNode = audioContext.createOscillator();
     this.oscillatorNode.onended = () => {
       this._isStopped = true;
     };
     this.gainNode = audioContext.createGain();
-    this.oscillatorNode.type = options.oscillatorType;
+    this.oscillatorNode.type = params.oscillatorType;
     this.oscillatorNode.connect(this.gainNode);
   }
 
+  /**
+   * MIDIノート番号を周波数に変換します。
+   * @param midi MIDIノート番号
+   * @returns 周波数（Hz）
+   */
   private midiToFrequency(midi: number) {
     return 440 * 2 ** ((midi - 69) / 12);
   }
 
-  connect(destination: AudioNode) {
-    this.gainNode.connect(destination);
-  }
-
+  /**
+   * ノートオンをスケジュールします。
+   * @param contextTime ノートオンを行う時刻（コンテキスト時間）
+   */
   noteOn(contextTime: number) {
     const t0 = contextTime;
     const atk = this.envelope.attack;
     const dcy = this.envelope.decay;
     const sus = this.envelope.sustain;
 
+    // エンベロープ（アタック、ディケイ、サスティーン）のスケジュールを行う
     this.gainNode.gain.value = 0;
     this.gainNode.gain.setValueAtTime(0, t0);
     this.gainNode.gain.linearRampToValueAtTime(1, t0 + atk);
@@ -556,6 +737,13 @@ class SynthVoice {
     this._isActive = true;
   }
 
+  /**
+   * ノートオフをスケジュールします。
+   * すでにノートオフがスケジュールされている場合は、
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
+   * 指定された時刻で再スケジュールを行います。
+   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   */
   noteOff(contextTime: number) {
     const t0 = contextTime;
     const rel = this.envelope.release;
@@ -565,6 +753,7 @@ class SynthVoice {
       this.stopContextTime === undefined ||
       stopContextTime < this.stopContextTime
     ) {
+      // エンベロープ（リリース）のスケジュールを行う
       this.gainNode.gain.cancelAndHoldAtTime(t0);
       this.gainNode.gain.setTargetAtTime(0, t0, rel);
 
@@ -574,31 +763,19 @@ class SynthVoice {
       this.stopContextTime = stopContextTime;
     }
   }
-
-  soundOff(contextTime?: number) {
-    if (
-      contextTime === undefined ||
-      this.stopContextTime === undefined ||
-      contextTime < this.stopContextTime
-    ) {
-      this.oscillatorNode.stop(contextTime);
-      this._isActive = false;
-
-      this.stopContextTime = contextTime ?? 0;
-    }
-  }
 }
 
-export type SynthOptions = {
+export type PolySynthOptions = {
   readonly volume: number;
   readonly oscillatorType: OscillatorType;
   readonly envelope: Envelope;
 };
 
 /**
- * ポリフォニックなシンセサイザー。
+ * エンベロープの設定が可能なポリフォニックシンセサイザーです。
+ * ボイス（SynthVoice）の作成・管理を行います。
  */
-export class Synth implements Instrument {
+export class PolySynth implements Instrument {
   private readonly audioContext: BaseAudioContext;
   private readonly gainNode: GainNode;
   private readonly oscillatorType: OscillatorType;
@@ -606,9 +783,13 @@ export class Synth implements Instrument {
 
   private voices: SynthVoice[] = [];
 
+  get output(): AudioNode {
+    return this.gainNode;
+  }
+
   constructor(
     context: Context,
-    options: SynthOptions = {
+    options: PolySynthOptions = {
       volume: 0.1,
       oscillatorType: "square",
       envelope: {
@@ -627,14 +808,12 @@ export class Synth implements Instrument {
     this.gainNode.gain.value = options.volume;
   }
 
-  connect(destination: AudioNode) {
-    this.gainNode.connect(destination);
-  }
-
-  disconnect() {
-    this.gainNode.disconnect();
-  }
-
+  /**
+   * ノートオンをスケジュールします。
+   * すでに指定されたノート番号でノートオンがスケジュールされている場合は何も行いません。
+   * @param contextTime ノートオンを行う時刻（コンテキスト時間）
+   * @param midi MIDIノート番号
+   */
   noteOn(contextTime: number, midi: number) {
     const exists = this.voices.some((value) => {
       return value.isActive && value.midi === midi;
@@ -650,10 +829,16 @@ export class Synth implements Instrument {
       return !value.isStopped;
     });
     this.voices.push(voice);
-    voice.connect(this.gainNode);
+    voice.output.connect(this.gainNode);
     voice.noteOn(contextTime);
   }
 
+  /**
+   * ノートオフをスケジュールします。
+   * すでに指定されたノート番号でノートオフがスケジュールされている場合は何も行いません。
+   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   * @param midi MIDIノート番号
+   */
   noteOff(contextTime: number, midi: number) {
     const voice = this.voices.find((value) => {
       return value.isActive && value.midi === midi;
@@ -663,17 +848,17 @@ export class Synth implements Instrument {
     voice.noteOff(contextTime);
   }
 
-  allSoundOff(contextTime?: number) {
-    if (contextTime === undefined) {
-      this.voices.forEach((value) => {
-        value.soundOff();
-      });
-      this.voices = [];
-    } else {
-      this.voices.forEach((value) => {
-        value.soundOff(contextTime);
-      });
-    }
+  /**
+   * 発音中のすべての音に対して、ノートオフのスケジュールを行います。
+   * すでにノートオフがスケジュールされている音の場合は、
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
+   * 指定された時刻で再スケジュールを行います。
+   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   */
+  allNotesOff(contextTime: number) {
+    this.voices.forEach((value) => {
+      value.noteOff(contextTime);
+    });
   }
 }
 
@@ -682,12 +867,16 @@ export type ChannelStripOptions = {
 };
 
 /**
- * ミキサーの1チャンネル分の機能を持つモジュールです。
+ * ミキサーの1チャンネル分の機能を提供します。
  */
 export class ChannelStrip {
   private readonly gainNode: GainNode;
 
-  get inputNode(): AudioNode {
+  get input(): AudioNode {
+    return this.gainNode;
+  }
+
+  get output(): AudioNode {
     return this.gainNode;
   }
 
@@ -707,14 +896,6 @@ export class ChannelStrip {
     this.gainNode = audioContext.createGain();
     this.gainNode.gain.value = options.volume;
   }
-
-  connect(destination: AudioNode) {
-    this.gainNode.connect(destination);
-  }
-
-  disconnect() {
-    this.gainNode.disconnect();
-  }
 }
 
 export type Context = {
@@ -722,6 +903,9 @@ export type Context = {
   readonly transport: BaseTransport;
 };
 
+/**
+ * 主にContextの作成・管理を行います。
+ */
 export class AudioRenderer {
   private readonly onlineContext: {
     readonly audioContext: AudioContext;
@@ -749,6 +933,11 @@ export class AudioRenderer {
     this.onlineContext = { audioContext, transport };
   }
 
+  /**
+   * 音声ファイルのBlobから音声バッファを作成します。
+   * @param blob 音声ファイルのBlob
+   * @returns 作成した音声バッファ
+   */
   async createAudioBuffer(blob: Blob) {
     const audioContext = this.onlineContext.audioContext;
     const arrayBuffer = await blob.arrayBuffer();
@@ -756,6 +945,15 @@ export class AudioRenderer {
     return audioBuffer;
   }
 
+  /**
+   * 音声をバッファーにレンダリングします。
+   * レンダリングはオフラインで行われます。
+   * @param sampleRate 音声のサンプルレート
+   * @param startTime レンダリングの開始位置（秒）
+   * @param duration 音声の長さ（秒）
+   * @param callback レンダリングの前に実行される関数
+   * @returns レンダリングした音声
+   */
   async renderToBuffer(
     sampleRate: number,
     startTime: number,
@@ -776,6 +974,9 @@ export class AudioRenderer {
     return audioBuffer;
   }
 
+  /**
+   * 破棄します。
+   */
   dispose() {
     this.onlineContext.transport.dispose();
     this.onlineContext.audioContext.close();
