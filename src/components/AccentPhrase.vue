@@ -169,12 +169,13 @@ import { computed, reactive } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { useStore } from "@/store";
-import { MoraDataType } from "@/type/preload";
+import { AudioKey, MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
 import { AccentPhrase } from "@/openapi";
 
 const props =
   defineProps<{
+    audioKey: AudioKey;
     accentPhrase: AccentPhrase;
     index: number;
     isLast: boolean;

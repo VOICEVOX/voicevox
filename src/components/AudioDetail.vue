@@ -70,6 +70,7 @@
           @click="setPlayAndStartPoint(accentPhraseIndex)"
         >
           <accent-phrase
+            :audio-key="activeAudioKey"
             :accent-phrase="accentPhrase"
             :index="accentPhraseIndex"
             :is-last="
