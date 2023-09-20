@@ -69,6 +69,7 @@
           ]"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
         >
+          <context-menu :menudata="accentPhraseMenudata(accentPhraseIndex)" />
           <accent-phrase
             :audio-key="activeAudioKey"
             :accent-phrase="accentPhrase"
@@ -100,6 +101,8 @@ import {
 } from "vue";
 import ToolTip from "./ToolTip.vue";
 import AccentPhrase from "./AccentPhrase.vue";
+import ContextMenu from "./ContextMenu.vue";
+import { MenuItemButton } from "./MenuBar.vue";
 import { useStore } from "@/store";
 import {
   AudioKey,
@@ -245,6 +248,22 @@ const setPlayAndStartPoint = (accentPhraseIndex: number) => {
   }
 };
 
+// accentPhraseIndexごとにcontext-menuの内容を用意する
+const accentPhraseMenudata = computed(() => (accentPhraseIndex: number): [
+  MenuItemButton
+] => {
+  return [
+    {
+      type: "button",
+      label: "削除",
+      onClick: async () => {
+        deleteAccentPhrase(accentPhraseIndex);
+      },
+      disableWhenUiLocked: true,
+    },
+  ];
+});
+
 watch(accentPhrases, async () => {
   activePoint.value = startPoint.value;
   // 連続再生時に、最初に選択されていた場所に戻るためにscrollToActivePointを呼ぶ必要があるが、
@@ -252,6 +271,13 @@ watch(accentPhrases, async () => {
   await nextTick();
   scrollToActivePoint();
 });
+
+const deleteAccentPhrase = (phraseIndex: number) => {
+  store.dispatch("COMMAND_DELETE_ACCENT_PHRASE", {
+    audioKey: props.activeAudioKey,
+    accentPhraseIndex: phraseIndex,
+  });
+};
 
 // audio play
 const play = async () => {
