@@ -213,6 +213,7 @@ const pronunciation = computed(() => {
 
 const handleChangePronounce = (newPronunciation: string) => {
   let popUntilPause = false;
+  newPronunciation = newPronunciation.replace(",", "、");
   const lastMora = newPronunciation.at(-1);
   if (lastMora == "、" || lastMora == ",") {
     if (props.isLast) {
