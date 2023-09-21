@@ -213,11 +213,11 @@ const pronunciation = computed(() => {
 
 const handleChangePronounce = (newPronunciation: string) => {
   let popUntilPause = false;
-  newPronunciation = newPronunciation.replace(",", "、");
+  newPronunciation = newPronunciation.replace(/,/g, "、");
   const lastMora = newPronunciation.at(-1);
-  if (lastMora === "、" || lastMora === ",") {
+  if (lastMora === "、") {
     // 末尾の読点(の連続)を削除
-    const pronunciation = newPronunciation.match(/(.*?)(?:、|,)+$/)?.[1];
+    const pronunciation = newPronunciation.match(/(.*?)、+$/)?.[1];
     if (pronunciation == null) throw new Error("pronunciation == null");
     newPronunciation = pronunciation;
     if (!props.isLast) {
