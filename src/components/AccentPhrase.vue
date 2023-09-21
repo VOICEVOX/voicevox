@@ -213,19 +213,11 @@ const pronunciation = computed(() => {
 
 const handleChangePronounce = (newPronunciation: string) => {
   let popUntilPause = false;
-  newPronunciation = newPronunciation.replace(/,/g, "、");
-  const lastMora = newPronunciation.at(-1);
-  if (lastMora === "、") {
-    // 末尾の読点(の連続)を削除
-    const pronunciation = newPronunciation.match(/(.*?)、+$/)?.[1];
-    if (pronunciation == null) throw new Error("pronunciation == null");
-    newPronunciation = pronunciation;
-    if (!props.isLast) {
-      // 消去された読点のうち1つだけを再付与＆生成エラー回避
-      newPronunciation += "、ア";
-      popUntilPause = true;
-    }
-    // 最後のアクセント句の場合は読点を削除するだけで良い
+  newPronunciation = newPronunciation.replace(",", "、");
+  if (newPronunciation.slice(-1) == "、" && !props.isLast) {
+    // 生成エラー回避
+    newPronunciation += "ア";
+    popUntilPause = true;
   }
   store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
     audioKey: props.audioKey,
