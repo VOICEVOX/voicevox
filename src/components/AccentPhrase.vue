@@ -237,7 +237,7 @@ const handleChangePronounce = (newPronunciation: string) => {
 
 const hoveredMoraIndex = ref<number | undefined>(undefined);
 
-const lengthHoveredType = ref<"vowel" | "consonant">("vowel");
+const lengthHoveredPhonemeType = ref<"vowel" | "consonant">("vowel");
 
 const handleHoverText = (isOver: boolean, moraIndex: number) => {
   if (props.selectedDetail == "accent" || props.selectedDetail == "pitch") {
@@ -252,7 +252,7 @@ const handleLengthHoverText = (
 ) => {
   if (phoneme !== "vowel" && phoneme !== "consonant")
     throw new Error("phoneme != hoveredType");
-  lengthHoveredType.value = phoneme;
+  lengthHoveredPhonemeType.value = phoneme;
   // the pause and pitch templates don't emit a mouseOver event
   hoveredMoraIndex.value = isOver ? moraIndex : undefined;
 };
@@ -269,7 +269,7 @@ const isHovered = (vowel: string, moraIndex: number) =>
 const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
   if (moraIndex === hoveredMoraIndex.value) {
-    if (lengthHoveredType.value == "vowel") {
+    if (lengthHoveredPhonemeType.value == "vowel") {
       return mora.vowel.toUpperCase();
     } else {
       return mora.consonant?.toUpperCase();
