@@ -216,16 +216,16 @@ const handleChangePronounce = (newPronunciation: string) => {
   newPronunciation = newPronunciation.replace(",", "、");
   const lastMora = newPronunciation.at(-1);
   if (lastMora == "、" || lastMora == ",") {
-    if (props.isLast) {
-      // 末尾の句点を削除
-      const pronunciation = newPronunciation.match(/(.*?)(?:、|,)+$/)?.[1];
-      if (pronunciation == null) throw new Error("pronunciation == null");
-      newPronunciation = pronunciation;
-    } else {
+    // 末尾の読点(の連続)を削除
+    const pronunciation = newPronunciation.match(/(.*?)(?:、|,)+$/)?.[1];
+    if (pronunciation == null) throw new Error("pronunciation == null");
+    newPronunciation = pronunciation;
+    if (!props.isLast) {
       // 生成エラー回避
-      newPronunciation += "ア";
+      newPronunciation += "、ア";
       popUntilPause = true;
     }
+    // 最後のアクセント句の場合は読点を削除するだけで良い
   }
   store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
     audioKey: props.audioKey,
