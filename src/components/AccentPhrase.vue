@@ -99,7 +99,7 @@
     <div
       class="text-cell"
       :class="{
-        'text-cell-hovered': isHovered(mora.vowel, moraIndex),
+        'text-cell-highlighted': isEditableMora(mora.vowel, moraIndex),
       }"
       :style="{
         'grid-column': `${moraIndex * 2 + 1} / span 1`,
@@ -249,12 +249,28 @@ const handleLengthHoverText = (
 
 const unvoicableVowels = ["U", "I", "i", "u"];
 
-const isHovered = (vowel: string, moraIndex: number) =>
-  !uiLocked.value &&
-  ((props.selectedDetail == "accent" && hoveredMoraIndex.value !== undefined) ||
-    (props.selectedDetail == "pitch" &&
-      moraIndex === hoveredMoraIndex.value &&
-      unvoicableVowels.includes(vowel)));
+/**
+ * 各モーラが、hover中のモーラをそのままクリックした場合に編集範囲に含まれるかどうか。
+ * 強調表示するかの判定に使われる。
+ */
+const isEditableMora = (vowel: string, moraIndex: number) => {
+  if (uiLocked.value) {
+    return false;
+  }
+  if (props.selectedDetail == "accent") {
+    // クリック時の動作はアクセント句全体の読み変更。
+    // よって、いずれかのモーラがhoverされているならアクセント句全体を強調表示する。
+    return hoveredMoraIndex.value !== undefined;
+  }
+  if (props.selectedDetail == "pitch") {
+    // クリック時の動作は無声化/有声化の切り替え。
+    // よって、hover中のモーラが無声化可能かを判定しそのモーラを強調表示する。
+    return (
+      moraIndex === hoveredMoraIndex.value && unvoicableVowels.includes(vowel)
+    );
+  }
+  return false;
+};
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
@@ -356,7 +372,7 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   transform: translateX(-50%);
   z-index: 10;
 }
-.text-cell-hovered {
+.text-cell-highlighted {
   font-weight: bold;
   cursor: pointer;
 }
