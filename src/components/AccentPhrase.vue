@@ -228,15 +228,13 @@ const handleChangePronounce = (newPronunciation: string) => {
 };
 
 const hoveredMoraIndex = ref<number | undefined>(undefined);
-
-const lengthHoveredPhonemeType = ref<"vowel" | "consonant">("vowel");
-
 const handleHoverText = (isOver: boolean, moraIndex: number) => {
   if (props.selectedDetail == "accent" || props.selectedDetail == "pitch") {
     hoveredMoraIndex.value = isOver ? moraIndex : undefined;
   }
 };
 
+const lengthHoveredPhonemeType = ref<"vowel" | "consonant">("vowel");
 const handleLengthHoverText = (
   isOver: boolean,
   phoneme: MoraDataType,
