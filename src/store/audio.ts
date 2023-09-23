@@ -305,8 +305,22 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   // audio elementの再生オフセット
   AUDIO_PLAY_START_POINT: {
-    getter(state) {
-      return state._audioPlayStartPoint;
+    getter(state, getters) {
+      // 選択+削除 や 挿入+選択+元に戻す などを行った場合でも
+      // 範囲外にならないようにクランプする
+      const audioPlayStartPoint = state._audioPlayStartPoint;
+      if (
+        audioPlayStartPoint == undefined ||
+        getters.ACTIVE_AUDIO_KEY == undefined
+      ) {
+        return undefined;
+      }
+      const length =
+        state.audioItems[getters.ACTIVE_AUDIO_KEY].query?.accentPhrases.length;
+      if (length == undefined) {
+        return undefined;
+      }
+      return Math.max(0, Math.min(length - 1, audioPlayStartPoint));
     },
   },
 
