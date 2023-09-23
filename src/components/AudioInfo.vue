@@ -44,6 +44,7 @@
       </div>
 
       <div class="full-width row" @wheel="setPresetByScroll($event)">
+        <!-- TODO: 同じプリセットを選択したときにも複数選択中の他のAudioItemのプリセットを変更するようにする -->
         <q-select
           v-model="presetSelectModel"
           :options="selectablePresetList"
