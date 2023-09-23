@@ -8,6 +8,10 @@
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "
       class="value-label"
+      :class="{
+        'value-label-consonant': props.clip && props.type === 'consonant',
+        'value-label-vowel': props.clip && props.type === 'vowel',
+      }"
       color="primary"
       text-color="display-on-primary"
     >
@@ -155,6 +159,14 @@ div {
     height: $value-label-height;
     padding: 0px 8px;
     transform: translateX(-50%) translateX(15px);
+  }
+
+  .value-label-consonant {
+    transform: translateX(-50%) translateX(14px) translateY(-60%);
+  }
+
+  .value-label-vowel {
+    transform: translateX(-50%) translateX(16px) translateY(60%);
   }
 }
 </style>
