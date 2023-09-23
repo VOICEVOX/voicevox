@@ -348,6 +348,11 @@ type Parameter = {
   action: Parameters<typeof store.dispatch>[0]["type"];
   key: keyof Omit<Preset, "name" | "morphingInfo">;
 };
+const selectedAudioKeys = computed(() =>
+  store.state.experimentalSetting.enableMultiSelect
+    ? store.getters.SELECTED_AUDIO_KEYS
+    : [props.activeAudioKey]
+);
 const parameters = computed<Parameter[]>(() => [
   {
     label: "話速",
@@ -361,12 +366,12 @@ const parameters = computed<Parameter[]>(() => [
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
       onChange: (speedScale: number) =>
-        store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
-          audioKey: props.activeAudioKey,
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_SPEED_SCALE", {
+          audioKeys: selectedAudioKeys.value,
           speedScale,
         }),
     }),
-    action: "COMMAND_SET_AUDIO_SPEED_SCALE",
+    action: "COMMAND_MULTI_SET_AUDIO_SPEED_SCALE",
     key: "speedScale",
   },
   {
@@ -380,12 +385,12 @@ const parameters = computed<Parameter[]>(() => [
       step: () => 0.01,
       scrollStep: () => 0.01,
       onChange: (pitchScale: number) =>
-        store.dispatch("COMMAND_SET_AUDIO_PITCH_SCALE", {
-          audioKey: props.activeAudioKey,
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_PITCH_SCALE", {
+          audioKeys: selectedAudioKeys.value,
           pitchScale,
         }),
     }),
-    action: "COMMAND_SET_AUDIO_PITCH_SCALE",
+    action: "COMMAND_MULTI_SET_AUDIO_PITCH_SCALE",
     key: "pitchScale",
   },
   {
@@ -401,12 +406,12 @@ const parameters = computed<Parameter[]>(() => [
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
       onChange: (intonationScale: number) =>
-        store.dispatch("COMMAND_SET_AUDIO_INTONATION_SCALE", {
-          audioKey: props.activeAudioKey,
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE", {
+          audioKeys: selectedAudioKeys.value,
           intonationScale,
         }),
     }),
-    action: "COMMAND_SET_AUDIO_INTONATION_SCALE",
+    action: "COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE",
     key: "intonationScale",
   },
   {
@@ -421,12 +426,12 @@ const parameters = computed<Parameter[]>(() => [
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
       onChange: (volumeScale: number) =>
-        store.dispatch("COMMAND_SET_AUDIO_VOLUME_SCALE", {
-          audioKey: props.activeAudioKey,
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE", {
+          audioKeys: selectedAudioKeys.value,
           volumeScale,
         }),
     }),
-    action: "COMMAND_SET_AUDIO_VOLUME_SCALE",
+    action: "COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE",
     key: "volumeScale",
   },
   {
@@ -440,12 +445,12 @@ const parameters = computed<Parameter[]>(() => [
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
       onChange: (prePhonemeLength: number) =>
-        store.dispatch("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", {
-          audioKey: props.activeAudioKey,
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH", {
+          audioKeys: selectedAudioKeys.value,
           prePhonemeLength,
         }),
     }),
-    action: "COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH",
+    action: "COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH",
     key: "prePhonemeLength",
   },
   {
@@ -459,12 +464,12 @@ const parameters = computed<Parameter[]>(() => [
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
       onChange: (postPhonemeLength: number) =>
-        store.dispatch("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", {
-          audioKey: props.activeAudioKey,
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH", {
+          audioKeys: selectedAudioKeys.value,
           postPhonemeLength,
         }),
     }),
-    action: "COMMAND_SET_AUDIO_POST_PHONEME_LENGTH",
+    action: "COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH",
     key: "postPhonemeLength",
   },
 ]);
@@ -480,7 +485,7 @@ const handleParameterChange = (
     parameter.slider.qSliderProps.max.value
   );
   store.dispatch(parameter.action, {
-    audioKey: props.activeAudioKey,
+    audioKeys: selectedAudioKeys.value,
     [parameter.key]: value,
   });
 };
@@ -583,8 +588,8 @@ const morphingTargetVoice = computed({
             targetStyleId: voice.styleId,
           }
         : undefined;
-    store.dispatch("COMMAND_SET_MORPHING_INFO", {
-      audioKey: props.activeAudioKey,
+    store.dispatch("COMMAND_MULTI_SET_MORPHING_INFO", {
+      audioKeys: selectedAudioKeys.value,
       morphingInfo,
     });
   },
@@ -611,8 +616,8 @@ const setMorphingRate = (rate: number) => {
   if (info == undefined) {
     throw new Error("audioItem.value.morphingInfo == undefined");
   }
-  return store.dispatch("COMMAND_SET_MORPHING_INFO", {
-    audioKey: props.activeAudioKey,
+  return store.dispatch("COMMAND_MULTI_SET_MORPHING_INFO", {
+    audioKeys: selectedAudioKeys.value,
     morphingInfo: {
       rate,
       targetEngineId: info.targetEngineId,
@@ -690,8 +695,8 @@ type PresetSelectModelType = {
 
 // プリセットの変更
 const changePreset = (presetKey: PresetKey | undefined) =>
-  store.dispatch("COMMAND_SET_AUDIO_PRESET", {
-    audioKey: props.activeAudioKey,
+  store.dispatch("COMMAND_MULTI_SET_AUDIO_PRESET", {
+    audioKeys: selectedAudioKeys.value,
     presetKey,
   });
 
