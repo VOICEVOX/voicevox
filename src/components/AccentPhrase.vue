@@ -108,6 +108,16 @@
       @mouseleave="handleHoverText(false, moraIndex)"
       @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
     >
+      <q-tooltip
+        v-if="
+          selectedDetail === 'pitch' && !unvoicableVowels.includes(mora.vowel)
+        "
+        :delay="500"
+        >この音は無声化できません。</q-tooltip
+      >
+      <q-tooltip v-if="selectedDetail === 'length'" :delay="500"
+        >長さ項目では編集できません。</q-tooltip
+      >
       <span class="text-cell-inner">
         {{ getHoveredText(mora, moraIndex) }}
       </span>
