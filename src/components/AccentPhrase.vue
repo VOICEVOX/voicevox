@@ -130,6 +130,7 @@
             width: `${scope.value.length + 1}em`,
             minWidth: '50px',
           }"
+          :aria-label="`${index + 1}番目のアクセント区間の読み`"
           autofocus
           outlined
           @keyup.enter="scope.set"
