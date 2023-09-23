@@ -266,8 +266,6 @@ export const audioStoreState: AudioStoreState = {
   audioItems: {},
   audioKeys: [],
   audioStates: {},
-  // audio elementの再生オフセット
-  audioPlayStartPoint: undefined,
   nowPlayingAudioKey: undefined,
   nowPlayingContinuously: false,
 };
@@ -302,6 +300,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   IS_ACTIVE: {
     getter: (state) => (audioKey: AudioKey) => {
       return state._activeAudioKey === audioKey;
+    },
+  },
+
+  // audio elementの再生オフセット
+  AUDIO_PLAY_START_POINT: {
+    getter(state) {
+      return state._audioPlayStartPoint;
     },
   },
 
@@ -567,7 +572,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   SET_AUDIO_PLAY_START_POINT: {
     mutation(state, { startPoint }: { startPoint?: number }) {
-      state.audioPlayStartPoint = startPoint;
+      state._audioPlayStartPoint = startPoint;
     },
     action({ commit }, { startPoint }: { startPoint?: number }) {
       commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
@@ -1807,7 +1812,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   PLAY_AUDIO_BLOB: {
     action: createUILockAction(
       async (
-        { state, commit, dispatch },
+        { getters, commit, dispatch },
         { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
         commit("SET_AUDIO_SOURCE", { audioBlob });
@@ -1819,7 +1824,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
           if (accentPhraseOffsets.length === 0)
             throw new Error("accentPhraseOffsets.length === 0");
-          const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+          const startTime =
+            accentPhraseOffsets[getters.AUDIO_PLAY_START_POINT ?? 0];
           if (startTime === undefined) throw Error("startTime === undefined");
           // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
           // 再生に影響のない程度かつ切り捨てられない値を加算する
@@ -1915,9 +1921,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   PLAY_CONTINUOUSLY_AUDIO: {
-    action: createUILockAction(async ({ state, commit, dispatch }) => {
+    action: createUILockAction(async ({ state, getters, commit, dispatch }) => {
       const currentAudioKey = state._activeAudioKey;
-      const currentAudioPlayStartPoint = state.audioPlayStartPoint;
+      const currentAudioPlayStartPoint = getters.AUDIO_PLAY_START_POINT;
 
       let index = 0;
       if (currentAudioKey !== undefined) {
