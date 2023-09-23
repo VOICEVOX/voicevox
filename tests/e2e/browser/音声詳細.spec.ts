@@ -21,7 +21,7 @@ test("単体アクセント句の読み変更", async ({ page }) => {
   await textField.fill("1234");
   await textField.press("Enter");
 
-  const inputs = Array.from(new Array(4), (_, i) =>
+  const inputs = Array.from({ length: 4 }, (_, i) =>
     getNthAccentPhraseInput({ page, n: i })
   );
 
