@@ -4,9 +4,7 @@
     @mouseleave="handleMouseHover(false)"
   >
     <q-badge
-      v-if="
-        !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
-      "
+      v-if="isSelfBadgeVisible || (!props.disable && props.forceValueVisible)"
       class="value-label"
       :class="{
         'value-label-consonant': props.clip && props.type === 'consonant',
@@ -43,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
 
@@ -59,6 +57,7 @@ const props = withDefaults(
     type?: MoraDataType;
     clip?: boolean;
     shiftKeyFlag?: boolean;
+    forceValueVisible?: boolean;
   }>(),
   {
     min: 0.0,
@@ -68,6 +67,7 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
+    forceValueVisible: false,
   }
 );
 
@@ -85,6 +85,7 @@ const emit =
       type: MoraDataType,
       moraIndex: number
     ): void;
+    (e: "changeSelfValueVisible", isVisible: boolean): void;
   }>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) =>
@@ -131,6 +132,16 @@ const precisionComputed = computed(() => {
   } else {
     return 3;
   }
+});
+
+const isSelfBadgeVisible = computed(
+  () =>
+    !props.disable &&
+    (valueLabel.visible || previewSlider.state.isPanning.value)
+);
+
+watch(isSelfBadgeVisible, (newValue) => {
+  emit("changeSelfValueVisible", newValue);
 });
 
 // クリックでアクセント句が選択されないように@click.stopに渡す

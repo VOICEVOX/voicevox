@@ -29,7 +29,9 @@
         :type="'pitch'"
         :clip="false"
         :shift-key-flag="shiftKeyFlag"
+        :force-value-visible="forceValueVisible"
         @change-value="changeMoraData"
+        @change-self-value-visible="handleValueVisible"
       />
     </div>
     <div v-if="accentPhrase.pauseMora" />
@@ -54,8 +56,10 @@
         :type="'consonant'"
         :clip="true"
         :shift-key-flag="shiftKeyFlag"
+        :force-value-visible="forceValueVisible"
         @change-value="changeMoraData"
         @mouse-over="handleLengthHoverText"
+        @change-self-value-visible="handleValueVisible"
       />
       <!-- vowel length -->
       <audio-parameter
@@ -68,8 +72,10 @@
         :type="'vowel'"
         :clip="mora.consonant ? true : false"
         :shift-key-flag="shiftKeyFlag"
+        :force-value-visible="forceValueVisible"
         @change-value="changeMoraData"
         @mouse-over="handleLengthHoverText"
+        @change-self-value-visible="handleValueVisible"
       />
     </div>
     <div
@@ -89,7 +95,9 @@
         :step="0.01"
         :type="'pause'"
         :shift-key-flag="shiftKeyFlag"
+        :force-value-visible="forceValueVisible"
         @change-value="changeMoraData"
+        @change-self-value-visible="handleValueVisible"
       />
     </div>
   </template>
@@ -301,6 +309,15 @@ const toggleAccentPhraseSplit = (isPause: boolean, moraIndex?: number) => {
 
 const lastPitches = computed(() =>
   props.accentPhrase.moras.map((mora) => mora.pitch)
+);
+
+// alt押下中の全モーラのスライダーの数値表示
+const isAnySingleValueVisible = ref(false);
+const handleValueVisible = (isVisible: boolean) => {
+  isAnySingleValueVisible.value = isVisible;
+};
+const forceValueVisible = computed(
+  () => props.altKeyFlag && isAnySingleValueVisible.value
 );
 
 const maxPitch = 6.5;
