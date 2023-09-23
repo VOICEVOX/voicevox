@@ -7,6 +7,7 @@
       v-if="isSelfBadgeVisible || (!props.disable && props.forceValueVisible)"
       class="value-label"
       :class="{
+        'value-label-translucent': !isSelfBadgeVisible,
         'value-label-consonant': props.clip && props.type === 'consonant',
         'value-label-vowel': props.clip && props.type === 'vowel',
       }"
@@ -170,6 +171,10 @@ div {
     height: $value-label-height;
     padding: 0px 8px;
     transform: translateX(-50%) translateX(15px);
+  }
+
+  .value-label-translucent {
+    opacity: 0.8;
   }
 
   .value-label-consonant {
