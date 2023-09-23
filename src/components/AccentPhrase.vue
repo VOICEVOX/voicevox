@@ -366,6 +366,8 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   white-space: nowrap;
   color: colors.$display;
   position: relative;
+  // デフォルトは編集不可
+  cursor: not-allowed;
 }
 .text-cell-inner {
   position: absolute;
