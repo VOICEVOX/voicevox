@@ -69,195 +69,18 @@
           ]"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
         >
-          <context-menu :menudata="accentPhraseMenudata(accentPhraseIndex)" />
-          <!-- スライダーここから -->
-          <!-- ｱｸｾﾝﾄ項目のスライダー -->
-          <template v-if="selectedDetail === 'accent'">
-            <audio-accent
-              :accent-phrase-index="accentPhraseIndex"
-              :accent-phrase="accentPhrase"
-              :ui-locked="uiLocked"
-              :shift-key-flag="shiftKeyFlag"
-              :on-change-accent="changeAccent"
-            />
-          </template>
-          <!-- ｲﾝﾄﾈｰｼｮﾝ項目のスライダー -->
-          <template v-if="selectedDetail === 'pitch'">
-            <div
-              v-for="(mora, moraIndex) in accentPhrase.moras"
-              :key="moraIndex"
-              class="q-mb-sm pitch-cell"
-              :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
-            >
-              <!-- div for input width -->
-              <audio-parameter
-                :mora-index="moraIndex"
-                :accent-phrase-index="accentPhraseIndex"
-                :value="mora.pitch"
-                :ui-locked="uiLocked"
-                :min="minPitch"
-                :max="maxPitch"
-                :disable="mora.pitch == 0.0"
-                :type="'pitch'"
-                :clip="false"
-                :shift-key-flag="shiftKeyFlag"
-                @change-value="changeMoraData"
-              />
-            </div>
-            <div v-if="accentPhrase.pauseMora" />
-          </template>
-          <!-- 長さ項目のスライダー -->
-          <template v-if="selectedDetail === 'length'">
-            <div
-              v-for="(mora, moraIndex) in accentPhrase.moras"
-              :key="moraIndex"
-              class="q-mb-sm pitch-cell"
-              :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
-            >
-              <!-- consonant length -->
-              <audio-parameter
-                v-if="mora.consonant && mora.consonantLength != undefined"
-                :mora-index="moraIndex"
-                :accent-phrase-index="accentPhraseIndex"
-                :value="mora.consonantLength"
-                :ui-locked="uiLocked"
-                :min="minMoraLength"
-                :max="maxMoraLength"
-                :step="0.001"
-                :type="'consonant'"
-                :clip="true"
-                :shift-key-flag="shiftKeyFlag"
-                @change-value="changeMoraData"
-                @mouse-over="handleLengthHoverText"
-              />
-              <!-- vowel length -->
-              <audio-parameter
-                :mora-index="moraIndex"
-                :accent-phrase-index="accentPhraseIndex"
-                :value="mora.vowelLength"
-                :ui-locked="uiLocked"
-                :min="minMoraLength"
-                :max="maxMoraLength"
-                :step="0.001"
-                :type="'vowel'"
-                :clip="mora.consonant ? true : false"
-                :shift-key-flag="shiftKeyFlag"
-                @change-value="changeMoraData"
-                @mouse-over="handleLengthHoverText"
-              />
-            </div>
-            <div
-              v-if="accentPhrase.pauseMora"
-              class="q-mb-sm pitch-cell"
-              :style="{
-                'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
-              }"
-            >
-              <!-- pause length -->
-              <audio-parameter
-                :mora-index="accentPhrase.moras.length"
-                :accent-phrase-index="accentPhraseIndex"
-                :value="accentPhrase.pauseMora.vowelLength"
-                :ui-locked="uiLocked"
-                :min="0"
-                :max="1.0"
-                :step="0.01"
-                :type="'pause'"
-                :shift-key-flag="shiftKeyFlag"
-                @change-value="changeMoraData"
-              />
-            </div>
-          </template>
-          <!-- スライダーここまで -->
-          <!-- 読みテキスト・アクセント句の分割と結合ここから -->
-          <template
-            v-for="(mora, moraIndex) in accentPhrase.moras"
-            :key="moraIndex"
-          >
-            <div
-              class="text-cell"
-              :class="{
-                'text-cell-hovered': isHovered(
-                  mora.vowel,
-                  accentPhraseIndex,
-                  moraIndex
-                ),
-              }"
-              :style="{
-                'grid-column': `${moraIndex * 2 + 1} / span 1`,
-              }"
-              @mouseover="handleHoverText(true, accentPhraseIndex, moraIndex)"
-              @mouseleave="handleHoverText(false, accentPhraseIndex, moraIndex)"
-              @click.stop="
-                uiLocked ||
-                  handleChangeVoicing(mora, accentPhraseIndex, moraIndex)
-              "
-            >
-              <span class="text-cell-inner">
-                {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
-              </span>
-              <q-popup-edit
-                v-if="selectedDetail == 'accent' && !uiLocked"
-                v-slot="scope"
-                :model-value="pronunciationByPhrase[accentPhraseIndex]"
-                auto-save
-                transition-show="none"
-                transition-hide="none"
-                @save="handleChangePronounce($event, accentPhraseIndex)"
-              >
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  :input-style="{
-                    width: `${scope.value.length + 1}em`,
-                    minWidth: '50px',
-                  }"
-                  autofocus
-                  outlined
-                  @keyup.enter="scope.set"
-                />
-              </q-popup-edit>
-            </div>
-            <div
-              v-if="
-                accentPhrases != undefined &&
-                (accentPhraseIndex < accentPhrases.length - 1 ||
-                  moraIndex < accentPhrase.moras.length - 1)
-              "
-              :class="[
-                'splitter-cell',
-                {
-                  'splitter-cell-accent': selectedDetail == 'accent',
-                  'splitter-cell-be-split':
-                    moraIndex == accentPhrase.moras.length - 1,
-                  'splitter-cell-be-split-pause': accentPhrase.pauseMora,
-                },
-              ]"
-              :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
-              @click.stop="
-                uiLocked ||
-                  toggleAccentPhraseSplit(accentPhraseIndex, false, moraIndex)
-              "
-            />
-          </template>
-          <template v-if="accentPhrase.pauseMora">
-            <div class="text-cell">
-              <span class="text-cell-inner">
-                {{ accentPhrase.pauseMora.text }}
-              </span>
-            </div>
-            <div
-              class="
-                splitter-cell
-                splitter-cell-be-split
-                splitter-cell-be-split-pause
-              "
-              @click.stop="
-                uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)
-              "
-            />
-          </template>
-          <!-- 読みテキスト・アクセント句の分割と結合ここまで -->
+          <accent-phrase
+            :audio-key="activeAudioKey"
+            :accent-phrase="accentPhrase"
+            :index="accentPhraseIndex"
+            :is-last="
+              accentPhrases !== undefined &&
+              accentPhrases.length - 1 === accentPhraseIndex
+            "
+            :selected-detail="selectedDetail"
+            :shift-key-flag="shiftKeyFlag"
+            :alt-key-flag="altKeyFlag"
+          />
         </div>
       </div>
     </div>
@@ -271,26 +94,21 @@ import {
   onBeforeUpdate,
   onMounted,
   onUnmounted,
-  reactive,
   ref,
   VNodeRef,
   watch,
 } from "vue";
 import ToolTip from "./ToolTip.vue";
-import AudioAccent from "./AudioAccent.vue";
-import AudioParameter from "./AudioParameter.vue";
-import ContextMenu from "./ContextMenu.vue";
-import { MenuItemButton } from "./MenuBar.vue";
+import AccentPhrase from "./AccentPhrase.vue";
 import { useStore } from "@/store";
 import {
   AudioKey,
   HotkeyAction,
   HotkeyReturnType,
   isMac,
-  MoraDataType,
 } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { EngineManifest, Mora } from "@/openapi/models";
+import { EngineManifest } from "@/openapi/models";
 
 const props =
   defineProps<{
@@ -372,7 +190,7 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
 setHotkeyFunctions(hotkeyMap, true);
 
 // detail selector
-type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
+type DetailTypes = "accent" | "pitch" | "length";
 const selectedDetail = ref<DetailTypes>("accent");
 
 // accent phrase
@@ -427,96 +245,13 @@ const setPlayAndStartPoint = (accentPhraseIndex: number) => {
   }
 };
 
-// accentPhraseIndexごとにcontext-menuの内容を用意する
-const accentPhraseMenudata = computed(() => (accentPhraseIndex: number): [
-  MenuItemButton
-] => {
-  return [
-    {
-      type: "button",
-      label: "削除",
-      onClick: async () => {
-        deleteAccentPhrase(accentPhraseIndex);
-      },
-      disableWhenUiLocked: true,
-    },
-  ];
-});
-
-const lastPitches = ref<number[][]>([]);
-watch(accentPhrases, async (newPhrases) => {
+watch(accentPhrases, async () => {
   activePoint.value = startPoint.value;
   // 連続再生時に、最初に選択されていた場所に戻るためにscrollToActivePointを呼ぶ必要があるが、
   // DOMの描画が少し遅いので、nextTickをはさむ
   await nextTick();
   scrollToActivePoint();
-  if (newPhrases) {
-    lastPitches.value = newPhrases.map((phrase) =>
-      phrase.moras.map((mora) => mora.pitch)
-    );
-  } else {
-    lastPitches.value = [];
-  }
 });
-
-const changeAccent = (accentPhraseIndex: number, accent: number) =>
-  store.dispatch("COMMAND_CHANGE_ACCENT", {
-    audioKey: props.activeAudioKey,
-    accentPhraseIndex,
-    accent,
-  });
-const toggleAccentPhraseSplit = (
-  accentPhraseIndex: number,
-  isPause: boolean,
-  moraIndex?: number
-) => {
-  store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
-    audioKey: props.activeAudioKey,
-    accentPhraseIndex,
-    ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
-  });
-};
-const deleteAccentPhrase = (phraseIndex: number) => {
-  store.dispatch("COMMAND_DELETE_ACCENT_PHRASE", {
-    audioKey: props.activeAudioKey,
-    accentPhraseIndex: phraseIndex,
-  });
-};
-
-const maxPitch = 6.5;
-const minPitch = 3;
-const maxMoraLength = 0.3;
-const minMoraLength = 0;
-const changeMoraData = (
-  accentPhraseIndex: number,
-  moraIndex: number,
-  data: number,
-  type: MoraDataType
-) => {
-  if (!altKeyFlag.value) {
-    if (type == "pitch") {
-      lastPitches.value[accentPhraseIndex][moraIndex] = data;
-    }
-    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-      audioKey: props.activeAudioKey,
-      accentPhraseIndex,
-      moraIndex,
-      data,
-      type,
-    });
-  } else {
-    if (accentPhrases.value === undefined) {
-      throw Error("accentPhrases.value === undefined");
-    }
-    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
-      audioKey: props.activeAudioKey,
-      accentPhraseIndex,
-      moraIndex,
-      data,
-      type,
-    });
-  }
-};
 
 // audio play
 const play = async () => {
@@ -640,182 +375,12 @@ watch(nowPlaying, async (newState) => {
   }
 });
 
-const pronunciationByPhrase = computed(() => {
-  const textArray: Array<string> = [];
-  accentPhrases.value?.forEach((accentPhrase) => {
-    let textString = "";
-    accentPhrase.moras.forEach((mora) => {
-      textString += mora.text;
-    });
-    if (accentPhrase.pauseMora) {
-      textString += "、";
-    }
-    textArray.push(textString);
-  });
-  return textArray;
-});
-
-const handleChangePronounce = (
-  newPronunciation: string,
-  phraseIndex: number
-) => {
-  let popUntilPause = false;
-  newPronunciation = newPronunciation.replace(",", "、");
-  if (accentPhrases.value == undefined)
-    throw new Error("accentPhrases.value == undefined");
-  if (
-    newPronunciation.slice(-1) == "、" &&
-    accentPhrases.value.length - 1 != phraseIndex
-  ) {
-    newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
-    popUntilPause = true;
-  }
-  store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
-    audioKey: props.activeAudioKey,
-    newPronunciation,
-    accentPhraseIndex: phraseIndex,
-    popUntilPause,
-  });
-};
-
-type hoveredType = "vowel" | "consonant";
-
-type hoveredInfoType = {
-  accentPhraseIndex: number | undefined;
-  moraIndex?: number | undefined;
-  type?: hoveredType;
-};
-
-const accentHoveredInfo = reactive<hoveredInfoType>({
-  accentPhraseIndex: undefined,
-});
-
-const pitchHoveredInfo = reactive<hoveredInfoType>({
-  accentPhraseIndex: undefined,
-  moraIndex: undefined,
-});
-
-const lengthHoveredInfo = reactive<hoveredInfoType>({
-  accentPhraseIndex: undefined,
-  moraIndex: undefined,
-  type: "vowel",
-});
-
-const handleHoverText = (
-  isOver: boolean,
-  phraseIndex: number,
-  moraIndex: number
-) => {
-  if (selectedDetail.value == "accent") {
-    if (isOver) {
-      accentHoveredInfo.accentPhraseIndex = phraseIndex;
-    } else {
-      accentHoveredInfo.accentPhraseIndex = undefined;
-    }
-  } else if (selectedDetail.value == "pitch") {
-    if (isOver) {
-      pitchHoveredInfo.accentPhraseIndex = phraseIndex;
-      pitchHoveredInfo.moraIndex = moraIndex;
-    } else {
-      pitchHoveredInfo.accentPhraseIndex = undefined;
-      pitchHoveredInfo.moraIndex = undefined;
-    }
-  }
-};
-
-const handleLengthHoverText = (
-  isOver: boolean,
-  phoneme: MoraDataType,
-  phraseIndex: number,
-  moraIndex?: number
-) => {
-  if (phoneme !== "vowel" && phoneme !== "consonant")
-    throw new Error("phoneme != hoveredType");
-  lengthHoveredInfo.type = phoneme;
-  // the pause and pitch templates don't emit a mouseOver event
-  if (isOver) {
-    lengthHoveredInfo.accentPhraseIndex = phraseIndex;
-    lengthHoveredInfo.moraIndex = moraIndex;
-  } else {
-    lengthHoveredInfo.accentPhraseIndex = undefined;
-    lengthHoveredInfo.moraIndex = undefined;
-  }
-};
-
-const unvoicableVowels = ["U", "I", "i", "u"];
-
-const isHovered = (
-  vowel: string,
-  accentPhraseIndex: number,
-  moraIndex: number
-) => {
-  let isHover = false;
-  if (!uiLocked.value) {
-    if (selectedDetail.value == "accent") {
-      if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
-        isHover = true;
-      }
-    } else if (selectedDetail.value == "pitch") {
-      if (
-        accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
-        moraIndex === pitchHoveredInfo.moraIndex &&
-        unvoicableVowels.includes(vowel)
-      ) {
-        isHover = true;
-      }
-    }
-  }
-  return isHover;
-};
-
-const getHoveredText = (
-  mora: Mora,
-  accentPhraseIndex: number,
-  moraIndex: number
-) => {
-  if (selectedDetail.value != "length") return mora.text;
-  if (
-    accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
-    moraIndex === lengthHoveredInfo.moraIndex
-  ) {
-    if (lengthHoveredInfo.type == "vowel") {
-      return mora.vowel.toUpperCase();
-    } else {
-      return mora.consonant?.toUpperCase();
-    }
-  } else {
-    return mora.text;
-  }
-};
-
 const shiftKeyFlag = ref(false);
 const altKeyFlag = ref(false);
 
 const keyEventListter = (event: KeyboardEvent) => {
   shiftKeyFlag.value = event.shiftKey;
   altKeyFlag.value = event.altKey;
-};
-
-const handleChangeVoicing = (
-  mora: Mora,
-  accentPhraseIndex: number,
-  moraIndex: number
-) => {
-  if (
-    selectedDetail.value == "pitch" &&
-    unvoicableVowels.includes(mora.vowel)
-  ) {
-    let data = 0;
-    if (mora.pitch == 0) {
-      if (lastPitches.value[accentPhraseIndex][moraIndex] == 0) {
-        // 元々無声だった場合、適当な値を代入
-        data = 5.5;
-      } else {
-        data = lastPitches.value[accentPhraseIndex][moraIndex];
-      }
-    }
-    changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
-  }
 };
 
 onMounted(() => {
@@ -830,10 +395,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
-
-$pitch-label-height: 24px;
 
 .tip-tweakable-slider-by-scroll {
   position: absolute;
@@ -888,68 +450,6 @@ $pitch-label-height: 24px;
 
       &:last-child {
         padding-right: 20px;
-      }
-
-      div {
-        padding: 0px;
-        &.text-cell {
-          min-width: 20px;
-          max-width: 20px;
-          grid-row-start: 3;
-          text-align: center;
-          white-space: nowrap;
-          color: colors.$display;
-          position: relative;
-
-          .text-cell-inner {
-            position: absolute;
-            transform: translateX(-50%);
-            z-index: 10;
-          }
-        }
-        &.text-cell-hovered {
-          font-weight: bold;
-          cursor: pointer;
-        }
-        &.splitter-cell {
-          min-width: 20px;
-          max-width: 20px;
-          grid-row: 3 / span 1;
-          z-index: vars.$detail-view-splitter-cell-z-index;
-        }
-        &.splitter-cell-accent {
-          @extend.splitter-cell;
-          grid-row: 2 / 4;
-        }
-        &.splitter-cell:hover {
-          background-color: colors.$text-splitter-hover;
-          cursor: pointer;
-        }
-        &.splitter-cell-be-split {
-          min-width: 40px;
-          max-width: 40px;
-          grid-row: 1 / span 3;
-        }
-        &.splitter-cell-be-split-pause {
-          min-width: 20px;
-          max-width: 20px;
-        }
-        &.accent-cell {
-          grid-row: 2 / span 1;
-          div {
-            min-width: 20px + 20px;
-            max-width: 20px + 20px;
-            display: inline-block;
-            cursor: pointer;
-          }
-        }
-        &.pitch-cell {
-          grid-row: 1 / span 2;
-          min-width: 20px;
-          max-width: 20px;
-          display: inline-block;
-          position: relative;
-        }
       }
     }
 
