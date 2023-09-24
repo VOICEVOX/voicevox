@@ -305,16 +305,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  NOW_PLAYING: {
-    getter(state, getters) {
-      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
-      return (
-        activeAudioKey != undefined &&
-        activeAudioKey === state.nowPlayingAudioKey
-      );
-    },
-  },
-
   LOAD_CHARACTER: {
     action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
       const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {

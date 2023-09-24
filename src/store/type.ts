@@ -151,10 +151,6 @@ export type AudioStoreTypes = {
     getter(audioKey: AudioKey): boolean;
   };
 
-  NOW_PLAYING: {
-    getter: boolean;
-  };
-
   LOAD_CHARACTER: {
     action(payload: { engineId: EngineId }): void;
   };
@@ -698,6 +694,10 @@ export type AudioPlayerStoreTypes = {
 
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
+  };
+
+  NOW_PLAYING: {
+    getter: boolean;
   };
 
   SET_AUDIO_SOURCE: {

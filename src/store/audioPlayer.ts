@@ -32,6 +32,16 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     },
   },
 
+  NOW_PLAYING: {
+    getter(state, getters) {
+      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
+      return (
+        activeAudioKey != undefined &&
+        activeAudioKey === state.nowPlayingAudioKey
+      );
+    },
+  },
+
   // NOTE: リファクタリング中、別ファイルに移動予定
   SET_AUDIO_SOURCE: {
     mutation(_, { audioBlob }: { audioBlob: Blob }) {
