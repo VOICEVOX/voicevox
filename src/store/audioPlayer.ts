@@ -17,13 +17,10 @@ const getAudioElement = (() => {
 })();
 
 export const audioPlayerStoreState: AudioPlayerStoreState = {
-  //
   nowPlayingAudioKey: undefined,
 };
 
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
-  //
-
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: (state) => {
       return state._activeAudioKey !== undefined
@@ -51,14 +48,12 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     },
   },
 
-  // NOTE: リファクタリング中、別ファイルに移動予定
   SET_AUDIO_SOURCE: {
     mutation(_, { audioBlob }: { audioBlob: Blob }) {
       getAudioElement().src = URL.createObjectURL(audioBlob);
     },
   },
 
-  // NOTE: リファクタリング中、別ファイルに移動予定
   PLAY_AUDIO_PLAYER: {
     async action(
       { state, commit },

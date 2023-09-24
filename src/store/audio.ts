@@ -248,17 +248,6 @@ export function applyAudioPresetToAudioItem(
 }
 
 const audioBlobCache: Record<string, Blob> = {};
-// TODO: 後で削除
-// ユニットテストが落ちるのを回避するための遅延読み込み
-const getAudioElement = (() => {
-  let audioElement: HTMLAudioElement | undefined = undefined;
-  return () => {
-    if (audioElement == undefined) {
-      audioElement = new Audio();
-    }
-    return audioElement;
-  };
-})();
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},

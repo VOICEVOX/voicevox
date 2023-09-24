@@ -681,13 +681,10 @@ export type AudioCommandStoreTypes = {
  */
 
 export type AudioPlayerStoreState = {
-  //
   nowPlayingAudioKey?: AudioKey;
 };
 
 export type AudioPlayerStoreTypes = {
-  //
-
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
   };
