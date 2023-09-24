@@ -131,7 +131,6 @@ export type AudioStoreState = {
   _activeAudioKey?: AudioKey;
   _selectedAudioKeys?: AudioKey[];
   audioPlayStartPoint?: number;
-  nowPlayingAudioKey?: AudioKey;
   nowPlayingContinuously: boolean;
 };
 
@@ -150,14 +149,6 @@ export type AudioStoreTypes = {
 
   IS_ACTIVE: {
     getter(audioKey: AudioKey): boolean;
-  };
-
-  NOW_PLAYING: {
-    getter: boolean;
-  };
-
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: number | undefined;
   };
 
   LOAD_CHARACTER: {
@@ -205,10 +196,6 @@ export type AudioStoreTypes = {
   SET_AUDIO_PLAY_START_POINT: {
     mutation: { startPoint?: number };
     action(payload: { startPoint?: number }): void;
-  };
-
-  SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: AudioKey; nowPlaying: boolean };
   };
 
   SET_AUDIO_NOW_GENERATING: {
@@ -457,20 +444,8 @@ export type AudioStoreTypes = {
     action(payload: { audioKey: AudioKey }): boolean;
   };
 
-  SET_AUDIO_SOURCE: {
-    mutation: { audioBlob: Blob };
-  };
-
   PLAY_AUDIO_BLOB: {
     action(payload: { audioBlob: Blob; audioKey?: AudioKey }): boolean;
-  };
-
-  PLAY_AUDIO_PLAYER: {
-    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
-  };
-
-  STOP_AUDIO: {
-    action(): void;
   };
 
   SET_AUDIO_PRESET_KEY: {
@@ -698,6 +673,40 @@ export type AudioCommandStoreTypes = {
       texts: string[];
       voice: Voice;
     }): AudioKey[];
+  };
+};
+
+/*
+ * Audio Player Store Types
+ */
+
+export type AudioPlayerStoreState = {
+  nowPlayingAudioKey?: AudioKey;
+};
+
+export type AudioPlayerStoreTypes = {
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
+    getter: number | undefined;
+  };
+
+  NOW_PLAYING: {
+    getter: boolean;
+  };
+
+  SET_AUDIO_NOW_PLAYING: {
+    mutation: { audioKey: AudioKey; nowPlaying: boolean };
+  };
+
+  SET_AUDIO_SOURCE: {
+    mutation: { audioBlob: Blob };
+  };
+
+  PLAY_AUDIO_PLAYER: {
+    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
+  };
+
+  STOP_AUDIO: {
+    action(): void;
   };
 };
 
@@ -1477,6 +1486,7 @@ export type ProxyStoreTypes = {
  */
 
 export type State = AudioStoreState &
+  AudioPlayerStoreState &
   AudioCommandStoreState &
   CommandStoreState &
   EngineStoreState &
@@ -1489,6 +1499,7 @@ export type State = AudioStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
+  AudioPlayerStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
   EngineStoreTypes &
