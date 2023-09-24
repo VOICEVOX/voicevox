@@ -131,7 +131,7 @@ describe("store/vuex.js test", () => {
           enableMorphing: false,
           enableMultiEngine: false,
           enableMultiSelect: false,
-          shouldKeepAudioParameter: false,
+          shouldKeepTuningOnTextChange: false,
         },
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {

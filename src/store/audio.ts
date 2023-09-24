@@ -2068,7 +2068,7 @@ export const audioCommandStore = transformCommandStore(
             );
             let newAccentPhrases: AccentPhrase[] = [];
             if (isTextDifferent) {
-              if (state.experimentalSetting.shouldKeepAudioParameter) {
+              if (state.experimentalSetting.shouldKeepTuningOnTextChange) {
                 const diff = diffArrays(
                   query.accentPhrases.map(joinTextsInAccentPhrases),
                   accentPhrases.map(joinTextsInAccentPhrases)
@@ -2093,10 +2093,18 @@ export const audioCommandStore = transformCommandStore(
                   );
                 newAccentPhrases = indexedDiff
                   .filter((d) => !d.removed)
-                  .map(
-                    (d, i) =>
-                      indexToOldAccentPhrase[d.index] ?? accentPhrases[i]
-                  );
+                  .map((d, i) => {
+                    const original = accentPhrases[i];
+                    const ap = indexToOldAccentPhrase[d.index] ?? original;
+                    if (accentPhrases[i].pauseMora !== undefined) {
+                      ap.pauseMora = original.pauseMora;
+                    } else {
+                      delete ap.pauseMora;
+                    }
+                    ap.isInterrogative = original.isInterrogative;
+
+                    return ap;
+                  });
               } else {
                 newAccentPhrases = accentPhrases;
               }

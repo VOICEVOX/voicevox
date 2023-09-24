@@ -499,7 +499,7 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   enableMultiEngine: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
-  shouldKeepAudioParameter: z.boolean().default(false),
+  shouldKeepTuningOnTextChange: z.boolean().default(false),
 });
 
 export type ExperimentalSetting = z.infer<typeof experimentalSettingSchema>;

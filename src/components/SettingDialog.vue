@@ -903,10 +903,12 @@
                 </div>
                 <q-space />
                 <q-toggle
-                  :model-value="experimentalSetting.shouldKeepAudioParameter"
+                  :model-value="
+                    experimentalSetting.shouldKeepTuningOnTextChange
+                  "
                   @update:model-value="
                     changeExperimentalSetting(
-                      'shouldKeepAudioParameter',
+                      'shouldKeepTuningOnTextChange',
                       $event
                     )
                   "
