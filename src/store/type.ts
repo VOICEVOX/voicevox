@@ -702,6 +702,18 @@ export type AudioCommandStoreTypes = {
 };
 
 /*
+ * Audio Player Store Types
+ */
+
+export type AudioPlayerStoreState = {
+  //
+};
+
+export type AudioPlayerStoreTypes = {
+  //
+};
+
+/*
  * Command Store Types
  */
 
@@ -1477,6 +1489,7 @@ export type ProxyStoreTypes = {
  */
 
 export type State = AudioStoreState &
+  AudioPlayerStoreState &
   AudioCommandStoreState &
   CommandStoreState &
   EngineStoreState &
@@ -1489,6 +1502,7 @@ export type State = AudioStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
+  AudioPlayerStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
   EngineStoreTypes &
