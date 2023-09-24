@@ -3,6 +3,7 @@
  */
 import { createPartialStore } from "./vuex";
 import { AudioPlayerStoreState, AudioPlayerStoreTypes } from "./type";
+import { AudioKey } from "@/type/preload";
 
 // ユニットテストが落ちるのを回避するための遅延読み込み
 const getAudioElement = (() => {
