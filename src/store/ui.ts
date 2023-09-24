@@ -1,4 +1,4 @@
-import { Action, ActionContext, ActionsBase } from "./vuex";
+import { Action, ActionContext, ActionsBase, Dispatch } from "./vuex";
 import {
   AllActions,
   AllGetters,
@@ -6,9 +6,19 @@ import {
   UiStoreState,
   UiStoreTypes,
 } from "./type";
-import { ActivePointScrollMode, EngineInfo } from "@/type/preload";
-import { EngineManifest } from "@/openapi";
 import { createPartialStore } from "./vuex";
+import { ActivePointScrollMode } from "@/type/preload";
+import {
+  CommonDialogOptions,
+  LoadingScreenOption,
+  NotifyAndNotShowAgainButtonOption,
+  hideAllLoadingScreen,
+  showAlertDialog,
+  showConfirmDialog,
+  showLoadingScreen,
+  showNotifyAndNotShowAgainButton,
+  showWarningDialog,
+} from "@/components/Dialog";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -26,10 +36,18 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   };
 }
 
+export function withProgress<T>(
+  action: Promise<T>,
+  dispatch: Dispatch<AllActions>
+): Promise<T> {
+  dispatch("START_PROGRESS");
+  return action.finally(() => dispatch("RESET_PROGRESS"));
+}
+
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
-  useGpu: false,
+  reloadingLock: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
@@ -41,9 +59,12 @@ export const uiStoreState: UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: false,
   isAcceptTermsDialogOpen: false,
   isDictionaryManageDialogOpen: false,
+  isEngineManageDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
+  progress: -1,
+  isVuexReady: false,
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
@@ -56,6 +77,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   MENUBAR_LOCKED: {
     getter(state) {
       return state.dialogLockCount > 0;
+    },
+  },
+
+  PROGRESS: {
+    getter(state) {
+      return state.progress;
     },
   },
 
@@ -82,7 +109,9 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         state.uiLockCount--;
       } else {
         // eslint-disable-next-line no-console
-        console.warn("UNLOCK_UI is called when state.uiLockCount == 0");
+        window.electron.logWarn(
+          "UNLOCK_UI is called when state.uiLockCount == 0"
+        );
       }
     },
     action({ commit }) {
@@ -108,233 +137,108 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  /**
+   * 再読み込み中。UNLOCKされることはない。
+   */
+  LOCK_RELOADING: {
+    mutation(state) {
+      state.reloadingLock = true;
+    },
+    action({ commit }) {
+      commit("LOCK_RELOADING");
+    },
+  },
+
   SHOULD_SHOW_PANES: {
     getter(_, getters) {
       return getters.ACTIVE_AUDIO_KEY != undefined;
     },
   },
 
-  IS_HELP_DIALOG_OPEN: {
-    mutation(state, { isHelpDialogOpen }: { isHelpDialogOpen: boolean }) {
-      state.isHelpDialogOpen = isHelpDialogOpen;
-    },
-    action(
-      { state, commit },
-      { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
-    ) {
-      if (state.isHelpDialogOpen === isHelpDialogOpen) return;
-
-      if (isHelpDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen });
-    },
-  },
-
-  IS_SETTING_DIALOG_OPEN: {
-    mutation(state, { isSettingDialogOpen }: { isSettingDialogOpen: boolean }) {
-      state.isSettingDialogOpen = isSettingDialogOpen;
-    },
-    action(
-      { state, commit },
-      { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
-    ) {
-      if (state.isSettingDialogOpen === isSettingDialogOpen) return;
-
-      if (isSettingDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
-    },
-  },
-
-  IS_HOTKEY_SETTING_DIALOG_OPEN: {
-    mutation(state, { isHotkeySettingDialogOpen }) {
-      state.isHotkeySettingDialogOpen = isHotkeySettingDialogOpen;
-    },
-    action({ state, commit }, { isHotkeySettingDialogOpen }) {
-      if (state.isHotkeySettingDialogOpen === isHotkeySettingDialogOpen) return;
-
-      if (isHotkeySettingDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_HOTKEY_SETTING_DIALOG_OPEN", { isHotkeySettingDialogOpen });
-    },
-  },
-
-  IS_TOOLBAR_SETTING_DIALOG_OPEN: {
+  SET_DIALOG_OPEN: {
     mutation(
       state,
-      { isToolbarSettingDialogOpen }: { isToolbarSettingDialogOpen: boolean }
+      dialogState: {
+        isDefaultStyleSelectDialogOpen?: boolean;
+        isAcceptRetrieveTelemetryDialogOpen?: boolean;
+        isAcceptTermsDialogOpen?: boolean;
+        isDictionaryManageDialogOpen?: boolean;
+        isHelpDialogOpen?: boolean;
+        isSettingDialogOpen?: boolean;
+        isHotkeySettingDialogOpen?: boolean;
+        isToolbarSettingDialogOpen?: boolean;
+        isCharacterOrderDialogOpen?: boolean;
+        isEngineManageDialogOpen?: boolean;
+      }
     ) {
-      state.isToolbarSettingDialogOpen = isToolbarSettingDialogOpen;
+      for (const [key, value] of Object.entries(dialogState)) {
+        if (!(key in state)) {
+          throw new Error(`Unknown dialog state: ${key}`);
+        }
+        state[key] = value;
+      }
     },
-    action(
-      { state, commit },
-      { isToolbarSettingDialogOpen }: { isToolbarSettingDialogOpen: boolean }
-    ) {
-      if (state.isToolbarSettingDialogOpen === isToolbarSettingDialogOpen)
-        return;
+    async action({ state, commit }, dialogState) {
+      for (const [key, value] of Object.entries(dialogState)) {
+        if (state[key] === value) continue;
 
-      if (isToolbarSettingDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
+        if (value) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
       }
 
-      commit("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
-        isToolbarSettingDialogOpen,
-      });
+      commit("SET_DIALOG_OPEN", dialogState);
     },
   },
 
-  IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN: {
-    mutation(state, { isAcceptRetrieveTelemetryDialogOpen }) {
-      state.isAcceptRetrieveTelemetryDialogOpen =
-        isAcceptRetrieveTelemetryDialogOpen;
-    },
-    async action({ state, commit }, { isAcceptRetrieveTelemetryDialogOpen }) {
-      if (
-        state.isAcceptRetrieveTelemetryDialogOpen ===
-        isAcceptRetrieveTelemetryDialogOpen
-      )
-        return;
-
-      if (isAcceptRetrieveTelemetryDialogOpen) commit("LOCK_UI");
-      else commit("UNLOCK_UI");
-
-      commit("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
-        isAcceptRetrieveTelemetryDialogOpen,
-      });
-    },
-  },
-
-  IS_ACCEPT_TERMS_DIALOG_OPEN: {
-    mutation(state, { isAcceptTermsDialogOpen }) {
-      state.isAcceptTermsDialogOpen = isAcceptTermsDialogOpen;
-    },
-    async action({ state, commit }, { isAcceptTermsDialogOpen }) {
-      if (state.isAcceptTerms_DialogOpen === isAcceptTermsDialogOpen) return;
-
-      if (isAcceptTermsDialogOpen) commit("LOCK_UI");
-      else commit("UNLOCK_UI");
-
-      commit("IS_ACCEPT_TERMS_DIALOG_OPEN", {
-        isAcceptTermsDialogOpen,
-      });
-    },
-  },
-
-  IS_DICTIONARY_MANAGE_DIALOG_OPEN: {
-    mutation(
-      state,
-      {
-        isDictionaryManageDialogOpen,
-      }: { isDictionaryManageDialogOpen: boolean }
-    ) {
-      state.isDictionaryManageDialogOpen = isDictionaryManageDialogOpen;
-    },
-    async action({ state, commit }, { isDictionaryManageDialogOpen }) {
-      if (state.isDictionaryManageDialogOpen === isDictionaryManageDialogOpen)
-        return;
-
-      if (isDictionaryManageDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
+  SHOW_ALERT_DIALOG: {
+    action: createUILockAction(
+      async (_, payload: { title: string; message: string; ok?: string }) => {
+        return await showAlertDialog(payload);
       }
+    ),
+  },
 
-      commit("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
-        isDictionaryManageDialogOpen,
-      });
+  SHOW_CONFIRM_DIALOG: {
+    action: createUILockAction(
+      async (_, payload: CommonDialogOptions["confirm"]) => {
+        return await showConfirmDialog(payload);
+      }
+    ),
+  },
+
+  SHOW_WARNING_DIALOG: {
+    action: createUILockAction(
+      async (_, payload: CommonDialogOptions["warning"]) => {
+        return await showWarningDialog(payload);
+      }
+    ),
+  },
+
+  SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
+    action({ dispatch }, payload: NotifyAndNotShowAgainButtonOption) {
+      showNotifyAndNotShowAgainButton({ dispatch }, payload);
     },
   },
 
-  ON_VUEX_READY: {
+  SHOW_LOADING_SCREEN: {
+    action(_, payload: LoadingScreenOption) {
+      showLoadingScreen(payload);
+    },
+  },
+
+  HIDE_ALL_LOADING_SCREEN: {
     action() {
-      window.electron.vuexReady();
-    },
-  },
-
-  IS_CHARACTER_ORDER_DIALOG_OPEN: {
-    mutation(
-      state,
-      { isCharacterOrderDialogOpen }: { isCharacterOrderDialogOpen: boolean }
-    ) {
-      state.isCharacterOrderDialogOpen = isCharacterOrderDialogOpen;
-    },
-    async action({ state, commit }, { isCharacterOrderDialogOpen }) {
-      if (state.isCharacterOrderDialogOpen === isCharacterOrderDialogOpen)
-        return;
-
-      if (isCharacterOrderDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_CHARACTER_ORDER_DIALOG_OPEN", {
-        isCharacterOrderDialogOpen,
-      });
-    },
-  },
-
-  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
-    mutation(
-      state,
-      {
-        isDefaultStyleSelectDialogOpen,
-      }: { isDefaultStyleSelectDialogOpen: boolean }
-    ) {
-      state.isDefaultStyleSelectDialogOpen = isDefaultStyleSelectDialogOpen;
-    },
-    async action({ state, commit }, { isDefaultStyleSelectDialogOpen }) {
-      if (
-        state.isDefaultStyleSelectDialogOpen === isDefaultStyleSelectDialogOpen
-      )
-        return;
-
-      if (isDefaultStyleSelectDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
-        isDefaultStyleSelectDialogOpen,
-      });
+      hideAllLoadingScreen();
     },
   },
 
   HYDRATE_UI_STORE: {
     async action({ commit }) {
-      commit("SET_USE_GPU", {
-        useGpu: await window.electron.getSetting("useGpu"),
-      });
-
       commit("SET_INHERIT_AUDIOINFO", {
         inheritAudioInfo: await window.electron.getSetting("inheritAudioInfo"),
       });
@@ -353,63 +257,13 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  SET_USE_GPU: {
-    mutation(state, { useGpu }: { useGpu: boolean }) {
-      state.useGpu = useGpu;
+  ON_VUEX_READY: {
+    mutation(state) {
+      state.isVuexReady = true;
     },
-    async action({ commit }, { useGpu }: { useGpu: boolean }) {
-      commit("SET_USE_GPU", {
-        useGpu: await window.electron.setSetting("useGpu", useGpu),
-      });
-    },
-  },
-
-  GET_ENGINE_INFOS: {
-    async action({ commit }) {
-      commit("SET_ENGINE_INFOS", {
-        engineInfos: await window.electron.engineInfos(),
-      });
-    },
-  },
-
-  SET_ENGINE_INFOS: {
-    mutation(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
-      state.engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
-      state.engineInfos = Object.fromEntries(
-        engineInfos.map((engineInfo) => [engineInfo.uuid, engineInfo])
-      );
-      state.engineStates = Object.fromEntries(
-        engineInfos.map((engineInfo) => [engineInfo.uuid, "STARTING"])
-      );
-    },
-  },
-
-  SET_ENGINE_MANIFESTS: {
-    mutation(
-      state,
-      { engineManifests }: { engineManifests: Record<string, EngineManifest> }
-    ) {
-      state.engineManifests = engineManifests;
-    },
-  },
-
-  FETCH_AND_SET_ENGINE_MANIFESTS: {
-    async action({ state, commit }) {
-      commit("SET_ENGINE_MANIFESTS", {
-        engineManifests: Object.fromEntries(
-          await Promise.all(
-            state.engineIds.map(
-              async (engineId) =>
-                await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-                  engineId,
-                }).then(async (instance) => [
-                  engineId,
-                  await instance.invoke("engineManifestEngineManifestGet")({}),
-                ])
-            )
-          )
-        ),
-      });
+    action({ commit }) {
+      window.electron.vuexReady();
+      commit("ON_VUEX_READY");
     },
   },
 
@@ -515,18 +369,15 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    async action({ getters }) {
+    /**
+     * プロジェクトファイル未保存の場合、保存するかどうかを確認する。
+     * 保存後にウィンドウを閉じるか、アプリを再読み込みする。
+     * 保存がキャンセルされた場合は何もしない。
+     */
+    async action({ dispatch, getters }, obj) {
       if (getters.IS_EDITED) {
-        const result: number = await window.electron.showQuestionDialog({
-          type: "info",
-          title: "警告",
-          message:
-            "プロジェクトの変更が保存されていません。\n" +
-            "変更を破棄してもよろしいですか？",
-          buttons: ["破棄", "キャンセル"],
-          cancelId: 1,
-        });
-        if (result == 1) {
+        const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {});
+        if (result == "canceled") {
           return;
         }
       }
@@ -539,7 +390,56 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       await dispatch("CHECK_EDITED_AND_NOT_SAVE");
       await dispatch("STOP_RENDERING");
 
-      window.electron.closeWindow();
+      if (obj.closeOrReload == "close") {
+        window.electron.closeWindow();
+      } else if (obj.closeOrReload == "reload") {
+        await dispatch("RELOAD_APP", {
+          isMultiEngineOffMode: obj.isMultiEngineOffMode,
+        });
+      }
+    },
+  },
+
+  RELOAD_APP: {
+    action: createUILockAction(
+      async (
+        { dispatch },
+        { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }
+      ) => {
+        await dispatch("LOCK_RELOADING");
+        await window.electron.reloadApp({
+          isMultiEngineOffMode: !!isMultiEngineOffMode,
+        });
+      }
+    ),
+  },
+
+  START_PROGRESS: {
+    action({ dispatch }) {
+      dispatch("SET_PROGRESS", { progress: 0 });
+    },
+  },
+
+  SET_PROGRESS: {
+    mutation(state, { progress }) {
+      state.progress = progress;
+    },
+    // progressは-1(非表示)と[0, 1]の範囲を取る
+    action({ commit }, { progress }) {
+      commit("SET_PROGRESS", { progress });
+    },
+  },
+
+  SET_PROGRESS_FROM_COUNT: {
+    action({ commit }, { finishedCount, totalCount }) {
+      commit("SET_PROGRESS", { progress: finishedCount / totalCount });
+    },
+  },
+
+  RESET_PROGRESS: {
+    action({ dispatch }) {
+      // -1で非表示
+      dispatch("SET_PROGRESS", { progress: -1 });
     },
   },
 });

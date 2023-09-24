@@ -2,11 +2,18 @@ import {
   AppInfos,
   ElectronStoreType,
   EngineInfo,
+  EngineDirValidationResult,
   HotkeySetting,
   ThemeSetting,
   ToolbarSetting,
   UpdateInfo,
+  NativeThemeType,
+  EngineSetting,
+  EngineId,
+  MessageBoxReturnValue,
 } from "@/type/preload";
+import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
 /**
  * invoke, handle
@@ -15,11 +22,6 @@ export type IpcIHData = {
   GET_APP_INFOS: {
     args: [];
     return: AppInfos;
-  };
-
-  GET_TEMP_DIR: {
-    args: [];
-    return: string;
   };
 
   GET_HOW_TO_USE_TEXT: {
@@ -62,12 +64,22 @@ export type IpcIHData = {
     return: string;
   };
 
+  GET_ALT_PORT_INFOS: {
+    args: [];
+    return: AltPortInfos;
+  };
+
   SHOW_AUDIO_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
   };
 
   SHOW_TEXT_SAVE_DIALOG: {
+    args: [obj: { title: string; defaultPath?: string }];
+    return?: string;
+  };
+
+  SHOW_VVPP_OPEN_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
   };
@@ -100,7 +112,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   SHOW_QUESTION_DIALOG: {
@@ -111,6 +123,7 @@ export type IpcIHData = {
         message: string;
         buttons: string[];
         cancelId?: number;
+        defaultId?: number;
       }
     ];
     return: number;
@@ -123,7 +136,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   SHOW_ERROR_DIALOG: {
@@ -133,12 +146,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
-  };
-
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    args: [];
-    return: void;
+    return: MessageBoxReturnValue;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -171,8 +179,18 @@ export type IpcIHData = {
     return: void;
   };
 
+  LOG_WARN: {
+    args: [...params: unknown[]];
+    return: void;
+  };
+
   LOG_INFO: {
     args: [...params: unknown[]];
+    return: void;
+  };
+
+  OPEN_LOG_DIRECTORY: {
+    args: [];
     return: void;
   };
 
@@ -187,12 +205,12 @@ export type IpcIHData = {
   };
 
   RESTART_ENGINE: {
-    args: [obj: { engineId: string }];
+    args: [obj: { engineId: EngineId }];
     return: void;
   };
 
   OPEN_ENGINE_DIRECTORY: {
-    args: [obj: { engineId: string }];
+    args: [obj: { engineId: EngineId }];
     return: void;
   };
 
@@ -209,11 +227,6 @@ export type IpcIHData = {
   HOTKEY_SETTINGS: {
     args: [obj: { newData?: HotkeySetting }];
     return: HotkeySetting[];
-  };
-
-  IS_UNSET_DEFAULT_STYLE_ID: {
-    args: [speakerUuid: string];
-    return: boolean;
   };
 
   GET_DEFAULT_HOTKEY_SETTINGS: {
@@ -236,15 +249,57 @@ export type IpcIHData = {
     return: void;
   };
 
-  // TODO: genericsが使用できないため、unknownで型宣言して実装時に型を付ける
   GET_SETTING: {
     args: [key: keyof ElectronStoreType];
-    return: unknown;
+    return: ElectronStoreType[keyof ElectronStoreType];
   };
 
   SET_SETTING: {
-    args: [key: keyof ElectronStoreType, newValue: unknown];
-    return: unknown;
+    args: [
+      key: keyof ElectronStoreType,
+      newValue: ElectronStoreType[keyof ElectronStoreType]
+    ];
+    return: ElectronStoreType[keyof ElectronStoreType];
+  };
+
+  SET_ENGINE_SETTING: {
+    args: [engineId: EngineId, engineSetting: EngineSetting];
+    return: void;
+  };
+
+  SET_NATIVE_THEME: {
+    args: [source: NativeThemeType];
+    return: void;
+  };
+
+  INSTALL_VVPP_ENGINE: {
+    args: [path: string];
+    return: Promise<boolean>;
+  };
+
+  UNINSTALL_VVPP_ENGINE: {
+    args: [engineId: EngineId];
+    return: Promise<boolean>;
+  };
+
+  VALIDATE_ENGINE_DIR: {
+    args: [obj: { engineDir: string }];
+    return: EngineDirValidationResult;
+  };
+
+  RELOAD_APP: {
+    args: [obj: { isMultiEngineOffMode?: boolean }];
+    return: void;
+  };
+
+  WRITE_FILE: {
+    args: [obj: { filePath: string; buffer: ArrayBuffer }];
+    return: Result<undefined>;
+  };
+
+  READ_FILE: {
+    args: [obj: { filePath: string }];
+    return: Result<ArrayBuffer>;
   };
 };
 
@@ -268,7 +323,7 @@ export type IpcSOData = {
   };
 
   DETECTED_ENGINE_ERROR: {
-    args: [obj: { engineId: string }];
+    args: [obj: { engineId: EngineId }];
     return: void;
   };
 
@@ -292,8 +347,18 @@ export type IpcSOData = {
     return: void;
   };
 
+<<<<<<< HEAD
   PROCESS_BEFORE_QUITTING: {
     args: [];
+=======
+  CHECK_EDITED_AND_NOT_SAVE: {
+    args: [
+      obj: {
+        closeOrReload: "close" | "reload";
+        isMultiEngineOffMode?: boolean;
+      }
+    ];
+>>>>>>> main
     return: void;
   };
 

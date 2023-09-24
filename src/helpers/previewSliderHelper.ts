@@ -1,14 +1,31 @@
 import { ref, computed, Ref, Events } from "vue";
 import { QSliderProps, debounce } from "quasar";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+
 export type Props = {
   onPan?: QSliderProps["onPan"];
-  onChange?: QSliderProps["onChange"];
+  /**
+   * スライダーの値が確定した時に呼び出される。
+   */
+  onChange: (value: number) => Promise<void>;
   modelValue: () => number | null;
+  /**
+   * デフォルトは`0`。
+   */
   min?: () => number;
-  max?: () => number;
-  disable?: () => boolean;
+  max: () => number;
+  /**
+   * デフォルトは`1`。
+   */
   step?: () => number;
+  disable?: () => boolean;
+  /**
+   * デフォルトは`this.step`。
+   */
   scrollStep?: () => number;
+  /**
+   * デフォルトは`this.scrollStep`。
+   */
   scrollMinStep?: () => number;
   disableScroll?: () => boolean;
 };
@@ -25,6 +42,7 @@ export type PreviewSliderHelper = {
     max: Ref<number>;
     step: Ref<number>;
     disable: Ref<boolean>;
+    modelValue: Ref<number | null>;
     "onUpdate:modelValue": (value: number) => void;
     onChange: (value: number) => void;
     onWheel: (event: Events["onWheel"]) => void;
@@ -62,7 +80,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   // Reactive references of each props
   const modelValue = computed(props.modelValue);
   const min = computed(() => (props.min && props.min()) ?? 0);
-  const max = computed(() => (props.max && props.max()) ?? 100);
+  const max = computed(() => props.max());
   const disable = computed(() => (props.disable && props.disable()) ?? false);
   const step = computed(() => (props.step && props.step()) ?? 1);
   const scrollStep = computed(
@@ -97,8 +115,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     if (previewValue.value === null)
       throw new Error("previewValue.value === null");
     if (modelValue.value !== previewValue.value && props.onChange) {
-      const ret: unknown = props.onChange(previewValue.value);
-      if (ret instanceof Promise) await ret;
+      await props.onChange(previewValue.value);
     }
   };
 
@@ -152,8 +169,9 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
       return;
     event.preventDefault();
     const deltaY = event.deltaY;
-    const ctrlKey = event.ctrlKey;
-    const step = ctrlKey ? scrollMinStep.value : scrollStep.value;
+    const step = isOnCommandOrCtrlKeyDown(event)
+      ? scrollMinStep.value
+      : scrollStep.value;
     const diff = -step * Math.sign(deltaY);
     const nextValue = Math.min(
       Math.max(currentValue.value + diff, min.value),

@@ -17,7 +17,11 @@ import {
   audioCommandStoreState,
   getCharacterInfo,
 } from "./audio";
+<<<<<<< HEAD
 import { singingStoreState, singingStore } from "./singing";
+=======
+import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
+>>>>>>> main
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
@@ -25,7 +29,14 @@ import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
-import { DefaultStyleId } from "@/type/preload";
+import { engineStoreState, engineStore } from "./engine";
+import {
+  DefaultStyleId,
+  EngineId,
+  SpeakerId,
+  StyleId,
+  Voice,
+} from "@/type/preload";
 
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
@@ -34,6 +45,7 @@ export const storeKey: InjectionKey<
 export const indexStoreState: IndexStoreState = {
   defaultStyleIds: [],
   userCharacterOrder: [],
+  isMultiEngineOffMode: false,
 };
 
 export const indexStore = createPartialStore<IndexStoreTypes>({
@@ -107,6 +119,23 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
+  GET_ALL_VOICES: {
+    getter(state) {
+      const flattenCharacters = Object.values(state.characterInfos).flatMap(
+        (characterInfos) => characterInfos
+      );
+      const flattenVoices: Voice[] = flattenCharacters.flatMap((c) =>
+        c.metas.styles.map((s) => ({
+          engineId: EngineId(s.engineId),
+          speakerId: SpeakerId(c.metas.speakerUuid),
+          styleId: StyleId(s.styleId),
+        }))
+      );
+
+      return flattenVoices;
+    },
+  },
+
   GET_HOW_TO_USE_TEXT: {
     async action() {
       return await window.electron.getHowToUseText();
@@ -155,23 +184,33 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
-  IS_UNSET_DEFAULT_STYLE_ID: {
-    async action(_, { speakerUuid }) {
-      return await window.electron.isUnsetDefaultStyleId(speakerUuid);
-    },
-  },
-
   LOAD_DEFAULT_STYLE_IDS: {
     async action({ commit, getters }) {
       let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
 
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
 
-      // デフォルトスタイルが設定されていない場合は0をセットする
-      // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき
+      // デフォルトスタイルが設定されていない、または
+      // デフォルトスタイルのスタイルが存在しない場合は0をセットする
+      // FIXME: 勝手に0番のデフォルトスタイルが保存されてしまうため、存在しないデフォルトスタイルでもUIが表示されるようにする
       const unsetCharacterInfos = [...allCharacterInfos.keys()].filter(
-        (speakerUuid) =>
-          !defaultStyleIds.some((styleId) => styleId.speakerUuid == speakerUuid)
+        (speakerUuid) => {
+          const defaultStyleId = defaultStyleIds.find(
+            (styleId) => styleId.speakerUuid == speakerUuid
+          );
+          if (defaultStyleId === undefined) {
+            return true;
+          }
+
+          const characterInfo = allCharacterInfos.get(speakerUuid);
+
+          if (!characterInfo) {
+            return false;
+          }
+          return !characterInfo.metas.styles.some(
+            (style) => style.styleId == defaultStyleId.defaultStyleId
+          );
+        }
       );
       defaultStyleIds = [
         ...defaultStyleIds,
@@ -183,6 +222,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
             );
           }
           return {
+            engineId: characterInfo.metas.styles[0].engineId,
             speakerUuid: speakerUuid,
             defaultStyleId: characterInfo.metas.styles[0].styleId,
           };
@@ -202,16 +242,10 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       if (state.audioKeys.length === 1) {
         const audioItem = state.audioItems[state.audioKeys[0]];
         if (audioItem.text === "") {
-          if (audioItem.engineId === undefined)
-            throw new Error("assert audioItem.engineId !== undefined");
-
-          if (audioItem.styleId === undefined)
-            throw new Error("assert audioItem.styleId !== undefined");
-
           const characterInfo = getCharacterInfo(
             state,
-            audioItem.engineId,
-            audioItem.styleId
+            audioItem.voice.engineId,
+            audioItem.voice.styleId
           );
 
           if (characterInfo === undefined)
@@ -220,9 +254,15 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
           const speakerUuid = characterInfo.metas.speakerUuid;
           const defaultStyleId = defaultStyleIds.find(
             (styleId) => speakerUuid == styleId.speakerUuid
-          )?.defaultStyleId;
+          );
+          if (defaultStyleId == undefined)
+            throw new Error("defaultStyleId == undefined");
 
-          audioItem.styleId = defaultStyleId;
+          audioItem.voice = {
+            engineId: defaultStyleId.engineId,
+            speakerId: defaultStyleId.speakerUuid,
+            styleId: defaultStyleId.defaultStyleId,
+          };
         }
       }
     },
@@ -273,6 +313,12 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
+  LOG_WARN: {
+    action(_, ...params: unknown[]) {
+      window.electron.logWarn(...params);
+    },
+  },
+
   LOG_INFO: {
     action(_, ...params: unknown[]) {
       window.electron.logInfo(...params);
@@ -293,14 +339,28 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       });
     },
   },
+
+  SET_IS_MULTI_ENGINE_OFF_MODE: {
+    mutation(state, { isMultiEngineOffMode }) {
+      state.isMultiEngineOffMode = isMultiEngineOffMode;
+    },
+    action({ commit }, isMultiEngineOffMode) {
+      commit("SET_IS_MULTI_ENGINE_OFF_MODE", { isMultiEngineOffMode });
+    },
+  },
 });
 
 export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   state: {
     ...uiStoreState,
     ...audioStoreState,
+<<<<<<< HEAD
     ...singingStoreState,
+=======
+    ...audioPlayerStoreState,
+>>>>>>> main
     ...commandStoreState,
+    ...engineStoreState,
     ...projectStoreState,
     ...settingStoreState,
     ...audioCommandStoreState,
@@ -314,7 +374,9 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   getters: {
     ...uiStore.getters,
     ...audioStore.getters,
+    ...audioPlayerStore.getters,
     ...commandStore.getters,
+    ...engineStore.getters,
     ...projectStore.getters,
     ...settingStore.getters,
     ...presetStore.getters,
@@ -328,7 +390,9 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   mutations: {
     ...uiStore.mutations,
     ...audioStore.mutations,
+    ...audioPlayerStore.mutations,
     ...commandStore.mutations,
+    ...engineStore.mutations,
     ...projectStore.mutations,
     ...settingStore.mutations,
     ...audioCommandStore.mutations,
@@ -342,6 +406,8 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   actions: {
     ...uiStore.actions,
     ...audioStore.actions,
+    ...audioPlayerStore.actions,
+    ...engineStore.actions,
     ...commandStore.actions,
     ...projectStore.actions,
     ...settingStore.actions,

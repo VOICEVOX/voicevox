@@ -1,5 +1,133 @@
 [
   {
+    "version": "0.14.7",
+    "descriptions": [
+      "キャラクター「中国うさぎ」を追加",
+      "キャラクター「波音リツ」「もち子さん」のスタイルを追加"
+    ],
+    "contributors": []
+  },
+  {
+    "version": "0.14.6",
+    "descriptions": [
+      "キャラクター「春歌ナナ」「猫使アル」「猫使ビィ」を追加",
+      "バグ修正"
+    ],
+    "contributors": ["Hiroshiba"]
+  },
+  {
+    "version": "0.14.5",
+    "descriptions": [
+      "キャラクター「†聖騎士 紅桜†」「雀松朱司」「麒ヶ島宗麟」を追加",
+      "同時書き込みで辞書が破損する問題を修正"
+    ],
+    "contributors": ["Hiroshiba"]
+  },
+  {
+    "version": "0.14.4",
+    "descriptions": ["デフォルトスタイル選択ダイアログが閉じれないバグを修正"],
+    "contributors": ["sevenc-nanashi"]
+  },
+  {
+    "version": "0.14.3",
+    "descriptions": ["GPUモードが動作しない・極端に遅い問題を解決"],
+    "contributors": []
+  },
+  {
+    "version": "0.14.2",
+    "descriptions": ["エンジンのバージョンを0.14.1に"],
+    "contributors": []
+  },
+  {
+    "version": "0.14.1",
+    "descriptions": [
+      "一部環境で起動しない問題を修正",
+      "タイトルバーからデバイス表記を除去"
+    ],
+    "contributors": ["sevenc-nanashi"]
+  },
+  {
+    "version": "0.14.0",
+    "descriptions": [
+      "プロジェクトを名前をつけて保存時にファイルが切り替わるように",
+      "コアをRust言語に移行",
+      "音声書き出し時にプログレスバー表示",
+      "話速や音量の値をテキスト入力可能に",
+      "デフォルトのフォントを変更",
+      "テキスト欄の複製機能",
+      "モーフィング機能",
+      "スタイルごとに異なる立ち絵の提供を可能に",
+      "DirectML利用時に適したGPUを自動選択",
+      "マルチエンジン機能",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "aoirint",
+      "Appletigerv",
+      "haru3me",
+      "Hiroshiba",
+      "jdkfx",
+      "kantas-spike",
+      "kat0h",
+      "k-chop",
+      "ksk001100",
+      "madosuki",
+      "masinc",
+      "misogihagi",
+      "MT224244",
+      "My-MC",
+      "nebocco",
+      "PickledChair",
+      "qryxip",
+      "qwerty2501",
+      "raa0121",
+      "sabonerune",
+      "sarisia",
+      "Segu-g",
+      "sevenc-nanashi",
+      "sheltie-fusafusa",
+      "shigobu",
+      "shirayu",
+      "sigprogramming",
+      "smly",
+      "sousuke0422",
+      "takana-v",
+      "TOMOFUMI-KONDO",
+      "ts-klassen",
+      "tunamaguro",
+      "wappon-28-dev",
+      "whiteball",
+      "y-chan"
+    ]
+  },
+  {
+    "version": "0.13.4",
+    "descriptions": [
+      "キャラクター「ちび式じい」「櫻歌ミコ」「小夜/SAYO」「ナースロボ＿タイプＴ」を追加",
+      "キャラクター「玄野武宏」のスタイルを追加",
+      "バグ修正"
+    ],
+    "contributors": ["Appletigerv"]
+  },
+  {
+    "version": "0.13.3",
+    "descriptions": [
+      "キャラクター「四国めたん」「ずんだもん」のスタイルを追加",
+      "キャラクター「ずんだもん」「九州そら」の「ささやき」スタイルを更新"
+    ],
+    "contributors": ["aoirint"]
+  },
+  {
+    "version": "0.13.2",
+    "descriptions": [
+      "キャラクター「WhiteCUL」「後鬼」「No.7」を追加",
+      "キャラクター「白上虎太郎」のスタイルを追加",
+      "バグ修正"
+    ],
+    "contributors": ["kantas-spike", "PickledChair"]
+  },
+  {
     "version": "0.13.1",
     "descriptions": ["バグ修正"],
     "contributors": ["Hiroshiba", "y-chan"]
@@ -11,7 +139,6 @@
       "イントネーションのTips追加",
       "辞書登録単語の優先度を変更可能に",
       "ダークテーマを追加",
-      "コアをRust言語に移行",
       "開発環境の向上",
       "バグ修正"
     ],

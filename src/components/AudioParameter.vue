@@ -4,21 +4,25 @@
     @mouseleave="handleMouseHover(false)"
   >
     <q-badge
-      class="value-label"
-      color="primary-light"
-      text-color="display-on-primary"
       v-if="
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "
+      class="value-label"
+      color="primary"
+      text-color="display-on-primary"
     >
-      {{ previewSlider.state.currentValue.value?.toFixed(precisionComputed) }}
+      {{
+        previewSlider.state.currentValue.value != undefined
+          ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
+          : undefined
+      }}
     </q-badge>
     <q-slider
       vertical
       reverse
       snap
-      color="primary-light"
-      trackSize="2.5px"
+      color="primary"
+      track-size="2.5px"
       :style="clipPathComputed"
       :min="previewSlider.qSliderProps.min.value"
       :max="previewSlider.qSliderProps.max.value"
@@ -26,9 +30,7 @@
       :disable="previewSlider.qSliderProps.disable.value"
       :model-value="previewSlider.qSliderProps.modelValue.value"
       @update:model-value="previewSlider.qSliderProps['onUpdate:modelValue']"
-      @click.stop="
-        undefined; // クリックでアクセント句が選択されないように
-      "
+      @click.stop="stopPropagation"
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"
       @pan="previewSlider.qSliderProps.onPan"
@@ -36,100 +38,101 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { computed, reactive } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
-import { computed, defineComponent, reactive } from "vue";
 
-export default defineComponent({
-  name: "AudioParameter",
+const props = withDefaults(
+  defineProps<{
+    value: number;
+    moraIndex: number;
+    uiLocked: boolean;
+    min?: number;
+    max?: number;
+    step?: number;
+    disable?: boolean;
+    type?: MoraDataType;
+    clip?: boolean;
+    shiftKeyFlag?: boolean;
+  }>(),
+  {
+    min: 0.0,
+    max: 10.0,
+    step: 0.01,
+    disable: false,
+    type: "vowel",
+    clip: false,
+    shiftKeyFlag: false,
+  }
+);
 
-  props: {
-    value: { type: Number, required: true },
-    accentPhraseIndex: { type: Number, required: true },
-    moraIndex: { type: Number, required: true },
-    uiLocked: { type: Boolean, required: true },
-    min: { type: Number, default: 0.0 },
-    max: { type: Number, default: 10.0 },
-    step: { type: Number, default: 0.01 },
-    disable: { type: Boolean, default: false },
-    type: { type: String as () => MoraDataType, default: "vowel" },
-    clip: { type: Boolean, default: false },
-    shiftKeyFlag: { type: Boolean, default: false },
-  },
+const emit =
+  defineEmits<{
+    (
+      e: "changeValue",
+      moraIndex: number,
+      newValue: number,
+      type: MoraDataType
+    ): Promise<void>;
+    (
+      e: "mouseOver",
+      isOver: boolean,
+      type: MoraDataType,
+      moraIndex: number
+    ): void;
+  }>();
 
-  emits: ["changeValue", "mouseOver"],
+const changeValue = (newValue: number, type: MoraDataType = props.type) =>
+  emit("changeValue", props.moraIndex, newValue, type);
 
-  setup(props, { emit }) {
-    const changeValue = (newValue: number, type: MoraDataType = props.type) => {
-      emit(
-        "changeValue",
-        props.accentPhraseIndex,
-        props.moraIndex,
-        newValue,
-        type
-      );
-    };
-
-    const previewSlider = previewSliderHelper({
-      modelValue: () => props.value,
-      disable: () => props.disable || props.uiLocked,
-      onChange: changeValue,
-      max: () => props.max,
-      min: () => props.min,
-      step: () => props.step,
-      scrollStep: () => props.step * 10,
-      scrollMinStep: () => props.step,
-      disableScroll: () => props.shiftKeyFlag, // shift+ホイール操作の横方向スクロール中にスライダー操作を無視するため
-    });
-
-    const valueLabel = reactive({
-      visible: false,
-    });
-
-    const clipPathComputed = computed((): string => {
-      if (!props.clip) {
-        return "";
-      } else {
-        if (props.type == "vowel") {
-          return "clip-path: inset(-50% -50% -50% 50%)";
-        } else {
-          return "clip-path: inset(-50% 50% -50% -50%)";
-        }
-      }
-    });
-
-    const handleMouseHover = (isOver: boolean) => {
-      valueLabel.visible = isOver;
-      if (props.type == "consonant" || props.type == "vowel") {
-        emit(
-          "mouseOver",
-          isOver,
-          props.type,
-          props.accentPhraseIndex,
-          props.moraIndex
-        );
-      }
-    };
-
-    const precisionComputed = computed(() => {
-      if (props.type == "pause" || props.type == "pitch") {
-        return 2;
-      } else {
-        return 3;
-      }
-    });
-
-    return {
-      previewSlider,
-      changeValue,
-      valueLabel,
-      clipPathComputed,
-      handleMouseHover,
-      precisionComputed,
-    };
-  },
+const previewSlider = previewSliderHelper({
+  modelValue: () => props.value,
+  disable: () => props.disable || props.uiLocked,
+  onChange: changeValue,
+  max: () => props.max,
+  min: () => props.min,
+  step: () => props.step,
+  scrollStep: () => props.step * 10,
+  scrollMinStep: () => props.step,
+  disableScroll: () => props.shiftKeyFlag, // shift+ホイール操作の横方向スクロール中にスライダー操作を無視するため
 });
+
+const valueLabel = reactive({
+  visible: false,
+});
+
+const clipPathComputed = computed((): string => {
+  if (!props.clip) {
+    return "";
+  } else {
+    if (props.type == "vowel") {
+      return "clip-path: inset(-50% -50% -50% 50%)";
+    } else {
+      return "clip-path: inset(-50% 50% -50% -50%)";
+    }
+  }
+});
+
+const handleMouseHover = (isOver: boolean) => {
+  valueLabel.visible = isOver;
+  if (props.type == "consonant" || props.type == "vowel") {
+    emit("mouseOver", isOver, props.type, props.moraIndex);
+  }
+};
+
+const precisionComputed = computed(() => {
+  if (props.type == "pause" || props.type == "pitch") {
+    return 2;
+  } else {
+    return 3;
+  }
+});
+
+// クリックでアクセント句が選択されないように@click.stopに渡す
+const stopPropagation = () => {
+  // fn is not a function エラーを回避するために何もしない関数を渡す
+};
 </script>
 
 <style scoped lang="scss">

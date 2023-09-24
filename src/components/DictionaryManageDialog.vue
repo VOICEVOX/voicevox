@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="dictionaryManageDialogOpenedComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="setting-dialog transparent-backdrop"
-    v-model="dictionaryManageDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container>
@@ -20,19 +20,31 @@
               flat
               icon="close"
               color="display"
+              :disable="wordEditing"
               @click="discardOrNotDialog(closeDialog)"
             />
           </q-toolbar>
         </q-header>
         <q-page class="row">
-          <div v-if="loadingDict" class="loading-dict">
+          <div v-if="loadingDictState" class="loading-dict">
             <div>
               <q-spinner color="primary" size="2.5rem" />
-              <div class="q-mt-xs">読み込み中・・・</div>
+              <div class="q-mt-xs">
+                <template v-if="loadingDictState === 'loading'"
+                  >読み込み中・・・</template
+                >
+                <template v-if="loadingDictState === 'synchronizing'"
+                  >同期中・・・</template
+                >
+              </div>
             </div>
           </div>
           <div class="col-4 word-list-col">
-            <div v-if="wordEditing" class="word-list-disable-overlay" />
+            <div
+              v-if="wordEditing"
+              class="word-list-disable-overlay"
+              @click="discardOrNotDialog(cancel)"
+            />
             <div class="word-list-header text-no-wrap">
               <div class="row word-list-title text-h5">単語一覧</div>
               <div class="row no-wrap">
@@ -40,24 +52,24 @@
                   outline
                   text-color="warning"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="deleteWord"
                   :disable="uiLocked || !isDeletable"
+                  @click="deleteWord"
                   >削除</q-btn
                 >
                 <q-btn
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="editWord"
                   :disable="uiLocked || !selectedId"
+                  @click="editWord"
                   >編集</q-btn
                 >
                 <q-btn
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="newWord"
                   :disable="uiLocked"
+                  @click="newWord"
                   >追加</q-btn
                 >
               </div>
@@ -66,12 +78,13 @@
               <q-item
                 v-for="(value, key) in userDict"
                 :key="key"
-                tag="label"
                 v-ripple
+                tag="label"
                 clickable
-                @click="selectWord(key)"
                 :active="selectedId === key"
                 active-class="active-word"
+                @click="selectWord(key)"
+                @dblclick="editWord"
               >
                 <q-item-section>
                   <q-item-label class="text-display">{{
@@ -92,27 +105,27 @@
               <div class="text-h6">単語</div>
               <q-input
                 ref="surfaceInput"
-                class="word-input"
                 v-model="surface"
-                @blur="setSurface(surface)"
-                @keydown="yomiFocusWhenEnter"
+                class="word-input"
                 dense
                 :disable="uiLocked"
+                @blur="setSurface(surface)"
+                @keydown.enter="yomiFocus"
               />
             </div>
             <div class="row q-pl-md q-pt-sm">
               <div class="text-h6">読み</div>
               <q-input
                 ref="yomiInput"
-                class="word-input q-pb-none"
                 v-model="yomi"
-                @blur="setYomi(yomi)"
-                @keydown="setYomiWhenEnter"
+                class="word-input q-pb-none"
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
+                @blur="setYomi(yomi)"
+                @keydown.enter="setYomiWhenEnter"
               >
-                <template v-slot:error>
+                <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
                 </template>
               </q-input>
@@ -126,7 +139,7 @@
                 <q-btn
                   v-if="!nowPlaying && !nowGenerating"
                   fab
-                  color="primary-light"
+                  color="primary"
                   text-color="display-on-primary"
                   icon="play_arrow"
                   @click="play"
@@ -134,11 +147,11 @@
                 <q-btn
                   v-else
                   fab
-                  color="primary-light"
+                  color="primary"
                   text-color="display-on-primary"
                   icon="stop"
-                  @click="stop"
                   :disable="nowGenerating"
+                  @click="stop"
                 />
               </div>
               <div
@@ -150,7 +163,7 @@
                     :accent-phrase="accentPhrase"
                     :accent-phrase-index="0"
                     :ui-locked="uiLocked"
-                    @changeAccent="changeAccent"
+                    :on-change-accent="changeAccent"
                   />
                   <template
                     v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -177,7 +190,7 @@
             </div>
             <div class="row q-pl-md q-pt-lg text-h6">単語優先度</div>
             <div class="row q-pl-md desc-row">
-              単語を登録しても反映されないと感じた場合、優先度の数値を上げてみてください。
+              単語を登録しても反映されない場合は優先度を高くしてください。
             </div>
             <div
               class="row q-px-md"
@@ -189,11 +202,12 @@
                 v-model="wordPriority"
                 snap
                 dense
-                marker-labels
-                color="primary-light"
+                color="primary"
+                markers
                 :min="0"
                 :max="10"
                 :step="1"
+                :marker-labels="wordPriorityLabels"
                 :style="{
                   width: '80%',
                 }"
@@ -206,24 +220,24 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="resetWord"
                 :disable="uiLocked || !isWordChanged"
+                @click="resetWord"
                 >リセット</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
                 :disable="uiLocked"
+                @click="discardOrNotDialog(cancel)"
                 >キャンセル</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="saveWord"
                 :disable="uiLocked || !isWordChanged"
+                @click="saveWord"
                 >保存</q-btn
               >
             </div>
@@ -234,514 +248,412 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, ref, watch } from "vue";
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { QInput } from "quasar";
+import AudioAccent from "./AudioAccent.vue";
 import { useStore } from "@/store";
-import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
+import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
 } from "@/store/utility";
-import AudioAccent from "@/components/AudioAccent.vue";
-import { QInput, useQuasar } from "quasar";
-import { AudioItem } from "@/store/type";
 
 const defaultDictPriority = 5;
 
-export default defineComponent({
-  name: "DictionaryManageDialog",
-  components: { AudioAccent },
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", v: boolean): void;
+  }>();
 
-  setup(props, { emit }) {
-    const store = useStore();
-    const $q = useQuasar();
+const store = useStore();
 
-    const engineIdComputed = computed(() => store.state.engineIds[0]); // TODO: 複数エンジン対応
-
-    const dictionaryManageDialogOpenedComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
-    const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
-    const nowGenerating = ref(false);
-    const nowPlaying = ref(false);
-
-    const loadingDict = ref(false);
-    const userDict = ref<Record<string, UserDictWord>>({});
-
-    const createUILockAction = function <T>(action: Promise<T>) {
-      uiLocked.value = true;
-      return action.finally(() => {
-        uiLocked.value = false;
-      });
-    };
-
-    const loadingDictProcess = async () => {
-      const engineId = engineIdComputed.value;
-      if (engineId === undefined)
-        throw new Error(`assert engineId !== undefined`);
-
-      loadingDict.value = true;
-      try {
-        userDict.value = await createUILockAction(
-          store.dispatch("LOAD_USER_DICT", {
-            engineId,
-          })
-        );
-      } catch {
-        $q.dialog({
-          title: "辞書の取得に失敗しました",
-          message: "エンジンの再起動をお試しください。",
-          ok: {
-            label: "閉じる",
-            flat: true,
-            textColor: "display",
-          },
-        }).onOk(() => {
-          dictionaryManageDialogOpenedComputed.value = false;
-        });
-      }
-      loadingDict.value = false;
-    };
-    watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
-      if (newValue) {
-        await loadingDictProcess();
-        toInitialState();
-      }
-    });
-
-    const wordEditing = ref(false);
-
-    const surfaceInput = ref<QInput>();
-    const yomiInput = ref<QInput>();
-    const yomiFocusWhenEnter = (event: KeyboardEvent) => {
-      // keyCodeは非推奨で、keyが推奨だが、
-      // key === "Enter"はIMEのEnterも拾ってしまうので、keyCodeを用いている
-      if (event.keyCode === 13) {
-        yomiInput.value?.focus();
-      }
-    };
-    const setYomiWhenEnter = (event: KeyboardEvent) => {
-      // keyCodeは非推奨で、keyが推奨だが、
-      // key === "Enter"はIMEのEnterも拾ってしまうので、keyCodeを用いている
-      if (event.keyCode === 13) {
-        setYomi(yomi.value);
-      }
-    };
-
-    const selectedId = ref("");
-    const surface = ref("");
-    const yomi = ref("");
-
-    const styleId = computed(() => {
-      if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return 0;
-      return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0]
-        .styleId;
-    });
-
-    const kanaRegex = createKanaRegex();
-    const isOnlyHiraOrKana = ref(true);
-    const accentPhrase = ref<AccentPhrase | undefined>();
-    const accentPhraseTable = ref<HTMLElement>();
-
-    const convertHankakuToZenkaku = (text: string) => {
-      // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
-      return text.replace(/[\u0021-\u007e]/g, (s) => {
-        return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
-      });
-    };
-    const setSurface = (text: string) => {
-      // surfaceを全角化する
-      // 入力は半角でも問題ないが、登録時に全角に変換され、isWordChangedの判断がおかしくなることがあるので、
-      // 入力後に自動で変換するようにする
-      surface.value = convertHankakuToZenkaku(text);
-    };
-    const setYomi = async (text: string, changeWord?: boolean) => {
-      const engineId = engineIdComputed.value;
-      if (engineId === undefined)
-        throw new Error(`assert engineId !== undefined`);
-
-      // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
-      isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
-      // 読みが変更されていない場合は、アクセントフレーズに変更を加えない
-      // ただし、読みが同じで違う単語が存在する場合が考えられるので、changeWordフラグを考慮する
-      // 「ガ」が自動挿入されるので、それを考慮してsliceしている
-      if (
-        text ==
-          accentPhrase.value?.moras
-            .map((v) => v.text)
-            .join("")
-            .slice(0, -1) &&
-        !changeWord
-      ) {
-        return;
-      }
-      if (isOnlyHiraOrKana.value && text.length) {
-        text = convertHiraToKana(text);
-        text = convertLongVowel(text);
-        accentPhrase.value = (
-          await createUILockAction(
-            store.dispatch("FETCH_ACCENT_PHRASES", {
-              text: text + "ガ'",
-              engineId,
-              styleId: styleId.value,
-              isKana: true,
-            })
-          )
-        )[0];
-        if (
-          selectedId.value &&
-          userDict.value[selectedId.value].yomi === text
-        ) {
-          accentPhrase.value.accent = computeDisplayAccent();
-        }
-      } else {
-        accentPhrase.value = undefined;
-      }
-      yomi.value = text;
-    };
-
-    const changeAccent = async (_: number, accent: number) => {
-      const engineId = engineIdComputed.value;
-      if (engineId === undefined)
-        throw new Error(`assert engineId !== undefined`);
-
-      if (accentPhrase.value) {
-        accentPhrase.value.accent = accent;
-        accentPhrase.value = (
-          await createUILockAction(
-            store.dispatch("FETCH_MORA_DATA", {
-              accentPhrases: [accentPhrase.value],
-              engineId,
-              styleId: styleId.value,
-            })
-          )
-        )[0];
-      }
-    };
-
-    const audioElem = new Audio();
-    audioElem.pause();
-
-    const play = async () => {
-      const engineId = engineIdComputed.value;
-      if (engineId === undefined)
-        throw new Error(`assert engineId !== undefined`);
-
-      if (!accentPhrase.value) return;
-      nowGenerating.value = true;
-      const query: AudioQuery = {
-        accentPhrases: [accentPhrase.value],
-        speedScale: 1.0,
-        pitchScale: 0,
-        intonationScale: 1.0,
-        volumeScale: 1.0,
-        prePhonemeLength: 0.1,
-        postPhonemeLength: 0.1,
-        outputSamplingRate: store.state.savingSetting.outputSamplingRate,
-        outputStereo: store.state.savingSetting.outputStereo,
-      };
-
-      const audioItem: AudioItem = {
-        text: yomi.value,
-        engineId,
-        styleId: styleId.value,
-        query,
-      };
-
-      let blob = await store.dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", {
-        audioItem,
-      });
-      if (!blob) {
-        blob = await createUILockAction(
-          store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
-            audioItem,
-          })
-        );
-        if (!blob) {
-          nowGenerating.value = false;
-          $q.dialog({
-            title: "生成に失敗しました",
-            message: "エンジンの再起動をお試しください。",
-            ok: {
-              label: "閉じる",
-              flat: true,
-              textColor: "display",
-            },
-          });
-          return;
-        }
-      }
-      nowGenerating.value = false;
-      nowPlaying.value = true;
-      await store.dispatch("PLAY_AUDIO_BLOB", { audioElem, audioBlob: blob });
-      nowPlaying.value = false;
-    };
-    const stop = () => {
-      audioElem.pause();
-    };
-
-    // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
-    // アクセントが自動追加される「ガ」に指定されている場合、
-    // 実際に登録するaccentの値は0となるので、そうなるように処理する
-    const computeRegisteredAccent = () => {
-      if (!accentPhrase.value) throw new Error();
-      let accent = accentPhrase.value.accent;
-      accent = accent === accentPhrase.value.moras.length ? 0 : accent;
-      return accent;
-    };
-    // computeの逆
-    // 辞書から得たaccentが0の場合に、自動で追加される「ガ」の位置にアクセントを表示させるように処理する
-    const computeDisplayAccent = () => {
-      if (!accentPhrase.value || !selectedId.value) throw new Error();
-      let accent = userDict.value[selectedId.value].accentType;
-      accent = accent === 0 ? accentPhrase.value.moras.length : accent;
-      return accent;
-    };
-
-    const wordPriority = ref(defaultDictPriority);
-
-    // 操作（ステートの移動）
-    const isWordChanged = computed(() => {
-      if (selectedId.value === "") {
-        return surface.value && yomi.value && accentPhrase.value;
-      }
-      // 一旦代入することで、userDictそのものが更新された時もcomputedするようにする
-      const dict = userDict.value;
-      const dictData = dict[selectedId.value];
-      return (
-        dictData &&
-        (dictData.surface !== surface.value ||
-          dictData.yomi !== yomi.value ||
-          dictData.accentType !== computeRegisteredAccent() ||
-          dictData.priority !== wordPriority.value)
-      );
-    });
-    const saveWord = async () => {
-      if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
-      const accent = computeRegisteredAccent();
-      if (selectedId.value) {
-        try {
-          await store.dispatch("REWRITE_WORD", {
-            wordUuid: selectedId.value,
-            surface: surface.value,
-            pronunciation: yomi.value,
-            accentType: accent,
-            priority: wordPriority.value,
-          });
-        } catch {
-          $q.dialog({
-            title: "単語の更新に失敗しました",
-            message: "エンジンの再起動をお試しください。",
-            ok: {
-              label: "閉じる",
-              flat: true,
-              textColor: "display",
-            },
-          });
-          return;
-        }
-      } else {
-        try {
-          await createUILockAction(
-            store.dispatch("ADD_WORD", {
-              surface: surface.value,
-              pronunciation: yomi.value,
-              accentType: accent,
-              priority: wordPriority.value,
-            })
-          );
-        } catch {
-          $q.dialog({
-            title: "単語の登録に失敗しました",
-            message: "エンジンの再起動をお試しください。",
-            ok: {
-              label: "閉じる",
-              flat: true,
-              textColor: "display",
-            },
-          });
-          return;
-        }
-      }
-      await loadingDictProcess();
-      toInitialState();
-    };
-    const isDeletable = computed(() => !!selectedId.value);
-    const deleteWord = () => {
-      $q.dialog({
-        title: "登録された単語を削除しますか？",
-        message: "削除された単語は復旧できません。",
-        persistent: true,
-        focus: "cancel",
-        ok: {
-          label: "削除",
-          flat: true,
-          textColor: "warning",
-        },
-        cancel: {
-          label: "キャンセル",
-          flat: true,
-          textColor: "display",
-        },
-      }).onOk(async () => {
-        try {
-          await createUILockAction(
-            store.dispatch("DELETE_WORD", {
-              wordUuid: selectedId.value,
-            })
-          );
-        } catch {
-          $q.dialog({
-            title: "単語の削除に失敗しました",
-            message: "エンジンの再起動をお試しください。",
-            ok: {
-              label: "閉じる",
-              flat: true,
-              textColor: "display",
-            },
-          });
-          return;
-        }
-        await loadingDictProcess();
-        toInitialState();
-      });
-    };
-    const resetWord = () => {
-      $q.dialog({
-        title: "単語の変更をリセットしますか？",
-        message: "単語の変更は破棄されてリセットされます。",
-        persistent: true,
-        focus: "cancel",
-        ok: {
-          label: "リセット",
-          flat: true,
-          textColor: "display",
-        },
-        cancel: {
-          label: "キャンセル",
-          flat: true,
-          textColor: "display",
-        },
-      }).onOk(() => {
-        toWordEditingState();
-      });
-    };
-    const discardOrNotDialog = (okCallback: () => void) => {
-      if (isWordChanged.value) {
-        $q.dialog({
-          title: "単語の追加・変更を破棄しますか？",
-          message:
-            "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
-          persistent: true,
-          focus: "cancel",
-          ok: {
-            label: "続行",
-            flat: true,
-            textColor: "display",
-          },
-          cancel: {
-            label: "キャンセル",
-            flat: true,
-            textColor: "display",
-          },
-        }).onOk(okCallback);
-      } else {
-        okCallback();
-      }
-    };
-    const newWord = () => {
-      selectedId.value = "";
-      surface.value = "";
-      setYomi("");
-      wordPriority.value = defaultDictPriority;
-      editWord();
-    };
-    const editWord = () => {
-      toWordEditingState();
-    };
-    const selectWord = (id: string) => {
-      selectedId.value = id;
-      surface.value = userDict.value[id].surface;
-      setYomi(userDict.value[id].yomi, true);
-      wordPriority.value = userDict.value[id].priority;
-      toWordSelectedState();
-    };
-    const cancel = () => {
-      toInitialState();
-    };
-    const closeDialog = () => {
-      toDialogClosedState();
-    };
-
-    // ステートの移動
-    // 初期状態
-    const toInitialState = () => {
-      wordEditing.value = false;
-      selectedId.value = "";
-      surface.value = "";
-      setYomi("");
-      wordPriority.value = defaultDictPriority;
-    };
-    // 単語が選択されているだけの状態
-    const toWordSelectedState = () => {
-      wordEditing.value = false;
-    };
-    // 単語が編集されている状態
-    const toWordEditingState = () => {
-      wordEditing.value = true;
-      surfaceInput.value?.focus();
-    };
-    // ダイアログが閉じている状態
-    const toDialogClosedState = () => {
-      dictionaryManageDialogOpenedComputed.value = false;
-    };
-
-    return {
-      dictionaryManageDialogOpenedComputed,
-      uiLocked,
-      nowGenerating,
-      nowPlaying,
-      userDict,
-      loadingDict,
-      wordEditing,
-      surfaceInput,
-      yomiInput,
-      yomiFocusWhenEnter,
-      setYomiWhenEnter,
-      selectedId,
-      surface,
-      yomi,
-      selectWord,
-      newWord,
-      editWord,
-      cancel,
-      isOnlyHiraOrKana,
-      setSurface,
-      setYomi,
-      accentPhrase,
-      accentPhraseTable,
-      changeAccent,
-      play,
-      stop,
-      isWordChanged,
-      isDeletable,
-      wordPriority,
-      saveWord,
-      deleteWord,
-      resetWord,
-      closeDialog,
-      discardOrNotDialog,
-    };
-  },
+const dictionaryManageDialogOpenedComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
 });
+const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
+const nowGenerating = ref(false);
+const nowPlaying = ref(false);
+
+const loadingDictState = ref<null | "loading" | "synchronizing">("loading");
+const userDict = ref<Record<string, UserDictWord>>({});
+
+const createUILockAction = function <T>(action: Promise<T>) {
+  uiLocked.value = true;
+  return action.finally(() => {
+    uiLocked.value = false;
+  });
+};
+
+const loadingDictProcess = async () => {
+  if (store.state.engineIds.length === 0)
+    throw new Error(`assert engineId.length > 0`);
+
+  loadingDictState.value = "loading";
+  try {
+    userDict.value = await createUILockAction(
+      store.dispatch("LOAD_ALL_USER_DICT")
+    );
+  } catch {
+    const result = await store.dispatch("SHOW_ALERT_DIALOG", {
+      title: "辞書の取得に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+    if (result === "OK") {
+      dictionaryManageDialogOpenedComputed.value = false;
+    }
+  }
+  loadingDictState.value = "synchronizing";
+  try {
+    await createUILockAction(store.dispatch("SYNC_ALL_USER_DICT"));
+  } catch {
+    await store.dispatch("SHOW_ALERT_DIALOG", {
+      title: "辞書の同期に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+  }
+  loadingDictState.value = null;
+};
+watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
+  if (newValue) {
+    await loadingDictProcess();
+    toInitialState();
+  }
+});
+
+const wordEditing = ref(false);
+
+const surfaceInput = ref<QInput>();
+const yomiInput = ref<QInput>();
+const yomiFocus = (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
+  yomiInput.value?.focus();
+};
+const setYomiWhenEnter = (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
+  setYomi(yomi.value);
+};
+
+const selectedId = ref("");
+const surface = ref("");
+const yomi = ref("");
+
+const voiceComputed = computed(() => {
+  if (store.getters.USER_ORDERED_CHARACTER_INFOS == undefined)
+    throw new Error("assert USER_ORDERED_CHARACTER_INFOS");
+  if (store.state.engineIds.length === 0)
+    throw new Error("assert engineId.length > 0");
+  const characterInfo = store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas;
+  const speakerId = characterInfo.speakerUuid;
+  const { engineId, styleId } = characterInfo.styles[0];
+  return { engineId, speakerId, styleId };
+});
+
+const kanaRegex = createKanaRegex();
+const isOnlyHiraOrKana = ref(true);
+const accentPhrase = ref<AccentPhrase | undefined>();
+const accentPhraseTable = ref<HTMLElement>();
+
+const convertHankakuToZenkaku = (text: string) => {
+  // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える
+  text = text.replace(/\p{Z}/gu, () => String.fromCharCode(0x3000));
+
+  // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
+  return text.replace(/[\u0021-\u007e]/g, (s) => {
+    return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
+  });
+};
+const setSurface = (text: string) => {
+  // surfaceを全角化する
+  // 入力は半角でも問題ないが、登録時に全角に変換され、isWordChangedの判断がおかしくなることがあるので、
+  // 入力後に自動で変換するようにする
+  surface.value = convertHankakuToZenkaku(text);
+};
+const setYomi = async (text: string, changeWord?: boolean) => {
+  const { engineId, styleId } = voiceComputed.value;
+
+  // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
+  isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
+  // 読みが変更されていない場合は、アクセントフレーズに変更を加えない
+  // ただし、読みが同じで違う単語が存在する場合が考えられるので、changeWordフラグを考慮する
+  // 「ガ」が自動挿入されるので、それを考慮してsliceしている
+  if (
+    text ==
+      accentPhrase.value?.moras
+        .map((v) => v.text)
+        .join("")
+        .slice(0, -1) &&
+    !changeWord
+  ) {
+    return;
+  }
+  if (isOnlyHiraOrKana.value && text.length) {
+    text = convertHiraToKana(text);
+    text = convertLongVowel(text);
+    accentPhrase.value = (
+      await createUILockAction(
+        store.dispatch("FETCH_ACCENT_PHRASES", {
+          text: text + "ガ'",
+          engineId,
+          styleId,
+          isKana: true,
+        })
+      )
+    )[0];
+    if (selectedId.value && userDict.value[selectedId.value].yomi === text) {
+      accentPhrase.value.accent = computeDisplayAccent();
+    }
+  } else {
+    accentPhrase.value = undefined;
+  }
+  yomi.value = text;
+};
+
+const changeAccent = async (_: number, accent: number) => {
+  const { engineId, styleId } = voiceComputed.value;
+
+  if (accentPhrase.value) {
+    accentPhrase.value.accent = accent;
+    accentPhrase.value = (
+      await createUILockAction(
+        store.dispatch("FETCH_MORA_DATA", {
+          accentPhrases: [accentPhrase.value],
+          engineId,
+          styleId,
+        })
+      )
+    )[0];
+  }
+};
+
+const play = async () => {
+  if (!accentPhrase.value) return;
+
+  nowGenerating.value = true;
+  const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+    text: yomi.value,
+    voice: voiceComputed.value,
+  });
+
+  if (audioItem.query == undefined)
+    throw new Error(`assert audioItem.query !== undefined`);
+
+  audioItem.query.accentPhrases = [accentPhrase.value];
+
+  let blob = await store.dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", {
+    audioItem,
+  });
+  if (!blob) {
+    try {
+      blob = await createUILockAction(
+        store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
+          audioItem,
+        })
+      );
+    } catch (e) {
+      window.electron.logError(e);
+      nowGenerating.value = false;
+      store.dispatch("SHOW_ALERT_DIALOG", {
+        title: "生成に失敗しました",
+        message: "エンジンの再起動をお試しください。",
+      });
+      return;
+    }
+  }
+  nowGenerating.value = false;
+  nowPlaying.value = true;
+  await store.dispatch("PLAY_AUDIO_BLOB", { audioBlob: blob });
+  nowPlaying.value = false;
+};
+const stop = () => {
+  store.dispatch("STOP_AUDIO");
+};
+
+// accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
+// アクセントが自動追加される「ガ」に指定されている場合、
+// 実際に登録するaccentの値は0となるので、そうなるように処理する
+const computeRegisteredAccent = () => {
+  if (!accentPhrase.value) throw new Error();
+  let accent = accentPhrase.value.accent;
+  accent = accent === accentPhrase.value.moras.length ? 0 : accent;
+  return accent;
+};
+// computeの逆
+// 辞書から得たaccentが0の場合に、自動で追加される「ガ」の位置にアクセントを表示させるように処理する
+const computeDisplayAccent = () => {
+  if (!accentPhrase.value || !selectedId.value) throw new Error();
+  let accent = userDict.value[selectedId.value].accentType;
+  accent = accent === 0 ? accentPhrase.value.moras.length : accent;
+  return accent;
+};
+
+const wordPriority = ref(defaultDictPriority);
+const wordPriorityLabels = {
+  0: "最低",
+  3: "低",
+  5: "標準",
+  7: "高",
+  10: "最高",
+};
+
+// 操作（ステートの移動）
+const isWordChanged = computed(() => {
+  if (selectedId.value === "") {
+    return surface.value && yomi.value && accentPhrase.value;
+  }
+  // 一旦代入することで、userDictそのものが更新された時もcomputedするようにする
+  const dict = userDict.value;
+  const dictData = dict[selectedId.value];
+  return (
+    dictData &&
+    (dictData.surface !== surface.value ||
+      dictData.yomi !== yomi.value ||
+      dictData.accentType !== computeRegisteredAccent() ||
+      dictData.priority !== wordPriority.value)
+  );
+});
+const saveWord = async () => {
+  if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
+  const accent = computeRegisteredAccent();
+  if (selectedId.value) {
+    try {
+      await store.dispatch("REWRITE_WORD", {
+        wordUuid: selectedId.value,
+        surface: surface.value,
+        pronunciation: yomi.value,
+        accentType: accent,
+        priority: wordPriority.value,
+      });
+    } catch {
+      store.dispatch("SHOW_ALERT_DIALOG", {
+        title: "単語の更新に失敗しました",
+        message: "エンジンの再起動をお試しください。",
+      });
+      return;
+    }
+  } else {
+    try {
+      await createUILockAction(
+        store.dispatch("ADD_WORD", {
+          surface: surface.value,
+          pronunciation: yomi.value,
+          accentType: accent,
+          priority: wordPriority.value,
+        })
+      );
+    } catch {
+      store.dispatch("SHOW_ALERT_DIALOG", {
+        title: "単語の登録に失敗しました",
+        message: "エンジンの再起動をお試しください。",
+      });
+      return;
+    }
+  }
+  await loadingDictProcess();
+  toInitialState();
+};
+const isDeletable = computed(() => !!selectedId.value);
+const deleteWord = async () => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+    title: "登録された単語を削除しますか？",
+    message: "削除された単語は復旧できません。",
+    actionName: "削除",
+  });
+  if (result === "OK") {
+    try {
+      await createUILockAction(
+        store.dispatch("DELETE_WORD", {
+          wordUuid: selectedId.value,
+        })
+      );
+    } catch {
+      store.dispatch("SHOW_ALERT_DIALOG", {
+        title: "単語の削除に失敗しました",
+        message: "エンジンの再起動をお試しください。",
+      });
+      return;
+    }
+    await loadingDictProcess();
+    toInitialState();
+  }
+};
+const resetWord = async () => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+    title: "単語の変更をリセットしますか？",
+    message: "単語の変更は破棄されてリセットされます。",
+    actionName: "リセット",
+  });
+  if (result === "OK") {
+    toWordEditingState();
+  }
+};
+const discardOrNotDialog = async (okCallback: () => void) => {
+  if (isWordChanged.value) {
+    const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+      title: "単語の追加・変更を破棄しますか？",
+      message:
+        "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
+      actionName: "続行",
+    });
+    if (result === "OK") {
+      okCallback();
+    }
+  } else {
+    okCallback();
+  }
+};
+const newWord = () => {
+  selectedId.value = "";
+  surface.value = "";
+  setYomi("");
+  wordPriority.value = defaultDictPriority;
+  editWord();
+};
+const editWord = () => {
+  toWordEditingState();
+};
+const selectWord = (id: string) => {
+  selectedId.value = id;
+  surface.value = userDict.value[id].surface;
+  setYomi(userDict.value[id].yomi, true);
+  wordPriority.value = userDict.value[id].priority;
+  toWordSelectedState();
+};
+const cancel = () => {
+  toInitialState();
+};
+const closeDialog = () => {
+  toDialogClosedState();
+};
+
+// ステートの移動
+// 初期状態
+const toInitialState = () => {
+  wordEditing.value = false;
+  selectedId.value = "";
+  surface.value = "";
+  setYomi("");
+  wordPriority.value = defaultDictPriority;
+};
+// 単語が選択されているだけの状態
+const toWordSelectedState = () => {
+  wordEditing.value = false;
+};
+// 単語が編集されている状態
+const toWordEditingState = () => {
+  wordEditing.value = true;
+  surfaceInput.value?.focus();
+};
+// ダイアログが閉じている状態
+const toDialogClosedState = () => {
+  dictionaryManageDialogOpenedComputed.value = false;
+};
 </script>
 
 <style lang="scss" scoped>
