@@ -62,11 +62,13 @@
               class="library-list"
             >
               <q-item
-                v-for="library of downloadableLibraries[engineId]"
-                :key="library.uuid"
+                v-for="(library, libraryUuid) in downloadableLibraries[
+                  engineId
+                ]"
+                :key="libraryUuid"
                 class="q-pa-none library-item"
                 :class="
-                  selectedLibrary === library.uuid && 'selected-library-item'
+                  selectedLibrary === libraryUuid && 'selected-library-item'
                 "
               >
                 <div class="library-item-inner">
@@ -87,7 +89,7 @@
                             ? "最新版です"
                             : installedLibraries[engineId].find(
                                 (installedLibrary) =>
-                                  installedLibrary.uuid === library.uuid
+                                  installedLibrary.uuid === libraryUuid
                               )
                             ? "アップデート"
                             : "インストール"
@@ -213,7 +215,7 @@ const closeDialog = () => {
 };
 
 const downloadableLibraries = ref<
-  Record<EngineId, BrandedDownloadableLibrary[]>
+  Record<EngineId, Record<LibraryId, BrandedDownloadableLibrary>>
 >({});
 const installedLibraries = ref<Record<EngineId, BrandedInstalledLibrary[]>>({});
 
@@ -366,10 +368,7 @@ watch(modelValueComputed, async (newValue) => {
 
       const [brandedDownloadableLibraries, brandedInstalledLibraries] =
         fetchResult;
-      downloadableLibraries.value[engineId] = brandedDownloadableLibraries;
-      installedLibraries.value[engineId] = brandedInstalledLibraries;
 
-      const libraries = downloadableLibraries.value[engineId] || [];
       const toPrimaryOrder = (library: BrandedDownloadableLibrary) => {
         const localLibrary = installedLibraries.value[engineId].find(
           (l) => l.uuid === library.uuid
@@ -384,9 +383,15 @@ watch(modelValueComputed, async (newValue) => {
         }
       };
 
-      libraries.sort((a, b) => {
+      brandedDownloadableLibraries.sort((a, b) => {
         return toPrimaryOrder(b) - toPrimaryOrder(a);
       });
+      downloadableLibraries.value[engineId] = {};
+      for (const downloadableLibrary of brandedDownloadableLibraries) {
+        downloadableLibraries.value[engineId][downloadableLibrary.uuid] =
+          downloadableLibrary;
+      }
+      installedLibraries.value[engineId] = brandedInstalledLibraries;
     })
   );
 });
@@ -417,9 +422,9 @@ const play = (
 ) => {
   if (audio.src !== "") stop();
 
-  const speaker = downloadableLibraries.value[engineId]
-    .find((l) => l.uuid === libraryId)
-    ?.speakers.find((s) => s.metas.speakerUuid === speakerUuid);
+  const speaker = downloadableLibraries.value[engineId][
+    libraryId
+  ].speakers.find((s) => s.metas.speakerUuid === speakerUuid);
   if (!speaker) throw new Error("speaker not found");
 
   const styleInfo = speaker.metas.styles.find((s) => s.styleId === styleId);
