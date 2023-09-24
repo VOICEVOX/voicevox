@@ -21,4 +21,11 @@ export const audioPlayerStoreState: AudioPlayerStoreState = {
 
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   //
+
+  // NOTE: リファクタリング中、別ファイルに移動予定
+  SET_AUDIO_SOURCE: {
+    mutation(_, { audioBlob }: { audioBlob: Blob }) {
+      getAudioElement().src = URL.createObjectURL(audioBlob);
+    },
+  },
 });
