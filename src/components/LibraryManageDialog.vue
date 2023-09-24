@@ -81,13 +81,16 @@
                         outline
                         text-color="display"
                         class="text-no-wrap q-ma-sm"
-                        :disable="isLatest(engineId, library)"
+                        :disable="
+                          library.type === 'installed' && library.isLatest
+                        "
                         @click.stop="installLibrary(engineId, library)"
                       >
                         {{
-                          isLatest(engineId, library)
+                          // TODO: customInstalledについて考慮
+                          library.type === "installed" && library.isLatest
                             ? "最新版です"
-                            : installedLibraries[engineId][libraryUuid]
+                            : library.type === "installed" && !library.isLatest
                             ? "アップデート"
                             : "インストール"
                         }}
@@ -96,7 +99,11 @@
                         outline
                         text-color="warning"
                         class="text-no-wrap q-ma-sm"
-                        :disable="!isUninstallable(engineId, library)"
+                        :disable="
+                          (library.type !== 'downloadable' &&
+                            !library.uninstallable) ||
+                          library.type === 'downloadable'
+                        "
                         @click.stop="uninstallLibrary(engineId, library)"
                       >
                         アンインストール
@@ -176,8 +183,21 @@ type DownloadableLibrary = Omit<
   speakers: CharacterInfo[];
 };
 
-type InstalledLibrary = DownloadableLibrary &
-  Pick<EngineInstalledLibrary, "uninstallable">;
+type LibraryType = DownloadableLibrary &
+  (
+    | {
+        type: "downloadable";
+      }
+    | {
+        type: "installed";
+        isLatest: boolean;
+        uninstallable: boolean;
+      }
+    | {
+        type: "customInstalled";
+        uninstallable: boolean;
+      }
+  );
 
 const $q = useQuasar();
 
@@ -215,30 +235,8 @@ const closeDialog = () => {
 };
 
 const downloadableLibraries = ref<
-  Record<EngineId, Record<LibraryId, DownloadableLibrary>>
+  Record<EngineId, Record<LibraryId, LibraryType>>
 >({});
-const installedLibraries = ref<
-  Record<EngineId, Record<LibraryId, InstalledLibrary>>
->({});
-
-const isLatest = (engineId: EngineId, library: DownloadableLibrary) => {
-  const installedLibrary = installedLibraries.value[engineId][library.uuid];
-  // ライブラリがインストールされていない場合はfalseとする
-  if (!installedLibrary) {
-    return false;
-  }
-  // installedLibrary.versionがlibrary.versionと等しいか、それより大きい場合はlatest
-  return semver.gte(installedLibrary.version, library.version);
-};
-
-const isUninstallable = (engineId: EngineId, library: DownloadableLibrary) => {
-  const installedLibrary = installedLibraries.value[engineId][library.uuid];
-  // ライブラリがインストールされていない場合はfalseとする
-  if (!installedLibrary) {
-    return false;
-  }
-  return installedLibrary.uninstallable;
-};
 
 const fetchStatuses = ref<
   Record<EngineId, "fetching" | "success" | "error" | undefined>
@@ -320,7 +318,7 @@ watch(modelValueComputed, async (newValue) => {
         return;
       }
       fetchStatuses.value[engineId] = "fetching";
-      const fetchResult = await store
+      const convertedDownloadableLibraries = await store
         .dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
         })
@@ -332,21 +330,13 @@ watch(modelValueComputed, async (newValue) => {
             instance.invoke("installedLibrariesInstalledLibrariesGet")({}),
           ])
         )
-        .then(([engineDownloadableLibraries, engineInstalledLibraries]): [
-          DownloadableLibrary[],
-          Record<LibraryId, InstalledLibrary>
-        ] => {
-          fetchStatuses.value[engineId] = "success";
-          // ダウンロード可能なライブラリは後にソートするため、配列のままにしておく
-          return [
-            engineDownloadableLibraries.map((library) => {
-              return {
-                ...library,
-                uuid: LibraryId(library.uuid),
-                speakers: libraryInfoToCharacterInfos(engineId, library),
-              };
-            }),
-            Object.fromEntries(
+        .then(
+          ([
+            engineDownloadableLibraries,
+            engineInstalledLibraries,
+          ]): LibraryType[] => {
+            fetchStatuses.value[engineId] = "success";
+            const convertedInstalledLibrary = Object.fromEntries(
               Object.entries(engineInstalledLibraries).map(
                 ([uuid, library]) => {
                   return [
@@ -359,27 +349,48 @@ watch(modelValueComputed, async (newValue) => {
                   ];
                 }
               )
-            ),
-          ];
-        })
+            );
+
+            // TODO: customInstalledについて考慮
+            return engineDownloadableLibraries.map((library) => {
+              const libraryBase = {
+                ...library,
+                uuid: LibraryId(library.uuid),
+                speakers: libraryInfoToCharacterInfos(engineId, library),
+              };
+              const installedLibrary = convertedInstalledLibrary[library.uuid];
+              if (installedLibrary) {
+                return {
+                  ...libraryBase,
+                  type: "installed",
+                  // installedLibrary.versionがlibrary.versionと等しいか、それより大きい場合はlatest
+                  isLatest: semver.gte(
+                    installedLibrary.version,
+                    library.version
+                  ),
+                  uninstallable: installedLibrary.uninstallable,
+                };
+              }
+              return {
+                ...libraryBase,
+                type: "downloadable",
+              };
+            });
+          }
+        )
         .catch((e) => {
           fetchStatuses.value[engineId] = "error";
           store.dispatch("LOG_ERROR", e);
         });
 
-      if (!fetchResult) return;
+      if (!convertedDownloadableLibraries) return;
 
-      const [convertedDownloadableLibraries, convertedInstalledLibraries] =
-        fetchResult;
-
-      installedLibraries.value[engineId] = convertedInstalledLibraries;
       // ダウンロード可能なライブラリはソートしてから代入する
-      const toPrimaryOrder = (library: DownloadableLibrary) => {
-        const localLibrary = installedLibraries.value[engineId][library.uuid];
+      const toPrimaryOrder = (library: LibraryType) => {
         // アップデート > 未インストール > インストール済み の順
-        if (!localLibrary) {
+        if (library.type === "downloadable") {
           return 1;
-        } else if (semver.gt(library.version, localLibrary?.version)) {
+        } else if (library.type === "installed" && !library.isLatest) {
           return 2;
         } else {
           return 0;
