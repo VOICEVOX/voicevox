@@ -87,10 +87,7 @@
                         {{
                           isLatest(engineId, library)
                             ? "最新版です"
-                            : installedLibraries[engineId].find(
-                                (installedLibrary) =>
-                                  installedLibrary.uuid === libraryUuid
-                              )
+                            : installedLibraries[engineId][libraryUuid]
                             ? "アップデート"
                             : "インストール"
                         }}
@@ -220,12 +217,12 @@ const closeDialog = () => {
 const downloadableLibraries = ref<
   Record<EngineId, Record<LibraryId, DownloadableLibrary>>
 >({});
-const installedLibraries = ref<Record<EngineId, InstalledLibrary[]>>({});
+const installedLibraries = ref<
+  Record<EngineId, Record<LibraryId, InstalledLibrary>>
+>({});
 
 const isLatest = (engineId: EngineId, library: DownloadableLibrary) => {
-  const installedLibrary = installedLibraries.value[engineId].find(
-    (installedLibrary) => installedLibrary.uuid === library.uuid
-  );
+  const installedLibrary = installedLibraries.value[engineId][library.uuid];
   // ライブラリがインストールされていない場合はfalseとする
   if (!installedLibrary) {
     return false;
@@ -235,9 +232,7 @@ const isLatest = (engineId: EngineId, library: DownloadableLibrary) => {
 };
 
 const isUninstallable = (engineId: EngineId, library: DownloadableLibrary) => {
-  const installedLibrary = installedLibraries.value[engineId].find(
-    (installedLibrary) => installedLibrary.uuid === library.uuid
-  );
+  const installedLibrary = installedLibraries.value[engineId][library.uuid];
   // ライブラリがインストールされていない場合はfalseとする
   if (!installedLibrary) {
     return false;
@@ -339,9 +334,10 @@ watch(modelValueComputed, async (newValue) => {
         )
         .then(([engineDownloadableLibraries, engineInstalledLibraries]): [
           DownloadableLibrary[],
-          InstalledLibrary[]
+          Record<LibraryId, InstalledLibrary>
         ] => {
           fetchStatuses.value[engineId] = "success";
+          // ダウンロード可能なライブラリは後にソートするため、配列のままにしておく
           return [
             engineDownloadableLibraries.map((library) => {
               return {
@@ -350,13 +346,20 @@ watch(modelValueComputed, async (newValue) => {
                 speakers: libraryInfoToCharacterInfos(engineId, library),
               };
             }),
-            Object.entries(engineInstalledLibraries).map(([uuid, library]) => {
-              return {
-                ...library,
-                uuid: LibraryId(uuid),
-                speakers: libraryInfoToCharacterInfos(engineId, library),
-              };
-            }),
+            Object.fromEntries(
+              Object.entries(engineInstalledLibraries).map(
+                ([uuid, library]) => {
+                  return [
+                    LibraryId(uuid),
+                    {
+                      ...library,
+                      uuid: LibraryId(uuid),
+                      speakers: libraryInfoToCharacterInfos(engineId, library),
+                    },
+                  ];
+                }
+              )
+            ),
           ];
         })
         .catch((e) => {
@@ -372,9 +375,7 @@ watch(modelValueComputed, async (newValue) => {
       installedLibraries.value[engineId] = convertedInstalledLibraries;
       // ダウンロード可能なライブラリはソートしてから代入する
       const toPrimaryOrder = (library: DownloadableLibrary) => {
-        const localLibrary = installedLibraries.value[engineId].find(
-          (l) => l.uuid === library.uuid
-        );
+        const localLibrary = installedLibraries.value[engineId][library.uuid];
         // アップデート > 未インストール > インストール済み の順
         if (!localLibrary) {
           return 1;
