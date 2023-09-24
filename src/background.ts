@@ -467,13 +467,9 @@ async function createWindow() {
   win.on("close", (event) => {
     if (!appState.willQuit) {
       event.preventDefault();
-<<<<<<< HEAD
-      ipcMainSend(win, "PROCESS_BEFORE_QUITTING");
-=======
       ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
         closeOrReload: "close",
       });
->>>>>>> main
       return;
     }
   });
@@ -758,13 +754,8 @@ ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
 ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title, name, extensions }) => {
   return dialog.showOpenDialogSync(win, {
     title,
-<<<<<<< HEAD
     filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
-    properties: ["openFile", "createDirectory"],
-=======
-    filters: [{ name: "Text", extensions: ["txt"] }],
     properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
->>>>>>> main
   })?.[0];
 });
 
@@ -963,11 +954,7 @@ app.on("window-all-closed", () => {
 app.on("before-quit", async (event) => {
   if (!appState.willQuit) {
     event.preventDefault();
-<<<<<<< HEAD
-    ipcMainSend(win, "PROCESS_BEFORE_QUITTING");
-=======
     ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
->>>>>>> main
     return;
   }
 

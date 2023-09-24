@@ -194,12 +194,9 @@ import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
-<<<<<<< HEAD
-import SingerTab from "@/components/SingerTab.vue";
-=======
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
->>>>>>> main
+import SingerTab from "@/components/SingerTab.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
@@ -218,26 +215,6 @@ const props =
     projectFilePath: string;
   }>();
 
-<<<<<<< HEAD
-  components: {
-    draggable,
-    MenuBar,
-    HeaderBar,
-    AudioCell,
-    AudioDetail,
-    AudioInfo,
-    HelpDialog,
-    SettingDialog,
-    HotkeySettingDialog,
-    HeaderBarCustomDialog,
-    CharacterPortrait,
-    DefaultStyleSelectDialog,
-    CharacterOrderDialog,
-    AcceptRetrieveTelemetryDialog,
-    AcceptTermsDialog,
-    DictionaryManageDialog,
-    SingerTab,
-=======
 const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
@@ -297,7 +274,6 @@ const hotkeyActionsNative = [
       addAudioItem();
       event.preventDefault();
     }
->>>>>>> main
   },
   (event: KeyboardEvent) => {
     if (

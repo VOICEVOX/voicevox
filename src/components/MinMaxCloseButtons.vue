@@ -99,19 +99,11 @@ import { useStore } from "@/store";
 
 const store = useStore();
 
-<<<<<<< HEAD
-    const closeWindow = () => {
-      store.dispatch("PROCESS_BEFORE_QUITTING");
-    };
-    const minimizeWindow = () => window.electron.minimizeWindow();
-    const maximizeWindow = () => window.electron.maximizeWindow();
-=======
 const closeWindow = async () => {
   store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
 };
 const minimizeWindow = () => window.electron.minimizeWindow();
 const maximizeWindow = () => window.electron.maximizeWindow();
->>>>>>> main
 
 const isMaximized = computed(() => store.state.isMaximized);
 </script>

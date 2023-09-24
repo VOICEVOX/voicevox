@@ -1591,10 +1591,6 @@ export type UiStoreTypes = {
   RESET_PROGRESS: {
     action(): void;
   };
-
-  PROCESS_BEFORE_QUITTING: {
-    action(): Promise<void>;
-  };
 };
 
 /*
