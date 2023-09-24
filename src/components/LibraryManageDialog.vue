@@ -369,6 +369,8 @@ watch(modelValueComputed, async (newValue) => {
       const [convertedDownloadableLibraries, convertedInstalledLibraries] =
         fetchResult;
 
+      installedLibraries.value[engineId] = convertedInstalledLibraries;
+      // ダウンロード可能なライブラリはソートしてから代入する
       const toPrimaryOrder = (library: DownloadableLibrary) => {
         const localLibrary = installedLibraries.value[engineId].find(
           (l) => l.uuid === library.uuid
@@ -391,7 +393,6 @@ watch(modelValueComputed, async (newValue) => {
         downloadableLibraries.value[engineId][downloadableLibrary.uuid] =
           downloadableLibrary;
       }
-      installedLibraries.value[engineId] = convertedInstalledLibraries;
     })
   );
 });
