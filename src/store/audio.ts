@@ -293,18 +293,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  HAVE_AUDIO_QUERY: {
-    getter: (state) => (audioKey: AudioKey) => {
-      return state.audioItems[audioKey]?.query != undefined;
-    },
-  },
-
-  IS_ACTIVE: {
-    getter: (state) => (audioKey: AudioKey) => {
-      return state._activeAudioKey === audioKey;
-    },
-  },
-
   NOW_PLAYING: {
     getter(state, getters) {
       const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
