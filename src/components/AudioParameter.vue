@@ -8,8 +8,10 @@
       class="value-label"
       :class="{
         'value-label-translucent': !isSelfBadgeVisible,
-        'value-label-consonant': props.clip && props.type === 'consonant',
-        'value-label-vowel': props.clip && props.type === 'vowel',
+        'value-label-consonant':
+          props.clip && props.forceValueVisible && props.type === 'consonant',
+        'value-label-vowel':
+          props.clip && props.forceValueVisible && props.type === 'vowel',
       }"
       color="primary"
       text-color="display-on-primary"
