@@ -248,5 +248,9 @@ export const isOnCommandOrCtrlKeyDown = (event: {
 export const joinTextsInAccentPhrases = (
   accentPhrase: AccentPhrase
 ): string => {
-  return accentPhrase.moras.map((mora) => mora.text).join("");
+  let moraText = accentPhrase.moras.map((mora) => mora.text).join("");
+  if (accentPhrase.pauseMora) {
+    moraText += accentPhrase.pauseMora.text;
+  }
+  return moraText;
 };
