@@ -1,3 +1,17 @@
+import path from "path";
+import { Midi } from "@tonejs/midi";
+import { v4 as uuidv4 } from "uuid";
+import {
+  Score,
+  Tempo,
+  TimeSignature,
+  Note,
+  SingingStoreState,
+  SingingStoreTypes,
+  SaveResultObject,
+} from "./type";
+import { createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
 import {
   AudioEvent,
   AudioPlayer,
@@ -11,27 +25,13 @@ import {
   PolySynth,
   Transport,
 } from "@/infrastructures/AudioRenderer";
-import {
-  Score,
-  Tempo,
-  TimeSignature,
-  Note,
-  SingingStoreState,
-  SingingStoreTypes,
-  SaveResultObject,
-} from "./type";
-import path from "path";
-import { createPartialStore } from "./vuex";
-import { createUILockAction } from "./ui";
 import { WriteFileErrorResult } from "@/type/preload";
-import { Midi } from "@tonejs/midi";
 import {
   getDoremiFromMidi,
   midiToFrequency,
   round,
 } from "@/helpers/singHelper";
 import { AudioQuery } from "@/openapi";
-import { v4 as uuidv4 } from "uuid";
 
 const ticksToSecondsForConstantBpm = (
   resolution: number,

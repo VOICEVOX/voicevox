@@ -1,5 +1,5 @@
 <template>
-  <div class="sing-singer-panel" v-bind:class="{ hide: !isShowSinger }">
+  <div class="sing-singer-panel" :class="{ hide: !isShowSinger }">
     <character-menu-button class="character-menu-button" :disable="uiLocked">
       <span class="character-name">{{ characterName }}</span>
       <div class="character-portrait-wrapper">

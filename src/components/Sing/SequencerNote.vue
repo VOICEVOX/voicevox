@@ -9,18 +9,18 @@
     <input
       type="text"
       :value="note.lyric"
-      @input="setLyric"
       class="sequencer-note-lyric"
+      @input="setLyric"
     />
     <svg
       :height="`${barHeight}`"
       :width="`${barWidth}`"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
-      @dblclick.prevent="removeNote"
-      @keydown.prevent="handleKeydown"
       focusable="true"
       tabindex="0"
+      @dblclick.prevent="removeNote"
+      @keydown.prevent="handleKeydown"
     >
       <g>
         <rect
