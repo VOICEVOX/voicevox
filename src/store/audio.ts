@@ -316,14 +316,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: (state) => {
-      return state._activeAudioKey !== undefined
-        ? getAudioElement().currentTime
-        : undefined;
-    },
-  },
-
   LOAD_CHARACTER: {
     action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
       const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {

@@ -156,10 +156,6 @@ export type AudioStoreTypes = {
     getter: boolean;
   };
 
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: number | undefined;
-  };
-
   LOAD_CHARACTER: {
     action(payload: { engineId: EngineId }): void;
   };
@@ -699,6 +695,10 @@ export type AudioPlayerStoreState = {
 
 export type AudioPlayerStoreTypes = {
   //
+
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
+    getter: number | undefined;
+  };
 
   SET_AUDIO_SOURCE: {
     mutation: { audioBlob: Blob };

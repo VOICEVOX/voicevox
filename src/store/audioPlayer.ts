@@ -23,6 +23,14 @@ export const audioPlayerStoreState: AudioPlayerStoreState = {
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   //
 
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
+    getter: (state) => {
+      return state._activeAudioKey !== undefined
+        ? getAudioElement().currentTime
+        : undefined;
+    },
+  },
+
   // NOTE: リファクタリング中、別ファイルに移動予定
   SET_AUDIO_SOURCE: {
     mutation(_, { audioBlob }: { audioBlob: Blob }) {
