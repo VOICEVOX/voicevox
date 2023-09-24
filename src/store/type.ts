@@ -131,7 +131,6 @@ export type AudioStoreState = {
   _activeAudioKey?: AudioKey;
   _selectedAudioKeys?: AudioKey[];
   audioPlayStartPoint?: number;
-  nowPlayingAudioKey?: AudioKey;
   nowPlayingContinuously: boolean;
 };
 
@@ -691,6 +690,7 @@ export type AudioCommandStoreTypes = {
 
 export type AudioPlayerStoreState = {
   //
+  nowPlayingAudioKey?: AudioKey;
 };
 
 export type AudioPlayerStoreTypes = {

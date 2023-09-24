@@ -18,6 +18,7 @@ const getAudioElement = (() => {
 
 export const audioPlayerStoreState: AudioPlayerStoreState = {
   //
+  nowPlayingAudioKey: undefined,
 };
 
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({

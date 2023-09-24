@@ -269,7 +269,6 @@ export const audioStoreState: AudioStoreState = {
   audioStates: {},
   // audio elementの再生オフセット
   audioPlayStartPoint: undefined,
-  nowPlayingAudioKey: undefined,
   nowPlayingContinuously: false,
 };
 
