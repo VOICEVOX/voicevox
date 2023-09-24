@@ -461,10 +461,6 @@ export type AudioStoreTypes = {
     action(payload: { audioBlob: Blob; audioKey?: AudioKey }): boolean;
   };
 
-  PLAY_AUDIO_PLAYER: {
-    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
-  };
-
   STOP_AUDIO: {
     action(): void;
   };
@@ -710,6 +706,10 @@ export type AudioPlayerStoreTypes = {
 
   SET_AUDIO_SOURCE: {
     mutation: { audioBlob: Blob };
+  };
+
+  PLAY_AUDIO_PLAYER: {
+    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
   };
 };
 
