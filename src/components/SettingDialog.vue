@@ -1118,11 +1118,15 @@ const updateAudioOutputDevices = async () => {
       return { label: device.label, key: device.deviceId };
     });
 };
-navigator.mediaDevices.addEventListener(
-  "devicechange",
-  updateAudioOutputDevices
-);
-updateAudioOutputDevices();
+if (navigator.mediaDevices) {
+  navigator.mediaDevices.addEventListener(
+    "devicechange",
+    updateAudioOutputDevices
+  );
+  updateAudioOutputDevices();
+} else {
+  store.dispatch("LOG_WARN", "navigator.mediaDevices is not available.");
+}
 
 const acceptRetrieveTelemetryComputed = computed({
   get: () => store.state.acceptRetrieveTelemetry == "Accepted",
