@@ -556,15 +556,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_AUDIO_NOW_PLAYING: {
-    mutation(
-      state,
-      { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean }
-    ) {
-      state.nowPlayingAudioKey = nowPlaying ? audioKey : undefined;
-    },
-  },
-
   SET_AUDIO_NOW_GENERATING: {
     mutation(
       state,

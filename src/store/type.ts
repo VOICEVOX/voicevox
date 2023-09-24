@@ -198,10 +198,6 @@ export type AudioStoreTypes = {
     action(payload: { startPoint?: number }): void;
   };
 
-  SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: AudioKey; nowPlaying: boolean };
-  };
-
   SET_AUDIO_NOW_GENERATING: {
     mutation: { audioKey: AudioKey; nowGenerating: boolean };
   };
@@ -698,6 +694,10 @@ export type AudioPlayerStoreTypes = {
 
   NOW_PLAYING: {
     getter: boolean;
+  };
+
+  SET_AUDIO_NOW_PLAYING: {
+    mutation: { audioKey: AudioKey; nowPlaying: boolean };
   };
 
   SET_AUDIO_SOURCE: {
