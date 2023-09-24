@@ -32,6 +32,7 @@ test("単体アクセント句の読み変更", async ({ page }) => {
   await page.waitForTimeout(100);
   await expect(page.getByText("セン、")).toBeVisible();
 
+  // 「,」が読点に変換される
   await page.getByText("ヒャ", { exact: true }).click();
   await inputs[1].fill("ニヒャク,");
   await inputs[1].press("Enter");
