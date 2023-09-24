@@ -6,7 +6,6 @@
     @mousemove="handleMouseMove"
     @mouseup="handleMouseUp"
     @dblclick="addNote"
-    @dblclick.prevent.stop="removeNote"
   >
     <!-- 鍵盤 -->
     <sequencer-keys />

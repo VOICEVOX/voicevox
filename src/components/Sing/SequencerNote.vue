@@ -98,7 +98,7 @@ export default defineComponent({
       store.dispatch("REMOVE_NOTE", { id: props.note.id });
     };
 
-    const setLyric = (event: InputEvent) => {
+    const setLyric = (event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
         return;
       }
@@ -187,7 +187,7 @@ export default defineComponent({
 .sequencer-note-lyric {
   background: white;
   border: 0;
-  border-bottom: 1px solid colors.$primary-light;
+  border-bottom: 1px solid colors.$primary;
   color: colors.$display;
   font-size: 12px;
   font-weight: bold;

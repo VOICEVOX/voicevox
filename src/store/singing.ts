@@ -25,13 +25,14 @@ import {
   PolySynth,
   Transport,
 } from "@/infrastructures/AudioRenderer";
-import { WriteFileErrorResult } from "@/type/preload";
+import { EngineId, StyleId } from "@/type/preload";
 import {
   getDoremiFromMidi,
   midiToFrequency,
   round,
 } from "@/helpers/singHelper";
 import { AudioQuery } from "@/openapi";
+import { ResultError, getValueOrThrow } from "@/type/result";
 
 const ticksToSecondsForConstantBpm = (
   resolution: number,
@@ -160,8 +161,8 @@ const createPromiseThatResolvesWhen = (
 };
 
 type Singer = {
-  readonly engineId: string;
-  readonly styleId: number;
+  readonly engineId: EngineId;
+  readonly styleId: StyleId;
 };
 
 type Phrase = {
@@ -287,7 +288,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_SINGER: {
     mutation(
       state,
-      { engineId, styleId }: { engineId: string; styleId: number }
+      { engineId, styleId }: { engineId: EngineId; styleId: StyleId }
     ) {
       state.engineId = engineId;
       state.styleId = styleId;
@@ -1238,7 +1239,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!filePath) return;
         }
 
-        const midiData = await window.electron.readFile({ filePath });
+        const midiData = getValueOrThrow(
+          await window.electron.readFile({ filePath })
+        );
         const midi = new Midi(midiData);
 
         const score = await dispatch("GET_EMPTY_SCORE");
@@ -1336,11 +1339,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         let xmlStr = new TextDecoder("utf-8").decode(
-          await window.electron.readFile({ filePath })
+          getValueOrThrow(await window.electron.readFile({ filePath }))
         );
         if (xmlStr.indexOf("\ufffd") > -1) {
           xmlStr = new TextDecoder("shift-jis").decode(
-            await window.electron.readFile({ filePath })
+            getValueOrThrow(await window.electron.readFile({ filePath }))
           );
         }
 
@@ -1684,20 +1687,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return buffer;
         };
 
-        const generateWriteErrorMessage = (
-          writeFileErrorResult: WriteFileErrorResult
-        ) => {
-          if (writeFileErrorResult.code) {
-            const code = writeFileErrorResult.code.toUpperCase();
+        function generateWriteErrorMessage(writeFileResult: ResultError) {
+          if (writeFileResult.code) {
+            const code = writeFileResult.code.toUpperCase();
+
             if (code.startsWith("ENOSPC")) {
               return "空き容量が足りません。";
             }
+
             if (code.startsWith("EACCES")) {
               return "ファイルにアクセスする許可がありません。";
             }
+
+            if (code.startsWith("EBUSY")) {
+              return "ファイルが開かれています。";
+            }
           }
-          return `何らかの理由で失敗しました。${writeFileErrorResult.message}`;
-        };
+
+          return `何らかの理由で失敗しました。${writeFileResult.message}`;
+        }
 
         if (!audioRenderer) {
           throw new Error("audioRenderer is undefined.");
@@ -1739,7 +1747,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         if (state.savingSetting.avoidOverwrite) {
           let tail = 1;
           const name = filePath.slice(0, filePath.length - 4);
-          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
+          while (await window.electron.checkFileExists(filePath)) {
             filePath = name + "[" + tail.toString() + "]" + ".wav";
             tail += 1;
           }
@@ -1794,16 +1802,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
         const waveFileData = convertToWavFileData(audioBuffer);
 
-        const writeFileResult = window.electron.writeFile({
-          filePath,
-          buffer: waveFileData,
-        }); // 失敗した場合、WriteFileErrorResultオブジェクトが返り、成功時はundefinedが反る
-        if (writeFileResult) {
-          window.electron.logError(new Error(writeFileResult.message));
+        try {
+          await window.electron
+            .writeFile({
+              filePath,
+              buffer: waveFileData,
+            })
+            .then(getValueOrThrow);
+        } catch (e) {
+          window.electron.logError(e);
+          if (e instanceof ResultError) {
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: generateWriteErrorMessage(e),
+            };
+          }
           return {
-            result: "WRITE_ERROR",
+            result: "UNKNOWN_ERROR",
             path: filePath,
-            errorMessage: generateWriteErrorMessage(writeFileResult),
+            errorMessage:
+              (e instanceof Error ? e.message : String(e)) ||
+              "不明なエラーが発生しました。",
           };
         }
 

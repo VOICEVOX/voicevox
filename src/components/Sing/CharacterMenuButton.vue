@@ -145,6 +145,7 @@ import { defineComponent, computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
+import { SpeakerId, StyleId } from "@/type/preload";
 
 export default defineComponent({
   name: "CharacterMenuButton",
@@ -169,7 +170,7 @@ export default defineComponent({
       subMenuOpenFlags.value = arr;
     }, 100);
 
-    const changeStyleId = (speakerUuid: string, styleId: number) => {
+    const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
       const engineId = store.state.engineIds.find((_engineId) =>
         (store.state.characterInfos[_engineId] ?? []).some(
           (characterInfo) =>
@@ -196,9 +197,14 @@ export default defineComponent({
         (x) => x.speakerUuid === speakerUuid
       )?.defaultStyleId;
 
-      return characterInfo?.metas.styles.find(
+      const defaultStyle = characterInfo?.metas.styles.find(
         (style) => style.styleId === defaultStyleId
       );
+
+      if (defaultStyle == undefined)
+        throw new Error("defaultStyle == undefined");
+
+      return defaultStyle;
     };
 
     const selectedCharacterInfo = computed(() => {
