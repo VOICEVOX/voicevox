@@ -25,14 +25,17 @@ test("単体アクセント句の読み変更", async ({ page }) => {
     getNthAccentPhraseInput({ page, n: i })
   );
 
+  // 最後のアクセント区間に読点をつけても無視される
   await page.getByText("ヨ", { exact: true }).click();
   await inputs[3].fill("ヨン,、,、");
   await inputs[3].press("Enter");
 
+  // 連続する読点を追加すると１つに集約される
   await page.getByText("ジュ", { exact: true }).click();
   await inputs[2].fill("サンジュウ,、,、");
   await inputs[2].press("Enter");
 
+  // 読点を追加
   await page.getByText("ヒャ", { exact: true }).click();
   await inputs[1].fill("ニヒャク、");
   await inputs[1].press("Enter");
