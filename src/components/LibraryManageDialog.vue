@@ -166,18 +166,21 @@ import {
   SpeakerId,
   StyleId,
 } from "@/type/preload";
-import { DownloadableLibrary, InstalledLibrary } from "@/openapi";
+import {
+  DownloadableLibrary as EngineDownloadableLibrary,
+  InstalledLibrary as EngineInstalledLibrary,
+} from "@/openapi";
 
-type BrandedDownloadableLibrary = Omit<
-  DownloadableLibrary,
+type DownloadableLibrary = Omit<
+  EngineDownloadableLibrary,
   "speakers" | "uuid"
 > & {
   uuid: LibraryId;
   speakers: CharacterInfo[];
 };
 
-type BrandedInstalledLibrary = BrandedDownloadableLibrary &
-  Pick<InstalledLibrary, "uninstallable">;
+type InstalledLibrary = DownloadableLibrary &
+  Pick<EngineInstalledLibrary, "uninstallable">;
 
 const $q = useQuasar();
 
@@ -215,11 +218,11 @@ const closeDialog = () => {
 };
 
 const downloadableLibraries = ref<
-  Record<EngineId, Record<LibraryId, BrandedDownloadableLibrary>>
+  Record<EngineId, Record<LibraryId, DownloadableLibrary>>
 >({});
-const installedLibraries = ref<Record<EngineId, BrandedInstalledLibrary[]>>({});
+const installedLibraries = ref<Record<EngineId, InstalledLibrary[]>>({});
 
-const isLatest = (engineId: EngineId, library: BrandedDownloadableLibrary) => {
+const isLatest = (engineId: EngineId, library: DownloadableLibrary) => {
   const installedLibrary = installedLibraries.value[engineId].find(
     (installedLibrary) => installedLibrary.uuid === library.uuid
   );
@@ -231,10 +234,7 @@ const isLatest = (engineId: EngineId, library: BrandedDownloadableLibrary) => {
   return semver.gte(installedLibrary.version, library.version);
 };
 
-const isUninstallable = (
-  engineId: EngineId,
-  library: BrandedDownloadableLibrary
-) => {
+const isUninstallable = (engineId: EngineId, library: DownloadableLibrary) => {
   const installedLibrary = installedLibraries.value[engineId].find(
     (installedLibrary) => installedLibrary.uuid === library.uuid
   );
@@ -273,7 +273,7 @@ const isValidHttpUrl = (url: string): boolean => {
 
 const libraryInfoToCharacterInfos = (
   engineId: EngineId,
-  libraryInfo: DownloadableLibrary | InstalledLibrary
+  libraryInfo: EngineDownloadableLibrary | EngineInstalledLibrary
 ): CharacterInfo[] => {
   return libraryInfo.speakers.map((speaker) => {
     const portrait = speaker.speakerInfo.portrait;
@@ -337,20 +337,20 @@ watch(modelValueComputed, async (newValue) => {
             instance.invoke("installedLibrariesInstalledLibrariesGet")({}),
           ])
         )
-        .then(([downloadableLibraries, installedLibraries]): [
-          BrandedDownloadableLibrary[],
-          BrandedInstalledLibrary[]
+        .then(([engineDownloadableLibraries, engineInstalledLibraries]): [
+          DownloadableLibrary[],
+          InstalledLibrary[]
         ] => {
           fetchStatuses.value[engineId] = "success";
           return [
-            downloadableLibraries.map((library) => {
+            engineDownloadableLibraries.map((library) => {
               return {
                 ...library,
                 uuid: LibraryId(library.uuid),
                 speakers: libraryInfoToCharacterInfos(engineId, library),
               };
             }),
-            Object.entries(installedLibraries).map(([uuid, library]) => {
+            Object.entries(engineInstalledLibraries).map(([uuid, library]) => {
               return {
                 ...library,
                 uuid: LibraryId(uuid),
@@ -366,10 +366,10 @@ watch(modelValueComputed, async (newValue) => {
 
       if (!fetchResult) return;
 
-      const [brandedDownloadableLibraries, brandedInstalledLibraries] =
+      const [convertedDownloadableLibraries, convertedInstalledLibraries] =
         fetchResult;
 
-      const toPrimaryOrder = (library: BrandedDownloadableLibrary) => {
+      const toPrimaryOrder = (library: DownloadableLibrary) => {
         const localLibrary = installedLibraries.value[engineId].find(
           (l) => l.uuid === library.uuid
         );
@@ -383,15 +383,15 @@ watch(modelValueComputed, async (newValue) => {
         }
       };
 
-      brandedDownloadableLibraries.sort((a, b) => {
+      convertedDownloadableLibraries.sort((a, b) => {
         return toPrimaryOrder(b) - toPrimaryOrder(a);
       });
       downloadableLibraries.value[engineId] = {};
-      for (const downloadableLibrary of brandedDownloadableLibraries) {
+      for (const downloadableLibrary of convertedDownloadableLibraries) {
         downloadableLibraries.value[engineId][downloadableLibrary.uuid] =
           downloadableLibrary;
       }
-      installedLibraries.value[engineId] = brandedInstalledLibraries;
+      installedLibraries.value[engineId] = convertedInstalledLibraries;
     })
   );
 });
@@ -475,7 +475,7 @@ const togglePlayOrStop = (
 
 const installLibrary = async (
   engineId: EngineId,
-  library: BrandedDownloadableLibrary
+  library: DownloadableLibrary
 ) => {
   selectLibraryAndSpeaker(
     LibraryId(library.uuid),
@@ -487,7 +487,7 @@ const installLibrary = async (
 
 const uninstallLibrary = async (
   engineId: EngineId,
-  library: BrandedDownloadableLibrary
+  library: DownloadableLibrary
 ) => {
   selectLibraryAndSpeaker(
     LibraryId(library.uuid),
