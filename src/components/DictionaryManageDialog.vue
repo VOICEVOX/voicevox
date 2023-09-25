@@ -432,9 +432,6 @@ const changeAccent = async (_: number, accent: number) => {
   }
 };
 
-const audioElem = new Audio();
-audioElem.pause();
-
 const play = async () => {
   if (!accentPhrase.value) return;
 
@@ -471,11 +468,11 @@ const play = async () => {
   }
   nowGenerating.value = false;
   nowPlaying.value = true;
-  await store.dispatch("PLAY_AUDIO_BLOB", { audioElem, audioBlob: blob });
+  await store.dispatch("PLAY_AUDIO_BLOB", { audioBlob: blob });
   nowPlaying.value = false;
 };
 const stop = () => {
-  audioElem.pause();
+  store.dispatch("STOP_AUDIO");
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる

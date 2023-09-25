@@ -73,7 +73,6 @@ export type AudioItem = {
 };
 
 export type AudioState = {
-  nowPlaying: boolean;
   nowGenerating: boolean;
 };
 
@@ -125,11 +124,12 @@ export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
 export type AudioStoreState = {
   characterInfos: Record<EngineId, CharacterInfo[]>;
   morphableTargetsInfo: Record<EngineId, MorphableTargetInfoTable>;
-  audioKeyInitializingSpeaker?: string;
+  audioKeysWithInitializingSpeaker: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;
   audioKeys: AudioKey[];
   audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
+  _selectedAudioKeys?: AudioKey[];
   audioPlayStartPoint?: number;
   nowPlayingContinuously: boolean;
 };
@@ -139,16 +139,16 @@ export type AudioStoreTypes = {
     getter: AudioKey | undefined;
   };
 
+  SELECTED_AUDIO_KEYS: {
+    getter: AudioKey[];
+  };
+
   HAVE_AUDIO_QUERY: {
     getter(audioKey: AudioKey): boolean;
   };
 
   IS_ACTIVE: {
     getter(audioKey: AudioKey): boolean;
-  };
-
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: number | undefined;
   };
 
   LOAD_CHARACTER: {
@@ -171,20 +171,16 @@ export type AudioStoreTypes = {
     getter: CharacterInfo[] | undefined;
   };
 
-  GENERATE_AUDIO_KEY: {
-    action(): AudioKey;
-  };
-
   SETUP_SPEAKER: {
     action(payload: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       engineId: EngineId;
       styleId: StyleId;
     }): void;
   };
 
-  SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
-    mutation: { audioKey?: AudioKey };
+  SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER: {
+    mutation: { audioKeys: AudioKey[] };
   };
 
   SET_ACTIVE_AUDIO_KEY: {
@@ -192,13 +188,14 @@ export type AudioStoreTypes = {
     action(payload: { audioKey?: AudioKey }): void;
   };
 
+  SET_SELECTED_AUDIO_KEYS: {
+    mutation: { audioKeys?: AudioKey[] };
+    action(payload: { audioKeys?: AudioKey[] }): void;
+  };
+
   SET_AUDIO_PLAY_START_POINT: {
     mutation: { startPoint?: number };
     action(payload: { startPoint?: number }): void;
-  };
-
-  SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: AudioKey; nowPlaying: boolean };
   };
 
   SET_AUDIO_NOW_GENERATING: {
@@ -448,15 +445,7 @@ export type AudioStoreTypes = {
   };
 
   PLAY_AUDIO_BLOB: {
-    action(payload: {
-      audioBlob: Blob;
-      audioElem: HTMLAudioElement;
-      audioKey?: AudioKey;
-    }): boolean;
-  };
-
-  STOP_AUDIO: {
-    action(payload: { audioKey: AudioKey }): void;
+    action(payload: { audioBlob: Blob; audioKey?: AudioKey }): boolean;
   };
 
   SET_AUDIO_PRESET_KEY: {
@@ -467,10 +456,6 @@ export type AudioStoreTypes = {
   };
 
   PLAY_CONTINUOUSLY_AUDIO: {
-    action(): void;
-  };
-
-  STOP_CONTINUOUSLY_AUDIO: {
     action(): void;
   };
 };
@@ -519,8 +504,8 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: AudioKey; text: string }): void;
   };
 
-  COMMAND_CHANGE_VOICE: {
-    mutation: { audioKey: AudioKey; voice: Voice } & (
+  COMMAND_MULTI_CHANGE_VOICE: {
+    mutation: { audioKeys: AudioKey[]; voice: Voice } & (
       | { update: "RollbackStyleId" }
       | {
           update: "AccentPhrases";
@@ -531,7 +516,7 @@ export type AudioCommandStoreTypes = {
           query: AudioQuery;
         }
     );
-    action(payload: { audioKey: AudioKey; voice: Voice }): void;
+    action(payload: { audioKeys: AudioKey[]; voice: Voice }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {
@@ -551,6 +536,10 @@ export type AudioCommandStoreTypes = {
         | { isPause: true }
       )
     ): void;
+  };
+
+  COMMAND_DELETE_ACCENT_PHRASE: {
+    action(payload: { audioKey: AudioKey; accentPhraseIndex: number }): void;
   };
 
   COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
@@ -671,7 +660,7 @@ export type AudioCommandStoreTypes = {
     mutation: {
       audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
     };
-    action(payload: { filePath?: string }): string[] | void;
+    action(payload: { filePath?: string }): void;
   };
 
   COMMAND_PUT_TEXTS: {
@@ -684,6 +673,40 @@ export type AudioCommandStoreTypes = {
       texts: string[];
       voice: Voice;
     }): AudioKey[];
+  };
+};
+
+/*
+ * Audio Player Store Types
+ */
+
+export type AudioPlayerStoreState = {
+  nowPlayingAudioKey?: AudioKey;
+};
+
+export type AudioPlayerStoreTypes = {
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
+    getter: number | undefined;
+  };
+
+  NOW_PLAYING: {
+    getter: boolean;
+  };
+
+  SET_AUDIO_NOW_PLAYING: {
+    mutation: { audioKey: AudioKey; nowPlaying: boolean };
+  };
+
+  SET_AUDIO_SOURCE: {
+    mutation: { audioBlob: Blob };
+  };
+
+  PLAY_AUDIO_PLAYER: {
+    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
+  };
+
+  STOP_AUDIO: {
+    action(): void;
   };
 };
 
@@ -1463,6 +1486,7 @@ export type ProxyStoreTypes = {
  */
 
 export type State = AudioStoreState &
+  AudioPlayerStoreState &
   AudioCommandStoreState &
   CommandStoreState &
   EngineStoreState &
@@ -1475,6 +1499,7 @@ export type State = AudioStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
+  AudioPlayerStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
   EngineStoreTypes &

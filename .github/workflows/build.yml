@@ -19,6 +19,7 @@ on:
       code_signing:
         description: "コード署名する"
         type: boolean
+        default: false
       upload_artifact:
         description: "デバッグ用に成果物をartifactにアップロードするか"
         type: boolean

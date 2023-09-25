@@ -857,6 +857,33 @@
                 >
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions
+                v-if="!isProduction"
+                class="q-px-md q-py-none bg-surface"
+              >
+                <div>複数選択</div>
+                <div aria-label="複数のテキスト欄を選択できるようにします。">
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      複数のテキスト欄を選択できるようにします。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableMultiSelect"
+                  @update:model-value="
+                    changeExperimentalSetting('enableMultiSelect', $event)
+                  "
+                >
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -895,6 +922,7 @@ import { computed, ref } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
+  isProduction,
   SavingSetting,
   EngineSetting,
   ExperimentalSetting,
@@ -1061,11 +1089,15 @@ const updateAudioOutputDevices = async () => {
       return { label: device.label, key: device.deviceId };
     });
 };
-navigator.mediaDevices.addEventListener(
-  "devicechange",
-  updateAudioOutputDevices
-);
-updateAudioOutputDevices();
+if (navigator.mediaDevices) {
+  navigator.mediaDevices.addEventListener(
+    "devicechange",
+    updateAudioOutputDevices
+  );
+  updateAudioOutputDevices();
+} else {
+  store.dispatch("LOG_WARN", "navigator.mediaDevices is not available.");
+}
 
 const acceptRetrieveTelemetryComputed = computed({
   get: () => store.state.acceptRetrieveTelemetry == "Accepted",

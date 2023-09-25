@@ -24,6 +24,7 @@ import {
   extractYomiText,
   sanitizeFileName,
   DEFAULT_STYLE_NAME,
+  formatCharacterStyleName,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -46,6 +47,10 @@ import {
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
+
+function generateAudioKey() {
+  return AudioKey(uuidv4());
+}
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -100,16 +105,19 @@ function parseTextFile(
   }
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
+    const characterName = characterInfo.metas.speakerName;
     for (const style of characterInfo.metas.styles) {
+      const styleName = style.styleName;
+      const voice = {
+        engineId: style.engineId,
+        speakerId: characterInfo.metas.speakerUuid,
+        styleId: style.styleId,
+      };
+      name2Voice.set(formatCharacterStyleName(characterName, styleName), voice);
+      // 古いフォーマットにも対応するため
       name2Voice.set(
-        `${characterInfo.metas.speakerName}(${
-          style.styleName || DEFAULT_STYLE_NAME
-        })`,
-        {
-          engineId: style.engineId,
-          speakerId: characterInfo.metas.speakerUuid,
-          styleId: style.styleId,
-        }
+        `${characterName}(${styleName || DEFAULT_STYLE_NAME})`,
+        voice
       );
     }
   }
@@ -132,12 +140,14 @@ function parseTextFile(
   return audioItems;
 }
 
-async function changeFileTailToNonExistent(filePath: string) {
-  const EXTENSION = "wav";
+async function changeFileTailToNonExistent(
+  filePath: string,
+  extension: string
+) {
   let tail = 1;
-  const name = filePath.slice(0, filePath.length - 1 - EXTENSION.length);
+  const name = filePath.slice(0, filePath.length - 1 - extension.length);
   while (await window.electron.checkFileExists(filePath)) {
-    filePath = `${name}[${tail}].${EXTENSION}`;
+    filePath = `${name}[${tail}].${extension}`;
     tail += 1;
   }
   return filePath;
@@ -238,10 +248,10 @@ export function applyAudioPresetToAudioItem(
 }
 
 const audioBlobCache: Record<string, Blob> = {};
-const audioElements: Record<AudioKey, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
+  audioKeysWithInitializingSpeaker: [],
   morphableTargetsInfo: {},
   audioItems: {},
   audioKeys: [],
@@ -261,6 +271,17 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  SELECTED_AUDIO_KEYS: {
+    getter(state) {
+      return (
+        //  undo/redoで消えていることがあるためフィルタする
+        state._selectedAudioKeys?.filter((audioKey) =>
+          state.audioKeys.includes(audioKey)
+        ) || []
+      );
+    },
+  },
+
   HAVE_AUDIO_QUERY: {
     getter: (state) => (audioKey: AudioKey) => {
       return state.audioItems[audioKey]?.query != undefined;
@@ -270,14 +291,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   IS_ACTIVE: {
     getter: (state) => (audioKey: AudioKey) => {
       return state._activeAudioKey === audioKey;
-    },
-  },
-
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: (state) => {
-      return state._activeAudioKey !== undefined
-        ? audioElements[state._activeAudioKey]?.currentTime
-        : undefined;
     },
   },
 
@@ -440,8 +453,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       );
       if (style === undefined) throw new Error("assert style !== undefined");
 
-      const styleName = style.styleName || DEFAULT_STYLE_NAME;
-      return `${characterInfo.metas.speakerName}(${styleName})`;
+      const speakerName = characterInfo.metas.speakerName;
+      const styleName = style.styleName;
+      return formatCharacterStyleName(speakerName, styleName);
     },
   },
 
@@ -458,42 +472,34 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  GENERATE_AUDIO_KEY: {
-    action() {
-      const audioKey = AudioKey(uuidv4());
-      audioElements[audioKey] = new Audio();
-      return audioKey;
-    },
-  },
-
   SETUP_SPEAKER: {
     /**
      * AudioItemに設定される話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
      */
-    async action({ commit, dispatch }, { engineId, audioKey, styleId }) {
+    async action({ commit, dispatch }, { engineId, audioKeys, styleId }) {
       const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
         engineId,
         styleId,
       });
       if (isInitialized) return;
 
-      commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
-        audioKey,
+      commit("SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER", {
+        audioKeys,
       });
       await dispatch("INITIALIZE_ENGINE_SPEAKER", {
         engineId,
         styleId,
       }).finally(() => {
-        commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
-          audioKey: undefined,
+        commit("SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER", {
+          audioKeys: [],
         });
       });
     },
   },
 
-  SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
-    mutation(state, { audioKey }: { audioKey?: AudioKey }) {
-      state.audioKeyInitializingSpeaker = audioKey;
+  SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER: {
+    mutation(state, { audioKeys }: { audioKeys: AudioKey[] }) {
+      state.audioKeysWithInitializingSpeaker = audioKeys;
     },
   },
 
@@ -508,21 +514,34 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  SET_SELECTED_AUDIO_KEYS: {
+    mutation(state, { audioKeys }: { audioKeys?: AudioKey[] }) {
+      state._selectedAudioKeys = audioKeys;
+    },
+    action(
+      { state, commit, getters },
+      { audioKeys }: { audioKeys?: AudioKey[] }
+    ) {
+      const uniqueAudioKeys = new Set(audioKeys);
+      if (
+        getters.ACTIVE_AUDIO_KEY &&
+        !uniqueAudioKeys.has(getters.ACTIVE_AUDIO_KEY)
+      ) {
+        throw new Error("selectedAudioKeys must include activeAudioKey");
+      }
+      const sortedAudioKeys = state.audioKeys.filter((audioKey) =>
+        uniqueAudioKeys.has(audioKey)
+      );
+      commit("SET_SELECTED_AUDIO_KEYS", { audioKeys: sortedAudioKeys });
+    },
+  },
+
   SET_AUDIO_PLAY_START_POINT: {
     mutation(state, { startPoint }: { startPoint?: number }) {
       state.audioPlayStartPoint = startPoint;
     },
     action({ commit }, { startPoint }: { startPoint?: number }) {
       commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
-    },
-  },
-
-  SET_AUDIO_NOW_PLAYING: {
-    mutation(
-      state,
-      { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean }
-    ) {
-      state.audioStates[audioKey].nowPlaying = nowPlaying;
     },
   },
 
@@ -642,13 +661,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   REGISTER_AUDIO_ITEM: {
     async action(
-      { dispatch, commit },
+      { commit },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey?: AudioKey }
     ) {
-      const audioKey = await dispatch("GENERATE_AUDIO_KEY");
+      const audioKey = generateAudioKey();
       commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
       return audioKey;
     },
@@ -674,7 +693,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       state.audioKeys.splice(index, 0, audioKey);
       state.audioItems[audioKey] = audioItem;
       state.audioStates[audioKey] = {
-        nowPlaying: false,
         nowGenerating: false,
       };
     },
@@ -700,7 +718,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       for (const { audioKey, audioItem } of audioKeyItemPairs) {
         state.audioItems[audioKey] = audioItem;
         state.audioStates[audioKey] = {
-          nowPlaying: false,
           nowGenerating: false,
         };
       }
@@ -1370,7 +1387,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath);
+          filePath = await changeFileTailToNonExistent(filePath, "wav");
         }
 
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
@@ -1518,7 +1535,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath);
+          filePath = await changeFileTailToNonExistent(filePath, "wav");
         }
 
         const encodedBlobs: string[] = [];
@@ -1658,7 +1675,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath);
+          filePath = await changeFileTailToNonExistent(filePath, "txt");
         }
 
         const characters = new Map<string, string>();
@@ -1667,12 +1684,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
         for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
+          const speakerName = characterInfo.metas.speakerName;
           for (const style of characterInfo.metas.styles) {
             characters.set(
               `${style.engineId}:${style.styleId}`, // FIXME: 入れ子のMapにする
-              `${characterInfo.metas.speakerName}(${
-                style.styleName || DEFAULT_STYLE_NAME
-              })`
+              formatCharacterStyleName(speakerName, style.styleName)
             );
           }
         }
@@ -1713,8 +1729,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   PLAY_AUDIO: {
     action: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
-        const audioElem = audioElements[audioKey];
-        audioElem.pause();
+        await dispatch("STOP_AUDIO");
 
         // 音声用意
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
@@ -1738,7 +1753,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         return dispatch("PLAY_AUDIO_BLOB", {
           audioBlob: blob,
-          audioElem,
           audioKey,
         });
       }
@@ -1749,83 +1763,27 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action: createUILockAction(
       async (
         { state, commit, dispatch },
-        {
-          audioBlob,
-          audioElem,
-          audioKey,
-        }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: AudioKey }
+        { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
-        audioElem.src = URL.createObjectURL(audioBlob);
+        commit("SET_AUDIO_SOURCE", { audioBlob });
+        let offset: number | undefined;
         // 途中再生用の処理
         if (audioKey) {
           const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
             audioKey,
           });
-          if (accentPhraseOffsets.length === 0) {
-            audioElem.currentTime = 0;
-          } else {
-            const startTime =
-              accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
-            if (startTime === undefined) throw Error("startTime === undefined");
-            // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
-            // 再生に影響のない程度かつ切り捨てられない値を加算する
-            audioElem.currentTime = startTime + 10e-6;
-          }
+          if (accentPhraseOffsets.length === 0)
+            throw new Error("accentPhraseOffsets.length === 0");
+          const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+          if (startTime === undefined) throw Error("startTime === undefined");
+          // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
+          // 再生に影響のない程度かつ切り捨てられない値を加算する
+          offset = startTime + 10e-6;
         }
 
-        // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
-        if (audioElem.setSinkId) {
-          audioElem
-            .setSinkId(state.savingSetting.audioOutputDevice)
-            .catch((err) => {
-              const stop = () => {
-                audioElem.pause();
-                audioElem.removeEventListener("canplay", stop);
-              };
-              audioElem.addEventListener("canplay", stop);
-              window.electron.showMessageDialog({
-                type: "error",
-                title: "エラー",
-                message: "再生デバイスが見つかりません",
-              });
-              throw new Error(err);
-            });
-        }
-
-        // 再生終了時にresolveされるPromiseを返す
-        const played = async () => {
-          if (audioKey) {
-            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
-          }
-        };
-        audioElem.addEventListener("play", played);
-
-        let paused: () => void;
-        const audioPlayPromise = new Promise<boolean>((resolve) => {
-          paused = () => {
-            resolve(audioElem.ended);
-          };
-          audioElem.addEventListener("pause", paused);
-        }).finally(async () => {
-          audioElem.removeEventListener("play", played);
-          audioElem.removeEventListener("pause", paused);
-          if (audioKey) {
-            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
-          }
-        });
-
-        audioElem.play();
-
-        return audioPlayPromise;
+        return dispatch("PLAY_AUDIO_PLAYER", { offset, audioKey });
       }
     ),
-  },
-
-  STOP_AUDIO: {
-    action(_, { audioKey }: { audioKey: AudioKey }) {
-      const audioElem = audioElements[audioKey];
-      audioElem.pause();
-    },
   },
 
   SET_AUDIO_PRESET_KEY: {
@@ -1873,16 +1831,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       }
     }),
   },
-
-  STOP_CONTINUOUSLY_AUDIO: {
-    action({ state, dispatch }) {
-      for (const audioKey of state.audioKeys) {
-        if (state.audioStates[audioKey].nowPlaying) {
-          dispatch("STOP_AUDIO", { audioKey });
-        }
-      }
-    },
-  },
 });
 
 export const audioCommandStoreState: AudioCommandStoreState = {};
@@ -1901,7 +1849,7 @@ export const audioCommandStore = transformCommandStore(
         audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
       },
       async action(
-        { dispatch, commit },
+        { commit },
         {
           audioItem,
           prevAudioKey,
@@ -1910,7 +1858,7 @@ export const audioCommandStore = transformCommandStore(
           prevAudioKey: AudioKey | undefined;
         }
       ) {
-        const audioKey = await dispatch("GENERATE_AUDIO_KEY");
+        const audioKey = generateAudioKey();
         commit("COMMAND_REGISTER_AUDIO_ITEM", {
           audioItem,
           audioKey,
@@ -2036,10 +1984,10 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_CHANGE_VOICE: {
+    COMMAND_MULTI_CHANGE_VOICE: {
       mutation(
         draft,
-        payload: { audioKey: AudioKey; voice: Voice } & (
+        payload: { audioKeys: AudioKey[]; voice: Voice } & (
           | { update: "RollbackStyleId" }
           | {
               update: "AccentPhrases";
@@ -2051,93 +1999,100 @@ export const audioCommandStore = transformCommandStore(
             }
         )
       ) {
-        audioStore.mutations.SET_AUDIO_VOICE(draft, {
-          audioKey: payload.audioKey,
-          voice: payload.voice,
-        });
-
-        if (payload.update === "RollbackStyleId") return;
-
-        const presetKey = draft.audioItems[payload.audioKey].presetKey;
-
-        const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
-          draft,
-          payload.voice,
-          presetKey,
-          "changeVoice"
-        );
-
-        audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-          audioKey: payload.audioKey,
-          presetKey: nextPresetKey,
-        });
-
-        if (payload.update == "AccentPhrases") {
-          audioStore.mutations.SET_ACCENT_PHRASES(draft, {
-            audioKey: payload.audioKey,
-            accentPhrases: payload.accentPhrases,
-          });
-        } else if (payload.update == "AudioQuery") {
-          audioStore.mutations.SET_AUDIO_QUERY(draft, {
-            audioKey: payload.audioKey,
-            audioQuery: payload.query,
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_VOICE(draft, {
+            audioKey,
+            voice: payload.voice,
           });
         }
 
-        if (shouldApplyPreset) {
-          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
-            audioKey: payload.audioKey,
+        if (payload.update === "RollbackStyleId") return;
+
+        for (const audioKey of payload.audioKeys) {
+          const presetKey = draft.audioItems[audioKey].presetKey;
+
+          const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
+            draft,
+            payload.voice,
+            presetKey,
+            "changeVoice"
+          );
+
+          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+            audioKey,
+            presetKey: nextPresetKey,
           });
+
+          if (payload.update == "AccentPhrases") {
+            audioStore.mutations.SET_ACCENT_PHRASES(draft, {
+              audioKey,
+              accentPhrases: payload.accentPhrases,
+            });
+          } else if (payload.update == "AudioQuery") {
+            audioStore.mutations.SET_AUDIO_QUERY(draft, {
+              audioKey,
+              audioQuery: payload.query,
+            });
+          }
+
+          if (shouldApplyPreset) {
+            audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+              audioKey,
+            });
+          }
         }
       },
       async action(
         { state, dispatch, commit },
-        { audioKey, voice }: { audioKey: AudioKey; voice: Voice }
+        { audioKeys, voice }: { audioKeys: AudioKey[]; voice: Voice }
       ) {
-        const query = state.audioItems[audioKey].query;
         const engineId = voice.engineId;
         const styleId = voice.styleId;
-        try {
-          await dispatch("SETUP_SPEAKER", { audioKey, engineId, styleId });
-
-          if (query !== undefined) {
-            const accentPhrases = query.accentPhrases;
-            const newAccentPhrases: AccentPhrase[] = await dispatch(
-              "FETCH_MORA_DATA",
-              {
-                accentPhrases,
-                engineId,
-                styleId,
+        await dispatch("SETUP_SPEAKER", { audioKeys, engineId, styleId });
+        await Promise.all(
+          audioKeys.map(async (audioKey) => {
+            try {
+              const query = state.audioItems[audioKey].query;
+              if (query !== undefined) {
+                const accentPhrases = query.accentPhrases;
+                const newAccentPhrases: AccentPhrase[] = await dispatch(
+                  "FETCH_MORA_DATA",
+                  {
+                    accentPhrases,
+                    engineId,
+                    styleId,
+                  }
+                );
+                commit("COMMAND_MULTI_CHANGE_VOICE", {
+                  audioKeys,
+                  voice,
+                  update: "AccentPhrases",
+                  accentPhrases: newAccentPhrases,
+                });
+              } else {
+                const text = state.audioItems[audioKey].text;
+                const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
+                  text: text,
+                  engineId,
+                  styleId,
+                });
+                commit("COMMAND_MULTI_CHANGE_VOICE", {
+                  audioKeys,
+                  voice,
+                  update: "AudioQuery",
+                  query,
+                });
               }
-            );
-            commit("COMMAND_CHANGE_VOICE", {
-              audioKey,
-              voice,
-              update: "AccentPhrases",
-              accentPhrases: newAccentPhrases,
-            });
-          } else {
-            const text = state.audioItems[audioKey].text;
-            const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
-              text: text,
-              engineId,
-              styleId,
-            });
-            commit("COMMAND_CHANGE_VOICE", {
-              audioKey,
-              voice,
-              update: "AudioQuery",
-              query,
-            });
-          }
-        } catch (error) {
-          commit("COMMAND_CHANGE_VOICE", {
-            audioKey,
-            voice,
-            update: "RollbackStyleId",
-          });
-          throw error;
-        }
+            } catch (error) {
+              commit("COMMAND_MULTI_CHANGE_VOICE", {
+                audioKeys,
+                voice,
+                update: "RollbackStyleId",
+              });
+              throw error;
+            }
+          })
+        );
       },
     },
 
@@ -2317,6 +2272,35 @@ export const audioCommandStore = transformCommandStore(
           });
           throw error;
         }
+      },
+    },
+
+    COMMAND_DELETE_ACCENT_PHRASE: {
+      async action(
+        { state, commit },
+        {
+          audioKey,
+          accentPhraseIndex,
+        }: {
+          audioKey: AudioKey;
+          accentPhraseIndex: number;
+        }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+
+        const originAccentPhrases = query.accentPhrases;
+
+        const newAccentPhrases = [
+          ...originAccentPhrases.slice(0, accentPhraseIndex),
+          ...originAccentPhrases.slice(accentPhraseIndex + 1),
+        ];
+
+        // 自動再調整は行わない
+        commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+          audioKey,
+          accentPhrases: newAccentPhrases,
+        });
       },
     },
 
@@ -2801,17 +2785,13 @@ export const audioCommandStore = transformCommandStore(
               })
             );
           }
-          const audioKeys: AudioKey[] = await Promise.all(
-            audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
-          );
-          const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
+          const audioKeyItemPairs = audioItems.map((audioItem) => ({
             audioItem,
-            audioKey: audioKeys[index],
+            audioKey: generateAudioKey(),
           }));
           commit("COMMAND_IMPORT_FROM_FILE", {
             audioKeyItemPairs,
           });
-          return audioKeys;
         }
       ),
     },
@@ -2855,7 +2835,7 @@ export const audioCommandStore = transformCommandStore(
           }
 
           for (const text of texts.filter((value) => value != "")) {
-            const audioKey: AudioKey = await dispatch("GENERATE_AUDIO_KEY");
+            const audioKey = generateAudioKey();
             const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
               text,
               voice,

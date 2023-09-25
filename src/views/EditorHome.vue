@@ -227,7 +227,7 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
     "テキスト欄にフォーカスを戻す",
     () => {
       if (activeAudioKey.value !== undefined) {
-        focusCell({ audioKey: activeAudioKey.value });
+        focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
       }
       return false; // this is the same with event.preventDefault()
     },
@@ -406,7 +406,7 @@ const addAudioItem = async () => {
     audioItem,
     prevAudioKey: activeAudioKey.value,
   });
-  audioCellRefs[newAudioKey].focusTextField();
+  audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
 };
 const duplicateAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
@@ -420,7 +420,7 @@ const duplicateAudioItem = async () => {
     audioItem: cloneDeep(prevAudioItem),
     prevAudioKey: activeAudioKey.value,
   });
-  audioCellRefs[newAudioKey].focusTextField();
+  audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
 };
 
 // Pane
@@ -472,8 +472,16 @@ watch(shouldShowPanes, (val, old) => {
 });
 
 // セルをフォーカス
-const focusCell = ({ audioKey }: { audioKey: AudioKey }) => {
-  audioCellRefs[audioKey].focusTextField();
+const focusCell = ({
+  audioKey,
+  focusTarget,
+}: {
+  audioKey: AudioKey;
+  focusTarget?: "root" | "textField";
+}) => {
+  audioCellRefs[audioKey].focusCell({
+    focusTarget: focusTarget ?? "textField",
+  });
 };
 
 // Electronのデフォルトのundo/redoを無効化
@@ -518,7 +526,10 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
     };
 
     // FIXME: UNDOができてしまうのでできれば直したい
-    store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
+    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+      audioKeys: [first],
+      voice: voice,
+    });
   }
 });
 
@@ -562,11 +573,11 @@ onMounted(async () => {
     const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
       audioItem,
     });
-    focusCell({ audioKey: newAudioKey });
+    focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
 
     // 最初の話者を初期化
     store.dispatch("SETUP_SPEAKER", {
-      audioKey: newAudioKey,
+      audioKeys: [newAudioKey],
       engineId: audioItem.voice.engineId,
       styleId: audioItem.voice.styleId,
     });
