@@ -2,6 +2,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import Encoding from "encoding-japanese";
 import { diffArrays } from "diff";
+import { toRaw } from "vue";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -2087,7 +2088,7 @@ export const audioCommandStore = transformCommandStore(
                   .reduce(
                     (acc, d, i) => ({
                       ...acc,
-                      [d.index]: query.accentPhrases[i],
+                      [d.index]: toRaw(query.accentPhrases[i]),
                     }),
                     {} as { [index: number]: AccentPhrase }
                   );
