@@ -369,7 +369,7 @@ const targetRecord = ref("");
 const duplicatedHotkey = computed(() =>
   targetRecord.value == ""
     ? undefined
-    : getDuplicatedHotkey(targetRecord.value, targetAction.value)
+    : getDuplicatedHotkey(targetAction.value, targetRecord.value)
 );
 
 const isOnlyModifierKey = computed(() =>
