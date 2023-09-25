@@ -486,10 +486,7 @@ const togglePlayOrStop = (
   }
 };
 
-const installLibrary = async (
-  engineId: EngineId,
-  library: DownloadableLibrary
-) => {
+const installLibrary = async (engineId: EngineId, library: LibraryType) => {
   selectLibraryAndSpeaker(
     LibraryId(library.uuid),
     SpeakerId(library.speakers[0].metas.speakerUuid)
@@ -498,10 +495,7 @@ const installLibrary = async (
   // TODO: インストール処理を追加する
 };
 
-const uninstallLibrary = async (
-  engineId: EngineId,
-  library: DownloadableLibrary
-) => {
+const uninstallLibrary = async (engineId: EngineId, library: LibraryType) => {
   selectLibraryAndSpeaker(
     LibraryId(library.uuid),
     SpeakerId(library.speakers[0].metas.speakerUuid)
