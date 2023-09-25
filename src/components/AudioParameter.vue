@@ -4,12 +4,17 @@
     @mouseleave="handleMouseHover(false)"
   >
     <q-badge
-      v-if="isSelfValueLabelVisible || (!props.disable && props.forceValueLabelVisible)"
+      v-if="
+        isSelfValueLabelVisible ||
+        (!props.disable && props.forceValueLabelVisible)
+      "
       class="value-label"
       :class="{
         'value-label-translucent': !isSelfValueLabelVisible,
         'value-label-consonant':
-          props.clip && props.forceValueLabelVisible && props.type === 'consonant',
+          props.clip &&
+          props.forceValueLabelVisible &&
+          props.type === 'consonant',
         'value-label-vowel':
           props.clip && props.forceValueLabelVisible && props.type === 'vowel',
       }"
