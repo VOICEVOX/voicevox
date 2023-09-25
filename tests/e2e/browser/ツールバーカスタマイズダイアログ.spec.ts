@@ -29,19 +29,19 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
   await page.waitForTimeout(100);
   await expect(page.getByText("ツールバーのカスタマイズ")).toBeVisible();
 
-  // // 全部書き出しボタンを追加する
-  // expect(
-  //   await page.getByRole("button").filter({ hasText: "全部書き出し" }).count()
-  // ).toBe(0);
-  // await page.getByRole("listitem").filter({ hasText: "全部書き出し" }).click();
-  // expect(
-  //   await page.getByRole("button").filter({ hasText: "全部書き出し" }).count()
-  // ).toBe(1);
-  // await page.getByText("保存", { exact: true }).click();
-  // await getNewestQuasarDialog(page)
-  //   .getByRole("button")
-  //   .filter({ hasText: "close" })
-  //   .click();
+  // 全部書き出しボタンを追加する
+  expect(
+    await page.getByRole("button").filter({ hasText: "全部書き出し" }).count()
+  ).toBe(0);
+  await page.getByRole("listitem").filter({ hasText: "全部書き出し" }).click();
+  expect(
+    await page.getByRole("button").filter({ hasText: "全部書き出し" }).count()
+  ).toBe(1);
+  await page.getByText("保存", { exact: true }).click();
+  await getNewestQuasarDialog(page)
+    .getByRole("button")
+    .filter({ hasText: "close" })
+    .click();
 
   // 閉じたあとに全部書き出しボタンが追加されてることを確認
   await page.waitForTimeout(100);
