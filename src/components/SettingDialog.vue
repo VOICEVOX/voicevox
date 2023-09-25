@@ -885,9 +885,9 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>同じ読みのアクセント句内のパラメータの保持</div>
+                <div>調整結果の保持</div>
                 <div
-                  aria-label="テキスト変更時、同じ読みのアクセント句内のパラメータを保持します。"
+                  aria-label="テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -896,9 +896,8 @@
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
+                      >テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。</q-tooltip
                     >
-                      テキスト変更時、同じ読みのアクセント句内のパラメータを保持します。
-                    </q-tooltip>
                   </q-icon>
                 </div>
                 <q-space />
