@@ -56,6 +56,25 @@ module.exports = {
       },
     ],
     "import/order": "error",
+    "no-restricted-syntax": [
+      "error",
+      {
+        selector: "BinaryExpression[operator='==='][right.value=null]",
+        message: "Don't use '=== null'. Use '== null' instead.",
+      },
+      {
+        selector: "BinaryExpression[operator='!=='][right.value=null]",
+        message: "Don't use '!== null'. Use '== null' instead.",
+      },
+      {
+        selector: "BinaryExpression[operator='==='][right.value=undefined]",
+        message: "Don't use '=== undefined'. Use '== undefined' instead.",
+      },
+      {
+        selector: "BinaryExpression[operator='!=='][right.value=undefined]",
+        message: "Don't use '!== undefined'. Use '== undefined' instead.",
+      },
+    ],
   },
   overrides: [
     {
