@@ -4,14 +4,14 @@
     @mouseleave="handleMouseHover(false)"
   >
     <q-badge
-      v-if="isSelfBadgeVisible || (!props.disable && props.forceValueVisible)"
+      v-if="isSelfValueLabelVisible || (!props.disable && props.forceValueLabelVisible)"
       class="value-label"
       :class="{
-        'value-label-translucent': !isSelfBadgeVisible,
+        'value-label-translucent': !isSelfValueLabelVisible,
         'value-label-consonant':
-          props.clip && props.forceValueVisible && props.type === 'consonant',
+          props.clip && props.forceValueLabelVisible && props.type === 'consonant',
         'value-label-vowel':
-          props.clip && props.forceValueVisible && props.type === 'vowel',
+          props.clip && props.forceValueLabelVisible && props.type === 'vowel',
       }"
       color="primary"
       text-color="display-on-primary"
@@ -60,7 +60,7 @@ const props = withDefaults(
     type?: MoraDataType;
     clip?: boolean;
     shiftKeyFlag?: boolean;
-    forceValueVisible?: boolean;
+    forceValueLabelVisible?: boolean;
   }>(),
   {
     min: 0.0,
@@ -70,7 +70,7 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
-    forceValueVisible: false,
+    forceValueLabelVisible: false,
   }
 );
 
@@ -88,7 +88,7 @@ const emit =
       type: MoraDataType,
       moraIndex: number
     ): void;
-    (e: "changeSelfValueVisible", isVisible: boolean): void;
+    (e: "changeSelfValueLabelVisible", isVisible: boolean): void;
   }>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) =>
@@ -137,14 +137,14 @@ const precisionComputed = computed(() => {
   }
 });
 
-const isSelfBadgeVisible = computed(
+const isSelfValueLabelVisible = computed(
   () =>
     !props.disable &&
     (valueLabel.visible || previewSlider.state.isPanning.value)
 );
 
-watch(isSelfBadgeVisible, (newValue) => {
-  emit("changeSelfValueVisible", newValue);
+watch(isSelfValueLabelVisible, (newValue) => {
+  emit("changeSelfValueLabelVisible", newValue);
 });
 
 // クリックでアクセント句が選択されないように@click.stopに渡す

@@ -29,9 +29,9 @@
         :type="'pitch'"
         :clip="false"
         :shift-key-flag="shiftKeyFlag"
-        :force-value-visible="forceValueVisible"
+        :force-value-label-visible="forceValueLabelVisible"
         @change-value="changeMoraData"
-        @change-self-value-visible="handleValueVisible"
+        @change-self-value-label-visible="handleValueLabelVisible"
       />
     </div>
     <div v-if="accentPhrase.pauseMora" />
@@ -56,10 +56,10 @@
         :type="'consonant'"
         :clip="true"
         :shift-key-flag="shiftKeyFlag"
-        :force-value-visible="forceValueVisible"
+        :force-value-label-visible="forceValueLabelVisible"
         @change-value="changeMoraData"
         @mouse-over="handleLengthHoverText"
-        @change-self-value-visible="handleValueVisible"
+        @change-self-value-visible="handleValueLabelVisible"
       />
       <!-- vowel length -->
       <audio-parameter
@@ -72,10 +72,10 @@
         :type="'vowel'"
         :clip="mora.consonant ? true : false"
         :shift-key-flag="shiftKeyFlag"
-        :force-value-visible="forceValueVisible"
+        :force-value-label-visible="forceValueLabelVisible"
         @change-value="changeMoraData"
         @mouse-over="handleLengthHoverText"
-        @change-self-value-visible="handleValueVisible"
+        @change-self-value-visible="handleValueLabelVisible"
       />
     </div>
     <div
@@ -95,9 +95,9 @@
         :step="0.01"
         :type="'pause'"
         :shift-key-flag="shiftKeyFlag"
-        :force-value-visible="forceValueVisible"
+        :force-value-label-visible="forceValueLabelVisible"
         @change-value="changeMoraData"
-        @change-self-value-visible="handleValueVisible"
+        @change-self-value-visible="handleValueLabelVisible"
       />
     </div>
   </template>
@@ -312,12 +312,12 @@ const lastPitches = computed(() =>
 );
 
 // alt押下中の全モーラのスライダーの数値表示
-const isAnySingleValueVisible = ref(false);
-const handleValueVisible = (isVisible: boolean) => {
-  isAnySingleValueVisible.value = isVisible;
+const isAnySingleValueLabelVisible = ref(false);
+const handleValueLabelVisible = (isVisible: boolean) => {
+  isAnySingleValueLabelVisible.value = isVisible;
 };
-const forceValueVisible = computed(
-  () => props.altKeyFlag && isAnySingleValueVisible.value
+const forceValueLabelVisible = computed(
+  () => props.altKeyFlag && isAnySingleValueLabelVisible.value
 );
 
 const maxPitch = 6.5;
