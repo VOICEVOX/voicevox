@@ -2096,7 +2096,9 @@ export const audioCommandStore = transformCommandStore(
                   .filter((d) => !d.removed)
                   .map((d, i) => {
                     const original = accentPhrases[i];
-                    const ap = indexToOldAccentPhrase[d.index] ?? original;
+                    const ap = structuredClone(
+                      indexToOldAccentPhrase[d.index] ?? original
+                    );
                     if (accentPhrases[i].pauseMora !== undefined) {
                       ap.pauseMora = original.pauseMora;
                     } else {
