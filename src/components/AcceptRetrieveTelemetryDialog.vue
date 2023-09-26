@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="accept-retrieve-telemetry-dialog transparent-backdrop"
-    v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -54,6 +54,7 @@
             </q-card-section>
 
             <q-card-section class="text-body1">
+              <!-- eslint-disable-next-line vue/no-v-html -->
               <div v-html="privacyPolicy"></div>
             </q-card-section>
           </q-card>
@@ -63,53 +64,41 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref, onMounted } from "vue";
+<script setup lang="ts">
+import { computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
-export default defineComponent({
-  name: "AcceptRetrieveTelemetryDialog",
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", value: boolean): void;
+  }>();
 
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const store = useStore();
 
-  setup(props, { emit }) {
-    const store = useStore();
+const modelValueComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
 
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
+const handler = (acceptRetrieveTelemetry: boolean) => {
+  store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+    acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
+  });
 
-    const handler = (acceptRetrieveTelemetry: boolean) => {
-      store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-        acceptRetrieveTelemetry: acceptRetrieveTelemetry
-          ? "Accepted"
-          : "Refused",
-      });
+  modelValueComputed.value = false;
+};
 
-      modelValueComputed.value = false;
-    };
-
-    const md = useMarkdownIt();
-    const privacyPolicy = ref("");
-    onMounted(async () => {
-      privacyPolicy.value = md.render(
-        await store.dispatch("GET_PRIVACY_POLICY_TEXT")
-      );
-    });
-
-    return {
-      modelValueComputed,
-      handler,
-      privacyPolicy,
-    };
-  },
+const md = useMarkdownIt();
+const privacyPolicy = ref("");
+onMounted(async () => {
+  privacyPolicy.value = md.render(
+    await store.dispatch("GET_PRIVACY_POLICY_TEXT")
+  );
 });
 </script>
 

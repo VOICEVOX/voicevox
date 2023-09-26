@@ -2,7 +2,7 @@
   <div class="sing-toolbar">
     <div
       class="singer-panel-toggler"
-      v-bind:class="{ active: isShowSinger }"
+      :class="{ active: isShowSinger }"
       @click="toggleShowSinger"
     >
       <img :src="selectedStyleIconPath" class="singer-avatar" />
@@ -40,7 +40,7 @@
         @update:model-value="setTempoInputBuffer"
         @change="setTempo"
       >
-        <template v-slot:prepend>
+        <template #prepend>
           <div />
         </template>
       </q-input>
@@ -53,7 +53,7 @@
         @update:model-value="setBeatsInputBuffer"
         @change="setTimeSignature"
       >
-        <template v-slot:prepend>
+        <template #prepend>
           <div />
         </template>
       </q-input>
@@ -67,7 +67,7 @@
         @update:model-value="setBeatTypeInputBuffer"
         @change="setTimeSignature"
       >
-        <template v-slot:prepend>
+        <template #prepend>
           <div />
         </template>
       </q-input>

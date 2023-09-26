@@ -1,5 +1,8 @@
 <template>
-  <q-dialog :model-value="openDialog" @update:model-value="updateOpenDialog">
+  <q-dialog
+    :model-value="props.openDialog"
+    @update:model-value="updateOpenDialog"
+  >
     <q-card class="setting-card q-pa-md dialog-card">
       <q-card-section>
         <div class="text-h5">プリセット管理</div>
@@ -8,11 +11,11 @@
         <div class="full-width row wrap justify-between">
           <q-list bordered separator class="col-sm-grow">
             <draggable
-              :modelValue="previewPresetList"
-              @update:modelValue="reorderPreset"
+              :model-value="previewPresetList"
               item-key="key"
+              @update:model-value="reorderPreset"
             >
-              <template v-slot:item="{ element: item }">
+              <template #item="{ element: item }">
                 <q-item>
                   <q-item-section>{{ item.name }}</q-item-section>
                   <q-space />
@@ -39,91 +42,83 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref } from "vue";
-import { useQuasar } from "quasar";
-import { useStore } from "@/store";
+<script setup lang="ts">
+import { computed, ref } from "vue";
 import draggable from "vuedraggable";
+import { useStore } from "@/store";
 
-import { Preset } from "@/type/preload";
+import { useDefaultPreset } from "@/composables/useDefaultPreset";
+import { Preset, PresetKey } from "@/type/preload";
 
-export default defineComponent({
-  name: "PresetManageDialog",
-  components: {
-    draggable,
-  },
+const props =
+  defineProps<{
+    openDialog: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:openDialog", val: boolean): void;
+  }>();
 
-  props: {
-    openDialog: Boolean,
-  },
+const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
-  emits: ["update:openDialog"],
+const store = useStore();
+const { isDefaultPresetKey } = useDefaultPreset();
 
-  setup(props, context) {
-    const updateOpenDialog = (isOpen: boolean) =>
-      context.emit("update:openDialog", isOpen);
+const presetItems = computed(() => store.state.presetItems);
+const presetKeys = computed(() => store.state.presetKeys);
 
-    const store = useStore();
-    const $q = useQuasar();
+const presetList = computed(() =>
+  presetKeys.value
+    .filter((key) => presetItems.value[key] != undefined)
+    .filter((key) => !isDefaultPresetKey(key))
+    .map((key) => ({
+      key,
+      ...presetItems.value[key],
+    }))
+);
 
-    const presetItems = computed(() => store.state.presetItems);
-    const presetKeys = computed(() => store.state.presetKeys);
+const isPreview = ref(false);
+const previewPresetKeys = ref(store.state.presetKeys);
 
-    const presetList = computed(() =>
-      presetKeys.value
+const previewPresetList = computed(() =>
+  isPreview.value
+    ? previewPresetKeys.value
         .filter((key) => presetItems.value[key] != undefined)
+        .filter((key) => !isDefaultPresetKey(key))
         .map((key) => ({
           key,
           ...presetItems.value[key],
         }))
-    );
+    : presetList.value
+);
 
-    const isPreview = ref(false);
-    const previewPresetKeys = ref(store.state.presetKeys);
+const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
+  const newPresetKeys = featurePresetList.map((item) => item.key);
+  previewPresetKeys.value = newPresetKeys;
+  isPreview.value = true;
 
-    const previewPresetList = computed(() =>
-      isPreview.value
-        ? previewPresetKeys.value
-            .filter((key) => presetItems.value[key] != undefined)
-            .map((key) => ({
-              key,
-              ...presetItems.value[key],
-            }))
-        : presetList.value
-    );
+  // デフォルトプリセットは表示するlistから除外しているので、末尾に追加しておかないと失われる
+  const defaultPresetKeys = presetKeys.value.filter(isDefaultPresetKey);
 
-    const reorderPreset = (featurePresetList: (Preset & { key: string })[]) => {
-      const newPresetKeys = featurePresetList.map((item) => item.key);
-      previewPresetKeys.value = newPresetKeys;
-      isPreview.value = true;
-      store
-        .dispatch("SAVE_PRESET_ORDER", {
-          presetKeys: newPresetKeys,
-        })
-        .finally(() => (isPreview.value = false));
-    };
+  store
+    .dispatch("SAVE_PRESET_ORDER", {
+      presetKeys: [...newPresetKeys, ...defaultPresetKeys],
+    })
+    .finally(() => (isPreview.value = false));
+};
 
-    const deletePreset = (key: string) => {
-      $q.dialog({
-        title: "プリセット削除の確認",
-        message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
-        cancel: true,
-      }).onOk(async () => {
-        await store.dispatch("DELETE_PRESET", {
-          presetKey: key,
-        });
-      });
-    };
-
-    return {
-      updateOpenDialog,
-      presetList,
-      previewPresetList,
-      deletePreset,
-      reorderPreset,
-    };
-  },
-});
+const deletePreset = async (key: PresetKey) => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+    title: "プリセット削除の確認",
+    message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
+    actionName: "削除",
+  });
+  if (result === "OK") {
+    await store.dispatch("DELETE_PRESET", {
+      presetKey: key,
+    });
+  }
+};
 </script>
 
 <style>

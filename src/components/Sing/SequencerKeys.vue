@@ -15,6 +15,7 @@
         :title="y.name"
       />
       <line
+        v-if="y.pitch === 'C' || y.pitch === 'F'"
         x1="0"
         x2="48"
         :y1="`${(index + 1) * sizeY * zoomY}`"
@@ -22,13 +23,12 @@
         :class="`sequencer-keys-item-separator ${
           y.pitch === 'C' && 'sequencer-keys-item-separator-octave'
         } ${y.pitch === 'F' && 'sequencer-keys-item-separator-f'}`"
-        v-if="y.pitch === 'C' || y.pitch === 'F'"
       />
       <text
+        v-if="y.pitch === 'C'"
         font-size="10"
         x="32"
         :y="`${sizeY * zoomY * (index + 1) - 4}`"
-        v-if="y.pitch === 'C'"
         class="sequencer-keys-item-pitchname"
       >
         {{ y.name }}

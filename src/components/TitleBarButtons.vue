@@ -8,32 +8,34 @@
   >
     <q-btn
       v-if="isPinned"
+      id="pinned-btn"
       dense
       flat
       round
       icon="push_pin"
       color="teal"
       class="title-bar-buttons"
-      id="pinned-btn"
+      aria-label="最前面固定を解除"
       @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に表示
+        最前面固定を解除
       </q-tooltip>
     </q-btn>
     <q-btn
       v-else
+      id="pinned-btn"
       dense
       flat
       round
       icon="push_pin"
       color="display"
       class="title-bar-buttons rotate-45"
-      id="pinned-btn"
+      aria-label="最前面に固定"
       @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に表示
+        最前面に固定
       </q-tooltip>
     </q-btn>
   </q-badge>
@@ -51,60 +53,51 @@
   >
     <q-btn
       v-if="isPinned"
+      id="pinned-btn"
       dense
       flat
       round
       icon="push_pin"
       color="teal"
       class="title-bar-buttons"
-      id="pinned-btn"
+      aria-label="最前面固定を解除"
       @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に表示
+        最前面固定を解除
       </q-tooltip>
     </q-btn>
     <q-btn
       v-else
+      id="pinned-btn"
       dense
       flat
       round
       icon="push_pin"
       class="title-bar-buttons rotate-45"
-      id="pinned-btn"
+      aria-label="最前面に固定"
       @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に表示
+        最前面に固定
       </q-tooltip>
     </q-btn>
   </q-badge>
   <min-max-close-buttons v-if="!$q.platform.is.mac" />
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from "vue";
+<script setup lang="ts">
+import { computed } from "vue";
 import { useStore } from "@/store";
 import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 
-export default defineComponent({
-  name: "TitleBarButtons",
-  components: { MinMaxCloseButtons },
-  setup() {
-    const store = useStore();
+const store = useStore();
 
-    const changePinWindow = () => {
-      window.electron.changePinWindow();
-    };
+const changePinWindow = () => {
+  window.electron.changePinWindow();
+};
 
-    const isPinned = computed(() => store.state.isPinned);
-
-    return {
-      changePinWindow,
-      isPinned,
-    };
-  },
-});
+const isPinned = computed(() => store.state.isPinned);
 </script>
 
 <style scoped lang="scss">

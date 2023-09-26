@@ -4,6 +4,8 @@ node_modules
 
 /tests/e2e/videos/
 /tests/e2e/screenshots/
+/test-results/*
+/playwright-report/
 
 # local env files
 .env.local
@@ -24,7 +26,7 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-#Electron-builder output
+# Electron-builder output
 /dist_electron
 
 # data

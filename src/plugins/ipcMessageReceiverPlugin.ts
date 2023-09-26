@@ -1,7 +1,7 @@
 import { Plugin } from "vue";
+import { debounce } from "quasar";
 import { Store } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
-import { debounce } from "quasar";
 
 export const ipcMessageReceiver: Plugin = {
   install: (
@@ -44,8 +44,8 @@ export const ipcMessageReceiver: Plugin = {
       options.store.dispatch("DETECT_LEAVE_FULLSCREEN")
     );
 
-    window.electron.onReceivedIPCMsg("PROCESS_BEFORE_QUITTING", () => {
-      options.store.dispatch("PROCESS_BEFORE_QUITTING");
+    window.electron.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", (_, obj) => {
+      options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE", obj);
     });
 
     window.electron.onReceivedIPCMsg(

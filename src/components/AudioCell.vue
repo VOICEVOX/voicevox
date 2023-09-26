@@ -1,593 +1,673 @@
 <template>
-  <div class="audio-cell">
+  <div
+    ref="root"
+    class="audio-cell"
+    tabindex="-1"
+    :class="{
+      active: isActiveAudioCell,
+      selected: isSelectedAudioCell && isMultiSelectEnabled,
+    }"
+    @keydown.prevent.up="moveUpCell"
+    @keydown.prevent.down="moveDownCell"
+    @focus="onRootFocus"
+  >
+    <!-- 複数選択用のヒットボックス -->
+    <div
+      v-if="(isCtrlOrCommandKeyDown || isShiftKeyDown) && isMultiSelectEnabled"
+      class="click-hitbox"
+      tabindex="-1"
+      @click="onClickWithModifierKey"
+    />
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
-      color="primary-light"
+      color="primary"
       size="sm"
       class="absolute active-arrow"
     />
-    <q-btn
-      flat
-      class="q-pa-none character-button"
-      :disable="uiLocked"
-      :class="{ opaque: isInitializingSpeaker }"
+    <div
+      v-if="showTextLineNumber"
+      class="line-number"
+      :class="{ active: isActiveAudioCell }"
     >
-      <!-- q-imgだとdisableのタイミングで点滅する -->
-      <img class="q-pa-none q-ma-none" :src="selectedStyle.iconPath" />
-      <div v-if="isInitializingSpeaker" class="loading">
-        <q-spinner color="primary" size="1.6rem" :thickness="7" />
-      </div>
-      <q-menu
-        class="character-menu"
-        transition-show="none"
-        transition-hide="none"
-      >
-        <q-list>
-          <q-item
-            v-for="(characterInfo, characterIndex) in userOrderedCharacterInfos"
-            :key="characterIndex"
-            class="q-pa-none"
-          >
-            <q-btn-group flat class="col full-width">
-              <q-btn
-                flat
-                no-caps
-                v-close-popup
-                class="col-grow"
-                :class="
-                  characterInfo.metas.speakerUuid ===
-                    selectedCharacterInfo.metas.speakerUuid &&
-                  'selected-character-item'
-                "
-                @click="
-                  changeStyleId(
-                    characterInfo.metas.speakerUuid,
-                    getDefaultStyle(characterInfo.metas.speakerUuid).styleId
-                  )
-                "
-                @mouseover="reassignSubMenuOpen(-1)"
-                @mouseleave="reassignSubMenuOpen.cancel()"
-              >
-                <q-avatar rounded size="2rem" class="q-mr-md">
-                  <q-img
-                    no-spinner
-                    no-transition
-                    :ratio="1"
-                    :src="
-                      getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
-                    "
-                  />
-                  <q-avatar
-                    class="engine-icon"
-                    rounded
-                    v-if="
-                      isMultipleEngine && characterInfo.metas.styles.length < 2
-                    "
-                  >
-                    <img
-                      :src="
-                        engineIcons[
-                          getDefaultStyle(characterInfo.metas.speakerUuid)
-                            .engineId
-                        ]
-                      "
-                    />
-                  </q-avatar>
-                </q-avatar>
-                <div>{{ characterInfo.metas.speakerName }}</div>
-              </q-btn>
-
-              <!-- スタイルが2つ以上あるものだけ、スタイル選択ボタンを表示する-->
-              <template v-if="characterInfo.metas.styles.length >= 2">
-                <q-separator vertical />
-
-                <div
-                  class="flex items-center q-px-sm q-py-none cursor-pointer"
-                  :class="
-                    subMenuOpenFlags[characterIndex] && 'opened-character-item'
-                  "
-                  @mouseover="reassignSubMenuOpen(characterIndex)"
-                  @mouseleave="reassignSubMenuOpen.cancel()"
-                >
-                  <q-icon
-                    name="keyboard_arrow_right"
-                    color="grey-6"
-                    size="sm"
-                  />
-
-                  <q-menu
-                    no-parent-event
-                    anchor="top end"
-                    self="top start"
-                    transition-show="none"
-                    transition-hide="none"
-                    class="character-menu"
-                    v-model="subMenuOpenFlags[characterIndex]"
-                  >
-                    <q-list>
-                      <q-item
-                        v-for="(style, styleIndex) in characterInfo.metas
-                          .styles"
-                        :key="styleIndex"
-                        clickable
-                        v-close-popup
-                        active-class="selected-character-item"
-                        :active="style.styleId === selectedStyle.styleId"
-                        @click="
-                          changeStyleId(
-                            characterInfo.metas.speakerUuid,
-                            style.styleId
-                          )
-                        "
-                      >
-                        <q-avatar rounded size="2rem" class="q-mr-md">
-                          <q-img
-                            no-spinner
-                            no-transition
-                            :ratio="1"
-                            :src="
-                              characterInfo.metas.styles[styleIndex].iconPath
-                            "
-                          />
-                          <q-avatar
-                            rounded
-                            class="engine-icon"
-                            v-if="isMultipleEngine"
-                          >
-                            <img
-                              :src="
-                                engineIcons[
-                                  characterInfo.metas.styles[styleIndex]
-                                    .engineId
-                                ]
-                              "
-                            />
-                          </q-avatar>
-                        </q-avatar>
-                        <q-item-section v-if="style.styleName"
-                          >{{ characterInfo.metas.speakerName }} ({{
-                            style.styleName
-                          }})</q-item-section
-                        >
-                        <q-item-section v-else>{{
-                          characterInfo.metas.speakerName
-                        }}</q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </div>
-              </template>
-            </q-btn-group>
-          </q-item>
-        </q-list>
-      </q-menu>
-    </q-btn>
+      {{ textLineNumberIndex }}
+    </div>
+    <character-button
+      v-model:selected-voice="selectedVoice"
+      :character-infos="userOrderedCharacterInfos"
+      :loading="isInitializingSpeaker"
+      :show-engine-info="isMultipleEngine"
+      :ui-locked="uiLocked"
+      @focus="
+        if (!isSelectedAudioCell) {
+          selectAndSetActiveAudioKey();
+        }
+      "
+    />
+    <!--
+      input.valueをスクリプトから変更した場合は@changeが発火しないため、
+      @blurと@keydown.prevent.enter.exactに分けている
+    -->
     <q-input
-      ref="textfield"
+      ref="textField"
       filled
       dense
       hide-bottom-space
       class="full-width"
-      color="primary-light"
+      color="primary"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
+      :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
-      @change="willRemove || pushAudioText()"
+      @focus="
+        clearInputSelection();
+        selectAndSetActiveAudioKey();
+      "
+      @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
-      @focus="setActiveAudioKey()"
-      @keydown.prevent.up.exact="moveUpCell"
-      @keydown.prevent.down.exact="moveDownCell"
-      @mouseup.right="onRightClickTextField"
+      @keydown.prevent.enter.exact="pushAudioTextIfNeeded"
     >
-      <template v-slot:error>
+      <template #error>
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template #after v-if="deleteButtonEnable">
+      <template v-if="deleteButtonEnable" #after>
         <q-btn
           round
           flat
           icon="delete_outline"
           size="0.8rem"
           :disable="uiLocked"
+          :aria-label="`${textLineNumberIndex}行目を削除`"
           @click="removeCell"
         />
       </template>
+      <context-menu
+        ref="contextMenu"
+        :header="contextMenuHeader"
+        :menudata="contextMenudata"
+        @before-show="
+          startContextMenuOperation();
+          readyForContextMenu();
+        "
+        @before-hide="endContextMenuOperation()"
+      />
     </q-input>
   </div>
 </template>
 
-<script lang="ts">
-import { computed, watch, defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { computed, watch, ref, nextTick, onMounted, onUnmounted } from "vue";
+import { QInput } from "quasar";
+import CharacterButton from "./CharacterButton.vue";
+import { MenuItemButton, MenuItemSeparator } from "./MenuBar.vue";
+import ContextMenu from "./ContextMenu.vue";
 import { useStore } from "@/store";
-import { AudioItem } from "@/store/type";
-import { QInput, debounce } from "quasar";
-import { base64ImageToUri } from "@/helpers/imageHelper";
+import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
+import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
-export default defineComponent({
-  name: "AudioCell",
+const props =
+  defineProps<{
+    audioKey: AudioKey;
+  }>();
 
-  props: {
-    audioKey: { type: String, required: true },
+const emit =
+  defineEmits<{
+    // focusTarget：
+    //   textField: テキストフィールドにフォーカス。複数選択が解除される。特別な理由がない限りはこちらを使う。
+    //   root: AudioCell自体にフォーカス。こちらは複数選択を解除しない。
+    (
+      e: "focusCell",
+      payload: { audioKey: AudioKey; focusTarget?: "textField" | "root" }
+    ): void;
+  }>();
+
+defineExpose({
+  audioKey: computed(() => props.audioKey),
+  focusCell: ({
+    focusTarget: baseFocusTarget,
+  }: {
+    focusTarget?: "textField" | "root";
+  }) => {
+    const focusTarget = baseFocusTarget ?? "textField";
+    if (focusTarget === "textField") {
+      textField.value?.focus();
+    } else {
+      root.value?.focus();
+    }
   },
-
-  emits: ["focusCell"],
-
-  setup(props, { emit }) {
-    const store = useStore();
-    const userOrderedCharacterInfos = computed(
-      () => store.getters.USER_ORDERED_CHARACTER_INFOS
-    );
-    const isInitializingSpeaker = computed(
-      () => store.state.audioKeyInitializingSpeaker === props.audioKey
-    );
-    const audioItem = computed(() => store.state.audioItems[props.audioKey]);
-    const nowPlaying = computed(
-      () => store.state.audioStates[props.audioKey].nowPlaying
-    );
-    const nowGenerating = computed(
-      () => store.state.audioStates[props.audioKey].nowGenerating
-    );
-
-    const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-    const selectedCharacterInfo = computed(() =>
-      userOrderedCharacterInfos.value !== undefined &&
-      audioItem.value.engineId !== undefined &&
-      audioItem.value.styleId !== undefined
-        ? store.getters.CHARACTER_INFO(
-            audioItem.value.engineId,
-            audioItem.value.styleId
-          )
-        : undefined
-    );
-    const selectedStyle = computed(() =>
-      selectedCharacterInfo.value?.metas.styles.find(
-        (style) =>
-          style.styleId === audioItem.value.styleId &&
-          style.engineId === audioItem.value.engineId
-      )
-    );
-
-    const subMenuOpenFlags = ref(
-      [...Array(userOrderedCharacterInfos.value?.length)].map(() => false)
-    );
-
-    const reassignSubMenuOpen = debounce((idx: number) => {
-      if (subMenuOpenFlags.value[idx]) return;
-      const arr = [...Array(userOrderedCharacterInfos.value?.length)].map(
-        () => false
-      );
-      arr[idx] = true;
-      subMenuOpenFlags.value = arr;
-    }, 100);
-
-    const isActiveAudioCell = computed(
-      () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY
-    );
-
-    const audioTextBuffer = ref(audioItem.value.text);
-    const isChangeFlag = ref(false);
-    const setAudioTextBuffer = (text: string) => {
-      audioTextBuffer.value = text;
-      isChangeFlag.value = true;
-    };
-
-    watch(
-      // `audioItem` becomes undefined just before the component is unmounted.
-      () => audioItem.value?.text,
-      (newText) => {
-        if (!isChangeFlag.value && newText !== undefined) {
-          audioTextBuffer.value = newText;
-        }
-      }
-    );
-
-    const pushAudioText = async () => {
-      if (isChangeFlag.value) {
-        isChangeFlag.value = false;
-        await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
-          audioKey: props.audioKey,
-          text: audioTextBuffer.value,
-        });
-      }
-    };
-
-    const changeStyleId = (speakerUuid: string, styleId: number) => {
-      const engineId = store.state.engineIds.find((_engineId) =>
-        (store.state.characterInfos[_engineId] ?? []).some(
-          (characterInfo) =>
-            characterInfo.metas.speakerUuid === speakerUuid &&
-            characterInfo.metas.styles.some(
-              (style) => style.styleId === styleId
-            )
-        )
-      );
-      if (engineId === undefined)
-        throw new Error(
-          `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
-        );
-
-      store.dispatch("COMMAND_CHANGE_STYLE_ID", {
-        audioKey: props.audioKey,
-        engineId,
-        styleId,
-      });
-    };
-    const getDefaultStyle = (speakerUuid: string) => {
-      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
-      const characterInfo = userOrderedCharacterInfos.value?.find(
-        (info) => info.metas.speakerUuid === speakerUuid
-      );
-      const defaultStyleId = store.state.defaultStyleIds.find(
-        (x) => x.speakerUuid === speakerUuid
-      )?.defaultStyleId;
-
-      return characterInfo?.metas.styles.find(
-        (style) => style.styleId === defaultStyleId
-      );
-    };
-    const setActiveAudioKey = () => {
-      store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
-    };
-    const save = () => {
-      store.dispatch("GENERATE_AND_SAVE_AUDIO", { audioKey: props.audioKey });
-    };
-
-    const play = () => {
-      store.dispatch("PLAY_AUDIO", { audioKey: props.audioKey });
-    };
-
-    const stop = () => {
-      store.dispatch("STOP_AUDIO", { audioKey: props.audioKey });
-    };
-
-    const isEnableSplitText = computed(() => store.state.splitTextWhenPaste);
-    // コピペしたときに句点と改行で区切る
-    const pasteOnAudioCell = async (event: ClipboardEvent) => {
-      if (event.clipboardData && isEnableSplitText.value !== "OFF") {
-        let texts: string[] = [];
-        const clipBoardData = event.clipboardData.getData("text/plain");
-        switch (isEnableSplitText.value) {
-          case "PERIOD_AND_NEW_LINE":
-            texts = clipBoardData.replaceAll("。", "。\n\r").split(/[\n\r]/);
-            break;
-          case "NEW_LINE":
-            texts = clipBoardData.split(/[\n\r]/);
-            break;
-        }
-
-        if (texts.length > 1) {
-          event.preventDefault();
-          blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
-
-          const prevAudioKey = props.audioKey;
-          if (audioTextBuffer.value == "") {
-            const text = texts.shift();
-            if (text == undefined) return;
-            setAudioTextBuffer(text);
-            await pushAudioText();
-          }
-
-          const engineId = audioItem.value.engineId;
-          if (engineId === undefined)
-            throw new Error("assert engineId !== undefined");
-
-          const styleId = audioItem.value.styleId;
-          if (styleId === undefined)
-            throw new Error("assert styleId !== undefined");
-
-          const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
-            texts,
-            engineId,
-            styleId,
-            prevAudioKey,
-          });
-          if (audioKeys)
-            emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
-        }
-      }
-    };
-
-    // 選択されている
-    const isActive = computed(() => store.getters.IS_ACTIVE(props.audioKey));
-
-    // 上下に移動
-    const audioKeys = computed(() => store.state.audioKeys);
-    const moveUpCell = () => {
-      const index = audioKeys.value.indexOf(props.audioKey) - 1;
-      if (index >= 0) {
-        emit("focusCell", { audioKey: audioKeys.value[index] });
-      }
-    };
-    const moveDownCell = () => {
-      const index = audioKeys.value.indexOf(props.audioKey) + 1;
-      if (index < audioKeys.value.length) {
-        emit("focusCell", { audioKey: audioKeys.value[index] });
-      }
-    };
-
-    // 消去
-    const willRemove = ref(false);
-    const removeCell = async () => {
-      // 1つだけの時は削除せず
-      if (audioKeys.value.length > 1) {
-        // フォーカスを外したりREMOVEしたりすると、
-        // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
-        // エラー防止のためにまずwillRemoveフラグを建てる
-        willRemove.value = true;
-
-        const index = audioKeys.value.indexOf(props.audioKey);
-        if (index > 0) {
-          emit("focusCell", { audioKey: audioKeys.value[index - 1] });
-        } else {
-          emit("focusCell", { audioKey: audioKeys.value[index + 1] });
-        }
-
-        store.dispatch("COMMAND_REMOVE_AUDIO_ITEM", {
-          audioKey: props.audioKey,
-        });
-      }
-    };
-
-    // 削除ボタンの有効／無効判定
-    const deleteButtonEnable = computed(() => {
-      return 1 < audioKeys.value.length;
-    });
-
-    // テキスト編集エリアの右クリック
-    const onRightClickTextField = () => {
-      store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU");
-    };
-
-    // 下にセルを追加
-    const addCellBellow = async () => {
-      const styleId = store.state.audioItems[props.audioKey].styleId;
-      const audioItem: AudioItem = { text: "", styleId };
-      await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
-        audioItem,
-        prevAudioKey: props.audioKey,
-      });
-      moveDownCell();
-    };
-
-    const blurCell = (event?: KeyboardEvent) => {
-      if (event?.isComposing) {
-        return;
-      }
-      if (document.activeElement instanceof HTMLInputElement) {
-        document.activeElement.blur();
-      }
-    };
-
-    // フォーカス
-    const textfield = ref<QInput>();
-    const focusTextField = () => {
-      if (textfield.value == undefined) return;
-      textfield.value.focus();
-    };
-
-    // 複数エンジン
-    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
-
-    const engineIcons = computed(() =>
-      Object.fromEntries(
-        store.state.engineIds.map((engineId) => [
-          engineId,
-          base64ImageToUri(store.state.engineManifests[engineId].icon),
-        ])
-      )
-    );
-
-    return {
-      userOrderedCharacterInfos,
-      isInitializingSpeaker,
-      audioItem,
-      deleteButtonEnable,
-      uiLocked,
-      nowPlaying,
-      nowGenerating,
-      selectedCharacterInfo,
-      selectedStyle,
-      subMenuOpenFlags,
-      reassignSubMenuOpen,
-      isActiveAudioCell,
-      audioTextBuffer,
-      isMultipleEngine,
-      engineIcons,
-      setAudioTextBuffer,
-      pushAudioText,
-      changeStyleId,
-      getDefaultStyle,
-      setActiveAudioKey,
-      save,
-      play,
-      stop,
-      willRemove,
-      removeCell,
-      addCellBellow,
-      isActive,
-      moveUpCell,
-      moveDownCell,
-      pasteOnAudioCell,
-      onRightClickTextField,
-      textfield,
-      focusTextField,
-      blurCell,
-    };
+  removeCell: () => {
+    removeCell();
   },
 });
+
+const store = useStore();
+const userOrderedCharacterInfos = computed(() => {
+  const infos = store.getters.USER_ORDERED_CHARACTER_INFOS;
+  if (infos == undefined)
+    throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+  return infos;
+});
+const isInitializingSpeaker = computed(() =>
+  store.state.audioKeysWithInitializingSpeaker.includes(props.audioKey)
+);
+const audioItem = computed(() => store.state.audioItems[props.audioKey]);
+
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const isMultiSelectEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiSelect
+);
+
+const selectAndSetActiveAudioKey = () => {
+  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
+  store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
+};
+
+const onRootFocus = () => {
+  selectAndSetActiveAudioKey();
+};
+// 複数選択：Ctrl（Cmd）またはShiftキーが押されている時のクリック処理
+const onClickWithModifierKey = (event: MouseEvent) => {
+  if (uiLocked.value) return;
+  const currentActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  const currentSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+  let newActiveAudioKey: AudioKey | undefined = currentActiveAudioKey;
+  let newSelectedAudioKeys: AudioKey[] = [...currentSelectedAudioKeys];
+  if (event.shiftKey) {
+    if (currentActiveAudioKey) {
+      const currentAudioIndex = store.state.audioKeys.indexOf(
+        currentActiveAudioKey
+      );
+      const clickedAudioIndex = store.state.audioKeys.indexOf(props.audioKey);
+      const minIndex = Math.min(currentAudioIndex, clickedAudioIndex);
+      const maxIndex = Math.max(currentAudioIndex, clickedAudioIndex);
+      const audioKeysBetween = store.state.audioKeys.slice(
+        minIndex,
+        maxIndex + 1
+      );
+      newActiveAudioKey = props.audioKey;
+      newSelectedAudioKeys = [...currentSelectedAudioKeys, ...audioKeysBetween];
+    }
+  } else if (isOnCommandOrCtrlKeyDown(event)) {
+    // Ctrlキーを押しながらクリックしたとき：
+    //   activeなAudioCellなら：
+    //     selectedが複数ある場合はactiveを次のselectedに移動し、selectedから除外する。
+    //     selectedが1つの場合はなにもしない。
+    //   選択していないAudioCellならactiveを移動し、以前の選択をselectedに追加する。
+    //   選択しているAudioCellならselectedから除外する。activeは変更しない。
+    if (props.audioKey === currentActiveAudioKey) {
+      if (currentSelectedAudioKeys.length > 1) {
+        const currentAudioIndex = currentSelectedAudioKeys.indexOf(
+          currentActiveAudioKey
+        );
+        newActiveAudioKey =
+          currentSelectedAudioKeys[
+            (currentAudioIndex + 1) % currentSelectedAudioKeys.length
+          ];
+        newSelectedAudioKeys = currentSelectedAudioKeys.filter(
+          (audioKey) => audioKey !== props.audioKey
+        );
+      }
+    } else if (currentSelectedAudioKeys.includes(props.audioKey)) {
+      newActiveAudioKey = currentActiveAudioKey;
+      newSelectedAudioKeys = currentSelectedAudioKeys.filter(
+        (audioKey) => audioKey !== props.audioKey
+      );
+    } else {
+      newActiveAudioKey = props.audioKey;
+      newSelectedAudioKeys = [...currentSelectedAudioKeys, props.audioKey];
+    }
+  }
+  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: newActiveAudioKey });
+  store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+    audioKeys: newSelectedAudioKeys,
+  });
+};
+
+const isCtrlOrCommandKeyDown = ref(false);
+const isShiftKeyDown = ref(false);
+
+const keyEventListener = (e: KeyboardEvent) => {
+  isCtrlOrCommandKeyDown.value = isOnCommandOrCtrlKeyDown(e);
+  isShiftKeyDown.value = e.shiftKey;
+};
+onMounted(() => {
+  window.addEventListener("keydown", keyEventListener);
+  window.addEventListener("keyup", keyEventListener);
+});
+onUnmounted(() => {
+  window.removeEventListener("keydown", keyEventListener);
+  window.removeEventListener("keyup", keyEventListener);
+});
+
+const selectedVoice = computed<Voice | undefined>({
+  get() {
+    const { engineId, styleId } = audioItem.value.voice;
+
+    if (
+      !store.state.engineIds.some((storeEngineId) => storeEngineId === engineId)
+    )
+      return undefined;
+
+    const speakerInfo =
+      userOrderedCharacterInfos.value != undefined
+        ? store.getters.CHARACTER_INFO(engineId, styleId)
+        : undefined;
+
+    if (speakerInfo == undefined) return undefined;
+    return { engineId, speakerId: speakerInfo.metas.speakerUuid, styleId };
+  },
+  set(voice: Voice | undefined) {
+    if (voice == undefined) return;
+    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+      audioKeys: isMultiSelectEnabled.value
+        ? store.getters.SELECTED_AUDIO_KEYS
+        : [props.audioKey],
+      voice,
+    });
+  },
+});
+
+const isActiveAudioCell = computed(
+  () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY
+);
+const isSelectedAudioCell = computed(() =>
+  store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
+);
+
+const audioTextBuffer = ref(audioItem.value.text);
+const isChangeFlag = ref(false);
+const setAudioTextBuffer = (text: string | number | null) => {
+  if (typeof text !== "string") throw new Error("typeof text !== 'string'");
+  audioTextBuffer.value = text;
+  isChangeFlag.value = true;
+};
+
+watch(
+  // `audioItem` becomes undefined just before the component is unmounted.
+  () => audioItem.value?.text,
+  (newText) => {
+    if (!isChangeFlag.value && newText !== undefined) {
+      audioTextBuffer.value = newText;
+    }
+  }
+);
+
+const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
+  if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
+    isChangeFlag.value = false;
+    await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
+      audioKey: props.audioKey,
+      text: audioTextBuffer.value,
+    });
+  }
+};
+
+// バグ修正用
+// see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
+const clearInputSelection = () => {
+  if (!willFocusOrBlur.value) {
+    textFieldSelection.toEmpty();
+  }
+};
+
+// コピペしたときに句点と改行で区切る
+const textSplitType = computed(() => store.state.splitTextWhenPaste);
+const pasteOnAudioCell = async (event: ClipboardEvent) => {
+  event.preventDefault();
+  paste({ text: event.clipboardData?.getData("text/plain") });
+};
+/**
+ * 貼り付け。
+ * ブラウザ版を考えるとClipboard APIをなるべく回避したいため、積極的に`options.text`を指定してください。
+ */
+const paste = async (options?: { text?: string }) => {
+  const text = options ? options.text : await navigator.clipboard.readText();
+  if (text === undefined) return;
+
+  // 複数行貼り付けできるか試す
+  if (textSplitType.value !== "OFF") {
+    const textSplitter: Record<
+      SplitTextWhenPasteType,
+      (text: string) => string[]
+    > = {
+      PERIOD_AND_NEW_LINE: (text) =>
+        text.replaceAll("。", "。\r\n").split(/[\r\n]/),
+      NEW_LINE: (text) => text.split(/[\r\n]/),
+      OFF: (text) => [text],
+    };
+    const texts = textSplitter[textSplitType.value](text);
+
+    if (texts.length >= 2 && texts.some((text) => text !== "")) {
+      await putMultilineText(texts);
+      return;
+    }
+  }
+
+  const beforeLength = audioTextBuffer.value.length;
+  const end = textFieldSelection.selectionEnd ?? 0;
+  setAudioTextBuffer(textFieldSelection.getReplacedStringTo(text));
+  await nextTick();
+  // 自動的に削除される改行などの文字数を念のため考慮している
+  textFieldSelection.setCursorPosition(
+    end + audioTextBuffer.value.length - beforeLength
+  );
+};
+const putMultilineText = async (texts: string[]) => {
+  // フォーカスを外して編集中のテキスト内容を確定させる
+  if (document.activeElement instanceof HTMLInputElement) {
+    document.activeElement.blur();
+  }
+
+  const prevAudioKey = props.audioKey;
+  if (audioTextBuffer.value == "") {
+    const text = texts.shift();
+    if (text == undefined) throw new Error("予期せぬタイプエラーです。");
+    setAudioTextBuffer(text);
+    await pushAudioTextIfNeeded();
+  }
+
+  const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
+    texts,
+    voice: audioItem.value.voice,
+    prevAudioKey,
+  });
+  if (audioKeys.length > 0) {
+    emit("focusCell", {
+      audioKey: audioKeys[audioKeys.length - 1],
+    });
+  }
+};
+
+// 行番号を表示するかどうか
+const showTextLineNumber = computed(() => store.state.showTextLineNumber);
+// 行番号
+const textLineNumberIndex = computed(
+  () => audioKeys.value.indexOf(props.audioKey) + 1
+);
+// 行番号の幅: 2桁はデフォで入るように, 3桁以上は1remずつ広げる
+const textLineNumberWidth = computed(() => {
+  const indexDigits = String(audioKeys.value.length).length;
+  if (indexDigits <= 2) return "1.5rem";
+  return `${indexDigits - 0.5}rem`;
+});
+
+// 上下に移動
+const audioKeys = computed(() => store.state.audioKeys);
+const moveCell = (offset: number) => (e?: KeyboardEvent) => {
+  if (e && e.isComposing) return;
+  const index = audioKeys.value.indexOf(props.audioKey) + offset;
+  if (index >= 0 && index < audioKeys.value.length) {
+    const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+    if (isMultiSelectEnabled.value && e?.shiftKey) {
+      emit("focusCell", {
+        audioKey: audioKeys.value[index],
+        focusTarget: "root",
+      });
+      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+        audioKeys: [
+          ...selectedAudioKeys,
+          props.audioKey,
+          audioKeys.value[index],
+        ],
+      });
+    } else {
+      emit("focusCell", {
+        audioKey: audioKeys.value[index],
+        focusTarget: "textField",
+      });
+    }
+  }
+};
+const moveUpCell = moveCell(-1);
+const moveDownCell = moveCell(1);
+
+// 消去
+const willRemove = ref(false);
+const removeCell = async () => {
+  // 1つだけの時は削除せず
+  if (audioKeys.value.length > 1) {
+    // フォーカスを外したりREMOVEしたりすると、
+    // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
+    // エラー防止のためにまずwillRemoveフラグを建てる
+    willRemove.value = true;
+
+    const index = audioKeys.value.indexOf(props.audioKey);
+    if (index > 0) {
+      emit("focusCell", {
+        audioKey: audioKeys.value[index - 1],
+      });
+    } else {
+      emit("focusCell", {
+        audioKey: audioKeys.value[index + 1],
+      });
+    }
+
+    store.dispatch("COMMAND_REMOVE_AUDIO_ITEM", {
+      audioKey: props.audioKey,
+    });
+  }
+};
+
+// 削除ボタンの有効／無効判定
+const deleteButtonEnable = computed(() => {
+  return 1 < audioKeys.value.length;
+});
+
+// テキスト編集エリアの右クリック
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+
+// FIXME: 可能なら`isRangeSelected`と`contextMenuHeader`をcomputedに
+const isRangeSelected = ref(false);
+const contextMenuHeader = ref<string | undefined>("");
+const contextMenudata = ref<
+  [
+    MenuItemButton,
+    MenuItemButton,
+    MenuItemButton,
+    MenuItemSeparator,
+    MenuItemButton,
+    MenuItemSeparator,
+    MenuItemButton
+  ]
+>([
+  // NOTE: audioTextBuffer.value の変更が nativeEl.value に反映されるのはnextTick。
+  {
+    type: "button",
+    label: "切り取り",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      if (textFieldSelection.isEmpty) return;
+
+      const text = textFieldSelection.getAsString();
+      const start = textFieldSelection.selectionStart;
+      setAudioTextBuffer(textFieldSelection.getReplacedStringTo(""));
+      await nextTick();
+      navigator.clipboard.writeText(text);
+      textFieldSelection.setCursorPosition(start);
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "コピー",
+    onClick: () => {
+      contextMenu.value?.hide();
+      if (textFieldSelection.isEmpty) return;
+
+      navigator.clipboard.writeText(textFieldSelection.getAsString());
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "貼り付け",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      paste();
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "全選択",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      textField.value?.select();
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "内容をテキストのみに適用",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      isChangeFlag.value = false;
+      await store.dispatch("COMMAND_CHANGE_DISPLAY_TEXT", {
+        audioKey: props.audioKey,
+        text: audioTextBuffer.value,
+      });
+      textField.value?.blur();
+    },
+    disableWhenUiLocked: true,
+  },
+]);
+/**
+ * コンテキストメニューの開閉によりFocusやBlurが発生する可能性のある間は`true`。
+ */
+// no-focus を付けた場合と付けてない場合でタイミングが異なるため、両方に対応。
+const willFocusOrBlur = ref(false);
+const startContextMenuOperation = () => {
+  willFocusOrBlur.value = true;
+};
+const readyForContextMenu = () => {
+  const getMenuItemButton = (label: string) => {
+    const item = contextMenudata.value.find((item) => item.label === label);
+    if (item?.type !== "button")
+      throw new Error("コンテキストメニューアイテムの取得に失敗しました。");
+    return item;
+  };
+
+  const MAX_HEADER_LENGTH = 15;
+  const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
+
+  // 選択範囲を1行目に表示
+  const selectionText = textFieldSelection.getAsString();
+  if (selectionText.length === 0) {
+    isRangeSelected.value = false;
+    getMenuItemButton("切り取り").disabled = true;
+    getMenuItemButton("コピー").disabled = true;
+  } else {
+    isRangeSelected.value = true;
+    getMenuItemButton("切り取り").disabled = false;
+    getMenuItemButton("コピー").disabled = false;
+    if (selectionText.length > MAX_HEADER_LENGTH) {
+      // 長すぎる場合適度な長さで省略
+      contextMenuHeader.value =
+        selectionText.length <= MAX_HEADER_LENGTH
+          ? selectionText
+          : `${selectionText.substring(
+              0,
+              SHORTED_HEADER_FRAGMENT_LENGTH
+            )} ... ${selectionText.substring(
+              selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
+            )}`;
+    } else {
+      contextMenuHeader.value = selectionText;
+    }
+  }
+};
+const endContextMenuOperation = async () => {
+  await nextTick();
+  willFocusOrBlur.value = false;
+};
+
+const root = ref<HTMLElement>();
+
+// テキスト欄
+const textField = ref<QInput>();
+const textFieldSelection = new SelectionHelperForQInput(textField);
+
+// 複数エンジン
+const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/visually-hidden' as visually-hidden;
 @use '@/styles/colors' as colors;
 
 .audio-cell {
   display: flex;
+  position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
+  &:focus {
+    // divはフォーカスするとデフォルトで青い枠が出るので消す
+    outline: none;
+  }
+  &.selected {
+    background-color: rgba(colors.$active-point-focus-rgb, 0.5);
+  }
+
   &:first-child {
     margin-top: 0.6rem;
   }
+
   &:last-child {
     margin-bottom: 0.6rem;
   }
+
   gap: 0px 1rem;
+
   .active-arrow {
-    left: -5px;
+    left: -1rem;
     height: 2rem;
   }
-  .character-button {
-    border: solid 1px;
-    border-color: colors.$primary-light;
-    font-size: 0;
-    height: fit-content;
-    img {
-      width: 2rem;
-      height: 2rem;
-      object-fit: scale-down;
-    }
-    .loading {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      margin: auto;
-      background-color: rgba(colors.$background-rgb, 0.74);
-      display: grid;
-      justify-content: center;
-      align-content: center;
-      svg {
-        filter: drop-shadow(0 0 1px colors.$background);
-      }
+
+  .line-number {
+    height: 2rem;
+    width: v-bind(textLineNumberWidth);
+    line-height: 2rem;
+    margin-right: -0.3rem;
+    opacity: 0.6;
+    text-align: right;
+    color: colors.$display;
+    &.active {
+      opacity: 1;
+      font-weight: bold;
+      color: colors.$primary;
     }
   }
-  .opaque {
-    opacity: 1 !important;
-  }
+
   .q-input {
     :deep(.q-field__control) {
       height: 2rem;
       background: none;
-      border-bottom: 1px solid colors.$primary-light;
+      border-bottom: 1px solid colors.$primary;
+
       &::before {
         border-bottom: none;
       }
     }
+
     :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
-      display: none;
     }
+
     &.q-field--filled.q-field--highlighted :deep(.q-field__control):before {
       background-color: rgba(colors.$display-rgb, 0.08);
     }
   }
-  &:hover > .q-input > :deep(.q-field__after) {
-    display: flex;
+
+  &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
+    @include visually-hidden.visually-hidden;
   }
 
   :deep(input) {
@@ -596,28 +676,14 @@ export default defineComponent({
   }
 }
 
-.character-menu {
-  .q-item {
-    color: colors.$display;
-  }
-  .q-btn-group {
-    > .q-btn:first-child > :deep(.q-btn__content) {
-      justify-content: flex-start;
-    }
-    > div:last-child:hover {
-      background-color: rgba(colors.$primary-rgb, 0.1);
-    }
-  }
-  .selected-character-item,
-  .opened-character-item {
-    background-color: rgba(colors.$primary-rgb, 0.2);
-  }
-  .engine-icon {
-    position: absolute;
-    width: 13px;
-    height: 13px;
-    bottom: -6px;
-    right: -6px;
-  }
+.click-hitbox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: none;
+  z-index: 1;
+  cursor: default;
 }
 </style>

@@ -12,8 +12,8 @@
           v-if="accentPhrase.moras.length > 1"
           snap
           dense
-          color="primary-light"
-          trackSize="2px"
+          color="primary"
+          track-size="2px"
           :min="previewAccentSlider.qSliderProps.min.value"
           :max="previewAccentSlider.qSliderProps.max.value"
           :step="previewAccentSlider.qSliderProps.step.value"
@@ -22,9 +22,7 @@
           @update:model-value="
             previewAccentSlider.qSliderProps['onUpdate:modelValue']
           "
-          @click.stop="
-            undefined; // クリックでアクセント句が選択されないように
-          "
+          @click.stop="stopPropagation"
           @change="previewAccentSlider.qSliderProps.onChange"
           @wheel="previewAccentSlider.qSliderProps.onWheel"
           @pan="previewAccentSlider.qSliderProps.onPan"
@@ -44,7 +42,6 @@
   </div>
   <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
     <div
-      @click="uiLocked || changeAccent(moraIndex + 1)"
       :class="[
         'accent-select-cell',
         {
@@ -53,6 +50,7 @@
         },
       ]"
       :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+      @click="uiLocked || changeAccent(moraIndex + 1)"
     >
       <svg width="19" height="50" viewBox="0 0 19 50">
         <line x1="9" y1="0" x2="9" y2="50" stroke-width="1" />
@@ -61,58 +59,54 @@
   </template>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { AccentPhrase } from "@/openapi";
-import { defineComponent, computed, PropType } from "vue";
 
-export default defineComponent({
-  name: "AudioAccent",
+const props = withDefaults(
+  defineProps<{
+    accentPhrase: AccentPhrase;
+    accentPhraseIndex: number;
+    uiLocked: boolean;
+    shiftKeyFlag?: boolean;
+    onChangeAccent: (
+      accentPhraseIndex: number,
+      accent: number
+    ) => Promise<void>;
+  }>(),
+  {
+    shiftKeyFlag: false,
+  }
+);
 
-  props: {
-    accentPhrase: { type: Object as PropType<AccentPhrase>, required: true },
-    accentPhraseIndex: { type: Number, required: true },
-    uiLocked: { type: Boolean, required: true },
-    shiftKeyFlag: { type: Boolean, default: false },
-    onChangeAccent: {
-      type: Function as PropType<
-        (accentPhraseIndex: number, accent: number) => Promise<void>
-      >,
-      required: true,
-    },
-  },
+const changeAccent = (accent: number) =>
+  props.onChangeAccent(props.accentPhraseIndex, accent);
 
-  setup(props) {
-    const changeAccent = (accent: number) =>
-      props.onChangeAccent(props.accentPhraseIndex, accent);
-
-    const previewAccentSlider = previewSliderHelper({
-      onChange: changeAccent,
-      modelValue: () => props.accentPhrase.accent,
-      disable: () => props.uiLocked,
-      disableScroll: () => props.shiftKeyFlag,
-      max: () => props.accentPhrase.moras.length,
-      min: () => 1,
-      step: () => 1,
-    });
-
-    const accentLine = computed(() => {
-      const accent = previewAccentSlider.state.currentValue.value ?? 0;
-      return [...Array(props.accentPhrase.moras.length).keys()].map(
-        (index) =>
-          `${index * 40 + 10} ${
-            index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
-          }`
-      );
-    });
-
-    return {
-      previewAccentSlider,
-      changeAccent,
-      accentLine,
-    };
-  },
+const previewAccentSlider = previewSliderHelper({
+  onChange: changeAccent,
+  modelValue: () => props.accentPhrase.accent,
+  disable: () => props.uiLocked,
+  disableScroll: () => props.shiftKeyFlag,
+  max: () => props.accentPhrase.moras.length,
+  min: () => 1,
+  step: () => 1,
 });
+
+const accentLine = computed(() => {
+  const accent = previewAccentSlider.state.currentValue.value ?? 0;
+  return [...Array(props.accentPhrase.moras.length).keys()]
+    .map(
+      (index) =>
+        `${index * 40 + 10} ${
+          index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
+        }`
+    )
+    .toString();
+});
+
+// クリックでアクセント句が選択されないように、@click.stopに渡す
+const stopPropagation = undefined;
 </script>
 
 <style scoped lang="scss">
@@ -155,7 +149,7 @@ div {
     text-align: center;
     cursor: pointer;
     svg line {
-      stroke: colors.$primary-light;
+      stroke: colors.$primary;
       stroke-dasharray: 3;
     }
   }
