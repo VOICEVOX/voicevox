@@ -185,7 +185,7 @@
         <span v-if="isOnlyModifierKey"> +</span>
         <div v-if="duplicatedHotkey != undefined" class="text-warning q-mt-lg">
           <div class="text-warning">
-            ショートカットキーが次の操作と重複しています
+            ショートカットキーが次の操作と重複しています：
           </div>
           <div class="q-mt-sm text-weight-bold text-warning">
             「{{ duplicatedHotkey.action }}」
