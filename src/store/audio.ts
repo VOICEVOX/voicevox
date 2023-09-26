@@ -2063,7 +2063,7 @@ export const audioCommandStore = transformCommandStore(
             );
 
             // 読みの内容が変わっていなければテキストだけ変更
-            const isSameText = isAccentPhrasesTextDifferent(
+            const isSameText = !isAccentPhrasesTextDifferent(
               query.accentPhrases,
               accentPhrases
             );
