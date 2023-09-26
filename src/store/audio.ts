@@ -2097,16 +2097,15 @@ export const audioCommandStore = transformCommandStore(
                 newAccentPhrases = indexedDiff
                   .filter((d) => !d.removed)
                   .map((d, i) => {
-                    const original = accentPhrases[i];
                     const ap = structuredClone(
-                      indexToOldAccentPhrase[d.index] ?? original
+                      indexToOldAccentPhrase[d.index] ?? accentPhrases[i]
                     );
                     if (accentPhrases[i].pauseMora !== undefined) {
-                      ap.pauseMora = original.pauseMora;
+                      ap.pauseMora = accentPhrases[i].pauseMora;
                     } else {
                       delete ap.pauseMora;
                     }
-                    ap.isInterrogative = original.isInterrogative;
+                    ap.isInterrogative = accentPhrases[i].isInterrogative;
 
                     return ap;
                   });
