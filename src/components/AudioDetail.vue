@@ -58,30 +58,23 @@
           <span v-if="isMac">Option</span><span v-else>Alt</span> + ホイール:
           一括調整
         </tool-tip>
-        <div
+        <accent-phrase
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           :ref="addAccentPhraseElem"
-          class="mora-table"
-          :class="[
-            accentPhraseIndex === activePoint && 'mora-table-focus',
-            uiLocked || 'mora-table-hover',
-          ]"
-          @click="setPlayAndStartPoint(accentPhraseIndex)"
-        >
-          <accent-phrase
-            :audio-key="activeAudioKey"
-            :accent-phrase="accentPhrase"
-            :index="accentPhraseIndex"
-            :is-last="
-              accentPhrases !== undefined &&
-              accentPhrases.length - 1 === accentPhraseIndex
-            "
-            :selected-detail="selectedDetail"
-            :shift-key-flag="shiftKeyFlag"
-            :alt-key-flag="altKeyFlag"
-          />
-        </div>
+          :audio-key="activeAudioKey"
+          :accent-phrase="accentPhrase"
+          :index="accentPhraseIndex"
+          :is-last="
+            accentPhrases !== undefined &&
+            accentPhrases.length - 1 === accentPhraseIndex
+          "
+          :is-active="accentPhraseIndex === activePoint"
+          :selected-detail="selectedDetail"
+          :shift-key-flag="shiftKeyFlag"
+          :alt-key-flag="altKeyFlag"
+          @click="setPlayAndStartPoint"
+        />
       </div>
     </div>
   </div>
@@ -285,9 +278,14 @@ const nowGenerating = computed(
 
 const audioDetail = ref<HTMLElement>();
 let accentPhraseElems: HTMLElement[] = [];
-const addAccentPhraseElem: VNodeRef = (elem) => {
-  if (elem instanceof HTMLElement) {
-    accentPhraseElems.push(elem);
+const addAccentPhraseElem: VNodeRef = (accentPhraseRef) => {
+  if (accentPhraseRef && !(accentPhraseRef instanceof Element)) {
+    const accentPhraseElem = (
+      accentPhraseRef as InstanceType<typeof AccentPhrase>
+    ).container;
+    if (accentPhraseElem !== undefined) {
+      accentPhraseElems.push(accentPhraseElem);
+    }
   }
 };
 onBeforeUpdate(() => {
@@ -442,26 +440,6 @@ onUnmounted(() => {
 
     display: flex;
     overflow-x: scroll;
-
-    .mora-table {
-      display: inline-grid;
-      align-self: stretch;
-      grid-template-rows: 1fr 60px 30px;
-
-      &:last-child {
-        padding-right: 20px;
-      }
-    }
-
-    .mora-table-hover:hover {
-      cursor: pointer;
-      background-color: colors.$active-point-hover;
-    }
-
-    .mora-table-focus {
-      // hover色に負けるので、importantが必要
-      background-color: colors.$active-point-focus !important;
-    }
   }
 }
 </style>
