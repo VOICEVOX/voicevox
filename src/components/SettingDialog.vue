@@ -896,7 +896,7 @@
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
-                      >ON の場合、テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。</q-tooltip
+                      >ONの場合、テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。</q-tooltip
                     >
                   </q-icon>
                 </div>
