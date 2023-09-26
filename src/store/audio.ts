@@ -2063,21 +2063,23 @@ export const audioCommandStore = transformCommandStore(
             );
 
             // 読みの内容が変わっていなければテキストだけ変更
-            const isTextDifferent = isAccentPhrasesTextDifferent(
+            const isSameText = isAccentPhrasesTextDifferent(
               query.accentPhrases,
               accentPhrases
             );
             let newAccentPhrases: AccentPhrase[] = [];
-            if (isTextDifferent) {
-              if (state.experimentalSetting.shouldKeepTuningOnTextChange) {
+            if (isSameText) {
+              newAccentPhrases = accentPhrases;
+            } else {
+              if (!state.experimentalSetting.shouldKeepTuningOnTextChange) {
+                newAccentPhrases = query.accentPhrases;
+              } else {
                 const diff = diffArrays(
                   query.accentPhrases.map(joinTextsInAccentPhrases),
                   accentPhrases.map(joinTextsInAccentPhrases)
                 );
                 const flatDiff = diff.flatMap((d) =>
-                  d.value
-                    .filter((v) => v !== "")
-                    .map((v) => ({ ...d, value: v }))
+                  d.value.map((v) => ({ ...d, value: v }))
                 );
                 const indexedDiff = flatDiff.map((d, i) => ({
                   ...d,
@@ -2108,11 +2110,7 @@ export const audioCommandStore = transformCommandStore(
 
                     return ap;
                   });
-              } else {
-                newAccentPhrases = accentPhrases;
               }
-            } else {
-              newAccentPhrases = query.accentPhrases;
             }
             commit("COMMAND_CHANGE_AUDIO_TEXT", {
               audioKey,
