@@ -105,8 +105,9 @@ const accentLine = computed(() => {
     .toString();
 });
 
-// クリックでアクセント句が選択されないように、@click.stopに渡す
-const stopPropagation = undefined;
+const stopPropagation = () => {
+  // fn is not a function エラーを回避するために何もしない関数を渡す
+};
 </script>
 
 <style scoped lang="scss">
