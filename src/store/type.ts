@@ -741,8 +741,8 @@ export type AudioPlayerStoreTypes = {
  */
 
 export type SingingStoreState = {
-  engineId?: string;
-  styleId?: number;
+  engineId?: EngineId;
+  styleId?: StyleId;
   score?: Score;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
@@ -770,8 +770,8 @@ export type SingingStoreTypes = {
   };
 
   SET_SINGER: {
-    mutation: { engineId: string; styleId: number };
-    action(payload: { engineId?: string; styleId?: number }): void;
+    mutation: { engineId: EngineId; styleId: StyleId };
+    action(payload: { engineId?: EngineId; styleId?: StyleId }): void;
   };
 
   GET_EMPTY_SCORE: {
@@ -1590,10 +1590,6 @@ export type UiStoreTypes = {
 
   RESET_PROGRESS: {
     action(): void;
-  };
-
-  PROCESS_BEFORE_QUITTING: {
-    action(): Promise<void>;
   };
 };
 

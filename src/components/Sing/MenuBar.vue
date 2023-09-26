@@ -3,8 +3,8 @@
     <menu-button
       v-for="(root, index) of menudata"
       :key="index"
-      :menudata="root"
       v-model:selected="subMenuOpenFlags[index]"
+      :menudata="root"
       :disable="menubarLocked"
       @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
@@ -35,23 +35,29 @@ export type MenuItemRoot = SingMenuItemBase<"root"> & {
   onClick: () => void;
   subMenu: MenuItemData[];
   icon?: string;
+  disabled?: boolean;
+  disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
 export type MenuItemButton = SingMenuItemBase<"button"> & {
   onClick: () => void;
   icon?: string;
+  disabled?: boolean;
+  disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
 export type MenuItemCheckbox = SingMenuItemBase<"checkbox"> & {
-  checked: ComputedRef<boolean>;
   onClick: () => void;
+  checked: ComputedRef<boolean>;
+  icon?: string;
+  disabled?: boolean;
+  disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
-export type MenuItemData =
-  | MenuItemSeparator
-  | MenuItemRoot
-  | MenuItemButton
-  | MenuItemCheckbox;
+export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
 
 export type MenuItemType = MenuItemData["type"];
 
@@ -105,7 +111,7 @@ export default defineComponent({
     };
 
     const openHelpDialog = () => {
-      store.dispatch("IS_HELP_DIALOG_OPEN", {
+      store.dispatch("SET_DIALOG_OPEN", {
         isHelpDialogOpen: true,
       });
     };
@@ -121,6 +127,7 @@ export default defineComponent({
         onClick: () => {
           closeAllDialog();
         },
+        disableWhenUiLocked: false,
         subMenu: [
           {
             type: "button",
@@ -128,6 +135,7 @@ export default defineComponent({
             onClick: () => {
               createNewSingProject();
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -135,6 +143,7 @@ export default defineComponent({
             onClick: () => {
               openSingProject();
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -142,6 +151,7 @@ export default defineComponent({
             onClick: () => {
               saveSingProject();
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -149,6 +159,7 @@ export default defineComponent({
             onClick: () => {
               saveAsSingProject();
             },
+            disableWhenUiLocked: true,
           },
           { type: "separator" },
           {
@@ -157,6 +168,7 @@ export default defineComponent({
             onClick: () => {
               importMidiFile();
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -164,6 +176,7 @@ export default defineComponent({
             onClick: () => {
               importMusicXMLFile();
             },
+            disableWhenUiLocked: true,
           },
           { type: "separator" },
           {
@@ -172,6 +185,7 @@ export default defineComponent({
             onClick: () => {
               exportWaveFile();
             },
+            disableWhenUiLocked: true,
           },
         ],
       },
@@ -185,6 +199,7 @@ export default defineComponent({
             openHelpDialog();
           }
         },
+        disableWhenUiLocked: false,
       },
     ]);
 

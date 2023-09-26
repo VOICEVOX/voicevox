@@ -38,14 +38,10 @@
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
     "@quasar/extras": "1.10.10",
-<<<<<<< HEAD
     "@tonejs/midi": "2.0.28",
-    "ajv": "8.6.2",
-=======
     "async-lock": "1.4.0",
     "buffer": "6.0.3",
     "clone-deep": "4.0.1",
->>>>>>> main
     "core-js": "3.12.1",
     "dayjs": "1.10.7",
     "electron-log": "4.4.8",

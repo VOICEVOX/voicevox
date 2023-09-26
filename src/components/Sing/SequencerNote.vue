@@ -9,18 +9,18 @@
     <input
       type="text"
       :value="note.lyric"
-      @input="setLyric"
       class="sequencer-note-lyric"
+      @input="setLyric"
     />
     <svg
       :height="`${barHeight}`"
       :width="`${barWidth}`"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
-      @dblclick.prevent="removeNote"
-      @keydown.prevent="handleKeydown"
       focusable="true"
       tabindex="0"
+      @dblclick.prevent="removeNote"
+      @keydown.prevent="handleKeydown"
     >
       <g>
         <rect
@@ -98,7 +98,7 @@ export default defineComponent({
       store.dispatch("REMOVE_NOTE", { id: props.note.id });
     };
 
-    const setLyric = (event: InputEvent) => {
+    const setLyric = (event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
         return;
       }
@@ -187,7 +187,7 @@ export default defineComponent({
 .sequencer-note-lyric {
   background: white;
   border: 0;
-  border-bottom: 1px solid colors.$primary-light;
+  border-bottom: 1px solid colors.$primary;
   color: colors.$display;
   font-size: 12px;
   font-weight: bold;

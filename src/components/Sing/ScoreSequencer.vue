@@ -1,12 +1,11 @@
 <template>
   <div
-    class="score-sequencer"
     id="score-sequencer"
+    class="score-sequencer"
     @mousedown="handleMouseDown"
     @mousemove="handleMouseMove"
     @mouseup="handleMouseUp"
     @dblclick="addNote"
-    @dblclick.prevent.stop="removeNote"
   >
     <!-- 鍵盤 -->
     <sequencer-keys />
@@ -58,11 +57,11 @@
           </pattern>
         </defs>
         <rect
+          id="sequencer-grid"
           x="0"
           y="0"
           width="100%"
           height="100%"
-          id="sequencer-grid"
           fill="url(#sequencer-grid-measure)"
         />
       </svg>
@@ -71,8 +70,8 @@
         :key="index"
         :note="note"
         :index="index"
-        :cursorX="cursorX"
-        :cursorY="cursorY"
+        :cursor-x="cursorX"
+        :cursor-y="cursorY"
         @handleNotesKeydown="handleNotesKeydown"
         @handleDragMoveStart="handleDragMoveStart"
         @handleDragRightStart="handleDragRightStart"
@@ -86,14 +85,14 @@
       max="1"
       step="0.05"
       :value="zoomX"
-      @input="setZoomX"
-      v-bind:style="{
+      :style="{
         position: 'fixed',
         zIndex: 10000,
         bottom: '8px',
         right: '16px',
         width: '80px',
       }"
+      @input="setZoomX"
     />
     <input
       type="range"
@@ -101,8 +100,7 @@
       max="1"
       step="0.05"
       :value="zoomY"
-      @input="setZoomY"
-      v-bind:style="{
+      :style="{
         position: 'fixed',
         zIndex: 10000,
         bottom: '64px',
@@ -110,14 +108,15 @@
         transform: 'rotate(-90deg)',
         width: '80px',
       }"
+      @input="setZoomY"
     />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted } from "vue";
-import { useStore } from "@/store";
 import { v4 as uuidv4 } from "uuid";
+import { useStore } from "@/store";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import {

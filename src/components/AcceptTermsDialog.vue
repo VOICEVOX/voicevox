@@ -90,18 +90,8 @@ const handler = (acceptTerms: boolean) => {
     ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" })
     : undefined;
 
-<<<<<<< HEAD
-    const handler = (acceptTerms: boolean) => {
-      store.dispatch("SET_ACCEPT_TERMS", {
-        acceptTerms: acceptTerms ? "Accepted" : "Rejected",
-      });
-      if (!acceptTerms) {
-        store.dispatch("PROCESS_BEFORE_QUITTING");
-      }
-=======
   modelValueComputed.value = false;
 };
->>>>>>> main
 
 const md = useMarkdownIt();
 const terms = ref("");

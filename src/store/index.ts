@@ -17,11 +17,8 @@ import {
   audioCommandStoreState,
   getCharacterInfo,
 } from "./audio";
-<<<<<<< HEAD
-import { singingStoreState, singingStore } from "./singing";
-=======
 import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
->>>>>>> main
+import { singingStoreState, singingStore } from "./singing";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
@@ -354,11 +351,8 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   state: {
     ...uiStoreState,
     ...audioStoreState,
-<<<<<<< HEAD
-    ...singingStoreState,
-=======
     ...audioPlayerStoreState,
->>>>>>> main
+    ...singingStoreState,
     ...commandStoreState,
     ...engineStoreState,
     ...projectStoreState,

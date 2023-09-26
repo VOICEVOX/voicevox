@@ -12,12 +12,9 @@ import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
 import { proxyStore } from "@/store/proxy";
 import { dictionaryStore } from "@/store/dictionary";
-<<<<<<< HEAD
-import { singingStore } from "@/store/singing";
-=======
 import { engineStore } from "@/store/engine";
+import { singingStore } from "@/store/singing";
 import { EngineId } from "@/type/preload";
->>>>>>> main
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -148,7 +145,9 @@ describe("store/vuex.js test", () => {
           engineStartedOnAltPort: false,
           notifyOnGenerate: false,
         },
-<<<<<<< HEAD
+        progress: -1,
+        isVuexReady: false,
+        defaultPresetKeys: {},
         isShowSinger: true,
         sequencerZoomX: 1,
         sequencerZoomY: 1,
@@ -164,11 +163,6 @@ describe("store/vuex.js test", () => {
         startRenderingRequested: false,
         stopRenderingRequested: false,
         nowRendering: false,
-=======
-        progress: -1,
-        isVuexReady: false,
-        defaultPresetKeys: {},
->>>>>>> main
       },
       getters: {
         ...uiStore.getters,

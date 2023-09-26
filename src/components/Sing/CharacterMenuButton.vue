@@ -15,9 +15,9 @@
         >
           <q-btn-group flat class="col full-width">
             <q-btn
+              v-close-popup
               flat
               no-caps
-              v-close-popup
               class="col-grow"
               :class="
                 characterInfo.metas.speakerUuid === selectedSpeakerUuid &&
@@ -42,11 +42,11 @@
                   "
                 />
                 <q-avatar
-                  class="engine-icon"
-                  rounded
                   v-if="
                     isMultipleEngine && characterInfo.metas.styles.length < 2
                   "
+                  class="engine-icon"
+                  rounded
                 >
                   <img
                     :src="
@@ -76,20 +76,20 @@
                 <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
 
                 <q-menu
+                  v-model="subMenuOpenFlags[characterIndex]"
                   no-parent-event
                   anchor="top end"
                   self="top start"
                   transition-show="none"
                   transition-hide="none"
                   class="character-menu"
-                  v-model="subMenuOpenFlags[characterIndex]"
                 >
                   <q-list>
                     <q-item
                       v-for="(style, styleIndex) in characterInfo.metas.styles"
                       :key="styleIndex"
-                      clickable
                       v-close-popup
+                      clickable
                       active-class="selected-character-item"
                       :active="style.styleId === selectedStyleId"
                       @click="
@@ -107,9 +107,9 @@
                           :src="characterInfo.metas.styles[styleIndex].iconPath"
                         />
                         <q-avatar
+                          v-if="isMultipleEngine"
                           rounded
                           class="engine-icon"
-                          v-if="isMultipleEngine"
                         >
                           <img
                             :src="
@@ -145,6 +145,7 @@ import { defineComponent, computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
+import { SpeakerId, StyleId } from "@/type/preload";
 
 export default defineComponent({
   name: "CharacterMenuButton",
@@ -169,7 +170,7 @@ export default defineComponent({
       subMenuOpenFlags.value = arr;
     }, 100);
 
-    const changeStyleId = (speakerUuid: string, styleId: number) => {
+    const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
       const engineId = store.state.engineIds.find((_engineId) =>
         (store.state.characterInfos[_engineId] ?? []).some(
           (characterInfo) =>
@@ -196,9 +197,14 @@ export default defineComponent({
         (x) => x.speakerUuid === speakerUuid
       )?.defaultStyleId;
 
-      return characterInfo?.metas.styles.find(
+      const defaultStyle = characterInfo?.metas.styles.find(
         (style) => style.styleId === defaultStyleId
       );
+
+      if (defaultStyle == undefined)
+        throw new Error("defaultStyle == undefined");
+
+      return defaultStyle;
     };
 
     const selectedCharacterInfo = computed(() => {

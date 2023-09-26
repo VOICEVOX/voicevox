@@ -347,10 +347,6 @@ export type IpcSOData = {
     return: void;
   };
 
-<<<<<<< HEAD
-  PROCESS_BEFORE_QUITTING: {
-    args: [];
-=======
   CHECK_EDITED_AND_NOT_SAVE: {
     args: [
       obj: {
@@ -358,7 +354,6 @@ export type IpcSOData = {
         isMultiEngineOffMode?: boolean;
       }
     ];
->>>>>>> main
     return: void;
   };
 
