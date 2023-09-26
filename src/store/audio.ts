@@ -2098,7 +2098,6 @@ export const audioCommandStore = transformCommandStore(
                  *   [ズ ン ダ モ ン ノ] #0 -> query.accentPhrases[0]
                  * + [ユ ウ ショ ク]     #1 -> accentPhrases[1]
                  * - [チョ ウ ショ ク]   #2 -> （無視）
-                 *
                  */
                 const diff = diffArrays(
                   query.accentPhrases.map(joinTextsInAccentPhrases),
