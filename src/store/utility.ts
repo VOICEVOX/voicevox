@@ -245,6 +245,9 @@ export const isOnCommandOrCtrlKeyDown = (event: {
   ctrlKey: boolean;
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
 
+/**
+ * AccentPhraseのtextを結合して返します。
+ */
 export const joinTextsInAccentPhrases = (
   accentPhrase: AccentPhrase
 ): string => {

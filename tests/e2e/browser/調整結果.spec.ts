@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 800, height: 600 });
   await page.goto(BASE_URL);
 });
-/*
+/**
  * イントネーションのスライダーの値をnumber[][]として取得する
  * @param page
  */

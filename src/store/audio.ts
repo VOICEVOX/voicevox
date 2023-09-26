@@ -2074,6 +2074,32 @@ export const audioCommandStore = transformCommandStore(
               if (!state.experimentalSetting.shouldKeepTuningOnTextChange) {
                 newAccentPhrases = query.accentPhrases;
               } else {
+                /*
+                 * # 調整結果の保持の仕組み
+                 * 1. 新しいAccentPhraseと古いAccentPhraseのテキスト（モーラのカタカナを結合したもの）を比較する。読点は無視する。（diffからflatDiff）
+                 * 例えば、
+                 * 旧：[ズ ン ダ モ ン ノ] [チョ ウ ショ ク]
+                 * 新：[ズ ン ダ モ ン ノ] [ユ ウ ショ ク]
+                 * という場合、
+                 *   [ズ ン ダ モ ン ノ]
+                 * + [ユ ウ ショ ク]
+                 * - [チョ ウ ショ ク]
+                 * のようなdiffが得られる。
+                 *
+                 * 2. それぞれのdiffにIDを振る。（indexedDiff）
+                 * 3. そのIDと古いAccentPhraseの対応表を作る。（indexToOldAccentPhrase）
+                 * 追加のdiffを抜くと古いAccentPhraseになるので、残ったAccentPhraseのIDを対応させる。
+                 *   [ズ ン ダ モ ン ノ] #0 -> query.accentPhrases[0]
+                 * + [ユ ウ ショ ク]     #1 -> （無視）
+                 * - [チョ ウ ショ ク]   #2 -> query.accentPhrases[1]
+                 *
+                 * 4. 新しいAccentPhraseの配列を作る。（newAccentPhrases）
+                 * 変更なしのdiffは上の対応表を使って古いAccentPhrase、追加のdiffは新しいAccentPhraseを使い、削除のdiffは無視する。
+                 *   [ズ ン ダ モ ン ノ] #0 -> query.accentPhrases[0]
+                 * + [ユ ウ ショ ク]     #1 -> accentPhrases[1]
+                 * - [チョ ウ ショ ク]   #2 -> （無視）
+                 *
+                 */
                 const diff = diffArrays(
                   query.accentPhrases.map(joinTextsInAccentPhrases),
                   accentPhrases.map(joinTextsInAccentPhrases)
