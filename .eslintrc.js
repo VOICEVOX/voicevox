@@ -64,7 +64,7 @@ module.exports = {
       },
       {
         selector: "BinaryExpression[operator='!=='][right.value=null]",
-        message: "Don't use '!== null'. Use '== null' instead.",
+        message: "Don't use '!== null'. Use '!= null' instead.",
       },
       {
         selector: "BinaryExpression[operator='==='][right.value=undefined]",
@@ -72,7 +72,7 @@ module.exports = {
       },
       {
         selector: "BinaryExpression[operator='!=='][right.value=undefined]",
-        message: "Don't use '!== undefined'. Use '== undefined' instead.",
+        message: "Don't use '!== undefined'. Use '!= undefined' instead.",
       },
     ],
   },
