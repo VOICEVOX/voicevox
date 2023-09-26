@@ -60,7 +60,7 @@ test("実験的機能：調整結果の保持", async ({ page }) => {
     [6.5, 6.5, 6.5, 6.5],
   ]);
 
-  // 句読点（pauseMora）だけの変更：句読点部分以外は変わらない
+  // 句読点（pauseMora）だけの変更/追加：句読点部分以外は変わらない
   await audioCell.locator("input").clear();
   await audioCell.locator("input").fill("ずんだもんの、朝食");
   await page.keyboard.press("Enter");
@@ -72,12 +72,28 @@ test("実験的機能：調整結果の保持", async ({ page }) => {
     // チョ ウ ショ ク
     [6.5, 6.5, 6.5, 6.5],
   ]);
+  // 読点が追加されていることを確認
   const firstAccentPhrase = page.locator(".mora-table").first();
-  expect(firstAccentPhrase.getByText("、").isVisible()).toBeTruthy();
+  expect(await firstAccentPhrase.getByText("、").isVisible()).toBeTruthy();
+
+  // 句読点（pauseMora）だけの変更/削除：句読点部分以外は変わらない
+  await audioCell.locator("input").clear();
+  await audioCell.locator("input").fill("ずんだもんの朝食");
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(100);
+  sliderValues = await getSliderValues(page);
+  expect(sliderValues).toEqual([
+    // ズ ン ダ モ ン ノ （、）
+    [6.5, 6.5, 6.5, 6.5, 6.5, 6.5],
+    // チョ ウ ショ ク
+    [6.5, 6.5, 6.5, 6.5],
+  ]);
+  // 読点が削除されていることを確認
+  expect(await firstAccentPhrase.getByText("、").isVisible()).toBeFalsy();
 
   // 一部のアクセント句のみ変更：他のアクセント句は変わらない
   await audioCell.locator("input").clear();
-  await audioCell.locator("input").fill("ずんだもんの、夕食");
+  await audioCell.locator("input").fill("ずんだもんの夕食");
   await page.keyboard.press("Enter");
   await page.waitForTimeout(100);
   sliderValues = await getSliderValues(page);
