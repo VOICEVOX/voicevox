@@ -154,15 +154,15 @@
     @update:model-value="closeHotkeyDialog"
   >
     <q-card class="q-py-sm q-px-md">
-      <q-card-section align="center">
+      <q-card-section>
         <div class="text-h6">「{{ targetAction }}」</div>
       </q-card-section>
-      <q-card-section align="center">
+      <q-card-section>
         <div class="text-md">
-          上記の操作に対応させる<br />ショートカットキーを入力してください
+          上記の操作に対応させる<br />ショートカットキーを入力してください。
         </div>
       </q-card-section>
-      <q-card-section align="center">
+      <q-card-section>
         <template
           v-for="(hotkey, index) in targetRecord.split(' ')"
           :key="index"
@@ -192,7 +192,7 @@
           </div>
         </div>
       </q-card-section>
-      <q-card-actions align="center">
+      <q-card-actions align="right">
         <q-btn
           padding="xs md"
           label="キャンセル"
