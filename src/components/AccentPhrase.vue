@@ -29,9 +29,8 @@
         :type="'pitch'"
         :clip="false"
         :shift-key-flag="shiftKeyFlag"
-        :force-value-label-visible="forceValueLabelVisible"
+        :alt-key-flag="altKeyFlag"
         @change-value="changeMoraData"
-        @change-self-value-label-visible="handleValueLabelVisible"
       />
     </div>
     <div v-if="accentPhrase.pauseMora" />
@@ -56,10 +55,9 @@
         :type="'consonant'"
         :clip="true"
         :shift-key-flag="shiftKeyFlag"
-        :force-value-label-visible="forceValueLabelVisible"
+        :alt-key-flag="altKeyFlag"
         @change-value="changeMoraData"
         @mouse-over="handleLengthHoverText"
-        @change-self-value-visible="handleValueLabelVisible"
       />
       <!-- vowel length -->
       <audio-parameter
@@ -72,10 +70,9 @@
         :type="'vowel'"
         :clip="mora.consonant ? true : false"
         :shift-key-flag="shiftKeyFlag"
-        :force-value-label-visible="forceValueLabelVisible"
+        :alt-key-flag="altKeyFlag"
         @change-value="changeMoraData"
         @mouse-over="handleLengthHoverText"
-        @change-self-value-visible="handleValueLabelVisible"
       />
     </div>
     <div
@@ -95,9 +92,8 @@
         :step="0.01"
         :type="'pause'"
         :shift-key-flag="shiftKeyFlag"
-        :force-value-label-visible="forceValueLabelVisible"
+        :alt-key-flag="altKeyFlag"
         @change-value="changeMoraData"
-        @change-self-value-visible="handleValueLabelVisible"
       />
     </div>
   </template>
@@ -309,15 +305,6 @@ const toggleAccentPhraseSplit = (isPause: boolean, moraIndex?: number) => {
 
 const lastPitches = computed(() =>
   props.accentPhrase.moras.map((mora) => mora.pitch)
-);
-
-// alt押下中の全モーラのスライダーの数値表示
-const isAnySingleValueLabelVisible = ref(false);
-const handleValueLabelVisible = (isVisible: boolean) => {
-  isAnySingleValueLabelVisible.value = isVisible;
-};
-const forceValueLabelVisible = computed(
-  () => props.altKeyFlag && isAnySingleValueLabelVisible.value
 );
 
 const maxPitch = 6.5;

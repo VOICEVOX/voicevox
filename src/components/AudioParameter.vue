@@ -1,22 +1,16 @@
 <template>
   <div
+    class="audio-parameter"
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
     <q-badge
-      v-if="
-        isSelfValueLabelVisible ||
-        (!props.disable && props.forceValueLabelVisible)
-      "
       class="value-label"
       :class="{
-        'value-label-translucent': !isSelfValueLabelVisible,
-        'value-label-consonant':
-          props.clip &&
-          props.forceValueLabelVisible &&
-          props.type === 'consonant',
-        'value-label-vowel':
-          props.clip && props.forceValueLabelVisible && props.type === 'vowel',
+        'ui-locked': !uiLocked,
+        'alt-key': altKeyFlag,
+        'value-label-consonant': clip && type === 'consonant',
+        'value-label-vowel': clip && type === 'vowel',
       }"
       color="primary"
       text-color="display-on-primary"
@@ -49,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from "vue";
+import { computed, reactive } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
 
@@ -65,7 +59,7 @@ const props = withDefaults(
     type?: MoraDataType;
     clip?: boolean;
     shiftKeyFlag?: boolean;
-    forceValueLabelVisible?: boolean;
+    altKeyFlag?: boolean;
   }>(),
   {
     min: 0.0,
@@ -75,7 +69,7 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
-    forceValueLabelVisible: false,
+    altKeyFlag: false,
   }
 );
 
@@ -142,16 +136,6 @@ const precisionComputed = computed(() => {
   }
 });
 
-const isSelfValueLabelVisible = computed(
-  () =>
-    !props.disable &&
-    (valueLabel.visible || previewSlider.state.isPanning.value)
-);
-
-watch(isSelfValueLabelVisible, (newValue) => {
-  emit("changeSelfValueLabelVisible", newValue);
-});
-
 // クリックでアクセント句が選択されないように@click.stopに渡す
 const stopPropagation = () => {
   // fn is not a function エラーを回避するために何もしない関数を渡す
@@ -178,18 +162,28 @@ div {
     height: $value-label-height;
     padding: 0px 8px;
     transform: translateX(-50%) translateX(15px);
-  }
+    z-index: 3;
 
-  .value-label-translucent {
-    opacity: 0.8;
+    // altキー押下中は母音と子音の値ラベルの表示位置が被らないようにずらす
+    &.alt-key.value-label-consonant {
+      transform: translateX(-50%) translateX(14px) translateY(-60%);
+    }
+    &.alt-key.value-label-vowel {
+      transform: translateX(-50%) translateX(16px) translateY(60%);
+    }
   }
+}
 
-  .value-label-consonant {
-    transform: translateX(-50%) translateX(14px) translateY(-60%);
-  }
+// hover中以外の音素のラベルは半透明にする
+.audio-parameter:not(:hover) .value-label {
+  opacity: 0.8;
+}
 
-  .value-label-vowel {
-    transform: translateX(-50%) translateX(16px) translateY(60%);
-  }
+.value-label.ui-locked
+// hover中以外のアクセント区間の値ラベル
+:root .mora-table:not(:hover) .value-label,
+// hover中以外の音素かつaltキー押下中以外の値ラベル
+.audio-parameter:not(:hover) .value-label:not(.alt-key) {
+  display: none;
 }
 </style>
