@@ -57,22 +57,30 @@ module.exports = {
     ],
     "import/order": "error",
     "no-restricted-syntax": [
-      "error",
+      "warn",
       {
-        selector: "BinaryExpression[operator='==='][right.value=null]",
-        message: "Don't use '=== null'. Use '== null' instead.",
+        selector:
+          "BinaryExpression[operator='==='][right.type='Literal'][right.value=null]",
+        message:
+          "'=== null'ではなく'== null'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
       },
       {
-        selector: "BinaryExpression[operator='!=='][right.value=null]",
-        message: "Don't use '!== null'. Use '!= null' instead.",
+        selector:
+          "BinaryExpression[operator='!=='][right.type='Literal'][right.value=null]",
+        message:
+          "'!== null'ではなく'!= null'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
       },
       {
-        selector: "BinaryExpression[operator='==='][right.value=undefined]",
-        message: "Don't use '=== undefined'. Use '== undefined' instead.",
+        selector:
+          "BinaryExpression[operator='==='][right.type='Identifier'][right.name=undefined]",
+        message:
+          "'=== undefined'ではなく'== undefined'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
       },
       {
-        selector: "BinaryExpression[operator='!=='][right.value=undefined]",
-        message: "Don't use '!== undefined'. Use '!= undefined' instead.",
+        selector:
+          "BinaryExpression[operator='!=='][right.type='Identifier'][right.name=undefined]",
+        message:
+          "'!== undefined'ではなく'!= undefined'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
       },
     ],
   },
