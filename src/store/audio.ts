@@ -314,25 +314,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       return Math.max(0, Math.min(length - 1, audioPlayStartPoint));
     },
   },
-
-  NOW_PLAYING: {
-    getter(state, getters) {
-      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
-      return (
-        activeAudioKey != undefined &&
-        activeAudioKey === state.nowPlayingAudioKey
-      );
-    },
-  },
-
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: (state) => {
-      return state._activeAudioKey !== undefined
-        ? getAudioElement().currentTime
-        : undefined;
-    },
-  },
-
   LOAD_CHARACTER: {
     action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
       const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
