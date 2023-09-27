@@ -2069,7 +2069,7 @@ export const audioCommandStore = transformCommandStore(
             );
             let newAccentPhrases: AccentPhrase[] = [];
             if (isSameText) {
-              newAccentPhrases = accentPhrases;
+              newAccentPhrases = query.accentPhrases;
             } else {
               if (!state.experimentalSetting.shouldKeepTuningOnTextChange) {
                 newAccentPhrases = accentPhrases;
