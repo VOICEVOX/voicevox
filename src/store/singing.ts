@@ -111,6 +111,16 @@ const secondsToTicks = (
   );
 };
 
+const generateAudioEvents = async (
+  audioContext: BaseAudioContext,
+  time: number,
+  blob: Blob
+): Promise<AudioEvent[]> => {
+  const arrayBuffer = await blob.arrayBuffer();
+  const buffer = await audioContext.decodeAudioData(arrayBuffer);
+  return [{ time, buffer }];
+};
+
 const generateNoteEvents = (
   resolution: number,
   tempos: Tempo[],
@@ -171,7 +181,7 @@ type Phrase = {
   // renderingが進むに連れてデータが代入されていく
   query?: AudioQuery;
   queryHash?: string; // queryの変更を検知するためのハッシュ
-  buffer?: AudioBuffer;
+  blob?: Blob;
   startTime?: number;
   source?: Instrument | AudioPlayer; // ひとまずPhraseに持たせる
   sequence?: Sequence; // ひとまずPhraseに持たせる
@@ -247,8 +257,7 @@ if (window.AudioContext) {
 
 let playbackPosition = 0;
 const allPhrases = new Map<string, Phrase>();
-
-const audioBufferCache = new Map<string, AudioBuffer>();
+const phraseAudioBlobCache = new Map<string, Blob>();
 
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
@@ -1110,25 +1119,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             return;
           }
 
-          // AudioQuery -> AudioBuffer
+          // AudioQuery -> Blob
           // Phrase & AudioQuery -> startTime
 
           const queryHash = await generateAudioQueryHash(phrase.query);
           // クエリが変更されていたら再合成
           if (queryHash !== phrase.queryHash) {
-            phrase.buffer = audioBufferCache.get(queryHash);
-            if (phrase.buffer) {
+            phrase.blob = phraseAudioBlobCache.get(queryHash);
+            if (phrase.blob) {
               window.electron.logInfo(`Loaded audio buffer from cache.`);
             } else {
               window.electron.logInfo(`Synthesizing...`);
 
-              const blob = await synthesize(phrase.singer, phrase.query);
-
-              const arrayBuffer = await blob.arrayBuffer();
-              phrase.buffer = await audioContextRef.decodeAudioData(
-                arrayBuffer
-              );
-              audioBufferCache.set(queryHash, phrase.buffer);
+              phrase.blob = await synthesize(phrase.singer, phrase.query);
+              phraseAudioBlobCache.set(queryHash, phrase.blob);
 
               window.electron.logInfo(`Synthesized.`);
             }
@@ -1144,12 +1148,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
 
             const audioPlayer = new AudioPlayer(audioContextRef);
-            const audioEvents: AudioEvent[] = [
-              {
-                time: phrase.startTime,
-                buffer: phrase.buffer,
-              },
-            ];
+            const audioEvents = await generateAudioEvents(
+              audioContextRef,
+              phrase.startTime,
+              phrase.blob
+            );
             const audioSequence: AudioSequence = {
               type: "audio",
               audioPlayer,
@@ -1765,14 +1768,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         for (const phrase of allPhrases.values()) {
           // TODO: この辺りの処理を共通化する
-          if (phrase.startTime !== undefined && phrase.buffer) {
+          if (phrase.startTime !== undefined && phrase.blob) {
             // レンダリング済みのフレーズの場合
-            const audioEvents: AudioEvent[] = [
-              {
-                time: phrase.startTime,
-                buffer: phrase.buffer,
-              },
-            ];
+            const audioEvents = await generateAudioEvents(
+              offlineAudioContext,
+              phrase.startTime,
+              phrase.blob
+            );
             const audioPlayer = new AudioPlayer(offlineAudioContext);
             audioPlayer.output.connect(channelStrip.input);
             const audioSequence: AudioSequence = {
