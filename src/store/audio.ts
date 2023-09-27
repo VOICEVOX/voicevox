@@ -248,16 +248,6 @@ export function applyAudioPresetToAudioItem(
 }
 
 const audioBlobCache: Record<string, Blob> = {};
-// ユニットテストが落ちるのを回避するための遅延読み込み
-const getAudioElement = (() => {
-  let audioElement: HTMLAudioElement | undefined = undefined;
-  return () => {
-    if (audioElement == undefined) {
-      audioElement = new Audio();
-    }
-    return audioElement;
-  };
-})();
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
@@ -266,7 +256,6 @@ export const audioStoreState: AudioStoreState = {
   audioItems: {},
   audioKeys: [],
   audioStates: {},
-  nowPlayingAudioKey: undefined,
   nowPlayingContinuously: false,
 };
 
@@ -592,15 +581,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
     action({ commit }, { startPoint }: { startPoint?: number }) {
       commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
-    },
-  },
-
-  SET_AUDIO_NOW_PLAYING: {
-    mutation(
-      state,
-      { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean }
-    ) {
-      state.nowPlayingAudioKey = nowPlaying ? audioKey : undefined;
     },
   },
 
@@ -1818,13 +1798,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
-  // NOTE: リファクタリング中、別ファイルに移動予定
-  SET_AUDIO_SOURCE: {
-    mutation(_, { audioBlob }: { audioBlob: Blob }) {
-      getAudioElement().src = URL.createObjectURL(audioBlob);
-    },
-  },
-
   PLAY_AUDIO_BLOB: {
     action: createUILockAction(
       async (
@@ -1851,73 +1824,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         return dispatch("PLAY_AUDIO_PLAYER", { offset, audioKey });
       }
     ),
-  },
-
-  // NOTE: リファクタリング中、別ファイルに移動予定
-  PLAY_AUDIO_PLAYER: {
-    async action(
-      { state, commit },
-      { offset, audioKey }: { offset?: number; audioKey?: AudioKey }
-    ) {
-      const audioElement = getAudioElement();
-
-      if (offset !== undefined) {
-        audioElement.currentTime = offset;
-      }
-
-      // 一部ブラウザではsetSinkIdが実装されていないので、その環境では無視する
-      if (audioElement.setSinkId) {
-        audioElement
-          .setSinkId(state.savingSetting.audioOutputDevice)
-          .catch((err) => {
-            const stop = () => {
-              audioElement.pause();
-              audioElement.removeEventListener("canplay", stop);
-            };
-            audioElement.addEventListener("canplay", stop);
-            window.electron.showMessageDialog({
-              type: "error",
-              title: "エラー",
-              message: "再生デバイスが見つかりません",
-            });
-            throw new Error(err);
-          });
-      }
-
-      // 再生終了時にresolveされるPromiseを返す
-      const played = async () => {
-        if (audioKey) {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
-        }
-      };
-      audioElement.addEventListener("play", played);
-
-      let paused: () => void;
-      const audioPlayPromise = new Promise<boolean>((resolve) => {
-        paused = () => {
-          resolve(audioElement.ended);
-        };
-        audioElement.addEventListener("pause", paused);
-      }).finally(async () => {
-        audioElement.removeEventListener("play", played);
-        audioElement.removeEventListener("pause", paused);
-        if (audioKey) {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
-        }
-      });
-
-      audioElement.play();
-
-      return audioPlayPromise;
-    },
-  },
-
-  STOP_AUDIO: {
-    // 停止中でも呼び出して問題ない
-    action() {
-      // PLAY_ でonpause時の処理が設定されているため、pauseするだけで良い
-      getAudioElement().pause();
-    },
   },
 
   SET_AUDIO_PRESET_KEY: {

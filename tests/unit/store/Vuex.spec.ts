@@ -5,6 +5,7 @@ import { createStore } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
 import { commandStore } from "@/store/command";
 import { audioStore, audioCommandStore } from "@/store/audio";
+import { audioPlayerStore } from "@/store/audioPlayer";
 import { projectStore } from "@/store/project";
 import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
@@ -149,6 +150,7 @@ describe("store/vuex.js test", () => {
       getters: {
         ...uiStore.getters,
         ...audioStore.getters,
+        ...audioPlayerStore.getters,
         ...commandStore.getters,
         ...engineStore.getters,
         ...projectStore.getters,
@@ -162,6 +164,7 @@ describe("store/vuex.js test", () => {
       mutations: {
         ...uiStore.mutations,
         ...audioStore.mutations,
+        ...audioPlayerStore.mutations,
         ...commandStore.mutations,
         ...engineStore.mutations,
         ...projectStore.mutations,
@@ -175,6 +178,7 @@ describe("store/vuex.js test", () => {
       actions: {
         ...uiStore.actions,
         ...audioStore.actions,
+        ...audioPlayerStore.actions,
         ...commandStore.actions,
         ...engineStore.actions,
         ...projectStore.actions,
