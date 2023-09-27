@@ -314,6 +314,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       return Math.max(0, Math.min(length - 1, audioPlayStartPoint));
     },
   },
+
   LOAD_CHARACTER: {
     action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
       const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
