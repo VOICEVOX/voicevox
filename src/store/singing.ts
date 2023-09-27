@@ -15,7 +15,6 @@ import { createUILockAction } from "./ui";
 import {
   AudioEvent,
   AudioPlayer,
-  AudioRenderer,
   AudioSequence,
   ChannelStrip,
   Instrument,
@@ -24,6 +23,7 @@ import {
   Sequence,
   PolySynth,
   Transport,
+  OfflineTransport,
 } from "@/infrastructures/AudioRenderer";
 import { EngineId, StyleId } from "@/type/preload";
 import {
@@ -232,18 +232,17 @@ const DEFAULT_TEMPO = 120;
 const DEFAULT_BEATS = 4;
 const DEFAULT_BEAT_TYPE = 4;
 
-let audioRenderer: AudioRenderer | undefined;
+let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let channelStrip: ChannelStrip | undefined;
 
-// テスト時はAudioContextが存在しないのでAudioRendererを作らない
+// NOTE: テスト時はAudioContextが存在しない
 if (window.AudioContext) {
-  audioRenderer = new AudioRenderer();
-  transport = audioRenderer.transport;
-  channelStrip = new ChannelStrip(audioRenderer.context);
+  audioContext = new AudioContext();
+  transport = new Transport(audioContext);
+  channelStrip = new ChannelStrip(audioContext);
 
-  const destination = audioRenderer.audioContext.destination;
-  channelStrip.output.connect(destination);
+  channelStrip.output.connect(audioContext.destination);
 }
 
 let playbackPosition = 0;
@@ -1028,12 +1027,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const stopRenderingRequested = () => state.stopRenderingRequested;
 
       const render = async () => {
-        if (!state.score || !audioRenderer || !transport || !channelStrip) {
+        if (!state.score || !audioContext || !transport || !channelStrip) {
           throw new Error(
-            "score or audioRenderer or transport or channelStrip is undefined."
+            "score or audioContext or transport or channelStrip is undefined."
           );
         }
-        const audioRendererRef = audioRenderer;
+        const audioContextRef = audioContext;
         const transportRef = transport;
         const channelStripRef = channelStrip;
 
@@ -1057,8 +1056,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.score.tempos,
               phrase.score.notes
             );
-            const context = audioRendererRef.context;
-            const polySynth = new PolySynth(context);
+            const polySynth = new PolySynth(audioContextRef);
             polySynth.output.connect(channelStripRef.input);
             const noteSequence: NoteSequence = {
               type: "note",
@@ -1125,7 +1123,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               window.electron.logInfo(`Synthesizing...`);
 
               const blob = await synthesize(phrase.singer, phrase.query);
-              phrase.buffer = await audioRendererRef.createAudioBuffer(blob);
+
+              const arrayBuffer = await blob.arrayBuffer();
+              phrase.buffer = await audioContextRef.decodeAudioData(
+                arrayBuffer
+              );
               audioBufferCache.set(queryHash, phrase.buffer);
 
               window.electron.logInfo(`Synthesized.`);
@@ -1141,8 +1143,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               transportRef.removeSequence(phrase.sequence);
             }
 
-            const context = audioRendererRef.context;
-            const audioPlayer = new AudioPlayer(context);
+            const audioPlayer = new AudioPlayer(audioContextRef);
             const audioEvents: AudioEvent[] = [
               {
                 time: phrase.startTime,
@@ -1707,8 +1708,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return `何らかの理由で失敗しました。${writeFileResult.message}`;
         }
 
-        if (!audioRenderer) {
-          throw new Error("audioRenderer is undefined.");
+        if (!window.OfflineAudioContext) {
+          throw new Error("OfflineAudioContext is undefined.");
         }
 
         // TODO: ファイル名を設定できるようにする
@@ -1753,53 +1754,56 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        // TODO: レンダリングで使用したノードはdisconnectしなくても解放されるはずですが、
-        // 念のため歌声合成周りを実装後に確認した方が良いかも
-        const audioBuffer = await audioRenderer.renderToBuffer(
-          48000, // TODO: 設定できるようにする
-          renderStartTime,
-          renderDuration,
-          (context) => {
-            const channelStrip = new ChannelStrip(context);
-            for (const phrase of allPhrases.values()) {
-              // TODO: この辺りの処理を共通化する
-              if (phrase.startTime !== undefined && phrase.buffer) {
-                // レンダリング済みのフレーズの場合
-                const audioEvents: AudioEvent[] = [
-                  {
-                    time: phrase.startTime,
-                    buffer: phrase.buffer,
-                  },
-                ];
-                const audioPlayer = new AudioPlayer(context);
-                audioPlayer.output.connect(channelStrip.input);
-                const audioSequence: AudioSequence = {
-                  type: "audio",
-                  audioPlayer,
-                  audioEvents,
-                };
-                context.transport.addSequence(audioSequence);
-              } else {
-                // レンダリング未完了のフレーズの場合
-                const noteEvents = generateNoteEvents(
-                  phrase.score.resolution,
-                  phrase.score.tempos,
-                  phrase.score.notes
-                );
-                const polySynth = new PolySynth(context);
-                polySynth.output.connect(channelStrip.input);
-                const noteSequence: NoteSequence = {
-                  type: "note",
-                  instrument: polySynth,
-                  noteEvents,
-                };
-                context.transport.addSequence(noteSequence);
-              }
-            }
-            const destination = context.audioContext.destination;
-            channelStrip.output.connect(destination);
-          }
+        const sampleRate = 48000; // TODO: 設定できるようにする
+        const offlineAudioContext = new OfflineAudioContext(
+          2,
+          sampleRate * renderDuration,
+          sampleRate
         );
+        const offlineTransport = new OfflineTransport();
+        const channelStrip = new ChannelStrip(offlineAudioContext);
+
+        for (const phrase of allPhrases.values()) {
+          // TODO: この辺りの処理を共通化する
+          if (phrase.startTime !== undefined && phrase.buffer) {
+            // レンダリング済みのフレーズの場合
+            const audioEvents: AudioEvent[] = [
+              {
+                time: phrase.startTime,
+                buffer: phrase.buffer,
+              },
+            ];
+            const audioPlayer = new AudioPlayer(offlineAudioContext);
+            audioPlayer.output.connect(channelStrip.input);
+            const audioSequence: AudioSequence = {
+              type: "audio",
+              audioPlayer,
+              audioEvents,
+            };
+            offlineTransport.addSequence(audioSequence);
+          } else {
+            // レンダリング未完了のフレーズの場合
+            const noteEvents = generateNoteEvents(
+              phrase.score.resolution,
+              phrase.score.tempos,
+              phrase.score.notes
+            );
+            const polySynth = new PolySynth(offlineAudioContext);
+            polySynth.output.connect(channelStrip.input);
+            const noteSequence: NoteSequence = {
+              type: "note",
+              instrument: polySynth,
+              noteEvents,
+            };
+            offlineTransport.addSequence(noteSequence);
+          }
+        }
+        channelStrip.output.connect(offlineAudioContext.destination);
+
+        // スケジューリングを行い、オフラインレンダリングを実行
+        // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
+        offlineTransport.schedule(renderStartTime, renderDuration);
+        const audioBuffer = await offlineAudioContext.startRendering();
         const waveFileData = convertToWavFileData(audioBuffer);
 
         try {
