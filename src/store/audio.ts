@@ -2084,7 +2084,7 @@ export const audioCommandStore = transformCommandStore(
                  *   [ズ ン ダ モ ン ノ]
                  * + [ユ ウ ショ ク]
                  * - [チョ ウ ショ ク]
-                 * のようなdiffが得られる。
+                 * のような変更なしのdiff・追加のdiff・削除のdiffが得られる。
                  *
                  * 2. それぞれのdiffにIDを振る。（indexedDiff）
                  * 3. そのIDと古いAccentPhraseの対応表を作る。（indexToOldAccentPhrase）
