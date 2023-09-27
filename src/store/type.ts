@@ -130,7 +130,7 @@ export type AudioStoreState = {
   audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
   _selectedAudioKeys?: AudioKey[];
-  audioPlayStartPoint?: number;
+  _audioPlayStartPoint?: number;
   nowPlayingContinuously: boolean;
 };
 
