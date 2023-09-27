@@ -67,27 +67,10 @@ interface EventScheduler {
 }
 
 /**
- * 複数のシーケンスのスケジューリングを行うトランスポートを表します。
- */
-export interface BaseTransport {
-  /**
-   * シーケンスを追加します。
-   * @param sequence 追加するシーケンス
-   */
-  addSequence(sequence: Sequence): void;
-
-  /**
-   * シーケンスを削除します。
-   * @param sequence 削除するシーケンス
-   */
-  removeSequence(sequence: Sequence): void;
-}
-
-/**
  * 複数のシーケンスのスケジューリングを行います。
  * 再生、停止、再生位置の変更などの機能を提供します。
  */
-export class Transport implements BaseTransport {
+export class Transport {
   private readonly audioContext: AudioContext;
   private readonly timer: Timer;
   private readonly scheduleAheadTime: number;
@@ -134,8 +117,8 @@ export class Transport implements BaseTransport {
    */
   constructor(
     audioContext: AudioContext,
-    lookahead: number,
-    scheduleAheadTime: number
+    lookahead = 0.2,
+    scheduleAheadTime = 0.6
   ) {
     if (scheduleAheadTime <= lookahead) {
       throw new Error(
@@ -275,7 +258,7 @@ export class Transport implements BaseTransport {
  * 複数のシーケンスのスケジューリングを行います。
  * オフラインレンダリングで使用します。
  */
-export class OfflineTransport implements BaseTransport {
+export class OfflineTransport {
   private schedulers = new Map<Sequence, EventScheduler>();
 
   /**
@@ -617,8 +600,11 @@ export class AudioPlayer {
     return this.gainNode;
   }
 
-  constructor(context: Context, options: AudioPlayerOptions = { volume: 1.0 }) {
-    this.audioContext = context.audioContext;
+  constructor(
+    audioContext: BaseAudioContext,
+    options: AudioPlayerOptions = { volume: 1.0 }
+  ) {
+    this.audioContext = audioContext;
 
     this.gainNode = this.audioContext.createGain();
     this.gainNode.gain.value = options.volume;
@@ -788,7 +774,7 @@ export class PolySynth implements Instrument {
   }
 
   constructor(
-    context: Context,
+    audioContext: BaseAudioContext,
     options: PolySynthOptions = {
       volume: 0.1,
       oscillatorType: "square",
@@ -800,7 +786,7 @@ export class PolySynth implements Instrument {
       },
     }
   ) {
-    this.audioContext = context.audioContext;
+    this.audioContext = audioContext;
 
     this.oscillatorType = options.oscillatorType;
     this.envelope = options.envelope;
@@ -889,96 +875,10 @@ export class ChannelStrip {
   }
 
   constructor(
-    context: Context,
+    audioContext: BaseAudioContext,
     options: ChannelStripOptions = { volume: 0.1 }
   ) {
-    const audioContext = context.audioContext;
     this.gainNode = audioContext.createGain();
     this.gainNode.gain.value = options.volume;
-  }
-}
-
-export type Context = {
-  readonly audioContext: BaseAudioContext;
-  readonly transport: BaseTransport;
-};
-
-/**
- * 主にContextの作成・管理を行います。
- */
-export class AudioRenderer {
-  private readonly onlineContext: {
-    readonly audioContext: AudioContext;
-    readonly transport: Transport;
-  };
-
-  get context(): Context {
-    return {
-      audioContext: this.onlineContext.audioContext,
-      transport: this.onlineContext.transport,
-    };
-  }
-
-  get audioContext() {
-    return this.onlineContext.audioContext;
-  }
-
-  get transport() {
-    return this.onlineContext.transport;
-  }
-
-  constructor() {
-    const audioContext = new AudioContext();
-    const transport = new Transport(audioContext, 0.2, 0.6);
-    this.onlineContext = { audioContext, transport };
-  }
-
-  /**
-   * 音声ファイルのBlobから音声バッファを作成します。
-   * @param blob 音声ファイルのBlob
-   * @returns 作成した音声バッファ
-   */
-  async createAudioBuffer(blob: Blob) {
-    const audioContext = this.onlineContext.audioContext;
-    const arrayBuffer = await blob.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    return audioBuffer;
-  }
-
-  /**
-   * 音声をバッファーにレンダリングします。
-   * レンダリングはオフラインで行われます。
-   * @param sampleRate 音声のサンプルレート
-   * @param startTime レンダリングの開始位置（秒）
-   * @param duration 音声の長さ（秒）
-   * @param callback レンダリングの前に実行される関数
-   * @returns レンダリングした音声
-   */
-  async renderToBuffer(
-    sampleRate: number,
-    startTime: number,
-    duration: number,
-    callback: (context: Context) => void
-  ) {
-    if (this.onlineContext.transport.state === "started") {
-      this.onlineContext.transport.stop();
-    }
-
-    const length = sampleRate * duration;
-    const audioContext = new OfflineAudioContext(2, length, sampleRate);
-    const transport = new OfflineTransport();
-
-    callback({ audioContext, transport });
-    transport.schedule(startTime, duration);
-    const audioBuffer = await audioContext.startRendering();
-    return audioBuffer;
-  }
-
-  /**
-   * 破棄します。
-   */
-  dispose() {
-    this.onlineContext.transport.dispose();
-    this.onlineContext.audioContext.close();
   }
 }
