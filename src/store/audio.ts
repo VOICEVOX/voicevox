@@ -305,8 +305,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   /**
    * audio elementの再生オフセット。
-   * 選択+削除 や 挿入+選択+元に戻す などを行った場合でも
-   * 範囲外にならないようにクランプする。
+   * 選択+削除 や 挿入+選択+元に戻す などを行った場合でも範囲外にならないようにクランプする。
+   * ACTIVE_AUDIO_KEYがundefinedのときはundefinedを返す。
    */
   AUDIO_PLAY_START_POINT: {
     getter(state, getters) {
