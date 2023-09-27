@@ -2072,7 +2072,7 @@ export const audioCommandStore = transformCommandStore(
               newAccentPhrases = accentPhrases;
             } else {
               if (!state.experimentalSetting.shouldKeepTuningOnTextChange) {
-                newAccentPhrases = query.accentPhrases;
+                newAccentPhrases = accentPhrases;
               } else {
                 /*
                  * # 調整結果の保持の仕組み
