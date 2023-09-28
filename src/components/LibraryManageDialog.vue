@@ -77,23 +77,25 @@
                       {{ library.name }}
                     </div>
                     <div class="library-manage-buttons q-ma-sm">
+                      <!-- TODO: customInstalledについて考慮 -->
                       <q-btn
+                        v-if="library.type === 'installed'"
                         outline
                         text-color="display"
                         class="text-no-wrap q-ma-sm"
-                        :disable="
-                          library.type === 'installed' && library.isLatest
-                        "
+                        :disable="library.isLatest"
                         @click.stop="installLibrary(engineId, library)"
                       >
-                        {{
-                          // TODO: customInstalledについて考慮
-                          library.type === "installed" && library.isLatest
-                            ? "最新版です"
-                            : library.type === "installed" && !library.isLatest
-                            ? "アップデート"
-                            : "インストール"
-                        }}
+                        {{ library.isLatest ? "最新版です" : "アップデート" }}
+                      </q-btn>
+                      <q-btn
+                        v-else-if="library.type === 'downloadable'"
+                        outline
+                        text-color="display"
+                        class="text-no-wrap q-ma-sm"
+                        @click.stop="installLibrary(engineId, library)"
+                      >
+                        インストール
                       </q-btn>
                       <q-btn
                         outline
