@@ -62,7 +62,7 @@
               class="library-list"
             >
               <q-item
-                v-for="(library, libraryUuid) in downloadableLibraries[
+                v-for="[libraryUuid, library] in downloadableLibraries[
                   engineId
                 ]"
                 :key="libraryUuid"
@@ -237,7 +237,7 @@ const closeDialog = () => {
 };
 
 const downloadableLibraries = ref<
-  Record<EngineId, Record<LibraryId, LibraryType>>
+  Record<EngineId, Map<LibraryId, LibraryType>>
 >({});
 
 const fetchStatuses = ref<
@@ -360,7 +360,8 @@ watch(modelValueComputed, async (newValue) => {
                 uuid: LibraryId(library.uuid),
                 speakers: libraryInfoToCharacterInfos(engineId, library),
               };
-              const installedLibrary = convertedInstalledLibraries[library.uuid];
+              const installedLibrary =
+                convertedInstalledLibraries[library.uuid];
               if (installedLibrary) {
                 return {
                   ...libraryBase,
@@ -402,10 +403,12 @@ watch(modelValueComputed, async (newValue) => {
       convertedDownloadableLibraries.sort((a, b) => {
         return toPrimaryOrder(b) - toPrimaryOrder(a);
       });
-      downloadableLibraries.value[engineId] = {};
+      downloadableLibraries.value[engineId] = new Map();
       for (const downloadableLibrary of convertedDownloadableLibraries) {
-        downloadableLibraries.value[engineId][downloadableLibrary.uuid] =
-          downloadableLibrary;
+        downloadableLibraries.value[engineId].set(
+          downloadableLibrary.uuid,
+          downloadableLibrary
+        );
       }
     })
   );
