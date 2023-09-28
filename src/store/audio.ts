@@ -280,6 +280,29 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  /**
+   * audio elementの再生オフセット。
+   * 選択+削除 や 挿入+選択+元に戻す などを行った場合でも範囲外にならないようにクランプする。
+   * ACTIVE_AUDIO_KEYがundefinedのときはundefinedを返す。
+   */
+  AUDIO_PLAY_START_POINT: {
+    getter(state, getters) {
+      const audioPlayStartPoint = state._audioPlayStartPoint;
+      if (
+        audioPlayStartPoint == undefined ||
+        getters.ACTIVE_AUDIO_KEY == undefined
+      ) {
+        return undefined;
+      }
+      const length =
+        state.audioItems[getters.ACTIVE_AUDIO_KEY].query?.accentPhrases.length;
+      if (length == undefined) {
+        return undefined;
+      }
+      return Math.max(0, Math.min(length - 1, audioPlayStartPoint));
+    },
+  },
+
   LOAD_CHARACTER: {
     action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
       const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {

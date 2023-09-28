@@ -143,6 +143,10 @@ export type AudioStoreTypes = {
     getter: AudioKey[];
   };
 
+  AUDIO_PLAY_START_POINT: {
+    getter: number | undefined;
+  };
+
   LOAD_CHARACTER: {
     action(payload: { engineId: EngineId }): void;
   };
