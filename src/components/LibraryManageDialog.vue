@@ -188,15 +188,15 @@ type DownloadableLibrary = Omit<
 type LibraryType = DownloadableLibrary &
   (
     | {
-        type: "notInstalled";
+        type: "notInstalled"; // 未インストールのライブラリ
       }
     | {
-        type: "installed";
+        type: "installed"; // インストール済みのライブラリ
         isLatest: boolean;
         uninstallable: boolean;
       }
     | {
-        type: "customInstalled";
+        type: "customInstalled"; // ユーザーが独自にインストールしたライブラリ
         uninstallable: boolean;
       }
   );
