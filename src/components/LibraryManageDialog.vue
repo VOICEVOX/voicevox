@@ -440,9 +440,14 @@ const play = (
 ) => {
   if (audio.src !== "") stop();
 
-  const speaker = downloadableLibraries.value[engineId][
-    libraryId
-  ].speakers.find((s) => s.metas.speakerUuid === speakerUuid);
+  const downloadableLibrary =
+    downloadableLibraries.value[engineId].get(libraryId);
+  if (downloadableLibrary === undefined)
+    throw new Error("downloadableLibrary  === undefined");
+
+  const speaker = downloadableLibrary.speakers.find(
+    (s) => s.metas.speakerUuid === speakerUuid
+  );
   if (!speaker) throw new Error("speaker not found");
 
   const styleInfo = speaker.metas.styles.find((s) => s.styleId === styleId);
