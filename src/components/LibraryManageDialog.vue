@@ -89,7 +89,7 @@
                         {{ library.isLatest ? "最新版です" : "アップデート" }}
                       </q-btn>
                       <q-btn
-                        v-else-if="library.type === 'downloadable'"
+                        v-else-if="library.type === 'notInstalled'"
                         outline
                         text-color="display"
                         class="text-no-wrap q-ma-sm"
@@ -102,9 +102,9 @@
                         text-color="warning"
                         class="text-no-wrap q-ma-sm"
                         :disable="
-                          (library.type !== 'downloadable' &&
+                          (library.type !== 'notInstalled' &&
                             !library.uninstallable) ||
-                          library.type === 'downloadable'
+                          library.type === 'notInstalled'
                         "
                         @click.stop="uninstallLibrary(engineId, library)"
                       >
@@ -188,7 +188,7 @@ type DownloadableLibrary = Omit<
 type LibraryType = DownloadableLibrary &
   (
     | {
-        type: "downloadable";
+        type: "notInstalled";
       }
     | {
         type: "installed";
@@ -375,7 +375,7 @@ watch(modelValueComputed, async (newValue) => {
               }
               return {
                 ...libraryBase,
-                type: "downloadable",
+                type: "notInstalled",
               };
             });
           }
@@ -390,7 +390,7 @@ watch(modelValueComputed, async (newValue) => {
       // ダウンロード可能なライブラリはソートしてから代入する
       const toPrimaryOrder = (library: LibraryType) => {
         // アップデート > 未インストール > インストール済み の順
-        if (library.type === "downloadable") {
+        if (library.type === "notInstalled") {
           return 1;
         } else if (library.type === "installed" && !library.isLatest) {
           return 2;
