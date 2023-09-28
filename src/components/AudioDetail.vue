@@ -61,7 +61,7 @@
         <accent-phrase
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
-          :ref="addAccentPhraseElem"
+          ref="accentPhraseComponents"
           :audio-key="activeAudioKey"
           :accent-phrase="accentPhrase"
           :index="accentPhraseIndex"
@@ -84,11 +84,9 @@
 import {
   computed,
   nextTick,
-  onBeforeUpdate,
   onMounted,
   onUnmounted,
   ref,
-  VNodeRef,
   watch,
 } from "vue";
 import ToolTip from "./ToolTip.vue";
@@ -277,29 +275,18 @@ const nowGenerating = computed(
 );
 
 const audioDetail = ref<HTMLElement>();
-let accentPhraseElems: HTMLElement[] = [];
-const addAccentPhraseElem: VNodeRef = (accentPhraseRef) => {
-  if (accentPhraseRef && !(accentPhraseRef instanceof Element)) {
-    const accentPhraseElem = (
-      accentPhraseRef as InstanceType<typeof AccentPhrase>
-    ).container;
-    if (accentPhraseElem !== undefined) {
-      accentPhraseElems.push(accentPhraseElem);
-    }
-  }
-};
-onBeforeUpdate(() => {
-  accentPhraseElems = [];
-});
+
+const accentPhraseComponents = ref<InstanceType<typeof AccentPhrase>[]>([]);
 
 const scrollToActivePoint = () => {
   if (
     activePoint.value === undefined ||
     !audioDetail.value ||
-    accentPhraseElems.length === 0
+    accentPhraseComponents.value.length === 0
   )
     return;
-  const elem = accentPhraseElems[activePoint.value];
+  const elem = accentPhraseComponents.value[activePoint.value].container;
+  if (elem == undefined) throw new Error("elem == undefined");
 
   if (activePointScrollMode.value === "CONTINUOUSLY") {
     const scrollCount = Math.max(
