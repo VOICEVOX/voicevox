@@ -127,6 +127,7 @@
             width: `${scope.value.length + 1}em`,
             minWidth: '50px',
           }"
+          :aria-label="`${index + 1}番目のアクセント区間の読み`"
           autofocus
           outlined
           @keyup.enter="scope.set"
@@ -213,11 +214,19 @@ const pronunciation = computed(() => {
 
 const handleChangePronounce = (newPronunciation: string) => {
   let popUntilPause = false;
-  newPronunciation = newPronunciation.replace(",", "、");
-  if (newPronunciation.slice(-1) == "、" && !props.isLast) {
-    // 生成エラー回避
-    newPronunciation += "ア";
-    popUntilPause = true;
+  newPronunciation = newPronunciation
+    .replace(/,/g, "、")
+    // 連続する読点をまとめる
+    .replace(/、{2,}/g, "、");
+  if (newPronunciation.endsWith("、")) {
+    if (props.isLast) {
+      // 末尾の読点を削除
+      newPronunciation = newPronunciation.slice(0, -1);
+    } else {
+      // 生成エラー回避
+      newPronunciation += "ア";
+      popUntilPause = true;
+    }
   }
   store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
     audioKey: props.audioKey,
