@@ -498,6 +498,9 @@ const installLibrary = async (engineId: EngineId, library: LibraryType) => {
 };
 
 const uninstallLibrary = async (engineId: EngineId, library: LibraryType) => {
+  if (library.type === "notInstalled") {
+    throw new Error("Not installed library cannot be uninstalled.");
+  }
   selectLibraryAndSpeaker(
     LibraryId(library.uuid),
     SpeakerId(library.speakers[0].metas.speakerUuid)
