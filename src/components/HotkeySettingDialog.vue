@@ -423,10 +423,6 @@ const solveDuplicated = async () => {
   width: 200px;
 }
 
-.header-spacer {
-  padding-left: calc(50% - 25rem);
-}
-
 .hotkey-table {
   width: calc(100vw - #{vars.$window-border-width * 2});
   height: calc(
@@ -439,7 +435,6 @@ const solveDuplicated = async () => {
     overflow-x: hidden;
 
     > .q-table {
-      margin: auto;
       max-width: 50rem;
     }
   }
