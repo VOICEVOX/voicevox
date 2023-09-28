@@ -338,7 +338,7 @@ watch(modelValueComputed, async (newValue) => {
             engineInstalledLibraries,
           ]): LibraryType[] => {
             fetchStatuses.value[engineId] = "success";
-            const convertedInstalledLibrary = Object.fromEntries(
+            const convertedInstalledLibraries = Object.fromEntries(
               Object.entries(engineInstalledLibraries).map(
                 ([uuid, library]) => {
                   return [
@@ -360,7 +360,7 @@ watch(modelValueComputed, async (newValue) => {
                 uuid: LibraryId(library.uuid),
                 speakers: libraryInfoToCharacterInfos(engineId, library),
               };
-              const installedLibrary = convertedInstalledLibrary[library.uuid];
+              const installedLibrary = convertedInstalledLibraries[library.uuid];
               if (installedLibrary) {
                 return {
                   ...libraryBase,
