@@ -1,6 +1,8 @@
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import Encoding from "encoding-japanese";
+import { diffArrays } from "diff";
+import { toRaw } from "vue";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -25,6 +27,7 @@ import {
   sanitizeFileName,
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
+  joinTextsInAccentPhrases,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -256,8 +259,6 @@ export const audioStoreState: AudioStoreState = {
   audioItems: {},
   audioKeys: [],
   audioStates: {},
-  // audio elementの再生オフセット
-  audioPlayStartPoint: undefined,
   nowPlayingContinuously: false,
 };
 
@@ -291,6 +292,29 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   IS_ACTIVE: {
     getter: (state) => (audioKey: AudioKey) => {
       return state._activeAudioKey === audioKey;
+    },
+  },
+
+  /**
+   * audio elementの再生オフセット。
+   * 選択+削除 や 挿入+選択+元に戻す などを行った場合でも範囲外にならないようにクランプする。
+   * ACTIVE_AUDIO_KEYがundefinedのときはundefinedを返す。
+   */
+  AUDIO_PLAY_START_POINT: {
+    getter(state, getters) {
+      const audioPlayStartPoint = state._audioPlayStartPoint;
+      if (
+        audioPlayStartPoint == undefined ||
+        getters.ACTIVE_AUDIO_KEY == undefined
+      ) {
+        return undefined;
+      }
+      const length =
+        state.audioItems[getters.ACTIVE_AUDIO_KEY].query?.accentPhrases.length;
+      if (length == undefined) {
+        return undefined;
+      }
+      return Math.max(0, Math.min(length - 1, audioPlayStartPoint));
     },
   },
 
@@ -538,7 +562,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   SET_AUDIO_PLAY_START_POINT: {
     mutation(state, { startPoint }: { startPoint?: number }) {
-      state.audioPlayStartPoint = startPoint;
+      state._audioPlayStartPoint = startPoint;
     },
     action({ commit }, { startPoint }: { startPoint?: number }) {
       commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
@@ -1762,7 +1786,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   PLAY_AUDIO_BLOB: {
     action: createUILockAction(
       async (
-        { state, commit, dispatch },
+        { getters, commit, dispatch },
         { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey }
       ) => {
         commit("SET_AUDIO_SOURCE", { audioBlob });
@@ -1774,7 +1798,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
           if (accentPhraseOffsets.length === 0)
             throw new Error("accentPhraseOffsets.length === 0");
-          const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+          const startTime =
+            accentPhraseOffsets[getters.AUDIO_PLAY_START_POINT ?? 0];
           if (startTime === undefined) throw Error("startTime === undefined");
           // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
           // 再生に影響のない程度かつ切り捨てられない値を加算する
@@ -1803,9 +1828,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   PLAY_CONTINUOUSLY_AUDIO: {
-    action: createUILockAction(async ({ state, commit, dispatch }) => {
+    action: createUILockAction(async ({ state, getters, commit, dispatch }) => {
       const currentAudioKey = state._activeAudioKey;
-      const currentAudioPlayStartPoint = state.audioPlayStartPoint;
+      const currentAudioPlayStartPoint = getters.AUDIO_PLAY_START_POINT;
 
       let index = 0;
       if (currentAudioKey !== undefined) {
@@ -1948,17 +1973,84 @@ export const audioCommandStore = transformCommandStore(
             );
 
             // 読みの内容が変わっていなければテキストだけ変更
-            const isChangedMora = isAccentPhrasesTextDifferent(
+            const isSameText = !isAccentPhrasesTextDifferent(
               query.accentPhrases,
               accentPhrases
             );
+            let newAccentPhrases: AccentPhrase[] = [];
+            if (isSameText) {
+              newAccentPhrases = query.accentPhrases;
+            } else {
+              if (!state.experimentalSetting.shouldKeepTuningOnTextChange) {
+                newAccentPhrases = accentPhrases;
+              } else {
+                /*
+                 * # 調整結果の保持の仕組み
+                 * 1. 新しいAccentPhraseと古いAccentPhraseのテキスト（モーラのカタカナを結合したもの）を比較する。読点は無視する。（diffからflatDiff）
+                 * 例えば、
+                 * 旧：[ズ ン ダ モ ン ノ] [チョ ウ ショ ク]
+                 * 新：[ズ ン ダ モ ン ノ] [ユ ウ ショ ク]
+                 * という場合、
+                 *   [ズ ン ダ モ ン ノ]
+                 * + [ユ ウ ショ ク]
+                 * - [チョ ウ ショ ク]
+                 * のような変更なしのdiff・追加のdiff・削除のdiffが得られる。
+                 *
+                 * 2. それぞれのdiffにインデックスを振る。（indexedDiff）
+                 * 3. diffのインデックスと古いAccentPhraseの対応表を作る。（indexToOldAccentPhrase）
+                 * 追加のdiffを抜くと古いAccentPhraseになるので、残ったAccentPhraseのIDを対応させる。
+                 *   [ズ ン ダ モ ン ノ] #0 -> query.accentPhrases[0]
+                 * + [ユ ウ ショ ク]     #1 -> （無視）
+                 * - [チョ ウ ショ ク]   #2 -> query.accentPhrases[1]
+                 *
+                 * 4. 新しいAccentPhraseの配列を作る。（newAccentPhrases）
+                 * 変更なしのdiffは上の対応表を使って古いAccentPhrase、追加のdiffは新しいAccentPhraseを使い、削除のdiffは無視する。
+                 *   [ズ ン ダ モ ン ノ] #0 -> query.accentPhrases[0]
+                 * + [ユ ウ ショ ク]     #1 -> accentPhrases[1]
+                 * - [チョ ウ ショ ク]   #2 -> （無視）
+                 */
+                const diff = diffArrays(
+                  query.accentPhrases.map(joinTextsInAccentPhrases),
+                  accentPhrases.map(joinTextsInAccentPhrases)
+                );
+                const flatDiff = diff.flatMap((d) =>
+                  d.value.map((v) => ({ ...d, value: v }))
+                );
+                const indexedDiff = flatDiff.map((d, i) => ({
+                  ...d,
+                  index: i,
+                }));
+                const indexToOldAccentPhrase = indexedDiff
+                  .filter((d) => !d.added)
+                  .reduce(
+                    (acc, d, i) => ({
+                      ...acc,
+                      [d.index]: toRaw(query.accentPhrases[i]),
+                    }),
+                    {} as { [index: number]: AccentPhrase }
+                  );
+                newAccentPhrases = indexedDiff
+                  .filter((d) => !d.removed)
+                  .map((d, i) => {
+                    const ap = structuredClone(
+                      indexToOldAccentPhrase[d.index] ?? accentPhrases[i]
+                    );
+                    if (accentPhrases[i].pauseMora !== undefined) {
+                      ap.pauseMora = accentPhrases[i].pauseMora;
+                    } else {
+                      delete ap.pauseMora;
+                    }
+                    ap.isInterrogative = accentPhrases[i].isInterrogative;
+
+                    return ap;
+                  });
+              }
+            }
             commit("COMMAND_CHANGE_AUDIO_TEXT", {
               audioKey,
               text,
               update: "AccentPhrases",
-              accentPhrases: isChangedMora
-                ? accentPhrases
-                : query.accentPhrases,
+              accentPhrases: newAccentPhrases,
             });
           } else {
             const newAudioQuery = await dispatch("FETCH_AUDIO_QUERY", {

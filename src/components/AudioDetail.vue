@@ -176,11 +176,11 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       if (
         !uiLocked.value &&
         store.getters.ACTIVE_AUDIO_KEY &&
-        store.state.audioPlayStartPoint !== undefined
+        store.getters.AUDIO_PLAY_START_POINT !== undefined
       ) {
         store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
           audioKey: store.getters.ACTIVE_AUDIO_KEY,
-          accentPhraseIndex: store.state.audioPlayStartPoint,
+          accentPhraseIndex: store.getters.AUDIO_PLAY_START_POINT,
         });
       }
     },
@@ -221,7 +221,7 @@ const activePointScrollMode = computed(() => store.state.activePointScrollMode);
 // 再生開始アクセント句
 const startPoint = computed({
   get: () => {
-    return store.state.audioPlayStartPoint;
+    return store.getters.AUDIO_PLAY_START_POINT;
   },
   set: (startPoint) => {
     store.dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint });

@@ -244,3 +244,12 @@ export const isOnCommandOrCtrlKeyDown = (event: {
   metaKey: boolean;
   ctrlKey: boolean;
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
+
+/**
+ * AccentPhraseのtextを結合して返します。
+ */
+export const joinTextsInAccentPhrases = (
+  accentPhrase: AccentPhrase
+): string => {
+  return accentPhrase.moras.map((mora) => mora.text).join("");
+};

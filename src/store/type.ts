@@ -130,7 +130,7 @@ export type AudioStoreState = {
   audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
   _selectedAudioKeys?: AudioKey[];
-  audioPlayStartPoint?: number;
+  _audioPlayStartPoint?: number;
   nowPlayingContinuously: boolean;
 };
 
@@ -149,6 +149,10 @@ export type AudioStoreTypes = {
 
   IS_ACTIVE: {
     getter(audioKey: AudioKey): boolean;
+  };
+
+  AUDIO_PLAY_START_POINT: {
+    getter: number | undefined;
   };
 
   LOAD_CHARACTER: {
