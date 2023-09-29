@@ -17,13 +17,15 @@ import {
   AudioPlayer,
   AudioSequence,
   ChannelStrip,
+  Clipper,
   Instrument,
+  Limiter,
   NoteEvent,
   NoteSequence,
-  Sequence,
-  PolySynth,
-  Transport,
   OfflineTransport,
+  PolySynth,
+  Sequence,
+  Transport,
 } from "@/infrastructures/AudioRenderer";
 import { EngineId, StyleId } from "@/type/preload";
 import {
@@ -245,14 +247,20 @@ const DEFAULT_BEAT_TYPE = 4;
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let channelStrip: ChannelStrip | undefined;
+let limiter: Limiter | undefined;
+let clipper: Clipper | undefined;
 
 // NOTE: テスト時はAudioContextが存在しない
 if (window.AudioContext) {
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
   channelStrip = new ChannelStrip(audioContext);
+  limiter = new Limiter(audioContext);
+  clipper = new Clipper(audioContext);
 
-  channelStrip.output.connect(audioContext.destination);
+  channelStrip.output.connect(limiter.input);
+  limiter.output.connect(clipper.input);
+  clipper.output.connect(audioContext.destination);
 }
 
 let playbackPosition = 0;
@@ -1758,6 +1766,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         const sampleRate = 48000; // TODO: 設定できるようにする
+        const useLimiter = false; // TODO: 設定できるようにする
+
         const offlineAudioContext = new OfflineAudioContext(
           2,
           sampleRate * renderDuration,
@@ -1765,6 +1775,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
         const offlineTransport = new OfflineTransport();
         const channelStrip = new ChannelStrip(offlineAudioContext);
+        const limiter = useLimiter
+          ? new Limiter(offlineAudioContext)
+          : undefined;
+        const clipper = new Clipper(offlineAudioContext);
 
         for (const phrase of allPhrases.values()) {
           // TODO: この辺りの処理を共通化する
@@ -1800,7 +1814,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             offlineTransport.addSequence(noteSequence);
           }
         }
-        channelStrip.output.connect(offlineAudioContext.destination);
+        if (limiter) {
+          channelStrip.output.connect(limiter.input);
+          limiter.output.connect(clipper.input);
+        } else {
+          channelStrip.output.connect(clipper.input);
+        }
+        clipper.output.connect(offlineAudioContext.destination);
 
         // スケジューリングを行い、オフラインレンダリングを実行
         // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
