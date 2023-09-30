@@ -99,7 +99,6 @@ export class Transport {
     }
     return this._time;
   }
-
   set time(value: number) {
     if (this._state === "started") {
       this.stop();
@@ -542,7 +541,7 @@ class AudioPlayerVoice {
   }
 
   constructor(audioContext: BaseAudioContext, buffer: AudioBuffer) {
-    this.audioBufferSourceNode = audioContext.createBufferSource();
+    this.audioBufferSourceNode = new AudioBufferSourceNode(audioContext);
     this.audioBufferSourceNode.buffer = buffer;
     this.audioBufferSourceNode.onended = () => {
       this._isStopped = true;
@@ -606,7 +605,7 @@ export class AudioPlayer {
   ) {
     this.audioContext = audioContext;
 
-    this.gainNode = this.audioContext.createGain();
+    this.gainNode = new GainNode(audioContext);
     this.gainNode.gain.value = options.volume;
   }
 
@@ -682,11 +681,11 @@ class SynthVoice {
     this.midi = params.midi;
     this.envelope = params.envelope;
 
-    this.oscillatorNode = audioContext.createOscillator();
+    this.oscillatorNode = new OscillatorNode(audioContext);
     this.oscillatorNode.onended = () => {
       this._isStopped = true;
     };
-    this.gainNode = audioContext.createGain();
+    this.gainNode = new GainNode(audioContext);
     this.oscillatorNode.type = params.oscillatorType;
     this.oscillatorNode.connect(this.gainNode);
   }
@@ -790,7 +789,7 @@ export class PolySynth implements Instrument {
 
     this.oscillatorType = options.oscillatorType;
     this.envelope = options.envelope;
-    this.gainNode = this.audioContext.createGain();
+    this.gainNode = new GainNode(this.audioContext);
     this.gainNode.gain.value = options.volume;
   }
 
@@ -869,7 +868,6 @@ export class ChannelStrip {
   get volume() {
     return this.gainNode.gain.value;
   }
-
   set volume(value: number) {
     this.gainNode.gain.value = value;
   }
@@ -878,7 +876,134 @@ export class ChannelStrip {
     audioContext: BaseAudioContext,
     options: ChannelStripOptions = { volume: 0.1 }
   ) {
-    this.gainNode = audioContext.createGain();
+    this.gainNode = new GainNode(audioContext);
     this.gainNode.gain.value = options.volume;
+  }
+}
+
+export type LimiterOptions = {
+  readonly inputGain: number;
+  readonly outputGain: number;
+  readonly release: number;
+};
+
+/**
+ * リミッターです。大きい音を抑えます。
+ */
+export class Limiter {
+  private readonly inputGainNode: GainNode;
+  private readonly compNode: DynamicsCompressorNode;
+  private readonly correctionGainNode: GainNode;
+  private readonly outputGainNode: GainNode;
+
+  get input(): AudioNode {
+    return this.inputGainNode;
+  }
+
+  get output(): AudioNode {
+    return this.outputGainNode;
+  }
+
+  /**
+   * 入力ゲイン（dB）
+   */
+  get inputGain() {
+    return this.getGainInDecibels(this.inputGainNode);
+  }
+  set inputGain(value: number) {
+    this.setGainInDecibels(value, this.inputGainNode);
+  }
+
+  /**
+   * 出力ゲイン（dB）
+   */
+  get outputGain() {
+    return this.getGainInDecibels(this.outputGainNode);
+  }
+  set outputGain(value: number) {
+    this.setGainInDecibels(value, this.outputGainNode);
+  }
+
+  get release() {
+    return this.compNode.release.value;
+  }
+  set release(value: number) {
+    this.compNode.release.value = value;
+  }
+
+  get reduction() {
+    return this.compNode.reduction;
+  }
+
+  constructor(
+    audioContext: BaseAudioContext,
+    options: LimiterOptions = { inputGain: 0, outputGain: 0, release: 0.25 }
+  ) {
+    this.inputGainNode = new GainNode(audioContext);
+    this.compNode = new DynamicsCompressorNode(audioContext);
+    this.correctionGainNode = new GainNode(audioContext);
+    this.outputGainNode = new GainNode(audioContext);
+
+    // TODO: 伴奏を再生する機能を実装したら、パラメーターを再調整する
+    this.compNode.threshold.value = -5; // 0dBを超えそうになったら（-5dBを超えたら）圧縮する
+    this.compNode.ratio.value = 20; // クリッピングが起こらないように、高いレシオ（1/20）で圧縮する
+    this.compNode.knee.value = 8; // 自然にかかってほしいという気持ちで8に設定（リミッターなので0でも良いかも）
+    this.compNode.attack.value = 0; // クリッピングが起こらないように、すぐに圧縮を開始する
+    this.compNode.release.value = options.release; // 歪まないように少し遅めに設定
+
+    // メイクアップゲインで上がった分を下げる（圧縮していないときは元の音量で出力）
+    this.correctionGainNode.gain.value = 0.85;
+
+    this.setGainInDecibels(options.inputGain, this.inputGainNode);
+    this.setGainInDecibels(options.outputGain, this.outputGainNode);
+
+    this.inputGainNode.connect(this.compNode);
+    this.compNode.connect(this.correctionGainNode);
+    this.correctionGainNode.connect(this.outputGainNode);
+  }
+
+  private linearToDecibel(linearValue: number) {
+    if (linearValue === 0) {
+      return -1000;
+    }
+    return 20 * Math.log10(linearValue);
+  }
+
+  private decibelToLinear(decibelValue: number) {
+    if (decibelValue <= -1000) {
+      return 0;
+    }
+    return Math.pow(10, decibelValue / 20);
+  }
+
+  private getGainInDecibels(gainNode: GainNode) {
+    return this.linearToDecibel(gainNode.gain.value);
+  }
+
+  private setGainInDecibels(value: number, gainNode: GainNode) {
+    if (!Number.isFinite(value)) {
+      throw new Error("Not a finite number.");
+    }
+    gainNode.gain.value = this.decibelToLinear(value);
+  }
+}
+
+/**
+ * 音声が0dB（-1～1の範囲）を超えないようにクリップします。
+ */
+export class Clipper {
+  private readonly waveShaperNode: WaveShaperNode;
+
+  get input(): AudioNode {
+    return this.waveShaperNode;
+  }
+
+  get output(): AudioNode {
+    return this.waveShaperNode;
+  }
+
+  constructor(audioContext: BaseAudioContext) {
+    this.waveShaperNode = new WaveShaperNode(audioContext);
+    this.waveShaperNode.curve = new Float32Array([-1, 0, 1]);
   }
 }
