@@ -1,168 +1,179 @@
 <template>
-  <context-menu :menudata="contextMenudata" />
-  <!-- スライダーここから -->
-  <!-- ｱｸｾﾝﾄ項目のスライダー -->
-  <template v-if="selectedDetail === 'accent'">
-    <audio-accent
-      :accent-phrase-index="index"
-      :accent-phrase="accentPhrase"
-      :ui-locked="uiLocked"
-      :shift-key-flag="shiftKeyFlag"
-      :on-change-accent="changeAccent"
-    />
-  </template>
-  <!-- ｲﾝﾄﾈｰｼｮﾝ項目のスライダー -->
-  <template v-if="selectedDetail === 'pitch'">
-    <div
-      v-for="(mora, moraIndex) in accentPhrase.moras"
-      :key="moraIndex"
-      class="q-mb-sm pitch-cell"
-      :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
-    >
-      <audio-parameter
-        :mora-index="moraIndex"
-        :value="mora.pitch"
+  <div
+    ref="container"
+    class="mora-table"
+    :class="[isActive && 'mora-table-focus', uiLocked || 'mora-table-hover']"
+    @click="$emit('click', index)"
+  >
+    <context-menu :menudata="contextMenudata" />
+    <!-- スライダーここから -->
+    <!-- ｱｸｾﾝﾄ項目のスライダー -->
+    <template v-if="selectedDetail === 'accent'">
+      <audio-accent
+        :accent-phrase-index="index"
+        :accent-phrase="accentPhrase"
         :ui-locked="uiLocked"
-        :min="minPitch"
-        :max="maxPitch"
-        :disable="mora.pitch == 0.0"
-        :type="'pitch'"
-        :clip="false"
         :shift-key-flag="shiftKeyFlag"
-        :alt-key-flag="altKeyFlag"
-        @change-value="changeMoraData"
+        :on-change-accent="changeAccent"
       />
-    </div>
-    <div v-if="accentPhrase.pauseMora" />
-  </template>
-  <!-- 長さ項目のスライダー -->
-  <template v-if="selectedDetail === 'length'">
-    <div
-      v-for="(mora, moraIndex) in accentPhrase.moras"
-      :key="moraIndex"
-      class="q-mb-sm pitch-cell"
-      :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
-    >
-      <!-- consonant length -->
-      <audio-parameter
-        v-if="mora.consonant && mora.consonantLength != undefined"
-        :mora-index="moraIndex"
-        :value="mora.consonantLength"
-        :ui-locked="uiLocked"
-        :min="minMoraLength"
-        :max="maxMoraLength"
-        :step="0.001"
-        :type="'consonant'"
-        :clip="true"
-        :shift-key-flag="shiftKeyFlag"
-        :alt-key-flag="altKeyFlag"
-        @change-value="changeMoraData"
-        @mouse-over="handleLengthHoverText"
-      />
-      <!-- vowel length -->
-      <audio-parameter
-        :mora-index="moraIndex"
-        :value="mora.vowelLength"
-        :ui-locked="uiLocked"
-        :min="minMoraLength"
-        :max="maxMoraLength"
-        :step="0.001"
-        :type="'vowel'"
-        :clip="mora.consonant ? true : false"
-        :shift-key-flag="shiftKeyFlag"
-        :alt-key-flag="altKeyFlag"
-        @change-value="changeMoraData"
-        @mouse-over="handleLengthHoverText"
-      />
-    </div>
-    <div
-      v-if="accentPhrase.pauseMora"
-      class="q-mb-sm pitch-cell"
-      :style="{
-        'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
-      }"
-    >
-      <!-- pause length -->
-      <audio-parameter
-        :mora-index="accentPhrase.moras.length"
-        :value="accentPhrase.pauseMora.vowelLength"
-        :ui-locked="uiLocked"
-        :min="0"
-        :max="1.0"
-        :step="0.01"
-        :type="'pause'"
-        :shift-key-flag="shiftKeyFlag"
-        :alt-key-flag="altKeyFlag"
-        @change-value="changeMoraData"
-      />
-    </div>
-  </template>
-  <!-- スライダーここまで -->
-  <!-- 読みテキスト・アクセント句の分割と結合ここから -->
-  <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
-    <div
-      class="text-cell"
-      :class="{
-        'text-cell-highlighted': isEditableMora(mora.vowel, moraIndex),
-      }"
-      :style="{
-        'grid-column': `${moraIndex * 2 + 1} / span 1`,
-      }"
-      @mouseover="handleHoverText(true, moraIndex)"
-      @mouseleave="handleHoverText(false, moraIndex)"
-      @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
-    >
-      <span class="text-cell-inner">
-        {{ getHoveredText(mora, moraIndex) }}
-      </span>
-      <q-popup-edit
-        v-if="selectedDetail == 'accent' && !uiLocked"
-        v-slot="scope"
-        :model-value="pronunciation"
-        auto-save
-        transition-show="none"
-        transition-hide="none"
-        @save="handleChangePronounce($event)"
+    </template>
+    <!-- ｲﾝﾄﾈｰｼｮﾝ項目のスライダー -->
+    <template v-if="selectedDetail === 'pitch'">
+      <div
+        v-for="(mora, moraIndex) in accentPhrase.moras"
+        :key="moraIndex"
+        class="q-mb-sm pitch-cell"
+        :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
       >
-        <q-input
-          v-model="scope.value"
-          dense
-          :input-style="{
-            width: `${scope.value.length + 1}em`,
-            minWidth: '50px',
-          }"
-          autofocus
-          outlined
-          @keyup.enter="scope.set"
+        <audio-parameter
+          :mora-index="moraIndex"
+          :value="mora.pitch"
+          :ui-locked="uiLocked"
+          :min="minPitch"
+          :max="maxPitch"
+          :disable="mora.pitch == 0.0"
+          :type="'pitch'"
+          :clip="false"
+          :shift-key-flag="shiftKeyFlag"
+          :alt-key-flag="altKeyFlag"
+          @change-value="changeMoraData"
         />
-      </q-popup-edit>
-    </div>
-    <div
-      v-if="!isLast || moraIndex < accentPhrase.moras.length - 1"
-      :class="[
-        'splitter-cell',
-        {
-          'splitter-cell-accent': selectedDetail == 'accent',
-          'splitter-cell-be-split': moraIndex == accentPhrase.moras.length - 1,
-          'splitter-cell-be-split-pause': accentPhrase.pauseMora,
-        },
-      ]"
-      :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
-      @click.stop="uiLocked || toggleAccentPhraseSplit(false, moraIndex)"
-    />
-  </template>
-  <template v-if="accentPhrase.pauseMora">
-    <div class="text-cell">
-      <span class="text-cell-inner">
-        {{ accentPhrase.pauseMora.text }}
-      </span>
-    </div>
-    <div
-      class="splitter-cell splitter-cell-be-split splitter-cell-be-split-pause"
-      @click.stop="uiLocked || toggleAccentPhraseSplit(true)"
-    />
-  </template>
-  <!-- 読みテキスト・アクセント句の分割と結合ここまで -->
+      </div>
+      <div v-if="accentPhrase.pauseMora" />
+    </template>
+    <!-- 長さ項目のスライダー -->
+    <template v-if="selectedDetail === 'length'">
+      <div
+        v-for="(mora, moraIndex) in accentPhrase.moras"
+        :key="moraIndex"
+        class="q-mb-sm pitch-cell"
+        :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+      >
+        <!-- consonant length -->
+        <audio-parameter
+          v-if="mora.consonant && mora.consonantLength != undefined"
+          :mora-index="moraIndex"
+          :value="mora.consonantLength"
+          :ui-locked="uiLocked"
+          :min="minMoraLength"
+          :max="maxMoraLength"
+          :step="0.001"
+          :type="'consonant'"
+          :clip="true"
+          :shift-key-flag="shiftKeyFlag"
+          :alt-key-flag="altKeyFlag"
+          @change-value="changeMoraData"
+          @mouse-over="handleLengthHoverText"
+        />
+        <!-- vowel length -->
+        <audio-parameter
+          :mora-index="moraIndex"
+          :value="mora.vowelLength"
+          :ui-locked="uiLocked"
+          :min="minMoraLength"
+          :max="maxMoraLength"
+          :step="0.001"
+          :type="'vowel'"
+          :clip="mora.consonant ? true : false"
+          :shift-key-flag="shiftKeyFlag"
+          :alt-key-flag="altKeyFlag"
+          @change-value="changeMoraData"
+          @mouse-over="handleLengthHoverText"
+        />
+      </div>
+      <div
+        v-if="accentPhrase.pauseMora"
+        class="q-mb-sm pitch-cell"
+        :style="{
+          'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
+        }"
+      >
+        <!-- pause length -->
+        <audio-parameter
+          :mora-index="accentPhrase.moras.length"
+          :value="accentPhrase.pauseMora.vowelLength"
+          :ui-locked="uiLocked"
+          :min="0"
+          :max="1.0"
+          :step="0.01"
+          :type="'pause'"
+          :shift-key-flag="shiftKeyFlag"
+          :alt-key-flag="altKeyFlag"
+          @change-value="changeMoraData"
+        />
+      </div>
+    </template>
+    <!-- スライダーここまで -->
+    <!-- 読みテキスト・アクセント句の分割と結合ここから -->
+    <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
+      <div
+        class="text-cell"
+        :class="{
+          'text-cell-highlighted': isEditableMora(mora.vowel, moraIndex),
+        }"
+        :style="{
+          'grid-column': `${moraIndex * 2 + 1} / span 1`,
+        }"
+        @mouseover="handleHoverText(true, moraIndex)"
+        @mouseleave="handleHoverText(false, moraIndex)"
+        @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
+      >
+        <span class="text-cell-inner">
+          {{ getHoveredText(mora, moraIndex) }}
+        </span>
+        <q-popup-edit
+          v-if="selectedDetail == 'accent' && !uiLocked"
+          v-slot="scope"
+          :model-value="pronunciation"
+          auto-save
+          transition-show="none"
+          transition-hide="none"
+          @save="handleChangePronounce($event)"
+        >
+          <q-input
+            v-model="scope.value"
+            dense
+            :input-style="{
+              width: `${scope.value.length + 1}em`,
+              minWidth: '50px',
+            }"
+            :aria-label="`${index + 1}番目のアクセント区間の読み`"
+            autofocus
+            outlined
+            @keyup.enter="scope.set"
+          />
+        </q-popup-edit>
+      </div>
+      <div
+        v-if="!isLast || moraIndex < accentPhrase.moras.length - 1"
+        :class="[
+          'splitter-cell',
+          {
+            'splitter-cell-accent': selectedDetail == 'accent',
+            'splitter-cell-be-split':
+              moraIndex == accentPhrase.moras.length - 1,
+            'splitter-cell-be-split-pause': accentPhrase.pauseMora,
+          },
+        ]"
+        :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
+        @click.stop="uiLocked || toggleAccentPhraseSplit(false, moraIndex)"
+      />
+    </template>
+    <template v-if="accentPhrase.pauseMora">
+      <div class="text-cell">
+        <span class="text-cell-inner">
+          {{ accentPhrase.pauseMora.text }}
+        </span>
+      </div>
+      <div
+        class="
+          splitter-cell splitter-cell-be-split splitter-cell-be-split-pause
+        "
+        @click.stop="uiLocked || toggleAccentPhraseSplit(true)"
+      />
+    </template>
+    <!-- 読みテキスト・アクセント句の分割と結合ここまで -->
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -181,11 +192,21 @@ const props =
     audioKey: AudioKey;
     accentPhrase: AccentPhrase;
     index: number;
+    isActive: boolean;
     isLast: boolean;
     selectedDetail: DetailTypes;
     shiftKeyFlag: boolean;
     altKeyFlag: boolean;
   }>();
+
+defineEmits<{
+  (e: "click", index: number): void;
+}>();
+
+const container = ref<HTMLElement>();
+defineExpose({
+  container,
+});
 
 type DetailTypes = "accent" | "pitch" | "length";
 
@@ -217,11 +238,19 @@ const pronunciation = computed(() => {
 
 const handleChangePronounce = (newPronunciation: string) => {
   let popUntilPause = false;
-  newPronunciation = newPronunciation.replace(",", "、");
-  if (newPronunciation.slice(-1) == "、" && !props.isLast) {
-    // 生成エラー回避
-    newPronunciation += "ア";
-    popUntilPause = true;
+  newPronunciation = newPronunciation
+    .replace(/,/g, "、")
+    // 連続する読点をまとめる
+    .replace(/、{2,}/g, "、");
+  if (newPronunciation.endsWith("、")) {
+    if (props.isLast) {
+      // 末尾の読点を削除
+      newPronunciation = newPronunciation.slice(0, -1);
+    } else {
+      // 生成エラー回避
+      newPronunciation += "ア";
+      popUntilPause = true;
+    }
   }
   store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
     audioKey: props.audioKey,
@@ -409,5 +438,25 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   max-width: 20px;
   display: inline-block;
   position: relative;
+}
+
+.mora-table {
+  display: inline-grid;
+  align-self: stretch;
+  grid-template-rows: 1fr 60px 30px;
+
+  &:last-child {
+    padding-right: 20px;
+  }
+}
+
+.mora-table-hover:hover {
+  cursor: pointer;
+  background-color: colors.$active-point-hover;
+}
+
+.mora-table-focus {
+  // hover色に負けるので、importantが必要
+  background-color: colors.$active-point-focus !important;
 }
 </style>

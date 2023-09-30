@@ -1,6 +1,6 @@
 import { test, expect, Locator } from "@playwright/test";
 
-import { navigateToMain } from "../navigators";
+import { navigateToMain, toggleSetting } from "../navigators";
 
 test.beforeEach(async ({ page }) => {
   const BASE_URL = "http://localhost:5173/#/home";
@@ -33,21 +33,8 @@ test("音声パラメータ引き継ぎの設定", async ({ page }) => {
   await page.getByRole("button").filter({ hasText: "add" }).click();
   validateValue(inputTag, "0.50");
 
-  // 設定画面を開き、パラメータ引き継ぎをオフにし、設定画面を閉じる
-  await page.getByText("設定").click();
-  await page.waitForTimeout(100);
-  await page.getByText("オプション").click();
-  await page.waitForTimeout(100);
-  await page
-    .locator(".q-card__actions")
-    .filter({ hasText: "パラメータの引き継ぎ" })
-    .getByRole("switch")
-    .click();
-  await page
-    .locator("#q-portal--dialog--6")
-    .getByRole("button")
-    .filter({ hasText: "close" })
-    .click();
+  await toggleSetting(page, "パラメータの引き継ぎ");
+
   // パラメータを引き継がないことの確認
   await page.locator(".audio-cell input").first().click();
   await page.getByRole("button").filter({ hasText: "add" }).click();

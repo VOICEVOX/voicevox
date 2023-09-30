@@ -71,6 +71,7 @@ test("「オプション」から「書き出しファイル名パターン」�
   await page.getByRole("button", { name: "$連番$" }).click();
   await expect(textbox).toHaveValue("test$連番$");
   await expect(doneButton).toBeEnabled();
+  await page.waitForTimeout(100);
 
   // 確定するとダイアログが閉じて設定した内容が反映されている
   await doneButton.click();
