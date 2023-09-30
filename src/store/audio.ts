@@ -283,18 +283,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  HAVE_AUDIO_QUERY: {
-    getter: (state) => (audioKey: AudioKey) => {
-      return state.audioItems[audioKey]?.query != undefined;
-    },
-  },
-
-  IS_ACTIVE: {
-    getter: (state) => (audioKey: AudioKey) => {
-      return state._activeAudioKey === audioKey;
-    },
-  },
-
   /**
    * audio elementの再生オフセット。
    * 選択+削除 や 挿入+選択+元に戻す などを行った場合でも範囲外にならないようにクランプする。
