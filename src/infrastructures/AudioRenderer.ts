@@ -944,11 +944,14 @@ export class Limiter {
     this.correctionGainNode = new GainNode(audioContext);
     this.outputGainNode = new GainNode(audioContext);
 
-    this.compNode.threshold.value = -5;
-    this.compNode.ratio.value = 20;
-    this.compNode.knee.value = 8;
-    this.compNode.attack.value = 0;
-    this.compNode.release.value = options.release;
+    // TODO: 伴奏を再生する機能を実装したら、パラメーターを再調整する
+    this.compNode.threshold.value = -5; // 0dBを超えそうになったら（-5dBを超えたら）圧縮する
+    this.compNode.ratio.value = 20; // クリッピングが起こらないように、高いレシオ（1/20）で圧縮する
+    this.compNode.knee.value = 8; // 自然にかかってほしいという気持ちで8に設定（リミッターなので0でも良いかも）
+    this.compNode.attack.value = 0; // クリッピングが起こらないように、すぐに圧縮を開始する
+    this.compNode.release.value = options.release; // 歪まないように少し遅めに設定
+
+    // メイクアップゲインで上がった分を下げる（圧縮していないときは元の音量で出力）
     this.correctionGainNode.gain.value = 0.85;
 
     this.setGainInDecibels(options.inputGain, this.inputGainNode);
@@ -979,7 +982,7 @@ export class Limiter {
 
   private setGainInDecibels(value: number, gainNode: GainNode) {
     if (!Number.isFinite(value)) {
-      throw new Error("The value is an infinite number.");
+      throw new Error("Not a finite number.");
     }
     gainNode.gain.value = this.decibelToLinear(value);
   }

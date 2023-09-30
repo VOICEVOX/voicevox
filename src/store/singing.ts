@@ -1766,7 +1766,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         const sampleRate = 48000; // TODO: 設定できるようにする
-        const useLimiter = false; // TODO: 設定できるようにする
+        const withLimiter = false; // TODO: 設定できるようにする
 
         const offlineAudioContext = new OfflineAudioContext(
           2,
@@ -1775,7 +1775,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
         const offlineTransport = new OfflineTransport();
         const channelStrip = new ChannelStrip(offlineAudioContext);
-        const limiter = useLimiter
+        const limiter = withLimiter
           ? new Limiter(offlineAudioContext)
           : undefined;
         const clipper = new Clipper(offlineAudioContext);
