@@ -822,6 +822,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  UPDATE_PERIODIC_PITCH: {
+    async action({ dispatch }, { audioQuery, engineId, styleId }) {
+      try {
+        const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        });
+        return await instance.invoke("periodicPitchPeriodicPitchPost")({
+          audioQuery,
+          speaker: styleId,
+        });
+      } catch (error) {
+        window.electron.logError(error, `Failed to update periodic pitch.`);
+        throw error;
+      }
+    },
+  },
+
   SET_START_RENDERING_REQUESTED: {
     mutation(state, { startRenderingRequested }) {
       state.startRenderingRequested = startRenderingRequested;
@@ -845,9 +862,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, commit, dispatch }) {
-      const preProcessing = (score: Score) => {
-        const resolution = score.resolution;
-        const tempos = score.tempos;
+      const preProcess = (score: Score) => {
         const notes = score.notes;
 
         // 重複するノートを除く
@@ -858,26 +873,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (note.position < lastNote.position + lastNote.duration) {
             notes.splice(i, 1);
             i--;
-          }
-        }
-
-        // 長いノートを短くする
-        const maxNoteTime = 0.26;
-        for (let i = 0; i < notes.length; i++) {
-          const note = notes[i];
-          const noteOnPos = note.position;
-          const noteOffPos = note.position + note.duration;
-          const noteOnTime = ticksToSeconds(resolution, tempos, noteOnPos);
-          const noteOffTime = ticksToSeconds(resolution, tempos, noteOffPos);
-
-          if (noteOffTime - noteOnTime > maxNoteTime) {
-            let noteOffPos = secondsToTicks(
-              resolution,
-              tempos,
-              noteOnTime + maxNoteTime
-            );
-            noteOffPos = Math.max(note.position + 1, Math.floor(noteOffPos));
-            note.duration = noteOffPos - note.position;
           }
         }
       };
@@ -928,7 +923,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           .map((value) => value.replace("へ", "ヘ")) // TODO: 助詞の扱いはあとで考える
           .join("");
 
-        const query = await dispatch("FETCH_AUDIO_QUERY", {
+        let query = await dispatch("FETCH_AUDIO_QUERY", {
           text,
           engineId: singer.engineId,
           styleId: singer.styleId,
@@ -999,6 +994,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
+        // ピッチを更新
+        query = await dispatch("UPDATE_PERIODIC_PITCH", {
+          audioQuery: query,
+          engineId: singer.engineId,
+          styleId: singer.styleId,
+        });
+
         return query;
       };
 
@@ -1057,7 +1059,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const score = copyScore(state.score);
         const singer = getSinger();
 
-        preProcessing(score);
+        preProcess(score);
 
         // Score -> Phrases
 

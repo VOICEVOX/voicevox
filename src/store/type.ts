@@ -918,6 +918,14 @@ export type SingingStoreTypes = {
     action(payload: { volume: number }): void;
   };
 
+  UPDATE_PERIODIC_PITCH: {
+    action(payload: {
+      audioQuery: AudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<AudioQuery>;
+  };
+
   SET_START_RENDERING_REQUESTED: {
     mutation: { startRenderingRequested: boolean };
   };
