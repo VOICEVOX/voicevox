@@ -917,10 +917,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("Engine not ready.");
         }
 
+        // TODO: 助詞や拗音の扱いはあとで考える
         const text = score.notes
           .map((value) => value.lyric)
-          .map((value) => value.replace("は", "ハ")) // TODO: 助詞の扱いはあとで考える
-          .map((value) => value.replace("へ", "ヘ")) // TODO: 助詞の扱いはあとで考える
+          .map((value) => value.replace("じょ", "ジョ"))
+          .map((value) => value.replace("うぉ", "ウォ"))
+          .map((value) => value.replace("は", "ハ"))
+          .map((value) => value.replace("へ", "ヘ"))
           .join("");
 
         let query = await dispatch("FETCH_AUDIO_QUERY", {
