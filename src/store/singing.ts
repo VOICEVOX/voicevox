@@ -990,6 +990,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const freq = midiToFrequency(note.midi);
             mora.pitch = Math.log(freq);
 
+            // 無声化を解除
+            if (mora.vowel === "I") {
+              mora.vowel = "i";
+            }
+            if (mora.vowel === "U") {
+              mora.vowel = "u";
+            }
+
             noteIndex++;
           }
         }
