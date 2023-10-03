@@ -226,7 +226,7 @@ jobs:
           # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないのでワークアラウンド
           CACHE_SIGNTOOL_PATH="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64/signtool.exe"
           mv "$CACHE_SIGNTOOL_PATH"{,.bak}
-          cp "$(head -n 1 $SIGNTOOL_PATH_PATH)" "$CACHE_SIGNTOOL_PATH"
+          ln "$(head -n 1 $SIGNTOOL_PATH_PATH)" "$CACHE_SIGNTOOL_PATH"
         env:
           ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
           ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
@@ -683,7 +683,7 @@ jobs:
           # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないのでワークアラウンド
           CACHE_SIGNTOOL_PATH="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64/signtool.exe"
           mv "$CACHE_SIGNTOOL_PATH"{,.bak}
-          cp "$(head -n 1 $SIGNTOOL_PATH_PATH)" "$CACHE_SIGNTOOL_PATH"
+          ln "$(head -n 1 $SIGNTOOL_PATH_PATH)" "$CACHE_SIGNTOOL_PATH"
         env:
           ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
           ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
