@@ -934,12 +934,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const moras = query.accentPhrases.map((value) => value.moras).flat();
 
-        if (moras.length !== score.notes.length) {
-          throw new Error(
-            "The number of moras and the number of notes do not match."
-          );
-        }
-
         // 音素を表示
         const phonemes = moras
           .map((value) => {
@@ -952,6 +946,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           .flat()
           .join(" ");
         window.electron.logInfo(`  phonemes: ${phonemes}`);
+
+        if (moras.length !== score.notes.length) {
+          throw new Error(
+            "The number of moras and the number of notes do not match."
+          );
+        }
 
         // クエリを編集
         let noteIndex = 0;
