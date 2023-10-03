@@ -213,18 +213,18 @@ jobs:
         run: |
           df -h
 
-      # build electronでコード署名するには環境変数を指定が必要だけど、
-      # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
-          # 複数行の文字列を環境変数に代入
-          echo 'CSC_LINK<<EOF' >> $GITHUB_ENV
-          echo "${{ secrets.CERT_BASE64 }}" >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
-
-          echo 'CSC_KEY_PASSWORD=${{ secrets.CERT_PASSWORD }}' >> $GITHUB_ENV
+          bash build/codesign_setup.bash
+          echo "WIN_CERTIFICATE_SHA1=$(head -n 1 $THUMBPRINT_PATH)" >> $GITHUB_ENV
+          echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
+        env:
+          ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
+          ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
+          ESIGNERCKA_TOTP_SECRET: ${{ secrets.ESIGNERCKA_TOTP_SECRET }}
+          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
@@ -243,8 +243,11 @@ jobs:
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
-          echo 'CSC_LINK=' >> $GITHUB_ENV
-          echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
+          bash build/codesign_cleanup.bash
+          echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
+          echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
+        env:
+          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
       - name: Upload NoEngine Prepackage
         uses: actions/upload-artifact@v3
@@ -654,18 +657,18 @@ jobs:
         run: |
           df -h
 
-      # build electronでコード署名するには環境変数を指定が必要だけど、
-      # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
       - name: Define Code Signing Envs
         if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
-          # 複数行の文字列を環境変数に代入
-          echo 'CSC_LINK<<EOF' >> $GITHUB_ENV
-          echo "${{ secrets.CERT_BASE64 }}" >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
-
-          echo 'CSC_KEY_PASSWORD=${{ secrets.CERT_PASSWORD }}' >> $GITHUB_ENV
+          bash build/codesign_setup.bash
+          echo "WIN_CERTIFICATE_SHA1=$(head -n 1 $THUMBPRINT_PATH)" >> $GITHUB_ENV
+          echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
+        env:
+          ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
+          ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
+          ESIGNERCKA_TOTP_SECRET: ${{ secrets.ESIGNERCKA_TOTP_SECRET }}
+          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
@@ -688,8 +691,11 @@ jobs:
         if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
-          echo 'CSC_LINK=' >> $GITHUB_ENV
-          echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
+          bash build/codesign_cleanup.bash
+          echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
+          echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
+        env:
+          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
       - name: Show disk space (debug info)
         shell: bash
