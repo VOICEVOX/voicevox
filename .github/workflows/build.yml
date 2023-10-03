@@ -217,6 +217,7 @@ jobs:
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
+          set -eux
           bash build/codesign_setup.bash
           echo "WIN_CERTIFICATE_SHA1=$(head -n 1 $THUMBPRINT_PATH)" >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
@@ -673,6 +674,7 @@ jobs:
         if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
+          set -eux
           bash build/codesign_setup.bash
           echo "WIN_CERTIFICATE_SHA1=$(head -n 1 $THUMBPRINT_PATH)" >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
