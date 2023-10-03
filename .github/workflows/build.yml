@@ -239,6 +239,7 @@ jobs:
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
+          SIGNTOOL_PATH: "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x86/signtool.exe"
         run: npm run electron:build_pnever -- --dir
 
       - name: Reset Code Signing Envs
