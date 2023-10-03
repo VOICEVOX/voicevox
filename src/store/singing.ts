@@ -33,7 +33,7 @@ import {
   midiToFrequency,
   round,
 } from "@/helpers/singHelper";
-import { AudioQuery } from "@/openapi";
+import { AudioQuery, Mora } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 
 const ticksToSecondsForConstantBpm = (
@@ -974,20 +974,36 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
 
             // 長さを編集
-            let vowelLength = noteOffTime - noteOnTime;
+            let nextMora: Mora | undefined;
             if (j !== moras.length - 1) {
-              const nextMora = moras[j + 1];
-              if (nextMora.consonantLength !== undefined) {
-                vowelLength -= nextMora.consonantLength;
-              }
+              nextMora = moras[j + 1];
             } else if (i !== query.accentPhrases.length - 1) {
               const nextAccentPhrase = query.accentPhrases[i + 1];
-              const nextMora = nextAccentPhrase.moras[0];
-              if (nextMora.consonantLength !== undefined) {
-                vowelLength -= nextMora.consonantLength;
-              }
+              nextMora = nextAccentPhrase.moras[0];
             }
-            mora.vowelLength = Math.max(0.001, vowelLength);
+            const minVowelLength = 0.01;
+            const minConsonantLength = 0.02;
+            const noteLength = noteOffTime - noteOnTime;
+            if (nextMora && nextMora.consonantLength !== undefined) {
+              // 母音の後ろに子音がある場合
+              mora.vowelLength = noteLength - nextMora.consonantLength;
+              if (mora.vowelLength < minVowelLength) {
+                // 母音をこれ以上短くできない場合は、子音を短くする
+                mora.vowelLength = minVowelLength;
+                nextMora.consonantLength = noteLength - mora.vowelLength;
+                if (nextMora.consonantLength < minConsonantLength) {
+                  // 子音も短くできない場合は、比で母音と子音の長さを決定する
+                  const minMoraLength = minVowelLength + minConsonantLength;
+                  const vowelRatio = minVowelLength / minMoraLength;
+                  const consonantRatio = minConsonantLength / minMoraLength;
+                  mora.vowelLength = noteLength * vowelRatio;
+                  nextMora.consonantLength = noteLength * consonantRatio;
+                }
+              }
+            } else {
+              // 母音の後ろに子音がない場合
+              mora.vowelLength = noteLength;
+            }
 
             // 音高を編集
             const freq = midiToFrequency(note.midi);
