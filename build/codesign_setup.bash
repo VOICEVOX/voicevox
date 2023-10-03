@@ -54,5 +54,5 @@ THUMBPRINT=$(
 echo "$THUMBPRINT" >"$THUMBPRINT_PATH"
 
 # 対応しているsigntoolのパスを出力
-SIGNTOOL_PATH=$(find "C:/Program Files (x86)/Windows Kits/10/bin/" -name "signtool.exe" | grep "x86/signtool.exe" | sort -V | tail -n 1) # なぜか32bit版じゃないと動かない
+SIGNTOOL_PATH=$(ls "C:/Program Files (x86)/Windows Kits/"10/bin/*/x86/signtool.exe | sort -V | tail -n 1) # なぜかこれじゃないと動かない
 echo "$SIGNTOOL_PATH" >"$SIGNTOOL_PATH_PATH"
