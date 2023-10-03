@@ -226,7 +226,7 @@ jobs:
           # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないのでワークアラウンドでディレクトリを差し替える
           CACHE_SIGNTOOL_DIR="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64"
           mv "$CACHE_SIGNTOOL_DIR"{,.bak}
-          SIGNTOOL_DIR=$(dirname $(head -n 1 $SIGNTOOL_PATH_PATH))
+          SIGNTOOL_DIR=$(dirname "$(head -n 1 $SIGNTOOL_PATH_PATH)")
           ln -s "$SIGNTOOL_DIR" "$CACHE_SIGNTOOL_DIR"
         env:
           ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
@@ -685,7 +685,7 @@ jobs:
           # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないのでワークアラウンドでディレクトリを差し替える
           CACHE_SIGNTOOL_DIR="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64"
           mv "$CACHE_SIGNTOOL_DIR"{,.bak}
-          SIGNTOOL_DIR=$(dirname $(head -n 1 $SIGNTOOL_PATH_PATH))
+          SIGNTOOL_DIR=$(dirname "$(head -n 1 $SIGNTOOL_PATH_PATH)")
           ln -s "$SIGNTOOL_DIR" "$CACHE_SIGNTOOL_DIR"
         env:
           ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
