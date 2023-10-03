@@ -220,11 +220,13 @@ jobs:
           bash build/codesign_setup.bash
           echo "WIN_CERTIFICATE_SHA1=$(head -n 1 $THUMBPRINT_PATH)" >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
+          echo "SIGNTOOL_PATH=$(head -n 1 $SIGNTOOL_PATH_PATH)" >> $GITHUB_ENV
         env:
           ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
           ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
           ESIGNERCKA_TOTP_SECRET: ${{ secrets.ESIGNERCKA_TOTP_SECRET }}
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
+          SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
 
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
@@ -246,6 +248,7 @@ jobs:
           bash build/codesign_cleanup.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
+          echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
         env:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
@@ -664,11 +667,13 @@ jobs:
           bash build/codesign_setup.bash
           echo "WIN_CERTIFICATE_SHA1=$(head -n 1 $THUMBPRINT_PATH)" >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
+          echo "SIGNTOOL_PATH=$(head -n 1 $SIGNTOOL_PATH_PATH)" >> $GITHUB_ENV
         env:
           ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
           ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
           ESIGNERCKA_TOTP_SECRET: ${{ secrets.ESIGNERCKA_TOTP_SECRET }}
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
+          SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
 
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
@@ -694,6 +699,7 @@ jobs:
           bash build/codesign_cleanup.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
+          echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
         env:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 

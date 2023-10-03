@@ -2,12 +2,12 @@
 
 set -eu
 
-if [ ! -v THUMBPRINT_PATH ]; then
+if [ ! -v THUMBPRINT_PATH ]; then # THUMBPRINTの出力先
     echo "THUMBPRINT_PATHが未定義です"
     exit 1
 fi
 
-if [ ! -v ESIGNERCKA_INSTALL_DIR ]; then
+if [ ! -v ESIGNERCKA_INSTALL_DIR ]; then # eSignerCKAのインストール先
     ESIGNERCKA_INSTALL_DIR='..\eSignerCKA'
 fi
 

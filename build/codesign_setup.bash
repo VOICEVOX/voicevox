@@ -2,20 +2,24 @@
 
 set -eu
 
-if [ ! -v ESIGNERCKA_USERNAME ]; then
+if [ ! -v ESIGNERCKA_USERNAME ]; then # eSignerCKAのユーザー名
     echo "ESIGNERCKA_USERNAMEが未定義です"
     exit 1
 fi
-if [ ! -v ESIGNERCKA_PASSWORD ]; then
+if [ ! -v ESIGNERCKA_PASSWORD ]; then # eSignerCKAのパスワード
     echo "ESIGNERCKA_PASSWORDが未定義です"
     exit 1
 fi
-if [ ! -v ESIGNERCKA_TOTP_SECRET ]; then
+if [ ! -v ESIGNERCKA_TOTP_SECRET ]; then # eSignerCKAのTOTP Secret
     echo "ESIGNERCKA_TOTP_SECRETが未定義です"
     exit 1
 fi
-if [ ! -v THUMBPRINT_PATH ]; then
+if [ ! -v THUMBPRINT_PATH ]; then # THUMBPRINTの出力先
     echo "THUMBPRINT_PATHが未定義です"
+    exit 1
+fi
+if [ ! -v SIGNTOOL_PATH_PATH ]; then # 対応しているsigntoolのパスの出力先
+    echo "SIGNTOOL_PATH_PATHが未定義です"
     exit 1
 fi
 
@@ -48,3 +52,7 @@ THUMBPRINT=$(
 
 # THUMBPRINTを出力
 echo "$THUMBPRINT" >"$THUMBPRINT_PATH"
+
+# 対応しているsigntoolのパスを出力
+SIGNTOOL_PATH=$(find "C:/Program Files (x86)/Windows Kits/10/bin/" -name "signtool.exe" | grep "x86/signtool.exe" | sort -V | tail -n 1) # なぜか32bit版じゃないと動かない
+echo "$SIGNTOOL_PATH" >"$SIGNTOOL_PATH_PATH"
