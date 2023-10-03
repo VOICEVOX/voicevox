@@ -220,6 +220,7 @@ jobs:
           bash build/codesign_setup.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
+          echo "::add-mask::$THUMBPRINT"
 
           echo "WIN_CERTIFICATE_SHA1=$THUMBPRINT" >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
@@ -681,6 +682,7 @@ jobs:
           bash build/codesign_setup.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
+          echo "::add-mask::$THUMBPRINT"
 
           echo "WIN_CERTIFICATE_SHA1=$THUMBPRINT" >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
