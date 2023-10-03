@@ -1,5 +1,8 @@
 # !!! コードサイニング証明書を取り扱うので取り扱い注意 !!!
 
+# eSignerCKAを使ってコードサイニング証明書を読み込む
+# electronから利用するためにTHUMBPRINTとsigntoolのパスを出力する
+
 set -eu
 
 if [ ! -v ESIGNERCKA_USERNAME ]; then # eSignerCKAのユーザー名

@@ -1,5 +1,7 @@
 # !!! コードサイニング証明書を取り扱うので取り扱い注意 !!!
 
+# eSignerCKAで読み込んだコードサイニング証明書を破棄する
+
 set -eu
 
 if [ ! -v THUMBPRINT_PATH ]; then # THUMBPRINTの出力先
@@ -11,7 +13,7 @@ if [ ! -v ESIGNERCKA_INSTALL_DIR ]; then # eSignerCKAのインストール先
     ESIGNERCKA_INSTALL_DIR='..\eSignerCKA'
 fi
 
-# 証明書を削除
+# 証明書を破棄
 powershell "& '$ESIGNERCKA_INSTALL_DIR\eSignerCKATool.exe' unload"
 
 # THUMBPRINTを削除

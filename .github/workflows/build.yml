@@ -226,7 +226,7 @@ jobs:
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
           echo "SIGNTOOL_PATH=$SIGNTOOL_PATH" >> $GITHUB_ENV
 
-          # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないのでワークアラウンドでディレクトリを差し替える
+          # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないので、ワークアラウンドとしてディレクトリを差し替える
           CACHE_SIGNTOOL_DIR="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64"
           mv "$CACHE_SIGNTOOL_DIR"{,.bak}
           SIGNTOOL_DIR=$(dirname "$SIGNTOOL_PATH")
@@ -688,7 +688,7 @@ jobs:
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
           echo "SIGNTOOL_PATH=$SIGNTOOL_PATH" >> $GITHUB_ENV
 
-          # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないのでワークアラウンドでディレクトリを差し替える
+          # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないので、ワークアラウンドとしてディレクトリを差し替える
           CACHE_SIGNTOOL_DIR="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64"
           mv "$CACHE_SIGNTOOL_DIR"{,.bak}
           SIGNTOOL_DIR=$(dirname "$SIGNTOOL_PATH")
