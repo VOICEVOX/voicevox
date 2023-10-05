@@ -63,6 +63,7 @@
 import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { AccentPhrase } from "@/openapi";
+import { SLIDER_PARAMETER } from "@/store/utility";
 
 const props = withDefaults(
   defineProps<{
@@ -89,8 +90,8 @@ const previewAccentSlider = previewSliderHelper({
   disable: () => props.uiLocked,
   disableScroll: () => props.shiftKeyFlag,
   max: () => props.accentPhrase.moras.length,
-  min: () => 1,
-  step: () => 1,
+  min: SLIDER_PARAMETER.ACCENT_SLIDER.min,
+  step: SLIDER_PARAMETER.ACCENT_SLIDER.step,
 });
 
 const accentLine = computed(() => {
