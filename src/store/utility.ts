@@ -106,7 +106,7 @@ export const SLIDER_PARAMETER = {
     scrollMinStep: () => 0.01,
   },
   /**
-   *  モーフィングレートパラメータの定義
+   *  アクセントスライダーの定義
    */
   ACCENT_SLIDER: {
     min: () => 1,
