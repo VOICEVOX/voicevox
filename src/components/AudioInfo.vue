@@ -1,5 +1,5 @@
 <template>
-  <div v-if="query" class="root full-height q-py-md">
+  <div v-if="query" class="root full-height q-py-md audio-info">
     <div v-if="enablePreset" class="q-px-md">
       <div class="row items-center no-wrap q-mb-xs">
         <div class="text-body1">プリセット</div>
