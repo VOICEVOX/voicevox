@@ -58,6 +58,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
     return {
       ...engineInfo,
       type: "default",
+      executionFilePath: path.resolve(engineInfo.executionFilePath),
       path:
         engineInfo.path === undefined
           ? undefined
