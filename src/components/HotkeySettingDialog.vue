@@ -7,7 +7,7 @@
     class="hotkey-setting-dialog transparent-backdrop"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm header-spacer">
+      <q-header class="q-py-sm">
         <q-toolbar>
           <q-toolbar-title class="text-display"
             >設定 / キー割り当て</q-toolbar-title
