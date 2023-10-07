@@ -33,7 +33,7 @@ import {
   midiToFrequency,
   round,
 } from "@/helpers/singHelper";
-import { AudioQuery } from "@/openapi";
+import { AudioQuery, Mora } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 
 const ticksToSecondsForConstantBpm = (
@@ -822,6 +822,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  UPDATE_PERIODIC_PITCH: {
+    async action({ dispatch }, { audioQuery, engineId, styleId }) {
+      try {
+        const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        });
+        return await instance.invoke("periodicPitchPeriodicPitchPost")({
+          audioQuery,
+          speaker: styleId,
+        });
+      } catch (error) {
+        window.electron.logError(error, `Failed to update periodic pitch.`);
+        throw error;
+      }
+    },
+  },
+
   SET_START_RENDERING_REQUESTED: {
     mutation(state, { startRenderingRequested }) {
       state.startRenderingRequested = startRenderingRequested;
@@ -845,9 +862,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, commit, dispatch }) {
-      const preProcessing = (score: Score) => {
-        const resolution = score.resolution;
-        const tempos = score.tempos;
+      const preProcess = (score: Score) => {
         const notes = score.notes;
 
         // 重複するノートを除く
@@ -858,26 +873,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (note.position < lastNote.position + lastNote.duration) {
             notes.splice(i, 1);
             i--;
-          }
-        }
-
-        // 長いノートを短くする
-        const maxNoteTime = 0.26;
-        for (let i = 0; i < notes.length; i++) {
-          const note = notes[i];
-          const noteOnPos = note.position;
-          const noteOffPos = note.position + note.duration;
-          const noteOnTime = ticksToSeconds(resolution, tempos, noteOnPos);
-          const noteOffTime = ticksToSeconds(resolution, tempos, noteOffPos);
-
-          if (noteOffTime - noteOnTime > maxNoteTime) {
-            let noteOffPos = secondsToTicks(
-              resolution,
-              tempos,
-              noteOnTime + maxNoteTime
-            );
-            noteOffPos = Math.max(note.position + 1, Math.floor(noteOffPos));
-            note.duration = noteOffPos - note.position;
           }
         }
       };
@@ -922,25 +917,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("Engine not ready.");
         }
 
+        // TODO: 助詞や拗音の扱いはあとで考える
         const text = score.notes
           .map((value) => value.lyric)
-          .map((value) => value.replace("は", "ハ")) // TODO: 助詞の扱いはあとで考える
-          .map((value) => value.replace("へ", "ヘ")) // TODO: 助詞の扱いはあとで考える
+          .map((value) => value.replace("じょ", "ジョ"))
+          .map((value) => value.replace("うぉ", "ウォ"))
+          .map((value) => value.replace("は", "ハ"))
+          .map((value) => value.replace("へ", "ヘ"))
           .join("");
 
-        const query = await dispatch("FETCH_AUDIO_QUERY", {
+        let query = await dispatch("FETCH_AUDIO_QUERY", {
           text,
           engineId: singer.engineId,
           styleId: singer.styleId,
         });
 
         const moras = query.accentPhrases.map((value) => value.moras).flat();
-
-        if (moras.length !== score.notes.length) {
-          throw new Error(
-            "The number of moras and the number of notes do not match."
-          );
-        }
 
         // 音素を表示
         const phonemes = moras
@@ -954,6 +946,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           .flat()
           .join(" ");
         window.electron.logInfo(`  phonemes: ${phonemes}`);
+
+        if (moras.length !== score.notes.length) {
+          throw new Error(
+            "The number of moras and the number of notes do not match."
+          );
+        }
 
         // クエリを編集
         let noteIndex = 0;
@@ -976,28 +974,59 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
 
             // 長さを編集
-            let vowelLength = noteOffTime - noteOnTime;
+            let nextMora: Mora | undefined;
             if (j !== moras.length - 1) {
-              const nextMora = moras[j + 1];
-              if (nextMora.consonantLength !== undefined) {
-                vowelLength -= nextMora.consonantLength;
-              }
+              nextMora = moras[j + 1];
             } else if (i !== query.accentPhrases.length - 1) {
               const nextAccentPhrase = query.accentPhrases[i + 1];
-              const nextMora = nextAccentPhrase.moras[0];
-              if (nextMora.consonantLength !== undefined) {
-                vowelLength -= nextMora.consonantLength;
-              }
+              nextMora = nextAccentPhrase.moras[0];
             }
-            mora.vowelLength = Math.max(0.001, vowelLength);
+            const minVowelLength = 0.01;
+            const minConsonantLength = 0.02;
+            const noteLength = noteOffTime - noteOnTime;
+            if (nextMora && nextMora.consonantLength !== undefined) {
+              // 母音の後ろに子音がある場合
+              mora.vowelLength = noteLength - nextMora.consonantLength;
+              if (mora.vowelLength < minVowelLength) {
+                // 母音をこれ以上短くできない場合は、子音を短くする
+                mora.vowelLength = minVowelLength;
+                nextMora.consonantLength = noteLength - mora.vowelLength;
+                if (nextMora.consonantLength < minConsonantLength) {
+                  // 子音も短くできない場合は、比で母音と子音の長さを決定する
+                  const minMoraLength = minVowelLength + minConsonantLength;
+                  const vowelRatio = minVowelLength / minMoraLength;
+                  const consonantRatio = minConsonantLength / minMoraLength;
+                  mora.vowelLength = noteLength * vowelRatio;
+                  nextMora.consonantLength = noteLength * consonantRatio;
+                }
+              }
+            } else {
+              // 母音の後ろに子音がない場合
+              mora.vowelLength = noteLength;
+            }
 
             // 音高を編集
             const freq = midiToFrequency(note.midi);
             mora.pitch = Math.log(freq);
 
+            // 無声化を解除
+            if (mora.vowel === "I") {
+              mora.vowel = "i";
+            }
+            if (mora.vowel === "U") {
+              mora.vowel = "u";
+            }
+
             noteIndex++;
           }
         }
+
+        // ピッチを更新
+        query = await dispatch("UPDATE_PERIODIC_PITCH", {
+          audioQuery: query,
+          engineId: singer.engineId,
+          styleId: singer.styleId,
+        });
 
         return query;
       };
@@ -1057,7 +1086,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const score = copyScore(state.score);
         const singer = getSinger();
 
-        preProcessing(score);
+        preProcess(score);
 
         // Score -> Phrases
 

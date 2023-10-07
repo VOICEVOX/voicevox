@@ -11,6 +11,7 @@ export * from './LicenseInfo';
 export * from './Mora';
 export * from './MorphableTargetInfo';
 export * from './ParseKanaBadRequest';
+export * from './PeriodicData';
 export * from './Preset';
 export * from './Speaker';
 export * from './SpeakerInfo';
