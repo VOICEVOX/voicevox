@@ -14,37 +14,40 @@
       <!-- グリッド -->
       <!-- NOTE: 現状小節+オクターブごとの罫線なし -->
       <svg
-        :height="`${sizeY * zoomY * 128}`"
-        :width="`${gridX.length * sizeX * zoomX}`"
+        :width="`${gridColumnWidth * gridColumnNum}`"
+        :height="`${gridRowHeight * keyInfos.length}`"
         xmlns="http://www.w3.org/2000/svg"
-        class="sequencer-grids"
+        class="sequencer-grid"
       >
         <!-- パターングリッド -->
         <defs>
           <pattern
-            id="sequencer-grid-16"
-            :width="`${sizeX * zoomX}px`"
-            :height="`${12 * sizeY * zoomY}px`"
+            id="sequencer-grid-column"
+            :width="`${gridColumnWidth}px`"
+            :height="`${gridRowHeight * 12}px`"
             patternUnits="userSpaceOnUse"
           >
             <rect
-              v-for="(y, index) in gridY"
+              v-for="(keyInfo, index) in keyInfos"
               :key="index"
               x="0"
-              :y="`${sizeY * zoomY * index}`"
-              :width="`${sizeX * zoomX}`"
-              :height="`${sizeY * zoomY}`"
-              :class="`sequencer-grids-col sequencer-grids-col-${y.color}`"
+              :y="`${gridRowHeight * index}`"
+              :width="`${gridColumnWidth}`"
+              :height="`${gridRowHeight}`"
+              :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
             />
           </pattern>
-          <!-- NOTE: 4/4 1小節でグリッド見た目確認目的 -->
           <pattern
             id="sequencer-grid-measure"
-            :width="`${sizeX * 16 * zoomX}`"
-            :height="`${12 * sizeY * zoomY}`"
+            :width="`${gridColumnWidth * gridColumnNumPerMeasure}`"
+            :height="`${gridRowHeight * 12}`"
             patternUnits="userSpaceOnUse"
           >
-            <rect width="100%" height="100%" fill="url(#sequencer-grid-16)" />
+            <rect
+              width="100%"
+              height="100%"
+              fill="url(#sequencer-grid-column)"
+            />
             <line
               x="100%"
               x2="0"
@@ -117,14 +120,20 @@
 import { defineComponent, computed, ref, onMounted } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
+import { TimeSignature } from "@/store/type";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import {
-  midiKeys,
-  getPitchFromMidi,
-  getDoremiFromMidi,
-  BASE_GRID_SIZE_X as sizeX,
-  BASE_GRID_SIZE_Y as sizeY,
+  getMeasureDuration,
+  getMeasureNum,
+  getNoteDuration,
+  getKeyBaseHeight,
+  tickToBaseX,
+  baseXToTick,
+  noteNumberToBaseY,
+  baseYToNoteNumber,
+  keyInfos,
+  getDoremiFromNoteNumber,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
@@ -152,63 +161,86 @@ export default defineComponent({
     const dragMoveCurrentX = ref();
     const dragMoveCurrentY = ref();
     const dragDurationCurrentX = ref();
-    // シーケンサグリッド
-    const gridY = midiKeys;
-    const gridX = computed(() => {
-      const resolution = state.score?.resolution || 480;
-      // NOTE: 最低長: 仮32小節...MIDI長さ(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
-      const minDuration = resolution * 4 * 32;
-      const lastNote = state.score?.notes.slice(-1)[0];
-      // Score長さ: スコア長もしくは最低長のうち長い方
-      const totalDuration = lastNote
-        ? Math.max(lastNote.position + lastNote.duration, minDuration)
-        : minDuration;
-      // グリッド幅1/16
-      const gridDuration = resolution / 4;
-      // NOTE: いったん最後尾に足した場合は伸びるようにする
-      const gridsMax = Math.ceil(totalDuration / gridDuration) + 16;
-      return [...Array(gridsMax).keys()].map(
-        (gridNum) => gridNum * gridDuration
-      );
-    });
+    // 分解能（Ticks Per Quarter Note）
+    const tpqn = computed(() => state.score?.resolution ?? 480);
     // ノート
-    const notes = computed(() => state.score?.notes);
-    // 表紙
-    const timeSignatures = computed(() => state.score?.timeSignatures);
+    const notes = computed(() => state.score?.notes ?? []);
+    // 拍子
+    const defaultTimeSignature: TimeSignature = {
+      position: 0,
+      beats: 4,
+      beatType: 4,
+    };
+    const timeSignature = computed(() => {
+      return state.score?.timeSignatures?.[0] ?? defaultTimeSignature;
+    });
     // ズーム状態
     const zoomX = computed(() => state.sequencerZoomX);
     const zoomY = computed(() => state.sequencerZoomY);
-    // スナップサイズ
-    const snapSize = computed(() => state.sequencerSnapSize);
-    const snapWidth = computed(() => (snapSize.value / 4) * zoomX.value);
-    // グリッドサイズ
-    const gridWidth = computed(() => sizeX * zoomX.value);
-    const gridHeight = computed(() => sizeY * zoomY.value);
+    // スナップ
+    const snapTicks = computed(() => {
+      return getNoteDuration(state.sequencerSnapType, tpqn.value);
+    });
+    const snapBaseWidth = computed(() => {
+      return tickToBaseX(snapTicks.value, tpqn.value);
+    });
+    const snapWidth = computed(() => {
+      return snapBaseWidth.value * zoomX.value;
+    });
+    // シーケンサグリッド
+    const gridColumnTicks = snapTicks;
+    const gridColumnBaseWidth = snapBaseWidth;
+    const gridColumnWidth = computed(() => {
+      return gridColumnBaseWidth.value * zoomX.value;
+    });
+    const gridRowBaseHeight = getKeyBaseHeight();
+    const gridRowHeight = computed(() => {
+      return gridRowBaseHeight * zoomY.value;
+    });
+    const measureDuration = computed(() => {
+      return getMeasureDuration(timeSignature.value, tpqn.value);
+    });
+    const gridColumnNumPerMeasure = computed(() => {
+      // TODO: スナップが3連符のときにおかしくなるので修正する
+      return Math.round(measureDuration.value / gridColumnTicks.value);
+    });
+    const gridColumnNum = computed(() => {
+      // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
+      const minMeasureNum = 32;
+      const measureNum = Math.max(
+        minMeasureNum,
+        getMeasureNum(notes.value, measureDuration.value)
+      );
+      // NOTE: いったん最後尾に足した場合は伸びるようにする
+      return gridColumnNumPerMeasure.value * (measureNum + 1);
+    });
     // スクロール位置
     // const scrollX = computed(() => state.sequencerScrollX);
-    const scrollY = computed(() => state.sequencerScrollY);
+    // const scrollY = computed(() => state.sequencerScrollY);
     const selectedNoteIds = computed(() => state.selectedNoteIds);
 
     // ノートの追加
     const addNote = (event: MouseEvent) => {
-      const resolution = state.score?.resolution;
-      const gridXSize = resolution ? resolution / 4 : snapSize.value;
-      const position =
-        gridXSize * Math.floor(event.offsetX / (sizeX * zoomX.value));
-      const midi = 127 - Math.floor(event.offsetY / (sizeY * zoomY.value));
-      if (0 > midi) {
+      const eventOffsetBaseX = event.offsetX / zoomX.value;
+      const eventOffsetBaseY = event.offsetY / zoomY.value;
+      const positionBaseX =
+        gridColumnBaseWidth.value *
+        Math.floor(eventOffsetBaseX / gridColumnBaseWidth.value);
+      const position = baseXToTick(positionBaseX, tpqn.value);
+      const noteNumber = baseYToNoteNumber(eventOffsetBaseY);
+      if (noteNumber < 0) {
         return;
       }
       // NOTE: ノートの追加は1/8をベース
-      const duration = gridXSize * 2;
-      const lyric = getDoremiFromMidi(midi);
+      const duration = getNoteDuration(8, tpqn.value);
+      const lyric = getDoremiFromNoteNumber(noteNumber);
       // NOTE: 仮ID
       const id = uuidv4();
       store.dispatch("ADD_NOTE", {
         note: {
           id,
           position,
-          midi,
+          midi: noteNumber,
           duration,
           lyric,
         },
@@ -257,23 +289,25 @@ export default defineComponent({
 
       // カーソル位置に応じてノート移動量を計算
       let amountPositionX = 0;
-      if (gridWidth.value <= Math.abs(distanceX)) {
-        amountPositionX = 0 < distanceX ? snapSize.value : -snapSize.value;
+      if (gridColumnWidth.value <= Math.abs(distanceX)) {
+        amountPositionX = 0 < distanceX ? snapTicks.value : -snapTicks.value;
         const dragMoveCurrentXNext =
           dragMoveCurrentX.value +
-          (0 < amountPositionX ? gridWidth.value : -gridWidth.value);
+          (0 < amountPositionX
+            ? gridColumnWidth.value
+            : -gridColumnWidth.value);
         dragMoveCurrentX.value = dragMoveCurrentXNext;
       }
       let amountPositionY = 0;
-      if (gridHeight.value <= Math.abs(distanceY)) {
+      if (gridRowHeight.value <= Math.abs(distanceY)) {
         amountPositionY = 0 < distanceY ? -1 : 1;
         const dragMoveCurrentYNext =
           dragMoveCurrentY.value +
-          (0 > amountPositionY ? gridHeight.value : -gridHeight.value);
+          (0 > amountPositionY ? gridRowHeight.value : -gridRowHeight.value);
         dragMoveCurrentY.value = dragMoveCurrentYNext;
       }
 
-      // 選択中のノートのpositionとmidiを変更
+      // 選択中のノートのpositionとnoteNumberを変更
       let isNotesChanged = false;
       const newNotes = [...state.score.notes].map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
@@ -282,10 +316,10 @@ export default defineComponent({
           }
           isNotesChanged = true;
           const position = note.position + amountPositionX;
-          const midi = note.midi + amountPositionY;
+          const noteNumber = note.midi + amountPositionY;
           return {
             ...note,
-            midi,
+            midi: noteNumber,
             position,
           };
         } else {
@@ -333,8 +367,8 @@ export default defineComponent({
           if (selectedNoteIds.value.includes(note.id)) {
             const duration =
               note.duration +
-              (0 < distanceX ? snapSize.value : -snapSize.value);
-            if (duration < Math.max(snapSize.value, 0) || note.position < 0) {
+              (0 < distanceX ? snapTicks.value : -snapTicks.value);
+            if (duration < Math.max(snapTicks.value, 0) || note.position < 0) {
               return note;
             } else {
               isNotesChanged = true;
@@ -385,11 +419,11 @@ export default defineComponent({
           if (selectedNoteIds.value.includes(note.id)) {
             const position =
               note.position +
-              (0 < distanceX ? snapSize.value : -snapSize.value);
+              (0 < distanceX ? snapTicks.value : -snapTicks.value);
             const duration =
               note.duration +
-              (0 > distanceX ? snapSize.value : -snapSize.value);
-            if (duration < Math.max(snapSize.value, 0) || note.position < 0) {
+              (0 > distanceX ? snapTicks.value : -snapTicks.value);
+            if (duration < Math.max(snapTicks.value, 0) || note.position < 0) {
               return note;
             } else {
               isNotesChanged = true;
@@ -451,10 +485,10 @@ export default defineComponent({
       }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
-          const midi = Math.min(note.midi + 1, 127);
+          const noteNumber = Math.min(note.midi + 1, 127);
           return {
             ...note,
-            midi,
+            midi: noteNumber,
           };
         } else {
           return note;
@@ -472,10 +506,10 @@ export default defineComponent({
       }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
-          const midi = Math.max(note.midi - 1, 0);
+          const noteNumber = Math.max(note.midi - 1, 0);
           return {
             ...note,
-            midi,
+            midi: noteNumber,
           };
         } else {
           return note;
@@ -493,7 +527,7 @@ export default defineComponent({
       }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
-          const position = note.position + snapSize.value;
+          const position = note.position + snapTicks.value;
           return {
             ...note,
             position,
@@ -511,7 +545,7 @@ export default defineComponent({
       }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
-          const position = note.position - snapSize.value;
+          const position = note.position - snapTicks.value;
           return {
             ...note,
             position,
@@ -557,24 +591,26 @@ export default defineComponent({
 
     onMounted(() => {
       const el = document.querySelector("#score-sequencer");
-      // C4あたりにスクロールする
+      // 上から2/3の位置がC4になるようにスクロールする
       if (el) {
-        el.scrollTop = scrollY.value * (sizeY * zoomY.value);
+        const c4BaseY = noteNumberToBaseY(60);
+        const clientBaseHeight = el.clientHeight / zoomY.value;
+        const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
+        el.scrollTop = scrollBaseY * zoomY.value;
       }
     });
 
     return {
-      timeSignatures,
-      gridY,
-      gridX,
+      gridColumnWidth,
+      gridRowHeight,
+      gridColumnNumPerMeasure,
+      gridColumnNum,
+      keyInfos,
       notes,
       zoomX,
       zoomY,
-      sizeX,
-      sizeY,
       cursorX,
       cursorY,
-      getPitchFromMidi,
       setZoomX,
       setZoomY,
       addNote,
@@ -619,21 +655,21 @@ export default defineComponent({
   padding-bottom: 164px;
 }
 
-.sequencer-grids {
+.sequencer-grid {
   display: block;
 }
 
-.sequencer-grids-col {
+.sequencer-grid-cell {
   display: block;
   stroke: #e8e8e8;
   stroke-width: 1;
 }
 
-.sequencer-grids-col-white {
+.sequencer-grid-cell-white {
   fill: #fff;
 }
 
-.sequencer-grids-col-black {
+.sequencer-grid-cell-black {
   fill: #f2f2f2;
 }
 

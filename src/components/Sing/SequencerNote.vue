@@ -19,7 +19,7 @@
       class="sequencer-note-bar"
       focusable="true"
       tabindex="0"
-      @dblclick.prevent="removeNote"
+      @dblclick.prevent.stop="removeNote"
       @keydown.prevent="handleKeydown"
     >
       <g>
@@ -43,8 +43,8 @@
         />
         <rect
           y="-25%"
-          :x="`${(note.duration / 4) * zoomX - 4}`"
-          width="16"
+          :x="`${barWidth - 4}`"
+          width="12"
           height="150%"
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
@@ -60,8 +60,9 @@ import { defineComponent, computed, PropType } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
-  BASE_GRID_SIZE_X as sizeX,
-  BASE_GRID_SIZE_Y as sizeY,
+  getKeyBaseHeight,
+  tickToBaseX,
+  noteNumberToBaseY,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
@@ -82,16 +83,28 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const zoomX = computed(() => store.state.sequencerZoomX);
-    const zoomY = computed(() => store.state.sequencerZoomY);
-    const positionX = computed(() => (props.note.position / 4) * zoomX.value);
-    const positionY = computed(
-      () => (127 - props.note.midi) * sizeY * zoomY.value
-    );
-    const barHeight = computed(() => sizeY * zoomY.value);
-    const barWidth = computed(() => (props.note.duration / 4) * zoomX.value);
+    const state = store.state;
+    const tpqn = computed(() => state.score?.resolution ?? 480);
+    const zoomX = computed(() => state.sequencerZoomX);
+    const zoomY = computed(() => state.sequencerZoomY);
+    const positionX = computed(() => {
+      const noteStartTicks = props.note.position;
+      return tickToBaseX(noteStartTicks, tpqn.value) * zoomX.value;
+    });
+    const positionY = computed(() => {
+      const noteNumber = props.note.midi;
+      return noteNumberToBaseY(noteNumber + 0.5) * zoomY.value;
+    });
+    const barHeight = computed(() => getKeyBaseHeight() * zoomY.value);
+    const barWidth = computed(() => {
+      const noteStartTicks = props.note.position;
+      const noteEndTicks = props.note.position + props.note.duration;
+      const noteStartBaseX = tickToBaseX(noteStartTicks, tpqn.value);
+      const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
+      return (noteEndBaseX - noteStartBaseX) * zoomX.value;
+    });
     const isSelected = computed(() => {
-      return store.state.selectedNoteIds.includes(props.note.id);
+      return state.selectedNoteIds.includes(props.note.id);
     });
 
     const removeNote = () => {
@@ -118,8 +131,8 @@ export default defineComponent({
     };
 
     const handleMouseDown = (event: MouseEvent) => {
-      if (!store.state.selectedNoteIds.includes(props.note.id)) {
-        const noteIds = [...store.state.selectedNoteIds, props.note.id];
+      if (!state.selectedNoteIds.includes(props.note.id)) {
+        const noteIds = [...state.selectedNoteIds, props.note.id];
         store.dispatch("SET_SELECTED_NOTE_IDS", {
           noteIds,
         });
@@ -129,7 +142,7 @@ export default defineComponent({
     };
 
     const handleDragRightStart = (event: MouseEvent) => {
-      const noteIds = [...store.state.selectedNoteIds, props.note.id];
+      const noteIds = [...state.selectedNoteIds, props.note.id];
       store.dispatch("SET_SELECTED_NOTE_IDS", {
         noteIds,
       });
@@ -137,7 +150,7 @@ export default defineComponent({
     };
 
     const handleDragLeftStart = (event: MouseEvent) => {
-      const noteIds = [...store.state.selectedNoteIds, props.note.id];
+      const noteIds = [...state.selectedNoteIds, props.note.id];
       store.dispatch("SET_SELECTED_NOTE_IDS", {
         noteIds,
       });
@@ -145,8 +158,6 @@ export default defineComponent({
     };
 
     return {
-      sizeX,
-      sizeY,
       zoomX,
       zoomY,
       positionX,

@@ -29,8 +29,8 @@ import {
 } from "@/infrastructures/AudioRenderer";
 import { EngineId, StyleId } from "@/type/preload";
 import {
-  getDoremiFromMidi,
-  midiToFrequency,
+  getDoremiFromNoteNumber,
+  noteNumberToFrequency,
   round,
 } from "@/helpers/singHelper";
 import { AudioQuery, Mora } from "@/openapi";
@@ -275,9 +275,9 @@ export const singingStoreState: SingingStoreState = {
   isShowSinger: true,
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
-  sequencerScrollY: 60, // Y軸 midi number
-  sequencerScrollX: 0, // X軸 midi duration(仮)
-  sequencerSnapSize: 120, // スナップサイズ 試行用で1/18(ppq=480)のmidi durationで固定
+  sequencerScrollY: 60, // Y軸 note number
+  sequencerScrollX: 0, // X軸 tick(仮)
+  sequencerSnapType: 16, // スナップタイプ 試行用で1/16で固定
   selectedNoteIds: [], // 選択中のノート
   nowPlaying: false,
   volume: 0,
@@ -1006,7 +1006,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
 
             // 音高を編集
-            const freq = midiToFrequency(note.midi);
+            const freq = noteNumberToFrequency(note.midi);
             mora.pitch = Math.log(freq);
 
             // 無声化を解除
@@ -1312,7 +1312,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               note.durationTicks
             ),
             midi: note.midi,
-            lyric: getDoremiFromMidi(note.midi),
+            lyric: getDoremiFromNoteNumber(note.midi),
           }))
           .sort((a, b) => a.position - b.position)
           .forEach((note) => {
