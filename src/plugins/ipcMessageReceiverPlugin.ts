@@ -44,8 +44,8 @@ export const ipcMessageReceiver: Plugin = {
       options.store.dispatch("DETECT_LEAVE_FULLSCREEN")
     );
 
-    window.electron.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", () => {
-      options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
+    window.electron.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", (_, obj) => {
+      options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE", obj);
     });
 
     window.electron.onReceivedIPCMsg(

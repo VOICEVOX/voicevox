@@ -1,7 +1,14 @@
 import path from "path";
 import { Platform } from "quasar";
-import { State } from "@/store/type";
-import { ToolbarButtonTagType } from "@/type/preload";
+import { ToolbarButtonTagType, isMac } from "@/type/preload";
+import { AccentPhrase } from "@/openapi";
+
+export const DEFAULT_STYLE_NAME = "ノーマル";
+
+export const formatCharacterStyleName = (
+  characterName: string,
+  styleName = DEFAULT_STYLE_NAME
+) => `${characterName}（${styleName}）`;
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
@@ -25,28 +32,6 @@ export function sanitizeFileName(fileName: string): string {
   return fileName.replace(sanitizer, "");
 }
 
-export function buildProjectFileName(state: State, extension?: string): string {
-  const headItemText = state.audioItems[state.audioKeys[0]].text;
-
-  const tailItemText =
-    state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
-
-  const headTailItemText =
-    headItemText !== tailItemText
-      ? headItemText + "..." + tailItemText
-      : headItemText;
-
-  let defaultFileNameStem = sanitizeFileName(headTailItemText);
-
-  if (defaultFileNameStem === "") {
-    defaultFileNameStem = "Untitled";
-  }
-
-  return extension
-    ? `${defaultFileNameStem}.${extension}`
-    : defaultFileNameStem;
-}
-
 export const replaceTagIdToTagString = {
   index: "連番",
   characterName: "キャラ",
@@ -58,13 +43,14 @@ const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
   replaceTagIdToTagString
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
-export const DEFAULT_FILE_NAME_TEMPLATE =
-  "$連番$_$キャラ$（$スタイル$）_$テキスト$.wav";
-const DEFAULT_FILE_NAME_VARIABLES = {
+export const DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE =
+  "$連番$_$キャラ$（$スタイル$）_$テキスト$";
+export const DEFAULT_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
+const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
-  styleName: "ノーマル",
+  styleName: DEFAULT_STYLE_NAME,
   date: currentDateString(),
 };
 
@@ -92,14 +78,68 @@ function replaceTag(
   return result;
 }
 
-export function buildFileNameFromRawData(
-  fileNamePattern = DEFAULT_FILE_NAME_TEMPLATE,
-  vars = DEFAULT_FILE_NAME_VARIABLES
+export function extractExportText(text: string): string {
+  return skipReadingPart(skipMemoText(text));
+}
+export function extractYomiText(text: string): string {
+  return skipWritingPart(skipMemoText(text));
+}
+function skipReadingPart(text: string): string {
+  // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
+  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
+}
+function skipWritingPart(text: string): string {
+  // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
+  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2");
+}
+function skipMemoText(targettext: string): string {
+  // []をスキップ
+  const resolvedText = targettext.replace(/\[.*?\]/g, "");
+  return resolvedText;
+}
+
+/**
+ * ２つのAccentPhrasesのテキスト内容が異なるかどうかを判定
+ */
+export function isAccentPhrasesTextDifferent(
+  beforeAccent: AccentPhrase[],
+  afterAccent: AccentPhrase[]
+): boolean {
+  if (beforeAccent.length !== afterAccent.length) return true;
+
+  for (let accentIndex = 0; accentIndex < beforeAccent.length; accentIndex++) {
+    if (
+      beforeAccent[accentIndex].moras.length !==
+        afterAccent[accentIndex].moras.length ||
+      beforeAccent[accentIndex].pauseMora?.text !==
+        afterAccent[accentIndex].pauseMora?.text
+    )
+      return true;
+
+    for (
+      let moraIndex = 0;
+      moraIndex < beforeAccent[accentIndex].moras.length;
+      moraIndex++
+    ) {
+      if (
+        beforeAccent[accentIndex].moras[moraIndex].text !==
+        afterAccent[accentIndex].moras[moraIndex].text
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export function buildAudioFileNameFromRawData(
+  fileNamePattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
+  vars = DEFAULT_AUDIO_FILE_NAME_VARIABLES
 ): string {
   let pattern = fileNamePattern;
   if (pattern === "") {
     // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
-    pattern = DEFAULT_FILE_NAME_TEMPLATE;
+    pattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE;
   }
 
   let text = sanitizeFileName(vars.text);
@@ -116,10 +156,10 @@ export function buildFileNameFromRawData(
   const date = currentDateString();
 
   return replaceTag(pattern, {
-    index,
-    characterName,
-    styleName: styleName,
     text,
+    characterName,
+    index,
+    styleName,
     date,
   });
 }
@@ -192,4 +232,24 @@ export const getBaseName = (filePath: string) => {
   const basename = resultOfSplitTailRegex[2] || "";
 
   return basename;
+};
+
+/**
+ * Macでの`command`キー、またはその他OSでの`Ctrl`キーが押されているなら`true`を返します。
+ */
+// ctrlKey = windowsのCtrl = macのControl
+// metaKey = windowsのWin = macのCommand
+// altKey = windowsのAlt = macのOption(問題なし)
+export const isOnCommandOrCtrlKeyDown = (event: {
+  metaKey: boolean;
+  ctrlKey: boolean;
+}) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
+
+/**
+ * AccentPhraseのtextを結合して返します。
+ */
+export const joinTextsInAccentPhrases = (
+  accentPhrase: AccentPhrase
+): string => {
+  return accentPhrase.moras.map((mora) => mora.text).join("");
 };

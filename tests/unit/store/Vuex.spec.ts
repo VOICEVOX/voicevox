@@ -5,6 +5,7 @@ import { createStore } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
 import { commandStore } from "@/store/command";
 import { audioStore, audioCommandStore } from "@/store/audio";
+import { audioPlayerStore } from "@/store/audioPlayer";
 import { projectStore } from "@/store/project";
 import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
@@ -25,16 +26,18 @@ describe("store/vuex.js test", () => {
           [engineId]: "STARTING",
         },
         engineSupportedDevices: {},
+        altPortInfos: {},
         characterInfos: {},
+        audioKeysWithInitializingSpeaker: [],
         morphableTargetsInfo: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
         audioKeys: [],
         audioStates: {},
-        audioPlayStartPoint: 0,
         uiLockCount: 0,
         dialogLockCount: 0,
+        reloadingLock: false,
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
@@ -76,6 +79,7 @@ describe("store/vuex.js test", () => {
         },
         editorFont: "default",
         showTextLineNumber: false,
+        showAddAudioItemButton: true,
         isPinned: false,
         isFullscreen: false,
         presetItems: {},
@@ -126,6 +130,8 @@ describe("store/vuex.js test", () => {
           enableInterrogativeUpspeak: false,
           enableMorphing: false,
           enableMultiEngine: false,
+          enableMultiSelect: false,
+          shouldKeepTuningOnTextChange: false,
         },
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {
@@ -136,13 +142,16 @@ describe("store/vuex.js test", () => {
         confirmedTips: {
           tweakableSliderByScroll: false,
           engineStartedOnAltPort: false,
+          notifyOnGenerate: false,
         },
         progress: -1,
+        isVuexReady: false,
         defaultPresetKeys: {},
       },
       getters: {
         ...uiStore.getters,
         ...audioStore.getters,
+        ...audioPlayerStore.getters,
         ...commandStore.getters,
         ...engineStore.getters,
         ...projectStore.getters,
@@ -156,6 +165,7 @@ describe("store/vuex.js test", () => {
       mutations: {
         ...uiStore.mutations,
         ...audioStore.mutations,
+        ...audioPlayerStore.mutations,
         ...commandStore.mutations,
         ...engineStore.mutations,
         ...projectStore.mutations,
@@ -169,6 +179,7 @@ describe("store/vuex.js test", () => {
       actions: {
         ...uiStore.actions,
         ...audioStore.actions,
+        ...audioPlayerStore.actions,
         ...commandStore.actions,
         ...engineStore.actions,
         ...projectStore.actions,
@@ -198,7 +209,6 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.audioKeys);
     assert.isObject(store.state.audioStates);
     assert.isEmpty(store.state.audioStates);
-    assert.equal(store.state.audioPlayStartPoint, 0);
     assert.equal(store.state.uiLockCount, 0);
     assert.equal(store.state.nowPlayingContinuously, false);
     assert.isArray(store.state.undoCommands);
@@ -244,6 +254,7 @@ describe("store/vuex.js test", () => {
       false
     );
     assert.equal(store.state.showTextLineNumber, false);
+    assert.equal(store.state.showAddAudioItemButton, true);
     assert.propertyVal(
       store.state.splitterPosition,
       "audioDetailPaneHeight",
@@ -253,5 +264,6 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.splitterPosition, "portraitPaneWidth", 50);
     assert.equal(store.state.confirmedTips.tweakableSliderByScroll, false);
     assert.equal(store.state.confirmedTips.engineStartedOnAltPort, false);
+    assert.equal(store.state.confirmedTips.notifyOnGenerate, false);
   });
 });

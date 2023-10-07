@@ -42,6 +42,7 @@ export const settingStoreState: SettingStoreState = {
   },
   editorFont: "default",
   showTextLineNumber: false,
+  showAddAudioItemButton: true,
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -49,6 +50,8 @@ export const settingStoreState: SettingStoreState = {
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
     enableMultiEngine: false,
+    enableMultiSelect: false,
+    shouldKeepTuningOnTextChange: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -59,6 +62,7 @@ export const settingStoreState: SettingStoreState = {
   confirmedTips: {
     tweakableSliderByScroll: false,
     engineStartedOnAltPort: false,
+    notifyOnGenerate: false,
   },
   engineSettings: {},
 };
@@ -85,9 +89,19 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       }
 
+      dispatch("SET_EDITOR_FONT", {
+        editorFont: await window.electron.getSetting("editorFont"),
+      });
+
       dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
         showTextLineNumber: await window.electron.getSetting(
           "showTextLineNumber"
+        ),
+      });
+
+      dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+        showAddAudioItemButton: await window.electron.getSetting(
+          "showAddAudioItemButton"
         ),
       });
 
@@ -234,6 +248,20 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           `${r}, ${g}, ${b}`
         );
       }
+      const mixColors: ThemeColorType[][] = [
+        ["primary", "background"],
+        ["warning", "background"],
+      ];
+      for (const [color1, color2] of mixColors) {
+        const color1Rgb = colors.hexToRgb(theme.colors[color1]);
+        const color2Rgb = colors.hexToRgb(theme.colors[color2]);
+        const r = Math.trunc((color1Rgb.r + color2Rgb.r) / 2);
+        const g = Math.trunc((color1Rgb.g + color2Rgb.g) / 2);
+        const b = Math.trunc((color1Rgb.b + color2Rgb.b) / 2);
+        const propertyName = `--color-mix-${color1}-${color2}-rgb`;
+        const cssColor = `${r}, ${g}, ${b}`;
+        document.documentElement.style.setProperty(propertyName, cssColor);
+      }
       Dark.set(theme.isDark);
       setCssVar("primary", theme.colors["primary"]);
       setCssVar("warning", theme.colors["warning"]);
@@ -269,6 +297,21 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       window.electron.setSetting("showTextLineNumber", showTextLineNumber);
       commit("SET_SHOW_TEXT_LINE_NUMBER", {
         showTextLineNumber,
+      });
+    },
+  },
+
+  SET_SHOW_ADD_AUDIO_ITEM_BUTTON: {
+    mutation(state, { showAddAudioItemButton }) {
+      state.showAddAudioItemButton = showAddAudioItemButton;
+    },
+    action({ commit }, { showAddAudioItemButton }) {
+      window.electron.setSetting(
+        "showAddAudioItemButton",
+        showAddAudioItemButton
+      );
+      commit("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
+        showAddAudioItemButton,
       });
     },
   },
@@ -344,6 +387,19 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action({ commit }, { confirmedTips }) {
       window.electron.setSetting("confirmedTips", confirmedTips);
       commit("SET_CONFIRMED_TIPS", { confirmedTips });
+    },
+  },
+
+  SET_CONFIRMED_TIP: {
+    action({ state, dispatch }, { confirmedTip }) {
+      const confirmedTips = {
+        ...state.confirmedTips,
+        ...confirmedTip,
+      };
+
+      dispatch("SET_CONFIRMED_TIPS", {
+        confirmedTips: confirmedTips as ConfirmedTips,
+      });
     },
   },
 
@@ -486,11 +542,11 @@ export const parseCombo = (event: KeyboardEvent): string => {
   if (event.key === " ") {
     recordedCombo += "Space";
   } else {
-    if (["Control", "Shift", "Alt", "Meta"].indexOf(event.key) == -1) {
+    if (["Control", "Shift", "Alt", "Meta"].includes(event.key)) {
+      recordedCombo = recordedCombo.slice(0, -1);
+    } else {
       recordedCombo +=
         event.key.length > 1 ? event.key : event.key.toUpperCase();
-    } else {
-      recordedCombo = recordedCombo.slice(0, -1);
     }
   }
   return recordedCombo;

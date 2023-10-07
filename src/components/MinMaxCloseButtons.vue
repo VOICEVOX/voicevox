@@ -14,6 +14,7 @@
       size="8.5px"
       color="red"
       class="title-bar-buttons"
+      aria-label="閉じる"
       @click="closeWindow()"
     ></q-btn>
     <q-btn
@@ -24,6 +25,7 @@
       size="8.5px"
       color="yellow"
       class="title-bar-buttons"
+      aria-label="最小化"
       @click="minimizeWindow()"
     ></q-btn>
     <q-btn
@@ -34,6 +36,7 @@
       size="8.5px"
       color="green"
       class="title-bar-buttons"
+      aria-label="最大化"
       @click="maximizeWindow()"
     ></q-btn>
   </q-badge>
@@ -54,6 +57,7 @@
       flat
       icon="minimize"
       class="title-bar-buttons"
+      aria-label="最小化"
       @click="minimizeWindow()"
     ></q-btn>
 
@@ -63,6 +67,7 @@
       flat
       icon="crop_square"
       class="title-bar-buttons"
+      aria-label="最大化"
       @click="maximizeWindow()"
     ></q-btn>
     <q-btn
@@ -71,6 +76,7 @@
       flat
       :icon="mdiWindowRestore"
       class="title-bar-buttons"
+      aria-label="最大化"
       @click="maximizeWindow()"
     >
     </q-btn>
@@ -80,6 +86,7 @@
       flat
       icon="close"
       class="title-bar-buttons close"
+      aria-label="閉じる"
       @click="closeWindow()"
     ></q-btn>
   </q-badge>
@@ -93,7 +100,7 @@ import { useStore } from "@/store";
 const store = useStore();
 
 const closeWindow = async () => {
-  store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
+  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
 };
 const minimizeWindow = () => window.electron.minimizeWindow();
 const maximizeWindow = () => window.electron.maximizeWindow();

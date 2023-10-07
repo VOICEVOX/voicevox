@@ -19,6 +19,7 @@ on:
       code_signing:
         description: "コード署名する"
         type: boolean
+        default: false
       upload_artifact:
         description: "デバッグ用に成果物をartifactにアップロードするか"
         type: boolean
@@ -32,6 +33,10 @@ env:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build-and-upload:
     environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' || '' }} # コード署名用のenvironment（false時の挙動は2022年7月10日時点で未定義動作）
@@ -39,6 +44,8 @@ jobs:
       ELECTRON_CACHE: .cache/electron
       ELECTRON_BUILDER_CACHE: .cache/electron-builder
       cache-version: v2
+      # GNUコマンド
+      sed: ${{ startsWith(matrix.os, 'macos-') && 'gsed' || 'sed' }}
     strategy:
       fail-fast: false
       matrix:
@@ -124,10 +131,8 @@ jobs:
       #       so you need to install GNU sed.
       - name: Install GNU sed on macOS
         if: startsWith(matrix.os, 'macos-')
-        shell: bash
         run: |
           brew install gnu-sed
-          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
 
       # Rename executable file
       # NOTE: If the CPU/DirectML/GPU builds have the same package name,
@@ -137,12 +142,11 @@ jobs:
       #       Files with the same name cannot be uploaded to a single GitHub Release,
       #       so different package/product names should be used for CPU/DirectML/GPU builds.
       - name: Replace package name & version
-        shell: bash
         run: |
-          sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+          $sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          # $sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
-          sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
+          $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -167,13 +171,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
       - name: Install dependencies
-        shell: bash
         run: npm ci
-
-      - name: Show disk space (debug info)
-        shell: bash
-        run: |
-          df -h
 
       - name: Checkout Product Version Resource
         uses: actions/checkout@v3
@@ -183,7 +181,6 @@ jobs:
           path: resource
 
       - name: Create and replace software resources
-        shell: bash
         run: |
           rm build/README.txt
           rm public/policy.md
@@ -199,29 +196,20 @@ jobs:
 
       - name: Overwrite .env.production for Linux and macOS
         if: startsWith(matrix.os, 'ubuntu-') || startsWith(matrix.os, 'macos-')
-        shell: bash
         run: |
-          sed -i 's|run.exe|./run|g' .env.production
+          $sed -i 's|run.exe|./run|g' .env.production
 
       - name: Replace .env.production infomations
-        shell: bash
         run: |
           # GTM ID
           gtm_id=$(jq -r '.gtm_container_id' resource/editor/metas.json)
-          sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
+          $sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
-        shell: bash
         run: npm run license:generate -- -o public/licenses.json
-
-      - name: Show disk space (debug info)
-        shell: bash
-        run: |
-          df -h
 
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
-        shell: bash
         run: |
           bash build/codesign_setup.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
@@ -231,12 +219,6 @@ jobs:
           echo "WIN_CERTIFICATE_SHA1=$THUMBPRINT" >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
           echo "SIGNTOOL_PATH=$SIGNTOOL_PATH" >> $GITHUB_ENV
-
-          # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないので、ワークアラウンドとしてディレクトリを差し替える
-          CACHE_SIGNTOOL_DIR="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64"
-          mv "$CACHE_SIGNTOOL_DIR"{,.bak}
-          SIGNTOOL_DIR=$(dirname "$SIGNTOOL_PATH")
-          ln -s "$SIGNTOOL_DIR" "$CACHE_SIGNTOOL_DIR"
         env:
           ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
           ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
@@ -246,7 +228,6 @@ jobs:
 
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
-        shell: bash
         env:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
@@ -259,22 +240,15 @@ jobs:
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
-        shell: bash
         run: |
           bash build/codesign_cleanup.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
-
-          # NOTE: ワークアラウンドで差し替えたディレクトリを元に戻す
-          CACHE_SIGNTOOL_DIR="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64"
-          rm -r "$CACHE_SIGNTOOL_DIR"
-          mv "$CACHE_SIGNTOOL_DIR"{.bak,}
         env:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
       - name: Rename NoEngine Prepackage
-        shell: bash
         run: |
           mv ${{ matrix.artifact_path }} ./prepackage
 
@@ -289,7 +263,6 @@ jobs:
 
       # FIXME: asarをextract/packせず、ビルド前にengine_licenses.jsonとlicenses.jsonを結合する
       - name: Merge licenses.json (ENGINE, VOICEVOX)
-        shell: bash
         run: |
           # Unpack asar
           npx asar extract "${{ matrix.app_asar_dir }}/app.asar" "${{ matrix.app_asar_dir }}/app"
@@ -304,33 +277,24 @@ jobs:
 
       - name: Merge VOICEVOX ENGINE into prepackage/
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
-        shell: bash
         run: |
           mv voicevox_engine/* prepackage/
           rm -rf voicevox_engine
 
       - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/MacOS/
         if: startsWith(matrix.artifact_name, 'macos-')
-        shell: bash
         run: |
           mv voicevox_engine/* prepackage/VOICEVOX.app/Contents/MacOS/
           rm -rf voicevox_engine
 
-      - name: Show disk space (debug info)
-        shell: bash
-        run: |
-          df -h
-
       - name: Recover file permissions
         if: startsWith(matrix.artifact_name, 'linux-') # linux
-        shell: bash
         run: |
           chmod +x "prepackage/${{ matrix.linux_executable_name }}"
           chmod +x "prepackage/run"
 
       - name: Recover file permissions for macOS build
         if: startsWith(matrix.artifact_name, 'macos-') # macOS
-        shell: bash
         run: |
           chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/${{ matrix.macos_executable_name }}"
           chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/run"
@@ -343,12 +307,10 @@ jobs:
       #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
       - name: Make .lproj directories in Resources directory of VOICEVOX.app
         if: startsWith(matrix.artifact_name, 'macos-')
-        shell: bash
         run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
       - name: Create Linux tar.gz (without nvidia)
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
-        shell: bash
         run: |
           name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
           7z a -ttar $name.tar prepackage/
@@ -376,13 +338,11 @@ jobs:
 
       - name: Delete Linux tar.gz (without nvidia)
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
-        shell: bash
         run: |
           rm ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz
 
       - name: Create Windows & Mac zip (without nvidia)
         if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
-        shell: bash
         run: |
           name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
           7z a -tzip $name.zip prepackage/
@@ -408,18 +368,11 @@ jobs:
 
       - name: Delete Windows & Mac zip (without nvidia)
         if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
-        shell: bash
         run: |
           rm ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
 
-      - name: Show disk space (debug info)
-        shell: bash
-        run: |
-          df -h
-
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
-        shell: bash
         run: |
           bash build/codesign_setup.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
@@ -429,12 +382,6 @@ jobs:
           echo "WIN_CERTIFICATE_SHA1=$THUMBPRINT" >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
           echo "SIGNTOOL_PATH=$SIGNTOOL_PATH" >> $GITHUB_ENV
-
-          # NOTE: electron-builder 22.14.13 は指定したsigntoolを使わないので、ワークアラウンドとしてディレクトリを差し替える
-          CACHE_SIGNTOOL_DIR="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64"
-          mv "$CACHE_SIGNTOOL_DIR"{,.bak}
-          SIGNTOOL_DIR=$(dirname "$SIGNTOOL_PATH")
-          ln -s "$SIGNTOOL_DIR" "$CACHE_SIGNTOOL_DIR"
         env:
           ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
           ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
@@ -445,7 +392,6 @@ jobs:
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') || endsWith(matrix.installer_artifact_name, '-appimage') # windows and linux
-        shell: bash
         env:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
@@ -455,7 +401,6 @@ jobs:
 
       - name: Build Electron (for macOS)
         if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
-        shell: bash
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: |
@@ -463,28 +408,16 @@ jobs:
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
-        shell: bash
         run: |
           bash build/codesign_cleanup.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
-
-          # NOTE: ワークアラウンドで差し替えたディレクトリを元に戻す
-          CACHE_SIGNTOOL_DIR="$ELECTRON_BUILDER_CACHE/winCodeSign/winCodeSign-2.6.0/windows-10/x64"
-          rm -r "$CACHE_SIGNTOOL_DIR"
-          mv "$CACHE_SIGNTOOL_DIR"{.bak,}
         env:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
-      - name: Show disk space (debug info)
-        shell: bash
-        run: |
-          df -h
-
       - name: Create Linux AppImage split
         if: endsWith(matrix.installer_artifact_name, '-appimage')
-        shell: bash
         run: |
           cd dist_electron/
 
@@ -542,7 +475,6 @@ jobs:
 
       - name: Create Windows NSIS Web artifact directory
         if: endsWith(matrix.installer_artifact_name, '-nsis-web')
-        shell: bash
         run: |
           mkdir -p nsis-web-artifact
           mv dist_electron/nsis-web/out/*.7z.* nsis-web-artifact/
@@ -551,7 +483,6 @@ jobs:
       # Rename file name like "VOICEVOX Web Setup X.X.X.exe" to "VOICEVOX.Web.Setup.X.X.X.exe".
       - name: Rename Windows NSIS Web Installer
         if: endsWith(matrix.installer_artifact_name, '-nsis-web')
-        shell: bash
         run: |
           cd nsis-web-artifact
           OLD_NAME=`find . -maxdepth 1 -name '*.exe'`

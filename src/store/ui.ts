@@ -8,6 +8,17 @@ import {
 } from "./type";
 import { createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
+import {
+  CommonDialogOptions,
+  LoadingScreenOption,
+  NotifyAndNotShowAgainButtonOption,
+  hideAllLoadingScreen,
+  showAlertDialog,
+  showConfirmDialog,
+  showLoadingScreen,
+  showNotifyAndNotShowAgainButton,
+  showWarningDialog,
+} from "@/components/Dialog";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -36,6 +47,7 @@ export function withProgress<T>(
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
+  reloadingLock: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
@@ -52,6 +64,7 @@ export const uiStoreState: UiStoreState = {
   isPinned: false,
   isFullscreen: false,
   progress: -1,
+  isVuexReady: false,
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
@@ -124,6 +137,18 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  /**
+   * 再読み込み中。UNLOCKされることはない。
+   */
+  LOCK_RELOADING: {
+    mutation(state) {
+      state.reloadingLock = true;
+    },
+    action({ commit }) {
+      commit("LOCK_RELOADING");
+    },
+  },
+
   SHOULD_SHOW_PANES: {
     getter(_, getters) {
       return getters.ACTIVE_AUDIO_KEY != undefined;
@@ -170,6 +195,48 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  SHOW_ALERT_DIALOG: {
+    action: createUILockAction(
+      async (_, payload: { title: string; message: string; ok?: string }) => {
+        return await showAlertDialog(payload);
+      }
+    ),
+  },
+
+  SHOW_CONFIRM_DIALOG: {
+    action: createUILockAction(
+      async (_, payload: CommonDialogOptions["confirm"]) => {
+        return await showConfirmDialog(payload);
+      }
+    ),
+  },
+
+  SHOW_WARNING_DIALOG: {
+    action: createUILockAction(
+      async (_, payload: CommonDialogOptions["warning"]) => {
+        return await showWarningDialog(payload);
+      }
+    ),
+  },
+
+  SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
+    action({ dispatch }, payload: NotifyAndNotShowAgainButtonOption) {
+      showNotifyAndNotShowAgainButton({ dispatch }, payload);
+    },
+  },
+
+  SHOW_LOADING_SCREEN: {
+    action(_, payload: LoadingScreenOption) {
+      showLoadingScreen(payload);
+    },
+  },
+
+  HIDE_ALL_LOADING_SCREEN: {
+    action() {
+      hideAllLoadingScreen();
+    },
+  },
+
   HYDRATE_UI_STORE: {
     async action({ commit }) {
       commit("SET_INHERIT_AUDIOINFO", {
@@ -191,8 +258,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   ON_VUEX_READY: {
-    action() {
+    mutation(state) {
+      state.isVuexReady = true;
+    },
+    action({ commit }) {
       window.electron.vuexReady();
+      commit("ON_VUEX_READY");
     },
   },
 
@@ -298,7 +369,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    async action({ dispatch, getters }) {
+    /**
+     * プロジェクトファイル未保存の場合、保存するかどうかを確認する。
+     * 保存後にウィンドウを閉じるか、アプリを再読み込みする。
+     * 保存がキャンセルされた場合は何もしない。
+     */
+    async action({ dispatch, getters }, obj) {
       if (getters.IS_EDITED) {
         const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {});
         if (result == "canceled") {
@@ -306,16 +382,28 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         }
       }
 
-      window.electron.closeWindow();
+      if (obj.closeOrReload == "close") {
+        window.electron.closeWindow();
+      } else if (obj.closeOrReload == "reload") {
+        await dispatch("RELOAD_APP", {
+          isMultiEngineOffMode: obj.isMultiEngineOffMode,
+        });
+      }
     },
   },
 
-  RESTART_APP: {
-    action(_, { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }) {
-      window.electron.restartApp({
-        isMultiEngineOffMode: !!isMultiEngineOffMode,
-      });
-    },
+  RELOAD_APP: {
+    action: createUILockAction(
+      async (
+        { dispatch },
+        { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }
+      ) => {
+        await dispatch("LOCK_RELOADING");
+        await window.electron.reloadApp({
+          isMultiEngineOffMode: !!isMultiEngineOffMode,
+        });
+      }
+    ),
   },
 
   START_PROGRESS: {

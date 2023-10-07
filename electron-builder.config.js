@@ -1,6 +1,10 @@
 // @ts-check
 const path = require("path");
 const fs = require("fs");
+const dotenv = require("dotenv");
+
+const dotenvPath = path.join(process.cwd(), ".env.production");
+dotenv.config({ path: dotenvPath });
 
 const VOICEVOX_ENGINE_DIR =
   process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/run.dist/";
@@ -83,10 +87,6 @@ const builderOptions = {
     {
       from: "build/README.txt",
       to: extraFilePrefix + "README.txt",
-    },
-    {
-      from: ".env.production",
-      to: extraFilePrefix + ".env",
     },
     {
       from: VOICEVOX_ENGINE_DIR,

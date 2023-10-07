@@ -1,17 +1,37 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
-export const isMac =
-  typeof process === "undefined"
-    ? navigator.userAgent.includes("Mac")
-    : process.platform === "darwin";
+export const isProduction = import.meta.env.MODE === "production";
+export const isElectron = import.meta.env.VITE_TARGET === "electron";
+export const isBrowser = import.meta.env.VITE_TARGET === "browser";
 
-export const engineIdSchema = z.string().uuid().brand<"EngineId">();
+// electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なmacOS判定
+function checkIsMac(): boolean {
+  let isMac: boolean | undefined = undefined;
+  if (process?.platform) {
+    // electronのメインプロセス用
+    isMac = process.platform === "darwin";
+  } else if (navigator?.userAgentData) {
+    // electronのレンダラープロセス用、Chrome系統が実装する実験的機能
+    isMac = navigator.userAgentData.platform.toLowerCase().includes("mac");
+  } else if (navigator?.platform) {
+    // ブラウザ用、非推奨機能
+    isMac = navigator.platform.toLowerCase().includes("mac");
+  } else {
+    // ブラウザ用、不正確
+    isMac = navigator.userAgent.toLowerCase().includes("mac");
+  }
+  return isMac;
+}
+export const isMac = checkIsMac();
+
+export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
 export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
 
-export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
+export const speakerIdSchema = z.string().brand<"SpeakerId">();
 export type SpeakerId = z.infer<typeof speakerIdSchema>;
 export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
 
@@ -19,11 +39,11 @@ export const styleIdSchema = z.number().brand<"StyleId">();
 export type StyleId = z.infer<typeof styleIdSchema>;
 export const StyleId = (id: number): StyleId => styleIdSchema.parse(id);
 
-export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
+export const audioKeySchema = z.string().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
-export const presetKeySchema = z.string().uuid().brand<"PresetKey">();
+export const presetKeySchema = z.string().brand<"PresetKey">();
 export type PresetKey = z.infer<typeof presetKeySchema>;
 export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
 
@@ -144,8 +164,6 @@ export interface Sandbox {
   getContactText(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
   getAltPortInfos(): Promise<AltPortInfos>;
-  saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
-  loadTempFile(): Promise<string>;
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
@@ -181,9 +199,8 @@ export interface Sandbox {
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
-  }): Promise<WriteFileErrorResult | undefined>;
-  readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
-  openTextEditContextMenu(): Promise<void>;
+  }): Promise<Result<undefined>>;
+  readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
@@ -196,6 +213,7 @@ export interface Sandbox {
   logError(...params: unknown[]): void;
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
+  openLogDirectory(): void;
   engineInfos(): Promise<EngineInfo[]>;
   restartEngine(engineId: EngineId): Promise<void>;
   openEngineDirectory(engineId: EngineId): void;
@@ -221,7 +239,7 @@ export interface Sandbox {
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
-  restartApp(obj: { isMultiEngineOffMode: boolean }): void;
+  reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
 }
 
 export type AppInfos = {
@@ -449,7 +467,6 @@ export type MoraDataType =
 
 export type ThemeColorType =
   | "primary"
-  | "primary-light"
   | "display"
   | "display-on-primary"
   | "display-hyperlink"
@@ -481,6 +498,8 @@ export const experimentalSettingSchema = z.object({
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
   enableMultiEngine: z.boolean().default(false),
+  enableMultiSelect: z.boolean().default(false),
+  shouldKeepTuningOnTextChange: z.boolean().default(false),
 });
 
 export type ExperimentalSetting = z.infer<typeof experimentalSettingSchema>;
@@ -497,6 +516,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
   engineStartedOnAltPort: boolean; // エンジンのポート変更の通知
+  notifyOnGenerate: boolean; // 音声書き出し時の通知
 };
 
 export const electronStoreSchema = z
@@ -572,6 +592,7 @@ export const electronStoreSchema = z
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     showTextLineNumber: z.boolean().default(false),
+    showAddAudioItemButton: z.boolean().default(true),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
@@ -587,6 +608,7 @@ export const electronStoreSchema = z
       .object({
         tweakableSliderByScroll: z.boolean().default(false),
         engineStartedOnAltPort: z.boolean().default(false),
+        notifyOnGenerate: z.boolean().default(false),
       })
       .passthrough()
       .default({}),
@@ -610,11 +632,6 @@ export class SystemError extends Error {
     }
   }
 }
-
-export type WriteFileErrorResult = {
-  code: string | undefined;
-  message: string;
-};
 
 export type EngineDirValidationResult =
   | "ok"

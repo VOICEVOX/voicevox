@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="help-dialog transparent-backdrop"
-    v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff">
       <q-drawer
@@ -20,8 +20,8 @@
             <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
               <q-item
                 v-if="page.type === 'item'"
-                clickable
                 v-ripple
+                clickable
                 active-class="selected-item"
                 :active="selectedPageIndex === pageIndex"
                 @click="selectedPageIndex = pageIndex"
@@ -46,19 +46,30 @@
               :name="pageIndex"
               class="q-pa-none"
             >
-              <div class="root" v-if="page.type === 'item'">
+              <div v-if="page.type === 'item'" class="root">
                 <q-header class="q-pa-sm">
                   <q-toolbar>
                     <q-toolbar-title class="text-display">
                       ヘルプ / {{ page.parent ? page.parent + " / " : ""
                       }}{{ page.name }}
                     </q-toolbar-title>
+                    <q-btn
+                      v-if="page.component === ContactInfo"
+                      unelevated
+                      color="toolbar-button"
+                      text-color="toolbar-button-display"
+                      class="text-no-wrap text-bold q-mr-sm"
+                      @click="openLogDirectory"
+                    >
+                      ログフォルダを開く
+                    </q-btn>
                     <!-- close button -->
                     <q-btn
                       round
                       flat
                       icon="close"
                       color="display"
+                      aria-label="ヘルプを閉じる"
                       @click="modelValueComputed = false"
                     />
                   </q-toolbar>
@@ -76,15 +87,15 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from "vue";
 import semver from "semver";
-import { UpdateInfo as UpdateInfoObject } from "../type/preload";
-import HelpPolicy from "@/components/HelpPolicy.vue";
-import LibraryPolicy from "@/components/LibraryPolicy.vue";
-import HowToUse from "@/components/HowToUse.vue";
-import OssLicense from "@/components/OssLicense.vue";
-import UpdateInfo from "@/components/UpdateInfo.vue";
-import OssCommunityInfo from "@/components/OssCommunityInfo.vue";
-import QAndA from "@/components/QAndA.vue";
-import ContactInfo from "@/components/ContactInfo.vue";
+import HelpPolicy from "./HelpPolicy.vue";
+import LibraryPolicy from "./LibraryPolicy.vue";
+import HowToUse from "./HowToUse.vue";
+import OssLicense from "./OssLicense.vue";
+import UpdateInfo from "./UpdateInfo.vue";
+import OssCommunityInfo from "./OssCommunityInfo.vue";
+import QAndA from "./QAndA.vue";
+import ContactInfo from "./ContactInfo.vue";
+import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
 import { useStore } from "@/store";
 
 type PageItem = {
@@ -212,6 +223,7 @@ const pagedata = computed(() => {
       name: "アップデート情報",
       component: UpdateInfo,
       props: {
+        downloadLink: "https://voicevox.hiroshiba.jp/",
         updateInfos: updateInfos.value,
         isUpdateAvailable: isUpdateAvailable.value,
         latestVersion: latestVersion.value,
@@ -279,6 +291,8 @@ const pagedata = computed(() => {
 });
 
 const selectedPageIndex = ref(0);
+
+const openLogDirectory = window.electron.openLogDirectory;
 </script>
 
 <style scoped lang="scss">

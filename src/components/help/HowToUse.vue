@@ -1,6 +1,7 @@
 <template>
   <q-page class="relative-absolute-wrapper scroller markdown-body">
-    <div class="q-pa-md markdown" v-html="ossCommunityInfos"></div>
+    <!-- eslint-disable-next-line vue/no-v-html -->
+    <div class="q-pa-md markdown" v-html="howToUse"></div>
   </q-page>
 </template>
 
@@ -10,12 +11,10 @@ import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 const store = useStore();
-const ossCommunityInfos = ref("");
+const howToUse = ref("");
 const md = useMarkdownIt();
 onMounted(async () => {
-  ossCommunityInfos.value = md.render(
-    await store.dispatch("GET_OSS_COMMUNITY_INFOS")
-  );
+  howToUse.value = md.render(await store.dispatch("GET_HOW_TO_USE_TEXT"));
 });
 </script>
 
@@ -25,5 +24,11 @@ onMounted(async () => {
     width: 100%;
     overflow: auto;
   }
+}
+
+.markdown :deep(img) {
+  border: 1px solid #888;
+  vertical-align: middle;
+  margin-bottom: 1rem;
 }
 </style>

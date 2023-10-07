@@ -1,6 +1,6 @@
 import semver from "semver";
 import { z } from "zod";
-import { buildProjectFileName, getBaseName } from "./utility";
+import { getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "@/store/ui";
 import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
@@ -14,6 +14,7 @@ import {
   speakerIdSchema,
   styleIdSchema,
 } from "@/type/preload";
+import { getValueOrThrow, ResultError } from "@/type/result";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -69,6 +70,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   LOAD_PROJECT_FILE: {
     /**
      * プロジェクトファイルを読み込む。読み込めたかの成否が返る。
+     * エラー発生時はダイアログが表示される。
      */
     action: createUILockAction(
       async (
@@ -88,11 +90,15 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         const projectFileErrorMsg = `VOICEVOX Project file "${filePath}" is a invalid file.`;
 
+        let buf: ArrayBuffer;
         try {
+          buf = await window.electron
+            .readFile({ filePath })
+            .then(getValueOrThrow);
+
           await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
             filePath,
           });
-          const buf = await window.electron.readFile({ filePath });
           const text = new TextDecoder("utf-8").decode(buf).trim();
           const projectData = JSON.parse(text);
 
@@ -204,11 +210,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               const audioItem = projectData.audioItems[audioItemsKey];
               if (audioItem.characterIndex != null) {
                 if (audioItem.characterIndex == 0) {
-                  // 四国めたん 0 -> 四国めたん(あまあま) 0
+                  // 四国めたん 0 -> 四国めたん（あまあま） 0
                   audioItem.speaker = 0;
                 }
                 if (audioItem.characterIndex == 1) {
-                  // ずんだもん 1 -> ずんだもん(あまあま) 1
+                  // ずんだもん 1 -> ずんだもん（あまあま） 1
                   audioItem.speaker = 1;
                 }
                 delete audioItem.characterIndex;
@@ -356,6 +362,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const message = (() => {
             if (typeof err === "string") return err;
             if (!(err instanceof Error)) return "エラーが発生しました。";
+            if (err instanceof ResultError && err.code === "ENOENT")
+              return "プロジェクトファイルが見つかりませんでした。ファイルが移動、または削除された可能性があります。";
             if (err.message.startsWith(projectFileErrorMsg))
               return "ファイルフォーマットが正しくありません。";
             return err.message;
@@ -363,7 +371,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await window.electron.showMessageDialog({
             type: "error",
             title: "エラー",
-            message,
+            message: `プロジェクトファイルの読み込みに失敗しました。\n${message}`,
           });
           return false;
         }
@@ -374,62 +382,83 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   SAVE_PROJECT_FILE: {
     /**
      * プロジェクトファイルを保存する。保存の成否が返る。
+     * エラー発生時はダイアログが表示される。
      */
     action: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
-        if (!overwrite || !filePath) {
-          let defaultPath: string;
+        try {
+          if (!overwrite || !filePath) {
+            let defaultPath: string;
 
-          if (!filePath) {
-            // if new project: use generated name
-            defaultPath = buildProjectFileName(context.state, "vvproj");
-          } else {
-            // if saveAs for existing project: use current project path
-            defaultPath = filePath;
+            if (!filePath) {
+              // if new project: use generated name
+              defaultPath = `${context.getters.DEFAULT_PROJECT_FILE_BASE_NAME}.vvproj`;
+            } else {
+              // if saveAs for existing project: use current project path
+              defaultPath = filePath;
+            }
+
+            // Write the current status to a project file.
+            const ret = await window.electron.showProjectSaveDialog({
+              title: "プロジェクトファイルの保存",
+              defaultPath,
+            });
+            if (ret == undefined) {
+              return false;
+            }
+            filePath = ret;
+          }
+          if (
+            context.state.projectFilePath &&
+            context.state.projectFilePath != filePath
+          ) {
+            await window.electron.showMessageDialog({
+              type: "info",
+              title: "保存",
+              message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+            });
           }
 
-          // Write the current status to a project file.
-          const ret = await window.electron.showProjectSaveDialog({
-            title: "プロジェクトファイルの保存",
-            defaultPath,
+          await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
+            filePath,
           });
-          if (ret == undefined) {
-            return false;
-          }
-          filePath = ret;
-        }
-        if (
-          context.state.projectFilePath &&
-          context.state.projectFilePath != filePath
-        ) {
-          window.electron.showMessageDialog({
-            type: "info",
-            title: "保存",
-            message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+          const appInfos = await window.electron.getAppInfos();
+          const { audioItems, audioKeys } = context.state;
+          const projectData: ProjectType = {
+            appVersion: appInfos.version,
+            audioKeys,
+            audioItems,
+          };
+          const buf = new TextEncoder().encode(
+            JSON.stringify(projectData)
+          ).buffer;
+          await window.electron
+            .writeFile({
+              filePath,
+              buffer: buf,
+            })
+            .then(getValueOrThrow);
+          context.commit("SET_PROJECT_FILEPATH", { filePath });
+          context.commit(
+            "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
+            context.getters.LAST_COMMAND_UNIX_MILLISEC
+          );
+          return true;
+        } catch (err) {
+          window.electron.logError(err);
+          const message = (() => {
+            if (typeof err === "string") return err;
+            if (!(err instanceof Error)) return "エラーが発生しました。";
+            return err.message;
+          })();
+          await window.electron.showMessageDialog({
+            type: "error",
+            title: "エラー",
+            message: `プロジェクトファイルの保存に失敗しました。\n${message}`,
           });
+          return false;
         }
-
-        await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
-          filePath,
-        });
-        const appInfos = await window.electron.getAppInfos();
-        const { audioItems, audioKeys } = context.state;
-        const projectData: ProjectType = {
-          appVersion: appInfos.version,
-          audioKeys,
-          audioItems,
-        };
-        const buf = new TextEncoder().encode(
-          JSON.stringify(projectData)
-        ).buffer;
-        await window.electron.writeFile({ filePath, buffer: buf });
-        context.commit("SET_PROJECT_FILEPATH", { filePath });
-        context.commit(
-          "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
-          context.getters.LAST_COMMAND_UNIX_MILLISEC
-        );
-        return true;
       }
     ),
   },

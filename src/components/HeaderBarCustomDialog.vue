@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="headerBarCustomDialogOpenComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="header-bar-custom-dialog transparent-backdrop"
-    v-model="headerBarCustomDialogOpenComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container class="root">
@@ -19,8 +19,8 @@
               color="toolbar-button"
               text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
-              @click="applyDefaultSetting"
               :disable="isDefault"
+              @click="applyDefaultSetting"
               >デフォルトに戻す</q-btn
             >
             <q-btn
@@ -28,8 +28,8 @@
               color="toolbar-button"
               text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
-              @click="saveCustomToolbar"
               :disable="!isChanged"
+              @click="saveCustomToolbar"
               >保存</q-btn
             >
             <!-- close button -->
@@ -52,11 +52,7 @@
                 @end="toolbarButtonDragging = false"
               >
                 <template
-                  v-slot:item="{
-                    element: button,
-                  }: {
-                    element: ToolbarButtonTagType,
-                  }"
+                  #item="{ element: button }: { element: ToolbarButtonTagType }"
                 >
                   <q-btn
                     unelevated
@@ -95,8 +91,8 @@
                 <q-item
                   v-for="(desc, key) in usableButtonsDesc"
                   :key="key"
-                  tag="label"
                   v-ripple
+                  tag="label"
                 >
                   <q-item-section>
                     <q-item-label>{{ getToolbarButtonName(key) }}</q-item-label>
@@ -117,7 +113,6 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, Ref } from "vue";
-import { useQuasar } from "quasar";
 import draggable from "vuedraggable";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
@@ -133,7 +128,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
 const toolbarButtons = ref([...store.state.toolbarSetting]);
@@ -213,25 +207,18 @@ watch(
   }
 );
 
-const applyDefaultSetting = () => {
-  $q.dialog({
+const applyDefaultSetting = async () => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "ツールバーをデフォルトに戻します",
     message: "ツールバーをデフォルトに戻します。<br/>よろしいですか？",
     html: true,
-    ok: {
-      label: "はい",
-      flat: true,
-      textColor: "display",
-    },
-    cancel: {
-      label: "いいえ",
-      flat: true,
-      textColor: "display",
-    },
-  }).onOk(() => {
+    actionName: "はい",
+    cancel: "いいえ",
+  });
+  if (result === "OK") {
     toolbarButtons.value = [...defaultSetting];
     selectedButton.value = toolbarButtons.value[0];
-  });
+  }
 };
 const saveCustomToolbar = () => {
   store.dispatch("SET_TOOLBAR_SETTING", {
@@ -239,28 +226,18 @@ const saveCustomToolbar = () => {
   });
 };
 
-const finishOrNotDialog = () => {
+const finishOrNotDialog = async () => {
   if (isChanged.value) {
-    $q.dialog({
+    const result = await store.dispatch("SHOW_WARNING_DIALOG", {
       title: "カスタマイズを終了しますか？",
       message: "このまま終了すると、カスタマイズは破棄されてリセットされます。",
-      persistent: true,
-      focus: "cancel",
-      ok: {
-        label: "終了",
-        flat: true,
-        textColor: "display",
-      },
-      cancel: {
-        label: "キャンセル",
-        flat: true,
-        textColor: "display",
-      },
-    }).onOk(() => {
+      actionName: "終了",
+    });
+    if (result === "OK") {
       toolbarButtons.value = [...store.state.toolbarSetting];
       selectedButton.value = toolbarButtons.value[0];
       headerBarCustomDialogOpenComputed.value = false;
-    });
+    }
   } else {
     selectedButton.value = toolbarButtons.value[0];
     headerBarCustomDialogOpenComputed.value = false;

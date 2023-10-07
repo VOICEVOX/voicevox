@@ -8,8 +8,8 @@
     <menu-button
       v-for="(root, index) of menudata"
       :key="index"
-      :menudata="root"
       v-model:selected="subMenuOpenFlags[index]"
+      :menudata="root"
       :disable="menubarLocked"
       @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
@@ -27,18 +27,17 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useQuasar } from "quasar";
-import { useStore } from "@/store";
-import MenuButton from "@/components/MenuButton.vue";
-import TitleBarButtons from "@/components/TitleBarButtons.vue";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
 import {
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
   connectAndExportTextWithDialog,
-} from "@/components/Dialog";
+} from "./Dialog";
+import MenuButton from "./MenuButton.vue";
+import TitleBarButtons from "./TitleBarButtons.vue";
+import { useStore } from "@/store";
+import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import { setHotkeyFunctions } from "@/store/setting";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
 export type MenuItemBase<T extends string> = {
@@ -54,6 +53,7 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
   icon?: string;
   disabled?: boolean;
   disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
 export type MenuItemButton = MenuItemBase<"button"> & {
@@ -61,6 +61,7 @@ export type MenuItemButton = MenuItemBase<"button"> & {
   icon?: string;
   disabled?: boolean;
   disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
 export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
@@ -68,15 +69,26 @@ export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
 export type MenuItemType = MenuItemData["type"];
 
 const store = useStore();
-const $q = useQuasar();
 const currentVersion = ref("");
-const altPorts = ref<number[]>([]);
 
-store.dispatch("GET_ALT_PORT_INFOS").then(
-  (altPortInfo) =>
-    // {[engineId]: {from: number, to: number}} -> to: number[]
-    (altPorts.value = Object.values(altPortInfo).map(({ to }) => to))
-);
+// デフォルトエンジンの代替先ポート
+const defaultEngineAltPortTo = computed<number | undefined>(() => {
+  const altPortInfos = store.state.altPortInfos;
+
+  // ref: https://github.com/VOICEVOX/voicevox/blob/32940eab36f4f729dd0390dca98f18656240d60d/src/views/EditorHome.vue#L522-L528
+  const defaultEngineInfo = Object.values(store.state.engineInfos).find(
+    (engine) => engine.type === "default"
+  );
+  if (defaultEngineInfo == undefined) return undefined;
+
+  // <defaultEngineId>: { from: number, to: number } -> to (代替先ポート)
+  if (defaultEngineInfo.uuid in altPortInfos) {
+    return altPortInfos[defaultEngineInfo.uuid].to;
+  } else {
+    return undefined;
+  }
+});
+
 window.electron.getAppInfos().then((obj) => {
   currentVersion.value = obj.version;
 });
@@ -100,8 +112,9 @@ const titleText = computed(
     "VOICEVOX" +
     (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
     (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
-    // メインエンジン (0番目) の代替ポートの表示のみ
-    (altPorts.value.length ? " - Port: " + altPorts.value[0] : "")
+    (defaultEngineAltPortTo.value != null
+      ? ` - Port: ${defaultEngineAltPortTo.value}`
+      : "")
 );
 
 // FIXME: App.vue内に移動する
@@ -118,8 +131,7 @@ const createNewProject = async () => {
 const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndSaveAllAudioWithDialog({
-      encoding: store.state.savingSetting.fileEncoding,
-      quasarDialog: $q.dialog,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
       dispatch: store.dispatch,
     });
   }
@@ -128,9 +140,8 @@ const generateAndSaveAllAudio = async () => {
 const generateAndConnectAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndConnectAndSaveAudioWithDialog({
-      quasarDialog: $q.dialog,
       dispatch: store.dispatch,
-      encoding: store.state.savingSetting.fileEncoding,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
 };
@@ -140,22 +151,16 @@ const generateAndSaveOneAudio = async () => {
 
   const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
   if (activeAudioKey == undefined) {
-    $q.dialog({
+    store.dispatch("SHOW_ALERT_DIALOG", {
       title: "テキスト欄が選択されていません",
       message: "音声を書き出したいテキスト欄を選択してください。",
-      ok: {
-        label: "閉じる",
-        flat: true,
-        textColor: "secondary",
-      },
     });
     return;
   }
 
   await generateAndSaveOneAudioWithDialog({
     audioKey: activeAudioKey,
-    encoding: store.state.savingSetting.fileEncoding,
-    quasarDialog: $q.dialog,
+    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     dispatch: store.dispatch,
   });
 };
@@ -163,9 +168,8 @@ const generateAndSaveOneAudio = async () => {
 const connectAndExportText = async () => {
   if (!uiLocked.value) {
     await connectAndExportTextWithDialog({
-      quasarDialog: $q.dialog,
       dispatch: store.dispatch,
-      encoding: store.state.savingSetting.fileEncoding,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
 };
@@ -176,15 +180,15 @@ const importTextFile = () => {
   }
 };
 
-const saveProject = () => {
+const saveProject = async () => {
   if (!uiLocked.value) {
-    store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+    await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
   }
 };
 
-const saveProjectAs = () => {
+const saveProjectAs = async () => {
   if (!uiLocked.value) {
-    store.dispatch("SAVE_PROJECT_FILE", {});
+    await store.dispatch("SAVE_PROJECT_FILE", {});
   }
 };
 
@@ -280,16 +284,16 @@ const menudata = ref<MenuItemData[]>([
       {
         type: "button",
         label: "プロジェクトを上書き保存",
-        onClick: () => {
-          saveProject();
+        onClick: async () => {
+          await saveProject();
         },
         disableWhenUiLocked: true,
       },
       {
         type: "button",
         label: "プロジェクトを名前を付けて保存",
-        onClick: () => {
-          saveProjectAs();
+        onClick: async () => {
+          await saveProjectAs();
         },
         disableWhenUiLocked: true,
       },
@@ -507,28 +511,26 @@ async function updateEngines() {
       disableWhenUiLocked: false,
     });
   }
+  // マルチエンジンオフモードの解除
+  if (store.state.isMultiEngineOffMode) {
+    engineMenu.subMenu.push({
+      type: "button",
+      label: "マルチエンジンをオンにして再読み込み",
+      onClick() {
+        store.dispatch("RELOAD_APP", {
+          isMultiEngineOffMode: false,
+        });
+      },
+      disableWhenUiLocked: false,
+      disablreloadingLocked: true,
+    });
+  }
 }
 // engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
 // FIXME: computedにする
 watch([engineInfos, engineManifests, enableMultiEngine], updateEngines, {
   immediate: true,
 });
-
-// マルチエンジンオフモードの解除
-if (store.state.isMultiEngineOffMode) {
-  (
-    menudata.value.find((data) => data.label === "エンジン") as MenuItemRoot
-  ).subMenu.push({
-    type: "button",
-    label: "マルチエンジンをオンにして再起動",
-    onClick() {
-      store.dispatch("RESTART_APP", {
-        isMultiEngineOffMode: false,
-      });
-    },
-    disableWhenUiLocked: false,
-  });
-}
 
 // 「最近開いたプロジェクト」の更新
 async function updateRecentProjects() {

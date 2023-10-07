@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="hotkeySettingDialogOpenComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="hotkey-setting-dialog transparent-backdrop"
-    v-model="hotkeySettingDialogOpenComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -13,12 +13,12 @@
             >設定 / キー割り当て</q-toolbar-title
           >
           <q-input
+            v-model="hotkeyFilter"
             hide-bottom-space
             dense
             placeholder="検索"
             color="display"
             class="q-mr-sm search-box"
-            v-model="hotkeyFilter"
           >
             <template #prepend>
               <q-icon name="search" />
@@ -46,6 +46,7 @@
       <q-page-container>
         <q-page>
           <q-table
+            v-model:pagination="hotkeyPagination"
             flat
             dense
             hide-bottom
@@ -56,31 +57,45 @@
             :rows="hotkeySettings"
             :columns="hotkeyColumns"
             class="hotkey-table"
-            v-model:pagination="hotkeyPagination"
           >
-            <template #header="props">
-              <q-tr :props="props">
-                <q-th v-for="col of props.cols" :key="col.name" :props="props">
+            <template #header="tableProps">
+              <q-tr :props="tableProps">
+                <q-th
+                  v-for="col of tableProps.cols"
+                  :key="col.name"
+                  :props="tableProps"
+                >
                   {{ col.label }}
                 </q-th>
               </q-tr>
             </template>
 
-            <template #body="props">
-              <q-tr :props="props">
-                <q-td no-hover :key="props.cols[0].name" :props="props">
-                  {{ props.row.action }}
+            <template #body="tableProps">
+              <q-tr :props="tableProps">
+                <q-td
+                  :key="tableProps.cols[0].name"
+                  no-hover
+                  :props="tableProps"
+                >
+                  {{ tableProps.row.action }}
                 </q-td>
-                <q-td no-hover :key="props.cols[1].name" :props="props">
+                <q-td
+                  :key="tableProps.cols[1].name"
+                  no-hover
+                  :props="tableProps"
+                >
                   <q-btn
                     dense
                     text-color="display"
                     padding="none sm"
                     flat
-                    :disable="checkHotkeyReadonly(props.row.action)"
+                    :disable="checkHotkeyReadonly(tableProps.row.action)"
                     no-caps
                     :label="
-                      getHotkeyText(props.row.action, props.row.combination)
+                      getHotkeyText(
+                        tableProps.row.action,
+                        tableProps.row.combination
+                      )
                         .split(' ')
                         .map((hotkeyText) => {
                           // Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
@@ -89,7 +104,7 @@
                         })
                         .join(' + ')
                     "
-                    @click="openHotkeyDialog(props.row.action)"
+                    @click="openHotkeyDialog(tableProps.row.action)"
                   />
                   <q-btn
                     rounded
@@ -97,8 +112,8 @@
                     icon="settings_backup_restore"
                     padding="none sm"
                     size="1em"
-                    :disable="checkHotkeyReadonly(props.row.action)"
-                    @click="resetHotkey(props.row.action)"
+                    :disable="checkHotkeyReadonly(tableProps.row.action)"
+                    @click="resetHotkey(tableProps.row.action)"
                   >
                     <q-tooltip :delay="500">デフォルトに戻す</q-tooltip>
                   </q-btn>
@@ -174,12 +189,12 @@
           color="primary"
           text-color="display-on-primary"
           class="q-mt-sm"
+          :disabled="confirmBtnEnabled"
           @click="
             changeHotkeySettings(lastAction, lastRecord).then(() =>
               closeHotkeyDialog()
             )
           "
-          :disabled="confirmBtnEnabled"
         />
         <q-btn
           v-else
@@ -189,8 +204,8 @@
           color="primary"
           text-color="display-on-primary"
           class="q-mt-sm"
-          @click="solveDuplicated().then(() => closeHotkeyDialog())"
           :disabled="confirmBtnEnabled"
+          @click="solveDuplicated().then(() => closeHotkeyDialog())"
         />
       </q-card-actions>
     </q-card>
@@ -199,7 +214,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
@@ -214,7 +228,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const hotkeySettingDialogOpenComputed = computed({
   get: () => props.modelValue,
@@ -287,7 +300,7 @@ const deleteHotkey = (action: string) => {
 };
 
 const getHotkeyText = (action: string, combo: string) => {
-  if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
+  if (checkHotkeyReadonly(action)) combo = "（読み取り専用）" + combo;
   if (combo == "") return "未設定";
   else return combo;
 };
@@ -329,28 +342,21 @@ const solveDuplicated = () => {
 const confirmBtnEnabled = computed(() => {
   return (
     lastRecord.value == "" ||
-    ["Ctrl", "Shift", "Alt", "Meta"].indexOf(
+    ["Ctrl", "Shift", "Alt", "Meta"].includes(
       lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
-    ) > -1
+    )
   );
 });
 
-const resetHotkey = (action: string) => {
-  $q.dialog({
+const resetHotkey = async (action: string) => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "ショートカットキーを初期値に戻します",
     message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
     html: true,
-    ok: {
-      label: "初期値に戻す",
-      flat: true,
-      textColor: "display",
-    },
-    cancel: {
-      label: "初期値に戻さない",
-      flat: true,
-      textColor: "display",
-    },
-  }).onOk(() => {
+    actionName: "初期値に戻す",
+    cancel: "初期値に戻さない",
+  });
+  if (result === "OK") {
     window.electron
       .getDefaultHotkeySettings()
       .then((defaultSettings: HotkeySetting[]) => {
@@ -359,7 +365,7 @@ const resetHotkey = (action: string) => {
           changeHotkeySettings(action, setting.combination);
         }
       });
-  });
+  }
 };
 </script>
 

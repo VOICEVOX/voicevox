@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="dictionaryManageDialogOpenedComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="setting-dialog transparent-backdrop"
-    v-model="dictionaryManageDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container>
@@ -52,24 +52,24 @@
                   outline
                   text-color="warning"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="deleteWord"
                   :disable="uiLocked || !isDeletable"
+                  @click="deleteWord"
                   >削除</q-btn
                 >
                 <q-btn
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="editWord"
                   :disable="uiLocked || !selectedId"
+                  @click="editWord"
                   >編集</q-btn
                 >
                 <q-btn
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="newWord"
                   :disable="uiLocked"
+                  @click="newWord"
                   >追加</q-btn
                 >
               </div>
@@ -78,13 +78,13 @@
               <q-item
                 v-for="(value, key) in userDict"
                 :key="key"
-                tag="label"
                 v-ripple
+                tag="label"
                 clickable
-                @click="selectWord(key)"
-                @dblclick="editWord"
                 :active="selectedId === key"
                 active-class="active-word"
+                @click="selectWord(key)"
+                @dblclick="editWord"
               >
                 <q-item-section>
                   <q-item-label class="text-display">{{
@@ -105,27 +105,27 @@
               <div class="text-h6">単語</div>
               <q-input
                 ref="surfaceInput"
-                class="word-input"
                 v-model="surface"
-                @blur="setSurface(surface)"
-                @keydown="yomiFocusWhenEnter"
+                class="word-input"
                 dense
                 :disable="uiLocked"
+                @blur="setSurface(surface)"
+                @keydown.enter="yomiFocus"
               />
             </div>
             <div class="row q-pl-md q-pt-sm">
               <div class="text-h6">読み</div>
               <q-input
                 ref="yomiInput"
-                class="word-input q-pb-none"
                 v-model="yomi"
-                @blur="setYomi(yomi)"
-                @keydown="setYomiWhenEnter"
+                class="word-input q-pb-none"
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
+                @blur="setYomi(yomi)"
+                @keydown.enter="setYomiWhenEnter"
               >
-                <template v-slot:error>
+                <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
                 </template>
               </q-input>
@@ -139,7 +139,7 @@
                 <q-btn
                   v-if="!nowPlaying && !nowGenerating"
                   fab
-                  color="primary-light"
+                  color="primary"
                   text-color="display-on-primary"
                   icon="play_arrow"
                   @click="play"
@@ -147,11 +147,11 @@
                 <q-btn
                   v-else
                   fab
-                  color="primary-light"
+                  color="primary"
                   text-color="display-on-primary"
                   icon="stop"
-                  @click="stop"
                   :disable="nowGenerating"
+                  @click="stop"
                 />
               </div>
               <div
@@ -163,7 +163,7 @@
                     :accent-phrase="accentPhrase"
                     :accent-phrase-index="0"
                     :ui-locked="uiLocked"
-                    :onChangeAccent="changeAccent"
+                    :on-change-accent="changeAccent"
                   />
                   <template
                     v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -202,7 +202,7 @@
                 v-model="wordPriority"
                 snap
                 dense
-                color="primary-light"
+                color="primary"
                 markers
                 :min="0"
                 :max="10"
@@ -220,24 +220,24 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="resetWord"
                 :disable="uiLocked || !isWordChanged"
+                @click="resetWord"
                 >リセット</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="discardOrNotDialog(cancel)"
                 :disable="uiLocked"
+                @click="discardOrNotDialog(cancel)"
                 >キャンセル</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="saveWord"
                 :disable="uiLocked || !isWordChanged"
+                @click="saveWord"
                 >保存</q-btn
               >
             </div>
@@ -250,7 +250,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { QInput, useQuasar } from "quasar";
+import { QInput } from "quasar";
+import AudioAccent from "./AudioAccent.vue";
 import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
@@ -258,7 +259,6 @@ import {
   convertLongVowel,
   createKanaRegex,
 } from "@/store/utility";
-import AudioAccent from "@/components/AudioAccent.vue";
 
 const defaultDictPriority = 5;
 
@@ -272,7 +272,6 @@ const emit =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const dictionaryManageDialogOpenedComputed = computed({
   get: () => props.modelValue,
@@ -302,30 +301,21 @@ const loadingDictProcess = async () => {
       store.dispatch("LOAD_ALL_USER_DICT")
     );
   } catch {
-    $q.dialog({
+    const result = await store.dispatch("SHOW_ALERT_DIALOG", {
       title: "辞書の取得に失敗しました",
       message: "エンジンの再起動をお試しください。",
-      ok: {
-        label: "閉じる",
-        flat: true,
-        textColor: "display",
-      },
-    }).onOk(() => {
-      dictionaryManageDialogOpenedComputed.value = false;
     });
+    if (result === "OK") {
+      dictionaryManageDialogOpenedComputed.value = false;
+    }
   }
   loadingDictState.value = "synchronizing";
   try {
     await createUILockAction(store.dispatch("SYNC_ALL_USER_DICT"));
   } catch {
-    $q.dialog({
+    await store.dispatch("SHOW_ALERT_DIALOG", {
       title: "辞書の同期に失敗しました",
       message: "エンジンの再起動をお試しください。",
-      ok: {
-        label: "閉じる",
-        flat: true,
-        textColor: "display",
-      },
     });
   }
   loadingDictState.value = null;
@@ -341,19 +331,13 @@ const wordEditing = ref(false);
 
 const surfaceInput = ref<QInput>();
 const yomiInput = ref<QInput>();
-const yomiFocusWhenEnter = (event: KeyboardEvent) => {
-  // keyCodeは非推奨で、keyが推奨だが、
-  // key === "Enter"はIMEのEnterも拾ってしまうので、keyCodeを用いている
-  if (event.keyCode === 13) {
-    yomiInput.value?.focus();
-  }
+const yomiFocus = (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
+  yomiInput.value?.focus();
 };
-const setYomiWhenEnter = (event: KeyboardEvent) => {
-  // keyCodeは非推奨で、keyが推奨だが、
-  // key === "Enter"はIMEのEnterも拾ってしまうので、keyCodeを用いている
-  if (event.keyCode === 13) {
-    setYomi(yomi.value);
-  }
+const setYomiWhenEnter = (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
+  setYomi(yomi.value);
 };
 
 const selectedId = ref("");
@@ -448,9 +432,6 @@ const changeAccent = async (_: number, accent: number) => {
   }
 };
 
-const audioElem = new Audio();
-audioElem.pause();
-
 const play = async () => {
   if (!accentPhrase.value) return;
 
@@ -478,25 +459,20 @@ const play = async () => {
     } catch (e) {
       window.electron.logError(e);
       nowGenerating.value = false;
-      $q.dialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "生成に失敗しました",
         message: "エンジンの再起動をお試しください。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
       return;
     }
   }
   nowGenerating.value = false;
   nowPlaying.value = true;
-  await store.dispatch("PLAY_AUDIO_BLOB", { audioElem, audioBlob: blob });
+  await store.dispatch("PLAY_AUDIO_BLOB", { audioBlob: blob });
   nowPlaying.value = false;
 };
 const stop = () => {
-  audioElem.pause();
+  store.dispatch("STOP_AUDIO");
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
@@ -555,14 +531,9 @@ const saveWord = async () => {
         priority: wordPriority.value,
       });
     } catch {
-      $q.dialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の更新に失敗しました",
         message: "エンジンの再起動をお試しください。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
       return;
     }
@@ -577,14 +548,9 @@ const saveWord = async () => {
         })
       );
     } catch {
-      $q.dialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の登録に失敗しました",
         message: "エンジンの再起動をお試しください。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
       return;
     }
@@ -593,23 +559,13 @@ const saveWord = async () => {
   toInitialState();
 };
 const isDeletable = computed(() => !!selectedId.value);
-const deleteWord = () => {
-  $q.dialog({
+const deleteWord = async () => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "登録された単語を削除しますか？",
     message: "削除された単語は復旧できません。",
-    persistent: true,
-    focus: "cancel",
-    ok: {
-      label: "削除",
-      flat: true,
-      textColor: "warning",
-    },
-    cancel: {
-      label: "キャンセル",
-      flat: true,
-      textColor: "display",
-    },
-  }).onOk(async () => {
+    actionName: "削除",
+  });
+  if (result === "OK") {
     try {
       await createUILockAction(
         store.dispatch("DELETE_WORD", {
@@ -617,60 +573,37 @@ const deleteWord = () => {
         })
       );
     } catch {
-      $q.dialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の削除に失敗しました",
         message: "エンジンの再起動をお試しください。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
       return;
     }
     await loadingDictProcess();
     toInitialState();
-  });
+  }
 };
-const resetWord = () => {
-  $q.dialog({
+const resetWord = async () => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
-    persistent: true,
-    focus: "cancel",
-    ok: {
-      label: "リセット",
-      flat: true,
-      textColor: "display",
-    },
-    cancel: {
-      label: "キャンセル",
-      flat: true,
-      textColor: "display",
-    },
-  }).onOk(() => {
-    toWordEditingState();
+    actionName: "リセット",
   });
+  if (result === "OK") {
+    toWordEditingState();
+  }
 };
-const discardOrNotDialog = (okCallback: () => void) => {
+const discardOrNotDialog = async (okCallback: () => void) => {
   if (isWordChanged.value) {
-    $q.dialog({
+    const result = await store.dispatch("SHOW_WARNING_DIALOG", {
       title: "単語の追加・変更を破棄しますか？",
       message:
         "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
-      persistent: true,
-      focus: "cancel",
-      ok: {
-        label: "続行",
-        flat: true,
-        textColor: "display",
-      },
-      cancel: {
-        label: "キャンセル",
-        flat: true,
-        textColor: "display",
-      },
-    }).onOk(okCallback);
+      actionName: "続行",
+    });
+    if (result === "OK") {
+      okCallback();
+    }
   } else {
     okCallback();
   }

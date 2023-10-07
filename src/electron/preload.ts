@@ -32,8 +32,6 @@ function ipcRendererOn(
   return ipcRenderer.on(channel, listener);
 }
 
-let tempDir: string;
-
 const api: Sandbox = {
   getAppInfos: async () => {
     return await ipcRendererInvoke("GET_APP_INFOS");
@@ -73,32 +71,6 @@ const api: Sandbox = {
 
   getAltPortInfos: async () => {
     return await ipcRendererInvoke("GET_ALT_PORT_INFOS");
-  },
-
-  saveTempAudioFile: async ({ relativePath, buffer }) => {
-    if (!tempDir) {
-      tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
-    }
-    const tempFilePath = await ipcRendererInvoke("JOIN_PATH", {
-      pathArray: [tempDir, relativePath],
-    });
-    await ipcRendererInvoke("WRITE_FILE", {
-      filePath: tempFilePath,
-      buffer: buffer,
-    });
-  },
-
-  loadTempFile: async () => {
-    if (!tempDir) {
-      tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
-    }
-    const tempFilePath = await ipcRendererInvoke("JOIN_PATH", {
-      pathArray: [tempDir, "hoge.txt"],
-    });
-    const buf = await ipcRendererInvoke("READ_FILE", {
-      filePath: tempFilePath,
-    });
-    return new TextDecoder().decode(buf);
   },
 
   showAudioSaveDialog: ({ title, defaultPath }) => {
@@ -162,10 +134,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("READ_FILE", { filePath });
   },
 
-  openTextEditContextMenu: () => {
-    return ipcRendererInvoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
-  },
-
   isAvailableGPUMode: () => {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
@@ -203,6 +171,10 @@ const api: Sandbox = {
   logInfo: (...params) => {
     console.info(...params);
     return ipcRenderer.invoke("LOG_INFO", ...params);
+  },
+
+  openLogDirectory: () => {
+    ipcRenderer.invoke("OPEN_LOG_DIRECTORY");
   },
 
   engineInfos: () => {
@@ -290,8 +262,12 @@ const api: Sandbox = {
     return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
   },
 
-  restartApp: ({ isMultiEngineOffMode }: { isMultiEngineOffMode: boolean }) => {
-    ipcRendererInvoke("RESTART_APP", { isMultiEngineOffMode });
+  /**
+   * アプリを再読み込みする。
+   * 画面以外の情報を刷新する。
+   */
+  reloadApp: async ({ isMultiEngineOffMode }) => {
+    return await ipcRendererInvoke("RELOAD_APP", { isMultiEngineOffMode });
   },
 };
 
