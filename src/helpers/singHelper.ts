@@ -15,13 +15,13 @@ export function getMeasureDuration(timeSignature: TimeSignature, tpqn: number) {
   return tpqn * quarterNotesPerMeasure;
 }
 
-export function getMeasureNum(notes: Note[], ticksPerMeasure: number) {
+export function getMeasureNum(notes: Note[], measureDuration: number) {
   if (notes.length === 0) {
     return 0;
   }
   const lastNote = notes[notes.length - 1];
   const maxTicks = lastNote.position + lastNote.duration;
-  return Math.ceil(maxTicks / ticksPerMeasure);
+  return Math.ceil(maxTicks / measureDuration);
 }
 
 // NOTE: 戻り値の単位はtick
