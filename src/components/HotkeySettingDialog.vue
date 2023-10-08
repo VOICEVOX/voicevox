@@ -438,6 +438,7 @@ const solveDuplicated = async () => {
     cursor: pointer;
 
     &:hover td::before {
+      // Quasarデフォルトの強調表示を流用し、hover中の行を強調表示
       content: "";
     }
     td .buttons {
