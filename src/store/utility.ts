@@ -78,7 +78,7 @@ export const SLIDER_PARAMETERS = {
   /**
    *  開始無音パラメータの定義
    */
-  START_SILENCE: {
+  PRE_PHONEME_LENGTH: {
     max: () => 1.5,
     min: () => 0,
     step: () => 0.01,
@@ -88,7 +88,7 @@ export const SLIDER_PARAMETERS = {
   /**
    *  終了無音パラメータの定義
    */
-  END_SILENCE: {
+  POST_PHONEME_LENGTH: {
     max: () => 1.5,
     min: () => 0,
     step: () => 0.01,

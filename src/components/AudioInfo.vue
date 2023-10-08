@@ -435,11 +435,11 @@ const parameters = computed<Parameter[]>(() => [
     slider: previewSliderHelper({
       modelValue: () => query.value?.prePhonemeLength ?? null,
       disable: () => uiLocked.value,
-      max: SLIDER_PARAMETERS.START_SILENCE.max,
-      min: SLIDER_PARAMETERS.START_SILENCE.min,
-      step: SLIDER_PARAMETERS.START_SILENCE.step,
-      scrollStep: SLIDER_PARAMETERS.START_SILENCE.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.START_SILENCE.scrollMinStep,
+      max: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.max,
+      min: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.min,
+      step: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.step,
+      scrollStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollMinStep,
       onChange: (prePhonemeLength: number) =>
         store.dispatch("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", {
           audioKey: props.activeAudioKey,
@@ -454,11 +454,11 @@ const parameters = computed<Parameter[]>(() => [
     slider: previewSliderHelper({
       modelValue: () => query.value?.postPhonemeLength ?? null,
       disable: () => uiLocked.value,
-      max: SLIDER_PARAMETERS.END_SILENCE.max,
-      min: SLIDER_PARAMETERS.END_SILENCE.min,
-      step: SLIDER_PARAMETERS.END_SILENCE.step,
-      scrollStep: SLIDER_PARAMETERS.END_SILENCE.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.END_SILENCE.scrollMinStep,
+      max: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.max,
+      min: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.min,
+      step: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.step,
+      scrollStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollMinStep,
       onChange: (postPhonemeLength: number) =>
         store.dispatch("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", {
           audioKey: props.activeAudioKey,
