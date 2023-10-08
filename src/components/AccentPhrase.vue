@@ -4,6 +4,8 @@
     class="mora-table"
     :class="[isActive && 'mora-table-focus', uiLocked || 'mora-table-hover']"
     @click="$emit('click', index)"
+    @mouseenter="isHovered = true"
+    @mouseleave="isHovered = false"
   >
     <context-menu :menudata="contextMenudata" />
     <!-- スライダーここから -->
@@ -24,6 +26,8 @@
         :key="moraIndex"
         class="q-mb-sm pitch-cell"
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+        @mouseenter="hoveredMoraIndex = moraIndex"
+        @mouseleave="hoveredMoraIndex = undefined"
       >
         <audio-parameter
           :mora-index="moraIndex"
@@ -36,6 +40,10 @@
           :clip="false"
           :shift-key-flag="shiftKeyFlag"
           :alt-key-flag="altKeyFlag"
+          :is-value-label-visible="
+            !uiLocked &&
+            ((isHovered && altKeyFlag) || hoveredMoraIndex === moraIndex)
+          "
           @change-value="changeMoraData"
         />
       </div>
@@ -48,6 +56,8 @@
         :key="moraIndex"
         class="q-mb-sm pitch-cell"
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+        @mouseenter="hoveredMoraIndex = moraIndex"
+        @mouseleave="hoveredMoraIndex = undefined"
       >
         <!-- consonant length -->
         <audio-parameter
@@ -62,6 +72,10 @@
           :clip="true"
           :shift-key-flag="shiftKeyFlag"
           :alt-key-flag="altKeyFlag"
+          :is-value-label-visible="
+            !uiLocked &&
+            ((isHovered && altKeyFlag) || hoveredMoraIndex === moraIndex)
+          "
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
@@ -77,6 +91,10 @@
           :clip="mora.consonant ? true : false"
           :shift-key-flag="shiftKeyFlag"
           :alt-key-flag="altKeyFlag"
+          :is-value-label-visible="
+            !uiLocked &&
+            ((isHovered && altKeyFlag) || hoveredMoraIndex === moraIndex)
+          "
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
@@ -99,6 +117,11 @@
           :type="'pause'"
           :shift-key-flag="shiftKeyFlag"
           :alt-key-flag="altKeyFlag"
+          :is-value-label-visible="
+            !uiLocked &&
+            ((isHovered && altKeyFlag) ||
+              hoveredMoraIndex === accentPhrase.moras.length)
+          "
           @change-value="changeMoraData"
         />
       </div>
@@ -260,12 +283,16 @@ const handleChangePronounce = (newPronunciation: string) => {
   });
 };
 
-const hoveredMoraIndex = ref<number | undefined>(undefined);
+const isHovered = ref(false);
+
+const hoveredTextMoraIndex = ref<number | undefined>(undefined);
 const handleHoverText = (isOver: boolean, moraIndex: number) => {
   if (props.selectedDetail == "accent" || props.selectedDetail == "pitch") {
-    hoveredMoraIndex.value = isOver ? moraIndex : undefined;
+    hoveredTextMoraIndex.value = isOver ? moraIndex : undefined;
   }
 };
+
+const hoveredMoraIndex = ref<number | undefined>(undefined);
 
 const lengthHoveredPhonemeType = ref<"vowel" | "consonant">("vowel");
 const handleLengthHoverText = (
@@ -277,7 +304,7 @@ const handleLengthHoverText = (
     throw new Error("phoneme != hoveredType");
   lengthHoveredPhonemeType.value = phoneme;
   // the pause and pitch templates don't emit a mouseOver event
-  hoveredMoraIndex.value = isOver ? moraIndex : undefined;
+  hoveredTextMoraIndex.value = isOver ? moraIndex : undefined;
 };
 
 const unvoicableVowels = ["U", "I", "i", "u"];
@@ -293,13 +320,14 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
   if (props.selectedDetail == "accent") {
     // クリック時の動作はそのアクセント句の読み変更。
     // よって、いずれかのモーラがhoverされているならそのアクセント句を強調表示する。
-    return hoveredMoraIndex.value !== undefined;
+    return hoveredTextMoraIndex.value !== undefined;
   }
   if (props.selectedDetail == "pitch") {
     // クリック時の動作は無声化/有声化の切り替え。
     // よって、hover中のモーラが無声化可能かを判定しそのモーラを強調表示する。
     return (
-      moraIndex === hoveredMoraIndex.value && unvoicableVowels.includes(vowel)
+      moraIndex === hoveredTextMoraIndex.value &&
+      unvoicableVowels.includes(vowel)
     );
   }
   return false;
@@ -307,7 +335,7 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
-  if (moraIndex === hoveredMoraIndex.value) {
+  if (moraIndex === hoveredTextMoraIndex.value) {
     if (lengthHoveredPhonemeType.value == "vowel") {
       return mora.vowel.toUpperCase();
     } else {

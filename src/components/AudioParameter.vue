@@ -5,12 +5,11 @@
     @mouseleave="handleMouseHover(false)"
   >
     <q-badge
+      v-if="isValueLabelVisible"
       class="value-label"
       :class="{
-        'ui-locked': !uiLocked,
-        'alt-key': altKeyFlag,
-        'value-label-consonant': clip && type === 'consonant',
-        'value-label-vowel': clip && type === 'vowel',
+        'value-label-consonant': altKeyFlag && clip && type === 'consonant',
+        'value-label-vowel': altKeyFlag && clip && type === 'vowel',
       }"
       color="primary"
       text-color="display-on-primary"
@@ -60,6 +59,7 @@ const props = withDefaults(
     clip?: boolean;
     shiftKeyFlag?: boolean;
     altKeyFlag?: boolean;
+    isValueLabelVisible?: boolean;
   }>(),
   {
     min: 0.0,
@@ -70,6 +70,7 @@ const props = withDefaults(
     clip: false,
     shiftKeyFlag: false,
     altKeyFlag: false,
+    isValueLabelVisible: false,
   }
 );
 
@@ -165,10 +166,10 @@ div {
     z-index: 3;
 
     // altキー押下中は母音と子音の値ラベルの表示位置が被らないようにずらす
-    &.alt-key.value-label-consonant {
+    &.value-label-consonant {
       transform: translateX(-50%) translateX(14px) translateY(-60%);
     }
-    &.alt-key.value-label-vowel {
+    &.value-label-vowel {
       transform: translateX(-50%) translateX(16px) translateY(60%);
     }
   }
@@ -177,13 +178,5 @@ div {
 // hover中以外の音素のラベルは半透明にする
 .audio-parameter:not(:hover) .value-label {
   opacity: 0.8;
-}
-
-.value-label.ui-locked
-// hover中以外のアクセント区間の値ラベル
-:root .mora-table:not(:hover) .value-label,
-// hover中以外の音素かつaltキー押下中以外の値ラベル
-.audio-parameter:not(:hover) .value-label:not(.alt-key) {
-  display: none;
 }
 </style>
