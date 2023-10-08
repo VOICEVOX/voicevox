@@ -74,7 +74,9 @@
           :alt-key-flag="altKeyFlag"
           :is-value-label-visible="
             !uiLocked &&
-            ((isHovered && altKeyFlag) || hoveredMoraIndex === moraIndex)
+            ((isHovered && altKeyFlag) ||
+              (lengthHoveredPhonemeType === 'consonant' &&
+                hoveredMoraIndex === moraIndex))
           "
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
@@ -93,7 +95,9 @@
           :alt-key-flag="altKeyFlag"
           :is-value-label-visible="
             !uiLocked &&
-            ((isHovered && altKeyFlag) || hoveredMoraIndex === moraIndex)
+            ((isHovered && altKeyFlag) ||
+              (lengthHoveredPhonemeType === 'vowel' &&
+                hoveredMoraIndex === moraIndex))
           "
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
