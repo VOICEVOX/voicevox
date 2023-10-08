@@ -155,9 +155,6 @@
   >
     <q-card class="q-py-sm q-px-md">
       <q-card-section>
-        <div class="text-h6">「{{ targetAction }}」</div>
-      </q-card-section>
-      <q-card-section>
         <template
           v-for="(hotkey, index) in targetRecord.split(' ')"
           :key="index"
