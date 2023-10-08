@@ -37,9 +37,9 @@ async function getAudioInfoParameters(
 ): Promise<Record<string, number>> {
   return await page.evaluate(() => {
     const result: Record<string, number> = {};
-    const audioInfo = document.querySelector(".audio-info");
+    const audioInfo = document.querySelector("[data-testid='AudioInfo']");
     if (!audioInfo) {
-      throw new Error("audio-infoがありません");
+      throw new Error("AudioInfoがありません");
     }
 
     const parameters = audioInfo.querySelectorAll(".parameters > div");
@@ -115,7 +115,7 @@ test("複数選択：AudioInfo操作", async ({ page }) => {
   await page.keyboard.up("Shift");
   await page.waitForTimeout(100);
 
-  const audioInfo = page.locator(".audio-info");
+  const audioInfo = page.getByTestId("AudioInfo");
   const parameters = await audioInfo.locator(".parameters > div").all();
 
   for (const parameter of parameters) {
