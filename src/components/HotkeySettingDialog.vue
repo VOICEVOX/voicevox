@@ -158,11 +158,6 @@
         <div class="text-h6">「{{ targetAction }}」</div>
       </q-card-section>
       <q-card-section>
-        <div class="text-md">
-          上記の操作に対応させる<br />ショートカットキーを入力してください。
-        </div>
-      </q-card-section>
-      <q-card-section>
         <template
           v-for="(hotkey, index) in targetRecord.split(' ')"
           :key="index"
