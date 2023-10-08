@@ -14,8 +14,8 @@
       <!-- グリッド -->
       <!-- NOTE: 現状小節+オクターブごとの罫線なし -->
       <svg
-        :width="`${gridColumnWidth * gridColumnNum}`"
-        :height="`${gridRowHeight * keyInfos.length}`"
+        :width="`${gridCellWidth * gridColumnNum}`"
+        :height="`${gridCellHeight * keyInfos.length}`"
         xmlns="http://www.w3.org/2000/svg"
         class="sequencer-grid"
       >
@@ -23,24 +23,24 @@
         <defs>
           <pattern
             id="sequencer-grid-column"
-            :width="`${gridColumnWidth}px`"
-            :height="`${gridRowHeight * 12}px`"
+            :width="`${gridCellWidth}px`"
+            :height="`${gridCellHeight * 12}px`"
             patternUnits="userSpaceOnUse"
           >
             <rect
               v-for="(keyInfo, index) in keyInfos"
               :key="index"
               x="0"
-              :y="`${gridRowHeight * index}`"
-              :width="`${gridColumnWidth}`"
-              :height="`${gridRowHeight}`"
+              :y="`${gridCellHeight * index}`"
+              :width="`${gridCellWidth}`"
+              :height="`${gridCellHeight}`"
               :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
             />
           </pattern>
           <pattern
             id="sequencer-grid-measure"
-            :width="`${gridColumnWidth * gridColumnNumPerMeasure}`"
-            :height="`${gridRowHeight * 12}`"
+            :width="`${gridCellWidth * gridColumnNumPerMeasure}`"
+            :height="`${gridCellHeight * 12}`"
             patternUnits="userSpaceOnUse"
           >
             <rect
@@ -188,21 +188,21 @@ export default defineComponent({
       return snapBaseWidth.value * zoomX.value;
     });
     // シーケンサグリッド
-    const gridColumnTicks = snapTicks;
-    const gridColumnBaseWidth = snapBaseWidth;
-    const gridColumnWidth = computed(() => {
-      return gridColumnBaseWidth.value * zoomX.value;
+    const gridCellTicks = snapTicks; // ひとまずスナップ幅＝グリッドセル幅
+    const gridCellBaseWidth = snapBaseWidth;
+    const gridCellWidth = computed(() => {
+      return gridCellBaseWidth.value * zoomX.value;
     });
-    const gridRowBaseHeight = getKeyBaseHeight();
-    const gridRowHeight = computed(() => {
-      return gridRowBaseHeight * zoomY.value;
+    const gridCellBaseHeight = getKeyBaseHeight();
+    const gridCellHeight = computed(() => {
+      return gridCellBaseHeight * zoomY.value;
     });
     const measureDuration = computed(() => {
       return getMeasureDuration(timeSignature.value, tpqn.value);
     });
     const gridColumnNumPerMeasure = computed(() => {
       // TODO: スナップが3連符のときにおかしくなるので修正する
-      return Math.round(measureDuration.value / gridColumnTicks.value);
+      return Math.round(measureDuration.value / gridCellTicks.value);
     });
     const gridColumnNum = computed(() => {
       // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
@@ -224,8 +224,8 @@ export default defineComponent({
       const eventOffsetBaseX = event.offsetX / zoomX.value;
       const eventOffsetBaseY = event.offsetY / zoomY.value;
       const positionBaseX =
-        gridColumnBaseWidth.value *
-        Math.floor(eventOffsetBaseX / gridColumnBaseWidth.value);
+        gridCellBaseWidth.value *
+        Math.floor(eventOffsetBaseX / gridCellBaseWidth.value);
       const position = baseXToTick(positionBaseX, tpqn.value);
       const noteNumber = baseYToNoteNumber(eventOffsetBaseY);
       if (noteNumber < 0) {
@@ -289,21 +289,19 @@ export default defineComponent({
 
       // カーソル位置に応じてノート移動量を計算
       let amountPositionX = 0;
-      if (gridColumnWidth.value <= Math.abs(distanceX)) {
+      if (gridCellWidth.value <= Math.abs(distanceX)) {
         amountPositionX = 0 < distanceX ? snapTicks.value : -snapTicks.value;
         const dragMoveCurrentXNext =
           dragMoveCurrentX.value +
-          (0 < amountPositionX
-            ? gridColumnWidth.value
-            : -gridColumnWidth.value);
+          (0 < amountPositionX ? gridCellWidth.value : -gridCellWidth.value);
         dragMoveCurrentX.value = dragMoveCurrentXNext;
       }
       let amountPositionY = 0;
-      if (gridRowHeight.value <= Math.abs(distanceY)) {
+      if (gridCellHeight.value <= Math.abs(distanceY)) {
         amountPositionY = 0 < distanceY ? -1 : 1;
         const dragMoveCurrentYNext =
           dragMoveCurrentY.value +
-          (0 > amountPositionY ? gridRowHeight.value : -gridRowHeight.value);
+          (0 > amountPositionY ? gridCellHeight.value : -gridCellHeight.value);
         dragMoveCurrentY.value = dragMoveCurrentYNext;
       }
 
@@ -601,8 +599,8 @@ export default defineComponent({
     });
 
     return {
-      gridColumnWidth,
-      gridRowHeight,
+      gridCellWidth,
+      gridCellHeight,
       gridColumnNumPerMeasure,
       gridColumnNum,
       keyInfos,
