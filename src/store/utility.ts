@@ -35,7 +35,7 @@ export function sanitizeFileName(fileName: string): string {
 /**
  * AudioInfoコンポーネントに表示されるパラメータ
  */
-export const SLIDER_PARAMETER = {
+export const SLIDER_PARAMETERS = {
   /**
    * 話速パラメータの定義
    */
