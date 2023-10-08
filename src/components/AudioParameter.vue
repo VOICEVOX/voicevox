@@ -37,12 +37,14 @@
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"
       @pan="previewSlider.qSliderProps.onPan"
+      @mouseenter="sliderHover(true)"
+      @mouseleave="sliderHover(false)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from "vue";
+import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
 
@@ -88,6 +90,7 @@ const emit =
       type: MoraDataType,
       moraIndex: number
     ): void;
+    (e: "sliderHover", isOver: boolean, moraIndex: number): void;
   }>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) =>
@@ -105,10 +108,6 @@ const previewSlider = previewSliderHelper({
   disableScroll: () => props.shiftKeyFlag, // shift+ホイール操作の横方向スクロール中にスライダー操作を無視するため
 });
 
-const valueLabel = reactive({
-  visible: false,
-});
-
 const clipPathComputed = computed((): string => {
   if (!props.clip) {
     return "";
@@ -122,10 +121,17 @@ const clipPathComputed = computed((): string => {
 });
 
 const handleMouseHover = (isOver: boolean) => {
-  valueLabel.visible = isOver;
-  if (props.type == "consonant" || props.type == "vowel") {
+  if (
+    props.type == "consonant" ||
+    props.type == "vowel" ||
+    props.type == "pause"
+  ) {
     emit("mouseOver", isOver, props.type, props.moraIndex);
   }
+};
+
+const sliderHover = (isOver: boolean) => {
+  emit("sliderHover", isOver, props.moraIndex);
 };
 
 const precisionComputed = computed(() => {

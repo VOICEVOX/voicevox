@@ -4,8 +4,8 @@
     class="mora-table"
     :class="[isActive && 'mora-table-focus', uiLocked || 'mora-table-hover']"
     @click="$emit('click', index)"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false"
+    @mouseenter="hoveredComponent = 'container'"
+    @mouseleave="hoveredComponent = undefined"
   >
     <context-menu :menudata="contextMenudata" />
     <!-- スライダーここから -->
@@ -26,8 +26,6 @@
         :key="moraIndex"
         class="q-mb-sm pitch-cell"
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
-        @mouseenter="hoveredMoraIndex = moraIndex"
-        @mouseleave="hoveredMoraIndex = undefined"
       >
         <audio-parameter
           :mora-index="moraIndex"
@@ -40,11 +38,9 @@
           :clip="false"
           :shift-key-flag="shiftKeyFlag"
           :alt-key-flag="altKeyFlag"
-          :is-value-label-visible="
-            !uiLocked &&
-            ((isHovered && altKeyFlag) || hoveredMoraIndex === moraIndex)
-          "
+          :is-value-label-visible="isValueLabelVisible(moraIndex, 'vowel')"
           @change-value="changeMoraData"
+          @slider-hover="handleHoveredSlider"
         />
       </div>
       <div v-if="accentPhrase.pauseMora" />
@@ -72,14 +68,10 @@
           :clip="true"
           :shift-key-flag="shiftKeyFlag"
           :alt-key-flag="altKeyFlag"
-          :is-value-label-visible="
-            !uiLocked &&
-            ((isHovered && altKeyFlag) ||
-              (lengthHoveredPhonemeType === 'consonant' &&
-                hoveredMoraIndex === moraIndex))
-          "
+          :is-value-label-visible="isValueLabelVisible(moraIndex, 'consonant')"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
+          @slider-hover="handleHoveredSlider"
         />
         <!-- vowel length -->
         <audio-parameter
@@ -93,14 +85,10 @@
           :clip="mora.consonant ? true : false"
           :shift-key-flag="shiftKeyFlag"
           :alt-key-flag="altKeyFlag"
-          :is-value-label-visible="
-            !uiLocked &&
-            ((isHovered && altKeyFlag) ||
-              (lengthHoveredPhonemeType === 'vowel' &&
-                hoveredMoraIndex === moraIndex))
-          "
+          :is-value-label-visible="isValueLabelVisible(moraIndex, 'vowel')"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
+          @slider-hover="handleHoveredSlider"
         />
       </div>
       <div
@@ -122,11 +110,11 @@
           :shift-key-flag="shiftKeyFlag"
           :alt-key-flag="altKeyFlag"
           :is-value-label-visible="
-            !uiLocked &&
-            ((isHovered && altKeyFlag) ||
-              hoveredMoraIndex === accentPhrase.moras.length)
+            isValueLabelVisible(accentPhrase.moras.length, 'pause')
           "
           @change-value="changeMoraData"
+          @mouse-over="handleLengthHoverText"
+          @slider-hover="handleHoveredSlider"
         />
       </div>
     </template>
@@ -141,8 +129,14 @@
         :style="{
           'grid-column': `${moraIndex * 2 + 1} / span 1`,
         }"
-        @mouseover="handleHoverText(true, moraIndex)"
-        @mouseleave="handleHoverText(false, moraIndex)"
+        @mouseover="
+          hoveredMoraIndex = moraIndex;
+          hoveredComponent = 'text';
+        "
+        @mouseleave="
+          hoveredMoraIndex = undefined;
+          hoveredComponent = 'container';
+        "
         @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
       >
         <span class="text-cell-inner">
@@ -287,28 +281,26 @@ const handleChangePronounce = (newPronunciation: string) => {
   });
 };
 
-const isHovered = ref(false);
-
-const hoveredTextMoraIndex = ref<number | undefined>(undefined);
-const handleHoverText = (isOver: boolean, moraIndex: number) => {
-  if (props.selectedDetail == "accent" || props.selectedDetail == "pitch") {
-    hoveredTextMoraIndex.value = isOver ? moraIndex : undefined;
-  }
-};
-
 const hoveredMoraIndex = ref<number | undefined>(undefined);
 
-const lengthHoveredPhonemeType = ref<"vowel" | "consonant">("vowel");
+const hoveredComponent =
+  ref<"container" | "text" | "slider" | undefined>(undefined);
+const handleHoveredSlider = (isOver: boolean, moraIndex: number) => {
+  hoveredMoraIndex.value = !isOver ? undefined : moraIndex;
+  hoveredComponent.value = !isOver ? "container" : "slider";
+};
+
+const lengthHoveredPhonemeType = ref<"vowel" | "consonant" | "pause">("vowel");
 const handleLengthHoverText = (
   isOver: boolean,
   phoneme: MoraDataType,
   moraIndex: number
 ) => {
-  if (phoneme !== "vowel" && phoneme !== "consonant")
+  if (phoneme !== "vowel" && phoneme !== "consonant" && phoneme !== "pause")
     throw new Error("phoneme != hoveredType");
   lengthHoveredPhonemeType.value = phoneme;
   // the pause and pitch templates don't emit a mouseOver event
-  hoveredTextMoraIndex.value = isOver ? moraIndex : undefined;
+  hoveredMoraIndex.value = isOver ? moraIndex : undefined;
 };
 
 const unvoicableVowels = ["U", "I", "i", "u"];
@@ -318,28 +310,48 @@ const unvoicableVowels = ["U", "I", "i", "u"];
  * 強調表示するかの判定に使われる。
  */
 const isEditableMora = (vowel: string, moraIndex: number) => {
-  if (uiLocked.value) {
+  if (uiLocked.value || hoveredComponent.value !== "text") {
     return false;
   }
   if (props.selectedDetail == "accent") {
     // クリック時の動作はそのアクセント句の読み変更。
     // よって、いずれかのモーラがhoverされているならそのアクセント句を強調表示する。
-    return hoveredTextMoraIndex.value !== undefined;
+    return hoveredMoraIndex.value !== undefined;
   }
   if (props.selectedDetail == "pitch") {
     // クリック時の動作は無声化/有声化の切り替え。
     // よって、hover中のモーラが無声化可能かを判定しそのモーラを強調表示する。
     return (
-      moraIndex === hoveredTextMoraIndex.value &&
-      unvoicableVowels.includes(vowel)
+      moraIndex === hoveredMoraIndex.value && unvoicableVowels.includes(vowel)
     );
+  }
+  return false;
+};
+
+const isValueLabelVisible = (moraIndex: number, moraDataType: MoraDataType) => {
+  if (uiLocked.value || hoveredComponent.value == undefined) {
+    return false;
+  }
+  if (props.altKeyFlag) {
+    return true;
+  }
+  if (
+    hoveredComponent.value === "slider" &&
+    moraIndex === hoveredMoraIndex.value
+  ) {
+    if (props.selectedDetail == "pitch") {
+      return true;
+    }
+    if (props.selectedDetail == "length") {
+      return moraDataType === lengthHoveredPhonemeType.value;
+    }
   }
   return false;
 };
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
-  if (moraIndex === hoveredTextMoraIndex.value) {
+  if (moraIndex === hoveredMoraIndex.value) {
     if (lengthHoveredPhonemeType.value == "vowel") {
       return mora.vowel.toUpperCase();
     } else {
