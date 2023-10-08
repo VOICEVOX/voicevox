@@ -88,7 +88,6 @@ const emit =
       type: MoraDataType,
       moraIndex: number
     ): void;
-    (e: "changeSelfValueLabelVisible", isVisible: boolean): void;
   }>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) =>
