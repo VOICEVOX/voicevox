@@ -90,8 +90,8 @@ const previewAccentSlider = previewSliderHelper({
   disable: () => props.uiLocked,
   disableScroll: () => props.shiftKeyFlag,
   max: () => props.accentPhrase.moras.length,
-  min: SLIDER_PARAMETER.ACCENT_SLIDER.min,
-  step: SLIDER_PARAMETER.ACCENT_SLIDER.step,
+  min: () => 1,
+  step: () => 1,
 });
 
 const accentLine = computed(() => {

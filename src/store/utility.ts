@@ -105,13 +105,6 @@ export const SLIDER_PARAMETER = {
     scrollStep: () => 0.1,
     scrollMinStep: () => 0.01,
   },
-  /**
-   *  アクセントスライダーの定義
-   */
-  ACCENT_SLIDER: {
-    min: () => 1,
-    step: () => 1,
-  },
 };
 
 export const replaceTagIdToTagString = {
