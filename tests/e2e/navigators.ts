@@ -5,7 +5,9 @@ import { getNewestQuasarDialog, getQuasarMenu } from "./locators";
  * 初回起動時の確認を完了してメイン画面に移動
  */
 export async function navigateToMain(page: Page) {
-  await expect(page.getByText("利用規約に関するお知らせ")).toBeVisible();
+  await expect(page.getByText("利用規約に関するお知らせ")).toBeVisible({
+    timeout: 60 * 1000,
+  });
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "同意して使用開始" }).click();
   await page.waitForTimeout(100);

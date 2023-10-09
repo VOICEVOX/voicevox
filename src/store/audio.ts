@@ -2671,130 +2671,178 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_SET_AUDIO_SPEED_SCALE: {
-      mutation(draft, payload: { audioKey: AudioKey; speedScale: number }) {
-        audioStore.mutations.SET_AUDIO_SPEED_SCALE(draft, payload);
-      },
-      action({ commit }, payload: { audioKey: AudioKey; speedScale: number }) {
-        commit("COMMAND_SET_AUDIO_SPEED_SCALE", payload);
-      },
-    },
-
-    COMMAND_SET_AUDIO_PITCH_SCALE: {
-      mutation(draft, payload: { audioKey: AudioKey; pitchScale: number }) {
-        audioStore.mutations.SET_AUDIO_PITCH_SCALE(draft, payload);
-      },
-      action({ commit }, payload: { audioKey: AudioKey; pitchScale: number }) {
-        commit("COMMAND_SET_AUDIO_PITCH_SCALE", payload);
-      },
-    },
-
-    COMMAND_SET_AUDIO_INTONATION_SCALE: {
-      mutation(
-        draft,
-        payload: { audioKey: AudioKey; intonationScale: number }
-      ) {
-        audioStore.mutations.SET_AUDIO_INTONATION_SCALE(draft, payload);
+    COMMAND_MULTI_SET_AUDIO_SPEED_SCALE: {
+      mutation(draft, payload: { audioKeys: AudioKey[]; speedScale: number }) {
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_SPEED_SCALE(draft, {
+            audioKey,
+            speedScale: payload.speedScale,
+          });
+        }
       },
       action(
         { commit },
-        payload: { audioKey: AudioKey; intonationScale: number }
+        payload: { audioKeys: AudioKey[]; speedScale: number }
       ) {
-        commit("COMMAND_SET_AUDIO_INTONATION_SCALE", payload);
+        commit("COMMAND_MULTI_SET_AUDIO_SPEED_SCALE", payload);
       },
     },
 
-    COMMAND_SET_AUDIO_VOLUME_SCALE: {
-      mutation(draft, payload: { audioKey: AudioKey; volumeScale: number }) {
-        audioStore.mutations.SET_AUDIO_VOLUME_SCALE(draft, payload);
-      },
-      action({ commit }, payload: { audioKey: AudioKey; volumeScale: number }) {
-        commit("COMMAND_SET_AUDIO_VOLUME_SCALE", payload);
-      },
-    },
-
-    COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH: {
-      mutation(
-        draft,
-        payload: { audioKey: AudioKey; prePhonemeLength: number }
-      ) {
-        audioStore.mutations.SET_AUDIO_PRE_PHONEME_LENGTH(draft, payload);
+    COMMAND_MULTI_SET_AUDIO_PITCH_SCALE: {
+      mutation(draft, payload: { audioKeys: AudioKey[]; pitchScale: number }) {
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_PITCH_SCALE(draft, {
+            audioKey,
+            pitchScale: payload.pitchScale,
+          });
+        }
       },
       action(
         { commit },
-        payload: { audioKey: AudioKey; prePhonemeLength: number }
+        payload: { audioKeys: AudioKey[]; pitchScale: number }
       ) {
-        commit("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", payload);
+        commit("COMMAND_MULTI_SET_AUDIO_PITCH_SCALE", payload);
       },
     },
 
-    COMMAND_SET_AUDIO_POST_PHONEME_LENGTH: {
+    COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE: {
       mutation(
         draft,
-        payload: { audioKey: AudioKey; postPhonemeLength: number }
+        payload: { audioKeys: AudioKey[]; intonationScale: number }
       ) {
-        audioStore.mutations.SET_AUDIO_POST_PHONEME_LENGTH(draft, payload);
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_INTONATION_SCALE(draft, {
+            audioKey,
+            intonationScale: payload.intonationScale,
+          });
+        }
       },
       action(
         { commit },
-        payload: { audioKey: AudioKey; postPhonemeLength: number }
+        payload: { audioKeys: AudioKey[]; intonationScale: number }
       ) {
-        commit("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", payload);
+        commit("COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE", payload);
       },
     },
 
-    COMMAND_SET_MORPHING_INFO: {
+    COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE: {
+      mutation(draft, payload: { audioKeys: AudioKey[]; volumeScale: number }) {
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_VOLUME_SCALE(draft, {
+            audioKey,
+            volumeScale: payload.volumeScale,
+          });
+        }
+      },
+      action(
+        { commit },
+        payload: { audioKeys: AudioKey[]; volumeScale: number }
+      ) {
+        commit("COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE", payload);
+      },
+    },
+
+    COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH: {
+      mutation(
+        draft,
+        payload: { audioKeys: AudioKey[]; prePhonemeLength: number }
+      ) {
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_PRE_PHONEME_LENGTH(draft, {
+            audioKey,
+            prePhonemeLength: payload.prePhonemeLength,
+          });
+        }
+      },
+      action(
+        { commit },
+        payload: { audioKeys: AudioKey[]; prePhonemeLength: number }
+      ) {
+        commit("COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH", payload);
+      },
+    },
+
+    COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH: {
+      mutation(
+        draft,
+        payload: { audioKeys: AudioKey[]; postPhonemeLength: number }
+      ) {
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_POST_PHONEME_LENGTH(draft, {
+            audioKey,
+            postPhonemeLength: payload.postPhonemeLength,
+          });
+        }
+      },
+      action(
+        { commit },
+        payload: { audioKeys: AudioKey[]; postPhonemeLength: number }
+      ) {
+        commit("COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH", payload);
+      },
+    },
+
+    COMMAND_MULTI_SET_MORPHING_INFO: {
       mutation(
         draft,
         payload: {
-          audioKey: AudioKey;
+          audioKeys: AudioKey[];
           morphingInfo: MorphingInfo | undefined;
         }
       ) {
-        audioStore.mutations.SET_MORPHING_INFO(draft, payload);
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_MORPHING_INFO(draft, {
+            audioKey,
+            morphingInfo: payload.morphingInfo,
+          });
+        }
       },
       action(
         { commit },
         payload: {
-          audioKey: AudioKey;
+          audioKeys: AudioKey[];
           morphingInfo: MorphingInfo | undefined;
         }
       ) {
-        commit("COMMAND_SET_MORPHING_INFO", payload);
+        commit("COMMAND_MULTI_SET_MORPHING_INFO", payload);
       },
     },
 
-    COMMAND_SET_AUDIO_PRESET: {
+    COMMAND_MULTI_SET_AUDIO_PRESET: {
       mutation(
         draft,
         {
-          audioKey,
+          audioKeys,
           presetKey,
-        }: { audioKey: AudioKey; presetKey: PresetKey | undefined }
+        }: { audioKeys: AudioKey[]; presetKey: PresetKey | undefined }
       ) {
-        audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-          audioKey,
-          presetKey,
-        });
-        audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
+        for (const audioKey of audioKeys) {
+          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+            audioKey,
+            presetKey,
+          });
+          audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
+        }
       },
       action(
         { commit },
         {
-          audioKey,
+          audioKeys,
           presetKey,
-        }: { audioKey: AudioKey; presetKey: PresetKey | undefined }
+        }: { audioKeys: AudioKey[]; presetKey: PresetKey | undefined }
       ) {
-        commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetKey });
+        commit("COMMAND_MULTI_SET_AUDIO_PRESET", { audioKeys, presetKey });
       },
     },
 
-    COMMAND_APPLY_AUDIO_PRESET: {
-      mutation(draft, payload: { audioKey: AudioKey }) {
-        audioStore.mutations.APPLY_AUDIO_PRESET(draft, payload);
+    COMMAND_MULTI_APPLY_AUDIO_PRESET: {
+      mutation(draft, payload: { audioKeys: AudioKey[] }) {
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
+        }
       },
-      action({ commit }, payload: { audioKey: AudioKey }) {
-        commit("COMMAND_APPLY_AUDIO_PRESET", payload);
+      action({ commit }, payload: { audioKeys: AudioKey[] }) {
+        commit("COMMAND_MULTI_APPLY_AUDIO_PRESET", payload);
       },
     },
 
