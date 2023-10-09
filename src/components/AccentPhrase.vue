@@ -114,6 +114,7 @@
         @mouseleave="handleHoverText(false, moraIndex)"
         @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
       >
+        <!-- tooltipを変更する場合、pauseMoraのものも合わせて変更すること-->
         <q-tooltip
           v-if="
             selectedDetail === 'pitch' && !unvoicableVowels.includes(mora.vowel)
@@ -174,6 +175,7 @@
     <template v-if="accentPhrase.pauseMora">
       <div class="text-cell">
         <!-- FIXME: 共通化 -->
+        <!-- tooltipを変更する場合、pauseMora以外のものも合わせて変更すること-->
         <q-tooltip
           v-if="selectedDetail === 'pitch'"
           :delay="500"
