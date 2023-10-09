@@ -39,7 +39,7 @@ export const SLIDER_PARAMETERS = {
   /**
    * 話速パラメータの定義
    */
-  SPEAKER_SPEED: {
+  SPEED: {
     max: () => 2,
     min: () => 0.5,
     step: () => 0.01,

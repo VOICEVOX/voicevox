@@ -356,11 +356,11 @@ const parameters = computed<Parameter[]>(() => [
       modelValue: () => query.value?.speedScale ?? null,
       disable: () =>
         uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
-      max: SLIDER_PARAMETERS.SPEAKER_SPEED.max,
-      min: SLIDER_PARAMETERS.SPEAKER_SPEED.min,
-      step: SLIDER_PARAMETERS.SPEAKER_SPEED.step,
-      scrollStep: SLIDER_PARAMETERS.SPEAKER_SPEED.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.SPEAKER_SPEED.scrollMinStep,
+      max: SLIDER_PARAMETERS.SPEED.max,
+      min: SLIDER_PARAMETERS.SPEED.min,
+      step: SLIDER_PARAMETERS.SPEED.step,
+      scrollStep: SLIDER_PARAMETERS.SPEED.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.SPEED.scrollMinStep,
       onChange: (speedScale: number) =>
         store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
           audioKey: props.activeAudioKey,
