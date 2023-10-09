@@ -283,6 +283,7 @@ const handleChangePronounce = (newPronunciation: string) => {
 
 const hoveredMoraIndex = ref<number | undefined>(undefined);
 
+// container, sliderは値ラベルの表示用。textはテキストの強調表示用。
 const hoveredTarget =
   ref<"container" | "text" | "slider" | undefined>(undefined);
 const handleHoveredSlider = (isOver: boolean, moraIndex: number) => {
