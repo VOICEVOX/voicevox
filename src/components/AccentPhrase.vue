@@ -173,6 +173,21 @@
     </template>
     <template v-if="accentPhrase.pauseMora">
       <div class="text-cell">
+        <!-- FIXME: 共通化 -->
+        <q-tooltip
+          v-if="selectedDetail === 'pitch'"
+          :delay="500"
+          transition-show="jump-up"
+          transition-hide="jump-down"
+          >イ段とウ段以外の音は無声化できません</q-tooltip
+        >
+        <q-tooltip
+          v-if="selectedDetail === 'length'"
+          :delay="500"
+          transition-show="jump-up"
+          transition-hide="jump-down"
+          >長さ項目では操作できません</q-tooltip
+        >
         <span class="text-cell-inner">
           {{ accentPhrase.pauseMora.text }}
         </span>
