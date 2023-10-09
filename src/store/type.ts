@@ -143,14 +143,6 @@ export type AudioStoreTypes = {
     getter: AudioKey[];
   };
 
-  HAVE_AUDIO_QUERY: {
-    getter(audioKey: AudioKey): boolean;
-  };
-
-  IS_ACTIVE: {
-    getter(audioKey: AudioKey): boolean;
-  };
-
   AUDIO_PLAY_START_POINT: {
     getter: number | undefined;
   };

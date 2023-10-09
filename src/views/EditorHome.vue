@@ -9,8 +9,16 @@
         <progress-dialog />
 
         <!-- TODO: 複数エンジン対応 -->
+        <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
+        <div v-if="allEngineState === 'FAILED_STARTING'" class="waiting-engine">
+          <div>
+            エンジンの起動に失敗しました。エンジンの再起動をお試しください。
+          </div>
+        </div>
         <div
-          v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
+          v-else-if="
+            !isCompletedInitialStartup || allEngineState === 'STARTING'
+          "
           class="waiting-engine"
         >
           <div>

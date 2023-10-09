@@ -58,8 +58,9 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
     return {
       ...engineInfo,
       type: "default",
+      executionFilePath: path.resolve(engineInfo.executionFilePath),
       path:
-        engineInfo.path === undefined
+        engineInfo.path == undefined
           ? undefined
           : path.resolve(defaultEngineDir, engineInfo.path),
     };
@@ -193,8 +194,8 @@ export class EngineManager {
   fetchEngineDirectory(engineId: EngineId): string {
     const engineInfo = this.fetchEngineInfo(engineId);
     const engineDirectory = engineInfo.path;
-    if (engineDirectory == null) {
-      throw new Error(`engineDirectory is null: engineId == ${engineId}`);
+    if (engineDirectory == undefined) {
+      throw new Error(`engineDirectory is undefined: engineId == ${engineId}`);
     }
 
     return engineDirectory;
@@ -385,7 +386,7 @@ export class EngineManager {
     for (const engineIdStr of Object.keys(this.engineProcessContainers)) {
       const engineId = EngineId(engineIdStr);
       const promise = this.killEngine(engineId);
-      if (promise === undefined) continue;
+      if (promise == undefined) continue;
 
       killingProcessPromises[engineId] = promise;
     }
@@ -410,15 +411,15 @@ export class EngineManager {
     }
 
     const engineProcess = engineProcessContainer.engineProcess;
-    if (engineProcess === undefined) {
+    if (engineProcess == undefined) {
       // nop if no process started (already killed or not started yet)
       log.info(`ENGINE ${engineId}: Process not started`);
 
       return undefined;
     }
 
-    const engineNotExited = engineProcess.exitCode === null;
-    const engineNotKilled = engineProcess.signalCode === null;
+    const engineNotExited = engineProcess.exitCode == undefined;
+    const engineNotKilled = engineProcess.signalCode == undefined;
 
     log.info(
       `ENGINE ${engineId}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
@@ -469,10 +470,10 @@ export class EngineManager {
       );
 
       // エンジンのプロセスがすでに終了している、またはkillされている場合
-      const engineExited = engineProcess?.exitCode !== null;
-      const engineKilled = engineProcess?.signalCode !== null;
+      const engineExited = engineProcess?.exitCode != undefined;
+      const engineKilled = engineProcess?.signalCode != undefined;
 
-      // engineProcess === undefinedの場合true
+      // engineProcess == undefinedの場合true
       if (engineExited || engineKilled) {
         log.info(
           `ENGINE ${engineId}: Process is not started yet or already killed. Starting process...`
@@ -495,10 +496,9 @@ export class EngineManager {
         resolve();
       };
 
-      if (engineProcess === undefined)
-        throw Error("engineProcess === undefined");
-      if (engineProcess.pid === undefined)
-        throw Error("engineProcess.pid === undefined");
+      if (engineProcess == undefined) throw Error("engineProcess == undefined");
+      if (engineProcess.pid == undefined)
+        throw Error("engineProcess.pid == undefined");
 
       engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
@@ -508,7 +508,7 @@ export class EngineManager {
       );
       treeKill(engineProcess.pid, (error) => {
         // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
-        if (error != null) {
+        if (error != undefined) {
           log.error(`ENGINE ${engineId}: Failed to kill process`);
           log.error(error);
 
