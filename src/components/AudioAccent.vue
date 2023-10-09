@@ -63,7 +63,6 @@
 import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { AccentPhrase } from "@/openapi";
-import { SLIDER_PARAMETER } from "@/store/utility";
 
 const props = withDefaults(
   defineProps<{
