@@ -4,8 +4,8 @@
     class="mora-table"
     :class="[isActive && 'mora-table-focus', uiLocked || 'mora-table-hover']"
     @click="$emit('click', index)"
-    @mouseenter="hoveredComponent = 'container'"
-    @mouseleave="hoveredComponent = undefined"
+    @mouseenter="hoveredTarget = 'container'"
+    @mouseleave="hoveredTarget = undefined"
   >
     <context-menu :menudata="contextMenudata" />
     <!-- スライダーここから -->
@@ -131,11 +131,11 @@
         }"
         @mouseover="
           hoveredMoraIndex = moraIndex;
-          hoveredComponent = 'text';
+          hoveredTarget = 'text';
         "
         @mouseleave="
           hoveredMoraIndex = undefined;
-          hoveredComponent = 'container';
+          hoveredTarget = 'container';
         "
         @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
       >
@@ -283,11 +283,11 @@ const handleChangePronounce = (newPronunciation: string) => {
 
 const hoveredMoraIndex = ref<number | undefined>(undefined);
 
-const hoveredComponent =
+const hoveredTarget =
   ref<"container" | "text" | "slider" | undefined>(undefined);
 const handleHoveredSlider = (isOver: boolean, moraIndex: number) => {
   hoveredMoraIndex.value = !isOver ? undefined : moraIndex;
-  hoveredComponent.value = !isOver ? "container" : "slider";
+  hoveredTarget.value = !isOver ? "container" : "slider";
 };
 
 const lengthHoveredPhonemeType = ref<"vowel" | "consonant" | "pause">("vowel");
@@ -310,7 +310,7 @@ const unvoicableVowels = ["U", "I", "i", "u"];
  * 強調表示するかの判定に使われる。
  */
 const isEditableMora = (vowel: string, moraIndex: number) => {
-  if (uiLocked.value || hoveredComponent.value !== "text") {
+  if (uiLocked.value || hoveredTarget.value !== "text") {
     return false;
   }
   if (props.selectedDetail == "accent") {
@@ -331,7 +331,7 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
 const isValueLabelVisible = (moraIndex: number, moraDataType: MoraDataType) => {
   if (
     uiLocked.value ||
-    hoveredComponent.value != "slider" ||
+    hoveredTarget.value != "slider" ||
     moraIndex !== hoveredMoraIndex.value
   ) {
     return false;
@@ -346,7 +346,7 @@ const isValueLabelVisible = (moraIndex: number, moraDataType: MoraDataType) => {
 };
 
 const forceValueLabelVisible = computed(
-  () => props.altKeyFlag && hoveredComponent.value != undefined
+  () => props.altKeyFlag && hoveredTarget.value != undefined
 );
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
