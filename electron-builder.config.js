@@ -21,6 +21,12 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 // ${productName}-${version}.${ext}
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
+// コード署名証明書
+const WIN_CERTIFICATE_SHA1 = process.env.WIN_CERTIFICATE_SHA1;
+const WIN_SIGNING_HASH_ALGORITHMS = process.env.WIN_SIGNING_HASH_ALGORITHMS
+  ? JSON.parse(process.env.WIN_SIGNING_HASH_ALGORITHMS)
+  : undefined;
+
 const isMac = process.platform === "darwin";
 
 // electron-builderのextraFilesは、ファイルのコピー先としてVOICEVOX.app/Contents/を使用する。
@@ -108,6 +114,12 @@ const builderOptions = {
         arch: ["x64"],
       },
     ],
+    certificateSha1:
+      WIN_CERTIFICATE_SHA1 !== "" ? WIN_CERTIFICATE_SHA1 : undefined,
+    signingHashAlgorithms:
+      WIN_SIGNING_HASH_ALGORITHMS !== ""
+        ? WIN_SIGNING_HASH_ALGORITHMS
+        : undefined,
   },
   nsisWeb: {
     artifactName:
