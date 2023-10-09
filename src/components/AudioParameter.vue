@@ -5,11 +5,14 @@
     @mouseleave="handleMouseHover(false)"
   >
     <q-badge
-      v-if="isValueLabelVisible"
+      v-if="isValueLabelVisible || forceValueLabelVisible"
       class="value-label"
       :class="{
-        'value-label-consonant': altKeyFlag && clip && type === 'consonant',
-        'value-label-vowel': altKeyFlag && clip && type === 'vowel',
+        'value-label-highlighted':
+          isValueLabelVisible && forceValueLabelVisible,
+        'value-label-consonant':
+          forceValueLabelVisible && clip && type === 'consonant',
+        'value-label-vowel': forceValueLabelVisible && clip && type === 'vowel',
       }"
       color="primary"
       text-color="display-on-primary"
@@ -60,8 +63,8 @@ const props = withDefaults(
     type?: MoraDataType;
     clip?: boolean;
     shiftKeyFlag?: boolean;
-    altKeyFlag?: boolean;
     isValueLabelVisible?: boolean;
+    forceValueLabelVisible?: boolean;
   }>(),
   {
     min: 0.0,
@@ -71,8 +74,8 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
-    altKeyFlag: false,
     isValueLabelVisible: false,
+    forceValueLabelVisible: false,
   }
 );
 
@@ -180,8 +183,7 @@ div {
   }
 }
 
-// hover中以外の音素のラベルは半透明にする
-.audio-parameter:not(:hover) .value-label {
-  opacity: 0.8;
+.value-label-highlighted {
+  font-weight: bold;
 }
 </style>

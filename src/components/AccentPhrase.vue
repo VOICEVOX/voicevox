@@ -37,8 +37,8 @@
           :type="'pitch'"
           :clip="false"
           :shift-key-flag="shiftKeyFlag"
-          :alt-key-flag="altKeyFlag"
           :is-value-label-visible="isValueLabelVisible(moraIndex, 'vowel')"
+          :force-value-label-visible="forceValueLabelVisible"
           @change-value="changeMoraData"
           @slider-hover="handleHoveredSlider"
         />
@@ -67,8 +67,8 @@
           :type="'consonant'"
           :clip="true"
           :shift-key-flag="shiftKeyFlag"
-          :alt-key-flag="altKeyFlag"
           :is-value-label-visible="isValueLabelVisible(moraIndex, 'consonant')"
+          :force-value-label-visible="forceValueLabelVisible"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
           @slider-hover="handleHoveredSlider"
@@ -84,8 +84,8 @@
           :type="'vowel'"
           :clip="mora.consonant ? true : false"
           :shift-key-flag="shiftKeyFlag"
-          :alt-key-flag="altKeyFlag"
           :is-value-label-visible="isValueLabelVisible(moraIndex, 'vowel')"
+          :force-value-label-visible="forceValueLabelVisible"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
           @slider-hover="handleHoveredSlider"
@@ -108,10 +108,10 @@
           :step="0.01"
           :type="'pause'"
           :shift-key-flag="shiftKeyFlag"
-          :alt-key-flag="altKeyFlag"
           :is-value-label-visible="
             isValueLabelVisible(accentPhrase.moras.length, 'pause')
           "
+          :force-value-label-visible="forceValueLabelVisible"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
           @slider-hover="handleHoveredSlider"
@@ -329,25 +329,25 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
 };
 
 const isValueLabelVisible = (moraIndex: number, moraDataType: MoraDataType) => {
-  if (uiLocked.value || hoveredComponent.value == undefined) {
+  if (
+    uiLocked.value ||
+    hoveredComponent.value != "slider" ||
+    moraIndex !== hoveredMoraIndex.value
+  ) {
     return false;
   }
-  if (props.altKeyFlag) {
+  if (props.selectedDetail == "pitch") {
     return true;
   }
-  if (
-    hoveredComponent.value === "slider" &&
-    moraIndex === hoveredMoraIndex.value
-  ) {
-    if (props.selectedDetail == "pitch") {
-      return true;
-    }
-    if (props.selectedDetail == "length") {
-      return moraDataType === lengthHoveredPhonemeType.value;
-    }
+  if (props.selectedDetail == "length") {
+    return moraDataType === lengthHoveredPhonemeType.value;
   }
   return false;
 };
+
+const forceValueLabelVisible = computed(
+  () => props.altKeyFlag && hoveredComponent.value != undefined
+);
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
