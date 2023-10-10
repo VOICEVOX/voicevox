@@ -347,7 +347,7 @@ const isValueLabelVisible = (moraIndex: number, moraDataType: MoraDataType) => {
 };
 
 const forceValueLabelVisible = computed(
-  () => props.altKeyFlag && hoveredTarget.value != undefined
+  () => !uiLocked.value && props.altKeyFlag && hoveredTarget.value != undefined
 );
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
