@@ -4,7 +4,7 @@
     class="mora-table"
     :class="[isActive && 'mora-table-focus', uiLocked || 'mora-table-hover']"
     @click="$emit('click', index)"
-    @mouseenter="hoveredTarget = 'container'"
+    @mouseenter="hoveredTarget = 'self'"
     @mouseleave="hoveredTarget = undefined"
   >
     <context-menu :menudata="contextMenudata" />
@@ -135,7 +135,7 @@
         "
         @mouseleave="
           hoveredMoraIndex = undefined;
-          hoveredTarget = 'container';
+          hoveredTarget = 'self';
         "
         @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
       >
@@ -283,12 +283,12 @@ const handleChangePronounce = (newPronunciation: string) => {
 
 const hoveredMoraIndex = ref<number | undefined>(undefined);
 
-// container, sliderは値ラベルの表示用。textはテキストの強調表示用。
+// self: アクセント区間全体, parameterSlider: audio-parameterのスライダー部分, text: 文字部分
 const hoveredTarget =
-  ref<"container" | "text" | "slider" | undefined>(undefined);
+  ref<"self" | "parameterSlider" | "text" | undefined>(undefined);
 const handleHoveredSlider = (isOver: boolean, moraIndex: number) => {
   hoveredMoraIndex.value = !isOver ? undefined : moraIndex;
-  hoveredTarget.value = !isOver ? "container" : "slider";
+  hoveredTarget.value = !isOver ? "self" : "parameterSlider";
 };
 
 const lengthHoveredPhonemeType = ref<"vowel" | "consonant" | "pause">("vowel");
@@ -332,7 +332,7 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
 const isValueLabelVisible = (moraIndex: number, moraDataType: MoraDataType) => {
   if (
     uiLocked.value ||
-    hoveredTarget.value != "slider" ||
+    hoveredTarget.value != "parameterSlider" ||
     moraIndex !== hoveredMoraIndex.value
   ) {
     return false;
