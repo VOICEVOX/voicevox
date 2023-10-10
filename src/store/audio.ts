@@ -83,6 +83,23 @@ async function generateUniqueIdAndQuery(
   return [id, audioQuery];
 }
 
+/**
+ * 複数選択が有効の時にどのAudioKeyを書き出すか決定する。
+ * @param isMultiSelectEnabled state.experimentalSetting.enableMultiSelect
+ * @param selectedAudioKeys getters.SELECTED_AUDIO_KEYS
+ * @param audioKeys state.audioKeys
+ */
+function audioKeysToExport(
+  isMultiSelectEnabled: boolean,
+  selectedAudioKeys: AudioKey[],
+  audioKeys: AudioKey[]
+): AudioKey[] {
+  if (!isMultiSelectEnabled) {
+    return audioKeys;
+  }
+  return selectedAudioKeys.length > 1 ? selectedAudioKeys : audioKeys;
+}
+
 function parseTextFile(
   body: string,
   defaultStyleIds: DefaultStyleId[],
@@ -1500,16 +1517,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           const totalCount = state.audioKeys.length;
           let finishedCount = 0;
 
-          let audioKeys: AudioKey[] = [];
-
-          if (state.experimentalSetting.enableMultiSelect) {
-            audioKeys = getters.SELECTED_AUDIO_KEYS;
-          }
-          if (audioKeys.length <= 1) {
-            audioKeys = state.audioKeys;
-          }
-
-          const promises = audioKeys.map((audioKey) => {
+          const promises = audioKeysToExport(
+            state.experimentalSetting.enableMultiSelect,
+            getters.SELECTED_AUDIO_KEYS,
+            state.audioKeys
+          ).map((audioKey) => {
             const name = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
@@ -1585,16 +1597,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const totalCount = state.audioKeys.length;
         let finishedCount = 0;
 
-        let audioKeys: AudioKey[] = [];
-
-        if (state.experimentalSetting.enableMultiSelect) {
-          audioKeys = getters.SELECTED_AUDIO_KEYS;
-        }
-        if (audioKeys.length <= 1) {
-          audioKeys = state.audioKeys;
-        }
-
-        for (const audioKey of audioKeys) {
+        for (const audioKey of audioKeysToExport(
+          state.experimentalSetting.enableMultiSelect,
+          getters.SELECTED_AUDIO_KEYS,
+          state.audioKeys
+        )) {
           let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
           if (!blob) {
             try {
@@ -1725,16 +1732,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         const texts: string[] = [];
 
-        let audioKeys: AudioKey[] = [];
-
-        if (state.experimentalSetting.enableMultiSelect) {
-          audioKeys = getters.SELECTED_AUDIO_KEYS;
-        }
-        if (audioKeys.length <= 1) {
-          audioKeys = state.audioKeys;
-        }
-
-        for (const audioKey of audioKeys) {
+        for (const audioKey of audioKeysToExport(
+          state.experimentalSetting.enableMultiSelect,
+          getters.SELECTED_AUDIO_KEYS,
+          state.audioKeys
+        )) {
           const styleId = state.audioItems[audioKey].voice.styleId;
           const engineId = state.audioItems[audioKey].voice.engineId;
           if (!engineId) {
