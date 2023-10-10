@@ -129,7 +129,7 @@
           :delay="500"
           transition-show="jump-up"
           transition-hide="jump-down"
-          >長さ項目では操作できません</q-tooltip
+          >読みの変更はアクセント項目でのみ、<br />無声化はイントネーション項目でのみ操作できます</q-tooltip
         >
         <span class="text-cell-inner">
           {{ getHoveredText(mora, moraIndex) }}
@@ -188,7 +188,7 @@
           :delay="500"
           transition-show="jump-up"
           transition-hide="jump-down"
-          >長さ項目では操作できません</q-tooltip
+          >読みの変更はアクセント項目でのみ、<br />無声化はイントネーション項目でのみ操作できます</q-tooltip
         >
         <span class="text-cell-inner">
           {{ accentPhrase.pauseMora.text }}
