@@ -84,7 +84,12 @@ async function generateUniqueIdAndQuery(
 }
 
 /**
- * 複数選択が有効の時にどのAudioKeyを書き出すか決定する。
+ * どのAudioKeyを書き出すか決定する。
+ *
+ * 複数選択が無効の時：全てのAudioKeyを書き出す
+ * 複数選択が有効、かつ選択されているAudioKeyが1つしかない時：全てのAudioKeyを書き出す
+ *  複数選択が有効、かつ選択されているAudioKeyが複数ある時：選択されているAudioKeyのみ書き出す
+ *
  * @param isMultiSelectEnabled state.experimentalSetting.enableMultiSelect
  * @param selectedAudioKeys getters.SELECTED_AUDIO_KEYS
  * @param audioKeys state.audioKeys
