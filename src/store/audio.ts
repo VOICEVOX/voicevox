@@ -1500,7 +1500,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           const totalCount = state.audioKeys.length;
           let finishedCount = 0;
 
-          const promises = state.audioKeys.map((audioKey) => {
+          let audioKeys: AudioKey[] = [];
+
+          if (state.experimentalSetting.enableMultiSelect) {
+            audioKeys = getters.SELECTED_AUDIO_KEYS;
+          }
+          if (audioKeys.length <= 1) {
+            audioKeys = state.audioKeys;
+          }
+
+          const promises = audioKeys.map((audioKey) => {
             const name = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
@@ -1576,7 +1585,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const totalCount = state.audioKeys.length;
         let finishedCount = 0;
 
-        for (const audioKey of state.audioKeys) {
+        let audioKeys: AudioKey[] = [];
+
+        if (state.experimentalSetting.enableMultiSelect) {
+          audioKeys = getters.SELECTED_AUDIO_KEYS;
+        }
+        if (audioKeys.length <= 1) {
+          audioKeys = state.audioKeys;
+        }
+
+        for (const audioKey of audioKeys) {
           let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
           if (!blob) {
             try {
@@ -1599,7 +1617,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             }
           }
           const encodedBlob = await base64Encoder(blob);
-          if (encodedBlob === undefined) {
+          if (encodedBlob == undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }
           encodedBlobs.push(encodedBlob);
@@ -1608,7 +1626,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             audioKey,
             offset: labOffset,
           });
-          if (lab === undefined) {
+          if (lab == undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }
           labs.push(lab);
@@ -1706,14 +1724,24 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         const texts: string[] = [];
-        for (const audioKey of state.audioKeys) {
+
+        let audioKeys: AudioKey[] = [];
+
+        if (state.experimentalSetting.enableMultiSelect) {
+          audioKeys = getters.SELECTED_AUDIO_KEYS;
+        }
+        if (audioKeys.length <= 1) {
+          audioKeys = state.audioKeys;
+        }
+
+        for (const audioKey of audioKeys) {
           const styleId = state.audioItems[audioKey].voice.styleId;
           const engineId = state.audioItems[audioKey].voice.engineId;
           if (!engineId) {
             throw new Error("engineId is undefined");
           }
           const speakerName =
-            styleId !== undefined
+            styleId != undefined
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 

@@ -192,7 +192,7 @@ export async function generateAndSaveAllAudioWithDialog({
     dispatch
   );
 
-  if (result === undefined) return;
+  if (result == undefined) return;
 
   // 書き出し成功時の出力先パスを配列に格納
   const successArray: Array<string | undefined> = result.flatMap((result) =>
@@ -280,7 +280,7 @@ export async function connectAndExportTextWithDialog({
     filePath,
   });
 
-  if (result === undefined || result.result === "CANCELED") return;
+  if (result == undefined || result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
     if (disableNotifyOnGenerate) return;
