@@ -41,6 +41,7 @@
           :force-value-label-visible="forceValueLabelVisible"
           @change-value="changeMoraData"
           @slider-hover="handleHoveredSlider"
+          @slider-pan="handlePanningSlider"
         />
       </div>
       <div v-if="accentPhrase.pauseMora" />
@@ -72,6 +73,7 @@
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
           @slider-hover="handleHoveredSlider"
+          @slider-pan="handlePanningSlider"
         />
         <!-- vowel length -->
         <audio-parameter
@@ -89,6 +91,7 @@
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
           @slider-hover="handleHoveredSlider"
+          @slider-pan="handlePanningSlider"
         />
       </div>
       <div
@@ -115,6 +118,7 @@
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
           @slider-hover="handleHoveredSlider"
+          @slider-pan="handlePanningSlider"
         />
       </div>
     </template>
@@ -291,6 +295,19 @@ const handleHoveredSlider = (isOver: boolean, moraIndex: number) => {
   hoveredTarget.value = !isOver ? "self" : "parameterSlider";
 };
 
+const pannningMoraIndex = ref<number | undefined>(undefined);
+const pannningMoraType =
+  ref<"pitch" | "vowel" | "consonant" | "pause">("vowel");
+const handlePanningSlider = (
+  isPanning: boolean,
+  phoneme: MoraDataType,
+  moraIndex: number
+) => {
+  if (phoneme === "voicing") throw new Error("phoneme != hoveredType");
+  pannningMoraIndex.value = isPanning ? moraIndex : undefined;
+  pannningMoraType.value = phoneme;
+};
+
 const lengthHoveredPhonemeType = ref<"vowel" | "consonant" | "pause">("vowel");
 const handleLengthHoverText = (
   isOver: boolean,
@@ -330,18 +347,27 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
 };
 
 const isValueLabelVisible = (moraIndex: number, moraDataType: MoraDataType) => {
-  if (
-    uiLocked.value ||
-    hoveredTarget.value != "parameterSlider" ||
-    moraIndex !== hoveredMoraIndex.value
-  ) {
+  if (uiLocked.value) {
     return false;
   }
-  if (props.selectedDetail == "pitch") {
-    return true;
+  if (moraIndex === pannningMoraIndex.value) {
+    if (props.selectedDetail == "pitch") {
+      return true;
+    }
+    if (props.selectedDetail == "length") {
+      return moraDataType === pannningMoraType.value;
+    }
   }
-  if (props.selectedDetail == "length") {
-    return moraDataType === lengthHoveredPhonemeType.value;
+  if (
+    hoveredTarget.value === "parameterSlider" &&
+    moraIndex === hoveredMoraIndex.value
+  ) {
+    if (props.selectedDetail == "pitch") {
+      return true;
+    }
+    if (props.selectedDetail == "length") {
+      return moraDataType === lengthHoveredPhonemeType.value;
+    }
   }
   return false;
 };

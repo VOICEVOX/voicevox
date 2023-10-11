@@ -39,7 +39,7 @@
       @click.stop="stopPropagation"
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"
-      @pan="previewSlider.qSliderProps.onPan"
+      @pan="sliderPan"
       @mouseenter="sliderHover(true)"
       @mouseleave="sliderHover(false)"
     />
@@ -94,6 +94,12 @@ const emit =
       moraIndex: number
     ): void;
     (e: "sliderHover", isOver: boolean, moraIndex: number): void;
+    (
+      e: "sliderPan",
+      isPanning: boolean,
+      type: MoraDataType,
+      moraIndex: number
+    ): void;
   }>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) =>
@@ -135,6 +141,11 @@ const handleMouseHover = (isOver: boolean) => {
 
 const sliderHover = (isOver: boolean) => {
   emit("sliderHover", isOver, props.moraIndex);
+};
+
+const sliderPan = (phase: "start" | "end") => {
+  previewSlider.qSliderProps.onPan?.(phase);
+  emit("sliderPan", phase === "start", props.type, props.moraIndex);
 };
 
 const precisionComputed = computed(() => {
