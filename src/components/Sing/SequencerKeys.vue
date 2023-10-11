@@ -1,37 +1,37 @@
 <template>
   <svg
     width="48"
-    :height="`${sizeY * zoomY * 128}`"
+    :height="`${keyHeight * keyInfos.length}`"
     xmlns="http://www.w3.org/2000/svg"
     class="sequencer-keys"
   >
-    <g v-for="(y, index) in gridY" :key="index">
+    <g v-for="(keyInfo, index) in keyInfos" :key="index">
       <rect
         x="0"
-        :y="`${sizeY * zoomY * index}`"
-        :width="`${y.color === 'black' ? 30 : 48}`"
-        :height="`${sizeY * zoomY}`"
-        :class="`sequencer-keys-item-${y.color}`"
-        :title="y.name"
+        :y="`${keyHeight * index}`"
+        :width="`${keyInfo.color === 'black' ? 30 : 48}`"
+        :height="`${keyHeight}`"
+        :class="`sequencer-keys-item-${keyInfo.color}`"
+        :title="keyInfo.name"
       />
       <line
-        v-if="y.pitch === 'C' || y.pitch === 'F'"
+        v-if="keyInfo.pitch === 'C' || keyInfo.pitch === 'F'"
         x1="0"
         x2="48"
-        :y1="`${(index + 1) * sizeY * zoomY}`"
-        :y2="`${(index + 1) * sizeY * zoomY}`"
+        :y1="`${(index + 1) * keyHeight}`"
+        :y2="`${(index + 1) * keyHeight}`"
         :class="`sequencer-keys-item-separator ${
-          y.pitch === 'C' && 'sequencer-keys-item-separator-octave'
-        } ${y.pitch === 'F' && 'sequencer-keys-item-separator-f'}`"
+          keyInfo.pitch === 'C' && 'sequencer-keys-item-separator-octave'
+        } ${keyInfo.pitch === 'F' && 'sequencer-keys-item-separator-f'}`"
       />
       <text
-        v-if="y.pitch === 'C'"
+        v-if="keyInfo.pitch === 'C'"
         font-size="10"
         x="32"
-        :y="`${sizeY * zoomY * (index + 1) - 4}`"
+        :y="`${keyHeight * (index + 1) - 4}`"
         class="sequencer-keys-item-pitchname"
       >
-        {{ y.name }}
+        {{ keyInfo.name }}
       </text>
     </g>
   </svg>
@@ -40,25 +40,21 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import {
-  midiKeys,
-  BASE_GRID_SIZE_X as sizeX,
-  BASE_GRID_SIZE_Y as sizeY,
-} from "@/helpers/singHelper";
+import { keyInfos, getKeyBaseHeight } from "@/helpers/singHelper";
 
 export default defineComponent({
   name: "SingSequencerKeys",
   setup() {
     const store = useStore();
-    const gridY = midiKeys;
     const zoomX = computed(() => store.state.sequencerZoomX);
     const zoomY = computed(() => store.state.sequencerZoomY);
+    const keyBaseHeight = getKeyBaseHeight();
+    const keyHeight = computed(() => keyBaseHeight * zoomY.value);
     return {
-      gridY,
-      sizeX,
-      sizeY,
+      keyInfos,
       zoomX,
       zoomY,
+      keyHeight,
     };
   },
 });

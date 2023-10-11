@@ -153,7 +153,7 @@ describe("store/vuex.js test", () => {
         sequencerZoomY: 1,
         sequencerScrollX: 0,
         sequencerScrollY: 60,
-        sequencerSnapSize: 120,
+        sequencerSnapType: 16,
         selectedNoteIds: [],
         nowPlaying: false,
         volume: 0,
