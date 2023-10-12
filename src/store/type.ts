@@ -590,61 +590,61 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_SET_AUDIO_SPEED_SCALE: {
-    mutation: { audioKey: AudioKey; speedScale: number };
-    action(payload: { audioKey: AudioKey; speedScale: number }): void;
+  COMMAND_MULTI_SET_AUDIO_SPEED_SCALE: {
+    mutation: { audioKeys: AudioKey[]; speedScale: number };
+    action(payload: { audioKeys: AudioKey[]; speedScale: number }): void;
   };
 
-  COMMAND_SET_AUDIO_PITCH_SCALE: {
-    mutation: { audioKey: AudioKey; pitchScale: number };
-    action(payload: { audioKey: AudioKey; pitchScale: number }): void;
+  COMMAND_MULTI_SET_AUDIO_PITCH_SCALE: {
+    mutation: { audioKeys: AudioKey[]; pitchScale: number };
+    action(payload: { audioKeys: AudioKey[]; pitchScale: number }): void;
   };
 
-  COMMAND_SET_AUDIO_INTONATION_SCALE: {
-    mutation: { audioKey: AudioKey; intonationScale: number };
-    action(payload: { audioKey: AudioKey; intonationScale: number }): void;
+  COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE: {
+    mutation: { audioKeys: AudioKey[]; intonationScale: number };
+    action(payload: { audioKeys: AudioKey[]; intonationScale: number }): void;
   };
 
-  COMMAND_SET_AUDIO_VOLUME_SCALE: {
-    mutation: { audioKey: AudioKey; volumeScale: number };
-    action(payload: { audioKey: AudioKey; volumeScale: number }): void;
+  COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE: {
+    mutation: { audioKeys: AudioKey[]; volumeScale: number };
+    action(payload: { audioKeys: AudioKey[]; volumeScale: number }): void;
   };
 
-  COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH: {
-    mutation: { audioKey: AudioKey; prePhonemeLength: number };
-    action(payload: { audioKey: AudioKey; prePhonemeLength: number }): void;
+  COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH: {
+    mutation: { audioKeys: AudioKey[]; prePhonemeLength: number };
+    action(payload: { audioKeys: AudioKey[]; prePhonemeLength: number }): void;
   };
 
-  COMMAND_SET_AUDIO_POST_PHONEME_LENGTH: {
-    mutation: { audioKey: AudioKey; postPhonemeLength: number };
-    action(payload: { audioKey: AudioKey; postPhonemeLength: number }): void;
+  COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH: {
+    mutation: { audioKeys: AudioKey[]; postPhonemeLength: number };
+    action(payload: { audioKeys: AudioKey[]; postPhonemeLength: number }): void;
   };
 
-  COMMAND_SET_MORPHING_INFO: {
+  COMMAND_MULTI_SET_MORPHING_INFO: {
     mutation: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       morphingInfo: MorphingInfo | undefined;
     };
     action(payload: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       morphingInfo: MorphingInfo | undefined;
     }): void;
   };
 
-  COMMAND_SET_AUDIO_PRESET: {
+  COMMAND_MULTI_SET_AUDIO_PRESET: {
     mutation: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       presetKey: PresetKey | undefined;
     };
     action(payload: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       presetKey: PresetKey | undefined;
     }): void;
   };
 
-  COMMAND_APPLY_AUDIO_PRESET: {
-    mutation: { audioKey: AudioKey };
-    action(payload: { audioKey: AudioKey }): void;
+  COMMAND_MULTI_APPLY_AUDIO_PRESET: {
+    mutation: { audioKeys: AudioKey[] };
+    action(payload: { audioKeys: AudioKey[] }): void;
   };
 
   COMMAND_FULLY_APPLY_AUDIO_PRESET: {
