@@ -27,7 +27,7 @@
 
 #### Apple Silicon 搭載の Mac をお使いの場合
 
-初めて VOICEVOX を機動する際に Rosetta のインストールを促される場合は、案内に従ってインストールしてください。
+初めて VOICEVOX を起動する際に Rosetta のインストールを促される場合は、案内に従ってインストールしてください。
 
 <img src="res/macos-big-sur-software-update-rosetta-alert.jpg" style="max-height: 12rem" alt="Rosettaのインストールを確認するダイアログ"/>
 
@@ -46,7 +46,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 <img src="res/image19.png" style="max-height: 12rem" alt="キャラクターアイコンの右にある空白" />
 
-エンターボタンを押して文章を確定すると、画面の下の方に読みとアクセントが表示されます。（１回目は反映まで数秒ほど時間がかかることがあります。）
+Enter キーボタンを押して文章を確定すると、画面の下の方に読みとアクセントが表示されます。（１回目は反映まで数秒ほど時間がかかることがあります。）
 
 <img src="res/image6.png" style="max-height: 14rem" alt="画面の下の方に読みとアクセントが表示された様子"/>
 
@@ -218,7 +218,8 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 画面上部にあるツールバーのボタンの種類や配置を変更することができます。
 
-<img src="res/toolbar-customize.png" style="max-height: 12rem" alt="ツールバーカスタマイズ画面"/>
+<img src="res/toolbar-customize1.png" style="max-height: 12rem" alt="ツールバーカスタマイズ画面"/>&nbsp;&nbsp;&nbsp;
+<img src="res/toolbar-customize2.png" style="max-height: 12rem" alt="ツールバーカスタマイズ画面"/>
 
 ## キャラクターの並び替え・試聴
 
