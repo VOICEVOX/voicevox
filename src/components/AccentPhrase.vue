@@ -305,7 +305,7 @@ const handlePanningSlider = (
   phoneme: MoraDataType,
   moraIndex: number
 ) => {
-  if (phoneme === "voicing") throw new Error("phoneme != hoveredType");
+  if (phoneme === "voicing") throw new Error("phoneme === voicing");
   pannningMora.value = isPanning
     ? { index: moraIndex, type: phoneme }
     : undefined;
