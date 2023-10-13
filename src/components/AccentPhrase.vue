@@ -295,17 +295,20 @@ const handleHoveredSlider = (isOver: boolean, moraIndex: number) => {
   hoveredTarget.value = !isOver ? "self" : "parameterSlider";
 };
 
-const pannningMoraIndex = ref<number | undefined>(undefined);
-const pannningMoraType =
-  ref<"pitch" | "vowel" | "consonant" | "pause">("vowel");
+const pannningMora =
+  ref<
+    | undefined
+    | { index: number; type: "pitch" | "vowel" | "consonant" | "pause" }
+  >(undefined);
 const handlePanningSlider = (
   isPanning: boolean,
   phoneme: MoraDataType,
   moraIndex: number
 ) => {
   if (phoneme === "voicing") throw new Error("phoneme != hoveredType");
-  pannningMoraIndex.value = isPanning ? moraIndex : undefined;
-  pannningMoraType.value = phoneme;
+  pannningMora.value = isPanning
+    ? { index: moraIndex, type: phoneme }
+    : undefined;
 };
 
 const lengthHoveredPhonemeType = ref<"vowel" | "consonant" | "pause">("vowel");
@@ -350,12 +353,12 @@ const isValueLabelVisible = (moraIndex: number, moraDataType: MoraDataType) => {
   if (uiLocked.value) {
     return false;
   }
-  if (moraIndex === pannningMoraIndex.value) {
+  if (moraIndex === pannningMora.value?.index) {
     if (props.selectedDetail == "pitch") {
       return true;
     }
     if (props.selectedDetail == "length") {
-      return moraDataType === pannningMoraType.value;
+      return moraDataType === pannningMora.value.type;
     }
   }
   if (
