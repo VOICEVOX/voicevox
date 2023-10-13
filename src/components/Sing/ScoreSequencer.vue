@@ -22,10 +22,10 @@
         <!-- パターングリッド -->
         <defs>
           <pattern
-            id="sequencer-grid-column"
-            :width="`${gridCellWidth}px`"
-            :height="`${gridCellHeight * 12}px`"
+            id="sequencer-grid-octave-cells"
             patternUnits="userSpaceOnUse"
+            :width="`${gridCellWidth}`"
+            :height="`${gridCellHeight * 12}`"
           >
             <rect
               v-for="(keyInfo, index) in keyInfos"
@@ -39,28 +39,38 @@
           </pattern>
           <pattern
             id="sequencer-grid-measure"
-            :width="`${gridCellWidth * gridColumnNumPerMeasure}`"
-            :height="`${gridCellHeight * 12}`"
             patternUnits="userSpaceOnUse"
+            :width="`${beatWidth * beatsPerMeasure}`"
+            :height="`${gridCellHeight * keyInfos.length}`"
           >
-            <rect
-              width="100%"
-              height="100%"
-              fill="url(#sequencer-grid-column)"
-            />
             <line
-              x="100%"
-              x2="0"
+              v-for="n in beatsPerMeasure"
+              :key="n"
+              :x1="`${beatWidth * (n - 1)}`"
+              :x2="`${beatWidth * (n - 1)}`"
               y1="0"
               y2="100%"
               stroke-width="1"
-              fill="none"
-              class="sequencer-grid-separator-line"
+              :class="`sequencer-grid-${n === 1 ? 'measure' : 'beat'}-line`"
+            />
+            <line
+              :x1="`${beatWidth * beatsPerMeasure}`"
+              :x2="`${beatWidth * beatsPerMeasure}`"
+              y1="0"
+              y2="100%"
+              stroke-width="1"
+              :class="`sequencer-grid-measure-line`"
             />
           </pattern>
         </defs>
         <rect
-          id="sequencer-grid"
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          fill="url(#sequencer-grid-octave-cells)"
+        />
+        <rect
           x="0"
           y="0"
           width="100%"
@@ -174,6 +184,17 @@ export default defineComponent({
     const timeSignature = computed(() => {
       return state.score?.timeSignatures?.[0] ?? defaultTimeSignature;
     });
+    // 小節数
+    const measureNum = computed(() => {
+      // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
+      const minMeasureNum = 32;
+      const measureNum = Math.max(
+        minMeasureNum,
+        getMeasureNum(notes.value, measureDuration.value)
+      );
+      // NOTE: いったん最後尾に足した場合は伸びるようにする
+      return measureNum + 1;
+    });
     // ズーム状態
     const zoomX = computed(() => state.sequencerZoomX);
     const zoomY = computed(() => state.sequencerZoomY);
@@ -200,19 +221,20 @@ export default defineComponent({
     const measureDuration = computed(() => {
       return getMeasureDuration(timeSignature.value, tpqn.value);
     });
-    const gridColumnNumPerMeasure = computed(() => {
-      // TODO: スナップが3連符のときにおかしくなるので修正する
-      return Math.round(measureDuration.value / gridCellTicks.value);
-    });
     const gridColumnNum = computed(() => {
-      // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
-      const minMeasureNum = 32;
-      const measureNum = Math.max(
-        minMeasureNum,
-        getMeasureNum(notes.value, measureDuration.value)
+      const gridColumnNumPerMeasure = Math.round(
+        measureDuration.value / gridCellTicks.value
       );
-      // NOTE: いったん最後尾に足した場合は伸びるようにする
-      return gridColumnNumPerMeasure.value * (measureNum + 1);
+      return gridColumnNumPerMeasure * measureNum.value;
+    });
+    const beatsPerMeasure = computed(() => {
+      return timeSignature.value.beats;
+    });
+    const beatWidth = computed(() => {
+      const beatType = timeSignature.value.beatType;
+      const quarterNotesPerBeat = 4 / beatType;
+      const beatTicks = tpqn.value * quarterNotesPerBeat;
+      return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
     });
     // スクロール位置
     // const scrollX = computed(() => state.sequencerScrollX);
@@ -599,9 +621,11 @@ export default defineComponent({
     });
 
     return {
+      measureNum,
+      beatsPerMeasure,
+      beatWidth,
       gridCellWidth,
       gridCellHeight,
-      gridColumnNumPerMeasure,
       gridColumnNum,
       keyInfos,
       notes,
@@ -671,8 +695,13 @@ export default defineComponent({
   fill: #f2f2f2;
 }
 
-.sequencer-grid-separator-line {
+.sequencer-grid-measure-line {
   backface-visibility: hidden;
   stroke: #b0b0b0;
+}
+
+.sequencer-grid-beat-line {
+  backface-visibility: hidden;
+  stroke: #d0d0d0;
 }
 </style>
