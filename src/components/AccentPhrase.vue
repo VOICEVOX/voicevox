@@ -131,7 +131,7 @@
         @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
       >
         <span class="text-cell-inner">
-          {{ getDisplayMoraText(mora, moraIndex) }}
+          {{ getHoveredText(mora, moraIndex) }}
         </span>
         <q-popup-edit
           v-if="selectedDetail == 'accent' && !uiLocked"
@@ -328,18 +328,19 @@ const forceValueLabelVisible = computed(
       ))
 );
 
-const getDisplayMoraText = (mora: Mora, moraIndex: number) => {
+const getHoveredText = (mora: Mora, moraIndex: number) => {
+  if (props.selectedDetail != "length") return mora.text;
   if (
-    props.selectedDetail !== "length" ||
-    moraIndex !== hoveredMoraIndex.value ||
-    lengthHoveredPhonemeType.value == undefined
+    moraIndex === hoveredMoraIndex.value &&
+    lengthHoveredPhonemeType.value != undefined
   ) {
-    return mora.text;
-  }
-  if (lengthHoveredPhonemeType.value == "vowel") {
-    return mora.vowel.toUpperCase();
+    if (lengthHoveredPhonemeType.value == "vowel") {
+      return mora.vowel.toUpperCase();
+    } else {
+      return mora.consonant?.toUpperCase();
+    }
   } else {
-    return mora.consonant?.toUpperCase();
+    return mora.text;
   }
 };
 
