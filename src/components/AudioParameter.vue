@@ -1,15 +1,10 @@
 <template>
-  <div
-    class="audio-parameter"
-    @mouseenter="handleMouseHover(true)"
-    @mouseleave="handleMouseHover(false)"
-  >
+  <div class="audio-parameter">
     <q-badge
-      v-if="isValueLabelVisible || forceValueLabelVisible"
+      v-if="shouldDisplayValueLabel"
       class="value-label"
       :class="{
-        'value-label-highlighted':
-          isValueLabelVisible && forceValueLabelVisible,
+        'value-label-highlighted': isOperating && forceValueLabelVisible,
         'value-label-consonant':
           forceValueLabelVisible && clip && type === 'consonant',
         'value-label-vowel': forceValueLabelVisible && clip && type === 'vowel',
@@ -39,15 +34,15 @@
       @click.stop="stopPropagation"
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"
-      @pan="sliderPan"
-      @mouseenter="sliderHover(true)"
-      @mouseleave="sliderHover(false)"
+      @pan="previewSlider.qSliderProps.onPan"
+      @mouseenter="handleMouseHover(true)"
+      @mouseleave="handleMouseHover(false)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
 
@@ -63,7 +58,6 @@ const props = withDefaults(
     type?: MoraDataType;
     clip?: boolean;
     shiftKeyFlag?: boolean;
-    isValueLabelVisible?: boolean;
     forceValueLabelVisible?: boolean;
   }>(),
   {
@@ -74,7 +68,6 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
-    isValueLabelVisible: false,
     forceValueLabelVisible: false,
   }
 );
@@ -90,13 +83,6 @@ const emit =
     (
       e: "mouseOver",
       isOver: boolean,
-      type: MoraDataType,
-      moraIndex: number
-    ): void;
-    (e: "sliderHover", isOver: boolean, moraIndex: number): void;
-    (
-      e: "sliderPan",
-      isPanning: boolean,
       type: MoraDataType,
       moraIndex: number
     ): void;
@@ -129,24 +115,29 @@ const clipPathComputed = computed((): string => {
   }
 });
 
+const isHovered = ref(false);
+
 const handleMouseHover = (isOver: boolean) => {
-  if (
-    props.type == "consonant" ||
-    props.type == "vowel" ||
-    props.type == "pause"
-  ) {
+  isHovered.value = isOver;
+  if (props.type == "consonant" || props.type == "vowel") {
     emit("mouseOver", isOver, props.type, props.moraIndex);
   }
 };
 
-const sliderHover = (isOver: boolean) => {
-  emit("sliderHover", isOver, props.moraIndex);
-};
+const isOperating = computed(
+  () => isHovered.value || previewSlider.state.isPanning.value
+);
 
-const sliderPan = (phase: "start" | "end") => {
-  previewSlider.qSliderProps.onPan?.(phase);
-  emit("sliderPan", phase === "start", props.type, props.moraIndex);
-};
+defineExpose({
+  isOperating,
+});
+
+const shouldDisplayValueLabel = computed(
+  () =>
+    !props.uiLocked &&
+    !props.disable &&
+    (props.forceValueLabelVisible || isOperating.value)
+);
 
 const precisionComputed = computed(() => {
   if (props.type == "pause" || props.type == "pitch") {
