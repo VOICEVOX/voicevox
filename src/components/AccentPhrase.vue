@@ -318,14 +318,14 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
 
 const audioParameters = ref<InstanceType<typeof AudioParameter>[]>();
 
+// pan中は当たり判定が消えるため
+const isOperating = computed(() =>
+  audioParameters.value?.some?.((audioParameter) => audioParameter.isOperating)
+);
+
 const forceValueLabelVisible = computed(
   () =>
-    props.altKeyFlag &&
-    (hoveredTarget.value != undefined ||
-      // pan中は当たり判定が消えるため
-      audioParameters.value?.some(
-        (audioParameter) => audioParameter.isOperating
-      ))
+    props.altKeyFlag && (hoveredTarget.value != undefined || isOperating.value)
 );
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
