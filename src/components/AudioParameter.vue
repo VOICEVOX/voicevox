@@ -10,7 +10,7 @@
         'value-label-vowel': forceValueLabelVisible && clip && type === 'vowel',
       }"
       :style="{
-        'z-index': 100 - moraIndex,
+        'z-index': isOperating ? 101 : 100 - moraIndex,
       }"
       color="primary"
       text-color="display-on-primary"
