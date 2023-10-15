@@ -74,9 +74,18 @@
     </div>
     <div class="sing-setting">
       <q-slider v-model.number="volume" class="sing-volume" />
-      <select class="sing-snap">
-        <option>1/16</option>
-      </select>
+      <q-select
+        v-model="snapTypeSelectModel"
+        :options="snapTypeSelectOptions"
+        color="primary"
+        text-color="display-on-primary"
+        outlined
+        dense
+        options-dense
+        transition-show="none"
+        transition-hide="none"
+        class="sing-snap"
+      />
     </div>
   </div>
 </template>
@@ -84,6 +93,7 @@
 <script lang="ts">
 import { defineComponent, computed, watch, ref } from "vue";
 import { useStore } from "@/store";
+import { getSnapTypes, isTriplet } from "@/helpers/singHelper";
 
 export default defineComponent({
   name: "SingToolBar",
@@ -238,6 +248,32 @@ export default defineComponent({
       },
     });
 
+    const snapTypeSelectOptions = computed(() => {
+      const tpqn = store.state.score?.resolution ?? 480;
+      return getSnapTypes(tpqn).map((snapType) => {
+        if (isTriplet(snapType)) {
+          return { snapType, label: `1/${(snapType / 3) * 2}（三連符）` };
+        } else {
+          return { snapType, label: `1/${snapType}` };
+        }
+      });
+    });
+    const snapTypeSelectModel = computed({
+      get() {
+        const snapType = store.state.sequencerSnapType;
+        const selectOptions = snapTypeSelectOptions.value;
+        return (
+          selectOptions.find((value) => value.snapType === snapType) ??
+          selectOptions[selectOptions.length - 1]
+        );
+      },
+      set(value) {
+        store.dispatch("SET_SNAP_TYPE", {
+          snapType: value.snapType,
+        });
+      },
+    });
+
     return {
       isShowSinger,
       toggleShowSinger,
@@ -256,6 +292,8 @@ export default defineComponent({
       stop,
       seek,
       volume,
+      snapTypeSelectOptions,
+      snapTypeSelectModel,
     };
   },
 });
@@ -336,7 +374,12 @@ export default defineComponent({
 }
 
 .sing-volume {
-  margin-right: 10px;
+  margin-right: 16px;
   width: 72px;
+}
+
+.sing-snap {
+  margin-right: 2px;
+  min-width: 160px;
 }
 </style>

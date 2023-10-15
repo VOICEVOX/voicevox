@@ -30,6 +30,7 @@ import {
 import { EngineId, StyleId } from "@/type/preload";
 import {
   getDoremiFromNoteNumber,
+  isValidSnapType,
   noteNumberToFrequency,
   round,
 } from "@/helpers/singHelper";
@@ -670,6 +671,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("CLEAR_SELECTED_NOTE_IDS");
 
       dispatch("RENDER");
+    },
+  },
+
+  SET_SNAP_TYPE: {
+    mutation(state, { snapType }) {
+      state.sequencerSnapType = snapType;
+    },
+    async action({ state, commit }, { snapType }) {
+      const tpqn = state.score?.resolution ?? 480;
+      if (!isValidSnapType(snapType, tpqn)) {
+        throw new Error("The snap type is invalid.");
+      }
+      commit("SET_SNAP_TYPE", { snapType });
     },
   },
 

@@ -253,8 +253,9 @@ export default defineComponent({
       if (noteNumber < 0) {
         return;
       }
-      // NOTE: ノートの追加は1/8をベース
-      const duration = getNoteDuration(8, tpqn.value);
+      // NOTE: ノートの長さはスナップをベース（最小の長さは1/8）
+      const noteType = Math.min(8, state.sequencerSnapType);
+      const duration = getNoteDuration(noteType, tpqn.value);
       const lyric = getDoremiFromNoteNumber(noteNumber);
       // NOTE: 仮ID
       const id = uuidv4();
