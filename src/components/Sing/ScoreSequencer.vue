@@ -144,8 +144,6 @@ import {
   baseYToNoteNumber,
   keyInfos,
   getDoremiFromNoteNumber,
-  getNoteTypes,
-  isTriplet,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
