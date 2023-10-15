@@ -9,6 +9,9 @@
           forceValueLabelVisible && clip && type === 'consonant',
         'value-label-vowel': forceValueLabelVisible && clip && type === 'vowel',
       }"
+      :style="{
+        'z-index': 100 - moraIndex,
+      }"
       color="primary"
       text-color="display-on-primary"
     >
@@ -173,7 +176,6 @@ div {
     height: $value-label-height;
     padding: 0px 8px;
     transform: translateX(-50%) translateX(15px);
-    z-index: 3;
 
     // altキー押下中は母音と子音の値ラベルの表示位置が被らないようにずらす
     &.value-label-consonant {
