@@ -157,6 +157,7 @@ const stopPropagation = () => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/colors' as colors;
 $value-label-height: 24px;
 
 div {
@@ -176,13 +177,14 @@ div {
     height: $value-label-height;
     padding: 0px 8px;
     transform: translateX(-50%) translateX(15px);
+    border: solid 1px colors.$active-point-hover;
 
     // altキー押下中は母音と子音の値ラベルの表示位置が被らないようにずらす
     &.value-label-consonant {
-      transform: translateX(-50%) translateX(14px) translateY(-60%);
+      transform: translateX(-50%) translateX(10px) translateY(-60%);
     }
     &.value-label-vowel {
-      transform: translateX(-50%) translateX(16px) translateY(60%);
+      transform: translateX(-50%) translateX(20px) translateY(60%);
     }
   }
 }
