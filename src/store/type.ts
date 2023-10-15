@@ -838,6 +838,11 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
+  SET_SNAP_TYPE: {
+    mutation: { snapType: number };
+    action(payload: { snapType: number }): void;
+  };
+
   SET_ZOOM_X: {
     mutation: { zoomX: number };
     action(payload: { zoomX: number }): void;

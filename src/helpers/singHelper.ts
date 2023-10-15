@@ -15,6 +15,7 @@ export function getMeasureDuration(timeSignature: TimeSignature, tpqn: number) {
   return tpqn * quarterNotesPerMeasure;
 }
 
+// TODO: getNumOfMeasuresに変更する
 export function getMeasureNum(notes: Note[], measureDuration: number) {
   if (notes.length === 0) {
     return 0;
@@ -27,6 +28,29 @@ export function getMeasureNum(notes: Note[], measureDuration: number) {
 // NOTE: 戻り値の単位はtick
 export function getNoteDuration(noteType: number, tpqn: number) {
   return (tpqn * 4) / noteType;
+}
+
+export function getNoteTypes(tpqn: number) {
+  const maxNoteType = 128;
+  const wholeNoteDuration = tpqn * 4;
+  const noteTypes = [1];
+  for (let noteType = 2; noteType <= maxNoteType; noteType *= 2) {
+    if (wholeNoteDuration % noteType !== 0) {
+      break;
+    }
+    noteTypes.push(noteType);
+  }
+  for (let noteType = 3; noteType <= maxNoteType; noteType *= 2) {
+    if (wholeNoteDuration % noteType !== 0) {
+      break;
+    }
+    noteTypes.push(noteType);
+  }
+  return noteTypes;
+}
+
+export function isTriplet(noteType: number) {
+  return noteType % 3 === 0;
 }
 
 export function getKeyBaseHeight() {
@@ -52,6 +76,14 @@ export function baseYToNoteNumber(baseY: number, integer = true) {
   return integer
     ? 127 - Math.floor(baseY / BASE_Y_PER_NOTE_NUMBER)
     : 127.5 - baseY / BASE_Y_PER_NOTE_NUMBER;
+}
+
+export function getSnapTypes(tpqn: number) {
+  return getNoteTypes(tpqn).filter((value) => value <= 64);
+}
+
+export function isValidSnapType(snapType: number, tpqn: number) {
+  return getSnapTypes(tpqn).some((value) => value === snapType);
 }
 
 export function getPitchFromNoteNumber(noteNumber: number) {
