@@ -26,7 +26,7 @@ const migrations: Record<string, (store: Store) => void> = {
     }
   },
   ">=0.14": (store) => {
-    // FIXME: できるならEngineManagerからEnginIDを取得したい
+    // FIXME: できるならEngineManagerからEngineIDを取得したい
     if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined)
       throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
     const engineId = EngineId(
