@@ -29,7 +29,6 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
-  SettingsStoreType,
 } from "./type/preload";
 import {
   ContactTextFileName,
