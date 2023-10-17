@@ -225,9 +225,7 @@ export interface Sandbox {
   setNativeTheme(source: NativeThemeType): void;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
-  getSetting<Key extends keyof ConfigType>(
-    key: Key
-  ): Promise<ConfigType[Key]>;
+  getSetting<Key extends keyof ConfigType>(key: Key): Promise<ConfigType[Key]>;
   setSetting<Key extends keyof ConfigType>(
     key: Key,
     newValue: ConfigType[Key]

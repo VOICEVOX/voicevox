@@ -255,10 +255,7 @@ export type IpcIHData = {
   };
 
   SET_SETTING: {
-    args: [
-      key: keyof ConfigType,
-      newValue: ConfigType[keyof ConfigType]
-    ];
+    args: [key: keyof ConfigType, newValue: ConfigType[keyof ConfigType]];
     return: ConfigType[keyof ConfigType];
   };
 
