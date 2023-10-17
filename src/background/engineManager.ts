@@ -2,7 +2,6 @@ import { spawn, ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
 import treeKill from "tree-kill";
-import Store from "electron-store";
 import shlex from "shlex";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
@@ -16,10 +15,10 @@ import {
   isAssignablePort,
   url2HostInfo,
 } from "./portManager";
+import { Store } from "./electronStore";
 
 import {
   EngineInfo,
-  SettingsStoreType,
   EngineDirValidationResult,
   MinimumEngineManifest,
   EngineId,
@@ -68,7 +67,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 }
 
 export class EngineManager {
-  store: Store<SettingsStoreType>;
+  store: Store;
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
@@ -85,7 +84,7 @@ export class EngineManager {
     vvppEngineDir,
     onEngineProcessError,
   }: {
-    store: Store<SettingsStoreType>;
+    store: Store;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;

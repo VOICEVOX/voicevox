@@ -29,6 +29,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  SettingsStoreType,
 } from "./type/preload";
 import {
   ContactTextFileName,
@@ -367,7 +368,7 @@ function migrateHotkeySettings() {
         (hotkey) => hotkey.combination === newHotkey.combination
       );
       if (combinationExists) {
-        const emptyHotkey = {
+        const emptyHotkey: HotkeySetting = {
           action: newHotkey.action,
           combination: "",
         };
@@ -871,7 +872,9 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
 });
 
 ipcMainHandle("SET_ENGINE_SETTING", (_, engineId, engineSetting) => {
-  store.set(`engineSettings.${engineId}`, engineSetting);
+  const engineSettings = store.get("engineSettings");
+  engineSettings[engineId] = engineSetting;
+  store.set(`engineSettings`, engineSettings);
 });
 
 ipcMainHandle("SET_NATIVE_THEME", (_, source) => {
