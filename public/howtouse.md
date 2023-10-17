@@ -21,7 +21,7 @@
 
 <img src="res/gatekeeper.png" style="max-height: 16rem" alt="「VOICEVOXは開発を検証できないため開けません」というダイアログ"/>
 
-その際は Finder で、Control キーを押しながら VOICEVOX アプリケーションアイコンをクリックし、ショートカットメニューから「開く」を選択してから、「開く」をクリックしてください。
+その際は Finder で <code>Ctrl</code> キーを押しながら VOICEVOX アプリケーションアイコンをクリックし、ショートカットメニューから「開く」を選択してから、「開く」をクリックしてください。
 
 もしくは、アップルメニューから「システム環境設定」を選択して「セキュリティとプライバシー」 をクリックし、「一般」パネルで「このまま開く」選んでください。
 
@@ -46,7 +46,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 <img src="res/image19.png" style="max-height: 12rem" alt="キャラクターアイコンの右にある空白" />
 
-Enter キーボタンを押して文章を確定すると、画面の下の方に読みとアクセントが表示されます。（１回目は反映まで数秒ほど時間がかかることがあります。）
+<code>Enter</code> キーを押して文章を確定すると、画面の下の方に読みとアクセントが表示されます。（１回目は反映まで数秒ほど時間がかかることがあります。）
 
 <img src="res/image6.png" style="max-height: 14rem" alt="画面の下の方に読みとアクセントが表示された様子"/>
 
@@ -183,21 +183,21 @@ Enter キーボタンを押して文章を確定すると、画面の下の方�
 
 - 上下キー
   - 上下のテキスト欄に移動
-- Space
+- <code>Space</code>
   - 音声を再生
-- Shift + Enter
+- <code>Shift</code> + <code>Enter</code>
   - テキスト欄を追加
-- Shift + Delete
+- <code>Shift</code> + <code>Delete</code>
   - テキスト欄を消去
-- Ctrl + S
+- <code>Ctrl</code> + <code>S</code>
   - プロジェクトの保存
-- Ctrl + E
+- <code>Ctrl</code> + <code>E</code>
   - 音声を書き出し
-- Ctrl + Z
+- <code>Ctrl</code> + <code>Z</code>
   - 元に戻す
-- Ctrl + Y
+- <code>Ctrl</code> + <code>Y</code>
   - やり直す
-- Esc
+- <code>Esc</code>
   - テキスト欄からカーソルを外す
 - 1
   - アクセント欄を表示
@@ -207,11 +207,11 @@ Enter キーボタンを押して文章を確定すると、画面の下の方�
   - 長さ欄を表示
 - スライダーの上でマウスホイール
   - スライダーの値を変更します（スライダー →<img src="res/image16.png" style="max-height: 1rem" alt="スライダー、緑色の棒"/>）
-  - Ctrl キーを押しながらマウスホイールを使うと更に細かく調整できます
+  - <code>Ctrl</code> キーを押しながらマウスホイールを使うと更に細かく調整できます
   - Alt キーを押しながらイントネーションや長さを調整することで、同じアクセント区間内を同時に調整できます
-- Ctrl + G
+- <code>Ctrl</code> + <code>G</code>
   - 全体のイントネーションをリセット
-- R
+- <code>R</code>
   - 選択中のイントネーションをリセット
 
 ## ツールバーのカスタマイズ
@@ -336,7 +336,7 @@ Linux は Nvidia 製 GPU のみに対応しています。
 
 #### マルチエンジン機能
 
-VOICEVOX 以外の VOICEVOX API 準拠エンジンを VOICEVOX 内で利用できるようになります。  
+VOICEVOX 以外の VOICEVOX API 準拠エンジンを VOICEVOX 内で利用できるようになります。 
 マルチエンジン機能をオンにしたあと、メニューにある「エンジン」の「エンジンの管理」に移動し、次のどちらかを実行すると利用できます。
 
 - VOICEVOX API 準拠エンジンの VVPP ファイルをインストールする
