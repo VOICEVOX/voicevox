@@ -1,6 +1,6 @@
 import {
   AppInfos,
-  SettingsStoreType,
+  ConfigType,
   EngineInfo,
   EngineDirValidationResult,
   HotkeySetting,
@@ -250,16 +250,16 @@ export type IpcIHData = {
   };
 
   GET_SETTING: {
-    args: [key: keyof SettingsStoreType];
-    return: SettingsStoreType[keyof SettingsStoreType];
+    args: [key: keyof ConfigType];
+    return: ConfigType[keyof ConfigType];
   };
 
   SET_SETTING: {
     args: [
-      key: keyof SettingsStoreType,
-      newValue: SettingsStoreType[keyof SettingsStoreType]
+      key: keyof ConfigType,
+      newValue: ConfigType[keyof ConfigType]
     ];
-    return: SettingsStoreType[keyof SettingsStoreType];
+    return: ConfigType[keyof ConfigType];
   };
 
   SET_ENGINE_SETTING: {

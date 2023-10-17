@@ -10,7 +10,7 @@ import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
-  settingsStoreSchema,
+  configSchema,
   EngineId,
   EngineSetting,
   EngineSettings,
@@ -224,7 +224,7 @@ export const api: Sandbox = {
   },
   async hotkeySettings(newData?: HotkeySetting) {
     type HotkeySettingType = ReturnType<
-      typeof settingsStoreSchema["parse"]
+      typeof configSchema["parse"]
     >["hotkeySettings"];
     if (newData !== undefined) {
       const hotkeySettings = (await this.getSetting(

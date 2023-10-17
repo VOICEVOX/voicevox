@@ -6,9 +6,9 @@ import { z } from "zod";
 import semver from "semver";
 import {
   AcceptTermsStatus,
-  SettingsStoreType,
+  ConfigType,
   EngineId,
-  settingsStoreSchema,
+  configSchema,
 } from "@/type/preload";
 
 const migrations: Record<string, (store: Store) => void> = {
@@ -47,7 +47,7 @@ const migrations: Record<string, (store: Store) => void> = {
     const outputSamplingRate: number =
       // @ts-expect-error 削除されたパラメータ。
       store.get("savingSetting").outputSamplingRate;
-    const engineSettings: SettingsStoreType["engineSettings"] = {};
+    const engineSettings: ConfigType["engineSettings"] = {};
     engineSettings[engineId] = {
       // @ts-expect-error 削除されたパラメータ。
       useGpu: store.get("useGpu"),
@@ -65,27 +65,24 @@ const migrations: Record<string, (store: Store) => void> = {
     store.delete("useGpu");
   },
 };
-const configJsonSchema = settingsStoreSchema.extend({
-  __internal__: z.object({
-    migrations: z.object({
-      version: z.string(),
-    }),
-  }),
-});
 
 export class Store {
-  private data: SettingsStoreType;
+  private data: ConfigType;
 
   constructor() {
-    const data = fs.existsSync(this.path)
-      ? JSON.parse(fs.readFileSync(this.path, "utf-8"))
-      : configJsonSchema.parse({});
-    const version = data.__internal__.migrations.version || app.getVersion();
-    this.data = data;
-    for (const [versionRange, migration] of Object.entries(migrations)) {
-      if (!semver.satisfies(version, versionRange)) {
-        migration(this);
+    if (fs.existsSync(this.path)) {
+      const data = JSON.parse(fs.readFileSync(this.path, "utf-8"));
+      const version = data.__internal__.migrations.version;
+      this.data = data;
+      for (const [versionRange, migration] of Object.entries(migrations)) {
+        if (!semver.satisfies(version, versionRange)) {
+          migration(this);
+        }
       }
+      this.data = configSchema.parse(this.data);
+    } else {
+      const defaultConfig = configSchema.parse({});
+      this.data = defaultConfig;
     }
     this.save();
   }
@@ -94,34 +91,34 @@ export class Store {
     return join(app.getPath("userData"), "config.json");
   }
 
-  public get<K extends keyof SettingsStoreType>(
-    key: K,
-    defaultValue?: SettingsStoreType[K]
-  ): SettingsStoreType[K] {
-    return this.data[key] ?? defaultValue;
+  public get<K extends keyof ConfigType>(key: K): ConfigType[K] {
+    return this.data[key];
   }
 
-  public set<K extends keyof SettingsStoreType>(
-    key: K,
-    value: SettingsStoreType[K]
-  ): void {
+  public set<K extends keyof ConfigType>(key: K, value: ConfigType[K]): void {
     this.data[key] = value;
     this.save();
   }
 
-  public delete(key: keyof SettingsStoreType): void {
+  public delete(key: keyof ConfigType): void {
     delete this.data[key];
     this.save();
   }
 
   save(): void {
+    fs.mkdirSync(app.getPath("userData"), { recursive: true });
     fs.writeFileSync(
       this.path,
       JSON.stringify(
-        configJsonSchema.parse({
-          ...this.data,
-          __internal__: { migrations: { version: app.getVersion() } },
-        }),
+        {
+          ...configSchema.parse(this.data),
+          __internal__: {
+            migrations: {
+              version: app.getVersion(),
+            },
+          },
+        },
+
         null,
         2
       )

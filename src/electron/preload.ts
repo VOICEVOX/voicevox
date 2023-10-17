@@ -7,7 +7,7 @@ import {
 
 import {
   Sandbox,
-  SettingsStoreType,
+  ConfigType,
   EngineId,
   SandboxKey,
 } from "@/type/preload";
@@ -228,7 +228,7 @@ const api: Sandbox = {
     return (await ipcRendererInvoke(
       "GET_SETTING",
       key
-    )) as SettingsStoreType[typeof key];
+    )) as ConfigType[typeof key];
   },
 
   /**
