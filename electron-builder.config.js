@@ -90,7 +90,7 @@ const builderOptions = {
     },
     {
       from: VOICEVOX_ENGINE_DIR,
-      to: path.join(extraFilePrefix, "engine"),
+      to: path.join(extraFilePrefix, "vv-engine"),
     },
     {
       from: path.resolve(__dirname, "build", "vendored", "7z", sevenZipFile),
