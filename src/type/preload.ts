@@ -225,13 +225,13 @@ export interface Sandbox {
   setNativeTheme(source: NativeThemeType): void;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
-  getSetting<Key extends keyof ElectronStoreType>(
+  getSetting<Key extends keyof SettingsStoreType>(
     key: Key
-  ): Promise<ElectronStoreType[Key]>;
-  setSetting<Key extends keyof ElectronStoreType>(
+  ): Promise<SettingsStoreType[Key]>;
+  setSetting<Key extends keyof SettingsStoreType>(
     key: Key,
-    newValue: ElectronStoreType[Key]
-  ): Promise<ElectronStoreType[Key]>;
+    newValue: SettingsStoreType[Key]
+  ): Promise<SettingsStoreType[Key]>;
   setEngineSetting(
     engineId: EngineId,
     engineSetting: EngineSetting
@@ -519,7 +519,7 @@ export type ConfirmedTips = {
   notifyOnGenerate: boolean; // 音声書き出し時の通知
 };
 
-export const electronStoreSchema = z
+export const settingsStoreSchema = z
   .object({
     inheritAudioInfo: z.boolean().default(true),
     activePointScrollMode: z
@@ -616,7 +616,7 @@ export const electronStoreSchema = z
     recentlyUsedProjects: z.string().array().default([]),
   })
   .passthrough();
-export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
+export type SettingsStoreType = z.infer<typeof settingsStoreSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {

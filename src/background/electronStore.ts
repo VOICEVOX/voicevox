@@ -4,18 +4,18 @@ import log from "electron-log";
 import zodToJsonSchema from "zod-to-json-schema";
 import {
   AcceptTermsStatus,
-  ElectronStoreType,
+  SettingsStoreType,
   EngineId,
-  electronStoreSchema,
+  settingsStoreSchema,
 } from "@/type/preload";
 
 function getStore() {
-  const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
+  const electronStoreJsonSchema = zodToJsonSchema(settingsStoreSchema);
   if (!("properties" in electronStoreJsonSchema)) {
     throw new Error("electronStoreJsonSchema must be object");
   }
-  return new Store<ElectronStoreType>({
-    schema: electronStoreJsonSchema.properties as Schema<ElectronStoreType>,
+  return new Store<SettingsStoreType>({
+    schema: electronStoreJsonSchema.properties as Schema<SettingsStoreType>,
     migrations: {
       ">=0.13": (store) => {
         // acceptTems -> acceptTerms
@@ -65,7 +65,7 @@ function getStore() {
   });
 }
 
-export function getStoreWithError(): Store<ElectronStoreType> {
+export function getStoreWithError(): Store<SettingsStoreType> {
   try {
     return getStore();
   } catch (e) {

@@ -19,7 +19,7 @@ import {
 
 import {
   EngineInfo,
-  ElectronStoreType,
+  SettingsStoreType,
   EngineDirValidationResult,
   MinimumEngineManifest,
   EngineId,
@@ -68,7 +68,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 }
 
 export class EngineManager {
-  store: Store<ElectronStoreType>;
+  store: Store<SettingsStoreType>;
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
@@ -85,7 +85,7 @@ export class EngineManager {
     vvppEngineDir,
     onEngineProcessError,
   }: {
-    store: Store<ElectronStoreType>;
+    store: Store<SettingsStoreType>;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
