@@ -11,60 +11,66 @@ import {
   configSchema,
 } from "@/type/preload";
 
-const migrations: Record<string, (store: Store) => void> = {
-  ">=0.13": (store) => {
-    // acceptTems -> acceptTerms
-    const prevIdentifier = "acceptTems";
-    // @ts-expect-error 削除されたパラメータ。
-    const prevValue = store.get(prevIdentifier, undefined) as
-      | AcceptTermsStatus
-      | undefined;
-    if (prevValue) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      store.delete(prevIdentifier as any);
-      store.set("acceptTerms", prevValue);
-    }
-  },
-  ">=0.14": (store) => {
-    // FIXME: できるならEngineManagerからEngineIDを取得したい
-    if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined)
-      throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
-    const engineId = EngineId(
-      JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
-    );
-    if (engineId == undefined)
-      throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
-    const prevDefaultStyleIds = store.get("defaultStyleIds");
-    store.set(
-      "defaultStyleIds",
-      prevDefaultStyleIds.map((defaultStyle) => ({
-        engineId,
-        speakerUuid: defaultStyle.speakerUuid,
-        defaultStyleId: defaultStyle.defaultStyleId,
-      }))
-    );
-
-    const outputSamplingRate: number =
+const migrations: [string, (store: Store) => void][] = [
+  [
+    ">=0.13",
+    (store) => {
+      // acceptTems -> acceptTerms
+      const prevIdentifier = "acceptTems";
       // @ts-expect-error 削除されたパラメータ。
-      store.get("savingSetting").outputSamplingRate;
-    const engineSettings: ConfigType["engineSettings"] = {};
-    engineSettings[engineId] = {
+      const prevValue = store.get(prevIdentifier, undefined) as
+        | AcceptTermsStatus
+        | undefined;
+      if (prevValue) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        store.delete(prevIdentifier as any);
+        store.set("acceptTerms", prevValue);
+      }
+    },
+  ],
+  [
+    ">=0.14",
+    (store) => {
+      // FIXME: できるならEngineManagerからEngineIDを取得したい
+      if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined)
+        throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
+      const engineId = EngineId(
+        JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
+      );
+      if (engineId == undefined)
+        throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
+      const prevDefaultStyleIds = store.get("defaultStyleIds");
+      store.set(
+        "defaultStyleIds",
+        prevDefaultStyleIds.map((defaultStyle) => ({
+          engineId,
+          speakerUuid: defaultStyle.speakerUuid,
+          defaultStyleId: defaultStyle.defaultStyleId,
+        }))
+      );
+
+      const outputSamplingRate: number =
+        // @ts-expect-error 削除されたパラメータ。
+        store.get("savingSetting").outputSamplingRate;
+      const engineSettings: ConfigType["engineSettings"] = {};
+      engineSettings[engineId] = {
+        // @ts-expect-error 削除されたパラメータ。
+        useGpu: store.get("useGpu"),
+        outputSamplingRate:
+          outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
+      };
+      store.set("engineSettings", engineSettings);
+
+      const savingSetting = store.get("savingSetting");
       // @ts-expect-error 削除されたパラメータ。
-      useGpu: store.get("useGpu"),
-      outputSamplingRate:
-        outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
-    };
-    store.set("engineSettings", engineSettings);
+      delete savingSetting.outputSamplingRate;
+      store.set("savingSetting", savingSetting);
 
-    const savingSetting = store.get("savingSetting");
-    // @ts-expect-error 削除されたパラメータ。
-    delete savingSetting.outputSamplingRate;
-    store.set("savingSetting", savingSetting);
-
-    // @ts-expect-error 削除されたパラメータ。
-    store.delete("useGpu");
-  },
-};
+      // @ts-expect-error 削除されたパラメータ。
+      store.delete("useGpu");
+    },
+  ],
+];
 
 export class Store {
   private data: ConfigType;
@@ -74,7 +80,7 @@ export class Store {
       const data = JSON.parse(fs.readFileSync(this.path, "utf-8"));
       const version = data.__internal__.migrations.version;
       this.data = data;
-      for (const [versionRange, migration] of Object.entries(migrations)) {
+      for (const [versionRange, migration] of migrations) {
         if (!semver.satisfies(version, versionRange)) {
           migration(this);
         }
