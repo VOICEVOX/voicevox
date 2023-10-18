@@ -311,14 +311,12 @@ export type SavingSetting = {
 
 export type EngineSettings = Record<EngineId, EngineSetting>;
 
-export const engineSettingSchema = z
-  .object({
-    useGpu: z.boolean().default(false),
-    outputSamplingRate: z
-      .union([z.number(), z.literal("engineDefault")])
-      .default("engineDefault"),
-  })
-  .passthrough();
+export const engineSettingSchema = z.object({
+  useGpu: z.boolean().default(false),
+  outputSamplingRate: z
+    .union([z.number(), z.literal("engineDefault")])
+    .default("engineDefault"),
+});
 export type EngineSetting = z.infer<typeof engineSettingSchema>;
 
 export type DefaultStyleId = {
@@ -333,15 +331,13 @@ export const supportedFeaturesItemSchema = z.object({
   name: z.string(),
 });
 
-export const minimumEngineManifestSchema = z
-  .object({
-    name: z.string(),
-    uuid: engineIdSchema,
-    command: z.string(),
-    port: z.number(),
-    supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
-  })
-  .passthrough();
+export const minimumEngineManifestSchema = z.object({
+  name: z.string(),
+  uuid: engineIdSchema,
+  command: z.string(),
+  port: z.number(),
+  supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
+});
 
 export type MinimumEngineManifest = z.infer<typeof minimumEngineManifestSchema>;
 
@@ -422,12 +418,10 @@ export type HotkeyAction = z.infer<typeof hotkeyActionSchema>;
 
 export type HotkeyCombo = string;
 
-export const hotkeySettingSchema = z
-  .object({
-    action: hotkeyActionSchema,
-    combination: z.string(),
-  })
-  .passthrough();
+export const hotkeySettingSchema = z.object({
+  action: hotkeyActionSchema,
+  combination: z.string(),
+});
 export type HotkeySetting = z.infer<typeof hotkeySettingSchema>;
 
 export type HotkeyReturnType =
@@ -502,13 +496,11 @@ export const experimentalSettingSchema = z.object({
 
 export type ExperimentalSetting = z.infer<typeof experimentalSettingSchema>;
 
-export const splitterPositionSchema = z
-  .object({
-    portraitPaneWidth: z.number().optional(),
-    audioInfoPaneWidth: z.number().optional(),
-    audioDetailPaneHeight: z.number().optional(),
-  })
-  .passthrough();
+export const splitterPositionSchema = z.object({
+  portraitPaneWidth: z.number().optional(),
+  audioInfoPaneWidth: z.number().optional(),
+  audioDetailPaneHeight: z.number().optional(),
+});
 export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 
 export type ConfirmedTips = {
@@ -517,103 +509,92 @@ export type ConfirmedTips = {
   notifyOnGenerate: boolean; // 音声書き出し時の通知
 };
 
-export const configSchema = z
-  .object({
-    inheritAudioInfo: z.boolean().default(true),
-    activePointScrollMode: z
-      .enum(["CONTINUOUSLY", "PAGE", "OFF"])
-      .default("OFF"),
-    savingSetting: z
-      .object({
-        fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
-        fileNamePattern: z.string().default(""),
-        fixedExportEnabled: z.boolean().default(false),
-        avoidOverwrite: z.boolean().default(false),
-        fixedExportDir: z.string().default(""),
-        exportLab: z.boolean().default(false),
-        exportText: z.boolean().default(false),
-        outputStereo: z.boolean().default(false),
-        audioOutputDevice: z.string().default(""),
-      })
-      .passthrough()
-      .default({}),
-    hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
-    toolbarSetting: toolbarSettingSchema
-      .array()
-      .default(defaultToolbarButtonSetting),
-    engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
-    userCharacterOrder: speakerIdSchema.array().default([]),
-    defaultStyleIds: z
-      .object({
-        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら.or(z.literal)を外す
-        engineId: engineIdSchema
-          .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
-          .default(EngineId("00000000-0000-0000-0000-000000000000")),
-        speakerUuid: speakerIdSchema,
-        defaultStyleId: styleIdSchema,
-      })
-      .passthrough()
-      .array()
-      .default([]),
-    presets: z
-      .object({
-        items: z
-          .record(
-            presetKeySchema,
-            z
+export const configSchema = z.object({
+  inheritAudioInfo: z.boolean().default(true),
+  activePointScrollMode: z.enum(["CONTINUOUSLY", "PAGE", "OFF"]).default("OFF"),
+  savingSetting: z
+    .object({
+      fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
+      fileNamePattern: z.string().default(""),
+      fixedExportEnabled: z.boolean().default(false),
+      avoidOverwrite: z.boolean().default(false),
+      fixedExportDir: z.string().default(""),
+      exportLab: z.boolean().default(false),
+      exportText: z.boolean().default(false),
+      outputStereo: z.boolean().default(false),
+      audioOutputDevice: z.string().default(""),
+    })
+    .default({}),
+  hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
+  toolbarSetting: toolbarSettingSchema
+    .array()
+    .default(defaultToolbarButtonSetting),
+  engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
+  userCharacterOrder: speakerIdSchema.array().default([]),
+  defaultStyleIds: z
+    .object({
+      // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら.or(z.literal)を外す
+      engineId: engineIdSchema
+        .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
+        .default(EngineId("00000000-0000-0000-0000-000000000000")),
+      speakerUuid: speakerIdSchema,
+      defaultStyleId: styleIdSchema,
+    })
+    .array()
+    .default([]),
+  presets: z
+    .object({
+      items: z
+        .record(
+          presetKeySchema,
+          z.object({
+            name: z.string(),
+            speedScale: z.number(),
+            pitchScale: z.number(),
+            intonationScale: z.number(),
+            volumeScale: z.number(),
+            prePhonemeLength: z.number(),
+            postPhonemeLength: z.number(),
+            morphingInfo: z
               .object({
-                name: z.string(),
-                speedScale: z.number(),
-                pitchScale: z.number(),
-                intonationScale: z.number(),
-                volumeScale: z.number(),
-                prePhonemeLength: z.number(),
-                postPhonemeLength: z.number(),
-                morphingInfo: z
-                  .object({
-                    rate: z.number(),
-                    targetEngineId: engineIdSchema,
-                    targetSpeakerId: speakerIdSchema,
-                    targetStyleId: styleIdSchema,
-                  })
-                  .passthrough()
-                  .optional(),
+                rate: z.number(),
+                targetEngineId: engineIdSchema,
+                targetSpeakerId: speakerIdSchema,
+                targetStyleId: styleIdSchema,
               })
-              .passthrough()
-          )
-          .default({}),
-        keys: presetKeySchema.array().default([]),
-      })
-      .passthrough()
-      .default({}),
-    defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
-    currentTheme: z.string().default("Default"),
-    editorFont: z.enum(["default", "os"]).default("default"),
-    showTextLineNumber: z.boolean().default(false),
-    showAddAudioItemButton: z.boolean().default(true),
-    experimentalSetting: experimentalSettingSchema.passthrough().default({}),
-    acceptRetrieveTelemetry: z
-      .enum(["Unconfirmed", "Accepted", "Refused"])
-      .default("Unconfirmed"),
-    acceptTerms: z
-      .enum(["Unconfirmed", "Accepted", "Rejected"])
-      .default("Unconfirmed"),
-    splitTextWhenPaste: z
-      .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
-      .default("PERIOD_AND_NEW_LINE"),
-    splitterPosition: splitterPositionSchema.default({}),
-    confirmedTips: z
-      .object({
-        tweakableSliderByScroll: z.boolean().default(false),
-        engineStartedOnAltPort: z.boolean().default(false),
-        notifyOnGenerate: z.boolean().default(false),
-      })
-      .passthrough()
-      .default({}),
-    registeredEngineDirs: z.string().array().default([]),
-    recentlyUsedProjects: z.string().array().default([]),
-  })
-  .passthrough();
+              .optional(),
+          })
+        )
+        .default({}),
+      keys: presetKeySchema.array().default([]),
+    })
+    .default({}),
+  defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
+  currentTheme: z.string().default("Default"),
+  editorFont: z.enum(["default", "os"]).default("default"),
+  showTextLineNumber: z.boolean().default(false),
+  showAddAudioItemButton: z.boolean().default(true),
+  experimentalSetting: experimentalSettingSchema.default({}),
+  acceptRetrieveTelemetry: z
+    .enum(["Unconfirmed", "Accepted", "Refused"])
+    .default("Unconfirmed"),
+  acceptTerms: z
+    .enum(["Unconfirmed", "Accepted", "Rejected"])
+    .default("Unconfirmed"),
+  splitTextWhenPaste: z
+    .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
+    .default("PERIOD_AND_NEW_LINE"),
+  splitterPosition: splitterPositionSchema.default({}),
+  confirmedTips: z
+    .object({
+      tweakableSliderByScroll: z.boolean().default(false),
+      engineStartedOnAltPort: z.boolean().default(false),
+      notifyOnGenerate: z.boolean().default(false),
+    })
+    .default({}),
+  registeredEngineDirs: z.string().array().default([]),
+  recentlyUsedProjects: z.string().array().default([]),
+});
 export type ConfigType = z.infer<typeof configSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。

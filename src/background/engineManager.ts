@@ -15,7 +15,7 @@ import {
   isAssignablePort,
   url2HostInfo,
 } from "./portManager";
-import { Store } from "./electronStore";
+import { ElectronConfig } from "./electronConfig";
 
 import {
   EngineInfo,
@@ -67,7 +67,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 }
 
 export class EngineManager {
-  store: Store;
+  config: ElectronConfig;
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
@@ -84,12 +84,12 @@ export class EngineManager {
     vvppEngineDir,
     onEngineProcessError,
   }: {
-    store: Store;
+    store: ElectronConfig;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
   }) {
-    this.store = store; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
+    this.config = store; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
@@ -147,7 +147,7 @@ export class EngineManager {
       }
     }
     // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でstore.setする
-    for (const engineDir of this.store.get("registeredEngineDirs")) {
+    for (const engineDir of this.config.get("registeredEngineDirs")) {
       const result = addEngine(engineDir, "path");
       if (result !== "ok") {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
@@ -157,9 +157,9 @@ export class EngineManager {
           "エンジンの読み込みに失敗しました。",
           `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
         );
-        this.store.set(
+        this.config.set(
           "registeredEngineDirs",
-          this.store.get("registeredEngineDirs").filter((p) => p !== engineDir)
+          this.config.get("registeredEngineDirs").filter((p) => p !== engineDir)
         );
       }
     }
@@ -311,7 +311,7 @@ export class EngineManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const engineSetting = this.store.get("engineSettings")[engineId];
+    const engineSetting = this.config.get("engineSettings")[engineId];
     if (engineSetting == undefined)
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 

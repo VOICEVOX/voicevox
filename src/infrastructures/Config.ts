@@ -1,8 +1,3 @@
-import { join } from "path";
-import fs from "fs";
-import { app, dialog, shell } from "electron";
-import log from "electron-log";
-import { z } from "zod";
 import semver from "semver";
 import {
   AcceptTermsStatus,
@@ -11,7 +6,7 @@ import {
   configSchema,
 } from "@/type/preload";
 
-const migrations: [string, (store: Store) => void][] = [
+const migrations: [string, (store: Config) => void][] = [
   [
     ">=0.13",
     (store) => {
@@ -22,8 +17,8 @@ const migrations: [string, (store: Store) => void][] = [
         | AcceptTermsStatus
         | undefined;
       if (prevValue) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        store.delete(prevIdentifier as any);
+        // @ts-expect-error 削除されたパラメータ。
+        store.delete(prevIdentifier);
         store.set("acceptTerms", prevValue);
       }
     },
@@ -32,11 +27,20 @@ const migrations: [string, (store: Store) => void][] = [
     ">=0.14",
     (store) => {
       // FIXME: できるならEngineManagerからEngineIDを取得したい
-      if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined)
-        throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
-      const engineId = EngineId(
-        JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
-      );
+      let engineId: EngineId;
+      if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined) {
+        // 何故かテスト時にundefinedになるのでハードコードする。
+        // FIXME: import.meta.env.VITE_DEFAULT_ENGINE_INFOSがundefinedにならないようにする
+        if (import.meta.env.MODE === "test") {
+          engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
+        } else {
+          throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
+        }
+      } else {
+        engineId = EngineId(
+          JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
+        );
+      }
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
       const prevDefaultStyleIds = store.get("defaultStyleIds");
@@ -72,14 +76,21 @@ const migrations: [string, (store: Store) => void][] = [
   ],
 ];
 
-export class Store {
-  private data: ConfigType;
+export abstract class Config {
+  protected data: ConfigType;
+
+  abstract configExists(): boolean;
+  abstract loadConfig(): Record<string, unknown> & {
+    __internal__: { migrations: { version: string } };
+  };
+  abstract save(data: ConfigType): void;
 
   constructor() {
-    if (fs.existsSync(this.path)) {
-      const data = JSON.parse(fs.readFileSync(this.path, "utf-8"));
+    if (this.configExists()) {
+      const data = this.loadConfig();
       const version = data.__internal__.migrations.version;
-      this.data = data;
+      // とりあえずConfigTypeにキャストしておく。バリデーションは下で行っているので問題ないはず。
+      this.data = data as unknown as ConfigType;
       for (const [versionRange, migration] of migrations) {
         if (!semver.satisfies(version, versionRange)) {
           migration(this);
@@ -90,11 +101,7 @@ export class Store {
       const defaultConfig = configSchema.parse({});
       this.data = defaultConfig;
     }
-    this.save();
-  }
-
-  get path(): string {
-    return join(app.getPath("userData"), "config.json");
+    this._save();
   }
 
   public get<K extends keyof ConfigType>(key: K): ConfigType[K] {
@@ -103,74 +110,25 @@ export class Store {
 
   public set<K extends keyof ConfigType>(key: K, value: ConfigType[K]): void {
     this.data[key] = value;
-    this.save();
+    this._save();
   }
 
   public delete(key: keyof ConfigType): void {
     delete this.data[key];
-    this.save();
+    this._save();
   }
 
-  save(): void {
-    fs.mkdirSync(app.getPath("userData"), { recursive: true });
-    fs.writeFileSync(
-      this.path,
-      JSON.stringify(
-        {
-          ...configSchema.parse(this.data),
-          __internal__: {
-            migrations: {
-              version: app.getVersion(),
-            },
+  private _save(): void {
+    this.save(
+      configSchema.parse({
+        ...this.data,
+        __internal__: {
+          migrations: {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            version: process.env.APP_VERSION!,
           },
         },
-
-        null,
-        2
-      )
+      })
     );
-  }
-}
-
-let store: Store | undefined;
-
-function getStore() {
-  if (!store) {
-    store = new Store();
-  }
-  return store;
-}
-
-export function getStoreWithError(): Store {
-  try {
-    return getStore();
-  } catch (e) {
-    log.error(e);
-    app.whenReady().then(() => {
-      dialog
-        .showMessageBox({
-          type: "error",
-          title: "設定ファイルの読み込みエラー",
-          message: `設定ファイルの読み込みに失敗しました。${app.getPath(
-            "userData"
-          )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。設定ファイルがあるフォルダを開きますか？`,
-          buttons: ["いいえ", "はい"],
-          noLink: true,
-          cancelId: 0,
-        })
-        .then(async ({ response }) => {
-          if (response === 1) {
-            await shell.openPath(app.getPath("userData"));
-            // 直後にexitするとフォルダが開かないため
-            await new Promise((resolve) => {
-              setTimeout(resolve, 500);
-            });
-          }
-        })
-        .finally(() => {
-          app.exit(1);
-        });
-    });
-    throw e;
   }
 }
