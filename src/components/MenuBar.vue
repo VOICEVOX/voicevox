@@ -315,6 +315,40 @@ const menudata = ref<MenuItemData[]>([
   },
   {
     type: "root",
+    label: "表示",
+    onClick: () => {
+      closeAllDialog();
+    },
+    disableWhenUiLocked: false,
+    subMenu: [
+      {
+        type: "button",
+        label: "拡大",
+        onClick: () => {
+          store.dispatch("ZOOM_IN");
+        },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "縮小",
+        onClick: () => {
+          store.dispatch("ZOOM_OUT");
+        },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "ズームのリセット",
+        onClick: () => {
+          store.dispatch("ZOOM_RESET");
+        },
+        disableWhenUiLocked: true,
+      },
+    ],
+  },
+  {
+    type: "root",
     label: "エンジン",
     onClick: () => {
       closeAllDialog();

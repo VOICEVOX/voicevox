@@ -78,6 +78,28 @@ const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
 ]);
 setHotkeyFunctions(undoRedoHotkeyMap);
 
+const zoomInOutHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+  [
+    "拡大",
+    () => {
+      zoomIn();
+    },
+  ],
+  [
+    "縮小",
+    () => {
+      zoomOut();
+    },
+  ],
+  [
+    "ズームのリセット",
+    () => {
+      zoomReset();
+    },
+  ],
+]);
+setHotkeyFunctions(zoomInOutHotkeyMap);
+
 const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
   // play/stop continuously
   [
@@ -101,6 +123,15 @@ const undo = () => {
 };
 const redo = () => {
   store.dispatch("REDO");
+};
+const zoomIn = () => {
+  store.dispatch("ZOOM_IN");
+};
+const zoomOut = () => {
+  store.dispatch("ZOOM_OUT");
+};
+const zoomReset = () => {
+  store.dispatch("ZOOM_RESET");
 };
 const playContinuously = async () => {
   try {
