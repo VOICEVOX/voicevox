@@ -13,7 +13,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     (store) => {
       // acceptTems -> acceptTerms
       const prevIdentifier = "acceptTems";
-      const prevValue = store.prevIdentifier as AcceptTermsStatus | undefined;
+      const prevValue = store[prevIdentifier] as AcceptTermsStatus | undefined;
       if (prevValue) {
         delete store[prevIdentifier];
         store.acceptTerms = prevValue;
