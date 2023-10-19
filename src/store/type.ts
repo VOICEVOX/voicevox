@@ -76,32 +76,6 @@ export type AudioState = {
   nowGenerating: boolean;
 };
 
-export type Tempo = {
-  position: number;
-  tempo: number;
-};
-
-export type TimeSignature = {
-  position: number;
-  beats: number;
-  beatType: number;
-};
-
-export type Note = {
-  id: string;
-  position: number;
-  duration: number;
-  midi: number;
-  lyric: string;
-};
-
-export type Score = {
-  resolution: number;
-  tempos: Tempo[];
-  timeSignatures: TimeSignature[];
-  notes: Note[];
-};
-
 export type Command = {
   unixMillisec: number;
   undoPatches: Patch[];
@@ -739,6 +713,32 @@ export type AudioPlayerStoreTypes = {
 /*
  * Singing Store Types
  */
+
+export type Tempo = {
+  position: number;
+  tempo: number;
+};
+
+export type TimeSignature = {
+  position: number;
+  beats: number;
+  beatType: number;
+};
+
+export type Note = {
+  id: string;
+  position: number;
+  duration: number;
+  noteNumber: number;
+  lyric: string;
+};
+
+export type Score = {
+  tpqn: number;
+  tempos: Tempo[];
+  timeSignatures: TimeSignature[];
+  notes: Note[];
+};
 
 export type SingingStoreState = {
   engineId?: EngineId;
