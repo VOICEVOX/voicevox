@@ -1,6 +1,6 @@
 import path from "path";
 import { Platform } from "quasar";
-import { Change, diffChars } from "diff";
+import { diffArrays } from "diff";
 import pluck from "just-pluck-it";
 import { ToolbarButtonTagType, isMac } from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
@@ -178,14 +178,11 @@ function skipMemoText(targettext: string): string {
 /**
  * 新しく変更されるアクセント句に対して、変更前のモーラを適用するクラス
  *
- *
- * まず、与えられた現在と過去のアクセント句のモーラを一つの配列にまとめる。こうして作られた過去と現在のモーラ配列を、
- * それぞれの「変更前モーラパッチ配列」「変更後モーラパッチ配列」と呼ぶことにする。
- * 「変更前モーラパッチ配列」と「変更後モーラパッチ配列」の各文字をテキスト化して、変更前から変更後への変更に対するテキスト差分を検出し、配列にまとめる。この配列を、テキストパッチ配列と呼ぶ。
- * 変更前モーラパッチ配列の中に、変化分の文字列を挿入、または、変更後の状態に合わせて、モーラを削除する操作を行う。
- * こうして作られたモーラ配列を、モーラパッチ配列と呼ぶ。
- * 最後に、変更後のアクセント句全体をモーラに対して走査し、モーラパッチ配列のモーラテキストとアクセント区のモーラテキストを比較して、テキストが一致していれば、
- * 変更後のアクセントモーラに対して、モーラパッチ配列の要素を適用する。
+ * まず、過去と現在のアクセント句から、モーラ配列を作成する。
+ * モーラ配列の各テキストを配列にまとめ、得られた2つの配列より、差分を検出する。
+ * 検出した差分の追加、削除、それ以外の状況に応じて、変更前のモーラ配列に対して、文字列の挿入、配列自体の削除
+ * を適用し、変更前のモーラ配列のテキストと変更後のアクセント句のモーラ配列のテキストを一致するようにする。
+ * 最後に、変更後のアクセント句を走査して、変更前のモーラ配列のオブジェクト部分を変更後のアクセント句のモーラに適用する。
  */
 export class AccentDiff {
   beforeAccent: AccentPhrase[];
@@ -194,83 +191,43 @@ export class AccentDiff {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
     this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
   }
+
   /**
-   * アクセント句のテキストを配列として返すメンバ関数
+   * モーラのパッチ配列を作成するメンバ関数
    */
-  getMorasTextFromAccentPhrases(accent: AccentPhrase[]) {
-    const result: string[] = [];
-    accent.forEach((element: AccentPhrase) => {
-      const plucked = pluck(element.moras, "text");
-      const text = plucked.join("");
-      result.push(text);
-    });
-    return result.join("");
-  }
-  /**
-   * パッチモーラ配列を作成するメンバ関数
-   */
-  createMorasOrMorasTextArray() {
+  createDiffPatch() {
     const after = JSON.parse(JSON.stringify(this.afterAccent));
     const before = JSON.parse(JSON.stringify(this.beforeAccent));
-    // テキストの差分検出
-    const diffed: any = diffChars(
-      this.getMorasTextFromAccentPhrases(before),
-      this.getMorasTextFromAccentPhrases(after)
+
+    const pluckedBefore = pluck(before, "moras").flat();
+    const pluckedAfter = pluck(after, "moras").flat();
+    const diffed = diffArrays(
+      pluck(JSON.parse(JSON.stringify(pluckedBefore)), "text"),
+      pluck(JSON.parse(JSON.stringify(pluckedAfter)), "text")
     );
-    const pluckedBefore = pluck(before, "moras").flat(); // 変更前のアクセント句からモーラ配列を作成
-    let pluckedIndex = 0; // 現在のモーラ配列の位置(テキストの位置)を表す。各操作に対して、非常に重要
+    let pluckedIndex = 0;
     for (const diff of diffed) {
       if (diff.removed) {
-        let removeForSmallCounter = 0; // ャ、ュ、ョといった文字を検出するたびに+1加算される
-        for (
-          let removeValueIndex = 0;
-          removeValueIndex < diff.value.length;
-          removeValueIndex++
-        ) {
-          if (
-            diff.value[removeValueIndex] === "ャ" ||
-            diff.value[removeValueIndex] === "ュ" ||
-            diff.value[removeValueIndex] === "ョ"
-          ) {
-            ++removeForSmallCounter;
-          }
-        }
-        pluckedBefore.splice(pluckedIndex, diff.count - removeForSmallCounter);
+        pluckedBefore.splice(pluckedIndex, diff.count);
       } else if (diff.added) {
-        for (let valueIndex = 0; valueIndex < diff.value.length; valueIndex++) {
-          if (
-            diff.value[valueIndex] === "ャ" ||
-            diff.value[valueIndex] === "ュ" ||
-            diff.value[valueIndex] === "ョ"
-          ) {
-            pluckedBefore.splice(
-              pluckedIndex - 1,
-              1,
-              String(diff.value[valueIndex - 1]) +
-                String(diff.value[valueIndex])
-            );
-            ++pluckedIndex;
-          } else {
-            pluckedBefore.splice(pluckedIndex, 0, diff.value[valueIndex]);
-            ++pluckedIndex;
-          }
+        for (const insertedText of diff.value) {
+          pluckedBefore.splice(pluckedIndex, 0, insertedText);
+          ++pluckedIndex;
         }
       } else {
-        // 削除も変更もしないfor文を記述
-        for (const char of diff.value) {
-          if (char === "ャ" || char === "ュ" || char === "ョ") continue;
-          else ++pluckedIndex;
-        }
+        diff.value.forEach(() => {
+          ++pluckedIndex;
+        });
       }
     }
     return pluckedBefore;
   }
   /**
-   * 変更後のアクセント句に、パッチモーラ配列を適用するメンバ関数
+   * 変更後のアクセント句に、モーラパッチ配列を適用するメンバ関数
    */
   mergeAccentPhrases() {
     const after = JSON.parse(JSON.stringify(this.afterAccent));
-    const pluckedBefore = this.createMorasOrMorasTextArray();
+    const MoraPatch = this.createDiffPatch();
     let beforeIndex = 0; // pluckedBeforeのデータの位置
 
     // 与えられたアクセント句は、AccentPhrases[ Nmber ][ Object Key][ Number ]の順番で、モーラを操作できるため、二重forで回す
@@ -280,16 +237,16 @@ export class AccentDiff {
         MoraIndex < after[AccentIndex]["moras"].length;
         MoraIndex++
       ) {
-        // パッチモーラのある要素が文字列なら次へ
-        if (typeof pluckedBefore[beforeIndex] === "string") {
+        // 文字列が検出されたとき、何もせず次のモーラへ移動
+        if (typeof MoraPatch[beforeIndex] === "string") {
           ++beforeIndex;
           continue;
         }
         if (
           after[AccentIndex]["moras"][MoraIndex].text ===
-          pluckedBefore[beforeIndex].text
+          MoraPatch[beforeIndex].text
         ) {
-          after[AccentIndex]["moras"][MoraIndex] = pluckedBefore[beforeIndex];
+          after[AccentIndex]["moras"][MoraIndex] = MoraPatch[beforeIndex];
         }
         ++beforeIndex;
       }
