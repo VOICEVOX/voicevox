@@ -152,7 +152,7 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
 };
 
 const engineManager = new EngineManager({
-  store: config,
+  config,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
   onEngineProcessError,
