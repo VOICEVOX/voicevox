@@ -87,7 +87,7 @@ export abstract class BaseConfig {
   abstract load(): Record<string, unknown> & Metadata;
   abstract save(data: ConfigType & Metadata): void;
 
-  abstract getVersion(): string;
+  abstract getAppVersion(): string;
 
   constructor() {
     if (this.exists()) {
@@ -122,7 +122,7 @@ export abstract class BaseConfig {
       }),
       __internal__: {
         migrations: {
-          version: this.getVersion(),
+          version: this.getAppVersion(),
         },
       },
     });

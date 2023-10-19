@@ -6,7 +6,7 @@ import { BaseConfig } from "@/infrastructures/Config";
 import { ConfigType } from "@/type/preload";
 
 export class ElectronConfig extends BaseConfig {
-  getVersion() {
+  getAppVersion() {
     return app.getVersion();
   }
 

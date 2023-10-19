@@ -12,7 +12,7 @@ const configBase = {
 };
 
 class TestConfig extends BaseConfig {
-  getVersion() {
+  getAppVersion() {
     return "999.999.999";
   }
 
