@@ -219,22 +219,6 @@ const isValidNote = (note: Note) => {
   );
 };
 
-const isValidTempos = (tempos: Tempo[]) => {
-  return (
-    tempos.length > 0 &&
-    tempos[0].position === 0 &&
-    tempos.every((value) => isValidTempo(value))
-  );
-};
-
-const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
-  return (
-    timeSignatures.length > 0 &&
-    timeSignatures[0].position === 0 &&
-    timeSignatures.every((value) => isValidTimeSignature(value))
-  );
-};
-
 const getFromOptional = <T>(value: T | undefined): T => {
   if (value === undefined) {
     throw new Error("The value is undefined.");
