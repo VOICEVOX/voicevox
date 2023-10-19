@@ -28,6 +28,7 @@ import {
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
   joinTextsInAccentPhrases,
+  AccentDiff,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -1972,6 +1973,10 @@ export const audioCommandStore = transformCommandStore(
               if (!state.experimentalSetting.shouldKeepTuningOnTextChange) {
                 newAccentPhrases = accentPhrases;
               } else {
+                const mergedDiff: AccentPhrase[] = new AccentDiff(
+                  query.accentPhrases,
+                  accentPhrases
+                ).mergeAccentPhrases();
                 /*
                  * # 調整結果の保持の仕組み
                  * 1. 新しいAccentPhraseと古いAccentPhraseのテキスト（モーラのカタカナを結合したもの）を比較する。読点は無視する。（diffからflatDiff）
@@ -2032,6 +2037,7 @@ export const audioCommandStore = transformCommandStore(
 
                     return ap;
                   });
+                newAccentPhrases = mergedDiff;
               }
             }
             commit("COMMAND_CHANGE_AUDIO_TEXT", {
