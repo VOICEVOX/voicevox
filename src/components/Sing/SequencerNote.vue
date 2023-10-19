@@ -84,7 +84,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
     const state = store.state;
-    const tpqn = computed(() => state.score?.resolution ?? 480);
+    const tpqn = computed(() => state.score?.tpqn ?? 480);
     const zoomX = computed(() => state.sequencerZoomX);
     const zoomY = computed(() => state.sequencerZoomY);
     const positionX = computed(() => {
@@ -92,7 +92,7 @@ export default defineComponent({
       return tickToBaseX(noteStartTicks, tpqn.value) * zoomX.value;
     });
     const positionY = computed(() => {
-      const noteNumber = props.note.midi;
+      const noteNumber = props.note.noteNumber;
       return noteNumberToBaseY(noteNumber + 0.5) * zoomY.value;
     });
     const barHeight = computed(() => getKeyBaseHeight() * zoomY.value);

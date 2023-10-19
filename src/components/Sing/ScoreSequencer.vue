@@ -172,7 +172,7 @@ export default defineComponent({
     const dragMoveCurrentY = ref();
     const dragDurationCurrentX = ref();
     // 分解能（Ticks Per Quarter Note）
-    const tpqn = computed(() => state.score?.resolution ?? 480);
+    const tpqn = computed(() => state.score?.tpqn ?? 480);
     // ノート
     const notes = computed(() => state.score?.notes ?? []);
     // 拍子
@@ -263,7 +263,7 @@ export default defineComponent({
         note: {
           id,
           position,
-          midi: noteNumber,
+          noteNumber,
           duration,
           lyric,
         },
@@ -337,10 +337,10 @@ export default defineComponent({
           }
           isNotesChanged = true;
           const position = note.position + amountPositionX;
-          const noteNumber = note.midi + amountPositionY;
+          const noteNumber = note.noteNumber + amountPositionY;
           return {
             ...note,
-            midi: noteNumber,
+            noteNumber,
             position,
           };
         } else {
@@ -506,16 +506,16 @@ export default defineComponent({
       }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
-          const noteNumber = Math.min(note.midi + 1, 127);
+          const noteNumber = Math.min(note.noteNumber + 1, 127);
           return {
             ...note,
-            midi: noteNumber,
+            noteNumber,
           };
         } else {
           return note;
         }
       });
-      if (newNotes.some((note) => note.midi > 127)) {
+      if (newNotes.some((note) => note.noteNumber > 127)) {
         return;
       }
       store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
@@ -527,16 +527,16 @@ export default defineComponent({
       }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
-          const noteNumber = Math.max(note.midi - 1, 0);
+          const noteNumber = Math.max(note.noteNumber - 1, 0);
           return {
             ...note,
-            midi: noteNumber,
+            noteNumber,
           };
         } else {
           return note;
         }
       });
-      if (newNotes.some((note) => note.midi < 0)) {
+      if (newNotes.some((note) => note.noteNumber < 0)) {
         return;
       }
       store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
@@ -622,7 +622,6 @@ export default defineComponent({
     });
 
     return {
-      measureNum,
       beatsPerMeasure,
       beatWidth,
       gridCellWidth,

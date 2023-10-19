@@ -411,17 +411,17 @@ export interface Instrument {
    * ノートオンをスケジュールします。
    * すでに指定されたノート番号でノートオンがスケジュールされている場合は何も行いません。
    * @param contextTime ノートオンを行う時刻（コンテキスト時間）
-   * @param midi MIDIノート番号
+   * @param noteNumber MIDIノート番号
    */
-  noteOn(contextTime: number, midi: number): void;
+  noteOn(contextTime: number, noteNumber: number): void;
 
   /**
    * ノートオフをスケジュールします。
    * すでに指定されたノート番号でノートオフがスケジュールされている場合は何も行いません。
    * @param contextTime ノートオフを行う時刻（コンテキスト時間）
-   * @param midi MIDIノート番号
+   * @param noteNumber MIDIノート番号
    */
-  noteOff(contextTime: number, midi: number): void;
+  noteOff(contextTime: number, noteNumber: number): void;
 
   /**
    * 発音中のすべての音に対して、ノートオフのスケジュールを行います。
@@ -436,7 +436,7 @@ export interface Instrument {
 export type NoteEvent = {
   readonly noteOnTime: number;
   readonly noteOffTime: number;
-  readonly midi: number;
+  readonly noteNumber: number;
 };
 
 /**
@@ -502,8 +502,8 @@ class NoteEventScheduler implements EventScheduler {
         this.startContextTime + (event.noteOffTime - this.startTime);
 
       if (event.noteOnTime < untilTime) {
-        this.instrument.noteOn(noteOnContextTime, event.midi);
-        this.instrument.noteOff(noteOffContextTime, event.midi);
+        this.instrument.noteOn(noteOnContextTime, event.noteNumber);
+        this.instrument.noteOff(noteOffContextTime, event.noteNumber);
         this.index++;
       } else break;
     }
@@ -647,7 +647,7 @@ export type Envelope = {
 };
 
 type SynthVoiceParams = {
-  readonly midi: number;
+  readonly noteNumber: number;
   readonly oscillatorType: OscillatorType;
   readonly envelope: Envelope;
 };
@@ -656,7 +656,7 @@ type SynthVoiceParams = {
  * シンセサイザーのボイスです。音を合成します。
  */
 class SynthVoice {
-  readonly midi: number;
+  readonly noteNumber: number;
   private readonly oscillatorNode: OscillatorNode;
   private readonly gainNode: GainNode;
   private readonly envelope: Envelope;
@@ -678,7 +678,7 @@ class SynthVoice {
   }
 
   constructor(audioContext: BaseAudioContext, params: SynthVoiceParams) {
-    this.midi = params.midi;
+    this.noteNumber = params.noteNumber;
     this.envelope = params.envelope;
 
     this.oscillatorNode = new OscillatorNode(audioContext);
@@ -692,11 +692,11 @@ class SynthVoice {
 
   /**
    * MIDIノート番号を周波数に変換します。
-   * @param midi MIDIノート番号
+   * @param noteNumber MIDIノート番号
    * @returns 周波数（Hz）
    */
-  private midiToFrequency(midi: number) {
-    return 440 * 2 ** ((midi - 69) / 12);
+  private midiToFrequency(noteNumber: number) {
+    return 440 * 2 ** ((noteNumber - 69) / 12);
   }
 
   /**
@@ -715,7 +715,7 @@ class SynthVoice {
     this.gainNode.gain.linearRampToValueAtTime(1, t0 + atk);
     this.gainNode.gain.setTargetAtTime(sus, t0 + atk, dcy);
 
-    const freq = this.midiToFrequency(this.midi);
+    const freq = this.midiToFrequency(this.noteNumber);
     this.oscillatorNode.frequency.value = freq;
 
     this.oscillatorNode.start(contextTime);
@@ -797,16 +797,16 @@ export class PolySynth implements Instrument {
    * ノートオンをスケジュールします。
    * すでに指定されたノート番号でノートオンがスケジュールされている場合は何も行いません。
    * @param contextTime ノートオンを行う時刻（コンテキスト時間）
-   * @param midi MIDIノート番号
+   * @param noteNumber MIDIノート番号
    */
-  noteOn(contextTime: number, midi: number) {
+  noteOn(contextTime: number, noteNumber: number) {
     const exists = this.voices.some((value) => {
-      return value.isActive && value.midi === midi;
+      return value.isActive && value.noteNumber === noteNumber;
     });
     if (exists) return;
 
     const voice = new SynthVoice(this.audioContext, {
-      midi,
+      noteNumber,
       oscillatorType: this.oscillatorType,
       envelope: this.envelope,
     });
@@ -822,11 +822,11 @@ export class PolySynth implements Instrument {
    * ノートオフをスケジュールします。
    * すでに指定されたノート番号でノートオフがスケジュールされている場合は何も行いません。
    * @param contextTime ノートオフを行う時刻（コンテキスト時間）
-   * @param midi MIDIノート番号
+   * @param noteNumber MIDIノート番号
    */
-  noteOff(contextTime: number, midi: number) {
+  noteOff(contextTime: number, noteNumber: number) {
     const voice = this.voices.find((value) => {
-      return value.isActive && value.midi === midi;
+      return value.isActive && value.noteNumber === noteNumber;
     });
     if (!voice) return;
 

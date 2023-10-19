@@ -249,7 +249,7 @@ export default defineComponent({
     });
 
     const snapTypeSelectOptions = computed(() => {
-      const tpqn = store.state.score?.resolution ?? 480;
+      const tpqn = store.state.score?.tpqn ?? 480;
       return getSnapTypes(tpqn).map((snapType) => {
         if (isTriplet(snapType)) {
           return { snapType, label: `1/${(snapType / 3) * 2}（三連符）` };
