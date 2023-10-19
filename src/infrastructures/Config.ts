@@ -4,23 +4,22 @@ import {
   ConfigType,
   EngineId,
   configSchema,
+  DefaultStyleId,
 } from "@/type/preload";
 
-const migrations: [string, (store: Config) => void][] = [
+const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
     ">=0.13",
     (store) => {
       // acceptTems -> acceptTerms
       const prevIdentifier = "acceptTems";
-      // @ts-expect-error 削除されたパラメータ。
-      const prevValue = store.get(prevIdentifier, undefined) as
-        | AcceptTermsStatus
-        | undefined;
+      const prevValue = store.prevIdentifier as AcceptTermsStatus | undefined;
       if (prevValue) {
-        // @ts-expect-error 削除されたパラメータ。
-        store.delete(prevIdentifier);
-        store.set("acceptTerms", prevValue);
+        delete store[prevIdentifier];
+        store.acceptTerms = prevValue;
       }
+
+      return store;
     },
   ],
   [
@@ -43,60 +42,63 @@ const migrations: [string, (store: Config) => void][] = [
       }
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
-      const prevDefaultStyleIds = store.get("defaultStyleIds");
-      store.set(
-        "defaultStyleIds",
-        prevDefaultStyleIds.map((defaultStyle) => ({
-          engineId,
-          speakerUuid: defaultStyle.speakerUuid,
-          defaultStyleId: defaultStyle.defaultStyleId,
-        }))
-      );
+      const prevDefaultStyleIds = store.defaultStyleIds as DefaultStyleId[];
+      store.defaultStyleIds = prevDefaultStyleIds.map((defaultStyle) => ({
+        engineId,
+        speakerUuid: defaultStyle.speakerUuid,
+        defaultStyleId: defaultStyle.defaultStyleId,
+      }));
 
-      const outputSamplingRate: number =
-        // @ts-expect-error 削除されたパラメータ。
-        store.get("savingSetting").outputSamplingRate;
+      const outputSamplingRate: number = (
+        store.savingSetting as { outputSamplingRate: number }
+      ).outputSamplingRate;
       const engineSettings: ConfigType["engineSettings"] = {};
       engineSettings[engineId] = {
-        // @ts-expect-error 削除されたパラメータ。
-        useGpu: store.get("useGpu"),
+        useGpu: store.useGpu as boolean,
         outputSamplingRate:
           outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
       };
-      store.set("engineSettings", engineSettings);
+      store.engineSettings = engineSettings;
 
-      const savingSetting = store.get("savingSetting");
+      const savingSetting = store.savingSetting as ConfigType["savingSetting"];
       // @ts-expect-error 削除されたパラメータ。
       delete savingSetting.outputSamplingRate;
-      store.set("savingSetting", savingSetting);
+      store.savingSetting = savingSetting;
 
-      // @ts-expect-error 削除されたパラメータ。
-      store.delete("useGpu");
+      delete store.useGpu;
+
+      return store;
     },
   ],
 ];
 
-export abstract class Config {
+type Metadata = {
+  __internal__: {
+    migrations: {
+      version: string;
+    };
+  };
+};
+
+export abstract class BaseConfig {
   protected data: ConfigType;
 
-  abstract configExists(): boolean;
-  abstract loadConfig(): Record<string, unknown> & {
-    __internal__: { migrations: { version: string } };
-  };
-  abstract save(data: ConfigType): void;
+  abstract exists(): boolean;
+  abstract load(): Record<string, unknown> & Metadata;
+  abstract save(data: ConfigType & Metadata): void;
+
+  abstract getVersion(): string;
 
   constructor() {
-    if (this.configExists()) {
-      const data = this.loadConfig();
+    if (this.exists()) {
+      const data = this.load();
       const version = data.__internal__.migrations.version;
-      // とりあえずConfigTypeにキャストしておく。バリデーションは下で行っているので問題ないはず。
-      this.data = data as unknown as ConfigType;
       for (const [versionRange, migration] of migrations) {
         if (!semver.satisfies(version, versionRange)) {
-          migration(this);
+          migration(data);
         }
       }
-      this.data = configSchema.parse(this.data);
+      this.data = configSchema.parse(data);
     } else {
       const defaultConfig = configSchema.parse({});
       this.data = defaultConfig;
@@ -113,22 +115,16 @@ export abstract class Config {
     this._save();
   }
 
-  public delete(key: keyof ConfigType): void {
-    delete this.data[key];
-    this._save();
-  }
-
   private _save(): void {
-    this.save(
-      configSchema.parse({
+    this.save({
+      ...configSchema.parse({
         ...this.data,
-        __internal__: {
-          migrations: {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            version: process.env.APP_VERSION!,
-          },
+      }),
+      __internal__: {
+        migrations: {
+          version: this.getVersion(),
         },
-      })
-    );
+      },
+    });
   }
 }

@@ -1,5 +1,5 @@
 import pastConfigs from "./pastConfigs";
-import { Config } from "@/infrastructures/Config";
+import { BaseConfig } from "@/infrastructures/Config";
 import { configSchema } from "@/type/preload";
 
 const configBase = {
@@ -11,37 +11,56 @@ const configBase = {
   },
 };
 
-class TestConfig extends Config {
-  configExists() {
+class TestConfig extends BaseConfig {
+  getVersion() {
+    return "999.999.999";
+  }
+
+  exists() {
     throw new Error("mockで実装してください");
 
     // Unreachableだが、一応booleanを返さないとモックできないので返しておく。
     return false;
   }
 
-  loadConfig() {
+  load() {
     throw new Error("mockで実装してください");
 
-    return {} as ReturnType<Config["loadConfig"]>;
+    return {} as ReturnType<BaseConfig["load"]>;
   }
 
-  save() {
+  // VitestのmockFn.mock.callsの型のために引数を受け取るようにしている。
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  save(data: Parameters<BaseConfig["save"]>[0]) {
     throw new Error("mockで実装してください");
   }
 }
 
 it("新規作成できる", () => {
-  TestConfig.prototype.configExists = vi.fn().mockReturnValue(false);
-  TestConfig.prototype.save = vi.fn();
+  vi.spyOn(TestConfig.prototype, "exists").mockImplementation(() => false);
+  vi.spyOn(TestConfig.prototype, "save").mockImplementation(() => undefined);
+
   const config = new TestConfig();
   expect(config).toBeTruthy();
 });
 
+it("バージョンが保存される", () => {
+  vi.spyOn(TestConfig.prototype, "exists").mockImplementation(() => false);
+  const saveSpy = vi
+    .spyOn(TestConfig.prototype, "save")
+    .mockImplementation(() => undefined);
+
+  new TestConfig();
+  expect(saveSpy).toHaveBeenCalled();
+  const savedData = saveSpy.mock.calls[0][0];
+  expect(savedData.__internal__.migrations.version).toBe("999.999.999");
+});
+
 for (const [version, data] of pastConfigs) {
   it(`${version}からマイグレーションできる`, () => {
-    TestConfig.prototype.configExists = vi.fn().mockReturnValue(true);
-    TestConfig.prototype.save = vi.fn();
-    TestConfig.prototype.loadConfig = vi.fn().mockReturnValue(data);
+    vi.spyOn(TestConfig.prototype, "exists").mockImplementation(() => true);
+    vi.spyOn(TestConfig.prototype, "save").mockImplementation(() => undefined);
+    vi.spyOn(TestConfig.prototype, "load").mockImplementation(() => data);
 
     const config = new TestConfig();
     expect(config).toBeTruthy();
@@ -49,39 +68,26 @@ for (const [version, data] of pastConfigs) {
 }
 
 it("getできる", () => {
-  TestConfig.prototype.configExists = vi.fn().mockReturnValue(true);
-  TestConfig.prototype.loadConfig = vi.fn().mockReturnValue({
+  vi.spyOn(TestConfig.prototype, "exists").mockImplementation(() => true);
+  vi.spyOn(TestConfig.prototype, "save").mockImplementation(() => undefined);
+  vi.spyOn(TestConfig.prototype, "load").mockImplementation(() => ({
     ...configBase,
     inheritAudioInfo: false,
-  });
-  TestConfig.prototype.save = vi.fn();
+  }));
 
   const config = new TestConfig();
   expect(config.get("inheritAudioInfo")).toBe(false);
 });
 
 it("setできる", () => {
-  TestConfig.prototype.configExists = vi.fn().mockReturnValue(true);
-  TestConfig.prototype.loadConfig = vi.fn().mockReturnValue({
+  vi.spyOn(TestConfig.prototype, "exists").mockImplementation(() => true);
+  vi.spyOn(TestConfig.prototype, "save").mockImplementation(() => undefined);
+  vi.spyOn(TestConfig.prototype, "load").mockImplementation(() => ({
     ...configBase,
     inheritAudioInfo: false,
-  });
-  TestConfig.prototype.save = vi.fn();
+  }));
 
   const config = new TestConfig();
   config.set("inheritAudioInfo", true);
   expect(config.get("inheritAudioInfo")).toBe(true);
-});
-
-it("deleteできる", () => {
-  TestConfig.prototype.configExists = vi.fn().mockReturnValue(true);
-  TestConfig.prototype.save = vi.fn();
-  TestConfig.prototype.loadConfig = vi.fn().mockReturnValue({
-    ...configBase,
-    inheritAudioInfo: false,
-  });
-
-  const config = new TestConfig();
-  config.delete("inheritAudioInfo");
-  expect(config.get("inheritAudioInfo")).toBeUndefined();
 });

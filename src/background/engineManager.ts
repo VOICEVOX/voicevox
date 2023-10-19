@@ -79,17 +79,17 @@ export class EngineManager {
   public altPortInfo: AltPortInfos = {};
 
   constructor({
-    store,
+    config,
     defaultEngineDir,
     vvppEngineDir,
     onEngineProcessError,
   }: {
-    store: ElectronConfig;
+    config: ElectronConfig;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
   }) {
-    this.config = store; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
+    this.config = config; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;

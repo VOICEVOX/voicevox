@@ -2,15 +2,19 @@ import { join } from "path";
 import fs from "fs";
 import { app, dialog, shell } from "electron";
 import log from "electron-log";
-import { Config } from "@/infrastructures/Config";
+import { BaseConfig } from "@/infrastructures/Config";
 import { ConfigType } from "@/type/preload";
 
-export class ElectronConfig extends Config {
-  public configExists(): boolean {
+export class ElectronConfig extends BaseConfig {
+  getVersion() {
+    return app.getVersion();
+  }
+
+  public exists(): boolean {
     return fs.existsSync(this.configPath);
   }
 
-  public loadConfig(): Record<string, unknown> & {
+  public load(): Record<string, unknown> & {
     __internal__: { migrations: { version: string } };
   } {
     return JSON.parse(fs.readFileSync(this.configPath, "utf-8"));
@@ -25,14 +29,14 @@ export class ElectronConfig extends Config {
   }
 }
 
-let store: ElectronConfig | undefined;
+let config: ElectronConfig | undefined;
 
 export function getConfigWithError(): ElectronConfig {
   try {
-    if (!store) {
-      store = new ElectronConfig();
+    if (!config) {
+      config = new ElectronConfig();
     }
-    return store;
+    return config;
   } catch (e) {
     log.error(e);
     app.whenReady().then(() => {
