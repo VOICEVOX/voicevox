@@ -1,4 +1,4 @@
-import { Note, TimeSignature } from "@/store/type";
+import { Note } from "@/store/type";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_NOTE_NUMBER = 30;
@@ -8,11 +8,13 @@ export function noteNumberToFrequency(noteNumber: number) {
 }
 
 // NOTE: 戻り値の単位はtick
-export function getMeasureDuration(timeSignature: TimeSignature, tpqn: number) {
-  const beats = timeSignature.beats;
-  const beatType = timeSignature.beatType;
-  const quarterNotesPerMeasure = (4 / beatType) * beats;
-  return tpqn * quarterNotesPerMeasure;
+export function getMeasureDuration(
+  beats: number,
+  beatType: number,
+  tpqn: number
+) {
+  const wholeNoteDuration = tpqn * 4;
+  return (wholeNoteDuration / beatType) * beats;
 }
 
 // TODO: getNumOfMeasuresに変更する
@@ -30,7 +32,7 @@ export function getNoteDuration(noteType: number, tpqn: number) {
   return (tpqn * 4) / noteType;
 }
 
-export function getNoteTypes(tpqn: number) {
+export function getRepresentableNoteTypes(tpqn: number) {
   const maxNoteType = 128;
   const wholeNoteDuration = tpqn * 4;
   const noteTypes = [1];
@@ -79,7 +81,10 @@ export function baseYToNoteNumber(baseY: number, integer = true) {
 }
 
 export function getSnapTypes(tpqn: number) {
-  return getNoteTypes(tpqn).filter((value) => value <= 64);
+  const maxSnapType = 64;
+  return getRepresentableNoteTypes(tpqn).filter((value) => {
+    return value <= maxSnapType;
+  });
 }
 
 export function isValidSnapType(snapType: number, tpqn: number) {

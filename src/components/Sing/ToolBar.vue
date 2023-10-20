@@ -154,7 +154,7 @@ export default defineComponent({
     const playbackPositionStr = computed(() => {
       let playTime = 0;
       if (store.state.score) {
-        playTime = store.getters.POSITION_TO_TIME(playPos.value);
+        playTime = store.getters.TICK_TO_SECOND(playPos.value);
       }
 
       const intPlayTime = Math.floor(playTime);
@@ -250,13 +250,21 @@ export default defineComponent({
 
     const snapTypeSelectOptions = computed(() => {
       const tpqn = store.state.score?.tpqn ?? 480;
-      return getSnapTypes(tpqn).map((snapType) => {
-        if (isTriplet(snapType)) {
-          return { snapType, label: `1/${(snapType / 3) * 2}（三連符）` };
-        } else {
-          return { snapType, label: `1/${snapType}` };
-        }
-      });
+      return getSnapTypes(tpqn)
+        .sort((a, b) => {
+          if (isTriplet(a) === isTriplet(b)) {
+            return a - b;
+          } else {
+            return isTriplet(a) ? 1 : -1;
+          }
+        })
+        .map((snapType) => {
+          if (isTriplet(snapType)) {
+            return { snapType, label: `1/${(snapType / 3) * 2}（三連符）` };
+          } else {
+            return { snapType, label: `1/${snapType}` };
+          }
+        });
     });
     const snapTypeSelectModel = computed({
       get() {
@@ -264,7 +272,7 @@ export default defineComponent({
         const selectOptions = snapTypeSelectOptions.value;
         return (
           selectOptions.find((value) => value.snapType === snapType) ??
-          selectOptions[selectOptions.length - 1]
+          selectOptions[0]
         );
       },
       set(value) {

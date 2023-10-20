@@ -219,6 +219,22 @@ const isValidNote = (note: Note) => {
   );
 };
 
+const isValidTempos = (tempos: Tempo[]) => {
+  return (
+    tempos.length > 0 &&
+    tempos[0].position === 0 &&
+    tempos.every((value) => isValidTempo(value))
+  );
+};
+
+const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
+  return (
+    timeSignatures.length > 0 &&
+    timeSignatures[0].position === 0 &&
+    timeSignatures.every((value) => isValidTimeSignature(value))
+  );
+};
+
 const getFromOptional = <T>(value: T | undefined): T => {
   if (value === undefined) {
     throw new Error("The value is undefined.");
@@ -335,36 +351,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  GET_EMPTY_SCORE: {
-    async action() {
-      const score: Score = {
-        tpqn: DEFAULT_TPQN,
-        tempos: [{ position: 0, tempo: DEFAULT_TEMPO }],
-        timeSignatures: [
-          { position: 0, beats: DEFAULT_BEATS, beatType: DEFAULT_BEAT_TYPE },
-        ],
-        notes: [],
-      };
-      if (score.tempos.length !== 1 || score.tempos[0].position !== 0) {
-        throw new Error("Tempo does not exist at the beginning of the score.");
-      }
-      if (
-        score.timeSignatures.length !== 1 ||
-        score.timeSignatures[0].position !== 0
-      ) {
-        throw new Error(
-          "Time signature does not exist at the beginning of the score."
-        );
-      }
-      return score;
-    },
-  },
-
   SET_SCORE: {
     mutation(state, { score }: { score: Score }) {
       state.score = score;
     },
-    async action({ state, getters, commit, dispatch }, { score }) {
+    async action(
+      { state, getters, commit, dispatch },
+      payload: { score?: Score }
+    ) {
+      const score: Score = payload.score ?? {
+        tpqn: DEFAULT_TPQN,
+        tempos: [
+          {
+            position: 0,
+            tempo: DEFAULT_TEMPO,
+          },
+        ],
+        timeSignatures: [
+          {
+            position: 0,
+            beats: DEFAULT_BEATS,
+            beatType: DEFAULT_BEAT_TYPE,
+          },
+        ],
+        notes: [],
+      };
+      if (!isValidTempos(score.tempos)) {
+        throw new Error("The tempos are invalid.");
+      }
+      if (!isValidTimeSignatures(score.timeSignatures)) {
+        throw new Error("The time signatures are invalid.");
+      }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
@@ -372,161 +389,152 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await dispatch("SING_STOP_AUDIO");
       }
       commit("SET_SCORE", { score });
-
-      transport.time = getters.POSITION_TO_TIME(playbackPosition);
+      transport.time = getters.TICK_TO_SECOND(playbackPosition);
 
       dispatch("RENDER");
     },
   },
 
   SET_TEMPO: {
-    mutation(state, { index, tempo }: { index: number; tempo: Tempo }) {
+    mutation(state, { tempo }: { tempo: Tempo }) {
       const score = getFromOptional(state.score);
+      const index = score.tempos.findIndex((value) => {
+        return value.position === tempo.position;
+      });
       const tempos = [...score.tempos];
-      tempos.splice(index, 0, tempo);
+      if (index !== -1) {
+        tempos.splice(index, 1, tempo);
+      } else {
+        tempos.push(tempo);
+        tempos.sort((a, b) => a.position - b.position);
+      }
       score.tempos = tempos;
     },
     // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
-    async action({ state, getters, commit, dispatch }, { tempo }) {
-      const score = state.score;
-      if (score === undefined || score.tempos.length === 0) {
-        throw new Error("Score is not initialized.");
-      }
+    async action(
+      { state, getters, commit, dispatch },
+      { tempo }: { tempo: Tempo }
+    ) {
       if (!transport) {
         throw new Error("transport is undefined.");
       }
       if (!isValidTempo(tempo)) {
         throw new Error("The tempo is invalid.");
       }
-      const duplicate = score.tempos.some((value) => {
-        return value.position === tempo.position;
-      });
-      const index = score.tempos.findIndex((value) => {
-        return value.position >= tempo.position;
-      });
-      if (index === -1) return;
-
-      tempo.tempo = round(tempo.tempo, 2);
-
       if (state.nowPlaying) {
-        playbackPosition = getters.TIME_TO_POSITION(transport.time);
+        playbackPosition = getters.SECOND_TO_TICK(transport.time);
       }
-
-      if (duplicate) {
-        commit("REMOVE_TEMPO", { index });
-      }
-      commit("SET_TEMPO", { index, tempo });
-
-      transport.time = getters.POSITION_TO_TIME(playbackPosition);
+      tempo.tempo = round(tempo.tempo, 2);
+      commit("SET_TEMPO", { tempo });
+      transport.time = getters.TICK_TO_SECOND(playbackPosition);
 
       dispatch("RENDER");
     },
   },
 
   REMOVE_TEMPO: {
-    mutation(state, { index }: { index: number }) {
+    mutation(state, { position }: { position: number }) {
       const score = getFromOptional(state.score);
+      const index = score.tempos.findIndex((value) => {
+        return value.position === position;
+      });
+      if (index === -1) {
+        return;
+      }
       const tempos = [...score.tempos];
-      tempos.splice(index, 1);
+      if (index === 0) {
+        tempos.splice(index, 1, {
+          position: 0,
+          tempo: DEFAULT_TEMPO,
+        });
+      } else {
+        tempos.splice(index, 1);
+      }
       score.tempos = tempos;
     },
     // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
-    async action({ state, getters, commit, dispatch }, { position }) {
-      const emptyScore = await dispatch("GET_EMPTY_SCORE");
-      const defaultTempo = emptyScore.tempos[0];
-
-      const score = state.score;
-      if (score === undefined || score.tempos.length === 0) {
-        throw new Error("Score is not initialized.");
+    async action(
+      { state, getters, commit, dispatch },
+      { position }: { position: number }
+    ) {
+      const score = getFromOptional(state.score);
+      const exists = score.tempos.some((value) => {
+        return value.position === position;
+      });
+      if (!exists) {
+        throw new Error("The tempo does not exist.");
       }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
-      const index = score.tempos.findIndex((value) => {
-        return value.position === position;
-      });
-      if (index === -1) return;
-
       if (state.nowPlaying) {
-        playbackPosition = getters.TIME_TO_POSITION(transport.time);
+        playbackPosition = getters.SECOND_TO_TICK(transport.time);
       }
-
-      commit("REMOVE_TEMPO", { index });
-      if (index === 0) {
-        commit("SET_TEMPO", { index, tempo: defaultTempo });
-      }
-
-      transport.time = getters.POSITION_TO_TIME(playbackPosition);
+      commit("REMOVE_TEMPO", { position });
+      transport.time = getters.TICK_TO_SECOND(playbackPosition);
 
       dispatch("RENDER");
     },
   },
 
   SET_TIME_SIGNATURE: {
-    mutation(
-      state,
-      { index, timeSignature }: { index: number; timeSignature: TimeSignature }
-    ) {
+    mutation(state, { timeSignature }: { timeSignature: TimeSignature }) {
       const score = getFromOptional(state.score);
+      const index = score.timeSignatures.findIndex((value) => {
+        return value.position === timeSignature.position;
+      });
       const timeSignatures = [...score.timeSignatures];
-      timeSignatures.splice(index, 0, timeSignature);
+      if (index !== -1) {
+        timeSignatures.splice(index, 1, timeSignature);
+      } else {
+        timeSignatures.push(timeSignature);
+        timeSignatures.sort((a, b) => a.position - b.position);
+      }
       score.timeSignatures = timeSignatures;
     },
     // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
     async action(
-      { state, commit },
+      { commit },
       { timeSignature }: { timeSignature: TimeSignature }
     ) {
-      const score = state.score;
-      if (score === undefined || score.timeSignatures.length === 0) {
-        throw new Error("Score is not initialized.");
-      }
       if (!isValidTimeSignature(timeSignature)) {
         throw new Error("The time signature is invalid.");
       }
-      const duplicate = score.timeSignatures.some((value) => {
-        return value.position === timeSignature.position;
-      });
-      const index = score.timeSignatures.findIndex((value) => {
-        return value.position >= timeSignature.position;
-      });
-      if (index === -1) return;
-
-      if (duplicate) {
-        commit("REMOVE_TIME_SIGNATURE", { index });
-      }
-      commit("SET_TIME_SIGNATURE", { index, timeSignature });
+      commit("SET_TIME_SIGNATURE", { timeSignature });
     },
   },
 
   REMOVE_TIME_SIGNATURE: {
-    mutation(state, { index }: { index: number }) {
+    mutation(state, { position }: { position: number }) {
       const score = getFromOptional(state.score);
-      const timeSignatures = [...score.timeSignatures];
-      timeSignatures.splice(index, 1);
-      score.timeSignatures = timeSignatures;
-    },
-    // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
-    async action({ state, commit, dispatch }, { position }) {
-      const emptyScore = await dispatch("GET_EMPTY_SCORE");
-      const defaultTimeSignature = emptyScore.timeSignatures[0];
-
-      const score = state.score;
-      if (score === undefined || score.timeSignatures.length === 0) {
-        throw new Error("Score is not initialized.");
-      }
       const index = score.timeSignatures.findIndex((value) => {
         return value.position === position;
       });
-      if (index === -1) return;
-
-      commit("REMOVE_TIME_SIGNATURE", { index });
-      if (index === 0) {
-        commit("SET_TIME_SIGNATURE", {
-          index,
-          timeSignature: defaultTimeSignature,
-        });
+      if (index === -1) {
+        return;
       }
+      const timeSignatures = [...score.timeSignatures];
+      if (index === 0) {
+        timeSignatures.splice(index, 1, {
+          position: 0,
+          beats: DEFAULT_BEATS,
+          beatType: DEFAULT_BEAT_TYPE,
+        });
+      } else {
+        timeSignatures.splice(index, 1);
+      }
+      score.timeSignatures = timeSignatures;
+    },
+    // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
+    async action({ state, commit }, { position }: { position: number }) {
+      const score = getFromOptional(state.score);
+      const exists = score.timeSignatures.some((value) => {
+        return value.position === position;
+      });
+      if (!exists) {
+        throw new Error("The time signature does not exist.");
+      }
+      commit("REMOVE_TIME_SIGNATURE", { position });
     },
   },
 
@@ -643,7 +651,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  // 選択中のノートを削除する
   REMOVE_SELECTED_NOTES: {
     mutation(state) {
       if (state.score) {
@@ -716,25 +723,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       });
     },
   },
-  POSITION_TO_TIME: {
+
+  TICK_TO_SECOND: {
     getter: (state) => (position) => {
       const score = getFromOptional(state.score);
       return tickToSecond(position, score.tempos, score.tpqn);
     },
   },
-  TIME_TO_POSITION: {
+
+  SECOND_TO_TICK: {
     getter: (state) => (time) => {
       const score = getFromOptional(state.score);
       return secondToTick(time, score.tempos, score.tpqn);
     },
   },
+
   GET_PLAYBACK_POSITION: {
     getter: (state, getters) => () => {
       if (!transport) {
         throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
-        playbackPosition = getters.TIME_TO_POSITION(transport.time);
+        playbackPosition = getters.SECOND_TO_TICK(transport.time);
       }
       return playbackPosition;
     },
@@ -746,8 +756,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       playbackPosition = position;
-
-      transport.time = getters.POSITION_TO_TIME(position);
+      transport.time = getters.TICK_TO_SECOND(position);
     },
   },
 
@@ -1838,8 +1847,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const leftLocatorPos = state.leftLocatorPosition;
         const rightLocatorPos = state.rightLocatorPosition;
-        const renderStartTime = getters.POSITION_TO_TIME(leftLocatorPos);
-        const renderEndTime = getters.POSITION_TO_TIME(rightLocatorPos);
+        const renderStartTime = getters.TICK_TO_SECOND(leftLocatorPos);
+        const renderEndTime = getters.TICK_TO_SECOND(rightLocatorPos);
         const renderDuration = renderEndTime - renderStartTime;
 
         if (renderEndTime <= renderStartTime) {
