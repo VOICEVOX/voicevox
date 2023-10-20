@@ -1,9 +1,8 @@
 import path from "path";
 import { Platform } from "quasar";
 import { diffArrays } from "diff";
-import pluck from "just-pluck-it";
 import { ToolbarButtonTagType, isMac } from "@/type/preload";
-import { AccentPhrase, Mora } from "@/openapi";
+import { AccentPhrase } from "@/openapi";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 
@@ -192,6 +191,15 @@ export class AccentDiff {
     this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
   }
 
+  createFlatArray(collection: AccentPhrase[], Key: string) {
+    const targetAccent = JSON.parse(JSON.stringify(collection));
+    const result = [];
+    for (const element of targetAccent) {
+      result.push(element[Key]);
+    }
+    return result.flat();
+  }
+
   /**
    * モーラのパッチ配列を作成するメンバ関数
    */
@@ -199,19 +207,19 @@ export class AccentDiff {
     const after = JSON.parse(JSON.stringify(this.afterAccent));
     const before = JSON.parse(JSON.stringify(this.beforeAccent));
 
-    const pluckedBefore = pluck(before, "moras").flat();
-    const pluckedAfter = pluck(after, "moras").flat();
+    const beforeFlatArray = this.createFlatArray(before, "moras");
+    const afterFlatArray = this.createFlatArray(after, "moras");
     const diffed = diffArrays(
-      pluck(JSON.parse(JSON.stringify(pluckedBefore)), "text"),
-      pluck(JSON.parse(JSON.stringify(pluckedAfter)), "text")
+      this.createFlatArray(JSON.parse(JSON.stringify(beforeFlatArray)), "text"),
+      this.createFlatArray(JSON.parse(JSON.stringify(afterFlatArray)), "text")
     );
     let pluckedIndex = 0;
     for (const diff of diffed) {
       if (diff.removed) {
-        pluckedBefore.splice(pluckedIndex, diff.count);
+        beforeFlatArray.splice(pluckedIndex, diff.count);
       } else if (diff.added) {
         for (const insertedText of diff.value) {
-          pluckedBefore.splice(pluckedIndex, 0, insertedText);
+          beforeFlatArray.splice(pluckedIndex, 0, insertedText);
           ++pluckedIndex;
         }
       } else {
@@ -220,7 +228,7 @@ export class AccentDiff {
         });
       }
     }
-    return pluckedBefore;
+    return beforeFlatArray;
   }
   /**
    * 変更後のアクセント句に、モーラパッチ配列を適用するメンバ関数
