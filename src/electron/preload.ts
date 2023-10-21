@@ -5,12 +5,7 @@ import {
   IpcRendererEvent,
 } from "electron";
 
-import {
-  Sandbox,
-  ElectronStoreType,
-  EngineId,
-  SandboxKey,
-} from "@/type/preload";
+import { Sandbox, ConfigType, EngineId, SandboxKey } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -228,7 +223,7 @@ const api: Sandbox = {
     return (await ipcRendererInvoke(
       "GET_SETTING",
       key
-    )) as ElectronStoreType[typeof key];
+    )) as ConfigType[typeof key];
   },
 
   /**

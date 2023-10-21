@@ -53,6 +53,10 @@ DirectML 対応の GPU を搭載した Windows PC と、Nvidia 製 GPU 搭載の
 
 `/Applications/VOICEVOX` もしくは `/Users/（ユーザー名）/Applications/VOICEVOX`
 
+#### Ubuntu 版のインストール先
+
+`/home/（ユーザー名）/.voicevox`
+
 ### Q. アップデート方法を教えてください
 
 ホームページから最新版を再インストールすることでアップデートできます。
