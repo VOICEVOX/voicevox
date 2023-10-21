@@ -1,5 +1,9 @@
 <template>
   <div class="audio-parameter">
+    <!--
+      z-index は値ラベルの全表示中の重なる順番を逆順にするために必要。
+      FIXME: 重ならない実装にできたら外す
+    -->
     <q-badge
       v-if="shouldDisplayValueLabel"
       class="value-label"
