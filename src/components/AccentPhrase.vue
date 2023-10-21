@@ -130,6 +130,23 @@
         "
         @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
       >
+        <!-- tooltipを変更する場合、pauseMoraのものも合わせて変更すること-->
+        <q-tooltip
+          v-if="
+            selectedDetail === 'pitch' && !unvoicableVowels.includes(mora.vowel)
+          "
+          :delay="500"
+          transition-show="jump-up"
+          transition-hide="jump-down"
+          >イ段とウ段以外の音は無声化できません</q-tooltip
+        >
+        <q-tooltip
+          v-if="selectedDetail === 'length'"
+          :delay="500"
+          transition-show="jump-up"
+          transition-hide="jump-down"
+          >読みの変更はアクセント項目でのみ、<br />無声化はイントネーション項目でのみ操作できます</q-tooltip
+        >
         <span class="text-cell-inner">
           {{ getHoveredText(mora, moraIndex) }}
         </span>
@@ -173,6 +190,22 @@
     </template>
     <template v-if="accentPhrase.pauseMora">
       <div class="text-cell">
+        <!-- FIXME: 共通化 -->
+        <!-- tooltipを変更する場合、pauseMora以外のものも合わせて変更すること-->
+        <q-tooltip
+          v-if="selectedDetail === 'pitch'"
+          :delay="500"
+          transition-show="jump-up"
+          transition-hide="jump-down"
+          >イ段とウ段以外の音は無声化できません</q-tooltip
+        >
+        <q-tooltip
+          v-if="selectedDetail === 'length'"
+          :delay="500"
+          transition-show="jump-up"
+          transition-hide="jump-down"
+          >読みの変更はアクセント項目でのみ、<br />無声化はイントネーション項目でのみ操作できます</q-tooltip
+        >
         <span class="text-cell-inner">
           {{ accentPhrase.pauseMora.text }}
         </span>
@@ -437,6 +470,8 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   white-space: nowrap;
   color: colors.$display;
   position: relative;
+  // デフォルトは編集不可
+  cursor: not-allowed;
 }
 .text-cell-inner {
   position: absolute;
