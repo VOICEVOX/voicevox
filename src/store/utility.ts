@@ -237,10 +237,10 @@ export class AccentDiff {
     let beforeIndex = 0; // pluckedBeforeのデータの位置
 
     // 与えられたアクセント句は、AccentPhrases[ Number ][ Object Key ][ Number ]の順番で、モーラを操作できるため、二重forで回す
-    for (let AccentIndex = 0; AccentIndex < after.length; AccentIndex++) {
+    for (let accentIndex = 0; accentIndex < after.length; accentIndex++) {
       for (
         let MoraIndex = 0;
-        MoraIndex < after[AccentIndex]["moras"].length;
+        MoraIndex < after[accentIndex]["moras"].length;
         MoraIndex++
       ) {
         // 文字列が検出されたとき、何もせず次のモーラへ移動
@@ -249,10 +249,10 @@ export class AccentDiff {
           continue;
         }
         if (
-          after[AccentIndex]["moras"][MoraIndex].text ===
+          after[accentIndex]["moras"][MoraIndex].text ===
           MoraPatch[beforeIndex].text
         ) {
-          after[AccentIndex]["moras"][MoraIndex] = MoraPatch[beforeIndex];
+          after[accentIndex]["moras"][MoraIndex] = MoraPatch[beforeIndex];
         }
         ++beforeIndex;
       }
