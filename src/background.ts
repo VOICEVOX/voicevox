@@ -46,7 +46,7 @@ import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-import { getStoreWithError } from "@/background/electronStore";
+import { getConfigWithError } from "@/background/electronConfig";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -128,7 +128,7 @@ protocol.registerSchemesAsPrivileged([
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // 設定ファイル
-const store = getStoreWithError();
+const config = getConfigWithError();
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
@@ -152,7 +152,7 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
 };
 
 const engineManager = new EngineManager({
-  store,
+  config,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
   onEngineProcessError,
@@ -236,7 +236,7 @@ async function installVvppEngineWithWarning({
  * 無効だった場合はダイアログを表示してfalseを返す。
  */
 function checkMultiEngineEnabled(): boolean {
-  const enabled = store.get("experimentalSetting").enableMultiEngine;
+  const enabled = config.get("experimentalSetting").enableMultiEngine;
   if (!enabled) {
     dialog.showMessageBoxSync(win, {
       type: "info",
@@ -344,7 +344,7 @@ const privacyPolicyText = fs.readFileSync(
 // hotkeySettingsのマイグレーション
 function migrateHotkeySettings() {
   const COMBINATION_IS_NONE = "####";
-  const loadedHotkeys = store.get("hotkeySettings");
+  const loadedHotkeys = config.get("hotkeySettings");
   const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
     (defaultHotkey) => {
       const loadedHotkey = loadedHotkeys.find(
@@ -367,7 +367,7 @@ function migrateHotkeySettings() {
         (hotkey) => hotkey.combination === newHotkey.combination
       );
       if (combinationExists) {
-        const emptyHotkey = {
+        const emptyHotkey: HotkeySetting = {
           action: newHotkey.action,
           combination: "",
         };
@@ -379,7 +379,7 @@ function migrateHotkeySettings() {
       return hotkey;
     }
   });
-  store.set("hotkeySettings", migratedHotkeys);
+  config.set("hotkeySettings", migratedHotkeys);
 }
 migrateHotkeySettings();
 
@@ -394,7 +394,7 @@ async function createWindow() {
     defaultHeight: 600,
   });
 
-  const currentTheme = store.get("currentTheme");
+  const currentTheme = config.get("currentTheme");
   const backgroundColor = themes.find((value) => value.name == currentTheme)
     ?.colors.background;
 
@@ -513,14 +513,14 @@ async function launchEngines() {
   // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
   engineManager.initializeEngineInfosAndAltPortInfo();
   const engineInfos = engineManager.fetchEngineInfos();
-  const engineSettings = store.get("engineSettings");
+  const engineSettings = config.get("engineSettings");
   for (const engineInfo of engineInfos) {
     if (!engineSettings[engineInfo.uuid]) {
       // 空オブジェクトをパースさせることで、デフォルト値を取得する
       engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
     }
   }
-  store.set("engineSettings", engineSettings);
+  config.set("engineSettings", engineSettings);
 
   await engineManager.runEngineAll();
 }
@@ -815,25 +815,25 @@ ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData !== undefined) {
-    const hotkeySettings = store.get("hotkeySettings");
+    const hotkeySettings = config.get("hotkeySettings");
     const hotkeySetting = hotkeySettings.find(
       (hotkey) => hotkey.action == newData.action
     );
     if (hotkeySetting !== undefined) {
       hotkeySetting.combination = newData.combination;
     }
-    store.set("hotkeySettings", hotkeySettings);
+    config.set("hotkeySettings", hotkeySettings);
   }
-  return store.get("hotkeySettings");
+  return config.get("hotkeySettings");
 });
 
 ipcMainHandle("THEME", (_, { newData }) => {
   if (newData !== undefined) {
-    store.set("currentTheme", newData);
+    config.set("currentTheme", newData);
     return;
   }
   return {
-    currentTheme: store.get("currentTheme"),
+    currentTheme: config.get("currentTheme"),
     availableThemes: themes,
   };
 });
@@ -862,16 +862,18 @@ ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
 });
 
 ipcMainHandle("GET_SETTING", (_, key) => {
-  return store.get(key);
+  return config.get(key);
 });
 
 ipcMainHandle("SET_SETTING", (_, key, newValue) => {
-  store.set(key, newValue);
-  return store.get(key);
+  config.set(key, newValue);
+  return config.get(key);
 });
 
 ipcMainHandle("SET_ENGINE_SETTING", (_, engineId, engineSetting) => {
-  store.set(`engineSettings.${engineId}`, engineSetting);
+  const engineSettings = config.get("engineSettings");
+  engineSettings[engineId] = engineSetting;
+  config.set(`engineSettings`, engineSettings);
 });
 
 ipcMainHandle("SET_NATIVE_THEME", (_, source) => {

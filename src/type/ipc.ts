@@ -1,6 +1,6 @@
 import {
   AppInfos,
-  ElectronStoreType,
+  ConfigType,
   EngineInfo,
   EngineDirValidationResult,
   HotkeySetting,
@@ -250,16 +250,13 @@ export type IpcIHData = {
   };
 
   GET_SETTING: {
-    args: [key: keyof ElectronStoreType];
-    return: ElectronStoreType[keyof ElectronStoreType];
+    args: [key: keyof ConfigType];
+    return: ConfigType[keyof ConfigType];
   };
 
   SET_SETTING: {
-    args: [
-      key: keyof ElectronStoreType,
-      newValue: ElectronStoreType[keyof ElectronStoreType]
-    ];
-    return: ElectronStoreType[keyof ElectronStoreType];
+    args: [key: keyof ConfigType, newValue: ConfigType[keyof ConfigType]];
+    return: ConfigType[keyof ConfigType];
   };
 
   SET_ENGINE_SETTING: {
