@@ -4,10 +4,10 @@
       v-if="shouldDisplayValueLabel"
       class="value-label"
       :class="{
-        'value-label-highlighted': isOperating && forceValueLabelVisible,
+        'value-label-highlighted': isOperating && valueLavelForce,
         'value-label-consonant':
-          forceValueLabelVisible && clip && type === 'consonant',
-        'value-label-vowel': forceValueLabelVisible && clip && type === 'vowel',
+          valueLavelForce && clip && type === 'consonant',
+        'value-label-vowel': valueLavelForce && clip && type === 'vowel',
       }"
       :style="{
         'z-index': isOperating ? 101 : 100 - moraIndex,
@@ -61,7 +61,7 @@ const props = withDefaults(
     type?: MoraDataType;
     clip?: boolean;
     shiftKeyFlag?: boolean;
-    forceValueLabelVisible?: boolean;
+    valueLavelForce?: boolean;
   }>(),
   {
     min: 0.0,
@@ -71,7 +71,7 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
-    forceValueLabelVisible: false,
+    valueLavelForce: false,
   }
 );
 
@@ -139,7 +139,7 @@ const shouldDisplayValueLabel = computed(
   () =>
     !props.uiLocked &&
     !props.disable &&
-    (props.forceValueLabelVisible || isOperating.value)
+    (props.valueLavelForce || isOperating.value)
 );
 
 const precisionComputed = computed(() => {

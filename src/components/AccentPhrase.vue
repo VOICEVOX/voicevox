@@ -38,7 +38,7 @@
           :type="'pitch'"
           :clip="false"
           :shift-key-flag="shiftKeyFlag"
-          :force-value-label-visible="forceValueLabelVisible"
+          :value-label-force="shouldForciblyDisplayValueLabel"
           @change-value="changeMoraData"
         />
       </div>
@@ -65,7 +65,7 @@
           :type="'consonant'"
           :clip="true"
           :shift-key-flag="shiftKeyFlag"
-          :force-value-label-visible="forceValueLabelVisible"
+          :value-label-force="shouldForciblyDisplayValueLabel"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
@@ -81,7 +81,7 @@
           :type="'vowel'"
           :clip="mora.consonant ? true : false"
           :shift-key-flag="shiftKeyFlag"
-          :force-value-label-visible="forceValueLabelVisible"
+          :value-label-force="shouldForciblyDisplayValueLabel"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
@@ -104,7 +104,7 @@
           :step="0.01"
           :type="'pause'"
           :shift-key-flag="shiftKeyFlag"
-          :force-value-label-visible="forceValueLabelVisible"
+          :value-label-force="shouldForciblyDisplayValueLabel"
           @change-value="changeMoraData"
         />
       </div>
@@ -323,7 +323,7 @@ const isOperating = computed(() =>
   audioParameters.value?.some?.((audioParameter) => audioParameter.isOperating)
 );
 
-const forceValueLabelVisible = computed(
+const shouldForciblyDisplayValueLabel = computed(
   () =>
     props.altKeyFlag && (hoveredTarget.value != undefined || isOperating.value)
 );
