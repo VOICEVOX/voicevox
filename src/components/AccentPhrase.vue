@@ -28,7 +28,7 @@
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
       >
         <audio-parameter
-          ref="audioParameters"
+          :ref="addAudioParameterRefs"
           :mora-index="moraIndex"
           :value="mora.pitch"
           :ui-locked="uiLocked"
@@ -55,7 +55,7 @@
         <!-- consonant length -->
         <audio-parameter
           v-if="mora.consonant && mora.consonantLength != undefined"
-          ref="audioParameters"
+          :ref="addAudioParameterRefs"
           :mora-index="moraIndex"
           :value="mora.consonantLength"
           :ui-locked="uiLocked"
@@ -71,7 +71,7 @@
         />
         <!-- vowel length -->
         <audio-parameter
-          ref="audioParameters"
+          :ref="addAudioParameterRefs"
           :mora-index="moraIndex"
           :value="mora.vowelLength"
           :ui-locked="uiLocked"
@@ -95,7 +95,7 @@
       >
         <!-- pause length -->
         <audio-parameter
-          ref="audioParameters"
+          :ref="addAudioParameterRefs"
           :mora-index="accentPhrase.moras.length"
           :value="accentPhrase.pauseMora.vowelLength"
           :ui-locked="uiLocked"
@@ -189,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { VNodeRef, computed, onBeforeUpdate, ref } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import ContextMenu from "./ContextMenu.vue";
@@ -316,11 +316,22 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
   return false;
 };
 
-const audioParameters = ref<InstanceType<typeof AudioParameter>[]>();
+const audioParameterRefs: InstanceType<typeof AudioParameter>[] = [];
+const addAudioParameterRefs: VNodeRef = (audioParameterRef) => {
+  if (audioParameterRef && !(audioParameterRef instanceof Element)) {
+    const typedaudioParameterRef = audioParameterRef as InstanceType<
+      typeof AudioParameter
+    >;
+    audioParameterRefs.push(typedaudioParameterRef);
+  }
+};
+onBeforeUpdate(() => {
+  audioParameterRefs.length = 0;
+});
 
 // pan中は当たり判定が消えるため
 const isOperatingParameterSlider = computed(() =>
-  audioParameters.value?.some?.((audioParameter) => audioParameter.isOperating)
+  audioParameterRefs.some?.((audioParameter) => audioParameter.isOperating)
 );
 
 const shouldForciblyDisplayValueLabel = computed(
