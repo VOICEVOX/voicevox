@@ -179,10 +179,10 @@ div {
 
     // altキー押下中は母音と子音の値ラベルの表示位置が被らないようにずらす
     &.value-label-consonant {
-      transform: translateX(-50%) translateX(14px) translateY(-60%);
+      transform: translateX(-50%) translateX(15px) translateY(-60%);
     }
     &.value-label-vowel {
-      transform: translateX(-50%) translateX(16px) translateY(60%);
+      transform: translateX(-50%) translateX(15px) translateY(60%);
     }
   }
 }
