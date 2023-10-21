@@ -439,7 +439,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return value.position === position;
       });
       if (index === -1) {
-        return;
+        throw new Error("The tempo does not exist.");
       }
       const tempos = [...score.tempos];
       if (index === 0) {
@@ -511,7 +511,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return value.position === position;
       });
       if (index === -1) {
-        return;
+        throw new Error("The time signature does not exist.");
       }
       const timeSignatures = [...score.timeSignatures];
       if (index === 0) {
