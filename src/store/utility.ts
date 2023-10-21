@@ -223,9 +223,7 @@ export class AccentDiff {
           ++pluckedIndex;
         });
       } else {
-        diff.value.forEach(() => {
-          ++pluckedIndex;
-        });
+        pluckedIndex += diff.value.length;
       }
     }
     return beforeFlatArray;
