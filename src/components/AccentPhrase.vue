@@ -319,7 +319,7 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
 const audioParameters = ref<InstanceType<typeof AudioParameter>[]>();
 
 // pan中は当たり判定が消えるため
-const isOperating = computed(() =>
+const isOperatingParameterSlider = computed(() =>
   audioParameters.value?.some?.((audioParameter) => audioParameter.isOperating)
 );
 
