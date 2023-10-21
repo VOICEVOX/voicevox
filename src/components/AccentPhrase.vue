@@ -325,7 +325,8 @@ const isOperatingParameterSlider = computed(() =>
 
 const shouldForciblyDisplayValueLabel = computed(
   () =>
-    props.altKeyFlag && (hoveredTarget.value != undefined || isOperating.value)
+    props.altKeyFlag &&
+    (hoveredTarget.value != undefined || isOperatingParameterSlider.value)
 );
 
 const getHoveredText = (mora: Mora, moraIndex: number) => {
