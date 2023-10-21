@@ -131,6 +131,7 @@ const handleMouseHover = (isOver: boolean) => {
   }
 };
 
+// FIXME: キーボード操作(フォーカス、値変更)に対応する
 const isOperating = computed(
   () => isHovered.value || previewSlider.state.isPanning.value
 );
