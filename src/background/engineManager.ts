@@ -2,7 +2,6 @@ import { spawn, ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
 import treeKill from "tree-kill";
-import Store from "electron-store";
 import shlex from "shlex";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
@@ -16,10 +15,10 @@ import {
   isAssignablePort,
   url2HostInfo,
 } from "./portManager";
+import { ElectronConfig } from "./electronConfig";
 
 import {
   EngineInfo,
-  ElectronStoreType,
   EngineDirValidationResult,
   MinimumEngineManifest,
   EngineId,
@@ -68,7 +67,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 }
 
 export class EngineManager {
-  store: Store<ElectronStoreType>;
+  config: ElectronConfig;
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
@@ -80,17 +79,17 @@ export class EngineManager {
   public altPortInfo: AltPortInfos = {};
 
   constructor({
-    store,
+    config,
     defaultEngineDir,
     vvppEngineDir,
     onEngineProcessError,
   }: {
-    store: Store<ElectronStoreType>;
+    config: ElectronConfig;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
   }) {
-    this.store = store; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
+    this.config = config; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
@@ -148,7 +147,7 @@ export class EngineManager {
       }
     }
     // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でstore.setする
-    for (const engineDir of this.store.get("registeredEngineDirs")) {
+    for (const engineDir of this.config.get("registeredEngineDirs")) {
       const result = addEngine(engineDir, "path");
       if (result !== "ok") {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
@@ -158,9 +157,9 @@ export class EngineManager {
           "エンジンの読み込みに失敗しました。",
           `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
         );
-        this.store.set(
+        this.config.set(
           "registeredEngineDirs",
-          this.store.get("registeredEngineDirs").filter((p) => p !== engineDir)
+          this.config.get("registeredEngineDirs").filter((p) => p !== engineDir)
         );
       }
     }
@@ -312,7 +311,7 @@ export class EngineManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const engineSetting = this.store.get("engineSettings")[engineId];
+    const engineSetting = this.config.get("engineSettings")[engineId];
     if (engineSetting == undefined)
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 
