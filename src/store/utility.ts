@@ -220,7 +220,7 @@ export class AccentDiff {
       } else if (diff.added) {
         diff.value.forEach(() => {
           beforeFlatArray.splice(pluckedIndex, 0, undefined);
-          ++pluckedIndex;
+          pluckedIndex++;
         });
       } else {
         pluckedIndex += diff.value.length;
@@ -245,7 +245,7 @@ export class AccentDiff {
       ) {
         // 文字列が検出されたとき、何もせず次のモーラへ移動
         if (typeof MoraPatch[beforeIndex] === "undefined") {
-          ++beforeIndex;
+          beforeIndex++;
           continue;
         }
         if (
@@ -254,7 +254,7 @@ export class AccentDiff {
         ) {
           after[accentIndex]["moras"][MoraIndex] = MoraPatch[beforeIndex];
         }
-        ++beforeIndex;
+        beforeIndex++;
       }
     }
 
