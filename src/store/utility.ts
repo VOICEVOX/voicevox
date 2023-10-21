@@ -187,8 +187,8 @@ export class AccentDiff {
   beforeAccent: AccentPhrase[];
   afterAccent: AccentPhrase[];
   constructor(beforeAccent: AccentPhrase[], afterAccent: AccentPhrase[]) {
-    this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
     this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
+    this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
   createFlatArray(collection: AccentPhrase[], Key: string) {
@@ -204,14 +204,14 @@ export class AccentDiff {
    * モーラのパッチ配列を作成するメンバ関数
    */
   createDiffPatch() {
-    const after = JSON.parse(JSON.stringify(this.afterAccent));
-    const before = JSON.parse(JSON.stringify(this.beforeAccent));
+    const before = structuredClone(this.beforeAccent);
+    const after = structuredClone(this.afterAccent);
 
     const beforeFlatArray = this.createFlatArray(before, "moras");
     const afterFlatArray = this.createFlatArray(after, "moras");
     const diffed = diffArrays(
-      this.createFlatArray(JSON.parse(JSON.stringify(beforeFlatArray)), "text"),
-      this.createFlatArray(JSON.parse(JSON.stringify(afterFlatArray)), "text")
+      this.createFlatArray(structuredClone(beforeFlatArray), "text"),
+      this.createFlatArray(structuredClone(afterFlatArray), "text")
     );
     let pluckedIndex = 0;
     for (const diff of diffed) {
@@ -232,7 +232,7 @@ export class AccentDiff {
    * 変更後のアクセント句に、モーラパッチ配列を適用するメンバ関数
    */
   mergeAccentPhrases() {
-    const after = JSON.parse(JSON.stringify(this.afterAccent));
+    const after = structuredClone(this.afterAccent);
     const MoraPatch = this.createDiffPatch();
     let beforeIndex = 0; // pluckedBeforeのデータの位置
 
