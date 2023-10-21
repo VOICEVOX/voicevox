@@ -70,6 +70,38 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       return store;
     },
   ],
+  [
+    ">=0.15",
+    (store) => {
+      const hotkeySettings =
+        store.hotkeySettings as ConfigType["hotkeySettings"];
+      const newHotkeySettings: ConfigType["hotkeySettings"] =
+        hotkeySettings.map((hotkeySetting) => {
+          /// @ts-expect-error 名前変更なので合わない。
+          if (hotkeySetting.action === "一つだけ書き出し") {
+            return {
+              ...hotkeySetting,
+              action: "選択中を書き出し",
+            };
+          }
+          return hotkeySetting;
+        });
+      store.hotkeySettings = newHotkeySettings;
+
+      const toolbarSetting =
+        store.toolbarSetting as ConfigType["toolbarSetting"];
+      const newToolbarSetting: ConfigType["toolbarSetting"] =
+        toolbarSetting.map((toolbarSetting) =>
+          // @ts-expect-error 名前変更なので合わない。
+          toolbarSetting === "EXPORT_AUDIO_ONE"
+            ? "EXPORT_AUDIO_SELECTED"
+            : toolbarSetting
+        );
+      store.toolbarSetting = newToolbarSetting;
+
+      return store;
+    },
+  ],
 ];
 
 type Metadata = {

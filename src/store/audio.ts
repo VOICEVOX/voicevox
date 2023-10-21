@@ -83,29 +83,6 @@ async function generateUniqueIdAndQuery(
   return [id, audioQuery];
 }
 
-/**
- * どのAudioKeyを書き出すか決定する。
- *
- * 複数選択が無効の時：全てのAudioKeyを書き出す
- * 複数選択が有効、かつ...
- *   選択されているAudioKeyが1つしかない時：全てのAudioKeyを書き出す
- *   かつ選択されているAudioKeyが複数ある時：選択されているAudioKeyのみ書き出す
- *
- * @param isMultiSelectEnabled state.experimentalSetting.enableMultiSelect
- * @param selectedAudioKeys getters.SELECTED_AUDIO_KEYS
- * @param audioKeys state.audioKeys
- */
-function audioKeysToExport(
-  isMultiSelectEnabled: boolean,
-  selectedAudioKeys: AudioKey[],
-  audioKeys: AudioKey[]
-): AudioKey[] {
-  if (!isMultiSelectEnabled) {
-    return audioKeys;
-  }
-  return selectedAudioKeys.length > 1 ? selectedAudioKeys : audioKeys;
-}
-
 function parseTextFile(
   body: string,
   defaultStyleIds: DefaultStyleId[],
@@ -1498,42 +1475,39 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
-  GENERATE_AND_SAVE_ALL_AUDIO: {
+  MULTI_GENERATE_AND_SAVE_AUDIO: {
     action: createUILockAction(
       async (
         { state, getters, dispatch },
         {
+          audioKeys,
           dirPath,
           callback,
         }: {
+          audioKeys: AudioKey[];
           dirPath?: string;
-          callback?: (finishedCount: number, totalCount: number) => void;
+          callback?: (finishedCount: number) => void;
         }
       ) => {
         if (state.savingSetting.fixedExportEnabled) {
           dirPath = state.savingSetting.fixedExportDir;
         } else {
           dirPath ??= await window.electron.showOpenDirectoryDialog({
-            title: "音声を全て保存",
+            title: "音声を保存",
           });
         }
         if (dirPath) {
           const _dirPath = dirPath;
 
-          const totalCount = state.audioKeys.length;
           let finishedCount = 0;
 
-          const promises = audioKeysToExport(
-            state.experimentalSetting.enableMultiSelect,
-            getters.SELECTED_AUDIO_KEYS,
-            state.audioKeys
-          ).map((audioKey) => {
+          const promises = audioKeys.map((audioKey) => {
             const name = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
               filePath: path.join(_dirPath, name),
             }).then((value) => {
-              callback?.(++finishedCount, totalCount);
+              callback?.(++finishedCount);
               return value;
             });
           });
@@ -1603,11 +1577,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const totalCount = state.audioKeys.length;
         let finishedCount = 0;
 
-        for (const audioKey of audioKeysToExport(
-          state.experimentalSetting.enableMultiSelect,
-          getters.SELECTED_AUDIO_KEYS,
-          state.audioKeys
-        )) {
+        for (const audioKey of state.audioKeys) {
           let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
           if (!blob) {
             try {
@@ -1738,11 +1708,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         const texts: string[] = [];
 
-        for (const audioKey of audioKeysToExport(
-          state.experimentalSetting.enableMultiSelect,
-          getters.SELECTED_AUDIO_KEYS,
-          state.audioKeys
-        )) {
+        for (const audioKey of state.audioKeys) {
           const styleId = state.audioItems[audioKey].voice.styleId;
           const engineId = state.audioItems[audioKey].voice.engineId;
           if (!engineId) {

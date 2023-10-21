@@ -29,7 +29,7 @@
 import { ref, computed, watch } from "vue";
 import {
   generateAndConnectAndSaveAudioWithDialog,
-  generateAndSaveAllAudioWithDialog,
+  multiGenerateAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
   connectAndExportTextWithDialog,
 } from "./Dialog";
@@ -130,7 +130,8 @@ const createNewProject = async () => {
 
 const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
-    await generateAndSaveAllAudioWithDialog({
+    await multiGenerateAndSaveAudioWithDialog({
+      audioKeys: store.state.audioKeys,
       disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
       dispatch: store.dispatch,
     });
@@ -146,7 +147,7 @@ const generateAndConnectAndSaveAllAudio = async () => {
   }
 };
 
-const generateAndSaveOneAudio = async () => {
+const generateAndSaveSelectedAudio = async () => {
   if (uiLocked.value) return;
 
   const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
@@ -158,11 +159,23 @@ const generateAndSaveOneAudio = async () => {
     return;
   }
 
-  await generateAndSaveOneAudioWithDialog({
-    audioKey: activeAudioKey,
-    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
-    dispatch: store.dispatch,
-  });
+  const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+  if (
+    store.state.experimentalSetting.enableMultiSelect &&
+    selectedAudioKeys.length > 1
+  ) {
+    await multiGenerateAndSaveAudioWithDialog({
+      audioKeys: selectedAudioKeys,
+      dispatch: store.dispatch,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+    });
+  } else {
+    await generateAndSaveOneAudioWithDialog({
+      audioKey: activeAudioKey,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+      dispatch: store.dispatch,
+    });
+  }
 };
 
 const connectAndExportText = async () => {
@@ -243,9 +256,9 @@ const menudata = ref<MenuItemData[]>([
       },
       {
         type: "button",
-        label: "一つだけ書き出し",
+        label: "選択中を書き出し",
         onClick: () => {
-          generateAndSaveOneAudio();
+          generateAndSaveSelectedAudio();
         },
         disableWhenUiLocked: true,
       },
@@ -423,7 +436,7 @@ const reassignSubMenuOpen = (idx: number) => {
 const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
   ["新規プロジェクト", createNewProject],
   ["音声書き出し", generateAndSaveAllAudio],
-  ["一つだけ書き出し", generateAndSaveOneAudio],
+  ["選択中を書き出し", generateAndSaveSelectedAudio],
   ["音声を繋げて書き出し", generateAndConnectAndSaveAllAudio],
   ["テキスト読み込む", importTextFile],
   ["プロジェクトを上書き保存", saveProject],

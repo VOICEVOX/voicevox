@@ -174,20 +174,26 @@ export async function generateAndSaveOneAudioWithDialog({
   }
 }
 
-export async function generateAndSaveAllAudioWithDialog({
+export async function multiGenerateAndSaveAudioWithDialog({
+  audioKeys,
   dispatch,
   dirPath,
   disableNotifyOnGenerate,
 }: {
+  audioKeys: AudioKey[];
   dispatch: Dispatch<AllActions>;
   dirPath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
-    dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
+    dispatch("MULTI_GENERATE_AND_SAVE_AUDIO", {
+      audioKeys,
       dirPath,
-      callback: (finishedCount, totalCount) =>
-        dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
+      callback: (finishedCount) =>
+        dispatch("SET_PROGRESS_FROM_COUNT", {
+          finishedCount,
+          totalCount: audioKeys.length,
+        }),
     }),
     dispatch
   );
