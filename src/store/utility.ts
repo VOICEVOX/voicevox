@@ -218,10 +218,10 @@ export class AccentDiff {
       if (diff.removed) {
         beforeFlatArray.splice(pluckedIndex, diff.count);
       } else if (diff.added) {
-        for (const insertedText of diff.value) {
-          beforeFlatArray.splice(pluckedIndex, 0, insertedText);
+        diff.value.forEach(() => {
+          beforeFlatArray.splice(pluckedIndex, 0, undefined);
           ++pluckedIndex;
-        }
+        });
       } else {
         diff.value.forEach(() => {
           ++pluckedIndex;
@@ -238,7 +238,7 @@ export class AccentDiff {
     const MoraPatch = this.createDiffPatch();
     let beforeIndex = 0; // pluckedBeforeのデータの位置
 
-    // 与えられたアクセント句は、AccentPhrases[ Nmber ][ Object Key][ Number ]の順番で、モーラを操作できるため、二重forで回す
+    // 与えられたアクセント句は、AccentPhrases[ Number ][ Object Key ][ Number ]の順番で、モーラを操作できるため、二重forで回す
     for (let AccentIndex = 0; AccentIndex < after.length; AccentIndex++) {
       for (
         let MoraIndex = 0;
@@ -246,7 +246,7 @@ export class AccentDiff {
         MoraIndex++
       ) {
         // 文字列が検出されたとき、何もせず次のモーラへ移動
-        if (typeof MoraPatch[beforeIndex] === "string") {
+        if (typeof MoraPatch[beforeIndex] === "undefined") {
           ++beforeIndex;
           continue;
         }
