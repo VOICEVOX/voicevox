@@ -247,6 +247,26 @@ const DEFAULT_TEMPO = 120;
 const DEFAULT_BEATS = 4;
 const DEFAULT_BEAT_TYPE = 4;
 
+const createEmptyScore = (): Score => {
+  return {
+    tpqn: DEFAULT_TPQN,
+    tempos: [
+      {
+        position: 0,
+        tempo: DEFAULT_TEMPO,
+      },
+    ],
+    timeSignatures: [
+      {
+        position: 0,
+        beats: DEFAULT_BEATS,
+        beatType: DEFAULT_BEAT_TYPE,
+      },
+    ],
+    notes: [],
+  };
+};
+
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let channelStrip: ChannelStrip | undefined;
@@ -273,7 +293,7 @@ const phraseAudioBlobCache = new Map<string, Blob>();
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
   styleId: undefined,
-  score: undefined,
+  score: createEmptyScore(),
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,
@@ -357,25 +377,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     async action(
       { state, getters, commit, dispatch },
-      payload: { score?: Score }
+      { score }: { score: Score }
     ) {
-      const score: Score = payload.score ?? {
-        tpqn: DEFAULT_TPQN,
-        tempos: [
-          {
-            position: 0,
-            tempo: DEFAULT_TEMPO,
-          },
-        ],
-        timeSignatures: [
-          {
-            position: 0,
-            beats: DEFAULT_BEATS,
-            beatType: DEFAULT_BEAT_TYPE,
-          },
-        ],
-        notes: [],
-      };
       if (!isValidTempos(score.tempos)) {
         throw new Error("The tempos are invalid.");
       }

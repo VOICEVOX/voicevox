@@ -776,7 +776,7 @@ export type SingingStoreTypes = {
 
   SET_SCORE: {
     mutation: { score: Score };
-    action(payload: { score?: Score }): void;
+    action(payload: { score: Score }): void;
   };
 
   SET_TEMPO: {
