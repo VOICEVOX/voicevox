@@ -533,7 +533,6 @@ export const configSchema = z.object({
   userCharacterOrder: speakerIdSchema.array().default([]),
   defaultStyleIds: z
     .object({
-      // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら.or(z.literal)を外す
       engineId: engineIdSchema
         .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
         .default(EngineId("00000000-0000-0000-0000-000000000000")),
