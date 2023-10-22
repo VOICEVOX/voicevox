@@ -48,10 +48,6 @@ export default defineComponent({
 
     // 歌声合成エディターの初期化
     onMounted(async () => {
-      if (store.state.score === undefined) {
-        const emptyScore = await store.dispatch("GET_EMPTY_SCORE");
-        await store.dispatch("SET_SCORE", { score: emptyScore });
-      }
       await store.dispatch("SET_SINGER", {});
 
       await store.dispatch("SET_VOLUME", { volume: 0.3 });

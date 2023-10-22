@@ -14,7 +14,7 @@
       <!-- グリッド -->
       <!-- NOTE: 現状小節+オクターブごとの罫線なし -->
       <svg
-        :width="`${gridCellWidth * gridColumnNum}`"
+        :width="`${gridCellWidth * numOfGridColumns}`"
         :height="`${gridCellHeight * keyInfos.length}`"
         xmlns="http://www.w3.org/2000/svg"
         class="sequencer-grid"
@@ -184,17 +184,6 @@ export default defineComponent({
     const timeSignature = computed(() => {
       return state.score?.timeSignatures?.[0] ?? defaultTimeSignature;
     });
-    // 小節数
-    const measureNum = computed(() => {
-      // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
-      const minMeasureNum = 32;
-      const measureNum = Math.max(
-        minMeasureNum,
-        getMeasureNum(notes.value, measureDuration.value)
-      );
-      // NOTE: いったん最後尾に足した場合は伸びるようにする
-      return measureNum + 1;
-    });
     // ズーム状態
     const zoomX = computed(() => state.sequencerZoomX);
     const zoomY = computed(() => state.sequencerZoomY);
@@ -218,14 +207,21 @@ export default defineComponent({
     const gridCellHeight = computed(() => {
       return gridCellBaseHeight * zoomY.value;
     });
-    const measureDuration = computed(() => {
-      return getMeasureDuration(timeSignature.value, tpqn.value);
-    });
-    const gridColumnNum = computed(() => {
-      const gridColumnNumPerMeasure = Math.round(
-        measureDuration.value / gridCellTicks.value
+    const numOfGridColumns = computed(() => {
+      const beats = timeSignature.value.beats;
+      const beatType = timeSignature.value.beatType;
+      const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
+      const numOfGridColumnsPerMeasure = Math.round(
+        measureDuration / gridCellTicks.value
       );
-      return gridColumnNumPerMeasure * measureNum.value;
+      // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
+      const minNumOfMeasures = 32;
+      // NOTE: いったん最後尾に足した場合は伸びるようにする
+      const numOfMeasures = Math.max(
+        minNumOfMeasures,
+        getMeasureNum(notes.value, measureDuration) + 1
+      );
+      return numOfGridColumnsPerMeasure * numOfMeasures;
     });
     const beatsPerMeasure = computed(() => {
       return timeSignature.value.beats;
@@ -626,7 +622,7 @@ export default defineComponent({
       beatWidth,
       gridCellWidth,
       gridCellHeight,
-      gridColumnNum,
+      numOfGridColumns,
       keyInfos,
       notes,
       zoomX,

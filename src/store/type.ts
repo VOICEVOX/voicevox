@@ -774,32 +774,28 @@ export type SingingStoreTypes = {
     action(payload: { engineId?: EngineId; styleId?: StyleId }): void;
   };
 
-  GET_EMPTY_SCORE: {
-    action(): Promise<Score>;
-  };
-
   SET_SCORE: {
     mutation: { score: Score };
     action(payload: { score: Score }): void;
   };
 
   SET_TEMPO: {
-    mutation: { index: number; tempo: Tempo };
+    mutation: { tempo: Tempo };
     action(payload: { tempo: Tempo }): void;
   };
 
   REMOVE_TEMPO: {
-    mutation: { index: number };
+    mutation: { position: number };
     action(payload: { position: number }): void;
   };
 
   SET_TIME_SIGNATURE: {
-    mutation: { index: number; timeSignature: TimeSignature };
+    mutation: { timeSignature: TimeSignature };
     action(payload: { timeSignature: TimeSignature }): void;
   };
 
   REMOVE_TIME_SIGNATURE: {
-    mutation: { index: number };
+    mutation: { position: number };
     action(payload: { position: number }): void;
   };
 
@@ -880,11 +876,11 @@ export type SingingStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject;
   };
 
-  POSITION_TO_TIME: {
+  TICK_TO_SECOND: {
     getter(position: number): number;
   };
 
-  TIME_TO_POSITION: {
+  SECOND_TO_TICK: {
     getter(time: number): number;
   };
 
