@@ -95,7 +95,6 @@
       >
         <!-- pause length -->
         <audio-parameter
-          :ref="addAudioParameterRefs"
           :mora-index="accentPhrase.moras.length"
           :value="accentPhrase.pauseMora.vowelLength"
           :ui-locked="uiLocked"
@@ -104,7 +103,6 @@
           :step="0.01"
           :type="'pause'"
           :shift-key-flag="shiftKeyFlag"
-          :value-label-force="shouldForciblyDisplayValueLabel"
           @change-value="changeMoraData"
         />
       </div>
