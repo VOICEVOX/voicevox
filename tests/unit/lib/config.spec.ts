@@ -36,7 +36,7 @@ class TestConfig extends BaseConfig {
   }
 }
 
-it("新規作成できる", () => {
+it("新規作成できる", async () => {
   vi.spyOn(TestConfig.prototype, "exists").mockImplementation(
     async () => false
   );
@@ -45,10 +45,11 @@ it("新規作成できる", () => {
   );
 
   const config = new TestConfig();
+  await config.initialize();
   expect(config).toBeTruthy();
 });
 
-it("バージョンが保存される", () => {
+it("バージョンが保存される", async () => {
   vi.spyOn(TestConfig.prototype, "exists").mockImplementation(
     async () => false
   );
@@ -56,14 +57,15 @@ it("バージョンが保存される", () => {
     .spyOn(TestConfig.prototype, "save")
     .mockImplementation(async () => undefined);
 
-  new TestConfig();
+  const config = new TestConfig();
+  await config.initialize();
   expect(saveSpy).toHaveBeenCalled();
   const savedData = saveSpy.mock.calls[0][0];
   expect(savedData.__internal__.migrations.version).toBe("999.999.999");
 });
 
 for (const [version, data] of pastConfigs) {
-  it(`${version}からマイグレーションできる`, () => {
+  it(`${version}からマイグレーションできる`, async () => {
     vi.spyOn(TestConfig.prototype, "exists").mockImplementation(
       async () => true
     );
@@ -73,11 +75,12 @@ for (const [version, data] of pastConfigs) {
     vi.spyOn(TestConfig.prototype, "load").mockImplementation(async () => data);
 
     const config = new TestConfig();
+    await config.initialize();
     expect(config).toBeTruthy();
   });
 }
 
-it("getできる", () => {
+it("getできる", async () => {
   vi.spyOn(TestConfig.prototype, "exists").mockImplementation(async () => true);
   vi.spyOn(TestConfig.prototype, "save").mockImplementation(
     async () => undefined
@@ -88,10 +91,11 @@ it("getできる", () => {
   }));
 
   const config = new TestConfig();
+  await config.initialize();
   expect(config.get("inheritAudioInfo")).toBe(false);
 });
 
-it("setできる", () => {
+it("setできる", async () => {
   vi.spyOn(TestConfig.prototype, "exists").mockImplementation(async () => true);
   vi.spyOn(TestConfig.prototype, "save").mockImplementation(
     async () => undefined
@@ -102,6 +106,7 @@ it("setできる", () => {
   }));
 
   const config = new TestConfig();
+  await config.initialize();
   config.set("inheritAudioInfo", true);
   expect(config.get("inheritAudioInfo")).toBe(true);
 });
