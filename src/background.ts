@@ -380,7 +380,6 @@ async function migrateHotkeySettings() {
   });
   config.set("hotkeySettings", migratedHotkeys);
 }
-migrateHotkeySettings();
 
 const appState = {
   willQuit: false,
@@ -1044,6 +1043,8 @@ app.on("ready", async () => {
       });
     }
   }
+
+  await migrateHotkeySettings();
 
   start();
 });
