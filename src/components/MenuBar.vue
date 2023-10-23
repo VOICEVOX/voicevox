@@ -256,7 +256,7 @@ const menudata = ref<MenuItemData[]>([
       },
       {
         type: "button",
-        label: "選択中を書き出し",
+        label: "選択音声を書き出し",
         onClick: () => {
           generateAndSaveSelectedAudio();
         },
@@ -436,7 +436,7 @@ const reassignSubMenuOpen = (idx: number) => {
 const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
   ["新規プロジェクト", createNewProject],
   ["音声書き出し", generateAndSaveAllAudio],
-  ["選択中を書き出し", generateAndSaveSelectedAudio],
+  ["選択音声を書き出し", generateAndSaveSelectedAudio],
   ["音声を繋げて書き出し", generateAndConnectAndSaveAllAudio],
   ["テキスト読み込む", importTextFile],
   ["プロジェクトを上書き保存", saveProject],

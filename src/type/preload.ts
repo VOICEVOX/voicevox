@@ -59,7 +59,7 @@ export const defaultHotkeySettings: HotkeySetting[] = [
     combination: !isMac ? "Ctrl E" : "Meta E",
   },
   {
-    action: "選択中を書き出し",
+    action: "選択音声を書き出し",
     combination: "E",
   },
   {
@@ -391,7 +391,7 @@ export type MorphableTargetInfoTable = {
 
 export const hotkeyActionSchema = z.enum([
   "音声書き出し",
-  "選択中を書き出し",
+  "選択音声を書き出し",
   "音声を繋げて書き出し",
   "再生/停止",
   "連続再生/停止",
