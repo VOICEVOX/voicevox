@@ -12,8 +12,13 @@
     @focus="onRootFocus"
   >
     <!-- 複数選択用のヒットボックス -->
+    <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
     <div
-      v-if="(isCtrlOrCommandKeyDown || isShiftKeyDown) && isMultiSelectEnabled"
+      v-if="
+        isMultiSelectEnabled && isActiveAudioCell
+          ? isCtrlOrCommandKeyDown
+          : isCtrlOrCommandKeyDown || isShiftKeyDown
+      "
       class="click-hitbox"
       tabindex="-1"
       @click="onClickWithModifierKey"
@@ -167,6 +172,8 @@ const selectAndSetActiveAudioKey = () => {
 };
 
 const onRootFocus = () => {
+  if (uiLocked.value) return;
+
   selectAndSetActiveAudioKey();
 };
 // 複数選択：Ctrl（Cmd）またはShiftキーが押されている時のクリック処理
@@ -290,7 +297,7 @@ watch(
   // `audioItem` becomes undefined just before the component is unmounted.
   () => audioItem.value?.text,
   (newText) => {
-    if (!isChangeFlag.value && newText !== undefined) {
+    if (!isChangeFlag.value && newText != undefined) {
       audioTextBuffer.value = newText;
     }
   }
@@ -327,7 +334,7 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
  */
 const paste = async (options?: { text?: string }) => {
   const text = options ? options.text : await navigator.clipboard.readText();
-  if (text === undefined) return;
+  if (text == undefined) return;
 
   // 複数行貼り付けできるか試す
   if (textSplitType.value !== "OFF") {
