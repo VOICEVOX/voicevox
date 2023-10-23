@@ -171,6 +171,8 @@ const selectAndSetActiveAudioKey = () => {
 };
 
 const onRootFocus = () => {
+  if (uiLocked.value) return;
+
   selectAndSetActiveAudioKey();
 };
 // 複数選択：Ctrl（Cmd）またはShiftキーが押されている時のクリック処理
