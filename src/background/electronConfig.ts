@@ -2,7 +2,7 @@ import { join } from "path";
 import fs from "fs";
 import { app, dialog, shell } from "electron";
 import log from "electron-log";
-import { BaseConfig } from "@/shared/Config";
+import { BaseConfig, Metadata } from "@/shared/Config";
 import { ConfigType } from "@/type/preload";
 
 export class ElectronConfig extends BaseConfig {
@@ -10,18 +10,22 @@ export class ElectronConfig extends BaseConfig {
     return app.getVersion();
   }
 
-  public exists(): boolean {
-    return fs.existsSync(this.configPath);
+  public async exists() {
+    return await fs.promises
+      .stat(this.configPath)
+      .then(() => true)
+      .catch(() => false);
   }
 
-  public load(): Record<string, unknown> & {
-    __internal__: { migrations: { version: string } };
-  } {
+  public async load(): Promise<Record<string, unknown> & Metadata> {
     return JSON.parse(fs.readFileSync(this.configPath, "utf-8"));
   }
 
-  public save(data: ConfigType) {
-    fs.writeFileSync(this.configPath, JSON.stringify(data, undefined, 2));
+  public async save(data: ConfigType) {
+    await fs.promises.writeFile(
+      this.configPath,
+      JSON.stringify(data, undefined, 2)
+    );
   }
 
   private get configPath(): string {
@@ -31,10 +35,11 @@ export class ElectronConfig extends BaseConfig {
 
 let config: ElectronConfig | undefined;
 
-export function getConfigWithError(): ElectronConfig {
+export async function getConfig(): Promise<ElectronConfig> {
   try {
     if (!config) {
       config = new ElectronConfig();
+      await config.initialize();
     }
     return config;
   } catch (e) {

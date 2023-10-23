@@ -15,7 +15,7 @@ import {
   isAssignablePort,
   url2HostInfo,
 } from "./portManager";
-import { ElectronConfig } from "./electronConfig";
+import { getConfig } from "./electronConfig";
 
 import {
   EngineInfo,
@@ -67,7 +67,6 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 }
 
 export class EngineManager {
-  config: ElectronConfig;
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
@@ -79,30 +78,30 @@ export class EngineManager {
   public altPortInfo: AltPortInfos = {};
 
   constructor({
-    config,
     defaultEngineDir,
     vvppEngineDir,
     onEngineProcessError,
   }: {
-    config: ElectronConfig;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
   }) {
-    this.config = config; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
 
-    this.initializeEngineInfosAndAltPortInfo();
     this.engineProcessContainers = {};
+  }
+
+  async initialize() {
+    await this.initializeEngineInfosAndAltPortInfo();
   }
 
   /**
    * 追加エンジンの一覧を作成する。
    * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
    */
-  private createAdditionalEngineInfos(): EngineInfo[] {
+  private async createAdditionalEngineInfos(): Promise<EngineInfo[]> {
     const engines: EngineInfo[] = [];
     const addEngine = (engineDir: string, type: "vvpp" | "path") => {
       const manifestPath = path.join(engineDir, "engine_manifest.json");
@@ -146,8 +145,9 @@ export class EngineManager {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
       }
     }
-    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でstore.setする
-    for (const engineDir of this.config.get("registeredEngineDirs")) {
+    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でconfig.setする
+    const config = await getConfig();
+    for (const engineDir of config.get("registeredEngineDirs")) {
       const result = addEngine(engineDir, "path");
       if (result !== "ok") {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
@@ -157,9 +157,9 @@ export class EngineManager {
           "エンジンの読み込みに失敗しました。",
           `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
         );
-        this.config.set(
+        config.set(
           "registeredEngineDirs",
-          this.config.get("registeredEngineDirs").filter((p) => p !== engineDir)
+          config.get("registeredEngineDirs").filter((p) => p !== engineDir)
         );
       }
     }
@@ -203,9 +203,9 @@ export class EngineManager {
   /**
    * EngineInfosとAltPortInfoを初期化する。
    */
-  initializeEngineInfosAndAltPortInfo() {
+  async initializeEngineInfosAndAltPortInfo() {
     this.defaultEngineInfos = createDefaultEngineInfos(this.defaultEngineDir);
-    this.additionalEngineInfos = this.createAdditionalEngineInfos();
+    this.additionalEngineInfos = await this.createAdditionalEngineInfos();
     this.altPortInfo = {};
   }
 
@@ -311,7 +311,9 @@ export class EngineManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const engineSetting = this.config.get("engineSettings")[engineId];
+    const config = await getConfig();
+
+    const engineSetting = config.get("engineSettings")[engineId];
     if (engineSetting == undefined)
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 

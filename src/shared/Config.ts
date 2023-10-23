@@ -72,7 +72,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   ],
 ];
 
-type Metadata = {
+export type Metadata = {
   __internal__: {
     migrations: {
       version: string;
@@ -81,17 +81,17 @@ type Metadata = {
 };
 
 export abstract class BaseConfig {
-  protected data: ConfigType;
+  protected data: ConfigType | undefined;
 
-  abstract exists(): boolean;
-  abstract load(): Record<string, unknown> & Metadata;
-  abstract save(data: ConfigType & Metadata): void;
+  abstract exists(): Promise<boolean>;
+  abstract load(): Promise<Record<string, unknown> & Metadata>;
+  abstract save(data: ConfigType & Metadata): Promise<void>;
 
   abstract getAppVersion(): string;
 
-  constructor() {
-    if (this.exists()) {
-      const data = this.load();
+  public async initialize(): Promise<this> {
+    if (await this.exists()) {
+      const data = await this.load();
       const version = data.__internal__.migrations.version;
       for (const [versionRange, migration] of migrations) {
         if (!semver.satisfies(version, versionRange)) {
@@ -103,20 +103,24 @@ export abstract class BaseConfig {
       const defaultConfig = configSchema.parse({});
       this.data = defaultConfig;
     }
-    this._save();
+    await this._save();
+
+    return this;
   }
 
   public get<K extends keyof ConfigType>(key: K): ConfigType[K] {
+    if (!this.data) throw new Error("Config is not initialized");
     return this.data[key];
   }
 
-  public set<K extends keyof ConfigType>(key: K, value: ConfigType[K]): void {
+  public async set<K extends keyof ConfigType>(key: K, value: ConfigType[K]) {
+    if (!this.data) throw new Error("Config is not initialized");
     this.data[key] = value;
-    this._save();
+    await this._save();
   }
 
-  private _save(): void {
-    this.save({
+  private async _save() {
+    await this.save({
       ...configSchema.parse({
         ...this.data,
       }),

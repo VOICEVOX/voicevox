@@ -46,7 +46,7 @@ import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-import { getConfigWithError } from "@/background/electronConfig";
+import { getConfig } from "@/background/electronConfig";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -127,8 +127,6 @@ protocol.registerSchemesAsPrivileged([
 
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
-// 設定ファイル
-const config = getConfigWithError();
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
@@ -152,7 +150,6 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
 };
 
 const engineManager = new EngineManager({
-  config,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
   onEngineProcessError,
@@ -235,7 +232,8 @@ async function installVvppEngineWithWarning({
  * マルチエンジン機能が有効だった場合はtrueを返す。
  * 無効だった場合はダイアログを表示してfalseを返す。
  */
-function checkMultiEngineEnabled(): boolean {
+async function checkMultiEngineEnabled(): Promise<boolean> {
+  const config = await getConfig();
   const enabled = config.get("experimentalSetting").enableMultiEngine;
   if (!enabled) {
     dialog.showMessageBoxSync(win, {
@@ -342,8 +340,9 @@ const privacyPolicyText = fs.readFileSync(
 );
 
 // hotkeySettingsのマイグレーション
-function migrateHotkeySettings() {
+async function migrateHotkeySettings() {
   const COMBINATION_IS_NONE = "####";
+  const config = await getConfig();
   const loadedHotkeys = config.get("hotkeySettings");
   const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
     (defaultHotkey) => {
@@ -393,6 +392,8 @@ async function createWindow() {
     defaultWidth: 800,
     defaultHeight: 600,
   });
+
+  const config = await getConfig();
 
   const currentTheme = config.get("currentTheme");
   const backgroundColor = themes.find((value) => value.name == currentTheme)
@@ -511,7 +512,8 @@ async function start() {
 // エンジンの準備と起動
 async function launchEngines() {
   // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
-  engineManager.initializeEngineInfosAndAltPortInfo();
+  await engineManager.initializeEngineInfosAndAltPortInfo();
+  const config = await getConfig();
   const engineInfos = engineManager.fetchEngineInfos();
   const engineSettings = config.get("engineSettings");
   for (const engineInfo of engineInfos) {
@@ -813,13 +815,14 @@ ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
   openEngineDirectory(engineId);
 });
 
-ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
-  if (newData !== undefined) {
+ipcMainHandle("HOTKEY_SETTINGS", async (_, { newData }) => {
+  const config = await getConfig();
+  if (newData != undefined) {
     const hotkeySettings = config.get("hotkeySettings");
     const hotkeySetting = hotkeySettings.find(
       (hotkey) => hotkey.action == newData.action
     );
-    if (hotkeySetting !== undefined) {
+    if (hotkeySetting != undefined) {
       hotkeySetting.combination = newData.combination;
     }
     config.set("hotkeySettings", hotkeySettings);
@@ -827,8 +830,9 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   return config.get("hotkeySettings");
 });
 
-ipcMainHandle("THEME", (_, { newData }) => {
-  if (newData !== undefined) {
+ipcMainHandle("THEME", async (_, { newData }) => {
+  const config = await getConfig();
+  if (newData != undefined) {
     config.set("currentTheme", newData);
     return;
   }
@@ -861,16 +865,19 @@ ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
   return defaultToolbarButtonSetting;
 });
 
-ipcMainHandle("GET_SETTING", (_, key) => {
+ipcMainHandle("GET_SETTING", async (_, key) => {
+  const config = await getConfig();
   return config.get(key);
 });
 
-ipcMainHandle("SET_SETTING", (_, key, newValue) => {
+ipcMainHandle("SET_SETTING", async (_, key, newValue) => {
+  const config = await getConfig();
   config.set(key, newValue);
   return config.get(key);
 });
 
-ipcMainHandle("SET_ENGINE_SETTING", (_, engineId, engineSetting) => {
+ipcMainHandle("SET_ENGINE_SETTING", async (_, engineId, engineSetting) => {
+  const config = await getConfig();
   const engineSettings = config.get("engineSettings");
   engineSettings[engineId] = engineSetting;
   config.set(`engineSettings`, engineSettings);
@@ -1030,7 +1037,7 @@ app.on("ready", async () => {
   if (filePath && isVvppFile(filePath)) {
     log.info(`vvpp file install: ${filePath}`);
     // FIXME: GUI側に合流させる
-    if (checkMultiEngineEnabled()) {
+    if (await checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: filePath,
         reloadNeeded: false,
@@ -1049,7 +1056,7 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
   } else if (isVvppFile(data.filePath)) {
     log.info("Second instance launched with vvpp file");
     // FIXME: GUI側に合流させる
-    if (checkMultiEngineEnabled()) {
+    if (await checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: data.filePath,
         reloadNeeded: true,
