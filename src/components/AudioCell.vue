@@ -13,7 +13,11 @@
   >
     <!-- 複数選択用のヒットボックス -->
     <div
-      v-if="(isCtrlOrCommandKeyDown || isShiftKeyDown) && isMultiSelectEnabled"
+      v-if="
+        (isCtrlOrCommandKeyDown || isShiftKeyDown) &&
+        isMultiSelectEnabled &&
+        !isActiveAudioCell
+      "
       class="click-hitbox"
       tabindex="-1"
       @click="onClickWithModifierKey"
