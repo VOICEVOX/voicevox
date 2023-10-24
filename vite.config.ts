@@ -83,7 +83,6 @@ export default defineConfig((options) => {
           eslint: {
             lintCommand: "eslint --ext .ts,.vue .",
           },
-          typescript: true,
           vueTsc: true,
         }),
       isElectron &&

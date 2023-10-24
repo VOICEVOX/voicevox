@@ -22,7 +22,7 @@
 import { computed, ComputedRef } from "vue";
 import {
   generateAndConnectAndSaveAudioWithDialog,
-  generateAndSaveAllAudioWithDialog,
+  multiGenerateAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
 } from "./Dialog";
 import { useStore } from "@/store";
@@ -122,17 +122,31 @@ const playContinuously = async () => {
 const stop = () => {
   store.dispatch("STOP_AUDIO");
 };
-const generateAndSaveOneAudio = async () => {
+const generateAndSaveSelectedAudio = async () => {
   if (activeAudioKey.value == undefined)
     throw new Error("activeAudioKey is undefined");
-  await generateAndSaveOneAudioWithDialog({
-    audioKey: activeAudioKey.value,
-    dispatch: store.dispatch,
-    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
-  });
+
+  const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+  if (
+    store.state.experimentalSetting.enableMultiSelect &&
+    selectedAudioKeys.length > 1
+  ) {
+    await multiGenerateAndSaveAudioWithDialog({
+      audioKeys: selectedAudioKeys,
+      dispatch: store.dispatch,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+    });
+  } else {
+    await generateAndSaveOneAudioWithDialog({
+      audioKey: activeAudioKey.value,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+      dispatch: store.dispatch,
+    });
+  }
 };
 const generateAndSaveAllAudio = async () => {
-  await generateAndSaveAllAudioWithDialog({
+  await multiGenerateAndSaveAudioWithDialog({
+    audioKeys: store.state.audioKeys,
     dispatch: store.dispatch,
     disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
   });
@@ -162,8 +176,8 @@ const usableButtons: Record<
     click: stop,
     disable: computed(() => !store.getters.NOW_PLAYING),
   },
-  EXPORT_AUDIO_ONE: {
-    click: generateAndSaveOneAudio,
+  EXPORT_AUDIO_SELECTED: {
+    click: generateAndSaveSelectedAudio,
     disable: computed(() => !activeAudioKey.value || uiLocked.value),
   },
   EXPORT_AUDIO_ALL: {

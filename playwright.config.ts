@@ -6,10 +6,12 @@ dotenv.config({ override: true });
 
 let project: Project;
 const additionalWebServer: PlaywrightTestConfig["webServer"] = [];
+const isElectron = process.env.VITE_TARGET === "electron";
+const isBrowser = process.env.VITE_TARGET === "browser";
 
-if (process.env.VITE_TARGET === "electron") {
+if (isElectron) {
   project = { name: "electron", testDir: "./tests/e2e/electron" };
-} else if (process.env.VITE_TARGET === "browser") {
+} else if (isBrowser) {
   project = { name: "browser", testDir: "./tests/e2e/browser" };
 
   // エンジンの起動が必要
@@ -54,8 +56,9 @@ const config: PlaywrightTestConfig = {
      */
     timeout: 5 * 1000,
   },
-  /* Run tests in files in parallel */
-  fullyParallel: true,
+  // ファイルシステムが関連してくるので、Electronテストでは並列化しない
+  fullyParallel: !isElectron,
+  workers: isElectron ? 1 : undefined,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI
