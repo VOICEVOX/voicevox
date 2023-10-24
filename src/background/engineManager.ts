@@ -6,7 +6,7 @@ import shlex from "shlex";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
-import log from "electron-log";
+import log from "electron-log/main";
 import { z } from "zod";
 import {
   findAltPort,

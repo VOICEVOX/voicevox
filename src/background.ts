@@ -15,7 +15,7 @@ import {
 } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
-import log from "electron-log";
+import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import { hasSupportedGpu } from "./electron/device";
@@ -71,6 +71,16 @@ console.log(`Environment: ${import.meta.env.MODE}, appData: ${appName}`);
 // バージョン0.14より前の設定ファイルの保存場所
 const beforeUserDataDir = app.getPath("userData"); // マイグレーション用
 
+// app.getPath("userData")を呼ぶとディレクトリが作成されてしまうため空なら削除する。
+try {
+  fs.rmdirSync(beforeUserDataDir);
+} catch (e) {
+  const err = e as NodeJS.ErrnoException;
+  if (err?.code !== "ENOTEMPTY") {
+    log.error(err);
+  }
+}
+
 // appnameをvoicevoxとしてsetする
 app.setName(appName);
 
@@ -84,20 +94,16 @@ if (!isDevelopment) {
   configMigration014({ fixedUserDataDir, beforeUserDataDir }); // 以前のファイルがあれば持ってくる
 }
 
+log.initialize({ preload: false });
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.console.level = "silly";
 
 // warn以上のログをファイルに出力
 const prefix = dayjs().format("YYYYMMDD_HHmmss");
-const logPath = app.getPath("logs");
 log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
-log.transports.file.resolvePath = (variables) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return path.join(logPath, variables.fileName!);
-};
 
 let win: BrowserWindow;
 
@@ -778,18 +784,6 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   } else {
     win.maximize();
   }
-});
-
-ipcMainHandle("LOG_ERROR", (_, ...params) => {
-  log.error(...params);
-});
-
-ipcMainHandle("LOG_WARN", (_, ...params) => {
-  log.warn(...params);
-});
-
-ipcMainHandle("LOG_INFO", (_, ...params) => {
-  log.info(...params);
 });
 
 ipcMainHandle("OPEN_LOG_DIRECTORY", () => {

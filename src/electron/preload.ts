@@ -155,17 +155,26 @@ const api: Sandbox = {
 
   logError: (...params) => {
     console.error(...params);
-    return ipcRenderer.invoke("LOG_ERROR", ...params);
+    ipcRenderer.send("__ELECTRON_LOG__", {
+      data: [...params],
+      level: "error",
+    });
   },
 
   logWarn: (...params) => {
     console.warn(...params);
-    return ipcRenderer.invoke("LOG_WARN", ...params);
+    ipcRenderer.send("__ELECTRON_LOG__", {
+      data: [...params],
+      level: "warn",
+    });
   },
 
   logInfo: (...params) => {
     console.info(...params);
-    return ipcRenderer.invoke("LOG_INFO", ...params);
+    ipcRenderer.send("__ELECTRON_LOG__", {
+      data: [...params],
+      level: "info",
+    });
   },
 
   openLogDirectory: () => {
