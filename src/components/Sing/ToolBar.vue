@@ -93,7 +93,7 @@
 <script lang="ts">
 import { defineComponent, computed, watch, ref } from "vue";
 import { useStore } from "@/store";
-import { getSnapTypes, isTriplet } from "@/helpers/singHelper";
+import { BEAT_TYPES, getSnapTypes, isTriplet } from "@/helpers/singHelper";
 
 export default defineComponent({
   name: "SingToolBar",
@@ -135,17 +135,23 @@ export default defineComponent({
 
     const setTempoInputBuffer = (tempoStr: string | number | null) => {
       const tempo = Number(tempoStr);
-      if (!Number.isFinite(tempo) || tempo <= 0) return;
+      if (!Number.isFinite(tempo) || tempo <= 0) {
+        return;
+      }
       tempoInputBuffer.value = tempo;
     };
     const setBeatsInputBuffer = (beatsStr: string | number | null) => {
       const beats = Number(beatsStr);
-      if (!Number.isInteger(beats) || beats <= 0) return;
+      if (!Number.isInteger(beats) || beats <= 0) {
+        return;
+      }
       beatsInputBuffer.value = beats;
     };
     const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
       const beatType = Number(beatTypeStr);
-      if (!Number.isInteger(beatType) || beatType <= 0) return;
+      if (!Number.isInteger(beatType) || !BEAT_TYPES.includes(beatType)) {
+        return;
+      }
       beatTypeInputBuffer.value = beatType;
     };
 
@@ -219,7 +225,7 @@ export default defineComponent({
       if (beats === 0 || beatType === 0) return;
       await store.dispatch("SET_TIME_SIGNATURE", {
         timeSignature: {
-          position: 0,
+          measureNumber: 1,
           beats: beats,
           beatType: beatType,
         },

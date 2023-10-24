@@ -130,12 +130,10 @@
 import { defineComponent, computed, ref, onMounted } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
-import { TimeSignature } from "@/store/type";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import {
   getMeasureDuration,
-  getMeasureNum,
   getNoteDuration,
   getKeyBaseHeight,
   tickToBaseX,
@@ -144,6 +142,7 @@ import {
   baseYToNoteNumber,
   keyInfos,
   getDoremiFromNoteNumber,
+  getNumOfMeasures,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
@@ -175,14 +174,28 @@ export default defineComponent({
     const tpqn = computed(() => state.score?.tpqn ?? 480);
     // ノート
     const notes = computed(() => state.score?.notes ?? []);
+    // テンポ
+    const tempos = computed(() => {
+      return (
+        state.score?.tempos ?? [
+          {
+            position: 0,
+            tempo: 120,
+          },
+        ]
+      );
+    });
     // 拍子
-    const defaultTimeSignature: TimeSignature = {
-      position: 0,
-      beats: 4,
-      beatType: 4,
-    };
-    const timeSignature = computed(() => {
-      return state.score?.timeSignatures?.[0] ?? defaultTimeSignature;
+    const timeSignatures = computed(() => {
+      return (
+        state.score?.timeSignatures ?? [
+          {
+            measureNumber: 1,
+            beats: 4,
+            beatType: 4,
+          },
+        ]
+      );
     });
     // ズーム状態
     const zoomX = computed(() => state.sequencerZoomX);
@@ -208,8 +221,9 @@ export default defineComponent({
       return gridCellBaseHeight * zoomY.value;
     });
     const numOfGridColumns = computed(() => {
-      const beats = timeSignature.value.beats;
-      const beatType = timeSignature.value.beatType;
+      // TODO: 複数拍子に対応する
+      const beats = timeSignatures.value[0].beats;
+      const beatType = timeSignatures.value[0].beatType;
       const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
       const numOfGridColumnsPerMeasure = Math.round(
         measureDuration / gridCellTicks.value
@@ -219,17 +233,22 @@ export default defineComponent({
       // NOTE: いったん最後尾に足した場合は伸びるようにする
       const numOfMeasures = Math.max(
         minNumOfMeasures,
-        getMeasureNum(notes.value, measureDuration) + 1
+        getNumOfMeasures(
+          notes.value,
+          tempos.value,
+          timeSignatures.value,
+          tpqn.value
+        ) + 1
       );
       return numOfGridColumnsPerMeasure * numOfMeasures;
     });
     const beatsPerMeasure = computed(() => {
-      return timeSignature.value.beats;
+      return timeSignatures.value[0].beats;
     });
     const beatWidth = computed(() => {
-      const beatType = timeSignature.value.beatType;
-      const quarterNotesPerBeat = 4 / beatType;
-      const beatTicks = tpqn.value * quarterNotesPerBeat;
+      const beatType = timeSignatures.value[0].beatType;
+      const wholeNoteDuration = tpqn.value * 4;
+      const beatTicks = wholeNoteDuration / beatType;
       return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
     });
     // スクロール位置
