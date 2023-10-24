@@ -20,7 +20,6 @@ import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import { hasSupportedGpu } from "./electron/device";
 import {
-  HotkeySetting,
   ThemeConf,
   EngineInfo,
   SystemError,
@@ -962,7 +961,6 @@ app.once("will-finish-launching", () => {
 
 app.on("ready", async () => {
   await config.initialize();
-  engineManager.initializeEngineInfosAndAltPortInfo();
 
   if (isDevelopment && !isTest) {
     try {
