@@ -35,11 +35,10 @@ export class ElectronConfig extends BaseConfig {
 
 let config: ElectronConfig | undefined;
 
-export async function getConfig(): Promise<ElectronConfig> {
+export function getConfig(): ElectronConfig {
   try {
     if (!config) {
       config = new ElectronConfig();
-      await config.initialize();
     }
     return config;
   } catch (e) {
@@ -65,7 +64,8 @@ export async function getConfig(): Promise<ElectronConfig> {
             });
           }
         })
-        .finally(() => {
+        .finally(async () => {
+          await config?.ensureSaved();
           app.exit(1);
         });
     });

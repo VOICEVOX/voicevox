@@ -149,7 +149,10 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
+const config = getConfig();
+
 const engineManager = new EngineManager({
+  config,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
   onEngineProcessError,
@@ -232,8 +235,7 @@ async function installVvppEngineWithWarning({
  * マルチエンジン機能が有効だった場合はtrueを返す。
  * 無効だった場合はダイアログを表示してfalseを返す。
  */
-async function checkMultiEngineEnabled(): Promise<boolean> {
-  const config = await getConfig();
+function checkMultiEngineEnabled(): boolean {
   const enabled = config.get("experimentalSetting").enableMultiEngine;
   if (!enabled) {
     dialog.showMessageBoxSync(win, {
@@ -342,7 +344,6 @@ const privacyPolicyText = fs.readFileSync(
 // hotkeySettingsのマイグレーション
 async function migrateHotkeySettings() {
   const COMBINATION_IS_NONE = "####";
-  const config = await getConfig();
   const loadedHotkeys = config.get("hotkeySettings");
   const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
     (defaultHotkey) => {
@@ -380,9 +381,11 @@ async function migrateHotkeySettings() {
   });
   config.set("hotkeySettings", migratedHotkeys);
 }
+migrateHotkeySettings();
 
 const appState = {
   willQuit: false,
+  configFinalized: false,
 };
 let filePathOnMac: string | undefined = undefined;
 // create window
@@ -391,8 +394,6 @@ async function createWindow() {
     defaultWidth: 800,
     defaultHeight: 600,
   });
-
-  const config = await getConfig();
 
   const currentTheme = config.get("currentTheme");
   const backgroundColor = themes.find((value) => value.name == currentTheme)
@@ -511,8 +512,8 @@ async function start() {
 // エンジンの準備と起動
 async function launchEngines() {
   // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
-  await engineManager.initializeEngineInfosAndAltPortInfo();
-  const config = await getConfig();
+  engineManager.initializeEngineInfosAndAltPortInfo();
+
   const engineInfos = engineManager.fetchEngineInfos();
   const engineSettings = config.get("engineSettings");
   for (const engineInfo of engineInfos) {
@@ -814,8 +815,7 @@ ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
   openEngineDirectory(engineId);
 });
 
-ipcMainHandle("HOTKEY_SETTINGS", async (_, { newData }) => {
-  const config = await getConfig();
+ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData != undefined) {
     const hotkeySettings = config.get("hotkeySettings");
     const hotkeySetting = hotkeySettings.find(
@@ -829,8 +829,7 @@ ipcMainHandle("HOTKEY_SETTINGS", async (_, { newData }) => {
   return config.get("hotkeySettings");
 });
 
-ipcMainHandle("THEME", async (_, { newData }) => {
-  const config = await getConfig();
+ipcMainHandle("THEME", (_, { newData }) => {
   if (newData != undefined) {
     config.set("currentTheme", newData);
     return;
@@ -864,19 +863,16 @@ ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
   return defaultToolbarButtonSetting;
 });
 
-ipcMainHandle("GET_SETTING", async (_, key) => {
-  const config = await getConfig();
+ipcMainHandle("GET_SETTING", (_, key) => {
   return config.get(key);
 });
 
-ipcMainHandle("SET_SETTING", async (_, key, newValue) => {
-  const config = await getConfig();
+ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   config.set(key, newValue);
   return config.get(key);
 });
 
 ipcMainHandle("SET_ENGINE_SETTING", async (_, engineId, engineSetting) => {
-  const config = await getConfig();
   const engineSettings = config.get("engineSettings");
   engineSettings[engineId] = engineSetting;
   config.set(`engineSettings`, engineSettings);
@@ -966,12 +962,21 @@ app.on("before-quit", async (event) => {
     return;
   }
 
+  if (appState.configFinalized) {
+    log.info("Config already finalized. Quitting app");
+    return;
+  }
+
   log.info("Checking ENGINE status before app quit");
   const engineCleanupResult = cleanupEngines();
 
   // エンジンの停止とエンジン終了後処理が完了している
   if (engineCleanupResult == "alreadyCompleted") {
-    log.info("Post engine kill process done. Now quit app");
+    log.info("Post engine kill process done. Finalizing config");
+    event.preventDefault();
+    await config.ensureSaved();
+    appState.configFinalized = true;
+    app.quit();
     return;
   }
 
@@ -998,6 +1003,7 @@ app.once("will-finish-launching", () => {
 });
 
 app.on("ready", async () => {
+  await config.initialize();
   if (isDevelopment && !isTest) {
     try {
       await installExtension(VUEJS_DEVTOOLS);
@@ -1036,15 +1042,13 @@ app.on("ready", async () => {
   if (filePath && isVvppFile(filePath)) {
     log.info(`vvpp file install: ${filePath}`);
     // FIXME: GUI側に合流させる
-    if (await checkMultiEngineEnabled()) {
+    if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: filePath,
         reloadNeeded: false,
       });
     }
   }
-
-  await migrateHotkeySettings();
 
   start();
 });
@@ -1057,7 +1061,7 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
   } else if (isVvppFile(data.filePath)) {
     log.info("Second instance launched with vvpp file");
     // FIXME: GUI側に合流させる
-    if (await checkMultiEngineEnabled()) {
+    if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: data.filePath,
         reloadNeeded: true,

@@ -80,8 +80,19 @@ export type Metadata = {
   };
 };
 
+/**
+ * 設定の基底クラス
+ *
+ * # ロジックメモ
+ * 保存呼び出しのカウンターを用意する。
+ * set（save）が呼ばれる度、カウンターをインクリメントし、保存のPromiseをspawnする。
+ *
+ * 必ず保存されることを保証する時（アプリ終了時など）は、await finalize()を呼ぶ。
+ */
 export abstract class BaseConfig {
   protected data: ConfigType | undefined;
+
+  private saveCounter = 0;
 
   abstract exists(): Promise<boolean>;
   abstract load(): Promise<Record<string, unknown> & Metadata>;
@@ -103,7 +114,7 @@ export abstract class BaseConfig {
       const defaultConfig = configSchema.parse({});
       this.data = defaultConfig;
     }
-    await this._save();
+    this._save();
 
     return this;
   }
@@ -113,22 +124,36 @@ export abstract class BaseConfig {
     return this.data[key];
   }
 
-  public async set<K extends keyof ConfigType>(key: K, value: ConfigType[K]) {
+  public set<K extends keyof ConfigType>(key: K, value: ConfigType[K]) {
     if (!this.data) throw new Error("Config is not initialized");
     this.data[key] = value;
-    await this._save();
+    this._save();
   }
 
-  private async _save() {
-    await this.save({
-      ...configSchema.parse({
-        ...this.data,
-      }),
-      __internal__: {
-        migrations: {
-          version: this.getAppVersion(),
-        },
-      },
-    });
+  private _save() {
+    this.saveCounter++;
+    (async () => {
+      try {
+        this.save({
+          ...configSchema.parse({
+            ...this.data,
+          }),
+          __internal__: {
+            migrations: {
+              version: this.getAppVersion(),
+            },
+          },
+        });
+      } finally {
+        this.saveCounter--;
+      }
+    })();
+  }
+
+  async ensureSaved() {
+    while (this.saveCounter > 0) {
+      // 他のスレッドに処理を譲る
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
   }
 }
