@@ -94,7 +94,6 @@ export class EngineManager {
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
 
-    this.initializeEngineInfosAndAltPortInfo();
     this.engineProcessContainers = {};
   }
 

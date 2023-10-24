@@ -1004,6 +1004,8 @@ app.once("will-finish-launching", () => {
 
 app.on("ready", async () => {
   await config.initialize();
+  engineManager.initializeEngineInfosAndAltPortInfo();
+
   if (isDevelopment && !isTest) {
     try {
       await installExtension(VUEJS_DEVTOOLS);
