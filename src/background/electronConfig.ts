@@ -18,7 +18,7 @@ export class ElectronConfig extends BaseConfig {
   }
 
   public async load(): Promise<Record<string, unknown> & Metadata> {
-    return JSON.parse(fs.readFileSync(this.configPath, "utf-8"));
+    return JSON.parse(await fs.promises.readFile(this.configPath, "utf-8"));
   }
 
   public async save(data: ConfigType) {
