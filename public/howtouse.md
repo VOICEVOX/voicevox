@@ -38,7 +38,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 ※Mac 版では GPU モードに対応していないため GPU モードはご利用頂けません。
 
-<img src="res/image4.png" style="max-height: 8rem" alt="音声合成エンジンを起動している様子" />
+<img src="res/image4.png" style="max-height: 6rem" alt="音声合成エンジンを起動している様子" />
 
 ## 音声の生成
 
@@ -48,7 +48,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 `Enter` キーを押して文章を確定すると、画面の下の方に読みとアクセントが表示されます。（１回目は反映まで数秒ほど時間がかかることがあります。）
 
-<img src="res/image6.png" style="max-height: 14rem" alt="画面の下の方に読みとアクセントが表示された様子"/>
+<img src="res/image6.png" style="max-height: 16rem" alt="画面の下の方に読みとアクセントが表示された様子"/>
 
 再生ボタンを押すと音声が生成され、音声が再生されます。
 
@@ -56,13 +56,13 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 右下の＋ボタンを押すとテキスト欄が増え、複数の文章を並べることができます。
 
-<img src="res/image10.png" style="max-height: 14rem" alt="テキスト欄が増えた様子" />
+<img src="res/image10.png" style="max-height: 12rem" alt="テキスト欄が増えた様子" />
 
 ## キャラクターの変更
 
 テキスト入力欄の左にあるアイコンをクリックすると、テキストを読み上げてくれるキャラクターを変更することができます。
 
-<img src="res/image7.png" style="max-height: 12rem" alt="左にあるアイコンをクリックしてほかのキャラクターアイコンが表示されている様子"/>
+<img src="res/image7.png" style="max-height: 10rem" alt="左にあるアイコンをクリックしてほかのキャラクターアイコンが表示されている様子"/>
 
 キャラクターの表示順序は「キャラクター並び替え」で変更できます。
 
@@ -88,7 +88,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 逆に切り離したい場合は、文字の間をクリックして切り離すことができます。
 
-<img src="res/image13.png" style="max-height: 8rem" alt="「ディープ」と「ラーニング」の間にマウスカーソルを合わせている様子。マウスカーソルが当たっている部分が青色になります"/>
+<img src="res/image13.png" style="max-height: 7rem" alt="「ディープ」と「ラーニング」の間にマウスカーソルを合わせている様子。マウスカーソルが当たっている部分が青色になります"/>
 
 ## アクセントの変更
 
@@ -97,7 +97,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 アクセント箇所を変えるには、読みの上にあるバーを左右に動かします。
 例えば「ディープラーニング」を「↑ ディープラ ↓ アニング」と読んでほしい場合は、「ラ」の位置まで丸をスライドします。
 
-<img src="res/image8.png" style="max-height: 8rem" alt="「ディープラーニング」" /> → <img src="res/image1.png" style="max-height: 8rem" alt="「↑ ディープラ ↓ アニング」" />
+<img src="res/image8.png" style="max-height: 7.5rem" alt="「ディープラーニング」" /> → <img src="res/image1.png" style="max-height: 8rem" alt="「↑ ディープラ ↓ アニング」" />
 
 ## イントネーションの変更
 
@@ -163,7 +163,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 このように読み込まれます。
 
-<img src="res/image17.png" style="max-height: 12rem" alt="テキストが読み込まれた様子。四国めたん「おはようございます」、四国めたん「こんにちは」、ずんだもん「こんばんは」、四国めたん「さようなら」のように、キャラクターと文章が読み込まれています"/>
+<img src="res/image17.png" style="max-height: 10rem" alt="テキストが読み込まれた様子。四国めたん「おはようございます」、四国めたん「こんにちは」、ずんだもん「こんばんは」、四国めたん「さようなら」のように、キャラクターと文章が読み込まれています"/>
 
 スタイル名が指定されていない場合は、デフォルトスタイルのスタイルが適用されます。
 
@@ -218,9 +218,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 ボタンをドラッグすることにより、画面上部にあるツールバーのボタンの種類や配置を変更することができます。
 
-<img src="res/toolbar-customize1.png" width="225px" height="150px" alt="ツールバーカスタマイズ画面"/>
-&rarr;
-<img src="res/toolbar-customize2.png" width="225px" height="150px" alt="ツールバーカスタマイズ画面"/>
+<img src="res/toolbar-customize.png" style="max-height: 18rem" alt="ツールバーカスタマイズ画面"/>
 
 ## キャラクターの並び替え・試聴
 
@@ -239,13 +237,13 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 読み方＆アクセント辞書画面を開くと、左に登録した単語のリストが表示されます。
 「追加」ボタンで新規に単語を登録できます。
 
-<img src="res/dict01.png" style="max-height: 12rem" alt="読み方＆アクセント辞書の単語リスト画面"/>
+<img src="res/dict01.png" style="max-height: 17rem" alt="読み方＆アクセント辞書の単語リスト画面"/>
 
 「単語」に登録したいテキストを、「読み」にそのテキストの読み方をひらがなかカタカナで入力してください。
 「アクセント調整」で自然になるアクセントを登録できます。
 もし登録した単語が反映されない場合は、「単語優先度」を上げてみてください。
 
-<img src="res/dict02.png" style="max-height: 15rem" alt="単語と読みとアクセントの登録画面"/>
+<img src="res/dict02.png" style="max-height: 17rem" alt="単語と読みとアクセントの登録画面"/>
 
 ## オプション
 
@@ -337,7 +335,7 @@ Linux は Nvidia 製 GPU のみに対応しています。
 
 #### マルチエンジン機能
 
-VOICEVOX 以外の VOICEVOX API 準拠エンジンを VOICEVOX 内で利用できるようになります。 
+VOICEVOX 以外の VOICEVOX API 準拠エンジンを VOICEVOX 内で利用できるようになります。  
 マルチエンジン機能をオンにしたあと、メニューにある「エンジン」の「エンジンの管理」に移動し、次のどちらかを実行すると利用できます。
 
 - VOICEVOX API 準拠エンジンの VVPP ファイルをインストールする
