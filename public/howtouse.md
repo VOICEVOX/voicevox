@@ -21,7 +21,7 @@
 
 <img src="res/gatekeeper.png" style="max-height: 16rem" alt="「VOICEVOXは開発を検証できないため開けません」というダイアログ"/>
 
-その際は Finder で <code>Ctrl</code> キーを押しながら VOICEVOX アプリケーションアイコンをクリックし、ショートカットメニューから「開く」を選択してから、「開く」をクリックしてください。
+その際は Finder で `Ctrl` キーを押しながら VOICEVOX アプリケーションアイコンをクリックし、ショートカットメニューから「開く」を選択してから、「開く」をクリックしてください。
 
 もしくは、アップルメニューから「システム環境設定」を選択して「セキュリティとプライバシー」 をクリックし、「一般」パネルで「このまま開く」選んでください。
 
@@ -46,7 +46,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 <img src="res/image19.png" style="max-height: 12rem" alt="キャラクターアイコンの右にある空白" />
 
-<code>Enter</code> キーを押して文章を確定すると、画面の下の方に読みとアクセントが表示されます。（１回目は反映まで数秒ほど時間がかかることがあります。）
+`Enter` キーを押して文章を確定すると、画面の下の方に読みとアクセントが表示されます。（１回目は反映まで数秒ほど時間がかかることがあります。）
 
 <img src="res/image6.png" style="max-height: 14rem" alt="画面の下の方に読みとアクセントが表示された様子"/>
 
@@ -183,21 +183,21 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 - 上下キー
   - 上下のテキスト欄に移動
-- <code>Space</code>
+- `Space`
   - 音声を再生
-- <code>Shift</code> + <code>Enter</code>
+- `Shift` + `Enter`
   - テキスト欄を追加
-- <code>Shift</code> + <code>Delete</code>
+- `Shift` + `Delete`
   - テキスト欄を消去
-- <code>Ctrl</code> + <code>S</code>
+- `Ctrl` + `S`
   - プロジェクトの保存
-- <code>Ctrl</code> + <code>E</code>
+- `Ctrl` + `E`
   - 音声を書き出し
-- <code>Ctrl</code> + <code>Z</code>
+- `Ctrl` + `Z`
   - 元に戻す
-- <code>Ctrl</code> + <code>Y</code>
+- `Ctrl` + `Y`
   - やり直す
-- <code>Esc</code>
+- `Esc`
   - テキスト欄からカーソルを外す
 - 1
   - アクセント欄を表示
@@ -207,19 +207,20 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
   - 長さ欄を表示
 - スライダーの上でマウスホイール
   - スライダーの値を変更します（スライダー →<img src="res/image16.png" style="max-height: 1rem" alt="スライダー、緑色の棒"/>）
-  - <code>Ctrl</code> キーを押しながらマウスホイールを使うと更に細かく調整できます
+  - `Ctrl` キーを押しながらマウスホイールを使うと更に細かく調整できます
   - Alt キーを押しながらイントネーションや長さを調整することで、同じアクセント区間内を同時に調整できます
-- <code>Ctrl</code> + <code>G</code>
+- `Ctrl` + `G`
   - 全体のイントネーションをリセット
-- <code>R</code>
+- `R`
   - 選択中のイントネーションをリセット
 
 ## ツールバーのカスタマイズ
 
-画面上部にあるツールバーのボタンの種類や配置を変更することができます。
+ボタンをドラッグすることにより、画面上部にあるツールバーのボタンの種類や配置を変更することができます。
 
-<img src="res/toolbar-customize1.png" style="max-height: 12rem" alt="ツールバーカスタマイズ画面"/>&nbsp;&nbsp;&nbsp;
-<img src="res/toolbar-customize2.png" style="max-height: 12rem" alt="ツールバーカスタマイズ画面"/>
+<img src="res/toolbar-customize1.png" width="225px" height="150px" alt="ツールバーカスタマイズ画面"/>
+&rarr;
+<img src="res/toolbar-customize2.png" width="225px" height="150px" alt="ツールバーカスタマイズ画面"/>
 
 ## キャラクターの並び替え・試聴
 
