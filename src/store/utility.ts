@@ -178,7 +178,7 @@ function skipMemoText(targettext: string): string {
  * 2つのアクセント句配列を比べて同じだと思われるモーラの調整結果を転写し
  * 変更前のアクセント句の調整結果を変更後のアクセント句に保持する
  */
-export class AccentDiff {
+export class TuningTranscription {
   beforeAccent: AccentPhrase[];
   afterAccent: AccentPhrase[];
   constructor(beforeAccent: AccentPhrase[], afterAccent: AccentPhrase[]) {
