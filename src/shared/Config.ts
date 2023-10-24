@@ -5,6 +5,8 @@ import {
   EngineId,
   configSchema,
   DefaultStyleId,
+  defaultHotkeySettings,
+  HotkeySetting,
 } from "@/type/preload";
 
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
@@ -109,7 +111,7 @@ export abstract class BaseConfig {
           migration(data);
         }
       }
-      this.data = configSchema.parse(data);
+      this.data = this.migrateHotkeySettings(configSchema.parse(data));
     } else {
       const defaultConfig = configSchema.parse({});
       this.data = defaultConfig;
@@ -155,5 +157,48 @@ export abstract class BaseConfig {
       // 他のスレッドに処理を譲る
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
+  }
+
+  private migrateHotkeySettings(data: ConfigType): ConfigType {
+    const COMBINATION_IS_NONE = "####";
+    const loadedHotkeys = structuredClone(data.hotkeySettings);
+    const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
+      (defaultHotkey) => {
+        const loadedHotkey = loadedHotkeys.find(
+          (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
+        );
+        const hotkeyWithoutCombination: HotkeySetting = {
+          action: defaultHotkey.action,
+          combination: COMBINATION_IS_NONE,
+        };
+        return loadedHotkey || hotkeyWithoutCombination;
+      }
+    );
+    const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
+      if (hotkey.combination === COMBINATION_IS_NONE) {
+        const newHotkey =
+          defaultHotkeySettings.find(
+            (defaultHotkey) => defaultHotkey.action === hotkey.action
+          ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
+        const combinationExists = hotkeysWithoutNewCombination.some(
+          (hotkey) => hotkey.combination === newHotkey.combination
+        );
+        if (combinationExists) {
+          const emptyHotkey: HotkeySetting = {
+            action: newHotkey.action,
+            combination: "",
+          };
+          return emptyHotkey;
+        } else {
+          return newHotkey;
+        }
+      } else {
+        return hotkey;
+      }
+    });
+    return {
+      ...data,
+      hotkeySettings: migratedHotkeys,
+    };
   }
 }

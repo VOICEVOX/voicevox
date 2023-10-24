@@ -341,48 +341,6 @@ const privacyPolicyText = fs.readFileSync(
   "utf-8"
 );
 
-// hotkeySettingsのマイグレーション
-async function migrateHotkeySettings() {
-  const COMBINATION_IS_NONE = "####";
-  const loadedHotkeys = config.get("hotkeySettings");
-  const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
-    (defaultHotkey) => {
-      const loadedHotkey = loadedHotkeys.find(
-        (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
-      );
-      const hotkeyWithoutCombination: HotkeySetting = {
-        action: defaultHotkey.action,
-        combination: COMBINATION_IS_NONE,
-      };
-      return loadedHotkey || hotkeyWithoutCombination;
-    }
-  );
-  const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
-    if (hotkey.combination === COMBINATION_IS_NONE) {
-      const newHotkey =
-        defaultHotkeySettings.find(
-          (defaultHotkey) => defaultHotkey.action === hotkey.action
-        ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
-      const combinationExists = hotkeysWithoutNewCombination.some(
-        (hotkey) => hotkey.combination === newHotkey.combination
-      );
-      if (combinationExists) {
-        const emptyHotkey: HotkeySetting = {
-          action: newHotkey.action,
-          combination: "",
-        };
-        return emptyHotkey;
-      } else {
-        return newHotkey;
-      }
-    } else {
-      return hotkey;
-    }
-  });
-  config.set("hotkeySettings", migratedHotkeys);
-}
-migrateHotkeySettings();
-
 const appState = {
   willQuit: false,
   configFinalized: false,
