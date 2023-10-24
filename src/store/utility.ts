@@ -195,7 +195,7 @@ export class AccentDiff {
   }
 
   /**
-   * モーラのパッチ配列を作成するメンバ関数
+   * 変更前と変更後のモーラをフラット化し、変更後のモーラテキストに対応するようにフラット化した変更前のモーラ配列を操作する
    */
   createDiffPatch() {
     const before = structuredClone(this.beforeAccent);
@@ -223,7 +223,7 @@ export class AccentDiff {
     return beforeFlatArray;
   }
   /**
-   * 変更後のアクセント句に、モーラパッチ配列を適用するメンバ関数
+   * 変更後のアクセント句に、createDiffPatchで作成したモーラ配列を適用し、各モーラ配列のテキストが一致したら、変更前のモーラを変更後のモーラに渡す
    */
   mergeAccentPhrases() {
     const after = structuredClone(this.afterAccent);
