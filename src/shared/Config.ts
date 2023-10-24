@@ -89,7 +89,7 @@ export type Metadata = {
  * 保存呼び出しのカウンターを用意する。
  * set（save）が呼ばれる度、カウンターをインクリメントし、保存のPromiseをspawnする。
  *
- * 必ず保存されることを保証する時（アプリ終了時など）は、await finalize()を呼ぶ。
+ * 必ず保存されることを保証したい時（アプリ終了時など）は、await ensureSaved()を呼ぶ。
  */
 export abstract class BaseConfig {
   protected data: ConfigType | undefined;
@@ -134,28 +134,36 @@ export abstract class BaseConfig {
 
   private _save() {
     this.saveCounter++;
-    (async () => {
-      try {
-        this.save({
-          ...configSchema.parse({
-            ...this.data,
-          }),
-          __internal__: {
-            migrations: {
-              version: this.getAppVersion(),
-            },
-          },
-        });
-      } finally {
-        this.saveCounter--;
-      }
-    })();
+    this.save({
+      ...configSchema.parse({
+        ...this.data,
+      }),
+      __internal__: {
+        migrations: {
+          version: this.getAppVersion(),
+        },
+      },
+    }).finally(() => {
+      this.saveCounter--;
+    });
   }
 
-  async ensureSaved() {
-    while (this.saveCounter > 0) {
+  ensureSaved(): Promise<void> | "alreadySaved" {
+    if (this.saveCounter === 0) {
+      return "alreadySaved";
+    }
+
+    return this._ensureSaved();
+  }
+
+  private async _ensureSaved(): Promise<void> {
+    // 10秒待っても保存が終わらなかったら諦める
+    for (let i = 0; i < 100; i++) {
       // 他のスレッドに処理を譲る
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (this.saveCounter === 0) {
+        return;
+      }
     }
   }
 

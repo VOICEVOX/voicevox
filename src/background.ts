@@ -342,7 +342,6 @@ const privacyPolicyText = fs.readFileSync(
 
 const appState = {
   willQuit: false,
-  configFinalized: false,
 };
 let filePathOnMac: string | undefined = undefined;
 // create window
@@ -919,31 +918,36 @@ app.on("before-quit", async (event) => {
     return;
   }
 
-  if (appState.configFinalized) {
-    log.info("Config already finalized. Quitting app");
-    return;
-  }
-
   log.info("Checking ENGINE status before app quit");
   const engineCleanupResult = cleanupEngines();
+  const configSavedResult = config.ensureSaved();
 
-  // エンジンの停止とエンジン終了後処理が完了している
-  if (engineCleanupResult == "alreadyCompleted") {
-    log.info("Post engine kill process done. Finalizing config");
-    event.preventDefault();
-    await config.ensureSaved();
-    appState.configFinalized = true;
-    app.quit();
+  // - エンジンの停止
+  // - エンジン終了後処理
+  // - 設定ファイルの保存
+  // が完了している
+  if (
+    engineCleanupResult === "alreadyCompleted" &&
+    configSavedResult === "alreadySaved"
+  ) {
+    log.info("Post engine kill process and config save done. Quitting app");
     return;
   }
 
   // すべてのエンジンプロセスのキルを開始
 
   // 同期的にbefore-quitイベントをキャンセル
-  log.info("Interrupt app quit to kill ENGINE processes");
+  log.info("Interrupt app quit");
   event.preventDefault();
 
-  await engineCleanupResult;
+  if (engineCleanupResult !== "alreadyCompleted") {
+    log.info("Waiting for post engine kill process");
+    await engineCleanupResult;
+  }
+  if (configSavedResult !== "alreadySaved") {
+    log.info("Waiting for config save");
+    await configSavedResult;
+  }
 
   // アプリケーションの終了を再試行する
   log.info("Attempting to quit app again");
