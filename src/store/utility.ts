@@ -237,8 +237,8 @@ export class AccentDiff {
         MoraIndex < after[accentIndex]["moras"].length;
         MoraIndex++
       ) {
-        // 文字列が検出されたとき、何もせず次のモーラへ移動
-        if (typeof MoraPatch[beforeIndex] === "undefined") {
+        // undefinedのとき、何もせず次のモーラへ移動
+        if (MoraPatch[beforeIndex] == undefined) {
           beforeIndex++;
           continue;
         }
