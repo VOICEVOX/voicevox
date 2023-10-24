@@ -2,7 +2,7 @@ import path from "path";
 import { Platform } from "quasar";
 import { diffArrays } from "diff";
 import { ToolbarButtonTagType, isMac } from "@/type/preload";
-import { AccentPhrase } from "@/openapi";
+import { AccentPhrase, Mora } from "@/openapi";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 
@@ -186,8 +186,7 @@ export class AccentDiff {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  createFlatArray(collection: AccentPhrase[], Key: string) {
-    const targetAccent = JSON.parse(JSON.stringify(collection));
+  createFlatArray(targetAccent: any[], Key: string) {
     const result = [];
     for (const element of targetAccent) {
       result.push(element[Key]);
