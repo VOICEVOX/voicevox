@@ -73,7 +73,7 @@ const beforeUserDataDir = app.getPath("userData"); // マイグレーション�
 
 // app.getPath("userData")を呼ぶとディレクトリが作成されてしまうため空なら削除する。
 try {
-  fs.rmdirSync(beforeUserDataDir, {recursive: false});
+  fs.rmdirSync(beforeUserDataDir, { recursive: false });
 } catch (e) {
   const err = e as NodeJS.ErrnoException;
   if (err?.code !== "ENOTEMPTY") {
