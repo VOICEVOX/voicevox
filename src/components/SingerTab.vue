@@ -21,7 +21,7 @@ export default defineComponent({
     onMounted(async () => {
       return null;
     });
-    return null;
+    return {};
   },
 });
 </script>

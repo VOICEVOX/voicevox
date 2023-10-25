@@ -9,7 +9,7 @@ export default defineComponent({
   name: "SingScorePosition",
 
   setup() {
-    return null;
+    return {};
   },
 });
 </script>
