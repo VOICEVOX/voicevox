@@ -366,8 +366,10 @@ const resetHotkey = async (action: string) => {
         }
         // デフォルトが未設定でない場合は、衝突チェックを行う
         if (setting.combination) {
-          const duplicated = hotkeySettings.value.find((item) =>
-              item.combination == setting.combination && item.action != action);
+          const duplicated = hotkeySettings.value.find(
+            (item) =>
+              item.combination == setting.combination && item.action != action
+          );
           if (duplicated !== undefined) {
             openHotkeyDialog(action);
             lastRecord.value = duplicated.combination;
