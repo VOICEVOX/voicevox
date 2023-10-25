@@ -12,21 +12,21 @@ import {
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
     ">=0.13",
-    (store) => {
+    (config) => {
       // acceptTems -> acceptTerms
       const prevIdentifier = "acceptTems";
-      const prevValue = store[prevIdentifier] as AcceptTermsStatus | undefined;
+      const prevValue = config[prevIdentifier] as AcceptTermsStatus | undefined;
       if (prevValue) {
-        delete store[prevIdentifier];
-        store.acceptTerms = prevValue;
+        delete config[prevIdentifier];
+        config.acceptTerms = prevValue;
       }
 
-      return store;
+      return config;
     },
   ],
   [
     ">=0.14",
-    (store) => {
+    (config) => {
       // FIXME: できるならEngineManagerからEngineIDを取得したい
       let engineId: EngineId;
       if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined) {
@@ -44,32 +44,64 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       }
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
-      const prevDefaultStyleIds = store.defaultStyleIds as DefaultStyleId[];
-      store.defaultStyleIds = prevDefaultStyleIds.map((defaultStyle) => ({
+      const prevDefaultStyleIds = config.defaultStyleIds as DefaultStyleId[];
+      config.defaultStyleIds = prevDefaultStyleIds.map((defaultStyle) => ({
         engineId,
         speakerUuid: defaultStyle.speakerUuid,
         defaultStyleId: defaultStyle.defaultStyleId,
       }));
 
       const outputSamplingRate: number = (
-        store.savingSetting as { outputSamplingRate: number }
+        config.savingSetting as { outputSamplingRate: number }
       ).outputSamplingRate;
       const engineSettings: ConfigType["engineSettings"] = {};
       engineSettings[engineId] = {
-        useGpu: store.useGpu as boolean,
+        useGpu: config.useGpu as boolean,
         outputSamplingRate:
           outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
       };
-      store.engineSettings = engineSettings;
+      config.engineSettings = engineSettings;
 
-      const savingSetting = store.savingSetting as ConfigType["savingSetting"];
+      const savingSetting = config.savingSetting as ConfigType["savingSetting"];
       // @ts-expect-error 削除されたパラメータ。
       delete savingSetting.outputSamplingRate;
-      store.savingSetting = savingSetting;
+      config.savingSetting = savingSetting;
 
-      delete store.useGpu;
+      delete config.useGpu;
 
-      return store;
+      return config;
+    },
+  ],
+  [
+    ">=0.15",
+    (config) => {
+      const hotkeySettings =
+        config.hotkeySettings as ConfigType["hotkeySettings"];
+      const newHotkeySettings: ConfigType["hotkeySettings"] =
+        hotkeySettings.map((hotkeySetting) => {
+          /// @ts-expect-error 名前変更なので合わない。
+          if (hotkeySetting.action === "一つだけ書き出し") {
+            return {
+              ...hotkeySetting,
+              action: "選択音声を書き出し",
+            };
+          }
+          return hotkeySetting;
+        });
+      config.hotkeySettings = newHotkeySettings;
+
+      const toolbarSetting =
+        config.toolbarSetting as ConfigType["toolbarSetting"];
+      const newToolbarSetting: ConfigType["toolbarSetting"] =
+        toolbarSetting.map((toolbarSetting) =>
+          // @ts-expect-error 名前変更なので合わない。
+          toolbarSetting === "EXPORT_AUDIO_ONE"
+            ? "EXPORT_AUDIO_SELECTED"
+            : toolbarSetting
+        );
+      config.toolbarSetting = newToolbarSetting;
+
+      return config;
     },
   ],
 ];
