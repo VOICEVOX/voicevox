@@ -15,6 +15,7 @@ import { dictionaryStore } from "@/store/dictionary";
 import { engineStore } from "@/store/engine";
 import { singingStore } from "@/store/singing";
 import { EngineId } from "@/type/preload";
+import { createEmptyScore } from "@/helpers/singHelper";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -148,6 +149,7 @@ describe("store/vuex.js test", () => {
         progress: -1,
         isVuexReady: false,
         defaultPresetKeys: {},
+        score: createEmptyScore(),
         isShowSinger: true,
         sequencerZoomX: 1,
         sequencerZoomY: 1,
