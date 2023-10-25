@@ -2,10 +2,10 @@ import { join } from "path";
 import fs from "fs";
 import { app, dialog, shell } from "electron";
 import log from "electron-log";
-import { BaseConfig, Metadata } from "@/shared/Config";
+import { BaseConfigManager, Metadata } from "@/shared/ConfigManager";
 import { ConfigType } from "@/type/preload";
 
-export class ElectronConfig extends BaseConfig {
+export class ElectronConfigManager extends BaseConfigManager {
   getAppVersion() {
     return app.getVersion();
   }
@@ -21,10 +21,10 @@ export class ElectronConfig extends BaseConfig {
     return JSON.parse(await fs.promises.readFile(this.configPath, "utf-8"));
   }
 
-  public async save(data: ConfigType) {
+  public async save(config: ConfigType) {
     await fs.promises.writeFile(
       this.configPath,
-      JSON.stringify(data, undefined, 2)
+      JSON.stringify(config, undefined, 2)
     );
   }
 
@@ -33,12 +33,12 @@ export class ElectronConfig extends BaseConfig {
   }
 }
 
-let config: ElectronConfig | undefined;
+let config: ElectronConfigManager | undefined;
 
-export function getConfig(): ElectronConfig {
+export function getConfig(): ElectronConfigManager {
   try {
     if (!config) {
-      config = new ElectronConfig();
+      config = new ElectronConfigManager();
     }
     return config;
   } catch (e) {

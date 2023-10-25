@@ -25,7 +25,7 @@ import {
   minimumEngineManifestSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
-import { BaseConfig } from "@/shared/Config";
+import { BaseConfigManager } from "@/shared/ConfigManager";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -67,7 +67,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 }
 
 export class EngineManager {
-  config: BaseConfig;
+  config: BaseConfigManager;
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
@@ -84,7 +84,7 @@ export class EngineManager {
     vvppEngineDir,
     onEngineProcessError,
   }: {
-    config: BaseConfig;
+    config: BaseConfigManager;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;

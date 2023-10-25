@@ -91,14 +91,14 @@ export type Metadata = {
  *
  * 必ず保存されることを保証したい時（アプリ終了時など）は、await ensureSaved()を呼ぶ。
  */
-export abstract class BaseConfig {
-  protected data: ConfigType | undefined;
+export abstract class BaseConfigManager {
+  protected config: ConfigType | undefined;
 
   private saveCounter = 0;
 
   abstract exists(): Promise<boolean>;
   abstract load(): Promise<Record<string, unknown> & Metadata>;
-  abstract save(data: ConfigType & Metadata): Promise<void>;
+  abstract save(config: ConfigType & Metadata): Promise<void>;
 
   abstract getAppVersion(): string;
 
@@ -111,10 +111,10 @@ export abstract class BaseConfig {
           migration(data);
         }
       }
-      this.data = this.migrateHotkeySettings(configSchema.parse(data));
+      this.config = this.migrateHotkeySettings(configSchema.parse(data));
     } else {
       const defaultConfig = configSchema.parse({});
-      this.data = defaultConfig;
+      this.config = defaultConfig;
     }
     this._save();
 
@@ -122,13 +122,13 @@ export abstract class BaseConfig {
   }
 
   public get<K extends keyof ConfigType>(key: K): ConfigType[K] {
-    if (!this.data) throw new Error("Config is not initialized");
-    return this.data[key];
+    if (!this.config) throw new Error("Config is not initialized");
+    return this.config[key];
   }
 
   public set<K extends keyof ConfigType>(key: K, value: ConfigType[K]) {
-    if (!this.data) throw new Error("Config is not initialized");
-    this.data[key] = value;
+    if (!this.config) throw new Error("Config is not initialized");
+    this.config[key] = value;
     this._save();
   }
 
@@ -136,7 +136,7 @@ export abstract class BaseConfig {
     this.saveCounter++;
     this.save({
       ...configSchema.parse({
-        ...this.data,
+        ...this.config,
       }),
       __internal__: {
         migrations: {
