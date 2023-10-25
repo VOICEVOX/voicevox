@@ -720,7 +720,7 @@ export type Tempo = {
 };
 
 export type TimeSignature = {
-  position: number;
+  measureNumber: number;
   beats: number;
   beatType: number;
 };
@@ -795,8 +795,8 @@ export type SingingStoreTypes = {
   };
 
   REMOVE_TIME_SIGNATURE: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
+    mutation: { measureNumber: number };
+    action(payload: { measureNumber: number }): void;
   };
 
   ADD_NOTE: {

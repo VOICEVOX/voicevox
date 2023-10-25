@@ -21,6 +21,7 @@ import {
   //watch,
 } from "vue";
 import { useStore } from "@/store";
+import { createEmptyScore } from "@/helpers/singHelper";
 // import { QResizeObserver, useQuasar } from "quasar";
 // import path from "path";
 
@@ -48,6 +49,7 @@ export default defineComponent({
 
     // 歌声合成エディターの初期化
     onMounted(async () => {
+      await store.dispatch("SET_SCORE", { score: createEmptyScore() });
       await store.dispatch("SET_SINGER", {});
 
       await store.dispatch("SET_VOLUME", { volume: 0.3 });

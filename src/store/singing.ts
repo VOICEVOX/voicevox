@@ -29,7 +29,14 @@ import {
 } from "@/infrastructures/AudioRenderer";
 import { EngineId, StyleId } from "@/type/preload";
 import {
+  BEAT_TYPES,
+  DEFAULT_BEATS,
+  DEFAULT_BEAT_TYPE,
+  DEFAULT_TEMPO,
+  DEFAULT_TPQN,
+  createEmptyScore,
   getDoremiFromNoteNumber,
+  getMeasureDuration,
   isValidSnapType,
   noteNumberToFrequency,
   round,
@@ -187,6 +194,14 @@ const generateAudioQueryHash = async (obj: AudioQuery) => {
   return _generateHash(obj);
 };
 
+const isValidTpqn = (tpqn: number) => {
+  return (
+    Number.isInteger(tpqn) &&
+    BEAT_TYPES.every((value) => tpqn % value === 0) &&
+    tpqn % 3 === 0
+  );
+};
+
 const isValidTempo = (tempo: Tempo) => {
   return (
     Number.isInteger(tempo.position) &&
@@ -196,14 +211,17 @@ const isValidTempo = (tempo: Tempo) => {
   );
 };
 
+const isValidBeatType = (beatType: number) => {
+  return Number.isInteger(beatType) && BEAT_TYPES.includes(beatType);
+};
+
 const isValidTimeSignature = (timeSignature: TimeSignature) => {
   return (
-    Number.isInteger(timeSignature.position) &&
+    Number.isInteger(timeSignature.measureNumber) &&
     Number.isInteger(timeSignature.beats) &&
-    Number.isInteger(timeSignature.beatType) &&
-    timeSignature.position >= 0 &&
+    timeSignature.measureNumber > 0 &&
     timeSignature.beats > 0 &&
-    timeSignature.beatType > 0
+    isValidBeatType(timeSignature.beatType)
   );
 };
 
@@ -230,9 +248,13 @@ const isValidTempos = (tempos: Tempo[]) => {
 const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
   return (
     timeSignatures.length > 0 &&
-    timeSignatures[0].position === 0 &&
+    timeSignatures[0].measureNumber === 1 &&
     timeSignatures.every((value) => isValidTimeSignature(value))
   );
+};
+
+const isValidNotes = (notes: Note[]) => {
+  return notes.every((value) => isValidNote(value));
 };
 
 const getFromOptional = <T>(value: T | undefined): T => {
@@ -240,31 +262,6 @@ const getFromOptional = <T>(value: T | undefined): T => {
     throw new Error("The value is undefined.");
   }
   return value;
-};
-
-const DEFAULT_TPQN = 480;
-const DEFAULT_TEMPO = 120;
-const DEFAULT_BEATS = 4;
-const DEFAULT_BEAT_TYPE = 4;
-
-const createEmptyScore = (): Score => {
-  return {
-    tpqn: DEFAULT_TPQN,
-    tempos: [
-      {
-        position: 0,
-        tempo: DEFAULT_TEMPO,
-      },
-    ],
-    timeSignatures: [
-      {
-        position: 0,
-        beats: DEFAULT_BEATS,
-        beatType: DEFAULT_BEAT_TYPE,
-      },
-    ],
-    notes: [],
-  };
 };
 
 let audioContext: AudioContext | undefined;
@@ -379,11 +376,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { state, getters, commit, dispatch },
       { score }: { score: Score }
     ) {
+      if (!isValidTpqn(score.tpqn)) {
+        throw new Error("The tpqn is invalid.");
+      }
       if (!isValidTempos(score.tempos)) {
         throw new Error("The tempos are invalid.");
       }
       if (!isValidTimeSignatures(score.timeSignatures)) {
         throw new Error("The time signatures are invalid.");
+      }
+      if (!isValidNotes(score.notes)) {
+        throw new Error("The notes are invalid.");
       }
       if (!transport) {
         throw new Error("transport is undefined.");
@@ -484,14 +487,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { timeSignature }: { timeSignature: TimeSignature }) {
       const score = getFromOptional(state.score);
       const index = score.timeSignatures.findIndex((value) => {
-        return value.position === timeSignature.position;
+        return value.measureNumber === timeSignature.measureNumber;
       });
       const timeSignatures = [...score.timeSignatures];
       if (index !== -1) {
         timeSignatures.splice(index, 1, timeSignature);
       } else {
         timeSignatures.push(timeSignature);
-        timeSignatures.sort((a, b) => a.position - b.position);
+        timeSignatures.sort((a, b) => a.measureNumber - b.measureNumber);
       }
       score.timeSignatures = timeSignatures;
     },
@@ -508,10 +511,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   REMOVE_TIME_SIGNATURE: {
-    mutation(state, { position }: { position: number }) {
+    mutation(state, { measureNumber }: { measureNumber: number }) {
       const score = getFromOptional(state.score);
       const index = score.timeSignatures.findIndex((value) => {
-        return value.position === position;
+        return value.measureNumber === measureNumber;
       });
       if (index === -1) {
         throw new Error("The time signature does not exist.");
@@ -519,7 +522,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const timeSignatures = [...score.timeSignatures];
       if (index === 0) {
         timeSignatures.splice(index, 1, {
-          position: 0,
+          measureNumber: 1,
           beats: DEFAULT_BEATS,
           beatType: DEFAULT_BEAT_TYPE,
         });
@@ -529,15 +532,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       score.timeSignatures = timeSignatures;
     },
     // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
-    async action({ state, commit }, { position }: { position: number }) {
+    async action(
+      { state, commit },
+      { measureNumber }: { measureNumber: number }
+    ) {
       const score = getFromOptional(state.score);
       const exists = score.timeSignatures.some((value) => {
-        return value.position === position;
+        return value.measureNumber === measureNumber;
       });
       if (!exists) {
         throw new Error("The time signature does not exist.");
       }
-      commit("REMOVE_TIME_SIGNATURE", { position });
+      commit("REMOVE_TIME_SIGNATURE", { measureNumber });
     },
   },
 
@@ -1346,7 +1352,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return timeSignatures.filter((value, index, array) => {
             return (
               index === array.length - 1 ||
-              value.position !== array[index + 1].position
+              value.measureNumber !== array[index + 1].measureNumber
             );
           });
         };
@@ -1406,19 +1412,32 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
         tempos = removeDuplicateTempos(tempos);
 
-        let timeSignatures = midiTimeSignatures.map((value): TimeSignature => {
-          return {
-            position: convertPosition(value.ticks, midiTpqn, tpqn),
-            beats: value.timeSignature[0],
-            beatType: value.timeSignature[1],
-          };
-        });
+        let timeSignatures: TimeSignature[] = [];
+        let tsPosition = 0;
+        let measureNumber = 1;
+        for (let i = 0; i < midiTimeSignatures.length; i++) {
+          const midiTs = midiTimeSignatures[i];
+          const beats = midiTs.timeSignature[0];
+          const beatType = midiTs.timeSignature[1];
+          timeSignatures.push({ measureNumber, beats, beatType });
+          if (i < midiTimeSignatures.length - 1) {
+            const nextTsTicks = midiTimeSignatures[i + 1].ticks;
+            const nextTsPos = convertPosition(nextTsTicks, midiTpqn, tpqn);
+            const tsDuration = nextTsPos - tsPosition;
+            const measureDuration = getMeasureDuration(beats, beatType, tpqn);
+            tsPosition = nextTsPos;
+            measureNumber += tsDuration / measureDuration;
+          }
+        }
         timeSignatures.unshift({
-          position: 0,
+          measureNumber: 1,
           beats: DEFAULT_BEATS,
           beatType: DEFAULT_BEAT_TYPE,
         });
         timeSignatures = removeDuplicateTimeSignatures(timeSignatures);
+
+        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
 
         await dispatch("SET_SCORE", {
           score: {
@@ -1453,15 +1472,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           );
         }
 
-        const getMeasureDuration = (
-          beats: number,
-          beatType: number,
-          tpqn: number
-        ) => {
-          const wholeNoteDuration = tpqn * 4;
-          return Math.round((wholeNoteDuration / beatType) * beats);
-        };
-
         const tpqn = DEFAULT_TPQN;
         const tempos: Tempo[] = [
           {
@@ -1471,7 +1481,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         ];
         const timeSignatures: TimeSignature[] = [
           {
-            position: 0,
+            measureNumber: 1,
             beats: DEFAULT_BEATS,
             beatType: DEFAULT_BEAT_TYPE,
           },
@@ -1480,6 +1490,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         let divisions = 1;
         let position = 0;
+        let measureNumber = 1;
         let measurePosition = 0;
         let measureDuration = getMeasureDuration(
           timeSignatures[0].beats,
@@ -1603,12 +1614,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           measureDuration = getMeasureDuration(beats, beatType, tpqn);
           if (timeSignatures.length !== 0) {
             const lastTimeSignature = timeSignatures[timeSignatures.length - 1];
-            if (lastTimeSignature.position === position) {
+            if (lastTimeSignature.measureNumber === measureNumber) {
               timeSignatures.pop();
             }
           }
           timeSignatures.push({
-            position,
+            measureNumber,
             beats,
             beatType,
           });
@@ -1705,6 +1716,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const parseMeasure = (measureElement: Element) => {
           measurePosition = position;
+          measureNumber = getAttributeAsNumber(measureElement, "number");
           for (const childElement of measureElement.children) {
             if (childElement.tagName === "direction") {
               parseDirection(childElement);
@@ -1745,6 +1757,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         parseMusicXml(xmlStr);
+
+        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
 
         await dispatch("SET_SCORE", {
           score: {

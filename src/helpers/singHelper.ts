@@ -1,10 +1,51 @@
-import { Note } from "@/store/type";
+import { Note, Score, Tempo, TimeSignature } from "@/store/type";
+
+export const BEAT_TYPES = [2, 4, 8, 16];
+
+export const DEFAULT_TPQN = 480;
+export const DEFAULT_TEMPO = 120;
+export const DEFAULT_BEATS = 4;
+export const DEFAULT_BEAT_TYPE = 4;
 
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_NOTE_NUMBER = 30;
 
 export function noteNumberToFrequency(noteNumber: number) {
   return 440 * 2 ** ((noteNumber - 69) / 12);
+}
+
+// NOTE: 戻り値の単位はtick
+export function getTimeSignaturePositions(
+  timeSignatures: TimeSignature[],
+  tpqn: number
+) {
+  const tsPositions: number[] = [0];
+  for (let i = 0; i < timeSignatures.length - 1; i++) {
+    const ts = timeSignatures[i];
+    const tsPosition = tsPositions[i];
+    const nextTs = timeSignatures[i + 1];
+    const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
+    const numOfMeasures = nextTs.measureNumber - ts.measureNumber;
+    const nextTsPosition = tsPosition + measureDuration * numOfMeasures;
+    tsPositions.push(nextTsPosition);
+  }
+  return tsPositions;
+}
+
+export function tickToMeasureNumber(
+  ticks: number,
+  timeSignatures: TimeSignature[],
+  tpqn: number
+) {
+  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
+  const nextTsIndex = tsPositions.findIndex((value) => ticks < value);
+  const lastTsIndex = tsPositions.length - 1;
+  const tsIndex = nextTsIndex !== -1 ? nextTsIndex - 1 : lastTsIndex;
+  const ts = timeSignatures[tsIndex];
+  const tsPosition = tsPositions[tsIndex];
+  const ticksWithinTs = ticks - tsPosition;
+  const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
+  return ts.measureNumber + Math.floor(ticksWithinTs / measureDuration);
 }
 
 // NOTE: 戻り値の単位はtick
@@ -17,14 +58,24 @@ export function getMeasureDuration(
   return (wholeNoteDuration / beatType) * beats;
 }
 
-// TODO: getNumOfMeasuresに変更する
-export function getMeasureNum(notes: Note[], measureDuration: number) {
-  if (notes.length === 0) {
-    return 0;
+export function getNumOfMeasures(
+  notes: Note[],
+  tempos: Tempo[],
+  timeSignatures: TimeSignature[],
+  tpqn: number
+) {
+  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
+  let maxTicks = 0;
+  const lastTsPosition = tsPositions[tsPositions.length - 1];
+  const lastTempoPosition = tempos[tempos.length - 1].position;
+  maxTicks = Math.max(maxTicks, lastTsPosition);
+  maxTicks = Math.max(maxTicks, lastTempoPosition);
+  if (notes.length > 0) {
+    const lastNote = notes[notes.length - 1];
+    const lastNoteEndPosition = lastNote.position + lastNote.duration;
+    maxTicks = Math.max(maxTicks, lastNoteEndPosition);
   }
-  const lastNote = notes[notes.length - 1];
-  const maxTicks = lastNote.position + lastNote.duration;
-  return Math.ceil(maxTicks / measureDuration);
+  return tickToMeasureNumber(maxTicks, timeSignatures, tpqn);
 }
 
 // NOTE: 戻り値の単位はtick
@@ -159,3 +210,23 @@ export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;
 }
+
+export const createEmptyScore = (): Score => {
+  return {
+    tpqn: DEFAULT_TPQN,
+    tempos: [
+      {
+        position: 0,
+        tempo: DEFAULT_TEMPO,
+      },
+    ],
+    timeSignatures: [
+      {
+        measureNumber: 1,
+        beats: DEFAULT_BEATS,
+        beatType: DEFAULT_BEAT_TYPE,
+      },
+    ],
+    notes: [],
+  };
+};
