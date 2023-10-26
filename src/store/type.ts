@@ -743,7 +743,7 @@ export type Score = {
 export type SingingStoreState = {
   engineId?: EngineId;
   styleId?: StyleId;
-  score?: Score;
+  score: Score;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
   // NOTE: オーディオ再生はボイスと同様もしくは拡張して使う？
