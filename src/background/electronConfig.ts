@@ -1,7 +1,7 @@
 import { join } from "path";
 import fs from "fs";
 import { app, dialog, shell } from "electron";
-import log from "electron-log";
+import log from "electron-log/main";
 import { BaseConfigManager, Metadata } from "@/shared/ConfigManager";
 import { ConfigType } from "@/type/preload";
 
