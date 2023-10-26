@@ -47,7 +47,7 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
     timeout: process.env.CI ? 0 : 60000,
     env: {
       ...process.env,
-      VITE_DEV_SERVER_URL: "http://localhost:5173",
+      VITE_DEV_SERVER_URL: "http://localhost:7357",
     },
   });
 
