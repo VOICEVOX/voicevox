@@ -361,9 +361,22 @@ const resetHotkey = async (action: string) => {
       .getDefaultHotkeySettings()
       .then((defaultSettings: HotkeySetting[]) => {
         const setting = defaultSettings.find((value) => value.action == action);
-        if (setting) {
-          changeHotkeySettings(action, setting.combination);
+        if (setting === undefined) {
+          return;
         }
+        // デフォルトが未設定でない場合は、衝突チェックを行う
+        if (setting.combination) {
+          const duplicated = hotkeySettings.value.find(
+            (item) =>
+              item.combination == setting.combination && item.action != action
+          );
+          if (duplicated !== undefined) {
+            openHotkeyDialog(action);
+            lastRecord.value = duplicated.combination;
+            return;
+          }
+        }
+        changeHotkeySettings(action, setting.combination);
       });
   }
 };

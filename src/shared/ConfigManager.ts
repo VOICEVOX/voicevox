@@ -5,6 +5,8 @@ import {
   EngineId,
   configSchema,
   DefaultStyleId,
+  defaultHotkeySettings,
+  HotkeySetting,
 } from "@/type/preload";
 
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
@@ -104,7 +106,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   ],
 ];
 
-type Metadata = {
+export type Metadata = {
   __internal__: {
     migrations: {
       version: string;
@@ -112,51 +114,131 @@ type Metadata = {
   };
 };
 
-export abstract class BaseConfig {
-  protected data: ConfigType;
+/**
+ * 設定管理の基底クラス
+ *
+ * # ロジックメモ
+ * 保存呼び出しのカウンターを用意する。
+ * set（save）が呼ばれる度、カウンターをインクリメントし、保存のPromiseをspawnする。
+ *
+ * 必ず保存されることを保証したい時（アプリ終了時など）は、await ensureSaved()を呼ぶ。
+ */
+export abstract class BaseConfigManager {
+  protected config: ConfigType | undefined;
 
-  abstract exists(): boolean;
-  abstract load(): Record<string, unknown> & Metadata;
-  abstract save(data: ConfigType & Metadata): void;
+  private saveCounter = 0;
+
+  abstract exists(): Promise<boolean>;
+  abstract load(): Promise<Record<string, unknown> & Metadata>;
+  abstract save(config: ConfigType & Metadata): Promise<void>;
 
   abstract getAppVersion(): string;
 
-  constructor() {
-    if (this.exists()) {
-      const data = this.load();
+  public async initialize(): Promise<this> {
+    if (await this.exists()) {
+      const data = await this.load();
       const version = data.__internal__.migrations.version;
       for (const [versionRange, migration] of migrations) {
         if (!semver.satisfies(version, versionRange)) {
           migration(data);
         }
       }
-      this.data = configSchema.parse(data);
+      this.config = this.migrateHotkeySettings(configSchema.parse(data));
     } else {
       const defaultConfig = configSchema.parse({});
-      this.data = defaultConfig;
+      this.config = defaultConfig;
     }
     this._save();
+
+    return this;
   }
 
   public get<K extends keyof ConfigType>(key: K): ConfigType[K] {
-    return this.data[key];
+    if (!this.config) throw new Error("Config is not initialized");
+    return this.config[key];
   }
 
-  public set<K extends keyof ConfigType>(key: K, value: ConfigType[K]): void {
-    this.data[key] = value;
+  public set<K extends keyof ConfigType>(key: K, value: ConfigType[K]) {
+    if (!this.config) throw new Error("Config is not initialized");
+    this.config[key] = value;
     this._save();
   }
 
-  private _save(): void {
+  private _save() {
+    this.saveCounter++;
     this.save({
       ...configSchema.parse({
-        ...this.data,
+        ...this.config,
       }),
       __internal__: {
         migrations: {
           version: this.getAppVersion(),
         },
       },
+    }).finally(() => {
+      this.saveCounter--;
     });
+  }
+
+  ensureSaved(): Promise<void> | "alreadySaved" {
+    if (this.saveCounter === 0) {
+      return "alreadySaved";
+    }
+
+    return this._ensureSaved();
+  }
+
+  private async _ensureSaved(): Promise<void> {
+    // 10秒待っても保存が終わらなかったら諦める
+    for (let i = 0; i < 100; i++) {
+      // 他のスレッドに処理を譲る
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (this.saveCounter === 0) {
+        return;
+      }
+    }
+  }
+
+  private migrateHotkeySettings(data: ConfigType): ConfigType {
+    const COMBINATION_IS_NONE = "####";
+    const loadedHotkeys = structuredClone(data.hotkeySettings);
+    const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
+      (defaultHotkey) => {
+        const loadedHotkey = loadedHotkeys.find(
+          (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
+        );
+        const hotkeyWithoutCombination: HotkeySetting = {
+          action: defaultHotkey.action,
+          combination: COMBINATION_IS_NONE,
+        };
+        return loadedHotkey || hotkeyWithoutCombination;
+      }
+    );
+    const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
+      if (hotkey.combination === COMBINATION_IS_NONE) {
+        const newHotkey =
+          defaultHotkeySettings.find(
+            (defaultHotkey) => defaultHotkey.action === hotkey.action
+          ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
+        const combinationExists = hotkeysWithoutNewCombination.some(
+          (hotkey) => hotkey.combination === newHotkey.combination
+        );
+        if (combinationExists) {
+          const emptyHotkey: HotkeySetting = {
+            action: newHotkey.action,
+            combination: "",
+          };
+          return emptyHotkey;
+        } else {
+          return newHotkey;
+        }
+      } else {
+        return hotkey;
+      }
+    });
+    return {
+      ...data,
+      hotkeySettings: migratedHotkeys,
+    };
   }
 }
