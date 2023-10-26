@@ -45,7 +45,7 @@ import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-import { getConfig } from "@/background/electronConfig";
+import { getConfigManager } from "@/background/electronConfig";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -148,10 +148,10 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
-const config = getConfig();
+const configManager = getConfigManager();
 
 const engineManager = new EngineManager({
-  config,
+  configManager,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
   onEngineProcessError,
@@ -235,7 +235,7 @@ async function installVvppEngineWithWarning({
  * 無効だった場合はダイアログを表示してfalseを返す。
  */
 function checkMultiEngineEnabled(): boolean {
-  const enabled = config.get("experimentalSetting").enableMultiEngine;
+  const enabled = configManager.get("experimentalSetting").enableMultiEngine;
   if (!enabled) {
     dialog.showMessageBoxSync(win, {
       type: "info",
@@ -351,7 +351,7 @@ async function createWindow() {
     defaultHeight: 600,
   });
 
-  const currentTheme = config.get("currentTheme");
+  const currentTheme = configManager.get("currentTheme");
   const backgroundColor = themes.find((value) => value.name == currentTheme)
     ?.colors.background;
 
@@ -471,14 +471,14 @@ async function launchEngines() {
   engineManager.initializeEngineInfosAndAltPortInfo();
 
   const engineInfos = engineManager.fetchEngineInfos();
-  const engineSettings = config.get("engineSettings");
+  const engineSettings = configManager.get("engineSettings");
   for (const engineInfo of engineInfos) {
     if (!engineSettings[engineInfo.uuid]) {
       // 空オブジェクトをパースさせることで、デフォルト値を取得する
       engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
     }
   }
-  config.set("engineSettings", engineSettings);
+  configManager.set("engineSettings", engineSettings);
 
   await engineManager.runEngineAll();
 }
@@ -773,25 +773,25 @@ ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData != undefined) {
-    const hotkeySettings = config.get("hotkeySettings");
+    const hotkeySettings = configManager.get("hotkeySettings");
     const hotkeySetting = hotkeySettings.find(
       (hotkey) => hotkey.action == newData.action
     );
     if (hotkeySetting != undefined) {
       hotkeySetting.combination = newData.combination;
     }
-    config.set("hotkeySettings", hotkeySettings);
+    configManager.set("hotkeySettings", hotkeySettings);
   }
-  return config.get("hotkeySettings");
+  return configManager.get("hotkeySettings");
 });
 
 ipcMainHandle("THEME", (_, { newData }) => {
   if (newData != undefined) {
-    config.set("currentTheme", newData);
+    configManager.set("currentTheme", newData);
     return;
   }
   return {
-    currentTheme: config.get("currentTheme"),
+    currentTheme: configManager.get("currentTheme"),
     availableThemes: themes,
   };
 });
@@ -820,18 +820,18 @@ ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
 });
 
 ipcMainHandle("GET_SETTING", (_, key) => {
-  return config.get(key);
+  return configManager.get(key);
 });
 
 ipcMainHandle("SET_SETTING", (_, key, newValue) => {
-  config.set(key, newValue);
-  return config.get(key);
+  configManager.set(key, newValue);
+  return configManager.get(key);
 });
 
 ipcMainHandle("SET_ENGINE_SETTING", async (_, engineId, engineSetting) => {
-  const engineSettings = config.get("engineSettings");
+  const engineSettings = configManager.get("engineSettings");
   engineSettings[engineId] = engineSetting;
-  config.set(`engineSettings`, engineSettings);
+  configManager.set(`engineSettings`, engineSettings);
 });
 
 ipcMainHandle("SET_NATIVE_THEME", (_, source) => {
@@ -920,7 +920,7 @@ app.on("before-quit", async (event) => {
 
   log.info("Checking ENGINE status before app quit");
   const engineCleanupResult = cleanupEngines();
-  const configSavedResult = config.ensureSaved();
+  const configSavedResult = configManager.ensureSaved();
 
   // - エンジンの停止
   // - エンジン終了後処理
@@ -964,7 +964,7 @@ app.once("will-finish-launching", () => {
 });
 
 app.on("ready", async () => {
-  await config.initialize();
+  await configManager.initialize();
 
   if (isDevelopment && !isTest) {
     try {

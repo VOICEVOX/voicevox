@@ -33,14 +33,14 @@ export class ElectronConfigManager extends BaseConfigManager {
   }
 }
 
-let config: ElectronConfigManager | undefined;
+let configManager: ElectronConfigManager | undefined;
 
-export function getConfig(): ElectronConfigManager {
+export function getConfigManager(): ElectronConfigManager {
   try {
-    if (!config) {
-      config = new ElectronConfigManager();
+    if (!configManager) {
+      configManager = new ElectronConfigManager();
     }
-    return config;
+    return configManager;
   } catch (e) {
     log.error(e);
     app.whenReady().then(() => {
@@ -65,7 +65,7 @@ export function getConfig(): ElectronConfigManager {
           }
         })
         .finally(async () => {
-          await config?.ensureSaved();
+          await configManager?.ensureSaved();
           app.exit(1);
         });
     });

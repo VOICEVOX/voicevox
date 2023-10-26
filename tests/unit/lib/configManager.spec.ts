@@ -44,9 +44,9 @@ it("新規作成できる", async () => {
     async () => undefined
   );
 
-  const config = new TestConfigManager();
-  await config.initialize();
-  expect(config).toBeTruthy();
+  const configManager = new TestConfigManager();
+  await configManager.initialize();
+  expect(configManager).toBeTruthy();
 });
 
 it("バージョンが保存される", async () => {
@@ -57,9 +57,9 @@ it("バージョンが保存される", async () => {
     .spyOn(TestConfigManager.prototype, "save")
     .mockImplementation(async () => undefined);
 
-  const config = new TestConfigManager();
-  await config.initialize();
-  await config.ensureSaved();
+  const configManager = new TestConfigManager();
+  await configManager.initialize();
+  await configManager.ensureSaved();
   expect(saveSpy).toHaveBeenCalled();
   const savedData = saveSpy.mock.calls[0][0];
   expect(savedData.__internal__.migrations.version).toBe("999.999.999");
@@ -77,9 +77,9 @@ for (const [version, data] of pastConfigs) {
       async () => data
     );
 
-    const config = new TestConfigManager();
-    await config.initialize();
-    expect(config).toBeTruthy();
+    const configManager = new TestConfigManager();
+    await configManager.initialize();
+    expect(configManager).toBeTruthy();
   });
 }
 
@@ -97,9 +97,9 @@ it("getできる", async () => {
     })
   );
 
-  const config = new TestConfigManager();
-  await config.initialize();
-  expect(config.get("inheritAudioInfo")).toBe(false);
+  const configManager = new TestConfigManager();
+  await configManager.initialize();
+  expect(configManager.get("inheritAudioInfo")).toBe(false);
 });
 
 it("setできる", async () => {
@@ -116,8 +116,8 @@ it("setできる", async () => {
     })
   );
 
-  const config = new TestConfigManager();
-  await config.initialize();
-  config.set("inheritAudioInfo", true);
-  expect(config.get("inheritAudioInfo")).toBe(true);
+  const configManager = new TestConfigManager();
+  await configManager.initialize();
+  configManager.set("inheritAudioInfo", true);
+  expect(configManager.get("inheritAudioInfo")).toBe(true);
 });
