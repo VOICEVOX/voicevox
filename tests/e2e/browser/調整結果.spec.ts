@@ -1,11 +1,8 @@
 import { test, expect, Page } from "@playwright/test";
-import { toggleSetting, navigateToMain } from "../navigators";
+import { toggleSetting, navigateToMain, gotoHome } from "../navigators";
 
-test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
-});
+test.beforeEach(gotoHome);
+
 /**
  * イントネーションのスライダーの値をnumber[][]として取得する
  * @param page

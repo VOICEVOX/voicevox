@@ -1,12 +1,8 @@
 import { test, expect, Page } from "@playwright/test";
 
-import { navigateToMain } from "../navigators";
+import { gotoHome, navigateToMain } from "../navigators";
 
-test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
-});
+test.beforeEach(gotoHome);
 
 function getNthAccentPhraseInput({ page, n }: { page: Page; n: number }) {
   return page.getByLabel(`${n + 1}番目のアクセント区間の読み`);

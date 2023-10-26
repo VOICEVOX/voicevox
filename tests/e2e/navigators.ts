@@ -2,6 +2,15 @@ import { expect, Page } from "@playwright/test";
 import { getNewestQuasarDialog, getQuasarMenu } from "./locators";
 
 /**
+ * /#/homeに移動
+ */
+export async function gotoHome({ page }: { page: Page }) {
+  const BASE_URL = "http://localhost:7357/#/home";
+  await page.setViewportSize({ width: 800, height: 600 });
+  await page.goto(BASE_URL);
+}
+
+/**
  * 初回起動時の確認を完了してメイン画面に移動
  */
 export async function navigateToMain(page: Page) {
@@ -34,7 +43,7 @@ export async function toggleSetting(page: Page, settingName: string) {
     .click();
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "設定を閉じる" }).click();
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(500);
 }
 
 /**

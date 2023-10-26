@@ -1,12 +1,8 @@
 import { test, expect, Locator } from "@playwright/test";
 
-import { navigateToMain, toggleSetting } from "../navigators";
+import { gotoHome, navigateToMain, toggleSetting } from "../navigators";
 
-test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
-});
+test.beforeEach(gotoHome);
 
 async function validateValue(locator: Locator, expectedValue: string) {
   const value = await locator.evaluate((e: HTMLInputElement) => e.value);
