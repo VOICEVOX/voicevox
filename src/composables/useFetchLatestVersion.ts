@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import semver from "semver";
+import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
 
 // 最新版があるか調べる
 export const useFetchLatestVersion = () => {
@@ -45,5 +46,26 @@ export const useFetchLatestVersion = () => {
         });
     });
 
-  return { isCheckingFinished, latestVersion };
+  return { isCheckingFinished, currentVersion, latestVersion };
+};
+
+// 最新の更新情報を取得する
+export const useFetchLatestUpdateInfos = () => {
+  const latestUpdateInfos = ref<UpdateInfoObject[]>();
+
+  fetch(
+    "https://raw.githubusercontent.com/VOICEVOX/voicevox_blog/master/src/data/updateInfos.json"
+  )
+    .then((response) => {
+      if (!response.ok) throw new Error("Network response was not ok.");
+      return response.json();
+    })
+    .then((json) => {
+      latestUpdateInfos.value = json;
+    })
+    .catch((err) => {
+      throw new Error(err);
+    });
+
+  return latestUpdateInfos;
 };

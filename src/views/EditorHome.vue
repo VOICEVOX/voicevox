@@ -3,11 +3,11 @@
 
   <q-layout reveal elevated container class="layout-container">
     <header-bar />
-    <update-notification-dialog />
 
     <q-page-container>
       <q-page class="main-row-panes">
         <progress-dialog />
+        <update-notification-dialog />
 
         <!-- TODO: 複数エンジン対応 -->
         <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
