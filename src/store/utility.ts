@@ -186,9 +186,9 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  createFlatArray(targetAccent: any[], Key: string) {
+  createFlatArray(collection: any[], Key: string) {
     const result = [];
-    for (const element of targetAccent) {
+    for (const element of collection) {
       result.push(element[Key]);
     }
     return result.flat();
