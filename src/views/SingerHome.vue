@@ -21,7 +21,6 @@ import {
   //watch,
 } from "vue";
 import { useStore } from "@/store";
-import { createEmptyScore } from "@/helpers/singHelper";
 // import { QResizeObserver, useQuasar } from "quasar";
 // import path from "path";
 
@@ -31,6 +30,12 @@ import ToolBar from "@/components/Sing/ToolBar.vue";
 import SingerPanel from "@/components/Sing/SingerPanel.vue";
 import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 import ScorePosition from "@/components/Sing/ScorePosition.vue";
+import {
+  DEFAULT_BEATS,
+  DEFAULT_BEAT_TYPE,
+  DEFAULT_BPM,
+  DEFAULT_TPQN,
+} from "@/helpers/singHelper";
 
 export default defineComponent({
   name: "SingerHome",
@@ -49,7 +54,25 @@ export default defineComponent({
 
     // 歌声合成エディターの初期化
     onMounted(async () => {
-      await store.dispatch("SET_SCORE", { score: createEmptyScore() });
+      await store.dispatch("SET_SCORE", {
+        score: {
+          tpqn: DEFAULT_TPQN,
+          tempos: [
+            {
+              position: 0,
+              bpm: DEFAULT_BPM,
+            },
+          ],
+          timeSignatures: [
+            {
+              measureNumber: 1,
+              beats: DEFAULT_BEATS,
+              beatType: DEFAULT_BEAT_TYPE,
+            },
+          ],
+          notes: [],
+        },
+      });
       await store.dispatch("SET_SINGER", {});
 
       await store.dispatch("SET_VOLUME", { volume: 0.3 });

@@ -33,11 +33,11 @@
       <div class="sing-playback-position">{{ playbackPositionStr }}</div>
       <q-input
         type="number"
-        :model-value="tempoInputBuffer"
+        :model-value="bpmInputBuffer"
         dense
         hide-bottom-space
         class="sing-tempo"
-        @update:model-value="setTempoInputBuffer"
+        @update:model-value="setBpmInputBuffer"
         @change="setTempo"
       >
         <template #prepend>
@@ -129,16 +129,16 @@ export default defineComponent({
         )?.iconPath
     );
 
-    const tempoInputBuffer = ref(0);
+    const bpmInputBuffer = ref(0);
     const beatsInputBuffer = ref(0);
     const beatTypeInputBuffer = ref(0);
 
-    const setTempoInputBuffer = (tempoStr: string | number | null) => {
-      const tempo = Number(tempoStr);
-      if (!Number.isFinite(tempo) || tempo <= 0) {
+    const setBpmInputBuffer = (bpmStr: string | number | null) => {
+      const bpm = Number(bpmStr);
+      if (!Number.isFinite(bpm) || bpm <= 0) {
         return;
       }
-      tempoInputBuffer.value = tempo;
+      bpmInputBuffer.value = bpm;
     };
     const setBeatsInputBuffer = (beatsStr: string | number | null) => {
       const beats = Number(beatsStr);
@@ -158,10 +158,7 @@ export default defineComponent({
     const playPos = ref(0);
 
     const playbackPositionStr = computed(() => {
-      let playTime = 0;
-      if (store.state.score) {
-        playTime = store.getters.TICK_TO_SECOND(playPos.value);
-      }
+      const playTime = store.getters.TICK_TO_SECOND(playPos.value);
 
       const intPlayTime = Math.floor(playTime);
       const min = Math.floor(intPlayTime / 60);
@@ -173,22 +170,22 @@ export default defineComponent({
       return `${minStr}:${secStr}.${milliSecStr}`;
     });
 
-    const tempos = computed(() => store.state.score?.tempos);
-    const timeSignatures = computed(() => store.state.score?.timeSignatures);
+    const tempos = computed(() => store.state.score.tempos);
+    const timeSignatures = computed(() => store.state.score.timeSignatures);
     const nowPlaying = computed(() => store.state.nowPlaying);
 
     watch(
       tempos,
       () => {
-        tempoInputBuffer.value = tempos.value?.[0].tempo ?? 0;
+        bpmInputBuffer.value = tempos.value[0].bpm;
       },
       { deep: true }
     );
     watch(
       timeSignatures,
       () => {
-        beatsInputBuffer.value = timeSignatures.value?.[0].beats ?? 0;
-        beatTypeInputBuffer.value = timeSignatures.value?.[0].beatType ?? 0;
+        beatsInputBuffer.value = timeSignatures.value[0].beats;
+        beatTypeInputBuffer.value = timeSignatures.value[0].beatType;
       },
       { deep: true }
     );
@@ -209,12 +206,12 @@ export default defineComponent({
     });
 
     const setTempo = async () => {
-      const tempo = tempoInputBuffer.value;
-      if (tempo === 0) return;
+      const bpm = bpmInputBuffer.value;
+      if (bpm === 0) return;
       await store.dispatch("SET_TEMPO", {
         tempo: {
           position: 0,
-          tempo: tempo,
+          bpm: bpm,
         },
       });
     };
@@ -255,7 +252,7 @@ export default defineComponent({
     });
 
     const snapTypeSelectOptions = computed(() => {
-      const tpqn = store.state.score?.tpqn ?? 480;
+      const tpqn = store.state.score.tpqn;
       return getSnapTypes(tpqn)
         .sort((a, b) => {
           if (isTriplet(a) === isTriplet(b)) {
@@ -292,10 +289,10 @@ export default defineComponent({
       isShowSinger,
       toggleShowSinger,
       selectedStyleIconPath,
-      tempoInputBuffer,
+      bpmInputBuffer,
       beatsInputBuffer,
       beatTypeInputBuffer,
-      setTempoInputBuffer,
+      setBpmInputBuffer,
       setBeatsInputBuffer,
       setBeatTypeInputBuffer,
       setTempo,

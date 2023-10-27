@@ -171,32 +171,13 @@ export default defineComponent({
     const dragMoveCurrentY = ref();
     const dragDurationCurrentX = ref();
     // 分解能（Ticks Per Quarter Note）
-    const tpqn = computed(() => state.score?.tpqn ?? 480);
+    const tpqn = computed(() => state.score.tpqn);
     // ノート
-    const notes = computed(() => state.score?.notes ?? []);
+    const notes = computed(() => state.score.notes);
     // テンポ
-    const tempos = computed(() => {
-      return (
-        state.score?.tempos ?? [
-          {
-            position: 0,
-            tempo: 120,
-          },
-        ]
-      );
-    });
+    const tempos = computed(() => state.score.tempos);
     // 拍子
-    const timeSignatures = computed(() => {
-      return (
-        state.score?.timeSignatures ?? [
-          {
-            measureNumber: 1,
-            beats: 4,
-            beatType: 4,
-          },
-        ]
-      );
-    });
+    const timeSignatures = computed(() => state.score.timeSignatures);
     // ズーム状態
     const zoomX = computed(() => state.sequencerZoomX);
     const zoomY = computed(() => state.sequencerZoomY);
@@ -314,9 +295,6 @@ export default defineComponent({
 
     // ドラッグでのノートの移動
     const dragMove = () => {
-      if (!state.score) {
-        throw new Error("Score is undefined.");
-      }
       if (dragMode.value !== DragMode.MOVE) {
         cancelAnimationFrame(dragId.value);
         return;
@@ -345,7 +323,7 @@ export default defineComponent({
 
       // 選択中のノートのpositionとnoteNumberを変更
       let isNotesChanged = false;
-      const newNotes = [...state.score.notes].map((note) => {
+      const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
           if (amountPositionX === 0 && amountPositionY === 0) {
             return note;
@@ -389,9 +367,6 @@ export default defineComponent({
     // ノート右ドラッグ
     // FIXME: 左右ドラッグロジックを統一する
     const dragRight = () => {
-      if (!state.score) {
-        throw new Error("Score is undefined.");
-      }
       if (dragMode.value !== DragMode.NOTE_RIGHT) {
         cancelAnimationFrame(dragId.value);
         return;
@@ -399,7 +374,7 @@ export default defineComponent({
       const distanceX = cursorX.value - dragDurationCurrentX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
         let isNotesChanged = false;
-        const newNotes = [...state.score.notes].map((note) => {
+        const newNotes = state.score.notes.map((note) => {
           if (selectedNoteIds.value.includes(note.id)) {
             const duration =
               note.duration +
@@ -441,9 +416,6 @@ export default defineComponent({
     // ノート左ドラッグ
     // FIXME: 左右ドラッグロジックを統一する
     const dragLeft = () => {
-      if (!state.score) {
-        throw new Error("Score is undefined.");
-      }
       if (dragMode.value !== DragMode.NOTE_LEFT) {
         cancelAnimationFrame(dragId.value);
         return;
@@ -451,7 +423,7 @@ export default defineComponent({
       const distanceX = cursorX.value - dragDurationCurrentX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
         let isNotesChanged = false;
-        const newNotes = [...state.score.notes].map((note) => {
+        const newNotes = state.score.notes.map((note) => {
           if (selectedNoteIds.value.includes(note.id)) {
             const position =
               note.position +
@@ -516,9 +488,6 @@ export default defineComponent({
 
     // キーボードイベント
     const handleNotesArrowUp = () => {
-      if (!state.score) {
-        throw new Error("Score is undefined.");
-      }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
           const noteNumber = Math.min(note.noteNumber + 1, 127);
@@ -537,9 +506,6 @@ export default defineComponent({
     };
 
     const handleNotesArrowDown = () => {
-      if (!state.score) {
-        throw new Error("Score is undefined.");
-      }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
           const noteNumber = Math.max(note.noteNumber - 1, 0);
@@ -558,9 +524,6 @@ export default defineComponent({
     };
 
     const handleNotesArrowRight = () => {
-      if (!state.score) {
-        throw new Error("Score is undefined.");
-      }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
           const position = note.position + snapTicks.value;
@@ -576,9 +539,6 @@ export default defineComponent({
     };
 
     const handleNotesArrowLeft = () => {
-      if (!state.score) {
-        throw new Error("Score is undefined.");
-      }
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
           const position = note.position - snapTicks.value;

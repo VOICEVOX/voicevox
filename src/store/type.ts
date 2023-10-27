@@ -716,7 +716,7 @@ export type AudioPlayerStoreTypes = {
 
 export type Tempo = {
   position: number;
-  tempo: number;
+  bpm: number;
 };
 
 export type TimeSignature = {
@@ -805,7 +805,7 @@ export type SingingStoreTypes = {
   };
 
   UPDATE_NOTE: {
-    mutation: { note: Note; index: number };
+    mutation: { index: number; note: Note };
     action(payload: { note: Note }): void;
   };
 

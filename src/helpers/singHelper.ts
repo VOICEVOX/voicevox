@@ -1,9 +1,9 @@
-import { Note, Score, Tempo, TimeSignature } from "@/store/type";
+import { Note, Tempo, TimeSignature } from "@/store/type";
 
 export const BEAT_TYPES = [2, 4, 8, 16];
 
 export const DEFAULT_TPQN = 480;
-export const DEFAULT_TEMPO = 120;
+export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
 export const DEFAULT_BEAT_TYPE = 4;
 
@@ -210,23 +210,3 @@ export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;
 }
-
-export const createEmptyScore = (): Score => {
-  return {
-    tpqn: DEFAULT_TPQN,
-    tempos: [
-      {
-        position: 0,
-        tempo: DEFAULT_TEMPO,
-      },
-    ],
-    timeSignatures: [
-      {
-        measureNumber: 1,
-        beats: DEFAULT_BEATS,
-        beatType: DEFAULT_BEAT_TYPE,
-      },
-    ],
-    notes: [],
-  };
-};
