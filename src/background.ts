@@ -70,6 +70,18 @@ console.log(`Environment: ${import.meta.env.MODE}, appData: ${appName}`);
 // バージョン0.14より前の設定ファイルの保存場所
 const beforeUserDataDir = app.getPath("userData"); // マイグレーション用
 
+// app.getPath("userData")を呼ぶとディレクトリが作成されてしまうため空なら削除する。
+let errorForRemoveBeforeUserDataDir: Error | undefined;
+try {
+  fs.rmdirSync(beforeUserDataDir, { recursive: false });
+} catch (e) {
+  const err = e as NodeJS.ErrnoException;
+  if (err?.code !== "ENOTEMPTY") {
+    // electron-logを初期化してからエラーを出力する
+    errorForRemoveBeforeUserDataDir = err;
+  }
+}
+
 // appnameをvoicevoxとしてsetする
 app.setName(appName);
 
@@ -94,16 +106,8 @@ log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
 
-// beforeUserDataDir取得のためapp.getPath("userData")を呼ぶとディレクトリが作成されてしまうため空なら削除する。
-if (beforeUserDataDir !== fixedUserDataDir) {
-  try {
-    fs.rmdirSync(beforeUserDataDir, { recursive: false });
-  } catch (e) {
-    const err = e as NodeJS.ErrnoException;
-    if (err?.code !== "ENOTEMPTY") {
-      log.error(err);
-    }
-  }
+if (errorForRemoveBeforeUserDataDir != undefined) {
+  log.error(errorForRemoveBeforeUserDataDir);
 }
 
 let win: BrowserWindow;
