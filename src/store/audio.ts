@@ -1,7 +1,6 @@
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import Encoding from "encoding-japanese";
-import { diffArrays } from "diff";
 import { toRaw } from "vue";
 import { createUILockAction, withProgress } from "./ui";
 import {
@@ -28,7 +27,6 @@ import {
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
   joinTextsInAccentPhrases,
-  AccentDiff,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
