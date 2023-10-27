@@ -1475,38 +1475,39 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
-  GENERATE_AND_SAVE_ALL_AUDIO: {
+  MULTI_GENERATE_AND_SAVE_AUDIO: {
     action: createUILockAction(
       async (
         { state, getters, dispatch },
         {
+          audioKeys,
           dirPath,
           callback,
         }: {
+          audioKeys: AudioKey[];
           dirPath?: string;
-          callback?: (finishedCount: number, totalCount: number) => void;
+          callback?: (finishedCount: number) => void;
         }
       ) => {
         if (state.savingSetting.fixedExportEnabled) {
           dirPath = state.savingSetting.fixedExportDir;
         } else {
           dirPath ??= await window.electron.showOpenDirectoryDialog({
-            title: "音声を全て保存",
+            title: "音声を保存",
           });
         }
         if (dirPath) {
           const _dirPath = dirPath;
 
-          const totalCount = state.audioKeys.length;
           let finishedCount = 0;
 
-          const promises = state.audioKeys.map((audioKey) => {
+          const promises = audioKeys.map((audioKey) => {
             const name = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
               filePath: path.join(_dirPath, name),
             }).then((value) => {
-              callback?.(++finishedCount, totalCount);
+              callback?.(++finishedCount);
               return value;
             });
           });
@@ -1599,7 +1600,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             }
           }
           const encodedBlob = await base64Encoder(blob);
-          if (encodedBlob === undefined) {
+          if (encodedBlob == undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }
           encodedBlobs.push(encodedBlob);
@@ -1608,7 +1609,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             audioKey,
             offset: labOffset,
           });
-          if (lab === undefined) {
+          if (lab == undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }
           labs.push(lab);
@@ -1706,6 +1707,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         const texts: string[] = [];
+
         for (const audioKey of state.audioKeys) {
           const styleId = state.audioItems[audioKey].voice.styleId;
           const engineId = state.audioItems[audioKey].voice.engineId;
@@ -1713,7 +1715,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             throw new Error("engineId is undefined");
           }
           const speakerName =
-            styleId !== undefined
+            styleId != undefined
               ? characters.get(`${engineId}:${styleId}`) + ","
               : "";
 

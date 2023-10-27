@@ -1,12 +1,8 @@
 import { test, expect, Page, Locator } from "@playwright/test";
-import { navigateToMain } from "../navigators";
+import { gotoHome, navigateToMain } from "../navigators";
 import { getNewestQuasarDialog } from "../locators";
 
-test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
-});
+test.beforeEach(gotoHome);
 
 // 「abs」を入力して読み方を確認する
 async function validateAbsYomi(
@@ -16,7 +12,7 @@ async function validateAbsYomi(
   await page.locator(".audio-cell input").last().fill("abs");
   await page.waitForTimeout(100);
   await page.locator(".audio-cell input").last().press("Enter");
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(500);
   const text = (await page.locator(".text-cell").allInnerTexts()).join("");
   expect(text).toBe(expectedText);
 }

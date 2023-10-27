@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { spawn } from "child_process";
-import log from "electron-log";
+import log from "electron-log/main";
 import { moveFile } from "move-file";
 import { app, dialog } from "electron";
 import MultiStream from "multistream";
@@ -143,7 +143,7 @@ export class VvppManager {
       filePaths.sort((a, b) => {
         const aMatch = a.match(/\.([0-9]+)\.vvppp$/);
         const bMatch = b.match(/\.([0-9]+)\.vvppp$/);
-        if (aMatch === null || bMatch === null) {
+        if (aMatch == null || bMatch == null) {
           throw new Error(`match is null: a=${a}, b=${b}`);
         }
         return parseInt(aMatch[1]) - parseInt(bMatch[1]);
