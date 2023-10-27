@@ -27,6 +27,7 @@ import {
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
   joinTextsInAccentPhrases,
+  TuningTranscription,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -1971,10 +1972,10 @@ export const audioCommandStore = transformCommandStore(
               if (!state.experimentalSetting.shouldKeepTuningOnTextChange) {
                 newAccentPhrases = accentPhrases;
               } else {
-                const mergedDiff: AccentPhrase[] = new AccentDiff(
+                const mergedDiff: AccentPhrase[] = new TuningTranscription(
                   query.accentPhrases,
                   accentPhrases
-                ).mergeAccentPhrases();
+                ).transcribe();
 
                 newAccentPhrases = mergedDiff;
               }
