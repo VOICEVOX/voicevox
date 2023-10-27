@@ -71,12 +71,14 @@ console.log(`Environment: ${import.meta.env.MODE}, appData: ${appName}`);
 const beforeUserDataDir = app.getPath("userData"); // マイグレーション用
 
 // app.getPath("userData")を呼ぶとディレクトリが作成されてしまうため空なら削除する。
+let errorForRemoveBeforeUserDataDir: Error | undefined;
 try {
   fs.rmdirSync(beforeUserDataDir, { recursive: false });
 } catch (e) {
   const err = e as NodeJS.ErrnoException;
   if (err?.code !== "ENOTEMPTY") {
-    log.error(err);
+    // electron-logを初期化してからエラーを出力する
+    errorForRemoveBeforeUserDataDir = err;
   }
 }
 
@@ -103,6 +105,10 @@ const prefix = dayjs().format("YYYYMMDD_HHmmss");
 log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
+
+if (errorForRemoveBeforeUserDataDir != undefined) {
+  log.error(errorForRemoveBeforeUserDataDir);
+}
 
 let win: BrowserWindow;
 
