@@ -9,6 +9,7 @@ import {
   SingingStoreState,
   SingingStoreTypes,
   SaveResultObject,
+  Singer,
 } from "./type";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -27,7 +28,6 @@ import {
   Sequence,
   Transport,
 } from "@/infrastructures/AudioRenderer";
-import { EngineId, StyleId } from "@/type/preload";
 import {
   BEAT_TYPES,
   DEFAULT_BEATS,
@@ -143,6 +143,16 @@ const copyScore = (score: Score): Score => {
   };
 };
 
+const copySinger = (singer?: Singer): Singer | undefined => {
+  if (!singer) {
+    return undefined;
+  }
+  return {
+    engineId: singer.engineId,
+    styleId: singer.styleId,
+  };
+};
+
 const _generateHash = async <T>(obj: T) => {
   const textEncoder = new TextEncoder();
   const data = textEncoder.encode(JSON.stringify(obj));
@@ -165,11 +175,6 @@ const createPromiseThatResolvesWhen = (
     };
     checkCondition();
   });
-};
-
-type Singer = {
-  readonly engineId: EngineId;
-  readonly styleId: StyleId;
 };
 
 type Phrase = {
@@ -291,8 +296,7 @@ const allPhrases = new Map<string, Phrase>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 
 export const singingStoreState: SingingStoreState = {
-  engineId: undefined,
-  styleId: undefined,
+  singer: undefined,
   score: {
     tpqn: DEFAULT_TPQN,
     tempos: [
@@ -341,25 +345,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGER: {
-    mutation(
-      state,
-      { engineId, styleId }: { engineId: EngineId; styleId: StyleId }
-    ) {
-      state.engineId = engineId;
-      state.styleId = styleId;
+    mutation(state, { singer }: { singer?: Singer }) {
+      state.singer = singer;
     },
-    async action({ state, getters, dispatch, commit }, payload) {
+    async action(
+      { state, getters, dispatch, commit },
+      { singer }: { singer?: Singer }
+    ) {
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
       if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
         throw new Error("state.characterInfos == undefined");
       const userOrderedCharacterInfos = getters.USER_ORDERED_CHARACTER_INFOS;
 
-      const engineId = payload.engineId ?? state.engineIds[0];
+      const engineId = singer?.engineId ?? state.engineIds[0];
 
       // FIXME: engineIdも含めて探査する
       const styleId =
-        payload.styleId ??
+        singer?.styleId ??
         state.defaultStyleIds[
           state.defaultStyleIds.findIndex(
             (x) =>
@@ -380,7 +383,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
         }
       } finally {
-        commit("SET_SINGER", { engineId, styleId });
+        commit("SET_SINGER", { singer: { engineId, styleId } });
 
         dispatch("RENDER");
       }
@@ -1077,13 +1080,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return blob;
       };
 
-      const getSinger = (): Singer | undefined => {
-        if (state.engineId === undefined || state.styleId === undefined) {
-          return undefined;
-        }
-        return { engineId: state.engineId, styleId: state.styleId };
-      };
-
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
       const startRenderingRequested = () => state.startRenderingRequested;
       const stopRenderingRequested = () => state.stopRenderingRequested;
@@ -1100,7 +1096,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         const score = copyScore(state.score);
-        const singer = getSinger();
+        const singer = copySinger(state.singer);
 
         preProcess(score);
 

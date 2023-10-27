@@ -110,24 +110,24 @@ export default defineComponent({
     const userOrderedCharacterInfos = computed(
       () => store.getters.USER_ORDERED_CHARACTER_INFOS
     );
-    const selectedCharacterInfo = computed(() =>
-      userOrderedCharacterInfos.value !== undefined &&
-      store.state.engineId !== undefined &&
-      store.state.styleId !== undefined
-        ? store.getters.CHARACTER_INFO(
-            store.state.engineId,
-            store.state.styleId
-          )
-        : undefined
-    );
-    const selectedStyleIconPath = computed(
-      () =>
-        selectedCharacterInfo.value?.metas.styles.find(
-          (style) =>
-            style.styleId === store.state.styleId &&
-            style.engineId === store.state.engineId
-        )?.iconPath
-    );
+    const selectedCharacterInfo = computed(() => {
+      if (!userOrderedCharacterInfos.value || !store.state.singer) {
+        return undefined;
+      }
+      return store.getters.CHARACTER_INFO(
+        store.state.singer.engineId,
+        store.state.singer.styleId
+      );
+    });
+    const selectedStyleIconPath = computed(() => {
+      const styles = selectedCharacterInfo.value?.metas.styles;
+      return styles?.find((style) => {
+        return (
+          style.styleId === store.state.singer?.styleId &&
+          style.engineId === store.state.singer?.engineId
+        );
+      })?.iconPath;
+    });
 
     const bpmInputBuffer = ref(0);
     const beatsInputBuffer = ref(0);
@@ -211,7 +211,7 @@ export default defineComponent({
       await store.dispatch("SET_TEMPO", {
         tempo: {
           position: 0,
-          bpm: bpm,
+          bpm,
         },
       });
     };
@@ -223,8 +223,8 @@ export default defineComponent({
       await store.dispatch("SET_TIME_SIGNATURE", {
         timeSignature: {
           measureNumber: 1,
-          beats: beats,
-          beatType: beatType,
+          beats,
+          beatType,
         },
       });
     };

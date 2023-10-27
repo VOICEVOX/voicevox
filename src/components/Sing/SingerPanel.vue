@@ -31,16 +31,18 @@ export default defineComponent({
     );
 
     const characterInfo = computed(() => {
-      const engineId = store.state.engineId;
-      const styleId = store.state.styleId;
-      if (userOrderedCharacterInfos.value === undefined) return undefined;
-      if (engineId === undefined || styleId === undefined) return undefined;
-      return store.getters.CHARACTER_INFO(engineId, styleId);
+      if (!userOrderedCharacterInfos.value || !store.state.singer) {
+        return undefined;
+      }
+      return store.getters.CHARACTER_INFO(
+        store.state.singer.engineId,
+        store.state.singer.styleId
+      );
     });
 
     const characterName = computed(() => {
       const style = characterInfo.value?.metas.styles.find(
-        (style) => style.styleId === store.state.styleId
+        (style) => style.styleId === store.state.singer?.styleId
       );
       return style?.styleName
         ? `${characterInfo.value?.metas.speakerName} (${style?.styleName})`
