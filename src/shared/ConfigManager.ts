@@ -127,6 +127,7 @@ export abstract class BaseConfigManager {
   protected config: ConfigType | undefined;
 
   private saveCounter = 0;
+  private initializePromise: Promise<this> | undefined;
 
   abstract exists(): Promise<boolean>;
   abstract load(): Promise<Record<string, unknown> & Metadata>;
@@ -134,7 +135,19 @@ export abstract class BaseConfigManager {
 
   abstract getAppVersion(): string;
 
-  public async initialize(): Promise<this> {
+  public initialize(): Promise<this> {
+    if (!this.initializePromise) {
+      this.initializePromise = this._initialize();
+    }
+    return this.initializePromise;
+  }
+  public ensureInitialized(): Promise<this> | undefined {
+    if (this.config) {
+      return undefined;
+    }
+    return this.initializePromise;
+  }
+  public async _initialize(): Promise<this> {
     if (await this.exists()) {
       const data = await this.load();
       const version = data.__internal__.migrations.version;
@@ -149,6 +162,7 @@ export abstract class BaseConfigManager {
       this.config = defaultConfig;
     }
     this._save();
+    await this.ensureSaved();
 
     return this;
   }

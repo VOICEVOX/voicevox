@@ -4,7 +4,7 @@ import {
   showOpenDirectoryDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
-import { getSettingEntry, setSettingEntry } from "./storeImpl";
+import { getConfigManager } from "./storeImpl";
 
 import { IpcSOData } from "@/type/ipc";
 import {
@@ -77,7 +77,7 @@ export const api: Sandbox = {
   },
   showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
     return new Promise((resolve, reject) => {
-      if (obj.defaultPath === undefined) {
+      if (obj.defaultPath == undefined) {
         reject(
           // storeやvue componentからdefaultPathを設定していなかったらrejectされる
           new Error(
@@ -91,7 +91,7 @@ export const api: Sandbox = {
   },
   showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
     return new Promise((resolve, reject) => {
-      if (obj.defaultPath === undefined) {
+      if (obj.defaultPath == undefined) {
         reject(
           // storeやvue componentからdefaultPathを設定していなかったらrejectされる
           new Error(
@@ -114,7 +114,7 @@ export const api: Sandbox = {
   },
   showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
     return new Promise((resolve, reject) => {
-      if (obj.defaultPath === undefined) {
+      if (obj.defaultPath == undefined) {
         reject(
           // storeやvue componentからdefaultPathを設定していなかったらrejectされる
           new Error(
@@ -226,14 +226,14 @@ export const api: Sandbox = {
     type HotkeySettingType = ReturnType<
       typeof configSchema["parse"]
     >["hotkeySettings"];
-    if (newData !== undefined) {
+    if (newData != undefined) {
       const hotkeySettings = (await this.getSetting(
         "hotkeySettings"
       )) as HotkeySettingType;
       const hotkeySetting = hotkeySettings.find(
         (hotkey) => hotkey.action == newData.action
       );
-      if (hotkeySetting !== undefined) {
+      if (hotkeySetting != undefined) {
         hotkeySetting.combination = newData.combination;
       }
       await this.setSetting("hotkeySettings", hotkeySettings);
@@ -257,7 +257,7 @@ export const api: Sandbox = {
     return;
   },
   async theme(newData?: string) {
-    if (newData !== undefined) {
+    if (newData != undefined) {
       await this.setSetting("currentTheme", newData);
       return;
     }
@@ -287,11 +287,16 @@ export const api: Sandbox = {
     // NOTE: 何もしなくて良さそう
     return Promise.resolve();
   },
-  getSetting(key) {
-    return getSettingEntry(key);
+  async getSetting(key) {
+    const configManager = await getConfigManager();
+    await configManager.ensureInitialized();
+    return configManager.get(key);
   },
-  setSetting(key, newValue) {
-    return setSettingEntry(key, newValue).then(() => getSettingEntry(key));
+  async setSetting(key, newValue) {
+    const configManager = await getConfigManager();
+    await configManager.ensureInitialized();
+    configManager.set(key, newValue);
+    return newValue;
   },
   async setEngineSetting(engineId: EngineId, engineSetting: EngineSetting) {
     const engineSettings = (await this.getSetting(

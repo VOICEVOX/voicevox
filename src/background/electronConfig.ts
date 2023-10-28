@@ -21,7 +21,7 @@ export class ElectronConfigManager extends BaseConfigManager {
     return JSON.parse(await fs.promises.readFile(this.configPath, "utf-8"));
   }
 
-  public async save(config: ConfigType) {
+  public async save(config: ConfigType & Metadata) {
     await fs.promises.writeFile(
       this.configPath,
       JSON.stringify(config, undefined, 2)
