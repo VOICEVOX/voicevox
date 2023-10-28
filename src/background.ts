@@ -980,7 +980,7 @@ app.on("ready", async () => {
       await appExit();
     };
     const resetConfig = () => {
-      configManager?.reset();
+      configManager.reset();
     };
 
     // 実利用時はconfigファイル削除で解決する可能性があることを案内して終了
