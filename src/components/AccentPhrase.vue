@@ -371,6 +371,7 @@ const isOperatingParameterSlider = computed(() => {
 
 const shouldForciblyDisplayValueLabel = computed(() => {
   return (
+    // 再計算が走る回数を抑制するため、props.altKeyFlag を後ろにする
     (hoveredTarget.value != undefined || isOperatingParameterSlider.value) &&
     props.altKeyFlag
   );
