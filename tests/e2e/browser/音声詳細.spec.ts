@@ -76,7 +76,7 @@ test("詳細調整欄のコンテキストメニュー", async ({ page }) => {
 });
 
 test("アクセント区間全体の値変更", async ({ page }) => {
-  const otherSliderValue = process.env.CI ? "0.103" : "0.064";
+  const otherSliderValue = process.env.CI ? "0.106" : "0.064";
 
   await navigateToMain(page);
   await page.waitForTimeout(100);
