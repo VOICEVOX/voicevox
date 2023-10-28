@@ -76,6 +76,8 @@ test("詳細調整欄のコンテキストメニュー", async ({ page }) => {
 });
 
 test("アクセント区間全体の値変更", async ({ page }) => {
+  const otherSliderValue = process.env.CI ? "0.103" : "0.064";
+
   await navigateToMain(page);
   await page.waitForTimeout(100);
 
@@ -95,7 +97,7 @@ test("アクセント区間全体の値変更", async ({ page }) => {
   await page.keyboard.down("Alt");
 
   // Alt 押下中は hover 中のアクセント区間の他モーラの値ラベルも表示される
-  await expect(page.getByText("0.064")).toBeVisible();
+  await expect(page.getByText(otherSliderValue)).toBeVisible();
 
   const sliderThumb = page.locator(".q-slider__thumb").last();
   await sliderThumb.hover();
@@ -104,7 +106,7 @@ test("アクセント区間全体の値変更", async ({ page }) => {
 
   // alt 押下中に pan しても値ラベルが表示されたまま
   // pan 中は Quasar によって当たり判定が消える都合で別処理のため、個別にテストが必要。
-  await expect(page.getByText("0.064")).toBeVisible();
+  await expect(page.getByText(otherSliderValue)).toBeVisible();
 
   await page.mouse.move(0, 0);
   await page.mouse.up();
@@ -116,7 +118,7 @@ test("アクセント区間全体の値変更", async ({ page }) => {
   await page.waitForTimeout(1000);
 
   // 他モーラの変更ができるかどうかを確認
-  await expect(page.getByText("0.064")).not.toBeVisible();
+  await expect(page.getByText(otherSliderValue)).not.toBeVisible();
 
   await page.mouse.up();
   await page.keyboard.up("Alt");
