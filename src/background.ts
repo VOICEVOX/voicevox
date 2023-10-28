@@ -971,7 +971,7 @@ app.on("ready", async () => {
       await configManager?.ensureSaved();
       app.exit(1);
     };
-    const openUserDataFolderAndExit = async () => {
+    const openConfigFolderAndExit = async () => {
       await shell.openPath(app.getPath("userData"));
       // 直後にexitするとフォルダが開かないため
       await new Promise((resolve) => {
@@ -998,7 +998,7 @@ app.on("ready", async () => {
         })
         .then(async ({ response }) => {
           if (response === 1) {
-            await openUserDataFolderAndExit();
+            await openConfigFolderAndExit();
           } else {
             await appExit();
           }
@@ -1022,7 +1022,7 @@ app.on("ready", async () => {
         })
         .then(async ({ response }) => {
           if (response === 1) {
-            await openUserDataFolderAndExit();
+            await openConfigFolderAndExit();
           } else if (response === 2) {
             resetConfig();
           } else {
