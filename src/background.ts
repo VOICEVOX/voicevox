@@ -966,30 +966,70 @@ app.once("will-finish-launching", () => {
 app.on("ready", async () => {
   await configManager.initialize().catch(async (e) => {
     log.error(e);
-    await dialog
-      .showMessageBox({
-        type: "error",
-        title: "設定ファイルの読み込みエラー",
-        message: `設定ファイルの読み込みに失敗しました。${app.getPath(
-          "userData"
-        )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。設定ファイルがあるフォルダを開きますか？`,
-        buttons: ["いいえ", "はい"],
-        noLink: true,
-        cancelId: 0,
-      })
-      .then(async ({ response }) => {
-        if (response === 1) {
-          await shell.openPath(app.getPath("userData"));
-          // 直後にexitするとフォルダが開かないため
-          await new Promise((resolve) => {
-            setTimeout(resolve, 500);
-          });
-        }
-      })
-      .finally(async () => {
-        await configManager?.ensureSaved();
-        app.exit(1);
+
+    const appExit = async () => {
+      await configManager?.ensureSaved();
+      app.exit(1);
+    };
+    const openUserDataFolderAndExit = async () => {
+      await shell.openPath(app.getPath("userData"));
+      // 直後にexitするとフォルダが開かないため
+      await new Promise((resolve) => {
+        setTimeout(resolve, 500);
       });
+      await appExit();
+    };
+    const resetConfig = () => {
+      configManager?.reset();
+    };
+
+    // 実利用時はconfigファイル削除で解決する可能性があることを案内して終了
+    if (!isDevelopment) {
+      await dialog
+        .showMessageBox({
+          type: "error",
+          title: "設定ファイルの読み込みエラー",
+          message: `設定ファイルの読み込みに失敗しました。${app.getPath(
+            "userData"
+          )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。設定ファイルがあるフォルダを開きますか？`,
+          buttons: ["いいえ", "はい"],
+          noLink: true,
+          cancelId: 0,
+        })
+        .then(async ({ response }) => {
+          if (response === 1) {
+            await openUserDataFolderAndExit();
+          } else {
+            await appExit();
+          }
+        });
+    }
+
+    // 開発時はconfigをリセットして起動を続行するかも問う
+    else {
+      await dialog
+        .showMessageBox({
+          type: "error",
+          title: "設定ファイルの読み込みエラー（開発者向け案内）",
+          message: `設定ファイルの読み込みに失敗しました。設定ファイルの名前を変更するか、設定をリセットしてください。`,
+          buttons: [
+            "何もせず終了",
+            "設定ファイルのフォルダを開いて終了",
+            "設定をリセットして続行",
+          ],
+          noLink: true,
+          cancelId: 0,
+        })
+        .then(async ({ response }) => {
+          if (response === 1) {
+            await openUserDataFolderAndExit();
+          } else if (response === 2) {
+            resetConfig();
+          } else {
+            await appExit();
+          }
+        });
+    }
   });
 
   if (isDevelopment && !isTest) {
