@@ -9,6 +9,7 @@ import {
   SingingStoreState,
   SingingStoreTypes,
   SaveResultObject,
+  Singer,
 } from "./type";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -27,14 +28,12 @@ import {
   Sequence,
   Transport,
 } from "@/infrastructures/AudioRenderer";
-import { EngineId, StyleId } from "@/type/preload";
 import {
   BEAT_TYPES,
   DEFAULT_BEATS,
   DEFAULT_BEAT_TYPE,
-  DEFAULT_TEMPO,
+  DEFAULT_BPM,
   DEFAULT_TPQN,
-  createEmptyScore,
   getDoremiFromNoteNumber,
   getMeasureDuration,
   isValidSnapType,
@@ -44,21 +43,23 @@ import {
 import { AudioQuery, Mora } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 
-const tickToSecondForConstantTempo = (
+const tickToSecondForConstantBpm = (
   ticks: number,
-  tempo: number,
+  bpm: number,
   tpqn: number
 ) => {
-  const quarterNotesPerSecond = tempo / 60;
+  const quarterNotesPerMinute = bpm;
+  const quarterNotesPerSecond = quarterNotesPerMinute / 60;
   return ticks / tpqn / quarterNotesPerSecond;
 };
 
-const secondToTickForConstantTempo = (
+const secondToTickForConstantBpm = (
   seconds: number,
-  tempo: number,
+  bpm: number,
   tpqn: number
 ) => {
-  const quarterNotesPerSecond = tempo / 60;
+  const quarterNotesPerMinute = bpm;
+  const quarterNotesPerSecond = quarterNotesPerMinute / 60;
   return seconds * quarterNotesPerSecond * tpqn;
 };
 
@@ -73,15 +74,15 @@ const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
       tempo = tempos[i];
       break;
     }
-    timeOfTempo += tickToSecondForConstantTempo(
+    timeOfTempo += tickToSecondForConstantBpm(
       tempos[i + 1].position - tempos[i].position,
-      tempos[i].tempo,
+      tempos[i].bpm,
       tpqn
     );
   }
   return (
     timeOfTempo +
-    tickToSecondForConstantTempo(ticks - tempo.position, tempo.tempo, tpqn)
+    tickToSecondForConstantBpm(ticks - tempo.position, tempo.bpm, tpqn)
   );
 };
 
@@ -94,9 +95,9 @@ const secondToTick = (seconds: number, tempos: Tempo[], tpqn: number) => {
     }
     const timeOfNextTempo =
       timeOfTempo +
-      tickToSecondForConstantTempo(
+      tickToSecondForConstantBpm(
         tempos[i + 1].position - tempos[i].position,
-        tempos[i].tempo,
+        tempos[i].bpm,
         tpqn
       );
     if (timeOfNextTempo > seconds) {
@@ -107,7 +108,7 @@ const secondToTick = (seconds: number, tempos: Tempo[], tpqn: number) => {
   }
   return (
     tempo.position +
-    secondToTickForConstantTempo(seconds - timeOfTempo, tempo.tempo, tpqn)
+    secondToTickForConstantBpm(seconds - timeOfTempo, tempo.bpm, tpqn)
   );
 };
 
@@ -142,6 +143,16 @@ const copyScore = (score: Score): Score => {
   };
 };
 
+const copySinger = (singer?: Singer): Singer | undefined => {
+  if (!singer) {
+    return undefined;
+  }
+  return {
+    engineId: singer.engineId,
+    styleId: singer.styleId,
+  };
+};
+
 const _generateHash = async <T>(obj: T) => {
   const textEncoder = new TextEncoder();
   const data = textEncoder.encode(JSON.stringify(obj));
@@ -164,11 +175,6 @@ const createPromiseThatResolvesWhen = (
     };
     checkCondition();
   });
-};
-
-type Singer = {
-  readonly engineId: EngineId;
-  readonly styleId: StyleId;
 };
 
 type Phrase = {
@@ -205,9 +211,9 @@ const isValidTpqn = (tpqn: number) => {
 const isValidTempo = (tempo: Tempo) => {
   return (
     Number.isInteger(tempo.position) &&
-    Number.isFinite(tempo.tempo) &&
+    Number.isFinite(tempo.bpm) &&
     tempo.position >= 0 &&
-    tempo.tempo > 0
+    tempo.bpm > 0
   );
 };
 
@@ -257,11 +263,13 @@ const isValidNotes = (notes: Note[]) => {
   return notes.every((value) => isValidNote(value));
 };
 
-const getFromOptional = <T>(value: T | undefined): T => {
-  if (value === undefined) {
-    throw new Error("The value is undefined.");
-  }
-  return value;
+const isValidScore = (score: Score) => {
+  return (
+    isValidTpqn(score.tpqn) &&
+    isValidTempos(score.tempos) &&
+    isValidTimeSignatures(score.timeSignatures) &&
+    isValidNotes(score.notes)
+  );
 };
 
 let audioContext: AudioContext | undefined;
@@ -288,9 +296,24 @@ const allPhrases = new Map<string, Phrase>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 
 export const singingStoreState: SingingStoreState = {
-  engineId: undefined,
-  styleId: undefined,
-  score: createEmptyScore(),
+  singer: undefined,
+  score: {
+    tpqn: DEFAULT_TPQN,
+    tempos: [
+      {
+        position: 0,
+        bpm: DEFAULT_BPM,
+      },
+    ],
+    timeSignatures: [
+      {
+        measureNumber: 1,
+        beats: DEFAULT_BEATS,
+        beatType: DEFAULT_BEAT_TYPE,
+      },
+    ],
+    notes: [],
+  },
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,
@@ -322,25 +345,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGER: {
-    mutation(
-      state,
-      { engineId, styleId }: { engineId: EngineId; styleId: StyleId }
-    ) {
-      state.engineId = engineId;
-      state.styleId = styleId;
+    mutation(state, { singer }: { singer?: Singer }) {
+      state.singer = singer;
     },
-    async action({ state, getters, dispatch, commit }, payload) {
+    async action(
+      { state, getters, dispatch, commit },
+      { singer }: { singer?: Singer }
+    ) {
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
       if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
         throw new Error("state.characterInfos == undefined");
       const userOrderedCharacterInfos = getters.USER_ORDERED_CHARACTER_INFOS;
 
-      const engineId = payload.engineId ?? state.engineIds[0];
+      const engineId = singer?.engineId ?? state.engineIds[0];
 
       // FIXME: engineIdも含めて探査する
       const styleId =
-        payload.styleId ??
+        singer?.styleId ??
         state.defaultStyleIds[
           state.defaultStyleIds.findIndex(
             (x) =>
@@ -361,7 +383,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
         }
       } finally {
-        commit("SET_SINGER", { engineId, styleId });
+        commit("SET_SINGER", { singer: { engineId, styleId } });
 
         dispatch("RENDER");
       }
@@ -376,17 +398,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { state, getters, commit, dispatch },
       { score }: { score: Score }
     ) {
-      if (!isValidTpqn(score.tpqn)) {
-        throw new Error("The tpqn is invalid.");
-      }
-      if (!isValidTempos(score.tempos)) {
-        throw new Error("The tempos are invalid.");
-      }
-      if (!isValidTimeSignatures(score.timeSignatures)) {
-        throw new Error("The time signatures are invalid.");
-      }
-      if (!isValidNotes(score.notes)) {
-        throw new Error("The notes are invalid.");
+      if (!isValidScore(score)) {
+        throw new Error("The score is invalid.");
       }
       if (!transport) {
         throw new Error("transport is undefined.");
@@ -394,6 +407,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.nowPlaying) {
         await dispatch("SING_STOP_AUDIO");
       }
+      commit("CLEAR_SELECTED_NOTE_IDS");
       commit("SET_SCORE", { score });
       transport.time = getters.TICK_TO_SECOND(playbackPosition);
 
@@ -403,18 +417,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_TEMPO: {
     mutation(state, { tempo }: { tempo: Tempo }) {
-      const score = getFromOptional(state.score);
-      const index = score.tempos.findIndex((value) => {
+      const index = state.score.tempos.findIndex((value) => {
         return value.position === tempo.position;
       });
-      const tempos = [...score.tempos];
+      const tempos = [...state.score.tempos];
       if (index !== -1) {
         tempos.splice(index, 1, tempo);
       } else {
         tempos.push(tempo);
         tempos.sort((a, b) => a.position - b.position);
       }
-      score.tempos = tempos;
+      state.score.tempos = tempos;
     },
     // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
     async action(
@@ -430,7 +443,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.nowPlaying) {
         playbackPosition = getters.SECOND_TO_TICK(transport.time);
       }
-      tempo.tempo = round(tempo.tempo, 2);
+      tempo.bpm = round(tempo.bpm, 2);
       commit("SET_TEMPO", { tempo });
       transport.time = getters.TICK_TO_SECOND(playbackPosition);
 
@@ -440,31 +453,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REMOVE_TEMPO: {
     mutation(state, { position }: { position: number }) {
-      const score = getFromOptional(state.score);
-      const index = score.tempos.findIndex((value) => {
+      const index = state.score.tempos.findIndex((value) => {
         return value.position === position;
       });
       if (index === -1) {
         throw new Error("The tempo does not exist.");
       }
-      const tempos = [...score.tempos];
+      const tempos = [...state.score.tempos];
       if (index === 0) {
         tempos.splice(index, 1, {
           position: 0,
-          tempo: DEFAULT_TEMPO,
+          bpm: DEFAULT_BPM,
         });
       } else {
         tempos.splice(index, 1);
       }
-      score.tempos = tempos;
+      state.score.tempos = tempos;
     },
     // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
     async action(
       { state, getters, commit, dispatch },
       { position }: { position: number }
     ) {
-      const score = getFromOptional(state.score);
-      const exists = score.tempos.some((value) => {
+      const exists = state.score.tempos.some((value) => {
         return value.position === position;
       });
       if (!exists) {
@@ -485,18 +496,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_TIME_SIGNATURE: {
     mutation(state, { timeSignature }: { timeSignature: TimeSignature }) {
-      const score = getFromOptional(state.score);
-      const index = score.timeSignatures.findIndex((value) => {
+      const index = state.score.timeSignatures.findIndex((value) => {
         return value.measureNumber === timeSignature.measureNumber;
       });
-      const timeSignatures = [...score.timeSignatures];
+      const timeSignatures = [...state.score.timeSignatures];
       if (index !== -1) {
         timeSignatures.splice(index, 1, timeSignature);
       } else {
         timeSignatures.push(timeSignature);
         timeSignatures.sort((a, b) => a.measureNumber - b.measureNumber);
       }
-      score.timeSignatures = timeSignatures;
+      state.score.timeSignatures = timeSignatures;
     },
     // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
     async action(
@@ -512,14 +522,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REMOVE_TIME_SIGNATURE: {
     mutation(state, { measureNumber }: { measureNumber: number }) {
-      const score = getFromOptional(state.score);
-      const index = score.timeSignatures.findIndex((value) => {
+      const index = state.score.timeSignatures.findIndex((value) => {
         return value.measureNumber === measureNumber;
       });
       if (index === -1) {
         throw new Error("The time signature does not exist.");
       }
-      const timeSignatures = [...score.timeSignatures];
+      const timeSignatures = [...state.score.timeSignatures];
       if (index === 0) {
         timeSignatures.splice(index, 1, {
           measureNumber: 1,
@@ -529,15 +538,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       } else {
         timeSignatures.splice(index, 1);
       }
-      score.timeSignatures = timeSignatures;
+      state.score.timeSignatures = timeSignatures;
     },
     // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
     async action(
       { state, commit },
       { measureNumber }: { measureNumber: number }
     ) {
-      const score = getFromOptional(state.score);
-      const exists = score.timeSignatures.some((value) => {
+      const exists = state.score.timeSignatures.some((value) => {
         return value.measureNumber === measureNumber;
       });
       if (!exists) {
@@ -549,89 +557,77 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   ADD_NOTE: {
     mutation(state, { note }: { note: Note }) {
-      if (state.score) {
-        state.selectedNoteIds.push(note.id);
-        state.score.notes = [...state.score.notes, note].sort(
-          (a, b) => a.position - b.position
-        );
-      }
+      const notes = [...state.score.notes];
+      notes.push(note);
+      notes.sort((a, b) => a.position - b.position);
+      state.score.notes = notes;
+      state.selectedNoteIds.push(note.id);
     },
     // ノートを追加する
     // NOTE: 重複削除など別途追加
-    async action({ state, commit, dispatch }, { note }) {
-      if (state.score === undefined) {
-        throw new Error("Score is not initialized.");
-      }
+    async action({ commit, dispatch }, { note }: { note: Note }) {
       if (!isValidNote(note)) {
         throw new Error("The note is invalid.");
       }
       commit("ADD_NOTE", { note });
+
       dispatch("RENDER");
     },
   },
 
   UPDATE_NOTE: {
-    mutation(state, { note, index }: { note: Note; index: number }) {
-      if (state.score) {
-        const notes = [...state.score.notes];
-        notes.splice(index, 1, note);
-        state.score.notes = notes;
-      }
+    mutation(state, { index, note }: { index: number; note: Note }) {
+      const notes = [...state.score.notes];
+      notes.splice(index, 1, note);
+      state.score.notes = notes;
     },
     async action({ state, commit, dispatch }, { note }) {
-      if (state.score === undefined) {
-        throw new Error("Score is not initialized.");
-      }
       if (!isValidNote(note)) {
         throw new Error("The note is invalid.");
       }
-
       const index = state.score.notes.findIndex((value) => {
         return value.id === note.id;
       });
-
-      if (index !== -1) {
-        commit("UPDATE_NOTE", { note, index });
-        dispatch("RENDER");
-      } else {
+      if (index === -1) {
         throw new Error("The note is not found.");
       }
+      commit("UPDATE_NOTE", { index, note });
+
+      dispatch("RENDER");
     },
   },
 
   REMOVE_NOTE: {
     mutation(state, { id }: { id: string }) {
-      if (state.score) {
-        state.score.notes = [...state.score.notes].filter(
-          (note) => note.id !== id
-        );
-        state.selectedNoteIds = [...state.selectedNoteIds].filter(
-          (selectedId) => selectedId !== id
-        );
-      }
+      const notes = state.score.notes;
+      const selectedNoteIds = state.selectedNoteIds;
+      state.score.notes = notes.filter((value) => {
+        return value.id !== id;
+      });
+      state.selectedNoteIds = selectedNoteIds.filter((value) => {
+        return value !== id;
+      });
     },
-    async action({ state, commit, dispatch }, { id }) {
-      if (state.score === undefined) {
-        throw new Error("Score is not initialized.");
+    async action({ state, commit, dispatch }, { id }: { id: string }) {
+      const exists = state.score.notes.some((value) => {
+        return value.id === id;
+      });
+      if (!exists) {
+        throw new Error("The note is not found.");
       }
-
       commit("REMOVE_NOTE", { id });
+
       dispatch("RENDER");
     },
   },
 
   REPLACE_ALL_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
-      if (state.score) {
-        state.score.notes = notes;
-      }
+      state.score.notes = notes;
     },
-    async action({ state, commit, dispatch }, { notes }: { notes: Note[] }) {
-      if (state.score === undefined) {
-        throw new Error("Score is not initialized.");
-      }
-      if (notes.some((note) => !isValidNote(note))) {
-        throw new Error("Invalid notes");
+    async action({ commit, dispatch }, { notes }: { notes: Note[] }) {
+      if (!isValidNotes(notes)) {
+        throw new Error("The notes are invalid.");
       }
       commit("REPLACE_ALL_NOTES", { notes });
 
@@ -644,8 +640,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.selectedNoteIds = noteIds;
     },
     async action({ state, commit }, { noteIds }: { noteIds: string[] }) {
-      if (state.score === undefined) {
-        throw new Error("Score is not initialized.");
+      const notes = state.score.notes;
+      const existingIds = new Set(notes.map((value) => value.id));
+      const exist = noteIds.every((value) => existingIds.has(value));
+      if (!exist) {
+        throw new Error("Contains an ID that does not exist.");
       }
       commit("SET_SELECTED_NOTE_IDS", { noteIds });
     },
@@ -662,15 +661,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REMOVE_SELECTED_NOTES: {
     mutation(state) {
-      if (state.score) {
-        state.score.notes = [...state.score.notes].filter(
-          (note) => !state.selectedNoteIds.includes(note.id)
-        );
-      }
+      const notes = state.score.notes;
+      const selectedNoteIds = state.selectedNoteIds;
+      state.score.notes = notes.filter((note) => {
+        return !selectedNoteIds.includes(note.id);
+      });
+      state.selectedNoteIds = [];
     },
     async action({ commit, dispatch }) {
       commit("REMOVE_SELECTED_NOTES");
-      commit("CLEAR_SELECTED_NOTE_IDS");
 
       dispatch("RENDER");
     },
@@ -681,7 +680,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.sequencerSnapType = snapType;
     },
     async action({ state, commit }, { snapType }) {
-      const tpqn = state.score?.tpqn ?? 480;
+      const tpqn = state.score.tpqn;
       if (!isValidSnapType(snapType, tpqn)) {
         throw new Error("The snap type is invalid.");
       }
@@ -735,15 +734,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   TICK_TO_SECOND: {
     getter: (state) => (position) => {
-      const score = getFromOptional(state.score);
-      return tickToSecond(position, score.tempos, score.tpqn);
+      const tpqn = state.score.tpqn;
+      const tempos = state.score.tempos;
+      return tickToSecond(position, tempos, tpqn);
     },
   },
 
   SECOND_TO_TICK: {
     getter: (state) => (time) => {
-      const score = getFromOptional(state.score);
-      return secondToTick(time, score.tempos, score.tpqn);
+      const tpqn = state.score.tpqn;
+      const tempos = state.score.tempos;
+      return secondToTick(time, tempos, tpqn);
     },
   },
 
@@ -1079,21 +1080,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return blob;
       };
 
-      const getSinger = (): Singer | undefined => {
-        if (state.engineId === undefined || state.styleId === undefined) {
-          return undefined;
-        }
-        return { engineId: state.engineId, styleId: state.styleId };
-      };
-
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
       const startRenderingRequested = () => state.startRenderingRequested;
       const stopRenderingRequested = () => state.stopRenderingRequested;
 
       const render = async () => {
-        if (!state.score || !audioContext || !transport || !channelStrip) {
+        if (!audioContext || !transport || !channelStrip) {
           throw new Error(
-            "score or audioContext or transport or channelStrip is undefined."
+            "audioContext or transport or channelStrip is undefined."
           );
         }
         const audioContextRef = audioContext;
@@ -1102,7 +1096,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         const score = copyScore(state.score);
-        const singer = getSinger();
+        const singer = copySinger(state.singer);
 
         preProcess(score);
 
@@ -1403,12 +1397,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         let tempos = midiTempos.map((value): Tempo => {
           return {
             position: convertPosition(value.ticks, midiTpqn, tpqn),
-            tempo: round(value.bpm, 2),
+            bpm: round(value.bpm, 2),
           };
         });
         tempos.unshift({
           position: 0,
-          tempo: DEFAULT_TEMPO,
+          bpm: DEFAULT_BPM,
         });
         tempos = removeDuplicateTempos(tempos);
 
@@ -1476,7 +1470,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const tempos: Tempo[] = [
           {
             position: 0,
-            tempo: DEFAULT_TEMPO,
+            bpm: DEFAULT_BPM,
           },
         ];
         const timeSignatures: TimeSignature[] = [
@@ -1584,7 +1578,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const tempo = getAttributeAsNumber(soundElement, "tempo");
           tempos.push({
             position: position,
-            tempo: round(tempo, 2),
+            bpm: round(tempo, 2),
           });
         };
 

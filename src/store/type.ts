@@ -716,7 +716,7 @@ export type AudioPlayerStoreTypes = {
 
 export type Tempo = {
   position: number;
-  tempo: number;
+  bpm: number;
 };
 
 export type TimeSignature = {
@@ -740,9 +740,13 @@ export type Score = {
   notes: Note[];
 };
 
+export type Singer = {
+  engineId: EngineId;
+  styleId: StyleId;
+};
+
 export type SingingStoreState = {
-  engineId?: EngineId;
-  styleId?: StyleId;
+  singer?: Singer;
   score: Score;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
@@ -770,8 +774,8 @@ export type SingingStoreTypes = {
   };
 
   SET_SINGER: {
-    mutation: { engineId: EngineId; styleId: StyleId };
-    action(payload: { engineId?: EngineId; styleId?: StyleId }): void;
+    mutation: { singer?: Singer };
+    action(payload: { singer?: Singer }): void;
   };
 
   SET_SCORE: {
@@ -805,7 +809,7 @@ export type SingingStoreTypes = {
   };
 
   UPDATE_NOTE: {
-    mutation: { note: Note; index: number };
+    mutation: { index: number; note: Note };
     action(payload: { note: Note }): void;
   };
 

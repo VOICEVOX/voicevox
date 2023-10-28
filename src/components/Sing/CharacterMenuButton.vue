@@ -185,7 +185,7 @@ export default defineComponent({
           `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
         );
 
-      store.dispatch("SET_SINGER", { engineId, styleId });
+      store.dispatch("SET_SINGER", { singer: { engineId, styleId } });
     };
 
     const getDefaultStyle = (speakerUuid: string) => {
@@ -210,13 +210,12 @@ export default defineComponent({
     const selectedCharacterInfo = computed(() => {
       if (
         userOrderedCharacterInfos.value === undefined ||
-        store.state.engineId === undefined ||
-        store.state.styleId === undefined
+        store.state.singer === undefined
       )
         return undefined;
       return store.getters.CHARACTER_INFO(
-        store.state.engineId,
-        store.state.styleId
+        store.state.singer.engineId,
+        store.state.singer.styleId
       );
     });
 
@@ -228,8 +227,8 @@ export default defineComponent({
       () =>
         selectedCharacterInfo.value?.metas.styles.find(
           (style) =>
-            style.styleId === store.state.styleId &&
-            style.engineId === store.state.engineId
+            style.styleId === store.state.singer?.styleId &&
+            style.engineId === store.state.singer?.engineId
         )?.styleId
     );
 
