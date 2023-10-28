@@ -46,7 +46,7 @@ export const useFetchLatestVersion = () => {
         });
     });
 
-  return { isCheckingFinished, currentVersion, latestVersion };
+  return { isCheckingFinished, latestVersion };
 };
 
 // 最新の更新情報を取得する
@@ -62,9 +62,6 @@ export const useFetchLatestUpdateInfos = () => {
     })
     .then((json) => {
       latestUpdateInfos.value = json;
-    })
-    .catch((err) => {
-      throw new Error(err);
     });
 
   return latestUpdateInfos;

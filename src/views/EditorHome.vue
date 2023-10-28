@@ -7,7 +7,6 @@
     <q-page-container>
       <q-page class="main-row-panes">
         <progress-dialog />
-        <update-notification-dialog />
 
         <!-- TODO: 複数エンジン対応 -->
         <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
@@ -177,6 +176,9 @@
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
   <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
+  <update-notification-dialog
+    v-model="isUpdateNotificationDialogOpenComputed"
+  />
 </template>
 
 <script setup lang="ts">
@@ -205,6 +207,7 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
 import UpdateNotificationDialog from "@/components/UpdateNotificationDialog.vue";
+import { useFetchLatestVersion } from "@/composables/useFetchLatestVersion";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
@@ -543,6 +546,12 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
   }
 });
 
+// エディタのアップデート確認
+const { isCheckingFinished, latestVersion } = useFetchLatestVersion();
+const isUpdateAvailable = computed(() => {
+  return isCheckingFinished.value && latestVersion.value !== "";
+});
+
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
 onMounted(async () => {
@@ -624,6 +633,8 @@ onMounted(async () => {
   isAcceptTermsDialogOpenComputed.value =
     import.meta.env.MODE !== "development" &&
     store.state.acceptTerms !== "Accepted";
+
+  isUpdateNotificationDialogOpenComputed.value = isUpdateAvailable.value;
 
   isCompletedInitialStartup.value = true;
 });
@@ -797,6 +808,15 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
   set: (val) =>
     store.dispatch("SET_DIALOG_OPEN", {
       isAcceptRetrieveTelemetryDialogOpen: val,
+    }),
+});
+
+// アップデート通知
+const isUpdateNotificationDialogOpenComputed = computed({
+  get: () => store.state.isUpdateNotificationDialogOpen,
+  set: (val) =>
+    store.dispatch("SET_DIALOG_OPEN", {
+      isUpdateNotificationDialogOpen: val,
     }),
 });
 

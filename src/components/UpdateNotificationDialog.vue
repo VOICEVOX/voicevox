@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-if="isUpdateAvailable" v-model="showDialog">
+  <q-dialog v-model="modelValueComputed">
     <q-card class="q-py-sm q-px-md">
       <q-card-section align="center">
         <div class="text-h6">
@@ -18,7 +18,7 @@
           color="surface"
           text-color="display"
           class="q-mt-sm"
-          @click="closeDialog()"
+          @click="closeUpdateNotificationDialog()"
         />
         <q-btn
           padding="xs md"
@@ -38,7 +38,7 @@
           class="q-mt-sm"
           @click="
             openOfficialWebsite();
-            closeDialog();
+            closeUpdateNotificationDialog();
           "
         />
       </q-card-actions>
@@ -96,25 +96,32 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import semver from "semver";
-import {
-  useFetchLatestVersion,
-  useFetchLatestUpdateInfos,
-} from "@/composables/useFetchLatestVersion";
+import { useFetchLatestUpdateInfos } from "@/composables/useFetchLatestVersion";
 
-const { isCheckingFinished, currentVersion, latestVersion } =
-  useFetchLatestVersion();
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", value: boolean): void;
+  }>();
 
-const isUpdateAvailable = computed(() => {
-  return isCheckingFinished.value && latestVersion.value !== "";
+const modelValueComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
 });
 
-const showDialog = ref<boolean>(true);
-
-const closeDialog = () => {
-  showDialog.value = false;
+const closeUpdateNotificationDialog = () => {
+  modelValueComputed.value = false;
 };
 
-// 最新の更新情報を取得
+const currentVersion = ref("");
+
+window.electron.getAppInfos().then((obj) => {
+  currentVersion.value = obj.version;
+});
+
 const latestUpdateInfos = useFetchLatestUpdateInfos();
 
 const showUpdateInfoDialog = ref<boolean>(false);
