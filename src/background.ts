@@ -987,7 +987,7 @@ app.on("ready", async () => {
         }
       })
       .finally(async () => {
-        await configManager?.ensureSaved();
+        await configManager.ensureSaved();
         app.exit(1);
       });
   });
