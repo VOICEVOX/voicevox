@@ -964,7 +964,33 @@ app.once("will-finish-launching", () => {
 });
 
 app.on("ready", async () => {
-  await configManager.initialize();
+  await configManager.initialize().catch(async (e) => {
+    log.error(e);
+    await dialog
+      .showMessageBox({
+        type: "error",
+        title: "設定ファイルの読み込みエラー",
+        message: `設定ファイルの読み込みに失敗しました。${app.getPath(
+          "userData"
+        )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。設定ファイルがあるフォルダを開きますか？`,
+        buttons: ["いいえ", "はい"],
+        noLink: true,
+        cancelId: 0,
+      })
+      .then(async ({ response }) => {
+        if (response === 1) {
+          await shell.openPath(app.getPath("userData"));
+          // 直後にexitするとフォルダが開かないため
+          await new Promise((resolve) => {
+            setTimeout(resolve, 500);
+          });
+        }
+      })
+      .finally(async () => {
+        await configManager.ensureSaved();
+        app.exit(1);
+      });
+  });
 
   if (isDevelopment && !isTest) {
     try {

@@ -21,7 +21,7 @@ async function openDictDialog(page: Page): Promise<void> {
   await page.getByRole("button", { name: "設定" }).click();
   await page.waitForTimeout(100);
   await page.getByText("読み方＆アクセント辞書").click();
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(500);
   await expect(page.getByText("読み方＆アクセント辞書")).toBeVisible();
   await expect(page.getByText("単語一覧")).toBeVisible();
 }
