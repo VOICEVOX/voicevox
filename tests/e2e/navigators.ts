@@ -34,6 +34,7 @@ export async function toggleSetting(page: Page, settingName: string) {
   await page.waitForTimeout(100);
   // FIXME: なぜかariaで取得できない
   // await page.getByRole("listitem", { name: "オプション" }).click();
+  await expect(page.getByText("オプション")).toBeVisible();
   await page.getByText("オプション").click();
   await page.waitForTimeout(100);
   await page
