@@ -186,12 +186,17 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  createFlatArray(collection: any[], Key: string) {
-    const result = [];
+  createFlatArray<T>(collection: T[], key: keyof T): T[keyof T][] {
+    const result: T[keyof T][] = [];
     for (const element of collection) {
-      result.push(element[Key]);
+      const value = element[key];
+      if (Array.isArray(value)) {
+        result.push(...value);
+      } else {
+        result.push(value);
+      }
     }
-    return result.flat();
+    return result;
   }
 
   /**
@@ -225,8 +230,8 @@ export class TuningTranscription {
   /**
    * 変更後のアクセント句に、createDiffPatchで作成したモーラ配列を適用し、各モーラ配列のテキストが一致したら、変更前のモーラを変更後のモーラに渡す
    */
-  mergeAccentPhrases(moraPatch: any[]) {
-    const after = structuredClone(this.afterAccent);
+  mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
+    const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let beforeIndex = 0; // pluckedBeforeのデータの位置
 
     // 与えられたアクセント句は、AccentPhrases[ Number ][ Object Key ][ Number ]の順番で、モーラを操作できるため、二重forで回す
@@ -243,7 +248,7 @@ export class TuningTranscription {
         }
         if (
           after[accentIndex]["moras"][moraIndex].text ===
-          moraPatch[beforeIndex].text
+          moraPatch[beforeIndex]?.text
         ) {
           after[accentIndex]["moras"][moraIndex] = moraPatch[beforeIndex];
         }
