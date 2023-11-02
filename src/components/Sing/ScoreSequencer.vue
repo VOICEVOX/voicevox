@@ -591,7 +591,7 @@ export default defineComponent({
     };
 
     const onScroll = (event: Event) => {
-      if (event.target instanceof HTMLDivElement) {
+      if (event.target instanceof HTMLElement) {
         scrollX.value = event.target.scrollLeft;
         scrollY.value = event.target.scrollTop;
       }
