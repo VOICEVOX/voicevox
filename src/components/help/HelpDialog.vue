@@ -96,7 +96,7 @@ import QAndA from "./QAndA.vue";
 import ContactInfo from "./ContactInfo.vue";
 import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
 import { useStore } from "@/store";
-import { useFetchLatestVersion } from "@/composables/useFetchLatestVersion";
+import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 
 type PageItem = {
   type: "item";
@@ -131,7 +131,7 @@ const store = useStore();
 const updateInfos = ref<UpdateInfoObject[]>();
 store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
-const { isCheckingFinished, latestVersion } = useFetchLatestVersion();
+const { isCheckingFinished, latestVersion } = useFetchNewUpdateInfos();
 
 const isUpdateAvailable = computed(() => {
   return isCheckingFinished.value && latestVersion.value !== "";

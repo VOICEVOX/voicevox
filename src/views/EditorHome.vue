@@ -178,6 +178,8 @@
   <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
   <update-notification-dialog
     v-model="isUpdateNotificationDialogOpenComputed"
+    :latest-version="latestVersion"
+    :new-update-infos="newUpdateInfos"
   />
 </template>
 
@@ -207,7 +209,7 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
 import UpdateNotificationDialog from "@/components/UpdateNotificationDialog.vue";
-import { useFetchLatestVersion } from "@/composables/useFetchLatestVersion";
+import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
@@ -547,7 +549,8 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
 });
 
 // エディタのアップデート確認
-const { isCheckingFinished, latestVersion } = useFetchLatestVersion();
+const { isCheckingFinished, latestVersion, newUpdateInfos } =
+  useFetchNewUpdateInfos();
 const isUpdateAvailable = computed(() => {
   return isCheckingFinished.value && latestVersion.value !== "";
 });
