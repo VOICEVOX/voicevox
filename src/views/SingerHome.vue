@@ -4,10 +4,7 @@
   <tool-bar />
   <div class="sing-main">
     <singer-panel />
-    <div class="sing-editor">
-      <score-position />
-      <score-sequencer />
-    </div>
+    <score-sequencer />
   </div>
 </template>
 
@@ -29,7 +26,6 @@ import MenuBar from "@/components/Sing/MenuBar.vue";
 import ToolBar from "@/components/Sing/ToolBar.vue";
 import SingerPanel from "@/components/Sing/SingerPanel.vue";
 import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
-import ScorePosition from "@/components/Sing/ScorePosition.vue";
 import {
   DEFAULT_BEATS,
   DEFAULT_BEAT_TYPE,
@@ -45,7 +41,6 @@ export default defineComponent({
     ToolBar,
     SingerPanel,
     ScoreSequencer,
-    ScorePosition,
   },
 
   setup() {
@@ -99,11 +94,6 @@ export default defineComponent({
 }
 .sing-main {
   display: flex;
-  height: 100vh;
-  width: 100vw;
-}
-
-.sing-editor {
-  width: 100%;
+  overflow: hidden;
 }
 </style>

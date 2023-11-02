@@ -13,8 +13,8 @@
       @input="setLyric"
     />
     <svg
-      :height="`${barHeight}`"
-      :width="`${barWidth}`"
+      :height="barHeight"
+      :width="barWidth"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
       focusable="true"
@@ -43,7 +43,7 @@
         />
         <rect
           y="-25%"
-          :x="`${barWidth - 4}`"
+          :x="barWidth - 4"
           width="12"
           height="150%"
           fill-opacity="0"
