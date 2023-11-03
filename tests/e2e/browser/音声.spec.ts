@@ -1,12 +1,8 @@
 import { test } from "@playwright/test";
 
-import { navigateToMain } from "../navigators";
+import { gotoHome, navigateToMain } from "../navigators";
 
-test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
-});
+test.beforeEach(gotoHome);
 
 test("テキストを入力→アクセントを変更→音声合成→再生ができる", async ({
   page,

@@ -104,6 +104,13 @@ jobs:
             npm run test:electron-e2e
           fi
 
+      - name: Upload playwright report to artifact
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: playwright-report
+
   lint:
     runs-on: ubuntu-latest
     steps:

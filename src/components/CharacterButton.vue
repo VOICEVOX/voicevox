@@ -173,9 +173,9 @@
                         </q-avatar>
                       </q-avatar>
                       <q-item-section v-if="style.styleName"
-                        >{{ characterInfo.metas.speakerName }} ({{
+                        >{{ characterInfo.metas.speakerName }}（{{
                           style.styleName
-                        }})</q-item-section
+                        }}）</q-item-section
                       >
                       <q-item-section v-else>{{
                         characterInfo.metas.speakerName
@@ -198,6 +198,7 @@ import { computed, Ref, ref } from "vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
+import { formatCharacterStyleName } from "@/store/utility";
 
 const props = withDefaults(
   defineProps<{
@@ -248,11 +249,13 @@ const selectedVoiceInfoText = computed(() => {
     return "キャラクター未選択";
   }
 
+  const speakerName = selectedCharacter.value.metas.speakerName;
   if (!selectedStyleInfo.value) {
-    return selectedCharacter.value.metas.speakerName;
+    return speakerName;
   }
 
-  return `${selectedCharacter.value.metas.speakerName} (${selectedStyleInfo.value.styleName})`;
+  const styleName = selectedStyleInfo.value.styleName;
+  return formatCharacterStyleName(speakerName, styleName);
 });
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>
@@ -340,7 +343,7 @@ const updateMenuHeight = () => {
 
 .character-button {
   border: solid 1px;
-  border-color: colors.$primary-light;
+  border-color: colors.$primary;
   font-size: 0;
   height: fit-content;
 

@@ -14,14 +14,12 @@ import {
   net,
 } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-import dotenv from "dotenv";
 
-import log from "electron-log";
+import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import { hasSupportedGpu } from "./electron/device";
 import {
-  HotkeySetting,
   ThemeConf,
   EngineInfo,
   SystemError,
@@ -47,7 +45,7 @@ import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-import { getStoreWithError } from "@/background/electronStore";
+import { getConfigManager } from "@/background/electronConfig";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -66,16 +64,29 @@ if (isTest) {
 } else if (isDevelopment) {
   suffix = "-dev";
 }
-console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
+const appName = import.meta.env.VITE_APP_NAME + suffix;
+console.log(`Environment: ${import.meta.env.MODE}, appData: ${appName}`);
 
 // バージョン0.14より前の設定ファイルの保存場所
 const beforeUserDataDir = app.getPath("userData"); // マイグレーション用
 
+// app.getPath("userData")を呼ぶとディレクトリが作成されてしまうため空なら削除する。
+let errorForRemoveBeforeUserDataDir: Error | undefined;
+try {
+  fs.rmdirSync(beforeUserDataDir, { recursive: false });
+} catch (e) {
+  const err = e as NodeJS.ErrnoException;
+  if (err?.code !== "ENOTEMPTY") {
+    // electron-logを初期化してからエラーを出力する
+    errorForRemoveBeforeUserDataDir = err;
+  }
+}
+
 // appnameをvoicevoxとしてsetする
-app.setName(`voicevox${suffix}`);
+app.setName(appName);
 
 // Electronの設定ファイルの保存場所を変更
-const fixedUserDataDir = path.join(app.getPath("appData"), `voicevox${suffix}`);
+const fixedUserDataDir = path.join(app.getPath("appData"), appName);
 if (!fs.existsSync(fixedUserDataDir)) {
   fs.mkdirSync(fixedUserDataDir);
 }
@@ -84,20 +95,20 @@ if (!isDevelopment) {
   configMigration014({ fixedUserDataDir, beforeUserDataDir }); // 以前のファイルがあれば持ってくる
 }
 
+log.initialize({ preload: false });
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.console.level = "silly";
 
 // warn以上のログをファイルに出力
 const prefix = dayjs().format("YYYYMMDD_HHmmss");
-const logPath = app.getPath("logs");
 log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
-log.transports.file.resolvePath = (variables) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return path.join(logPath, variables.fileName!);
-};
+
+if (errorForRemoveBeforeUserDataDir != undefined) {
+  log.error(errorForRemoveBeforeUserDataDir);
+}
 
 let win: BrowserWindow;
 
@@ -108,24 +119,15 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-// .envから設定をprocess.envに読み込み
 let appDirPath: string;
 let __static: string;
 
-// NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
-//       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
-//       Linux・macOS ではそのディレクトリはカレントディレクトリとはならないため、.env ファイルの
-//       パスを明示的に指定する必要がある。Windows の配布パッケージ版でもこの設定で起動できるため、
-//       全 OS で共通の条件分岐とした。
 if (isDevelopment) {
   // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
   appDirPath = path.resolve(__dirname, "..");
-  dotenv.config({ override: true });
   __static = path.join(appDirPath, "public");
 } else {
   appDirPath = path.dirname(app.getPath("exe"));
-  const envPath = path.join(appDirPath, ".env");
-  dotenv.config({ path: envPath });
   process.chdir(appDirPath);
   __static = __dirname;
 }
@@ -158,8 +160,6 @@ const tempProject = JSON.parse(
   })
 );
 
-// 設定ファイル
-const store = getStoreWithError();
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
@@ -182,8 +182,10 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
+const configManager = getConfigManager();
+
 const engineManager = new EngineManager({
-  store,
+  configManager,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
   onEngineProcessError,
@@ -267,7 +269,7 @@ async function installVvppEngineWithWarning({
  * 無効だった場合はダイアログを表示してfalseを返す。
  */
 function checkMultiEngineEnabled(): boolean {
-  const enabled = store.get("experimentalSetting").enableMultiEngine;
+  const enabled = configManager.get("experimentalSetting").enableMultiEngine;
   if (!enabled) {
     dialog.showMessageBoxSync(win, {
       type: "info",
@@ -372,48 +374,6 @@ const privacyPolicyText = fs.readFileSync(
   "utf-8"
 );
 
-// hotkeySettingsのマイグレーション
-function migrateHotkeySettings() {
-  const COMBINATION_IS_NONE = "####";
-  const loadedHotkeys = store.get("hotkeySettings");
-  const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
-    (defaultHotkey) => {
-      const loadedHotkey = loadedHotkeys.find(
-        (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
-      );
-      const hotkeyWithoutCombination: HotkeySetting = {
-        action: defaultHotkey.action,
-        combination: COMBINATION_IS_NONE,
-      };
-      return loadedHotkey || hotkeyWithoutCombination;
-    }
-  );
-  const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
-    if (hotkey.combination === COMBINATION_IS_NONE) {
-      const newHotkey =
-        defaultHotkeySettings.find(
-          (defaultHotkey) => defaultHotkey.action === hotkey.action
-        ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
-      const combinationExists = hotkeysWithoutNewCombination.some(
-        (hotkey) => hotkey.combination === newHotkey.combination
-      );
-      if (combinationExists) {
-        const emptyHotkey = {
-          action: newHotkey.action,
-          combination: "",
-        };
-        return emptyHotkey;
-      } else {
-        return newHotkey;
-      }
-    } else {
-      return hotkey;
-    }
-  });
-  store.set("hotkeySettings", migratedHotkeys);
-}
-migrateHotkeySettings();
-
 const appState = {
   willQuit: false,
 };
@@ -425,7 +385,7 @@ async function createWindow() {
     defaultHeight: 600,
   });
 
-  const currentTheme = store.get("currentTheme");
+  const currentTheme = configManager.get("currentTheme");
   const backgroundColor = themes.find((value) => value.name == currentTheme)
     ?.colors.background;
 
@@ -543,15 +503,16 @@ async function start() {
 async function launchEngines() {
   // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
   engineManager.initializeEngineInfosAndAltPortInfo();
+
   const engineInfos = engineManager.fetchEngineInfos();
-  const engineSettings = store.get("engineSettings");
+  const engineSettings = configManager.get("engineSettings");
   for (const engineInfo of engineInfos) {
     if (!engineSettings[engineInfo.uuid]) {
       // 空オブジェクトをパースさせることで、デフォルト値を取得する
       engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
     }
   }
-  store.set("engineSettings", engineSettings);
+  configManager.set("engineSettings", engineSettings);
 
   await engineManager.runEngineAll();
 }
@@ -811,18 +772,6 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   }
 });
 
-ipcMainHandle("LOG_ERROR", (_, ...params) => {
-  log.error(...params);
-});
-
-ipcMainHandle("LOG_WARN", (_, ...params) => {
-  log.warn(...params);
-});
-
-ipcMainHandle("LOG_INFO", (_, ...params) => {
-  log.info(...params);
-});
-
 ipcMainHandle("OPEN_LOG_DIRECTORY", () => {
   shell.openPath(app.getPath("logs"));
 });
@@ -845,26 +794,26 @@ ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
-  if (newData !== undefined) {
-    const hotkeySettings = store.get("hotkeySettings");
+  if (newData != undefined) {
+    const hotkeySettings = configManager.get("hotkeySettings");
     const hotkeySetting = hotkeySettings.find(
       (hotkey) => hotkey.action == newData.action
     );
-    if (hotkeySetting !== undefined) {
+    if (hotkeySetting != undefined) {
       hotkeySetting.combination = newData.combination;
     }
-    store.set("hotkeySettings", hotkeySettings);
+    configManager.set("hotkeySettings", hotkeySettings);
   }
-  return store.get("hotkeySettings");
+  return configManager.get("hotkeySettings");
 });
 
 ipcMainHandle("THEME", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("currentTheme", newData);
+  if (newData != undefined) {
+    configManager.set("currentTheme", newData);
     return;
   }
   return {
-    currentTheme: store.get("currentTheme"),
+    currentTheme: configManager.get("currentTheme"),
     availableThemes: themes,
   };
 });
@@ -893,12 +842,12 @@ ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
 });
 
 ipcMainHandle("GET_SETTING", (_, key) => {
-  return store.get(key);
+  return configManager.get(key);
 });
 
 ipcMainHandle("SET_SETTING", (_, key, newValue) => {
-  store.set(key, newValue);
-  return store.get(key);
+  configManager.set(key, newValue);
+  return configManager.get(key);
 });
 
 ipcMainHandle("GET_TEMP_PROJECT", () => {
@@ -909,8 +858,10 @@ ipcMainHandle("SET_TEMP_PROJECT", (_, tempProject) => {
   return setTempProject(tempProject);
 });
 
-ipcMainHandle("SET_ENGINE_SETTING", (_, engineId, engineSetting) => {
-  store.set(`engineSettings.${engineId}`, engineSetting);
+ipcMainHandle("SET_ENGINE_SETTING", async (_, engineId, engineSetting) => {
+  const engineSettings = configManager.get("engineSettings");
+  engineSettings[engineId] = engineSetting;
+  configManager.set(`engineSettings`, engineSettings);
 });
 
 ipcMainHandle("SET_NATIVE_THEME", (_, source) => {
@@ -999,20 +950,34 @@ app.on("before-quit", async (event) => {
 
   log.info("Checking ENGINE status before app quit");
   const engineCleanupResult = cleanupEngines();
+  const configSavedResult = configManager.ensureSaved();
 
-  // エンジンの停止とエンジン終了後処理が完了している
-  if (engineCleanupResult == "alreadyCompleted") {
-    log.info("Post engine kill process done. Now quit app");
+  // - エンジンの停止
+  // - エンジン終了後処理
+  // - 設定ファイルの保存
+  // が完了している
+  if (
+    engineCleanupResult === "alreadyCompleted" &&
+    configSavedResult === "alreadySaved"
+  ) {
+    log.info("Post engine kill process and config save done. Quitting app");
     return;
   }
 
   // すべてのエンジンプロセスのキルを開始
 
   // 同期的にbefore-quitイベントをキャンセル
-  log.info("Interrupt app quit to kill ENGINE processes");
+  log.info("Interrupt app quit");
   event.preventDefault();
 
-  await engineCleanupResult;
+  if (engineCleanupResult !== "alreadyCompleted") {
+    log.info("Waiting for post engine kill process");
+    await engineCleanupResult;
+  }
+  if (configSavedResult !== "alreadySaved") {
+    log.info("Waiting for config save");
+    await configSavedResult;
+  }
 
   // アプリケーションの終了を再試行する
   log.info("Attempting to quit app again");
@@ -1029,6 +994,34 @@ app.once("will-finish-launching", () => {
 });
 
 app.on("ready", async () => {
+  await configManager.initialize().catch(async (e) => {
+    log.error(e);
+    await dialog
+      .showMessageBox({
+        type: "error",
+        title: "設定ファイルの読み込みエラー",
+        message: `設定ファイルの読み込みに失敗しました。${app.getPath(
+          "userData"
+        )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。設定ファイルがあるフォルダを開きますか？`,
+        buttons: ["いいえ", "はい"],
+        noLink: true,
+        cancelId: 0,
+      })
+      .then(async ({ response }) => {
+        if (response === 1) {
+          await shell.openPath(app.getPath("userData"));
+          // 直後にexitするとフォルダが開かないため
+          await new Promise((resolve) => {
+            setTimeout(resolve, 500);
+          });
+        }
+      })
+      .finally(async () => {
+        await configManager.ensureSaved();
+        app.exit(1);
+      });
+  });
+
   if (isDevelopment && !isTest) {
     try {
       await installExtension(VUEJS_DEVTOOLS);

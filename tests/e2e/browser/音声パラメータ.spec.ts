@@ -1,72 +1,58 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, Locator } from "@playwright/test";
 
-import { navigateToMain } from "../navigators";
+import { gotoHome, navigateToMain, toggleSetting } from "../navigators";
 
-test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
-});
+test.beforeEach(gotoHome);
+
+async function validateValue(locator: Locator, expectedValue: string) {
+  const value = await locator.evaluate((e: HTMLInputElement) => e.value);
+  expect(value).toBe(expectedValue);
+}
 
 test("音声パラメータ引き継ぎの設定", async ({ page }) => {
   await navigateToMain(page);
   await page.waitForTimeout(100);
   await page.locator(".audio-cell input").first().press("Enter");
   await page.waitForTimeout(100);
-  await expect(
-    page.locator(".parameters .q-field__native").first()
-  ).toBeVisible();
+  const inputTag = page.locator(".parameters .q-field__native").first();
+  await expect(inputTag).toBeVisible();
 
   // 数値を変更し、変わるかどうかを確認
-  const beforeChange = await page
-    .locator(".parameters .q-field__native")
-    .first()
-    .evaluate((e: HTMLInputElement) => e.value);
-  expect(beforeChange).toBe("1.00");
-
-  await page
-    .locator(".parameters .q-field__native")
-    .first()
-    .evaluate((e: HTMLInputElement) => {
-      e.value = "0.50";
-      e.dispatchEvent(new Event("change"));
-    });
-
-  const afterChange = await page
-    .locator(".parameters .q-field__native")
-    .first()
-    .evaluate((e: HTMLInputElement) => e.value);
-  expect(afterChange).toBe("0.50");
+  validateValue(inputTag, "1.00");
+  await inputTag.evaluate((e: HTMLInputElement) => {
+    e.value = "0.50";
+    e.dispatchEvent(new Event("change"));
+  });
+  validateValue(inputTag, "0.50");
 
   // パラメータ引き継ぎは自動的にオンなので、パラメータ引き継ぎがされるかどうかを確認
   await page.getByRole("button").filter({ hasText: "add" }).click();
-  const afterAdd = await page
-    .locator(".parameters .q-field__native")
-    .first()
-    .evaluate((e: HTMLInputElement) => e.value);
-  expect(afterAdd).toBe("0.50");
+  validateValue(inputTag, "0.50");
 
-  // 設定画面を開き、パラメータ引き継ぎをオフにし、設定画面を閉じる
-  await page.getByText("設定").click();
-  await page.waitForTimeout(100);
-  await page.getByText("オプション").click();
-  await page.waitForTimeout(100);
-  await page
-    .locator(".q-card__actions")
-    .filter({ hasText: "パラメータの引き継ぎ" })
-    .getByRole("switch")
-    .click();
-  await page
-    .locator("#q-portal--dialog--6")
-    .getByRole("button")
-    .filter({ hasText: "close" })
-    .click();
+  await toggleSetting(page, "パラメータの引き継ぎ");
+
   // パラメータを引き継がないことの確認
   await page.locator(".audio-cell input").first().click();
   await page.getByRole("button").filter({ hasText: "add" }).click();
-  const afterChangeSetting = await page
-    .locator(".parameters .q-field__native")
+  await validateValue(inputTag, "1.00");
+
+  // スライダーからパラメータの変更ができるかどうかを確認
+  const sliderThumbBox = await page
+    .locator(".q-slider__thumb")
     .first()
-    .evaluate((e: HTMLInputElement) => e.value);
-  expect(afterChangeSetting).toBe("1.00");
+    .boundingBox();
+  if (!sliderThumbBox) throw new Error("sliderThumbBox is null");
+  const sliderBox = await page.locator(".q-slider").first().boundingBox();
+  if (!sliderBox) throw new Error("sliderBox is null");
+  await page.mouse.move(
+    sliderThumbBox.x + sliderThumbBox.width / 2,
+    sliderThumbBox.y + sliderThumbBox.height / 2
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    sliderBox.x + sliderBox.width,
+    sliderBox.y + sliderBox.height / 2
+  );
+  await page.waitForTimeout(100);
+  await validateValue(inputTag, "2.00");
 });

@@ -1,13 +1,13 @@
 import { defaultEngine, directoryHandleStoreKey } from "./contract";
 
 import {
-  electronStoreSchema,
-  ElectronStoreType,
+  configSchema,
+  ConfigType,
   EngineId,
   engineSettingSchema,
 } from "@/type/preload";
 
-const dbName = "voicevox-web";
+const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "electronStore";
 // FIXME: DBのschemaを変更したら、dbVersionを上げる
 // TODO: 気づけるようにしたい
@@ -29,7 +29,7 @@ export const openDB = () =>
       if (ev.oldVersion === 0) {
         // Initialize
         const db = request.result;
-        const baseSchema = electronStoreSchema.parse({});
+        const baseSchema = configSchema.parse({});
 
         const defaultVoicevoxEngineId = EngineId(defaultEngine.uuid);
         baseSchema.engineSettings = {
@@ -53,9 +53,9 @@ export const openDB = () =>
     };
   });
 
-export const setSettingEntry = async <Key extends keyof ElectronStoreType>(
+export const setSettingEntry = async <Key extends keyof ConfigType>(
   key: Key,
-  newValue: ElectronStoreType[Key]
+  newValue: ConfigType[Key]
 ) => {
   const db = await openDB();
 
@@ -65,9 +65,9 @@ export const setSettingEntry = async <Key extends keyof ElectronStoreType>(
     const store = transaction.objectStore(settingStoreKey);
     const getRequest = store.get(entryKey);
     getRequest.onsuccess = () => {
-      const baseSchema = electronStoreSchema.parse(getRequest.result);
+      const baseSchema = configSchema.parse(getRequest.result);
       baseSchema[key] = newValue;
-      const validatedSchema = electronStoreSchema.parse(baseSchema);
+      const validatedSchema = configSchema.parse(baseSchema);
       const putRequest = store.put(validatedSchema, entryKey);
       putRequest.onsuccess = () => {
         resolve(putRequest.result);
@@ -82,9 +82,9 @@ export const setSettingEntry = async <Key extends keyof ElectronStoreType>(
   });
 };
 
-export const getSettingEntry = async <Key extends keyof ElectronStoreType>(
+export const getSettingEntry = async <Key extends keyof ConfigType>(
   key: Key
-): Promise<ElectronStoreType[Key]> => {
+): Promise<ConfigType[Key]> => {
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
