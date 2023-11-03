@@ -39,12 +39,10 @@ const toStaticPath = (fileName: string) => `/${fileName}`;
  */
 export const api: Sandbox = {
   getAppInfos() {
-    /* eslint-disable @typescript-eslint/no-non-null-assertion */
     const appInfo = {
-      name: process.env.APP_NAME!,
-      version: process.env.APP_VERSION!,
+      name: import.meta.env.VITE_APP_NAME,
+      version: import.meta.env.VITE_APP_VERSION,
     };
-    /* eslint-enable @typescript-eslint/no-non-null-assertion */
     return Promise.resolve(appInfo);
   },
   getHowToUseText() {
@@ -77,7 +75,7 @@ export const api: Sandbox = {
   },
   showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
     return new Promise((resolve, reject) => {
-      if (obj.defaultPath === undefined) {
+      if (obj.defaultPath == undefined) {
         reject(
           // storeやvue componentからdefaultPathを設定していなかったらrejectされる
           new Error(
@@ -91,7 +89,7 @@ export const api: Sandbox = {
   },
   showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
     return new Promise((resolve, reject) => {
-      if (obj.defaultPath === undefined) {
+      if (obj.defaultPath == undefined) {
         reject(
           // storeやvue componentからdefaultPathを設定していなかったらrejectされる
           new Error(
@@ -114,7 +112,7 @@ export const api: Sandbox = {
   },
   showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
     return new Promise((resolve, reject) => {
-      if (obj.defaultPath === undefined) {
+      if (obj.defaultPath == undefined) {
         reject(
           // storeやvue componentからdefaultPathを設定していなかったらrejectされる
           new Error(
@@ -182,7 +180,7 @@ export const api: Sandbox = {
     listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void
   ) {
     window.addEventListener("message", (event) => {
-      if (event.data.channel === channel) {
+      if (event.data.channel == channel) {
         listener(event.data.args);
       }
     });
@@ -226,14 +224,14 @@ export const api: Sandbox = {
     type HotkeySettingType = ReturnType<
       typeof configSchema["parse"]
     >["hotkeySettings"];
-    if (newData !== undefined) {
+    if (newData != undefined) {
       const hotkeySettings = (await this.getSetting(
         "hotkeySettings"
       )) as HotkeySettingType;
       const hotkeySetting = hotkeySettings.find(
         (hotkey) => hotkey.action == newData.action
       );
-      if (hotkeySetting !== undefined) {
+      if (hotkeySetting != undefined) {
         hotkeySetting.combination = newData.combination;
       }
       await this.setSetting("hotkeySettings", hotkeySettings);
@@ -257,7 +255,7 @@ export const api: Sandbox = {
     return;
   },
   async theme(newData?: string) {
-    if (newData !== undefined) {
+    if (newData != undefined) {
       await this.setSetting("currentTheme", newData);
       return;
     }
