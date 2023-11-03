@@ -1,21 +1,24 @@
 <template>
   <div
-    id="score-sequencer"
     class="score-sequencer"
     @mousedown="handleMouseDown"
     @mousemove="handleMouseMove"
     @mouseup="handleMouseUp"
     @dblclick="addNote"
   >
+    <!-- 左上の角 -->
+    <div class="corner"></div>
+    <!-- スコア位置を表示するエリア -->
+    <score-position :offset="scrollX" />
     <!-- 鍵盤 -->
-    <sequencer-keys />
+    <sequencer-keys :offset="scrollY" />
     <!-- シーケンサ -->
-    <div class="sequencer-body">
+    <div id="sequencer-body" class="sequencer-body" @scroll="onScroll">
       <!-- グリッド -->
       <!-- NOTE: 現状小節+オクターブごとの罫線なし -->
       <svg
-        :width="`${gridCellWidth * numOfGridColumns}`"
-        :height="`${gridCellHeight * keyInfos.length}`"
+        :width="gridCellWidth * numOfGridColumns"
+        :height="gridCellHeight * keyInfos.length"
         xmlns="http://www.w3.org/2000/svg"
         class="sequencer-grid"
       >
@@ -24,42 +27,42 @@
           <pattern
             id="sequencer-grid-octave-cells"
             patternUnits="userSpaceOnUse"
-            :width="`${gridCellWidth}`"
-            :height="`${gridCellHeight * 12}`"
+            :width="gridCellWidth"
+            :height="gridCellHeight * 12"
           >
             <rect
               v-for="(keyInfo, index) in keyInfos"
               :key="index"
               x="0"
-              :y="`${gridCellHeight * index}`"
-              :width="`${gridCellWidth}`"
-              :height="`${gridCellHeight}`"
+              :y="gridCellHeight * index"
+              :width="gridCellWidth"
+              :height="gridCellHeight"
               :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
             />
           </pattern>
           <pattern
             id="sequencer-grid-measure"
             patternUnits="userSpaceOnUse"
-            :width="`${beatWidth * beatsPerMeasure}`"
-            :height="`${gridCellHeight * keyInfos.length}`"
+            :width="beatWidth * beatsPerMeasure"
+            :height="gridCellHeight * keyInfos.length"
           >
             <line
               v-for="n in beatsPerMeasure"
               :key="n"
-              :x1="`${beatWidth * (n - 1)}`"
-              :x2="`${beatWidth * (n - 1)}`"
+              :x1="beatWidth * (n - 1)"
+              :x2="beatWidth * (n - 1)"
               y1="0"
               y2="100%"
               stroke-width="1"
               :class="`sequencer-grid-${n === 1 ? 'measure' : 'beat'}-line`"
             />
             <line
-              :x1="`${beatWidth * beatsPerMeasure}`"
-              :x2="`${beatWidth * beatsPerMeasure}`"
+              :x1="beatWidth * beatsPerMeasure"
+              :x2="beatWidth * beatsPerMeasure"
               y1="0"
               y2="100%"
               stroke-width="1"
-              :class="`sequencer-grid-measure-line`"
+              class="sequencer-grid-measure-line"
             />
           </pattern>
         </defs>
@@ -101,8 +104,8 @@
       :style="{
         position: 'fixed',
         zIndex: 10000,
-        bottom: '8px',
-        right: '16px',
+        bottom: '20px',
+        right: '36px',
         width: '80px',
       }"
       @input="setZoomX"
@@ -116,8 +119,8 @@
       :style="{
         position: 'fixed',
         zIndex: 10000,
-        bottom: '64px',
-        right: '-8px',
+        bottom: '68px',
+        right: '-12px',
         transform: 'rotate(-90deg)',
         width: '80px',
       }"
@@ -130,6 +133,7 @@
 import { defineComponent, computed, ref, onMounted } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
+import ScorePosition from "@/components/Sing/ScorePosition.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import {
@@ -148,6 +152,7 @@ import {
 export default defineComponent({
   name: "SingScoreSequencer",
   components: {
+    ScorePosition,
     SequencerKeys,
     SequencerNote,
   },
@@ -233,8 +238,8 @@ export default defineComponent({
       return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
     });
     // スクロール位置
-    // const scrollX = computed(() => state.sequencerScrollX);
-    // const scrollY = computed(() => state.sequencerScrollY);
+    const scrollX = ref(0);
+    const scrollY = ref(0);
     const selectedNoteIds = computed(() => state.selectedNoteIds);
 
     // ノートの追加
@@ -585,14 +590,21 @@ export default defineComponent({
       }
     };
 
+    const onScroll = (event: Event) => {
+      if (event.target instanceof HTMLElement) {
+        scrollX.value = event.target.scrollLeft;
+        scrollY.value = event.target.scrollTop;
+      }
+    };
+
     onMounted(() => {
-      const el = document.querySelector("#score-sequencer");
+      const el = document.querySelector("#sequencer-body");
       // 上から2/3の位置がC4になるようにスクロールする
       if (el) {
         const c4BaseY = noteNumberToBaseY(60);
         const clientBaseHeight = el.clientHeight / zoomY.value;
         const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
-        el.scrollTop = scrollBaseY * zoomY.value;
+        el.scrollTo(0, scrollBaseY * zoomY.value);
       }
     });
 
@@ -608,6 +620,8 @@ export default defineComponent({
       zoomY,
       cursorX,
       cursorY,
+      scrollX,
+      scrollY,
       setZoomX,
       setZoomY,
       addNote,
@@ -618,6 +632,7 @@ export default defineComponent({
       handleDragMoveStart,
       handleDragRightStart,
       handleDragLeftStart,
+      onScroll,
     };
   },
 });
@@ -629,27 +644,25 @@ export default defineComponent({
 
 .score-sequencer {
   backface-visibility: hidden;
-  display: block;
-  height: 100%;
-  overflow: auto;
-  padding-bottom: 164px;
-  position: relative;
-  width: 100%;
+  display: grid;
+  grid-template-rows: 32px 1fr;
+  grid-template-columns: 48px 1fr;
 
   &.move {
     cursor: move;
   }
 }
 
+.corner {
+  background: #fff;
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+}
+
 .sequencer-body {
   backface-visibility: hidden;
-  display: block;
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  top: 0;
-  left: 48px;
-  padding-bottom: 164px;
+  overflow: auto;
+  position: relative;
 }
 
 .sequencer-grid {

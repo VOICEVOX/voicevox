@@ -84,7 +84,6 @@ export default defineComponent({
 .sing-singer-panel {
   background: colors.$background;
   border-right: 1px solid #ccc;
-  height: 100%;
   width: 200px;
 
   &.hide {

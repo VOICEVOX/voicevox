@@ -7,7 +7,9 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "SingScorePosition",
-
+  props: {
+    offset: { type: Number, default: 0 },
+  },
   setup() {
     return {};
   },
@@ -22,6 +24,5 @@ export default defineComponent({
   background: colors.$background;
   border-bottom: 1px solid #ccc;
   height: 32px;
-  width: 100%;
 }
 </style>
