@@ -28,7 +28,7 @@ on:
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
   VOICEVOX_ENGINE_VERSION: 0.14.6
-  VOICEVOX_RESOURCE_VERSION: 0.14.4
+  VOICEVOX_RESOURCE_VERSION: 0.15.0-preview.3
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -202,7 +202,7 @@ jobs:
       - name: Replace .env.production infomations
         run: |
           # GTM ID
-          gtm_id=$(jq -r '.gtm_container_id' resource/editor/metas.json)
+          gtm_id=$(jq -er '.gtm_container_id' resource/editor/metas.json)
           $sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
