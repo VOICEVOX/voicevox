@@ -34,7 +34,6 @@ export default defineConfig((options) => {
       linux: "7zzs",
       darwin: "7zz",
     }[process.platform];
-  process.env.VITE_APP_NAME = process.env.npm_package_name;
   process.env.VITE_APP_VERSION = process.env.npm_package_version;
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
