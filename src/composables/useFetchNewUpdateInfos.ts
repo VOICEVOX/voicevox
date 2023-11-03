@@ -16,10 +16,14 @@ export const useFetchNewUpdateInfos = () => {
       currentVersion.value = obj.version;
     })
     .then(() => {
-      // TODO: URLを環境変数で変えられるようにする
-      fetch(
-        "https://raw.githubusercontent.com/VOICEVOX/voicevox_blog/master/src/data/updateInfos.json"
-      )
+      const url: string | undefined = import.meta.env
+        .VITE_LATEST_UPDATE_INFOS_URL;
+      if (!url) {
+        throw new Error(
+          "VITE_LATEST_UPDATE_INFOS_URLが未設定です。.env内に記載してください。"
+        );
+      }
+      fetch(url)
         .then((response) => {
           if (!response.ok) throw new Error("Network response was not ok.");
           return response.json();

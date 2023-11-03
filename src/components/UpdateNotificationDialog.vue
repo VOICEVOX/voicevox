@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { UpdateInfo } from "@/type/preload";
 
 const props =
@@ -80,7 +80,7 @@ const closeUpdateNotificationDialog = () => {
 };
 
 const openOfficialWebsite = () => {
-  window.open("https://voicevox.hiroshiba.jp/", "_blank");
+  window.open(import.meta.env.VITE_OFFICIAL_WEBSITE_URL, "_blank");
 };
 </script>
 
