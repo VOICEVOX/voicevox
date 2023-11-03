@@ -51,6 +51,7 @@ describe("store/vuex.js test", () => {
         isDefaultStyleSelectDialogOpen: false,
         isDictionaryManageDialogOpen: false,
         isEngineManageDialogOpen: false,
+        isUpdateNotificationDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
