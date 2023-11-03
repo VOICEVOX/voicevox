@@ -261,7 +261,7 @@ export type IpcIHData = {
 
   GET_TEMP_PROJECT: {
     args: [];
-    return: ElectronStoreType;
+    return: ConfigType;
   };
 
   SET_TEMP_PROJECT: {
