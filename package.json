@@ -48,7 +48,7 @@
     "electron-window-state": "5.0.3",
     "encoding-japanese": "1.0.30",
     "glob": "8.0.3",
-    "immer": "10.0.3",
+    "immer": "9.0.21",
     "markdown-it": "13.0.2",
     "move-file": "3.0.0",
     "multistream": "4.1.0",
