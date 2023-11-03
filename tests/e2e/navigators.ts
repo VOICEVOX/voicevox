@@ -2,11 +2,20 @@ import { expect, Page } from "@playwright/test";
 import { getNewestQuasarDialog, getQuasarMenu } from "./locators";
 
 /**
+ * /#/homeに移動
+ */
+export async function gotoHome({ page }: { page: Page }) {
+  const BASE_URL = "http://localhost:7357/#/home";
+  await page.setViewportSize({ width: 800, height: 600 });
+  await page.goto(BASE_URL);
+}
+
+/**
  * 初回起動時の確認を完了してメイン画面に移動
  */
 export async function navigateToMain(page: Page) {
   await expect(page.getByText("利用規約に関するお知らせ")).toBeVisible({
-    timeout: 60 * 1000,
+    timeout: 90 * 1000,
   });
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "同意して使用開始" }).click();
@@ -14,6 +23,7 @@ export async function navigateToMain(page: Page) {
   await page.getByRole("button", { name: "完了" }).click();
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "許可" }).click();
+  await page.waitForTimeout(100);
 }
 
 /**
@@ -34,7 +44,7 @@ export async function toggleSetting(page: Page, settingName: string) {
     .click();
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "設定を閉じる" }).click();
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(500);
 }
 
 /**

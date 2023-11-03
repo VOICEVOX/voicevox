@@ -84,8 +84,8 @@ const config: PlaywrightTestConfig = {
 
   webServer: [
     {
-      command: "vite --mode test",
-      port: 5173,
+      command: "vite --mode test --port 7357",
+      port: 7357,
       reuseExistingServer: !process.env.CI,
     },
     ...additionalWebServer,

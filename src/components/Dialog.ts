@@ -174,25 +174,31 @@ export async function generateAndSaveOneAudioWithDialog({
   }
 }
 
-export async function generateAndSaveAllAudioWithDialog({
+export async function multiGenerateAndSaveAudioWithDialog({
+  audioKeys,
   dispatch,
   dirPath,
   disableNotifyOnGenerate,
 }: {
+  audioKeys: AudioKey[];
   dispatch: Dispatch<AllActions>;
   dirPath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
-    dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
+    dispatch("MULTI_GENERATE_AND_SAVE_AUDIO", {
+      audioKeys,
       dirPath,
-      callback: (finishedCount, totalCount) =>
-        dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
+      callback: (finishedCount) =>
+        dispatch("SET_PROGRESS_FROM_COUNT", {
+          finishedCount,
+          totalCount: audioKeys.length,
+        }),
     }),
     dispatch
   );
 
-  if (result === undefined) return;
+  if (result == undefined) return;
 
   // 書き出し成功時の出力先パスを配列に格納
   const successArray: Array<string | undefined> = result.flatMap((result) =>
@@ -280,7 +286,7 @@ export async function connectAndExportTextWithDialog({
     filePath,
   });
 
-  if (result === undefined || result.result === "CANCELED") return;
+  if (result == undefined || result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
     if (disableNotifyOnGenerate) return;

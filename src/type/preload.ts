@@ -59,7 +59,7 @@ export const defaultHotkeySettings: HotkeySetting[] = [
     combination: !isMac ? "Ctrl E" : "Meta E",
   },
   {
-    action: "一つだけ書き出し",
+    action: "選択音声を書き出し",
     combination: "E",
   },
   {
@@ -147,7 +147,7 @@ export const defaultHotkeySettings: HotkeySetting[] = [
 export const defaultToolbarButtonSetting: ToolbarSetting = [
   "PLAY_CONTINUOUSLY",
   "STOP",
-  "EXPORT_AUDIO_ONE",
+  "EXPORT_AUDIO_SELECTED",
   "EMPTY",
   "UNDO",
   "REDO",
@@ -391,7 +391,7 @@ export type MorphableTargetInfoTable = {
 
 export const hotkeyActionSchema = z.enum([
   "音声書き出し",
-  "一つだけ書き出し",
+  "選択音声を書き出し",
   "音声を繋げて書き出し",
   "再生/停止",
   "連続再生/停止",
@@ -433,7 +433,7 @@ export type HotkeyReturnType =
 export const toolbarButtonTagSchema = z.enum([
   "PLAY_CONTINUOUSLY",
   "STOP",
-  "EXPORT_AUDIO_ONE",
+  "EXPORT_AUDIO_SELECTED",
   "EXPORT_AUDIO_ALL",
   "EXPORT_AUDIO_CONNECT_ALL",
   "SAVE_PROJECT",

@@ -418,10 +418,11 @@ export type AudioStoreTypes = {
     }): SaveResultObject;
   };
 
-  GENERATE_AND_SAVE_ALL_AUDIO: {
+  MULTI_GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
+      audioKeys: AudioKey[];
       dirPath?: string;
-      callback?: (finishedCount: number, totalCount: number) => void;
+      callback?: (finishedCount: number) => void;
     }): SaveResultObject[] | undefined;
   };
 
