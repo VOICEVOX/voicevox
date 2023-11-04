@@ -204,7 +204,12 @@ export class TuningTranscription {
   }
 
   /**
-   * 変更前と変更後のモーラをフラット化し、変更後のモーラテキストに対応するようにフラット化した変更前のモーラ配列を操作する
+   * 変更前の配列を操作してpatchMora配列を作る
+   * <例> (Ｕはundefined）
+   *        変更前: [ "ズ", "ン", "ダ", "モ", "ン", "ナ", "ノ", "ダ" ]
+   *        変更後: [ "ボ", "ク", "ズ", "ン", "ダ", "ナ", "ノ", "デ", "ス" ]
+   *                                        ↓
+   * patchMora配列: [  Ｕ ,  Ｕ , "ズ", "ン", "ダ", "ナ", "ノ",  Ｕ ,  Ｕ  ]
    */
   createDiffPatch() {
     const before = structuredClone(this.beforeAccent);
