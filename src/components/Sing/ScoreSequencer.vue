@@ -1,6 +1,11 @@
 <template>
   <div
     class="score-sequencer"
+    :style="{
+      display: 'grid',
+      gridTemplateRows: `${rulerHeight}px 1fr`,
+      gridTemplateColumns: `${keysWidth}px 1fr`,
+    }"
     @mousedown="handleMouseDown"
     @mousemove="handleMouseMove"
     @mouseup="handleMouseUp"
@@ -8,10 +13,18 @@
   >
     <!-- 左上の角 -->
     <div class="corner"></div>
-    <!-- スコア位置を表示するエリア -->
-    <score-position :offset="scrollX" />
+    <!-- ルーラー -->
+    <sequencer-ruler
+      :offset="scrollX"
+      :height="rulerHeight"
+      :num-of-measures="numOfMeasures"
+    />
     <!-- 鍵盤 -->
-    <sequencer-keys :offset="scrollY" />
+    <sequencer-keys
+      :offset="scrollY"
+      :width="keysWidth"
+      :black-key-width="30"
+    />
     <!-- シーケンサ -->
     <div id="sequencer-body" class="sequencer-body" @scroll="onScroll">
       <!-- グリッド -->
@@ -133,7 +146,7 @@
 import { defineComponent, computed, ref, onMounted } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
-import ScorePosition from "@/components/Sing/ScorePosition.vue";
+import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import {
@@ -152,9 +165,13 @@ import {
 export default defineComponent({
   name: "SingScoreSequencer",
   components: {
-    ScorePosition,
+    SequencerRuler,
     SequencerKeys,
     SequencerNote,
+  },
+  props: {
+    rulerHeight: { type: Number, default: 32 },
+    keysWidth: { type: Number, default: 48 },
   },
   setup() {
     enum DragMode {
@@ -206,18 +223,11 @@ export default defineComponent({
     const gridCellHeight = computed(() => {
       return gridCellBaseHeight * zoomY.value;
     });
-    const numOfGridColumns = computed(() => {
-      // TODO: 複数拍子に対応する
-      const beats = timeSignatures.value[0].beats;
-      const beatType = timeSignatures.value[0].beatType;
-      const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
-      const numOfGridColumnsPerMeasure = Math.round(
-        measureDuration / gridCellTicks.value
-      );
+    const numOfMeasures = computed(() => {
       // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
       const minNumOfMeasures = 32;
       // NOTE: いったん最後尾に足した場合は伸びるようにする
-      const numOfMeasures = Math.max(
+      return Math.max(
         minNumOfMeasures,
         getNumOfMeasures(
           notes.value,
@@ -226,7 +236,16 @@ export default defineComponent({
           tpqn.value
         ) + 1
       );
-      return numOfGridColumnsPerMeasure * numOfMeasures;
+    });
+    const numOfGridColumns = computed(() => {
+      // TODO: 複数拍子に対応する
+      const beats = timeSignatures.value[0].beats;
+      const beatType = timeSignatures.value[0].beatType;
+      const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
+      const numOfGridColumnsPerMeasure = Math.round(
+        measureDuration / gridCellTicks.value
+      );
+      return numOfGridColumnsPerMeasure * numOfMeasures.value;
     });
     const beatsPerMeasure = computed(() => {
       return timeSignatures.value[0].beats;
@@ -613,6 +632,7 @@ export default defineComponent({
       beatWidth,
       gridCellWidth,
       gridCellHeight,
+      numOfMeasures,
       numOfGridColumns,
       keyInfos,
       notes,
@@ -644,9 +664,6 @@ export default defineComponent({
 
 .score-sequencer {
   backface-visibility: hidden;
-  display: grid;
-  grid-template-rows: 32px 1fr;
-  grid-template-columns: 48px 1fr;
 
   &.move {
     cursor: move;
