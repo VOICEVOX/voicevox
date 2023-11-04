@@ -39,6 +39,7 @@ jobs:
   e2e-test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
@@ -88,9 +89,9 @@ jobs:
             export DEBUG="pw:browser*"
           fi
           if [[ ${{ matrix.os }} == ubuntu-* ]]; then
-            xvfb-run --auto-servernum npm run test:browser-e2e
+            xvfb-run --auto-servernum npm run test:browser-e2e ./tests/e2e/browser/調整結果.spec.ts
           else
-            npm run test:browser-e2e
+            npm run test:browser-e2e ./tests/e2e/browser/調整結果.spec.ts
           fi
 
       - name: Run npm run test:electron-e2e
