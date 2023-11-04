@@ -27,6 +27,7 @@ async function getSliderValues(page: Page) {
 
 test("実験的機能：調整結果の保持", async ({ page }) => {
   await navigateToMain(page);
+  page.on("console", (msg) => console.log(msg.text()));
 
   await toggleSetting(page, "調整結果の保持");
   await page.waitForTimeout(100);
