@@ -28,20 +28,12 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     ">=0.14",
     (config) => {
       // FIXME: できるならEngineManagerからEngineIDを取得したい
-      let engineId: EngineId;
       if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined) {
-        // 何故かテスト時にundefinedになるのでハードコードする。
-        // FIXME: import.meta.env.VITE_DEFAULT_ENGINE_INFOSがundefinedにならないようにする
-        if (import.meta.env.MODE === "test") {
-          engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
-        } else {
-          throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
-        }
-      } else {
-        engineId = EngineId(
-          JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
-        );
+        throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
       }
+      const engineId = EngineId(
+        JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
+      );
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
       const prevDefaultStyleIds = config.defaultStyleIds as DefaultStyleId[];

@@ -176,6 +176,11 @@
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
   <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
+  <update-notification-dialog
+    v-model="isUpdateNotificationDialogOpenComputed"
+    :latest-version="latestVersion"
+    :new-update-infos="newUpdateInfos"
+  />
 </template>
 
 <script setup lang="ts">
@@ -203,6 +208,8 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
+import UpdateNotificationDialog from "@/components/UpdateNotificationDialog.vue";
+import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
@@ -541,6 +548,13 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
   }
 });
 
+// エディタのアップデート確認
+const { isCheckingFinished, latestVersion, newUpdateInfos } =
+  useFetchNewUpdateInfos();
+const isUpdateAvailable = computed(() => {
+  return isCheckingFinished.value && latestVersion.value !== "";
+});
+
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
 onMounted(async () => {
@@ -622,6 +636,8 @@ onMounted(async () => {
   isAcceptTermsDialogOpenComputed.value =
     import.meta.env.MODE !== "development" &&
     store.state.acceptTerms !== "Accepted";
+
+  isUpdateNotificationDialogOpenComputed.value = isUpdateAvailable.value;
 
   isCompletedInitialStartup.value = true;
 });
@@ -795,6 +811,15 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
   set: (val) =>
     store.dispatch("SET_DIALOG_OPEN", {
       isAcceptRetrieveTelemetryDialogOpen: val,
+    }),
+});
+
+// アップデート通知
+const isUpdateNotificationDialogOpenComputed = computed({
+  get: () => store.state.isUpdateNotificationDialogOpen,
+  set: (val) =>
+    store.dispatch("SET_DIALOG_OPEN", {
+      isUpdateNotificationDialogOpen: val,
     }),
 });
 

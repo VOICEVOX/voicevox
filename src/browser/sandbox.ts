@@ -39,12 +39,10 @@ const toStaticPath = (fileName: string) => `/${fileName}`;
  */
 export const api: Sandbox = {
   getAppInfos() {
-    /* eslint-disable @typescript-eslint/no-non-null-assertion */
     const appInfo = {
-      name: process.env.APP_NAME!,
-      version: process.env.APP_VERSION!,
+      name: import.meta.env.VITE_APP_NAME,
+      version: import.meta.env.VITE_APP_VERSION,
     };
-    /* eslint-enable @typescript-eslint/no-non-null-assertion */
     return Promise.resolve(appInfo);
   },
   getHowToUseText() {
@@ -182,7 +180,7 @@ export const api: Sandbox = {
     listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void
   ) {
     window.addEventListener("message", (event) => {
-      if (event.data.channel === channel) {
+      if (event.data.channel == channel) {
         listener(event.data.args);
       }
     });
