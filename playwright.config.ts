@@ -48,7 +48,7 @@ if (isElectron) {
 const config: PlaywrightTestConfig = {
   testDir: "./tests/e2e",
   /* Maximum time one test can run for. */
-  timeout: 120 * 1000,
+  timeout: 30 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -65,7 +65,7 @@ const config: PlaywrightTestConfig = {
     ? [["html", { open: "never" }], ["github"]]
     : [["html", { open: "on-failure" }]],
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: 0,
   use: {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
