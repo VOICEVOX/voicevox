@@ -206,10 +206,12 @@ export class TuningTranscription {
   /**
    * 変更前の配列を操作してpatchMora配列を作る
    * <例> (Ｕはundefined）
-   *        変更前: [ "ズ", "ン", "ダ", "モ", "ン", "ナ", "ノ", "ダ" ]
-   *        変更後: [ "ボ", "ク", "ズ", "ン", "ダ", "ナ", "ノ", "デ", "ス" ]
-   *                                        ↓
-   * patchMora配列: [  Ｕ ,  Ｕ , "ズ", "ン", "ダ", "ナ", "ノ",  Ｕ ,  Ｕ  ]
+   *         変更前のテキスト差分: [ "ズ", "ン", "ダ", "モ", "ン", "ナ", "ノ", "ダ" ]
+   *         変更後のテキスト差分: [ "ボ", "ク", "ズ", "ン", "ダ", "ナ", "ノ", "デ", "ス" ]
+   *                                                        ↓ テキストのみに注目したパッチ配列
+   *                               [  Ｕ ,  Ｕ , "ズ", "ン", "ダ", "ナ", "ノ",  Ｕ ,  Ｕ  ]
+   *  最終的にこちら(↓)が出力される
+   *  実際に作られるpatchMora配列: [  Ｕ ,  Ｕ , {text: "ズ"...}, {text: "ン"...}, {text: "ダ"...},{text: "ナ"...},{text: "ノ"...},  Ｕ ,  Ｕ  ]
    */
   createDiffPatch() {
     const before = structuredClone(this.beforeAccent);
@@ -238,13 +240,14 @@ export class TuningTranscription {
     return beforeFlatArray;
   }
   /**
-   * テキスト: 「こんにちは」 -> 「こんばんは」 と変更した場合、以下の例のように、moraPatch配列とafter(AccentPhrases)を比較する。
+   * 「こんにちは」 -> 「こんばんは」 とテキストを変更した場合、以下の例のように、moraPatch配列とafter(AccentPhrases)を比較し、
+   * text(key)の値が一致するとき、after[...]["moras"][moraIndex] = moraPatch[moraPatchIndex]と代入することで、モーラを再利用する。
+   *
    *  <例> (「||」は等号記号を表す)
    *           moraPatch = [ {text: "コ"...}, {text: "ン"...}, undefined      , undefined      , {text: "は"...} ]
    *                              ||                ||                                                ||
    * after[...]["moras"] = [ {text: "コ"...}, {text: "ン"...}, {text: "バ"...}, {text: "ン"...}, {text: "は"...} ]
    *
-   * text(key)の値が一致するとき、after[...]["moras"][moraIndex] = moraPatch[moraPatchIndex]と代入することで、モーラを再利用する。
    */
   mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
