@@ -261,7 +261,9 @@ export class TuningTranscription {
           after[accentIndex]["moras"][moraIndex].text ===
           moraPatch[moraPatchIndex]?.text
         ) {
-          after[accentIndex]["moras"][moraIndex] = moraPatch[moraPatchIndex];
+          after[accentIndex]["moras"][moraIndex] = moraPatch[
+            moraPatchIndex
+          ] as Mora;
         }
         moraPatchIndex++;
       }
@@ -272,7 +274,7 @@ export class TuningTranscription {
 
   transcribe() {
     const moraPatch = this.createDiffPatch();
-    return this.mergeAccentPhrases(moraPatch);
+    return this.mergeAccentPhrases(moraPatch as never);
   }
 }
 
