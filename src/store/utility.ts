@@ -228,11 +228,16 @@ export class TuningTranscription {
     return beforeFlatArray;
   }
   /**
-   * 変更後のアクセント句に、createDiffPatchで作成したモーラ配列を適用し、各モーラ配列のテキストが一致したら、変更前のモーラを変更後のモーラに渡す
+   * テキスト: 「こんにちは」 -> 「こんばんは」 のように変更が与えられた場合、にmoraPatch配列とafter(AccentPhrases)を比較する。
+   *
+   *           moraPatch = [ {text: "コ"...}, {text: "ン"...}, undefined      , undefined      , {text: "は"...} ]
+   * after[...]["moras"] = [ {text: "コ"...}, {text: "ン"...}, {text: "バ"...}, {text: "ン"...}, {text: "は"...} ]
+   *
+   * text(key)の値が一致するとき、after[...]["moras"][moraIndex] = moraPatch[moraPatchIndex]と代入することで、モーラを再利用する。
    */
   mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
-    let beforeIndex = 0; // pluckedBeforeのデータの位置
+    let moraPatchIndex = 0; // pluckedBeforeのデータの位置
 
     // 与えられたアクセント句は、AccentPhrases[ Number ][ Object Key ][ Number ]の順番で、モーラを操作できるため、二重forで回す
     for (let accentIndex = 0; accentIndex < after.length; accentIndex++) {
@@ -242,17 +247,17 @@ export class TuningTranscription {
         moraIndex++
       ) {
         // undefinedのとき、何もせず次のモーラへ移動
-        if (moraPatch[beforeIndex] == undefined) {
-          beforeIndex++;
+        if (moraPatch[moraPatchIndex] == undefined) {
+          moraPatchIndex++;
           continue;
         }
         if (
           after[accentIndex]["moras"][moraIndex].text ===
-          moraPatch[beforeIndex]?.text
+          moraPatch[moraPatchIndex]?.text
         ) {
-          after[accentIndex]["moras"][moraIndex] = moraPatch[beforeIndex];
+          after[accentIndex]["moras"][moraIndex] = moraPatch[moraPatchIndex];
         }
-        beforeIndex++;
+        moraPatchIndex++;
       }
     }
 
