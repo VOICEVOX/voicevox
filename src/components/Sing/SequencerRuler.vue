@@ -1,5 +1,5 @@
 <template>
-  <div class="sequencer-ruler" :style="{ height: height }">
+  <div class="sequencer-ruler">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width="rulerWidth"

@@ -6,10 +6,6 @@
       gridTemplateRows: `${rulerHeight}px 1fr`,
       gridTemplateColumns: `${keysWidth}px 1fr`,
     }"
-    @mousedown="handleMouseDown"
-    @mousemove="handleMouseMove"
-    @mouseup="handleMouseUp"
-    @dblclick="addNote"
   >
     <!-- 左上の角 -->
     <div class="corner"></div>
@@ -26,7 +22,15 @@
       :black-key-width="30"
     />
     <!-- シーケンサ -->
-    <div id="sequencer-body" class="sequencer-body" @scroll="onScroll">
+    <div
+      id="sequencer-body"
+      class="sequencer-body"
+      @mousedown="handleMouseDown"
+      @mousemove="handleMouseMove"
+      @mouseup="handleMouseUp"
+      @dblclick="addNote"
+      @scroll="onScroll"
+    >
       <!-- グリッド -->
       <!-- NOTE: 現状小節+オクターブごとの罫線なし -->
       <svg

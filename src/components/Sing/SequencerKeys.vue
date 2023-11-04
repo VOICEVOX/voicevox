@@ -15,7 +15,7 @@
             <text
               v-if="whiteKeyInfo.pitch === 'C'"
               font-size="10"
-              :x="blackKeyWidth"
+              :x="blackKeyWidth + 2"
               :y="whiteKeyRects[index].y + whiteKeyRects[index].height - 4"
               class="sequencer-keys-item-pitchname"
             >
