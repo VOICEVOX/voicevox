@@ -1,10 +1,6 @@
 <template>
   <div class="sequencer-ruler">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      :width="rulerWidth"
-      :height="height"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
       <defs>
         <pattern
           id="sequencer-ruler-measure"
@@ -44,7 +40,7 @@
         </symbol>
       </defs>
       <rect
-        :width="rulerWidth"
+        :width="width"
         :height="height"
         fill="url(#sequencer-ruler-measure)"
       />
@@ -95,7 +91,7 @@ export default defineComponent({
           (props.numOfMeasures - lastTs.measureNumber + 1)
       );
     });
-    const rulerWidth = computed(() => {
+    const width = computed(() => {
       return tickToBaseX(endTicks.value, tpqn.value) * zoomX.value;
     });
     const measureInfos = computed(() => {
@@ -131,7 +127,7 @@ export default defineComponent({
 
     return {
       measureWidth,
-      rulerWidth,
+      width,
       measureInfos,
     };
   },
