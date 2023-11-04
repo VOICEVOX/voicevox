@@ -7,6 +7,7 @@ import {
   DefaultStyleId,
   defaultHotkeySettings,
   HotkeySetting,
+  engineSettingSchema,
 } from "@/type/preload";
 
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
@@ -153,6 +154,7 @@ export abstract class BaseConfigManager {
       const defaultConfig = configSchema.parse({});
       this.config = defaultConfig;
     }
+    this.fillEngineSettings();
     this._save();
     await this.ensureSaved();
 
@@ -246,5 +248,20 @@ export abstract class BaseConfigManager {
       ...data,
       hotkeySettings: migratedHotkeys,
     };
+  }
+
+  private fillEngineSettings() {
+    if (!this.config) throw new Error("Config is not initialized");
+    // FIXME: できるならEngineManagerからEngineIDを取得したい
+    if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined) {
+      throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
+    }
+    const engineId = EngineId(
+      JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
+    );
+    if (engineId == undefined)
+      throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
+
+    this.config.engineSettings[engineId] = engineSettingSchema.parse({});
   }
 }
