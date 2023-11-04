@@ -190,8 +190,8 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  createFlatArray<T>(collection: T[], key: keyof T): T[keyof T][] {
-    const result: T[keyof T][] = [];
+  createFlatArray<T, K extends keyof T>(collection: T[], key: K): T[K][] {
+    const result: T[K][] = [];
     for (const element of collection) {
       const value = element[key];
       if (Array.isArray(value)) {
@@ -212,9 +212,10 @@ export class TuningTranscription {
 
     const beforeFlatArray = this.createFlatArray(before, "moras");
     const afterFlatArray = this.createFlatArray(after, "moras");
+    console.log(beforeFlatArray);
     const diffed = diffArrays(
-      this.createFlatArray(structuredClone(beforeFlatArray), "text"),
-      this.createFlatArray(structuredClone(afterFlatArray), "text")
+      this.createFlatArray(structuredClone(beforeFlatArray), "text" as never),
+      this.createFlatArray(structuredClone(afterFlatArray), "text" as never)
     );
     let pluckedIndex = 0;
     for (const diff of diffed) {
