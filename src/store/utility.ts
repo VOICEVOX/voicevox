@@ -223,7 +223,7 @@ export class TuningTranscription {
         beforeFlatArray.splice(pluckedIndex, diff.count);
       } else if (diff.added) {
         diff.value.forEach(() => {
-          beforeFlatArray.splice(pluckedIndex, 0, undefined);
+          beforeFlatArray.splice(pluckedIndex, 0, undefined as never);
           pluckedIndex++;
         });
       } else {
