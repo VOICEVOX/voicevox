@@ -177,6 +177,10 @@ function skipMemoText(targettext: string): string {
 /**
  * 2つのアクセント句配列を比べて同じだと思われるモーラの調整結果を転写し
  * 変更前のアクセント句の調整結果を変更後のアクセント句に保持する
+ * 「こんにちは」 -> 「こんばんは」と変更した場合、以下の例において[]に囲まれる部分は、変更前のアクセント句にあるモーラが再利用される。
+ * <例>
+ *
+ * 「 [こん]ばん[は] 」
  */
 export class TuningTranscription {
   beforeAccent: AccentPhrase[];
@@ -228,9 +232,10 @@ export class TuningTranscription {
     return beforeFlatArray;
   }
   /**
-   * テキスト: 「こんにちは」 -> 「こんばんは」 のように変更が与えられた場合、にmoraPatch配列とafter(AccentPhrases)を比較する。
-   *
+   * テキスト: 「こんにちは」 -> 「こんばんは」 と変更した場合、以下の例のように、moraPatch配列とafter(AccentPhrases)を比較する。
+   *  <例> (「||」は等号記号を表す)
    *           moraPatch = [ {text: "コ"...}, {text: "ン"...}, undefined      , undefined      , {text: "は"...} ]
+   *                              ||                ||                                                ||
    * after[...]["moras"] = [ {text: "コ"...}, {text: "ン"...}, {text: "バ"...}, {text: "ン"...}, {text: "は"...} ]
    *
    * text(key)の値が一致するとき、after[...]["moras"][moraIndex] = moraPatch[moraPatchIndex]と代入することで、モーラを再利用する。
