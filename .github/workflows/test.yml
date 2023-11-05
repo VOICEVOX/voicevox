@@ -79,17 +79,18 @@ jobs:
           chmod +x ${{ steps.download-engine.outputs.run_path }}
 
           # .env
+          sed -i -e 's|"074fc39e-678b-4c13-8916-ffca8d505d1d"|"208cf94d-43d2-4cf5-abc0-9783cac36d29"|' .env.test
+          sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env.test
+          sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port=50021"],|' .env.test
           cp .env.test .env
-          sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env
-          sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port=50021"],|' .env
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-      - name: Clone my dotfiles
-        run: |
-          curl https://github.com/sevenc-nanashi/dotfiles/raw/main/install.sh -L | bash
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - uses: denoland/setup-deno@v1
+      #   with:
+      #     deno-version: v1.x
+      # - name: Clone my dotfiles
+      #   run: |
+      #     curl https://github.com/sevenc-nanashi/dotfiles/raw/main/install.sh -L | bash
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
 
       - name: Run npm run test:browser-e2e
         run: |
