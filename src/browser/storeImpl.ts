@@ -3,7 +3,7 @@ import { directoryHandleStoreKey } from "./contract";
 import { BaseConfigManager, Metadata } from "@/shared/ConfigManager";
 import { ConfigType } from "@/type/preload";
 
-const dbName = `${process.env.APP_NAME}-web`;
+const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "config";
 const dbVersion = 1;
 // NOTE: settingを複数持つことはないと仮定して、keyを固定してしまう
