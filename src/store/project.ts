@@ -583,7 +583,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             context.commit("SET_PROJECT_FILEPATH", { filePath });
           }
 
-          // Fixme: プロジェクト保存時点で保存はされていないが IS_EDITED が false になる
+          // Fixme: プロジェクト復元時点で保存はされていないが IS_EDITED が false になる
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
           await registerAudioItems({ projectData, dispatch: context.dispatch });
           return;
