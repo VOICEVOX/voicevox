@@ -249,9 +249,9 @@ export class TuningTranscription {
    * text(key)の値が一致するとき、after[...]["moras"][moraIndex] = moraPatch[moraPatchIndex]と代入することで、モーラを再利用する。
    *
    *  <例> (「||」は等号記号を表す)
-   *           moraPatch = [ {text: "コ"...}, {text: "ン"...}, undefined      , undefined      , {text: "は"...} ]
+   *           moraPatch = [ {text: "コ"...}, {text: "ン"...}, undefined      , undefined      , {text: "ハ"...} ]
    *                              ||                ||                                                ||
-   * after[...]["moras"] = [ {text: "コ"...}, {text: "ン"...}, {text: "バ"...}, {text: "ン"...}, {text: "は"...} ]
+   * after[...]["moras"] = [ {text: "コ"...}, {text: "ン"...}, {text: "バ"...}, {text: "ン"...}, {text: "ハ"...} ]
    *
    */
   mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
