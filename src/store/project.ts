@@ -564,24 +564,24 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         }
 
-        const discardRestoredProject: number =
+        const applyRestoredProject: number =
           await window.electron.showQuestionDialog({
             type: "info",
             title: "復元されたプロジェクト",
             message: "復元されたプロジェクトがあります。復元しますか？",
-            buttons: ["復元する", "破棄"],
-            defaultId: 0,
-            cancelId: 1,
+            buttons: ["破棄", "復元する"],
+            defaultId: 1,
+            cancelId: 0,
           });
 
-        if (discardRestoredProject) {
-          // 破棄ボタン押下時
-          await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
-          return;
-        } else {
+        if (applyRestoredProject) {
           // 復元ボタン押下時
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
           await registerAudioItems({ projectData, dispatch: context.dispatch });
+          return;
+        } else {
+          // 破棄ボタン押下時
+          await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
           return;
         }
       } catch (err) {
