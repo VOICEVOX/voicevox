@@ -511,17 +511,23 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   SAVE_TEMPORARY_PROJECT_FILE: {
     async action({ state }) {
-      const appInfos = await window.electron.getAppInfos();
-      const { audioItems, audioKeys } = state;
+      try {
+        const appInfos = await window.electron.getAppInfos();
+        const { audioItems, audioKeys } = state;
 
-      const projectData = {
-        appVersion: appInfos.version,
-        audioKeys,
-        audioItems,
-      } as ProjectType;
-      const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
+        const projectData = {
+          appVersion: appInfos.version,
+          audioKeys,
+          audioItems,
+        } as ProjectType;
+        const buf = new TextEncoder().encode(
+          JSON.stringify(projectData)
+        ).buffer;
 
-      await window.electron.setTempProject(buf).then(getValueOrThrow);
+        await window.electron.setTempProject(buf).then(getValueOrThrow);
+      } catch (err) {
+        window.electron.logError(err);
+      }
     },
   },
 
@@ -530,8 +536,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   CLEAR_TEMPORARY_PROJECT_FILE: {
     async action() {
-      const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
-      await window.electron.setTempProject(buf).then(getValueOrThrow);
+      try {
+        const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
+        await window.electron.setTempProject(buf).then(getValueOrThrow);
+      } catch (err) {
+        window.electron.logError(err);
+      }
     },
   },
 
@@ -540,31 +550,47 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
-      const projectData: Partial<ProjectType> =
-        await window.electron.getTempProject();
+      try {
+        const projectData: Partial<ProjectType> =
+          await window.electron.getTempProject();
 
-      if (!Object.keys(projectData).length) {
-        return false;
-      }
+        if (!Object.keys(projectData).length) {
+          return false;
+        }
 
-      const discardRestoredProject: number =
-        await window.electron.showQuestionDialog({
-          type: "info",
-          title: "復元されたプロジェクト",
-          message: "復元されたプロジェクトがあります。復元しますか？",
-          buttons: ["復元する", "破棄"],
-          defaultId: 0,
-          cancelId: 1,
+        const discardRestoredProject: number =
+          await window.electron.showQuestionDialog({
+            type: "info",
+            title: "復元されたプロジェクト",
+            message: "復元されたプロジェクトがあります。復元しますか？",
+            buttons: ["復元する", "破棄"],
+            defaultId: 0,
+            cancelId: 1,
+          });
+
+        if (discardRestoredProject) {
+          // 復元されたプロジェクトを破棄する
+          await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
+          return false;
+        }
+        await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
+        await registerAudioItems({ projectData, dispatch: context.dispatch });
+        return true;
+      } catch (err) {
+        window.electron.logError(err);
+
+        const message = (() => {
+          if (typeof err === "string") return err;
+          if (!(err instanceof Error)) return "エラーが発生しました。";
+          return err.message;
+        })();
+        await window.electron.showMessageDialog({
+          type: "error",
+          title: "エラー",
+          message: `プロジェクトファイルの復元に失敗しました。\n${message}`,
         });
-
-      if (discardRestoredProject) {
-        // 復元されたプロジェクトを破棄する
-        await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
         return false;
       }
-      await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
-      await registerAudioItems({ projectData, dispatch: context.dispatch });
-      return true;
     }),
   },
 
