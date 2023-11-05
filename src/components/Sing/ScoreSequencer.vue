@@ -14,6 +14,7 @@
       @mousemove="handleMouseMove"
       @mouseup="handleMouseUp"
       @dblclick="addNote"
+      @wheel="onWheel"
       @scroll="onScroll"
     >
       <!-- グリッド -->
@@ -99,9 +100,9 @@
     <!-- NOTE: スクロールバー+ズームレンジ仮 -->
     <input
       type="range"
-      min="0.2"
-      max="1"
-      step="0.05"
+      :min="ZOOM_X_MIN"
+      :max="ZOOM_X_MAX"
+      :step="ZOOM_X_STEP"
       :value="zoomX"
       :style="{
         position: 'fixed',
@@ -114,9 +115,9 @@
     />
     <input
       type="range"
-      min="0.25"
-      max="1"
-      step="0.05"
+      :min="ZOOM_Y_MIN"
+      :max="ZOOM_Y_MAX"
+      :step="ZOOM_Y_STEP"
       :value="zoomY"
       :style="{
         position: 'fixed',
@@ -159,6 +160,13 @@ export default defineComponent({
     SequencerNote,
   },
   setup() {
+    const ZOOM_X_MIN = 0.2;
+    const ZOOM_X_MAX = 1;
+    const ZOOM_X_STEP = 0.05;
+    const ZOOM_Y_MIN = 0.35;
+    const ZOOM_Y_MAX = 1;
+    const ZOOM_Y_STEP = 0.05;
+
     enum DragMode {
       NONE = "NONE",
       MOVE = "MOVE",
@@ -481,6 +489,7 @@ export default defineComponent({
     const setZoomX = (event: Event) => {
       const sequencerBodyElement = sequencerBody.value;
       if (event.target instanceof HTMLInputElement && sequencerBodyElement) {
+        // 画面の中央を基準に水平方向のズームを行う
         const oldZoomX = zoomX.value;
         const newZoomX = Number(event.target.value);
         const scrollLeft = sequencerBodyElement.scrollLeft;
@@ -499,6 +508,7 @@ export default defineComponent({
     const setZoomY = (event: Event) => {
       const sequencerBodyElement = sequencerBody.value;
       if (event.target instanceof HTMLInputElement && sequencerBodyElement) {
+        // 画面の中央を基準に垂直方向のズームを行う
         const oldZoomY = zoomY.value;
         const newZoomY = Number(event.target.value);
         const scrollLeft = sequencerBodyElement.scrollLeft;
@@ -612,6 +622,28 @@ export default defineComponent({
       }
     };
 
+    const onWheel = (event: WheelEvent) => {
+      const sequencerBodyElement = sequencerBody.value;
+      if (sequencerBodyElement && event.ctrlKey) {
+        // カーソル位置を基準に水平方向のズームを行う
+        const oldZoomX = zoomX.value;
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
+        const cursorX = event.offsetX - scrollLeft;
+
+        let newZoomX = zoomX.value;
+        newZoomX -= event.deltaY * (ZOOM_X_STEP * 0.01);
+        newZoomX = Math.min(ZOOM_X_MAX, newZoomX);
+        newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
+
+        store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+          const cursorBaseX = (scrollLeft + cursorX) / oldZoomX;
+          const newScrollLeft = cursorBaseX * newZoomX - cursorX;
+          sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+        });
+      }
+    };
+
     const onScroll = (event: Event) => {
       if (event.target instanceof HTMLElement) {
         scrollX.value = event.target.scrollLeft;
@@ -632,6 +664,12 @@ export default defineComponent({
     });
 
     return {
+      ZOOM_X_MIN,
+      ZOOM_X_MAX,
+      ZOOM_X_STEP,
+      ZOOM_Y_MIN,
+      ZOOM_Y_MAX,
+      ZOOM_Y_STEP,
       beatsPerMeasure,
       beatWidth,
       gridCellWidth,
@@ -657,6 +695,7 @@ export default defineComponent({
       handleDragMoveStart,
       handleDragRightStart,
       handleDragLeftStart,
+      onWheel,
       onScroll,
     };
   },
