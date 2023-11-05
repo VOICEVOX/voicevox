@@ -1,16 +1,12 @@
 <template>
   <div class="sequencer-keys">
-    <svg
-      width="48"
-      :height="keyHeight * keyInfos.length + 1"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
       <defs>
         <symbol id="white-keys">
           <g v-for="(whiteKeyInfo, index) in whiteKeyInfos" :key="index">
             <rect
-              :x="whiteKeyRects[index].x"
-              :y="whiteKeyRects[index].y"
+              :x="whiteKeyRects[index].x - 0.5"
+              :y="whiteKeyRects[index].y + 0.5"
               :width="whiteKeyRects[index].width"
               :height="whiteKeyRects[index].height"
               class="sequencer-keys-item-white"
@@ -19,8 +15,8 @@
             <text
               v-if="whiteKeyInfo.pitch === 'C'"
               font-size="10"
-              x="32"
-              :y="keyHeight * (128 - whiteKeyInfo.noteNumber) - 4"
+              :x="blackKeyWidth + 2"
+              :y="whiteKeyRects[index].y + whiteKeyRects[index].height - 4"
               class="sequencer-keys-item-pitchname"
             >
               {{ whiteKeyInfo.name }}
@@ -31,8 +27,8 @@
           <rect
             v-for="(blackKeyInfo, index) in blackKeyInfos"
             :key="index"
-            :x="blackKeyRects[index].x"
-            :y="blackKeyRects[index].y"
+            :x="blackKeyRects[index].x - 0.5"
+            :y="blackKeyRects[index].y + 0.5"
             :width="blackKeyRects[index].width"
             :height="blackKeyRects[index].height"
             rx="2"
@@ -57,8 +53,10 @@ export default defineComponent({
   name: "SingSequencerKeys",
   props: {
     offset: { type: Number, default: 0 },
+    width: { type: Number, default: 48 },
+    blackKeyWidth: { type: Number, default: 30 },
   },
-  setup() {
+  setup(props) {
     const store = useStore();
     const zoomX = computed(() => store.state.sequencerZoomX);
     const zoomY = computed(() => store.state.sequencerZoomY);
@@ -78,15 +76,17 @@ export default defineComponent({
     const blackKeyBasePositions = blackKeyInfos.map((value) => {
       return keyBaseHeight * (127 - value.noteNumber);
     });
-    const keyHeight = computed(() => keyBaseHeight * zoomY.value);
+    const height = computed(() => {
+      return keyBaseHeight * 128 * zoomY.value + 1;
+    });
     const whiteKeyRects = computed(() => {
       return whiteKeyBasePositions.map((value, index, array) => {
         const isLast = index === array.length - 1;
         const nextValue = isLast ? keyBaseHeight * 128 : array[index + 1];
         return {
-          x: -2.5,
-          y: Math.floor(value * zoomY.value) + 0.5,
-          width: 50,
+          x: -2,
+          y: Math.floor(value * zoomY.value),
+          width: props.width + 2,
           height:
             Math.floor(nextValue * zoomY.value) -
             Math.floor(value * zoomY.value),
@@ -96,9 +96,9 @@ export default defineComponent({
     const blackKeyRects = computed(() => {
       return blackKeyBasePositions.map((value) => {
         return {
-          x: -2.5,
-          y: Math.floor(value * zoomY.value) + 0.5,
-          width: 32,
+          x: -2,
+          y: Math.floor(value * zoomY.value),
+          width: props.blackKeyWidth + 2,
           height: Math.floor(keyBaseHeight * zoomY.value),
         };
       });
@@ -108,7 +108,7 @@ export default defineComponent({
       keyInfos,
       zoomX,
       zoomY,
-      keyHeight,
+      height,
       whiteKeyInfos,
       blackKeyInfos,
       whiteKeyRects,
@@ -124,7 +124,7 @@ export default defineComponent({
 
 .sequencer-keys {
   backface-visibility: hidden;
-  background: #fff;
+  background: #ccc;
   overflow: hidden;
 }
 
