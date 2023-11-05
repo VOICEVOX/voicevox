@@ -1016,7 +1016,7 @@ export type ProjectStoreTypes = {
   };
 
   LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
-    action(): boolean;
+    action(): void;
   };
 
   SAVE_OR_DISCARD_PROJECT_FILE: {

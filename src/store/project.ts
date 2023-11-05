@@ -536,8 +536,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   CLEAR_TEMPORARY_PROJECT_FILE: {
     async action() {
+      const projectData: tempProjectType = {};
+
       try {
-        const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
+        const buf = new TextEncoder().encode(
+          JSON.stringify(projectData)
+        ).buffer;
         await window.electron.setTempProject(buf).then(getValueOrThrow);
       } catch (err) {
         window.electron.logError(err);
@@ -547,15 +551,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   /**
    * 一時ファイルを読み込む
+   * 一時ファイルにプロジェクトがある場合は、復元するか破棄するかのダイアログを出す
    */
   LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
       try {
-        const projectData: Partial<ProjectType> =
+        const projectData: tempProjectType =
           await window.electron.getTempProject();
 
+        // 一時ファイルにプロジェクトがない場合は何もしない
         if (!Object.keys(projectData).length) {
-          return false;
+          return;
         }
 
         const discardRestoredProject: number =
@@ -569,13 +575,15 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           });
 
         if (discardRestoredProject) {
-          // 復元されたプロジェクトを破棄する
+          // 破棄ボタン押下時
           await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
-          return false;
+          return;
+        } else {
+          // 復元ボタン押下時
+          await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
+          await registerAudioItems({ projectData, dispatch: context.dispatch });
+          return;
         }
-        await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
-        await registerAudioItems({ projectData, dispatch: context.dispatch });
-        return true;
       } catch (err) {
         window.electron.logError(err);
 
@@ -587,9 +595,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await window.electron.showMessageDialog({
           type: "error",
           title: "エラー",
-          message: `プロジェクトファイルの復元に失敗しました。\n${message}`,
+          message: `プロジェクト一時ファイルの読み込みに失敗しました。\n${message}`,
         });
-        return false;
+        return;
       }
     }),
   },
@@ -701,4 +709,10 @@ interface ProjectType {
   appVersion: string;
   audioKeys: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;
+}
+
+interface tempProjectType {
+  appVersion?: string;
+  audioKeys?: AudioKey[];
+  audioItems?: Record<AudioKey, AudioItem>;
 }
