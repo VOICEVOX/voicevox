@@ -83,14 +83,15 @@ jobs:
           sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env.test
           sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port=50021"],|' .env.test
           cp .env.test .env
-      # - uses: denoland/setup-deno@v1
-      #   with:
-      #     deno-version: v1.x
-      # - name: Clone my dotfiles
-      #   run: |
-      #     curl https://github.com/sevenc-nanashi/dotfiles/raw/main/install.sh -L | bash
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - name: Clone my dotfiles
+        run: |
+          curl https://github.com/sevenc-nanashi/dotfiles/raw/main/install.sh -L | bash
+          sudo snap install --classic nvim
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - name: Run npm run test:browser-e2e
         run: |
