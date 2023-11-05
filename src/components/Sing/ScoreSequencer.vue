@@ -1,29 +1,14 @@
 <template>
-  <div
-    class="score-sequencer"
-    :style="{
-      display: 'grid',
-      gridTemplateRows: `${rulerHeight}px 1fr`,
-      gridTemplateColumns: `${keysWidth}px 1fr`,
-    }"
-  >
+  <div class="score-sequencer">
     <!-- 左上の角 -->
     <div class="corner"></div>
     <!-- ルーラー -->
-    <sequencer-ruler
-      :offset="scrollX"
-      :height="rulerHeight"
-      :num-of-measures="numOfMeasures"
-    />
+    <sequencer-ruler :offset="scrollX" :num-of-measures="numOfMeasures" />
     <!-- 鍵盤 -->
-    <sequencer-keys
-      :offset="scrollY"
-      :width="keysWidth"
-      :black-key-width="30"
-    />
+    <sequencer-keys :offset="scrollY" :black-key-width="30" />
     <!-- シーケンサ -->
     <div
-      id="sequencer-body"
+      ref="sequencerBody"
       class="sequencer-body"
       @mousedown="handleMouseDown"
       @mousemove="handleMouseMove"
@@ -173,10 +158,6 @@ export default defineComponent({
     SequencerKeys,
     SequencerNote,
   },
-  props: {
-    rulerHeight: { type: Number, default: 32 },
-    keysWidth: { type: Number, default: 48 },
-  },
   setup() {
     enum DragMode {
       NONE = "NONE",
@@ -264,6 +245,8 @@ export default defineComponent({
     const scrollX = ref(0);
     const scrollY = ref(0);
     const selectedNoteIds = computed(() => state.selectedNoteIds);
+
+    const sequencerBody = ref<HTMLElement | null>(null);
 
     // ノートの追加
     const addNote = (event: MouseEvent) => {
@@ -496,22 +479,38 @@ export default defineComponent({
 
     // X軸ズーム
     const setZoomX = (event: Event) => {
-      if (!(event.target instanceof HTMLInputElement)) {
-        return;
+      const sequencerBodyElement = sequencerBody.value;
+      if (event.target instanceof HTMLInputElement && sequencerBodyElement) {
+        const oldZoomX = zoomX.value;
+        const newZoomX = Number(event.target.value);
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
+        const clientWidth = sequencerBodyElement.clientWidth;
+
+        store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+          const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
+          const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
+          sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+        });
       }
-      store.dispatch("SET_ZOOM_X", {
-        zoomX: Number(event.target.value),
-      });
     };
 
     // Y軸ズーム
     const setZoomY = (event: Event) => {
-      if (!(event.target instanceof HTMLInputElement)) {
-        return;
+      const sequencerBodyElement = sequencerBody.value;
+      if (event.target instanceof HTMLInputElement && sequencerBodyElement) {
+        const oldZoomY = zoomY.value;
+        const newZoomY = Number(event.target.value);
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
+        const clientHeight = sequencerBodyElement.clientHeight;
+
+        store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
+          const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
+          const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
+          sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
+        });
       }
-      store.dispatch("SET_ZOOM_Y", {
-        zoomY: Number(event.target.value),
-      });
     };
 
     // キーボードイベント
@@ -621,13 +620,14 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      const el = document.querySelector("#sequencer-body");
       // 上から2/3の位置がC4になるようにスクロールする
-      if (el) {
+      const sequencerBodyElement = sequencerBody.value;
+      if (sequencerBodyElement) {
+        const clientHeight = sequencerBodyElement.clientHeight;
         const c4BaseY = noteNumberToBaseY(60);
-        const clientBaseHeight = el.clientHeight / zoomY.value;
+        const clientBaseHeight = clientHeight / zoomY.value;
         const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
-        el.scrollTo(0, scrollBaseY * zoomY.value);
+        sequencerBodyElement.scrollTo(0, scrollBaseY * zoomY.value);
       }
     });
 
@@ -646,6 +646,7 @@ export default defineComponent({
       cursorY,
       scrollX,
       scrollY,
+      sequencerBody,
       setZoomX,
       setZoomY,
       addNote,
@@ -668,10 +669,9 @@ export default defineComponent({
 
 .score-sequencer {
   backface-visibility: hidden;
-
-  &.move {
-    cursor: move;
-  }
+  display: grid;
+  grid-template-rows: 30px 1fr;
+  grid-template-columns: 48px 1fr;
 }
 
 .corner {
@@ -684,6 +684,10 @@ export default defineComponent({
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
+
+  &.move {
+    cursor: move;
+  }
 }
 
 .sequencer-grid {
