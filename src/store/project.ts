@@ -515,15 +515,16 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         const appInfos = await window.electron.getAppInfos();
         const { audioItems, audioKeys } = state;
 
-        const projectData = {
+        const projectData: tempProjectType = {
           appVersion: appInfos.version,
           audioKeys,
           audioItems,
-        } as ProjectType;
+          projectFilePath: state.projectFilePath,
+        };
+
         const buf = new TextEncoder().encode(
           JSON.stringify(projectData)
         ).buffer;
-
         await window.electron.setTempProject(buf).then(getValueOrThrow);
       } catch (err) {
         window.electron.logError(err);
@@ -576,6 +577,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         if (applyRestoredProject) {
           // 復元ボタン押下時
+          const filePath = projectData.projectFilePath;
+
+          if (filePath) {
+            context.commit("SET_PROJECT_FILEPATH", { filePath });
+          }
+
+          // Fixme: プロジェクト保存時点で保存はされていないが IS_EDITED が false になる
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
           await registerAudioItems({ projectData, dispatch: context.dispatch });
           return;
@@ -724,4 +732,5 @@ interface tempProjectType {
   appVersion?: string;
   audioKeys?: AudioKey[];
   audioItems?: Record<AudioKey, AudioItem>;
+  projectFilePath?: string;
 }
