@@ -597,6 +597,15 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           title: "エラー",
           message: `プロジェクト一時ファイルの読み込みに失敗しました。\n${message}`,
         });
+
+        // エラー発生時に audioItem を再生成する
+        if (context.state.audioKeys.length === 0) {
+          const audioItem = await context.dispatch("GENERATE_AUDIO_ITEM", {});
+          await context.dispatch("REGISTER_AUDIO_ITEM", {
+            audioItem,
+          });
+        }
+
         return;
       }
     }),
