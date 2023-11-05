@@ -190,8 +190,11 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  createFlatArray<T, K extends keyof T>(collection: T[], key: K): T[K][] {
-    const result: T[K][] = [];
+  createFlatArray<T, K extends keyof T>(
+    collection: T[],
+    key: K
+  ): T[K] extends (infer U)[] ? U[] : T[K][] {
+    const result = [];
     for (const element of collection) {
       const value = element[key];
       if (Array.isArray(value)) {
@@ -200,7 +203,7 @@ export class TuningTranscription {
         result.push(value);
       }
     }
-    return result;
+    return result as T[K] extends (infer U)[] ? U[] : T[K][];
   }
 
   /**
@@ -217,25 +220,26 @@ export class TuningTranscription {
 
     const beforeFlatArray = this.createFlatArray(before, "moras");
     const afterFlatArray = this.createFlatArray(after, "moras");
-    console.log(beforeFlatArray);
     const diffed = diffArrays(
-      this.createFlatArray(structuredClone(beforeFlatArray), "text" as never),
-      this.createFlatArray(structuredClone(afterFlatArray), "text" as never)
+      this.createFlatArray(structuredClone(beforeFlatArray), "text"),
+      this.createFlatArray(structuredClone(afterFlatArray), "text")
     );
+
+    // FIXME: beforeFlatArrayを破壊的に変更しなくても良いようにしてasを不要にする
     let pluckedIndex = 0;
     for (const diff of diffed) {
       if (diff.removed) {
         beforeFlatArray.splice(pluckedIndex, diff.count);
       } else if (diff.added) {
         diff.value.forEach(() => {
-          beforeFlatArray.splice(pluckedIndex, 0, undefined as never);
+          beforeFlatArray.splice(pluckedIndex, 0, undefined as never as Mora);
           pluckedIndex++;
         });
       } else {
         pluckedIndex += diff.value.length;
       }
     }
-    return beforeFlatArray;
+    return beforeFlatArray as (Mora | undefined)[];
   }
   /**
    * テキスト: 「こんにちは」 -> 「こんばんは」 と変更した場合、以下の例のように、moraPatch配列とafter(AccentPhrases)を比較する。
