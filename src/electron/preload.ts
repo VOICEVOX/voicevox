@@ -5,12 +5,7 @@ import {
   IpcRendererEvent,
 } from "electron";
 
-import {
-  Sandbox,
-  ElectronStoreType,
-  EngineId,
-  SandboxKey,
-} from "@/type/preload";
+import { Sandbox, ConfigType, EngineId, SandboxKey } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -160,17 +155,27 @@ const api: Sandbox = {
 
   logError: (...params) => {
     console.error(...params);
-    return ipcRenderer.invoke("LOG_ERROR", ...params);
+    // 経緯 https://github.com/VOICEVOX/voicevox/pull/1620#discussion_r1371804569
+    ipcRenderer.send("__ELECTRON_LOG__", {
+      data: [...params],
+      level: "error",
+    });
   },
 
   logWarn: (...params) => {
     console.warn(...params);
-    return ipcRenderer.invoke("LOG_WARN", ...params);
+    ipcRenderer.send("__ELECTRON_LOG__", {
+      data: [...params],
+      level: "warn",
+    });
   },
 
   logInfo: (...params) => {
     console.info(...params);
-    return ipcRenderer.invoke("LOG_INFO", ...params);
+    ipcRenderer.send("__ELECTRON_LOG__", {
+      data: [...params],
+      level: "info",
+    });
   },
 
   openLogDirectory: () => {
@@ -228,7 +233,7 @@ const api: Sandbox = {
     return (await ipcRendererInvoke(
       "GET_SETTING",
       key
-    )) as ElectronStoreType[typeof key];
+    )) as ConfigType[typeof key];
   },
 
   /**

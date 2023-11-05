@@ -43,7 +43,7 @@ npm ci
 
 ## 実行
 
-`.env.production`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`のフルパスを指定します。
+`.env.production`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`のパスを指定します。
 
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
 
@@ -154,15 +154,9 @@ typos
 ## 型チェック
 
 TypeScript の型チェックを行います。
-※ 現在チェック方法は 2 種類ありますが、将来的に 1 つになります。
 
 ```bash
-# .tsのみ型チェック
 npm run typecheck
-
-# .vueも含めて型チェック
-# ※ 現状、大量にエラーが検出されます。
-npm run typecheck:vue-tsc
 ```
 
 ## Markdownlint
@@ -184,9 +178,7 @@ shellcheck ./build/*.sh
 
 ## OpenAPI generator
 
-音声合成エンジンが起動している状態で以下のコマンドを実行してください。  
-なお、2023/07/02 現在、openapi-generator の最新版に[パッチ](https://github.com/OpenAPITools/openapi-generator/pull/15943)を当てたものを使わないと更新できない状態になっています。  
-詳細は[こちら](https://github.com/VOICEVOX/voicevox/pull/1361)
+音声合成エンジンが起動している状態で以下のコマンドを実行してください。
 
 ```bash
 curl http://127.0.0.1:50021/openapi.json >openapi.json

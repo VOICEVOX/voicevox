@@ -19,6 +19,7 @@ on:
       code_signing:
         description: "コード署名する"
         type: boolean
+        default: false
       upload_artifact:
         description: "デバッグ用に成果物をartifactにアップロードするか"
         type: boolean
@@ -26,8 +27,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.14.5
-  VOICEVOX_RESOURCE_VERSION: 0.14.3
+  VOICEVOX_ENGINE_VERSION: 0.14.6
+  VOICEVOX_RESOURCE_VERSION: 0.15.0-preview.3
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -201,23 +202,29 @@ jobs:
       - name: Replace .env.production infomations
         run: |
           # GTM ID
-          gtm_id=$(jq -r '.gtm_container_id' resource/editor/metas.json)
+          gtm_id=$(jq -er '.gtm_container_id' resource/editor/metas.json)
           $sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
         run: npm run license:generate -- -o public/licenses.json
 
-      # build electronでコード署名するには環境変数を指定が必要だけど、
-      # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          # 複数行の文字列を環境変数に代入
-          echo 'CSC_LINK<<EOF' >> $GITHUB_ENV
-          echo "${{ secrets.CERT_BASE64 }}" >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          bash build/codesign_setup.bash
+          THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
+          SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
+          echo "::add-mask::$THUMBPRINT"
 
-          echo 'CSC_KEY_PASSWORD=${{ secrets.CERT_PASSWORD }}' >> $GITHUB_ENV
+          echo "WIN_CERTIFICATE_SHA1=$THUMBPRINT" >> $GITHUB_ENV
+          echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
+          echo "SIGNTOOL_PATH=$SIGNTOOL_PATH" >> $GITHUB_ENV
+        env:
+          ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
+          ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
+          ESIGNERCKA_TOTP_SECRET: ${{ secrets.ESIGNERCKA_TOTP_SECRET }}
+          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
+          SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
 
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
@@ -234,8 +241,12 @@ jobs:
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          echo 'CSC_LINK=' >> $GITHUB_ENV
-          echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
+          bash build/codesign_cleanup.bash
+          echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
+          echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
+          echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
+        env:
+          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
       - name: Rename NoEngine Prepackage
         run: |
@@ -267,26 +278,24 @@ jobs:
       - name: Merge VOICEVOX ENGINE into prepackage/
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
         run: |
-          mv voicevox_engine/* prepackage/
-          rm -rf voicevox_engine
+          mv voicevox_engine/ prepackage/vv-engine/
 
       - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/MacOS/
         if: startsWith(matrix.artifact_name, 'macos-')
         run: |
-          mv voicevox_engine/* prepackage/VOICEVOX.app/Contents/MacOS/
-          rm -rf voicevox_engine
+          mv voicevox_engine/ prepackage/VOICEVOX.app/Contents/MacOS/vv-engine/
 
       - name: Recover file permissions
         if: startsWith(matrix.artifact_name, 'linux-') # linux
         run: |
           chmod +x "prepackage/${{ matrix.linux_executable_name }}"
-          chmod +x "prepackage/run"
+          chmod +x "prepackage/vv-engine/run"
 
       - name: Recover file permissions for macOS build
         if: startsWith(matrix.artifact_name, 'macos-') # macOS
         run: |
           chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/${{ matrix.macos_executable_name }}"
-          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/run"
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/vv-engine/run"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
@@ -360,17 +369,23 @@ jobs:
         run: |
           rm ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
 
-      # build electronでコード署名するには環境変数を指定が必要だけど、
-      # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          # 複数行の文字列を環境変数に代入
-          echo 'CSC_LINK<<EOF' >> $GITHUB_ENV
-          echo "${{ secrets.CERT_BASE64 }}" >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          bash build/codesign_setup.bash
+          THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
+          SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
+          echo "::add-mask::$THUMBPRINT"
 
-          echo 'CSC_KEY_PASSWORD=${{ secrets.CERT_PASSWORD }}' >> $GITHUB_ENV
+          echo "WIN_CERTIFICATE_SHA1=$THUMBPRINT" >> $GITHUB_ENV
+          echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
+          echo "SIGNTOOL_PATH=$SIGNTOOL_PATH" >> $GITHUB_ENV
+        env:
+          ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
+          ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
+          ESIGNERCKA_TOTP_SECRET: ${{ secrets.ESIGNERCKA_TOTP_SECRET }}
+          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
+          SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
 
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
@@ -392,8 +407,12 @@ jobs:
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          echo 'CSC_LINK=' >> $GITHUB_ENV
-          echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
+          bash build/codesign_cleanup.bash
+          echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
+          echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
+          echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
+        env:
+          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
       - name: Create Linux AppImage split
         if: endsWith(matrix.installer_artifact_name, '-appimage')

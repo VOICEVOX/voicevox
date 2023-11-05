@@ -12,8 +12,13 @@
     @focus="onRootFocus"
   >
     <!-- 複数選択用のヒットボックス -->
+    <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
     <div
-      v-if="(isCtrlOrCommandKeyDown || isShiftKeyDown) && isMultiSelectEnabled"
+      v-if="
+        isMultiSelectEnabled && isActiveAudioCell
+          ? isCtrlOrCommandKeyDown
+          : isCtrlOrCommandKeyDown || isShiftKeyDown
+      "
       class="click-hitbox"
       tabindex="-1"
       @click="onClickWithModifierKey"
@@ -150,8 +155,8 @@ const userOrderedCharacterInfos = computed(() => {
     throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
   return infos;
 });
-const isInitializingSpeaker = computed(
-  () => store.state.audioKeyInitializingSpeaker === props.audioKey
+const isInitializingSpeaker = computed(() =>
+  store.state.audioKeysWithInitializingSpeaker.includes(props.audioKey)
 );
 const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
@@ -167,6 +172,8 @@ const selectAndSetActiveAudioKey = () => {
 };
 
 const onRootFocus = () => {
+  if (uiLocked.value) return;
+
   selectAndSetActiveAudioKey();
 };
 // 複数選択：Ctrl（Cmd）またはShiftキーが押されている時のクリック処理
@@ -262,8 +269,10 @@ const selectedVoice = computed<Voice | undefined>({
   },
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
-    store.dispatch("COMMAND_CHANGE_VOICE", {
-      audioKey: props.audioKey,
+    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+      audioKeys: isMultiSelectEnabled.value
+        ? store.getters.SELECTED_AUDIO_KEYS
+        : [props.audioKey],
       voice,
     });
   },
@@ -288,7 +297,7 @@ watch(
   // `audioItem` becomes undefined just before the component is unmounted.
   () => audioItem.value?.text,
   (newText) => {
-    if (!isChangeFlag.value && newText !== undefined) {
+    if (!isChangeFlag.value && newText != undefined) {
       audioTextBuffer.value = newText;
     }
   }
@@ -325,7 +334,7 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
  */
 const paste = async (options?: { text?: string }) => {
   const text = options ? options.text : await navigator.clipboard.readText();
-  if (text === undefined) return;
+  if (text == undefined) return;
 
   // 複数行貼り付けできるか試す
   if (textSplitType.value !== "OFF") {

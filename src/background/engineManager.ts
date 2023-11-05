@@ -2,12 +2,11 @@ import { spawn, ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
 import treeKill from "tree-kill";
-import Store from "electron-store";
 import shlex from "shlex";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
-import log from "electron-log";
+import log from "electron-log/main";
 import { z } from "zod";
 import {
   findAltPort,
@@ -19,7 +18,6 @@ import {
 
 import {
   EngineInfo,
-  ElectronStoreType,
   EngineDirValidationResult,
   MinimumEngineManifest,
   EngineId,
@@ -27,6 +25,7 @@ import {
   minimumEngineManifestSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
+import { BaseConfigManager } from "@/shared/ConfigManager";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -58,8 +57,9 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
     return {
       ...engineInfo,
       type: "default",
+      executionFilePath: path.resolve(engineInfo.executionFilePath),
       path:
-        engineInfo.path === undefined
+        engineInfo.path == undefined
           ? undefined
           : path.resolve(defaultEngineDir, engineInfo.path),
     };
@@ -67,7 +67,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 }
 
 export class EngineManager {
-  store: Store<ElectronStoreType>;
+  configManager: BaseConfigManager;
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
@@ -79,22 +79,21 @@ export class EngineManager {
   public altPortInfo: AltPortInfos = {};
 
   constructor({
-    store,
+    configManager,
     defaultEngineDir,
     vvppEngineDir,
     onEngineProcessError,
   }: {
-    store: Store<ElectronStoreType>;
+    configManager: BaseConfigManager;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
   }) {
-    this.store = store; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
+    this.configManager = configManager;
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
 
-    this.initializeEngineInfosAndAltPortInfo();
     this.engineProcessContainers = {};
   }
 
@@ -146,8 +145,8 @@ export class EngineManager {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
       }
     }
-    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でstore.setする
-    for (const engineDir of this.store.get("registeredEngineDirs")) {
+    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でconfig.setする
+    for (const engineDir of this.configManager.get("registeredEngineDirs")) {
       const result = addEngine(engineDir, "path");
       if (result !== "ok") {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
@@ -157,9 +156,11 @@ export class EngineManager {
           "エンジンの読み込みに失敗しました。",
           `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
         );
-        this.store.set(
+        this.configManager.set(
           "registeredEngineDirs",
-          this.store.get("registeredEngineDirs").filter((p) => p !== engineDir)
+          this.configManager
+            .get("registeredEngineDirs")
+            .filter((p) => p !== engineDir)
         );
       }
     }
@@ -193,8 +194,8 @@ export class EngineManager {
   fetchEngineDirectory(engineId: EngineId): string {
     const engineInfo = this.fetchEngineInfo(engineId);
     const engineDirectory = engineInfo.path;
-    if (engineDirectory == null) {
-      throw new Error(`engineDirectory is null: engineId == ${engineId}`);
+    if (engineDirectory == undefined) {
+      throw new Error(`engineDirectory is undefined: engineId == ${engineId}`);
     }
 
     return engineDirectory;
@@ -311,7 +312,7 @@ export class EngineManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const engineSetting = this.store.get("engineSettings")[engineId];
+    const engineSetting = this.configManager.get("engineSettings")[engineId];
     if (engineSetting == undefined)
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 
@@ -385,7 +386,7 @@ export class EngineManager {
     for (const engineIdStr of Object.keys(this.engineProcessContainers)) {
       const engineId = EngineId(engineIdStr);
       const promise = this.killEngine(engineId);
-      if (promise === undefined) continue;
+      if (promise == undefined) continue;
 
       killingProcessPromises[engineId] = promise;
     }
@@ -410,15 +411,15 @@ export class EngineManager {
     }
 
     const engineProcess = engineProcessContainer.engineProcess;
-    if (engineProcess === undefined) {
+    if (engineProcess == undefined) {
       // nop if no process started (already killed or not started yet)
       log.info(`ENGINE ${engineId}: Process not started`);
 
       return undefined;
     }
 
-    const engineNotExited = engineProcess.exitCode === null;
-    const engineNotKilled = engineProcess.signalCode === null;
+    const engineNotExited = engineProcess.exitCode == undefined;
+    const engineNotKilled = engineProcess.signalCode == undefined;
 
     log.info(
       `ENGINE ${engineId}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
@@ -469,10 +470,10 @@ export class EngineManager {
       );
 
       // エンジンのプロセスがすでに終了している、またはkillされている場合
-      const engineExited = engineProcess?.exitCode !== null;
-      const engineKilled = engineProcess?.signalCode !== null;
+      const engineExited = engineProcess?.exitCode != undefined;
+      const engineKilled = engineProcess?.signalCode != undefined;
 
-      // engineProcess === undefinedの場合true
+      // engineProcess == undefinedの場合true
       if (engineExited || engineKilled) {
         log.info(
           `ENGINE ${engineId}: Process is not started yet or already killed. Starting process...`
@@ -495,10 +496,9 @@ export class EngineManager {
         resolve();
       };
 
-      if (engineProcess === undefined)
-        throw Error("engineProcess === undefined");
-      if (engineProcess.pid === undefined)
-        throw Error("engineProcess.pid === undefined");
+      if (engineProcess == undefined) throw Error("engineProcess == undefined");
+      if (engineProcess.pid == undefined)
+        throw Error("engineProcess.pid == undefined");
 
       engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
@@ -508,7 +508,7 @@ export class EngineManager {
       );
       treeKill(engineProcess.pid, (error) => {
         // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
-        if (error != null) {
+        if (error != undefined) {
           log.error(`ENGINE ${engineId}: Failed to kill process`);
           log.error(error);
 

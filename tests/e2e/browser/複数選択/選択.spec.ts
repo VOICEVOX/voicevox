@@ -1,10 +1,9 @@
 import { test, expect, Page } from "@playwright/test";
-import { toggleSetting, navigateToMain } from "../navigators";
+import { toggleSetting, navigateToMain, gotoHome } from "../../navigators";
+import { ctrlLike, addAudioCells } from "./utils";
 
 test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
+  await gotoHome({ page });
 
   await navigateToMain(page);
   await page.waitForTimeout(100);
@@ -12,8 +11,6 @@ test.beforeEach(async ({ page }) => {
 
   await addAudioCells(page, 3);
 });
-
-const ctrlLike = process.platform === "darwin" ? "Meta" : "Control";
 
 type SelectedStatus = {
   active: number;
@@ -37,20 +34,13 @@ async function getSelectedStatus(page: Page): Promise<SelectedStatus> {
         selected.push(i + 1);
       }
     }
-    if (active === undefined) {
+    if (active == undefined) {
       throw new Error("No active audio cell");
     }
 
     return { active, selected };
   });
   return selectedAudioKeys;
-}
-
-async function addAudioCells(page: Page, count: number) {
-  for (let i = 0; i < count; i++) {
-    await page.getByRole("button", { name: "テキストを追加" }).click();
-    await page.waitForTimeout(100);
-  }
 }
 
 test("複数選択：マウス周り", async ({ page }) => {

@@ -124,14 +124,13 @@ export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
 export type AudioStoreState = {
   characterInfos: Record<EngineId, CharacterInfo[]>;
   morphableTargetsInfo: Record<EngineId, MorphableTargetInfoTable>;
-  audioKeyInitializingSpeaker?: string;
+  audioKeysWithInitializingSpeaker: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;
   audioKeys: AudioKey[];
   audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
   _selectedAudioKeys?: AudioKey[];
-  audioPlayStartPoint?: number;
-  nowPlayingAudioKey?: AudioKey;
+  _audioPlayStartPoint?: number;
   nowPlayingContinuously: boolean;
 };
 
@@ -144,19 +143,7 @@ export type AudioStoreTypes = {
     getter: AudioKey[];
   };
 
-  HAVE_AUDIO_QUERY: {
-    getter(audioKey: AudioKey): boolean;
-  };
-
-  IS_ACTIVE: {
-    getter(audioKey: AudioKey): boolean;
-  };
-
-  NOW_PLAYING: {
-    getter: boolean;
-  };
-
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
+  AUDIO_PLAY_START_POINT: {
     getter: number | undefined;
   };
 
@@ -180,20 +167,16 @@ export type AudioStoreTypes = {
     getter: CharacterInfo[] | undefined;
   };
 
-  GENERATE_AUDIO_KEY: {
-    action(): AudioKey;
-  };
-
   SETUP_SPEAKER: {
     action(payload: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       engineId: EngineId;
       styleId: StyleId;
     }): void;
   };
 
-  SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
-    mutation: { audioKey?: AudioKey };
+  SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER: {
+    mutation: { audioKeys: AudioKey[] };
   };
 
   SET_ACTIVE_AUDIO_KEY: {
@@ -209,10 +192,6 @@ export type AudioStoreTypes = {
   SET_AUDIO_PLAY_START_POINT: {
     mutation: { startPoint?: number };
     action(payload: { startPoint?: number }): void;
-  };
-
-  SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: AudioKey; nowPlaying: boolean };
   };
 
   SET_AUDIO_NOW_GENERATING: {
@@ -439,10 +418,11 @@ export type AudioStoreTypes = {
     }): SaveResultObject;
   };
 
-  GENERATE_AND_SAVE_ALL_AUDIO: {
+  MULTI_GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
+      audioKeys: AudioKey[];
       dirPath?: string;
-      callback?: (finishedCount: number, totalCount: number) => void;
+      callback?: (finishedCount: number) => void;
     }): SaveResultObject[] | undefined;
   };
 
@@ -463,10 +443,6 @@ export type AudioStoreTypes = {
 
   PLAY_AUDIO_BLOB: {
     action(payload: { audioBlob: Blob; audioKey?: AudioKey }): boolean;
-  };
-
-  STOP_AUDIO: {
-    action(): void;
   };
 
   SET_AUDIO_PRESET_KEY: {
@@ -525,8 +501,8 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: AudioKey; text: string }): void;
   };
 
-  COMMAND_CHANGE_VOICE: {
-    mutation: { audioKey: AudioKey; voice: Voice } & (
+  COMMAND_MULTI_CHANGE_VOICE: {
+    mutation: { audioKeys: AudioKey[]; voice: Voice } & (
       | { update: "RollbackStyleId" }
       | {
           update: "AccentPhrases";
@@ -537,7 +513,7 @@ export type AudioCommandStoreTypes = {
           query: AudioQuery;
         }
     );
-    action(payload: { audioKey: AudioKey; voice: Voice }): void;
+    action(payload: { audioKeys: AudioKey[]; voice: Voice }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {
@@ -557,6 +533,10 @@ export type AudioCommandStoreTypes = {
         | { isPause: true }
       )
     ): void;
+  };
+
+  COMMAND_DELETE_ACCENT_PHRASE: {
+    action(payload: { audioKey: AudioKey; accentPhraseIndex: number }): void;
   };
 
   COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
@@ -611,61 +591,61 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_SET_AUDIO_SPEED_SCALE: {
-    mutation: { audioKey: AudioKey; speedScale: number };
-    action(payload: { audioKey: AudioKey; speedScale: number }): void;
+  COMMAND_MULTI_SET_AUDIO_SPEED_SCALE: {
+    mutation: { audioKeys: AudioKey[]; speedScale: number };
+    action(payload: { audioKeys: AudioKey[]; speedScale: number }): void;
   };
 
-  COMMAND_SET_AUDIO_PITCH_SCALE: {
-    mutation: { audioKey: AudioKey; pitchScale: number };
-    action(payload: { audioKey: AudioKey; pitchScale: number }): void;
+  COMMAND_MULTI_SET_AUDIO_PITCH_SCALE: {
+    mutation: { audioKeys: AudioKey[]; pitchScale: number };
+    action(payload: { audioKeys: AudioKey[]; pitchScale: number }): void;
   };
 
-  COMMAND_SET_AUDIO_INTONATION_SCALE: {
-    mutation: { audioKey: AudioKey; intonationScale: number };
-    action(payload: { audioKey: AudioKey; intonationScale: number }): void;
+  COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE: {
+    mutation: { audioKeys: AudioKey[]; intonationScale: number };
+    action(payload: { audioKeys: AudioKey[]; intonationScale: number }): void;
   };
 
-  COMMAND_SET_AUDIO_VOLUME_SCALE: {
-    mutation: { audioKey: AudioKey; volumeScale: number };
-    action(payload: { audioKey: AudioKey; volumeScale: number }): void;
+  COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE: {
+    mutation: { audioKeys: AudioKey[]; volumeScale: number };
+    action(payload: { audioKeys: AudioKey[]; volumeScale: number }): void;
   };
 
-  COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH: {
-    mutation: { audioKey: AudioKey; prePhonemeLength: number };
-    action(payload: { audioKey: AudioKey; prePhonemeLength: number }): void;
+  COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH: {
+    mutation: { audioKeys: AudioKey[]; prePhonemeLength: number };
+    action(payload: { audioKeys: AudioKey[]; prePhonemeLength: number }): void;
   };
 
-  COMMAND_SET_AUDIO_POST_PHONEME_LENGTH: {
-    mutation: { audioKey: AudioKey; postPhonemeLength: number };
-    action(payload: { audioKey: AudioKey; postPhonemeLength: number }): void;
+  COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH: {
+    mutation: { audioKeys: AudioKey[]; postPhonemeLength: number };
+    action(payload: { audioKeys: AudioKey[]; postPhonemeLength: number }): void;
   };
 
-  COMMAND_SET_MORPHING_INFO: {
+  COMMAND_MULTI_SET_MORPHING_INFO: {
     mutation: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       morphingInfo: MorphingInfo | undefined;
     };
     action(payload: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       morphingInfo: MorphingInfo | undefined;
     }): void;
   };
 
-  COMMAND_SET_AUDIO_PRESET: {
+  COMMAND_MULTI_SET_AUDIO_PRESET: {
     mutation: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       presetKey: PresetKey | undefined;
     };
     action(payload: {
-      audioKey: AudioKey;
+      audioKeys: AudioKey[];
       presetKey: PresetKey | undefined;
     }): void;
   };
 
-  COMMAND_APPLY_AUDIO_PRESET: {
-    mutation: { audioKey: AudioKey };
-    action(payload: { audioKey: AudioKey }): void;
+  COMMAND_MULTI_APPLY_AUDIO_PRESET: {
+    mutation: { audioKeys: AudioKey[] };
+    action(payload: { audioKeys: AudioKey[] }): void;
   };
 
   COMMAND_FULLY_APPLY_AUDIO_PRESET: {
@@ -677,7 +657,7 @@ export type AudioCommandStoreTypes = {
     mutation: {
       audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
     };
-    action(payload: { filePath?: string }): string[] | void;
+    action(payload: { filePath?: string }): void;
   };
 
   COMMAND_PUT_TEXTS: {
@@ -690,6 +670,40 @@ export type AudioCommandStoreTypes = {
       texts: string[];
       voice: Voice;
     }): AudioKey[];
+  };
+};
+
+/*
+ * Audio Player Store Types
+ */
+
+export type AudioPlayerStoreState = {
+  nowPlayingAudioKey?: AudioKey;
+};
+
+export type AudioPlayerStoreTypes = {
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
+    getter: number | undefined;
+  };
+
+  NOW_PLAYING: {
+    getter: boolean;
+  };
+
+  SET_AUDIO_NOW_PLAYING: {
+    mutation: { audioKey: AudioKey; nowPlaying: boolean };
+  };
+
+  SET_AUDIO_SOURCE: {
+    mutation: { audioBlob: Blob };
+  };
+
+  PLAY_AUDIO_PLAYER: {
+    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
+  };
+
+  STOP_AUDIO: {
+    action(): void;
   };
 };
 
@@ -1152,6 +1166,7 @@ export type UiStoreState = {
   isAcceptTermsDialogOpen: boolean;
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
+  isUpdateNotificationDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1217,6 +1232,7 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
+      isUpdateNotificationDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1229,6 +1245,7 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
+      isUpdateNotificationDialogOpen?: boolean;
     }): void;
   };
 
@@ -1469,6 +1486,7 @@ export type ProxyStoreTypes = {
  */
 
 export type State = AudioStoreState &
+  AudioPlayerStoreState &
   AudioCommandStoreState &
   CommandStoreState &
   EngineStoreState &
@@ -1481,6 +1499,7 @@ export type State = AudioStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
+  AudioPlayerStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
   EngineStoreTypes &

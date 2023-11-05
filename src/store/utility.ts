@@ -32,6 +32,81 @@ export function sanitizeFileName(fileName: string): string {
   return fileName.replace(sanitizer, "");
 }
 
+/**
+ * AudioInfoコンポーネントに表示されるパラメータ
+ */
+export const SLIDER_PARAMETERS = {
+  /**
+   * 話速パラメータの定義
+   */
+  SPEED: {
+    max: () => 2,
+    min: () => 0.5,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+  /**
+   * 音高パラメータの定義
+   */
+  PITCH: {
+    max: () => 0.15,
+    min: () => -0.15,
+    step: () => 0.01,
+    scrollStep: () => 0.01,
+  },
+  /**
+   *  抑揚パラメータの定義
+   */
+  INTONATION: {
+    max: () => 2,
+    min: () => 0,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+  /**
+   *  音量パラメータの定義
+   */
+  VOLUME: {
+    max: () => 2,
+    min: () => 0,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+  /**
+   *  開始無音パラメータの定義
+   */
+  PRE_PHONEME_LENGTH: {
+    max: () => 1.5,
+    min: () => 0,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+  /**
+   *  終了無音パラメータの定義
+   */
+  POST_PHONEME_LENGTH: {
+    max: () => 1.5,
+    min: () => 0,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+  /**
+   *  モーフィングレートパラメータの定義
+   */
+  MORPHING_RATE: {
+    max: () => 1,
+    min: () => 0,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+};
+
 export const replaceTagIdToTagString = {
   index: "連番",
   characterName: "キャラ",
@@ -168,7 +243,7 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
   const tag2NameObj: Record<ToolbarButtonTagType, string> = {
     PLAY_CONTINUOUSLY: "連続再生",
     STOP: "停止",
-    EXPORT_AUDIO_ONE: "１つ書き出し",
+    EXPORT_AUDIO_SELECTED: "選択音声を書き出し",
     EXPORT_AUDIO_ALL: "全部書き出し",
     EXPORT_AUDIO_CONNECT_ALL: "音声を繋げて書き出し",
     SAVE_PROJECT: "プロジェクト保存",
@@ -244,3 +319,12 @@ export const isOnCommandOrCtrlKeyDown = (event: {
   metaKey: boolean;
   ctrlKey: boolean;
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
+
+/**
+ * AccentPhraseのtextを結合して返します。
+ */
+export const joinTextsInAccentPhrases = (
+  accentPhrase: AccentPhrase
+): string => {
+  return accentPhrase.moras.map((mora) => mora.text).join("");
+};
