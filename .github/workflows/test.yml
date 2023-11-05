@@ -98,9 +98,9 @@ jobs:
             export DEBUG="pw:browser*"
           fi
           if [[ ${{ matrix.os }} == ubuntu-* ]]; then
-            xvfb-run --auto-servernum npm run test:browser-e2e ./tests/e2e/browser/調整結果.spec.ts
+            xvfb-run --auto-servernum npm run test:browser-e2e
           else
-            npm run test:browser-e2e ./tests/e2e/browser/調整結果.spec.ts
+            npm run test:browser-e2e
           fi
 
       - name: Run npm run test:electron-e2e
