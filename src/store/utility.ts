@@ -224,22 +224,21 @@ export class TuningTranscription {
 
     const beforeFlatArray = this.createFlatArray(before, "moras");
     const afterFlatArray = this.createFlatArray(after, "moras");
-    console.log(beforeFlatArray);
     const diffed = diffArrays(
       this.createFlatArray(structuredClone(beforeFlatArray), "text" as never),
       this.createFlatArray(structuredClone(afterFlatArray), "text" as never)
     );
-    let pluckedIndex = 0;
+    let currenttextIndex = 0;
     for (const diff of diffed) {
       if (diff.removed) {
-        beforeFlatArray.splice(pluckedIndex, diff.count);
+        beforeFlatArray.splice(currenttextIndex, diff.count);
       } else if (diff.added) {
         diff.value.forEach(() => {
-          beforeFlatArray.splice(pluckedIndex, 0, undefined as never);
-          pluckedIndex++;
+          beforeFlatArray.splice(currenttextIndex, 0, undefined as never);
+          currenttextIndex++;
         });
       } else {
-        pluckedIndex += diff.value.length;
+        currenttextIndex += diff.value.length;
       }
     }
     return beforeFlatArray;
