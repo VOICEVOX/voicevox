@@ -152,9 +152,6 @@ const formatValue = (
   defaultMinValue: number,
   defaultMaxValue: number
 ): number => {
-  // デバッグ用
-  console.log(value + ":" + defaultMinValue + ":" + defaultMaxValue);
-
   if (typeof value === "number") {
     return parseFloat(value.toFixed(2));
   }
