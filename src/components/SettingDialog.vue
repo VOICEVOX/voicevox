@@ -1087,10 +1087,13 @@ const changeShowAddAudioItemButton = async (
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;
 });
-const currentAudioOutputDeviceComputed = computed<{
-  key: string;
-  label: string;
-} | null>({
+const currentAudioOutputDeviceComputed = computed<
+  | {
+      key: string;
+      label: string;
+    }
+  | undefined
+>({
   get: () => {
     // 再生デバイスが見つからなかったらデフォルト値に戻す
     const device = availableAudioOutputDevices.value?.find(
@@ -1098,10 +1101,10 @@ const currentAudioOutputDeviceComputed = computed<{
     );
     if (device) {
       return device;
-    } else {
+    } else if (store.state.savingSetting.audioOutputDevice !== "default") {
       handleSavingSettingChange("audioOutputDevice", "default");
-      return null;
     }
+    return undefined;
   },
   set: (device) => {
     if (device) {
