@@ -176,7 +176,7 @@ function skipMemoText(targettext: string): string {
 
 /**
  * 2つのアクセント句配列を比べて同じだと思われるモーラの調整結果を転写し
- * 変更前のアクセント句の調整結果を変更後のアクセント句に保持する
+ * 変更前のアクセント句の調整結果を変更後のアクセント句に保持する。
  * 「こんにちは」 -> 「こんばんは」と変更した場合、以下の例において[]に囲まれる部分は、変更前のモーラが再利用される。
  * <例>
  *
@@ -204,13 +204,18 @@ export class TuningTranscription {
   }
 
   /**
-   * 変更前の配列を操作してpatchMora配列を作る
+   * 変更前の配列を操作してpatchMora配列を作る。
    * <例> (Ｕはundefined）
    *         変更前のテキスト差分: [ "ズ", "ン", "ダ", "モ", "ン", "ナ", "ノ", "ダ" ]
    *         変更後のテキスト差分: [ "ボ", "ク", "ズ", "ン", "ダ", "ナ", "ノ", "デ", "ス" ]
-   *                                                        ↓ テキストのみに注目したパッチ配列
+   *                                              ↓
+   *                                              ↓ 再利用される文字列とundefinedで構成されたデータを作る。
+   *                                              ↓ 比較しやすいように文字列とundefinedを記述しているが、
+   *                                              ↓ 実際には"ズ"などの文字列部分が{text: "ズ"...}のようなデータ構造となる。
+   *                                              ↓
    *                               [  Ｕ ,  Ｕ , "ズ", "ン", "ダ", "ナ", "ノ",  Ｕ ,  Ｕ  ]
-   *  最終的にこちら(↓)が出力される
+   *
+   *  したがって、最終的にこちらのようなデータ構造(↓)が出力される。
    *  実際に作られるpatchMora配列: [  Ｕ ,  Ｕ , {text: "ズ"...}, {text: "ン"...}, {text: "ダ"...},{text: "ナ"...},{text: "ノ"...},  Ｕ ,  Ｕ  ]
    */
   createDiffPatch() {
@@ -253,7 +258,7 @@ export class TuningTranscription {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
-    // 与えられたアクセント句は、AccentPhrases[ Number ][ Object Key ][ Number ]の順番で、モーラを操作できるため、二重forで回す
+    // 与えられたアクセント句は、AccentPhrases[ Number ][ Object Key ][ Number ]の順番で、モーラを操作できるため、二重forで回す。
     for (let accentIndex = 0; accentIndex < after.length; accentIndex++) {
       for (
         let moraIndex = 0;
