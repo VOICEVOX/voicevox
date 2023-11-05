@@ -32,10 +32,6 @@ export async function navigateToMain(page: Page) {
 export async function toggleSetting(page: Page, settingName: string) {
   await page.getByRole("button", { name: "設定" }).click();
   await page.waitForTimeout(100);
-  // FIXME: なぜかariaで取得できない
-  // await page.getByRole("listitem", { name: "オプション" }).click();
-  page.on("console", (msg) => console.log(msg.text()));
-  await expect(page.getByText("オプション")).toBeVisible();
   await page.getByText("オプション").click();
   await page.waitForTimeout(100);
   await page
