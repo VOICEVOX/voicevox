@@ -1,5 +1,5 @@
 <template>
-  <div class="sequencer-keys">
+  <div ref="sequencerKeys" class="sequencer-keys">
     <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
       <defs>
         <symbol id="white-keys">
@@ -45,7 +45,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import { keyInfos, getKeyBaseHeight } from "@/helpers/singHelper";
 
@@ -53,11 +53,11 @@ export default defineComponent({
   name: "SingSequencerKeys",
   props: {
     offset: { type: Number, default: 0 },
-    width: { type: Number, default: 48 },
     blackKeyWidth: { type: Number, default: 30 },
   },
   setup(props) {
     const store = useStore();
+    const width = ref(48);
     const zoomX = computed(() => store.state.sequencerZoomX);
     const zoomY = computed(() => store.state.sequencerZoomY);
     const keyBaseHeight = getKeyBaseHeight();
@@ -86,7 +86,7 @@ export default defineComponent({
         return {
           x: -2,
           y: Math.floor(value * zoomY.value),
-          width: props.width + 2,
+          width: width.value + 2,
           height:
             Math.floor(nextValue * zoomY.value) -
             Math.floor(value * zoomY.value),
@@ -104,15 +104,45 @@ export default defineComponent({
       });
     });
 
+    const sequencerKeys = ref<HTMLElement | null>(null);
+    let resizeObserver: ResizeObserver | undefined;
+
+    onMounted(() => {
+      const sequencerKeysElement = sequencerKeys.value;
+      if (!sequencerKeysElement) {
+        throw new Error("sequencerKeysElement is null.");
+      }
+      resizeObserver = new ResizeObserver((entries) => {
+        let inlineSize = 0;
+        for (const entry of entries) {
+          for (const borderBoxSize of entry.borderBoxSize) {
+            inlineSize = borderBoxSize.inlineSize;
+          }
+        }
+        if (inlineSize > 0 && inlineSize !== width.value) {
+          width.value = inlineSize;
+        }
+      });
+      resizeObserver.observe(sequencerKeysElement);
+    });
+
+    onUnmounted(() => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    });
+
     return {
       keyInfos,
       zoomX,
       zoomY,
+      width,
       height,
       whiteKeyInfos,
       blackKeyInfos,
       whiteKeyRects,
       blackKeyRects,
+      sequencerKeys,
     };
   },
 });
@@ -124,7 +154,8 @@ export default defineComponent({
 
 .sequencer-keys {
   backface-visibility: hidden;
-  background: #ccc;
+  background: colors.$background;
+  border-right: 1px solid #ccc;
   overflow: hidden;
 }
 

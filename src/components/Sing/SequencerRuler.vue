@@ -1,5 +1,5 @@
 <template>
-  <div class="sequencer-ruler">
+  <div ref="sequencerRuler" class="sequencer-ruler">
     <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
       <defs>
         <pattern
@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import {
   getMeasureDuration,
@@ -62,12 +62,12 @@ export default defineComponent({
   name: "SingSequencerRuler",
   props: {
     offset: { type: Number, default: 0 },
-    height: { type: Number, default: 32 },
     numOfMeasures: { type: Number, default: 32 },
   },
   setup(props) {
     const store = useStore();
     const state = store.state;
+    const height = ref(32);
     const tpqn = computed(() => state.score.tpqn);
     const timeSignatures = computed(() => state.score.timeSignatures);
     const zoomX = computed(() => state.sequencerZoomX);
@@ -125,10 +125,40 @@ export default defineComponent({
       return measureInfos;
     });
 
+    const sequencerRuler = ref<HTMLElement | null>(null);
+    let resizeObserver: ResizeObserver | undefined;
+
+    onMounted(() => {
+      const sequencerRulerElement = sequencerRuler.value;
+      if (!sequencerRulerElement) {
+        throw new Error("sequencerRulerElement is null.");
+      }
+      resizeObserver = new ResizeObserver((entries) => {
+        let blockSize = 0;
+        for (const entry of entries) {
+          for (const borderBoxSize of entry.borderBoxSize) {
+            blockSize = borderBoxSize.blockSize;
+          }
+        }
+        if (blockSize > 0 && blockSize !== height.value) {
+          height.value = blockSize;
+        }
+      });
+      resizeObserver.observe(sequencerRulerElement);
+    });
+
+    onUnmounted(() => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    });
+
     return {
       measureWidth,
       width,
+      height,
       measureInfos,
+      sequencerRuler,
     };
   },
 });

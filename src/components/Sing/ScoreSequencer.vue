@@ -1,34 +1,20 @@
 <template>
-  <div
-    class="score-sequencer"
-    :style="{
-      display: 'grid',
-      gridTemplateRows: `${rulerHeight}px 1fr`,
-      gridTemplateColumns: `${keysWidth}px 1fr`,
-    }"
-  >
+  <div class="score-sequencer">
     <!-- 左上の角 -->
     <div class="corner"></div>
     <!-- ルーラー -->
-    <sequencer-ruler
-      :offset="scrollX"
-      :height="rulerHeight"
-      :num-of-measures="numOfMeasures"
-    />
+    <sequencer-ruler :offset="scrollX" :num-of-measures="numOfMeasures" />
     <!-- 鍵盤 -->
-    <sequencer-keys
-      :offset="scrollY"
-      :width="keysWidth"
-      :black-key-width="30"
-    />
+    <sequencer-keys :offset="scrollY" :black-key-width="30" />
     <!-- シーケンサ -->
     <div
-      id="sequencer-body"
+      ref="sequencerBody"
       class="sequencer-body"
       @mousedown="handleMouseDown"
       @mousemove="handleMouseMove"
       @mouseup="handleMouseUp"
       @dblclick="addNote"
+      @wheel="onWheel"
       @scroll="onScroll"
     >
       <!-- グリッド -->
@@ -114,9 +100,9 @@
     <!-- NOTE: スクロールバー+ズームレンジ仮 -->
     <input
       type="range"
-      min="0.2"
-      max="1"
-      step="0.05"
+      :min="ZOOM_X_MIN"
+      :max="ZOOM_X_MAX"
+      :step="ZOOM_X_STEP"
       :value="zoomX"
       :style="{
         position: 'fixed',
@@ -129,9 +115,9 @@
     />
     <input
       type="range"
-      min="0.25"
-      max="1"
-      step="0.05"
+      :min="ZOOM_Y_MIN"
+      :max="ZOOM_Y_MAX"
+      :step="ZOOM_Y_STEP"
       :value="zoomY"
       :style="{
         position: 'fixed',
@@ -173,11 +159,14 @@ export default defineComponent({
     SequencerKeys,
     SequencerNote,
   },
-  props: {
-    rulerHeight: { type: Number, default: 32 },
-    keysWidth: { type: Number, default: 48 },
-  },
   setup() {
+    const ZOOM_X_MIN = 0.2;
+    const ZOOM_X_MAX = 1;
+    const ZOOM_X_STEP = 0.05;
+    const ZOOM_Y_MIN = 0.35;
+    const ZOOM_Y_MAX = 1;
+    const ZOOM_Y_STEP = 0.05;
+
     enum DragMode {
       NONE = "NONE",
       MOVE = "MOVE",
@@ -264,6 +253,8 @@ export default defineComponent({
     const scrollX = ref(0);
     const scrollY = ref(0);
     const selectedNoteIds = computed(() => state.selectedNoteIds);
+
+    const sequencerBody = ref<HTMLElement | null>(null);
 
     // ノートの追加
     const addNote = (event: MouseEvent) => {
@@ -496,22 +487,40 @@ export default defineComponent({
 
     // X軸ズーム
     const setZoomX = (event: Event) => {
-      if (!(event.target instanceof HTMLInputElement)) {
-        return;
+      const sequencerBodyElement = sequencerBody.value;
+      if (event.target instanceof HTMLInputElement && sequencerBodyElement) {
+        // 画面の中央を基準に水平方向のズームを行う
+        const oldZoomX = zoomX.value;
+        const newZoomX = Number(event.target.value);
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
+        const clientWidth = sequencerBodyElement.clientWidth;
+
+        store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+          const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
+          const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
+          sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+        });
       }
-      store.dispatch("SET_ZOOM_X", {
-        zoomX: Number(event.target.value),
-      });
     };
 
     // Y軸ズーム
     const setZoomY = (event: Event) => {
-      if (!(event.target instanceof HTMLInputElement)) {
-        return;
+      const sequencerBodyElement = sequencerBody.value;
+      if (event.target instanceof HTMLInputElement && sequencerBodyElement) {
+        // 画面の中央を基準に垂直方向のズームを行う
+        const oldZoomY = zoomY.value;
+        const newZoomY = Number(event.target.value);
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
+        const clientHeight = sequencerBodyElement.clientHeight;
+
+        store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
+          const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
+          const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
+          sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
+        });
       }
-      store.dispatch("SET_ZOOM_Y", {
-        zoomY: Number(event.target.value),
-      });
     };
 
     // キーボードイベント
@@ -613,6 +622,28 @@ export default defineComponent({
       }
     };
 
+    const onWheel = (event: WheelEvent) => {
+      const sequencerBodyElement = sequencerBody.value;
+      if (sequencerBodyElement && event.ctrlKey) {
+        // カーソル位置を基準に水平方向のズームを行う
+        const oldZoomX = zoomX.value;
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
+        const cursorX = event.offsetX - scrollLeft;
+
+        let newZoomX = zoomX.value;
+        newZoomX -= event.deltaY * (ZOOM_X_STEP * 0.01);
+        newZoomX = Math.min(ZOOM_X_MAX, newZoomX);
+        newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
+
+        store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+          const cursorBaseX = (scrollLeft + cursorX) / oldZoomX;
+          const newScrollLeft = cursorBaseX * newZoomX - cursorX;
+          sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+        });
+      }
+    };
+
     const onScroll = (event: Event) => {
       if (event.target instanceof HTMLElement) {
         scrollX.value = event.target.scrollLeft;
@@ -621,17 +652,25 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      const el = document.querySelector("#sequencer-body");
-      // 上から2/3の位置がC4になるようにスクロールする
-      if (el) {
-        const c4BaseY = noteNumberToBaseY(60);
-        const clientBaseHeight = el.clientHeight / zoomY.value;
-        const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
-        el.scrollTo(0, scrollBaseY * zoomY.value);
+      const sequencerBodyElement = sequencerBody.value;
+      if (!sequencerBodyElement) {
+        throw new Error("sequencerBodyElement is null.");
       }
+      // 上から2/3の位置がC4になるようにスクロールする
+      const clientHeight = sequencerBodyElement.clientHeight;
+      const c4BaseY = noteNumberToBaseY(60);
+      const clientBaseHeight = clientHeight / zoomY.value;
+      const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
+      sequencerBodyElement.scrollTo(0, scrollBaseY * zoomY.value);
     });
 
     return {
+      ZOOM_X_MIN,
+      ZOOM_X_MAX,
+      ZOOM_X_STEP,
+      ZOOM_Y_MIN,
+      ZOOM_Y_MAX,
+      ZOOM_Y_STEP,
       beatsPerMeasure,
       beatWidth,
       gridCellWidth,
@@ -646,6 +685,7 @@ export default defineComponent({
       cursorY,
       scrollX,
       scrollY,
+      sequencerBody,
       setZoomX,
       setZoomY,
       addNote,
@@ -656,6 +696,7 @@ export default defineComponent({
       handleDragMoveStart,
       handleDragRightStart,
       handleDragLeftStart,
+      onWheel,
       onScroll,
     };
   },
@@ -668,10 +709,9 @@ export default defineComponent({
 
 .score-sequencer {
   backface-visibility: hidden;
-
-  &.move {
-    cursor: move;
-  }
+  display: grid;
+  grid-template-rows: 30px 1fr;
+  grid-template-columns: 48px 1fr;
 }
 
 .corner {
@@ -684,6 +724,10 @@ export default defineComponent({
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
+
+  &.move {
+    cursor: move;
+  }
 }
 
 .sequencer-grid {
