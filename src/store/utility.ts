@@ -228,17 +228,17 @@ export class TuningTranscription {
       this.createFlatArray(structuredClone(beforeFlatArray), "text" as never),
       this.createFlatArray(structuredClone(afterFlatArray), "text" as never)
     );
-    let currenttextIndex = 0;
+    let currentTextIndex = 0;
     for (const diff of diffed) {
       if (diff.removed) {
-        beforeFlatArray.splice(currenttextIndex, diff.count);
+        beforeFlatArray.splice(currentTextIndex, diff.count);
       } else if (diff.added) {
         diff.value.forEach(() => {
-          beforeFlatArray.splice(currenttextIndex, 0, undefined as never);
-          currenttextIndex++;
+          beforeFlatArray.splice(currentTextIndex, 0, undefined as never);
+          currentTextIndex++;
         });
       } else {
-        currenttextIndex += diff.value.length;
+        currentTextIndex += diff.value.length;
       }
     }
     return beforeFlatArray;
