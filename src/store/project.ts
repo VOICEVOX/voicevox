@@ -508,6 +508,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   /**
    * プロジェクトを一時ファイルに保存する
+   *
+   * @todo projectFilePath が存在する(既に一部を保存済み)場合差分のみを保存する
    */
   SAVE_TEMPORARY_PROJECT_FILE: {
     async action({ state }) {
@@ -520,6 +522,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           audioKeys,
           audioItems,
           projectFilePath: state.projectFilePath,
+          commandStoreState: {
+            undoCommands: state.undoCommands,
+            redoCommands: state.redoCommands,
+          },
         };
 
         const buf = new TextEncoder().encode(
@@ -553,6 +559,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   /**
    * 一時ファイルを読み込む
    * 一時ファイルにプロジェクトがある場合は、復元するか破棄するかのダイアログを出す
+   *
+   * @todo projectFilePath が一時ファイル存在する(既に一部を保存済み)場合差分を取得し、 projectFilePath に保存されたプロジェクトとマージさせる
+   * @todo ホットリロード時にポップアップが複数開かれるのを防ぐ
    */
   LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
@@ -577,13 +586,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         if (applyRestoredProject) {
           // 復元ボタン押下時
+          // プロジェクト保存先の復元
           const filePath = projectData.projectFilePath;
-
           if (filePath) {
             context.commit("SET_PROJECT_FILEPATH", { filePath });
           }
 
-          // Fixme: プロジェクト復元時点で保存はされていないが IS_EDITED が false になる
+          // AudioItems の復元
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
           await registerAudioItems({ projectData, dispatch: context.dispatch });
           return;
@@ -728,6 +737,7 @@ interface ProjectType {
   audioItems: Record<AudioKey, AudioItem>;
 }
 
+/** プロジェクト一時ファイル */
 interface tempProjectType {
   appVersion?: string;
   audioKeys?: AudioKey[];
