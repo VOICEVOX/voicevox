@@ -652,15 +652,16 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      // 上から2/3の位置がC4になるようにスクロールする
       const sequencerBodyElement = sequencerBody.value;
-      if (sequencerBodyElement) {
-        const clientHeight = sequencerBodyElement.clientHeight;
-        const c4BaseY = noteNumberToBaseY(60);
-        const clientBaseHeight = clientHeight / zoomY.value;
-        const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
-        sequencerBodyElement.scrollTo(0, scrollBaseY * zoomY.value);
+      if (!sequencerBodyElement) {
+        throw new Error("sequencerBodyElement is null.");
       }
+      // 上から2/3の位置がC4になるようにスクロールする
+      const clientHeight = sequencerBodyElement.clientHeight;
+      const c4BaseY = noteNumberToBaseY(60);
+      const clientBaseHeight = clientHeight / zoomY.value;
+      const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
+      sequencerBodyElement.scrollTo(0, scrollBaseY * zoomY.value);
     });
 
     return {

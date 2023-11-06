@@ -109,20 +109,21 @@ export default defineComponent({
 
     onMounted(() => {
       const sequencerKeysElement = sequencerKeys.value;
-      if (sequencerKeysElement) {
-        resizeObserver = new ResizeObserver((entries) => {
-          let inlineSize = 0;
-          for (const entry of entries) {
-            for (const borderBoxSize of entry.borderBoxSize) {
-              inlineSize = borderBoxSize.inlineSize;
-            }
-          }
-          if (inlineSize > 0 && inlineSize !== width.value) {
-            width.value = inlineSize;
-          }
-        });
-        resizeObserver.observe(sequencerKeysElement);
+      if (!sequencerKeysElement) {
+        throw new Error("sequencerKeysElement is null.");
       }
+      resizeObserver = new ResizeObserver((entries) => {
+        let inlineSize = 0;
+        for (const entry of entries) {
+          for (const borderBoxSize of entry.borderBoxSize) {
+            inlineSize = borderBoxSize.inlineSize;
+          }
+        }
+        if (inlineSize > 0 && inlineSize !== width.value) {
+          width.value = inlineSize;
+        }
+      });
+      resizeObserver.observe(sequencerKeysElement);
     });
 
     onUnmounted(() => {

@@ -130,20 +130,21 @@ export default defineComponent({
 
     onMounted(() => {
       const sequencerRulerElement = sequencerRuler.value;
-      if (sequencerRulerElement) {
-        resizeObserver = new ResizeObserver((entries) => {
-          let blockSize = 0;
-          for (const entry of entries) {
-            for (const borderBoxSize of entry.borderBoxSize) {
-              blockSize = borderBoxSize.blockSize;
-            }
-          }
-          if (blockSize > 0 && blockSize !== height.value) {
-            height.value = blockSize;
-          }
-        });
-        resizeObserver.observe(sequencerRulerElement);
+      if (!sequencerRulerElement) {
+        throw new Error("sequencerRulerElement is null.");
       }
+      resizeObserver = new ResizeObserver((entries) => {
+        let blockSize = 0;
+        for (const entry of entries) {
+          for (const borderBoxSize of entry.borderBoxSize) {
+            blockSize = borderBoxSize.blockSize;
+          }
+        }
+        if (blockSize > 0 && blockSize !== height.value) {
+          height.value = blockSize;
+        }
+      });
+      resizeObserver.observe(sequencerRulerElement);
     });
 
     onUnmounted(() => {
