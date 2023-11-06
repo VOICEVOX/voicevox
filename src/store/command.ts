@@ -140,4 +140,17 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       state.undoCommands.splice(0);
     },
   },
+
+  // undo/redoの状態を受け取った値に置き換える
+  RESTORE_COMMAND_STATE: {
+    mutation(state, commands: CommandStoreState) {
+      const { undoCommands, redoCommands } = commands;
+
+      state.undoCommands.splice(0, state.undoCommands.length, ...undoCommands);
+      state.redoCommands.splice(0, state.redoCommands.length, ...redoCommands);
+    },
+    action({ commit }, commands) {
+      commit("RESTORE_COMMAND_STATE", commands);
+    },
+  },
 });

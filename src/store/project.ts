@@ -8,6 +8,7 @@ import {
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
+  CommandStoreState,
 } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
@@ -595,6 +596,15 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           // AudioItems の復元
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
           await registerAudioItems({ projectData, dispatch: context.dispatch });
+
+          // undo/redo の復元
+          if (projectData.commandStoreState) {
+            context.dispatch(
+              "RESTORE_COMMAND_STATE",
+              projectData.commandStoreState
+            );
+          }
+
           return;
         } else {
           // 破棄ボタン押下時
@@ -743,4 +753,5 @@ interface tempProjectType {
   audioKeys?: AudioKey[];
   audioItems?: Record<AudioKey, AudioItem>;
   projectFilePath?: string;
+  commandStoreState?: CommandStoreState;
 }
