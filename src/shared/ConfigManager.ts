@@ -7,7 +7,6 @@ import {
   DefaultStyleId,
   defaultHotkeySettings,
   HotkeySetting,
-  engineSettingSchema,
 } from "@/type/preload";
 
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
@@ -120,7 +119,6 @@ export abstract class BaseConfigManager {
   protected config: ConfigType | undefined;
 
   private saveCounter = 0;
-  private initializePromise: Promise<this> | undefined;
 
   abstract exists(): Promise<boolean>;
   abstract load(): Promise<Record<string, unknown> & Metadata>;
@@ -128,19 +126,7 @@ export abstract class BaseConfigManager {
 
   abstract getAppVersion(): string;
 
-  public initialize(): Promise<this> {
-    if (!this.initializePromise) {
-      this.initializePromise = this._initialize();
-    }
-    return this.initializePromise;
-  }
-  public ensureInitialized(): Promise<this> | undefined {
-    if (this.config) {
-      return undefined;
-    }
-    return this.initializePromise;
-  }
-  public async _initialize(): Promise<this> {
+  public async initialize(): Promise<this> {
     if (await this.exists()) {
       const data = await this.load();
       const version = data.__internal__.migrations.version;
@@ -154,7 +140,7 @@ export abstract class BaseConfigManager {
       const defaultConfig = configSchema.parse({});
       this.config = defaultConfig;
     }
-    this.fillEngineSettings();
+    await this.afterInitialize();
     this._save();
     await this.ensureSaved();
 
@@ -250,18 +236,7 @@ export abstract class BaseConfigManager {
     };
   }
 
-  private fillEngineSettings() {
-    if (!this.config) throw new Error("Config is not initialized");
-    // FIXME: できるならEngineManagerからEngineIDを取得したい
-    if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined) {
-      throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
-    }
-    const engineId = EngineId(
-      JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
-    );
-    if (engineId == undefined)
-      throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
-
-    this.config.engineSettings[engineId] = engineSettingSchema.parse({});
+  async afterInitialize() {
+    // noop
   }
 }
