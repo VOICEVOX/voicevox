@@ -91,7 +91,7 @@ const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
 const enableMultiEngine = computed(
-  () => store.state.experimentalSetting.enableMultiEngine
+  () => store.state.savingSetting.enableMultiEngine
 );
 
 const titleText = computed(

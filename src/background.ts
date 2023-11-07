@@ -160,6 +160,15 @@ const store = new Store<ElectronStoreType>({
       // @ts-expect-error 削除されたパラメータ。
       store.delete("useGpu");
     },
+    ">=0.14.9": (store) => {
+      // マルチエンジン機能を実験的機能から通常機能に
+      const enableMultiEngine: boolean =
+        // @ts-expect-error 削除されたパラメータ。
+        store.get("experimentalSetting").enableMultiEngine;
+      store.set("savingSetting.enableMultiEngine", enableMultiEngine);
+      // @ts-expect-error 削除されたパラメータ。
+      store.delete("experimentalSetting.enableMultiEngine");
+    },
   },
 });
 
@@ -253,7 +262,7 @@ async function installVvppEngineWithWarning({
  * 無効だった場合はダイアログを表示してfalseを返す。
  */
 function checkMultiEngineEnabled(): boolean {
-  const enabled = store.get("experimentalSetting").enableMultiEngine;
+  const enabled = store.get("savingSetting").enableMultiEngine;
   if (!enabled) {
     dialog.showMessageBoxSync(win, {
       type: "info",
