@@ -165,7 +165,7 @@ const store = new Store<ElectronStoreType>({
       const enableMultiEngine: boolean =
         // @ts-expect-error 削除されたパラメータ。
         store.get("experimentalSetting").enableMultiEngine;
-      store.set("savingSetting.enableMultiEngine", enableMultiEngine);
+      store.set("enableMultiEngine", enableMultiEngine);
       // @ts-expect-error 削除されたパラメータ。
       store.delete("experimentalSetting.enableMultiEngine");
     },
@@ -262,7 +262,7 @@ async function installVvppEngineWithWarning({
  * 無効だった場合はダイアログを表示してfalseを返す。
  */
 function checkMultiEngineEnabled(): boolean {
-  const enabled = store.get("savingSetting").enableMultiEngine;
+  const enabled = store.get("enableMultiEngine");
   if (!enabled) {
     dialog.showMessageBoxSync(win, {
       type: "info",

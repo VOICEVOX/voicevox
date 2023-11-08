@@ -258,7 +258,6 @@ export type SavingSetting = {
   fixedExportDir: string;
   avoidOverwrite: boolean;
   exportText: boolean;
-  enableMultiEngine: boolean;
   outputStereo: boolean;
   audioOutputDevice: string;
 };
@@ -466,7 +465,6 @@ export const electronStoreSchema = z
         fixedExportDir: z.string().default(""),
         exportLab: z.boolean().default(false),
         exportText: z.boolean().default(false),
-        enableMultiEngine: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
         audioOutputDevice: z.string().default(""),
       })
@@ -546,6 +544,7 @@ export const electronStoreSchema = z
       .passthrough()
       .default({}),
     registeredEngineDirs: z.string().array().default([]),
+    enableMultiEngine: z.boolean().default(false),
   })
   .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;

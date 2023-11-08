@@ -59,7 +59,6 @@ describe("store/vuex.js test", () => {
           avoidOverwrite: false,
           exportLab: false,
           exportText: false,
-          enableMultiEngine: false,
           outputStereo: false,
           audioOutputDevice: "default",
         },
@@ -132,6 +131,7 @@ describe("store/vuex.js test", () => {
         confirmedTips: {
           tweakableSliderByScroll: false,
         },
+        enableMultiEngine: false,
         progress: -1,
       },
       getters: {

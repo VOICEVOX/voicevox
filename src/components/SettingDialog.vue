@@ -551,10 +551,8 @@
                 </div>
                 <q-space />
                 <q-toggle
-                  :model-value="savingSetting.enableMultiEngine"
-                  @update:model-value="
-                    handleSavingSettingChange('enableMultiEngine', $event)
-                  "
+                  :model-value="enableMultiEngine"
+                  @update:model-value="setEnableMultiEngine($event)"
                 >
                 </q-toggle>
               </q-card-actions>
@@ -1023,6 +1021,11 @@ export default defineComponent({
       store.dispatch("SET_EDITOR_FONT", { editorFont });
     };
 
+    const enableMultiEngine = computed(() => store.state.enableMultiEngine);
+    const setEnableMultiEngine = (enableMultiEngine: boolean) => {
+      store.dispatch("SET_ENABLE_MULTI_ENGINE", { enableMultiEngine });
+    };
+
     const showsFilePatternEditDialog = ref(false);
 
     const selectedEngineIdRaw = ref("");
@@ -1068,6 +1071,8 @@ export default defineComponent({
       splitTextWhenPaste,
       changeSplitTextWhenPaste,
       editorFont,
+      enableMultiEngine,
+      setEnableMultiEngine,
       changeEditorFont,
       showsFilePatternEditDialog,
     };
