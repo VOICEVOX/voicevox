@@ -6,7 +6,7 @@ import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
 
 const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "config";
-const dbVersion = 1;
+const dbVersion = 1; // 固定値。configのmigrationには使用していない。
 // NOTE: settingを複数持つことはないと仮定して、keyを固定してしまう
 const entryKey = "value";
 
