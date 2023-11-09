@@ -363,6 +363,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
+          context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
           return true;
         } catch (err) {
           window.electron.logError(err);
@@ -541,9 +542,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   /**
    * プロジェクトの一時ファイルを空にする
+   *
+   * @todo 必ずしも空にするわけではなくなったので命名を変更する
    */
   CLEAR_TEMPORARY_PROJECT_FILE: {
-    async action() {
+    async action(context) {
       const projectData: tempProjectType = {};
 
       try {
@@ -551,6 +554,19 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           JSON.stringify(projectData)
         ).buffer;
         await window.electron.setTempProject(buf).then(getValueOrThrow);
+
+        // 自動復元機能有効時
+        if (context.state.savingSetting.isAutoRestoreEnabled) {
+          const tempProject = new TextEncoder().encode(
+            JSON.stringify({
+              projectFilePath: context.state.projectFilePath,
+            })
+          ).buffer;
+
+          await window.electron
+            .setTempProject(tempProject)
+            .then(getValueOrThrow);
+        }
       } catch (err) {
         window.electron.logError(err);
       }
@@ -567,11 +583,25 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
       try {
+        // [TODO] projectData は少しわかりにくいので命名を変える
         const projectData: tempProjectType =
           await window.electron.getTempProject();
 
         // 一時ファイルにプロジェクトがない場合は何もしない
         if (!Object.keys(projectData).length) {
+          return;
+        }
+
+        // 自動復元有効かつ未保存の復元対象がない場合はダイアログを出さずに復元する
+        if (
+          projectData.projectFilePath &&
+          context.state.savingSetting.isAutoRestoreEnabled &&
+          !projectData.audioKeys
+        ) {
+          await context.dispatch("LOAD_PROJECT_FILE", {
+            filePath: projectData.projectFilePath,
+            confirm: false,
+          });
           return;
         }
 
@@ -595,6 +625,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
           // AudioItems の復元
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
+
+          // [TODO] LOAD_PROJECT_FILE を使用する
           await registerAudioItems({ projectData, dispatch: context.dispatch });
 
           // undo/redo の復元
