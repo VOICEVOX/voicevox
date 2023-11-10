@@ -219,15 +219,15 @@ export class TuningTranscription {
    * 実際には"ズ"などの文字列部分は{text: "ズ"...}のようなデータ構造になっている。
    * [ Ｕ, Ｕ, {text: "ズ"...}, {text: "ン"...}, {text: "ダ"...}, {text: "ナ"...}, {text: "ノ"...}, Ｕ, Ｕ ]
    */
-  createDiffPatch() {
+  private createDiffPatch() {
     const before = structuredClone(this.beforeAccent);
     const after = structuredClone(this.afterAccent);
 
     const beforeFlatArray = this.createFlatArray(before, "moras");
     const afterFlatArray = this.createFlatArray(after, "moras");
     const diffed = diffArrays(
-      this.createFlatArray(structuredClone(beforeFlatArray), "text"),
-      this.createFlatArray(structuredClone(afterFlatArray), "text")
+      this.createFlatArray(beforeFlatArray, "text"),
+      this.createFlatArray(afterFlatArray, "text")
     );
 
     // FIXME: beforeFlatArrayを破壊的に変更しなくても良いようにしてasを不要にする
@@ -260,7 +260,7 @@ export class TuningTranscription {
    * あとは一致したモーラを転写するだけ。
    *
    */
-  mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
+  private mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
