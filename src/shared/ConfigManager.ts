@@ -120,11 +120,11 @@ export abstract class BaseConfigManager {
 
   private saveCounter = 0;
 
-  abstract exists(): Promise<boolean>;
-  abstract load(): Promise<Record<string, unknown> & Metadata>;
-  abstract save(config: ConfigType & Metadata): Promise<void>;
+  protected abstract exists(): Promise<boolean>;
+  protected abstract load(): Promise<Record<string, unknown> & Metadata>;
+  protected abstract save(config: ConfigType & Metadata): Promise<void>;
 
-  abstract getAppVersion(): string;
+  protected abstract getAppVersion(): string;
 
   public async initialize(): Promise<this> {
     if (await this.exists()) {
@@ -137,10 +137,8 @@ export abstract class BaseConfigManager {
       }
       this.config = this.migrateHotkeySettings(configSchema.parse(data));
     } else {
-      const defaultConfig = configSchema.parse({});
-      this.config = defaultConfig;
+      this.config = await this.getDefaultConfig();
     }
-    await this.afterInitialize();
     this._save();
     await this.ensureSaved();
 
@@ -236,7 +234,7 @@ export abstract class BaseConfigManager {
     };
   }
 
-  async afterInitialize() {
-    // noop
+  protected async getDefaultConfig(): Promise<ConfigType> {
+    return configSchema.parse({});
   }
 }

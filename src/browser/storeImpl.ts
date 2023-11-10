@@ -71,10 +71,10 @@ export const openDB = () =>
   });
 
 class BrowserConfigManager extends BaseConfigManager {
-  getAppVersion() {
+  protected getAppVersion() {
     return import.meta.env.VITE_APP_VERSION;
   }
-  async exists() {
+  protected async exists() {
     const db = await openDB();
 
     try {
@@ -88,7 +88,7 @@ class BrowserConfigManager extends BaseConfigManager {
       return false;
     }
   }
-  async load(): Promise<Record<string, unknown> & Metadata> {
+  protected async load(): Promise<Record<string, unknown> & Metadata> {
     const db = await openDB();
 
     const transaction = db.transaction(settingStoreKey, "readonly");
@@ -102,7 +102,7 @@ class BrowserConfigManager extends BaseConfigManager {
     return JSON.parse(result);
   }
 
-  async save(data: ConfigType & Metadata) {
+  protected async save(data: ConfigType & Metadata) {
     const db = await openDB();
 
     const transaction = db.transaction(settingStoreKey, "readwrite");
@@ -111,12 +111,11 @@ class BrowserConfigManager extends BaseConfigManager {
     await waitRequest(request);
   }
 
-  async afterInitialize() {
-    if (this.config == null) {
-      throw new Error("assert: config != null");
-    }
-    this.config.engineSettings[defaultEngineId] ??= engineSettingSchema.parse(
+  protected async getDefaultConfig() {
+    const baseConfig = await super.getDefaultConfig();
+    baseConfig.engineSettings[defaultEngineId] ??= engineSettingSchema.parse(
       {}
     );
+    return baseConfig;
   }
 }
