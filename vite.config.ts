@@ -17,11 +17,11 @@ const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 
 export default defineConfig((options) => {
-  const package_name = process.env.npm_package_name;
+  const packageName = process.env.npm_package_name;
   const env = loadEnv(options.mode, __dirname);
-  if (!package_name.startsWith(env.VITE_APP_NAME)) {
+  if (!packageName?.startsWith(env.VITE_APP_NAME)) {
     throw new Error(
-      `"package.json"の"name":"${package_name}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`
+      `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`
     );
   }
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
@@ -34,11 +34,13 @@ export default defineConfig((options) => {
       linux: "7zzs",
       darwin: "7zz",
     }[process.platform];
+  process.env.VITE_APP_VERSION = process.env.npm_package_version;
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
     : false;
   return {
     root: path.resolve(__dirname, "src"),
+    envDir: __dirname,
     build: {
       outDir: path.resolve(__dirname, "dist"),
       chunkSizeWarningLimit: 10000,
@@ -83,7 +85,6 @@ export default defineConfig((options) => {
           eslint: {
             lintCommand: "eslint --ext .ts,.vue .",
           },
-          typescript: true,
           vueTsc: true,
         }),
       isElectron &&
@@ -111,12 +112,6 @@ export default defineConfig((options) => {
         }),
       isBrowser && injectBrowserPreloadPlugin(),
     ],
-    define: {
-      [`process.env`]: {
-        APP_NAME: process.env.npm_package_name,
-        APP_VERSION: process.env.npm_package_version,
-      },
-    },
   };
 });
 

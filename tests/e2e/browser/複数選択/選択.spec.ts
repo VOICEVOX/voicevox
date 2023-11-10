@@ -1,11 +1,9 @@
 import { test, expect, Page } from "@playwright/test";
-import { toggleSetting, navigateToMain } from "../../navigators";
+import { toggleSetting, navigateToMain, gotoHome } from "../../navigators";
 import { ctrlLike, addAudioCells } from "./utils";
 
 test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
+  await gotoHome({ page });
 
   await navigateToMain(page);
   await page.waitForTimeout(100);
@@ -36,7 +34,7 @@ async function getSelectedStatus(page: Page): Promise<SelectedStatus> {
         selected.push(i + 1);
       }
     }
-    if (active === undefined) {
+    if (active == undefined) {
       throw new Error("No active audio cell");
     }
 
