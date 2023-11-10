@@ -275,8 +275,6 @@ export class TuningTranscription {
         moraIndex < after[accentIndex]["moras"].length;
         moraIndex++
       ) {
-        console.log(moraIndex);
-
         // undefinedのとき、何もせず次のモーラへ移動
         if (moraPatch[moraPatchIndex] == undefined) {
           moraPatchIndex++;
@@ -289,7 +287,6 @@ export class TuningTranscription {
           after[accentIndex]["moras"][moraIndex] = moraPatch[
             moraPatchIndex
           ] as Mora;
-          console.log("copied!");
         }
         moraPatchIndex++;
       }
