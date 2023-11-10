@@ -121,7 +121,6 @@ describe("store/vuex.js test", () => {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
           enableMorphing: false,
-          enableMultiEngine: false,
         },
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {
@@ -132,6 +131,7 @@ describe("store/vuex.js test", () => {
         confirmedTips: {
           tweakableSliderByScroll: false,
         },
+        enableMultiEngine: false,
         progress: -1,
       },
       getters: {

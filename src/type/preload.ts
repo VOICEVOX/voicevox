@@ -436,7 +436,6 @@ export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
   enableMorphing: boolean;
-  enableMultiEngine: boolean;
 };
 
 export const splitterPositionSchema = z
@@ -525,7 +524,6 @@ export const electronStoreSchema = z
         enablePreset: z.boolean().default(false),
         enableInterrogativeUpspeak: z.boolean().default(false),
         enableMorphing: z.boolean().default(false),
-        enableMultiEngine: z.boolean().default(false),
       })
       .passthrough()
       .default({}),
@@ -546,6 +544,7 @@ export const electronStoreSchema = z
       .passthrough()
       .default({}),
     registeredEngineDirs: z.string().array().default([]),
+    enableMultiEngine: z.boolean().default(false),
   })
   .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
