@@ -1,7 +1,8 @@
 import path from "path";
 import { Platform } from "quasar";
+import { diffArrays } from "diff";
 import { ToolbarButtonTagType, isMac } from "@/type/preload";
-import { AccentPhrase } from "@/openapi";
+import { AccentPhrase, Mora } from "@/openapi";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 
@@ -171,6 +172,122 @@ function skipMemoText(targettext: string): string {
   // []をスキップ
   const resolvedText = targettext.replace(/\[.*?\]/g, "");
   return resolvedText;
+}
+
+/**
+ * 2つのアクセント句配列を比べて同じだと思われるモーラの調整結果を転写し
+ * 変更前のアクセント句の調整結果を変更後のアクセント句に保持する。
+ * 「こんにちは」 -> 「こんばんは」と変更した場合、以下の例において[]に囲まれる部分は、変更前のモーラが再利用される。
+ * <例>
+ *
+ * 「 [こん]ばん[は] 」
+ */
+export class TuningTranscription {
+  beforeAccent: AccentPhrase[];
+  afterAccent: AccentPhrase[];
+  constructor(beforeAccent: AccentPhrase[], afterAccent: AccentPhrase[]) {
+    this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
+    this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
+  }
+
+  createFlatArray<T, K extends keyof T>(collection: T[], key: K): T[K][] {
+    const result: T[K][] = [];
+    for (const element of collection) {
+      const value = element[key];
+      if (Array.isArray(value)) {
+        result.push(...value);
+      } else {
+        result.push(value);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * 変更前の配列を操作してpatchMora配列を作る。
+   * <例> (Ｕはundefined）
+   *         変更前のテキスト差分: [ "ズ", "ン", "ダ", "モ", "ン", "ナ", "ノ", "ダ" ]
+   *         変更後のテキスト差分: [ "ボ", "ク", "ズ", "ン", "ダ", "ナ", "ノ", "デ", "ス" ]
+   *                                              ↓
+   *                                              ↓ 再利用される文字列とundefinedで構成されたデータを作る。
+   *                                              ↓ 比較しやすいように文字列とundefinedを記述しているが、
+   *                                              ↓ 実際には"ズ"などの文字列部分が{text: "ズ"...}のようなデータ構造となる。
+   *                                              ↓
+   *                               [  Ｕ ,  Ｕ , "ズ", "ン", "ダ", "ナ", "ノ",  Ｕ ,  Ｕ  ]
+   *
+   *  したがって、最終的にこちらのようなデータ構造(↓)が出力される。
+   *  実際に作られるpatchMora配列: [  Ｕ ,  Ｕ , {text: "ズ"...}, {text: "ン"...}, {text: "ダ"...},{text: "ナ"...},{text: "ノ"...},  Ｕ ,  Ｕ  ]
+   */
+  createDiffPatch() {
+    const before = structuredClone(this.beforeAccent);
+    const after = structuredClone(this.afterAccent);
+
+    const beforeFlatArray = this.createFlatArray(before, "moras");
+    const afterFlatArray = this.createFlatArray(after, "moras");
+    const diffed = diffArrays(
+      this.createFlatArray(structuredClone(beforeFlatArray), "text" as never),
+      this.createFlatArray(structuredClone(afterFlatArray), "text" as never)
+    );
+    let currentTextIndex = 0;
+    for (const diff of diffed) {
+      if (diff.removed) {
+        beforeFlatArray.splice(currentTextIndex, diff.count);
+      } else if (diff.added) {
+        diff.value.forEach(() => {
+          beforeFlatArray.splice(currentTextIndex, 0, undefined as never);
+          currentTextIndex++;
+        });
+      } else {
+        currentTextIndex += diff.value.length;
+      }
+    }
+    return beforeFlatArray;
+  }
+  /**
+   * 「こんにちは」 -> 「こんばんは」 とテキストを変更した場合、以下の例のように、moraPatch配列とafter(AccentPhrases)を比較し、
+   * text(key)の値が一致するとき、after[...]["moras"][moraIndex] = moraPatch[moraPatchIndex]と代入することで、モーラを再利用する。
+   *
+   *  <例> (「||」は等号記号を表す)
+   *           moraPatch = [ {text: "コ"...}, {text: "ン"...}, undefined      , undefined      , {text: "ハ"...} ]
+   *                              ||                ||                                                ||
+   * after[...]["moras"] = [ {text: "コ"...}, {text: "ン"...}, {text: "バ"...}, {text: "ン"...}, {text: "ハ"...} ]
+   *
+   */
+  mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
+    const after: AccentPhrase[] = structuredClone(this.afterAccent);
+    let moraPatchIndex = 0;
+
+    // 与えられたアクセント句は、AccentPhrases[ Number ][ Object Key ][ Number ]の順番で、モーラを操作できるため、二重forで回す。
+    for (let accentIndex = 0; accentIndex < after.length; accentIndex++) {
+      for (
+        let moraIndex = 0;
+        moraIndex < after[accentIndex]["moras"].length;
+        moraIndex++
+      ) {
+        // undefinedのとき、何もせず次のモーラへ移動
+        if (moraPatch[moraPatchIndex] == undefined) {
+          moraPatchIndex++;
+          continue;
+        }
+        if (
+          after[accentIndex]["moras"][moraIndex].text ===
+          moraPatch[moraPatchIndex]?.text
+        ) {
+          after[accentIndex]["moras"][moraIndex] = moraPatch[
+            moraPatchIndex
+          ] as Mora;
+        }
+        moraPatchIndex++;
+      }
+    }
+
+    return after;
+  }
+
+  transcribe() {
+    const moraPatch = this.createDiffPatch();
+    return this.mergeAccentPhrases(moraPatch as never);
+  }
 }
 
 /**
