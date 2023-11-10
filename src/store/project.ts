@@ -519,7 +519,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         const appInfos = await window.electron.getAppInfos();
         const { audioItems, audioKeys } = state;
 
-        const projectData: tempProjectType = {
+        const projectData: TempProjectType = {
           appVersion: appInfos.version,
           audioKeys,
           audioItems,
@@ -547,7 +547,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   CLEAR_TEMPORARY_PROJECT_FILE: {
     async action(context) {
-      const projectData: tempProjectType = {};
+      const projectData: TempProjectType = {};
 
       try {
         const buf = new TextEncoder().encode(
@@ -584,7 +584,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     action: createUILockAction(async (context) => {
       try {
         // [TODO] projectData は少しわかりにくいので命名を変える
-        const projectData: tempProjectType =
+        const projectData: TempProjectType =
           await window.electron.getTempProject();
 
         // 一時ファイルにプロジェクトがない場合は何もしない
@@ -780,7 +780,7 @@ interface ProjectType {
 }
 
 /** プロジェクト一時ファイル */
-interface tempProjectType {
+interface TempProjectType {
   appVersion?: string;
   audioKeys?: AudioKey[];
   audioItems?: Record<AudioKey, AudioItem>;
