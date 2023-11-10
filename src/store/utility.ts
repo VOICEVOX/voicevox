@@ -231,17 +231,21 @@ export class TuningTranscription {
     );
 
     // FIXME: beforeFlatArrayを破壊的に変更しなくても良いようにしてasを不要にする
-    let pluckedIndex = 0;
+    let currentTextIndex = 0;
     for (const diff of diffed) {
       if (diff.removed) {
-        beforeFlatArray.splice(pluckedIndex, diff.count);
+        beforeFlatArray.splice(currentTextIndex, diff.count);
       } else if (diff.added) {
         diff.value.forEach(() => {
-          beforeFlatArray.splice(pluckedIndex, 0, undefined as never as Mora);
-          pluckedIndex++;
+          beforeFlatArray.splice(
+            currentTextIndex,
+            0,
+            undefined as never as Mora
+          );
+          currentTextIndex++;
         });
       } else {
-        pluckedIndex += diff.value.length;
+        currentTextIndex += diff.value.length;
       }
     }
     return beforeFlatArray as (Mora | undefined)[];
@@ -271,6 +275,8 @@ export class TuningTranscription {
         moraIndex < after[accentIndex]["moras"].length;
         moraIndex++
       ) {
+        console.log(moraIndex);
+
         // undefinedのとき、何もせず次のモーラへ移動
         if (moraPatch[moraPatchIndex] == undefined) {
           moraPatchIndex++;
@@ -283,6 +289,7 @@ export class TuningTranscription {
           after[accentIndex]["moras"][moraIndex] = moraPatch[
             moraPatchIndex
           ] as Mora;
+          console.log("copied!");
         }
         moraPatchIndex++;
       }

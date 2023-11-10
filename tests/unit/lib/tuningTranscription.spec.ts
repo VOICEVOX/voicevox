@@ -77,8 +77,6 @@ it("拗音のあるモーラも正しくデータを転写できる", async () =
   const tuningTransctiption = new TuningTranscription(before, after);
   const result = tuningTransctiption.transcribe();
 
-  console.log(tuningTransctiption.createDiffPatch());
-
   // モーラ数などは変わっていない
   expect(result.length).toEqual(after.length);
   for (let i = 0; i < result.length; i++) {
