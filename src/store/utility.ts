@@ -190,7 +190,7 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  createFlatArray<T, K extends keyof T>(
+  private createFlatArray<T, K extends keyof T>(
     collection: T[],
     key: K
   ): T[K] extends (infer U)[] ? U[] : T[K][] {
