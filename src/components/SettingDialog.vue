@@ -145,6 +145,32 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-surface">
+                <div>起動時に常に前回のプロジェクトを開く</div>
+                <div
+                  aria-label="ONの場合、前回開いていたプロジェクトが開いた状態で立ち上がります。"
+                >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      ONの場合、前回開いていたプロジェクトが開いた状態で立ち上がります。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="savingSetting.isAutoRestoreEnabled"
+                  @update:model-value="
+                    handleSavingSettingChange('isAutoRestoreEnabled', $event)
+                  "
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>再生位置を追従</div>
                 <div
                   aria-label="音声再生中の、下部パネルの自動スクロールのモードを選べます。"
