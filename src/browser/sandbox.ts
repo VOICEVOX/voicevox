@@ -4,7 +4,7 @@ import {
   showOpenDirectoryDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
-import { withConfigManager } from "./storeImpl";
+import { getConfigManager } from "./storeImpl";
 
 import { IpcSOData } from "@/type/ipc";
 import {
@@ -286,14 +286,12 @@ export const api: Sandbox = {
     return Promise.resolve();
   },
   async getSetting(key) {
-    return await withConfigManager(async (configManager) => {
-      return configManager.get(key);
-    });
+    const configManager = await getConfigManager();
+    return configManager.get(key);
   },
   async setSetting(key, newValue) {
-    await withConfigManager(async (configManager) => {
-      configManager.set(key, newValue);
-    });
+    const configManager = await getConfigManager();
+    configManager.set(key, newValue);
     return newValue;
   },
   async setEngineSetting(engineId: EngineId, engineSetting: EngineSetting) {

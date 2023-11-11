@@ -1,4 +1,5 @@
 import semver from "semver";
+import AsyncLock from "async-lock";
 import {
   AcceptTermsStatus,
   ConfigType,
@@ -8,6 +9,8 @@ import {
   defaultHotkeySettings,
   HotkeySetting,
 } from "@/type/preload";
+
+const lockKey = "save";
 
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
@@ -118,7 +121,7 @@ export type Metadata = {
 export abstract class BaseConfigManager {
   protected config: ConfigType | undefined;
 
-  private saveCounter = 0;
+  private lock = new AsyncLock();
 
   protected abstract exists(): Promise<boolean>;
   protected abstract load(): Promise<Record<string, unknown> & Metadata>;
@@ -137,7 +140,7 @@ export abstract class BaseConfigManager {
       }
       this.config = this.migrateHotkeySettings(configSchema.parse(data));
     } else {
-      this.config = await this.getDefaultConfig();
+      this.config = this.getDefaultConfig();
     }
     this._save();
     await this.ensureSaved();
@@ -157,23 +160,22 @@ export abstract class BaseConfigManager {
   }
 
   private _save() {
-    this.saveCounter++;
-    this.save({
-      ...configSchema.parse({
-        ...this.config,
-      }),
-      __internal__: {
-        migrations: {
-          version: this.getAppVersion(),
+    this.lock.acquire(lockKey, () => {
+      this.save({
+        ...configSchema.parse({
+          ...this.config,
+        }),
+        __internal__: {
+          migrations: {
+            version: this.getAppVersion(),
+          },
         },
-      },
-    }).finally(() => {
-      this.saveCounter--;
+      });
     });
   }
 
   ensureSaved(): Promise<void> | "alreadySaved" {
-    if (this.saveCounter === 0) {
+    if (!this.lock.isBusy(lockKey)) {
       return "alreadySaved";
     }
 
@@ -185,7 +187,7 @@ export abstract class BaseConfigManager {
     for (let i = 0; i < 100; i++) {
       // 他のスレッドに処理を譲る
       await new Promise((resolve) => setTimeout(resolve, 100));
-      if (this.saveCounter === 0) {
+      if (!this.lock.isBusy(lockKey)) {
         return;
       }
     }
@@ -234,7 +236,7 @@ export abstract class BaseConfigManager {
     };
   }
 
-  protected async getDefaultConfig(): Promise<ConfigType> {
+  protected getDefaultConfig(): ConfigType {
     return configSchema.parse({});
   }
 }

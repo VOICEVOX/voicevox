@@ -15,16 +15,18 @@ let configManager: BrowserConfigManager | undefined;
 const configManagerLock = new AsyncLock();
 const defaultEngineId = EngineId(defaultEngine.uuid);
 
-export async function withConfigManager<T>(
-  callback: (configManager: BrowserConfigManager) => Promise<T>
-): Promise<T> {
-  return await configManagerLock.acquire("configManager", async () => {
+export async function getConfigManager() {
+  await configManagerLock.acquire("configManager", async () => {
     if (!configManager) {
       configManager = new BrowserConfigManager();
-      await configManager.initialize();
     }
-    return await callback(configManager);
   });
+
+  if (!configManager) {
+    throw new Error("configManager is undefined");
+  }
+
+  return configManager;
 }
 
 const waitRequest = (request: IDBRequest) =>
@@ -111,8 +113,8 @@ class BrowserConfigManager extends BaseConfigManager {
     await waitRequest(request);
   }
 
-  protected async getDefaultConfig() {
-    const baseConfig = await super.getDefaultConfig();
+  protected getDefaultConfig() {
+    const baseConfig = super.getDefaultConfig();
     baseConfig.engineSettings[defaultEngineId] ??= engineSettingSchema.parse(
       {}
     );
