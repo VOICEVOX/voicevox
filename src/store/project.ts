@@ -602,6 +602,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         }
 
+        // FIXME: 稀に `"appVersion":"999.999.999","audioKeys":[],"audioItems":{},` のようなデータが保存されることがある
+        // このようなデータが保存された場合は一旦無視する仕様にしているが、原因を調査する
+        const parsedProjectData = projectSchema.parse(tempProjectData);
+        if (!parsedProjectData.audioKeys.length) {
+          return;
+        }
+
         const applyRestoredProject: number =
           await window.electron.showQuestionDialog({
             type: "info",
