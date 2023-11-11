@@ -482,6 +482,7 @@ async function launchEngines() {
   // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
   engineManager.initializeEngineInfosAndAltPortInfo();
 
+  // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
   const engineInfos = engineManager.fetchEngineInfos();
   const engineSettings = configManager.get("engineSettings");
   for (const engineInfo of engineInfos) {
