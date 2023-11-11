@@ -46,11 +46,11 @@
       />
       <use href="#sequencer-ruler-measure-numbers" :x="-offset" />
     </svg>
-    <div class="sequencer-ruler-separator"></div>
+    <div class="sequencer-ruler-border-bottom"></div>
     <div
       class="sequencer-ruler-playhead"
       :style="{
-        transform: `translateX(${playheadPosition - offset}px)`,
+        transform: `translateX(${playheadX - offset}px)`,
       }"
     ></div>
   </div>
@@ -132,7 +132,7 @@ export default defineComponent({
       }
       return measureInfos;
     });
-    const playheadPosition = computed(() => {
+    const playheadX = computed(() => {
       const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
       return Math.floor(baseX * zoomX.value);
     });
@@ -180,7 +180,7 @@ export default defineComponent({
       width,
       height,
       measureInfos,
-      playheadPosition,
+      playheadX,
       sequencerRuler,
     };
   },
@@ -197,7 +197,7 @@ export default defineComponent({
   overflow: hidden;
 }
 
-.sequencer-ruler-separator {
+.sequencer-ruler-border-bottom {
   position: absolute;
   left: 0;
   top: 0;
@@ -213,8 +213,8 @@ export default defineComponent({
   width: 4px;
   height: 100%;
   background: colors.$primary;
-  border-left: 1px solid rgba(colors.$background-rgb, 0.8);
-  border-right: 1px solid rgba(colors.$background-rgb, 0.8);
+  border-left: 1px solid rgba(colors.$background-rgb, 0.83);
+  border-right: 1px solid rgba(colors.$background-rgb, 0.83);
   pointer-events: none;
 }
 

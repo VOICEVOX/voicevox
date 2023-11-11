@@ -105,7 +105,7 @@
         <div
           class="sequencer-body-playhead"
           :style="{
-            transform: `translateX(${playheadPosition}px)`,
+            transform: `translateX(${playheadX}px)`,
           }"
         ></div>
       </div>
@@ -269,7 +269,7 @@ export default defineComponent({
     const scrollY = ref(0);
     // 再生ヘッドの位置
     const playheadTicks = ref(0);
-    const playheadPosition = computed(() => {
+    const playheadX = computed(() => {
       const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
       return Math.floor(baseX * zoomX.value);
     });
@@ -683,11 +683,11 @@ export default defineComponent({
         const scrollWidth = sequencerBodyElement.scrollWidth;
         const clientWidth = sequencerBodyElement.clientWidth;
         const playheadX = tickToBaseX(position, tpqn.value) * zoomX.value;
-        const ignoreError = 3;
-        if (playheadX < scrollLeft - ignoreError) {
+        const tolerance = 3;
+        if (playheadX < scrollLeft) {
           sequencerBodyElement.scrollTo(playheadX, scrollTop);
         } else if (
-          scrollLeft < scrollWidth - clientWidth - ignoreError &&
+          scrollLeft < scrollWidth - clientWidth - tolerance &&
           playheadX >= scrollLeft + clientWidth
         ) {
           sequencerBodyElement.scrollTo(playheadX, scrollTop);
@@ -740,7 +740,7 @@ export default defineComponent({
       cursorY,
       scrollX,
       scrollY,
-      playheadPosition,
+      playheadX,
       sequencerBody,
       setZoomX,
       setZoomY,
@@ -801,8 +801,8 @@ export default defineComponent({
   width: 4px;
   height: 100%;
   background: colors.$primary;
-  border-left: 1px solid rgba(colors.$background-rgb, 0.8);
-  border-right: 1px solid rgba(colors.$background-rgb, 0.8);
+  border-left: 1px solid rgba(colors.$background-rgb, 0.83);
+  border-right: 1px solid rgba(colors.$background-rgb, 0.83);
   pointer-events: none;
 }
 
