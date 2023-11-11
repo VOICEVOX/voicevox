@@ -526,7 +526,7 @@ export const configSchema = z.object({
       exportText: z.boolean().default(false),
       outputStereo: z.boolean().default(false),
       audioOutputDevice: z.string().default(""),
-      isAutoRestoreEnabled: z.boolean().default(true),
+      isAutoRestoreEnabled: z.boolean().default(false),
     })
     .default({}),
   hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
