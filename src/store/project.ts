@@ -555,7 +555,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         ).buffer;
         await window.electron.setTempProject(buf).then(getValueOrThrow);
 
-        // 自動復元機能有効時
+        // 自動復元機能有効時プロジェクトファイルのパスを保存する
         if (context.state.savingSetting.isAutoRestoreEnabled) {
           const tempProject = new TextEncoder().encode(
             JSON.stringify({
