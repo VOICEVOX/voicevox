@@ -1012,15 +1012,15 @@ export type ProjectStoreTypes = {
     action(payload: { overwrite?: boolean }): boolean;
   };
 
-  SAVE_TEMPORARY_PROJECT_FILE: {
+  SAVE_TEMP_PROJECT_FILE: {
     action(): void;
   };
 
-  CLEAR_TEMPORARY_PROJECT_FILE: {
+  RESET_TEMP_PROJECT_FILE: {
     action(): void;
   };
 
-  LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
+  LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
     action(): void;
   };
 

@@ -363,7 +363,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
-          context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
+          context.dispatch("RESET_TEMP_PROJECT_FILE");
           return true;
         } catch (err) {
           window.electron.logError(err);
@@ -453,7 +453,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             context.getters.LAST_COMMAND_UNIX_MILLISEC
           );
           // 保存時に一時ファイルをクリアする
-          await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
+          await context.dispatch("RESET_TEMP_PROJECT_FILE");
           return true;
         } catch (err) {
           window.electron.logError(err);
@@ -500,7 +500,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
         return saved ? "saved" : "canceled";
       } else if (result == 1) {
-        await dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
+        await dispatch("RESET_TEMP_PROJECT_FILE");
         return "discarded";
       } else {
         return "canceled";
@@ -513,7 +513,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    *
    * @todo projectFilePath が存在する(既に一部を保存済み)場合差分のみを保存する
    */
-  SAVE_TEMPORARY_PROJECT_FILE: {
+  SAVE_TEMP_PROJECT_FILE: {
     async action({ state }) {
       try {
         const appInfos = await window.electron.getAppInfos();
@@ -542,10 +542,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   /**
    * プロジェクトの一時ファイルを空にする
-   *
-   * @todo 必ずしも空にするわけではなくなったので命名を変更する
    */
-  CLEAR_TEMPORARY_PROJECT_FILE: {
+  RESET_TEMP_PROJECT_FILE: {
     async action(context) {
       const projectData: TempProjectType = {};
 
@@ -580,26 +578,25 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    * @todo projectFilePath が一時ファイル存在する(既に一部を保存済み)場合差分を取得し、 projectFilePath に保存されたプロジェクトとマージさせる
    * @todo ホットリロード時にポップアップが複数開かれるのを防ぐ
    */
-  LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE: {
+  LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
       try {
-        // [TODO] projectData は少しわかりにくいので命名を変える
-        const projectData: TempProjectType =
+        const tempProjectData: TempProjectType =
           await window.electron.getTempProject();
 
         // 一時ファイルにプロジェクトがない場合は何もしない
-        if (!Object.keys(projectData).length) {
+        if (!Object.keys(tempProjectData).length) {
           return;
         }
 
-        // 自動復元有効かつ未保存の復元対象がない場合はダイアログを出さずに復元する
+        // 自動復元有効かつ未保存の復元対象がない場合はダイアログを出さずに保存したプロジェクトを復元する
         if (
-          projectData.projectFilePath &&
+          tempProjectData.projectFilePath &&
           context.state.savingSetting.isAutoRestoreEnabled &&
-          !projectData.audioKeys
+          !tempProjectData.audioKeys
         ) {
           await context.dispatch("LOAD_PROJECT_FILE", {
-            filePath: projectData.projectFilePath,
+            filePath: tempProjectData.projectFilePath,
             confirm: false,
           });
           return;
@@ -618,7 +615,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         if (applyRestoredProject) {
           // 復元ボタン押下時
           // プロジェクト保存先の復元
-          const filePath = projectData.projectFilePath;
+          const filePath = tempProjectData.projectFilePath;
           if (filePath) {
             context.commit("SET_PROJECT_FILEPATH", { filePath });
           }
@@ -627,20 +624,23 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
           // [TODO] LOAD_PROJECT_FILE を使用する
-          await registerAudioItems({ projectData, dispatch: context.dispatch });
+          await registerAudioItems({
+            projectData: tempProjectData,
+            dispatch: context.dispatch,
+          });
 
           // undo/redo の復元
-          if (projectData.commandStoreState) {
+          if (tempProjectData.commandStoreState) {
             context.dispatch(
               "RESTORE_COMMAND_STATE",
-              projectData.commandStoreState
+              tempProjectData.commandStoreState
             );
           }
 
           return;
         } else {
           // 破棄ボタン押下時
-          await context.dispatch("CLEAR_TEMPORARY_PROJECT_FILE");
+          await context.dispatch("RESET_TEMP_PROJECT_FILE");
           return;
         }
       } catch (err) {

@@ -605,7 +605,7 @@ onMounted(async () => {
     });
 
     // 一時ファイルを読み込む
-    store.dispatch("LOAD_OR_DISCARD_TEMPORARY_PROJECT_FILE");
+    store.dispatch("LOAD_OR_DISCARD_TEMP_PROJECT_FILE");
   }
 
   // ショートカットキー操作を止める条件の設定
@@ -715,7 +715,7 @@ const audioKey = computed(() => store.state.audioKeys);
 
 // audioItemsの変更を監視
 watch([audioItems.value, audioKey.value], async () => {
-  await store.dispatch("SAVE_TEMPORARY_PROJECT_FILE");
+  await store.dispatch("SAVE_TEMP_PROJECT_FILE");
 });
 
 const reloadAppWithMultiEngineOffMode = () => {
