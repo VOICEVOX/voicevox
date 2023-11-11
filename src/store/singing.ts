@@ -39,6 +39,8 @@ import {
   isValidSnapType,
   noteNumberToFrequency,
   round,
+  FrequentlyUpdatedState,
+  AnimationFrameRunner,
 } from "@/helpers/singHelper";
 import { AudioQuery, Mora } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
@@ -291,9 +293,10 @@ if (window.AudioContext) {
   clipper.output.connect(audioContext.destination);
 }
 
-let playbackPosition = 0;
+const playheadPosition = new FrequentlyUpdatedState(0);
 const allPhrases = new Map<string, Phrase>();
 const phraseAudioBlobCache = new Map<string, Blob>();
+const animationFrameRunner = new AnimationFrameRunner();
 
 export const singingStoreState: SingingStoreState = {
   singer: undefined,
@@ -409,7 +412,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("CLEAR_SELECTED_NOTE_IDS");
       commit("SET_SCORE", { score });
-      transport.time = getters.TICK_TO_SECOND(playbackPosition);
+      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
       dispatch("RENDER");
     },
@@ -441,11 +444,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The tempo is invalid.");
       }
       if (state.nowPlaying) {
-        playbackPosition = getters.SECOND_TO_TICK(transport.time);
+        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
       }
       tempo.bpm = round(tempo.bpm, 2);
       commit("SET_TEMPO", { tempo });
-      transport.time = getters.TICK_TO_SECOND(playbackPosition);
+      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
       dispatch("RENDER");
     },
@@ -485,10 +488,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
-        playbackPosition = getters.SECOND_TO_TICK(transport.time);
+        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
       }
       commit("REMOVE_TEMPO", { position });
-      transport.time = getters.TICK_TO_SECOND(playbackPosition);
+      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
       dispatch("RENDER");
     },
@@ -748,25 +751,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  GET_PLAYBACK_POSITION: {
+  GET_PLAYHEAD_POSITION: {
     getter: (state, getters) => () => {
       if (!transport) {
         throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
-        playbackPosition = getters.SECOND_TO_TICK(transport.time);
+        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
       }
-      return playbackPosition;
+      return playheadPosition.value;
     },
   },
 
-  SET_PLAYBACK_POSITION: {
-    async action({ getters }, { position }) {
+  SET_PLAYHEAD_POSITION: {
+    async action({ getters }, { position }: { position: number }) {
       if (!transport) {
         throw new Error("transport is undefined.");
       }
-      playbackPosition = position;
+      playheadPosition.value = position;
       transport.time = getters.TICK_TO_SECOND(position);
+    },
+  },
+
+  ADD_PLAYHEAD_POSITION_CHANGE_LISTENER: {
+    async action(_, { listener }: { listener: (position: number) => void }) {
+      playheadPosition.addValueChangeListener(listener);
+    },
+  },
+
+  REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
+    async action(_, { listener }: { listener: (position: number) => void }) {
+      playheadPosition.removeValueChangeListener(listener);
     },
   },
 
@@ -795,24 +810,35 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SING_PLAY_AUDIO: {
-    async action({ commit }) {
+    async action({ state, getters, commit }) {
+      if (state.nowPlaying) {
+        return;
+      }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
       commit("SET_PLAYBACK_STATE", { nowPlaying: true });
 
       transport.start();
+      animationFrameRunner.start(() => {
+        playheadPosition.value = getters.GET_PLAYHEAD_POSITION();
+      });
     },
   },
 
   SING_STOP_AUDIO: {
-    async action({ commit }) {
+    async action({ state, getters, commit }) {
+      if (!state.nowPlaying) {
+        return;
+      }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
       commit("SET_PLAYBACK_STATE", { nowPlaying: false });
 
       transport.stop();
+      animationFrameRunner.stop();
+      playheadPosition.value = getters.GET_PLAYHEAD_POSITION();
     },
   },
 

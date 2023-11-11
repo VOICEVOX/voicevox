@@ -18,14 +18,13 @@
       @scroll="onScroll"
     >
       <!-- グリッド -->
-      <!-- NOTE: 現状小節+オクターブごとの罫線なし -->
+      <!-- NOTE: 現状オクターブごとの罫線なし -->
       <svg
-        :width="gridCellWidth * numOfGridColumns"
-        :height="gridCellHeight * keyInfos.length"
+        :width="gridWidth"
+        :height="gridHeight"
         xmlns="http://www.w3.org/2000/svg"
         class="sequencer-grid"
       >
-        <!-- パターングリッド -->
         <defs>
           <pattern
             id="sequencer-grid-octave-cells"
@@ -47,7 +46,7 @@
             id="sequencer-grid-measure"
             patternUnits="userSpaceOnUse"
             :width="beatWidth * beatsPerMeasure"
-            :height="gridCellHeight * keyInfos.length"
+            :height="gridHeight"
           >
             <line
               v-for="n in beatsPerMeasure"
@@ -96,6 +95,20 @@
         @handleDragRightStart="handleDragRightStart"
         @handleDragLeftStart="handleDragLeftStart"
       />
+      <div
+        class="sequencer-body-playhead-wrapper"
+        :style="{
+          width: `${gridWidth}px`,
+          height: `${gridHeight}px`,
+        }"
+      >
+        <div
+          class="sequencer-body-playhead"
+          :style="{
+            transform: `translateX(${playheadPosition}px)`,
+          }"
+        ></div>
+      </div>
     </div>
     <!-- NOTE: スクロールバー+ズームレンジ仮 -->
     <input
@@ -133,7 +146,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted } from "vue";
+import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
@@ -230,16 +243,6 @@ export default defineComponent({
         ) + 1
       );
     });
-    const numOfGridColumns = computed(() => {
-      // TODO: 複数拍子に対応する
-      const beats = timeSignatures.value[0].beats;
-      const beatType = timeSignatures.value[0].beatType;
-      const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
-      const numOfGridColumnsPerMeasure = Math.round(
-        measureDuration / gridCellTicks.value
-      );
-      return numOfGridColumnsPerMeasure * numOfMeasures.value;
-    });
     const beatsPerMeasure = computed(() => {
       return timeSignatures.value[0].beats;
     });
@@ -249,9 +252,27 @@ export default defineComponent({
       const beatTicks = wholeNoteDuration / beatType;
       return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
     });
+    const gridWidth = computed(() => {
+      // TODO: 複数拍子に対応する
+      const beats = timeSignatures.value[0].beats;
+      const beatType = timeSignatures.value[0].beatType;
+      const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
+      const numOfGridColumns =
+        Math.round(measureDuration / gridCellTicks.value) * numOfMeasures.value;
+      return gridCellWidth.value * numOfGridColumns;
+    });
+    const gridHeight = computed(() => {
+      return gridCellHeight.value * keyInfos.length;
+    });
     // スクロール位置
     const scrollX = ref(0);
     const scrollY = ref(0);
+    // 再生ヘッドの位置
+    const playheadTicks = ref(0);
+    const playheadPosition = computed(() => {
+      const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
+      return Math.floor(baseX * zoomX.value);
+    });
     const selectedNoteIds = computed(() => state.selectedNoteIds);
 
     const sequencerBody = ref<HTMLElement | null>(null);
@@ -651,6 +672,29 @@ export default defineComponent({
       }
     };
 
+    const playheadPositionChangeListener = (position: number) => {
+      playheadTicks.value = position;
+
+      // オートスクロール
+      const sequencerBodyElement = sequencerBody.value;
+      if (sequencerBodyElement) {
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
+        const scrollWidth = sequencerBodyElement.scrollWidth;
+        const clientWidth = sequencerBodyElement.clientWidth;
+        const playheadX = tickToBaseX(position, tpqn.value) * zoomX.value;
+        const ignoreError = 3;
+        if (playheadX < scrollLeft - ignoreError) {
+          sequencerBodyElement.scrollTo(playheadX, scrollTop);
+        } else if (
+          scrollLeft < scrollWidth - clientWidth - ignoreError &&
+          playheadX >= scrollLeft + clientWidth
+        ) {
+          sequencerBodyElement.scrollTo(playheadX, scrollTop);
+        }
+      }
+    };
+
     onMounted(() => {
       const sequencerBodyElement = sequencerBody.value;
       if (!sequencerBodyElement) {
@@ -662,6 +706,16 @@ export default defineComponent({
       const clientBaseHeight = clientHeight / zoomY.value;
       const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
       sequencerBodyElement.scrollTo(0, scrollBaseY * zoomY.value);
+
+      store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+        listener: playheadPositionChangeListener,
+      });
+    });
+
+    onUnmounted(() => {
+      store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+        listener: playheadPositionChangeListener,
+      });
     });
 
     return {
@@ -676,7 +730,8 @@ export default defineComponent({
       gridCellWidth,
       gridCellHeight,
       numOfMeasures,
-      numOfGridColumns,
+      gridWidth,
+      gridHeight,
       keyInfos,
       notes,
       zoomX,
@@ -685,6 +740,7 @@ export default defineComponent({
       cursorY,
       scrollX,
       scrollY,
+      playheadPosition,
       sequencerBody,
       setZoomX,
       setZoomY,
@@ -728,6 +784,26 @@ export default defineComponent({
   &.move {
     cursor: move;
   }
+}
+
+.sequencer-body-playhead-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sequencer-body-playhead {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 4px;
+  height: 100%;
+  background: colors.$primary;
+  border-left: 1px solid rgba(colors.$background-rgb, 0.8);
+  border-right: 1px solid rgba(colors.$background-rgb, 0.8);
+  pointer-events: none;
 }
 
 .sequencer-grid {

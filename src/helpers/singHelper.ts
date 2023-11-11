@@ -210,3 +210,88 @@ export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;
 }
+
+export class FrequentlyUpdatedState<T> {
+  private _value: T;
+  private listeners = new Set<(newValue: T) => void>();
+
+  get value() {
+    return this._value;
+  }
+
+  set value(newValue: T) {
+    this._value = newValue;
+    this.listeners.forEach((listener) => listener(newValue));
+  }
+
+  constructor(initialValue: T) {
+    this._value = initialValue;
+  }
+
+  addValueChangeListener(listener: (newValue: T) => void) {
+    if (this.listeners.has(listener)) {
+      throw new Error("The listener already exists.");
+    }
+    this.listeners.add(listener);
+    listener(this.value);
+  }
+
+  removeValueChangeListener(listener: (newValue: T) => void) {
+    if (!this.listeners.has(listener)) {
+      throw new Error("The listener does not exist.");
+    }
+    this.listeners.delete(listener);
+  }
+}
+
+export class AnimationFrameRunner {
+  private readonly maxFrameTime: number;
+
+  private requestId?: number;
+  private prevTimeStamp?: number;
+  private frameTimeDiff = 0;
+
+  get isStarted() {
+    return this.requestId !== undefined;
+  }
+
+  constructor(maxFrameRate = 60) {
+    this.maxFrameTime = 1000 / maxFrameRate;
+  }
+
+  start(onAnimationFrame: () => void) {
+    if (this.requestId !== undefined) {
+      throw new Error("The animation frame runner is already started.");
+    }
+
+    this.frameTimeDiff = 0;
+    this.prevTimeStamp = undefined;
+
+    const callback = (timeStamp: number) => {
+      if (this.prevTimeStamp === undefined) {
+        this.frameTimeDiff += this.maxFrameTime;
+      } else {
+        this.frameTimeDiff += timeStamp - this.prevTimeStamp;
+      }
+      let isExecuted = false;
+      while (this.frameTimeDiff >= this.maxFrameTime) {
+        this.frameTimeDiff -= this.maxFrameTime;
+        if (!isExecuted) {
+          onAnimationFrame();
+          isExecuted = true;
+        }
+      }
+      this.prevTimeStamp = timeStamp;
+      this.requestId = window.requestAnimationFrame(callback);
+    };
+    this.requestId = window.requestAnimationFrame(callback);
+  }
+
+  stop() {
+    if (this.requestId === undefined) {
+      throw new Error("The animation frame runner is not started.");
+    }
+    window.cancelAnimationFrame(this.requestId);
+    this.requestId = undefined;
+  }
+}

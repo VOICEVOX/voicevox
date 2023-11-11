@@ -888,12 +888,20 @@ export type SingingStoreTypes = {
     getter(time: number): number;
   };
 
-  GET_PLAYBACK_POSITION: {
+  GET_PLAYHEAD_POSITION: {
     getter(): number;
   };
 
-  SET_PLAYBACK_POSITION: {
+  SET_PLAYHEAD_POSITION: {
     action(payload: { position: number }): void;
+  };
+
+  ADD_PLAYHEAD_POSITION_CHANGE_LISTENER: {
+    action(payload: { listener: (position: number) => void }): void;
+  };
+
+  REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
+    action(payload: { listener: (position: number) => void }): void;
   };
 
   SET_LEFT_LOCATOR_POSITION: {
