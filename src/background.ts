@@ -997,10 +997,15 @@ app.on("ready", async () => {
           cancelId: 0,
         })
         .then(async ({ response }) => {
-          if (response === 1) {
-            await openConfigFolderAndExit();
-          } else {
-            await appExit();
+          switch (response) {
+            case 0:
+              await appExit();
+              break;
+            case 1:
+              await openConfigFolderAndExit();
+              break;
+            default:
+              throw new Error(`Unknown response: ${response}`);
           }
         });
     }
@@ -1032,7 +1037,7 @@ app.on("ready", async () => {
               resetConfig();
               break;
             default:
-              throw new Error("Unreachable");
+              throw new Error(`Unknown response: ${response}`);
           }
         });
     }
