@@ -8,7 +8,6 @@ import {
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
-  CommandStoreState,
 } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
@@ -19,6 +18,7 @@ import {
   engineIdSchema,
   speakerIdSchema,
   styleIdSchema,
+  TempProjectType,
 } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { Dispatch } from "@/store/vuex";
@@ -784,13 +784,4 @@ interface ProjectType {
   appVersion: string;
   audioKeys: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;
-}
-
-/** プロジェクト一時ファイル */
-interface TempProjectType {
-  appVersion?: string;
-  audioKeys?: AudioKey[];
-  audioItems?: Record<AudioKey, AudioItem>;
-  projectFilePath?: string;
-  commandStoreState?: CommandStoreState;
 }

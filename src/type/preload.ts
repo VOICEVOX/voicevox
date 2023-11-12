@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
-import { AltPortInfos } from "@/store/type";
+import { AltPortInfos, AudioItem, CommandStoreState } from "@/store/type";
 import { Result } from "@/type/result";
 
 export const isProduction = import.meta.env.MODE === "production";
@@ -230,7 +230,7 @@ export interface Sandbox {
     key: Key,
     newValue: ConfigType[Key]
   ): Promise<ConfigType[Key]>;
-  getTempProject(): object;
+  getTempProject(): Promise<TempProjectType>;
   setTempProject(tempProject: ArrayBuffer): Promise<Result<undefined>>;
   setEngineSetting(
     engineId: EngineId,
@@ -633,3 +633,12 @@ export interface MessageBoxReturnValue {
 }
 
 export const SandboxKey = "electron" as const;
+
+/** プロジェクト一時ファイル */
+export type TempProjectType = {
+  appVersion?: string;
+  audioKeys?: AudioKey[];
+  audioItems?: Record<AudioKey, AudioItem>;
+  projectFilePath?: string;
+  commandStoreState?: CommandStoreState;
+};
