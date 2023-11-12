@@ -191,6 +191,7 @@ export abstract class BaseConfigManager {
         return;
       }
     }
+    throw new Error("Failed to save config");
   }
 
   private migrateHotkeySettings(data: ConfigType): ConfigType {

@@ -19,6 +19,7 @@ export async function getConfigManager() {
   await configManagerLock.acquire("configManager", async () => {
     if (!configManager) {
       configManager = new BrowserConfigManager();
+      await configManager.initialize();
     }
   });
 
