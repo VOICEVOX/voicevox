@@ -60,6 +60,7 @@ export const uiStoreState: UiStoreState = {
   isAcceptTermsDialogOpen: false,
   isDictionaryManageDialogOpen: false,
   isEngineManageDialogOpen: false,
+  isUpdateNotificationDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -169,6 +170,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         isToolbarSettingDialogOpen?: boolean;
         isCharacterOrderDialogOpen?: boolean;
         isEngineManageDialogOpen?: boolean;
+        isUpdateNotificationDialogOpen?: boolean;
       }
     ) {
       for (const [key, value] of Object.entries(dialogState)) {
