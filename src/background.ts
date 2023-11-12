@@ -1021,12 +1021,18 @@ app.on("ready", async () => {
           cancelId: 0,
         })
         .then(async ({ response }) => {
-          if (response === 1) {
-            await openConfigFolderAndExit();
-          } else if (response === 2) {
-            resetConfig();
-          } else {
-            await appExit();
+          switch (response) {
+            case 0:
+              await appExit();
+              break;
+            case 1:
+              await openConfigFolderAndExit();
+              break;
+            case 2:
+              resetConfig();
+              break;
+            default:
+              throw new Error("Unreachable");
           }
         });
     }
