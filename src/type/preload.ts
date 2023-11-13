@@ -596,6 +596,17 @@ export const configSchema = z.object({
 });
 export type ConfigType = z.infer<typeof configSchema>;
 
+export const envEngineInfoSchema = z.object({
+  uuid: engineIdSchema,
+  host: z.string(),
+  name: z.string(),
+  executionEnabled: z.boolean(),
+  executionFilePath: z.string(),
+  executionArgs: z.array(z.string()),
+  path: z.string().optional(),
+});
+export type EnvEngineInfo = z.infer<typeof envEngineInfoSchema>;
+
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {
   code?: string | undefined;

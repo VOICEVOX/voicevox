@@ -1,4 +1,5 @@
 import semver from "semver";
+import AsyncLock from "async-lock";
 import {
   AcceptTermsStatus,
   ConfigType,
@@ -8,6 +9,8 @@ import {
   defaultHotkeySettings,
   HotkeySetting,
 } from "@/type/preload";
+
+const lockKey = "save";
 
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
@@ -118,17 +121,16 @@ export type Metadata = {
 export abstract class BaseConfigManager {
   protected config: ConfigType | undefined;
 
-  private saveCounter = 0;
+  private lock = new AsyncLock();
 
-  abstract exists(): Promise<boolean>;
-  abstract load(): Promise<Record<string, unknown> & Metadata>;
-  abstract save(config: ConfigType & Metadata): Promise<void>;
+  protected abstract exists(): Promise<boolean>;
+  protected abstract load(): Promise<Record<string, unknown> & Metadata>;
+  protected abstract save(config: ConfigType & Metadata): Promise<void>;
 
-  abstract getAppVersion(): string;
+  protected abstract getAppVersion(): string;
 
   public reset() {
-    const defaultConfig = configSchema.parse({});
-    this.config = defaultConfig;
+    this.config = this.getDefaultConfig();
     this._save();
   }
 
@@ -146,6 +148,7 @@ export abstract class BaseConfigManager {
     } else {
       this.reset();
     }
+    await this.ensureSaved();
 
     return this;
   }
@@ -162,23 +165,22 @@ export abstract class BaseConfigManager {
   }
 
   private _save() {
-    this.saveCounter++;
-    this.save({
-      ...configSchema.parse({
-        ...this.config,
-      }),
-      __internal__: {
-        migrations: {
-          version: this.getAppVersion(),
+    this.lock.acquire(lockKey, () => {
+      this.save({
+        ...configSchema.parse({
+          ...this.config,
+        }),
+        __internal__: {
+          migrations: {
+            version: this.getAppVersion(),
+          },
         },
-      },
-    }).finally(() => {
-      this.saveCounter--;
+      });
     });
   }
 
   ensureSaved(): Promise<void> | "alreadySaved" {
-    if (this.saveCounter === 0) {
+    if (!this.lock.isBusy(lockKey)) {
       return "alreadySaved";
     }
 
@@ -190,10 +192,11 @@ export abstract class BaseConfigManager {
     for (let i = 0; i < 100; i++) {
       // 他のスレッドに処理を譲る
       await new Promise((resolve) => setTimeout(resolve, 100));
-      if (this.saveCounter === 0) {
+      if (!this.lock.isBusy(lockKey)) {
         return;
       }
     }
+    throw new Error("Failed to save config");
   }
 
   private migrateHotkeySettings(data: ConfigType): ConfigType {
@@ -237,5 +240,9 @@ export abstract class BaseConfigManager {
       ...data,
       hotkeySettings: migratedHotkeys,
     };
+  }
+
+  protected getDefaultConfig(): ConfigType {
+    return configSchema.parse({});
   }
 }
