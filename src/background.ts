@@ -980,8 +980,9 @@ app.on("ready", async () => {
       });
       await appExit();
     };
-    const resetConfig = () => {
+    const resetConfig = async () => {
       configManager.reset();
+      await configManager.ensureSaved();
     };
 
     // 実利用時はconfigファイル削除で解決する可能性があることを案内して終了
@@ -1035,7 +1036,7 @@ app.on("ready", async () => {
               await openConfigFolderAndExit();
               break;
             case 2:
-              resetConfig();
+              await resetConfig();
               break;
             default:
               throw new Error(`Unknown response: ${response}`);
