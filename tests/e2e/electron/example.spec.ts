@@ -56,6 +56,8 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
   });
 
   // エンジンが起動し「利用規約に関するお知らせ」が表示されるのを待つ
-  await sut.waitForSelector("text=利用規約に関するお知らせ", { timeout: 0 });
+  await sut.waitForSelector("text=利用規約に関するお知らせ", {
+    timeout: 60000,
+  });
   await app.close();
 });
