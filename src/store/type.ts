@@ -395,6 +395,13 @@ export type AudioStoreTypes = {
     }): string | undefined;
   };
 
+  GENERATE_INTERVAL_FOR_SRT: {
+    action(payload: {
+      audioKey: AudioKey;
+      offset?: number;
+    }): number | undefined;
+  };
+
   GET_AUDIO_PLAY_OFFSETS: {
     action(payload: { audioKey: AudioKey }): number[];
   };
@@ -424,6 +431,16 @@ export type AudioStoreTypes = {
       dirPath?: string;
       callback?: (finishedCount: number) => void;
     }): SaveResultObject[] | undefined;
+  };
+
+  IS_SRT_DIALOG_OPEN: {
+    mutation: { isOpen: boolean };
+    action: (payload: { isOpen: boolean }) => void;
+  };
+
+  SET_SRT_START_TIME: {
+    mutation: { srtStartTime: number };
+    action: (payload: { srtStartTime: number }) => void;
   };
 
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {

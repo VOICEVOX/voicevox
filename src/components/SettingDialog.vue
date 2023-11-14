@@ -536,6 +536,32 @@
                 >
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>srtファイルを書き出し</div>
+                <div
+                  aria-label="ONの場合、リップシンク用のlabファイルが音声書き出し時に追加で書き出されます。"
+                >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      ONの場合、字幕用のsrtファイルが音声書き出し時に追加で書き出されます。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="savingSetting.exportSrt"
+                  @update:model-value="
+                    handleSavingSettingChange('exportSrt', $event)
+                  "
+                >
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <!-- Theme Card -->
             <q-card flat class="setting-card">

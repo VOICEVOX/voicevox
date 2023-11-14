@@ -26,6 +26,8 @@ import {
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
   TuningTranscription,
+  formatTime,
+  createSrtString,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -1243,6 +1245,44 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
+  GENERATE_INTERVAL_FOR_SRT: {
+    action: createUILockAction(
+      async (
+        { state },
+        { audioKey, offset }: { audioKey: AudioKey; offset?: number }
+      ) => {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) return;
+        const speedScale = query.speedScale;
+
+        let timestamp = offset != undefined ? offset : 0;
+
+        timestamp += (query.prePhonemeLength * 10000000) / speedScale;
+
+        query.accentPhrases.forEach((accentPhrase) => {
+          accentPhrase.moras.forEach((mora) => {
+            if (
+              mora.consonantLength != undefined &&
+              mora.consonant != undefined
+            ) {
+              timestamp += (mora.consonantLength * 10000000) / speedScale;
+            }
+            timestamp += (mora.vowelLength * 10000000) / speedScale;
+          });
+          if (accentPhrase.pauseMora != undefined) {
+            timestamp +=
+              (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
+          }
+        });
+
+        timestamp += (query.postPhonemeLength * 10000000) / speedScale;
+        timestamp /= 10000000;
+
+        return timestamp;
+      }
+    ),
+  },
+
   GET_AUDIO_PLAY_OFFSETS: {
     action({ state }, { audioKey }: { audioKey: AudioKey }) {
       const query = state.audioItems[audioKey].query;
@@ -1512,6 +1552,24 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
+  IS_SRT_DIALOG_OPEN: {
+    mutation(state, { isOpen }: { isOpen: boolean }) {
+      state.savingSetting.isSrtDialogOpen = isOpen;
+    },
+    action: async ({ commit }, { isOpen }: { isOpen: boolean }) => {
+      await commit("IS_SRT_DIALOG_OPEN", { isOpen });
+    },
+  },
+
+  SET_SRT_START_TIME: {
+    mutation(state, { srtStartTime }: { srtStartTime: number }) {
+      state.savingSetting.srtStartTime = srtStartTime;
+    },
+    action: async ({ commit }, { srtStartTime }: { srtStartTime: number }) => {
+      await commit("SET_SRT_START_TIME", { srtStartTime });
+    },
+  },
+
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action: createUILockAction(
       async (
@@ -1548,9 +1606,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         const encodedBlobs: string[] = [];
         const labs: string[] = [];
+        const srts: string[] = [];
         const texts: string[] = [];
 
         let labOffset = 0;
+        const srtInterval = {
+          currentSerialNumber: 1, // 現在の通し番号
+          start: state.savingSetting.srtStartTime, // 字幕の開始時間
+          end: state.savingSetting.srtStartTime, // 字幕の終了時間
+        };
 
         const base64Encoder = (blob: Blob): Promise<string | undefined> => {
           return new Promise((resolve, reject) => {
@@ -1599,19 +1663,58 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             return { result: "WRITE_ERROR", path: filePath };
           }
           encodedBlobs.push(encodedBlob);
-          // 大して処理能力を要しないので、生成設定のon/offにかかわらず生成してしまう
-          const lab = await dispatch("GENERATE_LAB", {
-            audioKey,
-            offset: labOffset,
-          });
-          if (lab == undefined) {
-            return { result: "WRITE_ERROR", path: filePath };
+
+          // labファイルを出力する設定の場合、labファイルに出力する文字列を作る
+          if (state.savingSetting.exportLab) {
+            const lab = await dispatch("GENERATE_LAB", {
+              audioKey,
+              offset: labOffset,
+            });
+            if (lab == undefined) {
+              return { result: "WRITE_ERROR", path: filePath };
+            }
+            labs.push(lab);
+            texts.push(extractExportText(state.audioItems[audioKey].text));
+            // 最終音素の終了時刻を取得する
+            const splitLab = lab.split(" ");
+            labOffset = Number(splitLab[splitLab.length - 2]);
           }
-          labs.push(lab);
-          texts.push(extractExportText(state.audioItems[audioKey].text));
-          // 最終音素の終了時刻を取得する
-          const splitLab = lab.split(" ");
-          labOffset = Number(splitLab[splitLab.length - 2]);
+
+          // srtファイルを出力する設定の場合、srtファイルに出力する文字列を作る
+          if (state.savingSetting.exportSrt) {
+            const srtIntervalTime = await dispatch(
+              "GENERATE_INTERVAL_FOR_SRT",
+              {
+                audioKey,
+                offset: labOffset,
+              }
+            );
+            if (srtIntervalTime == undefined) {
+              return { result: "WRITE_ERROR", path: filePath };
+            }
+            // 字幕の開始時間と終了時間を作る
+            const start = formatTime(srtInterval.start);
+            srtInterval.end += srtIntervalTime;
+            const end = formatTime(srtInterval.end);
+
+            const speakerName = getCharacterInfo(
+              state,
+              state.audioItems[audioKey].voice.engineId,
+              state.audioItems[audioKey].voice.styleId
+            )?.metas.speakerName as string;
+
+            // srtファイルに出力する文字列を作る
+            const srtString = createSrtString(
+              srtInterval.currentSerialNumber,
+              start,
+              end,
+              speakerName,
+              extractExportText(state.audioItems[audioKey].text)
+            );
+            srts.push(srtString);
+            srtInterval.currentSerialNumber++;
+            srtInterval.start = srtInterval.end;
+          }
         }
 
         const connectedWav = await dispatch("CONNECT_AUDIO", {
@@ -1638,6 +1741,18 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
           if (!labResult.ok) {
             window.electron.logError(labResult.error);
+            return { result: "WRITE_ERROR", path: filePath };
+          }
+        }
+
+        if (state.savingSetting.exportSrt) {
+          const srtResult = await writeTextFile({
+            text: srts.join("\n"),
+            filePath: filePath.replace(/\.wav$/, ".srt"),
+            encoding: state.savingSetting.fileEncoding,
+          });
+          if (!srtResult.ok) {
+            window.electron.logError(srtResult.error);
             return { result: "WRITE_ERROR", path: filePath };
           }
         }
