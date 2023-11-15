@@ -86,10 +86,10 @@
 
 <script setup lang="ts">
 import { computed, ref, type Component } from "vue";
+import OssLicense from "../template/OssLicenseSection.vue";
 import HelpPolicy from "./HelpPolicy.vue";
 import LibraryPolicy from "./LibraryPolicy.vue";
 import HowToUse from "./HowToUse.vue";
-import OssLicense from "./OssLicense.vue";
 import UpdateInfo from "./UpdateInfo.vue";
 import OssCommunityInfo from "./OssCommunityInfo.vue";
 import QAndA from "./QAndA.vue";
