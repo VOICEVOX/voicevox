@@ -510,8 +510,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   /**
    * プロジェクトを一時ファイルに保存する
-   *
-   * @todo projectFilePath が存在する(既に一部を保存済み)場合差分のみを保存する
    */
   SAVE_TEMP_PROJECT_FILE: {
     async action({ state }) {
@@ -575,7 +573,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    * 一時ファイルを読み込む
    * 一時ファイルにプロジェクトがある場合は、復元するか破棄するかのダイアログを出す
    *
-   * @todo projectFilePath が一時ファイル存在する(既に一部を保存済み)場合差分を取得し、 projectFilePath に保存されたプロジェクトとマージさせる
    * @todo ホットリロード時にポップアップが複数開かれるのを防ぐ
    */
   LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
@@ -603,7 +600,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         }
 
         // FIXME: 稀に `"appVersion":"999.999.999","audioKeys":[],"audioItems":{},` のようなデータが保存されることがある
-        // このようなデータが保存された場合は一旦無視する仕様にしているが、原因を調査する
+        // このようなデータが保存された場合は一旦リターンする仕様にしているが、原因を調査する
         const parsedProjectData = projectSchema.parse(tempProjectData);
         if (!parsedProjectData.audioKeys.length) {
           return;
@@ -630,11 +627,16 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           // AudioItems の復元
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
-          // [TODO] LOAD_PROJECT_FILE を使用する
-          await registerAudioItems({
-            projectData: tempProjectData,
-            dispatch: context.dispatch,
-          });
+          const { audioItems, audioKeys } = tempProjectData as ProjectType;
+
+          let prevAudioKey: AudioKey | undefined;
+          for (const audioKey of audioKeys) {
+            const audioItem = audioItems[audioKey];
+            prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
+              prevAudioKey,
+              audioItem,
+            });
+          }
 
           // undo/redo の復元
           if (tempProjectData.commandStoreState) {
@@ -692,36 +694,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     },
   },
 });
-
-/**
- * projectDataをaudioItemに登録する
- *
- * @param projectData
- * @param dispatch
- * @return void
- */
-const registerAudioItems = async ({
-  projectData,
-  dispatch,
-}: {
-  projectData: Partial<ProjectType>;
-  dispatch: Dispatch<AllActions>;
-}): Promise<void> => {
-  if (!Object.keys(projectData).length) {
-    return;
-  }
-
-  const { audioItems, audioKeys } = projectData as ProjectType;
-  let prevAudioKey: AudioKey | undefined;
-
-  for (const audioKey of audioKeys) {
-    const audioItem = audioItems[audioKey];
-    prevAudioKey = await dispatch("REGISTER_AUDIO_ITEM", {
-      prevAudioKey,
-      audioItem,
-    });
-  }
-};
 
 const moraSchema = z.object({
   text: z.string(),
