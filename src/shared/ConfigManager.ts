@@ -129,6 +129,11 @@ export abstract class BaseConfigManager {
 
   protected abstract getAppVersion(): string;
 
+  public reset() {
+    this.config = this.getDefaultConfig();
+    this._save();
+  }
+
   public async initialize(): Promise<this> {
     if (await this.exists()) {
       const data = await this.load();
@@ -139,10 +144,10 @@ export abstract class BaseConfigManager {
         }
       }
       this.config = this.migrateHotkeySettings(configSchema.parse(data));
+      this._save();
     } else {
-      this.config = this.getDefaultConfig();
+      this.reset();
     }
-    this._save();
     await this.ensureSaved();
 
     return this;
