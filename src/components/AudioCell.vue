@@ -77,7 +77,7 @@
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template v-if="deleteButtonEnable" #after>
+      <template v-if="enableDeleteButton" #after>
         <q-btn
           round
           flat
@@ -436,33 +436,54 @@ const moveDownCell = moveCell(1);
 // 消去
 const willRemove = ref(false);
 const removeCell = async () => {
+  let audioKeysToDelete: AudioKey[];
+  if (
+    isMultiSelectEnabled.value &&
+    store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
+  ) {
+    audioKeysToDelete = store.getters.SELECTED_AUDIO_KEYS;
+  } else {
+    audioKeysToDelete = [props.audioKey];
+  }
+  const firstAudioKey = audioKeysToDelete[0];
+  const selectedAudioKeysLength = audioKeysToDelete.length;
   // 1つだけの時は削除せず
-  if (audioKeys.value.length > 1) {
+  if (audioKeys.value.length > selectedAudioKeysLength) {
     // フォーカスを外したりREMOVEしたりすると、
     // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
     // エラー防止のためにまずwillRemoveフラグを建てる
     willRemove.value = true;
 
-    const index = audioKeys.value.indexOf(props.audioKey);
-    if (index > 0) {
+    const firstIndex = audioKeys.value.indexOf(
+      isMultiSelectEnabled.value ? firstAudioKey : props.audioKey
+    );
+    let willNextFocusIndex = firstIndex - 1;
+    if (willNextFocusIndex < 0) {
+      willNextFocusIndex = audioKeys.value.findIndex(
+        (audioKey) => !audioKeysToDelete.includes(audioKey)
+      );
+    }
+    if (audioKeysToDelete.includes(props.audioKey)) {
       emit("focusCell", {
-        audioKey: audioKeys.value[index - 1],
-      });
-    } else {
-      emit("focusCell", {
-        audioKey: audioKeys.value[index + 1],
+        audioKey: audioKeys.value[willNextFocusIndex],
       });
     }
 
-    store.dispatch("COMMAND_REMOVE_AUDIO_ITEM", {
-      audioKey: props.audioKey,
+    store.dispatch("COMMAND_MULTI_REMOVE_AUDIO_ITEM", {
+      audioKeys: audioKeysToDelete,
     });
   }
 };
 
 // 削除ボタンの有効／無効判定
-const deleteButtonEnable = computed(() => {
-  return 1 < audioKeys.value.length;
+const enableDeleteButton = computed(() => {
+  if (isMultiSelectEnabled.value) {
+    return (
+      store.getters.SELECTED_AUDIO_KEYS.length !== store.state.audioKeys.length
+    );
+  } else {
+    return store.state.audioKeys.length > 1;
+  }
 });
 
 // テキスト編集エリアの右クリック
