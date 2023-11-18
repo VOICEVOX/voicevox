@@ -211,6 +211,10 @@ export function round(value: number, digits: number) {
   return Math.round(value * powerOf10) / powerOf10;
 }
 
+/**
+ * 頻繁に変更される値を保持します。
+ * 値変更時に実行する関数を登録できます。
+ */
 export class FrequentlyUpdatedState<T> {
   private _value: T;
   private listeners = new Set<(newValue: T) => void>();
@@ -244,12 +248,17 @@ export class FrequentlyUpdatedState<T> {
   }
 }
 
+/**
+ * requestAnimationFrameを使用して関数を定期的に実行します。
+ * 関数は、指定した最大フレームレート以下で実行されます。
+ */
 export class AnimationFrameRunner {
   private readonly maxFrameTime: number;
+  private readonly maxDiff: number;
 
   private requestId?: number;
   private prevTimeStamp?: number;
-  private frameTimeDiff = 0;
+  private diff = 0;
 
   get isStarted() {
     return this.requestId !== undefined;
@@ -257,6 +266,7 @@ export class AnimationFrameRunner {
 
   constructor(maxFrameRate = 60) {
     this.maxFrameTime = 1000 / maxFrameRate;
+    this.maxDiff = this.maxFrameTime * 10;
   }
 
   start(onAnimationFrame: () => void) {
@@ -264,22 +274,19 @@ export class AnimationFrameRunner {
       throw new Error("The animation frame runner is already started.");
     }
 
-    this.frameTimeDiff = 0;
+    this.diff = 0;
     this.prevTimeStamp = undefined;
 
     const callback = (timeStamp: number) => {
       if (this.prevTimeStamp === undefined) {
-        this.frameTimeDiff += this.maxFrameTime;
+        this.diff += this.maxFrameTime;
       } else {
-        this.frameTimeDiff += timeStamp - this.prevTimeStamp;
+        this.diff += timeStamp - this.prevTimeStamp;
       }
-      let isExecuted = false;
-      while (this.frameTimeDiff >= this.maxFrameTime) {
-        this.frameTimeDiff -= this.maxFrameTime;
-        if (!isExecuted) {
-          onAnimationFrame();
-          isExecuted = true;
-        }
+      this.diff = Math.min(this.maxDiff, this.diff);
+      if (this.diff >= this.maxFrameTime) {
+        this.diff -= this.maxFrameTime;
+        onAnimationFrame();
       }
       this.prevTimeStamp = timeStamp;
       this.requestId = window.requestAnimationFrame(callback);
