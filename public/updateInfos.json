@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.14.10",
+    "descriptions": ["初回起動及び0.13からアップデートできないバグを修正"],
+    "contributors": ["sevenc-nanashi"]
+  },
+  {
     "version": "0.14.9",
     "descriptions": ["マルチエンジン機能を通常機能に"],
     "contributors": []
