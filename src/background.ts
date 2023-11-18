@@ -162,15 +162,14 @@ const store = new Store<ElectronStoreType>({
     },
     ">=0.14.9": (store) => {
       // マルチエンジン機能を実験的機能から通常機能に
-      if (!store.has("experimentalSetting.enableMultiEngine")) {
-        return;
-      }
-      const enableMultiEngine: boolean =
+      if (store.has("experimentalSetting.enableMultiEngine")) {
+        const enableMultiEngine: boolean =
+          // @ts-expect-error 削除されたパラメータ。
+          store.get("experimentalSetting").enableMultiEngine;
+        store.set("enableMultiEngine", enableMultiEngine);
         // @ts-expect-error 削除されたパラメータ。
-        store.get("experimentalSetting").enableMultiEngine;
-      store.set("enableMultiEngine", enableMultiEngine);
-      // @ts-expect-error 削除されたパラメータ。
-      store.delete("experimentalSetting.enableMultiEngine");
+        store.delete("experimentalSetting.enableMultiEngine");
+      }
     },
   },
 });
