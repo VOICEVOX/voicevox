@@ -489,7 +489,6 @@ export const experimentalSettingSchema = z.object({
   shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
-  enableMultiEngine: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
 });
@@ -593,6 +592,7 @@ export const configSchema = z.object({
     .default({}),
   registeredEngineDirs: z.string().array().default([]),
   recentlyUsedProjects: z.string().array().default([]),
+  enableMultiEngine: z.boolean().default(false),
 });
 export type ConfigType = z.infer<typeof configSchema>;
 

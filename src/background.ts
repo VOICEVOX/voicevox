@@ -247,7 +247,7 @@ async function installVvppEngineWithWarning({
  * 無効だった場合はダイアログを表示してfalseを返す。
  */
 function checkMultiEngineEnabled(): boolean {
-  const enabled = configManager.get("experimentalSetting").enableMultiEngine;
+  const enabled = configManager.get("enableMultiEngine");
   if (!enabled) {
     dialog.showMessageBoxSync(win, {
       type: "info",
