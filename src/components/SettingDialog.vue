@@ -651,10 +651,32 @@
               </q-card-actions>
             </q-card>
 
-            <!-- Experimental Card -->
+            <!-- Advanced Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
                 <h5 class="text-h5">高度な設定</h5>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>マルチエンジン機能</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      複数のVOICEVOX準拠エンジンを利用可能にする
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="enableMultiEngine"
+                  @update:model-value="setEnableMultiEngine($event)"
+                >
+                </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>音声をステレオ化</div>
@@ -715,6 +737,8 @@
                 </q-select>
               </q-card-actions>
             </q-card>
+
+            <!-- Experimental Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
@@ -827,32 +851,6 @@
                   :model-value="experimentalSetting.enableMorphing"
                   @update:model-value="
                     changeExperimentalSetting('enableMorphing', $event)
-                  "
-                >
-                </q-toggle>
-              </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>マルチエンジン機能</div>
-                <div
-                  aria-label="マルチエンジン機能を有効にします。複数のVOICEVOX準拠エンジンが利用可能になります。"
-                >
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      マルチエンジン機能を有効にします。複数のVOICEVOX準拠エンジンが利用可能になります。
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-toggle
-                  :model-value="experimentalSetting.enableMultiEngine"
-                  @update:model-value="
-                    changeExperimentalSetting('enableMultiEngine', $event)
                   "
                 >
                 </q-toggle>
@@ -1048,6 +1046,11 @@ const availableThemeNameComputed = computed(() => {
 const editorFont = computed(() => store.state.editorFont);
 const changeEditorFont = (editorFont: EditorFontType) => {
   store.dispatch("SET_EDITOR_FONT", { editorFont });
+};
+
+const enableMultiEngine = computed(() => store.state.enableMultiEngine);
+const setEnableMultiEngine = (enableMultiEngine: boolean) => {
+  store.dispatch("SET_ENABLE_MULTI_ENGINE", { enableMultiEngine });
 };
 
 const showTextLineNumber = computed(() => store.state.showTextLineNumber);
