@@ -509,7 +509,10 @@ export default defineComponent({
     // X軸ズーム
     const setZoomX = (event: Event) => {
       const sequencerBodyElement = sequencerBody.value;
-      if (event.target instanceof HTMLInputElement && sequencerBodyElement) {
+      if (!sequencerBodyElement) {
+        throw new Error("sequencerBodyElement is null.");
+      }
+      if (event.target instanceof HTMLInputElement) {
         // 画面の中央を基準に水平方向のズームを行う
         const oldZoomX = zoomX.value;
         const newZoomX = Number(event.target.value);
@@ -528,7 +531,10 @@ export default defineComponent({
     // Y軸ズーム
     const setZoomY = (event: Event) => {
       const sequencerBodyElement = sequencerBody.value;
-      if (event.target instanceof HTMLInputElement && sequencerBodyElement) {
+      if (!sequencerBodyElement) {
+        throw new Error("sequencerBodyElement is null.");
+      }
+      if (event.target instanceof HTMLInputElement) {
         // 画面の中央を基準に垂直方向のズームを行う
         const oldZoomY = zoomY.value;
         const newZoomY = Number(event.target.value);
@@ -645,7 +651,10 @@ export default defineComponent({
 
     const onWheel = (event: WheelEvent) => {
       const sequencerBodyElement = sequencerBody.value;
-      if (sequencerBodyElement && event.ctrlKey) {
+      if (!sequencerBodyElement) {
+        throw new Error("sequencerBodyElement is null.");
+      }
+      if (event.ctrlKey) {
         // カーソル位置を基準に水平方向のズームを行う
         const oldZoomX = zoomX.value;
         const scrollLeft = sequencerBodyElement.scrollLeft;
@@ -677,21 +686,22 @@ export default defineComponent({
 
       // オートスクロール
       const sequencerBodyElement = sequencerBody.value;
-      if (sequencerBodyElement) {
-        const scrollLeft = sequencerBodyElement.scrollLeft;
-        const scrollTop = sequencerBodyElement.scrollTop;
-        const scrollWidth = sequencerBodyElement.scrollWidth;
-        const clientWidth = sequencerBodyElement.clientWidth;
-        const playheadX = tickToBaseX(position, tpqn.value) * zoomX.value;
-        const tolerance = 3;
-        if (playheadX < scrollLeft) {
-          sequencerBodyElement.scrollTo(playheadX, scrollTop);
-        } else if (
-          scrollLeft < scrollWidth - clientWidth - tolerance &&
-          playheadX >= scrollLeft + clientWidth
-        ) {
-          sequencerBodyElement.scrollTo(playheadX, scrollTop);
-        }
+      if (!sequencerBodyElement) {
+        throw new Error("sequencerBodyElement is null.");
+      }
+      const scrollLeft = sequencerBodyElement.scrollLeft;
+      const scrollTop = sequencerBodyElement.scrollTop;
+      const scrollWidth = sequencerBodyElement.scrollWidth;
+      const clientWidth = sequencerBodyElement.clientWidth;
+      const playheadX = tickToBaseX(position, tpqn.value) * zoomX.value;
+      const tolerance = 3;
+      if (playheadX < scrollLeft) {
+        sequencerBodyElement.scrollTo(playheadX, scrollTop);
+      } else if (
+        scrollLeft < scrollWidth - clientWidth - tolerance &&
+        playheadX >= scrollLeft + clientWidth
+      ) {
+        sequencerBodyElement.scrollTo(playheadX, scrollTop);
       }
     };
 
