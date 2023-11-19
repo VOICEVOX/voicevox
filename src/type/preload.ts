@@ -492,7 +492,6 @@ export const experimentalSettingSchema = z.object({
   shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
-  enableMultiEngine: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
 });
@@ -597,8 +596,20 @@ export const configSchema = z.object({
     .default({}),
   registeredEngineDirs: z.string().array().default([]),
   recentlyUsedProjects: z.string().array().default([]),
+  enableMultiEngine: z.boolean().default(false),
 });
 export type ConfigType = z.infer<typeof configSchema>;
+
+export const envEngineInfoSchema = z.object({
+  uuid: engineIdSchema,
+  host: z.string(),
+  name: z.string(),
+  executionEnabled: z.boolean(),
+  executionFilePath: z.string(),
+  executionArgs: z.array(z.string()),
+  path: z.string().optional(),
+});
+export type EnvEngineInfo = z.infer<typeof envEngineInfoSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {

@@ -1060,6 +1060,7 @@ export type SettingStoreState = {
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
+  enableMultiEngine: boolean;
 };
 
 export type SettingStoreTypes = {
@@ -1148,6 +1149,11 @@ export type SettingStoreTypes = {
       engineSetting: EngineSetting;
       engineId: EngineId;
     }): Promise<void>;
+  };
+
+  SET_ENABLE_MULTI_ENGINE: {
+    mutation: { enableMultiEngine: boolean };
+    action(payload: { enableMultiEngine: boolean }): void;
   };
 
   CHANGE_USE_GPU: {

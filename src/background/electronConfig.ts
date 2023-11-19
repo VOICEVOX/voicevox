@@ -5,22 +5,22 @@ import { BaseConfigManager, Metadata } from "@/shared/ConfigManager";
 import { ConfigType } from "@/type/preload";
 
 export class ElectronConfigManager extends BaseConfigManager {
-  getAppVersion() {
+  protected getAppVersion() {
     return app.getVersion();
   }
 
-  public async exists() {
+  protected async exists() {
     return await fs.promises
       .stat(this.configPath)
       .then(() => true)
       .catch(() => false);
   }
 
-  public async load(): Promise<Record<string, unknown> & Metadata> {
+  protected async load(): Promise<Record<string, unknown> & Metadata> {
     return JSON.parse(await fs.promises.readFile(this.configPath, "utf-8"));
   }
 
-  public async save(config: ConfigType) {
+  protected async save(config: ConfigType & Metadata) {
     await fs.promises.writeFile(
       this.configPath,
       JSON.stringify(config, undefined, 2)
