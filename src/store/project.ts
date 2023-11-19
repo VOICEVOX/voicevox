@@ -613,17 +613,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         }
 
-        const applyRestoredProject: number =
-          await window.electron.showQuestionDialog({
-            type: "info",
+        const applyRestoredProject = await context.dispatch(
+          "SHOW_CONFIRM_DIALOG",
+          {
             title: "復元されたプロジェクト",
             message: "復元されたプロジェクトがあります。復元しますか？",
-            buttons: ["破棄", "復元する"],
-            defaultId: 1,
-            cancelId: 0,
-          });
+            actionName: "復元",
+            cancel: "破棄",
+          }
+        );
 
-        if (applyRestoredProject) {
+        if (applyRestoredProject === "OK") {
           // 復元ボタン押下時
           // プロジェクト保存先の復元
           const filePath = tempProjectData.projectFilePath;
