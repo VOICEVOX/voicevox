@@ -604,10 +604,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         }
 
-        // FIXME: 稀に `"appVersion":"999.999.999","audioKeys":[],"audioItems":{},` のようなデータが保存されることがある
-        // このようなデータが保存された場合は一旦リターンする仕様にしているが、原因を調査する
-        const parsedProjectData = projectSchema.parse(tempProjectData);
-        if (!parsedProjectData.audioKeys.length) {
+        // 復元対象の有無チェック
+        if (
+          !tempProjectData.appVersion ||
+          !tempProjectData.audioKeys?.length ||
+          !tempProjectData.audioItems
+        ) {
           return;
         }
 
@@ -632,7 +634,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           // AudioItems の復元
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
-          const { audioItems, audioKeys } = tempProjectData as ProjectType;
+          const parsedProjectData = projectSchema.parse(
+            tempProjectData
+          ) as ProjectType;
+          const { audioItems, audioKeys } = parsedProjectData;
 
           let prevAudioKey: AudioKey | undefined;
           for (const audioKey of audioKeys) {
