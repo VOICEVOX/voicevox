@@ -518,7 +518,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         const { audioItems, audioKeys } = state;
 
         // 初期状態の audioItems の場合
-        if (audioKeys.length <= 1 && audioItems[audioKeys[0]].text) {
+        if (audioKeys.length <= 1 && !audioItems[audioKeys[0]].text) {
           return;
         }
 
