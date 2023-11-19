@@ -145,7 +145,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-surface">
-                <div>起動時に常に前回のプロジェクトを開く</div>
+                <div>起動時に前回開いていたプロジェクトを開く</div>
                 <div
                   aria-label="ONの場合、前回開いていたプロジェクトが開いた状態で立ち上がります。"
                 >
