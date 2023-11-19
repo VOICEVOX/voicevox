@@ -517,6 +517,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         const appInfos = await window.electron.getAppInfos();
         const { audioItems, audioKeys } = state;
 
+        // 初期状態の audioItems の場合
+        if (audioKeys.length <= 1 && audioItems[audioKeys[0]].text) {
+          return;
+        }
+
         const projectData: TempProjectType = {
           appVersion: appInfos.version,
           audioKeys,
