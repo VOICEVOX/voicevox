@@ -67,7 +67,7 @@ describe("store/vuex.js test", () => {
           exportText: false,
           outputStereo: false,
           audioOutputDevice: "default",
-          isAutoRestoreEnabled: false,
+          enableAutoRestore: false,
         },
         engineSettings: {
           [engineId]: {

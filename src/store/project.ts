@@ -557,7 +557,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await window.electron.setTempProject(buf).then(getValueOrThrow);
 
         // 自動復元機能有効時プロジェクトファイルのパスを保存する
-        if (context.state.savingSetting.isAutoRestoreEnabled) {
+        if (context.state.savingSetting.enableAutoRestore) {
           const tempProject = new TextEncoder().encode(
             JSON.stringify({
               projectFilePath: context.state.projectFilePath,
@@ -577,8 +577,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   /**
    * 一時ファイルを読み込む
    * 一時ファイルにプロジェクトがある場合は、復元するか破棄するかのダイアログを出す
-   *
-   * @todo ホットリロード時にポップアップが複数開かれるのを防ぐ
    */
   LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
@@ -594,7 +592,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         // 自動復元有効かつ未保存の復元対象がない場合はダイアログを出さずに保存したプロジェクトを復元する
         if (
           tempProjectData.projectFilePath &&
-          context.state.savingSetting.isAutoRestoreEnabled &&
+          context.state.savingSetting.enableAutoRestore &&
           !tempProjectData.audioKeys
         ) {
           await context.dispatch("LOAD_PROJECT_FILE", {

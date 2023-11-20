@@ -163,9 +163,9 @@
                 </div>
                 <q-space />
                 <q-toggle
-                  :model-value="savingSetting.isAutoRestoreEnabled"
+                  :model-value="savingSetting.enableAutoRestore"
                   @update:model-value="
-                    handleSavingSettingChange('isAutoRestoreEnabled', $event)
+                    handleSavingSettingChange('enableAutoRestore', $event)
                   "
                 >
                 </q-toggle>
