@@ -210,3 +210,95 @@ export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;
 }
+
+/**
+ * 頻繁に変更される値を保持します。
+ * 値変更時に実行する関数を登録できます。
+ */
+export class FrequentlyUpdatedState<T> {
+  private _value: T;
+  private listeners = new Set<(newValue: T) => void>();
+
+  get value() {
+    return this._value;
+  }
+
+  set value(newValue: T) {
+    this._value = newValue;
+    this.listeners.forEach((listener) => listener(newValue));
+  }
+
+  constructor(initialValue: T) {
+    this._value = initialValue;
+  }
+
+  addValueChangeListener(listener: (newValue: T) => void) {
+    if (this.listeners.has(listener)) {
+      throw new Error("The listener already exists.");
+    }
+    this.listeners.add(listener);
+    listener(this.value);
+  }
+
+  removeValueChangeListener(listener: (newValue: T) => void) {
+    if (!this.listeners.has(listener)) {
+      throw new Error("The listener does not exist.");
+    }
+    this.listeners.delete(listener);
+  }
+}
+
+/**
+ * requestAnimationFrameを使用して関数を定期的に実行します。
+ * 関数は、指定した最大フレームレート以下で実行されます。
+ */
+export class AnimationFrameRunner {
+  private readonly maxFrameTime: number;
+  private readonly maxDiff: number;
+
+  private requestId?: number;
+  private prevTimeStamp?: number;
+  private diff = 0;
+
+  get isStarted() {
+    return this.requestId !== undefined;
+  }
+
+  constructor(maxFrameRate = 60) {
+    this.maxFrameTime = 1000 / maxFrameRate;
+    this.maxDiff = this.maxFrameTime * 10;
+  }
+
+  start(onAnimationFrame: () => void) {
+    if (this.requestId !== undefined) {
+      throw new Error("The animation frame runner is already started.");
+    }
+
+    this.diff = 0;
+    this.prevTimeStamp = undefined;
+
+    const callback = (timeStamp: number) => {
+      if (this.prevTimeStamp === undefined) {
+        this.diff += this.maxFrameTime;
+      } else {
+        this.diff += timeStamp - this.prevTimeStamp;
+      }
+      this.diff = Math.min(this.maxDiff, this.diff);
+      if (this.diff >= this.maxFrameTime) {
+        this.diff -= this.maxFrameTime;
+        onAnimationFrame();
+      }
+      this.prevTimeStamp = timeStamp;
+      this.requestId = window.requestAnimationFrame(callback);
+    };
+    this.requestId = window.requestAnimationFrame(callback);
+  }
+
+  stop() {
+    if (this.requestId === undefined) {
+      throw new Error("The animation frame runner is not started.");
+    }
+    window.cancelAnimationFrame(this.requestId);
+    this.requestId = undefined;
+  }
+}

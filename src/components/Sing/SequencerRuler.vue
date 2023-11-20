@@ -46,6 +46,13 @@
       />
       <use href="#sequencer-ruler-measure-numbers" :x="-offset" />
     </svg>
+    <div class="sequencer-ruler-border-bottom"></div>
+    <div
+      class="sequencer-ruler-playhead"
+      :style="{
+        transform: `translateX(${playheadX - offset}px)`,
+      }"
+    ></div>
   </div>
 </template>
 
@@ -68,6 +75,7 @@ export default defineComponent({
     const store = useStore();
     const state = store.state;
     const height = ref(32);
+    const playheadTicks = ref(0);
     const tpqn = computed(() => state.score.tpqn);
     const timeSignatures = computed(() => state.score.timeSignatures);
     const zoomX = computed(() => state.sequencerZoomX);
@@ -124,9 +132,17 @@ export default defineComponent({
       }
       return measureInfos;
     });
+    const playheadX = computed(() => {
+      const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
+      return Math.floor(baseX * zoomX.value);
+    });
 
     const sequencerRuler = ref<HTMLElement | null>(null);
     let resizeObserver: ResizeObserver | undefined;
+
+    const playheadPositionChangeListener = (position: number) => {
+      playheadTicks.value = position;
+    };
 
     onMounted(() => {
       const sequencerRulerElement = sequencerRuler.value;
@@ -145,12 +161,18 @@ export default defineComponent({
         }
       });
       resizeObserver.observe(sequencerRulerElement);
+
+      store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+        listener: playheadPositionChangeListener,
+      });
     });
 
     onUnmounted(() => {
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
+      resizeObserver?.disconnect();
+
+      store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+        listener: playheadPositionChangeListener,
+      });
     });
 
     return {
@@ -158,6 +180,7 @@ export default defineComponent({
       width,
       height,
       measureInfos,
+      playheadX,
       sequencerRuler,
     };
   },
@@ -170,8 +193,29 @@ export default defineComponent({
 
 .sequencer-ruler {
   background: colors.$background;
-  border-bottom: 1px solid #ccc;
+  position: relative;
   overflow: hidden;
+}
+
+.sequencer-ruler-border-bottom {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-bottom: 1px solid #ccc;
+}
+
+.sequencer-ruler-playhead {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 4px;
+  height: 100%;
+  background: colors.$primary;
+  border-left: 1px solid rgba(colors.$background-rgb, 0.83);
+  border-right: 1px solid rgba(colors.$background-rgb, 0.83);
+  pointer-events: none;
 }
 
 .sequencer-ruler-measure-number {

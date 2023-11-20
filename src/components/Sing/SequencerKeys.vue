@@ -127,9 +127,7 @@ export default defineComponent({
     });
 
     onUnmounted(() => {
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
+      resizeObserver?.disconnect();
     });
 
     return {

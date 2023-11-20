@@ -13,7 +13,7 @@
         round
         class="sing-transport-button"
         icon="skip_previous"
-        @click="seek(0)"
+        @click="goToZero"
       ></q-btn>
       <q-btn
         v-if="!nowPlaying"
@@ -30,7 +30,7 @@
         @click="stop"
       ></q-btn>
       <q-btn flat round class="sing-transport-button" icon="loop"></q-btn>
-      <div class="sing-playback-position">{{ playbackPositionStr }}</div>
+      <div class="sing-playhead-position">{{ playheadPositionStr }}</div>
       <q-input
         type="number"
         :model-value="bpmInputBuffer"
@@ -91,7 +91,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, watch, ref } from "vue";
+import {
+  defineComponent,
+  computed,
+  watch,
+  ref,
+  onMounted,
+  onUnmounted,
+} from "vue";
 import { useStore } from "@/store";
 import { BEAT_TYPES, getSnapTypes, isTriplet } from "@/helpers/singHelper";
 
@@ -155,17 +162,18 @@ export default defineComponent({
       beatTypeInputBuffer.value = beatType;
     };
 
-    const playPos = ref(0);
+    const playheadTicks = ref(0);
 
-    const playbackPositionStr = computed(() => {
-      const playTime = store.getters.TICK_TO_SECOND(playPos.value);
+    const playheadPositionStr = computed(() => {
+      const ticks = playheadTicks.value;
+      const time = store.getters.TICK_TO_SECOND(ticks);
 
-      const intPlayTime = Math.floor(playTime);
-      const min = Math.floor(intPlayTime / 60);
+      const intTime = Math.trunc(time);
+      const min = Math.trunc(intTime / 60);
       const minStr = String(min).padStart(2, "0");
-      const secStr = String(intPlayTime - min * 60).padStart(2, "0");
-      const match = String(playTime).match(/\.(\d+)$/);
-      const milliSecStr = (match?.[1] ?? "0").padEnd(3, "0").substring(0, 3);
+      const secStr = String(intTime - min * 60).padStart(2, "0");
+      const milliSec = Math.trunc((time - intTime) * 1000);
+      const milliSecStr = String(milliSec).padStart(3, "0");
 
       return `${minStr}:${secStr}.${milliSecStr}`;
     });
@@ -189,21 +197,6 @@ export default defineComponent({
       },
       { deep: true }
     );
-
-    const timeout = 1 / 60;
-    let timeoutId: number | undefined = undefined;
-    watch(nowPlaying, (newState) => {
-      if (newState) {
-        const updateView = () => {
-          playPos.value = store.getters.GET_PLAYBACK_POSITION();
-          timeoutId = window.setTimeout(updateView, timeout);
-        };
-        updateView();
-      } else if (timeoutId !== undefined) {
-        window.clearTimeout(timeoutId);
-        timeoutId = undefined;
-      }
-    });
 
     const setTempo = async () => {
       const bpm = bpmInputBuffer.value;
@@ -237,9 +230,8 @@ export default defineComponent({
       store.dispatch("SING_STOP_AUDIO");
     };
 
-    const seek = async (position: number) => {
-      await store.dispatch("SET_PLAYBACK_POSITION", { position });
-      playPos.value = position;
+    const goToZero = () => {
+      store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
     };
 
     const volume = computed({
@@ -285,6 +277,22 @@ export default defineComponent({
       },
     });
 
+    const playheadPositionChangeListener = (position: number) => {
+      playheadTicks.value = position;
+    };
+
+    onMounted(() => {
+      store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+        listener: playheadPositionChangeListener,
+      });
+    });
+
+    onUnmounted(() => {
+      store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+        listener: playheadPositionChangeListener,
+      });
+    });
+
     return {
       isShowSinger,
       toggleShowSinger,
@@ -297,11 +305,11 @@ export default defineComponent({
       setBeatTypeInputBuffer,
       setTempo,
       setTimeSignature,
-      playbackPositionStr,
+      playheadPositionStr,
       nowPlaying,
       play,
       stop,
-      seek,
+      goToZero,
       volume,
       snapTypeSelectOptions,
       snapTypeSelectModel,
@@ -372,7 +380,7 @@ export default defineComponent({
   width: 36px;
 }
 
-.sing-playback-position {
+.sing-playhead-position {
   font-size: 18px;
   margin: 0 4px;
   min-width: 82px;
