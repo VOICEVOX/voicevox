@@ -149,16 +149,6 @@ const setTempProject = (tempProject: ArrayBuffer) => {
     return failure(a.code, a);
   }
 };
-if (!fs.existsSync(tempProjectPath)) {
-  const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
-  setTempProject(buf);
-}
-
-const tempProject = JSON.parse(
-  fs.readFileSync(tempProjectPath, {
-    encoding: "utf-8",
-  })
-);
 
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
@@ -851,9 +841,25 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return configManager.get(key);
 });
 
-ipcMainHandle("GET_TEMP_PROJECT", () => {
-  tempProject.tempProjectFilePath = tempProjectPath;
-  return tempProject;
+ipcMainHandle("GET_TEMP_PROJECT", async () => {
+  try {
+    if (!fs.existsSync(tempProjectPath)) {
+      const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
+      await setTempProject(buf);
+    }
+
+    const tempProject = JSON.parse(
+      await fs.promises.readFile(tempProjectPath, {
+        encoding: "utf-8",
+      })
+    );
+
+    tempProject.tempProjectFilePath = tempProjectPath;
+    return success(tempProject);
+  } catch (e) {
+    const a = e as SystemError;
+    return failure(a.code, a);
+  }
 });
 
 ipcMainHandle("SET_TEMP_PROJECT", (_, tempProject) => {

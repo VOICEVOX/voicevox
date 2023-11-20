@@ -581,8 +581,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
       try {
-        const tempProjectData: TempProjectType =
-          await window.electron.getTempProject();
+        const tempProjectData: TempProjectType = await window.electron
+          .getTempProject()
+          .then(getValueOrThrow);
 
         // 一時ファイルにプロジェクトがない場合は何もしない
         if (!Object.keys(tempProjectData).length) {

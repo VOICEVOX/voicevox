@@ -262,7 +262,7 @@ export type IpcIHData = {
 
   GET_TEMP_PROJECT: {
     args: [];
-    return: TempProjectType;
+    return: Result<TempProjectType>;
   };
 
   SET_TEMP_PROJECT: {

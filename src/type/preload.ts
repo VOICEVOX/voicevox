@@ -230,7 +230,7 @@ export interface Sandbox {
     key: Key,
     newValue: ConfigType[Key]
   ): Promise<ConfigType[Key]>;
-  getTempProject(): Promise<TempProjectType>;
+  getTempProject(): Promise<Result<TempProjectType>>;
   setTempProject(tempProject: ArrayBuffer): Promise<Result<undefined>>;
   setEngineSetting(
     engineId: EngineId,
