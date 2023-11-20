@@ -854,7 +854,6 @@ ipcMainHandle("GET_TEMP_PROJECT", async () => {
       })
     );
 
-    tempProject.tempProjectFilePath = tempProjectPath;
     return success(tempProject);
   } catch (e) {
     const a = e as SystemError;
