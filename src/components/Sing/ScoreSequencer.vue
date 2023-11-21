@@ -655,11 +655,13 @@ export default defineComponent({
         throw new Error("sequencerBodyElement is null.");
       }
       if (event.ctrlKey) {
-        // カーソル位置を基準に水平方向のズームを行う
+        // マウスカーソル位置を基準に水平方向のズームを行う
         const oldZoomX = zoomX.value;
         const scrollLeft = sequencerBodyElement.scrollLeft;
         const scrollTop = sequencerBodyElement.scrollTop;
-        const cursorX = event.offsetX - scrollLeft;
+        const clientRect = sequencerBodyElement.getBoundingClientRect();
+        // sequencerBody要素のborderとpaddingが0であることを前提にマウスカーソル位置を算出
+        const cursorX = event.clientX - clientRect.left;
 
         let newZoomX = zoomX.value;
         newZoomX -= event.deltaY * (ZOOM_X_STEP * 0.01);
