@@ -447,7 +447,6 @@ const removeCell = async () => {
   } else {
     audioKeysToDelete = [props.audioKey];
   }
-  const firstAudioKey = audioKeysToDelete[0];
   // 全て消える場合はなにもしない
   if (audioKeys.value.length > audioKeysToDelete.length) {
     // フォーカスを外したりREMOVEしたりすると、
@@ -455,16 +454,31 @@ const removeCell = async () => {
     // エラー防止のためにまずwillRemoveフラグを建てる
     willRemove.value = true;
 
-    const firstIndex = audioKeys.value.indexOf(
-      isMultiSelectEnabled.value ? firstAudioKey : props.audioKey
-    );
-    let willNextFocusIndex = firstIndex - 1;
-    if (willNextFocusIndex < 0) {
-      willNextFocusIndex = audioKeys.value.findIndex(
-        (audioKey) => !audioKeysToDelete.includes(audioKey)
-      );
-    }
     if (audioKeysToDelete.includes(props.audioKey)) {
+      const firstAudioKey = audioKeysToDelete[0];
+      const firstIndex = audioKeys.value.indexOf(
+        isMultiSelectEnabled.value ? firstAudioKey : props.audioKey
+      );
+      let willNextFocusIndex = -1;
+      for (let i = firstIndex; i >= 0; i--) {
+        if (!audioKeysToDelete.includes(audioKeys.value[i])) {
+          willNextFocusIndex = i;
+          break;
+        }
+      }
+      if (willNextFocusIndex === -1) {
+        for (let i = firstIndex; i < audioKeys.value.length; i++) {
+          if (!audioKeysToDelete.includes(audioKeys.value[i])) {
+            willNextFocusIndex = i;
+            break;
+          }
+        }
+      }
+      if (willNextFocusIndex === -1) {
+        throw new Error(
+          "次に選択するaudioKeyが見付かりませんでした（unreachable）"
+        );
+      }
       emit("focusCell", {
         audioKey: audioKeys.value[willNextFocusIndex],
       });
@@ -478,13 +492,10 @@ const removeCell = async () => {
 
 // 削除ボタンの有効／無効判定
 const enableDeleteButton = computed(() => {
-  if (isMultiSelectEnabled.value) {
-    return (
-      store.getters.SELECTED_AUDIO_KEYS.length !== store.state.audioKeys.length
-    );
-  } else {
-    return store.state.audioKeys.length > 1;
-  }
+  return (
+    store.state.audioKeys.length >
+    (isMultiSelectEnabled.value ? store.getters.SELECTED_AUDIO_KEYS.length : 1)
+  );
 });
 
 // テキスト編集エリアの右クリック
