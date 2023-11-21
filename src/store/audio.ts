@@ -265,7 +265,7 @@ export const audioStoreState: AudioStoreState = {
 export const audioStore = createPartialStore<AudioStoreTypes>({
   ACTIVE_AUDIO_KEY: {
     getter(state) {
-      return state._activeAudioKey !== undefined &&
+      return state._activeAudioKey != undefined &&
         state.audioKeys.includes(state._activeAudioKey)
         ? state._activeAudioKey
         : undefined;

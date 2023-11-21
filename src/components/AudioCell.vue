@@ -441,14 +441,15 @@ const removeCell = async () => {
     isMultiSelectEnabled.value &&
     store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
   ) {
-    audioKeysToDelete = store.getters.SELECTED_AUDIO_KEYS;
+    audioKeysToDelete = store.state.audioKeys.filter((audioKey) =>
+      store.getters.SELECTED_AUDIO_KEYS.includes(audioKey)
+    );
   } else {
     audioKeysToDelete = [props.audioKey];
   }
   const firstAudioKey = audioKeysToDelete[0];
-  const selectedAudioKeysLength = audioKeysToDelete.length;
   // 全て消える場合はなにもしない
-  if (audioKeys.value.length > selectedAudioKeysLength) {
+  if (audioKeys.value.length > audioKeysToDelete.length) {
     // フォーカスを外したりREMOVEしたりすると、
     // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
     // エラー防止のためにまずwillRemoveフラグを建てる
