@@ -447,7 +447,7 @@ const removeCell = async () => {
   }
   const firstAudioKey = audioKeysToDelete[0];
   const selectedAudioKeysLength = audioKeysToDelete.length;
-  // 1つだけの時は削除せず
+  // 全て消える場合はなにもしない
   if (audioKeys.value.length > selectedAudioKeysLength) {
     // フォーカスを外したりREMOVEしたりすると、
     // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
