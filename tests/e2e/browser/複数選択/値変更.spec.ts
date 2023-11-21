@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { toggleSetting, navigateToMain } from "../../navigators";
+import { toggleSetting, navigateToMain, gotoHome } from "../../navigators";
 import { addAudioCells } from "./utils";
 
 /*
@@ -68,9 +68,7 @@ async function getAudioInfoParameters(
 }
 
 test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
+  await gotoHome({ page });
 
   await navigateToMain(page);
   await page.waitForTimeout(100);

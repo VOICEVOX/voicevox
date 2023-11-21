@@ -2,13 +2,11 @@ import { spawn, ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
 import treeKill from "tree-kill";
-import Store from "electron-store";
 import shlex from "shlex";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
-import log from "electron-log";
-import { z } from "zod";
+import log from "electron-log/main";
 import {
   findAltPort,
   getPidFromPort,
@@ -19,14 +17,14 @@ import {
 
 import {
   EngineInfo,
-  ElectronStoreType,
   EngineDirValidationResult,
   MinimumEngineManifest,
   EngineId,
-  engineIdSchema,
   minimumEngineManifestSchema,
+  envEngineInfoSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
+import { BaseConfigManager } from "@/shared/ConfigManager";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -41,17 +39,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   const defaultEngineInfosEnv =
     import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
 
-  const envSchema = z
-    .object({
-      uuid: engineIdSchema,
-      host: z.string(),
-      name: z.string(),
-      executionEnabled: z.boolean(),
-      executionFilePath: z.string(),
-      executionArgs: z.array(z.string()),
-      path: z.string().optional(),
-    })
-    .array();
+  const envSchema = envEngineInfoSchema.array();
   const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
   return engines.map((engineInfo) => {
@@ -68,7 +56,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 }
 
 export class EngineManager {
-  store: Store<ElectronStoreType>;
+  configManager: BaseConfigManager;
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
@@ -80,22 +68,21 @@ export class EngineManager {
   public altPortInfo: AltPortInfos = {};
 
   constructor({
-    store,
+    configManager,
     defaultEngineDir,
     vvppEngineDir,
     onEngineProcessError,
   }: {
-    store: Store<ElectronStoreType>;
+    configManager: BaseConfigManager;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
   }) {
-    this.store = store; // FIXME: エンジンマネージャーがelectron-storeを持たなくても良いようにする
+    this.configManager = configManager;
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
 
-    this.initializeEngineInfosAndAltPortInfo();
     this.engineProcessContainers = {};
   }
 
@@ -147,8 +134,8 @@ export class EngineManager {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
       }
     }
-    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でstore.setする
-    for (const engineDir of this.store.get("registeredEngineDirs")) {
+    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でconfig.setする
+    for (const engineDir of this.configManager.get("registeredEngineDirs")) {
       const result = addEngine(engineDir, "path");
       if (result !== "ok") {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
@@ -158,9 +145,11 @@ export class EngineManager {
           "エンジンの読み込みに失敗しました。",
           `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
         );
-        this.store.set(
+        this.configManager.set(
           "registeredEngineDirs",
-          this.store.get("registeredEngineDirs").filter((p) => p !== engineDir)
+          this.configManager
+            .get("registeredEngineDirs")
+            .filter((p) => p !== engineDir)
         );
       }
     }
@@ -312,7 +301,7 @@ export class EngineManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const engineSetting = this.store.get("engineSettings")[engineId];
+    const engineSetting = this.configManager.get("engineSettings")[engineId];
     if (engineSetting == undefined)
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 

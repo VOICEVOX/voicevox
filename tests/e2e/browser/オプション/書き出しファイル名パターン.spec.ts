@@ -1,13 +1,9 @@
 import { test, expect, Page, Locator } from "@playwright/test";
 
-import { navigateToOptionDialog } from "../../navigators";
+import { gotoHome, navigateToOptionDialog } from "../../navigators";
 import { getNewestQuasarDialog } from "../../locators";
 
-test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
-});
+test.beforeEach(gotoHome);
 
 /**
  * 書き出しファイル名パターンダイアログまで移動

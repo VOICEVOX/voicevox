@@ -418,10 +418,11 @@ export type AudioStoreTypes = {
     }): SaveResultObject;
   };
 
-  GENERATE_AND_SAVE_ALL_AUDIO: {
+  MULTI_GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
+      audioKeys: AudioKey[];
       dirPath?: string;
-      callback?: (finishedCount: number, totalCount: number) => void;
+      callback?: (finishedCount: number) => void;
     }): SaveResultObject[] | undefined;
   };
 
@@ -1042,6 +1043,7 @@ export type SettingStoreState = {
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
+  enableMultiEngine: boolean;
 };
 
 export type SettingStoreTypes = {
@@ -1132,6 +1134,11 @@ export type SettingStoreTypes = {
     }): Promise<void>;
   };
 
+  SET_ENABLE_MULTI_ENGINE: {
+    mutation: { enableMultiEngine: boolean };
+    action(payload: { enableMultiEngine: boolean }): void;
+  };
+
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean; engineId: EngineId }): Promise<void>;
   };
@@ -1165,6 +1172,7 @@ export type UiStoreState = {
   isAcceptTermsDialogOpen: boolean;
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
+  isUpdateNotificationDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1230,6 +1238,7 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
+      isUpdateNotificationDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1242,6 +1251,7 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
+      isUpdateNotificationDialogOpen?: boolean;
     }): void;
   };
 
