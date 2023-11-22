@@ -582,11 +582,11 @@ const uninstallLibrary = async (
     // deepをつけないとdisableになったときにUIが崩壊する
     :deep(.library-item) {
       margin: 10px 0;
-      box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
+      box-shadow: 0 0 0 1px rgba(colors.$primary-rgb, 0.5);
       border-radius: 10px;
       overflow: hidden;
       &.selected-library-item {
-        box-shadow: 0 0 0 2px colors.$primary-light;
+        box-shadow: 0 0 0 2px colors.$primary;
       }
       &:hover :deep(.q-focus-helper) {
         opacity: 0 !important;

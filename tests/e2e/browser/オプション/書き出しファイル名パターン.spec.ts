@@ -1,13 +1,9 @@
 import { test, expect, Page, Locator } from "@playwright/test";
 
-import { navigateToOptionDialog } from "../../navigators";
+import { gotoHome, navigateToOptionDialog } from "../../navigators";
 import { getNewestQuasarDialog } from "../../locators";
 
-test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
-});
+test.beforeEach(gotoHome);
 
 /**
  * 書き出しファイル名パターンダイアログまで移動
@@ -71,10 +67,11 @@ test("「オプション」から「書き出しファイル名パターン」�
   await page.getByRole("button", { name: "$連番$" }).click();
   await expect(textbox).toHaveValue("test$連番$");
   await expect(doneButton).toBeEnabled();
+  await page.waitForTimeout(100);
 
   // 確定するとダイアログが閉じて設定した内容が反映されている
   await doneButton.click();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(700);
   await expect(optionDialog.getByText("test$連番$.wav")).toBeVisible();
 
   // 再度開くと設定した内容が反映されている

@@ -12,4 +12,11 @@ declare global {
   interface Window {
     readonly [SandboxKey]: import("./preload").Sandbox;
   }
+
+  interface Navigator {
+    // navigator.userAgentDataを認識してくれないため
+    userAgentData: {
+      readonly platform: string;
+    };
+  }
 }
