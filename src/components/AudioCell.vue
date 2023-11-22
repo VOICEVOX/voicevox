@@ -453,19 +453,21 @@ const removeCell = async () => {
     willRemove.value = true;
 
     if (audioKeysToDelete.includes(props.audioKey)) {
-      const firstAudioKey = audioKeysToDelete[0];
-      const firstIndex = audioKeys.value.indexOf(
-        isMultiSelectEnabled.value ? firstAudioKey : props.audioKey
-      );
+      // 選択するAudioKeyを決定する。
+      // - 削除ボタンが押されたAudioCellから開始
+      // - 残るAudioCellを上方向に探す
+      // - 上方向になかったら下方向に探す
+      // - なかったらエラー（Unreachable）
+      const audioKeyIndex = audioKeys.value.indexOf(props.audioKey);
       let willNextFocusIndex = -1;
-      for (let i = firstIndex; i >= 0; i--) {
+      for (let i = audioKeyIndex; i >= 0; i--) {
         if (!audioKeysToDelete.includes(audioKeys.value[i])) {
           willNextFocusIndex = i;
           break;
         }
       }
       if (willNextFocusIndex === -1) {
-        for (let i = firstIndex; i < audioKeys.value.length; i++) {
+        for (let i = audioKeyIndex; i < audioKeys.value.length; i++) {
           if (!audioKeysToDelete.includes(audioKeys.value[i])) {
             willNextFocusIndex = i;
             break;
