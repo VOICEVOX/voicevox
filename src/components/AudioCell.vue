@@ -441,9 +441,7 @@ const removeCell = async () => {
     isMultiSelectEnabled.value &&
     store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
   ) {
-    audioKeysToDelete = store.state.audioKeys.filter((audioKey) =>
-      store.getters.SELECTED_AUDIO_KEYS.includes(audioKey)
-    );
+    audioKeysToDelete = store.getters.SELECTED_AUDIO_KEYS;
   } else {
     audioKeysToDelete = [props.audioKey];
   }
