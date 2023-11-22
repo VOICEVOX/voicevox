@@ -12,7 +12,7 @@
           v-if="accentPhrase.moras.length > 1"
           snap
           dense
-          color="primary-light"
+          color="primary"
           track-size="2px"
           :min="previewAccentSlider.qSliderProps.min.value"
           :max="previewAccentSlider.qSliderProps.max.value"
@@ -106,7 +106,9 @@ const accentLine = computed(() => {
 });
 
 // クリックでアクセント句が選択されないように、@click.stopに渡す
-const stopPropagation = undefined;
+const stopPropagation = () => {
+  // fn is not a function エラーを回避するために何もしない関数を渡す
+};
 </script>
 
 <style scoped lang="scss">
@@ -149,7 +151,7 @@ div {
     text-align: center;
     cursor: pointer;
     svg line {
-      stroke: colors.$primary-light;
+      stroke: colors.$primary;
       stroke-dasharray: 3;
     }
   }

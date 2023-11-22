@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
 
 /**
- * 最新のquasarダイアログのlocaltorを取得する
+ * 最新のquasarダイアログのlocatorを取得する
  */
 export function getNewestQuasarDialog(page: Page) {
   const locator = page.locator('[id^="q-portal--dialog"]');
@@ -9,7 +9,7 @@ export function getNewestQuasarDialog(page: Page) {
 }
 
 /**
- * quasarのメニューのlocaltorを取得する
+ * quasarのメニューのlocatorを取得する
  */
 export function getQuasarMenu(page: Page, menuName: string) {
   return page.getByRole("listitem").filter({ hasText: menuName });

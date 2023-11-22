@@ -8,7 +8,7 @@
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "
       class="value-label"
-      color="primary-light"
+      color="primary"
       text-color="display-on-primary"
     >
       {{
@@ -21,7 +21,7 @@
       vertical
       reverse
       snap
-      color="primary-light"
+      color="primary"
       track-size="2.5px"
       :style="clipPathComputed"
       :min="previewSlider.qSliderProps.min.value"
@@ -46,7 +46,6 @@ import { MoraDataType } from "@/type/preload";
 const props = withDefaults(
   defineProps<{
     value: number;
-    accentPhraseIndex: number;
     moraIndex: number;
     uiLocked: boolean;
     min?: number;
@@ -72,7 +71,6 @@ const emit =
   defineEmits<{
     (
       e: "changeValue",
-      accentPhraseIndex: number,
       moraIndex: number,
       newValue: number,
       type: MoraDataType
@@ -81,13 +79,12 @@ const emit =
       e: "mouseOver",
       isOver: boolean,
       type: MoraDataType,
-      accentPhraseIndex: number,
       moraIndex: number
     ): void;
   }>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) =>
-  emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue, type);
+  emit("changeValue", props.moraIndex, newValue, type);
 
 const previewSlider = previewSliderHelper({
   modelValue: () => props.value,
@@ -120,13 +117,7 @@ const clipPathComputed = computed((): string => {
 const handleMouseHover = (isOver: boolean) => {
   valueLabel.visible = isOver;
   if (props.type == "consonant" || props.type == "vowel") {
-    emit(
-      "mouseOver",
-      isOver,
-      props.type,
-      props.accentPhraseIndex,
-      props.moraIndex
-    );
+    emit("mouseOver", isOver, props.type, props.moraIndex);
   }
 };
 
@@ -139,7 +130,9 @@ const precisionComputed = computed(() => {
 });
 
 // クリックでアクセント句が選択されないように@click.stopに渡す
-const stopPropagation = undefined;
+const stopPropagation = () => {
+  // fn is not a function エラーを回避するために何もしない関数を渡す
+};
 </script>
 
 <style scoped lang="scss">

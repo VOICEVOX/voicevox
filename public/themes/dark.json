@@ -5,7 +5,6 @@
   "isDark": true,
   "colors": {
     "primary": "#86C591",
-    "primary-light": "#86C591",
     "display": "#E1E1E1",
     "display-on-primary": "#1F1F1F",
     "display-hyperlink": "#58A6FF",

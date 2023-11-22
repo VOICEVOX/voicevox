@@ -47,11 +47,15 @@ DirectML 対応の GPU を搭載した Windows PC と、Nvidia 製 GPU 搭載の
 
 #### Windows 版のインストール先
 
-`C:\Users\(ユーザー名)\AppData\Local\Programs\VOICEVOX`
+`C:\Users\（ユーザー名）\AppData\Local\Programs\VOICEVOX`
 
 #### Mac 版のインストール先
 
-`/Applications/VOICEVOX` もしくは `/Users/(ユーザー名)/Applications/VOICEVOX`
+`/Applications/VOICEVOX` もしくは `/Users/（ユーザー名）/Applications/VOICEVOX`
+
+#### Ubuntu 版のインストール先
+
+`/home/（ユーザー名）/.voicevox`
 
 ### Q. アップデート方法を教えてください
 
@@ -89,11 +93,11 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 #### Windows 版の設定ファイル
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\config.json`
+`C:\Users\（ユーザー名）\AppData\Roaming\voicevox\config.json`
 
 #### Mac 版の設定ファイル
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox/config.json`
+`/Users/（ユーザー名）/Library/Application Support/voicevox/config.json`
 
 ### Q. エンジンの起動が失敗したというエラーが表示されます
 
@@ -133,11 +137,11 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 #### Windows 版
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs`
+`C:\Users\（ユーザー名）\AppData\Roaming\voicevox\logs`
 
 #### Mac 版
 
-`/Users/(ユーザー名)/Library/Logs/voicevox-cpu`
+`/Users/（ユーザー名）/Library/Logs/voicevox-cpu`
 
 ### Q. Ubuntu 22.04 で動きません
 
@@ -168,7 +172,7 @@ sudo apt install libfuse2
 ### Q. 音楽配信サービスなどで公開する場合のクレジット表記はどうすれば良いですか？
 
 概要欄の無い楽曲投稿系プラットフォームの場合、タイトルやアーティストなどの欄にクレジットを記載するか、楽曲中に音声クレジットを挿入してください。  
-タイトルの例「タイトル (VOICEVOX:キャラクター名)」「タイトル feat. キャラクター名(VOICEVOX)」など  
+タイトルの例「タイトル（VOICEVOX:キャラクター名）」「タイトル feat. キャラクター名(VOICEVOX)」など  
 アーティストの例「キャラクター名(VOICEVOX)」「VOICEVOX:キャラクター名」など
 
 ### Q. スピーカーでの音声案内など、機械で音声を流したい場合のクレジット記載はどうすれば良いですか？
