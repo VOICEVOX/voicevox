@@ -1172,11 +1172,8 @@ export type UiStoreState = {
   isAcceptTermsDialogOpen: boolean;
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
-<<<<<<< HEAD
   isLibraryManageDialogOpen: boolean;
-=======
   isUpdateNotificationDialogOpen: boolean;
->>>>>>> upstream/main
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1242,11 +1239,8 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
-<<<<<<< HEAD
       isLibraryManageDialogOpen?: boolean;
-=======
       isUpdateNotificationDialogOpen?: boolean;
->>>>>>> upstream/main
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1259,11 +1253,8 @@ export type UiStoreTypes = {
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
-<<<<<<< HEAD
       isLibraryManageDialogOpen?: boolean;
-=======
       isUpdateNotificationDialogOpen?: boolean;
->>>>>>> upstream/main
     }): void;
   };
 

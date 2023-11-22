@@ -209,13 +209,9 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
-<<<<<<< HEAD
 import LibraryManageDialog from "@/components/LibraryManageDialog.vue";
-
-=======
 import UpdateNotificationDialog from "@/components/UpdateNotificationDialog.vue";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
->>>>>>> upstream/main
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
