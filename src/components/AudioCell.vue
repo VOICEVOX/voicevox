@@ -458,16 +458,16 @@ const removeCell = async () => {
       // - 残るAudioCellを上方向に探す
       // - 上方向になかったら下方向に探す
       // - なかったらエラー（Unreachable）
-      const audioKeyIndex = audioKeys.value.indexOf(props.audioKey);
+      const startIndex = audioKeys.value.indexOf(props.audioKey);
       let willNextFocusIndex = -1;
-      for (let i = audioKeyIndex; i >= 0; i--) {
+      for (let i = startIndex; i >= 0; i--) {
         if (!audioKeysToDelete.includes(audioKeys.value[i])) {
           willNextFocusIndex = i;
           break;
         }
       }
       if (willNextFocusIndex === -1) {
-        for (let i = audioKeyIndex; i < audioKeys.value.length; i++) {
+        for (let i = startIndex; i < audioKeys.value.length; i++) {
           if (!audioKeysToDelete.includes(audioKeys.value[i])) {
             willNextFocusIndex = i;
             break;
