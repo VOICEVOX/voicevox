@@ -56,7 +56,7 @@ const showWritableDirectoryPicker = async (): Promise<
 export const showOpenDirectoryDialogImpl: typeof window[typeof SandboxKey]["showOpenDirectoryDialog"] =
   async () => {
     const _directoryHandler = await showWritableDirectoryPicker();
-    if (_directoryHandler === undefined) {
+    if (_directoryHandler == undefined) {
       return undefined;
     }
 
@@ -83,7 +83,7 @@ const getDirectoryHandleFromDirectoryPath = async (
 ): Promise<FileSystemDirectoryHandle> => {
   const maybeHandle = directoryHandleMap.get(maybeDirectoryPathKey);
 
-  if (maybeHandle !== undefined) {
+  if (maybeHandle != undefined) {
     return maybeHandle;
   } else {
     // NOTE: fixedDirectoryの場合こっちに落ちる場合がある
@@ -91,7 +91,7 @@ const getDirectoryHandleFromDirectoryPath = async (
       maybeDirectoryPathKey
     );
 
-    if (maybeFixedDirectory === undefined) {
+    if (maybeFixedDirectory == undefined) {
       throw new Error(
         `フォルダへのアクセス許可がありません。アクセスしようとしたフォルダ名: ${maybeDirectoryPathKey}`
       );
