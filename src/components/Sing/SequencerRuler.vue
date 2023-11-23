@@ -1,5 +1,5 @@
 <template>
-  <div ref="sequencerRuler" class="sequencer-ruler">
+  <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
     <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
       <defs>
         <pattern
@@ -60,6 +60,7 @@
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import {
+  baseXToTick,
   getMeasureDuration,
   getTimeSignaturePositions,
   tickToBaseX,
@@ -137,6 +138,16 @@ export default defineComponent({
       return Math.floor(baseX * zoomX.value);
     });
 
+    const onClick = (event: MouseEvent) => {
+      const sequencerRulerElement = sequencerRuler.value;
+      if (!sequencerRulerElement) {
+        throw new Error("sequencerRulerElement is null.");
+      }
+      const baseX = (props.offset + event.offsetX) / zoomX.value;
+      const ticks = baseXToTick(baseX, tpqn.value);
+      store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+    };
+
     const sequencerRuler = ref<HTMLElement | null>(null);
     let resizeObserver: ResizeObserver | undefined;
 
@@ -182,6 +193,7 @@ export default defineComponent({
       measureInfos,
       playheadX,
       sequencerRuler,
+      onClick,
     };
   },
 });
