@@ -582,7 +582,7 @@ class AudioPlayerVoice {
 }
 
 export type AudioPlayerOptions = {
-  readonly volume: number;
+  readonly volume?: number;
 };
 
 /**
@@ -599,14 +599,11 @@ export class AudioPlayer {
     return this.gainNode;
   }
 
-  constructor(
-    audioContext: BaseAudioContext,
-    options: AudioPlayerOptions = { volume: 1.0 }
-  ) {
+  constructor(audioContext: BaseAudioContext, options?: AudioPlayerOptions) {
     this.audioContext = audioContext;
 
     this.gainNode = new GainNode(audioContext);
-    this.gainNode.gain.value = options.volume;
+    this.gainNode.gain.value = options?.volume ?? 1.0;
   }
 
   /**
@@ -751,9 +748,9 @@ class SynthVoice {
 }
 
 export type PolySynthOptions = {
-  readonly volume: number;
-  readonly oscillatorType: OscillatorType;
-  readonly envelope: Envelope;
+  readonly volume?: number;
+  readonly oscillatorType?: OscillatorType;
+  readonly envelope?: Envelope;
 };
 
 /**
@@ -772,25 +769,18 @@ export class PolySynth implements Instrument {
     return this.gainNode;
   }
 
-  constructor(
-    audioContext: BaseAudioContext,
-    options: PolySynthOptions = {
-      volume: 0.1,
-      oscillatorType: "square",
-      envelope: {
-        attack: 0.001,
-        decay: 0.1,
-        sustain: 0.7,
-        release: 0.02,
-      },
-    }
-  ) {
+  constructor(audioContext: BaseAudioContext, options?: PolySynthOptions) {
     this.audioContext = audioContext;
 
-    this.oscillatorType = options.oscillatorType;
-    this.envelope = options.envelope;
+    this.oscillatorType = options?.oscillatorType ?? "square";
+    this.envelope = options?.envelope ?? {
+      attack: 0.001,
+      decay: 0.1,
+      sustain: 0.7,
+      release: 0.02,
+    };
     this.gainNode = new GainNode(this.audioContext);
-    this.gainNode.gain.value = options.volume;
+    this.gainNode.gain.value = options?.volume ?? 0.1;
   }
 
   /**
@@ -848,7 +838,7 @@ export class PolySynth implements Instrument {
 }
 
 export type ChannelStripOptions = {
-  readonly volume: number;
+  readonly volume?: number;
 };
 
 /**
@@ -872,19 +862,16 @@ export class ChannelStrip {
     this.gainNode.gain.value = value;
   }
 
-  constructor(
-    audioContext: BaseAudioContext,
-    options: ChannelStripOptions = { volume: 0.1 }
-  ) {
+  constructor(audioContext: BaseAudioContext, options?: ChannelStripOptions) {
     this.gainNode = new GainNode(audioContext);
-    this.gainNode.gain.value = options.volume;
+    this.gainNode.gain.value = options?.volume ?? 0.1;
   }
 }
 
 export type LimiterOptions = {
-  readonly inputGain: number;
-  readonly outputGain: number;
-  readonly release: number;
+  readonly inputGain?: number;
+  readonly outputGain?: number;
+  readonly release?: number;
 };
 
 /**
@@ -935,10 +922,7 @@ export class Limiter {
     return this.compNode.reduction;
   }
 
-  constructor(
-    audioContext: BaseAudioContext,
-    options: LimiterOptions = { inputGain: 0, outputGain: 0, release: 0.25 }
-  ) {
+  constructor(audioContext: BaseAudioContext, options?: LimiterOptions) {
     this.inputGainNode = new GainNode(audioContext);
     this.compNode = new DynamicsCompressorNode(audioContext);
     this.correctionGainNode = new GainNode(audioContext);
@@ -949,13 +933,13 @@ export class Limiter {
     this.compNode.ratio.value = 20; // クリッピングが起こらないように、高いレシオ（1/20）で圧縮する
     this.compNode.knee.value = 8; // 自然にかかってほしいという気持ちで8に設定（リミッターなので0でも良いかも）
     this.compNode.attack.value = 0; // クリッピングが起こらないように、すぐに圧縮を開始する
-    this.compNode.release.value = options.release; // 歪まないように少し遅めに設定
+    this.compNode.release.value = options?.release ?? 0.25; // 歪まないように少し遅めに設定
 
     // メイクアップゲインで上がった分を下げる（圧縮していないときは元の音量で出力）
     this.correctionGainNode.gain.value = 0.85;
 
-    this.setGainInDecibels(options.inputGain, this.inputGainNode);
-    this.setGainInDecibels(options.outputGain, this.outputGainNode);
+    this.setGainInDecibels(options?.inputGain ?? 0, this.inputGainNode);
+    this.setGainInDecibels(options?.outputGain ?? 0, this.outputGainNode);
 
     this.inputGainNode.connect(this.compNode);
     this.compNode.connect(this.correctionGainNode);
