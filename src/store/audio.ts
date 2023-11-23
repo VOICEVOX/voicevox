@@ -265,7 +265,7 @@ export const audioStoreState: AudioStoreState = {
 export const audioStore = createPartialStore<AudioStoreTypes>({
   ACTIVE_AUDIO_KEY: {
     getter(state) {
-      return state._activeAudioKey !== undefined &&
+      return state._activeAudioKey != undefined &&
         state.audioKeys.includes(state._activeAudioKey)
         ? state._activeAudioKey
         : undefined;
@@ -1883,12 +1883,14 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_REMOVE_AUDIO_ITEM: {
-      mutation(draft, payload: { audioKey: AudioKey }) {
-        audioStore.mutations.REMOVE_AUDIO_ITEM(draft, payload);
+    COMMAND_MULTI_REMOVE_AUDIO_ITEM: {
+      mutation(draft, { audioKeys }: { audioKeys: AudioKey[] }) {
+        for (const audioKey of audioKeys) {
+          audioStore.mutations.REMOVE_AUDIO_ITEM(draft, { audioKey });
+        }
       },
-      action({ commit }, payload: { audioKey: AudioKey }) {
-        commit("COMMAND_REMOVE_AUDIO_ITEM", payload);
+      action({ commit }, payload: { audioKeys: AudioKey[] }) {
+        commit("COMMAND_MULTI_REMOVE_AUDIO_ITEM", payload);
       },
     },
 

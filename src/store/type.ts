@@ -478,9 +478,9 @@ export type AudioCommandStoreTypes = {
     }): Promise<AudioKey>;
   };
 
-  COMMAND_REMOVE_AUDIO_ITEM: {
-    mutation: { audioKey: AudioKey };
-    action(payload: { audioKey: AudioKey }): void;
+  COMMAND_MULTI_REMOVE_AUDIO_ITEM: {
+    mutation: { audioKeys: AudioKey[] };
+    action(payload: { audioKeys: AudioKey[] }): void;
   };
 
   COMMAND_SET_AUDIO_KEYS: {
