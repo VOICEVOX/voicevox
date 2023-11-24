@@ -549,7 +549,7 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
+  COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH: {
     action(payload: { audioKeys: AudioKey[] }): void;
   };
 

@@ -151,7 +151,7 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
         const audioKeys = store.state.experimentalSetting.enableMultiSelect
           ? store.getters.SELECTED_AUDIO_KEYS
           : [store.getters.ACTIVE_AUDIO_KEY];
-        store.dispatch("COMMAND_RESET_MORA_PITCH_AND_LENGTH", {
+        store.dispatch("COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH", {
           audioKeys,
         });
       }

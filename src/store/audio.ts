@@ -2446,7 +2446,7 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
+    COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH: {
       async action({ state, dispatch, commit }, { audioKeys }) {
         for (const audioKey of audioKeys) {
           const engineId = state.audioItems[audioKey].voice.engineId;
