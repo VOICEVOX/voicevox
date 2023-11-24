@@ -276,7 +276,7 @@ const accentPhraseComponents = ref<InstanceType<typeof AccentPhrase>[]>([]);
 
 const scrollToActivePoint = () => {
   if (
-    activePoint.value === undefined ||
+    activePoint.value == undefined ||
     !audioDetail.value ||
     accentPhraseComponents.value.length === 0
   )
@@ -323,7 +323,7 @@ watch(nowPlaying, async (newState) => {
     // それに合わせてフォーカスするアクセント句を変えていく
     const focusAccentPhrase = () => {
       const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
-      if (currentTime === undefined) {
+      if (currentTime == undefined) {
         throw new Error("currentTime === undefined)");
       }
       const playingAccentPhraseIndex =
@@ -346,13 +346,13 @@ watch(nowPlaying, async (newState) => {
       requestId = window.requestAnimationFrame(focusAccentPhrase);
     };
     requestId = window.requestAnimationFrame(focusAccentPhrase);
-  } else if (requestId !== undefined) {
+  } else if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
     requestId = undefined;
     // startPointがundefinedの場合、一旦最初のアクセント句までスクロール、その後activePointの選択を解除(undefinedに)する
     activePoint.value = startPoint.value ?? 0;
     scrollToActivePoint();
-    if (startPoint.value === undefined) activePoint.value = startPoint.value;
+    if (startPoint.value == undefined) activePoint.value = startPoint.value;
   }
 });
 
