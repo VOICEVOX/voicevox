@@ -62,11 +62,13 @@
               class="library-list"
             >
               <q-item
-                v-for="library of downloadableLibraries[engineId]"
-                :key="library.uuid"
+                v-for="[libraryUuid, library] in downloadableLibraries[
+                  engineId
+                ]"
+                :key="libraryUuid"
                 class="q-pa-none library-item"
                 :class="
-                  selectedLibrary === library.uuid && 'selected-library-item'
+                  selectedLibrary === libraryUuid && 'selected-library-item'
                 "
               >
                 <div class="library-item-inner">
@@ -75,29 +77,35 @@
                       {{ library.name }}
                     </div>
                     <div class="library-manage-buttons q-ma-sm">
+                      <!-- TODO: customInstalledについて考慮 -->
                       <q-btn
+                        v-if="library.type === 'installed'"
                         outline
                         text-color="display"
                         class="text-no-wrap q-ma-sm"
-                        :disable="isLatest(engineId, library)"
+                        :disable="library.isLatest"
                         @click.stop="installLibrary(engineId, library)"
                       >
-                        {{
-                          isLatest(engineId, library)
-                            ? "最新版です"
-                            : installedLibraries[engineId].find(
-                                (installedLibrary) =>
-                                  installedLibrary.uuid === library.uuid
-                              )
-                            ? "アップデート"
-                            : "インストール"
-                        }}
+                        {{ library.isLatest ? "最新版です" : "アップデート" }}
+                      </q-btn>
+                      <q-btn
+                        v-else-if="library.type === 'notInstalled'"
+                        outline
+                        text-color="display"
+                        class="text-no-wrap q-ma-sm"
+                        @click.stop="installLibrary(engineId, library)"
+                      >
+                        インストール
                       </q-btn>
                       <q-btn
                         outline
                         text-color="warning"
                         class="text-no-wrap q-ma-sm"
-                        :disable="!isUninstallable(engineId, library)"
+                        :disable="
+                          (library.type !== 'notInstalled' &&
+                            !library.uninstallable) ||
+                          library.type === 'notInstalled'
+                        "
                         @click.stop="uninstallLibrary(engineId, library)"
                       >
                         アンインストール
@@ -164,18 +172,34 @@ import {
   SpeakerId,
   StyleId,
 } from "@/type/preload";
-import { DownloadableLibrary, InstalledLibrary } from "@/openapi";
+import {
+  DownloadableLibrary as EngineDownloadableLibrary,
+  InstalledLibrary as EngineInstalledLibrary,
+} from "@/openapi";
 
-type BrandedDownloadableLibrary = Omit<
-  DownloadableLibrary,
+type DownloadableLibrary = Omit<
+  EngineDownloadableLibrary,
   "speakers" | "uuid"
 > & {
   uuid: LibraryId;
   speakers: CharacterInfo[];
 };
 
-type BrandedInstalledLibrary = BrandedDownloadableLibrary &
-  Pick<InstalledLibrary, "uninstallable">;
+type LibraryType = DownloadableLibrary &
+  (
+    | {
+        type: "notInstalled"; // 未インストールのライブラリ
+      }
+    | {
+        type: "installed"; // インストール済みのライブラリ
+        isLatest: boolean;
+        uninstallable: boolean;
+      }
+    | {
+        type: "customInstalled"; // ユーザーが独自にインストールしたライブラリ
+        uninstallable: boolean;
+      }
+  );
 
 const $q = useQuasar();
 
@@ -213,35 +237,8 @@ const closeDialog = () => {
 };
 
 const downloadableLibraries = ref<
-  Record<EngineId, BrandedDownloadableLibrary[]>
+  Record<EngineId, Map<LibraryId, LibraryType>>
 >({});
-const installedLibraries = ref<Record<EngineId, BrandedInstalledLibrary[]>>({});
-
-const isLatest = (engineId: EngineId, library: BrandedDownloadableLibrary) => {
-  const installedLibrary = installedLibraries.value[engineId].find(
-    (installedLibrary) => installedLibrary.uuid === library.uuid
-  );
-  // ライブラリがインストールされていない場合はfalseとする
-  if (!installedLibrary) {
-    return false;
-  }
-  // installedLibrary.versionがlibrary.versionと等しいか、それより大きい場合はlatest
-  return semver.gte(installedLibrary.version, library.version);
-};
-
-const isUninstallable = (
-  engineId: EngineId,
-  library: BrandedDownloadableLibrary
-) => {
-  const installedLibrary = installedLibraries.value[engineId].find(
-    (installedLibrary) => installedLibrary.uuid === library.uuid
-  );
-  // ライブラリがインストールされていない場合はfalseとする
-  if (!installedLibrary) {
-    return false;
-  }
-  return installedLibrary.uninstallable;
-};
 
 const fetchStatuses = ref<
   Record<EngineId, "fetching" | "success" | "error" | undefined>
@@ -271,7 +268,7 @@ const isValidHttpUrl = (url: string): boolean => {
 
 const libraryInfoToCharacterInfos = (
   engineId: EngineId,
-  libraryInfo: DownloadableLibrary | InstalledLibrary
+  libraryInfo: EngineDownloadableLibrary | EngineInstalledLibrary
 ): CharacterInfo[] => {
   return libraryInfo.speakers.map((speaker) => {
     const portrait = speaker.speakerInfo.portrait;
@@ -323,7 +320,7 @@ watch(modelValueComputed, async (newValue) => {
         return;
       }
       fetchStatuses.value[engineId] = "fetching";
-      const fetchResult = await store
+      const convertedDownloadableLibraries = await store
         .dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
         })
@@ -335,58 +332,84 @@ watch(modelValueComputed, async (newValue) => {
             instance.invoke("installedLibrariesInstalledLibrariesGet")({}),
           ])
         )
-        .then(([downloadableLibraries, installedLibraries]): [
-          BrandedDownloadableLibrary[],
-          BrandedInstalledLibrary[]
-        ] => {
-          fetchStatuses.value[engineId] = "success";
-          return [
-            downloadableLibraries.map((library) => {
-              return {
+        .then(
+          ([
+            engineDownloadableLibraries,
+            engineInstalledLibraries,
+          ]): LibraryType[] => {
+            fetchStatuses.value[engineId] = "success";
+            const convertedInstalledLibraries = Object.fromEntries(
+              Object.entries(engineInstalledLibraries).map(
+                ([uuid, library]) => {
+                  return [
+                    LibraryId(uuid),
+                    {
+                      ...library,
+                      uuid: LibraryId(uuid),
+                      speakers: libraryInfoToCharacterInfos(engineId, library),
+                    },
+                  ];
+                }
+              )
+            );
+
+            // TODO: customInstalledについて考慮
+            return engineDownloadableLibraries.map((library) => {
+              const libraryBase = {
                 ...library,
                 uuid: LibraryId(library.uuid),
                 speakers: libraryInfoToCharacterInfos(engineId, library),
               };
-            }),
-            Object.entries(installedLibraries).map(([uuid, library]) => {
+              const installedLibrary =
+                convertedInstalledLibraries[library.uuid];
+              if (installedLibrary) {
+                return {
+                  ...libraryBase,
+                  type: "installed",
+                  // installedLibrary.versionがlibrary.versionと等しいか、それより大きい場合はlatest
+                  isLatest: semver.gte(
+                    installedLibrary.version,
+                    library.version
+                  ),
+                  uninstallable: installedLibrary.uninstallable,
+                };
+              }
               return {
-                ...library,
-                uuid: LibraryId(uuid),
-                speakers: libraryInfoToCharacterInfos(engineId, library),
+                ...libraryBase,
+                type: "notInstalled",
               };
-            }),
-          ];
-        })
+            });
+          }
+        )
         .catch((e) => {
           fetchStatuses.value[engineId] = "error";
           store.dispatch("LOG_ERROR", e);
         });
 
-      if (!fetchResult) return;
+      if (!convertedDownloadableLibraries) return;
 
-      const [brandedDownloadableLibraries, brandedInstalledLibraries] =
-        fetchResult;
-      downloadableLibraries.value[engineId] = brandedDownloadableLibraries;
-      installedLibraries.value[engineId] = brandedInstalledLibraries;
-
-      const libraries = downloadableLibraries.value[engineId] || [];
-      const toPrimaryOrder = (library: BrandedDownloadableLibrary) => {
-        const localLibrary = installedLibraries.value[engineId].find(
-          (l) => l.uuid === library.uuid
-        );
+      // ダウンロード可能なライブラリはソートしてから代入する
+      const toPrimaryOrder = (library: LibraryType) => {
         // アップデート > 未インストール > インストール済み の順
-        if (!localLibrary) {
+        if (library.type === "notInstalled") {
           return 1;
-        } else if (semver.gt(library.version, localLibrary?.version)) {
+        } else if (library.type === "installed" && !library.isLatest) {
           return 2;
         } else {
           return 0;
         }
       };
 
-      libraries.sort((a, b) => {
+      convertedDownloadableLibraries.sort((a, b) => {
         return toPrimaryOrder(b) - toPrimaryOrder(a);
       });
+      downloadableLibraries.value[engineId] = new Map();
+      for (const downloadableLibrary of convertedDownloadableLibraries) {
+        downloadableLibraries.value[engineId].set(
+          downloadableLibrary.uuid,
+          downloadableLibrary
+        );
+      }
     })
   );
 });
@@ -417,9 +440,14 @@ const play = (
 ) => {
   if (audio.src !== "") stop();
 
-  const speaker = downloadableLibraries.value[engineId]
-    .find((l) => l.uuid === libraryId)
-    ?.speakers.find((s) => s.metas.speakerUuid === speakerUuid);
+  const downloadableLibrary =
+    downloadableLibraries.value[engineId].get(libraryId);
+  if (downloadableLibrary === undefined)
+    throw new Error("downloadableLibrary  === undefined");
+
+  const speaker = downloadableLibrary.speakers.find(
+    (s) => s.metas.speakerUuid === speakerUuid
+  );
   if (!speaker) throw new Error("speaker not found");
 
   const styleInfo = speaker.metas.styles.find((s) => s.styleId === styleId);
@@ -468,10 +496,7 @@ const togglePlayOrStop = (
   }
 };
 
-const installLibrary = async (
-  engineId: EngineId,
-  library: BrandedDownloadableLibrary
-) => {
+const installLibrary = async (engineId: EngineId, library: LibraryType) => {
   selectLibraryAndSpeaker(
     LibraryId(library.uuid),
     SpeakerId(library.speakers[0].metas.speakerUuid)
@@ -480,10 +505,10 @@ const installLibrary = async (
   // TODO: インストール処理を追加する
 };
 
-const uninstallLibrary = async (
-  engineId: EngineId,
-  library: BrandedDownloadableLibrary
-) => {
+const uninstallLibrary = async (engineId: EngineId, library: LibraryType) => {
+  if (library.type === "notInstalled") {
+    throw new Error("Not installed library cannot be uninstalled.");
+  }
   selectLibraryAndSpeaker(
     LibraryId(library.uuid),
     SpeakerId(library.speakers[0].metas.speakerUuid)
