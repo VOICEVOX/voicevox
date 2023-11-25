@@ -598,7 +598,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               confirm: false,
             });
 
-            // [TODO] コマンドも復元させる
+            // undo/redo の復元
+            context.dispatch(
+              "RESTORE_COMMAND_STATE",
+              tempProjectData.commandStoreState
+            );
           }
           return;
         }
@@ -639,12 +643,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           // undo/redo の復元
-          if (tempProjectData.commandStoreState) {
-            context.dispatch(
-              "RESTORE_COMMAND_STATE",
-              tempProjectData.commandStoreState
-            );
-          }
+          context.dispatch(
+            "RESTORE_COMMAND_STATE",
+            tempProjectData.commandStoreState
+          );
 
           return;
         } else {
