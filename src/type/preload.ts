@@ -645,7 +645,10 @@ export interface MessageBoxReturnValue {
 
 export const SandboxKey = "electron" as const;
 
-/** プロジェクト一時ファイル */
+/**
+ * プロジェクト一時ファイル
+ * 変更時はマイグレーションが必要
+ */
 export type TempProjectType = {
   appVersion?: string;
   audioKeys?: AudioKey[];
