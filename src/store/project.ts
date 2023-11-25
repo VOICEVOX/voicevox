@@ -523,9 +523,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         }
 
         const projectData: TempProjectType = {
-          appVersion: appInfos.version,
-          audioKeys,
-          audioItems,
+          state: "unSaved",
+          project: {
+            appVersion: appInfos.version,
+            audioKeys,
+            audioItems,
+          },
           projectFilePath: state.projectFilePath,
           commandStoreState: {
             undoCommands: state.undoCommands,
@@ -548,26 +551,30 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   RESET_TEMP_PROJECT_FILE: {
     async action(context) {
-      const projectData: TempProjectType = {};
+      let projectData: TempProjectType = {
+        state: "none",
+      };
+
+      // 自動復元機能有効時プロジェクトファイルのパスを保存する
+      if (
+        context.state.savingSetting.enableAutoRestore &&
+        context.state.projectFilePath
+      ) {
+        projectData = {
+          state: "saved",
+          projectFilePath: context.state.projectFilePath,
+          commandStoreState: {
+            undoCommands: context.state.undoCommands,
+            redoCommands: context.state.redoCommands,
+          },
+        };
+      }
 
       try {
         const buf = new TextEncoder().encode(
           JSON.stringify(projectData)
         ).buffer;
         await window.electron.setTempProject(buf).then(getValueOrThrow);
-
-        // 自動復元機能有効時プロジェクトファイルのパスを保存する
-        if (context.state.savingSetting.enableAutoRestore) {
-          const tempProject = new TextEncoder().encode(
-            JSON.stringify({
-              projectFilePath: context.state.projectFilePath,
-            })
-          ).buffer;
-
-          await window.electron
-            .setTempProject(tempProject)
-            .then(getValueOrThrow);
-        }
       } catch (err) {
         window.electron.logError(err);
       }
@@ -585,30 +592,20 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           .getTempProject()
           .then(getValueOrThrow);
 
-        // 一時ファイルにプロジェクトがない場合は何もしない
-        if (!Object.keys(tempProjectData).length) {
+        if (tempProjectData.state === "none") {
           return;
         }
 
-        // 自動復元有効かつ未保存の復元対象がない場合はダイアログを出さずに保存したプロジェクトを復元する
-        if (
-          tempProjectData.projectFilePath &&
-          context.state.savingSetting.enableAutoRestore &&
-          !tempProjectData.audioKeys
-        ) {
-          await context.dispatch("LOAD_PROJECT_FILE", {
-            filePath: tempProjectData.projectFilePath,
-            confirm: false,
-          });
-          return;
-        }
+        if (tempProjectData.state === "saved") {
+          // 自動復元機能有効時保存されたプロジェクトを復元する
+          if (context.state.savingSetting.enableAutoRestore) {
+            await context.dispatch("LOAD_PROJECT_FILE", {
+              filePath: tempProjectData.projectFilePath,
+              confirm: false,
+            });
 
-        // 復元対象の有無チェック
-        if (
-          !tempProjectData.appVersion ||
-          !tempProjectData.audioKeys?.length ||
-          !tempProjectData.audioItems
-        ) {
+            // [TODO] コマンドも復元させる
+          }
           return;
         }
 
@@ -634,7 +631,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
           const parsedProjectData = projectSchema.parse(
-            tempProjectData
+            tempProjectData.project
           ) as ProjectType;
           const { audioItems, audioKeys } = parsedProjectData;
 
@@ -761,7 +758,7 @@ const projectSchema = z.object({
 });
 
 export type LatestProjectType = z.infer<typeof projectSchema>;
-interface ProjectType {
+export interface ProjectType {
   appVersion: string;
   audioKeys: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;

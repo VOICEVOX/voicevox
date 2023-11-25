@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
-import { AltPortInfos, AudioItem, CommandStoreState } from "@/store/type";
+import { AltPortInfos, CommandStoreState } from "@/store/type";
 import { Result } from "@/type/result";
+import { ProjectType } from "@/store/project";
 
 export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
@@ -649,10 +650,18 @@ export const SandboxKey = "electron" as const;
  * プロジェクト一時ファイル
  * 変更時はマイグレーションが必要
  */
-export type TempProjectType = {
-  appVersion?: string;
-  audioKeys?: AudioKey[];
-  audioItems?: Record<AudioKey, AudioItem>;
-  projectFilePath?: string;
-  commandStoreState?: CommandStoreState;
-};
+export type TempProjectType =
+  | {
+      state: "unSaved";
+      project: ProjectType;
+      projectFilePath?: string;
+      commandStoreState: CommandStoreState;
+    }
+  | {
+      state: "saved";
+      projectFilePath: string;
+      commandStoreState: CommandStoreState;
+    }
+  | {
+      state: "none";
+    };
