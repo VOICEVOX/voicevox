@@ -220,6 +220,6 @@ VOICEVOX は、キャラクターとソフトウェアで権利者が異なり�
 
 ご感想・ご要望は、ぜひ X（旧Twitter） にてハッシュタグ `#VOICEVOX` を付けてポスト（旧ツイート）してください。開発の励みになります。
 
-うまく動かない場合や不具合を見つけられた方は、X にて不具合をハッシュタグ `#VOICEVOX` を付けてポストしていただくか、VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj?s=20)）までご報告ください。
+うまく動かない場合や不具合を見つけられた方は、X にて不具合をハッシュタグ `#VOICEVOX` を付けてポストしていただくか、VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj)）までご報告ください。
 
-その他、 Q&A に掲載されていないご質問があれば VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj?s=20)）にお問い合わせください。
+その他、 Q&A に掲載されていないご質問があれば VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj)）にお問い合わせください。
