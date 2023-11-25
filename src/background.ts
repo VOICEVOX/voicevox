@@ -28,6 +28,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  TempProjectType,
 } from "./type/preload";
 import {
   ContactTextFileName,
@@ -140,9 +141,10 @@ const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 const tempProjectPath = path.join(fixedUserDataDir, "project.tmp.json");
 
-const setTempProject = (tempProject: ArrayBuffer) => {
+const setTempProject = (tempProject: TempProjectType) => {
   try {
-    fs.writeFileSync(tempProjectPath, new DataView(tempProject));
+    const buf = new TextEncoder().encode(JSON.stringify(tempProject)).buffer;
+    fs.writeFileSync(tempProjectPath, new DataView(buf));
     return success(undefined);
   } catch (e) {
     const a = e as SystemError;
@@ -844,8 +846,9 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
 ipcMainHandle("GET_TEMP_PROJECT", async () => {
   try {
     if (!fs.existsSync(tempProjectPath)) {
-      const buf = new TextEncoder().encode(JSON.stringify({})).buffer;
-      await setTempProject(buf);
+      await setTempProject({
+        state: "none",
+      });
     }
 
     const tempProject = JSON.parse(

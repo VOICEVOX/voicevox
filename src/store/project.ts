@@ -536,10 +536,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           },
         };
 
-        const buf = new TextEncoder().encode(
-          JSON.stringify(projectData)
-        ).buffer;
-        await window.electron.setTempProject(buf).then(getValueOrThrow);
+        await window.electron.setTempProject(projectData).then(getValueOrThrow);
       } catch (err) {
         window.electron.logError(err);
       }
@@ -571,10 +568,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       }
 
       try {
-        const buf = new TextEncoder().encode(
-          JSON.stringify(projectData)
-        ).buffer;
-        await window.electron.setTempProject(buf).then(getValueOrThrow);
+        await window.electron.setTempProject(projectData).then(getValueOrThrow);
       } catch (err) {
         window.electron.logError(err);
       }
