@@ -232,7 +232,7 @@ export interface Sandbox {
     newValue: ConfigType[Key]
   ): Promise<ConfigType[Key]>;
   getTempProject(): Promise<Result<TempProjectType>>;
-  setTempProject(tempProject: TempProjectType): Promise<Result<undefined>>;
+  setTempProject(tempProject: ArrayBuffer): Promise<Result<undefined>>;
   setEngineSetting(
     engineId: EngineId,
     engineSetting: EngineSetting

@@ -266,7 +266,7 @@ export type IpcIHData = {
   };
 
   SET_TEMP_PROJECT: {
-    args: [tempProject: TempProjectType];
+    args: [tempProject: ArrayBuffer];
     return: Result<undefined>;
   };
 

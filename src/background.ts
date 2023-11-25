@@ -141,10 +141,9 @@ const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 const tempProjectPath = path.join(fixedUserDataDir, "project.tmp.json");
 
-const setTempProject = (tempProject: TempProjectType) => {
+const setTempProject = (tempProject: ArrayBuffer) => {
   try {
-    const buf = new TextEncoder().encode(JSON.stringify(tempProject)).buffer;
-    fs.writeFileSync(tempProjectPath, new DataView(buf));
+    fs.writeFileSync(tempProjectPath, new DataView(tempProject));
     return success(undefined);
   } catch (e) {
     const a = e as SystemError;
@@ -846,9 +845,12 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
 ipcMainHandle("GET_TEMP_PROJECT", async () => {
   try {
     if (!fs.existsSync(tempProjectPath)) {
-      await setTempProject({
-        state: "none",
-      });
+      const buf = new TextEncoder().encode(
+        JSON.stringify({
+          state: "none",
+        })
+      ).buffer;
+      await setTempProject(buf);
     }
 
     const tempProject = JSON.parse(
