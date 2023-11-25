@@ -3,12 +3,7 @@ import { z } from "zod";
 import { getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "@/store/ui";
-import {
-  AllActions,
-  AudioItem,
-  ProjectStoreState,
-  ProjectStoreTypes,
-} from "@/store/type";
+import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
 import {
@@ -21,7 +16,6 @@ import {
   TempProjectType,
 } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
-import { Dispatch } from "@/store/vuex";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
