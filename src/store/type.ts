@@ -478,9 +478,9 @@ export type AudioCommandStoreTypes = {
     }): Promise<AudioKey>;
   };
 
-  COMMAND_REMOVE_AUDIO_ITEM: {
-    mutation: { audioKey: AudioKey };
-    action(payload: { audioKey: AudioKey }): void;
+  COMMAND_MULTI_REMOVE_AUDIO_ITEM: {
+    mutation: { audioKeys: AudioKey[] };
+    action(payload: { audioKeys: AudioKey[] }): void;
   };
 
   COMMAND_SET_AUDIO_KEYS: {
@@ -549,8 +549,8 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
-    action(payload: { audioKey: AudioKey }): void;
+  COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH: {
+    action(payload: { audioKeys: AudioKey[] }): void;
   };
 
   COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH: {
