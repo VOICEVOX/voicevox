@@ -8,6 +8,7 @@ import {
   DefaultStyleId,
   defaultHotkeySettings,
   HotkeySetting,
+  ExperimentalSetting,
 } from "@/type/preload";
 
 const lockKey = "save";
@@ -65,6 +66,27 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       delete config.useGpu;
 
       return config;
+    },
+  ],
+  [
+    ">=0.14.9",
+    (config) => {
+      // マルチエンジン機能を実験的機能から通常機能に
+      const experimentalSetting =
+        config.experimentalSetting as ExperimentalSetting; // FIXME: parseするかasをやめる
+      if (
+        Object.prototype.hasOwnProperty.call(
+          experimentalSetting,
+          "enableMultiEngine"
+        )
+      ) {
+        const enableMultiEngine: boolean =
+          // @ts-expect-error 削除されたパラメータ。
+          config.experimentalSetting.enableMultiEngine;
+        config.enableMultiEngine = enableMultiEngine;
+        // @ts-expect-error 削除されたパラメータ。
+        delete config.experimentalSetting.enableMultiEngine;
+      }
     },
   ],
   [

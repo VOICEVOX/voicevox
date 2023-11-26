@@ -101,9 +101,7 @@ const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
-const enableMultiEngine = computed(
-  () => store.state.experimentalSetting.enableMultiEngine
-);
+const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 
 const titleText = computed(
   () =>
