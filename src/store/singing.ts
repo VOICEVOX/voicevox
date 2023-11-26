@@ -1873,7 +1873,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return `何らかの理由で失敗しました。${writeFileResult.message}`;
         };
 
-        const calcRenderDuration = (tailTime: number) => {
+        const calcRenderDuration = () => {
           const notes = state.score.notes;
           if (notes.length === 0) {
             return 1;
@@ -1881,7 +1881,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const lastNote = notes[notes.length - 1];
           const lastNoteEndPosition = lastNote.position + lastNote.duration;
           const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
-          return Math.max(1, lastNoteEndTime + tailTime);
+          return Math.max(1, lastNoteEndTime + 1);
         };
 
         const exportWaveFile = async (): Promise<SaveResultObject> => {
@@ -1889,9 +1889,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const numberOfChannels = 2;
           const sampleRate = 48000; // TODO: 設定できるようにする
           const withLimiter = false; // TODO: 設定できるようにする
-          const tailTime = 1;
 
-          const renderDuration = calcRenderDuration(tailTime);
+          const renderDuration = calcRenderDuration();
 
           if (state.nowPlaying) {
             await dispatch("SING_STOP_AUDIO");
@@ -1975,6 +1974,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               offlineTransport.addSequence(noteSequence);
             }
           }
+          channelStrip.volume = 1;
           if (limiter) {
             channelStrip.output.connect(limiter.input);
             limiter.output.connect(clipper.input);
