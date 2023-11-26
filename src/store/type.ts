@@ -761,10 +761,11 @@ export type SingingStoreState = {
   volume: number;
   leftLocatorPosition: number;
   rightLocatorPosition: number;
-  renderingEnabled: boolean;
   startRenderingRequested: boolean;
   stopRenderingRequested: boolean;
   nowRendering: boolean;
+  exportingAudio: boolean;
+  cancellationOfAudioExportRequested: boolean;
 };
 
 export type SingingStoreTypes = {
@@ -880,6 +881,10 @@ export type SingingStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject;
   };
 
+  CANCEL_AUDIO_EXPORT: {
+    action(): void;
+  };
+
   TICK_TO_SECOND: {
     getter(position: number): number;
   };
@@ -951,17 +956,20 @@ export type SingingStoreTypes = {
     mutation: { nowRendering: boolean };
   };
 
+  SET_EXPORTING_AUDIO: {
+    mutation: { exportingAudio: boolean };
+  };
+
+  SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {
+    mutation: { cancellationOfAudioExportRequested: boolean };
+  };
+
   RENDER: {
     action(): void;
   };
 
   STOP_RENDERING: {
     action(): void;
-  };
-
-  SET_RENDERING_ENABLED: {
-    mutation: { renderingEnabled: boolean };
-    action(payload: { renderingEnabled: boolean }): void;
   };
 };
 

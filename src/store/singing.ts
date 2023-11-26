@@ -329,10 +329,11 @@ export const singingStoreState: SingingStoreState = {
   volume: 0,
   leftLocatorPosition: 0,
   rightLocatorPosition: 0,
-  renderingEnabled: false,
   startRenderingRequested: false,
   stopRenderingRequested: false,
   nowRendering: false,
+  exportingAudio: false,
+  cancellationOfAudioExportRequested: false,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1249,7 +1250,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_START_RENDERING_REQUESTED", {
         startRenderingRequested: true,
       });
-      if (!state.renderingEnabled || state.nowRendering) {
+      if (state.nowRendering) {
         return;
       }
 
@@ -1290,20 +1291,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         window.electron.logInfo("Rendering stopped.");
       }
     }),
-  },
-
-  SET_RENDERING_ENABLED: {
-    mutation(state, { renderingEnabled }) {
-      state.renderingEnabled = renderingEnabled;
-    },
-    async action({ commit, dispatch }, { renderingEnabled }) {
-      if (renderingEnabled) {
-        dispatch("RENDER");
-      } else {
-        await dispatch("STOP_RENDERING");
-      }
-      commit("SET_RENDERING_ENABLED", { renderingEnabled });
-    },
   },
 
   IMPORT_MIDI_FILE: {
@@ -1793,12 +1780,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
+  SET_EXPORTING_AUDIO: {
+    mutation(state, { exportingAudio }) {
+      state.exportingAudio = exportingAudio;
+    },
+  },
+
+  SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {
+    mutation(state, { cancellationOfAudioExportRequested }) {
+      state.cancellationOfAudioExportRequested =
+        cancellationOfAudioExportRequested;
+    },
+  },
+
   EXPORT_WAVE_FILE: {
     action: createUILockAction(
-      async (
-        { state, getters, dispatch },
-        { filePath }
-      ): Promise<SaveResultObject> => {
+      async ({ state, getters, commit, dispatch }, { filePath }) => {
         const convertToWavFileData = (audioBuffer: AudioBuffer) => {
           const bytesPerSample = 4; // Float32
           const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
@@ -1856,7 +1853,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return buffer;
         };
 
-        function generateWriteErrorMessage(writeFileResult: ResultError) {
+        const generateWriteErrorMessage = (writeFileResult: ResultError) => {
           if (writeFileResult.code) {
             const code = writeFileResult.code.toUpperCase();
 
@@ -1874,144 +1871,170 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           return `何らかの理由で失敗しました。${writeFileResult.message}`;
-        }
+        };
 
-        if (!window.OfflineAudioContext) {
-          throw new Error("OfflineAudioContext is undefined.");
-        }
-
-        // TODO: ファイル名を設定できるようにする
-        const fileName = "test_export.wav";
-
-        const leftLocatorPos = state.leftLocatorPosition;
-        const rightLocatorPos = state.rightLocatorPosition;
-        const renderStartTime = getters.TICK_TO_SECOND(leftLocatorPos);
-        const renderEndTime = getters.TICK_TO_SECOND(rightLocatorPos);
-        const renderDuration = renderEndTime - renderStartTime;
-
-        if (renderEndTime <= renderStartTime) {
-          // TODO: メッセージを表示するようにする
-          throw new Error("Invalid render range.");
-        }
-
-        if (state.nowPlaying) {
-          await dispatch("SING_STOP_AUDIO");
-        }
-        if (state.nowRendering) {
-          await dispatch("STOP_RENDERING");
-        }
-
-        if (state.savingSetting.fixedExportEnabled) {
-          filePath = path.join(state.savingSetting.fixedExportDir, fileName);
-        } else {
-          filePath ??= await window.electron.showAudioSaveDialog({
-            title: "音声を保存",
-            defaultPath: fileName,
-          });
-        }
-        if (!filePath) {
-          return { result: "CANCELED", path: "" };
-        }
-
-        if (state.savingSetting.avoidOverwrite) {
-          let tail = 1;
-          const name = filePath.slice(0, filePath.length - 4);
-          while (await window.electron.checkFileExists(filePath)) {
-            filePath = name + "[" + tail.toString() + "]" + ".wav";
-            tail += 1;
+        const calcRenderDuration = (tailTime: number) => {
+          const notes = state.score.notes;
+          if (notes.length === 0) {
+            return 1;
           }
-        }
+          const lastNote = notes[notes.length - 1];
+          const lastNoteEndPosition = lastNote.position + lastNote.duration;
+          const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
+          return Math.max(1, lastNoteEndTime + tailTime);
+        };
 
-        const sampleRate = 48000; // TODO: 設定できるようにする
-        const withLimiter = false; // TODO: 設定できるようにする
+        const exportWaveFile = async (): Promise<SaveResultObject> => {
+          const fileName = "test_export.wav"; // TODO: 設定できるようにする
+          const numberOfChannels = 2;
+          const sampleRate = 48000; // TODO: 設定できるようにする
+          const withLimiter = false; // TODO: 設定できるようにする
+          const tailTime = 1;
 
-        const offlineAudioContext = new OfflineAudioContext(
-          2,
-          sampleRate * renderDuration,
-          sampleRate
-        );
-        const offlineTransport = new OfflineTransport();
-        const channelStrip = new ChannelStrip(offlineAudioContext);
-        const limiter = withLimiter
-          ? new Limiter(offlineAudioContext)
-          : undefined;
-        const clipper = new Clipper(offlineAudioContext);
+          const renderDuration = calcRenderDuration(tailTime);
 
-        for (const phrase of allPhrases.values()) {
-          // TODO: この辺りの処理を共通化する
-          if (phrase.startTime !== undefined && phrase.blob) {
-            // レンダリング済みのフレーズの場合
-            const audioEvents = await generateAudioEvents(
-              offlineAudioContext,
-              phrase.startTime,
-              phrase.blob
-            );
-            const audioPlayer = new AudioPlayer(offlineAudioContext);
-            audioPlayer.output.connect(channelStrip.input);
-            const audioSequence: AudioSequence = {
-              type: "audio",
-              audioPlayer,
-              audioEvents,
-            };
-            offlineTransport.addSequence(audioSequence);
+          if (state.nowPlaying) {
+            await dispatch("SING_STOP_AUDIO");
+          }
+
+          if (state.savingSetting.fixedExportEnabled) {
+            filePath = path.join(state.savingSetting.fixedExportDir, fileName);
           } else {
-            // レンダリング未完了のフレーズの場合
-            const noteEvents = generateNoteEvents(
-              phrase.score.notes,
-              phrase.score.tempos,
-              phrase.score.tpqn
-            );
-            const polySynth = new PolySynth(offlineAudioContext);
-            polySynth.output.connect(channelStrip.input);
-            const noteSequence: NoteSequence = {
-              type: "note",
-              instrument: polySynth,
-              noteEvents,
-            };
-            offlineTransport.addSequence(noteSequence);
+            filePath ??= await window.electron.showAudioSaveDialog({
+              title: "音声を保存",
+              defaultPath: fileName,
+            });
           }
-        }
-        if (limiter) {
-          channelStrip.output.connect(limiter.input);
-          limiter.output.connect(clipper.input);
-        } else {
-          channelStrip.output.connect(clipper.input);
-        }
-        clipper.output.connect(offlineAudioContext.destination);
+          if (!filePath) {
+            return { result: "CANCELED", path: "" };
+          }
 
-        // スケジューリングを行い、オフラインレンダリングを実行
-        // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
-        offlineTransport.schedule(renderStartTime, renderDuration);
-        const audioBuffer = await offlineAudioContext.startRendering();
-        const waveFileData = convertToWavFileData(audioBuffer);
+          if (state.savingSetting.avoidOverwrite) {
+            let tail = 1;
+            const name = filePath.slice(0, filePath.length - 4);
+            while (await window.electron.checkFileExists(filePath)) {
+              filePath = name + "[" + tail.toString() + "]" + ".wav";
+              tail += 1;
+            }
+          }
 
-        try {
-          await window.electron
-            .writeFile({
-              filePath,
-              buffer: waveFileData,
-            })
-            .then(getValueOrThrow);
-        } catch (e) {
-          window.electron.logError(e);
-          if (e instanceof ResultError) {
+          if (state.nowRendering) {
+            await createPromiseThatResolvesWhen(() => {
+              return (
+                !state.nowRendering || state.cancellationOfAudioExportRequested
+              );
+            });
+            if (state.cancellationOfAudioExportRequested) {
+              return { result: "CANCELED", path: "" };
+            }
+          }
+
+          const offlineAudioContext = new OfflineAudioContext(
+            numberOfChannels,
+            sampleRate * renderDuration,
+            sampleRate
+          );
+          const offlineTransport = new OfflineTransport();
+          const channelStrip = new ChannelStrip(offlineAudioContext);
+          const limiter = withLimiter
+            ? new Limiter(offlineAudioContext)
+            : undefined;
+          const clipper = new Clipper(offlineAudioContext);
+
+          for (const phrase of allPhrases.values()) {
+            // TODO: この辺りの処理を共通化する
+            if (phrase.startTime !== undefined && phrase.blob) {
+              // レンダリング済みのフレーズの場合
+              const audioEvents = await generateAudioEvents(
+                offlineAudioContext,
+                phrase.startTime,
+                phrase.blob
+              );
+              const audioPlayer = new AudioPlayer(offlineAudioContext);
+              audioPlayer.output.connect(channelStrip.input);
+              const audioSequence: AudioSequence = {
+                type: "audio",
+                audioPlayer,
+                audioEvents,
+              };
+              offlineTransport.addSequence(audioSequence);
+            } else {
+              // レンダリング未完了のフレーズの場合
+              const noteEvents = generateNoteEvents(
+                phrase.score.notes,
+                phrase.score.tempos,
+                phrase.score.tpqn
+              );
+              const polySynth = new PolySynth(offlineAudioContext);
+              polySynth.output.connect(channelStrip.input);
+              const noteSequence: NoteSequence = {
+                type: "note",
+                instrument: polySynth,
+                noteEvents,
+              };
+              offlineTransport.addSequence(noteSequence);
+            }
+          }
+          if (limiter) {
+            channelStrip.output.connect(limiter.input);
+            limiter.output.connect(clipper.input);
+          } else {
+            channelStrip.output.connect(clipper.input);
+          }
+          clipper.output.connect(offlineAudioContext.destination);
+
+          // スケジューリングを行い、オフラインレンダリングを実行
+          // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
+          offlineTransport.schedule(0, renderDuration);
+          const audioBuffer = await offlineAudioContext.startRendering();
+          const waveFileData = convertToWavFileData(audioBuffer);
+
+          try {
+            await window.electron
+              .writeFile({
+                filePath,
+                buffer: waveFileData,
+              })
+              .then(getValueOrThrow);
+          } catch (e) {
+            window.electron.logError(e);
+            if (e instanceof ResultError) {
+              return {
+                result: "WRITE_ERROR",
+                path: filePath,
+                errorMessage: generateWriteErrorMessage(e),
+              };
+            }
             return {
-              result: "WRITE_ERROR",
+              result: "UNKNOWN_ERROR",
               path: filePath,
-              errorMessage: generateWriteErrorMessage(e),
+              errorMessage:
+                (e instanceof Error ? e.message : String(e)) ||
+                "不明なエラーが発生しました。",
             };
           }
-          return {
-            result: "UNKNOWN_ERROR",
-            path: filePath,
-            errorMessage:
-              (e instanceof Error ? e.message : String(e)) ||
-              "不明なエラーが発生しました。",
-          };
-        }
 
-        return { result: "SUCCESS", path: filePath };
+          return { result: "SUCCESS", path: filePath };
+        };
+
+        commit("SET_EXPORTING_AUDIO", { exportingAudio: true });
+        return exportWaveFile().finally(() => {
+          if (state.cancellationOfAudioExportRequested) {
+            commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
+              cancellationOfAudioExportRequested: false,
+            });
+          }
+          commit("SET_EXPORTING_AUDIO", { exportingAudio: false });
+        });
       }
     ),
+  },
+
+  CANCEL_AUDIO_EXPORT: {
+    async action({ commit }) {
+      commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
+        cancellationOfAudioExportRequested: true,
+      });
+    },
   },
 });
