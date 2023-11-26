@@ -2019,11 +2019,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         commit("SET_EXPORTING_AUDIO", { exportingAudio: true });
         return exportWaveFile().finally(() => {
-          if (state.cancellationOfAudioExportRequested) {
-            commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
-              cancellationOfAudioExportRequested: false,
-            });
-          }
+          commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
+            cancellationOfAudioExportRequested: false,
+          });
           commit("SET_EXPORTING_AUDIO", { exportingAudio: false });
         });
       }
@@ -2031,7 +2029,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CANCEL_AUDIO_EXPORT: {
-    async action({ commit }) {
+    async action({ state, commit }) {
+      if (!state.exportingAudio) {
+        return;
+      }
       commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
         cancellationOfAudioExportRequested: true,
       });
