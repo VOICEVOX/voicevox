@@ -201,4 +201,4 @@ npm scripts の `serve` や `electron:serve` などの開発ビルド下では�
 ## ライセンス
 
 LGPL v3 と、ソースコードの公開が不要な別ライセンスのデュアルライセンスです。
-別ライセンスを取得したい場合は、ヒホ（twitter: [@hiho_karuta](https://twitter.com/hiho_karuta)）に求めてください。
+別ライセンスを取得したい場合は、ヒホ（X（旧Twitter） : [@hiho_karuta](https://x.com/hiho_karuta)）に求めてください。
