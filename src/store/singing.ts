@@ -2029,8 +2029,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CANCEL_AUDIO_EXPORT: {
-    async action({ state, commit }) {
+    async action({ state, commit, dispatch }) {
       if (!state.exportingAudio) {
+        dispatch("LOG_WARN", "CANCEL_AUDIO_EXPORT on !exportingAudio");
         return;
       }
       commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
