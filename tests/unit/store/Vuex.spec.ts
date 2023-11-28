@@ -176,10 +176,11 @@ describe("store/vuex.js test", () => {
         volume: 0,
         leftLocatorPosition: 0,
         rightLocatorPosition: 0,
-        renderingEnabled: false,
         startRenderingRequested: false,
         stopRenderingRequested: false,
         nowRendering: false,
+        exportingAudio: false,
+        cancellationOfAudioExportRequested: false,
       },
       getters: {
         ...uiStore.getters,

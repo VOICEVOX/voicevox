@@ -3,6 +3,23 @@
   <menu-bar />
   <tool-bar />
   <div class="sing-main">
+    <div v-if="exportingAudio" class="exporting-dialog">
+      <div>
+        <q-spinner color="primary" size="2.5rem" />
+        <div class="q-mt-xs">
+          {{ nowRendering ? "レンダリング中・・・" : "音声を書き出し中・・・" }}
+        </div>
+        <q-btn
+          v-if="nowRendering"
+          padding="xs md"
+          label="音声の書き出しをキャンセル"
+          color="surface"
+          text-color="display"
+          class="q-mt-sm"
+          @click="cancelExport"
+        />
+      </div>
+    </div>
     <singer-panel />
     <score-sequencer />
   </div>
@@ -10,7 +27,7 @@
 
 <script lang="ts">
 import {
-  //computed,
+  computed,
   defineComponent,
   //onBeforeUpdate,
   onMounted,
@@ -47,6 +64,17 @@ export default defineComponent({
     const store = useStore();
     //const $q = useQuasar();
 
+    const nowRendering = computed(() => {
+      return store.state.nowRendering;
+    });
+    const exportingAudio = computed(() => {
+      return store.state.exportingAudio;
+    });
+
+    const cancelExport = () => {
+      store.dispatch("CANCEL_AUDIO_EXPORT");
+    };
+
     // 歌声合成エディターの初期化
     onMounted(async () => {
       await store.dispatch("SET_SCORE", {
@@ -78,9 +106,14 @@ export default defineComponent({
       await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
         position: 480 * 4 * 16,
       });
-      await store.dispatch("SET_RENDERING_ENABLED", { renderingEnabled: true });
       return {};
     });
+
+    return {
+      nowRendering,
+      exportingAudio,
+      cancelExport,
+    };
   },
 });
 </script>
@@ -95,5 +128,23 @@ export default defineComponent({
 .sing-main {
   display: flex;
   overflow: hidden;
+}
+
+.exporting-dialog {
+  background-color: rgba(colors.$display-rgb, 0.15);
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+
+  > div {
+    color: colors.$display;
+    background: colors.$surface;
+    border-radius: 6px;
+    padding: 14px;
+  }
 }
 </style>
