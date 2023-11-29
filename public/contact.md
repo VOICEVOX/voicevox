@@ -2,11 +2,11 @@
 
 ## ご感想・ご要望
 
-ぜひ X （旧Twitter） にてハッシュタグ `#VOICEVOX` を付けてポストしてください。開発の励みになります。
+ぜひ X（旧 Twitter）にてハッシュタグ `#VOICEVOX` を付けてポストしてください。開発の励みになります。
 
 ## 不具合・バグ報告
 
-以下の内容を添えてハッシュタグ `#VOICEVOX` を付けてツイートしていただくか、VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj)）までご報告ください。
+以下の内容を添えてハッシュタグ `#VOICEVOX` を付けてポストしていただくか、VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj)）までご報告ください。
 
 - 不具合の内容
 - 再現手順（動画や写真があれば添付してください）
@@ -35,4 +35,4 @@
 VOICEVOX ホームページ：[https://voicevox.hiroshiba.jp](https://voicevox.hiroshiba.jp)  
 Copyright ©︎ Hiroshiba Kazuyuki  
 VOICEVOX 公式：[@voicevox_pj](https://x.com/voicevox_pj)  
-開発者 Xアカウント：[@hiho_karuta](https://x.com/hiho_karuta)
+開発者：[@hiho_karuta](https://x.com/hiho_karuta)

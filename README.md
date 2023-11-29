@@ -94,6 +94,7 @@ npm run test-watch:unit # 監視モード
 ### ブラウザ End to End テスト
 
 Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
+
 > **Note**
 > 一部のエンジンの設定を書き換えるテストは、CI(Github Actions)上でのみ実行されるようになっています。
 
@@ -201,4 +202,5 @@ npm scripts の `serve` や `electron:serve` などの開発ビルド下では�
 ## ライセンス
 
 LGPL v3 と、ソースコードの公開が不要な別ライセンスのデュアルライセンスです。
-別ライセンスを取得したい場合は、ヒホ（X（旧Twitter） : [@hiho_karuta](https://x.com/hiho_karuta)）に求めてください。
+別ライセンスを取得したい場合は、ヒホに求めてください。  
+X（旧 Twitter）アカウント: [@hiho_karuta](https://x.com/hiho_karuta)
