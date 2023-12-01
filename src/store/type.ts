@@ -745,9 +745,17 @@ export type Singer = {
   styleId: StyleId;
 };
 
+export type Phrase = {
+  singer?: Singer;
+  score: Score;
+  query?: AudioQuery;
+  startTime?: number;
+};
+
 export type SingingStoreState = {
   singer?: Singer;
   score: Score;
+  phrases: Record<string, Phrase>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
   // NOTE: オーディオ再生はボイスと同様もしくは拡張して使う？
@@ -837,6 +845,22 @@ export type SingingStoreTypes = {
   REMOVE_SELECTED_NOTES: {
     mutation: void;
     action(): void;
+  };
+
+  SET_PHRASE: {
+    mutation: { phraseKey: string; phrase: Phrase };
+  };
+
+  DELETE_PHRASE: {
+    mutation: { phraseKey: string };
+  };
+
+  SET_AUDIO_QUERY_TO_PHRASE: {
+    mutation: { phraseKey: string; audioQuery: AudioQuery };
+  };
+
+  SET_START_TIME_TO_PHRASE: {
+    mutation: { phraseKey: string; startTime: number };
   };
 
   SET_SNAP_TYPE: {

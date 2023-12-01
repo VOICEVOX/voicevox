@@ -165,6 +165,7 @@ describe("store/vuex.js test", () => {
           ],
           notes: [],
         },
+        phrases: {},
         isShowSinger: true,
         sequencerZoomX: 1,
         sequencerZoomY: 1,
