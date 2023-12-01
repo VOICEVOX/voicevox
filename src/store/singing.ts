@@ -324,7 +324,7 @@ export const singingStoreState: SingingStoreState = {
   startRenderingRequested: false,
   stopRenderingRequested: false,
   nowRendering: false,
-  exportingAudio: false,
+  nowAudioExporting: false,
   cancellationOfAudioExportRequested: false,
 };
 
@@ -1823,9 +1823,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
-  SET_EXPORTING_AUDIO: {
-    mutation(state, { exportingAudio }) {
-      state.exportingAudio = exportingAudio;
+  SET_NOW_AUDIO_EXPORTING: {
+    mutation(state, { nowAudioExporting }) {
+      state.nowAudioExporting = nowAudioExporting;
     },
   },
 
@@ -2052,12 +2052,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return { result: "SUCCESS", path: filePath };
         };
 
-        commit("SET_EXPORTING_AUDIO", { exportingAudio: true });
+        commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: true });
         return exportWaveFile().finally(() => {
           commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
             cancellationOfAudioExportRequested: false,
           });
-          commit("SET_EXPORTING_AUDIO", { exportingAudio: false });
+          commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: false });
         });
       }
     ),
@@ -2065,8 +2065,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   CANCEL_AUDIO_EXPORT: {
     async action({ state, commit, dispatch }) {
-      if (!state.exportingAudio) {
-        dispatch("LOG_WARN", "CANCEL_AUDIO_EXPORT on !exportingAudio");
+      if (!state.nowAudioExporting) {
+        dispatch("LOG_WARN", "CANCEL_AUDIO_EXPORT on !nowAudioExporting");
         return;
       }
       commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {

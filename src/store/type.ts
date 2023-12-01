@@ -772,7 +772,7 @@ export type SingingStoreState = {
   startRenderingRequested: boolean;
   stopRenderingRequested: boolean;
   nowRendering: boolean;
-  exportingAudio: boolean;
+  nowAudioExporting: boolean;
   cancellationOfAudioExportRequested: boolean;
 };
 
@@ -980,8 +980,8 @@ export type SingingStoreTypes = {
     mutation: { nowRendering: boolean };
   };
 
-  SET_EXPORTING_AUDIO: {
-    mutation: { exportingAudio: boolean };
+  SET_NOW_AUDIO_EXPORTING: {
+    mutation: { nowAudioExporting: boolean };
   };
 
   SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {

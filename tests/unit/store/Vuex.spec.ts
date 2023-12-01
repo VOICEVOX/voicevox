@@ -180,7 +180,7 @@ describe("store/vuex.js test", () => {
         startRenderingRequested: false,
         stopRenderingRequested: false,
         nowRendering: false,
-        exportingAudio: false,
+        nowAudioExporting: false,
         cancellationOfAudioExportRequested: false,
       },
       getters: {
