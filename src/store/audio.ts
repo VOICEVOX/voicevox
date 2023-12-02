@@ -2012,7 +2012,7 @@ export const audioCommandStore = transformCommandStore(
     COMMAND_MULTI_CHANGE_VOICE: {
       mutation(
         draft,
-        payload: { audioKeys: AudioKey[]; voice: Voice } & (
+        payload: { audioKey: AudioKey; voice: Voice } & (
           | { update: "RollbackStyleId" }
           | {
               update: "AccentPhrases";
@@ -2024,47 +2024,43 @@ export const audioCommandStore = transformCommandStore(
             }
         )
       ) {
-        for (const audioKey of payload.audioKeys) {
-          audioStore.mutations.SET_AUDIO_VOICE(draft, {
-            audioKey,
-            voice: payload.voice,
-          });
-        }
+        audioStore.mutations.SET_AUDIO_VOICE(draft, {
+          audioKey: payload.audioKey,
+          voice: payload.voice,
+        });
 
         if (payload.update === "RollbackStyleId") return;
 
-        for (const audioKey of payload.audioKeys) {
-          const presetKey = draft.audioItems[audioKey].presetKey;
+        const presetKey = draft.audioItems[payload.audioKey].presetKey;
 
-          const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
-            draft,
-            payload.voice,
-            presetKey,
-            "changeVoice"
-          );
+        const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
+          draft,
+          payload.voice,
+          presetKey,
+          "changeVoice"
+        );
 
-          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-            audioKey,
-            presetKey: nextPresetKey,
+        audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+          audioKey: payload.audioKey,
+          presetKey: nextPresetKey,
+        });
+
+        if (payload.update === "AccentPhrases") {
+          audioStore.mutations.SET_ACCENT_PHRASES(draft, {
+            audioKey: payload.audioKey,
+            accentPhrases: payload.accentPhrases,
           });
+        } else if (payload.update === "AudioQuery") {
+          audioStore.mutations.SET_AUDIO_QUERY(draft, {
+            audioKey: payload.audioKey,
+            audioQuery: payload.query,
+          });
+        }
 
-          if (payload.update == "AccentPhrases") {
-            audioStore.mutations.SET_ACCENT_PHRASES(draft, {
-              audioKey,
-              accentPhrases: payload.accentPhrases,
-            });
-          } else if (payload.update == "AudioQuery") {
-            audioStore.mutations.SET_AUDIO_QUERY(draft, {
-              audioKey,
-              audioQuery: payload.query,
-            });
-          }
-
-          if (shouldApplyPreset) {
-            audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
-              audioKey,
-            });
-          }
+        if (shouldApplyPreset) {
+          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+            audioKey: payload.audioKey,
+          });
         }
       },
       async action(
@@ -2089,7 +2085,7 @@ export const audioCommandStore = transformCommandStore(
                   }
                 );
                 commit("COMMAND_MULTI_CHANGE_VOICE", {
-                  audioKeys,
+                  audioKey,
                   voice,
                   update: "AccentPhrases",
                   accentPhrases: newAccentPhrases,
@@ -2102,7 +2098,7 @@ export const audioCommandStore = transformCommandStore(
                   styleId,
                 });
                 commit("COMMAND_MULTI_CHANGE_VOICE", {
-                  audioKeys,
+                  audioKey,
                   voice,
                   update: "AudioQuery",
                   query,
@@ -2110,7 +2106,7 @@ export const audioCommandStore = transformCommandStore(
               }
             } catch (error) {
               commit("COMMAND_MULTI_CHANGE_VOICE", {
-                audioKeys,
+                audioKey,
                 voice,
                 update: "RollbackStyleId",
               });
