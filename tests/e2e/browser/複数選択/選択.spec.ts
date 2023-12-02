@@ -182,3 +182,34 @@ test("複数選択：キーボード", async ({ page }) => {
   expect(selectedStatus.active).toBe(3);
   expect(selectedStatus.selected).toEqual([3]);
 });
+test("複数選択：台本欄の余白クリックで解除", async ({ page }) => {
+  let selectedStatus: SelectedStatus;
+
+  await page.locator(".audio-cell:nth-child(2)").click();
+  await page.keyboard.down("Shift");
+  await page.locator(".audio-cell:nth-child(4)").click();
+  await page.keyboard.up("Shift");
+
+  // 念のため確認
+  await page.waitForTimeout(100);
+  selectedStatus = await getSelectedStatus(page);
+  expect(selectedStatus.active).toBe(4);
+  expect(selectedStatus.selected).toEqual([2, 3, 4]);
+
+  const scriptArea = page.locator(".audio-cell-pane");
+  const boundingBox = await scriptArea.boundingBox();
+  if (!boundingBox) {
+    throw new Error("No bounding box");
+  }
+  await scriptArea.click({
+    position: {
+      x: 10,
+      y: boundingBox.height - 10,
+    },
+  });
+
+  await page.waitForTimeout(100);
+  selectedStatus = await getSelectedStatus(page);
+  expect(selectedStatus.active).toBe(4);
+  expect(selectedStatus.selected).toEqual([4]);
+});
