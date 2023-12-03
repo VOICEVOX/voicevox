@@ -53,6 +53,7 @@
     "move-file": "3.0.0",
     "multistream": "4.1.0",
     "quasar": "2.11.6",
+    "radix-vue": "1.2.3",
     "semver": "7.5.4",
     "shlex": "2.1.2",
     "source-map-support": "0.5.19",
