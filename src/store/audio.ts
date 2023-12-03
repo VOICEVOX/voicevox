@@ -2011,9 +2011,49 @@ export const audioCommandStore = transformCommandStore(
 
     COMMAND_MULTI_CHANGE_VOICE: {
       mutation(
-        draft,
-        payload: { audioKey: AudioKey; voice: Voice } & (
-          | { update: "RollbackStyleId" }
+        state,
+        payload: {
+          voice: Voice;
+          changes: Record<
+            AudioKey,
+            | {
+                update: "AccentPhrases";
+                accentPhrases: AccentPhrase[];
+              }
+            | {
+                update: "AudioQuery";
+                query: AudioQuery;
+              }
+          >;
+        }
+      ) {
+        for (const [audioKey_, change] of Object.entries(payload.changes)) {
+          // TypeScriptは`Object.entries`のKeyの型を`string`としてしまうので、`as`で型を指定する
+          const audioKey = audioKey_ as AudioKey;
+
+          audioStore.mutations.SET_AUDIO_VOICE(state, {
+            audioKey,
+            voice: payload.voice,
+          });
+          if (change.update == "AccentPhrases") {
+            audioStore.mutations.SET_ACCENT_PHRASES(state, {
+              audioKey,
+              accentPhrases: change.accentPhrases,
+            });
+          } else if (change.update == "AudioQuery") {
+            audioStore.mutations.SET_AUDIO_QUERY(state, {
+              audioKey,
+              audioQuery: change.query,
+            });
+          }
+        }
+      },
+      async action(
+        { state, dispatch, commit },
+        { audioKeys, voice }: { audioKeys: AudioKey[]; voice: Voice }
+      ) {
+        const changes: Record<
+          AudioKey,
           | {
               update: "AccentPhrases";
               accentPhrases: AccentPhrase[];
@@ -2022,98 +2062,60 @@ export const audioCommandStore = transformCommandStore(
               update: "AudioQuery";
               query: AudioQuery;
             }
-        )
-      ) {
-        audioStore.mutations.SET_AUDIO_VOICE(draft, {
-          audioKey: payload.audioKey,
-          voice: payload.voice,
-        });
-
-        if (payload.update === "RollbackStyleId") return;
-
-        const presetKey = draft.audioItems[payload.audioKey].presetKey;
-
-        const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
-          draft,
-          payload.voice,
-          presetKey,
-          "changeVoice"
-        );
-
-        audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-          audioKey: payload.audioKey,
-          presetKey: nextPresetKey,
-        });
-
-        if (payload.update === "AccentPhrases") {
-          audioStore.mutations.SET_ACCENT_PHRASES(draft, {
-            audioKey: payload.audioKey,
-            accentPhrases: payload.accentPhrases,
-          });
-        } else if (payload.update === "AudioQuery") {
-          audioStore.mutations.SET_AUDIO_QUERY(draft, {
-            audioKey: payload.audioKey,
-            audioQuery: payload.query,
-          });
-        }
-
-        if (shouldApplyPreset) {
-          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
-            audioKey: payload.audioKey,
-          });
-        }
-      },
-      async action(
-        { state, dispatch, commit },
-        { audioKeys, voice }: { audioKeys: AudioKey[]; voice: Voice }
-      ) {
-        const engineId = voice.engineId;
-        const styleId = voice.styleId;
-        await dispatch("SETUP_SPEAKER", { audioKeys, engineId, styleId });
-        await Promise.all(
-          audioKeys.map(async (audioKey) => {
-            try {
-              const query = state.audioItems[audioKey].query;
-              if (query != undefined) {
-                const accentPhrases = query.accentPhrases;
+        > = Object.fromEntries(
+          await Promise.all(
+            audioKeys.map(async (audioKey) => {
+              try {
+                const audioItem = state.audioItems[audioKey];
+                if (audioItem.query == undefined) {
+                  const query: AudioQuery = await dispatch(
+                    "FETCH_AUDIO_QUERY",
+                    {
+                      text: audioItem.text,
+                      engineId: voice.engineId,
+                      styleId: voice.styleId,
+                    }
+                  );
+                  return [
+                    [
+                      audioKey,
+                      {
+                        update: "AudioQuery",
+                        query,
+                      },
+                    ],
+                  ];
+                }
                 const newAccentPhrases: AccentPhrase[] = await dispatch(
                   "FETCH_MORA_DATA",
                   {
-                    accentPhrases,
-                    engineId,
-                    styleId,
+                    accentPhrases: audioItem.query.accentPhrases,
+                    engineId: voice.engineId,
+                    styleId: voice.styleId,
                   }
                 );
-                commit("COMMAND_MULTI_CHANGE_VOICE", {
-                  audioKey,
-                  voice,
-                  update: "AccentPhrases",
-                  accentPhrases: newAccentPhrases,
-                });
-              } else {
-                const text = state.audioItems[audioKey].text;
-                const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
-                  text: text,
-                  engineId,
-                  styleId,
-                });
-                commit("COMMAND_MULTI_CHANGE_VOICE", {
-                  audioKey,
-                  voice,
-                  update: "AudioQuery",
-                  query,
-                });
+
+                return [
+                  [
+                    audioKey,
+                    {
+                      update: "AccentPhrases",
+                      accentPhrases: newAccentPhrases,
+                    },
+                  ],
+                ];
+              } catch (error) {
+                await dispatch("LOG_ERROR", error);
+                return [];
               }
-            } catch (error) {
-              commit("COMMAND_MULTI_CHANGE_VOICE", {
-                audioKey,
-                voice,
-                update: "RollbackStyleId",
-              });
-              throw error;
-            }
-          })
+            })
+          ).then((entries) => entries.flat())
         );
+
+        commit("COMMAND_MULTI_CHANGE_VOICE", {
+          voice,
+          changes,
+        });
       },
     },
 

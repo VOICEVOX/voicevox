@@ -502,17 +502,20 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_MULTI_CHANGE_VOICE: {
-    mutation: { audioKey: AudioKey; voice: Voice } & (
-      | { update: "RollbackStyleId" }
-      | {
-          update: "AccentPhrases";
-          accentPhrases: AccentPhrase[];
-        }
-      | {
-          update: "AudioQuery";
-          query: AudioQuery;
-        }
-    );
+    mutation: {
+      voice: Voice;
+      changes: Record<
+        AudioKey,
+        | {
+            update: "AccentPhrases";
+            accentPhrases: AccentPhrase[];
+          }
+        | {
+            update: "AudioQuery";
+            query: AudioQuery;
+          }
+      >;
+    };
     action(payload: { audioKeys: AudioKey[]; voice: Voice }): void;
   };
 
