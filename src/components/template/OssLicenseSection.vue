@@ -1,32 +1,36 @@
 <template>
   <div class="container">
-    <div v-if="detailIndex === undefined" class="inner inner-list">
-      <h1 class="headline">ライセンス情報</h1>
-      <div class="list">
-        <BaseRowCard
-          v-for="(license, index) in props.licenses"
-          :key="index"
-          :title="
-            license.name + (license.version ? ' | ' + license.version : '')
-          "
-          clickable
-          @click="selectLicenseIndex(index)"
-        >
-          <q-icon name="arrow_right" size="sm" />
-        </BaseRowCard>
+    <BaseScrollArea v-if="detailIndex === undefined">
+      <div class="inner inner-list">
+        <h1 class="title">ライセンス情報</h1>
+        <div class="list">
+          <BaseRowCard
+            v-for="(license, index) in props.licenses"
+            :key="index"
+            :title="
+              license.name + (license.version ? ' | ' + license.version : '')
+            "
+            clickable
+            @click="selectLicenseIndex(index)"
+          >
+            <q-icon name="keyboard_arrow_right" size="sm" />
+          </BaseRowCard>
+        </div>
       </div>
-    </div>
-    <div v-else class="inner inner-detail">
-      <div>
-        <BaseButton
-          label="戻る"
-          icon="keyboard_arrow_left"
-          @click="selectLicenseIndex(undefined)"
-        />
+    </BaseScrollArea>
+    <BaseScrollArea v-else>
+      <div class="inner inner-detail">
+        <div>
+          <BaseButton
+            label="戻る"
+            icon="keyboard_arrow_left"
+            @click="selectLicenseIndex(undefined)"
+          />
+        </div>
+        <h1 class="title">{{ licenses[detailIndex].name }}</h1>
+        <pre>{{ licenses[detailIndex].text }}</pre>
       </div>
-      <h1 class="headline">{{ licenses[detailIndex].name }}</h1>
-      <pre>{{ licenses[detailIndex].text }}</pre>
-    </div>
+    </BaseScrollArea>
   </div>
 </template>
 
@@ -34,6 +38,7 @@
 import { ref } from "vue";
 import BaseRowCard from "../base/BaseRowCard.vue";
 import BaseButton from "../base/BaseButton.vue";
+import BaseScrollArea from "../base/BaseScrollArea.vue";
 
 const props =
   defineProps<{
@@ -55,7 +60,6 @@ const selectLicenseIndex = (index: number | undefined) => {
   // 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
   // height: 100%;
   height: calc(100vh - 90px);
-  overflow-y: auto;
   background-color: #e9f3e7;
 }
 
@@ -64,7 +68,6 @@ const selectLicenseIndex = (index: number | undefined) => {
   flex-direction: column;
   padding: vars.$padding-container;
   gap: vars.$gap-container;
-  min-height: 100%;
 }
 
 .inner-detail {
