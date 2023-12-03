@@ -182,6 +182,7 @@ test("複数選択：キーボード", async ({ page }) => {
   expect(selectedStatus.active).toBe(3);
   expect(selectedStatus.selected).toEqual([3]);
 });
+
 test("複数選択：台本欄の余白クリックで解除", async ({ page }) => {
   let selectedStatus: SelectedStatus;
 
