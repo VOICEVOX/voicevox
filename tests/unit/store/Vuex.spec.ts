@@ -165,6 +165,7 @@ describe("store/vuex.js test", () => {
           ],
           notes: [],
         },
+        phrases: {},
         isShowSinger: true,
         sequencerZoomX: 1,
         sequencerZoomY: 1,
@@ -179,7 +180,7 @@ describe("store/vuex.js test", () => {
         startRenderingRequested: false,
         stopRenderingRequested: false,
         nowRendering: false,
-        exportingAudio: false,
+        nowAudioExporting: false,
         cancellationOfAudioExportRequested: false,
       },
       getters: {

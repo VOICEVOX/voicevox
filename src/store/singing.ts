@@ -10,6 +10,7 @@ import {
   SingingStoreTypes,
   SaveResultObject,
   Singer,
+  Phrase,
 } from "./type";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -179,26 +180,10 @@ const createPromiseThatResolvesWhen = (
   });
 };
 
-type Phrase = {
-  readonly singer: Singer | undefined;
-  readonly score: Score;
-  // renderingが進むに連れてデータが代入されていく
-  query?: AudioQuery;
-  queryHash?: string; // queryの変更を検知するためのハッシュ
-  blob?: Blob;
-  startTime?: number;
-  source?: Instrument | AudioPlayer; // ひとまずPhraseに持たせる
-  sequence?: Sequence; // ひとまずPhraseに持たせる
-};
-
 const generateSingerAndScoreHash = async (obj: {
   singer: Singer | undefined;
   score: Score;
 }) => {
-  return _generateHash(obj);
-};
-
-const generateAudioQueryHash = async (obj: AudioQuery) => {
   return _generateHash(obj);
 };
 
@@ -293,8 +278,14 @@ if (window.AudioContext) {
   clipper.output.connect(audioContext.destination);
 }
 
+type PhraseData = {
+  blob?: Blob;
+  source?: Instrument | AudioPlayer; // ひとまずPhraseDataに持たせる
+  sequence?: Sequence; // ひとまずPhraseDataに持たせる
+};
+
 const playheadPosition = new FrequentlyUpdatedState(0);
-const allPhrases = new Map<string, Phrase>();
+const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationFrameRunner = new AnimationFrameRunner();
 
@@ -317,6 +308,7 @@ export const singingStoreState: SingingStoreState = {
     ],
     notes: [],
   },
+  phrases: {},
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,
@@ -332,7 +324,7 @@ export const singingStoreState: SingingStoreState = {
   startRenderingRequested: false,
   stopRenderingRequested: false,
   nowRendering: false,
-  exportingAudio: false,
+  nowAudioExporting: false,
   cancellationOfAudioExportRequested: false,
 };
 
@@ -676,6 +668,39 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("REMOVE_SELECTED_NOTES");
 
       dispatch("RENDER");
+    },
+  },
+
+  SET_PHRASE: {
+    mutation(
+      state,
+      { phraseKey, phrase }: { phraseKey: string; phrase: Phrase }
+    ) {
+      state.phrases[phraseKey] = phrase;
+    },
+  },
+
+  DELETE_PHRASE: {
+    mutation(state, { phraseKey }: { phraseKey: string }) {
+      delete state.phrases[phraseKey];
+    },
+  },
+
+  SET_AUDIO_QUERY_TO_PHRASE: {
+    mutation(
+      state,
+      { phraseKey, audioQuery }: { phraseKey: string; audioQuery: AudioQuery }
+    ) {
+      state.phrases[phraseKey].query = audioQuery;
+    },
+  },
+
+  SET_START_TIME_TO_PHRASE: {
+    mutation(
+      state,
+      { phraseKey, startTime }: { phraseKey: string; startTime: number }
+    ) {
+      state.phrases[phraseKey].startTime = startTime;
     },
   },
 
@@ -1077,7 +1102,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return query;
       };
 
-      const calculateStartTime = (score: Score, query: AudioQuery) => {
+      const calcStartTime = (score: Score, query: AudioQuery) => {
         const firstMora = query.accentPhrases[0].moras[0];
         let startTime = tickToSecond(
           score.notes[0].position,
@@ -1133,8 +1158,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const foundPhrases = await searchPhrases(singer, score);
         for (const [hash, phrase] of foundPhrases) {
-          if (!allPhrases.has(hash)) {
-            allPhrases.set(hash, phrase);
+          const key = hash;
+          if (!state.phrases[key]) {
+            commit("SET_PHRASE", { phraseKey: key, phrase });
+
             // フレーズ追加時の処理
             const noteEvents = generateNoteEvents(
               phrase.score.notes,
@@ -1149,21 +1176,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               noteEvents,
             };
             transportRef.addSequence(noteSequence);
-
-            phrase.source = polySynth;
-            phrase.sequence = noteSequence;
+            phraseDataMap.set(key, {
+              source: polySynth,
+              sequence: noteSequence,
+            });
           }
         }
-        for (const [hash, phrase] of allPhrases) {
-          if (!foundPhrases.has(hash)) {
-            allPhrases.delete(hash);
+        for (const key of Object.keys(state.phrases)) {
+          if (!foundPhrases.has(key)) {
+            commit("DELETE_PHRASE", { phraseKey: key });
+
             // フレーズ削除時の処理
-            if (phrase.source) {
-              phrase.source.output.disconnect();
+            const phraseData = phraseDataMap.get(key);
+            if (!phraseData) {
+              throw new Error("phraseData is undefined");
             }
-            if (phrase.sequence) {
-              transportRef.removeSequence(phrase.sequence);
+            if (phraseData.source) {
+              phraseData.source.output.disconnect();
             }
+            if (phraseData.sequence) {
+              transportRef.removeSequence(phraseData.sequence);
+            }
+            phraseDataMap.delete(key);
           }
         }
 
@@ -1173,20 +1207,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
-        for (const phrase of allPhrases.values()) {
+        for (const [key, phrase] of Object.entries(state.phrases)) {
           if (!phrase.singer) {
             continue;
           }
 
-          // Phrase -> AudioQuery
+          // Singer & Score -> AudioQuery
+          // Score & AudioQuery -> StartTime
 
           if (!phrase.query) {
             window.electron.logInfo(`Generating query...`);
 
-            phrase.query = await generateAndEditQuery(
+            const audioQuery = await generateAndEditQuery(
               phrase.singer,
               phrase.score
             );
+            commit("SET_AUDIO_QUERY_TO_PHRASE", { phraseKey: key, audioQuery });
+
+            const startTime = calcStartTime(phrase.score, audioQuery);
+            commit("SET_START_TIME_TO_PHRASE", { phraseKey: key, startTime });
 
             window.electron.logInfo(`Query generated.`);
           }
@@ -1196,38 +1235,43 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           // AudioQuery -> Blob
-          // Phrase & AudioQuery -> startTime
+          // Blob & StartTime -> AudioSequence
 
-          const queryHash = await generateAudioQueryHash(phrase.query);
-          // クエリが変更されていたら再合成
-          if (queryHash !== phrase.queryHash) {
-            phrase.blob = phraseAudioBlobCache.get(queryHash);
-            if (phrase.blob) {
+          const phraseData = phraseDataMap.get(key);
+          if (!phraseData) {
+            throw new Error("phraseData is undefined");
+          }
+          if (!phrase.query) {
+            throw new Error("query is undefined.");
+          }
+          if (phrase.startTime === undefined) {
+            throw new Error("startTime is undefined.");
+          }
+          if (!phraseData.blob) {
+            phraseData.blob = phraseAudioBlobCache.get(key);
+            if (phraseData.blob) {
               window.electron.logInfo(`Loaded audio buffer from cache.`);
             } else {
               window.electron.logInfo(`Synthesizing...`);
 
-              phrase.blob = await synthesize(phrase.singer, phrase.query);
-              phraseAudioBlobCache.set(queryHash, phrase.blob);
+              phraseData.blob = await synthesize(phrase.singer, phrase.query);
+              phraseAudioBlobCache.set(key, phraseData.blob);
 
               window.electron.logInfo(`Synthesized.`);
             }
-            phrase.queryHash = queryHash;
-            phrase.startTime = calculateStartTime(phrase.score, phrase.query);
 
             // 音源とシーケンスを作成し直して、再接続する
-            if (phrase.source) {
-              phrase.source.output.disconnect();
+            if (phraseData.source) {
+              phraseData.source.output.disconnect();
             }
-            if (phrase.sequence) {
-              transportRef.removeSequence(phrase.sequence);
+            if (phraseData.sequence) {
+              transportRef.removeSequence(phraseData.sequence);
             }
-
             const audioPlayer = new AudioPlayer(audioContextRef);
             const audioEvents = await generateAudioEvents(
               audioContextRef,
               phrase.startTime,
-              phrase.blob
+              phraseData.blob
             );
             const audioSequence: AudioSequence = {
               type: "audio",
@@ -1236,9 +1280,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             };
             audioPlayer.output.connect(channelStripRef.input);
             transportRef.addSequence(audioSequence);
-
-            phrase.source = audioPlayer;
-            phrase.sequence = audioSequence;
+            phraseData.source = audioPlayer;
+            phraseData.sequence = audioSequence;
           }
 
           if (startRenderingRequested() || stopRenderingRequested()) {
@@ -1780,9 +1823,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
-  SET_EXPORTING_AUDIO: {
-    mutation(state, { exportingAudio }) {
-      state.exportingAudio = exportingAudio;
+  SET_NOW_AUDIO_EXPORTING: {
+    mutation(state, { nowAudioExporting }) {
+      state.nowAudioExporting = nowAudioExporting;
     },
   },
 
@@ -1940,39 +1983,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             : undefined;
           const clipper = new Clipper(offlineAudioContext);
 
-          for (const phrase of allPhrases.values()) {
-            // TODO: この辺りの処理を共通化する
-            if (phrase.startTime !== undefined && phrase.blob) {
-              // レンダリング済みのフレーズの場合
-              const audioEvents = await generateAudioEvents(
-                offlineAudioContext,
-                phrase.startTime,
-                phrase.blob
-              );
-              const audioPlayer = new AudioPlayer(offlineAudioContext);
-              audioPlayer.output.connect(channelStrip.input);
-              const audioSequence: AudioSequence = {
-                type: "audio",
-                audioPlayer,
-                audioEvents,
-              };
-              offlineTransport.addSequence(audioSequence);
-            } else {
-              // レンダリング未完了のフレーズの場合
-              const noteEvents = generateNoteEvents(
-                phrase.score.notes,
-                phrase.score.tempos,
-                phrase.score.tpqn
-              );
-              const polySynth = new PolySynth(offlineAudioContext);
-              polySynth.output.connect(channelStrip.input);
-              const noteSequence: NoteSequence = {
-                type: "note",
-                instrument: polySynth,
-                noteEvents,
-              };
-              offlineTransport.addSequence(noteSequence);
+          for (const [key, phrase] of Object.entries(state.phrases)) {
+            const phraseData = phraseDataMap.get(key);
+            if (!phraseData) {
+              throw new Error("phraseData is undefined");
             }
+            if (phrase.startTime === undefined) {
+              throw new Error("startTime is undefined");
+            }
+            if (!phraseData.blob) {
+              throw new Error("blob is undefined");
+            }
+            // TODO: この辺りの処理を共通化する
+            const audioEvents = await generateAudioEvents(
+              offlineAudioContext,
+              phrase.startTime,
+              phraseData.blob
+            );
+            const audioPlayer = new AudioPlayer(offlineAudioContext);
+            audioPlayer.output.connect(channelStrip.input);
+            const audioSequence: AudioSequence = {
+              type: "audio",
+              audioPlayer,
+              audioEvents,
+            };
+            offlineTransport.addSequence(audioSequence);
           }
           channelStrip.volume = 1;
           if (limiter) {
@@ -2017,12 +2052,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return { result: "SUCCESS", path: filePath };
         };
 
-        commit("SET_EXPORTING_AUDIO", { exportingAudio: true });
+        commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: true });
         return exportWaveFile().finally(() => {
           commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
             cancellationOfAudioExportRequested: false,
           });
-          commit("SET_EXPORTING_AUDIO", { exportingAudio: false });
+          commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: false });
         });
       }
     ),
@@ -2030,8 +2065,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   CANCEL_AUDIO_EXPORT: {
     async action({ state, commit, dispatch }) {
-      if (!state.exportingAudio) {
-        dispatch("LOG_WARN", "CANCEL_AUDIO_EXPORT on !exportingAudio");
+      if (!state.nowAudioExporting) {
+        dispatch("LOG_WARN", "CANCEL_AUDIO_EXPORT on !nowAudioExporting");
         return;
       }
       commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {

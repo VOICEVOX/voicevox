@@ -3,7 +3,7 @@
   <menu-bar />
   <tool-bar />
   <div class="sing-main">
-    <div v-if="exportingAudio" class="exporting-dialog">
+    <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <q-spinner color="primary" size="2.5rem" />
         <div class="q-mt-xs">
@@ -67,8 +67,8 @@ export default defineComponent({
     const nowRendering = computed(() => {
       return store.state.nowRendering;
     });
-    const exportingAudio = computed(() => {
-      return store.state.exportingAudio;
+    const nowAudioExporting = computed(() => {
+      return store.state.nowAudioExporting;
     });
 
     const cancelExport = () => {
@@ -111,7 +111,7 @@ export default defineComponent({
 
     return {
       nowRendering,
-      exportingAudio,
+      nowAudioExporting,
       cancelExport,
     };
   },
