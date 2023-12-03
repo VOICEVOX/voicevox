@@ -55,6 +55,7 @@ const selectLicenseIndex = (index: number | undefined) => {
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
+@use '@/styles/typography' as typography;
 
 .container {
   // 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
@@ -74,10 +75,8 @@ const selectLicenseIndex = (index: number | undefined) => {
   background-color: #fff;
 }
 
-.headline {
-  font-size: 1.5rem;
-  line-height: 1;
-  margin: 0;
+.title {
+  @include typography.headline-1;
 }
 
 .list {
