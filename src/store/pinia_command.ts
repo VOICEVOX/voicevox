@@ -59,10 +59,10 @@ export const useCommand = defineStore("command", () => {
     )
   );
   const stackedPatchesHistory = ref<CommandPatches[]>([]);
-  const popedPatchesHistory = ref<CommandPatches[]>([]);
+  const poppedPatchesHistory = ref<CommandPatches[]>([]);
 
   const undoable = computed(() => stackedPatchesHistory.value.length !== 0);
-  const redoable = computed(() => popedPatchesHistory.value.length !== 0);
+  const redoable = computed(() => poppedPatchesHistory.value.length !== 0);
 
   const undo = () => {
     const command = stackedPatchesHistory.value.pop();
@@ -70,11 +70,11 @@ export const useCommand = defineStore("command", () => {
     for (const [storeId, { undoPatches }] of Object.entries(command)) {
       updateStore(storeIdMap[storeId], undoPatches);
     }
-    popedPatchesHistory.value.push(command);
+    poppedPatchesHistory.value.push(command);
   };
 
   const redo = () => {
-    const command = popedPatchesHistory.value.pop();
+    const command = poppedPatchesHistory.value.pop();
     if (command == undefined) return;
     for (const [storeId, { redoPatches }] of Object.entries(command)) {
       updateStore(storeIdMap[storeId], redoPatches);
@@ -83,7 +83,7 @@ export const useCommand = defineStore("command", () => {
   };
 
   const $pushCommand = (command: CommandPatches) => {
-    popedPatchesHistory.value = [];
+    poppedPatchesHistory.value = [];
     stackedPatchesHistory.value.push(command);
   };
 
