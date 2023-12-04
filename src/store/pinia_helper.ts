@@ -136,7 +136,7 @@ export type MutationDefinition<
   S extends StateTree,
   Payloads extends unknown[]
 > = (draft: Writable<UnwrapRef<S>>, ...payloads: Payloads) => void;
-type Mutation<S extends StateTree, Payloads extends unknown[]> = {
+export type Mutation<S extends StateTree, Payloads extends unknown[]> = {
   func: MutationDefinition<S, Payloads>;
   commit: (...payloads: Payloads) => void;
 };

@@ -18,6 +18,7 @@ import {
   StateStoreDefinition,
   StateStore,
   MutationDefinition,
+  Mutation,
   Action,
   Writable,
 } from "./pinia_helper";
@@ -127,14 +128,18 @@ export class CommandableStateController<
     ) => defCommand(commandStore, contexts._writableState, mutation, action);
     const asCmd = <Payloads extends unknown[]>(
       mutation: MutationDefinition<S, Payloads>
-    ): Command<(...payloads: Payloads) => void> => ({
-      dispatch: contexts.asAct(mutation),
-      command: convertAsCommand(
-        commandStore,
-        contexts._writableState,
-        mutation
-      ),
-    });
+    ): Command<(...payloads: Payloads) => void> & Mutation<S, Payloads> => {
+      const mut = contexts.defMut(mutation);
+      return {
+        ...mut,
+        dispatch: contexts.asAct(mutation),
+        command: convertAsCommand(
+          commandStore,
+          contexts._writableState,
+          mutation
+        ),
+      };
+    };
 
     return {
       ...contexts,
