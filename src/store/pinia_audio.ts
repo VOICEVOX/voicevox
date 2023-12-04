@@ -51,6 +51,13 @@ export const audioStore = defineStore("audioStore/store", () => {
       };
     }
   );
+  const removeAudioItem = asCmd(
+    (draft, { audioKey }: { audioKey: AudioKey }) => {
+      draft.audioKeys.splice(draft.audioKeys.indexOf(audioKey), 1);
+      delete draft.audioItems[audioKey];
+      delete draft.audioStates[audioKey];
+    }
+  );
 
   const registerAudioItem = defCmd(
     insertAudioItem.func,
@@ -66,10 +73,19 @@ export const audioStore = defineStore("audioStore/store", () => {
       return audioKey;
     }
   );
+  const multiRemoveAudioItem = asCmd(
+    (draft, { audioKeys }: { audioKeys: AudioKey[] }) => {
+      for (const audioKey of audioKeys) {
+        removeAudioItem.func(draft, { audioKey });
+      }
+    }
+  );
 
   return {
     state: storeToRefs(state),
     insertAudioItem,
+    removeAudioItem,
     registerAudioItem,
+    multiRemoveAudioItem,
   };
 });
