@@ -141,9 +141,14 @@ const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 const tempProjectPath = path.join(fixedUserDataDir, "project.tmp.json");
 
-const setTempProject = (tempProject: ArrayBuffer) => {
+const setTempProject = async (tempProject: ArrayBuffer) => {
   try {
-    fs.writeFileSync(tempProjectPath, new DataView(tempProject));
+    await fs.promises.writeFile(
+      tempProjectPath + ".bk",
+      new DataView(tempProject)
+    );
+    await fs.promises.rename(tempProjectPath + ".bk", tempProjectPath);
+
     return success(undefined);
   } catch (e) {
     const a = e as SystemError;
