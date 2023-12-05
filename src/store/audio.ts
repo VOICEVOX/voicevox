@@ -2118,7 +2118,7 @@ export const audioCommandStore = transformCommandStore(
         if (Object.keys(errors).length > 0) {
           throw new Error(
             `話者の変更に失敗しました：\n${Object.entries(errors)
-              .map(([audioKey, error]) => `${audioKey}: ${error}`)
+              .map(([audioKey, error]) => `${audioKey}：${error}`)
               .join("\n")}`
           );
         }
