@@ -514,6 +514,9 @@ export type AudioCommandStoreTypes = {
             update: "AudioQuery";
             query: AudioQuery;
           }
+        | {
+            update: "OnlyVoice";
+          }
       >;
     };
     action(payload: { audioKeys: AudioKey[]; voice: Voice }): void;

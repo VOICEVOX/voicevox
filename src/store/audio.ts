@@ -2024,6 +2024,9 @@ export const audioCommandStore = transformCommandStore(
                 update: "AudioQuery";
                 query: AudioQuery;
               }
+            | {
+                update: "OnlyVoice";
+              }
           >;
         }
       ) {
@@ -2052,6 +2055,10 @@ export const audioCommandStore = transformCommandStore(
         { state, dispatch, commit },
         { audioKeys, voice }: { audioKeys: AudioKey[]; voice: Voice }
       ) {
+        const engineId = voice.engineId;
+        const styleId = voice.styleId;
+        await dispatch("SETUP_SPEAKER", { audioKeys, engineId, styleId });
+        const errors: Record<AudioKey, unknown> = {};
         const changes: Record<
           AudioKey,
           | {
@@ -2062,60 +2069,59 @@ export const audioCommandStore = transformCommandStore(
               update: "AudioQuery";
               query: AudioQuery;
             }
-        > = Object.fromEntries(
-          await Promise.all(
-            audioKeys.map(async (audioKey) => {
-              try {
-                const audioItem = state.audioItems[audioKey];
-                if (audioItem.query == undefined) {
-                  const query: AudioQuery = await dispatch(
-                    "FETCH_AUDIO_QUERY",
-                    {
-                      text: audioItem.text,
-                      engineId: voice.engineId,
-                      styleId: voice.styleId,
-                    }
-                  );
-                  return [
-                    [
-                      audioKey,
-                      {
-                        update: "AudioQuery",
-                        query,
-                      },
-                    ],
-                  ];
-                }
-                const newAccentPhrases: AccentPhrase[] = await dispatch(
-                  "FETCH_MORA_DATA",
-                  {
-                    accentPhrases: audioItem.query.accentPhrases,
-                    engineId: voice.engineId,
-                    styleId: voice.styleId,
-                  }
-                );
+          | {
+              update: "OnlyVoice";
+            }
+        > = {};
 
-                return [
-                  [
-                    audioKey,
-                    {
-                      update: "AccentPhrases",
-                      accentPhrases: newAccentPhrases,
-                    },
-                  ],
-                ];
-              } catch (error) {
-                await dispatch("LOG_ERROR", error);
-                return [];
-              }
-            })
-          ).then((entries) => entries.flat())
-        );
+        for (const audioKey of audioKeys) {
+          try {
+            const audioItem = state.audioItems[audioKey];
+            if (audioItem.query == undefined) {
+              const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
+                text: audioItem.text,
+                engineId: voice.engineId,
+                styleId: voice.styleId,
+              });
+              changes[audioKey] = {
+                update: "AudioQuery",
+                query,
+              };
+            } else {
+              const newAccentPhrases: AccentPhrase[] = await dispatch(
+                "FETCH_MORA_DATA",
+                {
+                  accentPhrases: audioItem.query.accentPhrases,
+                  engineId: voice.engineId,
+                  styleId: voice.styleId,
+                }
+              );
+
+              changes[audioKey] = {
+                update: "AccentPhrases",
+                accentPhrases: newAccentPhrases,
+              };
+            }
+          } catch (error) {
+            errors[audioKey] = error;
+            changes[audioKey] = {
+              update: "OnlyVoice",
+            };
+          }
+        }
 
         commit("COMMAND_MULTI_CHANGE_VOICE", {
           voice,
           changes,
         });
+
+        if (Object.keys(errors).length > 0) {
+          throw new Error(
+            `話者の変更に失敗しました：\n${Object.entries(errors)
+              .map(([audioKey, error]) => `${audioKey}: ${error}`)
+              .join("\n")}`
+          );
+        }
       },
     },
 
