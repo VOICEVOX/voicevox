@@ -21,18 +21,23 @@ if (isElectron) {
       host: z.string(),
       executionFilePath: z.string(),
       executionArgs: z.array(z.string()),
+      executionEnabled: z.boolean(),
     })
     .passthrough()
     .array();
   const engineInfos = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
-  engineInfos.forEach((info) => {
+  for (const info of engineInfos) {
+    if (!info.executionEnabled) {
+      continue;
+    }
+
     additionalWebServer.push({
       command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
       url: `${info.host}/version`,
       reuseExistingServer: !process.env.CI,
     });
-  });
+  }
 } else {
   throw new Error(`VITE_TARGETの指定が不正です。${process.env.VITE_TARGET}`);
 }

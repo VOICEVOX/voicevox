@@ -10,6 +10,7 @@
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
     @focus="onRootFocus"
+    @click.stop=""
   >
     <!-- 複数選択用のヒットボックス -->
     <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->

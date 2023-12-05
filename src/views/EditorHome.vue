@@ -95,6 +95,7 @@
                         dragEventCounter = 0;
                         loadDraggedFile($event);
                       "
+                      @click="onAudioCellPaneClick"
                     >
                       <draggable
                         ref="cellsRef"
@@ -241,7 +242,7 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
   [
     "テキスト欄にフォーカスを戻す",
     () => {
-      if (activeAudioKey.value !== undefined) {
+      if (activeAudioKey.value != undefined) {
         focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
       }
       return false; // this is the same with event.preventDefault()
@@ -405,7 +406,7 @@ const addAudioItem = async () => {
   let presetKey: PresetKey | undefined = undefined;
   let baseAudioItem: AudioItem | undefined = undefined;
 
-  if (prevAudioKey !== undefined) {
+  if (prevAudioKey != undefined) {
     voice = store.state.audioItems[prevAudioKey].voice;
     presetKey = store.state.audioItems[prevAudioKey].presetKey;
     baseAudioItem = store.state.audioItems[prevAudioKey];
@@ -655,7 +656,7 @@ const allEngineState = computed(() => {
   // 登録されているすべてのエンジンについて状態を確認する
   for (const engineId of store.state.engineIds) {
     const engineState: EngineState | undefined = engineStates[engineId];
-    if (engineState === undefined)
+    if (engineState == undefined)
       throw new Error(`No such engineState set: engineId == ${engineId}`);
 
     // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
@@ -672,7 +673,7 @@ const allEngineState = computed(() => {
 const isEngineWaitingLong = ref<boolean>(false);
 let engineTimer: number | undefined = undefined;
 watch(allEngineState, (newEngineState) => {
-  if (engineTimer !== undefined) {
+  if (engineTimer != undefined) {
     clearTimeout(engineTimer);
     engineTimer = undefined;
   }
@@ -879,6 +880,17 @@ watch(activeAudioKey, (audioKey) => {
 const showAddAudioItemButton = computed(() => {
   return store.state.showAddAudioItemButton;
 });
+
+const onAudioCellPaneClick = () => {
+  if (
+    store.state.experimentalSetting.enableMultiSelect &&
+    activeAudioKey.value
+  ) {
+    store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+      audioKeys: [activeAudioKey.value],
+    });
+  }
+};
 </script>
 
 <style scoped lang="scss">
