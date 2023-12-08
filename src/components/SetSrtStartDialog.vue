@@ -30,9 +30,11 @@ import { useStore } from "@/store";
 const store = useStore();
 
 const updateSrtStartTimeOnMenuBarProp = () => {
-  const inputedTime = document.getElementById("time-input") as HTMLInputElement;
+  const inputtedTime = document.getElementById(
+    "time-input"
+  ) as HTMLInputElement;
   // inputedtime.valueをnumber型に変換する
-  const [hours, minutes, seconds] = inputedTime.value.split(":").map(Number);
+  const [hours, minutes, seconds] = inputtedTime.value.split(":").map(Number);
   const timeInSeconds = hours * 3600 + minutes * 60 + seconds;
   store.commit("SET_SRT_START_TIME", {
     srtStartTime: timeInSeconds,
