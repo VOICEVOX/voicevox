@@ -2043,11 +2043,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (!phraseData) {
               throw new Error("phraseData is undefined");
             }
-            if (phrase.startTime === undefined) {
-              throw new Error("startTime is undefined");
-            }
-            if (!phraseData.blob) {
-              throw new Error("blob is undefined");
+            if (
+              !phraseData.blob ||
+              phrase.startTime === undefined ||
+              phrase.state !== "PLAYABLE"
+            ) {
+              continue;
             }
             // TODO: この辺りの処理を共通化する
             const audioEvents = await generateAudioEvents(
