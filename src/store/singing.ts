@@ -11,6 +11,7 @@ import {
   SaveResultObject,
   Singer,
   Phrase,
+  PhraseState,
 } from "./type";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -686,6 +687,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_STATE_TO_PHRASE: {
+    mutation(
+      state,
+      {
+        phraseKey,
+        phraseState,
+      }: { phraseKey: string; phraseState: PhraseState }
+    ) {
+      state.phrases[phraseKey].state = phraseState;
+    },
+  },
+
   SET_AUDIO_QUERY_TO_PHRASE: {
     mutation(
       state,
@@ -968,6 +981,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               ...score,
               notes: phraseNotes,
             };
+            const phraseFirstNote = phraseNotes[0];
+            const phraseLastNote = phraseNotes[phraseNotes.length - 1];
             const hash = await generateSingerAndScoreHash({
               singer,
               score: phraseScore, // NOTE: とりあえず拍子も含めてハッシュ生成する
@@ -975,6 +990,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             foundPhrases.set(hash, {
               singer,
               score: phraseScore,
+              startTicks: phraseFirstNote.position,
+              endTicks: phraseLastNote.position + phraseLastNote.duration,
+              state: "WAITING_TO_BE_RENDERED",
             });
 
             phraseNotes = [];
@@ -983,7 +1001,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return foundPhrases;
       };
 
-      const generateAndEditQuery = async (singer: Singer, score: Score) => {
+      const getSortedPhrasesEntries = (phrases: Record<string, Phrase>) => {
+        return Object.entries(phrases).sort((a, b) => {
+          return a[1].startTicks - b[1].startTicks;
+        });
+      };
+
+      const fetchQuery = async (singer: Singer, score: Score) => {
         if (!getters.IS_ENGINE_READY(singer.engineId)) {
           throw new Error("Engine not ready.");
         }
@@ -997,15 +1021,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           .map((value) => value.replace("へ", "ヘ"))
           .join("");
 
-        let query = await dispatch("FETCH_AUDIO_QUERY", {
+        const query = await dispatch("FETCH_AUDIO_QUERY", {
           text,
           engineId: singer.engineId,
           styleId: singer.styleId,
         });
+        return query;
+      };
 
-        const moras = query.accentPhrases.map((value) => value.moras).flat();
+      const getMoras = (query: AudioQuery) => {
+        return query.accentPhrases.map((value) => value.moras).flat();
+      };
 
-        // 音素を表示
+      const logPhonemes = (moras: Mora[]) => {
         const phonemes = moras
           .map((value) => {
             if (value.consonant === undefined) {
@@ -1017,14 +1045,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           .flat()
           .join(" ");
         window.electron.logInfo(`  phonemes: ${phonemes}`);
+      };
 
-        if (moras.length !== score.notes.length) {
-          throw new Error(
-            "The number of moras and the number of notes do not match."
-          );
-        }
-
-        // クエリを編集
+      const editQuery = (score: Score, query: AudioQuery) => {
         let noteIndex = 0;
         for (let i = 0; i < query.accentPhrases.length; i++) {
           const accentPhrase = query.accentPhrases[i];
@@ -1091,15 +1114,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             noteIndex++;
           }
         }
+      };
 
-        // ピッチを更新
-        query = await dispatch("UPDATE_PERIODIC_PITCH", {
+      const updatePeriodicPitch = async (singer: Singer, query: AudioQuery) => {
+        if (!getters.IS_ENGINE_READY(singer.engineId)) {
+          throw new Error("Engine not ready.");
+        }
+
+        const newQuery = await dispatch("UPDATE_PERIODIC_PITCH", {
           audioQuery: query,
           engineId: singer.engineId,
           styleId: singer.styleId,
         });
-
-        return query;
+        return newQuery;
       };
 
       const calcStartTime = (score: Score, query: AudioQuery) => {
@@ -1159,7 +1186,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const foundPhrases = await searchPhrases(singer, score);
         for (const [hash, phrase] of foundPhrases) {
           const key = hash;
-          if (!state.phrases[key]) {
+          if (!Object.hasOwn(state.phrases, key)) {
             commit("SET_PHRASE", { phraseKey: key, phrase });
 
             // フレーズ追加時の処理
@@ -1207,9 +1234,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
-        for (const [key, phrase] of Object.entries(state.phrases)) {
+        for (const [key, phrase] of getSortedPhrasesEntries(state.phrases)) {
           if (!phrase.singer) {
             continue;
+          }
+
+          if (phrase.state === "WAITING_TO_BE_RENDERED") {
+            commit("SET_STATE_TO_PHRASE", {
+              phraseKey: key,
+              phraseState: "NOW_RENDERING",
+            });
           }
 
           // Singer & Score -> AudioQuery
@@ -1218,19 +1252,33 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!phrase.query) {
             window.electron.logInfo(`Generating query...`);
 
-            const audioQuery = await generateAndEditQuery(
-              phrase.singer,
-              phrase.score
-            );
-            commit("SET_AUDIO_QUERY_TO_PHRASE", { phraseKey: key, audioQuery });
-
+            let audioQuery = await fetchQuery(phrase.singer, phrase.score);
+            const moras = getMoras(audioQuery);
+            logPhonemes(moras);
+            if (moras.length !== phrase.score.notes.length) {
+              commit("SET_STATE_TO_PHRASE", {
+                phraseKey: key,
+                phraseState: "COULD_NOT_RENDER",
+              });
+              continue;
+            }
+            editQuery(phrase.score, audioQuery);
+            audioQuery = await updatePeriodicPitch(phrase.singer, audioQuery);
             const startTime = calcStartTime(phrase.score, audioQuery);
+
+            commit("SET_AUDIO_QUERY_TO_PHRASE", { phraseKey: key, audioQuery });
             commit("SET_START_TIME_TO_PHRASE", { phraseKey: key, startTime });
 
             window.electron.logInfo(`Query generated.`);
           }
 
           if (startRenderingRequested() || stopRenderingRequested()) {
+            if (phrase.state === "NOW_RENDERING") {
+              commit("SET_STATE_TO_PHRASE", {
+                phraseKey: key,
+                phraseState: "WAITING_TO_BE_RENDERED",
+              });
+            }
             return;
           }
 
@@ -1282,6 +1330,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             transportRef.addSequence(audioSequence);
             phraseData.source = audioPlayer;
             phraseData.sequence = audioSequence;
+          }
+
+          if (phrase.state === "NOW_RENDERING") {
+            commit("SET_STATE_TO_PHRASE", {
+              phraseKey: key,
+              phraseState: "PLAYABLE",
+            });
           }
 
           if (startRenderingRequested() || stopRenderingRequested()) {

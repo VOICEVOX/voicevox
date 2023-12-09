@@ -1,11 +1,19 @@
 <template>
   <div class="score-sequencer">
     <!-- 左上の角 -->
-    <div class="corner"></div>
+    <div class="sequencer-corner"></div>
     <!-- ルーラー -->
-    <sequencer-ruler :offset="scrollX" :num-of-measures="numOfMeasures" />
+    <sequencer-ruler
+      class="sequencer-ruler"
+      :offset="scrollX"
+      :num-of-measures="numOfMeasures"
+    />
     <!-- 鍵盤 -->
-    <sequencer-keys :offset="scrollY" :black-key-width="30" />
+    <sequencer-keys
+      class="sequencer-keys"
+      :offset="scrollY"
+      :black-key-width="30"
+    />
     <!-- シーケンサ -->
     <div
       ref="sequencerBody"
@@ -95,20 +103,24 @@
         @handleDragRightStart="handleDragRightStart"
         @handleDragLeftStart="handleDragLeftStart"
       />
-      <div
-        class="sequencer-body-playhead-wrapper"
+    </div>
+    <div class="sequencer-overlay">
+      <sequencer-phrase-indicator
+        v-for="phraseInfo in phraseInfos"
+        :key="phraseInfo.key"
+        :phrase-key="phraseInfo.key"
+        class="sequencer-phrase-indicator"
         :style="{
-          width: `${gridWidth}px`,
-          height: `${gridHeight}px`,
+          width: `${phraseInfo.width}px`,
+          transform: `translateX(${phraseInfo.x - scrollX}px)`,
         }"
-      >
-        <div
-          class="sequencer-body-playhead"
-          :style="{
-            transform: `translateX(${playheadX}px)`,
-          }"
-        ></div>
-      </div>
+      />
+      <div
+        class="sequencer-playhead"
+        :style="{
+          transform: `translateX(${playheadX - scrollX}px)`,
+        }"
+      ></div>
     </div>
     <!-- NOTE: スクロールバー+ズームレンジ仮 -->
     <input
@@ -152,6 +164,7 @@ import { useStore } from "@/store";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
+import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import {
   getMeasureDuration,
   getNoteDuration,
@@ -171,6 +184,7 @@ export default defineComponent({
     SequencerRuler,
     SequencerKeys,
     SequencerNote,
+    SequencerPhraseIndicator,
   },
   setup() {
     const ZOOM_X_MIN = 0.2;
@@ -274,6 +288,15 @@ export default defineComponent({
       return Math.floor(baseX * zoomX.value);
     });
     const selectedNoteIds = computed(() => state.selectedNoteIds);
+    const phraseInfos = computed(() => {
+      return Object.entries(state.phrases).map(([key, phrase]) => {
+        const startBaseX = tickToBaseX(phrase.startTicks, tpqn.value);
+        const endBaseX = tickToBaseX(phrase.endTicks, tpqn.value);
+        const startX = startBaseX * zoomX.value;
+        const endX = endBaseX * zoomX.value;
+        return { key, x: startX, width: endX - startX };
+      });
+    });
 
     const sequencerBody = ref<HTMLElement | null>(null);
 
@@ -753,6 +776,7 @@ export default defineComponent({
       scrollX,
       scrollY,
       playheadX,
+      phraseInfos,
       sequencerBody,
       setZoomX,
       setZoomY,
@@ -782,13 +806,26 @@ export default defineComponent({
   grid-template-columns: 48px 1fr;
 }
 
-.corner {
+.sequencer-corner {
+  grid-row: 1;
+  grid-column: 1;
   background: #fff;
   border-bottom: 1px solid #ccc;
   border-right: 1px solid #ccc;
 }
 
+.sequencer-ruler {
+  grid-row: 1;
+  grid-column: 2;
+}
+.sequencer-keys {
+  grid-row: 2;
+  grid-column: 1;
+}
+
 .sequencer-body {
+  grid-row: 2;
+  grid-column: 2;
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
@@ -798,15 +835,23 @@ export default defineComponent({
   }
 }
 
-.sequencer-body-playhead-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
+.sequencer-overlay {
+  grid-row: 2;
+  grid-column: 2;
+  position: relative;
   overflow: hidden;
   pointer-events: none;
 }
 
-.sequencer-body-playhead {
+.sequencer-phrase-indicator {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  height: 6px;
+  border-radius: 2px;
+}
+
+.sequencer-playhead {
   position: absolute;
   top: 0;
   left: -2px;
@@ -815,7 +860,6 @@ export default defineComponent({
   background: colors.$primary;
   border-left: 1px solid rgba(colors.$background-rgb, 0.83);
   border-right: 1px solid rgba(colors.$background-rgb, 0.83);
-  pointer-events: none;
 }
 
 .sequencer-grid {

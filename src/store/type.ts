@@ -745,9 +745,18 @@ export type Singer = {
   styleId: StyleId;
 };
 
+export type PhraseState =
+  | "WAITING_TO_BE_RENDERED"
+  | "NOW_RENDERING"
+  | "COULD_NOT_RENDER"
+  | "PLAYABLE";
+
 export type Phrase = {
   singer?: Singer;
   score: Score;
+  startTicks: number;
+  endTicks: number;
+  state: PhraseState;
   query?: AudioQuery;
   startTime?: number;
 };
@@ -853,6 +862,10 @@ export type SingingStoreTypes = {
 
   DELETE_PHRASE: {
     mutation: { phraseKey: string };
+  };
+
+  SET_STATE_TO_PHRASE: {
+    mutation: { phraseKey: string; phraseState: PhraseState };
   };
 
   SET_AUDIO_QUERY_TO_PHRASE: {
