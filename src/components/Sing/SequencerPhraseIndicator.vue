@@ -14,14 +14,14 @@ export default defineComponent({
   },
   setup(props) {
     const store = useStore();
+    const classNames: Record<PhraseState, string> = {
+      WAITING_TO_BE_RENDERED: "waiting-to-be-rendered",
+      NOW_RENDERING: "now-rendering",
+      COULD_NOT_RENDER: "could-not-render",
+      PLAYABLE: "playable",
+    };
     const className = computed(() => {
       const phrase = store.state.phrases[props.phraseKey];
-      const classNames: Record<PhraseState, string> = {
-        WAITING_TO_BE_RENDERED: "waiting-to-be-rendered",
-        NOW_RENDERING: "now-rendering",
-        COULD_NOT_RENDER: "could-not-render",
-        PLAYABLE: "playable",
-      };
       return classNames[phrase.state];
     });
 
@@ -73,8 +73,7 @@ export default defineComponent({
 }
 
 .could-not-render {
-  background-color: colors.$background;
-  background-image: linear-gradient(to right, #ff6a64, #ff6a64);
+  background-color: #ff6a64;
 }
 
 .playable {
