@@ -104,7 +104,13 @@
         @handleDragLeftStart="handleDragLeftStart"
       />
     </div>
-    <div class="sequencer-overlay">
+    <div
+      class="sequencer-overlay"
+      :style="{
+        marginRight: `${scrollBarWidth}px`,
+        marginBottom: `${scrollBarWidth}px`,
+      }"
+    >
       <sequencer-phrase-indicator
         v-for="phraseInfo in phraseInfos"
         :key="phraseInfo.key"
@@ -297,6 +303,7 @@ export default defineComponent({
         return { key, x: startX, width: endX - startX };
       });
     });
+    const scrollBarWidth = ref(12);
 
     const sequencerBody = ref<HTMLElement | null>(null);
 
@@ -742,6 +749,11 @@ export default defineComponent({
       const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
       sequencerBodyElement.scrollTo(0, scrollBaseY * zoomY.value);
 
+      // スクロールバーの幅を取得する
+      const clientWidth = sequencerBodyElement.clientWidth;
+      const offsetWidth = sequencerBodyElement.offsetWidth;
+      scrollBarWidth.value = offsetWidth - clientWidth;
+
       store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
         listener: playheadPositionChangeListener,
       });
@@ -777,6 +789,7 @@ export default defineComponent({
       scrollY,
       playheadX,
       phraseInfos,
+      scrollBarWidth,
       sequencerBody,
       setZoomX,
       setZoomY,
@@ -818,6 +831,7 @@ export default defineComponent({
   grid-row: 1;
   grid-column: 2;
 }
+
 .sequencer-keys {
   grid-row: 2;
   grid-column: 1;
