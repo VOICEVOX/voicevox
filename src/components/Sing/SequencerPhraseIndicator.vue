@@ -74,7 +74,7 @@ export default defineComponent({
 
 .could-not-render {
   background-color: colors.$background;
-  background-image: linear-gradient(to right, #ef5d58, #ef5d58);
+  background-image: linear-gradient(to right, #ff6a64, #ff6a64);
 }
 
 .playable {
