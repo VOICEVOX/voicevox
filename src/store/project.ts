@@ -16,6 +16,7 @@ import {
   TempProjectType,
 } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
+import { escapeHtml } from "@/helpers/htmlHelper";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -601,9 +602,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         }
 
         const isFileModified =
+          tempProjectData.projectFilePath &&
           Math.floor((tempProjectData.fileModifiedAt ?? 0) / 1000) !==
-          Math.floor((tempProjectData.projectSavedAt ?? 0) / 1000);
-
+            Math.floor((tempProjectData.projectSavedAt ?? 0) / 1000);
         if (tempProjectData.state === "saved") {
           // プロジェクト保存先のファイル変更チェック
           if (isFileModified) {
@@ -643,9 +644,21 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           "SHOW_CONFIRM_DIALOG",
           {
             title: "復元されたプロジェクト",
-            message: "復元されたプロジェクトがあります。復元しますか？",
+            message: `復元されたプロジェクトがあります。復元しますか？${
+              isFileModified
+                ? "<br />※読み込み先のファイルが外部で変更されています。"
+                : ""
+            }
+            <br />復元対象 : ${
+              tempProjectData.projectFilePath
+                ? "<span style='overflow-wrap: break-word;'>" +
+                  escapeHtml(tempProjectData.projectFilePath) +
+                  "</span>"
+                : "untitled"
+            }`,
             actionName: "復元",
             cancel: "破棄",
+            html: true,
           }
         );
 
