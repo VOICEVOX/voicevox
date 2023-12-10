@@ -1,3 +1,8 @@
+@mixin on-focus {
+  outline-color: #a5d4ad;
+  outline-width: 2px;
+}
+
 @mixin headline-1 {
   font-size: 1.5rem;
   line-height: 2;

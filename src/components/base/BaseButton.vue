@@ -23,6 +23,7 @@ defineEmits<{
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
+@use '@/styles/mixin' as mixin;
 
 .button {
   display: flex;
@@ -39,6 +40,10 @@ defineEmits<{
 
   &:active:not(:disabled) {
     box-shadow: 0 0 0 transparent;
+  }
+
+  &:focus-visible {
+    @include mixin.on-focus;
   }
 }
 

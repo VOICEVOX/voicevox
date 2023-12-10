@@ -55,7 +55,7 @@ const selectLicenseIndex = (index: number | undefined) => {
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
-@use '@/styles/typography' as typography;
+@use '@/styles/mixin' as mixin;
 
 .container {
   // 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
@@ -76,7 +76,7 @@ const selectLicenseIndex = (index: number | undefined) => {
 }
 
 .title {
-  @include typography.headline-1;
+  @include mixin.headline-1;
 }
 
 .list {

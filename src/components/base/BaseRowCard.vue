@@ -29,6 +29,7 @@ defineEmits<{
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
+@use '@/styles/mixin' as mixin;
 
 .row-card {
   display: flex;
@@ -51,6 +52,10 @@ defineEmits<{
 
   &:active {
     background-color: #ebeceb;
+  }
+
+  &:focus-visible {
+    @include mixin.on-focus;
   }
 }
 
