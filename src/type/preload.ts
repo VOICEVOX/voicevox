@@ -310,7 +310,7 @@ export type SavingSetting = {
   exportText: boolean;
   outputStereo: boolean;
   audioOutputDevice: string;
-  enableAutoRestore: boolean;
+  enableAutoLoad: boolean;
 };
 
 export type EngineSettings = Record<EngineId, EngineSetting>;
@@ -526,7 +526,7 @@ export const configSchema = z.object({
       exportText: z.boolean().default(false),
       outputStereo: z.boolean().default(false),
       audioOutputDevice: z.string().default(""),
-      enableAutoRestore: z.boolean().default(false),
+      enableAutoLoad: z.boolean().default(false),
     })
     .default({}),
   hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),

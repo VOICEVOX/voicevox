@@ -558,9 +558,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         state: "none",
       };
 
-      // 自動復元機能有効時プロジェクトファイルのパスを保存する
+      // 自動読み込み機能有効時プロジェクトファイルのパスを保存する
       if (
-        context.state.savingSetting.enableAutoRestore &&
+        context.state.savingSetting.enableAutoLoad &&
         context.state.projectFilePath
       ) {
         projectData = {
@@ -624,8 +624,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
           }
 
-          // 自動復元機能有効時保存されたプロジェクトを復元する
-          if (context.state.savingSetting.enableAutoRestore) {
+          // 自動読み込み機能有効時保存されたプロジェクトを復元する
+          if (context.state.savingSetting.enableAutoLoad) {
             await context.dispatch("LOAD_PROJECT_FILE", {
               filePath: tempProjectData.projectFilePath,
               confirm: false,
