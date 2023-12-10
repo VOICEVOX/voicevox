@@ -516,6 +516,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         }
 
+        const loadedTempProjectData: TempProjectType = await window.electron
+          .getTempProject()
+          .then(getValueOrThrow);
+
         const projectData: TempProjectType = {
           state: "unSaved",
           project: {
@@ -528,6 +532,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             undoCommands: state.undoCommands,
             redoCommands: state.redoCommands,
           },
+          projectSavedAt:
+            loadedTempProjectData.state === "none"
+              ? new Date().getTime()
+              : loadedTempProjectData.projectSavedAt,
         };
 
         const buf = new TextEncoder().encode(
@@ -561,6 +569,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             undoCommands: context.state.undoCommands,
             redoCommands: context.state.redoCommands,
           },
+          projectSavedAt: new Date().getTime(),
+          fileModifiedAt: new Date().getTime(),
         };
       }
 
@@ -590,7 +600,29 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         }
 
+        const isFileModified =
+          Math.floor((tempProjectData.fileModifiedAt ?? 0) / 1000) !==
+          Math.floor((tempProjectData.projectSavedAt ?? 0) / 1000);
+
         if (tempProjectData.state === "saved") {
+          // プロジェクト保存先のファイル変更チェック
+          if (isFileModified) {
+            const applyRestoredProject = await context.dispatch(
+              "SHOW_CONFIRM_DIALOG",
+              {
+                title: "プロジェクト保存先の変更",
+                message:
+                  "読み込み先のファイルが外部で変更されています。復元しますか？",
+                actionName: "復元",
+                cancel: "復元しない",
+              }
+            );
+
+            if (applyRestoredProject === "CANCEL") {
+              return;
+            }
+          }
+
           // 自動復元機能有効時保存されたプロジェクトを復元する
           if (context.state.savingSetting.enableAutoRestore) {
             await context.dispatch("LOAD_PROJECT_FILE", {

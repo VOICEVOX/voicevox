@@ -28,6 +28,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  TempProjectType,
 } from "./type/preload";
 import {
   ContactTextFileName,
@@ -857,11 +858,18 @@ ipcMainHandle("GET_TEMP_PROJECT", async () => {
       await setTempProject(buf);
     }
 
-    const tempProject = JSON.parse(
+    const tempProject: TempProjectType = JSON.parse(
       await fs.promises.readFile(tempProjectPath, {
         encoding: "utf-8",
       })
     );
+
+    if (tempProject.state !== "none" && tempProject.projectFilePath) {
+      const state = await fs.promises.stat(tempProject.projectFilePath);
+      tempProject.fileModifiedAt = state.mtime.getTime();
+
+      return success(tempProject);
+    }
 
     return success(tempProject);
   } catch (e) {

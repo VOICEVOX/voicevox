@@ -657,12 +657,16 @@ export type TempProjectType =
       project: ProjectType;
       projectFilePath?: string;
       commandStoreState: CommandStoreState;
+      projectSavedAt: number | null;
+      fileModifiedAt?: number;
     }
   | {
       /** プロジェクトが保存されている状態 */
       state: "saved";
       projectFilePath: string;
       commandStoreState: CommandStoreState;
+      projectSavedAt: number;
+      fileModifiedAt: number;
     }
   | {
       /** プロジェクト一時ファイルの初期状態 */
