@@ -186,7 +186,15 @@
 
 <script setup lang="ts">
 import path from "path";
-import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
+import {
+  computed,
+  onBeforeUpdate,
+  onMounted,
+  onUnmounted,
+  ref,
+  VNodeRef,
+  watch,
+} from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
@@ -220,6 +228,7 @@ import {
   PresetKey,
   SplitterPosition,
   Voice,
+  isProduction,
 } from "@/type/preload";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
@@ -236,6 +245,8 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 const reloadingLocked = computed(() => store.state.reloadingLock);
 
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
+
+const isEdited = computed(() => store.getters.IS_EDITED);
 
 // hotkeys handled by Mousetrap
 const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
@@ -712,11 +723,16 @@ watch(
   }
 );
 
-const audioKey = computed(() => store.state.audioKeys);
+// N秒ごとに保存がされていない場合のみ一時ファイルを保存
+const saveTempFileIntervalSec = isProduction ? 60 : 1;
+const interval = setInterval(async () => {
+  if (isEdited.value) {
+    await store.dispatch("SAVE_TEMP_PROJECT_FILE");
+  }
+}, saveTempFileIntervalSec * 1000);
 
-// audioItemsの変更を監視
-watch([audioItems.value, audioKey.value], async () => {
-  await store.dispatch("SAVE_TEMP_PROJECT_FILE");
+onUnmounted(() => {
+  clearInterval(interval);
 });
 
 const reloadAppWithMultiEngineOffMode = () => {
