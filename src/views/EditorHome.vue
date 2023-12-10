@@ -617,7 +617,7 @@ onMounted(async () => {
     });
 
     // 一時ファイルを読み込む
-    store.dispatch("LOAD_OR_DISCARD_TEMP_PROJECT_FILE");
+    await store.dispatch("LOAD_OR_DISCARD_TEMP_PROJECT_FILE");
   }
 
   // ショートカットキー操作を止める条件の設定
