@@ -1,6 +1,6 @@
 <template>
-  <div class="container">
-    <BaseScrollArea v-if="detailIndex === undefined">
+  <div v-if="detailIndex == undefined" class="container">
+    <BaseScrollArea>
       <div class="inner inner-list">
         <h1 class="title">ライセンス情報</h1>
         <div class="list">
@@ -18,8 +18,10 @@
         </div>
       </div>
     </BaseScrollArea>
-    <BaseScrollArea v-else>
-      <div class="inner inner-detail">
+  </div>
+  <div v-else class="container container-detail">
+    <BaseScrollArea>
+      <div class="inner">
         <div>
           <BaseButton
             label="戻る"
@@ -64,15 +66,15 @@ const selectLicenseIndex = (index: number | undefined) => {
   background-color: #e9f3e7;
 }
 
+.container-detail {
+  background-color: #fff;
+}
+
 .inner {
   display: flex;
   flex-direction: column;
   padding: vars.$padding-container;
   gap: vars.$gap-container;
-}
-
-.inner-detail {
-  background-color: #fff;
 }
 
 .title {

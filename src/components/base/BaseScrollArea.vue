@@ -1,6 +1,6 @@
 <template>
   <ScrollAreaRoot class="scroll-area" type="auto">
-    <ScrollAreaViewport>
+    <ScrollAreaViewport class="viewport">
       <slot />
     </ScrollAreaViewport>
     <ScrollAreaScrollbar class="scrollbar" orientation="horizontal">
@@ -27,12 +27,18 @@ import {
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
+
 .scroll-area {
   width: 100%;
   height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.viewport {
+  width: 100%;
+  height: 100%;
 }
 
 .scrollbar {
