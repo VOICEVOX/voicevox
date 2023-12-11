@@ -5,7 +5,7 @@ import {
   StateTree,
   DefineStoreOptions,
 } from "pinia";
-import { ref, computed, UnwrapRef } from "vue";
+import { ref, computed, UnwrapRef, DeepReadonly } from "vue";
 import { enablePatches, enableMapSet, Immer, Patch } from "immer";
 // immerの内部関数であるgetPlugin("Patches").applyPatches_はexportされていないので
 // ビルド前のsrcからソースコードを読み込んで使う必要がある
@@ -16,11 +16,20 @@ import { getPlugin } from "immer/src/utils/plugins";
 import {
   StateController,
   StateStoreDefinition,
-  StateStore,
-  MutationDefinition,
+  useController as useControllerOrig,
+  Get,
+  Commit,
+  Dispatch,
+  templateGet,
+  templateCommit,
+  templateDispatchWithoutStore,
   Mutation,
+  MutationContext,
   Action,
-  Writable,
+  ActionDefinition,
+  STORE_TAG,
+  MUTATION_TAG,
+  ACTION_TAG,
 } from "./pinia_helper";
 
 // ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
@@ -37,9 +46,8 @@ immer.setAutoFreeze(false);
 
 const useStateObj: Record<string, StoreDefinition> = {};
 /**
- * Commandに対応したStateを持つStoreはcommandのpinia storeからアクセスするため
- * {useStateObj}にuseStoreを登録する. そのため定義はdefineCommandableStateを経由
- * させる
+ * `Command`に対応したStateを持つ`store`は`commandStore`からアクセスするため`useStateObj`に`useStore`を登録する.
+ * `defineCommandableState`を経由してstateを定義することで`useStateObj`に登録される．
  */
 export const defineCommandableState = <Id extends string, S extends StateTree>(
   option: DefineStoreOptions<Id, S, Record<never, never>, Record<never, never>>
@@ -66,7 +74,7 @@ export const useCommand = defineStore("command", () => {
 
   const undo = () => {
     const command = stackedPatchesHistory.value.pop();
-    if (command == undefined) return;
+    if (command === undefined) return;
     for (const [storeId, { undoPatches }] of Object.entries(command)) {
       updateStore(storeIdMap[storeId], undoPatches);
     }
@@ -75,9 +83,9 @@ export const useCommand = defineStore("command", () => {
 
   const redo = () => {
     const command = poppedPatchesHistory.value.pop();
-    if (command == undefined) return;
-    for (const [storeId, { redoPatches }] of Object.entries(command)) {
-      updateStore(storeIdMap[storeId], redoPatches);
+    if (command === undefined) return;
+    for (const [storeId, { doPatches }] of Object.entries(command)) {
+      updateStore(storeIdMap[storeId], doPatches);
     }
     stackedPatchesHistory.value.push(command);
   };
@@ -99,7 +107,7 @@ export const useCommand = defineStore("command", () => {
 type CommandPatches = Record<
   string,
   {
-    redoPatches: Patch[];
+    doPatches: Patch[];
     undoPatches: Patch[];
   }
 >;
@@ -112,103 +120,183 @@ export class CommandableStateController<
     super(id, useStore);
   }
 
-  public useContext() {
-    const contexts = super.useContext();
-    const commandStore = useCommand();
-    const defCmd = <
-      MPayloads extends unknown[],
-      APayloads extends unknown[],
-      Ret
-    >(
-      mutation: MutationDefinition<S, MPayloads>,
-      action: (
-        mutation: (...payloads: MPayloads) => void,
-        ...payloads: APayloads
-      ) => Ret
-    ) => defCommand(commandStore, contexts._writableState, mutation, action);
-    const asCmd = <Payloads extends unknown[]>(
-      mutation: MutationDefinition<S, Payloads>
-    ): Command<(...payloads: Payloads) => void> & Mutation<S, Payloads> => {
-      const mut = contexts.defMut(mutation);
-      return {
-        ...mut,
-        dispatch: contexts.asAct(mutation),
-        command: convertAsCommand(
-          commandStore,
-          contexts._writableState,
-          mutation
-        ),
-      };
-    };
+  public useControllerContext(...args: Parameters<StoreDefinition>) {
+    const contexts = super.useControllerContext(...args);
+    const commandStore = useCommand(...args);
+    const defCmd = <Payloads extends unknown[], Ret>(
+      commandDef: CommandDefinition<Id, S, Payloads, Ret>
+    ): Command<Id, S, Payloads, Ret> => ({
+      [COMMAND_TAG]: commandDef,
+      [STORE_TAG]: contexts._store,
+      [COMMAND_STORE_TAG]: commandStore,
+    });
+    const invalidateRecordInternal = <Payloads extends unknown[], Ret>(
+      command: Command<Id, S, Payloads, Ret>
+    ) => invalidateRecord<Id, S, Payloads, Ret>(command);
 
     return {
       ...contexts,
       defCmd,
-      asCmd,
+      invalidateRecord: invalidateRecordInternal,
     };
   }
 }
 
+export function useController(...args: Parameters<StoreDefinition>) {
+  const comamndStore = useCommand(...args);
+  const callers = useControllerOrig();
+  const commandDispatch = templateCommandDispatchWithoutStore(comamndStore);
+  return {
+    ...callers,
+    commandDispatch,
+  };
+}
+
+/**
+ * 引数に取ったCommand内で用いられているMutation及びCommandのundo/redoの記録を無効化する
+ * @param {Command<Id, S, Payloads, Ret>} command - 記録を無効化したいCommand
+ * @returns {Action<Id, S, Payloads, Ret>} 記録を無効化したaction
+ */
+export function invalidateRecord<
+  Id extends string,
+  S extends StateTree,
+  Payloads extends unknown[],
+  Ret
+>(command: Command<Id, S, Payloads, Ret>): Action<Id, S, Payloads, Ret> {
+  const commandDef: CommandDefinition<Id, S, Payloads, Ret> =
+    command[COMMAND_TAG];
+  // dispatchからcommandDispatchを生成する
+  function templateCommandDispatch(dispatch: Dispatch): CommandDispatch {
+    return <
+      _Id extends string,
+      _S extends StateTree,
+      _Payloads extends unknown[],
+      _Ret
+    >(
+      command: Command<_Id, _S, _Payloads, _Ret>,
+      ...payloads: _Payloads
+    ) =>
+      dispatch(
+        invalidateRecord<_Id, _S, _Payloads, _Ret>(command),
+        ...payloads
+      );
+  }
+  const actionDef: ActionDefinition<Id, S, Payloads, Ret> = (
+    ctx,
+    ...payloads
+  ) =>
+    commandDef(
+      {
+        ...ctx,
+        recordCommit: ctx.commit,
+        commandDispatch: templateCommandDispatch(ctx.dispatch),
+      },
+      ...payloads
+    );
+  return {
+    [STORE_TAG]: command[STORE_TAG],
+    [ACTION_TAG]: actionDef,
+  };
+}
+
+export function templateCommandDispatchWithoutStore(
+  commandStore: CommandStoreInterface
+): CommandDispatch {
+  function commandDispatch<
+    Id extends string,
+    S extends StateTree,
+    Payloads extends unknown[],
+    Ret
+  >(command: Command<Id, S, Payloads, Ret>, ...payloads: Payloads) {
+    const state = command[STORE_TAG];
+    const commandContext: CommandContext<Id, S> = {
+      state: state as DeepReadonly<UnwrapRef<S>>,
+      get: templateGet<Id, S>(state as DeepReadonly<UnwrapRef<S>>),
+      commit: templateCommit<Id, S>(state),
+      recordCommit: templateRecordCommit(state, commandStore),
+      dispatch: templateDispatchWithoutStore(),
+      commandDispatch: commandDispatch,
+    };
+    return command[COMMAND_TAG](commandContext, ...payloads);
+  }
+  return commandDispatch;
+}
+
+export function templateRecordCommit<Id extends string, S extends StateTree>(
+  store: Store<Id, S>,
+  commandStore: CommandStoreInterface
+): Commit<Id, S> {
+  function recordCommit<Payloads extends unknown[]>(
+    mutaiton: Mutation<Id, S, Payloads>,
+    ...payloads: Payloads
+  ) {
+    const [, doPatches, undoPatches] = immer.produceWithPatches(
+      store.$state,
+      (draft: UnwrapRef<S>) => {
+        const mutationContext: MutationContext<Id, S> = {
+          state: draft,
+          get: templateGet<Id, S>(draft as DeepReadonly<UnwrapRef<S>>),
+          commit: templateCommit(draft),
+        };
+        mutaiton[MUTATION_TAG](mutationContext, ...payloads);
+      }
+    );
+    updateStore(store as Store, doPatches);
+    commandStore.$pushCommand({
+      [store.$id]: {
+        doPatches,
+        undoPatches,
+      },
+    });
+  }
+  return recordCommit;
+}
+
 function updateStore(store: Store, patches: Patch[]) {
-  store.$patch((state: StateTree) => {
+  store.$patch((state: unknown) => {
     applyPatchesImpl(state, patches);
   });
 }
 
-const convertAsCommand = <
-  Id extends string,
-  S extends StateTree,
-  Payloads extends unknown[]
->(
-  commandStore: { $pushCommand(command: CommandPatches): void },
-  store: StateStore<Id, S>,
-  mutation: MutationDefinition<S, Payloads>
-) => {
-  return (...payloads: Payloads) => {
-    // Record operations
-    const [, redoPatches, undoPatches] = immer.produceWithPatches(
-      store.$state,
-      (draft) => mutation(draft as Writable<UnwrapRef<S>>, ...payloads)
-    );
-    // apply patches
-    updateStore(store as Store, redoPatches);
-    commandStore.$pushCommand({
-      [store.$id]: {
-        redoPatches: redoPatches,
-        undoPatches: undoPatches,
-      },
-    });
-  };
-};
+// symbol for hiding
+export const COMMAND_TAG: unique symbol = Symbol();
+export const COMMAND_STORE_TAG: unique symbol = Symbol();
 
-export const defCommand = <
+// Context function
+export type CommandDispatch = <
   Id extends string,
   S extends StateTree,
-  MPayloads extends unknown[],
-  APayloads extends unknown[],
+  Payloads extends unknown[],
   Ret
 >(
-  commandStore: { $pushCommand(command: CommandPatches): void },
-  state: StateStore<Id, S>,
-  mutation: MutationDefinition<S, MPayloads>,
-  action: (
-    commit: (...payloads: MPayloads) => void,
-    ...payloads: APayloads
-  ) => Ret
-): Command<(...payloads: APayloads) => Ret> => {
-  const commandFunc = convertAsCommand(commandStore, state, mutation);
-  return {
-    dispatch: (...payloads: APayloads) =>
-      action(
-        (...mpayloads: MPayloads) =>
-          mutation(state as UnwrapRef<Writable<S>>, ...mpayloads),
-        ...payloads
-      ),
-    command: (...payloads: APayloads) => action(commandFunc, ...payloads),
-  };
+  command: Command<Id, S, Payloads, Ret>,
+  ...payloads: Payloads
+) => Ret;
+
+// Command
+export type CommandContext<Id extends string, S extends StateTree> = {
+  state: DeepReadonly<UnwrapRef<S>>;
+  get: Get<Id, S>;
+  commit: Commit<Id, S>;
+  recordCommit: Commit<Id, S>;
+  dispatch: Dispatch;
+  commandDispatch: CommandDispatch;
+};
+export type CommandDefinition<
+  Id extends string,
+  S extends StateTree,
+  Payloads extends unknown[],
+  Ret
+> = (context: CommandContext<Id, S>, ...payloads: Payloads) => Ret;
+export type Command<
+  Id extends string,
+  S extends StateTree,
+  Payloads extends unknown[],
+  Ret
+> = {
+  [COMMAND_TAG]: CommandDefinition<Id, S, Payloads, Ret>;
+  [STORE_TAG]: Store<Id, S>;
+  [COMMAND_STORE_TAG]: CommandStoreInterface;
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type Command<A extends Function> = Action<A> & {
-  command: A;
-};
+type CommandStoreInterface = { $pushCommand(command: CommandPatches): void };

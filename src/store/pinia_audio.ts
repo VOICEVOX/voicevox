@@ -25,11 +25,12 @@ const audioCmdState = defineCommandableState({
 });
 
 export const audioStore = defineStore("audioStore/store", () => {
-  const { state, asCmd, defCmd } = audioCmdState.useContext();
+  const { defMut, defCmd, invalidateRecord, _store } =
+    audioCmdState.useControllerContext();
 
-  const insertAudioItem = asCmd(
+  const mutInsertAudioItem = defMut(
     (
-      draft,
+      { state },
       {
         audioItem,
         audioKey,
@@ -42,50 +43,51 @@ export const audioStore = defineStore("audioStore/store", () => {
     ) => {
       const index =
         prevAudioKey != undefined
-          ? draft.audioKeys.indexOf(prevAudioKey) + 1
-          : draft.audioKeys.length;
-      draft.audioKeys.splice(index, 0, audioKey);
-      draft.audioItems[audioKey] = audioItem;
-      draft.audioStates[audioKey] = {
+          ? state.audioKeys.indexOf(prevAudioKey) + 1
+          : state.audioKeys.length;
+      state.audioKeys.splice(index, 0, audioKey);
+      state.audioItems[audioKey] = audioItem;
+      state.audioStates[audioKey] = {
         nowGenerating: false,
       };
     }
   );
-  const removeAudioItem = asCmd(
-    (draft, { audioKey }: { audioKey: AudioKey }) => {
-      draft.audioKeys.splice(draft.audioKeys.indexOf(audioKey), 1);
-      delete draft.audioItems[audioKey];
-      delete draft.audioStates[audioKey];
-    }
-  );
-
-  const registerAudioItem = defCmd(
-    insertAudioItem.func,
+  const cmdRegisterAudioItem = defCmd(
     (
-      commit,
+      { recordCommit },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey?: AudioKey }
     ) => {
       const audioKey = generateAudioKey();
-      commit({ audioKey, audioItem, prevAudioKey });
+      recordCommit(mutInsertAudioItem, { audioKey, audioItem, prevAudioKey });
       return audioKey;
     }
   );
-  const multiRemoveAudioItem = asCmd(
-    (draft, { audioKeys }: { audioKeys: AudioKey[] }) => {
+  const actRegisterAudioItem = invalidateRecord(cmdRegisterAudioItem);
+
+  const mutRemoveAudioItem = defMut(
+    ({ state }, { audioKey }: { audioKey: AudioKey }) => {
+      state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
+      delete state.audioItems[audioKey];
+      delete state.audioStates[audioKey];
+    }
+  );
+  const cmdMultiRemoveAudioItem = defCmd(
+    ({ recordCommit }, { audioKeys }: { audioKeys: AudioKey[] }) => {
       for (const audioKey of audioKeys) {
-        removeAudioItem.func(draft, { audioKey });
+        recordCommit(mutRemoveAudioItem, { audioKey });
       }
     }
   );
+  const actMultiRemoveAudioItem = invalidateRecord(cmdMultiRemoveAudioItem);
 
   return {
-    state: storeToRefs(state),
-    insertAudioItem,
-    removeAudioItem,
-    registerAudioItem,
-    multiRemoveAudioItem,
+    state: storeToRefs(_store),
+    cmdRegisterAudioItem,
+    actRegisterAudioItem,
+    cmdMultiRemoveAudioItem,
+    actMultiRemoveAudioItem,
   };
 });
