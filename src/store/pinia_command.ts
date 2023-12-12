@@ -137,9 +137,9 @@ export class CommandableStateController<
       [STORE_TAG]: contexts._store,
       [COMMAND_STORE_TAG]: commandStore,
     });
-    const invalidateRecordInternal = <Payloads extends unknown[], Ret>(
+    const asNonRecordActInternal = <Payloads extends unknown[], Ret>(
       command: Command<Id, S, Payloads, Ret>
-    ) => invalidateRecord<Id, S, Payloads, Ret>(command);
+    ) => asNonRecordAct<Id, S, Payloads, Ret>(command);
 
     return {
       ...contexts,
@@ -158,9 +158,9 @@ export class CommandableStateController<
       /**
        * `Command`の`recordCommit`を無効化し, 記録を行わない通常の`Action`に変換する関数
        * @example
-       * const action3 = invalidateRecord(command3);
+       * const action3 = asNonRecordAct(command3);
        */
-      invalidateRecord: invalidateRecordInternal,
+      asNonRecordAct: asNonRecordActInternal,
     };
   }
 }
@@ -194,7 +194,7 @@ export function useController(...args: Parameters<StoreDefinition>) {
  * @param {Command<Id, S, Payloads, Ret>} command - 記録を無効化したいCommand
  * @returns {Action<Id, S, Payloads, Ret>} 記録を無効化したaction
  */
-export function invalidateRecord<
+export function asNonRecordAct<
   Id extends string,
   S extends StateTree,
   Payloads extends unknown[],
@@ -213,10 +213,7 @@ export function invalidateRecord<
       command: Command<_Id, _S, _Payloads, _Ret>,
       ...payloads: _Payloads
     ) =>
-      dispatch(
-        invalidateRecord<_Id, _S, _Payloads, _Ret>(command),
-        ...payloads
-      );
+      dispatch(asNonRecordAct<_Id, _S, _Payloads, _Ret>(command), ...payloads);
   }
   const actionDef: ActionDefinition<Id, S, Payloads, Ret> = (
     ctx,
