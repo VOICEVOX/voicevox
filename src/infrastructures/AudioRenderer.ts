@@ -808,7 +808,7 @@ export class PolySynth implements Instrument {
     this.filterParams = options?.filter ?? {
       cutoff: 3300,
       resonance: 0,
-      keyTrack: 0.26,
+      keyTrack: 0.25,
     };
     this.ampParams = options?.amp ?? {
       attack: 0.001,
@@ -818,7 +818,7 @@ export class PolySynth implements Instrument {
     };
 
     this.gainNode = new GainNode(this.audioContext);
-    this.gainNode.gain.value = options?.volume ?? 0.1;
+    this.gainNode.gain.value = options?.volume ?? 0.13;
   }
 
   /**
