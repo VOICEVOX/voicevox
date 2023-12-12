@@ -143,9 +143,9 @@ export class CommandableStateController<
 }
 
 export function useController(...args: Parameters<StoreDefinition>) {
-  const comamndStore = useCommand(...args);
+  const commandStore = useCommand(...args);
   const callers = useControllerOrig();
-  const commandDispatch = templateCommandDispatchWithoutStore(comamndStore);
+  const commandDispatch = templateCommandDispatchWithoutStore(commandStore);
   return {
     ...callers,
     commandDispatch,
