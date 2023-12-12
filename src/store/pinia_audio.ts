@@ -25,7 +25,7 @@ const audioCmdState = defineCommandableState({
 });
 
 export const audioStore = defineStore("audioStore/store", () => {
-  const { defMut, defCmd, asNonRecordAct, _store } =
+  const { defMut, defCmd, asNonRecordAct, _rawStore } =
     audioCmdState.useControllerContext();
 
   const mutInsertAudioItem = defMut(
@@ -87,7 +87,7 @@ export const audioStore = defineStore("audioStore/store", () => {
   );
 
   return {
-    state: storeToRefs(_store),
+    state: storeToRefs(_rawStore),
     cmdRegisterAudioItem,
     actRegisterAudioItem,
     cmdMultiRemoveAudioItem,

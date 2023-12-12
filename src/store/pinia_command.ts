@@ -134,7 +134,7 @@ export class CommandableStateController<
       commandDef: CommandDefinition<Id, S, Payloads, Ret>
     ): Command<Id, S, Payloads, Ret> => ({
       [COMMAND_TAG]: commandDef,
-      [STORE_TAG]: contexts._store,
+      [STORE_TAG]: contexts._rawStore,
       [COMMAND_STORE_TAG]: commandStore,
     });
     const asNonRecordActInternal = <Payloads extends unknown[], Ret>(

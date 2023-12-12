@@ -86,7 +86,7 @@ export class StateController<Id extends string, S extends StateTree> {
         [ACTION_TAG]: actionDef,
         [STORE_TAG]: store,
       }),
-      _store: store,
+      _rawStore: store,
     };
   }
 
