@@ -74,20 +74,22 @@ export const audioStore = defineStore("audioStore/store", () => {
       delete state.audioStates[audioKey];
     }
   );
-  const cmdMultiRemoveAudioItem = defCmd(
-    ({ recordCommit }, { audioKeys }: { audioKeys: AudioKey[] }) => {
+  const mutMultiRemoveAudioItem = defMut(
+    ({ commit }, { audioKeys }: { audioKeys: AudioKey[] }) => {
       for (const audioKey of audioKeys) {
-        recordCommit(mutRemoveAudioItem, { audioKey });
+        commit(mutRemoveAudioItem, { audioKey });
       }
     }
   );
-  const actMultiRemoveAudioItem = invalidateRecord(cmdMultiRemoveAudioItem);
+  const cmdMultiRemoveAudioItem = defCmd(
+    ({ recordCommit }, payload: { audioKeys: AudioKey[] }) =>
+      recordCommit(mutMultiRemoveAudioItem, payload)
+  );
 
   return {
     state: storeToRefs(_store),
     cmdRegisterAudioItem,
     actRegisterAudioItem,
     cmdMultiRemoveAudioItem,
-    actMultiRemoveAudioItem,
   };
 });
