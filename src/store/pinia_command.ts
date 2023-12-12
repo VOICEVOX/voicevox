@@ -74,7 +74,7 @@ export const useCommand = defineStore("command", () => {
 
   const undo = () => {
     const command = stackedPatchesHistory.value.pop();
-    if (command === undefined) return;
+    if (command == undefined) return;
     for (const [storeId, { undoPatches }] of Object.entries(command)) {
       updateStore(storeIdMap[storeId], undoPatches);
     }
@@ -83,7 +83,7 @@ export const useCommand = defineStore("command", () => {
 
   const redo = () => {
     const command = poppedPatchesHistory.value.pop();
-    if (command === undefined) return;
+    if (command == undefined) return;
     for (const [storeId, { doPatches }] of Object.entries(command)) {
       updateStore(storeIdMap[storeId], doPatches);
     }
