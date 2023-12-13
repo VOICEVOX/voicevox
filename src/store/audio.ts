@@ -2043,12 +2043,10 @@ export const audioCommandStore = transformCommandStore(
             "changeVoice"
           );
 
-          if (shouldApplyPreset) {
-            audioStore.mutations.SET_AUDIO_PRESET_KEY(state, {
-              audioKey,
-              presetKey: nextPresetKey,
-            });
-          }
+          audioStore.mutations.SET_AUDIO_PRESET_KEY(state, {
+            audioKey,
+            presetKey: nextPresetKey,
+          });
 
           audioStore.mutations.SET_AUDIO_VOICE(state, {
             audioKey,
