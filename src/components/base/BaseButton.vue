@@ -4,6 +4,7 @@
     :class="variant ? variant : 'default'"
     @click="(payload) => $emit('click', payload)"
   >
+    <!-- 暫定でq-iconを使用 -->
     <q-icon v-if="icon" :name="icon" size="sm" />
     {{ label }}
   </button>

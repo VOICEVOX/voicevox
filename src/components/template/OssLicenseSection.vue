@@ -13,6 +13,7 @@
             clickable
             @click="selectLicenseIndex(index)"
           >
+            <!-- 暫定でq-iconを使用 -->
             <q-icon name="keyboard_arrow_right" size="sm" />
           </BaseRowCard>
         </div>
@@ -60,7 +61,7 @@ const selectLicenseIndex = (index: number | undefined) => {
 @use '@/styles/mixin' as mixin;
 
 .container {
-  // 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
+  // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
   // height: 100%;
   height: calc(100vh - 90px);
   background-color: #e9f3e7;
