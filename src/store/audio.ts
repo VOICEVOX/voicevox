@@ -2034,6 +2034,22 @@ export const audioCommandStore = transformCommandStore(
           // TypeScriptは`Object.entries`のKeyの型を`string`としてしまうので、`as`で型を指定する
           const audioKey = audioKey_ as AudioKey;
 
+          const presetKey = state.audioItems[audioKey].presetKey;
+
+          const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
+            state,
+            payload.voice,
+            presetKey,
+            "changeVoice"
+          );
+
+          if (shouldApplyPreset) {
+            audioStore.mutations.SET_AUDIO_PRESET_KEY(state, {
+              audioKey,
+              presetKey: nextPresetKey,
+            });
+          }
+
           audioStore.mutations.SET_AUDIO_VOICE(state, {
             audioKey,
             voice: payload.voice,
@@ -2047,6 +2063,11 @@ export const audioCommandStore = transformCommandStore(
             audioStore.mutations.SET_AUDIO_QUERY(state, {
               audioKey,
               audioQuery: change.query,
+            });
+          }
+          if (shouldApplyPreset) {
+            audioStore.mutations.APPLY_AUDIO_PRESET(state, {
+              audioKey,
             });
           }
         }
