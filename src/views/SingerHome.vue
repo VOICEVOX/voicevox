@@ -98,7 +98,7 @@ export default defineComponent({
       });
       await store.dispatch("SET_SINGER", {});
 
-      await store.dispatch("SET_VOLUME", { volume: 0.3 });
+      await store.dispatch("SET_VOLUME", { volume: 0.6 });
       await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
       await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
         position: 0,

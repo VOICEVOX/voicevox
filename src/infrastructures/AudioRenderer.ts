@@ -582,12 +582,11 @@ class AudioPlayerVoice {
 }
 
 export type AudioPlayerOptions = {
-  readonly volume: number;
+  readonly volume?: number;
 };
 
 /**
  * 同時に複数の音声を再生することが可能なプレイヤーです。
- * ボイス（AudioPlayerVoice）の作成・管理を行います。
  */
 export class AudioPlayer {
   private readonly audioContext: BaseAudioContext;
@@ -599,14 +598,11 @@ export class AudioPlayer {
     return this.gainNode;
   }
 
-  constructor(
-    audioContext: BaseAudioContext,
-    options: AudioPlayerOptions = { volume: 1.0 }
-  ) {
+  constructor(audioContext: BaseAudioContext, options?: AudioPlayerOptions) {
     this.audioContext = audioContext;
 
     this.gainNode = new GainNode(audioContext);
-    this.gainNode.gain.value = options.volume;
+    this.gainNode.gain.value = options?.volume ?? 1.0;
   }
 
   /**
@@ -639,7 +635,17 @@ export class AudioPlayer {
   }
 }
 
-export type Envelope = {
+export type SynthOscParams = {
+  readonly type: OscillatorType;
+};
+
+export type SynthFilterParams = {
+  readonly cutoff: number;
+  readonly resonance: number;
+  readonly keyTrack: number;
+};
+
+export type SynthAmpParams = {
   readonly attack: number;
   readonly decay: number;
   readonly sustain: number;
@@ -648,8 +654,9 @@ export type Envelope = {
 
 type SynthVoiceParams = {
   readonly noteNumber: number;
-  readonly oscillatorType: OscillatorType;
-  readonly envelope: Envelope;
+  readonly osc: SynthOscParams;
+  readonly filter: SynthFilterParams;
+  readonly amp: SynthAmpParams;
 };
 
 /**
@@ -657,9 +664,10 @@ type SynthVoiceParams = {
  */
 class SynthVoice {
   readonly noteNumber: number;
-  private readonly oscillatorNode: OscillatorNode;
+  private readonly oscNode: OscillatorNode;
   private readonly gainNode: GainNode;
-  private readonly envelope: Envelope;
+  private readonly filterNode: BiquadFilterNode;
+  private readonly ampParams: SynthAmpParams;
 
   private _isActive = false;
   private _isStopped = false;
@@ -679,24 +687,43 @@ class SynthVoice {
 
   constructor(audioContext: BaseAudioContext, params: SynthVoiceParams) {
     this.noteNumber = params.noteNumber;
-    this.envelope = params.envelope;
+    this.ampParams = params.amp;
 
-    this.oscillatorNode = new OscillatorNode(audioContext);
-    this.oscillatorNode.onended = () => {
+    this.oscNode = new OscillatorNode(audioContext);
+    this.oscNode.type = params.osc.type;
+    this.oscNode.onended = () => {
       this._isStopped = true;
     };
+    this.filterNode = new BiquadFilterNode(audioContext);
+    this.filterNode.type = "lowpass";
+    this.filterNode.frequency.value = this.calcFilterFreq(
+      params.filter.cutoff,
+      params.filter.keyTrack,
+      params.noteNumber
+    );
+    this.filterNode.Q.value = this.calcFilterQ(params.filter.resonance);
     this.gainNode = new GainNode(audioContext);
-    this.oscillatorNode.type = params.oscillatorType;
-    this.oscillatorNode.connect(this.gainNode);
+    this.oscNode.connect(this.filterNode);
+    this.filterNode.connect(this.gainNode);
   }
 
-  /**
-   * MIDIノート番号を周波数に変換します。
-   * @param noteNumber MIDIノート番号
-   * @returns 周波数（Hz）
-   */
-  private midiToFrequency(noteNumber: number) {
-    return 440 * 2 ** ((noteNumber - 69) / 12);
+  private noteNumberToFrequency(noteNumber: number) {
+    return 440 * Math.pow(2, (noteNumber - 69) / 12);
+  }
+
+  private linearToDecibel(linearValue: number) {
+    if (linearValue === 0) {
+      return -1000;
+    }
+    return 20 * Math.log10(linearValue);
+  }
+
+  private calcFilterFreq(cutoff: number, keyTrack: number, noteNumber: number) {
+    return cutoff * Math.pow(2, ((noteNumber - 60) * keyTrack) / 12);
+  }
+
+  private calcFilterQ(resonance: number) {
+    return this.linearToDecibel(Math.SQRT1_2) + resonance;
   }
 
   /**
@@ -705,20 +732,20 @@ class SynthVoice {
    */
   noteOn(contextTime: number) {
     const t0 = contextTime;
-    const atk = this.envelope.attack;
-    const dcy = this.envelope.decay;
-    const sus = this.envelope.sustain;
+    const atk = this.ampParams.attack;
+    const dcy = this.ampParams.decay;
+    const sus = this.ampParams.sustain;
 
-    // エンベロープ（アタック、ディケイ、サスティーン）のスケジュールを行う
+    // アタック、ディケイ、サスティーンのスケジュールを行う
     this.gainNode.gain.value = 0;
     this.gainNode.gain.setValueAtTime(0, t0);
     this.gainNode.gain.linearRampToValueAtTime(1, t0 + atk);
     this.gainNode.gain.setTargetAtTime(sus, t0 + atk, dcy);
 
-    const freq = this.midiToFrequency(this.noteNumber);
-    this.oscillatorNode.frequency.value = freq;
+    const freq = this.noteNumberToFrequency(this.noteNumber);
+    this.oscNode.frequency.value = freq;
 
-    this.oscillatorNode.start(contextTime);
+    this.oscNode.start(contextTime);
     this._isActive = true;
   }
 
@@ -731,18 +758,18 @@ class SynthVoice {
    */
   noteOff(contextTime: number) {
     const t0 = contextTime;
-    const rel = this.envelope.release;
+    const rel = this.ampParams.release;
     const stopContextTime = t0 + rel * 4;
 
     if (
       this.stopContextTime === undefined ||
       stopContextTime < this.stopContextTime
     ) {
-      // エンベロープ（リリース）のスケジュールを行う
+      // リリースのスケジュールを行う
       this.gainNode.gain.cancelAndHoldAtTime(t0);
       this.gainNode.gain.setTargetAtTime(0, t0, rel);
 
-      this.oscillatorNode.stop(stopContextTime);
+      this.oscNode.stop(stopContextTime);
       this._isActive = false;
 
       this.stopContextTime = stopContextTime;
@@ -751,20 +778,21 @@ class SynthVoice {
 }
 
 export type PolySynthOptions = {
-  readonly volume: number;
-  readonly oscillatorType: OscillatorType;
-  readonly envelope: Envelope;
+  readonly volume?: number;
+  readonly osc?: SynthOscParams;
+  readonly filter?: SynthFilterParams;
+  readonly amp?: SynthAmpParams;
 };
 
 /**
- * エンベロープの設定が可能なポリフォニックシンセサイザーです。
- * ボイス（SynthVoice）の作成・管理を行います。
+ * ポリフォニックシンセサイザーです。
  */
 export class PolySynth implements Instrument {
   private readonly audioContext: BaseAudioContext;
   private readonly gainNode: GainNode;
-  private readonly oscillatorType: OscillatorType;
-  private readonly envelope: Envelope;
+  private readonly oscParams: SynthOscParams;
+  private readonly filterParams: SynthFilterParams;
+  private readonly ampParams: SynthAmpParams;
 
   private voices: SynthVoice[] = [];
 
@@ -772,25 +800,25 @@ export class PolySynth implements Instrument {
     return this.gainNode;
   }
 
-  constructor(
-    audioContext: BaseAudioContext,
-    options: PolySynthOptions = {
-      volume: 0.1,
-      oscillatorType: "square",
-      envelope: {
-        attack: 0.001,
-        decay: 0.1,
-        sustain: 0.7,
-        release: 0.02,
-      },
-    }
-  ) {
+  constructor(audioContext: BaseAudioContext, options?: PolySynthOptions) {
     this.audioContext = audioContext;
+    this.oscParams = options?.osc ?? {
+      type: "square",
+    };
+    this.filterParams = options?.filter ?? {
+      cutoff: 3300,
+      resonance: 0,
+      keyTrack: 0.25,
+    };
+    this.ampParams = options?.amp ?? {
+      attack: 0.001,
+      decay: 0.18,
+      sustain: 0.3,
+      release: 0.02,
+    };
 
-    this.oscillatorType = options.oscillatorType;
-    this.envelope = options.envelope;
     this.gainNode = new GainNode(this.audioContext);
-    this.gainNode.gain.value = options.volume;
+    this.gainNode.gain.value = options?.volume ?? 0.13;
   }
 
   /**
@@ -807,8 +835,9 @@ export class PolySynth implements Instrument {
 
     const voice = new SynthVoice(this.audioContext, {
       noteNumber,
-      oscillatorType: this.oscillatorType,
-      envelope: this.envelope,
+      osc: this.oscParams,
+      filter: this.filterParams,
+      amp: this.ampParams,
     });
     this.voices = this.voices.filter((value) => {
       return !value.isStopped;
@@ -848,7 +877,7 @@ export class PolySynth implements Instrument {
 }
 
 export type ChannelStripOptions = {
-  readonly volume: number;
+  readonly volume?: number;
 };
 
 /**
@@ -872,19 +901,16 @@ export class ChannelStrip {
     this.gainNode.gain.value = value;
   }
 
-  constructor(
-    audioContext: BaseAudioContext,
-    options: ChannelStripOptions = { volume: 0.1 }
-  ) {
+  constructor(audioContext: BaseAudioContext, options?: ChannelStripOptions) {
     this.gainNode = new GainNode(audioContext);
-    this.gainNode.gain.value = options.volume;
+    this.gainNode.gain.value = options?.volume ?? 0.1;
   }
 }
 
 export type LimiterOptions = {
-  readonly inputGain: number;
-  readonly outputGain: number;
-  readonly release: number;
+  readonly inputGain?: number;
+  readonly outputGain?: number;
+  readonly release?: number;
 };
 
 /**
@@ -935,10 +961,7 @@ export class Limiter {
     return this.compNode.reduction;
   }
 
-  constructor(
-    audioContext: BaseAudioContext,
-    options: LimiterOptions = { inputGain: 0, outputGain: 0, release: 0.25 }
-  ) {
+  constructor(audioContext: BaseAudioContext, options?: LimiterOptions) {
     this.inputGainNode = new GainNode(audioContext);
     this.compNode = new DynamicsCompressorNode(audioContext);
     this.correctionGainNode = new GainNode(audioContext);
@@ -949,13 +972,13 @@ export class Limiter {
     this.compNode.ratio.value = 20; // クリッピングが起こらないように、高いレシオ（1/20）で圧縮する
     this.compNode.knee.value = 8; // 自然にかかってほしいという気持ちで8に設定（リミッターなので0でも良いかも）
     this.compNode.attack.value = 0; // クリッピングが起こらないように、すぐに圧縮を開始する
-    this.compNode.release.value = options.release; // 歪まないように少し遅めに設定
+    this.compNode.release.value = options?.release ?? 0.25; // 歪まないように少し遅めに設定
 
     // メイクアップゲインで上がった分を下げる（圧縮していないときは元の音量で出力）
     this.correctionGainNode.gain.value = 0.85;
 
-    this.setGainInDecibels(options.inputGain, this.inputGainNode);
-    this.setGainInDecibels(options.outputGain, this.outputGainNode);
+    this.setGainInDecibels(options?.inputGain ?? 0, this.inputGainNode);
+    this.setGainInDecibels(options?.outputGain ?? 0, this.outputGainNode);
 
     this.inputGainNode.connect(this.compNode);
     this.compNode.connect(this.correctionGainNode);
