@@ -1,16 +1,16 @@
 <template>
-  <ScrollAreaRoot class="scroll-area" type="auto">
-    <ScrollAreaViewport class="viewport">
+  <ScrollAreaRoot class="ScrollAreaRoot" type="auto">
+    <ScrollAreaViewport class="ScrollAreaViewport">
       <slot />
     </ScrollAreaViewport>
-    <ScrollAreaScrollbar class="scrollbar" orientation="horizontal">
-      <ScrollAreaThumb class="thumb-container">
-        <div class="thumb"></div>
+    <ScrollAreaScrollbar class="ScrollAreaScrollbar" orientation="horizontal">
+      <ScrollAreaThumb class="ScrollAreaThumbContainer">
+        <div class="ScrollAreaThumb"></div>
       </ScrollAreaThumb>
     </ScrollAreaScrollbar>
-    <ScrollAreaScrollbar class="scrollbar" orientation="vertical">
-      <ScrollAreaThumb class="thumb-container">
-        <div class="thumb"></div>
+    <ScrollAreaScrollbar class="ScrollAreaScrollbar" orientation="vertical">
+      <ScrollAreaThumb class="ScrollAreaThumbContainer">
+        <div class="ScrollAreaThumb"></div>
       </ScrollAreaThumb>
     </ScrollAreaScrollbar>
   </ScrollAreaRoot>
@@ -28,7 +28,7 @@ import {
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
 
-.scroll-area {
+.ScrollAreaRoot {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -36,29 +36,29 @@ import {
   flex-direction: column;
 }
 
-.viewport {
+.ScrollAreaViewport {
   width: 100%;
   height: 100%;
 }
 
-.scrollbar {
+.ScrollAreaScrollbar {
   user-select: none;
   touch-action: none;
 }
 
-.scrollbar[data-orientation="vertical"] {
+.ScrollAreaScrollbar[data-orientation="vertical"] {
   width: vars.$size-scrollbar;
 }
 
-.scrollbar[data-orientation="horizontal"] {
+.ScrollAreaScrollbar[data-orientation="horizontal"] {
   height: vars.$size-scrollbar;
 }
 
-.thumb-container {
+.ScrollAreaThumbContainer {
   padding: 4px;
 }
 
-.thumb {
+.ScrollAreaThumb {
   width: 100%;
   height: 100%;
   background-color: #0002;
@@ -67,7 +67,7 @@ import {
   transition: background-color vars.$transition-duration;
 }
 
-.scrollbar:hover .thumb {
+.ScrollAreaScrollbar:hover .ScrollAreaThumb {
   background-color: #0003;
 }
 </style>
