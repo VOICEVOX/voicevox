@@ -657,8 +657,8 @@ export type TempProjectType =
       project: ProjectType;
       projectFilePath?: string;
       commandStoreState: CommandStoreState;
-      projectSavedAt: number | null;
-      fileModifiedAt?: number;
+      projectSavedAt: number | null; // projectFilePath のファイル保存時刻（外部で編集された場合も値は変わらない）
+      fileModifiedAt?: number; // projectFilePath のファイル物理変更時刻
     }
   | {
       /** プロジェクトが保存されている状態 */
@@ -671,4 +671,5 @@ export type TempProjectType =
   | {
       /** プロジェクト一時ファイルの初期状態 */
       state: "none";
+      projectSavedAt: null;
     };

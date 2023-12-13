@@ -850,10 +850,12 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
 ipcMainHandle("GET_TEMP_PROJECT", async () => {
   try {
     if (!fs.existsSync(tempProjectPath)) {
+      const defaultTempProject: TempProjectType = {
+        state: "none",
+        projectSavedAt: null,
+      };
       const buf = new TextEncoder().encode(
-        JSON.stringify({
-          state: "none",
-        })
+        JSON.stringify(defaultTempProject)
       ).buffer;
       await setTempProject(buf);
     }

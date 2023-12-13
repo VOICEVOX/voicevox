@@ -533,10 +533,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             undoCommands: state.undoCommands,
             redoCommands: state.redoCommands,
           },
-          projectSavedAt:
-            loadedTempProjectData.state === "none"
-              ? new Date().getTime()
-              : loadedTempProjectData.projectSavedAt,
+          projectSavedAt: loadedTempProjectData.projectSavedAt, // プロジェクトファイルの保存時刻を引き継ぐ
         };
 
         const buf = new TextEncoder().encode(
@@ -556,6 +553,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     async action(context) {
       let projectData: TempProjectType = {
         state: "none",
+        projectSavedAt: null,
       };
 
       // 自動読み込み機能有効時プロジェクトファイルのパスを保存する
