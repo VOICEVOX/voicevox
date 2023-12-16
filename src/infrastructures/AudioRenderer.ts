@@ -831,7 +831,7 @@ export class PolySynth implements Instrument {
     };
 
     this.gainNode = new GainNode(this.audioContext);
-    this.gainNode.gain.value = options?.volume ?? 0.13;
+    this.gainNode.gain.value = options?.volume ?? 0.12;
   }
 
   /**

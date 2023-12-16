@@ -12,7 +12,7 @@
     <sequencer-keys
       class="sequencer-keys"
       :offset="scrollY"
-      :black-key-width="30"
+      :black-key-width="28"
     />
     <!-- シーケンサ -->
     <div

@@ -22,7 +22,7 @@
         <text
           v-if="whiteKeyInfo.pitch === 'C'"
           font-size="10"
-          :x="blackKeyWidth + 2"
+          :x="whiteKeyRects[index].x + whiteKeyRects[index].width - 18"
           :y="whiteKeyRects[index].y + whiteKeyRects[index].height - 4 - offset"
           class="pitchname"
         >
