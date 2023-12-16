@@ -63,6 +63,7 @@ import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
+  PREVIEW_SOUND_DURATION,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
@@ -126,34 +127,40 @@ export default defineComponent({
       }
     };
 
+    const selectThisNote = () => {
+      const noteIds = [...state.selectedNoteIds, props.note.id];
+      store.dispatch("SET_SELECTED_NOTE_IDS", {
+        noteIds,
+      });
+      store.dispatch("PLAY_PREVIEW_SOUND", {
+        noteNumber: props.note.noteNumber,
+        duration: PREVIEW_SOUND_DURATION,
+      });
+    };
+
     const handleKeydown = (event: KeyboardEvent) => {
       emit("handleNotesKeydown", event);
     };
 
     const handleMouseDown = (event: MouseEvent) => {
       if (!state.selectedNoteIds.includes(props.note.id)) {
-        const noteIds = [...state.selectedNoteIds, props.note.id];
-        store.dispatch("SET_SELECTED_NOTE_IDS", {
-          noteIds,
-        });
+        selectThisNote();
       } else {
         emit("handleDragMoveStart", event);
       }
     };
 
     const handleDragRightStart = (event: MouseEvent) => {
-      const noteIds = [...state.selectedNoteIds, props.note.id];
-      store.dispatch("SET_SELECTED_NOTE_IDS", {
-        noteIds,
-      });
+      if (!state.selectedNoteIds.includes(props.note.id)) {
+        selectThisNote();
+      }
       emit("handleDragRightStart", event);
     };
 
     const handleDragLeftStart = (event: MouseEvent) => {
-      const noteIds = [...state.selectedNoteIds, props.note.id];
-      store.dispatch("SET_SELECTED_NOTE_IDS", {
-        noteIds,
-      });
+      if (!state.selectedNoteIds.includes(props.note.id)) {
+        selectThisNote();
+      }
       emit("handleDragLeftStart", event);
     };
 

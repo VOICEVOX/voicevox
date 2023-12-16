@@ -262,6 +262,7 @@ const isValidScore = (score: Score) => {
 
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
+let previewSynth: PolySynth | undefined;
 let channelStrip: ChannelStrip | undefined;
 let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
@@ -270,10 +271,12 @@ let clipper: Clipper | undefined;
 if (window.AudioContext) {
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
+  previewSynth = new PolySynth(audioContext);
   channelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
 
+  previewSynth.output.connect(channelStrip.input);
   channelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
@@ -892,6 +895,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_VOLUME", { volume });
 
       channelStrip.volume = volume;
+    },
+  },
+
+  PLAY_PREVIEW_SOUND: {
+    async action(
+      _,
+      { noteNumber, duration }: { noteNumber: number; duration?: number }
+    ) {
+      if (!audioContext) {
+        throw new Error("audioContext is undefined.");
+      }
+      if (!previewSynth) {
+        throw new Error("previewSynth is undefined.");
+      }
+      previewSynth.noteOn(0, noteNumber);
+      if (duration !== undefined) {
+        const contextTime = audioContext.currentTime;
+        previewSynth.noteOff(contextTime + duration, noteNumber);
+      }
+    },
+  },
+
+  STOP_PREVIEW_SOUND: {
+    async action(_, { noteNumber }: { noteNumber: number }) {
+      if (!audioContext) {
+        throw new Error("audioContext is undefined.");
+      }
+      if (!previewSynth) {
+        throw new Error("previewSynth is undefined.");
+      }
+      previewSynth.noteOff(0, noteNumber);
     },
   },
 

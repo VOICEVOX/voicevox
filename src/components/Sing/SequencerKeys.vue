@@ -1,45 +1,52 @@
 <template>
   <div ref="sequencerKeys" class="sequencer-keys">
     <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
-      <defs>
-        <symbol id="white-keys">
-          <g v-for="(whiteKeyInfo, index) in whiteKeyInfos" :key="index">
-            <rect
-              :x="whiteKeyRects[index].x - 0.5"
-              :y="whiteKeyRects[index].y + 0.5"
-              :width="whiteKeyRects[index].width"
-              :height="whiteKeyRects[index].height"
-              class="sequencer-keys-item-white"
-              :title="whiteKeyInfo.name"
-            />
-            <text
-              v-if="whiteKeyInfo.pitch === 'C'"
-              font-size="10"
-              :x="blackKeyWidth + 2"
-              :y="whiteKeyRects[index].y + whiteKeyRects[index].height - 4"
-              class="sequencer-keys-item-pitchname"
-            >
-              {{ whiteKeyInfo.name }}
-            </text>
-          </g>
-        </symbol>
-        <symbol id="black-keys">
-          <rect
-            v-for="(blackKeyInfo, index) in blackKeyInfos"
-            :key="index"
-            :x="blackKeyRects[index].x - 0.5"
-            :y="blackKeyRects[index].y + 0.5"
-            :width="blackKeyRects[index].width"
-            :height="blackKeyRects[index].height"
-            rx="2"
-            ry="2"
-            class="sequencer-keys-item-black"
-            :title="blackKeyInfo.name"
-          />
-        </symbol>
-      </defs>
-      <use href="#white-keys" :y="-offset" />
-      <use href="#black-keys" :y="-offset" />
+      <g
+        v-for="(whiteKeyInfo, index) in whiteKeyInfos"
+        :key="index"
+        @mousedown="onMouseDown(whiteKeyInfo.noteNumber)"
+        @mouseenter="onMouseEnter(whiteKeyInfo.noteNumber)"
+      >
+        <rect
+          :x="whiteKeyRects[index].x - 0.5"
+          :y="whiteKeyRects[index].y + 0.5 - offset"
+          :width="whiteKeyRects[index].width"
+          :height="whiteKeyRects[index].height"
+          :title="whiteKeyInfo.name"
+          :class="
+            noteNumberOfKeyBeingPressed === whiteKeyInfo.noteNumber
+              ? 'white-key-being-pressed'
+              : 'white-key'
+          "
+        />
+        <text
+          v-if="whiteKeyInfo.pitch === 'C'"
+          font-size="10"
+          :x="blackKeyWidth + 2"
+          :y="whiteKeyRects[index].y + whiteKeyRects[index].height - 4 - offset"
+          class="pitchname"
+        >
+          {{ whiteKeyInfo.name }}
+        </text>
+      </g>
+      <rect
+        v-for="(blackKeyInfo, index) in blackKeyInfos"
+        :key="index"
+        :x="blackKeyRects[index].x - 0.5"
+        :y="blackKeyRects[index].y + 0.5 - offset"
+        :width="blackKeyRects[index].width"
+        :height="blackKeyRects[index].height"
+        rx="2"
+        ry="2"
+        :title="blackKeyInfo.name"
+        :class="
+          noteNumberOfKeyBeingPressed === blackKeyInfo.noteNumber
+            ? 'black-key-being-pressed'
+            : 'black-key'
+        "
+        @mousedown="onMouseDown(blackKeyInfo.noteNumber)"
+        @mouseenter="onMouseEnter(blackKeyInfo.noteNumber)"
+      />
     </svg>
   </div>
 </template>
@@ -103,9 +110,36 @@ export default defineComponent({
         };
       });
     });
+    const noteNumberOfKeyBeingPressed = ref<number | undefined>();
 
     const sequencerKeys = ref<HTMLElement | null>(null);
     let resizeObserver: ResizeObserver | undefined;
+
+    const onMouseDown = (noteNumber: number) => {
+      noteNumberOfKeyBeingPressed.value = noteNumber;
+      store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+    };
+
+    const onMouseUp = () => {
+      if (noteNumberOfKeyBeingPressed.value !== undefined) {
+        const noteNumber = noteNumberOfKeyBeingPressed.value;
+        noteNumberOfKeyBeingPressed.value = undefined;
+        store.dispatch("STOP_PREVIEW_SOUND", { noteNumber });
+      }
+    };
+
+    const onMouseEnter = (noteNumber: number) => {
+      if (
+        noteNumberOfKeyBeingPressed.value !== undefined &&
+        noteNumberOfKeyBeingPressed.value !== noteNumber
+      ) {
+        store.dispatch("STOP_PREVIEW_SOUND", {
+          noteNumber: noteNumberOfKeyBeingPressed.value,
+        });
+        noteNumberOfKeyBeingPressed.value = noteNumber;
+        store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+      }
+    };
 
     onMounted(() => {
       const sequencerKeysElement = sequencerKeys.value;
@@ -124,10 +158,13 @@ export default defineComponent({
         }
       });
       resizeObserver.observe(sequencerKeysElement);
+
+      document.addEventListener("mouseup", onMouseUp);
     });
 
     onUnmounted(() => {
       resizeObserver?.disconnect();
+      document.removeEventListener("mouseup", onMouseUp);
     });
 
     return {
@@ -141,6 +178,9 @@ export default defineComponent({
       whiteKeyRects,
       blackKeyRects,
       sequencerKeys,
+      noteNumberOfKeyBeingPressed,
+      onMouseDown,
+      onMouseEnter,
     };
   },
 });
@@ -157,16 +197,25 @@ export default defineComponent({
   overflow: hidden;
 }
 
-.sequencer-keys-item-white {
+.white-key {
   fill: #fff;
   stroke: #ccc;
 }
 
-.sequencer-keys-item-black {
+.white-key-being-pressed {
+  fill: colors.$primary;
+  stroke: colors.$primary;
+}
+
+.black-key {
   fill: #5a5a5a;
 }
 
-.sequencer-keys-item-pitchname {
+.black-key-being-pressed {
+  fill: colors.$primary;
+}
+
+.pitchname {
   fill: #555;
 }
 </style>

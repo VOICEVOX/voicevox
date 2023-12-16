@@ -973,6 +973,14 @@ export type SingingStoreTypes = {
     action(payload: { volume: number }): void;
   };
 
+  PLAY_PREVIEW_SOUND: {
+    action(payload: { noteNumber: number; duration?: number }): void;
+  };
+
+  STOP_PREVIEW_SOUND: {
+    action(payload: { noteNumber: number }): void;
+  };
+
   UPDATE_PERIODIC_PITCH: {
     action(payload: {
       audioQuery: AudioQuery;

@@ -664,10 +664,11 @@ type SynthVoiceParams = {
  */
 class SynthVoice {
   readonly noteNumber: number;
+  private readonly audioContext: BaseAudioContext;
+  private readonly ampParams: SynthAmpParams;
   private readonly oscNode: OscillatorNode;
   private readonly gainNode: GainNode;
   private readonly filterNode: BiquadFilterNode;
-  private readonly ampParams: SynthAmpParams;
 
   private _isActive = false;
   private _isStopped = false;
@@ -687,6 +688,7 @@ class SynthVoice {
 
   constructor(audioContext: BaseAudioContext, params: SynthVoiceParams) {
     this.noteNumber = params.noteNumber;
+    this.audioContext = audioContext;
     this.ampParams = params.amp;
 
     this.oscNode = new OscillatorNode(audioContext);
@@ -702,7 +704,7 @@ class SynthVoice {
       params.noteNumber
     );
     this.filterNode.Q.value = this.calcFilterQ(params.filter.resonance);
-    this.gainNode = new GainNode(audioContext);
+    this.gainNode = new GainNode(audioContext, { gain: 0 });
     this.oscNode.connect(this.filterNode);
     this.filterNode.connect(this.gainNode);
   }
@@ -726,18 +728,28 @@ class SynthVoice {
     return this.linearToDecibel(Math.SQRT1_2) + resonance;
   }
 
+  private getMinContextTime(audioContext: BaseAudioContext) {
+    if (audioContext instanceof AudioContext) {
+      const renderQuantumSize = 128;
+      const latency = (renderQuantumSize + 10) / audioContext.sampleRate;
+      return audioContext.currentTime + latency;
+    } else {
+      return 0;
+    }
+  }
+
   /**
    * ノートオンをスケジュールします。
    * @param contextTime ノートオンを行う時刻（コンテキスト時間）
    */
   noteOn(contextTime: number) {
-    const t0 = contextTime;
+    const minContextTime = this.getMinContextTime(this.audioContext);
+    const t0 = Math.max(minContextTime, contextTime);
     const atk = this.ampParams.attack;
     const dcy = this.ampParams.decay;
     const sus = this.ampParams.sustain;
 
     // アタック、ディケイ、サスティーンのスケジュールを行う
-    this.gainNode.gain.value = 0;
     this.gainNode.gain.setValueAtTime(0, t0);
     this.gainNode.gain.linearRampToValueAtTime(1, t0 + atk);
     this.gainNode.gain.setTargetAtTime(sus, t0 + atk, dcy);
@@ -757,7 +769,8 @@ class SynthVoice {
    * @param contextTime ノートオフを行う時刻（コンテキスト時間）
    */
   noteOff(contextTime: number) {
-    const t0 = contextTime;
+    const minContextTime = this.getMinContextTime(this.audioContext);
+    const t0 = Math.max(minContextTime, contextTime);
     const rel = this.ampParams.release;
     const stopContextTime = t0 + rel * 4;
 
@@ -806,14 +819,14 @@ export class PolySynth implements Instrument {
       type: "square",
     };
     this.filterParams = options?.filter ?? {
-      cutoff: 3300,
+      cutoff: 3000,
       resonance: 0,
-      keyTrack: 0.25,
+      keyTrack: 0.26,
     };
     this.ampParams = options?.amp ?? {
       attack: 0.001,
       decay: 0.18,
-      sustain: 0.3,
+      sustain: 0.4,
       release: 0.02,
     };
 

@@ -182,6 +182,13 @@ import {
   keyInfos,
   getDoremiFromNoteNumber,
   getNumOfMeasures,
+  ZOOM_X_MIN,
+  ZOOM_X_MAX,
+  ZOOM_X_STEP,
+  ZOOM_Y_MIN,
+  ZOOM_Y_MAX,
+  ZOOM_Y_STEP,
+  PREVIEW_SOUND_DURATION,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
@@ -193,13 +200,6 @@ export default defineComponent({
     SequencerPhraseIndicator,
   },
   setup() {
-    const ZOOM_X_MIN = 0.2;
-    const ZOOM_X_MAX = 1;
-    const ZOOM_X_STEP = 0.05;
-    const ZOOM_Y_MIN = 0.35;
-    const ZOOM_Y_MAX = 1;
-    const ZOOM_Y_STEP = 0.05;
-
     enum DragMode {
       NONE = "NONE",
       MOVE = "MOVE",
@@ -334,6 +334,10 @@ export default defineComponent({
           lyric,
         },
       });
+      store.dispatch("PLAY_PREVIEW_SOUND", {
+        noteNumber,
+        duration: PREVIEW_SOUND_DURATION,
+      });
     };
 
     // マウスダウン
@@ -359,6 +363,20 @@ export default defineComponent({
       if (dragMode.value !== DragMode.NONE) {
         cancelAnimationFrame(dragId.value);
         dragMode.value = DragMode.NONE;
+
+        if (selectedNoteIds.value.length === 1) {
+          const selectedNoteId = selectedNoteIds.value[0];
+          const selectedNote = state.score.notes.find((value) => {
+            return value.id === selectedNoteId;
+          });
+          if (!selectedNote) {
+            throw new Error("selectedNote is undefined.");
+          }
+          store.dispatch("PLAY_PREVIEW_SOUND", {
+            noteNumber: selectedNote.noteNumber,
+            duration: PREVIEW_SOUND_DURATION,
+          });
+        }
         return;
       }
     };
@@ -582,9 +600,11 @@ export default defineComponent({
 
     // キーボードイベント
     const handleNotesArrowUp = () => {
+      let changedNoteNumber: number | undefined;
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
           const noteNumber = Math.min(note.noteNumber + 1, 127);
+          changedNoteNumber = noteNumber;
           return {
             ...note,
             noteNumber,
@@ -597,12 +617,23 @@ export default defineComponent({
         return;
       }
       store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+      if (
+        changedNoteNumber !== undefined &&
+        selectedNoteIds.value.length === 1
+      ) {
+        store.dispatch("PLAY_PREVIEW_SOUND", {
+          noteNumber: changedNoteNumber,
+          duration: PREVIEW_SOUND_DURATION,
+        });
+      }
     };
 
     const handleNotesArrowDown = () => {
+      let changedNoteNumber: number | undefined;
       const newNotes = state.score.notes.map((note) => {
         if (selectedNoteIds.value.includes(note.id)) {
           const noteNumber = Math.max(note.noteNumber - 1, 0);
+          changedNoteNumber = noteNumber;
           return {
             ...note,
             noteNumber,
@@ -615,6 +646,15 @@ export default defineComponent({
         return;
       }
       store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+      if (
+        changedNoteNumber !== undefined &&
+        selectedNoteIds.value.length === 1
+      ) {
+        store.dispatch("PLAY_PREVIEW_SOUND", {
+          noteNumber: changedNoteNumber,
+          duration: PREVIEW_SOUND_DURATION,
+        });
+      }
     };
 
     const handleNotesArrowRight = () => {
