@@ -31,9 +31,9 @@ defineEmits<{
   justify-content: space-between;
   align-items: center;
   height: vars.$size-control;
-  border-radius: vars.$radius-control;
-  padding: 0 vars.$padding-button;
-  gap: vars.$gap-control;
+  border-radius: vars.$radius-1;
+  padding: 0 vars.$padding-2;
+  gap: vars.$gap-1;
   border: 1px solid;
   transition: background-color vars.$transition-duration;
   cursor: pointer;

@@ -37,9 +37,9 @@ defineEmits<{
   align-items: center;
   border: 1px solid #0002;
   background-color: #fff;
-  border-radius: vars.$radius-container;
-  padding: vars.$padding-container;
-  gap: vars.$gap-container;
+  border-radius: vars.$radius-2;
+  padding: vars.$padding-2;
+  gap: vars.$gap-2;
   transition: background-color vars.$transition-duration;
 }
 

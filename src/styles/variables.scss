@@ -7,21 +7,27 @@ $detail-view-splitter-cell-z-index: 2;
 
 $character-item-size: 215px; // キャラクター並び替えダイアログなどでの１キャラ表示要素の横幅
 
-$size-scrollbar: 12px;
-$size-icon: 16px;
-$size-indicator: 24px;
-$size-control: 32px;
-$size-listitem: 40px;
-$size-fab: 48px;
+:root {
+  --size-basis: 8px;
+  --padding-basis: 8px;
+  --gap-basis: 8px;
+  --radius-basis: 8px;
+}
 
-$padding-control: 8px;
-$padding-button: 16px;
-$padding-container: 16px;
+$size-scrollbar: calc(var(--size-basis) * 1.5);
+$size-icon: calc(var(--size-basis) * 2);
+$size-indicator: calc(var(--size-basis) * 3);
+$size-control: calc(var(--size-basis) * 4);
+$size-listitem: calc(var(--size-basis) * 5);
+$size-fab: calc(var(--size-basis) * 6);
 
-$gap-control: 8px;
-$gap-container: 16px;
+$padding-1: var(--padding-basis);
+$padding-2: calc(var(--padding-basis) * 2);
 
-$radius-control: 8px;
-$radius-container: 16px;
+$gap-1: var(--gap-basis);
+$gap-2: calc(var(--gap-basis) * 2);
+
+$radius-1: var(--radius-basis);
+$radius-2: calc(var(--radius-basis) * 2);
 
 $transition-duration: 100ms;

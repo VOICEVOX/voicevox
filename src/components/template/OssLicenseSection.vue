@@ -74,8 +74,8 @@ const selectLicenseIndex = (index: number | undefined) => {
 .inner {
   display: flex;
   flex-direction: column;
-  padding: vars.$padding-container;
-  gap: vars.$gap-container;
+  padding: vars.$padding-2;
+  gap: vars.$gap-1;
 }
 
 .title {
@@ -85,6 +85,6 @@ const selectLicenseIndex = (index: number | undefined) => {
 .list {
   display: flex;
   flex-direction: column;
-  gap: vars.$gap-control;
+  gap: vars.$gap-1;
 }
 </style>
