@@ -10,6 +10,14 @@ export const DEFAULT_BEAT_TYPE = 4;
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_NOTE_NUMBER = 30;
 
+export const ZOOM_X_MIN = 0.2;
+export const ZOOM_X_MAX = 1;
+export const ZOOM_X_STEP = 0.05;
+export const ZOOM_Y_MIN = 0.35;
+export const ZOOM_Y_MAX = 1;
+export const ZOOM_Y_STEP = 0.05;
+export const PREVIEW_SOUND_DURATION = 0.1;
+
 export function noteNumberToFrequency(noteNumber: number) {
   return 440 * 2 ** ((noteNumber - 69) / 12);
 }
