@@ -12,10 +12,10 @@
 
 ## 担当
 
-|役割           | 担当         |
-|---------------|-------------|
-|プロダクトオーナ|@Hiroshiba    |
-|メンテナー      |@Hiroshiba、@y-chan    |
+|役割             | 担当                  |
+|-----------------|-----------------------|
+|プロダクトオーナ |@Hiroshiba             |
+|メンテナー       |@Hiroshiba、@y-chan    |
 
 ## 参加の心得
 
@@ -48,11 +48,11 @@ VOICEVOXには、下記のような貢献の仕方があります。
 
 プログラムは３部構成に分かれているので、該当する部分に該当するプロジェクトに参加しましょう。
 
-|種類           |ページ        |役割          |
-|---------------|-------------|-------------|
-|VOICEVOX       |[プロジェクト](https://github.com/VOICEVOX/voicevox/)|主にユーザインタフェイス(エディタ)部分|
-|VOICEVOX_ENGINE|[プロジェクト](https://github.com/VOICEVOX/voicevox_engine/)|主にAPI実装や音声合成を行う部分|
-|VOICEVOX_CORE|[プロジェクト](https://github.com/VOICEVOX/voicevox_core/)|主に推論する部分|
+|種類           |ページ                                                      |役割                                    |
+|---------------|------------------------------------------------------------|----------------------------------------|
+|VOICEVOX       |[プロジェクト](https://github.com/VOICEVOX/voicevox/)       |主にユーザインタフェイス(エディタ)部分  |
+|VOICEVOX_ENGINE|[プロジェクト](https://github.com/VOICEVOX/voicevox_engine/)|主にAPI実装や音声合成を行う部分         |
+|VOICEVOX_CORE  |[プロジェクト](https://github.com/VOICEVOX/voicevox_core/)  |主に推論する部分                        |
 
 なお、全体構成を学びたい場合は、[こちら](docs/全体構成.md)が参考になることでしょう。
 
@@ -62,11 +62,11 @@ VOICEVOXには、下記のような貢献の仕方があります。
 
 「初心者歓迎タスク」は、VOICEVOXプロジェクトとしては「難易度が比較的低い案件であるが、必要とされているもの」となっており、比較的一通りの工程をスマートに学びながら貢献することができます。
 
-|種類           |ページ        |
-|---------------|-------------|
+|種類           |ページ            |
+|---------------|------------------|
 |VOICEVOX       |[初心者歓迎タスク](https://github.com/VOICEVOX/voicevox/issues?q=is%3Aissue+is%3Aopen+label%3A%E5%88%9D%E5%BF%83%E8%80%85%E6%AD%93%E8%BF%8E%E3%82%BF%E3%82%B9%E3%82%AF)|
 |VOICEVOX_ENGINE|[初心者歓迎タスク](https://github.com/VOICEVOX/voicevox_engine/issues?q=is%3Aissue+is%3Aopen+label%3A%E5%88%9D%E5%BF%83%E8%80%85%E6%AD%93%E8%BF%8E%E3%82%BF%E3%82%B9%E3%82%AF)|
-|VOICEVOX_CORE|[初心者歓迎タスク](https://github.com/VOICEVOX/voicevox_core/issues?q=is%3Aissue+is%3Aopen+label%3A%E5%88%9D%E5%BF%83%E8%80%85%E6%AD%93%E8%BF%8E%E3%82%BF%E3%82%B9%E3%82%AF)|
+|VOICEVOX_CORE  |[初心者歓迎タスク](https://github.com/VOICEVOX/voicevox_core/issues?q=is%3Aissue+is%3Aopen+label%3A%E5%88%9D%E5%BF%83%E8%80%85%E6%AD%93%E8%BF%8E%E3%82%BF%E3%82%B9%E3%82%AF)|
 
 ## 事前準備
 
@@ -91,31 +91,30 @@ VOICEVOXには、下記のような貢献の仕方があります。
 
 ### 3. フォークする
 
-* 自分のワークスペースにソースを複製して作業準備をする作業をフォークと言います。[こちら](https://github.com/VOICEVOX/voicevox/fork)を押して、フォークを実施します。
+* プロジェクトの複製をつくって自分のGitHubリポジトリにもってくる作業をフォークと言います。[こちら](https://github.com/VOICEVOX/voicevox/fork)を押して、フォークを実施します。
 
-### 4. ソースコードを手に入れる
+### 4. ソースコードを手に入れる（クローン）
 
-* 自分のワークスペースにあるソースコードを複製（クローン）をします。
+* 自分のGitHubリポジトリにあるソースコードをGitHubから作業用パソコンに持ってきます。
 
 #### 4.1 コマンドラインで行う場合
   
-* GetHub CLIを使う場合
+* GitHub コマンド(GitHub CLI)を使う場合
 
 ```bash
-       gh auth login
-       gh gist clone https://github.com/(個人ID)/voicevox.git
+gh repo clone https://github.com/(個人のGitHubアカウント名)/voicevox.git
 ```
 
-* GitHub sshを使う場合
+* Git コマンド(Git CLI)を使う場合
 
 ```bash
-      git clone git@github.com:user/voicevox.git
+git clone git@github.com:(個人のGitHubアカウント名)/voicevox.git
 ```
 
 #### 4.2 GUIで行う場合
 
 * Visual Studio CodeやTortoise Gitなどのツールを用いて入手します。
-* 指定するURLは、`git clone https://github.com/(個人ID)/voicevox.git`となります。
+* 指定するURLはツールによって異なりますが、`git@github.com:(個人のGitHubアカウント名)/voicevox.git`や`https://github.com/(個人のGitHubアカウント名)/voicevox.git`となります。
 
 ### 5. 必要なプログラムをダウンロードする
 
@@ -126,27 +125,26 @@ VOICEVOXには、下記のような貢献の仕方があります。
 ### 6. エンジンを指定する
 
 * `.env.production`というファイルがありますので、コピーして、名前を`.env`にします。
-* ファイルをエディタでひらいて、`DEFAULT_ENGINE_INFOS`内の`executionFilePath`に手順１のフォルダ名をいれます。たとえば製品版をインストーラで導入し、インストール先を変更していない場合は、下記のように書き換えて保存します。
+* ファイルをエディタでひらいて、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に手順１のフォルダ名をいれます。たとえば製品版をインストーラで導入し、インストール先を変更していない場合は、下記のように書き換えて保存します。
 
 ```text
-  DEFAULT_ENGINE_INFOS=`[
+VITE_APP_NAME=voicevox
+VITE_DEFAULT_ENGINE_INFOS=`[
     {
         "uuid": "074fc39e-678b-4c13-8916-ffca8d505d1d",
         "name": "VOICEVOX Engine",
         "executionEnabled": true,
-        "executionFilePath": "%localappdata%/programs/voicevox/run.exe",
+        "executionFilePath": "vv-engine/run.exe",
         "executionArgs": [],
         "host": "http://127.0.0.1:50021"
     }
-  ]`
-  VUE_APP_GTM_CONTAINER_ID=GTM-DUMMY
-  VV_OUTPUT_LOG_UTF8=1
+]`
 ```
 
 * あなたがVOICEVOX製品版のインストール先を変更している場合は個別で指定します。たとえば、`D:\VOICEVOX0.14.1`に製品版をインストールしている場合は、下記のように書き換えて保存します。
 
 ```text
-  "executionFilePath": "D:/VOICEVOX0.14.1/run.exe",   
+"executionFilePath": "D:/VOICEVOX0.14.1/run.exe",   
 ```
 
 ### 7. 始動してみる
@@ -193,22 +191,23 @@ VOICEVOXには、下記のような貢献の仕方があります。
 * 関数名や変数名は極力キャメルケースで命名する必要があります。何かしらの制約上キャメルケースで命名出来ない場合は、コメントを残します。
 
 ```python
-  // FIXME:●●のため、キャメルケースが採用できない
+// FIXME: ●●のため、キャメルケースが採用できない
 ```
 
 * 今回コーディングするが、構造制約などで「本来ありたい構造と異なる」場合にも、コメントを残します。
 
 ```python
-  // TODO:●●を使わずに、●●となる実装にしたい
+// TODO: ●●を使わずに、●●となる実装にしたい
 ```
 
 * 変数名や型名の命名にあたっては、その仕組みで一般的に使われる命名則があれば、それらを優先して採用します。
 * 関数名は、動詞＋役割となるように設定をします。
-  |命名例      |役割                        |
-  |-----------|----------------------------|
-  |setVolume()|音量を設定                   |
-  |getVolume()|音量を取得                   |
-  |isMute     |ミュート状態の取得(boolean)   |
+  |命名例      |役割                          |
+  |------------|------------------------------|
+  |setVolume() |音量を設定                    |
+  |getVolume() |音量を取得                    |
+  |isMuted     |ミュート状態の取得(boolean)   |
+
 * 変数や関数名につける英語は極力省略しないようにします。
 * コードは分かりやすさや単純さを保つようにしてください。
 * 不必要な定義や、作業中のコードは、コード提出までに除去しましょう。
@@ -218,20 +217,14 @@ VOICEVOXには、下記のような貢献の仕方があります。
 * 記述コードがコーディングルールに沿っていることを確認します。（特に今回の作業によって警告やエラーが増えていないかどうかに注目してください）
 
   ```bash
-    npm run lint
-    npm run fmt
+  npm run lint
+  npm run fmt
   ```
 
 * TypeScriptの型チェックを行います。
 
   ```bash
-    npm run typecheck
-  ```
-
-  ※なお、現時点でエラーが大量に出るため採用されていませんが、今後下記のチェック方法に統一されていく予定です。
-
-  ```bash
-    npm run typecheck:vue-tsc
+  npm run typecheck
   ```
 
 * Markdownの記述が正しいことを確認します。
@@ -312,13 +305,6 @@ VOICEVOXには、下記のような貢献の仕方があります。
 
   1. 自分の作業リポジトリにプルします。プル元は、自分のGitHub領域ではなく、[VOICEVOXのリポジトリ](https://github.com/VOICEVOX/voicevox.git)を指定します。
 
-      Gitコマンドを使う場合は下記のように指示します。
-
-      ```bash
-        git remote add upstream https://github.com/VOICEVOX/voicevox.git
-        git pull upstream main
-      ```
-
   2. 自分の作業リポジトリにプッシュします。この時、「コンフリクトが発生した」と表示されますが、そのまま続行します。
 
   3. 変更差分をみながら、修正がぶつかっている部分を正しい実装に修正します。
@@ -339,6 +325,7 @@ VOICEVOXには、下記のような貢献の仕方があります。
 
 * VOICEVOXプロジェクトメンバーは、貢献者が活動しやすいようサポートや相談に応じています。
 * こまったり、わからないことが発生したら、プロジェクトメンバーに相談しましょう。
+* [Discordコミュニティ](https://discord.gg/gJamMrqFHg)もあります。議論しながら考えをまとめたい場合など、コミュニティをうまく活用するとよいでしょう。
 * 諸事情で処理が継続できなくなった場合や、技術的ハードルが高かったりして心が折れたときは、ギブアップを宣言することも可能です。調整が可能な場合もあるので、宣言する前に相談をすることをお勧めします。
 
 ## 参考情報
