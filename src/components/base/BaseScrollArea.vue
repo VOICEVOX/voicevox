@@ -4,13 +4,13 @@
       <slot />
     </ScrollAreaViewport>
     <ScrollAreaScrollbar class="ScrollAreaScrollbar" orientation="horizontal">
-      <ScrollAreaThumb class="ScrollAreaThumbContainer">
-        <div class="ScrollAreaThumb"></div>
+      <ScrollAreaThumb class="ScrollAreaThumb">
+        <div class="thumb"></div>
       </ScrollAreaThumb>
     </ScrollAreaScrollbar>
     <ScrollAreaScrollbar class="ScrollAreaScrollbar" orientation="vertical">
-      <ScrollAreaThumb class="ScrollAreaThumbContainer">
-        <div class="ScrollAreaThumb"></div>
+      <ScrollAreaThumb class="ScrollAreaThumb">
+        <div class="thumb"></div>
       </ScrollAreaThumb>
     </ScrollAreaScrollbar>
   </ScrollAreaRoot>
@@ -54,11 +54,11 @@ import {
   height: vars.$size-scrollbar;
 }
 
-.ScrollAreaThumbContainer {
+.ScrollAreaThumb {
   padding: 4px;
 }
 
-.ScrollAreaThumb {
+.thumb {
   width: 100%;
   height: 100%;
   background-color: #0002;
@@ -67,7 +67,7 @@ import {
   transition: background-color vars.$transition-duration;
 }
 
-.ScrollAreaScrollbar:hover .ScrollAreaThumb {
+.ScrollAreaScrollbar:hover .thumb {
   background-color: #0003;
 }
 </style>
