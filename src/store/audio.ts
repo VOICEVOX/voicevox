@@ -2011,57 +2011,60 @@ export const audioCommandStore = transformCommandStore(
 
     COMMAND_MULTI_CHANGE_VOICE: {
       mutation(
-        draft,
-        payload: { audioKeys: AudioKey[]; voice: Voice } & (
-          | { update: "RollbackStyleId" }
-          | {
-              update: "AccentPhrases";
-              accentPhrases: AccentPhrase[];
-            }
-          | {
-              update: "AudioQuery";
-              query: AudioQuery;
-            }
-        )
-      ) {
-        for (const audioKey of payload.audioKeys) {
-          audioStore.mutations.SET_AUDIO_VOICE(draft, {
-            audioKey,
-            voice: payload.voice,
-          });
+        state,
+        payload: {
+          voice: Voice;
+          changes: Record<
+            AudioKey,
+            | {
+                update: "AccentPhrases";
+                accentPhrases: AccentPhrase[];
+              }
+            | {
+                update: "AudioQuery";
+                query: AudioQuery;
+              }
+            | {
+                update: "OnlyVoice";
+              }
+          >;
         }
+      ) {
+        for (const [audioKey_, change] of Object.entries(payload.changes)) {
+          // TypeScriptは`Object.entries`のKeyの型を`string`としてしまうので、`as`で型を指定する
+          const audioKey = audioKey_ as AudioKey;
 
-        if (payload.update === "RollbackStyleId") return;
-
-        for (const audioKey of payload.audioKeys) {
-          const presetKey = draft.audioItems[audioKey].presetKey;
+          const presetKey = state.audioItems[audioKey].presetKey;
 
           const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
-            draft,
+            state,
             payload.voice,
             presetKey,
             "changeVoice"
           );
 
-          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+          audioStore.mutations.SET_AUDIO_PRESET_KEY(state, {
             audioKey,
             presetKey: nextPresetKey,
           });
 
-          if (payload.update == "AccentPhrases") {
-            audioStore.mutations.SET_ACCENT_PHRASES(draft, {
+          audioStore.mutations.SET_AUDIO_VOICE(state, {
+            audioKey,
+            voice: payload.voice,
+          });
+          if (change.update == "AccentPhrases") {
+            audioStore.mutations.SET_ACCENT_PHRASES(state, {
               audioKey,
-              accentPhrases: payload.accentPhrases,
+              accentPhrases: change.accentPhrases,
             });
-          } else if (payload.update == "AudioQuery") {
-            audioStore.mutations.SET_AUDIO_QUERY(draft, {
+          } else if (change.update == "AudioQuery") {
+            audioStore.mutations.SET_AUDIO_QUERY(state, {
               audioKey,
-              audioQuery: payload.query,
+              audioQuery: change.query,
             });
           }
-
           if (shouldApplyPreset) {
-            audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+            audioStore.mutations.APPLY_AUDIO_PRESET(state, {
               audioKey,
             });
           }
@@ -2074,50 +2077,70 @@ export const audioCommandStore = transformCommandStore(
         const engineId = voice.engineId;
         const styleId = voice.styleId;
         await dispatch("SETUP_SPEAKER", { audioKeys, engineId, styleId });
-        await Promise.all(
-          audioKeys.map(async (audioKey) => {
-            try {
-              const query = state.audioItems[audioKey].query;
-              if (query != undefined) {
-                const accentPhrases = query.accentPhrases;
-                const newAccentPhrases: AccentPhrase[] = await dispatch(
-                  "FETCH_MORA_DATA",
-                  {
-                    accentPhrases,
-                    engineId,
-                    styleId,
-                  }
-                );
-                commit("COMMAND_MULTI_CHANGE_VOICE", {
-                  audioKeys,
-                  voice,
-                  update: "AccentPhrases",
-                  accentPhrases: newAccentPhrases,
-                });
-              } else {
-                const text = state.audioItems[audioKey].text;
-                const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
-                  text: text,
-                  engineId,
-                  styleId,
-                });
-                commit("COMMAND_MULTI_CHANGE_VOICE", {
-                  audioKeys,
-                  voice,
-                  update: "AudioQuery",
-                  query,
-                });
-              }
-            } catch (error) {
-              commit("COMMAND_MULTI_CHANGE_VOICE", {
-                audioKeys,
-                voice,
-                update: "RollbackStyleId",
-              });
-              throw error;
+        const errors: Record<AudioKey, unknown> = {};
+        const changes: Record<
+          AudioKey,
+          | {
+              update: "AccentPhrases";
+              accentPhrases: AccentPhrase[];
             }
-          })
-        );
+          | {
+              update: "AudioQuery";
+              query: AudioQuery;
+            }
+          | {
+              update: "OnlyVoice";
+            }
+        > = {};
+
+        for (const audioKey of audioKeys) {
+          try {
+            const audioItem = state.audioItems[audioKey];
+            if (audioItem.query == undefined) {
+              const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
+                text: audioItem.text,
+                engineId: voice.engineId,
+                styleId: voice.styleId,
+              });
+              changes[audioKey] = {
+                update: "AudioQuery",
+                query,
+              };
+            } else {
+              const newAccentPhrases: AccentPhrase[] = await dispatch(
+                "FETCH_MORA_DATA",
+                {
+                  accentPhrases: audioItem.query.accentPhrases,
+                  engineId: voice.engineId,
+                  styleId: voice.styleId,
+                }
+              );
+
+              changes[audioKey] = {
+                update: "AccentPhrases",
+                accentPhrases: newAccentPhrases,
+              };
+            }
+          } catch (error) {
+            errors[audioKey] = error;
+            changes[audioKey] = {
+              update: "OnlyVoice",
+            };
+          }
+        }
+
+        commit("COMMAND_MULTI_CHANGE_VOICE", {
+          voice,
+          changes,
+        });
+
+        if (Object.keys(errors).length > 0) {
+          throw new Error(
+            `話者の変更に失敗しました：\n${Object.entries(errors)
+              .map(([audioKey, error]) => `${audioKey}：${error}`)
+              .join("\n")}`
+          );
+        }
       },
     },
 
