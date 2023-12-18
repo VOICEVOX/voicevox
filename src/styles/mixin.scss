@@ -1,0 +1,13 @@
+// キーボードフォーカス時のOutline表示用のスタイル
+@mixin on-focus {
+  outline-color: #a5d4ad;
+  outline-width: 2px;
+}
+
+// 見出し1(h1)用のスタイル
+@mixin headline-1 {
+  font-size: 1.5rem;
+  line-height: 2;
+  margin: 0;
+  font-weight: 600;
+}
