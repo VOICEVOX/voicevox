@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="`sequencer-note ${isSelected ? 'selected' : ''}`"
+    :class="classNamesStr"
     :style="{
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
@@ -104,12 +104,18 @@ export default defineComponent({
       const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
       return (noteEndBaseX - noteStartBaseX) * zoomX.value;
     });
-    const isSelected = computed(() => {
-      return state.selectedNoteIds.includes(props.note.id);
+    const classNamesStr = computed(() => {
+      if (state.selectedNoteIds.includes(props.note.id)) {
+        return "sequencer-note selected";
+      }
+      if (state.overlappingNoteIds.includes(props.note.id)) {
+        return "sequencer-note overlapping";
+      }
+      return "sequencer-note";
     });
 
     const removeNote = () => {
-      store.dispatch("REMOVE_NOTE", { id: props.note.id });
+      store.dispatch("REMOVE_NOTES", { noteIds: [props.note.id] });
     };
 
     const setLyric = (event: Event) => {
@@ -118,20 +124,12 @@ export default defineComponent({
       }
       if (event.target.value) {
         const lyric = event.target.value;
-        store.dispatch("UPDATE_NOTE", {
-          note: {
-            ...props.note,
-            lyric,
-          },
-        });
+        store.dispatch("UPDATE_NOTES", { notes: [{ ...props.note, lyric }] });
       }
     };
 
     const selectThisNote = () => {
-      const noteIds = [...state.selectedNoteIds, props.note.id];
-      store.dispatch("SET_SELECTED_NOTE_IDS", {
-        noteIds,
-      });
+      store.dispatch("SELECT_NOTES", { noteIds: [props.note.id] });
       store.dispatch("PLAY_PREVIEW_SOUND", {
         noteNumber: props.note.noteNumber,
         duration: PREVIEW_SOUND_DURATION,
@@ -171,7 +169,7 @@ export default defineComponent({
       positionY,
       barHeight,
       barWidth,
-      isSelected,
+      classNamesStr,
       removeNote,
       setLyric,
       handleKeydown,
@@ -198,6 +196,12 @@ export default defineComponent({
     .sequencer-note-bar-body {
       fill: darkorange; // 仮
       cursor: move;
+    }
+  }
+
+  &.overlapping {
+    .sequencer-note-bar-body {
+      fill: rgba(colors.$primary-rgb, 0.5);
     }
   }
 }

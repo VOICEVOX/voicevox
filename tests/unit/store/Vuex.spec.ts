@@ -173,6 +173,7 @@ describe("store/vuex.js test", () => {
         sequencerScrollY: 60,
         sequencerSnapType: 16,
         selectedNoteIds: [],
+        overlappingNoteIds: [],
         nowPlaying: false,
         volume: 0,
         leftLocatorPosition: 0,

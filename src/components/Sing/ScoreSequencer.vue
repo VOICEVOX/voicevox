@@ -190,6 +190,7 @@ import {
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
 } from "@/helpers/singHelper";
+import { Note } from "@/store/type";
 
 export default defineComponent({
   name: "SingScoreSequencer",
@@ -293,7 +294,10 @@ export default defineComponent({
       const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
       return Math.floor(baseX * zoomX.value);
     });
-    const selectedNoteIds = computed(() => state.selectedNoteIds);
+    const selectedNotes = computed(() => {
+      const selectedNoteIds = new Set(state.selectedNoteIds);
+      return notes.value.filter((value) => selectedNoteIds.has(value.id));
+    });
     const phraseInfos = computed(() => {
       return Object.entries(state.phrases).map(([key, phrase]) => {
         const startBaseX = tickToBaseX(phrase.startTicks, tpqn.value);
@@ -325,14 +329,8 @@ export default defineComponent({
       const lyric = getDoremiFromNoteNumber(noteNumber);
       // NOTE: 仮ID
       const id = uuidv4();
-      store.dispatch("ADD_NOTE", {
-        note: {
-          id,
-          position,
-          noteNumber,
-          duration,
-          lyric,
-        },
+      store.dispatch("ADD_NOTES", {
+        notes: [{ id, position, noteNumber, duration, lyric }],
       });
       store.dispatch("PLAY_PREVIEW_SOUND", {
         noteNumber,
@@ -343,8 +341,8 @@ export default defineComponent({
     // マウスダウン
     // 選択中のノートがある場合は選択リセット
     const handleMouseDown = () => {
-      if (0 < selectedNoteIds.value.length) {
-        store.dispatch("CLEAR_SELECTED_NOTE_IDS");
+      if (0 < selectedNotes.value.length) {
+        store.dispatch("DESELECT_ALL_NOTES");
       }
     };
 
@@ -364,20 +362,12 @@ export default defineComponent({
         cancelAnimationFrame(dragId.value);
         dragMode.value = DragMode.NONE;
 
-        if (selectedNoteIds.value.length === 1) {
-          const selectedNoteId = selectedNoteIds.value[0];
-          const selectedNote = state.score.notes.find((value) => {
-            return value.id === selectedNoteId;
-          });
-          if (!selectedNote) {
-            throw new Error("selectedNote is undefined.");
-          }
+        if (selectedNotes.value.length === 1) {
           store.dispatch("PLAY_PREVIEW_SOUND", {
-            noteNumber: selectedNote.noteNumber,
+            noteNumber: selectedNotes.value[0].noteNumber,
             duration: PREVIEW_SOUND_DURATION,
           });
         }
-        return;
       }
     };
 
@@ -410,39 +400,34 @@ export default defineComponent({
       }
 
       // 選択中のノートのpositionとnoteNumberを変更
-      let isNotesChanged = false;
-      const newNotes = state.score.notes.map((note) => {
-        if (selectedNoteIds.value.includes(note.id)) {
-          if (amountPositionX === 0 && amountPositionY === 0) {
-            return note;
-          }
-          isNotesChanged = true;
-          const position = note.position + amountPositionX;
-          const noteNumber = note.noteNumber + amountPositionY;
-          return {
-            ...note,
-            noteNumber,
-            position,
-          };
-        } else {
-          return note;
+      const editedNotes: Note[] = [];
+      for (const note of selectedNotes.value) {
+        if (amountPositionX === 0 && amountPositionY === 0) {
+          continue;
         }
-      });
+        const position = note.position + amountPositionX;
+        const noteNumber = note.noteNumber + amountPositionY;
+        editedNotes.push({
+          ...note,
+          noteNumber,
+          position,
+        });
+      }
 
       // 左端より前はドラッグしない
-      if (newNotes.some((note) => note.position < 0)) {
+      if (editedNotes.some((note) => note.position < 0)) {
         dragId.value = requestAnimationFrame(dragMove);
         return;
       }
-      if (isNotesChanged) {
-        store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+      if (editedNotes.length !== 0) {
+        store.dispatch("UPDATE_NOTES", { notes: editedNotes });
       }
       dragId.value = requestAnimationFrame(dragMove);
     };
 
     // ノートドラッグ開始
     const handleDragMoveStart = (event: MouseEvent) => {
-      if (selectedNoteIds.value.length > 0) {
+      if (selectedNotes.value.length > 0) {
         dragMode.value = DragMode.MOVE;
         setTimeout(() => {
           dragMoveCurrentX.value = event.clientX;
@@ -461,32 +446,23 @@ export default defineComponent({
       }
       const distanceX = cursorX.value - dragDurationCurrentX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
-        let isNotesChanged = false;
-        const newNotes = state.score.notes.map((note) => {
-          if (selectedNoteIds.value.includes(note.id)) {
-            const duration =
-              note.duration +
-              (0 < distanceX ? snapTicks.value : -snapTicks.value);
-            if (duration < Math.max(snapTicks.value, 0) || note.position < 0) {
-              return note;
-            } else {
-              isNotesChanged = true;
-              return {
-                ...note,
-                duration,
-              };
-            }
-          } else {
-            return note;
+        const editedNotes: Note[] = [];
+        for (const note of selectedNotes.value) {
+          const duration =
+            note.duration +
+            (0 < distanceX ? snapTicks.value : -snapTicks.value);
+          if (duration < Math.max(snapTicks.value, 0) || note.position < 0) {
+            continue;
           }
-        });
+          editedNotes.push({ ...note, duration });
+        }
         const dragDurationCurrentXNext =
           dragDurationCurrentX.value +
           (0 < distanceX ? snapWidth.value : -snapWidth.value);
         dragDurationCurrentX.value = dragDurationCurrentXNext;
         dragId.value = requestAnimationFrame(dragRight);
-        if (isNotesChanged) {
-          store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+        if (editedNotes.length !== 0) {
+          store.dispatch("UPDATE_NOTES", { notes: editedNotes });
         }
       }
       dragId.value = requestAnimationFrame(dragRight);
@@ -510,36 +486,26 @@ export default defineComponent({
       }
       const distanceX = cursorX.value - dragDurationCurrentX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
-        let isNotesChanged = false;
-        const newNotes = state.score.notes.map((note) => {
-          if (selectedNoteIds.value.includes(note.id)) {
-            const position =
-              note.position +
-              (0 < distanceX ? snapTicks.value : -snapTicks.value);
-            const duration =
-              note.duration +
-              (0 > distanceX ? snapTicks.value : -snapTicks.value);
-            if (duration < Math.max(snapTicks.value, 0) || note.position < 0) {
-              return note;
-            } else {
-              isNotesChanged = true;
-              return {
-                ...note,
-                position,
-                duration,
-              };
-            }
-          } else {
-            return note;
+        const editedNotes: Note[] = [];
+        for (const note of selectedNotes.value) {
+          const position =
+            note.position +
+            (0 < distanceX ? snapTicks.value : -snapTicks.value);
+          const duration =
+            note.duration +
+            (0 > distanceX ? snapTicks.value : -snapTicks.value);
+          if (duration < Math.max(snapTicks.value, 0) || note.position < 0) {
+            continue;
           }
-        });
+          editedNotes.push({ ...note, position, duration });
+        }
         const dragDurationCurrentXNext =
           dragDurationCurrentX.value +
           (0 < distanceX ? snapWidth.value : -snapWidth.value);
         dragDurationCurrentX.value = dragDurationCurrentXNext;
         dragId.value = requestAnimationFrame(dragLeft);
-        if (isNotesChanged) {
-          store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+        if (editedNotes.length !== 0) {
+          store.dispatch("UPDATE_NOTES", { notes: editedNotes });
         }
       }
       dragId.value = requestAnimationFrame(dragLeft);
@@ -600,94 +566,62 @@ export default defineComponent({
 
     // キーボードイベント
     const handleNotesArrowUp = () => {
-      let changedNoteNumber: number | undefined;
-      const newNotes = state.score.notes.map((note) => {
-        if (selectedNoteIds.value.includes(note.id)) {
-          const noteNumber = Math.min(note.noteNumber + 1, 127);
-          changedNoteNumber = noteNumber;
-          return {
-            ...note,
-            noteNumber,
-          };
-        } else {
-          return note;
-        }
-      });
-      if (newNotes.some((note) => note.noteNumber > 127)) {
+      const editedNotes: Note[] = [];
+      for (const note of selectedNotes.value) {
+        const noteNumber = Math.min(note.noteNumber + 1, 127);
+        editedNotes.push({ ...note, noteNumber });
+      }
+      if (editedNotes.some((note) => note.noteNumber > 127)) {
         return;
       }
-      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
-      if (
-        changedNoteNumber !== undefined &&
-        selectedNoteIds.value.length === 1
-      ) {
+      store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+
+      if (editedNotes.length === 1) {
         store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: changedNoteNumber,
+          noteNumber: editedNotes[0].noteNumber,
           duration: PREVIEW_SOUND_DURATION,
         });
       }
     };
 
     const handleNotesArrowDown = () => {
-      let changedNoteNumber: number | undefined;
-      const newNotes = state.score.notes.map((note) => {
-        if (selectedNoteIds.value.includes(note.id)) {
-          const noteNumber = Math.max(note.noteNumber - 1, 0);
-          changedNoteNumber = noteNumber;
-          return {
-            ...note,
-            noteNumber,
-          };
-        } else {
-          return note;
-        }
-      });
-      if (newNotes.some((note) => note.noteNumber < 0)) {
+      const editedNotes: Note[] = [];
+      for (const note of selectedNotes.value) {
+        const noteNumber = Math.max(note.noteNumber - 1, 0);
+        editedNotes.push({ ...note, noteNumber });
+      }
+      if (editedNotes.some((note) => note.noteNumber < 0)) {
         return;
       }
-      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
-      if (
-        changedNoteNumber !== undefined &&
-        selectedNoteIds.value.length === 1
-      ) {
+      store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+
+      if (editedNotes.length === 1) {
         store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: changedNoteNumber,
+          noteNumber: editedNotes[0].noteNumber,
           duration: PREVIEW_SOUND_DURATION,
         });
       }
     };
 
     const handleNotesArrowRight = () => {
-      const newNotes = state.score.notes.map((note) => {
-        if (selectedNoteIds.value.includes(note.id)) {
-          const position = note.position + snapTicks.value;
-          return {
-            ...note,
-            position,
-          };
-        } else {
-          return note;
-        }
-      });
-      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+      const editedNotes: Note[] = [];
+      for (const note of selectedNotes.value) {
+        const position = note.position + snapTicks.value;
+        editedNotes.push({ ...note, position });
+      }
+      store.dispatch("UPDATE_NOTES", { notes: editedNotes });
     };
 
     const handleNotesArrowLeft = () => {
-      const newNotes = state.score.notes.map((note) => {
-        if (selectedNoteIds.value.includes(note.id)) {
-          const position = note.position - snapTicks.value;
-          return {
-            ...note,
-            position,
-          };
-        } else {
-          return note;
-        }
-      });
-      if (newNotes.some((note) => note.position < 0)) {
+      const editedNotes: Note[] = [];
+      for (const note of selectedNotes.value) {
+        const position = note.position - snapTicks.value;
+        editedNotes.push({ ...note, position });
+      }
+      if (editedNotes.some((note) => note.position < 0)) {
         return;
       }
-      store.dispatch("REPLACE_ALL_NOTES", { notes: newNotes });
+      store.dispatch("UPDATE_NOTES", { notes: editedNotes });
     };
 
     const handleNotesBackspaceOrDelete = () => {
