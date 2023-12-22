@@ -1003,11 +1003,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!previewSynth) {
         throw new Error("previewSynth is undefined.");
       }
-      previewSynth.noteOn(0, noteNumber);
-      if (duration !== undefined) {
-        const contextTime = audioContext.currentTime;
-        previewSynth.noteOff(contextTime + duration, noteNumber);
-      }
+      previewSynth.noteOn("immediately", noteNumber, duration);
     },
   },
 
@@ -1019,7 +1015,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!previewSynth) {
         throw new Error("previewSynth is undefined.");
       }
-      previewSynth.noteOff(0, noteNumber);
+      previewSynth.noteOff("immediately", noteNumber);
     },
   },
 

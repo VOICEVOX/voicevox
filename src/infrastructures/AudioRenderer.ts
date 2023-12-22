@@ -1,3 +1,16 @@
+import {
+  decibelToLinear,
+  linearToDecibel,
+  noteNumberToFrequency,
+} from "@/helpers/singHelper";
+
+const getEarliestSchedulableContextTime = (audioContext: BaseAudioContext) => {
+  const renderQuantumSize = 128;
+  const sampleRate = audioContext.sampleRate;
+  const currentTime = audioContext.currentTime;
+  return currentTime + (renderQuantumSize + 10) / sampleRate;
+};
+
 /**
  * スケジューリングで使用するタイマーです。
  */
@@ -426,8 +439,7 @@ export interface Instrument {
   /**
    * 発音中のすべての音に対して、ノートオフのスケジュールを行います。
    * すでにノートオフがスケジュールされている音の場合は、
-   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
-   * 指定された時刻で再スケジュールを行います。
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
    * @param contextTime ノートオフを行う時刻（コンテキスト時間）
    */
   allNotesOff(contextTime: number): void;
@@ -566,8 +578,7 @@ class AudioPlayerVoice {
   /**
    * 音声の停止をスケジュールします。
    * すでに停止がスケジュールされている場合は、
-   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
-   * 指定された時刻で再スケジュールを行います。
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
    * @param contextTime 停止する時刻（コンテキスト時間）
    */
   stop(contextTime: number) {
@@ -624,8 +635,7 @@ export class AudioPlayer {
   /**
    * 再生中のすべての音声の停止をスケジュールします。
    * すでに停止がスケジュールされている音声の場合は、
-   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
-   * 指定された時刻で再スケジュールを行います。
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
    * @param contextTime 停止する時刻（コンテキスト時間）
    */
   allStop(contextTime: number) {
@@ -709,33 +719,12 @@ class SynthVoice {
     this.filterNode.connect(this.gainNode);
   }
 
-  private noteNumberToFrequency(noteNumber: number) {
-    return 440 * Math.pow(2, (noteNumber - 69) / 12);
-  }
-
-  private linearToDecibel(linearValue: number) {
-    if (linearValue === 0) {
-      return -1000;
-    }
-    return 20 * Math.log10(linearValue);
-  }
-
   private calcFilterFreq(cutoff: number, keyTrack: number, noteNumber: number) {
     return cutoff * Math.pow(2, ((noteNumber - 60) * keyTrack) / 12);
   }
 
   private calcFilterQ(resonance: number) {
-    return this.linearToDecibel(Math.SQRT1_2) + resonance;
-  }
-
-  private getMinContextTime(audioContext: BaseAudioContext) {
-    if (audioContext instanceof AudioContext) {
-      const renderQuantumSize = 128;
-      const latency = (renderQuantumSize + 10) / audioContext.sampleRate;
-      return audioContext.currentTime + latency;
-    } else {
-      return 0;
-    }
+    return linearToDecibel(Math.SQRT1_2) + resonance;
   }
 
   /**
@@ -743,35 +732,38 @@ class SynthVoice {
    * @param contextTime ノートオンを行う時刻（コンテキスト時間）
    */
   noteOn(contextTime: number) {
-    const minContextTime = this.getMinContextTime(this.audioContext);
-    const t0 = Math.max(minContextTime, contextTime);
     const atk = this.ampParams.attack;
     const dcy = this.ampParams.decay;
     const sus = this.ampParams.sustain;
+    const freq = noteNumberToFrequency(this.noteNumber);
+    const t0 = Math.max(
+      getEarliestSchedulableContextTime(this.audioContext),
+      contextTime
+    );
 
     // アタック、ディケイ、サスティーンのスケジュールを行う
     this.gainNode.gain.setValueAtTime(0, t0);
     this.gainNode.gain.linearRampToValueAtTime(1, t0 + atk);
     this.gainNode.gain.setTargetAtTime(sus, t0 + atk, dcy);
 
-    const freq = this.noteNumberToFrequency(this.noteNumber);
     this.oscNode.frequency.value = freq;
+    this.oscNode.start(t0);
 
-    this.oscNode.start(contextTime);
     this._isActive = true;
   }
 
   /**
    * ノートオフをスケジュールします。
    * すでにノートオフがスケジュールされている場合は、
-   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
-   * 指定された時刻で再スケジュールを行います。
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
    * @param contextTime ノートオフを行う時刻（コンテキスト時間）
    */
   noteOff(contextTime: number) {
-    const minContextTime = this.getMinContextTime(this.audioContext);
-    const t0 = Math.max(minContextTime, contextTime);
     const rel = this.ampParams.release;
+    const t0 = Math.max(
+      getEarliestSchedulableContextTime(this.audioContext),
+      contextTime
+    );
     const stopContextTime = t0 + rel * 4;
 
     if (
@@ -783,8 +775,8 @@ class SynthVoice {
       this.gainNode.gain.setTargetAtTime(0, t0, rel);
 
       this.oscNode.stop(stopContextTime);
-      this._isActive = false;
 
+      this._isActive = false;
       this.stopContextTime = stopContextTime;
     }
   }
@@ -837,27 +829,40 @@ export class PolySynth implements Instrument {
   /**
    * ノートオンをスケジュールします。
    * すでに指定されたノート番号でノートオンがスケジュールされている場合は何も行いません。
+   * ノートの長さが指定された場合は、ノートオフもスケジュールします。
    * @param contextTime ノートオンを行う時刻（コンテキスト時間）
    * @param noteNumber MIDIノート番号
+   * @param duration ノートの長さ（秒）
    */
-  noteOn(contextTime: number, noteNumber: number) {
-    const exists = this.voices.some((value) => {
+  noteOn(
+    contextTime: number | "immediately",
+    noteNumber: number,
+    duration?: number
+  ) {
+    let voice = this.voices.find((value) => {
       return value.isActive && value.noteNumber === noteNumber;
     });
-    if (exists) return;
+    if (contextTime === "immediately") {
+      contextTime = getEarliestSchedulableContextTime(this.audioContext);
+    }
+    if (!voice) {
+      voice = new SynthVoice(this.audioContext, {
+        noteNumber,
+        osc: this.oscParams,
+        filter: this.filterParams,
+        amp: this.ampParams,
+      });
+      voice.output.connect(this.gainNode);
+      voice.noteOn(contextTime);
 
-    const voice = new SynthVoice(this.audioContext, {
-      noteNumber,
-      osc: this.oscParams,
-      filter: this.filterParams,
-      amp: this.ampParams,
-    });
-    this.voices = this.voices.filter((value) => {
-      return !value.isStopped;
-    });
-    this.voices.push(voice);
-    voice.output.connect(this.gainNode);
-    voice.noteOn(contextTime);
+      this.voices = this.voices.filter((value) => {
+        return !value.isStopped;
+      });
+      this.voices.push(voice);
+    }
+    if (duration !== undefined) {
+      voice.noteOff(contextTime + duration);
+    }
   }
 
   /**
@@ -866,20 +871,22 @@ export class PolySynth implements Instrument {
    * @param contextTime ノートオフを行う時刻（コンテキスト時間）
    * @param noteNumber MIDIノート番号
    */
-  noteOff(contextTime: number, noteNumber: number) {
+  noteOff(contextTime: number | "immediately", noteNumber: number) {
     const voice = this.voices.find((value) => {
       return value.isActive && value.noteNumber === noteNumber;
     });
-    if (!voice) return;
-
-    voice.noteOff(contextTime);
+    if (contextTime === "immediately") {
+      contextTime = getEarliestSchedulableContextTime(this.audioContext);
+    }
+    if (voice) {
+      voice.noteOff(contextTime);
+    }
   }
 
   /**
    * 発音中のすべての音に対して、ノートオフのスケジュールを行います。
    * すでにノートオフがスケジュールされている音の場合は、
-   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ、
-   * 指定された時刻で再スケジュールを行います。
+   * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
    * @param contextTime ノートオフを行う時刻（コンテキスト時間）
    */
   allNotesOff(contextTime: number) {
@@ -998,29 +1005,15 @@ export class Limiter {
     this.correctionGainNode.connect(this.outputGainNode);
   }
 
-  private linearToDecibel(linearValue: number) {
-    if (linearValue === 0) {
-      return -1000;
-    }
-    return 20 * Math.log10(linearValue);
-  }
-
-  private decibelToLinear(decibelValue: number) {
-    if (decibelValue <= -1000) {
-      return 0;
-    }
-    return Math.pow(10, decibelValue / 20);
-  }
-
   private getGainInDecibels(gainNode: GainNode) {
-    return this.linearToDecibel(gainNode.gain.value);
+    return linearToDecibel(gainNode.gain.value);
   }
 
   private setGainInDecibels(value: number, gainNode: GainNode) {
     if (!Number.isFinite(value)) {
       throw new Error("Not a finite number.");
     }
-    gainNode.gain.value = this.decibelToLinear(value);
+    gainNode.gain.value = decibelToLinear(value);
   }
 }
 

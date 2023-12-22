@@ -20,7 +20,21 @@ export const ZOOM_Y_STEP = 0.05;
 export const PREVIEW_SOUND_DURATION = 0.1;
 
 export function noteNumberToFrequency(noteNumber: number) {
-  return 440 * 2 ** ((noteNumber - 69) / 12);
+  return 440 * Math.pow(2, (noteNumber - 69) / 12);
+}
+
+export function linearToDecibel(linearValue: number) {
+  if (linearValue === 0) {
+    return -1000;
+  }
+  return 20 * Math.log10(linearValue);
+}
+
+export function decibelToLinear(decibelValue: number) {
+  if (decibelValue <= -1000) {
+    return 0;
+  }
+  return Math.pow(10, decibelValue / 20);
 }
 
 // NOTE: 戻り値の単位はtick
