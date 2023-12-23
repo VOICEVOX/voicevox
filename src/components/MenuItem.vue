@@ -74,7 +74,7 @@
 import { ref, computed, watch } from "vue";
 import type { MenuItemData } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
-import { HotkeyAction } from "@/type/preload";
+import { hotkeyActionSchema } from "@/type/preload";
 const props = withDefaults(
   defineProps<{
     selected?: boolean;
@@ -95,10 +95,14 @@ const hotkeySettingsMap = computed(
       store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
     )
 );
-// FIXME: string型は受け付けないべき
-const getMenuBarHotkey = (label: HotkeyAction | string) => {
-  const hotkey = hotkeySettingsMap.value.get(label);
-  if (hotkey === undefined) {
+const getMenuBarHotkey = (rawLabel: string) => {
+  const label = hotkeyActionSchema.safeParse(rawLabel);
+  if (!label.success) {
+    return "";
+  }
+
+  const hotkey = hotkeySettingsMap.value.get(label.data);
+  if (hotkey == undefined) {
     return "";
   } else {
     // Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
