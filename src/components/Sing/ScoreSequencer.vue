@@ -407,11 +407,7 @@ export default defineComponent({
         }
         const position = note.position + amountPositionX;
         const noteNumber = note.noteNumber + amountPositionY;
-        editedNotes.push({
-          ...note,
-          noteNumber,
-          position,
-        });
+        editedNotes.push({ ...note, noteNumber, position });
       }
 
       // 左端より前はドラッグしない

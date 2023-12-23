@@ -277,7 +277,7 @@ class OverlappingNotesDetector {
         overlappingNoteIds: new Set<string>(),
       });
     }
-
+    // TODO: 計算量がO(n^2)になっているので、区間木などを使用してO(nlogn)にする
     for (const note of notes) {
       const overlappingNoteIds = new Set<string>();
       for (const [noteId, noteInfo] of this.noteInfos) {
@@ -325,7 +325,6 @@ class OverlappingNotesDetector {
         noteInfo1.overlappingNoteIds.delete(noteId2);
       }
     }
-
     for (const note of notes) {
       this.noteInfos.delete(note.id);
     }
@@ -727,7 +726,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ) {
       const scoreNotes = state.score.notes;
       const existingIds = new Set(scoreNotes.map((value) => value.id));
-      if (!noteIds.every((value) => existingIds.has(value))) {
+      const isValidNoteIds = noteIds.every((value) => existingIds.has(value));
+      if (!isValidNoteIds) {
         throw new Error("The note ids are invalid.");
       }
       commit("REMOVE_NOTES", { noteIds });
@@ -1082,7 +1082,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, commit, dispatch }) {
-      const removeOverlappingNotes = (
+      const deleteOverlappingNotes = (
         score: Score,
         overlappingNoteIds: string[]
       ) => {
@@ -1308,7 +1308,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const score = copyScore(state.score);
         const singer = copySinger(state.singer);
 
-        removeOverlappingNotes(score, state.overlappingNoteIds);
+        deleteOverlappingNotes(score, state.overlappingNoteIds);
 
         // Score -> Phrases
 
