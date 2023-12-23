@@ -65,8 +65,6 @@ describe("store/vuex.js test", () => {
           avoidOverwrite: false,
           exportLab: false,
           exportSrt: false,
-          isSrtDialogOpen: false,
-          srtStartTime: 0,
           exportText: false,
           outputStereo: false,
           audioOutputDevice: "default",

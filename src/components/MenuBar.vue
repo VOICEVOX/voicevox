@@ -1,8 +1,4 @@
 <template>
-  <set-srt-start-dialog
-    v-model="store.state.savingSetting.isSrtDialogOpen"
-    :is-dialog-open="store.state.savingSetting.isSrtDialogOpen"
-  />
   <q-bar class="bg-background q-pa-none relative-position">
     <div
       v-if="$q.platform.is.mac && !isFullscreen"
@@ -43,7 +39,6 @@ import { useStore } from "@/store";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import SetSrtStartDialog from "@/components/SetSrtStartDialog.vue";
 
 export type MenuItemBase<T extends string> = {
   type: T;
@@ -142,19 +137,6 @@ const generateAndSaveAllAudio = async () => {
 };
 
 const generateAndConnectAndSaveAllAudio = async () => {
-  if (store.state.savingSetting.exportSrt) {
-    store.commit("IS_SRT_DIALOG_OPEN", {
-      isOpen: true,
-    });
-    await new Promise((resolve) => {
-      const timer = setInterval(() => {
-        if (store.state.savingSetting.isSrtDialogOpen === false) {
-          clearInterval(timer);
-          resolve(undefined);
-        }
-      }, 100);
-    });
-  }
   if (!uiLocked.value) {
     await generateAndConnectAndSaveAudioWithDialog({
       dispatch: store.dispatch,

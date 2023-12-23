@@ -433,16 +433,6 @@ export type AudioStoreTypes = {
     }): SaveResultObject[] | undefined;
   };
 
-  IS_SRT_DIALOG_OPEN: {
-    mutation: { isOpen: boolean };
-    action: (payload: { isOpen: boolean }) => void;
-  };
-
-  SET_SRT_START_TIME: {
-    mutation: { srtStartTime: number };
-    action: (payload: { srtStartTime: number }) => void;
-  };
-
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
       filePath?: string;

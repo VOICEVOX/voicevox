@@ -306,8 +306,6 @@ export type SavingSetting = {
   exportLab: boolean;
   exportText: boolean;
   exportSrt: boolean;
-  isSrtDialogOpen: boolean;
-  srtStartTime: number;
   outputStereo: boolean;
   audioOutputDevice: string;
 };
@@ -523,8 +521,6 @@ export const configSchema = z.object({
       fixedExportDir: z.string().default(""),
       exportLab: z.boolean().default(false),
       exportSrt: z.boolean().default(false),
-      isSrtDialogOpen: z.boolean().default(false),
-      srtStartTime: z.number().default(0),
       exportText: z.boolean().default(false),
       outputStereo: z.boolean().default(false),
       audioOutputDevice: z.string().default(""),

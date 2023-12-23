@@ -1552,24 +1552,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
-  IS_SRT_DIALOG_OPEN: {
-    mutation(state, { isOpen }: { isOpen: boolean }) {
-      state.savingSetting.isSrtDialogOpen = isOpen;
-    },
-    action: async ({ commit }, { isOpen }: { isOpen: boolean }) => {
-      await commit("IS_SRT_DIALOG_OPEN", { isOpen });
-    },
-  },
-
-  SET_SRT_START_TIME: {
-    mutation(state, { srtStartTime }: { srtStartTime: number }) {
-      state.savingSetting.srtStartTime = srtStartTime;
-    },
-    action: async ({ commit }, { srtStartTime }: { srtStartTime: number }) => {
-      await commit("SET_SRT_START_TIME", { srtStartTime });
-    },
-  },
-
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action: createUILockAction(
       async (
@@ -1610,10 +1592,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const texts: string[] = [];
 
         let labOffset = 0;
+
+        // TODO: もしsrtファイルの開始時間を任意に設定する場合は、ここで設定する
         const srtInterval = {
           currentSerialNumber: 1, // 現在の通し番号
-          start: state.savingSetting.srtStartTime, // 字幕の開始時間
-          end: state.savingSetting.srtStartTime, // 字幕の終了時間
+          start: 0, // 字幕の開始時間
+          end: 0, // 字幕の終了時間
         };
 
         const base64Encoder = (blob: Blob): Promise<string | undefined> => {
