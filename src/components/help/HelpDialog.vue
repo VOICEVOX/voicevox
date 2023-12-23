@@ -196,6 +196,7 @@ const pagedata = computed(() => {
             }
           : {
               isUpdateAvailable: false,
+              latestVersion: undefined,
             }),
       },
     },
