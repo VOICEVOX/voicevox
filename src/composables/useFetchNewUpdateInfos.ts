@@ -4,7 +4,7 @@ import { z } from "zod";
 import { UpdateInfo, updateInfoSchema } from "@/type/preload";
 
 /**
- * 現在のバージョンより新しい最新バージョンがリリースされているか調べる。
+ * 現在のバージョンより新しいバージョンがリリースされているか調べる。
  * あれば最新バージョンと、現在より新しいバージョンの情報を返す。
  */
 export const useFetchNewUpdateInfos = (
