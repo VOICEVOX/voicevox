@@ -10,10 +10,16 @@
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
     @focus="onRootFocus"
+    @click.stop=""
   >
     <!-- 複数選択用のヒットボックス -->
+    <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
     <div
-      v-if="(isCtrlOrCommandKeyDown || isShiftKeyDown) && isMultiSelectEnabled"
+      v-if="
+        isMultiSelectEnabled && isActiveAudioCell
+          ? isCtrlOrCommandKeyDown
+          : isCtrlOrCommandKeyDown || isShiftKeyDown
+      "
       class="click-hitbox"
       tabindex="-1"
       @click="onClickWithModifierKey"
@@ -72,7 +78,7 @@
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template v-if="deleteButtonEnable" #after>
+      <template v-if="enableDeleteButton" #after>
         <q-btn
           round
           flat
@@ -167,6 +173,8 @@ const selectAndSetActiveAudioKey = () => {
 };
 
 const onRootFocus = () => {
+  if (uiLocked.value) return;
+
   selectAndSetActiveAudioKey();
 };
 // 複数選択：Ctrl（Cmd）またはShiftキーが押されている時のクリック処理
@@ -290,7 +298,7 @@ watch(
   // `audioItem` becomes undefined just before the component is unmounted.
   () => audioItem.value?.text,
   (newText) => {
-    if (!isChangeFlag.value && newText !== undefined) {
+    if (!isChangeFlag.value && newText != undefined) {
       audioTextBuffer.value = newText;
     }
   }
@@ -327,7 +335,7 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
  */
 const paste = async (options?: { text?: string }) => {
   const text = options ? options.text : await navigator.clipboard.readText();
-  if (text === undefined) return;
+  if (text == undefined) return;
 
   // 複数行貼り付けできるか試す
   if (textSplitType.value !== "OFF") {
@@ -429,33 +437,66 @@ const moveDownCell = moveCell(1);
 // 消去
 const willRemove = ref(false);
 const removeCell = async () => {
-  // 1つだけの時は削除せず
-  if (audioKeys.value.length > 1) {
+  let audioKeysToDelete: AudioKey[];
+  if (
+    isMultiSelectEnabled.value &&
+    store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
+  ) {
+    audioKeysToDelete = store.getters.SELECTED_AUDIO_KEYS;
+  } else {
+    audioKeysToDelete = [props.audioKey];
+  }
+  // 全て消える場合はなにもしない
+  if (audioKeys.value.length > audioKeysToDelete.length) {
     // フォーカスを外したりREMOVEしたりすると、
     // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
     // エラー防止のためにまずwillRemoveフラグを建てる
     willRemove.value = true;
 
-    const index = audioKeys.value.indexOf(props.audioKey);
-    if (index > 0) {
+    if (audioKeysToDelete.includes(props.audioKey)) {
+      // 選択するAudioKeyを決定する。
+      // - 削除ボタンが押されたAudioCellから開始
+      // - 残るAudioCellを上方向に探す
+      // - 上方向になかったら下方向に探す
+      // - なかったらエラー（Unreachable）
+      const startIndex = audioKeys.value.indexOf(props.audioKey);
+      let willNextFocusIndex = -1;
+      for (let i = startIndex; i >= 0; i--) {
+        if (!audioKeysToDelete.includes(audioKeys.value[i])) {
+          willNextFocusIndex = i;
+          break;
+        }
+      }
+      if (willNextFocusIndex === -1) {
+        for (let i = startIndex; i < audioKeys.value.length; i++) {
+          if (!audioKeysToDelete.includes(audioKeys.value[i])) {
+            willNextFocusIndex = i;
+            break;
+          }
+        }
+      }
+      if (willNextFocusIndex === -1) {
+        throw new Error(
+          "次に選択するaudioKeyが見付かりませんでした（unreachable）"
+        );
+      }
       emit("focusCell", {
-        audioKey: audioKeys.value[index - 1],
-      });
-    } else {
-      emit("focusCell", {
-        audioKey: audioKeys.value[index + 1],
+        audioKey: audioKeys.value[willNextFocusIndex],
       });
     }
 
-    store.dispatch("COMMAND_REMOVE_AUDIO_ITEM", {
-      audioKey: props.audioKey,
+    store.dispatch("COMMAND_MULTI_REMOVE_AUDIO_ITEM", {
+      audioKeys: audioKeysToDelete,
     });
   }
 };
 
 // 削除ボタンの有効／無効判定
-const deleteButtonEnable = computed(() => {
-  return 1 < audioKeys.value.length;
+const enableDeleteButton = computed(() => {
+  return (
+    store.state.audioKeys.length >
+    (isMultiSelectEnabled.value ? store.getters.SELECTED_AUDIO_KEYS.length : 1)
+  );
 });
 
 // テキスト編集エリアの右クリック

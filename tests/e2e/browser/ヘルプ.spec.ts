@@ -1,12 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-import { navigateToHelpDialog } from "../navigators";
+import { gotoHome, navigateToHelpDialog } from "../navigators";
 
-test.beforeEach(async ({ page }) => {
-  const BASE_URL = "http://localhost:5173/#/home";
-  await page.setViewportSize({ width: 800, height: 600 });
-  await page.goto(BASE_URL);
-});
+test.beforeEach(gotoHome);
 
 test("「ヘルプ」メニューから各項目をクリックすると、その項目の内容が表示される", async ({
   page,

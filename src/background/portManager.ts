@@ -1,6 +1,6 @@
 import { execFileSync } from "child_process";
 import { createServer } from "net";
-import log from "electron-log";
+import log from "electron-log/main";
 
 const isWindows = process.platform === "win32";
 
@@ -100,7 +100,7 @@ export async function getPidFromPort(
       });
 
       // pid が undefined (= 割り当て可能) でないものを取得 → 1つ目を取得
-      return pidArr.filter((pid) => pid !== undefined)[0]?.toString();
+      return pidArr.filter((pid) => pid != undefined)[0]?.toString();
     }
   };
 

@@ -36,7 +36,6 @@ describe("store/vuex.js test", () => {
         audioItems: {},
         audioKeys: [],
         audioStates: {},
-        audioPlayStartPoint: 0,
         uiLockCount: 0,
         dialogLockCount: 0,
         reloadingLock: false,
@@ -53,6 +52,7 @@ describe("store/vuex.js test", () => {
         isDefaultStyleSelectDialogOpen: false,
         isDictionaryManageDialogOpen: false,
         isEngineManageDialogOpen: false,
+        isUpdateNotificationDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
@@ -131,8 +131,8 @@ describe("store/vuex.js test", () => {
           shouldApplyDefaultPresetOnVoiceChanged: false,
           enableInterrogativeUpspeak: false,
           enableMorphing: false,
-          enableMultiEngine: false,
           enableMultiSelect: false,
+          shouldKeepTuningOnTextChange: false,
         },
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {
@@ -145,6 +145,7 @@ describe("store/vuex.js test", () => {
           engineStartedOnAltPort: false,
           notifyOnGenerate: false,
         },
+        enableMultiEngine: false,
         progress: -1,
         isVuexReady: false,
         defaultPresetKeys: {},
@@ -248,7 +249,6 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.audioKeys);
     assert.isObject(store.state.audioStates);
     assert.isEmpty(store.state.audioStates);
-    assert.equal(store.state.audioPlayStartPoint, 0);
     assert.equal(store.state.uiLockCount, 0);
     assert.equal(store.state.nowPlayingContinuously, false);
     assert.isArray(store.state.undoCommands);

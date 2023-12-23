@@ -56,6 +56,33 @@ module.exports = {
       },
     ],
     "import/order": "error",
+    "no-restricted-syntax": [
+      "warn",
+      {
+        selector:
+          "BinaryExpression[operator='==='][right.type='Literal'][right.value=null]",
+        message:
+          "'=== null'ではなく'== null'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
+      },
+      {
+        selector:
+          "BinaryExpression[operator='!=='][right.type='Literal'][right.value=null]",
+        message:
+          "'!== null'ではなく'!= null'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
+      },
+      {
+        selector:
+          "BinaryExpression[operator='==='][right.type='Identifier'][right.name=undefined]",
+        message:
+          "'=== undefined'ではなく'== undefined'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
+      },
+      {
+        selector:
+          "BinaryExpression[operator='!=='][right.type='Identifier'][right.name=undefined]",
+        message:
+          "'!== undefined'ではなく'!= undefined'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
+      },
+    ],
   },
   overrides: [
     {
