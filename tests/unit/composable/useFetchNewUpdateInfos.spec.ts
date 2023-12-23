@@ -18,9 +18,9 @@ const setupFetchMock = (latestVersion: string) => {
 };
 
 // 準備完了まで待機
-const waitFinished = async (result: Ref<{ status: "checking" | string }>) => {
+const waitFinished = async (result: Ref<{ status: string }>) => {
   await vi.waitFor(() => {
-    if (result.value.status == "checking") throw new Error();
+    if (result.value.status === "upadteChecking") throw new Error();
   });
 };
 
@@ -41,7 +41,7 @@ it("新バージョンがある場合、latestVersionに最新バージョンが
   });
 });
 
-it("新バージョンがない場合、latestVersionはundefined", async () => {
+it("新バージョンがない場合は状態が変わるだけ", async () => {
   const currentVersion = "1.0.0";
   const latestVersion = "1.0.0";
   setupFetchMock(latestVersion);

@@ -13,7 +13,7 @@ export const useFetchNewUpdateInfos = (
 ) => {
   const result = ref<
     | {
-        status: "checking";
+        status: "upadteChecking";
       }
     | {
         status: "updateAvailable";
@@ -24,7 +24,7 @@ export const useFetchNewUpdateInfos = (
         status: "updateNotAvailable";
       }
   >({
-    status: "checking",
+    status: "upadteChecking",
   });
 
   (async () => {
