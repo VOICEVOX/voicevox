@@ -28,7 +28,6 @@ export const settingStoreState: SettingStoreState = {
     avoidOverwrite: false,
     exportLab: false,
     exportSrt: false,
-    srtStartTime: 0,
     exportText: false,
     outputStereo: false,
     audioOutputDevice: "default",

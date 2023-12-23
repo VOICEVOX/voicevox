@@ -1202,6 +1202,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         let timestamp = offset != undefined ? offset : 0;
 
         labString += timestamp.toFixed() + " ";
+
+        // labファイルは1000万分の1秒 まで整数として扱うため、各音声パラメータを1000万倍する
         timestamp += (query.prePhonemeLength * 10000000) / speedScale;
         labString += timestamp.toFixed() + " ";
         labString += "pau" + "\n";
@@ -1257,7 +1259,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         let timestamp = offset != undefined ? offset : 0;
 
-        timestamp += (query.prePhonemeLength * 10000000) / speedScale;
+        timestamp += (query.prePhonemeLength * 1000) / speedScale;
 
         query.accentPhrases.forEach((accentPhrase) => {
           accentPhrase.moras.forEach((mora) => {
@@ -1265,18 +1267,18 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               mora.consonantLength != undefined &&
               mora.consonant != undefined
             ) {
-              timestamp += (mora.consonantLength * 10000000) / speedScale;
+              timestamp += (mora.consonantLength * 1000) / speedScale;
             }
-            timestamp += (mora.vowelLength * 10000000) / speedScale;
+            timestamp += (mora.vowelLength * 1000) / speedScale;
           });
           if (accentPhrase.pauseMora != undefined) {
             timestamp +=
-              (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
+              (accentPhrase.pauseMora.vowelLength * 1000) / speedScale;
           }
         });
 
-        timestamp += (query.postPhonemeLength * 10000000) / speedScale;
-        timestamp /= 10000000;
+        timestamp += (query.postPhonemeLength * 1000) / speedScale;
+        timestamp /= 1000;
 
         return timestamp;
       }
@@ -1588,13 +1590,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         const encodedBlobs: string[] = [];
         const labs: string[] = [];
-        const srts: string[] = [];
+        const subtitles: string[] = [];
         const texts: string[] = [];
 
         let labOffset = 0;
 
-        // TODO: もしsrtファイルの開始時間を任意に設定する場合は、ここで設定する
-        const srtInterval = {
+        const subtitleTiming = {
           currentSerialNumber: 1, // 現在の通し番号
           start: 0, // 字幕の開始時間
           end: 0, // 字幕の終了時間
@@ -1664,22 +1665,22 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             labOffset = Number(splitLab[splitLab.length - 2]);
           }
 
-          // srtファイルを出力する設定の場合、srtファイルに出力する文字列を作る
+          // 字幕ファイルを出力する設定の場合、字幕ファイルに出力する文字列を作る
           if (state.savingSetting.exportSrt) {
-            const srtIntervalTime = await dispatch(
+            const subtitleIntervalTime = await dispatch(
               "GENERATE_INTERVAL_FOR_SRT",
               {
                 audioKey,
                 offset: labOffset,
               }
             );
-            if (srtIntervalTime == undefined) {
+            if (subtitleIntervalTime == undefined) {
               return { result: "WRITE_ERROR", path: filePath };
             }
             // 字幕の開始時間と終了時間を作る
-            const start = formatTime(srtInterval.start);
-            srtInterval.end += srtIntervalTime;
-            const end = formatTime(srtInterval.end);
+            const start = formatTime(subtitleTiming.start);
+            subtitleTiming.end += subtitleIntervalTime;
+            const end = formatTime(subtitleTiming.end);
 
             const speakerName = getCharacterInfo(
               state,
@@ -1687,17 +1688,17 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               state.audioItems[audioKey].voice.styleId
             )?.metas.speakerName as string;
 
-            // srtファイルに出力する文字列を作る
-            const srtString = createSrtString(
-              srtInterval.currentSerialNumber,
+            // 字幕ファイルに出力する文字列を作る
+            const subtitleString = createSrtString(
+              subtitleTiming.currentSerialNumber,
               start,
               end,
               speakerName,
               extractExportText(state.audioItems[audioKey].text)
             );
-            srts.push(srtString);
-            srtInterval.currentSerialNumber++;
-            srtInterval.start = srtInterval.end;
+            subtitles.push(subtitleString);
+            subtitleTiming.currentSerialNumber++;
+            subtitleTiming.start = subtitleTiming.end;
           }
         }
 
@@ -1708,47 +1709,47 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           return { result: "ENGINE_ERROR", path: filePath };
         }
 
-        const writeFileResult = await window.electron.writeFile({
+        const writingWavResult = await window.electron.writeFile({
           filePath,
           buffer: await connectedWav.arrayBuffer(),
         });
-        if (!writeFileResult.ok) {
-          window.electron.logError(writeFileResult.error);
+        if (!writingWavResult.ok) {
+          window.electron.logError(writingWavResult.error);
           return { result: "WRITE_ERROR", path: filePath };
         }
 
         if (state.savingSetting.exportLab) {
-          const labResult = await writeTextFile({
+          const writingLabResult = await writeTextFile({
             // GENERATE_LABで生成される文字列はすべて改行で終わるので、追加で改行を挟む必要はない
             text: labs.join(""),
             filePath: filePath.replace(/\.wav$/, ".lab"),
           });
-          if (!labResult.ok) {
-            window.electron.logError(labResult.error);
+          if (!writingLabResult.ok) {
+            window.electron.logError(writingLabResult.error);
             return { result: "WRITE_ERROR", path: filePath };
           }
         }
 
         if (state.savingSetting.exportSrt) {
-          const srtResult = await writeTextFile({
-            text: srts.join("\n"),
+          const writingSubtitleResult = await writeTextFile({
+            text: subtitles.join("\n"),
             filePath: filePath.replace(/\.wav$/, ".srt"),
             encoding: state.savingSetting.fileEncoding,
           });
-          if (!srtResult.ok) {
-            window.electron.logError(srtResult.error);
+          if (!writingSubtitleResult.ok) {
+            window.electron.logError(writingSubtitleResult.error);
             return { result: "WRITE_ERROR", path: filePath };
           }
         }
 
         if (state.savingSetting.exportText) {
-          const textResult = await writeTextFile({
+          const writingTextResult = await writeTextFile({
             text: texts.join("\n"),
             filePath: filePath.replace(/\.wav$/, ".txt"),
             encoding: state.savingSetting.fileEncoding,
           });
-          if (!textResult.ok) {
-            window.electron.logError(textResult.error);
+          if (!writingTextResult.ok) {
+            window.electron.logError(writingTextResult.error);
             return { result: "WRITE_ERROR", path: filePath };
           }
         }

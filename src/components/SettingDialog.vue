@@ -537,9 +537,9 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>srtファイルを書き出し</div>
+                <div>字幕ファイルを書き出し</div>
                 <div
-                  aria-label="ONの場合、リップシンク用のlabファイルが音声書き出し時に追加で書き出されます。"
+                  aria-label="ONの場合、字幕ファイルが音声書き出し時に追加で書き出されます。(srt形式)"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -549,7 +549,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      ONの場合、字幕用のsrtファイルが音声書き出し時に追加で書き出されます。
+                      ONの場合、字幕ファイルが音声書き出し時に追加で書き出されます。(srt形式)
                     </q-tooltip>
                   </q-icon>
                 </div>
