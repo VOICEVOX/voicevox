@@ -85,7 +85,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, type Component } from "vue";
+import { computed, ref } from "vue";
+import type { Component } from "vue";
 import HelpPolicy from "./HelpPolicy.vue";
 import LibraryPolicy from "./LibraryPolicy.vue";
 import HowToUse from "./HowToUse.vue";
@@ -131,7 +132,14 @@ const store = useStore();
 const updateInfos = ref<UpdateInfoObject[]>();
 store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
-const { isCheckingFinished, latestVersion } = useFetchNewUpdateInfos();
+if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
+  throw new Error(
+    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。"
+  );
+}
+const { isCheckingFinished, latestVersion } = useFetchNewUpdateInfos(
+  import.meta.env.VITE_LATEST_UPDATE_INFOS_URL
+);
 
 const isUpdateAvailable = computed(() => {
   return isCheckingFinished.value && latestVersion.value !== "";

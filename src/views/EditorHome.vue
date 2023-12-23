@@ -550,8 +550,13 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
 });
 
 // エディタのアップデート確認
+if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
+  throw new Error(
+    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。"
+  );
+}
 const { isCheckingFinished, latestVersion, newUpdateInfos } =
-  useFetchNewUpdateInfos();
+  useFetchNewUpdateInfos(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL);
 const isUpdateAvailable = computed(() => {
   return isCheckingFinished.value && latestVersion.value !== "";
 });

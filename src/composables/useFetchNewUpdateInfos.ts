@@ -1,10 +1,11 @@
 import { ref } from "vue";
 import semver from "semver";
-import { UpdateInfo } from "@/type/preload";
+import { z } from "zod";
+import { UpdateInfo, updateInfoSchema } from "@/type/preload";
 
 // 最新版があるか調べる
 // 現バージョンより新しい最新版があれば`latestVersion`に代入される
-export const useFetchNewUpdateInfos = () => {
+export const useFetchNewUpdateInfos = (newUpdateInfosUrl: string) => {
   const isCheckingFinished = ref<boolean>(false);
   const currentVersion = ref("");
   const latestVersion = ref("");
@@ -16,20 +17,13 @@ export const useFetchNewUpdateInfos = () => {
       currentVersion.value = obj.version;
     })
     .then(() => {
-      const url: string | undefined = import.meta.env
-        .VITE_LATEST_UPDATE_INFOS_URL;
-      if (!url) {
-        throw new Error(
-          "VITE_LATEST_UPDATE_INFOS_URLが未設定です。.env内に記載してください。"
-        );
-      }
-      fetch(url)
-        .then((response) => {
+      fetch(newUpdateInfosUrl)
+        .then(async (response) => {
           if (!response.ok) throw new Error("Network response was not ok.");
-          return response.json();
+          return z.array(updateInfoSchema).parse(await response.json());
         })
-        .then((json) => {
-          newUpdateInfos.value = json.filter((item: UpdateInfo) => {
+        .then((updateInfos) => {
+          newUpdateInfos.value = updateInfos.filter((item: UpdateInfo) => {
             return semver.lt(currentVersion.value, item.version);
           });
           if (newUpdateInfos.value?.length) {
