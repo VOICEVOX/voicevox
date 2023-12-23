@@ -260,6 +260,92 @@ const isValidScore = (score: Score) => {
   );
 };
 
+type NoteInfo = {
+  startTicks: number;
+  endTicks: number;
+  overlappingNoteIds: Set<string>;
+};
+
+class OverlappingNotesDetector {
+  private readonly noteInfos = new Map<string, NoteInfo>();
+
+  addNotes(notes: Note[]) {
+    for (const note of notes) {
+      this.noteInfos.set(note.id, {
+        startTicks: note.position,
+        endTicks: note.position + note.duration,
+        overlappingNoteIds: new Set<string>(),
+      });
+    }
+    // TODO: 計算量がO(n^2)になっているので、区間木などを使用してO(nlogn)にする
+    for (const note of notes) {
+      const overlappingNoteIds = new Set<string>();
+      for (const [noteId, noteInfo] of this.noteInfos) {
+        if (noteId === note.id) {
+          continue;
+        }
+        if (noteInfo.startTicks >= note.position + note.duration) {
+          continue;
+        }
+        if (noteInfo.endTicks <= note.position) {
+          continue;
+        }
+        overlappingNoteIds.add(noteId);
+      }
+
+      const noteId1 = note.id;
+      const noteInfo1 = this.noteInfos.get(noteId1);
+      if (!noteInfo1) {
+        throw new Error("noteInfo1 is undefined.");
+      }
+      for (const noteId2 of overlappingNoteIds) {
+        const noteInfo2 = this.noteInfos.get(noteId2);
+        if (!noteInfo2) {
+          throw new Error("noteInfo2 is undefined.");
+        }
+        noteInfo2.overlappingNoteIds.add(noteId1);
+        noteInfo1.overlappingNoteIds.add(noteId2);
+      }
+    }
+  }
+
+  removeNotes(notes: Note[]) {
+    for (const note of notes) {
+      const noteId1 = note.id;
+      const noteInfo1 = this.noteInfos.get(noteId1);
+      if (!noteInfo1) {
+        throw new Error("noteInfo1 is undefined.");
+      }
+      for (const noteId2 of noteInfo1.overlappingNoteIds) {
+        const noteInfo2 = this.noteInfos.get(noteId2);
+        if (!noteInfo2) {
+          throw new Error("noteInfo2 is undefined.");
+        }
+        noteInfo2.overlappingNoteIds.delete(noteId1);
+        noteInfo1.overlappingNoteIds.delete(noteId2);
+      }
+    }
+    for (const note of notes) {
+      this.noteInfos.delete(note.id);
+    }
+  }
+
+  updateNotes(notes: Note[]) {
+    this.removeNotes(notes);
+    this.addNotes(notes);
+  }
+
+  getOverlappingNoteIds() {
+    const overlappingNoteIds: string[] = [];
+    for (const [noteId, noteInfo] of this.noteInfos) {
+      if (noteInfo.overlappingNoteIds.size !== 0) {
+        overlappingNoteIds.push(noteId);
+      }
+    }
+    return overlappingNoteIds;
+  }
+}
+
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let previewSynth: PolySynth | undefined;
@@ -289,6 +375,7 @@ type PhraseData = {
 };
 
 const playheadPosition = new FrequentlyUpdatedState(0);
+const overlappingNotesDetector = new OverlappingNotesDetector();
 const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationFrameRunner = new AnimationFrameRunner();
@@ -319,8 +406,9 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomY: 0.75,
   sequencerScrollY: 60, // Y軸 note number
   sequencerScrollX: 0, // X軸 tick(仮)
-  sequencerSnapType: 16, // スナップタイプ 試行用で1/16で固定
-  selectedNoteIds: [], // 選択中のノート
+  sequencerSnapType: 16, // スナップタイプ
+  selectedNoteIds: [],
+  overlappingNoteIds: [],
   nowPlaying: false,
   volume: 0,
   leftLocatorPosition: 0,
@@ -392,7 +480,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SCORE: {
     mutation(state, { score }: { score: Score }) {
+      const oldNotes = state.score.notes;
       state.score = score;
+      state.selectedNoteIds = [];
+      overlappingNotesDetector.removeNotes(oldNotes);
+      overlappingNotesDetector.addNotes(score.notes);
+      state.overlappingNoteIds =
+        overlappingNotesDetector.getOverlappingNoteIds();
     },
     async action(
       { state, getters, commit, dispatch },
@@ -407,7 +501,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.nowPlaying) {
         await dispatch("SING_STOP_AUDIO");
       }
-      commit("CLEAR_SELECTED_NOTE_IDS");
       commit("SET_SCORE", { score });
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
@@ -555,81 +648,89 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  ADD_NOTE: {
-    mutation(state, { note }: { note: Note }) {
-      const notes = [...state.score.notes];
-      notes.push(note);
-      notes.sort((a, b) => a.position - b.position);
-      state.score.notes = notes;
-      state.selectedNoteIds.push(note.id);
-    },
-    // ノートを追加する
-    // NOTE: 重複削除など別途追加
-    async action({ commit, dispatch }, { note }: { note: Note }) {
-      if (!isValidNote(note)) {
-        throw new Error("The note is invalid.");
-      }
-      commit("ADD_NOTE", { note });
-
-      dispatch("RENDER");
-    },
-  },
-
-  UPDATE_NOTE: {
-    mutation(state, { index, note }: { index: number; note: Note }) {
-      const notes = [...state.score.notes];
-      notes.splice(index, 1, note);
-      state.score.notes = notes;
-    },
-    async action({ state, commit, dispatch }, { note }) {
-      if (!isValidNote(note)) {
-        throw new Error("The note is invalid.");
-      }
-      const index = state.score.notes.findIndex((value) => {
-        return value.id === note.id;
-      });
-      if (index === -1) {
-        throw new Error("The note is not found.");
-      }
-      commit("UPDATE_NOTE", { index, note });
-
-      dispatch("RENDER");
-    },
-  },
-
-  REMOVE_NOTE: {
-    mutation(state, { id }: { id: string }) {
-      const notes = state.score.notes;
-      const selectedNoteIds = state.selectedNoteIds;
-      state.score.notes = notes.filter((value) => {
-        return value.id !== id;
-      });
-      state.selectedNoteIds = selectedNoteIds.filter((value) => {
-        return value !== id;
-      });
-    },
-    async action({ state, commit, dispatch }, { id }: { id: string }) {
-      const exists = state.score.notes.some((value) => {
-        return value.id === id;
-      });
-      if (!exists) {
-        throw new Error("The note is not found.");
-      }
-      commit("REMOVE_NOTE", { id });
-
-      dispatch("RENDER");
-    },
-  },
-
-  REPLACE_ALL_NOTES: {
+  ADD_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
-      state.score.notes = notes;
+      const noteIds = notes.map((value) => value.id);
+      const scoreNotes = [...state.score.notes, ...notes];
+      scoreNotes.sort((a, b) => a.position - b.position);
+      state.score.notes = scoreNotes;
+      state.selectedNoteIds = [...state.selectedNoteIds, ...noteIds];
+      overlappingNotesDetector.addNotes(notes);
+      state.overlappingNoteIds =
+        overlappingNotesDetector.getOverlappingNoteIds();
     },
-    async action({ commit, dispatch }, { notes }: { notes: Note[] }) {
-      if (!isValidNotes(notes)) {
+    async action({ state, commit, dispatch }, { notes }: { notes: Note[] }) {
+      const scoreNotes = state.score.notes;
+      const existingIds = new Set(scoreNotes.map((value) => value.id));
+      const isValidNotes = notes.every((value) => {
+        return !existingIds.has(value.id) && isValidNote(value);
+      });
+      if (!isValidNotes) {
         throw new Error("The notes are invalid.");
       }
-      commit("REPLACE_ALL_NOTES", { notes });
+      commit("ADD_NOTES", { notes });
+
+      dispatch("RENDER");
+    },
+  },
+
+  UPDATE_NOTES: {
+    mutation(state, { notes }: { notes: Note[] }) {
+      const notesMap = new Map<string, Note>();
+      for (const note of notes) {
+        notesMap.set(note.id, note);
+      }
+      const scoreNotes = state.score.notes.map((value) => {
+        return notesMap.get(value.id) ?? value;
+      });
+      scoreNotes.sort((a, b) => a.position - b.position);
+      state.score.notes = scoreNotes;
+      overlappingNotesDetector.updateNotes(notes);
+      state.overlappingNoteIds =
+        overlappingNotesDetector.getOverlappingNoteIds();
+    },
+    async action({ state, commit, dispatch }, { notes }: { notes: Note[] }) {
+      const scoreNotes = state.score.notes;
+      const existingIds = new Set(scoreNotes.map((value) => value.id));
+      const isValidNotes = notes.every((value) => {
+        return existingIds.has(value.id) && isValidNote(value);
+      });
+      if (!isValidNotes) {
+        throw new Error("The notes are invalid.");
+      }
+      commit("UPDATE_NOTES", { notes });
+
+      dispatch("RENDER");
+    },
+  },
+
+  REMOVE_NOTES: {
+    mutation(state, { noteIds }: { noteIds: string[] }) {
+      const noteIdsSet = new Set(noteIds);
+      const notes = state.score.notes.filter((value) => {
+        return noteIdsSet.has(value.id);
+      });
+      state.score.notes = state.score.notes.filter((value) => {
+        return !noteIdsSet.has(value.id);
+      });
+      state.selectedNoteIds = state.selectedNoteIds.filter((value) => {
+        return !noteIdsSet.has(value);
+      });
+      overlappingNotesDetector.removeNotes(notes);
+      state.overlappingNoteIds =
+        overlappingNotesDetector.getOverlappingNoteIds();
+    },
+    async action(
+      { state, commit, dispatch },
+      { noteIds }: { noteIds: string[] }
+    ) {
+      const scoreNotes = state.score.notes;
+      const existingIds = new Set(scoreNotes.map((value) => value.id));
+      const isValidNoteIds = noteIds.every((value) => existingIds.has(value));
+      if (!isValidNoteIds) {
+        throw new Error("The note ids are invalid.");
+      }
+      commit("REMOVE_NOTES", { noteIds });
 
       dispatch("RENDER");
     },
@@ -639,39 +740,40 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { noteIds }: { noteIds: string[] }) {
       state.selectedNoteIds = noteIds;
     },
+  },
+
+  SELECT_NOTES: {
     async action({ state, commit }, { noteIds }: { noteIds: string[] }) {
-      const notes = state.score.notes;
-      const existingIds = new Set(notes.map((value) => value.id));
-      const exist = noteIds.every((value) => existingIds.has(value));
-      if (!exist) {
-        throw new Error("Contains an ID that does not exist.");
+      const scoreNotes = state.score.notes;
+      const existingIds = new Set(scoreNotes.map((value) => value.id));
+      if (!noteIds.every((value) => existingIds.has(value))) {
+        throw new Error("The note ids are invalid.");
       }
-      commit("SET_SELECTED_NOTE_IDS", { noteIds });
+      const selectedNoteIdsSet = new Set([
+        ...state.selectedNoteIds,
+        ...noteIds,
+      ]);
+      commit("SET_SELECTED_NOTE_IDS", { noteIds: [...selectedNoteIdsSet] });
     },
   },
 
-  CLEAR_SELECTED_NOTE_IDS: {
-    mutation(state) {
-      state.selectedNoteIds = [];
-    },
+  DESELECT_ALL_NOTES: {
     async action({ commit }) {
-      commit("CLEAR_SELECTED_NOTE_IDS");
+      commit("SET_SELECTED_NOTE_IDS", { noteIds: [] });
     },
   },
 
   REMOVE_SELECTED_NOTES: {
-    mutation(state) {
-      const notes = state.score.notes;
-      const selectedNoteIds = state.selectedNoteIds;
-      state.score.notes = notes.filter((note) => {
-        return !selectedNoteIds.includes(note.id);
-      });
-      state.selectedNoteIds = [];
-    },
-    async action({ commit, dispatch }) {
-      commit("REMOVE_SELECTED_NOTES");
+    async action({ state, commit, dispatch }) {
+      commit("REMOVE_NOTES", { noteIds: state.selectedNoteIds });
 
       dispatch("RENDER");
+    },
+  },
+
+  SET_OVERLAPPING_NOTE_IDS: {
+    mutation(state, { noteIds }: { noteIds: string[] }) {
+      state.overlappingNoteIds = noteIds;
     },
   },
 
@@ -980,19 +1082,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, commit, dispatch }) {
-      const preProcess = (score: Score) => {
-        const notes = score.notes;
-
-        // 重複するノートを除く
-        for (let i = 0; i < notes.length; i++) {
-          const note = notes[i];
-          if (i === 0) continue;
-          const lastNote = notes[i - 1];
-          if (note.position < lastNote.position + lastNote.duration) {
-            notes.splice(i, 1);
-            i--;
-          }
-        }
+      const deleteOverlappingNotes = (
+        score: Score,
+        overlappingNoteIds: string[]
+      ) => {
+        const overlappingNoteIdsSet = new Set(overlappingNoteIds);
+        score.notes = score.notes.filter((value) => {
+          return !overlappingNoteIdsSet.has(value.id);
+        });
       };
 
       const searchPhrases = async (
@@ -1211,7 +1308,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const score = copyScore(state.score);
         const singer = copySinger(state.singer);
 
-        preProcess(score);
+        deleteOverlappingNotes(score, state.overlappingNoteIds);
 
         // Score -> Phrases
 

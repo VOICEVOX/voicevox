@@ -774,6 +774,7 @@ export type SingingStoreState = {
   sequencerScrollY: number;
   sequencerSnapType: number;
   selectedNoteIds: string[];
+  overlappingNoteIds: string[];
   nowPlaying: boolean;
   volume: number;
   leftLocatorPosition: number;
@@ -821,39 +822,39 @@ export type SingingStoreTypes = {
     action(payload: { measureNumber: number }): void;
   };
 
-  ADD_NOTE: {
-    mutation: { note: Note };
-    action(payload: { note: Note }): void;
-  };
-
-  UPDATE_NOTE: {
-    mutation: { index: number; note: Note };
-    action(payload: { note: Note }): void;
-  };
-
-  REMOVE_NOTE: {
-    mutation: { id: string };
-    action(payload: { id: string }): void;
-  };
-
-  REPLACE_ALL_NOTES: {
+  ADD_NOTES: {
     mutation: { notes: Note[] };
     action(payload: { notes: Note[] }): void;
   };
 
-  SET_SELECTED_NOTE_IDS: {
+  UPDATE_NOTES: {
+    mutation: { notes: Note[] };
+    action(payload: { notes: Note[] }): void;
+  };
+
+  REMOVE_NOTES: {
     mutation: { noteIds: string[] };
     action(payload: { noteIds: string[] }): void;
   };
 
-  CLEAR_SELECTED_NOTE_IDS: {
-    mutation: void;
+  SET_SELECTED_NOTE_IDS: {
+    mutation: { noteIds: string[] };
+  };
+
+  SELECT_NOTES: {
+    action(payload: { noteIds: string[] }): void;
+  };
+
+  DESELECT_ALL_NOTES: {
     action(): void;
   };
 
   REMOVE_SELECTED_NOTES: {
-    mutation: void;
     action(): void;
+  };
+
+  SET_OVERLAPPING_NOTE_IDS: {
+    mutation: { noteIds: string[] };
   };
 
   SET_PHRASE: {
