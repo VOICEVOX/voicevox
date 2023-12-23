@@ -178,9 +178,10 @@
   />
   <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
   <update-notification-dialog
+    v-if="newUpdateResult.status == 'updateAvailable'"
     v-model="isUpdateNotificationDialogOpenComputed"
-    :latest-version="latestVersion"
-    :new-update-infos="newUpdateInfos"
+    :latest-version="newUpdateResult.latestVersion"
+    :new-update-infos="newUpdateResult.newUpdateInfos"
   />
 </template>
 
@@ -555,11 +556,10 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
     "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。"
   );
 }
-const { isCheckingFinished, latestVersion, newUpdateInfos } =
-  useFetchNewUpdateInfos(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL);
-const isUpdateAvailable = computed(() => {
-  return isCheckingFinished.value && latestVersion.value !== "";
-});
+const newUpdateResult = useFetchNewUpdateInfos(
+  () => window.electron.getAppInfos().then((obj) => obj.version), // アプリのバージョン
+  import.meta.env.VITE_LATEST_UPDATE_INFOS_URL
+);
 
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
@@ -643,7 +643,8 @@ onMounted(async () => {
     import.meta.env.MODE !== "development" &&
     store.state.acceptTerms !== "Accepted";
 
-  isUpdateNotificationDialogOpenComputed.value = isUpdateAvailable.value;
+  isUpdateNotificationDialogOpenComputed.value =
+    newUpdateResult.value.status == "updateAvailable";
 
   isCompletedInitialStartup.value = true;
 });

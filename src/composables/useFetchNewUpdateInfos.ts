@@ -3,39 +3,55 @@ import semver from "semver";
 import { z } from "zod";
 import { UpdateInfo, updateInfoSchema } from "@/type/preload";
 
-// 最新版があるか調べる
-// 現バージョンより新しい最新版があれば`latestVersion`に代入される
-export const useFetchNewUpdateInfos = (newUpdateInfosUrl: string) => {
-  const isCheckingFinished = ref<boolean>(false);
-  const currentVersion = ref("");
-  const latestVersion = ref("");
-  const newUpdateInfos = ref<UpdateInfo[]>([]);
+/**
+ * 現在のバージョンより新しい最新バージョンがリリースされているか調べる。
+ * あれば最新バージョンと、現在より新しいバージョンの情報を返す。
+ */
+export const useFetchNewUpdateInfos = (
+  currentVersionGetter: () => Promise<string>,
+  newUpdateInfosUrl: string
+) => {
+  const result = ref<
+    | {
+        status: "checking";
+      }
+    | {
+        status: "updateAvailable";
+        latestVersion: string;
+        newUpdateInfos: UpdateInfo[];
+      }
+    | {
+        status: "updateNotAvailable";
+      }
+  >({
+    status: "checking",
+  });
 
-  window.electron
-    .getAppInfos()
-    .then((obj) => {
-      currentVersion.value = obj.version;
-    })
-    .then(() => {
-      fetch(newUpdateInfosUrl)
-        .then(async (response) => {
-          if (!response.ok) throw new Error("Network response was not ok.");
-          return z.array(updateInfoSchema).parse(await response.json());
-        })
-        .then((updateInfos) => {
-          newUpdateInfos.value = updateInfos.filter((item: UpdateInfo) => {
-            return semver.lt(currentVersion.value, item.version);
-          });
-          if (newUpdateInfos.value?.length) {
-            latestVersion.value = newUpdateInfos.value[0].version;
-          }
-          isCheckingFinished.value = true;
-        });
+  (async () => {
+    const currentVersion = await currentVersionGetter();
+
+    const updateInfos = await fetch(newUpdateInfosUrl).then(
+      async (response) => {
+        if (!response.ok) throw new Error("Network response was not ok.");
+        return z.array(updateInfoSchema).parse(await response.json());
+      }
+    );
+    const newUpdateInfos = updateInfos.filter((item: UpdateInfo) => {
+      return semver.lt(currentVersion, item.version);
     });
 
-  return {
-    isCheckingFinished,
-    latestVersion,
-    newUpdateInfos,
-  };
+    if (newUpdateInfos.length > 0) {
+      result.value = {
+        status: "updateAvailable",
+        latestVersion: newUpdateInfos[0].version,
+        newUpdateInfos,
+      };
+    } else {
+      result.value = {
+        status: "updateNotAvailable",
+      };
+    }
+  })();
+
+  return result;
 };

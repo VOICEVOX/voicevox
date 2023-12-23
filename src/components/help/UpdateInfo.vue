@@ -42,7 +42,7 @@ import { UpdateInfo } from "@/type/preload";
 
 const props =
   defineProps<{
-    latestVersion: string;
+    latestVersion: string | undefined;
     downloadLink: string;
     updateInfos: UpdateInfo[];
     isUpdateAvailable: boolean;

@@ -137,13 +137,10 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
     "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。"
   );
 }
-const { isCheckingFinished, latestVersion } = useFetchNewUpdateInfos(
+const newUpdateResult = useFetchNewUpdateInfos(
+  () => window.electron.getAppInfos().then((obj) => obj.version), // アプリのバージョン
   import.meta.env.VITE_LATEST_UPDATE_INFOS_URL
 );
-
-const isUpdateAvailable = computed(() => {
-  return isCheckingFinished.value && latestVersion.value !== "";
-});
 
 // エディタのOSSライセンス取得
 const licenses = ref<Record<string, string>[]>();
@@ -192,8 +189,14 @@ const pagedata = computed(() => {
       props: {
         downloadLink: import.meta.env.VITE_OFFICIAL_WEBSITE_URL,
         updateInfos: updateInfos.value,
-        isUpdateAvailable: isUpdateAvailable.value,
-        latestVersion: latestVersion.value,
+        ...(newUpdateResult.value.status == "updateAvailable"
+          ? {
+              isUpdateAvailable: true,
+              latestVersion: newUpdateResult.value.latestVersion,
+            }
+          : {
+              isUpdateAvailable: false,
+            }),
       },
     },
     {
