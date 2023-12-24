@@ -855,10 +855,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions
-                v-if="!isProduction"
-                class="q-px-md q-py-none bg-surface"
-              >
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>複数選択</div>
                 <div aria-label="複数のテキスト欄を選択できるようにします。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -950,7 +947,6 @@ import { computed, ref } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
-  isProduction,
   SavingSetting,
   EngineSetting,
   ExperimentalSetting,
