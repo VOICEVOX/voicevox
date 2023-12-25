@@ -8,7 +8,7 @@ export const DEFAULT_BEATS = 4;
 export const DEFAULT_BEAT_TYPE = 4;
 
 const BASE_X_PER_QUARTER_NOTE = 120;
-const BASE_Y_PER_NOTE_NUMBER = 30;
+const BASE_Y_PER_SEMITONE = 30;
 
 export const ZOOM_X_MIN = 0.2;
 export const ZOOM_X_MAX = 1;
@@ -115,7 +115,7 @@ export function isTriplet(noteType: number) {
 }
 
 export function getKeyBaseHeight() {
-  return BASE_Y_PER_NOTE_NUMBER;
+  return BASE_Y_PER_SEMITONE;
 }
 
 export function tickToBaseX(ticks: number, tpqn: number) {
@@ -128,15 +128,15 @@ export function baseXToTick(baseX: number, tpqn: number) {
 
 // NOTE: ノート番号が整数のときに、そのノート番号のキーの中央の位置を返します
 export function noteNumberToBaseY(noteNumber: number) {
-  return (127.5 - noteNumber) * BASE_Y_PER_NOTE_NUMBER;
+  return (127.5 - noteNumber) * BASE_Y_PER_SEMITONE;
 }
 
 // NOTE: integerがfalseの場合は、ノート番号のキーの中央の位置が
 //       ちょうどそのノート番号となるように計算します
 export function baseYToNoteNumber(baseY: number, integer = true) {
   return integer
-    ? 127 - Math.floor(baseY / BASE_Y_PER_NOTE_NUMBER)
-    : 127.5 - baseY / BASE_Y_PER_NOTE_NUMBER;
+    ? 127 - Math.floor(baseY / BASE_Y_PER_SEMITONE)
+    : 127.5 - baseY / BASE_Y_PER_SEMITONE;
 }
 
 export function getSnapTypes(tpqn: number) {

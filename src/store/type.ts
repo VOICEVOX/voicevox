@@ -776,8 +776,8 @@ export type SingingStoreState = {
   sequencerScrollX: number;
   sequencerScrollY: number;
   sequencerSnapType: number;
-  selectedNoteIds: string[];
-  overlappingNoteIds: string[];
+  selectedNoteIds: Set<string>;
+  overlappingNoteIds: Set<string>;
   nowPlaying: boolean;
   volume: number;
   leftLocatorPosition: number;
@@ -841,7 +841,7 @@ export type SingingStoreTypes = {
   };
 
   SET_SELECTED_NOTE_IDS: {
-    mutation: { noteIds: string[] };
+    mutation: { noteIds: Set<string> };
   };
 
   SELECT_NOTES: {
@@ -854,10 +854,6 @@ export type SingingStoreTypes = {
 
   REMOVE_SELECTED_NOTES: {
     action(): void;
-  };
-
-  SET_OVERLAPPING_NOTE_IDS: {
-    mutation: { noteIds: string[] };
   };
 
   SET_PHRASE: {

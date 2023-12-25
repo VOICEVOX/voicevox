@@ -17,10 +17,7 @@
       :width="barWidth"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
-      focusable="true"
-      tabindex="0"
-      @dblclick.prevent.stop="removeNote"
-      @keydown.prevent="handleKeydown"
+      @dblclick.prevent.stop="onBarDoubleClick"
     >
       <g>
         <rect
@@ -30,7 +27,7 @@
           width="100%"
           stroke-width="1"
           class="sequencer-note-bar-body"
-          @mousedown.stop="handleMouseDown"
+          @mousedown.stop="onBodyMouseDown"
         />
         <rect
           y="-25%"
@@ -39,16 +36,16 @@
           width="12"
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
-          @mousedown.stop="handleDragLeftStart"
+          @mousedown.stop="onLeftEdgeMouseDown"
         />
         <rect
           y="-25%"
-          :x="barWidth - 4"
+          :x="barWidth - 8"
           width="12"
           height="150%"
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
-          @mousedown.stop="handleDragRightStart"
+          @mousedown.stop="onRightEdgeMouseDown"
         />
       </g>
     </svg>
@@ -63,25 +60,20 @@ import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
-  PREVIEW_SOUND_DURATION,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
   name: "SingSequencerNote",
   props: {
     note: { type: Object as PropType<Note>, required: true },
-    index: { type: Number, required: true },
-    cursorX: { type: Number },
-    cursorY: { type: Number },
+    isSelected: { type: Boolean },
   },
-
   emits: [
-    "handleNotesKeydown",
-    "handleDragMoveStart",
-    "handleDragRightStart",
-    "handleDragLeftStart",
+    "bodyMousedown",
+    "rightEdgeMousedown",
+    "leftEdgeMousedown",
+    "BarDblclick",
   ],
-
   setup(props, { emit }) {
     const store = useStore();
     const state = store.state;
@@ -105,18 +97,14 @@ export default defineComponent({
       return (noteEndBaseX - noteStartBaseX) * zoomX.value;
     });
     const classNamesStr = computed(() => {
-      if (state.selectedNoteIds.includes(props.note.id)) {
+      if (props.isSelected) {
         return "sequencer-note selected";
       }
-      if (state.overlappingNoteIds.includes(props.note.id)) {
+      if (state.overlappingNoteIds.has(props.note.id)) {
         return "sequencer-note overlapping";
       }
       return "sequencer-note";
     });
-
-    const removeNote = () => {
-      store.dispatch("REMOVE_NOTES", { noteIds: [props.note.id] });
-    };
 
     const setLyric = (event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
@@ -128,38 +116,20 @@ export default defineComponent({
       }
     };
 
-    const selectThisNote = () => {
-      store.dispatch("SELECT_NOTES", { noteIds: [props.note.id] });
-      store.dispatch("PLAY_PREVIEW_SOUND", {
-        noteNumber: props.note.noteNumber,
-        duration: PREVIEW_SOUND_DURATION,
-      });
+    const onBodyMouseDown = (event: MouseEvent) => {
+      emit("bodyMousedown", event);
     };
 
-    const handleKeydown = (event: KeyboardEvent) => {
-      emit("handleNotesKeydown", event);
+    const onRightEdgeMouseDown = (event: MouseEvent) => {
+      emit("rightEdgeMousedown", event);
     };
 
-    const handleMouseDown = (event: MouseEvent) => {
-      if (!state.selectedNoteIds.includes(props.note.id)) {
-        selectThisNote();
-      } else {
-        emit("handleDragMoveStart", event);
-      }
+    const onLeftEdgeMouseDown = (event: MouseEvent) => {
+      emit("leftEdgeMousedown", event);
     };
 
-    const handleDragRightStart = (event: MouseEvent) => {
-      if (!state.selectedNoteIds.includes(props.note.id)) {
-        selectThisNote();
-      }
-      emit("handleDragRightStart", event);
-    };
-
-    const handleDragLeftStart = (event: MouseEvent) => {
-      if (!state.selectedNoteIds.includes(props.note.id)) {
-        selectThisNote();
-      }
-      emit("handleDragLeftStart", event);
+    const onBarDoubleClick = (event: MouseEvent) => {
+      emit("BarDblclick", event);
     };
 
     return {
@@ -170,12 +140,11 @@ export default defineComponent({
       barHeight,
       barWidth,
       classNamesStr,
-      removeNote,
       setLyric,
-      handleKeydown,
-      handleDragRightStart,
-      handleDragLeftStart,
-      handleMouseDown,
+      onBodyMouseDown,
+      onRightEdgeMouseDown,
+      onLeftEdgeMouseDown,
+      onBarDoubleClick,
     };
   },
 });
@@ -195,7 +164,6 @@ export default defineComponent({
   &.selected {
     .sequencer-note-bar-body {
       fill: darkorange; // 仮
-      cursor: move;
     }
   }
 
@@ -234,6 +202,7 @@ export default defineComponent({
   position: relative;
   top: 0;
   left: 0;
+  cursor: move;
 }
 
 .sequencer-note-bar-draghandle {
