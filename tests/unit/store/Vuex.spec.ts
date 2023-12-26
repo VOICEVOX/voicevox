@@ -170,8 +170,6 @@ describe("store/vuex.js test", () => {
         isShowSinger: true,
         sequencerZoomX: 1,
         sequencerZoomY: 1,
-        sequencerScrollX: 0,
-        sequencerScrollY: 60,
         sequencerSnapType: 16,
         selectedNoteIds: new Set(),
         overlappingNoteIds: new Set(),

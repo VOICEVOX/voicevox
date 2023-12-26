@@ -29,7 +29,6 @@
         icon="stop"
         @click="stop"
       ></q-btn>
-      <q-btn flat round class="sing-transport-button" icon="loop"></q-btn>
       <div class="sing-playhead-position">{{ playheadPositionStr }}</div>
       <q-input
         type="number"
@@ -382,7 +381,8 @@ export default defineComponent({
 
 .sing-playhead-position {
   font-size: 18px;
-  margin: 0 4px;
+  margin-left: 12px;
+  margin-right: 4px;
   min-width: 82px;
 }
 

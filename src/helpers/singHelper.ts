@@ -1,6 +1,7 @@
 import { Note, Tempo, TimeSignature } from "@/store/type";
 
 export const BEAT_TYPES = [2, 4, 8, 16];
+export const MAX_SNAP_TYPE = 32;
 
 export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;
@@ -140,9 +141,8 @@ export function baseYToNoteNumber(baseY: number, integer = true) {
 }
 
 export function getSnapTypes(tpqn: number) {
-  const maxSnapType = 64;
   return getRepresentableNoteTypes(tpqn).filter((value) => {
-    return value <= maxSnapType;
+    return value <= MAX_SNAP_TYPE;
   });
 }
 

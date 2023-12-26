@@ -404,8 +404,6 @@ export const singingStoreState: SingingStoreState = {
   isShowSinger: true,
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
-  sequencerScrollY: 60, // Y軸 note number
-  sequencerScrollX: 0, // X軸 tick(仮)
   sequencerSnapType: 16, // スナップタイプ
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
@@ -742,30 +740,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_SELECTED_NOTE_IDS: {
-    mutation(state, { noteIds }: { noteIds: Set<string> }) {
-      state.selectedNoteIds = noteIds;
-    },
-  },
-
   SELECT_NOTES: {
+    mutation(state, { noteIds }: { noteIds: string[] }) {
+      const selectedNoteIds = new Set(state.selectedNoteIds);
+      for (const noteId of noteIds) {
+        selectedNoteIds.add(noteId);
+      }
+      state.selectedNoteIds = selectedNoteIds;
+    },
     async action({ state, commit }, { noteIds }: { noteIds: string[] }) {
       const scoreNotes = state.score.notes;
       const existingIds = new Set(scoreNotes.map((value) => value.id));
       if (!noteIds.every((value) => existingIds.has(value))) {
         throw new Error("The note ids are invalid.");
       }
-      const selectedNoteIds = new Set(state.selectedNoteIds);
-      for (const noteId of noteIds) {
-        selectedNoteIds.add(noteId);
-      }
-      commit("SET_SELECTED_NOTE_IDS", { noteIds: selectedNoteIds });
+      commit("SELECT_NOTES", { noteIds });
     },
   },
 
   DESELECT_ALL_NOTES: {
+    mutation(state) {
+      state.selectedNoteIds = new Set();
+    },
     async action({ commit }) {
-      commit("SET_SELECTED_NOTE_IDS", { noteIds: new Set() });
+      commit("DESELECT_ALL_NOTES");
     },
   },
 
@@ -853,28 +851,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ commit }, { zoomY }) {
       commit("SET_ZOOM_Y", {
         zoomY,
-      });
-    },
-  },
-
-  SET_SCROLL_X: {
-    mutation(state, { scrollX }: { scrollX: number }) {
-      state.sequencerScrollX = scrollX;
-    },
-    async action({ commit }, { scrollX }) {
-      commit("SET_SCROLL_X", {
-        scrollX,
-      });
-    },
-  },
-
-  SET_SCROLL_Y: {
-    mutation(state, { scrollY }: { scrollY: number }) {
-      state.sequencerScrollY = scrollY;
-    },
-    async action({ commit }, { scrollY }) {
-      commit("SET_SCROLL_Y", {
-        scrollY,
       });
     },
   },

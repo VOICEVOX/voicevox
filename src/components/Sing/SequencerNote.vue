@@ -25,6 +25,8 @@
           x="0"
           height="100%"
           width="100%"
+          rx="2"
+          ry="2"
           stroke-width="1"
           class="sequencer-note-bar-body"
           @mousedown.stop="onBodyMouseDown"

@@ -18,7 +18,7 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
-      @mousedown="startDrag($event, 'ADD')"
+      @mousedown="startPreview($event, 'ADD')"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
       @wheel="onWheel"
@@ -94,20 +94,20 @@
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
-        @body-mousedown="startDrag($event, 'MOVE', note)"
-        @right-edge-mousedown="startDrag($event, 'RESIZE_RIGHT', note)"
-        @left-edge-mousedown="startDrag($event, 'RESIZE_LEFT', note)"
-        @bar-dblclick="onDoubleClick(note.id)"
+        @body-mousedown="startPreview($event, 'MOVE', note)"
+        @right-edge-mousedown="startPreview($event, 'RESIZE_RIGHT', note)"
+        @left-edge-mousedown="startPreview($event, 'RESIZE_LEFT', note)"
+        @bar-dblclick="onNoteBarDoubleClick(note.id)"
       />
       <sequencer-note
-        v-for="note in selectedNotes"
+        v-for="note in showPreviewNotes ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
         is-selected
-        @body-mousedown="startDrag($event, 'MOVE', note)"
-        @right-edge-mousedown="startDrag($event, 'RESIZE_RIGHT', note)"
-        @left-edge-mousedown="startDrag($event, 'RESIZE_LEFT', note)"
-        @bar-dblclick="onDoubleClick(note.id)"
+        @body-mousedown="startPreview($event, 'MOVE', note)"
+        @right-edge-mousedown="startPreview($event, 'RESIZE_RIGHT', note)"
+        @left-edge-mousedown="startPreview($event, 'RESIZE_LEFT', note)"
+        @bar-dblclick="onNoteBarDoubleClick(note.id)"
       />
     </div>
     <div
@@ -198,7 +198,7 @@ import {
 } from "@/helpers/singHelper";
 import { Note } from "@/store/type";
 
-type DragMode = "NONE" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT" | "ADD";
+type PreviewMode = "NONE" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT" | "ADD";
 
 export default defineComponent({
   name: "SingScoreSequencer",
@@ -286,13 +286,9 @@ export default defineComponent({
       const selectedNoteIds = state.selectedNoteIds;
       return notes.value.filter((value) => !selectedNoteIds.has(value.id));
     });
-    const isPreview = ref(false);
-    const previewNotes = ref<Note[]>([]);
     const selectedNotes = computed(() => {
       const selectedNoteIds = state.selectedNoteIds;
-      return isPreview.value
-        ? previewNotes.value
-        : notes.value.filter((value) => selectedNoteIds.has(value.id));
+      return notes.value.filter((value) => selectedNoteIds.has(value.id));
     });
     const phraseInfos = computed(() => {
       return Object.entries(state.phrases).map(([key, phrase]) => {
@@ -306,22 +302,24 @@ export default defineComponent({
     const scrollBarWidth = ref(12);
     const sequencerBody = ref<HTMLElement | null>(null);
 
-    // ドラッグ状態
-    let dragMode: DragMode = "NONE";
+    // プレビュー時の状態
+    let previewMode: PreviewMode = "NONE";
     let currentCursorX = 0;
     let currentCursorY = 0;
-    let dragRequestId = 0;
+    let previewRequestId = 0;
     let dragStartTicks = 0;
     let dragStartNoteNumber = 0;
     let draggingNoteId = "";
     let edited = false;
     let cancelDoubleClick = false;
-    const copiedNotesMap = new Map<string, Note>();
+    const copiedNotesForPreview = new Map<string, Note>();
+    const previewNotes = ref<Note[]>([]);
+    const showPreviewNotes = ref(false);
 
     const previewAdd = () => {
       const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-      const draggingNote = copiedNotesMap.get(draggingNoteId);
+      const draggingNote = copiedNotesForPreview.get(draggingNoteId);
       if (!draggingNote) {
         throw new Error("draggingNote is undefined.");
       }
@@ -332,7 +330,7 @@ export default defineComponent({
 
       const editedNotes = new Map<string, Note>();
       for (const note of previewNotes.value) {
-        const copiedNote = copiedNotesMap.get(note.id);
+        const copiedNote = copiedNotesForPreview.get(note.id);
         if (!copiedNote) {
           throw new Error("copiedNote is undefined.");
         }
@@ -355,12 +353,11 @@ export default defineComponent({
     };
 
     const previewMove = () => {
-      // カーソル位置に応じてノート移動量を計算
       const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
       const cursorBaseY = (scrollY.value + currentCursorY) / zoomY.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
       const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
-      const draggingNote = copiedNotesMap.get(draggingNoteId);
+      const draggingNote = copiedNotesForPreview.get(draggingNoteId);
       if (!draggingNote) {
         throw new Error("draggingNote is undefined.");
       }
@@ -371,10 +368,9 @@ export default defineComponent({
       const movingTicks = newNotePos - notePos;
       const movingSemitones = cursorNoteNumber - dragStartNoteNumber;
 
-      // 選択中のノートのpositionとnoteNumberを変更
       const editedNotes = new Map<string, Note>();
       for (const note of previewNotes.value) {
-        const copiedNote = copiedNotesMap.get(note.id);
+        const copiedNote = copiedNotesForPreview.get(note.id);
         if (!copiedNote) {
           throw new Error("copiedNote is undefined.");
         }
@@ -401,7 +397,7 @@ export default defineComponent({
     const previewResizeRight = () => {
       const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-      const draggingNote = copiedNotesMap.get(draggingNoteId);
+      const draggingNote = copiedNotesForPreview.get(draggingNoteId);
       if (!draggingNote) {
         throw new Error("draggingNote is undefined.");
       }
@@ -414,7 +410,7 @@ export default defineComponent({
 
       const editedNotes = new Map<string, Note>();
       for (const note of previewNotes.value) {
-        const copiedNote = copiedNotesMap.get(note.id);
+        const copiedNote = copiedNotesForPreview.get(note.id);
         if (!copiedNote) {
           throw new Error("copiedNote is undefined.");
         }
@@ -439,7 +435,7 @@ export default defineComponent({
     const previewResizeLeft = () => {
       const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-      const draggingNote = copiedNotesMap.get(draggingNoteId);
+      const draggingNote = copiedNotesForPreview.get(draggingNoteId);
       if (!draggingNote) {
         throw new Error("draggingNote is undefined.");
       }
@@ -451,7 +447,7 @@ export default defineComponent({
 
       const editedNotes = new Map<string, Note>();
       for (const note of previewNotes.value) {
-        const copiedNote = copiedNotesMap.get(note.id);
+        const copiedNote = copiedNotesForPreview.get(note.id);
         if (!copiedNote) {
           throw new Error("copiedNote is undefined.");
         }
@@ -481,19 +477,19 @@ export default defineComponent({
     };
 
     const preview = () => {
-      if (dragMode === "ADD") {
+      if (previewMode === "ADD") {
         previewAdd();
       }
-      if (dragMode === "MOVE") {
+      if (previewMode === "MOVE") {
         previewMove();
       }
-      if (dragMode === "RESIZE_RIGHT") {
+      if (previewMode === "RESIZE_RIGHT") {
         previewResizeRight();
       }
-      if (dragMode === "RESIZE_LEFT") {
+      if (previewMode === "RESIZE_LEFT") {
         previewResizeLeft();
       }
-      dragRequestId = requestAnimationFrame(preview);
+      previewRequestId = requestAnimationFrame(preview);
     };
 
     const getXInBorderBox = (clientX: number, element: HTMLElement) => {
@@ -504,7 +500,11 @@ export default defineComponent({
       return clientY - element.getBoundingClientRect().top;
     };
 
-    const startDrag = (event: MouseEvent, mode: DragMode, note?: Note) => {
+    const startPreview = (
+      event: MouseEvent,
+      mode: PreviewMode,
+      note?: Note
+    ) => {
       const sequencerBodyElement = sequencerBody.value;
       if (!sequencerBodyElement) {
         throw new Error("sequencerBodyElement is null.");
@@ -512,7 +512,7 @@ export default defineComponent({
       if (mode === "NONE") {
         throw new Error("mode is NONE.");
       }
-      if (dragMode !== "NONE") {
+      if (previewMode !== "NONE") {
         return;
       }
       const cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
@@ -534,7 +534,7 @@ export default defineComponent({
         }
         note = {
           id: uuidv4(),
-          position: Math.floor(cursorTicks / snapTicks.value) * snapTicks.value,
+          position: Math.round(cursorTicks / snapTicks.value) * snapTicks.value,
           duration: snapTicks.value,
           noteNumber: cursorNoteNumber,
           lyric: getDoremiFromNoteNumber(cursorNoteNumber),
@@ -563,7 +563,7 @@ export default defineComponent({
           copiedNotes.push({ ...note });
         }
       }
-      dragMode = mode;
+      previewMode = mode;
       currentCursorX = cursorX;
       currentCursorY = cursorY;
       dragStartTicks = cursorTicks;
@@ -573,35 +573,34 @@ export default defineComponent({
       if (event.detail === 1) {
         cancelDoubleClick = false;
       }
-      isPreview.value = true;
       previewNotes.value = copiedNotes;
-      copiedNotesMap.clear();
+      showPreviewNotes.value = true;
+      copiedNotesForPreview.clear();
       for (const copiedNote of copiedNotes) {
-        copiedNotesMap.set(copiedNote.id, copiedNote);
+        copiedNotesForPreview.set(copiedNote.id, copiedNote);
       }
-      setTimeout(preview, 50);
+      previewRequestId = requestAnimationFrame(preview);
     };
 
-    // ドラッグ中の場合はカーソル位置を更新
     const onMouseMove = (event: MouseEvent) => {
+      if (previewMode === "NONE") {
+        return;
+      }
       const sequencerBodyElement = sequencerBody.value;
       if (!sequencerBodyElement) {
         throw new Error("sequencerBodyElement is null.");
       }
-      if (dragMode !== "NONE") {
-        currentCursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-        currentCursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
-      }
+      currentCursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
+      currentCursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
     };
 
-    // ドラッグしていた場合はドラッグを終了
     const onMouseUp = () => {
-      if (dragMode === "NONE") {
+      if (previewMode === "NONE") {
         return;
       }
-      cancelAnimationFrame(dragRequestId);
-      isPreview.value = false;
-      if (dragMode === "ADD") {
+      cancelAnimationFrame(previewRequestId);
+      showPreviewNotes.value = false;
+      if (previewMode === "ADD") {
         store.dispatch("ADD_NOTES", { notes: previewNotes.value });
         cancelDoubleClick = true;
       } else if (edited) {
@@ -614,58 +613,14 @@ export default defineComponent({
           duration: PREVIEW_SOUND_DURATION,
         });
       }
-      dragMode = "NONE";
+      previewMode = "NONE";
     };
 
-    const onDoubleClick = (noteId: string) => {
+    const onNoteBarDoubleClick = (noteId: string) => {
       if (cancelDoubleClick) {
         return;
       }
       store.dispatch("REMOVE_NOTES", { noteIds: [noteId] });
-    };
-
-    // X軸ズーム
-    const setZoomX = (event: Event) => {
-      const sequencerBodyElement = sequencerBody.value;
-      if (!sequencerBodyElement) {
-        throw new Error("sequencerBodyElement is null.");
-      }
-      if (event.target instanceof HTMLInputElement) {
-        // 画面の中央を基準に水平方向のズームを行う
-        const oldZoomX = zoomX.value;
-        const newZoomX = Number(event.target.value);
-        const scrollLeft = sequencerBodyElement.scrollLeft;
-        const scrollTop = sequencerBodyElement.scrollTop;
-        const clientWidth = sequencerBodyElement.clientWidth;
-
-        store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
-          const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
-          const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
-          sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
-        });
-      }
-    };
-
-    // Y軸ズーム
-    const setZoomY = (event: Event) => {
-      const sequencerBodyElement = sequencerBody.value;
-      if (!sequencerBodyElement) {
-        throw new Error("sequencerBodyElement is null.");
-      }
-      if (event.target instanceof HTMLInputElement) {
-        // 画面の中央を基準に垂直方向のズームを行う
-        const oldZoomY = zoomY.value;
-        const newZoomY = Number(event.target.value);
-        const scrollLeft = sequencerBodyElement.scrollLeft;
-        const scrollTop = sequencerBodyElement.scrollTop;
-        const clientHeight = sequencerBodyElement.clientHeight;
-
-        store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
-          const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
-          const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
-          sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
-        });
-      }
     };
 
     // キーボードイベント
@@ -742,7 +697,7 @@ export default defineComponent({
     };
 
     const handleKeydown = (event: KeyboardEvent) => {
-      if (dragMode !== "NONE") {
+      if (previewMode !== "NONE") {
         return;
       }
       switch (event.key) {
@@ -769,6 +724,50 @@ export default defineComponent({
       }
     };
 
+    // X軸ズーム
+    const setZoomX = (event: Event) => {
+      const sequencerBodyElement = sequencerBody.value;
+      if (!sequencerBodyElement) {
+        throw new Error("sequencerBodyElement is null.");
+      }
+      if (event.target instanceof HTMLInputElement) {
+        // 画面の中央を基準に水平方向のズームを行う
+        const oldZoomX = zoomX.value;
+        const newZoomX = Number(event.target.value);
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
+        const clientWidth = sequencerBodyElement.clientWidth;
+
+        store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+          const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
+          const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
+          sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+        });
+      }
+    };
+
+    // Y軸ズーム
+    const setZoomY = (event: Event) => {
+      const sequencerBodyElement = sequencerBody.value;
+      if (!sequencerBodyElement) {
+        throw new Error("sequencerBodyElement is null.");
+      }
+      if (event.target instanceof HTMLInputElement) {
+        // 画面の中央を基準に垂直方向のズームを行う
+        const oldZoomY = zoomY.value;
+        const newZoomY = Number(event.target.value);
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
+        const clientHeight = sequencerBodyElement.clientHeight;
+
+        store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
+          const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
+          const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
+          sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
+        });
+      }
+    };
+
     const onWheel = (event: WheelEvent) => {
       const sequencerBodyElement = sequencerBody.value;
       if (!sequencerBodyElement) {
@@ -778,15 +777,14 @@ export default defineComponent({
         // マウスカーソル位置を基準に水平方向のズームを行う
         const cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
         const oldZoomX = zoomX.value;
-
         let newZoomX = zoomX.value;
         newZoomX -= event.deltaY * (ZOOM_X_STEP * 0.01);
         newZoomX = Math.min(ZOOM_X_MAX, newZoomX);
         newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const scrollTop = sequencerBodyElement.scrollTop;
 
         store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
-          const scrollLeft = sequencerBodyElement.scrollLeft;
-          const scrollTop = sequencerBodyElement.scrollTop;
           const cursorBaseX = (scrollLeft + cursorX) / oldZoomX;
           const newScrollLeft = cursorBaseX * newZoomX - cursorX;
           sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
@@ -881,14 +879,16 @@ export default defineComponent({
       phraseInfos,
       scrollBarWidth,
       sequencerBody,
+      showPreviewNotes,
+      previewNotes,
       selectedNotes,
       unselectedNotes,
       setZoomX,
       setZoomY,
       onMouseMove,
       onMouseUp,
-      startDrag,
-      onDoubleClick,
+      startPreview,
+      onNoteBarDoubleClick,
       onWheel,
       onScroll,
     };
