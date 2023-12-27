@@ -21,6 +21,7 @@
       @mousedown="startPreview($event, 'ADD')"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
+      @dblclick="onDoubleClick"
       @wheel="onWheel"
       @scroll="onScroll"
     >
@@ -97,17 +98,16 @@
         @body-mousedown="startPreview($event, 'MOVE', note)"
         @right-edge-mousedown="startPreview($event, 'RESIZE_RIGHT', note)"
         @left-edge-mousedown="startPreview($event, 'RESIZE_LEFT', note)"
-        @bar-dblclick="onNoteBarDoubleClick(note.id)"
       />
       <sequencer-note
-        v-for="note in showPreviewNotes ? previewNotes : selectedNotes"
+        v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
         is-selected
+        :is-preview="nowPreviewing"
         @body-mousedown="startPreview($event, 'MOVE', note)"
         @right-edge-mousedown="startPreview($event, 'RESIZE_RIGHT', note)"
         @left-edge-mousedown="startPreview($event, 'RESIZE_LEFT', note)"
-        @bar-dblclick="onNoteBarDoubleClick(note.id)"
       />
     </div>
     <div
@@ -198,7 +198,7 @@ import {
 } from "@/helpers/singHelper";
 import { Note } from "@/store/type";
 
-type PreviewMode = "NONE" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT" | "ADD";
+type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
 export default defineComponent({
   name: "SingScoreSequencer",
@@ -301,20 +301,21 @@ export default defineComponent({
     });
     const scrollBarWidth = ref(12);
     const sequencerBody = ref<HTMLElement | null>(null);
-
-    // プレビュー時の状態
-    let previewMode: PreviewMode = "NONE";
+    // プレビュー
+    const nowPreviewing = ref(false);
+    const previewNotes = ref<Note[]>([]);
+    const copiedNotesForPreview = new Map<string, Note>();
+    let previewMode: PreviewMode = "ADD";
+    let previewRequestId = 0;
     let currentCursorX = 0;
     let currentCursorY = 0;
-    let previewRequestId = 0;
     let dragStartTicks = 0;
     let dragStartNoteNumber = 0;
     let draggingNoteId = "";
     let edited = false;
+    // ダブルクリック
+    const clickedNoteIds: (string | undefined)[] = [undefined, undefined];
     let cancelDoubleClick = false;
-    const copiedNotesForPreview = new Map<string, Note>();
-    const previewNotes = ref<Note[]>([]);
-    const showPreviewNotes = ref(false);
 
     const previewAdd = () => {
       const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
@@ -505,15 +506,12 @@ export default defineComponent({
       mode: PreviewMode,
       note?: Note
     ) => {
+      if (nowPreviewing.value) {
+        return;
+      }
       const sequencerBodyElement = sequencerBody.value;
       if (!sequencerBodyElement) {
         throw new Error("sequencerBodyElement is null.");
-      }
-      if (mode === "NONE") {
-        throw new Error("mode is NONE.");
-      }
-      if (previewMode !== "NONE") {
-        return;
       }
       const cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
       const cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
@@ -573,17 +571,17 @@ export default defineComponent({
       if (event.detail === 1) {
         cancelDoubleClick = false;
       }
-      previewNotes.value = copiedNotes;
-      showPreviewNotes.value = true;
       copiedNotesForPreview.clear();
       for (const copiedNote of copiedNotes) {
         copiedNotesForPreview.set(copiedNote.id, copiedNote);
       }
+      previewNotes.value = copiedNotes;
+      nowPreviewing.value = true;
       previewRequestId = requestAnimationFrame(preview);
     };
 
     const onMouseMove = (event: MouseEvent) => {
-      if (previewMode === "NONE") {
+      if (!nowPreviewing.value) {
         return;
       }
       const sequencerBodyElement = sequencerBody.value;
@@ -595,11 +593,12 @@ export default defineComponent({
     };
 
     const onMouseUp = () => {
-      if (previewMode === "NONE") {
+      clickedNoteIds[0] = clickedNoteIds[1];
+      clickedNoteIds[1] = nowPreviewing.value ? draggingNoteId : undefined;
+      if (!nowPreviewing.value) {
         return;
       }
       cancelAnimationFrame(previewRequestId);
-      showPreviewNotes.value = false;
       if (previewMode === "ADD") {
         store.dispatch("ADD_NOTES", { notes: previewNotes.value });
         cancelDoubleClick = true;
@@ -607,20 +606,24 @@ export default defineComponent({
         store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
         cancelDoubleClick = true;
       }
-      if (selectedNotes.value.length === 1) {
+      if (previewNotes.value.length === 1) {
         store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: selectedNotes.value[0].noteNumber,
+          noteNumber: previewNotes.value[0].noteNumber,
           duration: PREVIEW_SOUND_DURATION,
         });
       }
-      previewMode = "NONE";
+      nowPreviewing.value = false;
     };
 
-    const onNoteBarDoubleClick = (noteId: string) => {
-      if (cancelDoubleClick) {
+    const onDoubleClick = () => {
+      if (
+        cancelDoubleClick ||
+        clickedNoteIds[0] !== clickedNoteIds[1] ||
+        clickedNoteIds[1] === undefined
+      ) {
         return;
       }
-      store.dispatch("REMOVE_NOTES", { noteIds: [noteId] });
+      store.dispatch("REMOVE_NOTES", { noteIds: [clickedNoteIds[1]] });
     };
 
     // キーボードイベント
@@ -697,7 +700,7 @@ export default defineComponent({
     };
 
     const handleKeydown = (event: KeyboardEvent) => {
-      if (previewMode !== "NONE") {
+      if (!nowPreviewing.value) {
         return;
       }
       switch (event.key) {
@@ -879,7 +882,7 @@ export default defineComponent({
       phraseInfos,
       scrollBarWidth,
       sequencerBody,
-      showPreviewNotes,
+      nowPreviewing,
       previewNotes,
       selectedNotes,
       unselectedNotes,
@@ -888,7 +891,7 @@ export default defineComponent({
       onMouseMove,
       onMouseUp,
       startPreview,
-      onNoteBarDoubleClick,
+      onDoubleClick,
       onWheel,
       onScroll,
     };
@@ -931,10 +934,6 @@ export default defineComponent({
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
-
-  &.move {
-    cursor: move;
-  }
 }
 
 .sequencer-overlay {

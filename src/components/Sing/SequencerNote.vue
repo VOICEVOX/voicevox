@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="classNamesStr"
+    :class="classNames"
     :style="{
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
@@ -17,7 +17,6 @@
       :width="barWidth"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
-      @dblclick.prevent.stop="onBarDoubleClick"
     >
       <g>
         <rect
@@ -29,7 +28,8 @@
           ry="2"
           stroke-width="1"
           class="sequencer-note-bar-body"
-          @mousedown.stop="onBodyMouseDown"
+          :class="{ 'cursor-move': !isPreview }"
+          @mousedown="onBodyMouseDown"
         />
         <rect
           y="-25%"
@@ -37,8 +37,8 @@
           height="150%"
           width="12"
           fill-opacity="0"
-          class="sequencer-note-bar-draghandle"
-          @mousedown.stop="onLeftEdgeMouseDown"
+          :class="{ 'cursor-ew-resize': !isPreview }"
+          @mousedown="onLeftEdgeMouseDown"
         />
         <rect
           y="-25%"
@@ -46,8 +46,8 @@
           width="12"
           height="150%"
           fill-opacity="0"
-          class="sequencer-note-bar-draghandle"
-          @mousedown.stop="onRightEdgeMouseDown"
+          :class="{ 'cursor-ew-resize': !isPreview }"
+          @mousedown="onRightEdgeMouseDown"
         />
       </g>
     </svg>
@@ -69,13 +69,9 @@ export default defineComponent({
   props: {
     note: { type: Object as PropType<Note>, required: true },
     isSelected: { type: Boolean },
+    isPreview: { type: Boolean },
   },
-  emits: [
-    "bodyMousedown",
-    "rightEdgeMousedown",
-    "leftEdgeMousedown",
-    "BarDblclick",
-  ],
+  emits: ["bodyMousedown", "rightEdgeMousedown", "leftEdgeMousedown"],
   setup(props, { emit }) {
     const store = useStore();
     const state = store.state;
@@ -98,7 +94,7 @@ export default defineComponent({
       const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
       return (noteEndBaseX - noteStartBaseX) * zoomX.value;
     });
-    const classNamesStr = computed(() => {
+    const classNames = computed(() => {
       if (props.isSelected) {
         return "sequencer-note selected";
       }
@@ -130,10 +126,6 @@ export default defineComponent({
       emit("leftEdgeMousedown", event);
     };
 
-    const onBarDoubleClick = (event: MouseEvent) => {
-      emit("BarDblclick", event);
-    };
-
     return {
       zoomX,
       zoomY,
@@ -141,12 +133,11 @@ export default defineComponent({
       positionY,
       barHeight,
       barWidth,
-      classNamesStr,
+      classNames,
       setLyric,
       onBodyMouseDown,
       onRightEdgeMouseDown,
       onLeftEdgeMouseDown,
-      onBarDoubleClick,
     };
   },
 });
@@ -197,6 +188,7 @@ export default defineComponent({
   display: block;
   position: relative;
 }
+
 .sequencer-note-bar-body {
   fill: colors.$primary;
   stroke: #fff;
@@ -204,10 +196,13 @@ export default defineComponent({
   position: relative;
   top: 0;
   left: 0;
+}
+
+.cursor-move {
   cursor: move;
 }
 
-.sequencer-note-bar-draghandle {
+.cursor-ew-resize {
   cursor: ew-resize;
 }
 </style>
