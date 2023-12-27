@@ -381,7 +381,7 @@ export default defineComponent({
 
 .sing-playhead-position {
   font-size: 18px;
-  margin-left: 12px;
+  margin-left: 14px;
   margin-right: 4px;
   min-width: 82px;
 }

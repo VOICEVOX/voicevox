@@ -349,7 +349,6 @@ export default defineComponent({
         previewNotes.value = previewNotes.value.map((value) => {
           return editedNotes.get(value.id) ?? value;
         });
-        edited = true;
       }
     };
 
