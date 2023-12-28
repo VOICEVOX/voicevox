@@ -314,7 +314,10 @@ export default defineComponent({
     let draggingNoteId = "";
     let edited = false;
     // ダブルクリック
-    const clickedNoteIds: (string | undefined)[] = [undefined, undefined];
+    const clickedNoteIds: [string | undefined, string | undefined] = [
+      undefined,
+      undefined,
+    ];
     let cancelDoubleClick = false;
 
     const previewAdd = () => {
