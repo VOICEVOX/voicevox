@@ -139,6 +139,8 @@ export default defineComponent({
     });
 
     const onClick = (event: MouseEvent) => {
+      store.dispatch("DESELECT_ALL_NOTES");
+
       const sequencerRulerElement = sequencerRuler.value;
       if (!sequencerRulerElement) {
         throw new Error("sequencerRulerElement is null.");

@@ -773,11 +773,9 @@ export type SingingStoreState = {
   // NOTE: オーディオ再生はボイスと同様もしくは拡張して使う？
   sequencerZoomX: number;
   sequencerZoomY: number;
-  sequencerScrollX: number;
-  sequencerScrollY: number;
   sequencerSnapType: number;
-  selectedNoteIds: string[];
-  overlappingNoteIds: string[];
+  selectedNoteIds: Set<string>;
+  overlappingNoteIds: Set<string>;
   nowPlaying: boolean;
   volume: number;
   leftLocatorPosition: number;
@@ -840,24 +838,18 @@ export type SingingStoreTypes = {
     action(payload: { noteIds: string[] }): void;
   };
 
-  SET_SELECTED_NOTE_IDS: {
-    mutation: { noteIds: string[] };
-  };
-
   SELECT_NOTES: {
+    mutation: { noteIds: string[] };
     action(payload: { noteIds: string[] }): void;
   };
 
   DESELECT_ALL_NOTES: {
+    mutation: undefined;
     action(): void;
   };
 
   REMOVE_SELECTED_NOTES: {
     action(): void;
-  };
-
-  SET_OVERLAPPING_NOTE_IDS: {
-    mutation: { noteIds: string[] };
   };
 
   SET_PHRASE: {
@@ -893,16 +885,6 @@ export type SingingStoreTypes = {
   SET_ZOOM_Y: {
     mutation: { zoomY: number };
     action(payload: { zoomY: number }): void;
-  };
-
-  SET_SCROLL_X: {
-    mutation: { scrollX: number };
-    action(payload: { scrollX: number }): void;
-  };
-
-  SET_SCROLL_Y: {
-    mutation: { scrollY: number };
-    action(payload: { scrollY: number }): void;
   };
 
   SET_IS_DRAG: {

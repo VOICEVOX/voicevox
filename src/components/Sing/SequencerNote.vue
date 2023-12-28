@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="classNamesStr"
+    :class="classNames"
     :style="{
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
@@ -17,10 +17,6 @@
       :width="barWidth"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
-      focusable="true"
-      tabindex="0"
-      @dblclick.prevent.stop="removeNote"
-      @keydown.prevent="handleKeydown"
     >
       <g>
         <rect
@@ -28,9 +24,12 @@
           x="0"
           height="100%"
           width="100%"
+          rx="2"
+          ry="2"
           stroke-width="1"
           class="sequencer-note-bar-body"
-          @mousedown.stop="handleMouseDown"
+          :class="{ 'cursor-move': !isPreview }"
+          @mousedown="onBodyMouseDown"
         />
         <rect
           y="-25%"
@@ -38,17 +37,17 @@
           height="150%"
           width="12"
           fill-opacity="0"
-          class="sequencer-note-bar-draghandle"
-          @mousedown.stop="handleDragLeftStart"
+          :class="{ 'cursor-ew-resize': !isPreview }"
+          @mousedown="onLeftEdgeMouseDown"
         />
         <rect
           y="-25%"
-          :x="barWidth - 4"
+          :x="barWidth - 8"
           width="12"
           height="150%"
           fill-opacity="0"
-          class="sequencer-note-bar-draghandle"
-          @mousedown.stop="handleDragRightStart"
+          :class="{ 'cursor-ew-resize': !isPreview }"
+          @mousedown="onRightEdgeMouseDown"
         />
       </g>
     </svg>
@@ -63,25 +62,16 @@ import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
-  PREVIEW_SOUND_DURATION,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
   name: "SingSequencerNote",
   props: {
     note: { type: Object as PropType<Note>, required: true },
-    index: { type: Number, required: true },
-    cursorX: { type: Number },
-    cursorY: { type: Number },
+    isSelected: { type: Boolean },
+    isPreview: { type: Boolean },
   },
-
-  emits: [
-    "handleNotesKeydown",
-    "handleDragMoveStart",
-    "handleDragRightStart",
-    "handleDragLeftStart",
-  ],
-
+  emits: ["bodyMousedown", "rightEdgeMousedown", "leftEdgeMousedown"],
   setup(props, { emit }) {
     const store = useStore();
     const state = store.state;
@@ -104,19 +94,15 @@ export default defineComponent({
       const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
       return (noteEndBaseX - noteStartBaseX) * zoomX.value;
     });
-    const classNamesStr = computed(() => {
-      if (state.selectedNoteIds.includes(props.note.id)) {
+    const classNames = computed(() => {
+      if (props.isSelected) {
         return "sequencer-note selected";
       }
-      if (state.overlappingNoteIds.includes(props.note.id)) {
+      if (state.overlappingNoteIds.has(props.note.id)) {
         return "sequencer-note overlapping";
       }
       return "sequencer-note";
     });
-
-    const removeNote = () => {
-      store.dispatch("REMOVE_NOTES", { noteIds: [props.note.id] });
-    };
 
     const setLyric = (event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
@@ -128,38 +114,16 @@ export default defineComponent({
       }
     };
 
-    const selectThisNote = () => {
-      store.dispatch("SELECT_NOTES", { noteIds: [props.note.id] });
-      store.dispatch("PLAY_PREVIEW_SOUND", {
-        noteNumber: props.note.noteNumber,
-        duration: PREVIEW_SOUND_DURATION,
-      });
+    const onBodyMouseDown = (event: MouseEvent) => {
+      emit("bodyMousedown", event);
     };
 
-    const handleKeydown = (event: KeyboardEvent) => {
-      emit("handleNotesKeydown", event);
+    const onRightEdgeMouseDown = (event: MouseEvent) => {
+      emit("rightEdgeMousedown", event);
     };
 
-    const handleMouseDown = (event: MouseEvent) => {
-      if (!state.selectedNoteIds.includes(props.note.id)) {
-        selectThisNote();
-      } else {
-        emit("handleDragMoveStart", event);
-      }
-    };
-
-    const handleDragRightStart = (event: MouseEvent) => {
-      if (!state.selectedNoteIds.includes(props.note.id)) {
-        selectThisNote();
-      }
-      emit("handleDragRightStart", event);
-    };
-
-    const handleDragLeftStart = (event: MouseEvent) => {
-      if (!state.selectedNoteIds.includes(props.note.id)) {
-        selectThisNote();
-      }
-      emit("handleDragLeftStart", event);
+    const onLeftEdgeMouseDown = (event: MouseEvent) => {
+      emit("leftEdgeMousedown", event);
     };
 
     return {
@@ -169,13 +133,11 @@ export default defineComponent({
       positionY,
       barHeight,
       barWidth,
-      classNamesStr,
-      removeNote,
+      classNames,
       setLyric,
-      handleKeydown,
-      handleDragRightStart,
-      handleDragLeftStart,
-      handleMouseDown,
+      onBodyMouseDown,
+      onRightEdgeMouseDown,
+      onLeftEdgeMouseDown,
     };
   },
 });
@@ -195,7 +157,6 @@ export default defineComponent({
   &.selected {
     .sequencer-note-bar-body {
       fill: darkorange; // 仮
-      cursor: move;
     }
   }
 
@@ -227,6 +188,7 @@ export default defineComponent({
   display: block;
   position: relative;
 }
+
 .sequencer-note-bar-body {
   fill: colors.$primary;
   stroke: #fff;
@@ -236,7 +198,11 @@ export default defineComponent({
   left: 0;
 }
 
-.sequencer-note-bar-draghandle {
+.cursor-move {
+  cursor: move;
+}
+
+.cursor-ew-resize {
   cursor: ew-resize;
 }
 </style>
