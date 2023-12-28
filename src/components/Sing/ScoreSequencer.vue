@@ -621,7 +621,7 @@ export default defineComponent({
       if (
         cancelDoubleClick ||
         clickedNoteIds[0] !== clickedNoteIds[1] ||
-        clickedNoteIds[1] === undefined
+        clickedNoteIds[1] == undefined
       ) {
         return;
       }
