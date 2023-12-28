@@ -311,7 +311,7 @@ export default defineComponent({
     let currentCursorY = 0;
     let dragStartTicks = 0;
     let dragStartNoteNumber = 0;
-    let draggingNoteId = "";
+    let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
     let edited = false;
     // ダブルクリック
     const clickedNoteIds: [string | undefined, string | undefined] = [
