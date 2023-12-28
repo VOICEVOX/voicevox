@@ -301,7 +301,9 @@ export default defineComponent({
     });
     const scrollBarWidth = ref(12);
     const sequencerBody = ref<HTMLElement | null>(null);
+
     // プレビュー
+    // FIXME: 関連する値を１つのobjectにまとめる
     const nowPreviewing = ref(false);
     const previewNotes = ref<Note[]>([]);
     const copiedNotesForPreview = new Map<string, Note>();
