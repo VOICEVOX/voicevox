@@ -509,6 +509,8 @@ export default defineComponent({
       note?: Note
     ) => {
       if (nowPreviewing.value) {
+        // RESIZE_RIGHT・RESIZE_LEFTのあとにADDも発生するので、その場合は無視する
+        // TODO: stopPropagation付けたり、他のイベントではエラーを投げるようにする
         return;
       }
       const sequencerBodyElement = sequencerBody.value;
