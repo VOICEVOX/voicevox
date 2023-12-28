@@ -699,7 +699,8 @@ export default defineComponent({
     };
 
     const handleKeydown = (event: KeyboardEvent) => {
-      if (!nowPreviewing.value) {
+      // プレビュー中の操作は想定外の挙動をしそうなので防止
+      if (nowPreviewing.value) {
         return;
       }
       switch (event.key) {
