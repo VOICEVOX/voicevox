@@ -674,6 +674,7 @@ export default defineComponent({
         editedNotes.push({ ...note, position });
       }
       if (editedNotes.length === 0) {
+        // TODO: 例外処理は`UPDATE_NOTES`内に移す？
         return;
       }
       store.dispatch("UPDATE_NOTES", { notes: editedNotes });
