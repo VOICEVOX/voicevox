@@ -198,7 +198,8 @@ watch(
     if (oldData.length < newData.length) {
       selectedButton.value = newData[newData.length - 1];
     } else if (
-      selectedButton.value !== undefined &&
+      // on -> off になったとき
+      selectedButton.value != undefined &&
       oldData.includes(selectedButton.value) &&
       !newData.includes(selectedButton.value)
     ) {

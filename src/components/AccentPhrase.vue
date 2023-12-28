@@ -322,7 +322,7 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
   if (props.selectedDetail == "accent") {
     // クリック時の動作はそのアクセント句の読み変更。
     // よって、いずれかのモーラがhoverされているならそのアクセント句を強調表示する。
-    return hoveredMoraIndex.value !== undefined;
+    return hoveredMoraIndex.value != undefined;
   }
   if (props.selectedDetail == "pitch") {
     // クリック時の動作は無声化/有声化の切り替え。

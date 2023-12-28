@@ -102,11 +102,10 @@ const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
 const enableMultiEngine = computed(() => store.state.enableMultiEngine);
-
 const titleText = computed(
   () =>
     (isEdited.value ? "*" : "") +
-    (projectName.value !== undefined ? projectName.value + " - " : "") +
+    (projectName.value != undefined ? projectName.value + " - " : "") +
     "VOICEVOX" +
     (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
     (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +

@@ -361,7 +361,7 @@ const resetHotkey = async (action: string) => {
       .getDefaultHotkeySettings()
       .then((defaultSettings: HotkeySetting[]) => {
         const setting = defaultSettings.find((value) => value.action == action);
-        if (setting === undefined) {
+        if (setting == undefined) {
           return;
         }
         // デフォルトが未設定でない場合は、衝突チェックを行う
