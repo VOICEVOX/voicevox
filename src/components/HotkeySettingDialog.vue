@@ -370,7 +370,7 @@ const resetHotkey = async (action: string) => {
             (item) =>
               item.combination == setting.combination && item.action != action
           );
-          if (duplicated !== undefined) {
+          if (duplicated != undefined) {
             openHotkeyDialog(action);
             lastRecord.value = duplicated.combination;
             return;
