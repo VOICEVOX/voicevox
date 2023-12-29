@@ -653,7 +653,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     outline: none;
   }
   &.selected {
-    background-color: rgba(colors.$active-point-focus-rgb, 0.5);
+    background-color: colors.$active-point-focus;
   }
 
   &:first-child {
@@ -702,9 +702,15 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
       padding-left: 5px;
     }
 
-    &.q-field--filled.q-field--highlighted :deep(.q-field__control):before {
+    &.q-field--filled.q-field--highlighted :deep(.q-field__control)::before {
       background-color: rgba(colors.$display-rgb, 0.08);
     }
+  }
+
+  &.selected
+    .q-input.q-field--filled.q-field--focused.q-field--highlighted
+    :deep(.q-field__control)::before {
+    background-color: colors.$background;
   }
 
   &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
