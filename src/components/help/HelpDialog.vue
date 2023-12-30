@@ -86,14 +86,14 @@
 
 <script setup lang="ts">
 import { computed, ref, type Component } from "vue";
-import OssLicense from "../template/OssLicenseSection.vue";
-import HelpPolicy from "./HelpPolicy.vue";
+import OssLicense from "../template/HelpOssLicenseSection.vue";
+import HelpPolicy from "../template/HelpPolicySection.vue";
+import HowToUse from "../template/HelpHowToUseSection.vue";
+import UpdateInfo from "../template/HelpUpdateInfoSection.vue";
+import OssCommunityInfo from "../template/HelpOssCommunityInfoSection.vue";
+import QAndA from "../template/HelpQAndASection.vue";
+import ContactInfo from "../template/HelpContactInfoSection.vue";
 import LibraryPolicy from "./LibraryPolicy.vue";
-import HowToUse from "./HowToUse.vue";
-import UpdateInfo from "./UpdateInfo.vue";
-import OssCommunityInfo from "./OssCommunityInfo.vue";
-import QAndA from "./QAndA.vue";
-import ContactInfo from "./ContactInfo.vue";
 import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
