@@ -260,7 +260,7 @@ export async function generateAndConnectAndSaveAudioWithDialog({
     dispatch
   );
 
-  if (result === undefined || result.result === "CANCELED") return;
+  if (result == undefined || result.result === "CANCELED") return;
 
   if (result.result === "SUCCESS") {
     if (disableNotifyOnGenerate) return;
