@@ -29,8 +29,8 @@ const characterInfo = computed(() => {
   const styleId = audioItem?.voice.styleId;
 
   if (
-    engineId === undefined ||
-    styleId === undefined ||
+    engineId == undefined ||
+    styleId == undefined ||
     !store.state.engineIds.some((id) => id === engineId)
   )
     return undefined;
