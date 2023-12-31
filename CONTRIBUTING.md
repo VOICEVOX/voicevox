@@ -214,6 +214,8 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 
 ### 4. 事前テスト
 
+* 提出前にコードをテストします。テストにはいくつかのツールを使います。このガイドラインの手順で進んでいれば既に必要なものはそろっている
+
 * 記述コードがコーディングルールに沿っていることを確認します。（特に今回の作業によって警告やエラーが増えていないかどうかに注目してください）
 
   ```bash
@@ -230,26 +232,39 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 * Markdownの記述が正しいことを確認します。
   
   ```bash
-    npm run markdownlint ./*/*.md
+  npm run markdownlint ./*/*.md
   ```
 
 * 命名に使っている英語が誤っていないことを確認します。
 
   ```bash
-    typos
+  typos
   ```
 
 * 個人環境でVOICEVOXを実行し、提出前に、一通り動くことを確認します。
 
   ```bash
-    npm run electron:serve
+  npm run electron:serve
   ```
 
 * 使用するライブラリのライセンスに使用出来ないものが使われていないことを確認します。
 
   ```bash
-    npm run license:generate -- -o voicevox_licenses.json
+  npm run license:generate -- -o voicevox_licenses.json
   ```
+
+* e2eテストの内容を確認します。
+
+  ```bash
+  npm run test:unit
+  npm run test:browser-e2e
+  npm run test:electron-e2e
+  ```
+
+  * e2eテストは実際には自分が提出する範囲外の指摘をしたり、完全に警告が消えないことがあります。
+  * 確認の目安としては、加工前後で e2eテスト結果による指摘が増えていないことを確認してください。（チェックアウト時点でe2eテストの指摘が残っていることがあるため、前後の差分で判断するのが良いでしょう）
+  * 提出する範囲で指摘されているようであれば提出前に訂正しましょう。
+  * e2eテスト結果を修正出来ない事情がある場合や判断に迷う場合は、レビュー時に相談をしましょう。
 
 ### 5. コードの提出
 
