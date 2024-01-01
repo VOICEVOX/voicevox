@@ -104,7 +104,6 @@
         :key="note.id"
         :note="note"
         is-selected
-        :is-preview="nowPreviewing"
         @body-mousedown="startPreview($event, 'MOVE', note)"
         @right-edge-mousedown="startPreview($event, 'RESIZE_RIGHT', note)"
         @left-edge-mousedown="startPreview($event, 'RESIZE_LEFT', note)"

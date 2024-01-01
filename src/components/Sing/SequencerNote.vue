@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="classNames"
+    class="note"
     :style="{
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
@@ -9,48 +9,24 @@
     <input
       type="text"
       :value="note.lyric"
-      class="sequencer-note-lyric"
+      class="note-lyric"
       @input="setLyric"
     />
-    <svg
-      :height="barHeight"
-      :width="barWidth"
-      xmlns="http://www.w3.org/2000/svg"
-      class="sequencer-note-bar"
+    <div
+      class="note-bar"
+      :class="{
+        selected: noteState === 'SELECTED',
+        overlapping: noteState === 'OVERLAPPING',
+      }"
+      :style="{
+        width: `${barWidth}px`,
+        height: `${barHeight}px`,
+      }"
+      @mousedown.stop="onBarMouseDown"
     >
-      <g>
-        <rect
-          y="0"
-          x="0"
-          height="100%"
-          width="100%"
-          rx="2"
-          ry="2"
-          stroke-width="1"
-          class="sequencer-note-bar-body"
-          :class="{ 'cursor-move': !isPreview }"
-          @mousedown="onBodyMouseDown"
-        />
-        <rect
-          y="-25%"
-          x="-4"
-          height="150%"
-          width="12"
-          fill-opacity="0"
-          :class="{ 'cursor-ew-resize': !isPreview }"
-          @mousedown="onLeftEdgeMouseDown"
-        />
-        <rect
-          y="-25%"
-          :x="barWidth - 8"
-          width="12"
-          height="150%"
-          fill-opacity="0"
-          :class="{ 'cursor-ew-resize': !isPreview }"
-          @mousedown="onRightEdgeMouseDown"
-        />
-      </g>
-    </svg>
+      <div class="note-left-edge" @mousedown.stop="onLeftEdgeMouseDown"></div>
+      <div class="note-right-edge" @mousedown.stop="onRightEdgeMouseDown"></div>
+    </div>
   </div>
 </template>
 
@@ -64,12 +40,13 @@ import {
   noteNumberToBaseY,
 } from "@/helpers/singHelper";
 
+type NoteState = "NONE" | "SELECTED" | "OVERLAPPING";
+
 export default defineComponent({
   name: "SingSequencerNote",
   props: {
     note: { type: Object as PropType<Note>, required: true },
     isSelected: { type: Boolean },
-    isPreview: { type: Boolean },
   },
   emits: ["bodyMousedown", "rightEdgeMousedown", "leftEdgeMousedown"],
   setup(props, { emit }) {
@@ -94,14 +71,14 @@ export default defineComponent({
       const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
       return (noteEndBaseX - noteStartBaseX) * zoomX.value;
     });
-    const classNames = computed(() => {
+    const noteState = computed((): NoteState => {
       if (props.isSelected) {
-        return "sequencer-note selected";
+        return "SELECTED";
       }
       if (state.overlappingNoteIds.has(props.note.id)) {
-        return "sequencer-note overlapping";
+        return "OVERLAPPING";
       }
-      return "sequencer-note";
+      return "NONE";
     });
 
     const setLyric = (event: Event) => {
@@ -114,7 +91,7 @@ export default defineComponent({
       }
     };
 
-    const onBodyMouseDown = (event: MouseEvent) => {
+    const onBarMouseDown = (event: MouseEvent) => {
       emit("bodyMousedown", event);
     };
 
@@ -133,9 +110,9 @@ export default defineComponent({
       positionY,
       barHeight,
       barWidth,
-      classNames,
+      noteState,
       setLyric,
-      onBodyMouseDown,
+      onBarMouseDown,
       onRightEdgeMouseDown,
       onLeftEdgeMouseDown,
     };
@@ -147,27 +124,13 @@ export default defineComponent({
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
-.sequencer-note {
-  backface-visibility: hidden;
+.note {
   position: absolute;
   top: 0;
   left: 0;
-  transform-origin: 0, 0;
-
-  &.selected {
-    .sequencer-note-bar-body {
-      fill: darkorange; // 仮
-    }
-  }
-
-  &.overlapping {
-    .sequencer-note-bar-body {
-      fill: rgba(colors.$primary-rgb, 0.5);
-    }
-  }
 }
 
-.sequencer-note-lyric {
+.note-lyric {
   background: white;
   border: 0;
   border-bottom: 1px solid colors.$primary;
@@ -184,25 +147,38 @@ export default defineComponent({
   width: 24px;
 }
 
-.sequencer-note-bar {
-  display: block;
+.note-bar {
   position: relative;
-}
-
-.sequencer-note-bar-body {
-  fill: colors.$primary;
-  stroke: #fff;
-  stroke-opacity: 0.5;
-  position: relative;
-  top: 0;
-  left: 0;
-}
-
-.cursor-move {
+  background-color: colors.$primary;
+  border-color: rgba(255, 255, 255, 0.5);
+  border-width: 1px;
+  border-radius: 2px;
   cursor: move;
+
+  &.selected {
+    background-color: darkorange; // 仮
+  }
+
+  &.overlapping {
+    background-color: rgba(colors.$primary-rgb, 0.5);
+  }
 }
 
-.cursor-ew-resize {
+.note-left-edge {
+  position: absolute;
+  top: 0;
+  left: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.note-right-edge {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 12px;
+  height: 100%;
   cursor: ew-resize;
 }
 </style>
