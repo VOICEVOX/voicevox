@@ -479,7 +479,7 @@ const handleParameterChange = (
   parameter: Parameter,
   inputValue: string | number | null
 ) => {
-  if (inputValue === null) throw new Error("inputValue is null");
+  if (inputValue == null) throw new Error("inputValue is null");
   const value = adjustSliderValue(
     parameter.label + "入力",
     inputValue.toString(),
@@ -760,7 +760,7 @@ const setPresetByScroll = (event: WheelEvent) => {
   event.preventDefault();
 
   const presetNumber = selectablePresetList.value.length;
-  if (presetNumber === 0 || presetNumber === undefined) return;
+  if (presetNumber === 0 || presetNumber == undefined) return;
 
   const nowIndex = selectablePresetList.value.findIndex(
     (value) => value.key == presetSelectModel.value.key
@@ -770,7 +770,7 @@ const setPresetByScroll = (event: WheelEvent) => {
   const newIndex = isUp ? nowIndex + 1 : nowIndex - 1;
   if (newIndex < 0 || presetNumber <= newIndex) return;
 
-  if (selectablePresetList.value[newIndex] === undefined) return;
+  if (selectablePresetList.value[newIndex] == undefined) return;
 
   changePreset(selectablePresetList.value[newIndex].key);
 };
@@ -889,7 +889,7 @@ const updatePreset = async (fullApply: boolean) => {
   const key = presetList.value.find(
     (preset) => preset.label === presetName.value
   )?.key;
-  if (key === undefined) return;
+  if (key == undefined) return;
 
   const title = presetName.value;
   const newPreset = createPresetData(title);

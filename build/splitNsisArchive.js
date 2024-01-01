@@ -13,13 +13,13 @@ const createIni = (sizes, hashes) => {
 // target: electron-builder.Target
 exports.default = async function (target) {
   const projectName = process.env.npm_package_name;
-  if (projectName === undefined) {
+  if (projectName == undefined) {
     const ErrorMessage = "Project name is undefined.";
     console.error(ErrorMessage);
     throw ErrorMessage;
   }
   const projectVersion = process.env.npm_package_version;
-  if (projectVersion === undefined) {
+  if (projectVersion == undefined) {
     const ErrorMessage = "Project version is undefined.";
     console.error(ErrorMessage);
     throw ErrorMessage;

@@ -367,7 +367,7 @@ const engineManageDialogOpenedComputed = computed({
   set: (val) => emit("update:modelValue", val),
 });
 const uiLockedState = ref<null | "addingEngine" | "deletingEngine">(null); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
-const uiLocked = computed(() => uiLockedState.value !== null);
+const uiLocked = computed(() => uiLockedState.value != null);
 const isAddingEngine = ref(false);
 const engineLoaderType = ref<EngineLoaderType>("vvpp");
 

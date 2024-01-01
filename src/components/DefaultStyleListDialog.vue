@@ -106,7 +106,6 @@ import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
-
 const props =
   defineProps<{
     modelValue: boolean;
@@ -164,7 +163,7 @@ watch([() => props.modelValue], async ([newValue]) => {
   if (newValue) {
     speakerWithMultipleStyles.value = store.state.userCharacterOrder
       .map((speakerUuid) => characterInfosMap.value[speakerUuid])
-      .filter((characterInfo) => characterInfo !== undefined)
+      .filter((characterInfo) => characterInfo != undefined)
       .filter(
         (characterInfo) => characterInfo.metas.styles.length > 1
       ) as CharacterInfo[];
