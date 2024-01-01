@@ -1,0 +1,88 @@
+<template>
+  <div class="container">
+    <BaseScrollArea>
+      <div class="inner">
+        <BaseDocumentView>
+          <h1>アップデート履歴</h1>
+          <div v-if="props.isUpdateAvailable" class="info">
+            <div class="info-title">
+              最新バージョン {{ props.latestVersion }} が見つかりました
+            </div>
+            <a :href="props.downloadLink" target="_blank">ダウンロードページ</a>
+          </div>
+          <template
+            v-for="(info, infoIndex) of props.updateInfos"
+            :key="infoIndex"
+          >
+            <h2>バージョン {{ info.version }}</h2>
+            <ul>
+              <li
+                v-for="(item, descriptionIndex) of info.descriptions"
+                :key="descriptionIndex"
+              >
+                {{ item }}
+              </li>
+            </ul>
+            <h3 v-if="info.contributors.length > 0">貢献者リスト</h3>
+            <p>
+              <template
+                v-for="(item, contributorIndex) of info.contributors"
+                :key="contributorIndex"
+              >
+                <span v-if="contributorIndex > 0"> / </span>
+                <a :href="`https://github.com/${item}`" target="_blank">
+                  {{ item }}
+                </a>
+              </template>
+            </p>
+          </template>
+        </BaseDocumentView>
+      </div>
+    </BaseScrollArea>
+  </div>
+</template>
+
+<script setup lang="ts">
+import BaseScrollArea from "../base/BaseScrollArea.vue";
+import BaseDocumentView from "../base/BaseDocumentView.vue";
+import { UpdateInfo } from "@/type/preload";
+
+const props =
+  defineProps<{
+    latestVersion: string;
+    downloadLink: string;
+    updateInfos: UpdateInfo[];
+    isUpdateAvailable: boolean;
+  }>();
+</script>
+
+<style scoped lang="scss">
+@use '@/styles/variables' as vars;
+@use '@/styles/colors' as colors;
+@use '@/styles/mixin' as mixin;
+
+.container {
+  // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
+  // height: 100%;
+  height: calc(100vh - 90px);
+  background-color: #e9f3e7;
+}
+
+.inner {
+  padding: vars.$padding-2;
+  background-color: #fff;
+}
+
+.info {
+  background-color: #e9f3e7;
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.info-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  line-height: 2;
+  margin: 0;
+}
+</style>
