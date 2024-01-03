@@ -413,6 +413,8 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
     if (isMultiSelectEnabled.value && e?.shiftKey) {
+      // focusCellをemitする前にselectedAudioKeysを保存しておく。
+      // （focusCellでselectedAudioKeysが変更されるため）
       const selectedAudioKeysBefore = selectedAudioKeys.value;
       emit("focusCell", {
         audioKey: audioKeys.value[index],
