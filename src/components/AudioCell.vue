@@ -6,7 +6,10 @@
     :class="{
       active: isActiveAudioCell,
       selected: isSelectedAudioCell && isMultiSelectEnabled,
-      highlighted: isSelectedAudioCell && selectedAudioKeys.length > 1,
+      highlighted:
+        isSelectedAudioCell &&
+        isMultiSelectEnabled &&
+        selectedAudioKeys.length > 1,
     }"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
