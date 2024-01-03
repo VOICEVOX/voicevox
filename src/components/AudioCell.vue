@@ -285,7 +285,7 @@ const isActiveAudioCell = computed(
 );
 const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const isSelectedAudioCell = computed(() =>
-  store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
+  selectedAudioKeys.value.includes(props.audioKey)
 );
 
 const audioTextBuffer = ref(audioItem.value.text);
@@ -413,13 +413,14 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
     if (isMultiSelectEnabled.value && e?.shiftKey) {
+      const selectedAudioKeysBefore = selectedAudioKeys.value;
       emit("focusCell", {
         audioKey: audioKeys.value[index],
         focusTarget: "root",
       });
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: [
-          ...store.getters.SELECTED_AUDIO_KEYS,
+          ...selectedAudioKeysBefore,
           props.audioKey,
           audioKeys.value[index],
         ],
