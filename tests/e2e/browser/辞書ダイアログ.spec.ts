@@ -4,14 +4,34 @@ import { getNewestQuasarDialog } from "../locators";
 
 test.beforeEach(gotoHome);
 
-// 読み方を確認する
+// 読み方を確認する。
+// たまに読みが反映されないことがあるので、
+// 一度空にする -> テキストが消えたことを確認（消えてなかったらもう一度Enter）->
+// 再度入力する -> 読み方が表示されたことを確認（表示されてなかったらもう一度Enter）
+// という流れで読み方を確認する。
 async function getYomi(page: Page, inputText: string): Promise<string> {
   await page.locator(".audio-cell input").last().fill(inputText);
   await page.waitForTimeout(100);
-  await page.locator(".audio-cell input").last().press("Enter");
-  await page.waitForTimeout(500);
-  const text = (await page.locator(".text-cell").allInnerTexts()).join("");
-  return text;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    await page.locator(".audio-cell input").last().press("Enter");
+    await page.waitForTimeout(100);
+    const text = (await page.locator(".text-cell").allInnerTexts()).join("");
+    if (text.length === 0) {
+      break;
+    }
+    await page.waitForTimeout(100);
+  }
+
+  await page.locator(".audio-cell input").last().fill(inputText);
+  await page.waitForTimeout(100);
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    await page.locator(".audio-cell input").last().press("Enter");
+    await page.waitForTimeout(100);
+    const text = (await page.locator(".text-cell").allInnerTexts()).join("");
+    return text;
+  }
 }
 
 async function openDictDialog(page: Page): Promise<void> {
