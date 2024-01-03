@@ -7,6 +7,7 @@
       active: isActiveAudioCell,
       selected: isSelectedAudioCell && isMultiSelectEnabled,
     }"
+    :data-should-highlight="selectedAudioKeys.length > 1"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
     @focus="onRootFocus"
@@ -282,8 +283,9 @@ const selectedVoice = computed<Voice | undefined>({
 const isActiveAudioCell = computed(
   () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY
 );
+const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const isSelectedAudioCell = computed(() =>
-  store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
+  selectedAudioKeys.value.includes(props.audioKey)
 );
 
 const audioTextBuffer = ref(audioItem.value.text);
@@ -410,7 +412,6 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   if (e && e.isComposing) return;
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
-    const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
     if (isMultiSelectEnabled.value && e?.shiftKey) {
       emit("focusCell", {
         audioKey: audioKeys.value[index],
@@ -418,7 +419,7 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
       });
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: [
-          ...selectedAudioKeys,
+          ...selectedAudioKeys.value,
           props.audioKey,
           audioKeys.value[index],
         ],
@@ -652,7 +653,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     // divはフォーカスするとデフォルトで青い枠が出るので消す
     outline: none;
   }
-  &.selected {
+  &.selected[data-should-highlight="true"] {
     background-color: colors.$active-point-focus;
   }
 
@@ -705,12 +706,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     &.q-field--filled.q-field--highlighted :deep(.q-field__control)::before {
       background-color: rgba(colors.$display-rgb, 0.08);
     }
-  }
-
-  &.selected
-    .q-input.q-field--filled.q-field--focused.q-field--highlighted
-    :deep(.q-field__control)::before {
-    background-color: colors.$background;
   }
 
   &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
