@@ -84,6 +84,8 @@ jobs:
           sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port=50021"],|' .env.test
           cp .env.test .env
 
+      - use: sevenc-nanashi/dotfiles@main
+
       - name: Run npm run test:browser-e2e
         run: |
           if [ -n "${{ runner.debug }}" ]; then

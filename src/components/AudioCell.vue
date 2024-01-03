@@ -285,7 +285,7 @@ const isActiveAudioCell = computed(
 );
 const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const isSelectedAudioCell = computed(() =>
-  selectedAudioKeys.value.includes(props.audioKey)
+  store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
 );
 
 const audioTextBuffer = ref(audioItem.value.text);
@@ -419,8 +419,6 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
       });
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: [
-          // ここでselectedAudioKeys.valueを参照すると何故か1つしか入っていないのでstore.getters.SELECTED_AUDIO_KEYSを使っている。
-          // FIXME: 原因を見つけてselectedAudioKeys.valueを使うようにする。
           ...store.getters.SELECTED_AUDIO_KEYS,
           props.audioKey,
           audioKeys.value[index],
