@@ -419,7 +419,9 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
       });
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: [
-          ...selectedAudioKeys.value,
+          // ここでselectedAudioKeys.valueを参照すると何故か1つしか入っていないのでstore.getters.SELECTED_AUDIO_KEYSを使っている。
+          // FIXME: 原因を見つけてselectedAudioKeys.valueを使うようにする。
+          ...store.getters.SELECTED_AUDIO_KEYS,
           props.audioKey,
           audioKeys.value[index],
         ],
