@@ -10,12 +10,11 @@ test.beforeEach(gotoHome);
 // 再度入力する -> 読み方が表示されたことを確認（表示されてなかったらもう一度Enter）
 // という流れで読み方を確認する。
 async function getYomi(page: Page, inputText: string): Promise<string> {
-  await page.locator(".audio-cell input").last().fill(inputText);
+  await page.locator(".audio-cell input").last().fill("");
   await page.waitForTimeout(100);
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await page.locator(".audio-cell input").last().press("Enter");
-    await page.waitForTimeout(100);
     const text = (await page.locator(".text-cell").allInnerTexts()).join("");
     if (text.length === 0) {
       break;
@@ -30,7 +29,9 @@ async function getYomi(page: Page, inputText: string): Promise<string> {
     await page.locator(".audio-cell input").last().press("Enter");
     await page.waitForTimeout(100);
     const text = (await page.locator(".text-cell").allInnerTexts()).join("");
-    return text;
+    if (text.length > 0) {
+      return text;
+    }
   }
 }
 
