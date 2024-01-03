@@ -6,8 +6,8 @@
     :class="{
       active: isActiveAudioCell,
       selected: isSelectedAudioCell && isMultiSelectEnabled,
+      highlighted: isSelectedAudioCell && selectedAudioKeys.length > 1,
     }"
-    :data-should-highlight="selectedAudioKeys.length > 1"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
     @focus="onRootFocus"
@@ -656,7 +656,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     // divはフォーカスするとデフォルトで青い枠が出るので消す
     outline: none;
   }
-  &.selected[data-should-highlight="true"] {
+  &.highlighted {
     background-color: colors.$active-point-focus;
   }
 
