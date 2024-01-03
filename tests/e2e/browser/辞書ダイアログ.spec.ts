@@ -4,17 +4,14 @@ import { getNewestQuasarDialog } from "../locators";
 
 test.beforeEach(gotoHome);
 
-// 「abs」を入力して読み方を確認する
-async function validateAbsYomi(
-  page: Page,
-  expectedText: string
-): Promise<void> {
-  await page.locator(".audio-cell input").last().fill("abs");
+// 読み方を確認する
+async function getYomi(page: Page, inputText: string): Promise<string> {
+  await page.locator(".audio-cell input").last().fill(inputText);
   await page.waitForTimeout(100);
   await page.locator(".audio-cell input").last().press("Enter");
   await page.waitForTimeout(500);
   const text = (await page.locator(".text-cell").allInnerTexts()).join("");
-  expect(text).toBe(expectedText);
+  return text;
 }
 
 async function openDictDialog(page: Page): Promise<void> {
@@ -42,8 +39,16 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
 }) => {
   test.skip(!process.env.CI, "環境変数CIが未設定のためスキップします");
   await navigateToMain(page);
+
+  const randomString = Math.random().toString(36).slice(-8);
+  const zenkakuRandomString = randomString.replace(/[\u0021-\u007e]/g, (s) => {
+    // アルファベットを入力し、読み方を確認
+    return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
+  });
   // アルファベットを入力し、読み方を確認
-  await validateAbsYomi(page, "エエビイエス");
+  const yomi = await getYomi(page, randomString);
+  // ほぼ100%の確率で8文字以上の読み方が返ってくるはず（無限の猿みたいなことが起きない限り）
+  expect(yomi.length).toBeGreaterThan(8);
 
   // 読み方の設定画面を開く
   await openDictDialog(page);
@@ -54,12 +59,12 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
     .locator(".word-editor .row")
     .filter({ hasText: "単語" })
     .locator(".q-field__native");
-  wordInputTag.evaluate((e: HTMLInputElement) => {
-    e.value = "abs";
+  wordInputTag.evaluate((e: HTMLInputElement, rs: string) => {
+    e.value = rs;
     e.dispatchEvent(new Event("input"));
-  });
+  }, randomString);
   await page.waitForTimeout(100);
-  await validateInputTag(page, wordInputTag, "ａｂｓ");
+  await validateInputTag(page, wordInputTag, zenkakuRandomString);
 
   const yomiInputTag = page
     .locator(".word-editor .row")
@@ -67,11 +72,11 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
     .locator(".q-field__native");
 
   await yomiInputTag.evaluate((e: HTMLInputElement) => {
-    e.value = "アブス";
+    e.value = "テスト";
     e.dispatchEvent(new Event("input"));
   });
   await page.waitForTimeout(100);
-  await validateInputTag(page, yomiInputTag, "アブス");
+  await validateInputTag(page, yomiInputTag, "テスト");
 
   // 保存して設定画面を閉じる
   await page.getByText("保存", { exact: true }).click();
@@ -84,11 +89,15 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   // 辞書が登録されているかどうかを確認
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
-  await validateAbsYomi(page, "アブス");
+  const yomi2 = await getYomi(page, randomString);
+  expect(yomi2).toBe("テスト");
 
   // もう一度設定を開き辞書からabsを削除
   await openDictDialog(page);
-  await page.getByRole("listitem").filter({ hasText: "ａｂｓ" }).click();
+  await page
+    .getByRole("listitem")
+    .filter({ hasText: zenkakuRandomString })
+    .click();
   await page.waitForTimeout(100);
   await page
     .locator(".word-list-header")
@@ -111,5 +120,6 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   // 辞書から削除されていることを確認
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
-  await validateAbsYomi(page, "エエビイエス");
+  const yomi3 = await getYomi(page, randomString);
+  expect(yomi3.length).toBeGreaterThan(8);
 });
