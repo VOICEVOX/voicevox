@@ -1,32 +1,34 @@
 <template>
   <div
     class="note"
+    :class="{
+      selected: noteState === 'SELECTED',
+      overlapping: noteState === 'OVERLAPPING',
+    }"
     :style="{
+      width: `${width}px`,
+      height: `${height}px`,
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
   >
-    <!-- NOTE: q-inputへの変更 / 表示面+速度面から、クリック時のみinputを表示に変更予定 -->
-    <input
-      type="text"
-      :value="note.lyric"
-      class="note-lyric"
-      @input="setLyric"
-    />
-    <div
-      class="note-bar"
-      :class="{
-        selected: noteState === 'SELECTED',
-        overlapping: noteState === 'OVERLAPPING',
-      }"
-      :style="{
-        width: `${barWidth}px`,
-        height: `${barHeight}px`,
-      }"
-      @mousedown.stop="onBarMouseDown"
-    >
+    <div class="note-lyric" @mousedown.stop="onLyricMouseDown">
+      {{ lyric }}
+    </div>
+    <div class="note-bar" @mousedown.stop="onBodyMouseDown">
       <div class="note-left-edge" @mousedown.stop="onLeftEdgeMouseDown"></div>
       <div class="note-right-edge" @mousedown.stop="onRightEdgeMouseDown"></div>
     </div>
+    <input
+      v-if="showLyricInput"
+      v-model.lazy.trim="lyric"
+      v-focus
+      type="text"
+      class="note-lyric-input"
+      @mousedown.stop
+      @dblclick.stop
+      @keydown.stop="onLyricInputKeyDown"
+      @blur="onLyricInputBlur"
+    />
   </div>
 </template>
 
@@ -44,11 +46,19 @@ type NoteState = "NONE" | "SELECTED" | "OVERLAPPING";
 
 export default defineComponent({
   name: "SingSequencerNote",
+  directives: {
+    focus: { mounted: (el: HTMLElement) => el.focus() },
+  },
   props: {
     note: { type: Object as PropType<Note>, required: true },
     isSelected: { type: Boolean },
   },
-  emits: ["bodyMousedown", "rightEdgeMousedown", "leftEdgeMousedown"],
+  emits: [
+    "bodyMousedown",
+    "rightEdgeMousedown",
+    "leftEdgeMousedown",
+    "lyricMouseDown",
+  ],
   setup(props, { emit }) {
     const store = useStore();
     const state = store.state;
@@ -63,8 +73,8 @@ export default defineComponent({
       const noteNumber = props.note.noteNumber;
       return noteNumberToBaseY(noteNumber + 0.5) * zoomY.value;
     });
-    const barHeight = computed(() => getKeyBaseHeight() * zoomY.value);
-    const barWidth = computed(() => {
+    const height = computed(() => getKeyBaseHeight() * zoomY.value);
+    const width = computed(() => {
       const noteStartTicks = props.note.position;
       const noteEndTicks = props.note.position + props.note.duration;
       const noteStartBaseX = tickToBaseX(noteStartTicks, tpqn.value);
@@ -80,18 +90,23 @@ export default defineComponent({
       }
       return "NONE";
     });
+    const lyric = computed({
+      get() {
+        return props.note.lyric;
+      },
+      set(value) {
+        if (!value) {
+          return;
+        }
+        const note: Note = { ...props.note, lyric: value };
+        store.dispatch("UPDATE_NOTES", { notes: [note] });
+      },
+    });
+    const showLyricInput = computed(() => {
+      return state.editingLyricNoteId === props.note.id;
+    });
 
-    const setLyric = (event: Event) => {
-      if (!(event.target instanceof HTMLInputElement)) {
-        return;
-      }
-      if (event.target.value) {
-        const lyric = event.target.value;
-        store.dispatch("UPDATE_NOTES", { notes: [{ ...props.note, lyric }] });
-      }
-    };
-
-    const onBarMouseDown = (event: MouseEvent) => {
+    const onBodyMouseDown = (event: MouseEvent) => {
       emit("bodyMousedown", event);
     };
 
@@ -103,18 +118,55 @@ export default defineComponent({
       emit("leftEdgeMousedown", event);
     };
 
+    const onLyricMouseDown = (event: MouseEvent) => {
+      emit("lyricMouseDown", event);
+    };
+
+    const onLyricInputKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Tab") {
+        event.preventDefault();
+        const noteId = props.note.id;
+        const notes = state.score.notes;
+        const index = notes.findIndex((value) => value.id === noteId);
+        if (index === -1) {
+          return;
+        }
+        if (event.shiftKey && index - 1 < 0) {
+          return;
+        }
+        if (!event.shiftKey && index + 1 >= notes.length) {
+          return;
+        }
+        const nextNoteId = notes[index + (event.shiftKey ? -1 : 1)].id;
+        store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
+      }
+      if (event.key === "Enter") {
+        store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
+      }
+    };
+
+    const onLyricInputBlur = () => {
+      if (state.editingLyricNoteId === props.note.id) {
+        store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
+      }
+    };
+
     return {
       zoomX,
       zoomY,
       positionX,
       positionY,
-      barHeight,
-      barWidth,
+      height,
+      width,
       noteState,
-      setLyric,
-      onBarMouseDown,
+      lyric,
+      showLyricInput,
+      onBodyMouseDown,
       onRightEdgeMouseDown,
       onLeftEdgeMouseDown,
+      onLyricMouseDown,
+      onLyricInputKeyDown,
+      onLyricInputBlur,
     };
   },
 });
@@ -128,47 +180,61 @@ export default defineComponent({
   position: absolute;
   top: 0;
   left: 0;
+
+  &.selected {
+    // 色は仮
+    .note-bar {
+      background-color: hsl(33, 100%, 50%);
+      border-color: hsl(33, 100%, 78%);
+    }
+
+    .note-lyric {
+      border-color: hsl(33, 100%, 84%);
+    }
+  }
+
+  &.overlapping {
+    .note-bar {
+      background-color: hsl(130, 35%, 85%);
+      border-color: hsl(130, 35%, 90%);
+    }
+  }
 }
 
 .note-lyric {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% - 3px);
+  min-width: min(22px, 100%);
+  max-width: 100%;
+  padding: 0 1px 2px;
   background: white;
-  border: 0;
-  border-bottom: 1px solid colors.$primary;
   color: colors.$display;
+  border: 1px solid hsl(130, 35%, 88%);
+  border-radius: 3px;
   font-size: 12px;
   font-weight: bold;
   font-feature-settings: "palt" 1;
   letter-spacing: 0.05em;
-  outline: none;
-  padding: 0;
-  position: absolute;
-  bottom: calc(100% - 1px);
-  left: 0;
-  width: 24px;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .note-bar {
-  position: relative;
+  position: absolute;
+  width: calc(100% + 1px);
+  height: 100%;
   background-color: colors.$primary;
-  border-color: rgba(255, 255, 255, 0.5);
-  border-width: 1px;
+  border: 1px solid hsl(130, 35%, 86%);
   border-radius: 2px;
   cursor: move;
-
-  &.selected {
-    background-color: darkorange; // 仮
-  }
-
-  &.overlapping {
-    background-color: rgba(colors.$primary-rgb, 0.5);
-  }
 }
 
 .note-left-edge {
   position: absolute;
   top: 0;
-  left: -6px;
-  width: 12px;
+  left: -2px;
+  width: 6px;
   height: 100%;
   cursor: ew-resize;
 }
@@ -176,9 +242,17 @@ export default defineComponent({
 .note-right-edge {
   position: absolute;
   top: 0;
-  right: -6px;
-  width: 12px;
+  right: -2px;
+  width: 6px;
   height: 100%;
   cursor: ew-resize;
+}
+
+.note-lyric-input {
+  position: absolute;
+  top: 1px;
+  width: 40px;
+  border: 1px solid hsl(33, 100%, 73%);
+  border-radius: 3px;
 }
 </style>

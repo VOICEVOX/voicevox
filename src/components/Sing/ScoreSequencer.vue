@@ -18,7 +18,7 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
-      @mousedown="startPreview($event, 'ADD')"
+      @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
       @dblclick="onDoubleClick"
@@ -95,18 +95,20 @@
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
-        @body-mousedown="startPreview($event, 'MOVE', note)"
-        @right-edge-mousedown="startPreview($event, 'RESIZE_RIGHT', note)"
-        @left-edge-mousedown="startPreview($event, 'RESIZE_LEFT', note)"
+        @body-mousedown="onNoteBodyMouseDown($event, note)"
+        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
+        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
       <sequencer-note
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
         is-selected
-        @body-mousedown="startPreview($event, 'MOVE', note)"
-        @right-edge-mousedown="startPreview($event, 'RESIZE_RIGHT', note)"
-        @left-edge-mousedown="startPreview($event, 'RESIZE_LEFT', note)"
+        @body-mousedown="onNoteBodyMouseDown($event, note)"
+        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
+        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
     </div>
     <div
@@ -315,6 +317,7 @@ export default defineComponent({
     let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
     let edited = false;
     // ダブルクリック
+    let mouseDownNoteId: string | undefined;
     const clickedNoteIds: [string | undefined, string | undefined] = [
       undefined,
       undefined,
@@ -573,9 +576,6 @@ export default defineComponent({
       dragStartNoteNumber = cursorNoteNumber;
       draggingNoteId = note.id;
       edited = false;
-      if (event.detail === 1) {
-        cancelDoubleClick = false;
-      }
       copiedNotesForPreview.clear();
       for (const copiedNote of copiedNotes) {
         copiedNotesForPreview.set(copiedNote.id, copiedNote);
@@ -583,6 +583,43 @@ export default defineComponent({
       previewNotes.value = copiedNotes;
       nowPreviewing.value = true;
       previewRequestId = requestAnimationFrame(preview);
+    };
+
+    const onNoteMouseDown = (event: MouseEvent, note: Note) => {
+      mouseDownNoteId = note.id;
+      if (event.detail === 1) {
+        cancelDoubleClick = false;
+      }
+    };
+
+    const onNoteBodyMouseDown = (event: MouseEvent, note: Note) => {
+      startPreview(event, "MOVE", note);
+      onNoteMouseDown(event, note);
+    };
+
+    const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
+      startPreview(event, "RESIZE_LEFT", note);
+      onNoteMouseDown(event, note);
+    };
+
+    const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
+      startPreview(event, "RESIZE_RIGHT", note);
+      onNoteMouseDown(event, note);
+    };
+
+    const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
+      store.dispatch("DESELECT_ALL_NOTES");
+      store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+      store.dispatch("PLAY_PREVIEW_SOUND", {
+        noteNumber: note.noteNumber,
+        duration: PREVIEW_SOUND_DURATION,
+      });
+      onNoteMouseDown(event, note);
+    };
+
+    const onMouseDown = (event: MouseEvent) => {
+      startPreview(event, "ADD");
+      mouseDownNoteId = undefined;
     };
 
     const onMouseMove = (event: MouseEvent) => {
@@ -599,13 +636,16 @@ export default defineComponent({
 
     const onMouseUp = () => {
       clickedNoteIds[0] = clickedNoteIds[1];
-      clickedNoteIds[1] = nowPreviewing.value ? draggingNoteId : undefined;
+      clickedNoteIds[1] = mouseDownNoteId;
       if (!nowPreviewing.value) {
         return;
       }
       cancelAnimationFrame(previewRequestId);
       if (previewMode === "ADD") {
         store.dispatch("ADD_NOTES", { notes: previewNotes.value });
+        store.dispatch("SELECT_NOTES", {
+          noteIds: previewNotes.value.map((value) => value.id),
+        });
         cancelDoubleClick = true;
       } else if (edited) {
         store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
@@ -628,7 +668,9 @@ export default defineComponent({
       ) {
         return;
       }
-      store.dispatch("REMOVE_NOTES", { noteIds: [clickedNoteIds[1]] });
+      store.dispatch("SET_EDITING_LYRIC_NOTE_ID", {
+        noteId: clickedNoteIds[1],
+      });
     };
 
     // キーボードイベント
@@ -896,9 +938,13 @@ export default defineComponent({
       unselectedNotes,
       setZoomX,
       setZoomY,
+      onNoteBodyMouseDown,
+      onNoteLeftEdgeMouseDown,
+      onNoteRightEdgeMouseDown,
+      onNoteLyricMouseDown,
+      onMouseDown,
       onMouseMove,
       onMouseUp,
-      startPreview,
       onDoubleClick,
       onWheel,
       onScroll,

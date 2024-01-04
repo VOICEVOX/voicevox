@@ -478,10 +478,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SCORE: {
     mutation(state, { score }: { score: Score }) {
-      const oldNotes = state.score.notes;
-      state.score = score;
+      overlappingNotesDetector.removeNotes(state.score.notes);
+      state.overlappingNoteIds.clear();
+      state.editingLyricNoteId = undefined;
       state.selectedNoteIds.clear();
-      overlappingNotesDetector.removeNotes(oldNotes);
+      state.score = score;
       overlappingNotesDetector.addNotes(score.notes);
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
@@ -648,15 +649,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   ADD_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
-      const noteIds = notes.map((value) => value.id);
       const scoreNotes = [...state.score.notes, ...notes];
       scoreNotes.sort((a, b) => a.position - b.position);
       state.score.notes = scoreNotes;
-      const selectedNoteIds = new Set(state.selectedNoteIds);
-      for (const noteId of noteIds) {
-        selectedNoteIds.add(noteId);
-      }
-      state.selectedNoteIds = selectedNoteIds;
       overlappingNotesDetector.addNotes(notes);
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
@@ -712,17 +707,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const notes = state.score.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
-      state.score.notes = state.score.notes.filter((value) => {
-        return !noteIdsSet.has(value.id);
-      });
-      const selectedNoteIds = new Set(state.selectedNoteIds);
-      for (const noteId of noteIds) {
-        selectedNoteIds.delete(noteId);
-      }
-      state.selectedNoteIds = selectedNoteIds;
       overlappingNotesDetector.removeNotes(notes);
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
+      if (
+        state.editingLyricNoteId != undefined &&
+        noteIdsSet.has(state.editingLyricNoteId)
+      ) {
+        state.editingLyricNoteId = undefined;
+      }
+      for (const noteId of noteIds) {
+        state.selectedNoteIds.delete(noteId);
+      }
+      state.score.notes = state.score.notes.filter((value) => {
+        return !noteIdsSet.has(value.id);
+      });
     },
     async action(
       { state, commit, dispatch },
@@ -742,11 +741,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECT_NOTES: {
     mutation(state, { noteIds }: { noteIds: string[] }) {
-      const selectedNoteIds = new Set(state.selectedNoteIds);
       for (const noteId of noteIds) {
-        selectedNoteIds.add(noteId);
+        state.selectedNoteIds.add(noteId);
       }
-      state.selectedNoteIds = selectedNoteIds;
     },
     async action({ state, commit }, { noteIds }: { noteIds: string[] }) {
       const scoreNotes = state.score.notes;
@@ -760,6 +757,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   DESELECT_ALL_NOTES: {
     mutation(state) {
+      state.editingLyricNoteId = undefined;
       state.selectedNoteIds = new Set();
     },
     async action({ commit }) {
@@ -772,6 +770,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
 
       dispatch("RENDER");
+    },
+  },
+
+  SET_EDITING_LYRIC_NOTE_ID: {
+    mutation(state, { noteId }: { noteId?: string }) {
+      if (noteId != undefined && !state.selectedNoteIds.has(noteId)) {
+        state.selectedNoteIds.clear();
+        state.selectedNoteIds.add(noteId);
+      }
+      state.editingLyricNoteId = noteId;
+    },
+    async action({ state, commit }, { noteId }: { noteId?: string }) {
+      const scoreNotes = state.score.notes;
+      const existingIds = new Set(scoreNotes.map((value) => value.id));
+      if (noteId != undefined && !existingIds.has(noteId)) {
+        throw new Error("The note id is invalid.");
+      }
+      commit("SET_EDITING_LYRIC_NOTE_ID", { noteId });
     },
   },
 
