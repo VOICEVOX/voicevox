@@ -112,7 +112,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.os }}
           path: playwright-report
 
   lint:
