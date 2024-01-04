@@ -98,7 +98,7 @@
         @body-mousedown="onNoteBodyMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-mouse-down="onNoteLyricMouseDown(note)"
       />
       <sequencer-note
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
@@ -108,7 +108,7 @@
         @body-mousedown="onNoteBodyMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-mouse-down="onNoteLyricMouseDown(note)"
       />
     </div>
     <div
@@ -200,6 +200,11 @@ import {
 import { Note } from "@/store/type";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
+
+type ClickedNoteInfo = {
+  id: string;
+  edited: boolean;
+};
 
 export default defineComponent({
   name: "SingScoreSequencer",
@@ -318,11 +323,7 @@ export default defineComponent({
     let edited = false;
     // ダブルクリック
     let mouseDownNoteId: string | undefined;
-    const clickedNoteIds: [string | undefined, string | undefined] = [
-      undefined,
-      undefined,
-    ];
-    let cancelDoubleClick = false;
+    let clickedNoteInfos: (ClickedNoteInfo | undefined)[] = [];
 
     const previewAdd = () => {
       const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
@@ -575,7 +576,7 @@ export default defineComponent({
       dragStartTicks = cursorTicks;
       dragStartNoteNumber = cursorNoteNumber;
       draggingNoteId = note.id;
-      edited = false;
+      edited = mode === "ADD";
       copiedNotesForPreview.clear();
       for (const copiedNote of copiedNotes) {
         copiedNotesForPreview.set(copiedNote.id, copiedNote);
@@ -585,41 +586,33 @@ export default defineComponent({
       previewRequestId = requestAnimationFrame(preview);
     };
 
-    const onNoteMouseDown = (event: MouseEvent, note: Note) => {
-      mouseDownNoteId = note.id;
-      if (event.detail === 1) {
-        cancelDoubleClick = false;
-      }
-    };
-
     const onNoteBodyMouseDown = (event: MouseEvent, note: Note) => {
       startPreview(event, "MOVE", note);
-      onNoteMouseDown(event, note);
+      mouseDownNoteId = note.id;
     };
 
     const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
       startPreview(event, "RESIZE_LEFT", note);
-      onNoteMouseDown(event, note);
+      mouseDownNoteId = note.id;
     };
 
     const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
       startPreview(event, "RESIZE_RIGHT", note);
-      onNoteMouseDown(event, note);
+      mouseDownNoteId = note.id;
     };
 
-    const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
+    const onNoteLyricMouseDown = (note: Note) => {
       store.dispatch("DESELECT_ALL_NOTES");
       store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
       store.dispatch("PLAY_PREVIEW_SOUND", {
         noteNumber: note.noteNumber,
         duration: PREVIEW_SOUND_DURATION,
       });
-      onNoteMouseDown(event, note);
+      mouseDownNoteId = note.id;
     };
 
     const onMouseDown = (event: MouseEvent) => {
       startPreview(event, "ADD");
-      mouseDownNoteId = undefined;
     };
 
     const onMouseMove = (event: MouseEvent) => {
@@ -634,42 +627,60 @@ export default defineComponent({
       currentCursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
     };
 
-    const onMouseUp = () => {
-      clickedNoteIds[0] = clickedNoteIds[1];
-      clickedNoteIds[1] = mouseDownNoteId;
+    const onMouseUp = (event: MouseEvent) => {
+      if (event.detail === 1) {
+        clickedNoteInfos = [];
+      }
+      if (mouseDownNoteId === undefined) {
+        clickedNoteInfos.push(undefined);
+      } else {
+        clickedNoteInfos.push({
+          id: mouseDownNoteId,
+          edited: nowPreviewing.value && edited,
+        });
+        mouseDownNoteId = undefined;
+      }
+
       if (!nowPreviewing.value) {
         return;
       }
       cancelAnimationFrame(previewRequestId);
-      if (previewMode === "ADD") {
-        store.dispatch("ADD_NOTES", { notes: previewNotes.value });
-        store.dispatch("SELECT_NOTES", {
-          noteIds: previewNotes.value.map((value) => value.id),
-        });
-        cancelDoubleClick = true;
-      } else if (edited) {
-        store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
-        cancelDoubleClick = true;
-      }
-      if (previewNotes.value.length === 1) {
-        store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: previewNotes.value[0].noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
-        });
+      if (edited) {
+        if (previewMode === "ADD") {
+          store.dispatch("ADD_NOTES", { notes: previewNotes.value });
+          store.dispatch("SELECT_NOTES", {
+            noteIds: previewNotes.value.map((value) => value.id),
+          });
+        } else {
+          store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
+        }
+        if (previewNotes.value.length === 1) {
+          store.dispatch("PLAY_PREVIEW_SOUND", {
+            noteNumber: previewNotes.value[0].noteNumber,
+            duration: PREVIEW_SOUND_DURATION,
+          });
+        }
       }
       nowPreviewing.value = false;
     };
 
     const onDoubleClick = () => {
-      if (
-        cancelDoubleClick ||
-        clickedNoteIds[0] !== clickedNoteIds[1] ||
-        clickedNoteIds[1] == undefined
-      ) {
+      if (clickedNoteInfos.length < 2) {
         return;
       }
+      if (clickedNoteInfos.some((value) => value?.edited ?? false)) {
+        return;
+      }
+      if (clickedNoteInfos[0] === undefined) {
+        return;
+      }
+      for (let i = 1; i < clickedNoteInfos.length; i++) {
+        if (clickedNoteInfos[i - 1]?.id !== clickedNoteInfos[i]?.id) {
+          return;
+        }
+      }
       store.dispatch("SET_EDITING_LYRIC_NOTE_ID", {
-        noteId: clickedNoteIds[1],
+        noteId: clickedNoteInfos[0].id,
       });
     };
 
