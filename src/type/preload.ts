@@ -231,7 +231,7 @@ export interface Sandbox {
     key: Key,
     newValue: ConfigType[Key]
   ): Promise<ConfigType[Key]>;
-  getTempProject(): Promise<Result<TempProjectType>>;
+  getTempProject(): Promise<Result<WorkspaceType>>;
   setTempProject(tempProject: ArrayBuffer): Promise<Result<undefined>>;
   setEngineSetting(
     engineId: EngineId,
@@ -647,7 +647,8 @@ export interface MessageBoxReturnValue {
 export const SandboxKey = "electron" as const;
 
 /**
- * プロジェクト一時ファイル
+ * 一時プロジェクト情報
+ * プロジェクトの復元に必要な情報を保持する
  * 変更時はマイグレーションが必要
  */
 export type TempProjectType =
@@ -657,19 +658,27 @@ export type TempProjectType =
       project: ProjectType;
       projectFilePath?: string;
       commandStoreState: CommandStoreState;
-      projectSavedAt: number | null; // projectFilePath のファイル保存時刻（外部で編集された場合も値は変わらない）
-      fileModifiedAt?: number; // projectFilePath のファイル物理変更時刻
     }
   | {
       /** プロジェクトが保存されている状態 */
       state: "saved";
-      projectFilePath: string;
       commandStoreState: CommandStoreState;
-      projectSavedAt: number;
-      fileModifiedAt: number;
     }
   | {
       /** プロジェクト一時ファイルの初期状態 */
       state: "none";
-      projectSavedAt: null;
     };
+
+/**
+ * 起動時のプロジェクト自動読み込みに必要な情報
+ */
+export type AutoLoadProjectInfo = {
+  projectFilePath?: string;
+  projectSavedAt: number | null; // projectFilePath のファイル保存時刻（外部で編集された場合も値は変わらない）
+  fileModifiedAt?: number; // projectFilePath のファイル物理変更時刻
+};
+
+export type WorkspaceType = {
+  tempProject: TempProjectType;
+  autoLoadProjectInfo: AutoLoadProjectInfo;
+};

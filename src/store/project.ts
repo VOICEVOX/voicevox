@@ -13,7 +13,7 @@ import {
   engineIdSchema,
   speakerIdSchema,
   styleIdSchema,
-  TempProjectType,
+  WorkspaceType,
 } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { escapeHtml } from "@/helpers/htmlHelper";
@@ -517,23 +517,28 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         }
 
-        const loadedTempProjectData: TempProjectType = await window.electron
+        const loadedTempProjectData: WorkspaceType = await window.electron
           .getTempProject()
           .then(getValueOrThrow);
 
-        const projectData: TempProjectType = {
-          state: "unSaved",
-          project: {
-            appVersion: appInfos.version,
-            audioKeys,
-            audioItems,
+        const projectData: WorkspaceType = {
+          tempProject: {
+            state: "unSaved",
+            project: {
+              appVersion: appInfos.version,
+              audioKeys,
+              audioItems,
+            },
+            commandStoreState: {
+              undoCommands: state.undoCommands,
+              redoCommands: state.redoCommands,
+            },
           },
-          projectFilePath: state.projectFilePath,
-          commandStoreState: {
-            undoCommands: state.undoCommands,
-            redoCommands: state.redoCommands,
+          autoLoadProjectInfo: {
+            projectFilePath: state.projectFilePath ?? "",
+            projectSavedAt:
+              loadedTempProjectData.autoLoadProjectInfo.projectSavedAt, // プロジェクトファイルの保存時刻を引き継ぐ
           },
-          projectSavedAt: loadedTempProjectData.projectSavedAt, // プロジェクトファイルの保存時刻を引き継ぐ
         };
 
         const buf = new TextEncoder().encode(
@@ -551,9 +556,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   RESET_TEMP_PROJECT_FILE: {
     async action(context) {
-      let projectData: TempProjectType = {
-        state: "none",
-        projectSavedAt: null,
+      let projectData: WorkspaceType = {
+        tempProject: {
+          state: "none",
+        },
+        autoLoadProjectInfo: {
+          projectSavedAt: null,
+        },
       };
 
       // 自動読み込み機能有効時プロジェクトファイルのパスを保存する
@@ -562,14 +571,19 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         context.state.projectFilePath
       ) {
         projectData = {
-          state: "saved",
-          projectFilePath: context.state.projectFilePath,
-          commandStoreState: {
-            undoCommands: context.state.undoCommands,
-            redoCommands: context.state.redoCommands,
+          tempProject: {
+            state: "saved",
+            commandStoreState: {
+              undoCommands: context.state.undoCommands,
+              redoCommands: context.state.redoCommands,
+            },
           },
-          projectSavedAt: new Date().getTime(),
-          fileModifiedAt: new Date().getTime(),
+
+          autoLoadProjectInfo: {
+            projectFilePath: context.state.projectFilePath,
+            projectSavedAt: new Date().getTime(),
+            fileModifiedAt: new Date().getTime(),
+          },
         };
       }
 
@@ -591,19 +605,19 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
       try {
-        const tempProjectData: TempProjectType = await window.electron
+        const { tempProject, autoLoadProjectInfo } = await window.electron
           .getTempProject()
           .then(getValueOrThrow);
 
-        if (tempProjectData.state === "none") {
+        if (tempProject.state === "none") {
           return;
         }
 
         const isFileModified =
-          tempProjectData.projectFilePath &&
-          Math.floor((tempProjectData.fileModifiedAt ?? 0) / 1000) !==
-            Math.floor((tempProjectData.projectSavedAt ?? 0) / 1000);
-        if (tempProjectData.state === "saved") {
+          autoLoadProjectInfo.projectFilePath &&
+          Math.floor((autoLoadProjectInfo.fileModifiedAt ?? 0) / 1000) !==
+            Math.floor((autoLoadProjectInfo.projectSavedAt ?? 0) / 1000);
+        if (tempProject.state === "saved") {
           // プロジェクト保存先のファイル変更チェック
           if (isFileModified) {
             const applyRestoredProject = await context.dispatch(
@@ -625,14 +639,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           // 自動読み込み機能有効時保存されたプロジェクトを復元する
           if (context.state.savingSetting.enableAutoLoad) {
             await context.dispatch("LOAD_PROJECT_FILE", {
-              filePath: tempProjectData.projectFilePath,
+              filePath: autoLoadProjectInfo.projectFilePath,
               confirm: false,
             });
 
             // undo/redo の復元
             context.dispatch(
               "RESTORE_COMMAND_STATE",
-              tempProjectData.commandStoreState
+              tempProject.commandStoreState
             );
           }
           return;
@@ -648,9 +662,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                 : ""
             }
             <br />復元対象 : ${
-              tempProjectData.projectFilePath
+              autoLoadProjectInfo.projectFilePath
                 ? "<span style='overflow-wrap: break-word;'>" +
-                  escapeHtml(tempProjectData.projectFilePath) +
+                  escapeHtml(autoLoadProjectInfo.projectFilePath) +
                   "</span>"
                 : "untitled"
             }`,
@@ -663,7 +677,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         if (applyRestoredProject === "OK") {
           // 復元ボタン押下時
           // プロジェクト保存先の復元
-          const filePath = tempProjectData.projectFilePath;
+          const filePath = autoLoadProjectInfo.projectFilePath;
           if (filePath) {
             context.commit("SET_PROJECT_FILEPATH", { filePath });
           }
@@ -672,7 +686,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
           const parsedProjectData = projectSchema.parse(
-            tempProjectData.project
+            tempProject.project
           ) as ProjectType;
           const { audioItems, audioKeys } = parsedProjectData;
 
@@ -688,7 +702,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           // undo/redo の復元
           context.dispatch(
             "RESTORE_COMMAND_STATE",
-            tempProjectData.commandStoreState
+            tempProject.commandStoreState
           );
 
           return;

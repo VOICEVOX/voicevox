@@ -11,7 +11,7 @@ import {
   EngineSetting,
   EngineId,
   MessageBoxReturnValue,
-  TempProjectType,
+  WorkspaceType,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -262,7 +262,7 @@ export type IpcIHData = {
 
   GET_TEMP_PROJECT: {
     args: [];
-    return: Result<TempProjectType>;
+    return: Result<WorkspaceType>;
   };
 
   SET_TEMP_PROJECT: {

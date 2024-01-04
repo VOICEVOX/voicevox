@@ -28,7 +28,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
-  TempProjectType,
+  WorkspaceType,
 } from "./type/preload";
 import {
   ContactTextFileName,
@@ -850,9 +850,13 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
 ipcMainHandle("GET_TEMP_PROJECT", async () => {
   try {
     if (!fs.existsSync(tempProjectPath)) {
-      const defaultTempProject: TempProjectType = {
-        state: "none",
-        projectSavedAt: null,
+      const defaultTempProject: WorkspaceType = {
+        tempProject: {
+          state: "none",
+        },
+        autoLoadProjectInfo: {
+          projectSavedAt: null,
+        },
       };
       const buf = new TextEncoder().encode(
         JSON.stringify(defaultTempProject)
@@ -860,20 +864,25 @@ ipcMainHandle("GET_TEMP_PROJECT", async () => {
       await setTempProject(buf);
     }
 
-    const tempProject: TempProjectType = JSON.parse(
+    const workspace: WorkspaceType = JSON.parse(
       await fs.promises.readFile(tempProjectPath, {
         encoding: "utf-8",
       })
     );
 
-    if (tempProject.state !== "none" && tempProject.projectFilePath) {
-      const state = await fs.promises.stat(tempProject.projectFilePath);
-      tempProject.fileModifiedAt = state.mtime.getTime();
+    if (
+      workspace.tempProject.state !== "none" &&
+      workspace.autoLoadProjectInfo.projectFilePath
+    ) {
+      const state = await fs.promises.stat(
+        workspace.autoLoadProjectInfo.projectFilePath
+      );
+      workspace.autoLoadProjectInfo.fileModifiedAt = state.mtime.getTime();
 
-      return success(tempProject);
+      return success(workspace);
     }
 
-    return success(tempProject);
+    return success(workspace);
   } catch (e) {
     const a = e as SystemError;
     return failure(a.code, a);
