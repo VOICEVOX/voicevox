@@ -57,6 +57,14 @@ describe("store/vuex.js test", () => {
         isMaximized: false,
         isMultiEngineOffMode: false,
         savedLastCommandUnixMillisec: null,
+        workspace: {
+          tempProject: {
+            state: "none",
+          },
+          autoLoadProjectInfo: {
+            projectSavedAt: null,
+          },
+        },
         savingSetting: {
           fileEncoding: "UTF-8",
           fileNamePattern: "",
@@ -267,5 +275,7 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.confirmedTips.tweakableSliderByScroll, false);
     assert.equal(store.state.confirmedTips.engineStartedOnAltPort, false);
     assert.equal(store.state.confirmedTips.notifyOnGenerate, false);
+    assert.isNotEmpty(store.state.workspace);
+    assert.equal(store.state.workspace.tempProject.state, "none");
   });
 });

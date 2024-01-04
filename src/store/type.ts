@@ -48,6 +48,7 @@ import {
   StyleId,
   AudioKey,
   PresetKey,
+  WorkspaceType,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -995,6 +996,7 @@ export type IndexStoreTypes = {
 export type ProjectStoreState = {
   projectFilePath?: string;
   savedLastCommandUnixMillisec: number | null;
+  workspace: WorkspaceType;
 };
 
 export type ProjectStoreTypes = {
@@ -1034,6 +1036,19 @@ export type ProjectStoreTypes = {
     action(palyoad: {
       additionalMessage?: string;
     }): "saved" | "discarded" | "canceled";
+  };
+
+  SET_WORKSPACE: {
+    mutation: { workspace: WorkspaceType };
+    action(payload: { workspace: WorkspaceType }): void;
+  };
+
+  HYDRATE_PROJECT_STORE: {
+    action(): void;
+  };
+
+  GENERATE_WORKSPACE: {
+    action(payload: { tempProjectState: "unSaved" | "saved" | "none" }): void;
   };
 
   IS_EDITED: {

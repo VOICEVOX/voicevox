@@ -22,6 +22,14 @@ const DEFAULT_SAMPLING_RATE = 24000;
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandUnixMillisec: null,
+  workspace: {
+    tempProject: {
+      state: "none",
+    },
+    autoLoadProjectInfo: {
+      projectSavedAt: null,
+    },
+  },
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -507,44 +515,15 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    * プロジェクトを一時ファイルに保存する
    */
   SAVE_TEMP_PROJECT_FILE: {
-    async action({ state }) {
+    async action(context) {
       try {
-        const appInfos = await window.electron.getAppInfos();
-        const { audioItems, audioKeys } = state;
+        const { audioItems, audioKeys } = context.state;
 
         // 初期状態の audioItems の場合
         if (audioKeys.length <= 1 && !audioItems[audioKeys[0]].text) {
           return;
         }
-
-        const loadedTempProjectData: WorkspaceType = await window.electron
-          .getTempProject()
-          .then(getValueOrThrow);
-
-        const projectData: WorkspaceType = {
-          tempProject: {
-            state: "unSaved",
-            project: {
-              appVersion: appInfos.version,
-              audioKeys,
-              audioItems,
-            },
-            commandStoreState: {
-              undoCommands: state.undoCommands,
-              redoCommands: state.redoCommands,
-            },
-          },
-          autoLoadProjectInfo: {
-            projectFilePath: state.projectFilePath ?? "",
-            projectSavedAt:
-              loadedTempProjectData.autoLoadProjectInfo.projectSavedAt, // プロジェクトファイルの保存時刻を引き継ぐ
-          },
-        };
-
-        const buf = new TextEncoder().encode(
-          JSON.stringify(projectData)
-        ).buffer;
-        await window.electron.setTempProject(buf).then(getValueOrThrow);
+        context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "unSaved" });
       } catch (err) {
         window.electron.logError(err);
       }
@@ -556,44 +535,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   RESET_TEMP_PROJECT_FILE: {
     async action(context) {
-      let projectData: WorkspaceType = {
-        tempProject: {
-          state: "none",
-        },
-        autoLoadProjectInfo: {
-          projectSavedAt: null,
-        },
-      };
+      context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "none" });
 
       // 自動読み込み機能有効時プロジェクトファイルのパスを保存する
       if (
         context.state.savingSetting.enableAutoLoad &&
         context.state.projectFilePath
       ) {
-        projectData = {
-          tempProject: {
-            state: "saved",
-            commandStoreState: {
-              undoCommands: context.state.undoCommands,
-              redoCommands: context.state.redoCommands,
-            },
-          },
-
-          autoLoadProjectInfo: {
-            projectFilePath: context.state.projectFilePath,
-            projectSavedAt: new Date().getTime(),
-            fileModifiedAt: new Date().getTime(),
-          },
-        };
-      }
-
-      try {
-        const buf = new TextEncoder().encode(
-          JSON.stringify(projectData)
-        ).buffer;
-        await window.electron.setTempProject(buf).then(getValueOrThrow);
-      } catch (err) {
-        window.electron.logError(err);
+        context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "saved" });
       }
     },
   },
@@ -605,9 +554,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
       try {
-        const { tempProject, autoLoadProjectInfo } = await window.electron
-          .getTempProject()
-          .then(getValueOrThrow);
+        const { tempProject, autoLoadProjectInfo } = context.state.workspace;
 
         if (tempProject.state === "none") {
           return;
@@ -736,6 +683,104 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return;
       }
     }),
+  },
+
+  SET_WORKSPACE: {
+    mutation(state, { workspace }) {
+      state.workspace = workspace;
+    },
+    async action({ commit }, { workspace }) {
+      const buf = new TextEncoder().encode(JSON.stringify(workspace)).buffer;
+      await window.electron.setTempProject(buf).then(getValueOrThrow);
+
+      commit("SET_WORKSPACE", { workspace });
+    },
+  },
+
+  HYDRATE_PROJECT_STORE: {
+    async action({ commit }) {
+      try {
+        const workspace: WorkspaceType = await window.electron
+          .getTempProject()
+          .then(getValueOrThrow);
+
+        await commit("SET_WORKSPACE", { workspace });
+      } catch (e) {
+        window.electron.logError(e);
+      }
+    },
+  },
+
+  /**
+   * ワークスペース情報を生成し、一時ファイルに保存する
+   */
+  GENERATE_WORKSPACE: {
+    async action({ state, dispatch, commit }, { tempProjectState }) {
+      const backupState = state.workspace;
+      let workspace = state.workspace as WorkspaceType;
+
+      switch (tempProjectState) {
+        case "unSaved": {
+          const appInfos = await window.electron.getAppInfos();
+          const { audioItems, audioKeys } = state;
+
+          workspace = {
+            tempProject: {
+              state: "unSaved",
+              project: {
+                appVersion: appInfos.version,
+                audioKeys,
+                audioItems,
+              },
+              commandStoreState: {
+                undoCommands: state.undoCommands,
+                redoCommands: state.redoCommands,
+              },
+            },
+            autoLoadProjectInfo: {
+              projectFilePath: state.projectFilePath ?? "",
+              projectSavedAt:
+                state.workspace.autoLoadProjectInfo.projectSavedAt ?? null,
+            },
+          };
+          break;
+        }
+        case "saved":
+          workspace = {
+            tempProject: {
+              state: "saved",
+              commandStoreState: {
+                undoCommands: state.undoCommands,
+                redoCommands: state.redoCommands,
+              },
+            },
+
+            autoLoadProjectInfo: {
+              projectFilePath: state.projectFilePath,
+              projectSavedAt: new Date().getTime(),
+              fileModifiedAt: new Date().getTime(),
+            },
+          };
+          break;
+        case "none":
+          workspace = {
+            tempProject: {
+              state: "none",
+            },
+            autoLoadProjectInfo: {
+              projectSavedAt: null,
+            },
+          };
+      }
+
+      try {
+        await dispatch("SET_WORKSPACE", { workspace });
+      } catch (err) {
+        // ファイルの更新に失敗した場合はロールバック
+        commit("SET_WORKSPACE", { workspace: backupState });
+        window.electron.logError(err);
+      }
+    },
   },
 
   IS_EDITED: {
