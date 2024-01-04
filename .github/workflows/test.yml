@@ -168,6 +168,8 @@ jobs:
             git add tests/e2e/browser
             git commit -m "（スナップショットを更新）" -m "[skip ci]"
             git push
+          else
+            echo "No changes to commit"
           fi
 
   lint:
