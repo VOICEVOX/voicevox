@@ -38,8 +38,6 @@ jobs:
   # e2e テスト
   e2e-test:
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -139,16 +137,37 @@ jobs:
           name: playwright-report-${{ matrix.os }}
           path: playwright-report
 
-      - name: Commit and push updated snapshots
+      - name: Upload updated snapshots to artifact
         if: steps.check-whether-to-update-snapshots.outputs.updateSnapshots == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-snapshots-${{ matrix.os }}
+          path: tests/e2e/browser/*-snapshots/*
+
+  commit-snapshots:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: updated-snapshots-*
+          path: tests/e2e/browser
+          merge-multiple: true
+
+      - name: Commit updated snapshots
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./tests/e2e/browser
-          if git diff --cached --quiet; then
+          if git diff --quiet; then
             echo "No changes to commit"
             exit 0
           fi
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add tests/e2e/browser/
           git commit -m "（スナップショットを更新）" -m "[skip ci]"
           git push
 
