@@ -1,0 +1,3 @@
+[submodule "build/vendored/voicevox_engine"]
+	path = build/vendored/voicevox_engine
+	url = git@github.com:voicevox/voicevox_engine
