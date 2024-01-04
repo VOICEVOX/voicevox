@@ -148,12 +148,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    needs:
+      - e2e-test
     steps:
       - uses: actions/checkout@v3
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
-        continue-on-error: true
         with:
           pattern: updated-snapshots-*
           path: tests/e2e/browser
