@@ -631,7 +631,7 @@ export default defineComponent({
       if (event.detail === 1) {
         clickedNoteInfos = [];
       }
-      if (mouseDownNoteId === undefined) {
+      if (mouseDownNoteId == undefined) {
         clickedNoteInfos.push(undefined);
       } else {
         clickedNoteInfos.push({
@@ -671,7 +671,7 @@ export default defineComponent({
       if (clickedNoteInfos.some((value) => value?.edited ?? false)) {
         return;
       }
-      if (clickedNoteInfos[0] === undefined) {
+      if (clickedNoteInfos[0] == undefined) {
         return;
       }
       for (let i = 1; i < clickedNoteInfos.length; i++) {
