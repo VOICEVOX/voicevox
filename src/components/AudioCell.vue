@@ -5,6 +5,8 @@
     tabindex="-1"
     :class="{
       active: isActiveAudioCell,
+      // このクラスはテストで使われているので残す。
+      // TODO: テストをこのクラスに依存しないようにして、このクラスを消す。
       selected: isSelectedAudioCell && isMultiSelectEnabled,
       highlighted:
         isSelectedAudioCell &&
