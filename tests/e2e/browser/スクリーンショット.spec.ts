@@ -75,9 +75,16 @@ async function getSpeakerImages(): Promise<
   return speakerImages;
 }
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page }, testinfo) => {
   let speakers: Speaker[];
+  // Playwrightはデフォルトでスクリーンショットのファイル名にOSを含める。
+  // 色々な環境でスクリーンショットの更新を出来るようにするため、
+  // この挙動を無効化する。
+  // 参照： https://github.com/microsoft/playwright/issues/14218
+  testinfo.snapshotSuffix = "";
   const speakerImages = await getSpeakerImages();
+  // Voicevox Nemo EngineでもVoicevox Engineでも同じ結果が選られるように、
+  // GET /speakers、GET /speaker_infoの話者名、スタイル名、画像を差し替える。
   await page.route(/\/speakers$/, async (route) => {
     const response = await route.fetch();
     const json: Speaker[] = await response
