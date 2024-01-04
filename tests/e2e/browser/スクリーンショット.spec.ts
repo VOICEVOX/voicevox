@@ -50,11 +50,12 @@ async function getSpeakerImages(): Promise<
       femaleVoices.map(async (characterInfo) => {
         const characterInfoPath = path.join(characterInfoDir, characterInfo);
         const files = await fs.readdir(characterInfoPath);
-        const images = files.filter((file) => file.endsWith(".png"));
-        const portraitPath = images.find((image) =>
+        const portraitPath = files.find((image) =>
           image.startsWith("portrait")
         );
-        const iconPath = images.find((image) => image.startsWith("nemo_icon_"));
+        const iconPath = await fs
+          .readdir(path.join(characterInfoPath, "icons"))
+          .then((files) => files[0]);
         if (!portraitPath || !iconPath) {
           throw new Error(`portraitPath=${portraitPath}, iconPath=${iconPath}`);
         }
@@ -64,7 +65,7 @@ async function getSpeakerImages(): Promise<
           "base64"
         );
         const icon = await fs.readFile(
-          path.join(characterInfoPath, iconPath),
+          path.join(characterInfoPath, "icons", iconPath),
           "base64"
         );
 
