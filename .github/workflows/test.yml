@@ -38,6 +38,8 @@ jobs:
   # e2e テスト
   e2e-test:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -86,6 +88,19 @@ jobs:
           sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port=50021"],|' .env.test
           cp .env.test .env
 
+      - name: Check if commit message includes [update snapshots]
+        id: check-whether-to-update-snapshots
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commits = ${{ toJson(github.event.commits) }};
+            const updateSnapshots = commits.some((commit) =>
+              commit.message.toLowerCase().includes("[update snapshots]")
+            );
+            core.setOutput("updateSnapshots", updateSnapshots);
+            console.log(`updateSnapshots: ${updateSnapshots}`);
+
       - name: Run npm run test:browser-e2e
         run: |
           if [ -n "${{ runner.debug }}" ]; then
@@ -99,14 +114,24 @@ jobs:
 
       - name: Run npm run test:electron-e2e
         run: |
+          # shellcheck disable=SC2193
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
           fi
           if [[ ${{ matrix.os }} == ubuntu-* ]]; then
-            xvfb-run --auto-servernum npm run test:electron-e2e
+            function execute() {
+              xvfb-run --auto-servernum $@
+            }
           else
-            npm run test:electron-e2e
+            function execute() {
+              $@
+            }
           fi
+          ARGS=""
+          if [[ ${{ steps.check-whether-to-update-snapshots.outputs.updateSnapshots }} == 'true' ]]; then
+            ARGS="--update-snapshots"
+          fi
+          execute npm run test:electron-e2e -- $ARGS
 
       - name: Upload playwright report to artifact
         if: failure()
@@ -114,6 +139,19 @@ jobs:
         with:
           name: playwright-report-${{ matrix.os }}
           path: playwright-report
+
+      - name: Commit and push updated snapshots
+        if: steps.check-whether-to-update-snapshots.outputs.updateSnapshots == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add ./tests/e2e/browser
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "（スナップショットを更新）"
+          git push
 
   lint:
     runs-on: ubuntu-latest
