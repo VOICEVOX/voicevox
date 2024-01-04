@@ -107,18 +107,6 @@ jobs:
             export DEBUG="pw:browser*"
           fi
           if [[ ${{ matrix.os }} == ubuntu-* ]]; then
-            xvfb-run --auto-servernum npm run test:browser-e2e
-          else
-            npm run test:browser-e2e
-          fi
-
-      - name: Run npm run test:electron-e2e
-        run: |
-          # shellcheck disable=SC2193
-          if [ -n "${{ runner.debug }}" ]; then
-            export DEBUG="pw:browser*"
-          fi
-          if [[ ${{ matrix.os }} == ubuntu-* ]]; then
             function execute() {
               xvfb-run --auto-servernum $@
             }
@@ -131,7 +119,18 @@ jobs:
           if [[ ${{ steps.check-whether-to-update-snapshots.outputs.updateSnapshots }} == 'true' ]]; then
             ARGS="--update-snapshots"
           fi
-          execute npm run test:electron-e2e -- $ARGS
+          execute npm run test:browser-e2e -- $ARGS
+
+      - name: Run npm run test:electron-e2e
+        run: |
+          if [ -n "${{ runner.debug }}" ]; then
+            export DEBUG="pw:browser*"
+          fi
+          if [[ ${{ matrix.os }} == ubuntu-* ]]; then
+            xvfb-run --auto-servernum npm run test:electron-e2e
+          else
+            npm run test:electron-e2e
+          fi
 
       - name: Upload playwright report to artifact
         if: failure()
@@ -150,7 +149,7 @@ jobs:
             echo "No changes to commit"
             exit 0
           fi
-          git commit -m "（スナップショットを更新）"
+          git commit -m "（スナップショットを更新）" -m "[skip ci]"
           git push
 
   lint:
