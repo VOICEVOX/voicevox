@@ -9,8 +9,16 @@
         <progress-dialog />
 
         <!-- TODO: 複数エンジン対応 -->
+        <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
+        <div v-if="allEngineState === 'FAILED_STARTING'" class="waiting-engine">
+          <div>
+            エンジンの起動に失敗しました。エンジンの再起動をお試しください。
+          </div>
+        </div>
         <div
-          v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
+          v-else-if="
+            !isCompletedInitialStartup || allEngineState === 'STARTING'
+          "
           class="waiting-engine"
         >
           <div>
@@ -90,6 +98,7 @@
                         dragEventCounter = 0;
                         loadDraggedFile($event);
                       "
+                      @click="onAudioCellPaneClick"
                     >
                       <draggable
                         ref="cellsRef"
@@ -171,6 +180,11 @@
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
   <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
+  <update-notification-dialog
+    v-model="isUpdateNotificationDialogOpenComputed"
+    :latest-version="latestVersion"
+    :new-update-infos="newUpdateInfos"
+  />
 </template>
 
 <script setup lang="ts">
@@ -198,6 +212,8 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
+import UpdateNotificationDialog from "@/components/UpdateNotificationDialog.vue";
+import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
@@ -229,8 +245,8 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
   [
     "テキスト欄にフォーカスを戻す",
     () => {
-      if (activeAudioKey.value !== undefined) {
-        focusCell({ audioKey: activeAudioKey.value });
+      if (activeAudioKey.value != undefined) {
+        focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
       }
       return false; // this is the same with event.preventDefault()
     },
@@ -393,7 +409,7 @@ const addAudioItem = async () => {
   let presetKey: PresetKey | undefined = undefined;
   let baseAudioItem: AudioItem | undefined = undefined;
 
-  if (prevAudioKey !== undefined) {
+  if (prevAudioKey != undefined) {
     voice = store.state.audioItems[prevAudioKey].voice;
     presetKey = store.state.audioItems[prevAudioKey].presetKey;
     baseAudioItem = store.state.audioItems[prevAudioKey];
@@ -409,7 +425,7 @@ const addAudioItem = async () => {
     audioItem,
     prevAudioKey: activeAudioKey.value,
   });
-  audioCellRefs[newAudioKey].focusTextField();
+  audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
 };
 const duplicateAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
@@ -423,7 +439,7 @@ const duplicateAudioItem = async () => {
     audioItem: cloneDeep(prevAudioItem),
     prevAudioKey: activeAudioKey.value,
   });
-  audioCellRefs[newAudioKey].focusTextField();
+  audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
 };
 
 // Pane
@@ -475,8 +491,16 @@ watch(shouldShowPanes, (val, old) => {
 });
 
 // セルをフォーカス
-const focusCell = ({ audioKey }: { audioKey: AudioKey }) => {
-  audioCellRefs[audioKey].focusTextField();
+const focusCell = ({
+  audioKey,
+  focusTarget,
+}: {
+  audioKey: AudioKey;
+  focusTarget?: "root" | "textField";
+}) => {
+  audioCellRefs[audioKey].focusCell({
+    focusTarget: focusTarget ?? "textField",
+  });
 };
 
 // Electronのデフォルトのundo/redoを無効化
@@ -521,8 +545,18 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
     };
 
     // FIXME: UNDOができてしまうのでできれば直したい
-    store.dispatch("COMMAND_CHANGE_VOICE", { audioKey: first, voice: voice });
+    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+      audioKeys: [first],
+      voice: voice,
+    });
   }
+});
+
+// エディタのアップデート確認
+const { isCheckingFinished, latestVersion, newUpdateInfos } =
+  useFetchNewUpdateInfos();
+const isUpdateAvailable = computed(() => {
+  return isCheckingFinished.value && latestVersion.value !== "";
 });
 
 // ソフトウェアを初期化
@@ -565,11 +599,11 @@ onMounted(async () => {
     const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
       audioItem,
     });
-    focusCell({ audioKey: newAudioKey });
+    focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
 
     // 最初の話者を初期化
     store.dispatch("SETUP_SPEAKER", {
-      audioKey: newAudioKey,
+      audioKeys: [newAudioKey],
       engineId: audioItem.voice.engineId,
       styleId: audioItem.voice.styleId,
     });
@@ -607,6 +641,8 @@ onMounted(async () => {
     import.meta.env.MODE !== "development" &&
     store.state.acceptTerms !== "Accepted";
 
+  isUpdateNotificationDialogOpenComputed.value = isUpdateAvailable.value;
+
   isCompletedInitialStartup.value = true;
 });
 
@@ -620,7 +656,7 @@ const allEngineState = computed(() => {
   // 登録されているすべてのエンジンについて状態を確認する
   for (const engineId of store.state.engineIds) {
     const engineState: EngineState | undefined = engineStates[engineId];
-    if (engineState === undefined)
+    if (engineState == undefined)
       throw new Error(`No such engineState set: engineId == ${engineId}`);
 
     // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
@@ -637,7 +673,7 @@ const allEngineState = computed(() => {
 const isEngineWaitingLong = ref<boolean>(false);
 let engineTimer: number | undefined = undefined;
 watch(allEngineState, (newEngineState) => {
-  if (engineTimer !== undefined) {
+  if (engineTimer != undefined) {
     clearTimeout(engineTimer);
     engineTimer = undefined;
   }
@@ -782,6 +818,15 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
     }),
 });
 
+// アップデート通知
+const isUpdateNotificationDialogOpenComputed = computed({
+  get: () => store.state.isUpdateNotificationDialogOpen,
+  set: (val) =>
+    store.dispatch("SET_DIALOG_OPEN", {
+      isUpdateNotificationDialogOpen: val,
+    }),
+});
+
 // ドラッグ＆ドロップ
 const dragEventCounter = ref(0);
 const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
@@ -828,6 +873,17 @@ watch(activeAudioKey, (audioKey) => {
 const showAddAudioItemButton = computed(() => {
   return store.state.showAddAudioItemButton;
 });
+
+const onAudioCellPaneClick = () => {
+  if (
+    store.state.experimentalSetting.enableMultiSelect &&
+    activeAudioKey.value
+  ) {
+    store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+      audioKeys: [activeAudioKey.value],
+    });
+  }
+};
 </script>
 
 <style scoped lang="scss">

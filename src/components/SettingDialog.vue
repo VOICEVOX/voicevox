@@ -651,10 +651,32 @@
               </q-card-actions>
             </q-card>
 
-            <!-- Experimental Card -->
+            <!-- Advanced Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
                 <h5 class="text-h5">高度な設定</h5>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>マルチエンジン機能</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      複数のVOICEVOX準拠エンジンを利用可能にする
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="enableMultiEngine"
+                  @update:model-value="setEnableMultiEngine($event)"
+                >
+                </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>音声をステレオ化</div>
@@ -715,6 +737,8 @@
                 </q-select>
               </q-card-actions>
             </q-card>
+
+            <!-- Experimental Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
@@ -832,10 +856,8 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>マルチエンジン機能</div>
-                <div
-                  aria-label="マルチエンジン機能を有効にします。複数のVOICEVOX準拠エンジンが利用可能になります。"
-                >
+                <div>複数選択</div>
+                <div aria-label="複数のテキスト欄を選択できるようにします。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
@@ -844,15 +866,45 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      マルチエンジン機能を有効にします。複数のVOICEVOX準拠エンジンが利用可能になります。
+                      複数のテキスト欄を選択できるようにします。
                     </q-tooltip>
                   </q-icon>
                 </div>
                 <q-space />
                 <q-toggle
-                  :model-value="experimentalSetting.enableMultiEngine"
+                  :model-value="experimentalSetting.enableMultiSelect"
                   @update:model-value="
-                    changeExperimentalSetting('enableMultiEngine', $event)
+                    changeExperimentalSetting('enableMultiSelect', $event)
+                  "
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>調整結果の保持</div>
+                <div
+                  aria-label="テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。"
+                >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                      >ONの場合、テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。</q-tooltip
+                    >
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="
+                    experimentalSetting.shouldKeepTuningOnTextChange
+                  "
+                  @update:model-value="
+                    changeExperimentalSetting(
+                      'shouldKeepTuningOnTextChange',
+                      $event
+                    )
                   "
                 >
                 </q-toggle>
@@ -992,6 +1044,11 @@ const changeEditorFont = (editorFont: EditorFontType) => {
   store.dispatch("SET_EDITOR_FONT", { editorFont });
 };
 
+const enableMultiEngine = computed(() => store.state.enableMultiEngine);
+const setEnableMultiEngine = (enableMultiEngine: boolean) => {
+  store.dispatch("SET_ENABLE_MULTI_ENGINE", { enableMultiEngine });
+};
+
 const showTextLineNumber = computed(() => store.state.showTextLineNumber);
 const changeShowTextLineNumber = (showTextLineNumber: boolean) => {
   store.dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
@@ -1029,21 +1086,25 @@ const changeShowAddAudioItemButton = async (
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;
 });
-const currentAudioOutputDeviceComputed = computed<{
-  key: string;
-  label: string;
-} | null>({
+const currentAudioOutputDeviceComputed = computed<
+  | {
+      key: string;
+      label: string;
+    }
+  | undefined
+>({
   get: () => {
     // 再生デバイスが見つからなかったらデフォルト値に戻す
+    // FIXME: watchなどにしてgetter内で操作しないようにする
     const device = availableAudioOutputDevices.value?.find(
       (device) => device.key === store.state.savingSetting.audioOutputDevice
     );
     if (device) {
       return device;
-    } else {
+    } else if (store.state.savingSetting.audioOutputDevice !== "default") {
       handleSavingSettingChange("audioOutputDevice", "default");
-      return null;
     }
+    return undefined;
   },
   set: (device) => {
     if (device) {
@@ -1061,11 +1122,15 @@ const updateAudioOutputDevices = async () => {
       return { label: device.label, key: device.deviceId };
     });
 };
-navigator.mediaDevices.addEventListener(
-  "devicechange",
-  updateAudioOutputDevices
-);
-updateAudioOutputDevices();
+if (navigator.mediaDevices) {
+  navigator.mediaDevices.addEventListener(
+    "devicechange",
+    updateAudioOutputDevices
+  );
+  updateAudioOutputDevices();
+} else {
+  store.dispatch("LOG_WARN", "navigator.mediaDevices is not available.");
+}
 
 const acceptRetrieveTelemetryComputed = computed({
   get: () => store.state.acceptRetrieveTelemetry == "Accepted",

@@ -157,7 +157,7 @@ const usableButtonsDesc: Record<ToolbarButtonTagType, string> = {
   PLAY_CONTINUOUSLY:
     "選択されているテキスト以降のすべてのテキストを読み上げます。",
   STOP: "テキストが読み上げられているときに、それを止めます。",
-  EXPORT_AUDIO_ONE:
+  EXPORT_AUDIO_SELECTED:
     "選択されているテキストの読み上げを音声ファイルに書き出します。",
   EXPORT_AUDIO_ALL:
     "入力されているすべてのテキストの読み上げを音声ファイルに書き出します。",
@@ -198,7 +198,7 @@ watch(
     if (oldData.length < newData.length) {
       selectedButton.value = newData[newData.length - 1];
     } else if (
-      selectedButton.value !== undefined &&
+      selectedButton.value != undefined &&
       oldData.includes(selectedButton.value) &&
       !newData.includes(selectedButton.value)
     ) {

@@ -47,11 +47,15 @@ DirectML 対応の GPU を搭載した Windows PC と、Nvidia 製 GPU 搭載の
 
 #### Windows 版のインストール先
 
-`C:\Users\(ユーザー名)\AppData\Local\Programs\VOICEVOX`
+`C:\Users\（ユーザー名）\AppData\Local\Programs\VOICEVOX`
 
 #### Mac 版のインストール先
 
-`/Applications/VOICEVOX` もしくは `/Users/(ユーザー名)/Applications/VOICEVOX`
+`/Applications/VOICEVOX` もしくは `/Users/（ユーザー名）/Applications/VOICEVOX`
+
+#### Ubuntu 版のインストール先
+
+`/home/（ユーザー名）/.voicevox`
 
 ### Q. アップデート方法を教えてください
 
@@ -70,7 +74,7 @@ DirectML 対応の GPU を搭載した Windows PC と、Nvidia 製 GPU 搭載の
 ### Q. 使い方がわかりません
 
 [使い方](https://voicevox.hiroshiba.jp/how_to_use) Web ページか、ソフトウェアのヘルプからご確認ください。  
-わからないところがあれば Twitter にて `#VOICEVOX` を付けてツイートすると、解決策を教えてくれる方がいらっしゃるかもしれません。
+わからないところがあれば X（旧 Twitter）にて `#VOICEVOX` を付けてポストすると、解決策を教えてくれる方がいらっしゃるかもしれません。
 
 ### Q. オフラインのパソコンで使用できますか？
 
@@ -80,8 +84,8 @@ DirectML 対応の GPU を搭載した Windows PC と、Nvidia 製 GPU 搭載の
 
 ### Q. バグを見つけました。どこに報告すれば良いですか？
 
-バグを見つけられた方はツイッターにてご報告いただけると助かります。  
-VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
+バグを見つけられた方は X にてご報告いただけると助かります。  
+VOICEVOX X アカウント [@voicevox_pj](https://x.com/voicevox_pj)
 
 ### Q. バージョンアップすると表示がおかしくなりました
 
@@ -89,11 +93,11 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 #### Windows 版の設定ファイル
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\config.json`
+`C:\Users\（ユーザー名）\AppData\Roaming\voicevox\config.json`
 
 #### Mac 版の設定ファイル
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox/config.json`
+`/Users/（ユーザー名）/Library/Application Support/voicevox/config.json`
 
 ### Q. エンジンの起動が失敗したというエラーが表示されます
 
@@ -133,11 +137,11 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 #### Windows 版
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs`
+`C:\Users\（ユーザー名）\AppData\Roaming\voicevox\logs`
 
 #### Mac 版
 
-`/Users/(ユーザー名)/Library/Logs/voicevox-cpu`
+`/Users/（ユーザー名）/Library/Logs/voicevox-cpu`
 
 ### Q. Ubuntu 22.04 で動きません
 
@@ -168,7 +172,7 @@ sudo apt install libfuse2
 ### Q. 音楽配信サービスなどで公開する場合のクレジット表記はどうすれば良いですか？
 
 概要欄の無い楽曲投稿系プラットフォームの場合、タイトルやアーティストなどの欄にクレジットを記載するか、楽曲中に音声クレジットを挿入してください。  
-タイトルの例「タイトル (VOICEVOX:キャラクター名)」「タイトル feat. キャラクター名(VOICEVOX)」など  
+タイトルの例「タイトル（VOICEVOX:キャラクター名）」「タイトル feat. キャラクター名(VOICEVOX)」など  
 アーティストの例「キャラクター名(VOICEVOX)」「VOICEVOX:キャラクター名」など
 
 ### Q. スピーカーでの音声案内など、機械で音声を流したい場合のクレジット記載はどうすれば良いですか？
@@ -214,8 +218,8 @@ VOICEVOX は、キャラクターとソフトウェアで権利者が異なり�
 
 ### Q. 問い合わせ先を教えてください
 
-ご感想・ご要望は、ぜひ Twitter にてハッシュタグ `#VOICEVOX` を付けてツイートしてください。開発の励みになります。
+ご感想・ご要望は、ぜひ X（旧 Twitter）にてハッシュタグ `#VOICEVOX` を付けてポストしてください。開発の励みになります。
 
-うまく動かない場合や不具合を見つけられた方は、Twitter にて不具合をハッシュタグ `#VOICEVOX` を付けてツイートしていただくか、VOICEVOX 公式（[@voicevox_pj](https://twitter.com/voicevox_pj)）までご報告ください。
+うまく動かない場合や不具合を見つけられた方は、X にて不具合をハッシュタグ `#VOICEVOX` を付けてポストしていただくか、VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj)）までご報告ください。
 
-その他、 Q&A に掲載されていないご質問があれば VOICEVOX 公式（[@voicevox_pj](https://twitter.com/voicevox_pj)）にお問い合わせください。
+その他、 Q&A に掲載されていないご質問があれば VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj)）にお問い合わせください。

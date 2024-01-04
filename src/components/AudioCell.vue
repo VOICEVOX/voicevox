@@ -1,5 +1,29 @@
 <template>
-  <div class="audio-cell">
+  <div
+    ref="root"
+    class="audio-cell"
+    tabindex="-1"
+    :class="{
+      active: isActiveAudioCell,
+      selected: isSelectedAudioCell && isMultiSelectEnabled,
+    }"
+    @keydown.prevent.up="moveUpCell"
+    @keydown.prevent.down="moveDownCell"
+    @focus="onRootFocus"
+    @click.stop=""
+  >
+    <!-- 複数選択用のヒットボックス -->
+    <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
+    <div
+      v-if="
+        isMultiSelectEnabled && isActiveAudioCell
+          ? isCtrlOrCommandKeyDown
+          : isCtrlOrCommandKeyDown || isShiftKeyDown
+      "
+      class="click-hitbox"
+      tabindex="-1"
+      @click="onClickWithModifierKey"
+    />
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
@@ -20,14 +44,18 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
-      @focus="setActiveAudioKey()"
+      @focus="
+        if (!isSelectedAudioCell) {
+          selectAndSetActiveAudioKey();
+        }
+      "
     />
-    <!-- 
+    <!--
       input.valueをスクリプトから変更した場合は@changeが発火しないため、
       @blurと@keydown.prevent.enter.exactに分けている
     -->
     <q-input
-      ref="textfield"
+      ref="textField"
       filled
       dense
       hide-bottom-space
@@ -40,19 +68,17 @@
       @update:model-value="setAudioTextBuffer"
       @focus="
         clearInputSelection();
-        setActiveAudioKey();
+        selectAndSetActiveAudioKey();
       "
       @blur="pushAudioTextIfNeeded()"
       @paste="pasteOnAudioCell"
-      @keydown.prevent.up.exact="moveUpCell"
-      @keydown.prevent.down.exact="moveDownCell"
       @keydown.prevent.enter.exact="pushAudioTextIfNeeded"
     >
       <template #error>
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template v-if="deleteButtonEnable" #after>
+      <template v-if="enableDeleteButton" #after>
         <q-btn
           round
           flat
@@ -78,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref, nextTick } from "vue";
+import { computed, watch, ref, nextTick, onMounted, onUnmounted } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "./CharacterButton.vue";
 import { MenuItemButton, MenuItemSeparator } from "./MenuBar.vue";
@@ -86,6 +112,7 @@ import ContextMenu from "./ContextMenu.vue";
 import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 const props =
   defineProps<{
@@ -94,13 +121,28 @@ const props =
 
 const emit =
   defineEmits<{
-    (e: "focusCell", payload: { audioKey: AudioKey }): void;
+    // focusTarget：
+    //   textField: テキストフィールドにフォーカス。複数選択が解除される。特別な理由がない限りはこちらを使う。
+    //   root: AudioCell自体にフォーカス。こちらは複数選択を解除しない。
+    (
+      e: "focusCell",
+      payload: { audioKey: AudioKey; focusTarget?: "textField" | "root" }
+    ): void;
   }>();
 
 defineExpose({
   audioKey: computed(() => props.audioKey),
-  focusTextField: () => {
-    textfield.value?.focus();
+  focusCell: ({
+    focusTarget: baseFocusTarget,
+  }: {
+    focusTarget?: "textField" | "root";
+  }) => {
+    const focusTarget = baseFocusTarget ?? "textField";
+    if (focusTarget === "textField") {
+      textField.value?.focus();
+    } else {
+      root.value?.focus();
+    }
   },
   removeCell: () => {
     removeCell();
@@ -114,12 +156,100 @@ const userOrderedCharacterInfos = computed(() => {
     throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
   return infos;
 });
-const isInitializingSpeaker = computed(
-  () => store.state.audioKeyInitializingSpeaker === props.audioKey
+const isInitializingSpeaker = computed(() =>
+  store.state.audioKeysWithInitializingSpeaker.includes(props.audioKey)
 );
 const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const isMultiSelectEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiSelect
+);
+
+const selectAndSetActiveAudioKey = () => {
+  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
+  store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
+};
+
+const onRootFocus = () => {
+  if (uiLocked.value) return;
+
+  selectAndSetActiveAudioKey();
+};
+// 複数選択：Ctrl（Cmd）またはShiftキーが押されている時のクリック処理
+const onClickWithModifierKey = (event: MouseEvent) => {
+  if (uiLocked.value) return;
+  const currentActiveAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  const currentSelectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+  let newActiveAudioKey: AudioKey | undefined = currentActiveAudioKey;
+  let newSelectedAudioKeys: AudioKey[] = [...currentSelectedAudioKeys];
+  if (event.shiftKey) {
+    if (currentActiveAudioKey) {
+      const currentAudioIndex = store.state.audioKeys.indexOf(
+        currentActiveAudioKey
+      );
+      const clickedAudioIndex = store.state.audioKeys.indexOf(props.audioKey);
+      const minIndex = Math.min(currentAudioIndex, clickedAudioIndex);
+      const maxIndex = Math.max(currentAudioIndex, clickedAudioIndex);
+      const audioKeysBetween = store.state.audioKeys.slice(
+        minIndex,
+        maxIndex + 1
+      );
+      newActiveAudioKey = props.audioKey;
+      newSelectedAudioKeys = [...currentSelectedAudioKeys, ...audioKeysBetween];
+    }
+  } else if (isOnCommandOrCtrlKeyDown(event)) {
+    // Ctrlキーを押しながらクリックしたとき：
+    //   activeなAudioCellなら：
+    //     selectedが複数ある場合はactiveを次のselectedに移動し、selectedから除外する。
+    //     selectedが1つの場合はなにもしない。
+    //   選択していないAudioCellならactiveを移動し、以前の選択をselectedに追加する。
+    //   選択しているAudioCellならselectedから除外する。activeは変更しない。
+    if (props.audioKey === currentActiveAudioKey) {
+      if (currentSelectedAudioKeys.length > 1) {
+        const currentAudioIndex = currentSelectedAudioKeys.indexOf(
+          currentActiveAudioKey
+        );
+        newActiveAudioKey =
+          currentSelectedAudioKeys[
+            (currentAudioIndex + 1) % currentSelectedAudioKeys.length
+          ];
+        newSelectedAudioKeys = currentSelectedAudioKeys.filter(
+          (audioKey) => audioKey !== props.audioKey
+        );
+      }
+    } else if (currentSelectedAudioKeys.includes(props.audioKey)) {
+      newActiveAudioKey = currentActiveAudioKey;
+      newSelectedAudioKeys = currentSelectedAudioKeys.filter(
+        (audioKey) => audioKey !== props.audioKey
+      );
+    } else {
+      newActiveAudioKey = props.audioKey;
+      newSelectedAudioKeys = [...currentSelectedAudioKeys, props.audioKey];
+    }
+  }
+  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: newActiveAudioKey });
+  store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+    audioKeys: newSelectedAudioKeys,
+  });
+};
+
+const isCtrlOrCommandKeyDown = ref(false);
+const isShiftKeyDown = ref(false);
+
+const keyEventListener = (e: KeyboardEvent) => {
+  isCtrlOrCommandKeyDown.value = isOnCommandOrCtrlKeyDown(e);
+  isShiftKeyDown.value = e.shiftKey;
+};
+onMounted(() => {
+  window.addEventListener("keydown", keyEventListener);
+  window.addEventListener("keyup", keyEventListener);
+});
+onUnmounted(() => {
+  window.removeEventListener("keydown", keyEventListener);
+  window.removeEventListener("keyup", keyEventListener);
+});
 
 const selectedVoice = computed<Voice | undefined>({
   get() {
@@ -140,8 +270,10 @@ const selectedVoice = computed<Voice | undefined>({
   },
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
-    store.dispatch("COMMAND_CHANGE_VOICE", {
-      audioKey: props.audioKey,
+    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+      audioKeys: isMultiSelectEnabled.value
+        ? store.getters.SELECTED_AUDIO_KEYS
+        : [props.audioKey],
       voice,
     });
   },
@@ -149,6 +281,9 @@ const selectedVoice = computed<Voice | undefined>({
 
 const isActiveAudioCell = computed(
   () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY
+);
+const isSelectedAudioCell = computed(() =>
+  store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
 );
 
 const audioTextBuffer = ref(audioItem.value.text);
@@ -163,7 +298,7 @@ watch(
   // `audioItem` becomes undefined just before the component is unmounted.
   () => audioItem.value?.text,
   (newText) => {
-    if (!isChangeFlag.value && newText !== undefined) {
+    if (!isChangeFlag.value && newText != undefined) {
       audioTextBuffer.value = newText;
     }
   }
@@ -184,12 +319,8 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
 // see https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
 const clearInputSelection = () => {
   if (!willFocusOrBlur.value) {
-    textfieldSelection.toEmpty();
+    textFieldSelection.toEmpty();
   }
-};
-
-const setActiveAudioKey = () => {
-  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
 
 // コピペしたときに句点と改行で区切る
@@ -204,7 +335,7 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
  */
 const paste = async (options?: { text?: string }) => {
   const text = options ? options.text : await navigator.clipboard.readText();
-  if (text === undefined) return;
+  if (text == undefined) return;
 
   // 複数行貼り付けできるか試す
   if (textSplitType.value !== "OFF") {
@@ -226,11 +357,11 @@ const paste = async (options?: { text?: string }) => {
   }
 
   const beforeLength = audioTextBuffer.value.length;
-  const end = textfieldSelection.selectionEnd ?? 0;
-  setAudioTextBuffer(textfieldSelection.getReplacedStringTo(text));
+  const end = textFieldSelection.selectionEnd ?? 0;
+  setAudioTextBuffer(textFieldSelection.getReplacedStringTo(text));
   await nextTick();
   // 自動的に削除される改行などの文字数を念のため考慮している
-  textfieldSelection.setCursorPosition(
+  textFieldSelection.setCursorPosition(
     end + audioTextBuffer.value.length - beforeLength
   );
 };
@@ -254,7 +385,9 @@ const putMultilineText = async (texts: string[]) => {
     prevAudioKey,
   });
   if (audioKeys.length > 0) {
-    emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
+    emit("focusCell", {
+      audioKey: audioKeys[audioKeys.length - 1],
+    });
   }
 };
 
@@ -273,47 +406,97 @@ const textLineNumberWidth = computed(() => {
 
 // 上下に移動
 const audioKeys = computed(() => store.state.audioKeys);
-const moveUpCell = (e?: KeyboardEvent) => {
+const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   if (e && e.isComposing) return;
-  const index = audioKeys.value.indexOf(props.audioKey) - 1;
-  if (index >= 0) {
-    emit("focusCell", { audioKey: audioKeys.value[index] });
+  const index = audioKeys.value.indexOf(props.audioKey) + offset;
+  if (index >= 0 && index < audioKeys.value.length) {
+    const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+    if (isMultiSelectEnabled.value && e?.shiftKey) {
+      emit("focusCell", {
+        audioKey: audioKeys.value[index],
+        focusTarget: "root",
+      });
+      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+        audioKeys: [
+          ...selectedAudioKeys,
+          props.audioKey,
+          audioKeys.value[index],
+        ],
+      });
+    } else {
+      emit("focusCell", {
+        audioKey: audioKeys.value[index],
+        focusTarget: "textField",
+      });
+    }
   }
 };
-const moveDownCell = (e?: KeyboardEvent) => {
-  if (e && e.isComposing) return;
-  const index = audioKeys.value.indexOf(props.audioKey) + 1;
-  if (index < audioKeys.value.length) {
-    emit("focusCell", { audioKey: audioKeys.value[index] });
-  }
-};
+const moveUpCell = moveCell(-1);
+const moveDownCell = moveCell(1);
 
 // 消去
 const willRemove = ref(false);
 const removeCell = async () => {
-  // 1つだけの時は削除せず
-  if (audioKeys.value.length > 1) {
+  let audioKeysToDelete: AudioKey[];
+  if (
+    isMultiSelectEnabled.value &&
+    store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
+  ) {
+    audioKeysToDelete = store.getters.SELECTED_AUDIO_KEYS;
+  } else {
+    audioKeysToDelete = [props.audioKey];
+  }
+  // 全て消える場合はなにもしない
+  if (audioKeys.value.length > audioKeysToDelete.length) {
     // フォーカスを外したりREMOVEしたりすると、
     // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
     // エラー防止のためにまずwillRemoveフラグを建てる
     willRemove.value = true;
 
-    const index = audioKeys.value.indexOf(props.audioKey);
-    if (index > 0) {
-      emit("focusCell", { audioKey: audioKeys.value[index - 1] });
-    } else {
-      emit("focusCell", { audioKey: audioKeys.value[index + 1] });
+    if (audioKeysToDelete.includes(props.audioKey)) {
+      // 選択するAudioKeyを決定する。
+      // - 削除ボタンが押されたAudioCellから開始
+      // - 残るAudioCellを上方向に探す
+      // - 上方向になかったら下方向に探す
+      // - なかったらエラー（Unreachable）
+      const startIndex = audioKeys.value.indexOf(props.audioKey);
+      let willNextFocusIndex = -1;
+      for (let i = startIndex; i >= 0; i--) {
+        if (!audioKeysToDelete.includes(audioKeys.value[i])) {
+          willNextFocusIndex = i;
+          break;
+        }
+      }
+      if (willNextFocusIndex === -1) {
+        for (let i = startIndex; i < audioKeys.value.length; i++) {
+          if (!audioKeysToDelete.includes(audioKeys.value[i])) {
+            willNextFocusIndex = i;
+            break;
+          }
+        }
+      }
+      if (willNextFocusIndex === -1) {
+        throw new Error(
+          "次に選択するaudioKeyが見付かりませんでした（unreachable）"
+        );
+      }
+      emit("focusCell", {
+        audioKey: audioKeys.value[willNextFocusIndex],
+      });
     }
 
-    store.dispatch("COMMAND_REMOVE_AUDIO_ITEM", {
-      audioKey: props.audioKey,
+    store.dispatch("COMMAND_MULTI_REMOVE_AUDIO_ITEM", {
+      audioKeys: audioKeysToDelete,
     });
   }
 };
 
 // 削除ボタンの有効／無効判定
-const deleteButtonEnable = computed(() => {
-  return 1 < audioKeys.value.length;
+const enableDeleteButton = computed(() => {
+  return (
+    store.state.audioKeys.length >
+    (isMultiSelectEnabled.value ? store.getters.SELECTED_AUDIO_KEYS.length : 1)
+  );
 });
 
 // テキスト編集エリアの右クリック
@@ -339,14 +522,14 @@ const contextMenudata = ref<
     label: "切り取り",
     onClick: async () => {
       contextMenu.value?.hide();
-      if (textfieldSelection.isEmpty) return;
+      if (textFieldSelection.isEmpty) return;
 
-      const text = textfieldSelection.getAsString();
-      const start = textfieldSelection.selectionStart;
-      setAudioTextBuffer(textfieldSelection.getReplacedStringTo(""));
+      const text = textFieldSelection.getAsString();
+      const start = textFieldSelection.selectionStart;
+      setAudioTextBuffer(textFieldSelection.getReplacedStringTo(""));
       await nextTick();
       navigator.clipboard.writeText(text);
-      textfieldSelection.setCursorPosition(start);
+      textFieldSelection.setCursorPosition(start);
     },
     disableWhenUiLocked: true,
   },
@@ -355,9 +538,9 @@ const contextMenudata = ref<
     label: "コピー",
     onClick: () => {
       contextMenu.value?.hide();
-      if (textfieldSelection.isEmpty) return;
+      if (textFieldSelection.isEmpty) return;
 
-      navigator.clipboard.writeText(textfieldSelection.getAsString());
+      navigator.clipboard.writeText(textFieldSelection.getAsString());
     },
     disableWhenUiLocked: true,
   },
@@ -376,7 +559,7 @@ const contextMenudata = ref<
     label: "全選択",
     onClick: async () => {
       contextMenu.value?.hide();
-      textfield.value?.select();
+      textField.value?.select();
     },
     disableWhenUiLocked: true,
   },
@@ -391,7 +574,7 @@ const contextMenudata = ref<
         audioKey: props.audioKey,
         text: audioTextBuffer.value,
       });
-      textfield.value?.blur();
+      textField.value?.blur();
     },
     disableWhenUiLocked: true,
   },
@@ -416,7 +599,7 @@ const readyForContextMenu = () => {
   const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
   // 選択範囲を1行目に表示
-  const selectionText = textfieldSelection.getAsString();
+  const selectionText = textFieldSelection.getAsString();
   if (selectionText.length === 0) {
     isRangeSelected.value = false;
     getMenuItemButton("切り取り").disabled = true;
@@ -446,9 +629,11 @@ const endContextMenuOperation = async () => {
   willFocusOrBlur.value = false;
 };
 
+const root = ref<HTMLElement>();
+
 // テキスト欄
-const textfield = ref<QInput>();
-const textfieldSelection = new SelectionHelperForQInput(textfield);
+const textField = ref<QInput>();
+const textFieldSelection = new SelectionHelperForQInput(textField);
 
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
@@ -460,8 +645,16 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
 .audio-cell {
   display: flex;
+  position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
+  &:focus {
+    // divはフォーカスするとデフォルトで青い枠が出るので消す
+    outline: none;
+  }
+  &.selected {
+    background-color: rgba(colors.$active-point-focus-rgb, 0.5);
+  }
 
   &:first-child {
     margin-top: 0.6rem;
@@ -474,7 +667,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   gap: 0px 1rem;
 
   .active-arrow {
-    left: -5px;
+    left: -1rem;
     height: 2rem;
   }
 
@@ -522,5 +715,16 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     caret-color: colors.$display;
     color: colors.$display;
   }
+}
+
+.click-hitbox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: none;
+  z-index: 1;
+  cursor: default;
 }
 </style>

@@ -49,7 +49,8 @@ export const settingStoreState: SettingStoreState = {
     shouldApplyDefaultPresetOnVoiceChanged: false,
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
-    enableMultiEngine: false,
+    enableMultiSelect: false,
+    shouldKeepTuningOnTextChange: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -63,6 +64,7 @@ export const settingStoreState: SettingStoreState = {
     notifyOnGenerate: false,
   },
   engineSettings: {},
+  enableMultiEngine: false,
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -154,6 +156,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           engineSetting,
         });
       }
+
+      commit("SET_ENABLE_MULTI_ENGINE", {
+        enableMultiEngine: await window.electron.getSetting(
+          "enableMultiEngine"
+        ),
+      });
     },
   },
 
@@ -425,6 +433,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     async action({ commit }, { engineSetting, engineId }) {
       await window.electron.setEngineSetting(engineId, engineSetting);
       commit("SET_ENGINE_SETTING", { engineSetting, engineId });
+    },
+  },
+
+  SET_ENABLE_MULTI_ENGINE: {
+    mutation(state, { enableMultiEngine }) {
+      state.enableMultiEngine = enableMultiEngine;
+    },
+    action({ commit }, { enableMultiEngine }) {
+      window.electron.setSetting("enableMultiEngine", enableMultiEngine);
+      commit("SET_ENABLE_MULTI_ENGINE", { enableMultiEngine });
     },
   },
 

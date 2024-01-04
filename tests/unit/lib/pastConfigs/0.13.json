@@ -1,0 +1,151 @@
+{
+	"useGpu": false,
+	"inheritAudioInfo": true,
+	"activePointScrollMode": "OFF",
+	"savingSetting": {
+		"fileEncoding": "UTF-8",
+		"fileNamePattern": "",
+		"fixedExportEnabled": false,
+		"avoidOverwrite": false,
+		"fixedExportDir": "",
+		"exportLab": false,
+		"exportText": false,
+		"outputStereo": false,
+		"outputSamplingRate": 24000,
+		"audioOutputDevice": "default",
+		"splitTextWhenPaste": "PERIOD_AND_NEW_LINE"
+	},
+	"hotkeySettings": [
+		{
+			"action": "音声書き出し",
+			"combination": "Ctrl E"
+		},
+		{
+			"action": "一つだけ書き出し",
+			"combination": "E"
+		},
+		{
+			"action": "音声を繋げて書き出し",
+			"combination": ""
+		},
+		{
+			"action": "再生/停止",
+			"combination": "Space"
+		},
+		{
+			"action": "連続再生/停止",
+			"combination": "Shift Space"
+		},
+		{
+			"action": "ｱｸｾﾝﾄ欄を表示",
+			"combination": "1"
+		},
+		{
+			"action": "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+			"combination": "2"
+		},
+		{
+			"action": "長さ欄を表示",
+			"combination": "3"
+		},
+		{
+			"action": "テキスト欄を追加",
+			"combination": "Shift Enter"
+		},
+		{
+			"action": "テキスト欄を削除",
+			"combination": "Shift Delete"
+		},
+		{
+			"action": "テキスト欄からフォーカスを外す",
+			"combination": "Escape"
+		},
+		{
+			"action": "テキスト欄にフォーカスを戻す",
+			"combination": "Enter"
+		},
+		{
+			"action": "元に戻す",
+			"combination": "Ctrl Z"
+		},
+		{
+			"action": "やり直す",
+			"combination": "Ctrl Y"
+		},
+		{
+			"action": "新規プロジェクト",
+			"combination": "Ctrl N"
+		},
+		{
+			"action": "プロジェクトを名前を付けて保存",
+			"combination": "Ctrl Shift S"
+		},
+		{
+			"action": "プロジェクトを上書き保存",
+			"combination": "Ctrl S"
+		},
+		{
+			"action": "プロジェクト読み込み",
+			"combination": "Ctrl O"
+		},
+		{
+			"action": "テキスト読み込む",
+			"combination": ""
+		},
+		{
+			"action": "全体のイントネーションをリセット",
+			"combination": "Ctrl G"
+		},
+		{
+			"action": "選択中のアクセント句のイントネーションをリセット",
+			"combination": "R"
+		}
+	],
+	"toolbarSetting": [
+		"PLAY_CONTINUOUSLY",
+		"STOP",
+		"EXPORT_AUDIO_ONE",
+		"EMPTY",
+		"UNDO",
+		"REDO"
+	],
+	"userCharacterOrder": [
+		"7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff",
+		"388f246b-8c41-4ac1-8e2d-5d79f3ff56d9",
+		"35b2c544-660e-401e-b503-0e14c635303a",
+		"3474ee95-c274-47f9-aa1a-8322163d96f1",
+		"b1a81618-b27b-40d2-b0ea-27a9ad408c4b",
+		"c30dc15a-0992-4f8d-8bb8-ad3b314e6a6f",
+		"e5020595-5c5d-4e87-b849-270a518d0dcf",
+		"4f51116a-d9ee-4516-925d-21f183e2afad",
+		"8eaad775-3119-417e-8cf4-2a10bfd592c8",
+		"481fb609-6446-4870-9f46-90c4dd623403",
+		"9f3ee141-26ad-437e-97bd-d22298d02ad2",
+		"1a17ca16-7ee5-4ea5-b191-2f02ace24d21",
+		"67d5d8da-acd7-4207-bb10-b5542d3a663b",
+		"0f56c2f2-644c-49c9-8989-94e11f7129d0",
+		"044830d2-f23b-44d6-ac0d-b5d733caa900"
+	],
+	"defaultStyleIds": [],
+	"presets": {
+		"items": {},
+		"keys": []
+	},
+	"currentTheme": "Default",
+	"experimentalSetting": {
+		"enablePreset": false,
+		"enableInterrogativeUpspeak": false
+	},
+	"acceptRetrieveTelemetry": "Accepted",
+	"acceptTerms": "Accepted",
+	"splitTextWhenPaste": "PERIOD_AND_NEW_LINE",
+	"splitterPosition": {},
+	"confirmedTips": {
+		"tweakableSliderByScroll": false
+	},
+	"__internal__": {
+		"migrations": {
+			"version": "0.13.3"
+		}
+	}
+}

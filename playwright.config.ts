@@ -6,10 +6,12 @@ dotenv.config({ override: true });
 
 let project: Project;
 const additionalWebServer: PlaywrightTestConfig["webServer"] = [];
+const isElectron = process.env.VITE_TARGET === "electron";
+const isBrowser = process.env.VITE_TARGET === "browser";
 
-if (process.env.VITE_TARGET === "electron") {
+if (isElectron) {
   project = { name: "electron", testDir: "./tests/e2e/electron" };
-} else if (process.env.VITE_TARGET === "browser") {
+} else if (isBrowser) {
   project = { name: "browser", testDir: "./tests/e2e/browser" };
 
   // エンジンの起動が必要
@@ -19,18 +21,23 @@ if (process.env.VITE_TARGET === "electron") {
       host: z.string(),
       executionFilePath: z.string(),
       executionArgs: z.array(z.string()),
+      executionEnabled: z.boolean(),
     })
     .passthrough()
     .array();
   const engineInfos = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
-  engineInfos.forEach((info) => {
+  for (const info of engineInfos) {
+    if (!info.executionEnabled) {
+      continue;
+    }
+
     additionalWebServer.push({
       command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
       url: `${info.host}/version`,
       reuseExistingServer: !process.env.CI,
     });
-  });
+  }
 } else {
   throw new Error(`VITE_TARGETの指定が不正です。${process.env.VITE_TARGET}`);
 }
@@ -46,26 +53,22 @@ if (process.env.VITE_TARGET === "electron") {
 const config: PlaywrightTestConfig = {
   testDir: "./tests/e2e",
   /* Maximum time one test can run for. */
-  timeout: 120 * 1000,
+  timeout: 60 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
      * For example in `await expect(locator).toHaveText();`
      */
-    timeout: 30 * 1000,
+    timeout: 5 * 1000,
   },
-  /* Run tests in files in parallel */
-  fullyParallel: true,
+  // ファイルシステムが関連してくるので、Electronテストでは並列化しない
+  fullyParallel: !isElectron,
+  workers: isElectron ? 1 : undefined,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  reporter: [
-    [
-      "html",
-      {
-        open: process.env.CI ? "never" : "on-failure",
-      },
-    ],
-  ],
+  reporter: process.env.CI
+    ? [["html", { open: "never" }], ["github"]]
+    : [["html", { open: "on-failure" }]],
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   use: {
@@ -86,8 +89,8 @@ const config: PlaywrightTestConfig = {
 
   webServer: [
     {
-      command: "vite --mode test",
-      port: 5173,
+      command: "vite --mode test --port 7357",
+      port: 7357,
       reuseExistingServer: !process.env.CI,
     },
     ...additionalWebServer,
