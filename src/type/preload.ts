@@ -656,7 +656,6 @@ export type TempProjectType =
       /** プロジェクトの一部・またはすべてが未保存の状態 */
       state: "unSaved";
       project: ProjectType;
-      projectFilePath?: string;
       commandStoreState: CommandStoreState;
     }
   | {
