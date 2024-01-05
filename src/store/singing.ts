@@ -42,7 +42,7 @@ import {
   noteNumberToFrequency,
   round,
   FrequentlyUpdatedState,
-  AnimationFrameRunner,
+  AnimationTimer,
 } from "@/helpers/singHelper";
 import { AudioQuery, Mora } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
@@ -378,7 +378,7 @@ const playheadPosition = new FrequentlyUpdatedState(0);
 const overlappingNotesDetector = new OverlappingNotesDetector();
 const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
-const animationFrameRunner = new AnimationFrameRunner();
+const animationFrameRunner = new AnimationTimer();
 
 export const singingStoreState: SingingStoreState = {
   singer: undefined,

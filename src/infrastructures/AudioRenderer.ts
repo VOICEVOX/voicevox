@@ -1,4 +1,5 @@
 import {
+  Timer,
   decibelToLinear,
   linearToDecibel,
   noteNumberToFrequency,
@@ -10,35 +11,6 @@ const getEarliestSchedulableContextTime = (audioContext: BaseAudioContext) => {
   const currentTime = audioContext.currentTime;
   return currentTime + (renderQuantumSize + 10) / sampleRate;
 };
-
-/**
- * スケジューリングで使用するタイマーです。
- */
-class Timer {
-  private timeoutId?: number;
-
-  /**
-   * @param interval 関数の呼び出し間隔（ミリ秒）
-   * @param callback 呼び出される関数
-   */
-  constructor(interval: number, callback: () => void) {
-    const tick = () => {
-      callback();
-      this.timeoutId = window.setTimeout(tick, interval);
-    };
-    tick();
-  }
-
-  /**
-   * 破棄します。
-   */
-  dispose() {
-    if (this.timeoutId !== undefined) {
-      window.clearTimeout(this.timeoutId);
-      this.timeoutId = undefined;
-    }
-  }
-}
 
 export type AudioSequence = {
   readonly type: "audio";
@@ -61,7 +33,7 @@ export type Sequence = AudioSequence | NoteSequence;
 interface EventScheduler {
   /**
    * スケジューリングを開始します。
-   * @param contextTime スケジューリングを開始する時刻（コンテキスト時間）
+   * @param contextTime スケジューリングを開始する時刻（コンテキスト時刻）
    * @param time スケジューリングの開始位置
    */
   start(contextTime: number, time: number): void;
@@ -74,7 +46,7 @@ interface EventScheduler {
 
   /**
    * スケジューリングを停止します。
-   * @param contextTime スケジューリングを停止する時刻（コンテキスト時間）
+   * @param contextTime スケジューリングを停止する時刻（コンテキスト時刻）
    */
   stop(contextTime: number): void;
 }
@@ -140,7 +112,8 @@ export class Transport {
 
     this.audioContext = audioContext;
     this.scheduleAheadTime = scheduleAheadTime;
-    this.timer = new Timer(lookahead * 1000, () => {
+    this.timer = new Timer(lookahead * 1000);
+    this.timer.start(() => {
       if (this._state === "started") {
         this.schedule(this.audioContext.currentTime);
       }
@@ -166,7 +139,7 @@ export class Transport {
 
   /**
    * スケジューリングを行います。
-   * @param contextTime スケジューリングを行う時刻（コンテキスト時間）
+   * @param contextTime スケジューリングを行う時刻（コンテキスト時刻）
    */
   private schedule(contextTime: number) {
     // 再生位置を計算
@@ -262,7 +235,7 @@ export class Transport {
     if (this.state === "started") {
       this.stop();
     }
-    this.timer.dispose();
+    this.timer.stop();
   }
 }
 
@@ -354,7 +327,7 @@ class AudioEventScheduler implements EventScheduler {
   /**
    * スケジューリングを開始します。
    * このメソッドは一度しか呼び出せません。
-   * @param contextTime スケジューリングを開始する時刻（コンテキスト時間）
+   * @param contextTime スケジューリングを開始する時刻（コンテキスト時刻）
    * @param time スケジューリングの開始位置
    */
   start(contextTime: number, time: number) {
@@ -403,7 +376,7 @@ class AudioEventScheduler implements EventScheduler {
 
   /**
    * スケジューリングを停止します。
-   * @param contextTime スケジューリングを停止する時刻（コンテキスト時間）
+   * @param contextTime スケジューリングを停止する時刻（コンテキスト時刻）
    */
   stop(contextTime: number) {
     if (!this.isStarted) {
@@ -423,7 +396,7 @@ export interface Instrument {
   /**
    * ノートオンをスケジュールします。
    * すでに指定されたノート番号でノートオンがスケジュールされている場合は何も行いません。
-   * @param contextTime ノートオンを行う時刻（コンテキスト時間）
+   * @param contextTime ノートオンを行う時刻（コンテキスト時刻）
    * @param noteNumber MIDIノート番号
    */
   noteOn(contextTime: number, noteNumber: number): void;
@@ -431,7 +404,7 @@ export interface Instrument {
   /**
    * ノートオフをスケジュールします。
    * すでに指定されたノート番号でノートオフがスケジュールされている場合は何も行いません。
-   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   * @param contextTime ノートオフを行う時刻（コンテキスト時刻）
    * @param noteNumber MIDIノート番号
    */
   noteOff(contextTime: number, noteNumber: number): void;
@@ -440,7 +413,7 @@ export interface Instrument {
    * 発音中のすべての音に対して、ノートオフのスケジュールを行います。
    * すでにノートオフがスケジュールされている音の場合は、
    * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
-   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   * @param contextTime ノートオフを行う時刻（コンテキスト時刻）
    */
   allNotesOff(contextTime: number): void;
 }
@@ -473,7 +446,7 @@ class NoteEventScheduler implements EventScheduler {
   /**
    * スケジューリングを開始します。
    * このメソッドは一度しか呼び出せません。
-   * @param contextTime スケジューリングを開始する時刻（コンテキスト時間）
+   * @param contextTime スケジューリングを開始する時刻（コンテキスト時刻）
    * @param time スケジューリングの開始位置
    */
   start(contextTime: number, time: number) {
@@ -523,7 +496,7 @@ class NoteEventScheduler implements EventScheduler {
 
   /**
    * スケジューリングを停止します。
-   * @param contextTime スケジューリングを停止する時刻（コンテキスト時間）
+   * @param contextTime スケジューリングを停止する時刻（コンテキスト時刻）
    */
   stop(contextTime: number) {
     if (!this.isStarted) {
@@ -564,7 +537,7 @@ class AudioPlayerVoice {
   /**
    * 音声の再生をスケジュールします。
    * このメソッドは一度しか呼び出せません。
-   * @param contextTime 再生を行う時刻（コンテキスト時間）
+   * @param contextTime 再生を行う時刻（コンテキスト時刻）
    * @param offset オフセット（秒）
    */
   play(contextTime: number, offset: number) {
@@ -579,7 +552,7 @@ class AudioPlayerVoice {
    * 音声の停止をスケジュールします。
    * すでに停止がスケジュールされている場合は、
    * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
-   * @param contextTime 停止する時刻（コンテキスト時間）
+   * @param contextTime 停止する時刻（コンテキスト時刻）
    */
   stop(contextTime: number) {
     if (this.stopContextTime === undefined) {
@@ -618,7 +591,7 @@ export class AudioPlayer {
 
   /**
    * 音声の再生をスケジュールします。
-   * @param contextTime 再生を行う時刻（コンテキスト時間）
+   * @param contextTime 再生を行う時刻（コンテキスト時刻）
    * @param offset オフセット（秒）
    * @param buffer 再生する音声バッファ
    */
@@ -636,7 +609,7 @@ export class AudioPlayer {
    * 再生中のすべての音声の停止をスケジュールします。
    * すでに停止がスケジュールされている音声の場合は、
    * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
-   * @param contextTime 停止する時刻（コンテキスト時間）
+   * @param contextTime 停止する時刻（コンテキスト時刻）
    */
   allStop(contextTime: number) {
     this.voices.forEach((value) => {
@@ -729,7 +702,7 @@ class SynthVoice {
 
   /**
    * ノートオンをスケジュールします。
-   * @param contextTime ノートオンを行う時刻（コンテキスト時間）
+   * @param contextTime ノートオンを行う時刻（コンテキスト時刻）
    */
   noteOn(contextTime: number) {
     const atk = this.ampParams.attack;
@@ -756,7 +729,7 @@ class SynthVoice {
    * ノートオフをスケジュールします。
    * すでにノートオフがスケジュールされている場合は、
    * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
-   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   * @param contextTime ノートオフを行う時刻（コンテキスト時刻）
    */
   noteOff(contextTime: number) {
     const rel = this.ampParams.release;
@@ -828,9 +801,9 @@ export class PolySynth implements Instrument {
 
   /**
    * ノートオンをスケジュールします。
-   * すでに指定されたノート番号でノートオンがスケジュールされている場合は何も行いません。
    * ノートの長さが指定された場合は、ノートオフもスケジュールします。
-   * @param contextTime ノートオンを行う時刻（コンテキスト時間）
+   * すでに指定されたノート番号でノートオンがスケジュールされている場合は何も行いません。
+   * @param contextTime ノートオンを行う時刻（コンテキスト時刻）
    * @param noteNumber MIDIノート番号
    * @param duration ノートの長さ（秒）
    */
@@ -868,7 +841,7 @@ export class PolySynth implements Instrument {
   /**
    * ノートオフをスケジュールします。
    * すでに指定されたノート番号でノートオフがスケジュールされている場合は何も行いません。
-   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   * @param contextTime ノートオフを行う時刻（コンテキスト時刻）
    * @param noteNumber MIDIノート番号
    */
   noteOff(contextTime: number | "immediately", noteNumber: number) {
@@ -887,7 +860,7 @@ export class PolySynth implements Instrument {
    * 発音中のすべての音に対して、ノートオフのスケジュールを行います。
    * すでにノートオフがスケジュールされている音の場合は、
    * 指定された時刻が現在スケジュールされている時刻よりも早い場合にのみ再スケジュールを行います。
-   * @param contextTime ノートオフを行う時刻（コンテキスト時間）
+   * @param contextTime ノートオフを行う時刻（コンテキスト時刻）
    */
   allNotesOff(contextTime: number) {
     this.voices.forEach((value) => {
@@ -970,6 +943,9 @@ export class Limiter {
     this.setGainInDecibels(value, this.outputGainNode);
   }
 
+  /**
+   * リリース（秒）
+   */
   get release() {
     return this.compNode.release.value;
   }
