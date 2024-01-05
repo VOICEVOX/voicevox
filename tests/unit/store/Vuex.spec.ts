@@ -58,12 +58,7 @@ describe("store/vuex.js test", () => {
         isMultiEngineOffMode: false,
         savedLastCommandUnixMillisec: null,
         workspace: {
-          tempProject: {
-            state: "none",
-          },
-          autoLoadProjectInfo: {
-            projectSavedAt: null,
-          },
+          state: "none",
         },
         savingSetting: {
           fileEncoding: "UTF-8",
@@ -276,6 +271,6 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.confirmedTips.engineStartedOnAltPort, false);
     assert.equal(store.state.confirmedTips.notifyOnGenerate, false);
     assert.isNotEmpty(store.state.workspace);
-    assert.equal(store.state.workspace.tempProject.state, "none");
+    assert.equal(store.state.workspace.state, "none");
   });
 });

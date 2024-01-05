@@ -23,12 +23,7 @@ const DEFAULT_SAMPLING_RATE = 24000;
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandUnixMillisec: null,
   workspace: {
-    tempProject: {
-      state: "none",
-    },
-    autoLoadProjectInfo: {
-      projectSavedAt: null,
-    },
+    state: "none",
   },
 };
 
@@ -556,19 +551,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
     action: createUILockAction(async (context) => {
       try {
-        const { tempProject, autoLoadProjectInfo } = context.state.workspace;
+        const workspace = context.state.workspace;
 
-        if (tempProject.state === "none") {
+        if (workspace.state === "none") {
           return;
         }
 
-        const isFileModified =
-          autoLoadProjectInfo.projectFilePath &&
-          Math.floor((autoLoadProjectInfo.fileModifiedAt ?? 0) / 1000) !==
-            Math.floor((autoLoadProjectInfo.projectSavedAt ?? 0) / 1000);
-        if (tempProject.state === "saved") {
+        const { autoLoadProjectInfo } = workspace;
+
+        if (workspace.state === "saved") {
           // プロジェクト保存先のファイル変更チェック
-          if (isFileModified) {
+          if (context.getters.IS_PROJECT_EXTERNAL_MODIFIED) {
             const applyRestoredProject = await context.dispatch(
               "SHOW_CONFIRM_DIALOG",
               {
@@ -586,7 +579,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           // 自動読み込み機能有効時保存されたプロジェクトを復元する
-          if (context.state.savingSetting.enableAutoLoad) {
+          if (
+            context.state.savingSetting.enableAutoLoad &&
+            autoLoadProjectInfo
+          ) {
             await context.dispatch("LOAD_PROJECT_FILE", {
               filePath: autoLoadProjectInfo.projectFilePath,
               confirm: false,
@@ -595,17 +591,18 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         }
 
+        // 未保存時の復元確認
         const applyRestoredProject = await context.dispatch(
           "SHOW_CONFIRM_DIALOG",
           {
             title: "復元されたプロジェクト",
             message: `復元されたプロジェクトがあります。復元しますか？${
-              isFileModified
+              context.getters.IS_PROJECT_EXTERNAL_MODIFIED
                 ? "<br />※読み込み先のファイルが外部で変更されています。"
                 : ""
             }
             <br />復元対象 : ${
-              autoLoadProjectInfo.projectFilePath
+              autoLoadProjectInfo
                 ? "<span style='overflow-wrap: break-word;'>" +
                   escapeHtml(autoLoadProjectInfo.projectFilePath) +
                   "</span>"
@@ -620,16 +617,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         if (applyRestoredProject === "OK") {
           // 復元ボタン押下時
           // プロジェクト保存先の復元
-          const filePath = autoLoadProjectInfo.projectFilePath;
-          if (filePath) {
-            context.commit("SET_PROJECT_FILEPATH", { filePath });
+          if (autoLoadProjectInfo) {
+            context.commit("SET_PROJECT_FILEPATH", {
+              filePath: autoLoadProjectInfo.projectFilePath,
+            });
           }
 
           // AudioItems の復元
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
           const parsedProjectData = projectSchema.parse(
-            tempProject.project
+            workspace.tempProject.project
           ) as ProjectType;
           const { audioItems, audioKeys } = parsedProjectData;
 
@@ -714,31 +712,43 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const appInfos = await window.electron.getAppInfos();
           const { audioItems, audioKeys } = state;
 
-          workspace = {
-            tempProject: {
+          if (state.projectFilePath && state.workspace.state !== "none") {
+            // プロジェクト保存または読み込み後に編集し、保存していない状態
+            workspace = {
               state: "unSaved",
-              project: {
-                appVersion: appInfos.version,
-                audioKeys,
-                audioItems,
+              tempProject: {
+                project: {
+                  appVersion: appInfos.version,
+                  audioKeys,
+                  audioItems,
+                },
               },
-            },
-            autoLoadProjectInfo: {
-              projectFilePath: state.projectFilePath ?? "",
-              projectSavedAt:
-                state.workspace.autoLoadProjectInfo.projectSavedAt ?? null,
-            },
-          };
+              autoLoadProjectInfo: {
+                projectFilePath: state.projectFilePath,
+                projectSavedAt:
+                  state.workspace.autoLoadProjectInfo?.projectSavedAt ?? null,
+              },
+            };
+          } else {
+            // プロジェクト新規作成後に編集し、保存していない状態
+            workspace = {
+              state: "unSaved",
+              tempProject: {
+                project: {
+                  appVersion: appInfos.version,
+                  audioKeys,
+                  audioItems,
+                },
+              },
+            };
+          }
           break;
         }
         case "saved":
           workspace = {
-            tempProject: {
-              state: "saved",
-            },
-
+            state: "saved",
             autoLoadProjectInfo: {
-              projectFilePath: state.projectFilePath,
+              projectFilePath: state.projectFilePath ?? "",
               projectSavedAt: new Date().getTime(),
               fileModifiedAt: new Date().getTime(),
             },
@@ -746,12 +756,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           break;
         case "none":
           workspace = {
-            tempProject: {
-              state: "none",
-            },
-            autoLoadProjectInfo: {
-              projectSavedAt: null,
-            },
+            state: "none",
           };
       }
 
@@ -770,7 +775,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       return (
         getters.LAST_COMMAND_UNIX_MILLISEC !==
           state.savedLastCommandUnixMillisec ||
-        state.workspace.tempProject.state === "unSaved"
+        state.workspace.state === "unSaved"
       );
     },
   },
@@ -778,6 +783,28 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
     mutation(state, unixMillisec) {
       state.savedLastCommandUnixMillisec = unixMillisec;
+    },
+  },
+
+  // 自動読み込み対象のプロジェクトファイルが外部で変更されていないかチェックする
+  IS_PROJECT_EXTERNAL_MODIFIED: {
+    getter(state) {
+      if (
+        state.workspace.state === "none" ||
+        !state.workspace.autoLoadProjectInfo
+      ) {
+        return false;
+      }
+
+      // 保存時刻を比較（1000ms以下は切り捨て）
+      return (
+        Math.floor(
+          (state.workspace.autoLoadProjectInfo.fileModifiedAt ?? 0) / 1000
+        ) !==
+        Math.floor(
+          (state.workspace.autoLoadProjectInfo.projectSavedAt ?? 0) / 1000
+        )
+      );
     },
   },
 });

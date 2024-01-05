@@ -651,33 +651,34 @@ export const SandboxKey = "electron" as const;
  * プロジェクトの復元に必要な情報を保持する
  * 変更時はマイグレーションが必要
  */
-export type TempProjectType =
-  | {
-      /** プロジェクトの一部・またはすべてが未保存の状態 */
-      state: "unSaved";
-      project: ProjectType;
-    }
-  | {
-      /** プロジェクトが保存されている状態 */
-      state: "saved";
-    }
-  | {
-      /** プロジェクト一時ファイルの初期状態 */
-      state: "none";
-    };
+export type TempProjectType = {
+  project: ProjectType;
+};
 
 /**
  * 起動時のプロジェクト自動読み込みに必要な情報
  */
 export type AutoLoadProjectInfo = {
-  projectFilePath?: string;
+  projectFilePath: string;
   /** projectFilePath のファイル保存時刻（外部で編集された場合も値は変わらない） */
   projectSavedAt: number | null;
   /** projectFilePath のファイル物理変更時刻 */
   fileModifiedAt?: number;
 };
 
-export type WorkspaceType = {
-  tempProject: TempProjectType;
-  autoLoadProjectInfo: AutoLoadProjectInfo;
-};
+export type WorkspaceType =
+  | {
+      /** プロジェクトの一部・またはすべてが未保存の状態 */
+      state: "unSaved";
+      tempProject: TempProjectType;
+      autoLoadProjectInfo?: AutoLoadProjectInfo;
+    }
+  | {
+      /** プロジェクトが保存されている状態 */
+      state: "saved";
+      autoLoadProjectInfo: AutoLoadProjectInfo;
+    }
+  | {
+      /** プロジェクト一時ファイルの初期状態 */
+      state: "none";
+    };

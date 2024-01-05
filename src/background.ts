@@ -851,12 +851,7 @@ ipcMainHandle("GET_TEMP_PROJECT", async () => {
   try {
     if (!fs.existsSync(tempProjectPath)) {
       const defaultTempProject: WorkspaceType = {
-        tempProject: {
-          state: "none",
-        },
-        autoLoadProjectInfo: {
-          projectSavedAt: null,
-        },
+        state: "none",
       };
       const buf = new TextEncoder().encode(
         JSON.stringify(defaultTempProject)
@@ -870,10 +865,8 @@ ipcMainHandle("GET_TEMP_PROJECT", async () => {
       })
     );
 
-    if (
-      workspace.tempProject.state !== "none" &&
-      workspace.autoLoadProjectInfo.projectFilePath
-    ) {
+    if (workspace.state !== "none" && workspace.autoLoadProjectInfo) {
+      // 実際のファイル変更日時を取得
       const state = await fs.promises.stat(
         workspace.autoLoadProjectInfo.projectFilePath
       );

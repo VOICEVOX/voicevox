@@ -1053,6 +1053,10 @@ export type ProjectStoreTypes = {
   SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
     mutation: number | null;
   };
+
+  IS_PROJECT_EXTERNAL_MODIFIED: {
+    getter: boolean;
+  };
 };
 
 /*
