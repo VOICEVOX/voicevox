@@ -171,7 +171,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           if [ -n "$(git status --porcelain)" ]; then
             git add tests/e2e/browser
-            git commit -m "（スナップショットを更新）" -m "[skip ci]"
+            git commit -m "（スナップショットを更新）"
             git push
           else
             echo "No changes to commit"
