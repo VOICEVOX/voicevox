@@ -37,7 +37,15 @@ async function getSpeakerImages(): Promise<
   }[]
 > {
   if (!speakerImages) {
-    const characterInfos = await fs.readdir(characterInfoDir);
+    let characterInfos;
+    try {
+      characterInfos = await fs.readdir(characterInfoDir);
+    } catch (e) {
+      console.error(
+        "画像を取得できませんでした。submoduleのpullを忘れていませんか？"
+      );
+      throw e;
+    }
 
     // readdirの結果の順序に依存しないようにソートする。
     // 男声は入れない（女声の6種類で十分のはず）
