@@ -11,17 +11,6 @@ import {
   SpeakerToJSON,
 } from "@/openapi";
 
-const characterInfoDir = path.resolve(
-  __dirname,
-  "..",
-  "..",
-  "..", // プロジェクトルート
-  "build",
-  "vendored",
-  "voicevox_nemo_resource",
-  "voicevox_nemo",
-  "character_info"
-);
 let speakerImages: {
   portrait: string;
   icon: string;
@@ -37,43 +26,23 @@ async function getSpeakerImages(): Promise<
   }[]
 > {
   if (!speakerImages) {
-    let characterInfos;
-    try {
-      characterInfos = await fs.readdir(characterInfoDir);
-    } catch (e) {
-      console.error(
-        "画像を取得できませんでした。submoduleのpullを忘れていませんか？"
-      );
-      throw e;
-    }
-
-    // readdirの結果の順序に依存しないようにソートする。
-    // 男声は入れない（女声の6種類で十分のはず）
-    const femaleVoices = characterInfos.filter((characterInfo) =>
-      characterInfo.startsWith("女声")
+    const assetsPath = path.resolve(__dirname, "assets");
+    const images = await fs.readdir(assetsPath);
+    const icons = images.filter((image) => image.startsWith("icon"));
+    icons.sort(
+      (a, b) =>
+        parseInt(a.split(".")[0].split("_")[1]) -
+        parseInt(b.split(".")[0].split("_")[1])
     );
-
-    femaleVoices.sort((a, b) => parseInt(a[2]) - parseInt(b[2]));
     speakerImages = await Promise.all(
-      femaleVoices.map(async (characterInfo) => {
-        const characterInfoPath = path.join(characterInfoDir, characterInfo);
-        const files = await fs.readdir(characterInfoPath);
-        const portraitPath = files.find((image) =>
-          image.startsWith("portrait")
-        );
-        const iconPath = await fs
-          .readdir(path.join(characterInfoPath, "icons"))
-          .then((files) => files[0]);
-        if (!portraitPath || !iconPath) {
-          throw new Error(`portraitPath=${portraitPath}, iconPath=${iconPath}`);
-        }
-
+      icons.map(async (iconPath) => {
+        const portraitPath = iconPath.replace("icon_", "portrait_");
         const portrait = await fs.readFile(
-          path.join(characterInfoPath, portraitPath),
+          path.join(assetsPath, portraitPath),
           "base64"
         );
         const icon = await fs.readFile(
-          path.join(characterInfoPath, "icons", iconPath),
+          path.join(assetsPath, iconPath),
           "base64"
         );
 
