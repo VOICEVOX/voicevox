@@ -93,6 +93,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const commits = ${{ toJson(github.event.commits) }};
+            if (!commits) {
+              // pull_request などでコミットがない場合はスキップ
+              core.setOutput("updateSnapshots", false);
+              process.exit(0);
+            }
             const updateSnapshots = commits.some((commit) =>
               commit.message.toLowerCase().includes("[update snapshots]")
             );
