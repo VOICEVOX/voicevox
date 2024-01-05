@@ -68,7 +68,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         context.commit("CLEAR_COMMANDS");
-        context.dispatch("RESET_TEMP_PROJECT_FILE");
+        context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "none" });
       }
     ),
   },
@@ -362,7 +362,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
-          context.dispatch("RESET_TEMP_PROJECT_FILE");
+          context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "none" });
           return true;
         } catch (err) {
           window.electron.logError(err);
@@ -452,7 +452,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             context.getters.LAST_COMMAND_UNIX_MILLISEC
           );
           // 保存時に一時ファイルをクリアする
-          await context.dispatch("RESET_TEMP_PROJECT_FILE");
+          context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "saved" });
           return true;
         } catch (err) {
           window.electron.logError(err);
@@ -500,7 +500,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return saved ? "saved" : "canceled";
       } else if (result == 1) {
         // 変更内容を破棄する場合一時ファイルをクリアする
-        await dispatch("RESET_TEMP_PROJECT_FILE");
+        await dispatch("GENERATE_WORKSPACE", {
+          tempProjectState: "none",
+        });
         return "discarded";
       } else {
         return "canceled";
@@ -523,23 +525,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "unSaved" });
       } catch (err) {
         window.electron.logError(err);
-      }
-    },
-  },
-
-  /**
-   * プロジェクトの一時ファイルを空にする
-   */
-  RESET_TEMP_PROJECT_FILE: {
-    async action(context) {
-      context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "none" });
-
-      // 自動読み込み機能有効時プロジェクトファイルのパスを保存する
-      if (
-        context.state.savingSetting.enableAutoLoad &&
-        context.state.projectFilePath
-      ) {
-        context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "saved" });
       }
     },
   },
@@ -643,7 +628,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         } else {
           // 破棄ボタン押下時
-          await context.dispatch("RESET_TEMP_PROJECT_FILE");
+          await context.dispatch("GENERATE_WORKSPACE", {
+            tempProjectState: "none",
+          });
           return;
         }
       } catch (err) {
@@ -796,7 +783,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return false;
       }
 
-      // 保存時刻を比較（1000ms以下は切り捨て）
+      // 保存時刻を比較（誤差を考慮し1000ms未満は切り捨てて比較）
       return (
         Math.floor(
           (state.workspace.autoLoadProjectInfo.fileModifiedAt ?? 0) / 1000

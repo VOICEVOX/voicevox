@@ -1019,10 +1019,6 @@ export type ProjectStoreTypes = {
     action(): void;
   };
 
-  RESET_TEMP_PROJECT_FILE: {
-    action(): void;
-  };
-
   LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
     action(): void;
   };
