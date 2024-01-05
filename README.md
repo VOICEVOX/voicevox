@@ -122,9 +122,9 @@ npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
 2. リポジトリの設定の Actions > General > Workflow permissions で Read and write permissions を選択します。
 3. `[update snapshots]` という文字列をコミットメッセージに含めてコミットします。
 
-```bash
-git commit -m "UIを変更 [update snapshots]"
-```
+   ```bash
+   git commit -m "UIを変更 [update snapshots]"
+   ```
 
 4. 6 分ほどで更新されたスクリーンショットがコミットされます。
 
