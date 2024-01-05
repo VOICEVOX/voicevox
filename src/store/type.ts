@@ -749,11 +749,6 @@ export type CommandStoreTypes = {
   CLEAR_COMMANDS: {
     mutation: undefined;
   };
-
-  RESTORE_COMMAND_STATE: {
-    mutation: CommandStoreState;
-    action(commands: CommandStoreState): void;
-  };
 };
 
 /*

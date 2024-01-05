@@ -590,12 +590,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               filePath: autoLoadProjectInfo.projectFilePath,
               confirm: false,
             });
-
-            // undo/redo の復元
-            context.dispatch(
-              "RESTORE_COMMAND_STATE",
-              tempProject.commandStoreState
-            );
           }
           return;
         }
@@ -646,12 +640,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               audioItem,
             });
           }
-
-          // undo/redo の復元
-          context.dispatch(
-            "RESTORE_COMMAND_STATE",
-            tempProject.commandStoreState
-          );
 
           return;
         } else {
@@ -733,10 +721,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                 audioKeys,
                 audioItems,
               },
-              commandStoreState: {
-                undoCommands: state.undoCommands,
-                redoCommands: state.redoCommands,
-              },
             },
             autoLoadProjectInfo: {
               projectFilePath: state.projectFilePath ?? "",
@@ -750,10 +734,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           workspace = {
             tempProject: {
               state: "saved",
-              commandStoreState: {
-                undoCommands: state.undoCommands,
-                redoCommands: state.redoCommands,
-              },
             },
 
             autoLoadProjectInfo: {
@@ -788,7 +768,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     getter(state, getters) {
       return (
         getters.LAST_COMMAND_UNIX_MILLISEC !==
-        state.savedLastCommandUnixMillisec
+          state.savedLastCommandUnixMillisec ||
+        state.workspace.tempProject.state === "unSaved"
       );
     },
   },
