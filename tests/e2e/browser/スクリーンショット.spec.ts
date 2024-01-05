@@ -137,5 +137,5 @@ test("メイン画面の表示", async ({ page }) => {
       break;
     }
   }
-  await expect(page).toHaveScreenshot();
+  await expect(page).toHaveScreenshot("メイン画面.png");
 });
