@@ -18,7 +18,7 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
-      @mousedown="startPreview($event, 'ADD')"
+      @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
       @dblclick="onDoubleClick"
@@ -95,19 +95,20 @@
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
-        @body-mousedown="startPreview($event, 'MOVE', note)"
-        @right-edge-mousedown="startPreview($event, 'RESIZE_RIGHT', note)"
-        @left-edge-mousedown="startPreview($event, 'RESIZE_LEFT', note)"
+        @body-mousedown="onNoteBodyMouseDown($event, note)"
+        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
+        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyric-mouse-down="onNoteLyricMouseDown(note)"
       />
       <sequencer-note
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
         is-selected
-        :is-preview="nowPreviewing"
-        @body-mousedown="startPreview($event, 'MOVE', note)"
-        @right-edge-mousedown="startPreview($event, 'RESIZE_RIGHT', note)"
-        @left-edge-mousedown="startPreview($event, 'RESIZE_LEFT', note)"
+        @body-mousedown="onNoteBodyMouseDown($event, note)"
+        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
+        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyric-mouse-down="onNoteLyricMouseDown(note)"
       />
     </div>
     <div
@@ -199,6 +200,11 @@ import {
 import { Note } from "@/store/type";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
+
+type ClickedNoteInfo = {
+  id: string;
+  edited: boolean;
+};
 
 export default defineComponent({
   name: "SingScoreSequencer",
@@ -316,11 +322,8 @@ export default defineComponent({
     let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
     let edited = false;
     // ダブルクリック
-    const clickedNoteIds: [string | undefined, string | undefined] = [
-      undefined,
-      undefined,
-    ];
-    let cancelDoubleClick = false;
+    let mouseDownNoteId: string | undefined;
+    let clickedNoteInfos: (ClickedNoteInfo | undefined)[] = [];
 
     const previewAdd = () => {
       const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
@@ -544,10 +547,6 @@ export default defineComponent({
           lyric: getDoremiFromNoteNumber(cursorNoteNumber),
         };
         store.dispatch("DESELECT_ALL_NOTES");
-        store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: note.noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
-        });
         copiedNotes.push(note);
       } else {
         if (!note) {
@@ -573,10 +572,7 @@ export default defineComponent({
       dragStartTicks = cursorTicks;
       dragStartNoteNumber = cursorNoteNumber;
       draggingNoteId = note.id;
-      edited = false;
-      if (event.detail === 1) {
-        cancelDoubleClick = false;
-      }
+      edited = mode === "ADD";
       copiedNotesForPreview.clear();
       for (const copiedNote of copiedNotes) {
         copiedNotesForPreview.set(copiedNote.id, copiedNote);
@@ -584,6 +580,37 @@ export default defineComponent({
       previewNotes.value = copiedNotes;
       nowPreviewing.value = true;
       previewRequestId = requestAnimationFrame(preview);
+    };
+
+    const onNoteBodyMouseDown = (event: MouseEvent, note: Note) => {
+      startPreview(event, "MOVE", note);
+      mouseDownNoteId = note.id;
+    };
+
+    const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
+      startPreview(event, "RESIZE_LEFT", note);
+      mouseDownNoteId = note.id;
+    };
+
+    const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
+      startPreview(event, "RESIZE_RIGHT", note);
+      mouseDownNoteId = note.id;
+    };
+
+    const onNoteLyricMouseDown = (note: Note) => {
+      if (!state.selectedNoteIds.has(note.id)) {
+        store.dispatch("DESELECT_ALL_NOTES");
+        store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+        store.dispatch("PLAY_PREVIEW_SOUND", {
+          noteNumber: note.noteNumber,
+          duration: PREVIEW_SOUND_DURATION,
+        });
+      }
+      mouseDownNoteId = note.id;
+    };
+
+    const onMouseDown = (event: MouseEvent) => {
+      startPreview(event, "ADD");
     };
 
     const onMouseMove = (event: MouseEvent) => {
@@ -598,38 +625,63 @@ export default defineComponent({
       currentCursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
     };
 
-    const onMouseUp = () => {
-      clickedNoteIds[0] = clickedNoteIds[1];
-      clickedNoteIds[1] = nowPreviewing.value ? draggingNoteId : undefined;
+    const onMouseUp = (event: MouseEvent) => {
+      if (event.detail === 1) {
+        clickedNoteInfos = [];
+      }
+      if (mouseDownNoteId == undefined) {
+        clickedNoteInfos.push(undefined);
+      } else {
+        clickedNoteInfos.push({
+          id: mouseDownNoteId,
+          edited: nowPreviewing.value && edited,
+        });
+        mouseDownNoteId = undefined;
+      }
+
       if (!nowPreviewing.value) {
         return;
       }
       cancelAnimationFrame(previewRequestId);
-      if (previewMode === "ADD") {
-        store.dispatch("ADD_NOTES", { notes: previewNotes.value });
-        cancelDoubleClick = true;
-      } else if (edited) {
-        store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
-        cancelDoubleClick = true;
-      }
-      if (previewNotes.value.length === 1) {
-        store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: previewNotes.value[0].noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
-        });
+      if (edited) {
+        if (previewMode === "ADD") {
+          store.dispatch("ADD_NOTES", { notes: previewNotes.value });
+          store.dispatch("SELECT_NOTES", {
+            noteIds: previewNotes.value.map((value) => value.id),
+          });
+        } else {
+          store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
+        }
+        if (previewNotes.value.length === 1) {
+          store.dispatch("PLAY_PREVIEW_SOUND", {
+            noteNumber: previewNotes.value[0].noteNumber,
+            duration: PREVIEW_SOUND_DURATION,
+          });
+        }
       }
       nowPreviewing.value = false;
     };
 
     const onDoubleClick = () => {
-      if (
-        cancelDoubleClick ||
-        clickedNoteIds[0] !== clickedNoteIds[1] ||
-        clickedNoteIds[1] == undefined
-      ) {
+      if (clickedNoteInfos.length < 2) {
         return;
       }
-      store.dispatch("REMOVE_NOTES", { noteIds: [clickedNoteIds[1]] });
+      if (clickedNoteInfos.some((value) => value?.edited ?? false)) {
+        return;
+      }
+      if (clickedNoteInfos[0] == undefined) {
+        return;
+      }
+      for (let i = 1; i < clickedNoteInfos.length; i++) {
+        if (clickedNoteInfos[i - 1]?.id !== clickedNoteInfos[i]?.id) {
+          return;
+        }
+      }
+
+      const noteId = clickedNoteInfos[0].id;
+      if (state.editingLyricNoteId !== noteId) {
+        store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId });
+      }
     };
 
     // キーボードイベント
@@ -897,9 +949,13 @@ export default defineComponent({
       unselectedNotes,
       setZoomX,
       setZoomY,
+      onNoteBodyMouseDown,
+      onNoteLeftEdgeMouseDown,
+      onNoteRightEdgeMouseDown,
+      onNoteLyricMouseDown,
+      onMouseDown,
       onMouseMove,
       onMouseUp,
-      startPreview,
       onDoubleClick,
       onWheel,
       onScroll,

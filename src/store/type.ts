@@ -776,6 +776,7 @@ export type SingingStoreState = {
   sequencerSnapType: number;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
+  editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
   leftLocatorPosition: number;
@@ -850,6 +851,11 @@ export type SingingStoreTypes = {
 
   REMOVE_SELECTED_NOTES: {
     action(): void;
+  };
+
+  SET_EDITING_LYRIC_NOTE_ID: {
+    mutation: { noteId?: string };
+    action(payload: { noteId?: string }): void;
   };
 
   SET_PHRASE: {
