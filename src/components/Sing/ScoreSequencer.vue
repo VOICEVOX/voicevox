@@ -547,10 +547,6 @@ export default defineComponent({
           lyric: getDoremiFromNoteNumber(cursorNoteNumber),
         };
         store.dispatch("DESELECT_ALL_NOTES");
-        store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: note.noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
-        });
         copiedNotes.push(note);
       } else {
         if (!note) {
@@ -602,12 +598,14 @@ export default defineComponent({
     };
 
     const onNoteLyricMouseDown = (note: Note) => {
-      store.dispatch("DESELECT_ALL_NOTES");
-      store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-      store.dispatch("PLAY_PREVIEW_SOUND", {
-        noteNumber: note.noteNumber,
-        duration: PREVIEW_SOUND_DURATION,
-      });
+      if (!state.selectedNoteIds.has(note.id)) {
+        store.dispatch("DESELECT_ALL_NOTES");
+        store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+        store.dispatch("PLAY_PREVIEW_SOUND", {
+          noteNumber: note.noteNumber,
+          duration: PREVIEW_SOUND_DURATION,
+        });
+      }
       mouseDownNoteId = note.id;
     };
 
@@ -679,9 +677,11 @@ export default defineComponent({
           return;
         }
       }
-      store.dispatch("SET_EDITING_LYRIC_NOTE_ID", {
-        noteId: clickedNoteInfos[0].id,
-      });
+
+      const noteId = clickedNoteInfos[0].id;
+      if (state.editingLyricNoteId !== noteId) {
+        store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId });
+      }
     };
 
     // キーボードイベント

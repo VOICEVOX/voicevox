@@ -22,7 +22,6 @@
       v-if="showLyricInput"
       v-model.lazy.trim="lyric"
       v-focus
-      type="text"
       class="note-lyric-input"
       @mousedown.stop
       @dblclick.stop
@@ -42,7 +41,7 @@ import {
   noteNumberToBaseY,
 } from "@/helpers/singHelper";
 
-type NoteState = "NONE" | "SELECTED" | "OVERLAPPING";
+type NoteState = "NORMAL" | "SELECTED" | "OVERLAPPING";
 
 export default defineComponent({
   name: "SingSequencerNote",
@@ -88,7 +87,7 @@ export default defineComponent({
       if (state.overlappingNoteIds.has(props.note.id)) {
         return "OVERLAPPING";
       }
-      return "NONE";
+      return "NORMAL";
     });
     const lyric = computed({
       get() {
@@ -205,8 +204,7 @@ export default defineComponent({
   position: absolute;
   left: 0;
   bottom: calc(100% - 3px);
-  min-width: min(22px, 100%);
-  max-width: 100%;
+  min-width: 20px;
   padding: 0 1px 2px;
   background: white;
   color: colors.$display;
