@@ -503,6 +503,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
         return saved ? "saved" : "canceled";
       } else if (result == 1) {
+        // 変更内容を破棄する場合一時ファイルをクリアする
         await dispatch("RESET_TEMP_PROJECT_FILE");
         return "discarded";
       } else {

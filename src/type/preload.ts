@@ -674,8 +674,10 @@ export type TempProjectType =
  */
 export type AutoLoadProjectInfo = {
   projectFilePath?: string;
-  projectSavedAt: number | null; // projectFilePath のファイル保存時刻（外部で編集された場合も値は変わらない）
-  fileModifiedAt?: number; // projectFilePath のファイル物理変更時刻
+  /** projectFilePath のファイル保存時刻（外部で編集された場合も値は変わらない） */
+  projectSavedAt: number | null;
+  /** projectFilePath のファイル物理変更時刻 */
+  fileModifiedAt?: number;
 };
 
 export type WorkspaceType = {
