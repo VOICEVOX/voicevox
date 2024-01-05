@@ -73,6 +73,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         context.commit("CLEAR_COMMANDS");
+        context.dispatch("RESET_TEMP_PROJECT_FILE");
       }
     ),
   },
