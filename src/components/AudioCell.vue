@@ -8,7 +8,7 @@
       // このクラスはテストで使われているので残す。
       // TODO: テストをこのクラスに依存しないようにして、このクラスを消す。
       selected: isSelectedAudioCell && isMultiSelectEnabled,
-      highlighted:
+      'selected-highlight':
         isSelectedAudioCell &&
         isMultiSelectEnabled &&
         selectedAudioKeys.length > 1,
@@ -661,7 +661,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     // divはフォーカスするとデフォルトで青い枠が出るので消す
     outline: none;
   }
-  &.highlighted {
+  &.selected-highlight {
     background-color: colors.$active-point-focus;
   }
 
