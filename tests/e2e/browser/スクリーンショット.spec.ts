@@ -28,7 +28,7 @@ let speakerImages: {
 }[];
 
 /**
- * Voicevox Nemoで使われているアイコン・立ち絵を取得する。
+ * 差し替え用の立ち絵・アイコンを取得する。
  */
 async function getSpeakerImages(): Promise<
   {
