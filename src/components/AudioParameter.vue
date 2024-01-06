@@ -144,7 +144,7 @@ const formatValue = (
     return parseFloat(value.toFixed(2));
   }
 
-  if (value === null) {
+  if (value == null) {
     return parseFloat(defaultMinValue.toFixed(2));
   }
 
