@@ -61,7 +61,7 @@ const config: PlaywrightTestConfig = {
      */
     timeout: 5 * 1000,
     toHaveScreenshot: {
-      maxDiffPixelRatio: 0.01,
+      maxDiffPixelRatio: 0.001,
     },
   },
   // ファイルシステムが関連してくるので、Electronテストでは並列化しない
