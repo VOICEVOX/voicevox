@@ -20,7 +20,21 @@ export const ZOOM_Y_STEP = 0.05;
 export const PREVIEW_SOUND_DURATION = 0.1;
 
 export function noteNumberToFrequency(noteNumber: number) {
-  return 440 * 2 ** ((noteNumber - 69) / 12);
+  return 440 * Math.pow(2, (noteNumber - 69) / 12);
+}
+
+export function linearToDecibel(linearValue: number) {
+  if (linearValue === 0) {
+    return -1000;
+  }
+  return 20 * Math.log10(linearValue);
+}
+
+export function decibelToLinear(decibelValue: number) {
+  if (decibelValue <= -1000) {
+    return 0;
+  }
+  return Math.pow(10, decibelValue / 20);
 }
 
 // NOTE: 戻り値の単位はtick
@@ -257,10 +271,45 @@ export class FrequentlyUpdatedState<T> {
 }
 
 /**
- * requestAnimationFrameを使用して関数を定期的に実行します。
- * 関数は、指定した最大フレームレート以下で実行されます。
+ * タイマーです。関数を定期的に実行します。
  */
-export class AnimationFrameRunner {
+export class Timer {
+  private readonly interval: number;
+  private timeoutId?: number;
+
+  get isStarted() {
+    return this.timeoutId != undefined;
+  }
+
+  /**
+   * @param interval 関数を実行する間隔（ミリ秒）
+   */
+  constructor(interval: number) {
+    this.interval = interval;
+  }
+
+  start(onTick: () => void) {
+    const callback = () => {
+      onTick();
+      this.timeoutId = window.setTimeout(callback, this.interval);
+    };
+    this.timeoutId = window.setTimeout(callback, this.interval);
+  }
+
+  stop() {
+    if (this.timeoutId == undefined) {
+      throw new Error("The timer is not started.");
+    }
+    window.clearTimeout(this.timeoutId);
+    this.timeoutId = undefined;
+  }
+}
+
+/**
+ * requestAnimationFrameを使用して関数を定期的に実行します。
+ * 関数は、指定された最大フレームレート以下で実行されます。
+ */
+export class AnimationTimer {
   private readonly maxFrameTime: number;
   private readonly maxDiff: number;
 
@@ -269,16 +318,19 @@ export class AnimationFrameRunner {
   private diff = 0;
 
   get isStarted() {
-    return this.requestId !== undefined;
+    return this.requestId != undefined;
   }
 
+  /**
+   * @param maxFrameRate 最大フレームレート（フレーム毎秒）
+   */
   constructor(maxFrameRate = 60) {
     this.maxFrameTime = 1000 / maxFrameRate;
     this.maxDiff = this.maxFrameTime * 10;
   }
 
   start(onAnimationFrame: () => void) {
-    if (this.requestId !== undefined) {
+    if (this.requestId != undefined) {
       throw new Error("The animation frame runner is already started.");
     }
 
@@ -286,7 +338,7 @@ export class AnimationFrameRunner {
     this.prevTimeStamp = undefined;
 
     const callback = (timeStamp: number) => {
-      if (this.prevTimeStamp === undefined) {
+      if (this.prevTimeStamp == undefined) {
         this.diff += this.maxFrameTime;
       } else {
         this.diff += timeStamp - this.prevTimeStamp;
@@ -303,7 +355,7 @@ export class AnimationFrameRunner {
   }
 
   stop() {
-    if (this.requestId === undefined) {
+    if (this.requestId == undefined) {
       throw new Error("The animation frame runner is not started.");
     }
     window.cancelAnimationFrame(this.requestId);
