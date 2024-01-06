@@ -10,29 +10,23 @@ test.beforeEach(gotoHome);
 // 再度入力する -> 読み方が表示されたことを確認（表示されてなかったらもう一度Enter）
 // という流れで読み方を確認する。
 async function getYomi(page: Page, inputText: string): Promise<string> {
-  await page.locator(".audio-cell input").last().fill("");
-  await page.waitForTimeout(100);
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    await page.locator(".audio-cell input").last().press("Enter");
-    const text = (await page.locator(".text-cell").allInnerTexts()).join("");
-    if (text.length === 0) {
-      break;
-    }
+  const audioCellInput = page.locator(".audio-cell input").last();
+  await audioCellInput.fill("");
+  let text = "";
+  do {
     await page.waitForTimeout(100);
-  }
+    await audioCellInput.press("Enter");
+    text = (await page.locator(".text-cell").allInnerTexts()).join("");
+  } while (text.length > 0);
 
-  await page.locator(".audio-cell input").last().fill(inputText);
-  await page.waitForTimeout(100);
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    await page.locator(".audio-cell input").last().press("Enter");
+  await audioCellInput.fill(inputText);
+  do {
     await page.waitForTimeout(100);
-    const text = (await page.locator(".text-cell").allInnerTexts()).join("");
-    if (text.length > 0) {
-      return text;
-    }
-  }
+    await audioCellInput.press("Enter");
+    text = (await page.locator(".text-cell").allInnerTexts()).join("");
+  } while (text.length === 0);
+
+  return text;
 }
 
 async function openDictDialog(page: Page): Promise<void> {
@@ -61,15 +55,14 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   test.skip(!process.env.CI, "環境変数CIが未設定のためスキップします");
   await navigateToMain(page);
 
+  // テスト用にランダムな文字列を生成
   const randomString = Math.random().toString(36).slice(-8);
   const zenkakuRandomString = randomString.replace(/[\u0021-\u007e]/g, (s) => {
-    // アルファベットを入力し、読み方を確認
     return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
   });
-  // アルファベットを入力し、読み方を確認
+
+  // 文字列を入力して読み方を確認する
   const yomi = await getYomi(page, randomString);
-  // ほぼ100%の確率で8文字以上の読み方が返ってくるはず（無限の猿みたいなことが起きない限り）
-  expect(yomi.length).toBeGreaterThan(8);
 
   // 読み方の設定画面を開く
   await openDictDialog(page);
@@ -139,8 +132,9 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   await page.waitForTimeout(100);
 
   // 辞書から削除されていることを確認
+  // （＝最初の読み方と同じになっていることを確認）
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
   const yomi3 = await getYomi(page, randomString);
-  expect(yomi3.length).toBeGreaterThan(8);
+  expect(yomi3).toBe(yomi);
 });
