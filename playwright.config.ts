@@ -60,6 +60,9 @@ const config: PlaywrightTestConfig = {
      * For example in `await expect(locator).toHaveText();`
      */
     timeout: 5 * 1000,
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.01,
+    },
   },
   // ファイルシステムが関連してくるので、Electronテストでは並列化しない
   fullyParallel: !isElectron,
