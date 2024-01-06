@@ -173,7 +173,7 @@ const selectStyleIndex = (styleIndex: number) => {
   // 音声を再生する。同じ話者/styleIndexだったら停止する。
   const selectedStyleInfo = props.characterInfo.metas.styles[styleIndex];
   if (
-    playing.value !== undefined &&
+    playing.value != undefined &&
     playing.value.styleId === selectedStyleInfo.styleId
   ) {
     stop();

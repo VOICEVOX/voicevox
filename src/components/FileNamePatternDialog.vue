@@ -127,7 +127,7 @@ const errorMessage = computed(() => {
   }
 
   const result: string[] = [];
-  if (invalidChar.value !== undefined) {
+  if (invalidChar.value != undefined) {
     result.push(`使用できない文字が含まれています：「${invalidChar.value}」`);
   }
   if (previewFileName.value.includes("$")) {

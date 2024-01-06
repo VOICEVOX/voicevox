@@ -148,8 +148,11 @@ const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
     "全体のイントネーションをリセット",
     () => {
       if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
-        store.dispatch("COMMAND_RESET_MORA_PITCH_AND_LENGTH", {
-          audioKey: store.getters.ACTIVE_AUDIO_KEY,
+        const audioKeys = store.state.experimentalSetting.enableMultiSelect
+          ? store.getters.SELECTED_AUDIO_KEYS
+          : [store.getters.ACTIVE_AUDIO_KEY];
+        store.dispatch("COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH", {
+          audioKeys,
         });
       }
     },

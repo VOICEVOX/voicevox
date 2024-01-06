@@ -502,17 +502,23 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_MULTI_CHANGE_VOICE: {
-    mutation: { audioKeys: AudioKey[]; voice: Voice } & (
-      | { update: "RollbackStyleId" }
-      | {
-          update: "AccentPhrases";
-          accentPhrases: AccentPhrase[];
-        }
-      | {
-          update: "AudioQuery";
-          query: AudioQuery;
-        }
-    );
+    mutation: {
+      voice: Voice;
+      changes: Record<
+        AudioKey,
+        | {
+            update: "AccentPhrases";
+            accentPhrases: AccentPhrase[];
+          }
+        | {
+            update: "AudioQuery";
+            query: AudioQuery;
+          }
+        | {
+            update: "OnlyVoice";
+          }
+      >;
+    };
     action(payload: { audioKeys: AudioKey[]; voice: Voice }): void;
   };
 
@@ -549,8 +555,8 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
-    action(payload: { audioKey: AudioKey }): void;
+  COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH: {
+    action(payload: { audioKeys: AudioKey[] }): void;
   };
 
   COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH: {
