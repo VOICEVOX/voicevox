@@ -378,7 +378,7 @@ const playheadPosition = new FrequentlyUpdatedState(0);
 const overlappingNotesDetector = new OverlappingNotesDetector();
 const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
-const animationFrameRunner = new AnimationTimer();
+const animationTimer = new AnimationTimer();
 
 export const singingStoreState: SingingStoreState = {
   singer: undefined,
@@ -956,7 +956,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_PLAYBACK_STATE", { nowPlaying: true });
 
       transport.start();
-      animationFrameRunner.start(() => {
+      animationTimer.start(() => {
         playheadPosition.value = getters.GET_PLAYHEAD_POSITION();
       });
     },
@@ -973,7 +973,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_PLAYBACK_STATE", { nowPlaying: false });
 
       transport.stop();
-      animationFrameRunner.stop();
+      animationTimer.stop();
       playheadPosition.value = getters.GET_PLAYHEAD_POSITION();
     },
   },
@@ -1154,7 +1154,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const logPhonemes = (moras: Mora[]) => {
         const phonemes = moras
           .map((value) => {
-            if (value.consonant === undefined) {
+            if (value.consonant == undefined) {
               return [value.vowel];
             } else {
               return [value.consonant, value.vowel];
@@ -1196,7 +1196,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const minVowelLength = 0.01;
             const minConsonantLength = 0.02;
             const noteLength = noteOffTime - noteOnTime;
-            if (nextMora && nextMora.consonantLength !== undefined) {
+            if (nextMora && nextMora.consonantLength != undefined) {
               // 母音の後ろに子音がある場合
               mora.vowelLength = noteLength - nextMora.consonantLength;
               if (mora.vowelLength < minVowelLength) {
@@ -1410,7 +1410,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!phrase.query) {
             throw new Error("query is undefined.");
           }
-          if (phrase.startTime === undefined) {
+          if (phrase.startTime == undefined) {
             throw new Error("startTime is undefined.");
           }
           if (!phraseData.blob) {
@@ -1763,7 +1763,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             B: 11,
           };
           const stepChar = stepElement.textContent;
-          if (stepChar === null) {
+          if (stepChar == null) {
             throw new Error("The value is invalid.");
           }
           return stepNumberDict[stepChar];
@@ -2163,7 +2163,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
             if (
               !phraseData.blob ||
-              phrase.startTime === undefined ||
+              phrase.startTime == undefined ||
               phrase.state !== "PLAYABLE"
             ) {
               continue;
