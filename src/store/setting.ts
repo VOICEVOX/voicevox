@@ -15,7 +15,9 @@ import {
   ToolbarSetting,
   EngineId,
   ConfirmedTips,
+  RootMiscSetting as RootMiscSetting,
 } from "@/type/preload";
+import { IsEqual } from "@/type/utility";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -89,22 +91,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       }
 
-      dispatch("SET_EDITOR_FONT", {
-        editorFont: await window.electron.getSetting("editorFont"),
-      });
-
-      dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
-        showTextLineNumber: await window.electron.getSetting(
-          "showTextLineNumber"
-        ),
-      });
-
-      dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
-        showAddAudioItemButton: await window.electron.getSetting(
-          "showAddAudioItemButton"
-        ),
-      });
-
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
         acceptRetrieveTelemetry: await window.electron.getSetting(
           "acceptRetrieveTelemetry"
@@ -129,16 +115,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         ),
       });
 
-      commit("SET_SPLIT_TEXT_WHEN_PASTE", {
-        splitTextWhenPaste: await window.electron.getSetting(
-          "splitTextWhenPaste"
-        ),
-      });
-
-      commit("SET_SPLITTER_POSITION", {
-        splitterPosition: await window.electron.getSetting("splitterPosition"),
-      });
-
       commit("SET_CONFIRMED_TIPS", {
         confirmedTips: await window.electron.getSetting("confirmedTips"),
       });
@@ -157,11 +133,30 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       }
 
-      commit("SET_ENABLE_MULTI_ENGINE", {
-        enableMultiEngine: await window.electron.getSetting(
-          "enableMultiEngine"
-        ),
-      });
+      const rootMiscSettingKeys = [
+        "editorFont",
+        "showTextLineNumber",
+        "showAddAudioItemButton",
+        "splitTextWhenPaste",
+        "splitterPosition",
+        "enableMultiEngine",
+      ] as const;
+
+      // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _: IsEqual<
+        keyof RootMiscSetting,
+        typeof rootMiscSettingKeys[number]
+      > = true;
+
+      for (const key of rootMiscSettingKeys) {
+        commit("SET_ROOT_MISC_SETTING", {
+          // NOTE: Vuexの型処理でUnionが解かれてしまうのを迂回している
+          // FIXME: このワークアラウンドをなくす
+          key: key as never,
+          value: await window.electron.getSetting(key),
+        });
+      }
     },
   },
 
@@ -225,6 +220,20 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
+  SET_ROOT_MISC_SETTING: {
+    mutation(state, { key, value }) {
+      // NOTE: Vuexの型処理でUnionが解かれてしまうのを迂回している
+      // FIXME: このワークアラウンドをなくす
+      state[key as never] = value;
+    },
+    action({ commit }, { key, value }) {
+      window.electron.setSetting(key, value);
+      // NOTE: Vuexの型処理でUnionが解かれてしまうのを迂回している
+      // FIXME: このワークアラウンドをなくす
+      commit("SET_ROOT_MISC_SETTING", { key: key as never, value });
+    },
+  },
+
   SET_THEME_SETTING: {
     mutation(
       state,
@@ -285,43 +294,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
-  SET_EDITOR_FONT: {
-    mutation(state, { editorFont }) {
-      state.editorFont = editorFont;
-    },
-    action({ commit }, { editorFont }) {
-      window.electron.setSetting("editorFont", editorFont);
-      commit("SET_EDITOR_FONT", { editorFont });
-    },
-  },
-
-  SET_SHOW_TEXT_LINE_NUMBER: {
-    mutation(state, { showTextLineNumber }) {
-      state.showTextLineNumber = showTextLineNumber;
-    },
-    action({ commit }, { showTextLineNumber }) {
-      window.electron.setSetting("showTextLineNumber", showTextLineNumber);
-      commit("SET_SHOW_TEXT_LINE_NUMBER", {
-        showTextLineNumber,
-      });
-    },
-  },
-
-  SET_SHOW_ADD_AUDIO_ITEM_BUTTON: {
-    mutation(state, { showAddAudioItemButton }) {
-      state.showAddAudioItemButton = showAddAudioItemButton;
-    },
-    action({ commit }, { showAddAudioItemButton }) {
-      window.electron.setSetting(
-        "showAddAudioItemButton",
-        showAddAudioItemButton
-      );
-      commit("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
-        showAddAudioItemButton,
-      });
-    },
-  },
-
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
     mutation(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
@@ -363,26 +335,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action({ commit }, { experimentalSetting }) {
       window.electron.setSetting("experimentalSetting", experimentalSetting);
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
-    },
-  },
-
-  SET_SPLIT_TEXT_WHEN_PASTE: {
-    mutation(state, { splitTextWhenPaste }) {
-      state.splitTextWhenPaste = splitTextWhenPaste;
-    },
-    action({ commit }, { splitTextWhenPaste }) {
-      window.electron.setSetting("splitTextWhenPaste", splitTextWhenPaste);
-      commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
-    },
-  },
-
-  SET_SPLITTER_POSITION: {
-    mutation(state, { splitterPosition }) {
-      state.splitterPosition = splitterPosition;
-    },
-    action({ commit }, { splitterPosition }) {
-      window.electron.setSetting("splitterPosition", splitterPosition);
-      commit("SET_SPLITTER_POSITION", { splitterPosition });
     },
   },
 
@@ -433,16 +385,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     async action({ commit }, { engineSetting, engineId }) {
       await window.electron.setEngineSetting(engineId, engineSetting);
       commit("SET_ENGINE_SETTING", { engineSetting, engineId });
-    },
-  },
-
-  SET_ENABLE_MULTI_ENGINE: {
-    mutation(state, { enableMultiEngine }) {
-      state.enableMultiEngine = enableMultiEngine;
-    },
-    action({ commit }, { enableMultiEngine }) {
-      window.electron.setSetting("enableMultiEngine", enableMultiEngine);
-      commit("SET_ENABLE_MULTI_ENGINE", { enableMultiEngine });
     },
   },
 
