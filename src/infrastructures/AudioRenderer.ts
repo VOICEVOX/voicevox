@@ -1,9 +1,9 @@
 import {
-  Timer,
+  noteNumberToFrequency,
   decibelToLinear,
   linearToDecibel,
-  noteNumberToFrequency,
-} from "@/helpers/singHelper";
+} from "@/sing/domain";
+import { Timer } from "@/sing/utility";
 
 const getEarliestSchedulableContextTime = (audioContext: BaseAudioContext) => {
   const renderQuantumSize = 128;

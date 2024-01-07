@@ -39,7 +39,7 @@ import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
-} from "@/helpers/singHelper";
+} from "@/sing/viewHelper";
 
 type NoteState = "NORMAL" | "SELECTED" | "OVERLAPPING";
 

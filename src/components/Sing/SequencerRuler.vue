@@ -59,12 +59,8 @@
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
-import {
-  baseXToTick,
-  getMeasureDuration,
-  getTimeSignaturePositions,
-  tickToBaseX,
-} from "@/helpers/singHelper";
+import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
+import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 
 export default defineComponent({
   name: "SingSequencerRuler",

@@ -99,7 +99,8 @@ import {
   onUnmounted,
 } from "vue";
 import { useStore } from "@/store";
-import { BEAT_TYPES, getSnapTypes, isTriplet } from "@/helpers/singHelper";
+import { BEAT_TYPES, isTriplet } from "@/sing/domain";
+import { getSnapTypes } from "@/sing/storeHelper";
 
 export default defineComponent({
   name: "SingToolBar",

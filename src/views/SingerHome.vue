@@ -26,29 +26,19 @@
 </template>
 
 <script lang="ts">
-import {
-  computed,
-  defineComponent,
-  //onBeforeUpdate,
-  onMounted,
-  //ref,
-  //watch,
-} from "vue";
+import { computed, defineComponent, onMounted } from "vue";
 import { useStore } from "@/store";
-// import { QResizeObserver, useQuasar } from "quasar";
-// import path from "path";
-
-import SingerTab from "@/components/SingerTab.vue";
-import MenuBar from "@/components/Sing/MenuBar.vue";
-import ToolBar from "@/components/Sing/ToolBar.vue";
-import SingerPanel from "@/components/Sing/SingerPanel.vue";
-import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 import {
   DEFAULT_BEATS,
   DEFAULT_BEAT_TYPE,
   DEFAULT_BPM,
   DEFAULT_TPQN,
-} from "@/helpers/singHelper";
+} from "@/sing/storeHelper";
+import SingerTab from "@/components/SingerTab.vue";
+import MenuBar from "@/components/Sing/MenuBar.vue";
+import ToolBar from "@/components/Sing/ToolBar.vue";
+import SingerPanel from "@/components/Sing/SingerPanel.vue";
+import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 
 export default defineComponent({
   name: "SingerHome",
