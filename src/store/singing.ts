@@ -1,6 +1,8 @@
 import path from "path";
 import { Midi } from "@tonejs/midi";
 import { v4 as uuidv4 } from "uuid";
+import { createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
 import {
   Score,
   Tempo,
@@ -13,8 +15,8 @@ import {
   Phrase,
   PhraseState,
 } from "./type";
-import { createPartialStore } from "./vuex";
-import { createUILockAction } from "./ui";
+import { AudioQuery, Mora } from "@/openapi";
+import { ResultError, getValueOrThrow } from "@/type/result";
 import {
   AudioEvent,
   AudioPlayer,
@@ -31,90 +33,33 @@ import {
   Transport,
 } from "@/infrastructures/AudioRenderer";
 import {
-  BEAT_TYPES,
+  getMeasureDuration,
+  isValidNote,
+  isValidScore,
+  isValidTempo,
+  isValidTimeSignature,
+  noteNumberToFrequency,
+  secondToTick,
+  tickToSecond,
+} from "@/sing/domain";
+import {
   DEFAULT_BEATS,
   DEFAULT_BEAT_TYPE,
   DEFAULT_BPM,
   DEFAULT_TPQN,
-  getDoremiFromNoteNumber,
-  getMeasureDuration,
-  isValidSnapType,
-  noteNumberToFrequency,
-  round,
   FrequentlyUpdatedState,
+  OverlappingNotesDetector,
+  copyScore,
+  copySinger,
+  generateSingerAndScoreHash,
+  isValidSnapType,
+} from "@/sing/storeHelper";
+import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
+import {
   AnimationTimer,
-} from "@/helpers/singHelper";
-import { AudioQuery, Mora } from "@/openapi";
-import { ResultError, getValueOrThrow } from "@/type/result";
-
-const tickToSecondForConstantBpm = (
-  ticks: number,
-  bpm: number,
-  tpqn: number
-) => {
-  const quarterNotesPerMinute = bpm;
-  const quarterNotesPerSecond = quarterNotesPerMinute / 60;
-  return ticks / tpqn / quarterNotesPerSecond;
-};
-
-const secondToTickForConstantBpm = (
-  seconds: number,
-  bpm: number,
-  tpqn: number
-) => {
-  const quarterNotesPerMinute = bpm;
-  const quarterNotesPerSecond = quarterNotesPerMinute / 60;
-  return seconds * quarterNotesPerSecond * tpqn;
-};
-
-const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
-  let timeOfTempo = 0;
-  let tempo = tempos[tempos.length - 1];
-  for (let i = 0; i < tempos.length; i++) {
-    if (i === tempos.length - 1) {
-      break;
-    }
-    if (tempos[i + 1].position > ticks) {
-      tempo = tempos[i];
-      break;
-    }
-    timeOfTempo += tickToSecondForConstantBpm(
-      tempos[i + 1].position - tempos[i].position,
-      tempos[i].bpm,
-      tpqn
-    );
-  }
-  return (
-    timeOfTempo +
-    tickToSecondForConstantBpm(ticks - tempo.position, tempo.bpm, tpqn)
-  );
-};
-
-const secondToTick = (seconds: number, tempos: Tempo[], tpqn: number) => {
-  let timeOfTempo = 0;
-  let tempo = tempos[tempos.length - 1];
-  for (let i = 0; i < tempos.length; i++) {
-    if (i === tempos.length - 1) {
-      break;
-    }
-    const timeOfNextTempo =
-      timeOfTempo +
-      tickToSecondForConstantBpm(
-        tempos[i + 1].position - tempos[i].position,
-        tempos[i].bpm,
-        tpqn
-      );
-    if (timeOfNextTempo > seconds) {
-      tempo = tempos[i];
-      break;
-    }
-    timeOfTempo = timeOfNextTempo;
-  }
-  return (
-    tempo.position +
-    secondToTickForConstantBpm(seconds - timeOfTempo, tempo.bpm, tpqn)
-  );
-};
+  createPromiseThatResolvesWhen,
+  round,
+} from "@/sing/utility";
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -137,214 +82,6 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
     };
   });
 };
-
-const copyScore = (score: Score): Score => {
-  return {
-    tpqn: score.tpqn,
-    tempos: score.tempos.map((value) => ({ ...value })),
-    timeSignatures: score.timeSignatures.map((value) => ({ ...value })),
-    notes: score.notes.map((value) => ({ ...value })),
-  };
-};
-
-const copySinger = (singer?: Singer): Singer | undefined => {
-  if (!singer) {
-    return undefined;
-  }
-  return {
-    engineId: singer.engineId,
-    styleId: singer.styleId,
-  };
-};
-
-const _generateHash = async <T>(obj: T) => {
-  const textEncoder = new TextEncoder();
-  const data = textEncoder.encode(JSON.stringify(obj));
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest))
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join("");
-};
-
-const createPromiseThatResolvesWhen = (
-  condition: () => boolean,
-  interval = 200
-) => {
-  return new Promise<void>((resolve) => {
-    const checkCondition = () => {
-      if (condition()) {
-        resolve();
-      }
-      window.setTimeout(checkCondition, interval);
-    };
-    checkCondition();
-  });
-};
-
-const generateSingerAndScoreHash = async (obj: {
-  singer: Singer | undefined;
-  score: Score;
-}) => {
-  return _generateHash(obj);
-};
-
-const isValidTpqn = (tpqn: number) => {
-  return (
-    Number.isInteger(tpqn) &&
-    BEAT_TYPES.every((value) => tpqn % value === 0) &&
-    tpqn % 3 === 0
-  );
-};
-
-const isValidTempo = (tempo: Tempo) => {
-  return (
-    Number.isInteger(tempo.position) &&
-    Number.isFinite(tempo.bpm) &&
-    tempo.position >= 0 &&
-    tempo.bpm > 0
-  );
-};
-
-const isValidBeatType = (beatType: number) => {
-  return Number.isInteger(beatType) && BEAT_TYPES.includes(beatType);
-};
-
-const isValidTimeSignature = (timeSignature: TimeSignature) => {
-  return (
-    Number.isInteger(timeSignature.measureNumber) &&
-    Number.isInteger(timeSignature.beats) &&
-    timeSignature.measureNumber > 0 &&
-    timeSignature.beats > 0 &&
-    isValidBeatType(timeSignature.beatType)
-  );
-};
-
-const isValidNote = (note: Note) => {
-  return (
-    Number.isInteger(note.position) &&
-    Number.isInteger(note.duration) &&
-    Number.isInteger(note.noteNumber) &&
-    note.position >= 0 &&
-    note.duration > 0 &&
-    note.noteNumber >= 0 &&
-    note.noteNumber <= 127
-  );
-};
-
-const isValidTempos = (tempos: Tempo[]) => {
-  return (
-    tempos.length > 0 &&
-    tempos[0].position === 0 &&
-    tempos.every((value) => isValidTempo(value))
-  );
-};
-
-const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
-  return (
-    timeSignatures.length > 0 &&
-    timeSignatures[0].measureNumber === 1 &&
-    timeSignatures.every((value) => isValidTimeSignature(value))
-  );
-};
-
-const isValidNotes = (notes: Note[]) => {
-  return notes.every((value) => isValidNote(value));
-};
-
-const isValidScore = (score: Score) => {
-  return (
-    isValidTpqn(score.tpqn) &&
-    isValidTempos(score.tempos) &&
-    isValidTimeSignatures(score.timeSignatures) &&
-    isValidNotes(score.notes)
-  );
-};
-
-type NoteInfo = {
-  startTicks: number;
-  endTicks: number;
-  overlappingNoteIds: Set<string>;
-};
-
-class OverlappingNotesDetector {
-  private readonly noteInfos = new Map<string, NoteInfo>();
-
-  addNotes(notes: Note[]) {
-    for (const note of notes) {
-      this.noteInfos.set(note.id, {
-        startTicks: note.position,
-        endTicks: note.position + note.duration,
-        overlappingNoteIds: new Set<string>(),
-      });
-    }
-    // TODO: 計算量がO(n^2)になっているので、区間木などを使用してO(nlogn)にする
-    for (const note of notes) {
-      const overlappingNoteIds = new Set<string>();
-      for (const [noteId, noteInfo] of this.noteInfos) {
-        if (noteId === note.id) {
-          continue;
-        }
-        if (noteInfo.startTicks >= note.position + note.duration) {
-          continue;
-        }
-        if (noteInfo.endTicks <= note.position) {
-          continue;
-        }
-        overlappingNoteIds.add(noteId);
-      }
-
-      const noteId1 = note.id;
-      const noteInfo1 = this.noteInfos.get(noteId1);
-      if (!noteInfo1) {
-        throw new Error("noteInfo1 is undefined.");
-      }
-      for (const noteId2 of overlappingNoteIds) {
-        const noteInfo2 = this.noteInfos.get(noteId2);
-        if (!noteInfo2) {
-          throw new Error("noteInfo2 is undefined.");
-        }
-        noteInfo2.overlappingNoteIds.add(noteId1);
-        noteInfo1.overlappingNoteIds.add(noteId2);
-      }
-    }
-  }
-
-  removeNotes(notes: Note[]) {
-    for (const note of notes) {
-      const noteId1 = note.id;
-      const noteInfo1 = this.noteInfos.get(noteId1);
-      if (!noteInfo1) {
-        throw new Error("noteInfo1 is undefined.");
-      }
-      for (const noteId2 of noteInfo1.overlappingNoteIds) {
-        const noteInfo2 = this.noteInfos.get(noteId2);
-        if (!noteInfo2) {
-          throw new Error("noteInfo2 is undefined.");
-        }
-        noteInfo2.overlappingNoteIds.delete(noteId1);
-        noteInfo1.overlappingNoteIds.delete(noteId2);
-      }
-    }
-    for (const note of notes) {
-      this.noteInfos.delete(note.id);
-    }
-  }
-
-  updateNotes(notes: Note[]) {
-    this.removeNotes(notes);
-    this.addNotes(notes);
-  }
-
-  getOverlappingNoteIds() {
-    const overlappingNoteIds = new Set<string>();
-    for (const [noteId, noteInfo] of this.noteInfos) {
-      if (noteInfo.overlappingNoteIds.size !== 0) {
-        overlappingNoteIds.add(noteId);
-      }
-    }
-    return overlappingNoteIds;
-  }
-}
 
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;

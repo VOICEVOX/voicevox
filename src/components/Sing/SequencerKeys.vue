@@ -54,7 +54,7 @@
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
-import { keyInfos, getKeyBaseHeight } from "@/helpers/singHelper";
+import { keyInfos, getKeyBaseHeight } from "@/sing/viewHelper";
 
 export default defineComponent({
   name: "SingSequencerKeys",

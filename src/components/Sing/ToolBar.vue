@@ -40,7 +40,7 @@
         @change="setTempo"
       >
         <template #prepend>
-          <div />
+          <div></div>
         </template>
       </q-input>
       <q-input
@@ -53,7 +53,7 @@
         @change="setTimeSignature"
       >
         <template #prepend>
-          <div />
+          <div></div>
         </template>
       </q-input>
       /
@@ -67,7 +67,7 @@
         @change="setTimeSignature"
       >
         <template #prepend>
-          <div />
+          <div></div>
         </template>
       </q-input>
     </div>
@@ -99,7 +99,8 @@ import {
   onUnmounted,
 } from "vue";
 import { useStore } from "@/store";
-import { BEAT_TYPES, getSnapTypes, isTriplet } from "@/helpers/singHelper";
+import { isTriplet, isValidBeatType } from "@/sing/domain";
+import { getSnapTypes } from "@/sing/storeHelper";
 
 export default defineComponent({
   name: "SingToolBar",
@@ -155,7 +156,7 @@ export default defineComponent({
     };
     const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
       const beatType = Number(beatTypeStr);
-      if (!Number.isInteger(beatType) || !BEAT_TYPES.includes(beatType)) {
+      if (!Number.isInteger(beatType) || !isValidBeatType(beatType)) {
         return;
       }
       beatTypeInputBuffer.value = beatType;
@@ -329,8 +330,9 @@ export default defineComponent({
   padding: 8px 16px;
   width: 100%;
 }
+
 .singer-panel-toggler {
-  border: 2px solid #777;
+  border: 2px solid #aaa;
   border-radius: 50%;
   display: block;
   height: 48px;

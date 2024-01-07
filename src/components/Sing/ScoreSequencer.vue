@@ -174,13 +174,13 @@
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
-import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
-import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
-import SequencerNote from "@/components/Sing/SequencerNote.vue";
-import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
+import { Note } from "@/store/type";
 import {
   getMeasureDuration,
   getNoteDuration,
+  getNumOfMeasures,
+} from "@/sing/domain";
+import {
   getKeyBaseHeight,
   tickToBaseX,
   baseXToTick,
@@ -188,7 +188,6 @@ import {
   baseYToNoteNumber,
   keyInfos,
   getDoremiFromNoteNumber,
-  getNumOfMeasures,
   ZOOM_X_MIN,
   ZOOM_X_MAX,
   ZOOM_X_STEP,
@@ -196,8 +195,11 @@ import {
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
-} from "@/helpers/singHelper";
-import { Note } from "@/store/type";
+} from "@/sing/viewHelper";
+import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
+import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
+import SequencerNote from "@/components/Sing/SequencerNote.vue";
+import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -320,7 +322,7 @@ export default defineComponent({
     let dragStartTicks = 0;
     let dragStartNoteNumber = 0;
     let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
-    let edited = false;
+    let edited = false; // プレビュー終了時にScoreの変更を行うかどうかを表す変数
     // ダブルクリック
     let mouseDownNoteId: string | undefined;
     let clickedNoteInfos: (ClickedNoteInfo | undefined)[] = [];
