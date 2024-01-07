@@ -188,7 +188,7 @@ export default defineComponent({
     }
 
     .note-lyric {
-      border-color: hsl(33, 100%, 84%);
+      border-color: hsl(33, 0%, 90%);
     }
   }
 
@@ -208,14 +208,13 @@ export default defineComponent({
   padding: 0 1px 2px;
   background: white;
   color: colors.$display;
-  border: 1px solid hsl(130, 35%, 88%);
+  border: 1px solid hsl(130, 0%, 90%);
   border-radius: 3px;
   font-size: 12px;
   font-weight: bold;
   font-feature-settings: "palt" 1;
   letter-spacing: 0.05em;
   white-space: nowrap;
-  overflow: hidden;
 }
 
 .note-bar {

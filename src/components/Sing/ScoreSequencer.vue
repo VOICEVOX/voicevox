@@ -322,7 +322,7 @@ export default defineComponent({
     let dragStartTicks = 0;
     let dragStartNoteNumber = 0;
     let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
-    let edited = false;
+    let edited = false; // プレビュー終了時にScoreの変更を行うかどうかを表す変数
     // ダブルクリック
     let mouseDownNoteId: string | undefined;
     let clickedNoteInfos: (ClickedNoteInfo | undefined)[] = [];

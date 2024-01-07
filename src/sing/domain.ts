@@ -1,6 +1,6 @@
 import { Note, Score, Tempo, TimeSignature } from "@/store/type";
 
-export const BEAT_TYPES = [2, 4, 8, 16];
+const BEAT_TYPES = [2, 4, 8, 16];
 
 export const isValidTpqn = (tpqn: number) => {
   return (

@@ -88,6 +88,9 @@ type NoteInfo = {
   overlappingNoteIds: Set<string>;
 };
 
+/**
+ * 重なっているノートを検出します。
+ */
 export class OverlappingNotesDetector {
   private readonly noteInfos = new Map<string, NoteInfo>();
 
