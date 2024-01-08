@@ -203,11 +203,6 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
-type ClickedNoteInfo = {
-  id: string;
-  edited: boolean;
-};
-
 export default defineComponent({
   name: "SingScoreSequencer",
   components: {
@@ -325,7 +320,11 @@ export default defineComponent({
     let edited = false; // プレビュー終了時にScoreの変更を行うかどうかを表す変数
     // ダブルクリック
     let mouseDownNoteId: string | undefined;
-    let clickedNoteInfos: (ClickedNoteInfo | undefined)[] = [];
+    const clickedNoteIds: [string | undefined, string | undefined] = [
+      undefined,
+      undefined,
+    ];
+    let ignoreDoubleClick = false;
 
     const previewAdd = () => {
       const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
@@ -554,17 +553,35 @@ export default defineComponent({
         if (!note) {
           throw new Error("note is undefined.");
         }
-        if (state.selectedNoteIds.has(note.id)) {
-          for (const note of selectedNotes.value) {
-            copiedNotes.push({ ...note });
+        if (event.shiftKey) {
+          let minIndex = notes.value.length - 1;
+          let maxIndex = 0;
+          for (let i = 0; i < notes.value.length; i++) {
+            const noteId = notes.value[i].id;
+            if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
+              minIndex = Math.min(minIndex, i);
+              maxIndex = Math.max(maxIndex, i);
+            }
           }
-        } else {
+          const noteIdsToSelect: string[] = [];
+          for (let i = minIndex; i <= maxIndex; i++) {
+            const noteId = notes.value[i].id;
+            if (!state.selectedNoteIds.has(noteId)) {
+              noteIdsToSelect.push(noteId);
+            }
+          }
+          store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+        } else if (event.ctrlKey) {
+          store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+        } else if (!state.selectedNoteIds.has(note.id)) {
           store.dispatch("DESELECT_ALL_NOTES");
           store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
           store.dispatch("PLAY_PREVIEW_SOUND", {
             noteNumber: note.noteNumber,
             duration: PREVIEW_SOUND_DURATION,
           });
+        }
+        for (const note of selectedNotes.value) {
           copiedNotes.push({ ...note });
         }
       }
@@ -613,6 +630,7 @@ export default defineComponent({
 
     const onMouseDown = (event: MouseEvent) => {
       startPreview(event, "ADD");
+      mouseDownNoteId = undefined;
     };
 
     const onMouseMove = (event: MouseEvent) => {
@@ -628,17 +646,13 @@ export default defineComponent({
     };
 
     const onMouseUp = (event: MouseEvent) => {
+      clickedNoteIds[0] = clickedNoteIds[1];
+      clickedNoteIds[1] = mouseDownNoteId;
       if (event.detail === 1) {
-        clickedNoteInfos = [];
+        ignoreDoubleClick = false;
       }
-      if (mouseDownNoteId == undefined) {
-        clickedNoteInfos.push(undefined);
-      } else {
-        clickedNoteInfos.push({
-          id: mouseDownNoteId,
-          edited: nowPreviewing.value && edited,
-        });
-        mouseDownNoteId = undefined;
+      if (nowPreviewing.value && edited) {
+        ignoreDoubleClick = true;
       }
 
       if (!nowPreviewing.value) {
@@ -665,22 +679,15 @@ export default defineComponent({
     };
 
     const onDoubleClick = () => {
-      if (clickedNoteInfos.length < 2) {
+      if (
+        ignoreDoubleClick ||
+        clickedNoteIds[0] !== clickedNoteIds[1] ||
+        clickedNoteIds[1] == undefined
+      ) {
         return;
-      }
-      if (clickedNoteInfos.some((value) => value?.edited ?? false)) {
-        return;
-      }
-      if (clickedNoteInfos[0] == undefined) {
-        return;
-      }
-      for (let i = 1; i < clickedNoteInfos.length; i++) {
-        if (clickedNoteInfos[i - 1]?.id !== clickedNoteInfos[i]?.id) {
-          return;
-        }
       }
 
-      const noteId = clickedNoteInfos[0].id;
+      const noteId = clickedNoteIds[1];
       if (state.editingLyricNoteId !== noteId) {
         store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId });
       }
