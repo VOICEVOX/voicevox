@@ -554,17 +554,35 @@ export default defineComponent({
         if (!note) {
           throw new Error("note is undefined.");
         }
-        if (state.selectedNoteIds.has(note.id)) {
-          for (const note of selectedNotes.value) {
-            copiedNotes.push({ ...note });
+        if (event.shiftKey) {
+          let minIndex = notes.value.length - 1;
+          let maxIndex = 0;
+          for (let i = 0; i < notes.value.length; i++) {
+            const noteId = notes.value[i].id;
+            if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
+              minIndex = Math.min(minIndex, i);
+              maxIndex = Math.max(maxIndex, i);
+            }
           }
-        } else {
+          const noteIdsToSelect: string[] = [];
+          for (let i = minIndex; i <= maxIndex; i++) {
+            const noteId = notes.value[i].id;
+            if (!state.selectedNoteIds.has(noteId)) {
+              noteIdsToSelect.push(noteId);
+            }
+          }
+          store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+        } else if (event.ctrlKey) {
+          store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+        } else if (!state.selectedNoteIds.has(note.id)) {
           store.dispatch("DESELECT_ALL_NOTES");
           store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
           store.dispatch("PLAY_PREVIEW_SOUND", {
             noteNumber: note.noteNumber,
             duration: PREVIEW_SOUND_DURATION,
           });
+        }
+        for (const note of selectedNotes.value) {
           copiedNotes.push({ ...note });
         }
       }
