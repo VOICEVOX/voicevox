@@ -151,7 +151,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       for (const key of rootMiscSettingKeys) {
         commit("SET_ROOT_MISC_SETTING", {
-          // NOTE: Vuexの型処理でUnionが解かれてしまうのを迂回している
+          // Vuexの型処理でUnionが解かれてしまうのを迂回している
           // FIXME: このワークアラウンドをなくす
           key: key as never,
           value: await window.electron.getSetting(key),
