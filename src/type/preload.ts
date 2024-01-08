@@ -509,7 +509,7 @@ export type ConfirmedTips = {
 };
 
 // ルート直下にある雑多な設定値
-export const RootMiscSettingSchema = z.object({
+export const rootMiscSettingSchema = z.object({
   editorFont: z.enum(["default", "os"]).default("default"),
   showTextLineNumber: z.boolean().default(false),
   showAddAudioItemButton: z.boolean().default(true),
@@ -519,7 +519,7 @@ export const RootMiscSettingSchema = z.object({
   splitterPosition: splitterPositionSchema.default({}),
   enableMultiEngine: z.boolean().default(false),
 });
-export type RootMiscSetting = z.infer<typeof RootMiscSettingSchema>;
+export type RootMiscSetting = z.infer<typeof rootMiscSettingSchema>;
 
 export const configSchema = z
   .object({
@@ -602,7 +602,7 @@ export const configSchema = z
     registeredEngineDirs: z.string().array().default([]),
     recentlyUsedProjects: z.string().array().default([]),
   })
-  .merge(RootMiscSettingSchema);
+  .merge(rootMiscSettingSchema);
 export type ConfigType = z.infer<typeof configSchema>;
 
 export const envEngineInfoSchema = z.object({

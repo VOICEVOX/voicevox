@@ -151,7 +151,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       for (const key of rootMiscSettingKeys) {
         commit("SET_ROOT_MISC_SETTING", {
-          // NOTE: Vuexの型処理でUnionが解かれてしまうのを迂回している
+          // Vuexの型処理でUnionが解かれてしまうのを迂回している
           // FIXME: このワークアラウンドをなくす
           key: key as never,
           value: await window.electron.getSetting(key),
@@ -222,13 +222,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
   SET_ROOT_MISC_SETTING: {
     mutation(state, { key, value }) {
-      // NOTE: Vuexの型処理でUnionが解かれてしまうのを迂回している
+      // Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
       state[key as never] = value;
     },
     action({ commit }, { key, value }) {
       window.electron.setSetting(key, value);
-      // NOTE: Vuexの型処理でUnionが解かれてしまうのを迂回している
+      // Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
       commit("SET_ROOT_MISC_SETTING", { key: key as never, value });
     },
