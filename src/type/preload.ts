@@ -508,92 +508,101 @@ export type ConfirmedTips = {
   notifyOnGenerate: boolean; // 音声書き出し時の通知
 };
 
-export const configSchema = z.object({
-  inheritAudioInfo: z.boolean().default(true),
-  activePointScrollMode: z.enum(["CONTINUOUSLY", "PAGE", "OFF"]).default("OFF"),
-  savingSetting: z
-    .object({
-      fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
-      fileNamePattern: z.string().default(""),
-      fixedExportEnabled: z.boolean().default(false),
-      avoidOverwrite: z.boolean().default(false),
-      fixedExportDir: z.string().default(""),
-      exportLab: z.boolean().default(false),
-      exportText: z.boolean().default(false),
-      outputStereo: z.boolean().default(false),
-      audioOutputDevice: z.string().default(""),
-    })
-    .default({}),
-  hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
-  toolbarSetting: toolbarSettingSchema
-    .array()
-    .default(defaultToolbarButtonSetting),
-  engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
-  userCharacterOrder: speakerIdSchema.array().default([]),
-  defaultStyleIds: z
-    .object({
-      engineId: engineIdSchema
-        .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
-        .default(EngineId("00000000-0000-0000-0000-000000000000")),
-      speakerUuid: speakerIdSchema,
-      defaultStyleId: styleIdSchema,
-    })
-    .array()
-    .default([]),
-  presets: z
-    .object({
-      items: z
-        .record(
-          presetKeySchema,
-          z.object({
-            name: z.string(),
-            speedScale: z.number(),
-            pitchScale: z.number(),
-            intonationScale: z.number(),
-            volumeScale: z.number(),
-            prePhonemeLength: z.number(),
-            postPhonemeLength: z.number(),
-            morphingInfo: z
-              .object({
-                rate: z.number(),
-                targetEngineId: engineIdSchema,
-                targetSpeakerId: speakerIdSchema,
-                targetStyleId: styleIdSchema,
-              })
-              .optional(),
-          })
-        )
-        .default({}),
-      keys: presetKeySchema.array().default([]),
-    })
-    .default({}),
-  defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
-  currentTheme: z.string().default("Default"),
+// ルート直下にある雑多な設定値
+export const rootMiscSettingSchema = z.object({
   editorFont: z.enum(["default", "os"]).default("default"),
   showTextLineNumber: z.boolean().default(false),
   showAddAudioItemButton: z.boolean().default(true),
-  experimentalSetting: experimentalSettingSchema.default({}),
-  acceptRetrieveTelemetry: z
-    .enum(["Unconfirmed", "Accepted", "Refused"])
-    .default("Unconfirmed"),
-  acceptTerms: z
-    .enum(["Unconfirmed", "Accepted", "Rejected"])
-    .default("Unconfirmed"),
   splitTextWhenPaste: z
     .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
     .default("PERIOD_AND_NEW_LINE"),
   splitterPosition: splitterPositionSchema.default({}),
-  confirmedTips: z
-    .object({
-      tweakableSliderByScroll: z.boolean().default(false),
-      engineStartedOnAltPort: z.boolean().default(false),
-      notifyOnGenerate: z.boolean().default(false),
-    })
-    .default({}),
-  registeredEngineDirs: z.string().array().default([]),
-  recentlyUsedProjects: z.string().array().default([]),
   enableMultiEngine: z.boolean().default(false),
 });
+export type RootMiscSetting = z.infer<typeof rootMiscSettingSchema>;
+
+export const configSchema = z
+  .object({
+    inheritAudioInfo: z.boolean().default(true),
+    activePointScrollMode: z
+      .enum(["CONTINUOUSLY", "PAGE", "OFF"])
+      .default("OFF"),
+    savingSetting: z
+      .object({
+        fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
+        fileNamePattern: z.string().default(""),
+        fixedExportEnabled: z.boolean().default(false),
+        avoidOverwrite: z.boolean().default(false),
+        fixedExportDir: z.string().default(""),
+        exportLab: z.boolean().default(false),
+        exportText: z.boolean().default(false),
+        outputStereo: z.boolean().default(false),
+        audioOutputDevice: z.string().default(""),
+      })
+      .default({}),
+    hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
+    toolbarSetting: toolbarSettingSchema
+      .array()
+      .default(defaultToolbarButtonSetting),
+    engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
+    userCharacterOrder: speakerIdSchema.array().default([]),
+    defaultStyleIds: z
+      .object({
+        engineId: engineIdSchema
+          .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
+          .default(EngineId("00000000-0000-0000-0000-000000000000")),
+        speakerUuid: speakerIdSchema,
+        defaultStyleId: styleIdSchema,
+      })
+      .array()
+      .default([]),
+    presets: z
+      .object({
+        items: z
+          .record(
+            presetKeySchema,
+            z.object({
+              name: z.string(),
+              speedScale: z.number(),
+              pitchScale: z.number(),
+              intonationScale: z.number(),
+              volumeScale: z.number(),
+              prePhonemeLength: z.number(),
+              postPhonemeLength: z.number(),
+              morphingInfo: z
+                .object({
+                  rate: z.number(),
+                  targetEngineId: engineIdSchema,
+                  targetSpeakerId: speakerIdSchema,
+                  targetStyleId: styleIdSchema,
+                })
+                .optional(),
+            })
+          )
+          .default({}),
+        keys: presetKeySchema.array().default([]),
+      })
+      .default({}),
+    defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
+    currentTheme: z.string().default("Default"),
+    experimentalSetting: experimentalSettingSchema.default({}),
+    acceptRetrieveTelemetry: z
+      .enum(["Unconfirmed", "Accepted", "Refused"])
+      .default("Unconfirmed"),
+    acceptTerms: z
+      .enum(["Unconfirmed", "Accepted", "Rejected"])
+      .default("Unconfirmed"),
+    confirmedTips: z
+      .object({
+        tweakableSliderByScroll: z.boolean().default(false),
+        engineStartedOnAltPort: z.boolean().default(false),
+        notifyOnGenerate: z.boolean().default(false),
+      })
+      .default({}),
+    registeredEngineDirs: z.string().array().default([]),
+    recentlyUsedProjects: z.string().array().default([]),
+  })
+  .merge(rootMiscSettingSchema);
 export type ConfigType = z.infer<typeof configSchema>;
 
 export const envEngineInfoSchema = z.object({
