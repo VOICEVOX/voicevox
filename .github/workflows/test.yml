@@ -109,20 +109,11 @@ jobs:
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
           fi
-          if [[ ${{ matrix.os }} == ubuntu-* ]]; then
-            function execute() {
-              xvfb-run --auto-servernum $@
-            }
-          else
-            function execute() {
-              $@
-            }
-          fi
           ARGS=""
           if [[ ${{ steps.check-whether-to-update-snapshots.outputs.updateSnapshots }} == 'true' ]]; then
             ARGS="--update-snapshots"
           fi
-          execute npm run test:browser-e2e -- $ARGS
+          npm run test:browser-e2e -- $ARGS
 
       - name: Run npm run test:electron-e2e
         run: |
