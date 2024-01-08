@@ -15,7 +15,7 @@ import {
   ToolbarSetting,
   EngineId,
   ConfirmedTips,
-  RootMiscSetting as RootMiscSetting,
+  RootMiscSetting,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
 
