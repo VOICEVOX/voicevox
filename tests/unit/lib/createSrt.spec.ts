@@ -10,7 +10,7 @@ describe("Utility functions", () => {
     expect(formatTime(3600.1357)).toBe("01:00:00,136");
   });
 
-  test("createSrtStringは正しいsrt文字列を作成する", () => {
+  test("createSrtStringは正しい字幕用文字列を作成する", () => {
     const serialNumber = 1;
     const start = "00:07:12,011";
     const end = "00:14:08,675";
