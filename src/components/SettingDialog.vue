@@ -881,10 +881,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions
-                v-if="!isProduction"
-                class="q-px-md q-py-none bg-surface"
-              >
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>複数選択</div>
                 <div aria-label="複数のテキスト欄を選択できるようにします。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -976,7 +973,6 @@ import { computed, ref } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
-  isProduction,
   SavingSetting,
   EngineSetting,
   ExperimentalSetting,
@@ -1071,18 +1067,25 @@ const availableThemeNameComputed = computed(() => {
 
 const editorFont = computed(() => store.state.editorFont);
 const changeEditorFont = (editorFont: EditorFontType) => {
-  store.dispatch("SET_EDITOR_FONT", { editorFont });
+  store.dispatch("SET_ROOT_MISC_SETTING", {
+    key: "editorFont",
+    value: editorFont,
+  });
 };
 
 const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 const setEnableMultiEngine = (enableMultiEngine: boolean) => {
-  store.dispatch("SET_ENABLE_MULTI_ENGINE", { enableMultiEngine });
+  store.dispatch("SET_ROOT_MISC_SETTING", {
+    key: "enableMultiEngine",
+    value: enableMultiEngine,
+  });
 };
 
 const showTextLineNumber = computed(() => store.state.showTextLineNumber);
 const changeShowTextLineNumber = (showTextLineNumber: boolean) => {
-  store.dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
-    showTextLineNumber,
+  store.dispatch("SET_ROOT_MISC_SETTING", {
+    key: "showTextLineNumber",
+    value: showTextLineNumber,
   });
 };
 
@@ -1093,8 +1096,9 @@ const showAddAudioItemButton = computed(
 const changeShowAddAudioItemButton = async (
   showAddAudioItemButton: boolean
 ) => {
-  store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
-    showAddAudioItemButton,
+  store.dispatch("SET_ROOT_MISC_SETTING", {
+    key: "showAddAudioItemButton",
+    value: showAddAudioItemButton,
   });
 
   // 設定をオフにする場合はヒントを表示
@@ -1106,8 +1110,9 @@ const changeShowAddAudioItemButton = async (
     });
     if (result === "CANCEL") {
       // キャンセルしたら設定を元に戻す
-      store.dispatch("SET_SHOW_ADD_AUDIO_ITEM_BUTTON", {
-        showAddAudioItemButton: true,
+      store.dispatch("SET_ROOT_MISC_SETTING", {
+        key: "showAddAudioItemButton",
+        value: true,
       });
     }
   }
@@ -1302,7 +1307,10 @@ const splitTextWhenPaste = computed(() => store.state.splitTextWhenPaste);
 const changeSplitTextWhenPaste = (
   splitTextWhenPaste: SplitTextWhenPasteType
 ) => {
-  store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
+  store.dispatch("SET_ROOT_MISC_SETTING", {
+    key: "splitTextWhenPaste",
+    value: splitTextWhenPaste,
+  });
 };
 
 const showsFilePatternEditDialog = ref(false);

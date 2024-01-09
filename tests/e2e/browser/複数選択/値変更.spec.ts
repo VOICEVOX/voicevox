@@ -118,7 +118,7 @@ test("複数選択：AudioInfo操作", async ({ page }) => {
 
   for (const parameter of parameters) {
     const input = parameter.locator("label input");
-    await input.type("2\n");
+    await input.fill("2");
     await page.waitForTimeout(100);
   }
 

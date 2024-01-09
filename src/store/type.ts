@@ -33,11 +33,8 @@ import {
   MorphingInfo,
   ActivePointScrollMode,
   EngineInfo,
-  SplitTextWhenPasteType,
-  SplitterPosition,
   ConfirmedTips,
   EngineDirValidationResult,
-  EditorFontType,
   EngineSettings,
   MorphableTargetInfoTable,
   EngineSetting,
@@ -48,6 +45,7 @@ import {
   StyleId,
   AudioKey,
   PresetKey,
+  RootMiscSetting,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -509,17 +507,23 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_MULTI_CHANGE_VOICE: {
-    mutation: { audioKeys: AudioKey[]; voice: Voice } & (
-      | { update: "RollbackStyleId" }
-      | {
-          update: "AccentPhrases";
-          accentPhrases: AccentPhrase[];
-        }
-      | {
-          update: "AudioQuery";
-          query: AudioQuery;
-        }
-    );
+    mutation: {
+      voice: Voice;
+      changes: Record<
+        AudioKey,
+        | {
+            update: "AccentPhrases";
+            accentPhrases: AccentPhrase[];
+          }
+        | {
+            update: "AudioQuery";
+            query: AudioQuery;
+          }
+        | {
+            update: "OnlyVoice";
+          }
+      >;
+    };
     action(payload: { audioKeys: AudioKey[]; voice: Voice }): void;
   };
 
@@ -1041,17 +1045,19 @@ export type SettingStoreState = {
   engineInfos: Record<EngineId, EngineInfo>;
   engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
-  editorFont: EditorFontType;
-  showTextLineNumber: boolean;
-  showAddAudioItemButton: boolean;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
-  splitTextWhenPaste: SplitTextWhenPasteType;
-  splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
-  enableMultiEngine: boolean;
-};
+} & RootMiscSetting;
+
+// keyとvalueの型を連動するようにしたPayloadを作る
+type KeyValuePayload<R, K extends keyof R = keyof R> = K extends keyof R
+  ? {
+      key: K;
+      value: R[K];
+    }
+  : never;
 
 export type SettingStoreTypes = {
   HYDRATE_SETTING_STORE: {
@@ -1073,24 +1079,14 @@ export type SettingStoreTypes = {
     action(payload: { data: ToolbarSetting }): void;
   };
 
+  SET_ROOT_MISC_SETTING: {
+    mutation: KeyValuePayload<RootMiscSetting>;
+    action(payload: KeyValuePayload<RootMiscSetting>): void;
+  };
+
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
-  };
-
-  SET_EDITOR_FONT: {
-    mutation: { editorFont: EditorFontType };
-    action(payload: { editorFont: EditorFontType }): void;
-  };
-
-  SET_SHOW_TEXT_LINE_NUMBER: {
-    mutation: { showTextLineNumber: boolean };
-    action(payload: { showTextLineNumber: boolean }): void;
-  };
-
-  SET_SHOW_ADD_AUDIO_ITEM_BUTTON: {
-    mutation: { showAddAudioItemButton: boolean };
-    action(payload: { showAddAudioItemButton: boolean }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
@@ -1108,16 +1104,6 @@ export type SettingStoreTypes = {
   SET_EXPERIMENTAL_SETTING: {
     mutation: { experimentalSetting: ExperimentalSetting };
     action(payload: { experimentalSetting: ExperimentalSetting }): void;
-  };
-
-  SET_SPLIT_TEXT_WHEN_PASTE: {
-    mutation: { splitTextWhenPaste: SplitTextWhenPasteType };
-    action(payload: { splitTextWhenPaste: SplitTextWhenPasteType }): void;
-  };
-
-  SET_SPLITTER_POSITION: {
-    mutation: { splitterPosition: SplitterPosition };
-    action(payload: { splitterPosition: SplitterPosition }): void;
   };
 
   SET_CONFIRMED_TIPS: {
@@ -1139,11 +1125,6 @@ export type SettingStoreTypes = {
       engineSetting: EngineSetting;
       engineId: EngineId;
     }): Promise<void>;
-  };
-
-  SET_ENABLE_MULTI_ENGINE: {
-    mutation: { enableMultiEngine: boolean };
-    action(payload: { enableMultiEngine: boolean }): void;
   };
 
   CHANGE_USE_GPU: {

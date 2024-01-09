@@ -358,8 +358,9 @@ const updateSplitterPosition = async (
     ...splitterPosition.value,
     [propertyName]: newValue,
   };
-  store.dispatch("SET_SPLITTER_POSITION", {
-    splitterPosition: newSplitterPosition,
+  await store.dispatch("SET_ROOT_MISC_SETTING", {
+    key: "splitterPosition",
+    value: newSplitterPosition,
   });
 };
 
