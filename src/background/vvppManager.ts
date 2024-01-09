@@ -11,7 +11,7 @@ import {
   EngineId,
   EngineInfo,
   minimumEngineManifestSchema,
-  MinimumEngineManifest,
+  MinimumEngineManifestType,
 } from "@/type/preload";
 
 const isNotWin = process.platform !== "win32";
@@ -93,12 +93,12 @@ export class VvppManager {
     this.willDeleteEngineIds.add(engineId);
   }
 
-  toValidDirName(manifest: MinimumEngineManifest) {
+  toValidDirName(manifest: MinimumEngineManifestType) {
     // フォルダに使用できない文字が含まれている場合は置換する
     return `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${manifest.uuid}`;
   }
 
-  isEngineDirName(dir: string, manifest: MinimumEngineManifest) {
+  isEngineDirName(dir: string, manifest: MinimumEngineManifestType) {
     return dir.endsWith(`+${manifest.uuid}`);
   }
 
@@ -121,7 +121,7 @@ export class VvppManager {
 
   private async extractVvpp(
     vvppLikeFilePath: string
-  ): Promise<{ outputDir: string; manifest: MinimumEngineManifest }> {
+  ): Promise<{ outputDir: string; manifest: MinimumEngineManifestType }> {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
@@ -240,14 +240,15 @@ export class VvppManager {
           await fs.promises.rm(tmpConcatenatedFile);
         }
       }
-      const manifest: MinimumEngineManifest = minimumEngineManifestSchema.parse(
-        JSON.parse(
-          await fs.promises.readFile(
-            path.join(outputDir, "engine_manifest.json"),
-            "utf-8"
+      const manifest: MinimumEngineManifestType =
+        minimumEngineManifestSchema.parse(
+          JSON.parse(
+            await fs.promises.readFile(
+              path.join(outputDir, "engine_manifest.json"),
+              "utf-8"
+            )
           )
-        )
-      );
+        );
       return {
         outputDir,
         manifest,

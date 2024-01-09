@@ -18,7 +18,7 @@ import {
 import {
   EngineInfo,
   EngineDirValidationResult,
-  MinimumEngineManifest,
+  MinimumEngineManifestType,
   EngineId,
   minimumEngineManifestSchema,
   envEngineInfoSchema,
@@ -97,7 +97,7 @@ export class EngineManager {
       if (!fs.existsSync(manifestPath)) {
         return "manifestNotFound";
       }
-      let manifest: MinimumEngineManifest;
+      let manifest: MinimumEngineManifestType;
       try {
         manifest = minimumEngineManifestSchema.parse(
           JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" }))
@@ -529,7 +529,7 @@ export class EngineManager {
       path.join(engineDir, "engine_manifest.json"),
       "utf-8"
     );
-    let manifestContent: MinimumEngineManifest;
+    let manifestContent: MinimumEngineManifestType;
     try {
       manifestContent = minimumEngineManifestSchema.parse(JSON.parse(manifest));
     } catch (e) {

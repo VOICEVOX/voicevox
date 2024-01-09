@@ -21,13 +21,13 @@ import {
   DefaultStyleId,
   AcceptRetrieveTelemetryStatus,
   AcceptTermsStatus,
-  HotkeySetting,
+  HotkeySettingType,
   MoraDataType,
   SavingSetting,
   ThemeConf,
   ThemeSetting,
-  ExperimentalSetting,
-  ToolbarSetting,
+  ExperimentalSettingType,
+  ToolbarSettingType,
   UpdateInfo,
   Preset,
   MorphingInfo,
@@ -37,7 +37,7 @@ import {
   EngineDirValidationResult,
   EngineSettings,
   MorphableTargetInfoTable,
-  EngineSetting,
+  EngineSettingType,
   Voice,
   EngineId,
   VoiceId,
@@ -45,7 +45,7 @@ import {
   StyleId,
   AudioKey,
   PresetKey,
-  RootMiscSetting,
+  RootMiscSettingType,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -1032,17 +1032,17 @@ export type ProjectStoreTypes = {
 
 export type SettingStoreState = {
   savingSetting: SavingSetting;
-  hotkeySettings: HotkeySetting[];
-  toolbarSetting: ToolbarSetting;
+  hotkeySettings: HotkeySettingType[];
+  toolbarSetting: ToolbarSettingType;
   engineIds: EngineId[];
   engineInfos: Record<EngineId, EngineInfo>;
   engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
-  experimentalSetting: ExperimentalSetting;
+  experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
-} & RootMiscSetting;
+} & RootMiscSettingType;
 
 // keyとvalueの型を連動するようにしたPayloadを作る
 type KeyValuePayload<R, K extends keyof R = keyof R> = K extends keyof R
@@ -1063,18 +1063,18 @@ export type SettingStoreTypes = {
   };
 
   SET_HOTKEY_SETTINGS: {
-    mutation: { newHotkey: HotkeySetting };
-    action(payload: { data: HotkeySetting }): void;
+    mutation: { newHotkey: HotkeySettingType };
+    action(payload: { data: HotkeySettingType }): void;
   };
 
   SET_TOOLBAR_SETTING: {
-    mutation: { toolbarSetting: ToolbarSetting };
-    action(payload: { data: ToolbarSetting }): void;
+    mutation: { toolbarSetting: ToolbarSettingType };
+    action(payload: { data: ToolbarSettingType }): void;
   };
 
   SET_ROOT_MISC_SETTING: {
-    mutation: KeyValuePayload<RootMiscSetting>;
-    action(payload: KeyValuePayload<RootMiscSetting>): void;
+    mutation: KeyValuePayload<RootMiscSettingType>;
+    action(payload: KeyValuePayload<RootMiscSettingType>): void;
   };
 
   SET_THEME_SETTING: {
@@ -1095,8 +1095,8 @@ export type SettingStoreTypes = {
   };
 
   SET_EXPERIMENTAL_SETTING: {
-    mutation: { experimentalSetting: ExperimentalSetting };
-    action(payload: { experimentalSetting: ExperimentalSetting }): void;
+    mutation: { experimentalSetting: ExperimentalSettingType };
+    action(payload: { experimentalSetting: ExperimentalSettingType }): void;
   };
 
   SET_CONFIRMED_TIPS: {
@@ -1113,9 +1113,9 @@ export type SettingStoreTypes = {
   };
 
   SET_ENGINE_SETTING: {
-    mutation: { engineSetting: EngineSetting; engineId: EngineId };
+    mutation: { engineSetting: EngineSettingType; engineId: EngineId };
     action(payload: {
-      engineSetting: EngineSetting;
+      engineSetting: EngineSettingType;
       engineId: EngineId;
     }): Promise<void>;
   };

@@ -53,7 +53,7 @@ export const VoiceId = (voice: Voice): VoiceId =>
   voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
 
 // ホットキーを追加したときは設定のマイグレーションが必要
-export const defaultHotkeySettings: HotkeySetting[] = [
+export const defaultHotkeySettings: HotkeySettingType[] = [
   {
     action: "音声書き出し",
     combination: !isMac ? "Ctrl E" : "Meta E",
@@ -144,7 +144,7 @@ export const defaultHotkeySettings: HotkeySetting[] = [
   },
 ];
 
-export const defaultToolbarButtonSetting: ToolbarSetting = [
+export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "PLAY_CONTINUOUSLY",
   "STOP",
   "EXPORT_AUDIO_SELECTED",
@@ -217,11 +217,11 @@ export interface Sandbox {
   engineInfos(): Promise<EngineInfo[]>;
   restartEngine(engineId: EngineId): Promise<void>;
   openEngineDirectory(engineId: EngineId): void;
-  hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
+  hotkeySettings(newData?: HotkeySettingType): Promise<HotkeySettingType[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
-  getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
-  getDefaultToolbarSetting(): Promise<ToolbarSetting>;
+  getDefaultHotkeySettings(): Promise<HotkeySettingType[]>;
+  getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
   setNativeTheme(source: NativeThemeType): void;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
@@ -232,7 +232,7 @@ export interface Sandbox {
   ): Promise<ConfigType[Key]>;
   setEngineSetting(
     engineId: EngineId,
-    engineSetting: EngineSetting
+    engineSetting: EngineSettingType
   ): Promise<void>;
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
@@ -309,7 +309,7 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
-export type EngineSettings = Record<EngineId, EngineSetting>;
+export type EngineSettings = Record<EngineId, EngineSettingType>;
 
 export const engineSettingSchema = z.object({
   useGpu: z.boolean().default(false),
@@ -317,7 +317,7 @@ export const engineSettingSchema = z.object({
     .union([z.number(), z.literal("engineDefault")])
     .default("engineDefault"),
 });
-export type EngineSetting = z.infer<typeof engineSettingSchema>;
+export type EngineSettingType = z.infer<typeof engineSettingSchema>;
 
 export type DefaultStyleId = {
   engineId: EngineId;
@@ -339,7 +339,9 @@ export const minimumEngineManifestSchema = z.object({
   supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
 });
 
-export type MinimumEngineManifest = z.infer<typeof minimumEngineManifestSchema>;
+export type MinimumEngineManifestType = z.infer<
+  typeof minimumEngineManifestSchema
+>;
 
 export type EngineInfo = {
   uuid: EngineId;
@@ -414,7 +416,7 @@ export const hotkeyActionSchema = z.enum([
   "選択中のアクセント句のイントネーションをリセット",
 ]);
 
-export type HotkeyAction = z.infer<typeof hotkeyActionSchema>;
+export type HotkeyActionType = z.infer<typeof hotkeyActionSchema>;
 
 export type HotkeyCombo = string;
 
@@ -422,7 +424,7 @@ export const hotkeySettingSchema = z.object({
   action: hotkeyActionSchema,
   combination: z.string(),
 });
-export type HotkeySetting = z.infer<typeof hotkeySettingSchema>;
+export type HotkeySettingType = z.infer<typeof hotkeySettingSchema>;
 
 export type HotkeyReturnType =
   | void
@@ -445,7 +447,7 @@ export const toolbarButtonTagSchema = z.enum([
 export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
 
 export const toolbarSettingSchema = toolbarButtonTagSchema;
-export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>[];
+export type ToolbarSettingType = z.infer<typeof toolbarSettingSchema>[];
 
 // base: typeof electron.nativeTheme["themeSource"];
 export type NativeThemeType = "system" | "light" | "dark";
@@ -493,14 +495,14 @@ export const experimentalSettingSchema = z.object({
   shouldKeepTuningOnTextChange: z.boolean().default(false),
 });
 
-export type ExperimentalSetting = z.infer<typeof experimentalSettingSchema>;
+export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
 
 export const splitterPositionSchema = z.object({
   portraitPaneWidth: z.number().optional(),
   audioInfoPaneWidth: z.number().optional(),
   audioDetailPaneHeight: z.number().optional(),
 });
-export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
+export type SplitterPositionType = z.infer<typeof splitterPositionSchema>;
 
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
@@ -519,7 +521,7 @@ export const rootMiscSettingSchema = z.object({
   splitterPosition: splitterPositionSchema.default({}),
   enableMultiEngine: z.boolean().default(false),
 });
-export type RootMiscSetting = z.infer<typeof rootMiscSettingSchema>;
+export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
 export const configSchema = z
   .object({
@@ -614,7 +616,7 @@ export const envEngineInfoSchema = z.object({
   executionArgs: z.array(z.string()),
   path: z.string().optional(),
 });
-export type EnvEngineInfo = z.infer<typeof envEngineInfoSchema>;
+export type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {

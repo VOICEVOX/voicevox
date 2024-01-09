@@ -948,15 +948,15 @@ import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
   SavingSetting,
-  EngineSetting,
-  ExperimentalSetting,
+  EngineSettingType,
+  ExperimentalSettingType,
   ActivePointScrollMode,
   SplitTextWhenPasteType,
   EditorFontType,
   EngineId,
 } from "@/type/preload";
 
-type SamplingRateOption = EngineSetting["outputSamplingRate"];
+type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
 const props =
   defineProps<{
@@ -1191,7 +1191,7 @@ const changeEnablePreset = (value: boolean) => {
 };
 
 const changeExperimentalSetting = async (
-  key: keyof ExperimentalSetting,
+  key: keyof ExperimentalSettingType,
   data: boolean
 ) => {
   store.dispatch("SET_EXPERIMENTAL_SETTING", {
