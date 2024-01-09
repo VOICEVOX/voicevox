@@ -520,6 +520,8 @@ export const rootMiscSettingSchema = z.object({
     .default("PERIOD_AND_NEW_LINE"),
   splitterPosition: splitterPositionSchema.default({}),
   enableMultiEngine: z.boolean().default(false),
+  enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
+  enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
