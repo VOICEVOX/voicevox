@@ -26,7 +26,7 @@ import {
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
   TuningTranscription,
-  formatTime,
+  durationFormat,
   createSrtString,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
@@ -1678,9 +1678,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               return { result: "WRITE_ERROR", path: filePath };
             }
             // 字幕の開始時間と終了時間を作る
-            const start = formatTime(subtitleTiming.start);
+            const start = durationFormat(subtitleTiming.start);
             subtitleTiming.end += subtitleIntervalTime;
-            const end = formatTime(subtitleTiming.end);
+            const end = durationFormat(subtitleTiming.end);
 
             const speakerName = getCharacterInfo(
               state,

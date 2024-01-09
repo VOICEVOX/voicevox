@@ -156,7 +156,9 @@ function replaceTag(
 /**
  * secondsをhh:mm:ss形式に変換する
  */
-export function formatTime(time: number): string {
+export function durationFormat(time: number): string {
+  // todo: Intl.durationFormatが正式実装された際に、この関数が不要になるかもしれない。
+  // その場合、この関数を削除する
   const hours = Math.floor((time % 86400) / 3600)
     .toString()
     .padStart(2, "0")

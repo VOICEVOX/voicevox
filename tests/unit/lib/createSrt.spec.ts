@@ -1,13 +1,13 @@
-import { formatTime, createSrtString } from "@/store/utility";
+import { durationFormat, createSrtString } from "@/store/utility";
 
 describe("Utility functions", () => {
-  test("formatTimeは時間を正しくフォーマットする", () => {
-    expect(formatTime(3661)).toBe("01:01:01,000");
-    expect(formatTime(60)).toBe("00:01:00,000");
-    expect(formatTime(3600)).toBe("01:00:00,000");
-    expect(formatTime(3661.123)).toBe("01:01:01,123");
-    expect(formatTime(60.987)).toBe("00:01:00,987");
-    expect(formatTime(3600.1357)).toBe("01:00:00,136");
+  test("字幕ファイル用に時間を整形する", () => {
+    expect(durationFormat(3661)).toBe("01:01:01,000");
+    expect(durationFormat(60)).toBe("00:01:00,000");
+    expect(durationFormat(3600)).toBe("01:00:00,000");
+    expect(durationFormat(3661.123)).toBe("01:01:01,123");
+    expect(durationFormat(60.987)).toBe("00:01:00,987");
+    expect(durationFormat(3600.1357)).toBe("01:00:00,136");
   });
 
   test("createSrtStringは正しい字幕用文字列を作成する", () => {
