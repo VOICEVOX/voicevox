@@ -215,10 +215,10 @@ import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
   EngineId,
-  HotkeyAction,
+  HotkeyActionType,
   HotkeyReturnType,
   PresetKey,
-  SplitterPosition,
+  SplitterPositionType,
   Voice,
 } from "@/type/preload";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
@@ -238,7 +238,7 @@ const reloadingLocked = computed(() => store.state.reloadingLock);
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
 // hotkeys handled by Mousetrap
-const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
   [
     "テキスト欄にフォーカスを戻す",
     () => {
@@ -346,12 +346,12 @@ const changeAudioDetailPaneMaxHeight = (height: number) => {
   }
 };
 
-const splitterPosition = computed<SplitterPosition>(
+const splitterPosition = computed<SplitterPositionType>(
   () => store.state.splitterPosition
 );
 
 const updateSplitterPosition = async (
-  propertyName: keyof SplitterPosition,
+  propertyName: keyof SplitterPositionType,
   newValue: number
 ) => {
   const newSplitterPosition = {
