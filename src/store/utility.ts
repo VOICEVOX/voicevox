@@ -122,7 +122,7 @@ const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
 export const DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE =
   "$連番$_$キャラ$（$スタイル$）_$テキスト$";
 export const DEFAULT_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
-export const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
+const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
