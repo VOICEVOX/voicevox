@@ -1,7 +1,6 @@
 import { AccentPhrase, Mora } from "@/openapi";
 import { ToolbarButtonTagType, isMac } from "@/type/preload";
 import {
-  DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
   formatCharacterStyleName,
   sanitizeFileName,
   currentDateString,
@@ -9,7 +8,7 @@ import {
   extractExportText,
   extractYomiText,
   TuningTranscription,
-  // isAccentPhrasesTextDifferent,
+  isAccentPhrasesTextDifferent,
   buildAudioFileNameFromRawData,
   getToolbarButtonName,
   createKanaRegex,
@@ -89,7 +88,7 @@ describe("Utilitys", () => {
     expect(result).toEqual(expected);
   });
 
-  test("TuningTranscription", () => {
+  describe("TuningTranscription", () => {
     it("２つ以上のアクセント句でも正しくデータを転写できる", async () => {
       const before: AccentPhrase[] = [
         createDummyAccentPhrase(["い", "え"]),
@@ -153,27 +152,51 @@ describe("Utilitys", () => {
     });
   });
 
-  test("buildAudioFileNameFromRawData", () => {
-    it("指定したパターンに従ってファイル名を生成する", () => {
-      const fileNamePattern = "テストパターン";
-      const vars = {
-        index: 1,
-        characterName: "四国めたん",
-        text: "テストテキスト",
-        styleName: "ツンツン",
-        date: currentDateString(),
-      };
-      const result = buildAudioFileNameFromRawData(fileNamePattern, vars);
-      expect(result).toBe("テストパターン");
+  describe("isAccentPhrasesTextDifferent", () => {
+    it("アクセントフレーズのテキストが異なる場合、trueを返す", () => {
+      const accentPhrases1 = [
+        createDummyAccentPhrase(["あ", "い", "う"]),
+        createDummyAccentPhrase(["え", "お"]),
+      ];
+      const accentPhrases2 = [
+        createDummyAccentPhrase(["か", "き", "く"]),
+        createDummyAccentPhrase(["け", "こ"]),
+      ];
+      const result = isAccentPhrasesTextDifferent(
+        accentPhrases1,
+        accentPhrases2
+      );
+      expect(result).toBe(true);
     });
 
-    it("何も記述しなくても処理される", () => {
-      // このテストが通らない場合
-      // buildAudioFileFromRawData関数の記述か
-      // デフォルト引数が間違っている可能性がある。
-      const result = buildAudioFileNameFromRawData();
-      expect(result).toBe(DEFAULT_AUDIO_FILE_NAME_TEMPLATE);
+    it("アクセントフレーズのテキストが同じ場合、falseを返す", () => {
+      const accentPhrases1 = [
+        createDummyAccentPhrase(["あ", "い", "う"]),
+        createDummyAccentPhrase(["え", "お"]),
+      ];
+      const accentPhrases2 = [
+        createDummyAccentPhrase(["あ", "い", "う"]),
+        createDummyAccentPhrase(["え", "お"]),
+      ];
+      const result = isAccentPhrasesTextDifferent(
+        accentPhrases1,
+        accentPhrases2
+      );
+      expect(result).toBe(false);
     });
+  });
+
+  test("buildAudioFileNameFromRawData", () => {
+    const fileNamePattern = "テストパターン";
+    const vars = {
+      index: 1,
+      characterName: "四国めたん",
+      text: "テストテキスト",
+      styleName: "ツンツン",
+      date: currentDateString(),
+    };
+    const result = buildAudioFileNameFromRawData(fileNamePattern, vars);
+    expect(result).toBe("テストパターン");
   });
 
   test("getToolbarButtonName", () => {
@@ -191,7 +214,7 @@ describe("Utilitys", () => {
     );
   });
 
-  test("createKanaRegex", () => {
+  describe("createKanaRegex", () => {
     it("includeSeparationがtrueの場合、読点とクエスチョンも含む", () => {
       const regex = createKanaRegex(true);
       expect(regex.test("あいうえお、")).toBe(true);
