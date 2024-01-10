@@ -22,15 +22,17 @@
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
       @dblclick="onDoubleClick"
+      @mouseenter="onMouseEnter"
+      @mouseleave="onMouseLeave"
       @wheel="onWheel"
       @scroll="onScroll"
     >
       <!-- グリッド -->
       <!-- NOTE: 現状オクターブごとの罫線なし -->
       <svg
+        xmlns="http://www.w3.org/2000/svg"
         :width="gridWidth"
         :height="gridHeight"
-        xmlns="http://www.w3.org/2000/svg"
         class="sequencer-grid"
       >
         <defs>
@@ -91,6 +93,14 @@
           fill="url(#sequencer-grid-measure)"
         />
       </svg>
+      <div
+        v-if="showGuideLine"
+        class="sequencer-guideline"
+        :style="{
+          height: `${gridHeight}px`,
+          transform: `translateX(${guideLineX}px)`,
+        }"
+      ></div>
       <sequencer-note
         v-for="note in unselectedNotes"
         :key="note.id"
@@ -135,7 +145,6 @@
         }"
       ></div>
     </div>
-    <!-- NOTE: スクロールバー+ズームレンジ仮 -->
     <input
       type="range"
       :min="ZOOM_X_MIN"
@@ -304,7 +313,9 @@ export default defineComponent({
     });
     const scrollBarWidth = ref(12);
     const sequencerBody = ref<HTMLElement | null>(null);
-
+    // マウスカーソル位置
+    let cursorX = 0;
+    let cursorY = 0;
     // プレビュー
     // FIXME: 関連する値を１つのobjectにまとめる
     const nowPreviewing = ref(false);
@@ -312,8 +323,6 @@ export default defineComponent({
     const copiedNotesForPreview = new Map<string, Note>();
     let previewMode: PreviewMode = "ADD";
     let previewRequestId = 0;
-    let currentCursorX = 0;
-    let currentCursorY = 0;
     let dragStartTicks = 0;
     let dragStartNoteNumber = 0;
     let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
@@ -325,9 +334,12 @@ export default defineComponent({
       undefined,
     ];
     let ignoreDoubleClick = false;
+    // ガイドライン
+    const showGuideLine = ref(true);
+    const guideLineX = ref(0);
 
     const previewAdd = () => {
-      const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
+      const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
       const draggingNote = copiedNotesForPreview.get(draggingNoteId);
       if (!draggingNote) {
@@ -359,11 +371,14 @@ export default defineComponent({
           return editedNotes.get(value.id) ?? value;
         });
       }
+
+      const guideLineBaseX = tickToBaseX(newNoteEndPos, tpqn.value);
+      guideLineX.value = guideLineBaseX * zoomX.value;
     };
 
     const previewMove = () => {
-      const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
-      const cursorBaseY = (scrollY.value + currentCursorY) / zoomY.value;
+      const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+      const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
       const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
       const draggingNote = copiedNotesForPreview.get(draggingNoteId);
@@ -401,10 +416,16 @@ export default defineComponent({
         });
         edited = true;
       }
+
+      const guidelineTicks =
+        Math.round(dragStartTicks / snapTicks.value) * snapTicks.value +
+        movingTicks;
+      const guideLineBaseX = tickToBaseX(guidelineTicks, tpqn.value);
+      guideLineX.value = guideLineBaseX * zoomX.value;
     };
 
     const previewResizeRight = () => {
-      const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
+      const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
       const draggingNote = copiedNotesForPreview.get(draggingNoteId);
       if (!draggingNote) {
@@ -439,10 +460,13 @@ export default defineComponent({
         });
         edited = true;
       }
+
+      const guideLineBaseX = tickToBaseX(newNoteEndPos, tpqn.value);
+      guideLineX.value = guideLineBaseX * zoomX.value;
     };
 
     const previewResizeLeft = () => {
-      const cursorBaseX = (scrollX.value + currentCursorX) / zoomX.value;
+      const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
       const draggingNote = copiedNotesForPreview.get(draggingNoteId);
       if (!draggingNote) {
@@ -483,6 +507,9 @@ export default defineComponent({
         });
         edited = true;
       }
+
+      const guideLineBaseX = tickToBaseX(newNotePos, tpqn.value);
+      guideLineX.value = guideLineBaseX * zoomX.value;
     };
 
     const preview = () => {
@@ -523,8 +550,8 @@ export default defineComponent({
       if (!sequencerBodyElement) {
         throw new Error("sequencerBodyElement is null.");
       }
-      const cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-      const cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
+      cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
+      cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
       if (cursorX >= sequencerBodyElement.clientWidth) {
         return;
       }
@@ -542,7 +569,8 @@ export default defineComponent({
         }
         note = {
           id: uuidv4(),
-          position: Math.round(cursorTicks / snapTicks.value) * snapTicks.value,
+          position:
+            Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value,
           duration: snapTicks.value,
           noteNumber: cursorNoteNumber,
           lyric: getDoremiFromNoteNumber(cursorNoteNumber),
@@ -586,8 +614,6 @@ export default defineComponent({
         }
       }
       previewMode = mode;
-      currentCursorX = cursorX;
-      currentCursorY = cursorY;
       dragStartTicks = cursorTicks;
       dragStartNoteNumber = cursorNoteNumber;
       draggingNoteId = note.id;
@@ -634,15 +660,22 @@ export default defineComponent({
     };
 
     const onMouseMove = (event: MouseEvent) => {
-      if (!nowPreviewing.value) {
-        return;
-      }
       const sequencerBodyElement = sequencerBody.value;
       if (!sequencerBodyElement) {
         throw new Error("sequencerBodyElement is null.");
       }
-      currentCursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-      currentCursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
+      cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
+      cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
+
+      if (!nowPreviewing.value) {
+        const scrollLeft = sequencerBodyElement.scrollLeft;
+        const cursorBaseX = (scrollLeft + cursorX) / zoomX.value;
+        const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+        const guideLineTicks =
+          Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
+        const guideLineBaseX = tickToBaseX(guideLineTicks, tpqn.value);
+        guideLineX.value = guideLineBaseX * zoomX.value;
+      }
     };
 
     const onMouseUp = (event: MouseEvent) => {
@@ -667,6 +700,7 @@ export default defineComponent({
           });
         } else {
           store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
+          store.dispatch("DESELECT_ALL_NOTES");
         }
         if (previewNotes.value.length === 1) {
           store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -691,6 +725,14 @@ export default defineComponent({
       if (state.editingLyricNoteId !== noteId) {
         store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId });
       }
+    };
+
+    const onMouseEnter = () => {
+      showGuideLine.value = true;
+    };
+
+    const onMouseLeave = () => {
+      showGuideLine.value = false;
     };
 
     // キーボードイベント
@@ -847,8 +889,8 @@ export default defineComponent({
         throw new Error("sequencerBodyElement is null.");
       }
       if (event.ctrlKey) {
+        cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
         // マウスカーソル位置を基準に水平方向のズームを行う
-        const cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
         const oldZoomX = zoomX.value;
         let newZoomX = zoomX.value;
         newZoomX -= event.deltaY * (ZOOM_X_STEP * 0.01);
@@ -956,6 +998,8 @@ export default defineComponent({
       previewNotes,
       selectedNotes,
       unselectedNotes,
+      showGuideLine,
+      guideLineX,
       setZoomX,
       setZoomY,
       onNoteBodyMouseDown,
@@ -966,6 +1010,8 @@ export default defineComponent({
       onMouseMove,
       onMouseUp,
       onDoubleClick,
+      onMouseEnter,
+      onMouseLeave,
       onWheel,
       onScroll,
     };
@@ -1008,6 +1054,15 @@ export default defineComponent({
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
+}
+
+.sequencer-guideline {
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 2px;
+  background: hsl(130, 35%, 82%);
+  pointer-events: none;
 }
 
 .sequencer-overlay {

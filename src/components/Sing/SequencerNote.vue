@@ -208,7 +208,7 @@ export default defineComponent({
   padding: 0 1px 2px;
   background: white;
   color: colors.$display;
-  border: 1px solid hsl(130, 0%, 90%);
+  border: 1px solid hsl(130, 0%, 91%);
   border-radius: 3px;
   font-size: 12px;
   font-weight: bold;
@@ -230,8 +230,8 @@ export default defineComponent({
 .note-left-edge {
   position: absolute;
   top: 0;
-  left: -2px;
-  width: 6px;
+  left: 0px;
+  width: 4px;
   height: 100%;
   cursor: ew-resize;
 }
@@ -239,8 +239,8 @@ export default defineComponent({
 .note-right-edge {
   position: absolute;
   top: 0;
-  right: -2px;
-  width: 6px;
+  right: 0px;
+  width: 4px;
   height: 100%;
   cursor: ew-resize;
 }
