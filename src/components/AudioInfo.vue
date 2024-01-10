@@ -221,7 +221,7 @@
         <character-button
           v-model:selected-voice="morphingTargetVoice"
           class="q-my-xs"
-          :character-infos="morphingTargetCharacters"
+          :character-infos="[morphingTargetCharacters]"
           :show-engine-info="morphingTargetEngines.length >= 2"
           :emptiable="true"
           :ui-locked="uiLocked"

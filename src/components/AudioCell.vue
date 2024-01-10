@@ -46,7 +46,11 @@
     </div>
     <character-button
       v-model:selected-voice="selectedVoice"
-      :character-infos="userOrderedCharacterInfos"
+      :character-infos="
+        selectedCharacterInfo == undefined
+          ? []
+          : [[selectedCharacterInfo], userOrderedCharacterInfos]
+      "
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
@@ -156,6 +160,13 @@ defineExpose({
 });
 
 const store = useStore();
+const selectedCharacterInfo = computed(() => {
+  const speakerId = selectedVoice.value?.speakerId;
+  if (speakerId == undefined) return undefined;
+  const info = store.getters.GET_ALL_CHARACTER_INFOS.get(speakerId);
+  if (info == undefined) return undefined;
+  return info;
+});
 const userOrderedCharacterInfos = computed(() => {
   const infos = store.getters.USER_ORDERED_CHARACTER_INFOS;
   if (infos == undefined)
