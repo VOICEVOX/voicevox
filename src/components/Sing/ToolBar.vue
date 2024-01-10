@@ -332,7 +332,7 @@ export default defineComponent({
 }
 
 .singer-panel-toggler {
-  border: 2px solid #aaa;
+  border: 2px solid #bbb;
   border-radius: 50%;
   display: block;
   height: 48px;
