@@ -89,7 +89,7 @@ test("複数選択：キャラクター選択", async ({ page }) => {
   await page.waitForTimeout(100);
 
   await page
-    .locator(".character-item-container > .q-item:nth-child(3)")
+    .locator(".character-item-container > .q-item:nth-child(4)")
     .click();
   await page.waitForTimeout(200);
 
