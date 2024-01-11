@@ -181,7 +181,7 @@ export function durationFormat(time: number): string {
  *
  * 1
  * 00:07:12,011 --> 00:14:08,675
- * >> 四国 めたん: こんにちは世界!
+ * 四国 めたん: こんにちは世界!
  *
  */
 export function createSrtString(
@@ -191,7 +191,7 @@ export function createSrtString(
   speakerName: string,
   text: string
 ): string {
-  return `${serialNumber}\n${start} --> ${end}\n>> ${speakerName}: ${text}\n`;
+  return `${serialNumber}\n${start} --> ${end}\n${speakerName}: ${text}\n`;
 }
 
 export function extractExportText(text: string): string {
