@@ -9,6 +9,7 @@ import { UpdateInfo, updateInfoSchema } from "@/type/preload";
  */
 export const useFetchNewUpdateInfos = (
   currentVersionGetter: () => Promise<string>,
+  skipUpdateVersionGetter: () => Promise<string>,
   newUpdateInfosUrl: string
 ) => {
   const result = ref<
@@ -17,6 +18,7 @@ export const useFetchNewUpdateInfos = (
       }
     | {
         status: "updateAvailable";
+        requireNotification: boolean;
         latestVersion: string;
         newUpdateInfos: UpdateInfo[];
       }
@@ -29,6 +31,7 @@ export const useFetchNewUpdateInfos = (
 
   (async () => {
     const currentVersion = await currentVersionGetter();
+    const skipUpdateVersion = await skipUpdateVersionGetter();
 
     const updateInfos = await fetch(newUpdateInfosUrl).then(
       async (response) => {
@@ -41,9 +44,15 @@ export const useFetchNewUpdateInfos = (
     });
 
     if (newUpdateInfos.length > 0) {
+      const latestVersion = newUpdateInfos[0].version;
+      const requireNotification =
+        semver.valid(skipUpdateVersion) == undefined ||
+        semver.gt(latestVersion, skipUpdateVersion);
+
       result.value = {
         status: "updateAvailable",
-        latestVersion: newUpdateInfos[0].version,
+        requireNotification,
+        latestVersion,
         newUpdateInfos,
       };
     } else {

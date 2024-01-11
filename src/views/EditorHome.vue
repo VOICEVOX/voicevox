@@ -559,6 +559,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
 }
 const newUpdateResult = useFetchNewUpdateInfos(
   () => window.electron.getAppInfos().then((obj) => obj.version), // アプリのバージョン
+  () => window.electron.getSetting("skipUpdateVersion"),
   import.meta.env.VITE_LATEST_UPDATE_INFOS_URL
 );
 
@@ -645,7 +646,8 @@ onMounted(async () => {
     store.state.acceptTerms !== "Accepted";
 
   isUpdateNotificationDialogOpenComputed.value =
-    newUpdateResult.value.status == "updateAvailable";
+    newUpdateResult.value.status == "updateAvailable" &&
+    newUpdateResult.value.requireNotification;
 
   isCompletedInitialStartup.value = true;
 });

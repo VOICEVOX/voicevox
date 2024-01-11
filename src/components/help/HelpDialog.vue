@@ -139,6 +139,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
 }
 const newUpdateResult = useFetchNewUpdateInfos(
   () => window.electron.getAppInfos().then((obj) => obj.version), // アプリのバージョン
+  async () => "", //チェック不要なので空文字を入れる
   import.meta.env.VITE_LATEST_UPDATE_INFOS_URL
 );
 
