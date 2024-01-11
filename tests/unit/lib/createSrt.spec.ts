@@ -17,7 +17,7 @@ describe("Utility functions", () => {
     const speakerName = "四国 めたん";
     const text = "こんにちは世界!";
     const expectedSrtString =
-      "1\n00:07:12,011 --> 00:14:08,675\n>> 四国 めたん: こんにちは世界!\n";
+      "1\n00:07:12,011 --> 00:14:08,675\n四国 めたん: こんにちは世界!\n";
     expect(createSrtString(serialNumber, start, end, speakerName, text)).toBe(
       expectedSrtString
     );
@@ -28,7 +28,7 @@ describe("Utility functions", () => {
       const speakerName = "四国 めたん";
       const text = "";
       const expectedSrtString =
-        "1\n00:00:00,000 --> 00:00:00,000\n>> 四国 めたん: \n";
+        "1\n00:00:00,000 --> 00:00:00,000\n四国 めたん: \n";
       expect(createSrtString(serialNumber, start, end, speakerName, text)).toBe(
         expectedSrtString
       );
