@@ -187,7 +187,7 @@ describe("Utilitys", () => {
   });
 
   test("buildAudioFileNameFromRawData", () => {
-    const fileNamePattern = "テストパターン";
+    const fileNamePattern = "テストパターン";  // FIXME: いろんなパターンを試す
     const vars = {
       index: 1,
       characterName: "四国めたん",
@@ -232,6 +232,7 @@ describe("Utilitys", () => {
     expect(convertHiraToKana("あいうえお")).toBe("アイウエオ");
     expect(convertHiraToKana("かきくけこ")).toBe("カキクケコ");
     expect(convertHiraToKana("さしすせそ")).toBe("サシスセソ");
+    expect(convertHiraToKana("がぱをんー")).toBe("ガパヲンー");
   });
 
   test("convertLongVowel", () => {
@@ -240,6 +241,8 @@ describe("Utilitys", () => {
     expect(convertLongVowel("ウー")).toBe("ウウ");
     expect(convertLongVowel("エー")).toBe("エエ");
     expect(convertLongVowel("オー")).toBe("オオ");
+    expect(convertLongVowel("ガー")).toBe("ガア");
+    expect(convertLongVowel("ンー")).toBe("ンン");
   });
 
   test("getBaseName", () => {
@@ -265,6 +268,7 @@ describe("Utilitys", () => {
   });
 
   test("joinTextsInAccentPhrases", () => {
+    // FIXME: いろいろくっつける
     const accentPhrase: AccentPhrase = {
       moras: [
         createDummyMora("あ"),
