@@ -154,6 +154,9 @@ function replaceTag(
   return result;
 }
 
+/**
+ * テキスト書き出し用のテキストを生成する。
+ */
 export function extractExportText(
   text: string,
   {
@@ -169,6 +172,10 @@ export function extractExportText(
   }
   return text;
 }
+
+/**
+ * 読み用のテキストを生成する。
+ */
 export function extractYomiText(
   text: string,
   {
@@ -184,6 +191,7 @@ export function extractYomiText(
   }
   return text;
 }
+
 function skipRubyReadingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
   return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
