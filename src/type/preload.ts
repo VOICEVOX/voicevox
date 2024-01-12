@@ -270,11 +270,12 @@ export type CharacterInfo = {
   };
 };
 
-export type UpdateInfo = {
-  version: string;
-  descriptions: string[];
-  contributors: string[];
-};
+export const updateInfoSchema = z.object({
+  version: z.string(),
+  descriptions: z.array(z.string()),
+  contributors: z.array(z.string()),
+});
+export type UpdateInfo = z.infer<typeof updateInfoSchema>;
 
 export type Voice = {
   engineId: EngineId;
