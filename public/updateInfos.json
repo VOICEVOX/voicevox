@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.14.11",
+    "descriptions": [
+      "キャラクター「小夜」「ずんだもん」「もち子さん」「青山龍星」のスタイルを追加・更新"
+    ],
+    "contributors": []
+  },
+  {
     "version": "0.14.10",
     "descriptions": ["初回起動及び0.13からアップデートできないバグを修正"],
     "contributors": ["sevenc-nanashi"]

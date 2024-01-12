@@ -374,13 +374,9 @@ export function buildAudioFileNameFromRawData(
   }
 
   const characterName = sanitizeFileName(vars.characterName);
-
   const index = (vars.index + 1).toString().padStart(3, "0");
-
   const styleName = sanitizeFileName(vars.styleName);
-
-  const date = currentDateString();
-
+  const date = vars.date;
   return replaceTag(pattern, {
     text,
     characterName,
@@ -470,12 +466,3 @@ export const isOnCommandOrCtrlKeyDown = (event: {
   metaKey: boolean;
   ctrlKey: boolean;
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
-
-/**
- * AccentPhraseのtextを結合して返します。
- */
-export const joinTextsInAccentPhrases = (
-  accentPhrase: AccentPhrase
-): string => {
-  return accentPhrase.moras.map((mora) => mora.text).join("");
-};
