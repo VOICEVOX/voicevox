@@ -270,11 +270,12 @@ export type CharacterInfo = {
   };
 };
 
-export type UpdateInfo = {
-  version: string;
-  descriptions: string[];
-  contributors: string[];
-};
+export const updateInfoSchema = z.object({
+  version: z.string(),
+  descriptions: z.array(z.string()),
+  contributors: z.array(z.string()),
+});
+export type UpdateInfo = z.infer<typeof updateInfoSchema>;
 
 export type Voice = {
   engineId: EngineId;
@@ -520,6 +521,8 @@ export const rootMiscSettingSchema = z.object({
     .default("PERIOD_AND_NEW_LINE"),
   splitterPosition: splitterPositionSchema.default({}),
   enableMultiEngine: z.boolean().default(false),
+  enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
+  enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 

@@ -72,18 +72,63 @@ test("currentDateString", () => {
   expect(currentDateString()).toMatch(/\d{4}\d{2}\d{2}/);
 });
 
-test("extractExportText", () => {
-  const input = "{漢字|かんじ}[半角記号メモ]";
-  const expected = "漢字";
-  const result = extractExportText(input);
-  expect(result).toEqual(expected);
-});
+describe("extractExportTextとextractYomiText", () => {
+  const memoText = "ダミー]ダミー[メモ]ダミー[ダミー";
+  const rubyText = "ダミー|}ダミー{漢字|読み}ダミー{|ダミー";
 
-test("extractYomiText", () => {
-  const input = "{漢字|かんじ}[メモ]";
-  const expected = "かんじ";
-  const result = extractYomiText(input);
-  expect(result).toEqual(expected);
+  const text = memoText + rubyText;
+
+  const expectedSkippedMemoText = "ダミー]ダミーダミー[ダミー";
+  const expectedSkippedRubyExportText = "ダミー|}ダミー読みダミー{|ダミー";
+  const expectedSkippedRubyYomiText = "ダミー|}ダミー漢字ダミー{|ダミー";
+
+  it("無指定の場合はそのまま", () => {
+    const param = {
+      enableMemoNotation: false,
+      enableRubyNotation: false,
+    };
+    expect(extractExportText(text, param)).toBe(text);
+    expect(extractYomiText(text, param)).toBe(text);
+  });
+
+  it("メモをスキップ", () => {
+    const param = {
+      enableMemoNotation: true,
+      enableRubyNotation: false,
+    };
+    expect(extractExportText(text, param)).toBe(
+      expectedSkippedMemoText + rubyText
+    );
+    expect(extractYomiText(text, param)).toBe(
+      expectedSkippedMemoText + rubyText
+    );
+  });
+
+  it("ルビをスキップ", () => {
+    const param = {
+      enableMemoNotation: false,
+      enableRubyNotation: true,
+    };
+    expect(extractExportText(text, param)).toBe(
+      memoText + expectedSkippedRubyYomiText
+    );
+    expect(extractYomiText(text, param)).toBe(
+      memoText + expectedSkippedRubyExportText
+    );
+  });
+
+  it("メモとルビをスキップ", () => {
+    const param = {
+      enableMemoNotation: true,
+      enableRubyNotation: true,
+    };
+    expect(extractExportText(text, param)).toBe(
+      expectedSkippedMemoText + expectedSkippedRubyYomiText
+    );
+    expect(extractYomiText(text, param)).toBe(
+      expectedSkippedMemoText + expectedSkippedRubyExportText
+    );
+  });
 });
 
 describe("TuningTranscription", () => {

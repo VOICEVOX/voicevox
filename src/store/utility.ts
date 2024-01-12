@@ -154,24 +154,55 @@ function replaceTag(
   return result;
 }
 
-export function extractExportText(text: string): string {
-  return skipReadingPart(skipMemoText(text));
+/**
+ * テキスト書き出し用のテキストを生成する。
+ */
+export function extractExportText(
+  text: string,
+  {
+    enableMemoNotation,
+    enableRubyNotation,
+  }: { enableMemoNotation: boolean; enableRubyNotation: boolean }
+): string {
+  if (enableMemoNotation) {
+    text = skipMemoText(text);
+  }
+  if (enableRubyNotation) {
+    text = skipRubyReadingPart(text);
+  }
+  return text;
 }
-export function extractYomiText(text: string): string {
-  return skipWritingPart(skipMemoText(text));
+
+/**
+ * 読み用のテキストを生成する。
+ */
+export function extractYomiText(
+  text: string,
+  {
+    enableMemoNotation,
+    enableRubyNotation,
+  }: { enableMemoNotation: boolean; enableRubyNotation: boolean }
+): string {
+  if (enableMemoNotation) {
+    text = skipMemoText(text);
+  }
+  if (enableRubyNotation) {
+    text = skipRubyWritingPart(text);
+  }
+  return text;
 }
-function skipReadingPart(text: string): string {
+
+function skipRubyReadingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
   return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
 }
-function skipWritingPart(text: string): string {
+function skipRubyWritingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
   return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2");
 }
 function skipMemoText(targettext: string): string {
   // []をスキップ
-  const resolvedText = targettext.replace(/\[.*?\]/g, "");
-  return resolvedText;
+  return targettext.replace(/\[.*?\]/g, "");
 }
 
 /**
