@@ -43,7 +43,7 @@
                   />
                 </template>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>エンジンモード</div>
                 <div
                   aria-label=" GPU モードの利用には GPU が必要です。Linux は
@@ -87,7 +87,7 @@
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>音声のサンプリングレート</div>
                 <div
                   aria-label="再生と保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。"
@@ -108,6 +108,7 @@
                 <q-select
                   v-model="outputSamplingRate"
                   borderless
+                  dense
                   name="samplingRate"
                   :options="samplingRateOptions"
                   :option-label="renderSamplingRateLabel"
@@ -120,7 +121,7 @@
               <q-card-actions>
                 <h5 class="text-h5">操作</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>パラメータの引き継ぎ</div>
                 <div
                   aria-label="ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。"
@@ -144,7 +145,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>再生位置を追従</div>
                 <div
                   aria-label="音声再生中の、下部パネルの自動スクロールのモードを選べます。"
@@ -200,7 +201,7 @@
                   </q-radio>
                 </div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>テキスト分割の区切り</div>
                 <div
                   aria-label="テキスト貼り付けの際のテキストの分割箇所を選べます。"
@@ -276,7 +277,7 @@
                   </template>
                 </q-btn-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>メモ機能</div>
                 <div
                   aria-label="ONの場合、テキストを [] で囲むことで、テキスト中にメモを書けます。"
@@ -301,7 +302,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>ルビ機能</div>
                 <div
                   aria-label="ONの場合、テキストに {ルビ対象|よみかた} と書くことで、テキストの読み方を変えられます。"
@@ -326,7 +327,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>非表示にしたヒントを全て再表示</div>
                 <div
                   aria-label="過去に非表示にしたヒントを全て再表示できます。"
@@ -375,7 +376,7 @@
               <q-card-actions>
                 <h5 class="text-h5">保存</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>書き出し先を固定</div>
                 <div
                   aria-label="ONの場合、書き出す際のフォルダをあらかじめ指定できます。"
@@ -441,7 +442,7 @@
                 v-model:open-dialog="showsFilePatternEditDialog"
               />
 
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>書き出しファイル名パターン</div>
                 <div
                   aria-label="書き出す際のファイル名のパターンをカスタマイズできます。"
@@ -472,7 +473,7 @@
                 />
               </q-card-actions>
 
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>上書き防止</div>
                 <div
                   aria-label="ONの場合、書き出す際に同名ファイルが既にあった場合に、かわりに連番で保存され、上書きされません。"
@@ -498,7 +499,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>文字コード</div>
                 <div
                   aria-label="テキストファイルを書き出す際の文字コードを選べます。"
@@ -533,7 +534,7 @@
                   "
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>txtファイルを書き出し</div>
                 <div
                   aria-label="ONの場合、テキストがtxtファイルとして音声書き出し時に追加で書き出されます。"
@@ -560,7 +561,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>labファイルを書き出し</div>
                 <div
                   aria-label="ONの場合、リップシンク用のlabファイルが音声書き出し時に追加で書き出されます。"
@@ -592,7 +593,7 @@
               <q-card-actions>
                 <h5 class="text-h5">外観</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>テーマ</div>
                 <div aria-label="エディタの色を選べます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -620,7 +621,7 @@
                 />
               </q-card-actions>
 
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>フォント</div>
                 <div aria-label="エディタのフォントを選べます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -651,7 +652,7 @@
                   @update:model-value="changeEditorFont($event)"
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>行番号の表示</div>
                 <div
                   aria-label="ONの場合、テキスト欄の左側に行番号が表示されます。"
@@ -675,7 +676,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>テキスト追加ボタンの表示</div>
                 <div
                   aria-label="OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は Shift + Enter で追加できます）"
@@ -707,7 +708,7 @@
               <q-card-actions>
                 <h5 class="text-h5">高度な設定</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>マルチエンジン機能</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -729,7 +730,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>音声をステレオ化</div>
                 <div
                   aria-label="ONの場合、音声データがモノラルからステレオに変換されてから再生・保存が行われます。"
@@ -756,7 +757,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions
-                class="q-px-md q-py-none bg-surface"
+                class="q-px-md bg-surface"
                 :class="{ disabled: !canSetAudioOutputDevice }"
               >
                 <div>再生デバイス</div>
@@ -781,7 +782,7 @@
                   v-model="currentAudioOutputDeviceComputed"
                   :disable="!canSetAudioOutputDevice"
                   dense
-                  label="再生デバイス"
+                  name="audioOutputDevice"
                   :options="availableAudioOutputDevices"
                   class="col-7"
                 >
@@ -795,7 +796,7 @@
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
               <!-- 今後実験的機能を追加する場合はここに追加 -->
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>プリセット機能</div>
                 <div
                   aria-label="プリセット機能を有効にします。あらかじめ登録しておいた話速などのパラメータを呼び出せるようになります。"
@@ -819,7 +820,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>スタイル変更時にデフォルトプリセットを適用</div>
                 <div
                   aria-label="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
@@ -851,7 +852,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>疑問文を自動調整</div>
                 <div
                   aria-label="ONの場合、疑問文の語尾の音高が自動的に上げられます。"
@@ -880,7 +881,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>モーフィング機能</div>
                 <div
                   aria-label="モーフィング機能を有効にします。2つのスタイルの中間を選べるようになります。"
@@ -906,7 +907,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>複数選択</div>
                 <div aria-label="複数のテキスト欄を選択できるようにします。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -930,7 +931,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>調整結果の保持</div>
                 <div
                   aria-label="テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。"
@@ -965,7 +966,7 @@
               <q-card-actions>
                 <h5 class="text-h5">データ収集</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>ソフトウェア利用状況のデータ収集を許可</div>
                 <div
                   aria-label="ONの場合、各UIの利用率などのデータが送信され、VOICEVOXの改善に役立てられます。テキストデータや音声データは送信されません。"
