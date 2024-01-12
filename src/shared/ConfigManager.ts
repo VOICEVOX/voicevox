@@ -7,8 +7,8 @@ import {
   configSchema,
   DefaultStyleId,
   defaultHotkeySettings,
-  HotkeySetting,
-  ExperimentalSetting,
+  HotkeySettingType,
+  ExperimentalSettingType,
 } from "@/type/preload";
 
 const lockKey = "save";
@@ -73,7 +73,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     (config) => {
       // マルチエンジン機能を実験的機能から通常機能に
       const experimentalSetting =
-        config.experimentalSetting as ExperimentalSetting; // FIXME: parseするかasをやめる
+        config.experimentalSetting as ExperimentalSettingType; // FIXME: parseするかasをやめる
       if (
         Object.prototype.hasOwnProperty.call(
           experimentalSetting,
@@ -229,7 +229,7 @@ export abstract class BaseConfigManager {
         const loadedHotkey = loadedHotkeys.find(
           (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
         );
-        const hotkeyWithoutCombination: HotkeySetting = {
+        const hotkeyWithoutCombination: HotkeySettingType = {
           action: defaultHotkey.action,
           combination: COMBINATION_IS_NONE,
         };
@@ -246,7 +246,7 @@ export abstract class BaseConfigManager {
           (hotkey) => hotkey.combination === newHotkey.combination
         );
         if (combinationExists) {
-          const emptyHotkey: HotkeySetting = {
+          const emptyHotkey: HotkeySettingType = {
             action: newHotkey.action,
             combination: "",
           };

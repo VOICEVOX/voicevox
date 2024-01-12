@@ -87,7 +87,7 @@ import AccentPhrase from "./AccentPhrase.vue";
 import { useStore } from "@/store";
 import {
   AudioKey,
-  HotkeyAction,
+  HotkeyActionType,
   HotkeyReturnType,
   isMac,
 } from "@/type/preload";
@@ -111,7 +111,7 @@ const supportedFeatures = computed(
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
 
-const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
   [
     "再生/停止",
     () => {

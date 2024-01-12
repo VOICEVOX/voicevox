@@ -115,7 +115,7 @@
 import { computed, ref, watch, Ref } from "vue";
 import draggable from "vuedraggable";
 import { useStore } from "@/store";
-import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
+import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
 
 const props =
@@ -148,7 +148,7 @@ watch(
   }
 );
 
-const defaultSetting: ToolbarSetting = [];
+const defaultSetting: ToolbarSettingType = [];
 window.electron.getDefaultToolbarSetting().then((setting) => {
   defaultSetting.push(...setting);
 });
