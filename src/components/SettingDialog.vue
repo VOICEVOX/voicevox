@@ -678,7 +678,7 @@
               <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>テキスト追加ボタンの表示</div>
                 <div
-                  aria-label="OFFの場合、右下にテキスト追加ボタンが表示されません。"
+                  aria-label="OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は Shift + Enter で追加できます）"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -688,7 +688,8 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      OFFの場合、右下にテキスト追加ボタンが表示されません。
+                      OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は
+                      Shift + Enter で追加できます）
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -1001,7 +1002,6 @@ import {
   EngineSettingType,
   ExperimentalSettingType,
   ActivePointScrollMode,
-  SplitTextWhenPasteType,
   RootMiscSettingType,
   EngineId,
 } from "@/type/preload";
@@ -1108,34 +1108,8 @@ const [enableMultiEngine, setEnableMultiEngine] =
 const [showTextLineNumber, changeShowTextLineNumber] =
   useRootMiscSetting("showTextLineNumber");
 
-// エディタの＋ボタン表示設定
-const showAddAudioItemButton = computed(
-  () => store.state.showAddAudioItemButton
-);
-const changeShowAddAudioItemButton = async (
-  showAddAudioItemButton: boolean
-) => {
-  store.dispatch("SET_ROOT_MISC_SETTING", {
-    key: "showAddAudioItemButton",
-    value: showAddAudioItemButton,
-  });
-
-  // 設定をオフにする場合はヒントを表示
-  if (!showAddAudioItemButton) {
-    const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
-      title: "エディタの＋ボタンを非表示にする",
-      message: "テキスト欄は Shift + Enter で追加できます",
-      actionName: "非表示",
-    });
-    if (result === "CANCEL") {
-      // キャンセルしたら設定を元に戻す
-      store.dispatch("SET_ROOT_MISC_SETTING", {
-        key: "showAddAudioItemButton",
-        value: true,
-      });
-    }
-  }
-};
+const [showAddAudioItemButton, changeShowAddAudioItemButton] =
+  useRootMiscSetting("showAddAudioItemButton");
 
 const [enableMemoNotation, changeEnableMemoNotation] =
   useRootMiscSetting("enableMemoNotation");
