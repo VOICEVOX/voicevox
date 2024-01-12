@@ -148,7 +148,7 @@
               <q-card-actions class="q-px-md bg-surface">
                 <div>再生位置を追従</div>
                 <div
-                  aria-label="音声再生中の、下部パネルの自動スクロールのモードを選べます。"
+                  aria-label="音声再生中の、詳細調整欄の自動スクロールのモードを選べます。"
                 >
                   <span
                     v-for="(obj, key) in activePointScrollModeOptions"
@@ -164,7 +164,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      音声再生中の、下部パネルの自動スクロールのモードを選べます。
+                      音声再生中の、詳細調整欄の自動スクロールのモードを選べます。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -202,7 +202,7 @@
                 </div>
               </q-card-actions>
               <q-card-actions class="q-px-md bg-surface">
-                <div>テキスト分割の区切り</div>
+                <div>テキスト自動分割</div>
                 <div
                   aria-label="テキスト貼り付けの際のテキストの分割箇所を選べます。"
                 >
@@ -476,7 +476,7 @@
               <q-card-actions class="q-px-md bg-surface">
                 <div>上書き防止</div>
                 <div
-                  aria-label="ONの場合、書き出す際に同名ファイルが既にあった場合に、かわりに連番で保存され、上書きされません。"
+                  aria-label="ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -486,7 +486,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      ONの場合、書き出す際に同名ファイルが既にあった場合に、かわりに連番で保存され、上書きされません。
+                      ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -537,7 +537,7 @@
               <q-card-actions class="q-px-md bg-surface">
                 <div>txtファイルを書き出し</div>
                 <div
-                  aria-label="ONの場合、テキストがtxtファイルとして音声書き出し時に追加で書き出されます。"
+                  aria-label="ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -547,7 +547,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      ONの場合、テキストがtxtファイルとして音声書き出し時に追加で書き出されます。
+                      ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -564,7 +564,7 @@
               <q-card-actions class="q-px-md bg-surface">
                 <div>labファイルを書き出し</div>
                 <div
-                  aria-label="ONの場合、リップシンク用のlabファイルが音声書き出し時に追加で書き出されます。"
+                  aria-label="ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -574,7 +574,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      ONの場合、リップシンク用のlabファイルが音声書き出し時に追加で書き出されます。
+                      ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -799,7 +799,7 @@
               <q-card-actions class="q-px-md bg-surface">
                 <div>プリセット機能</div>
                 <div
-                  aria-label="プリセット機能を有効にします。あらかじめ登録しておいた話速などのパラメータを呼び出せるようになります。"
+                  aria-label="プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -809,7 +809,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      プリセット機能を有効にします。あらかじめ登録しておいた話速などのパラメータを呼び出せるようになります。
+                      プリセット機能を有効にします。パラメータを登録したり適用したりできます。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -884,7 +884,7 @@
               <q-card-actions class="q-px-md bg-surface">
                 <div>モーフィング機能</div>
                 <div
-                  aria-label="モーフィング機能を有効にします。2つのスタイルの中間を選べるようになります。"
+                  aria-label="モーフィング機能を有効にします。2つの音声混ぜられるようになります。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -894,7 +894,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      モーフィング機能を有効にします。2つのスタイルの中間を選べるようになります。
+                      モーフィング機能を有効にします。2つの音声混ぜられるようになります。
                     </q-tooltip>
                   </q-icon>
                 </div>

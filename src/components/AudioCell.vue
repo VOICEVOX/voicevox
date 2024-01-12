@@ -575,7 +575,7 @@ const contextMenudata = ref<
   { type: "separator" },
   {
     type: "button",
-    label: "内容をテキストのみに適用",
+    label: "読みを変えずに適用",
     onClick: async () => {
       contextMenu.value?.hide();
       isChangeFlag.value = false;
