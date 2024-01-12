@@ -20,7 +20,7 @@ const setupFetchMock = (latestVersion: string) => {
 // 準備完了まで待機
 const waitFinished = async (result: Ref<{ status: string }>) => {
   await vi.waitFor(() => {
-    if (result.value.status === "upadteChecking") throw new Error();
+    if (result.value.status === "updateChecking") throw new Error();
   });
 };
 
