@@ -557,11 +557,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             const applyRestoredProject = await context.dispatch(
               "SHOW_CONFIRM_DIALOG",
               {
-                title: "プロジェクト保存先の変更",
-                message:
-                  "読み込み先のファイルが外部で変更されています。復元しますか？",
-                actionName: "復元",
-                cancel: "復元しない",
+                title: "読み込みファイルの変更",
+                message: `前回開いていたプロジェクトがエディタ外で変更されています。読み込みますか？<br />
+                  読み込み先ファイル名：${escapeHtml(
+                    getBaseName(autoLoadProjectInfo.projectFilePath)
+                  )}`,
+                actionName: "読み込む",
+                cancel: "読み込まない",
+                html: true,
               }
             );
 
@@ -578,23 +581,33 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           return;
         }
 
+        const { tempProject } = workspace;
+
+        // ダイアログに表示するメッセージを生成
+        let dialogMessage = `復元されたプロジェクトがあります。復元しますか？<br /><br />
+          復元内容：${escapeHtml(
+            tempProject.project.audioItems[tempProject.project.audioKeys[0]]
+              .text
+          )}...`;
+
+        // 保存済みプロジェクトの場合は保存先ファイル名を表示
+        if (autoLoadProjectInfo) {
+          dialogMessage += `<br />保存先ファイル名 : <span style='overflow-wrap: break-word;'>${escapeHtml(
+            getBaseName(autoLoadProjectInfo.projectFilePath)
+          )}</span>`;
+        }
+
+        if (context.getters.IS_PROJECT_EXTERNAL_MODIFIED) {
+          dialogMessage +=
+            "<br />※保存先のファイルが保存後にエディタ外で変更されています。";
+        }
+
         // 未保存時の復元確認
         const applyRestoredProject = await context.dispatch(
           "SHOW_CONFIRM_DIALOG",
           {
             title: "復元されたプロジェクト",
-            message: `復元されたプロジェクトがあります。復元しますか？${
-              context.getters.IS_PROJECT_EXTERNAL_MODIFIED
-                ? "<br />※読み込み先のファイルが外部で変更されています。"
-                : ""
-            }
-            <br />復元対象 : ${
-              autoLoadProjectInfo
-                ? "<span style='overflow-wrap: break-word;'>" +
-                  escapeHtml(autoLoadProjectInfo.projectFilePath) +
-                  "</span>"
-                : "untitled"
-            }`,
+            message: dialogMessage,
             actionName: "復元",
             cancel: "破棄",
             html: true,
@@ -614,7 +627,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
           const parsedProjectData = projectSchema.parse(
-            workspace.tempProject.project
+            tempProject.project
           ) as ProjectType;
           const { audioItems, audioKeys } = parsedProjectData;
 
