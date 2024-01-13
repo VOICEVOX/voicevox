@@ -153,6 +153,46 @@ function replaceTag(
 
   return result;
 }
+/**
+ * secondsをhh:mm:ss形式に変換する
+ */
+export function durationFormat(time: number): string {
+  // todo: Intl.durationFormatが正式実装された際に、この関数が不要になるかもしれない。
+  // その場合、この関数を削除する
+  const hours = Math.floor((time % 86400) / 3600)
+    .toString()
+    .padStart(2, "0")
+    .replace(".", ",");
+  const minutes = Math.floor((time % 3600) / 60)
+    .toString()
+    .padStart(2, "0")
+    .replace(".", ",");
+  const secondsInt = Math.floor(time % 60)
+    .toString()
+    .padStart(2, "0");
+  const secondsDec =
+    "," + ((time % 60) - Math.floor(time % 60)).toFixed(3).substring(2);
+
+  return `${hours}:${minutes}:${secondsInt}${secondsDec}`;
+}
+/**
+ * srtファイルに出力する文字列を作成する
+ * 例:
+ *
+ * 1
+ * 00:07:12,011 --> 00:14:08,675
+ * 四国 めたん: こんにちは世界!
+ *
+ */
+export function createSrtString(
+  serialNumber: number,
+  start: string,
+  end: string,
+  speakerName: string,
+  text: string
+): string {
+  return `${serialNumber}\n${start} --> ${end}\n${speakerName}: ${text}\n`;
+}
 
 /**
  * テキスト書き出し用のテキストを生成する。

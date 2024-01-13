@@ -393,6 +393,13 @@ export type AudioStoreTypes = {
     }): string | undefined;
   };
 
+  GENERATE_INTERVAL_FOR_SRT: {
+    action(payload: {
+      audioKey: AudioKey;
+      offset?: number;
+    }): number | undefined;
+  };
+
   GET_AUDIO_PLAY_OFFSETS: {
     action(payload: { audioKey: AudioKey }): number[];
   };

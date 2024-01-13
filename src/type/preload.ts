@@ -299,13 +299,14 @@ export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 export type EditorFontType = "default" | "os";
 
 export type SavingSetting = {
-  exportLab: boolean;
   fileEncoding: Encoding;
   fileNamePattern: string;
   fixedExportEnabled: boolean;
   fixedExportDir: string;
   avoidOverwrite: boolean;
+  exportLab: boolean;
   exportText: boolean;
+  exportSrt: boolean;
   outputStereo: boolean;
   audioOutputDevice: string;
 };
@@ -540,6 +541,7 @@ export const configSchema = z
         avoidOverwrite: z.boolean().default(false),
         fixedExportDir: z.string().default(""),
         exportLab: z.boolean().default(false),
+        exportSrt: z.boolean().default(false),
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
         audioOutputDevice: z.string().default(""),

@@ -64,6 +64,7 @@ describe("store/vuex.js test", () => {
           fixedExportDir: "",
           avoidOverwrite: false,
           exportLab: false,
+          exportSrt: false,
           exportText: false,
           outputStereo: false,
           audioOutputDevice: "default",
@@ -235,6 +236,7 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "fixedExportDir", "");
     assert.propertyVal(store.state.savingSetting, "avoidOverwrite", false);
     assert.propertyVal(store.state.savingSetting, "exportLab", false);
+    assert.propertyVal(store.state.savingSetting, "exportSrt", false);
     assert.propertyVal(store.state.savingSetting, "fileNamePattern", "");
     assert.equal(store.state.isPinned, false);
     assert.isObject(store.state.presetItems);
