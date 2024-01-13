@@ -32,7 +32,6 @@ export const settingStoreState: SettingStoreState = {
     exportText: false,
     outputStereo: false,
     audioOutputDevice: "default",
-    enableAutoLoad: false,
   },
   hotkeySettings: [],
   toolbarSetting: [],
@@ -68,6 +67,7 @@ export const settingStoreState: SettingStoreState = {
   },
   engineSettings: {},
   enableMultiEngine: false,
+  enableAutoLoad: false,
   enableMemoNotation: false,
   enableRubyNotation: false,
 };
@@ -143,6 +143,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "splitTextWhenPaste",
         "splitterPosition",
         "enableMultiEngine",
+        "enableAutoLoad",
         "enableRubyNotation",
         "enableMemoNotation",
       ] as const;

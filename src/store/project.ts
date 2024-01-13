@@ -564,10 +564,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           // 自動読み込み機能有効時保存されたプロジェクトを復元する
-          if (
-            context.state.savingSetting.enableAutoLoad &&
-            autoLoadProjectInfo
-          ) {
+          if (context.state.enableAutoLoad && autoLoadProjectInfo) {
             await context.dispatch("LOAD_PROJECT_FILE", {
               filePath: autoLoadProjectInfo.projectFilePath,
               confirm: false,

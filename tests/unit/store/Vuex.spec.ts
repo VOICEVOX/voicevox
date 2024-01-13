@@ -70,7 +70,6 @@ describe("store/vuex.js test", () => {
           exportText: false,
           outputStereo: false,
           audioOutputDevice: "default",
-          enableAutoLoad: false,
         },
         engineSettings: {
           [engineId]: {
@@ -149,6 +148,7 @@ describe("store/vuex.js test", () => {
           notifyOnGenerate: false,
         },
         enableMultiEngine: false,
+        enableAutoLoad: false,
         enableMemoNotation: false,
         enableRubyNotation: false,
         progress: -1,

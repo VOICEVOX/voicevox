@@ -586,32 +586,6 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
-                <div>起動時に前回開いていたプロジェクトを開く</div>
-                <div
-                  aria-label="ONの場合、前回開いていたプロジェクトが開いた状態で立ち上がります。"
-                >
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、前回開いていたプロジェクトが開いた状態で立ち上がります。
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-toggle
-                  :model-value="savingSetting.enableAutoLoad"
-                  @update:model-value="
-                    handleSavingSettingChange('enableAutoLoad', $event)
-                  "
-                >
-                </q-toggle>
-              </q-card-actions>
             </q-card>
             <!-- Theme Card -->
             <q-card flat class="setting-card">
@@ -751,6 +725,30 @@
                 <q-toggle
                   :model-value="enableMultiEngine"
                   @update:model-value="setEnableMultiEngine($event)"
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>起動時に前回開いていたプロジェクトを開く</div>
+                <div
+                  aria-label="ONの場合、前回開いていたプロジェクトが開いた状態で立ち上がります。"
+                >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      ONの場合、前回開いていたプロジェクトが開いた状態で立ち上がります。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="enableAutoLoad"
+                  @update:model-value="setEnableAutoLoad($event)"
                 >
                 </q-toggle>
               </q-card-actions>
@@ -1130,6 +1128,9 @@ const [editorFont, changeEditorFont] = useRootMiscSetting("editorFont");
 
 const [enableMultiEngine, setEnableMultiEngine] =
   useRootMiscSetting("enableMultiEngine");
+
+const [enableAutoLoad, setEnableAutoLoad] =
+  useRootMiscSetting("enableAutoLoad");
 
 const [showTextLineNumber, changeShowTextLineNumber] =
   useRootMiscSetting("showTextLineNumber");

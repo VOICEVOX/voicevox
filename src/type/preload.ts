@@ -311,7 +311,6 @@ export type SavingSetting = {
   exportText: boolean;
   outputStereo: boolean;
   audioOutputDevice: string;
-  enableAutoLoad: boolean;
 };
 
 export type EngineSettings = Record<EngineId, EngineSettingType>;
@@ -525,6 +524,7 @@ export const rootMiscSettingSchema = z.object({
     .default("PERIOD_AND_NEW_LINE"),
   splitterPosition: splitterPositionSchema.default({}),
   enableMultiEngine: z.boolean().default(false),
+  enableAutoLoad: z.boolean().default(false),
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
 });
@@ -547,7 +547,6 @@ export const configSchema = z
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
         audioOutputDevice: z.string().default(""),
-        enableAutoLoad: z.boolean().default(false),
       })
       .default({}),
     hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
