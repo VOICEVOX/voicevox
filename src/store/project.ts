@@ -548,7 +548,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         if (workspace.state === "saved") {
           // 自動読み込み機能OFFで保存済みの場合は何もしない
-          if (!context.state.enableAutoLoad) {
+          if (!context.state.enableAutoLoad || !autoLoadProjectInfo) {
             return;
           }
 
@@ -571,12 +571,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           // 自動読み込み機能有効時保存されたプロジェクトを復元する
-          if (autoLoadProjectInfo) {
-            await context.dispatch("LOAD_PROJECT_FILE", {
-              filePath: autoLoadProjectInfo.projectFilePath,
-              confirm: false,
-            });
-          }
+          await context.dispatch("LOAD_PROJECT_FILE", {
+            filePath: autoLoadProjectInfo.projectFilePath,
+            confirm: false,
+          });
           return;
         }
 
