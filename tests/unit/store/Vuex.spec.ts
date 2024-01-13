@@ -146,6 +146,8 @@ describe("store/vuex.js test", () => {
           notifyOnGenerate: false,
         },
         enableMultiEngine: false,
+        enableMemoNotation: false,
+        enableRubyNotation: false,
         progress: -1,
         isVuexReady: false,
         defaultPresetKeys: {},

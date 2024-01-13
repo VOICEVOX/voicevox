@@ -1484,7 +1484,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
           if (state.savingSetting.exportText) {
             await writeTextFile({
-              text: extractExportText(state.audioItems[audioKey].text),
+              text: extractExportText(state.audioItems[audioKey].text, {
+                enableMemoNotation: state.enableMemoNotation,
+                enableRubyNotation: state.enableRubyNotation,
+              }),
               filePath: filePath.replace(/\.wav$/, ".txt"),
               encoding: state.savingSetting.fileEncoding,
             }).then(getValueOrThrow);
@@ -1815,7 +1818,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               : "";
 
           const skippedText = extractExportText(
-            state.audioItems[audioKey].text
+            state.audioItems[audioKey].text,
+            {
+              enableMemoNotation: state.enableMemoNotation,
+              enableRubyNotation: state.enableRubyNotation,
+            }
           );
           texts.push(speakerName + skippedText);
         }
@@ -2046,7 +2053,10 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
-        const skippedText = extractYomiText(text);
+        const skippedText = extractYomiText(text, {
+          enableMemoNotation: state.enableMemoNotation,
+          enableRubyNotation: state.enableRubyNotation,
+        });
 
         try {
           if (query != undefined) {

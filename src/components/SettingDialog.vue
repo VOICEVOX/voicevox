@@ -277,6 +277,56 @@
                 </q-btn-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-surface">
+                <div>メモ機能</div>
+                <div
+                  aria-label="ONの場合、テキストを [] で囲むことで、テキスト中にメモを書けます。"
+                >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      ONの場合、テキストを []
+                      で囲むことで、テキスト中にメモを書けます。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="enableMemoNotation"
+                  @update:model-value="changeEnableMemoNotation($event)"
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
+                <div>ルビ機能</div>
+                <div
+                  aria-label="ONの場合、テキストに {ルビ対象|よみかた} と書くことで、テキストの読み方を変えられます。"
+                >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      ONの場合、テキストに {ルビ対象|よみかた}
+                      と書くことで、テキストの読み方を変えられます。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="enableRubyNotation"
+                  @update:model-value="changeEnableRubyNotation($event)"
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>非表示にしたヒントを全て再表示</div>
                 <div
                   aria-label="過去に非表示にしたヒントを全て再表示できます。"
@@ -974,15 +1024,26 @@ import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
   SavingSetting,
-  EngineSetting,
-  ExperimentalSetting,
+  EngineSettingType,
+  ExperimentalSettingType,
   ActivePointScrollMode,
   SplitTextWhenPasteType,
-  EditorFontType,
+  RootMiscSettingType,
   EngineId,
 } from "@/type/preload";
 
-type SamplingRateOption = EngineSetting["outputSamplingRate"];
+type SamplingRateOption = EngineSettingType["outputSamplingRate"];
+
+// ルート直下にある雑多な設定値を簡単に扱えるようにする
+const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
+  const state = computed(() => store.state[key]);
+  const setter = (value: RootMiscSettingType[T]) => {
+    // Vuexの型処理でUnionが解かれてしまうのを迂回している
+    // FIXME: このワークアラウンドをなくす
+    store.dispatch("SET_ROOT_MISC_SETTING", { key: key as never, value });
+  };
+  return [state, setter] as const;
+};
 
 const props =
   defineProps<{
@@ -1065,29 +1126,13 @@ const availableThemeNameComputed = computed(() => {
     });
 });
 
-const editorFont = computed(() => store.state.editorFont);
-const changeEditorFont = (editorFont: EditorFontType) => {
-  store.dispatch("SET_ROOT_MISC_SETTING", {
-    key: "editorFont",
-    value: editorFont,
-  });
-};
+const [editorFont, changeEditorFont] = useRootMiscSetting("editorFont");
 
-const enableMultiEngine = computed(() => store.state.enableMultiEngine);
-const setEnableMultiEngine = (enableMultiEngine: boolean) => {
-  store.dispatch("SET_ROOT_MISC_SETTING", {
-    key: "enableMultiEngine",
-    value: enableMultiEngine,
-  });
-};
+const [enableMultiEngine, setEnableMultiEngine] =
+  useRootMiscSetting("enableMultiEngine");
 
-const showTextLineNumber = computed(() => store.state.showTextLineNumber);
-const changeShowTextLineNumber = (showTextLineNumber: boolean) => {
-  store.dispatch("SET_ROOT_MISC_SETTING", {
-    key: "showTextLineNumber",
-    value: showTextLineNumber,
-  });
-};
+const [showTextLineNumber, changeShowTextLineNumber] =
+  useRootMiscSetting("showTextLineNumber");
 
 // エディタの＋ボタン表示設定
 const showAddAudioItemButton = computed(
@@ -1117,6 +1162,12 @@ const changeShowAddAudioItemButton = async (
     }
   }
 };
+
+const [enableMemoNotation, changeEnableMemoNotation] =
+  useRootMiscSetting("enableMemoNotation");
+
+const [enableRubyNotation, changeEnableRubyNotation] =
+  useRootMiscSetting("enableRubyNotation");
 
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;
@@ -1217,7 +1268,7 @@ const changeEnablePreset = (value: boolean) => {
 };
 
 const changeExperimentalSetting = async (
-  key: keyof ExperimentalSetting,
+  key: keyof ExperimentalSettingType,
   data: boolean
 ) => {
   store.dispatch("SET_EXPERIMENTAL_SETTING", {
@@ -1303,15 +1354,8 @@ const openFileExplore = async () => {
   }
 };
 
-const splitTextWhenPaste = computed(() => store.state.splitTextWhenPaste);
-const changeSplitTextWhenPaste = (
-  splitTextWhenPaste: SplitTextWhenPasteType
-) => {
-  store.dispatch("SET_ROOT_MISC_SETTING", {
-    key: "splitTextWhenPaste",
-    value: splitTextWhenPaste,
-  });
-};
+const [splitTextWhenPaste, changeSplitTextWhenPaste] =
+  useRootMiscSetting("splitTextWhenPaste");
 
 const showsFilePatternEditDialog = ref(false);
 

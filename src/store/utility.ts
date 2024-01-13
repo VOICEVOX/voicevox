@@ -194,24 +194,55 @@ export function createSrtString(
   return `${serialNumber}\n${start} --> ${end}\n${speakerName}: ${text}\n`;
 }
 
-export function extractExportText(text: string): string {
-  return skipReadingPart(skipMemoText(text));
+/**
+ * テキスト書き出し用のテキストを生成する。
+ */
+export function extractExportText(
+  text: string,
+  {
+    enableMemoNotation,
+    enableRubyNotation,
+  }: { enableMemoNotation: boolean; enableRubyNotation: boolean }
+): string {
+  if (enableMemoNotation) {
+    text = skipMemoText(text);
+  }
+  if (enableRubyNotation) {
+    text = skipRubyReadingPart(text);
+  }
+  return text;
 }
-export function extractYomiText(text: string): string {
-  return skipWritingPart(skipMemoText(text));
+
+/**
+ * 読み用のテキストを生成する。
+ */
+export function extractYomiText(
+  text: string,
+  {
+    enableMemoNotation,
+    enableRubyNotation,
+  }: { enableMemoNotation: boolean; enableRubyNotation: boolean }
+): string {
+  if (enableMemoNotation) {
+    text = skipMemoText(text);
+  }
+  if (enableRubyNotation) {
+    text = skipRubyWritingPart(text);
+  }
+  return text;
 }
-function skipReadingPart(text: string): string {
+
+function skipRubyReadingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
   return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
 }
-function skipWritingPart(text: string): string {
+function skipRubyWritingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
   return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2");
 }
 function skipMemoText(targettext: string): string {
   // []をスキップ
-  const resolvedText = targettext.replace(/\[.*?\]/g, "");
-  return resolvedText;
+  return targettext.replace(/\[.*?\]/g, "");
 }
 
 /**
@@ -391,13 +422,9 @@ export function buildAudioFileNameFromRawData(
   }
 
   const characterName = sanitizeFileName(vars.characterName);
-
   const index = (vars.index + 1).toString().padStart(3, "0");
-
   const styleName = sanitizeFileName(vars.styleName);
-
-  const date = currentDateString();
-
+  const date = vars.date;
   return replaceTag(pattern, {
     text,
     characterName,
@@ -487,12 +514,3 @@ export const isOnCommandOrCtrlKeyDown = (event: {
   metaKey: boolean;
   ctrlKey: boolean;
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
-
-/**
- * AccentPhraseのtextを結合して返します。
- */
-export const joinTextsInAccentPhrases = (
-  accentPhrase: AccentPhrase
-): string => {
-  return accentPhrase.moras.map((mora) => mora.text).join("");
-};
