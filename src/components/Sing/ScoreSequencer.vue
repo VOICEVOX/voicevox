@@ -418,7 +418,7 @@ export default defineComponent({
       }
 
       const guidelineTicks =
-        Math.round(dragStartTicks / snapTicks.value) * snapTicks.value +
+        Math.round(dragStartTicks / snapTicks.value - 0.25) * snapTicks.value +
         movingTicks;
       const guideLineBaseX = tickToBaseX(guidelineTicks, tpqn.value);
       guideLineX.value = guideLineBaseX * zoomX.value;
