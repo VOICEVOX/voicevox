@@ -263,6 +263,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("SET_TEMP_PROJECT", tempProject);
   },
 
+  getFileModifiedAt: async (filePath) => {
+    return await ipcRendererInvoke("GET_FILE_MODIFIED_AT", filePath);
+  },
+
   installVvppEngine: async (filePath) => {
     return await ipcRendererInvoke("INSTALL_VVPP_ENGINE", filePath);
   },

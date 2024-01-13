@@ -233,6 +233,7 @@ export interface Sandbox {
   ): Promise<ConfigType[Key]>;
   getTempProject(): Promise<Result<WorkspaceType>>;
   setTempProject(tempProject: ArrayBuffer): Promise<Result<undefined>>;
+  getFileModifiedAt(filePath: string): Promise<Result<number>>;
   setEngineSetting(
     engineId: EngineId,
     engineSetting: EngineSettingType

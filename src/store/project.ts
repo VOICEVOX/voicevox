@@ -362,7 +362,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
-          context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "none" });
+          context.dispatch("GENERATE_WORKSPACE", {
+            tempProjectState: "saved",
+          });
           return true;
         } catch (err) {
           window.electron.logError(err);
@@ -728,16 +730,29 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
           break;
         }
-        case "saved":
-          workspace = {
-            state: "saved",
-            autoLoadProjectInfo: {
-              projectFilePath: state.projectFilePath ?? "",
-              projectSavedAt: new Date().getTime(),
-              fileModifiedAt: new Date().getTime(),
-            },
-          };
+        case "saved": {
+          if (state.projectFilePath) {
+            const fileModifiedAt = await window.electron
+              .getFileModifiedAt(state.projectFilePath)
+              .then(getValueOrThrow);
+
+            workspace = {
+              state: "saved",
+              autoLoadProjectInfo: {
+                projectFilePath: state.projectFilePath,
+                projectSavedAt: fileModifiedAt,
+                fileModifiedAt: fileModifiedAt,
+              },
+            };
+          } else {
+            // projectFilePath がない場合は none にする
+            workspace = {
+              state: "none",
+            };
+          }
+
           break;
+        }
         case "none":
           workspace = {
             state: "none",

@@ -270,6 +270,11 @@ export type IpcIHData = {
     return: Result<undefined>;
   };
 
+  GET_FILE_MODIFIED_AT: {
+    args: [filePath: string];
+    return: Result<number>;
+  };
+
   SET_ENGINE_SETTING: {
     args: [engineId: EngineId, engineSetting: EngineSettingType];
     return: void;

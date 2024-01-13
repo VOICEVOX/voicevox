@@ -886,6 +886,16 @@ ipcMainHandle("SET_TEMP_PROJECT", (_, tempProject) => {
   return setTempProject(tempProject);
 });
 
+ipcMainHandle("GET_FILE_MODIFIED_AT", async (_, filePath) => {
+  try {
+    const result = (await fs.promises.stat(filePath)).mtime.getTime();
+    return success(result);
+  } catch (e) {
+    const result = e as SystemError;
+    return failure(result.code, result);
+  }
+});
+
 ipcMainHandle("SET_ENGINE_SETTING", async (_, engineId, engineSetting) => {
   const engineSettings = configManager.get("engineSettings");
   engineSettings[engineId] = engineSetting;

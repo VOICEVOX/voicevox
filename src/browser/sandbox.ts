@@ -300,6 +300,9 @@ export const api: Sandbox = {
   setTempProject(/* tempProject: ArrayBuffer */) {
     throw new Error("Not supported on Browser version: setTempProject");
   },
+  getFileModifiedAt(/* getFileModifiedAt: number */) {
+    throw new Error("Not supported on Browser version: getFileModifiedAt");
+  },
   async setEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
     const engineSettings = (await this.getSetting(
       "engineSettings"
