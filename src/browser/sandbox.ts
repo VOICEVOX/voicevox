@@ -12,9 +12,9 @@ import {
   defaultToolbarButtonSetting,
   configSchema,
   EngineId,
-  EngineSetting,
+  EngineSettingType,
   EngineSettings,
-  HotkeySetting,
+  HotkeySettingType,
   Sandbox,
   ThemeConf,
 } from "@/type/preload";
@@ -220,7 +220,7 @@ export const api: Sandbox = {
   openEngineDirectory(/* engineId: EngineId */) {
     throw new Error(`Not supported on Browser version: openEngineDirectory`);
   },
-  async hotkeySettings(newData?: HotkeySetting) {
+  async hotkeySettings(newData?: HotkeySettingType) {
     type HotkeySettingType = ReturnType<
       typeof configSchema["parse"]
     >["hotkeySettings"];
@@ -300,7 +300,7 @@ export const api: Sandbox = {
   setTempProject(/* tempProject: ArrayBuffer */) {
     throw new Error("Not supported on Browser version: setTempProject");
   },
-  async setEngineSetting(engineId: EngineId, engineSetting: EngineSetting) {
+  async setEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
     const engineSettings = (await this.getSetting(
       "engineSettings"
     )) as EngineSettings;
