@@ -72,64 +72,85 @@ test("currentDateString", () => {
   expect(currentDateString()).toMatch(/\d{4}\d{2}\d{2}/);
 });
 
-describe("extractExportTextとextractYomiText", () => {
-  const memoText = "ダミー]ダミー[メモ]ダミー[ダミー";
-  const rubyText = "ダミー|}ダミー{漢字|読み}ダミー{|ダミー";
+describe.each([
+  // 半角記号
+  {
+    testName: "半角記号",
+    memoText: "ダミー]ダミー[メモ]ダミー[ダミー",
+    rubyText: "ダミー|}ダミー{漢字|読み}ダミー{|ダミー",
+    expectedSkippedMemoText: "ダミー]ダミーダミー[ダミー",
+    expectedSkippedRubyExportText: "ダミー|}ダミー読みダミー{|ダミー",
+    expectedSkippedRubyYomiText: "ダミー|}ダミー漢字ダミー{|ダミー",
+  },
+  // 全角記号
+  {
+    testName: "全角記号",
+    memoText: "ダミー］ダミー［メモ］ダミー［ダミー",
+    rubyText: "ダミー｜｝ダミー｛漢字｜読み｝ダミー｛｜ダミー",
+    expectedSkippedMemoText: "ダミー］ダミーダミー［ダミー",
+    expectedSkippedRubyExportText: "ダミー｜｝ダミー読みダミー｛｜ダミー",
+    expectedSkippedRubyYomiText: "ダミー｜｝ダミー漢字ダミー｛｜ダミー",
+  },
+])(
+  "extractExportTextとextractYomiText $testName",
+  ({
+    memoText,
+    rubyText,
+    expectedSkippedMemoText,
+    expectedSkippedRubyExportText,
+    expectedSkippedRubyYomiText,
+  }) => {
+    const text = memoText + rubyText;
 
-  const text = memoText + rubyText;
+    it("無指定の場合はそのまま", () => {
+      const param = {
+        enableMemoNotation: false,
+        enableRubyNotation: false,
+      };
+      expect(extractExportText(text, param)).toBe(text);
+      expect(extractYomiText(text, param)).toBe(text);
+    });
 
-  const expectedSkippedMemoText = "ダミー]ダミーダミー[ダミー";
-  const expectedSkippedRubyExportText = "ダミー|}ダミー読みダミー{|ダミー";
-  const expectedSkippedRubyYomiText = "ダミー|}ダミー漢字ダミー{|ダミー";
+    it("メモをスキップ", () => {
+      const param = {
+        enableMemoNotation: true,
+        enableRubyNotation: false,
+      };
+      expect(extractExportText(text, param)).toBe(
+        expectedSkippedMemoText + rubyText
+      );
+      expect(extractYomiText(text, param)).toBe(
+        expectedSkippedMemoText + rubyText
+      );
+    });
 
-  it("無指定の場合はそのまま", () => {
-    const param = {
-      enableMemoNotation: false,
-      enableRubyNotation: false,
-    };
-    expect(extractExportText(text, param)).toBe(text);
-    expect(extractYomiText(text, param)).toBe(text);
-  });
+    it("ルビをスキップ", () => {
+      const param = {
+        enableMemoNotation: false,
+        enableRubyNotation: true,
+      };
+      expect(extractExportText(text, param)).toBe(
+        memoText + expectedSkippedRubyYomiText
+      );
+      expect(extractYomiText(text, param)).toBe(
+        memoText + expectedSkippedRubyExportText
+      );
+    });
 
-  it("メモをスキップ", () => {
-    const param = {
-      enableMemoNotation: true,
-      enableRubyNotation: false,
-    };
-    expect(extractExportText(text, param)).toBe(
-      expectedSkippedMemoText + rubyText
-    );
-    expect(extractYomiText(text, param)).toBe(
-      expectedSkippedMemoText + rubyText
-    );
-  });
-
-  it("ルビをスキップ", () => {
-    const param = {
-      enableMemoNotation: false,
-      enableRubyNotation: true,
-    };
-    expect(extractExportText(text, param)).toBe(
-      memoText + expectedSkippedRubyYomiText
-    );
-    expect(extractYomiText(text, param)).toBe(
-      memoText + expectedSkippedRubyExportText
-    );
-  });
-
-  it("メモとルビをスキップ", () => {
-    const param = {
-      enableMemoNotation: true,
-      enableRubyNotation: true,
-    };
-    expect(extractExportText(text, param)).toBe(
-      expectedSkippedMemoText + expectedSkippedRubyYomiText
-    );
-    expect(extractYomiText(text, param)).toBe(
-      expectedSkippedMemoText + expectedSkippedRubyExportText
-    );
-  });
-});
+    it("メモとルビをスキップ", () => {
+      const param = {
+        enableMemoNotation: true,
+        enableRubyNotation: true,
+      };
+      expect(extractExportText(text, param)).toBe(
+        expectedSkippedMemoText + expectedSkippedRubyYomiText
+      );
+      expect(extractYomiText(text, param)).toBe(
+        expectedSkippedMemoText + expectedSkippedRubyExportText
+      );
+    });
+  }
+);
 
 describe("TuningTranscription", () => {
   it("２つ以上のアクセント句でも正しくデータを転写できる", async () => {
