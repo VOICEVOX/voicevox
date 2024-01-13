@@ -795,14 +795,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return false;
       }
 
-      // 保存時刻を比較（誤差を考慮し1000ms未満は切り捨てて比較）
       return (
-        Math.floor(
-          (state.workspace.autoLoadProjectInfo.fileModifiedAt ?? 0) / 1000
-        ) !==
-        Math.floor(
-          (state.workspace.autoLoadProjectInfo.projectSavedAt ?? 0) / 1000
-        )
+        state.workspace.autoLoadProjectInfo.fileModifiedAt !==
+        state.workspace.autoLoadProjectInfo.projectSavedAt
       );
     },
   },
