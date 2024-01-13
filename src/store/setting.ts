@@ -5,17 +5,17 @@ import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
 import { useStore } from "@/store";
 import {
-  HotkeyAction,
+  HotkeyActionType,
   HotkeyReturnType,
-  HotkeySetting,
+  HotkeySettingType,
   SavingSetting,
-  ExperimentalSetting,
+  ExperimentalSettingType,
   ThemeColorType,
   ThemeConf,
-  ToolbarSetting,
+  ToolbarSettingType,
   EngineId,
   ConfirmedTips,
-  RootMiscSetting,
+  RootMiscSettingType,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
 
@@ -67,6 +67,8 @@ export const settingStoreState: SettingStoreState = {
   },
   engineSettings: {},
   enableMultiEngine: false,
+  enableMemoNotation: false,
+  enableRubyNotation: false,
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -140,12 +142,14 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "splitTextWhenPaste",
         "splitterPosition",
         "enableMultiEngine",
+        "enableRubyNotation",
+        "enableMemoNotation",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const _: IsEqual<
-        keyof RootMiscSetting,
+        keyof RootMiscSettingType,
         typeof rootMiscSettingKeys[number]
       > = true;
 
@@ -173,7 +177,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
   },
 
   SET_HOTKEY_SETTINGS: {
-    mutation(state, { newHotkey }: { newHotkey: HotkeySetting }) {
+    mutation(state, { newHotkey }: { newHotkey: HotkeySettingType }) {
       let flag = true;
       state.hotkeySettings.forEach((hotkey) => {
         if (hotkey.action == newHotkey.action) {
@@ -183,19 +187,19 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       });
       if (flag) state.hotkeySettings.push(newHotkey);
     },
-    action({ state, commit }, { data }: { data: HotkeySetting }) {
+    action({ state, commit }, { data }: { data: HotkeySettingType }) {
       window.electron.hotkeySettings(data);
       const oldHotkey = state.hotkeySettings.find((value) => {
         return value.action == data.action;
       });
-      if (oldHotkey !== undefined) {
+      if (oldHotkey != undefined) {
         if (oldHotkey.combination != "") {
           Mousetrap.unbind(hotkey2Combo(oldHotkey.combination));
         }
       }
       if (
         data.combination != "" &&
-        hotkeyFunctionCache[data.action] !== undefined
+        hotkeyFunctionCache[data.action] != undefined
       ) {
         Mousetrap.bind(
           hotkey2Combo(data.combination),
@@ -209,10 +213,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
   },
 
   SET_TOOLBAR_SETTING: {
-    mutation(state, { toolbarSetting }: { toolbarSetting: ToolbarSetting }) {
+    mutation(
+      state,
+      { toolbarSetting }: { toolbarSetting: ToolbarSettingType }
+    ) {
       state.toolbarSetting = toolbarSetting;
     },
-    action({ commit }, { data }: { data: ToolbarSetting }) {
+    action({ commit }, { data }: { data: ToolbarSettingType }) {
       const newData = window.electron.setSetting("toolbarSetting", data);
       newData.then((toolbarSetting) => {
         commit("SET_TOOLBAR_SETTING", { toolbarSetting });
@@ -328,7 +335,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
   SET_EXPERIMENTAL_SETTING: {
     mutation(
       state,
-      { experimentalSetting }: { experimentalSetting: ExperimentalSetting }
+      { experimentalSetting }: { experimentalSetting: ExperimentalSettingType }
     ) {
       state.experimentalSetting = experimentalSetting;
     },
@@ -459,7 +466,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 });
 
 export const setHotkeyFunctions = (
-  hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>,
+  hotkeyMap: Map<HotkeyActionType, () => HotkeyReturnType>,
   reassign?: boolean
 ): void => {
   hotkeyMap.forEach((value, key) => {
