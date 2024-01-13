@@ -75,12 +75,23 @@ test("currentDateString", () => {
 describe("extractExportTextとextractYomiText", () => {
   const memoText = "ダミー]ダミー[メモ]ダミー[ダミー";
   const rubyText = "ダミー|}ダミー{漢字|読み}ダミー{|ダミー";
+  const fullWidthMemoText = "ダミー］ダミー［メモ］ダミー［ダミー";
+  const fullwidthRubyText = "ダミー｜｝ダミー｛漢字｜読み｝ダミー｛｜ダミー";
 
   const text = memoText + rubyText;
+  const fullWidthText = fullWidthMemoText + fullwidthRubyText;
 
+  // 半角機能を使用した、メモとルビ
   const expectedSkippedMemoText = "ダミー]ダミーダミー[ダミー";
   const expectedSkippedRubyExportText = "ダミー|}ダミー読みダミー{|ダミー";
   const expectedSkippedRubyYomiText = "ダミー|}ダミー漢字ダミー{|ダミー";
+
+  // 全角機能を使用した、メモとルビ
+  const expectedSkippedFullWidthMemoText = "ダミー］ダミーダミー［ダミー";
+  const expectedSkippedFullWidthRubyExportText =
+    "ダミー｜｝ダミー読みダミー｛｜ダミー";
+  const expectedSkippedFullWidthRubyYomiText =
+    "ダミー｜｝ダミー漢字ダミー｛｜ダミー";
 
   it("無指定の場合はそのまま", () => {
     const param = {
@@ -89,6 +100,8 @@ describe("extractExportTextとextractYomiText", () => {
     };
     expect(extractExportText(text, param)).toBe(text);
     expect(extractYomiText(text, param)).toBe(text);
+    expect(extractExportText(fullWidthText, param)).toBe(fullWidthText);
+    expect(extractYomiText(fullWidthText, param)).toBe(fullWidthText);
   });
 
   it("メモをスキップ", () => {
@@ -101,6 +114,12 @@ describe("extractExportTextとextractYomiText", () => {
     );
     expect(extractYomiText(text, param)).toBe(
       expectedSkippedMemoText + rubyText
+    );
+    expect(extractExportText(fullWidthText, param)).toBe(
+      expectedSkippedFullWidthMemoText + fullwidthRubyText
+    );
+    expect(extractYomiText(fullWidthText, param)).toBe(
+      expectedSkippedFullWidthMemoText + fullwidthRubyText
     );
   });
 
@@ -115,6 +134,12 @@ describe("extractExportTextとextractYomiText", () => {
     expect(extractYomiText(text, param)).toBe(
       memoText + expectedSkippedRubyExportText
     );
+    expect(extractExportText(fullWidthText, param)).toBe(
+      fullWidthMemoText + expectedSkippedFullWidthRubyYomiText
+    );
+    expect(extractYomiText(fullWidthText, param)).toBe(
+      fullWidthMemoText + expectedSkippedFullWidthRubyExportText
+    );
   });
 
   it("メモとルビをスキップ", () => {
@@ -127,6 +152,12 @@ describe("extractExportTextとextractYomiText", () => {
     );
     expect(extractYomiText(text, param)).toBe(
       expectedSkippedMemoText + expectedSkippedRubyExportText
+    );
+    expect(extractExportText(fullWidthText, param)).toBe(
+      expectedSkippedFullWidthMemoText + expectedSkippedFullWidthRubyYomiText
+    );
+    expect(extractYomiText(fullWidthText, param)).toBe(
+      expectedSkippedFullWidthMemoText + expectedSkippedFullWidthRubyExportText
     );
   });
 });
