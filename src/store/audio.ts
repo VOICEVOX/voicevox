@@ -1662,7 +1662,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               return { result: "WRITE_ERROR", path: filePath };
             }
             labs.push(lab);
-            texts.push(extractExportText(state.audioItems[audioKey].text));
+            texts.push(
+              extractExportText(state.audioItems[audioKey].text, {
+                enableMemoNotation: state.enableMemoNotation,
+                enableRubyNotation: state.enableRubyNotation,
+              })
+            );
             // 最終音素の終了時刻を取得する
             const splitLab = lab.split(" ");
             labOffset = Number(splitLab[splitLab.length - 2]);
@@ -1697,7 +1702,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               start,
               end,
               speakerName,
-              extractExportText(state.audioItems[audioKey].text)
+              extractExportText(state.audioItems[audioKey].text, {
+                enableMemoNotation: state.enableMemoNotation,
+                enableRubyNotation: state.enableRubyNotation,
+              })
             );
             subtitles.push(subtitleString);
             subtitleTiming.currentSerialNumber++;
