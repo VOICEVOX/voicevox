@@ -250,8 +250,8 @@ export default defineComponent({
 .note-left-edge {
   position: absolute;
   top: 0;
-  left: 0px;
-  width: 4px;
+  left: -1px;
+  width: 5px;
   height: 100%;
   cursor: ew-resize;
 }
@@ -259,8 +259,8 @@ export default defineComponent({
 .note-right-edge {
   position: absolute;
   top: 0;
-  right: 0px;
-  width: 4px;
+  right: -1px;
+  width: 5px;
   height: 100%;
   cursor: ew-resize;
 }
