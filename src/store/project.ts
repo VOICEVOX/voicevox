@@ -453,7 +453,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
             context.getters.LAST_COMMAND_UNIX_MILLISEC
           );
-          // 保存時に一時ファイルをクリアする
+          // 保存完了時にワークスペースを更新する
           context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "saved" });
           return true;
         } catch (err) {
