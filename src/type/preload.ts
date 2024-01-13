@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
-import { AltPortInfos, CommandStoreState } from "@/store/type";
+import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
 import { ProjectType } from "@/store/project";
 
