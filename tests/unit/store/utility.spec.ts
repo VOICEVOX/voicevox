@@ -81,12 +81,12 @@ describe("extractExportTextとextractYomiText", () => {
   const text = memoText + rubyText;
   const fullWidthText = fullWidthMemoText + fullwidthRubyText;
 
-  // 半角機能を使用した、メモとルビ
+  // 半角記号[]{|}を使用した、メモとルビ
   const expectedSkippedMemoText = "ダミー]ダミーダミー[ダミー";
   const expectedSkippedRubyExportText = "ダミー|}ダミー読みダミー{|ダミー";
   const expectedSkippedRubyYomiText = "ダミー|}ダミー漢字ダミー{|ダミー";
 
-  // 全角機能を使用した、メモとルビ
+  // 全角記号［］｛｜｝を使用した、メモとルビ
   const expectedSkippedFullWidthMemoText = "ダミー］ダミーダミー［ダミー";
   const expectedSkippedFullWidthRubyExportText =
     "ダミー｜｝ダミー読みダミー｛｜ダミー";
