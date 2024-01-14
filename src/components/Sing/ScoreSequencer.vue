@@ -105,20 +105,20 @@
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
-        @body-mousedown="onNoteBodyMouseDown($event, note)"
+        @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown(note)"
+        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
       <sequencer-note
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
         is-selected
-        @body-mousedown="onNoteBodyMouseDown($event, note)"
+        @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown(note)"
+        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
     </div>
     <div
@@ -211,6 +211,11 @@ import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
+
+// 直接イベントが来ているかどうか
+const isSelfEventTarget = (event: UIEvent) => {
+  return event.target === event.currentTarget;
+};
 
 export default defineComponent({
   name: "SingScoreSequencer",
@@ -417,8 +422,9 @@ export default defineComponent({
         edited = true;
       }
 
+      // 当たり判定を0.25だけずらす
       const guidelineTicks =
-        Math.round(dragStartTicks / snapTicks.value) * snapTicks.value +
+        Math.round(dragStartTicks / snapTicks.value - 0.25) * snapTicks.value +
         movingTicks;
       const guideLineBaseX = tickToBaseX(guidelineTicks, tpqn.value);
       guideLineX.value = guideLineBaseX * zoomX.value;
@@ -536,6 +542,15 @@ export default defineComponent({
       return clientY - element.getBoundingClientRect().top;
     };
 
+    const selectOnlyThis = (note: Note) => {
+      store.dispatch("DESELECT_ALL_NOTES");
+      store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+      store.dispatch("PLAY_PREVIEW_SOUND", {
+        noteNumber: note.noteNumber,
+        duration: PREVIEW_SOUND_DURATION,
+      });
+    };
+
     const startPreview = (
       event: MouseEvent,
       mode: PreviewMode,
@@ -602,12 +617,7 @@ export default defineComponent({
         } else if (event.ctrlKey) {
           store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
         } else if (!state.selectedNoteIds.has(note.id)) {
-          store.dispatch("DESELECT_ALL_NOTES");
-          store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-          store.dispatch("PLAY_PREVIEW_SOUND", {
-            noteNumber: note.noteNumber,
-            duration: PREVIEW_SOUND_DURATION,
-          });
+          selectOnlyThis(note);
         }
         for (const note of selectedNotes.value) {
           copiedNotes.push({ ...note });
@@ -627,36 +637,64 @@ export default defineComponent({
       previewRequestId = requestAnimationFrame(preview);
     };
 
-    const onNoteBodyMouseDown = (event: MouseEvent, note: Note) => {
-      startPreview(event, "MOVE", note);
-      mouseDownNoteId = note.id;
+    const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
+      if (!isSelfEventTarget) {
+        return;
+      }
+      if (event.button === 0) {
+        startPreview(event, "MOVE", note);
+        mouseDownNoteId = note.id;
+      } else if (!state.selectedNoteIds.has(note.id)) {
+        selectOnlyThis(note);
+      }
     };
 
     const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
-      startPreview(event, "RESIZE_LEFT", note);
-      mouseDownNoteId = note.id;
+      if (!isSelfEventTarget) {
+        return;
+      }
+      if (event.button === 0) {
+        startPreview(event, "RESIZE_LEFT", note);
+        mouseDownNoteId = note.id;
+      } else if (!state.selectedNoteIds.has(note.id)) {
+        selectOnlyThis(note);
+      }
     };
 
     const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
-      startPreview(event, "RESIZE_RIGHT", note);
-      mouseDownNoteId = note.id;
+      if (!isSelfEventTarget) {
+        return;
+      }
+      if (event.button === 0) {
+        startPreview(event, "RESIZE_RIGHT", note);
+        mouseDownNoteId = note.id;
+      } else if (!state.selectedNoteIds.has(note.id)) {
+        selectOnlyThis(note);
+      }
     };
 
-    const onNoteLyricMouseDown = (note: Note) => {
-      if (!state.selectedNoteIds.has(note.id)) {
-        store.dispatch("DESELECT_ALL_NOTES");
-        store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-        store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: note.noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
-        });
+    const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
+      if (!isSelfEventTarget) {
+        return;
       }
-      mouseDownNoteId = note.id;
+      if (!state.selectedNoteIds.has(note.id)) {
+        selectOnlyThis(note);
+      }
+      if (event.button === 0) {
+        mouseDownNoteId = note.id;
+      }
     };
 
     const onMouseDown = (event: MouseEvent) => {
-      startPreview(event, "ADD");
-      mouseDownNoteId = undefined;
+      if (!isSelfEventTarget) {
+        return;
+      }
+      if (event.button === 0) {
+        startPreview(event, "ADD");
+        mouseDownNoteId = undefined;
+      } else {
+        store.dispatch("DESELECT_ALL_NOTES");
+      }
     };
 
     const onMouseMove = (event: MouseEvent) => {
@@ -679,6 +717,9 @@ export default defineComponent({
     };
 
     const onMouseUp = (event: MouseEvent) => {
+      if (event.button !== 0) {
+        return;
+      }
       clickedNoteIds[0] = clickedNoteIds[1];
       clickedNoteIds[1] = mouseDownNoteId;
       if (event.detail === 1) {
@@ -1002,7 +1043,7 @@ export default defineComponent({
       guideLineX,
       setZoomX,
       setZoomY,
-      onNoteBodyMouseDown,
+      onNoteBarMouseDown,
       onNoteLeftEdgeMouseDown,
       onNoteRightEdgeMouseDown,
       onNoteLyricMouseDown,
@@ -1094,6 +1135,7 @@ export default defineComponent({
 
 .sequencer-grid {
   display: block;
+  pointer-events: none;
 }
 
 .sequencer-grid-cell {

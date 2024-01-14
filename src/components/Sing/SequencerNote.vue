@@ -11,12 +11,13 @@
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
   >
-    <div class="note-lyric" @mousedown.stop="onLyricMouseDown">
+    <div class="note-lyric" @mousedown="onLyricMouseDown">
       {{ lyric }}
     </div>
-    <div class="note-bar" @mousedown.stop="onBodyMouseDown">
-      <div class="note-left-edge" @mousedown.stop="onLeftEdgeMouseDown"></div>
-      <div class="note-right-edge" @mousedown.stop="onRightEdgeMouseDown"></div>
+    <div class="note-bar" @mousedown="onBarMouseDown">
+      <div class="note-left-edge" @mousedown="onLeftEdgeMouseDown"></div>
+      <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
+      <context-menu ref="contextMenu" :menudata="contextMenuData" />
     </div>
     <input
       v-if="showLyricInput"
@@ -32,7 +33,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, PropType } from "vue";
+import { defineComponent, computed, PropType, ref } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
@@ -40,11 +41,16 @@ import {
   tickToBaseX,
   noteNumberToBaseY,
 } from "@/sing/viewHelper";
+import ContextMenu from "@/components/ContextMenu.vue";
+import { MenuItemButton } from "@/components/MenuBar.vue";
 
 type NoteState = "NORMAL" | "SELECTED" | "OVERLAPPING";
 
 export default defineComponent({
   name: "SingSequencerNote",
+  components: {
+    ContextMenu,
+  },
   directives: {
     focus: { mounted: (el: HTMLElement) => el.focus() },
   },
@@ -53,7 +59,7 @@ export default defineComponent({
     isSelected: { type: Boolean },
   },
   emits: [
-    "bodyMousedown",
+    "barMousedown",
     "rightEdgeMousedown",
     "leftEdgeMousedown",
     "lyricMouseDown",
@@ -104,9 +110,21 @@ export default defineComponent({
     const showLyricInput = computed(() => {
       return state.editingLyricNoteId === props.note.id;
     });
+    const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+    const contextMenuData = ref<[MenuItemButton]>([
+      {
+        type: "button",
+        label: "削除",
+        onClick: async () => {
+          contextMenu.value?.hide();
+          store.dispatch("REMOVE_SELECTED_NOTES");
+        },
+        disableWhenUiLocked: true,
+      },
+    ]);
 
-    const onBodyMouseDown = (event: MouseEvent) => {
-      emit("bodyMousedown", event);
+    const onBarMouseDown = (event: MouseEvent) => {
+      emit("barMousedown", event);
     };
 
     const onRightEdgeMouseDown = (event: MouseEvent) => {
@@ -160,7 +178,9 @@ export default defineComponent({
       noteState,
       lyric,
       showLyricInput,
-      onBodyMouseDown,
+      contextMenu,
+      contextMenuData,
+      onBarMouseDown,
       onRightEdgeMouseDown,
       onLeftEdgeMouseDown,
       onLyricMouseDown,
@@ -230,8 +250,8 @@ export default defineComponent({
 .note-left-edge {
   position: absolute;
   top: 0;
-  left: 0px;
-  width: 4px;
+  left: -1px;
+  width: 5px;
   height: 100%;
   cursor: ew-resize;
 }
@@ -239,8 +259,8 @@ export default defineComponent({
 .note-right-edge {
   position: absolute;
   top: 0;
-  right: 0px;
-  width: 4px;
+  right: -1px;
+  width: 5px;
   height: 100%;
   cursor: ew-resize;
 }
