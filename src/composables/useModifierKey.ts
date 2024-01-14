@@ -1,7 +1,7 @@
 import { Ref, ref } from "vue";
 import { isMac } from "@/type/preload";
 
-export const createUseKey = (key: string) => (): Ref<boolean> => {
+const createUseKey = (key: string) => (): Ref<boolean> => {
   const isActive = ref(false);
   const onKeydown = (e: KeyboardEvent) => {
     if (e.key === key) {
