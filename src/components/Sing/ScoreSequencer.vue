@@ -212,6 +212,11 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
+// 直接イベントが来ているかどうか
+const isSelfEventTarget = (event: UIEvent) => {
+  return event.target === event.currentTarget;
+};
+
 export default defineComponent({
   name: "SingScoreSequencer",
   components: {
@@ -632,7 +637,7 @@ export default defineComponent({
     };
 
     const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
-      if (event.target !== event.currentTarget) {
+      if (!isSelfEventTarget) {
         return;
       }
       if (event.button === 0) {
@@ -644,7 +649,7 @@ export default defineComponent({
     };
 
     const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
-      if (event.target !== event.currentTarget) {
+      if (!isSelfEventTarget) {
         return;
       }
       if (event.button === 0) {
@@ -656,7 +661,7 @@ export default defineComponent({
     };
 
     const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
-      if (event.target !== event.currentTarget) {
+      if (!isSelfEventTarget) {
         return;
       }
       if (event.button === 0) {
@@ -668,7 +673,7 @@ export default defineComponent({
     };
 
     const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
-      if (event.target !== event.currentTarget) {
+      if (!isSelfEventTarget) {
         return;
       }
       if (!state.selectedNoteIds.has(note.id)) {
@@ -680,7 +685,7 @@ export default defineComponent({
     };
 
     const onMouseDown = (event: MouseEvent) => {
-      if (event.target !== event.currentTarget) {
+      if (!isSelfEventTarget) {
         return;
       }
       if (event.button === 0) {
