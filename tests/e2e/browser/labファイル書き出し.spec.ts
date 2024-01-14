@@ -52,14 +52,14 @@ async function downloadAction(page: Page, timeout: number) {
 test("labファイルの生成", async ({ page }) => {
   // labファイルを生成しない
   await navigateToMain(page);
-  const DownloadLab = true;
-  await commonAction(page, DownloadLab, "おはようございます");
+  const notDownloadLab = false;
+  await commonAction(page, notDownloadLab, "おはようございます");
   const downloads = await downloadAction(page, 6100);
   expect(downloads.length).toBe(1);
 
   // labファイルを生成する
-  const notDownloadLab = false;
-  await commonAction(page, notDownloadLab, "");
+  const DownloadLab = true;
+  await commonAction(page, DownloadLab, "");
   const downloads2 = await downloadAction(page, 6000);
   expect(downloads2.length).toBe(2);
   expect(downloads2[0]).toBe(downloads[0]);
