@@ -422,6 +422,7 @@ export default defineComponent({
         edited = true;
       }
 
+      // 当たり判定を0.25だけずらす
       const guidelineTicks =
         Math.round(dragStartTicks / snapTicks.value - 0.25) * snapTicks.value +
         movingTicks;
