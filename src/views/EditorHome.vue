@@ -192,6 +192,7 @@ import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
 import Mousetrap from "mousetrap";
+import semver from "semver";
 import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
@@ -644,8 +645,17 @@ onMounted(async () => {
     import.meta.env.MODE !== "development" &&
     store.state.acceptTerms !== "Accepted";
 
-  isUpdateNotificationDialogOpenComputed.value =
-    newUpdateResult.value.status == "updateAvailable";
+  if (newUpdateResult.value.status === "updateAvailable") {
+    const skipUpdateVersion = await window.electron.getSetting(
+      "skipUpdateVersion"
+    );
+    if (
+      semver.valid(skipUpdateVersion) == undefined ||
+      semver.gt(newUpdateResult.value.latestVersion, skipUpdateVersion)
+    ) {
+      isUpdateNotificationDialogOpenComputed.value = true;
+    }
+  }
 
   isCompletedInitialStartup.value = true;
 });

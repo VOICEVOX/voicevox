@@ -606,6 +606,7 @@ export const configSchema = z
       .default({}),
     registeredEngineDirs: z.string().array().default([]),
     recentlyUsedProjects: z.string().array().default([]),
+    skipUpdateVersion: z.string().default(""), // FIXME: undefinedにする・rootMiscSettingSchemaに移す
   })
   .merge(rootMiscSettingSchema);
 export type ConfigType = z.infer<typeof configSchema>;
