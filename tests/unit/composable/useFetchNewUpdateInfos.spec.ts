@@ -27,19 +27,16 @@ const waitFinished = async (result: Ref<{ status: string }>) => {
 it("新バージョンがある場合、latestVersionに最新バージョンが代入される", async () => {
   const currentVersion = "1.0.0";
   const latestVersion = "2.0.0";
-  const skipUpdateVersion = "";
   setupFetchMock(latestVersion);
 
   const result = useFetchNewUpdateInfos(
     async () => currentVersion,
-    async () => skipUpdateVersion,
     "Dummy Url"
   );
 
   await waitFinished(result);
   expect(result.value).toMatchObject({
     status: "updateAvailable",
-    requireNotification: true,
     latestVersion,
   });
 });
@@ -47,55 +44,13 @@ it("新バージョンがある場合、latestVersionに最新バージョンが
 it("新バージョンがない場合は状態が変わるだけ", async () => {
   const currentVersion = "1.0.0";
   const latestVersion = "1.0.0";
-  const skipUpdateVersion = "";
   setupFetchMock(latestVersion);
 
   const result = useFetchNewUpdateInfos(
     async () => currentVersion,
-    async () => skipUpdateVersion,
     "Dummy Url"
   );
 
   await waitFinished(result);
   expect(result.value).toMatchObject({ status: "updateNotAvailable" });
-});
-
-it("skipUpdateVersionがlatestVersion以上の場合requireNotificationがfalseに", async () => {
-  const currentVersion = "1.0.0";
-  const latestVersion = "2.0.0";
-  setupFetchMock(latestVersion);
-
-  const resultEq = useFetchNewUpdateInfos(
-    async () => currentVersion,
-    async () => "2.0.0",
-    "Dummy Url"
-  );
-
-  await waitFinished(resultEq);
-  expect(resultEq.value).toMatchObject({ requireNotification: false });
-
-  const resultGt = useFetchNewUpdateInfos(
-    async () => currentVersion,
-    async () => "2.0.1",
-    "Dummy Url"
-  );
-
-  await waitFinished(resultGt);
-  expect(resultGt.value).toMatchObject({ requireNotification: false });
-});
-
-it("skipUpdateVersionがlatestVersion未満の場合requireNotificationがtrueに", async () => {
-  const currentVersion = "1.0.0";
-  const latestVersion = "2.0.0";
-  const skipUpdateVersion = "1.0.0";
-  setupFetchMock(latestVersion);
-
-  const result = useFetchNewUpdateInfos(
-    async () => currentVersion,
-    async () => skipUpdateVersion,
-    "Dummy Url"
-  );
-
-  await waitFinished(result);
-  expect(result.value).toMatchObject({ requireNotification: true });
 });
