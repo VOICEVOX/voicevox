@@ -117,11 +117,6 @@ const openOfficialWebsite = () => {
       font-weight: bold;
       margin: 0;
     }
-    h4 {
-      font-size: 1.1rem;
-      font-weight: bold;
-      margin: 0;
-    }
   }
 }
 </style>
