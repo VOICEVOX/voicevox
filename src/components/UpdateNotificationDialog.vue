@@ -84,6 +84,7 @@ const skipThisVersion = ref<boolean>(false);
 
 const setSkipVersion = () => {
   if (skipThisVersion.value) {
+    // FIXME: window.electronを直に呼ばないようにする
     window.electron.setSetting("skipUpdateVersion", props.latestVersion);
   }
 };
