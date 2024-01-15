@@ -667,7 +667,7 @@ onMounted(async () => {
   if (newUpdateResult.value.status === "updateAvailable") {
     const skipUpdateVersion = store.state.skipUpdateVersion ?? "0.0.0";
     if (semver.valid(skipUpdateVersion) == undefined) {
-      // 問題だけど処理を止めるほどではないので警告だけ
+      // 処理を止めるほどではないので警告だけ
       store.dispatch(
         "LOG_WARN",
         `skipUpdateVersionが不正です: ${skipUpdateVersion}`

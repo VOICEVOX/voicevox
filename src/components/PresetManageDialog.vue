@@ -121,7 +121,7 @@ const deletePreset = async (key: PresetKey) => {
 };
 </script>
 
-<style>
+<style scoped lang="scss">
 .dialog-card {
   width: 700px;
   max-width: 80vw;
