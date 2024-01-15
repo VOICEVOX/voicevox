@@ -29,22 +29,25 @@
         </template>
       </q-card-section>
       <q-card-actions class="button-area">
-        <q-checkbox
-          v-model="skipThisVersion"
-          size="xs"
-          dense
-          label="このバージョンをスキップ"
-        />
         <q-space />
         <q-btn
           padding="xs md"
-          label="キャンセル"
+          label="閉じる"
+          unelevated
+          color="surface"
+          text-color="display"
+          class="q-mt-sm"
+          @click="closeUpdateNotificationDialog()"
+        />
+        <q-btn
+          padding="xs md"
+          label="このバージョンをスキップ"
           unelevated
           color="surface"
           text-color="display"
           class="q-mt-sm"
           @click="
-            setSkipVersion();
+            onSkipThisVersionClick(props.latestVersion);
             closeUpdateNotificationDialog();
           "
         />
@@ -66,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { UpdateInfo } from "@/type/preload";
 
 const props =
@@ -74,20 +77,12 @@ const props =
     modelValue: boolean;
     latestVersion: string;
     newUpdateInfos: UpdateInfo[];
+    onSkipThisVersionClick: (version: string) => void;
   }>();
 const emit =
   defineEmits<{
     (e: "update:modelValue", value: boolean): void;
   }>();
-
-const skipThisVersion = ref<boolean>(false);
-
-const setSkipVersion = () => {
-  if (skipThisVersion.value) {
-    // FIXME: window.electronを直に呼ばないようにする
-    window.electron.setSetting("skipUpdateVersion", props.latestVersion);
-  }
-};
 
 const modelValueComputed = computed({
   get: () => props.modelValue,

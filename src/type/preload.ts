@@ -523,6 +523,7 @@ export const rootMiscSettingSchema = z.object({
   enableMultiEngine: z.boolean().default(false),
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
+  skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
@@ -606,7 +607,6 @@ export const configSchema = z
       .default({}),
     registeredEngineDirs: z.string().array().default([]),
     recentlyUsedProjects: z.string().array().default([]),
-    skipUpdateVersion: z.string().default(""), // FIXME: undefinedにする・rootMiscSettingSchemaに移す
   })
   .merge(rootMiscSettingSchema);
 export type ConfigType = z.infer<typeof configSchema>;
