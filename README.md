@@ -139,6 +139,8 @@ npm run test-watch:electron-e2e # 監視モード
 
 ## 依存ライブラリのライセンス情報の生成
 
+依存ライブラリのライセンス情報は Github Workflow でのビルド時に自動生成されます。以下のコマンドで生成できます。
+
 ```bash
 # get licenses.json from voicevox_engine as engine_licenses.json
 

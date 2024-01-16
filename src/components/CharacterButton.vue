@@ -347,6 +347,8 @@ const updateMenuHeight = () => {
   font-size: 0;
   height: fit-content;
 
+  background: colors.$background;
+
   .icon-container {
     height: 2rem;
     width: 2rem;

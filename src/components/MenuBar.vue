@@ -36,7 +36,7 @@ import {
 import MenuButton from "./MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import { useStore } from "@/store";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
@@ -430,7 +430,7 @@ const reassignSubMenuOpen = (idx: number) => {
   }
 };
 
-const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
   ["新規プロジェクト", createNewProject],
   ["音声書き出し", generateAndSaveAllAudio],
   ["選択音声を書き出し", generateAndSaveSelectedAudio],

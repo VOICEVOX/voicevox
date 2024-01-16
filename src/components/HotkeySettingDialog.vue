@@ -216,7 +216,7 @@
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
-import { HotkeyAction, HotkeySetting } from "@/type/preload";
+import { HotkeyActionType, HotkeySettingType } from "@/type/preload";
 
 const props =
   defineProps<{
@@ -280,7 +280,7 @@ const recordCombination = (event: KeyboardEvent) => {
 const changeHotkeySettings = (action: string, combo: string) => {
   return store.dispatch("SET_HOTKEY_SETTINGS", {
     data: {
-      action: action as HotkeyAction,
+      action: action as HotkeyActionType,
       combination: combo,
     },
   });
@@ -359,7 +359,7 @@ const resetHotkey = async (action: string) => {
   if (result === "OK") {
     window.electron
       .getDefaultHotkeySettings()
-      .then((defaultSettings: HotkeySetting[]) => {
+      .then((defaultSettings: HotkeySettingType[]) => {
         const setting = defaultSettings.find((value) => value.action == action);
         if (setting == undefined) {
           return;
