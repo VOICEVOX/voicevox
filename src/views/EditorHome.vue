@@ -182,6 +182,7 @@
     v-model="isUpdateNotificationDialogOpenComputed"
     :latest-version="newUpdateResult.latestVersion"
     :new-update-infos="newUpdateResult.newUpdateInfos"
+    @skip-this-version-click="handleSkipThisVersionClick"
   />
 </template>
 
@@ -562,6 +563,12 @@ const newUpdateResult = useFetchNewUpdateInfos(
   () => window.electron.getAppInfos().then((obj) => obj.version), // アプリのバージョン
   import.meta.env.VITE_LATEST_UPDATE_INFOS_URL
 );
+const handleSkipThisVersionClick = (version: string) => {
+  store.dispatch("SET_ROOT_MISC_SETTING", {
+    key: "skipUpdateVersion",
+    value: version,
+  });
+};
 
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
@@ -638,6 +645,17 @@ onMounted(async () => {
     document.addEventListener("keyup", item);
   });
 
+  // 設定の読み込みを待機する
+  // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
+  let vuexReadyTimeout = 0;
+  while (!store.state.isVuexReady) {
+    if (vuexReadyTimeout >= 15000) {
+      throw new Error("Vuexが準備できませんでした");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    vuexReadyTimeout += 300;
+  }
+
   isAcceptRetrieveTelemetryDialogOpenComputed.value =
     store.state.acceptRetrieveTelemetry === "Unconfirmed";
 
@@ -645,12 +663,16 @@ onMounted(async () => {
     import.meta.env.MODE !== "development" &&
     store.state.acceptTerms !== "Accepted";
 
+  // アップデート通知ダイアログ
   if (newUpdateResult.value.status === "updateAvailable") {
-    const skipUpdateVersion = await window.electron.getSetting(
-      "skipUpdateVersion"
-    );
-    if (
-      semver.valid(skipUpdateVersion) == undefined ||
+    const skipUpdateVersion = store.state.skipUpdateVersion ?? "0.0.0";
+    if (semver.valid(skipUpdateVersion) == undefined) {
+      // 処理を止めるほどではないので警告だけ
+      store.dispatch(
+        "LOG_WARN",
+        `skipUpdateVersionが不正です: ${skipUpdateVersion}`
+      );
+    } else if (
       semver.gt(newUpdateResult.value.latestVersion, skipUpdateVersion)
     ) {
       isUpdateNotificationDialogOpenComputed.value = true;

@@ -1,23 +1,21 @@
 <template>
   <q-dialog v-model="modelValueComputed">
-    <q-card class="q-py-sm q-px-md">
-      <q-card-section class="q-pb-sm" align="center">
-        <div class="text-h6">
-          <q-icon name="info" color="primary" />アップデート通知
-        </div>
-      </q-card-section>
-      <q-card-section class="q-pt-sm" align="center">
-        <div class="text-body1">
-          最新バージョン {{ props.latestVersion }} が利用可能です。<br />
+    <q-card class="q-py-sm q-px-md dialog-card">
+      <q-card-section>
+        <div class="text-h5">アップデートのお知らせ</div>
+        <div class="text-body2 text-grey-8">
           公式サイトから最新バージョンをダウンロードできます。
         </div>
       </q-card-section>
-      <q-card-section class="q-py-none scrollable-area">
+
+      <q-separator />
+
+      <q-card-section class="q-py-none scroll scrollable-area">
         <template
           v-for="(info, infoIndex) of props.newUpdateInfos"
           :key="infoIndex"
         >
-          <div class="text-h6">バージョン {{ info.version }}</div>
+          <h3>バージョン {{ info.version }}</h3>
           <ul>
             <template
               v-for="(item, descriptionIndex) of info.descriptions"
@@ -28,23 +26,29 @@
           </ul>
         </template>
       </q-card-section>
-      <q-card-actions class="button-area">
-        <q-checkbox
-          v-model="skipThisVersion"
-          size="xs"
-          dense
-          label="このバージョンをスキップ"
-        />
+
+      <q-separator />
+
+      <q-card-actions>
         <q-space />
         <q-btn
           padding="xs md"
-          label="キャンセル"
+          label="閉じる"
+          unelevated
+          color="surface"
+          text-color="display"
+          class="q-mt-sm"
+          @click="closeUpdateNotificationDialog()"
+        />
+        <q-btn
+          padding="xs md"
+          label="このバージョンをスキップ"
           unelevated
           color="surface"
           text-color="display"
           class="q-mt-sm"
           @click="
-            setSkipVersion();
+            onSkipThisVersionClick(props.latestVersion);
             closeUpdateNotificationDialog();
           "
         />
@@ -66,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { UpdateInfo } from "@/type/preload";
 
 const props =
@@ -74,20 +78,12 @@ const props =
     modelValue: boolean;
     latestVersion: string;
     newUpdateInfos: UpdateInfo[];
+    onSkipThisVersionClick: (version: string) => void;
   }>();
 const emit =
   defineEmits<{
     (e: "update:modelValue", value: boolean): void;
   }>();
-
-const skipThisVersion = ref<boolean>(false);
-
-const setSkipVersion = () => {
-  if (skipThisVersion.value) {
-    // FIXME: window.electronを直に呼ばないようにする
-    window.electron.setSetting("skipUpdateVersion", props.latestVersion);
-  }
-};
 
 const modelValueComputed = computed({
   get: () => props.modelValue,
@@ -106,21 +102,21 @@ const openOfficialWebsite = () => {
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;
 
+.dialog-card {
+  width: 700px;
+  max-width: 80vw;
+}
+
 .scrollable-area {
   overflow-y: auto;
-  max-height: 250px;
-}
+  max-height: 50vh;
 
-.scrollable-area h5 {
-  margin: 10px 0;
-}
-
-.scrollable-area h6 {
-  margin: 15px 0;
-}
-
-.button-area {
-  border-top: 1px solid colors.$splitter;
-  /* ボタン領域の上部に線を引く */
+  :deep() {
+    h3 {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin: 0;
+    }
+  }
 }
 </style>
