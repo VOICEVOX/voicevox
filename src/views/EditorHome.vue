@@ -856,7 +856,12 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
 
 // アップデート通知
 const isUpdateNotificationDialogOpenComputed = computed({
-  get: () => store.state.isUpdateNotificationDialogOpen,
+  get: () =>
+    !store.state.isAcceptTermsDialogOpen &&
+    !store.state.isCharacterOrderDialogOpen &&
+    !store.state.isDefaultStyleSelectDialogOpen &&
+    !store.state.isAcceptRetrieveTelemetryDialogOpen &&
+    store.state.isUpdateNotificationDialogOpen,
   set: (val) =>
     store.dispatch("SET_DIALOG_OPEN", {
       isUpdateNotificationDialogOpen: val,
