@@ -680,8 +680,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       state.workspace = workspace;
     },
     async action({ commit }, { workspace }) {
-      const buf = new TextEncoder().encode(JSON.stringify(workspace)).buffer;
-      await window.electron.setTempProject(buf).then(getValueOrThrow);
+      await window.electron
+        .setTempProject(JSON.parse(JSON.stringify(workspace)))
+        .then(getValueOrThrow);
 
       commit("SET_WORKSPACE", { workspace });
     },

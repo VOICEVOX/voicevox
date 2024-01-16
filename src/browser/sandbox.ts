@@ -297,7 +297,7 @@ export const api: Sandbox = {
   getTempProject() {
     throw new Error("Not supported on Browser version: getTempProject");
   },
-  setTempProject(/* tempProject: ArrayBuffer */) {
+  setTempProject(/* tempProject: WorkspaceType */) {
     throw new Error("Not supported on Browser version: setTempProject");
   },
   getFileModifiedAt(/* getFileModifiedAt: number */) {

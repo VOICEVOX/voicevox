@@ -141,12 +141,11 @@ const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 const tempProjectPath = path.join(fixedUserDataDir, "project.tmp.json");
 
-const setTempProject = async (tempProject: ArrayBuffer) => {
+const setTempProject = async (tempProject: WorkspaceType) => {
   try {
-    await fs.promises.writeFile(
-      tempProjectPath + ".bk",
-      new DataView(tempProject)
-    );
+    const buf = new TextEncoder().encode(JSON.stringify(tempProject)).buffer;
+
+    await fs.promises.writeFile(tempProjectPath + ".bk", new DataView(buf));
     await fs.promises.rename(tempProjectPath + ".bk", tempProjectPath);
 
     return success(undefined);
@@ -853,10 +852,8 @@ ipcMainHandle("GET_TEMP_PROJECT", async () => {
       const defaultTempProject: WorkspaceType = {
         state: "none",
       };
-      const buf = new TextEncoder().encode(
-        JSON.stringify(defaultTempProject)
-      ).buffer;
-      await setTempProject(buf);
+
+      await setTempProject(defaultTempProject);
     }
 
     const workspace: WorkspaceType = JSON.parse(
