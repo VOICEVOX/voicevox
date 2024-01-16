@@ -105,7 +105,7 @@ npm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
 ```
 
 Playwright を使用しているためテストパターンを生成することもできます。
-ブラウザ版を起動している状態で以下のコマンドを実行してください。
+**ブラウザ版を起動している状態で**以下のコマンドを実行してください。
 
 ```bash
 npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
