@@ -733,7 +733,7 @@ watch(
 // N秒ごとに保存がされていない場合のみ一時ファイルを保存
 const saveTempFileIntervalSec = isProduction ? 60 : 1;
 const interval = setInterval(async () => {
-  if (isEdited.value) {
+  if (isEdited.value && !uiLocked.value) {
     await store.dispatch("SAVE_TEMP_PROJECT_FILE");
   }
 }, saveTempFileIntervalSec * 1000);
