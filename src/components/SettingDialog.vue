@@ -150,12 +150,6 @@
                 <div
                   aria-label="音声再生中の、詳細調整欄の自動スクロールのモードを選べます。"
                 >
-                  <span
-                    v-for="(obj, key) in activePointScrollModeOptions"
-                    :key="key"
-                    class="visually-hidden"
-                    >{{ `「${obj.label}」モードの場合、${obj.desc}` }}</span
-                  >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
@@ -169,26 +163,33 @@
                   </q-icon>
                 </div>
                 <q-space />
-                <div class="scroll-mode-toggle">
-                  <q-radio
-                    v-for="(obj, key) in activePointScrollModeOptions"
-                    :key="key"
-                    v-model="activePointScrollMode"
-                    :val="key"
-                    :label="obj.label"
-                    size="0"
-                    :class="[
-                      'q-px-md',
-                      'q-py-sm',
-                      key !== activePointScrollMode && 'scroll-mode-button',
-                      key === activePointScrollMode &&
-                        'scroll-mode-button-selected',
-                    ]"
-                    :style="[
-                      key === 'CONTINUOUSLY' && 'border-radius: 3px 0 0 3px',
-                      key === 'OFF' && 'border-radius: 0 3px 3px 0',
-                    ]"
-                  >
+                <q-btn-toggle
+                  v-model="activePointScrollMode"
+                  padding="xs md"
+                  unelevated
+                  color="background"
+                  text-color="display"
+                  toggle-color="primary"
+                  toggle-text-color="display-on-primary"
+                  :options="[
+                    {
+                      label: '連続',
+                      value: 'CONTINUOUSLY',
+                      slot: 'CONTINUOUSLY',
+                    },
+                    {
+                      label: 'ページめくり',
+                      value: 'PAGE',
+                      slot: 'PAGE',
+                    },
+                    {
+                      label: 'オフ',
+                      value: 'OFF',
+                      slot: 'OFF',
+                    },
+                  ]"
+                >
+                  <template #CONTINUOUSLY>
                     <q-tooltip
                       :delay="500"
                       anchor="center right"
@@ -196,10 +197,32 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      {{ obj.desc }}
+                      現在の再生位置を真ん中に表示します。
                     </q-tooltip>
-                  </q-radio>
-                </div>
+                  </template>
+                  <template #PAGE>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      現在の再生位置が表示範囲外にある場合にスクロールします。
+                    </q-tooltip>
+                  </template>
+                  <template #OFF>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      自動でスクロールしません。
+                    </q-tooltip>
+                  </template>
+                </q-btn-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md bg-surface">
                 <div>テキスト自動分割</div>
@@ -219,6 +242,7 @@
                   </q-icon>
                 </div>
                 <q-space />
+                <!-- FIXME: ツールチップの内容をaria-labelに付ける -->
                 <q-btn-toggle
                   padding="xs md"
                   unelevated
@@ -1055,26 +1079,6 @@ const activePointScrollMode = computed({
     });
   },
 });
-const activePointScrollModeOptions: Record<
-  ActivePointScrollMode,
-  {
-    label: string;
-    desc: string;
-  }
-> = {
-  CONTINUOUSLY: {
-    label: "連続",
-    desc: "現在の再生位置を真ん中に表示します。",
-  },
-  PAGE: {
-    label: "ページめくり",
-    desc: "現在の再生位置が表示範囲外にある場合にスクロールします。",
-  },
-  OFF: {
-    label: "オフ",
-    desc: "自動でスクロールしません。",
-  },
-};
 const experimentalSetting = computed(() => store.state.experimentalSetting);
 
 // 非表示にしたヒントの再表示
@@ -1356,30 +1360,10 @@ const renderEngineNameLabel = (engineId: EngineId) => {
   background: colors.$background;
 }
 
-.scroll-mode-toggle {
-  background: colors.$background;
-  border-radius: 3px;
-}
-
-.scroll-mode-button {
-  background: colors.$background;
-  color: colors.$display;
-  transition: 0.5s;
-}
-
-.scroll-mode-button-selected {
-  background: colors.$primary;
-  color: colors.$display-on-primary;
-}
-
 .text-ellipsis {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.scroll-mode-button:hover {
-  background: rgba(colors.$primary-rgb, 0.2);
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {
