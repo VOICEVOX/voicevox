@@ -156,28 +156,51 @@ test("複数選択：キーボード", async ({ page }) => {
   // Shift+上で上方向を選択範囲にする
   await page.keyboard.down("Shift");
   await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowUp");
   await page.keyboard.up("Shift");
   await page.waitForTimeout(100);
 
   selectedStatus = await getSelectedStatus(page);
-  expect(selectedStatus.active).toBe(3);
-  expect(selectedStatus.selected).toEqual([3, 4]);
+  expect(selectedStatus.active).toBe(2);
+  expect(selectedStatus.selected).toEqual([2, 3, 4]);
 
   // ただの上で上方向をactiveにして他の選択を解除する
   await page.keyboard.press("ArrowUp");
   await page.waitForTimeout(100);
 
   selectedStatus = await getSelectedStatus(page);
-  expect(selectedStatus.active).toBe(2);
-  expect(selectedStatus.selected).toEqual([2]);
+  expect(selectedStatus.active).toBe(1);
+  expect(selectedStatus.selected).toEqual([1]);
 
-  // EnterでactiveのAudioCellのテキストフィールドにフォーカスし、複数選択を解除する
+  // Shift+下で下方向を選択範囲にする
   await page.keyboard.down("Shift");
   await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.up("Shift");
+  await page.waitForTimeout(100);
+
+  selectedStatus = await getSelectedStatus(page);
+  expect(selectedStatus.active).toBe(3);
+  expect(selectedStatus.selected).toEqual([1, 2, 3]);
+
+  // ただの下で下方向をactiveにして他の選択を解除する
+
+  await page.keyboard.press("ArrowDown");
+  await page.waitForTimeout(100);
+
+  selectedStatus = await getSelectedStatus(page);
+  expect(selectedStatus.active).toBe(4);
+  expect(selectedStatus.selected).toEqual([4]);
+
+  // EnterでactiveのAudioCellのテキストフィールドにフォーカスし、複数選択を解除する
+
+  await page.keyboard.down("Shift");
+  await page.keyboard.press("ArrowUp");
   await page.keyboard.up("Shift");
   await page.keyboard.press("Enter");
 
   await page.waitForTimeout(100);
+
   selectedStatus = await getSelectedStatus(page);
   expect(selectedStatus.active).toBe(3);
   expect(selectedStatus.selected).toEqual([3]);

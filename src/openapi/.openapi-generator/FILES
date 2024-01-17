@@ -3,10 +3,12 @@ apis/index.ts
 index.ts
 models/AccentPhrase.ts
 models/AudioQuery.ts
-models/DownloadableLibrary.ts
+models/BaseLibraryInfo.ts
+models/CorsPolicyMode.ts
+models/DownloadableLibraryInfo.ts
 models/EngineManifest.ts
 models/HTTPValidationError.ts
-models/InstalledLibrary.ts
+models/InstalledLibraryInfo.ts
 models/LibrarySpeaker.ts
 models/LicenseInfo.ts
 models/Mora.ts
@@ -25,6 +27,7 @@ models/SupportedFeatures.ts
 models/UpdateInfo.ts
 models/UserDictWord.ts
 models/ValidationError.ts
+models/ValidationErrorLocInner.ts
 models/VvlibManifest.ts
 models/WordTypes.ts
 models/index.ts
