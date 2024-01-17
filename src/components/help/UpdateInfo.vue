@@ -42,8 +42,8 @@ import { UpdateInfo } from "@/type/preload";
 
 const props =
   defineProps<{
-    latestVersion: string | undefined;
-    downloadLink: string;
+    latestVersion?: string;
+    downloadLink?: string;
     updateInfos: UpdateInfo[];
     isUpdateAvailable: boolean;
   }>();
