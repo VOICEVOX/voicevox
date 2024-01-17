@@ -194,15 +194,19 @@ export function extractYomiText(
 
 function skipRubyReadingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
-  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
+  return text
+    .replace(/\{([^|]*)\|([^}]*)\}/g, "$1")
+    .replace(/｛([^|]*)｜([^}]*)｝/g, "$1");
 }
 function skipRubyWritingPart(text: string): string {
   // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
-  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2");
+  return text
+    .replace(/\{([^|]*)\|([^}]*)\}/g, "$2")
+    .replace(/｛([^|]*)｜([^}]*)｝/g, "$2");
 }
 function skipMemoText(targettext: string): string {
   // []をスキップ
-  return targettext.replace(/\[.*?\]/g, "");
+  return targettext.replace(/\[.*?\]/g, "").replace(/［.*?］/g, "");
 }
 
 /**

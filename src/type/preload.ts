@@ -523,6 +523,7 @@ export const rootMiscSettingSchema = z.object({
   enableMultiEngine: z.boolean().default(false),
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
+  skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
