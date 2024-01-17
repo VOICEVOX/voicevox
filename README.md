@@ -118,7 +118,7 @@ npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
 ブラウザ End to End テストでは Visual Regression Testing を行っています。
 以下の手順でスクリーンショットを更新できます：
 
-1. GitHub Actions をフォークしたリポジトリで有効にします。
+1. フォークしたリポジトリの設定で GitHub Actions を有効にします。
 2. リポジトリの設定の Actions > General > Workflow permissions で Read and write permissions を選択します。
 3. `[update snapshots]` という文字列をコミットメッセージに含めてコミットします。
 
@@ -126,7 +126,7 @@ npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
    git commit -m "UIを変更 [update snapshots]"
    ```
 
-4. 6 分ほどで更新されたスクリーンショットがコミットされます。
+4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
 
 ### Electron End to End テスト
 
