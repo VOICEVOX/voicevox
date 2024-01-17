@@ -122,6 +122,72 @@
                 <h5 class="text-h5">操作</h5>
               </q-card-actions>
               <q-card-actions class="q-px-md bg-surface">
+                <div>プリセット機能</div>
+                <div
+                  aria-label="プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
+                >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      プリセット機能を有効にします。パラメータを登録したり適用したりできます。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enablePreset"
+                  @update:model-value="changeEnablePreset"
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-slide-transition>
+                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
+                <div v-show="experimentalSetting.enablePreset">
+                  <q-card-actions
+                    class="q-px-md bg-surface in-slide-transition-workaround"
+                  >
+                    <div>スタイル変更時にデフォルトプリセットを適用</div>
+                    <div
+                      aria-label="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
+                    >
+                      <q-icon
+                        name="help_outline"
+                        size="sm"
+                        class="help-hover-icon"
+                      >
+                        <q-tooltip
+                          :delay="500"
+                          anchor="center right"
+                          self="center left"
+                          transition-show="jump-right"
+                          transition-hide="jump-left"
+                        >
+                          ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。
+                        </q-tooltip>
+                      </q-icon>
+                    </div>
+                    <q-space />
+                    <q-toggle
+                      :model-value="
+                        experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
+                      "
+                      @update:model-value="
+                        changeExperimentalSetting(
+                          'shouldApplyDefaultPresetOnVoiceChanged',
+                          $event
+                        )
+                      "
+                    >
+                    </q-toggle>
+                  </q-card-actions>
+                </div>
+              </q-slide-transition>
+              <q-card-actions class="q-px-md bg-surface">
                 <div>パラメータの引き継ぎ</div>
                 <div
                   aria-label="ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。"
@@ -821,62 +887,6 @@
               </q-card-actions>
               <!-- 今後実験的機能を追加する場合はここに追加 -->
               <q-card-actions class="q-px-md bg-surface">
-                <div>プリセット機能</div>
-                <div
-                  aria-label="プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
-                >
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      プリセット機能を有効にします。パラメータを登録したり適用したりできます。
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-toggle
-                  :model-value="experimentalSetting.enablePreset"
-                  @update:model-value="changeEnablePreset"
-                >
-                </q-toggle>
-              </q-card-actions>
-              <q-card-actions class="q-px-md bg-surface">
-                <div>スタイル変更時にデフォルトプリセットを適用</div>
-                <div
-                  aria-label="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
-                >
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-toggle
-                  :model-value="
-                    experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
-                  "
-                  :disable="!experimentalSetting.enablePreset"
-                  @update:model-value="
-                    changeExperimentalSetting(
-                      'shouldApplyDefaultPresetOnVoiceChanged',
-                      $event
-                    )
-                  "
-                >
-                </q-toggle>
-              </q-card-actions>
-              <q-card-actions class="q-px-md bg-surface">
                 <div>疑問文を自動調整</div>
                 <div
                   aria-label="ONの場合、疑問文の語尾の音高が自動的に上げられます。"
@@ -1329,10 +1339,6 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 <style scoped lang="scss">
 @use '@/styles/visually-hidden' as visually-hidden;
 @use "@/styles/colors" as colors;
-
-.visually-hidden {
-  @include visually-hidden.visually-hidden;
-}
 
 .text-h5 {
   margin: 0;
