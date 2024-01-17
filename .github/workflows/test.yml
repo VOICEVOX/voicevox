@@ -93,14 +93,14 @@ jobs:
             const commits = ${{ toJson(github.event.commits) }};
             if (!commits) {
               // pull_request などでコミットがない場合はスキップ
-              core.setOutput("updateSnapshots", false);
+              core.setOutput("shouldUpdateSnapshots", false);
               process.exit(0);
             }
             const shouldUpdateSnapshots = commits.some((commit) =>
               commit.message.toLowerCase().includes("[update snapshots]")
             );
-            core.setOutput("updateSnapshots", shouldUpdateSnapshots);
-            console.log(`updateSnapshots: ${shouldUpdateSnapshots}`);
+            core.setOutput("shouldUpdateSnapshots", shouldUpdateSnapshots);
+            console.log(`shouldUpdateSnapshots: ${shouldUpdateSnapshots}`);
 
       - name: Run npm run test:browser-e2e
         run: |
@@ -108,7 +108,7 @@ jobs:
             export DEBUG="pw:browser*"
           fi
           ARGS=""
-          if [[ ${{ steps.check-whether-to-update-snapshots.outputs.updateSnapshots }} == 'true' ]]; then
+          if [[ ${{ steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots }} == 'true' ]]; then
             ARGS="--update-snapshots"
           fi
           npm run test:browser-e2e -- $ARGS
@@ -132,7 +132,7 @@ jobs:
           path: playwright-report
 
       - name: Upload updated snapshots to artifact
-        if: steps.check-whether-to-update-snapshots.outputs.updateSnapshots == 'true'
+        if: steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updated-snapshots-${{ matrix.os }}
