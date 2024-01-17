@@ -210,6 +210,14 @@ npx openapi-generator-cli generate \
 npm run fmt
 ```
 
+### OpanAPI generator のバージョンアップ
+
+新しいバージョンの確認・インストールは次のコマンドで行えます。
+
+```bash
+npx openapi-generator-cli version-manager list
+```
+
 ## VS Code でのデバッグ実行
 
 npm scripts の `serve` や `electron:serve` などの開発ビルド下では、ビルドに使用している vite で sourcemap を出力するため、ソースコードと出力されたコードの対応付けが行われます。
