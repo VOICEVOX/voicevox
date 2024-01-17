@@ -105,13 +105,28 @@ npm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
 ```
 
 Playwright を使用しているためテストパターンを生成することもできます。
-ブラウザ版を起動している状態で以下のコマンドを実行してください。
+**ブラウザ版を起動している状態で**以下のコマンドを実行してください。
 
 ```bash
 npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
 ```
 
 詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。
+
+#### スクリーンショットの更新
+
+ブラウザ End to End テストでは Visual Regression Testing を行っています。
+以下の手順でスクリーンショットを更新できます：
+
+1. フォークしたリポジトリの設定で GitHub Actions を有効にします。
+2. リポジトリの設定の Actions > General > Workflow permissions で Read and write permissions を選択します。
+3. `[update snapshots]` という文字列をコミットメッセージに含めてコミットします。
+
+   ```bash
+   git commit -m "UIを変更 [update snapshots]"
+   ```
+
+4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
 
 ### Electron End to End テスト
 
@@ -123,6 +138,8 @@ npm run test-watch:electron-e2e # 監視モード
 ```
 
 ## 依存ライブラリのライセンス情報の生成
+
+依存ライブラリのライセンス情報は Github Workflow でのビルド時に自動生成されます。以下のコマンドで生成できます。
 
 ```bash
 # get licenses.json from voicevox_engine as engine_licenses.json
@@ -191,6 +208,14 @@ npx openapi-generator-cli generate \
     --additional-properties "modelPropertyNaming=camelCase,supportsES6=true,withInterfaces=true,typescriptThreePlus=true"
 
 npm run fmt
+```
+
+### OpanAPI generator のバージョンアップ
+
+新しいバージョンの確認・インストールは次のコマンドで行えます。
+
+```bash
+npx openapi-generator-cli version-manager list
 ```
 
 ## VS Code でのデバッグ実行

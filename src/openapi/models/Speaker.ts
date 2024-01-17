@@ -27,7 +27,7 @@ import {
 } from './SpeakerSupportedFeatures';
 
 /**
- * スピーカー情報
+ * 話者情報
  * @export
  * @interface Speaker
  */

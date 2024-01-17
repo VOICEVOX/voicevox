@@ -5,7 +5,13 @@
     tabindex="-1"
     :class="{
       active: isActiveAudioCell,
+      // selectedクラスはテストで使われているので残す。
+      // TODO: テストをこのクラスに依存しないようにして、このクラスを消す。
       selected: isSelectedAudioCell && isMultiSelectEnabled,
+      'selected-highlight':
+        isSelectedAudioCell &&
+        isMultiSelectEnabled &&
+        selectedAudioKeys.length > 1,
     }"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
@@ -104,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref, nextTick, onMounted, onUnmounted } from "vue";
+import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "./CharacterButton.vue";
 import { MenuItemButton, MenuItemSeparator } from "./MenuBar.vue";
@@ -113,6 +119,10 @@ import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import {
+  useShiftKey,
+  useCommandOrControlKey,
+} from "@/composables/useModifierKey";
 
 const props =
   defineProps<{
@@ -177,6 +187,10 @@ const onRootFocus = () => {
 
   selectAndSetActiveAudioKey();
 };
+
+const isShiftKeyDown = useShiftKey();
+const isCtrlOrCommandKeyDown = useCommandOrControlKey();
+
 // 複数選択：Ctrl（Cmd）またはShiftキーが押されている時のクリック処理
 const onClickWithModifierKey = (event: MouseEvent) => {
   if (uiLocked.value) return;
@@ -235,22 +249,6 @@ const onClickWithModifierKey = (event: MouseEvent) => {
   });
 };
 
-const isCtrlOrCommandKeyDown = ref(false);
-const isShiftKeyDown = ref(false);
-
-const keyEventListener = (e: KeyboardEvent) => {
-  isCtrlOrCommandKeyDown.value = isOnCommandOrCtrlKeyDown(e);
-  isShiftKeyDown.value = e.shiftKey;
-};
-onMounted(() => {
-  window.addEventListener("keydown", keyEventListener);
-  window.addEventListener("keyup", keyEventListener);
-});
-onUnmounted(() => {
-  window.removeEventListener("keydown", keyEventListener);
-  window.removeEventListener("keyup", keyEventListener);
-});
-
 const selectedVoice = computed<Voice | undefined>({
   get() {
     const { engineId, styleId } = audioItem.value.voice;
@@ -282,8 +280,9 @@ const selectedVoice = computed<Voice | undefined>({
 const isActiveAudioCell = computed(
   () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY
 );
+const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const isSelectedAudioCell = computed(() =>
-  store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
+  selectedAudioKeys.value.includes(props.audioKey)
 );
 
 const audioTextBuffer = ref(audioItem.value.text);
@@ -410,15 +409,17 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   if (e && e.isComposing) return;
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
-    const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
     if (isMultiSelectEnabled.value && e?.shiftKey) {
+      // focusCellをemitする前にselectedAudioKeysを保存しておく。
+      // （focusCellでselectedAudioKeysが変更されるため）
+      const selectedAudioKeysBefore = selectedAudioKeys.value;
       emit("focusCell", {
         audioKey: audioKeys.value[index],
         focusTarget: "root",
       });
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: [
-          ...selectedAudioKeys,
+          ...selectedAudioKeysBefore,
           props.audioKey,
           audioKeys.value[index],
         ],
@@ -652,8 +653,8 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     // divはフォーカスするとデフォルトで青い枠が出るので消す
     outline: none;
   }
-  &.selected {
-    background-color: rgba(colors.$active-point-focus-rgb, 0.5);
+  &.selected-highlight {
+    background-color: colors.$active-point-focus;
   }
 
   &:first-child {
@@ -702,7 +703,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
       padding-left: 5px;
     }
 
-    &.q-field--filled.q-field--highlighted :deep(.q-field__control):before {
+    &.q-field--filled.q-field--highlighted :deep(.q-field__control)::before {
       background-color: rgba(colors.$display-rgb, 0.08);
     }
   }
