@@ -14,7 +14,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * スピーカーのスタイル情報
+ * 話者のスタイル情報
  * @export
  * @interface SpeakerStyle
  */
