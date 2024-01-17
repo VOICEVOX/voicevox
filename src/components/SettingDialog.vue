@@ -75,10 +75,7 @@
                   :disable="!gpuSwitchEnabled(selectedEngineId)"
                 >
                   <q-tooltip
-                    anchor="center start"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
+                    :delay="500"
                     :target="!gpuSwitchEnabled(selectedEngineId)"
                   >
                     {{
@@ -256,35 +253,17 @@
                   ]"
                 >
                   <template #CONTINUOUSLY>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
+                    <q-tooltip :delay="500">
                       現在の再生位置を真ん中に表示します。
                     </q-tooltip>
                   </template>
                   <template #PAGE>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
+                    <q-tooltip :delay="500">
                       現在の再生位置が表示範囲外にある場合にスクロールします。
                     </q-tooltip>
                   </template>
                   <template #OFF>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
+                    <q-tooltip :delay="500">
                       自動でスクロールしません。
                     </q-tooltip>
                   </template>
@@ -333,37 +312,17 @@
                   @update:model-value="changeSplitTextWhenPaste($event)"
                 >
                   <template #splitTextPeriodAndNewLine>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
+                    <q-tooltip :delay="500">
                       句点と改行を基にテキストを分割します。
                     </q-tooltip>
                   </template>
                   <template #splitTextNewLine>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
+                    <q-tooltip :delay="500">
                       改行のみを基にテキストを分割します。
                     </q-tooltip>
                   </template>
                   <template #splitTextOFF>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      分割を行いません。
-                    </q-tooltip>
+                    <q-tooltip :delay="500"> 分割を行いません。 </q-tooltip>
                   </template>
                 </q-btn-toggle>
               </q-card-actions>
@@ -804,10 +763,10 @@
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       複数のVOICEVOX準拠エンジンを利用可能にする
                     </q-tooltip>
