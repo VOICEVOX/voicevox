@@ -70,7 +70,7 @@ test.beforeEach(async ({ page }) => {
       let j = 0;
       for (const style of speaker.styles) {
         j++;
-        style.name = `Style ${j}`;
+        style.name = `Style ${i}-${j}`;
       }
     }
     speakers = json;
