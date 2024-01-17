@@ -51,8 +51,6 @@ jobs:
             voicevox_engine_asset_name: windows-cpu
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
