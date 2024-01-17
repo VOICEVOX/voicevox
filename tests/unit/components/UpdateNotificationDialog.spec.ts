@@ -8,6 +8,7 @@ import { describe, it } from "vitest";
 import { Quasar } from "quasar";
 
 import UpdateNotificationDialogPresentation from "@/components/UpdateNotificationDialog/Presentation.vue";
+import { assertNonNullable } from "@/type/utility";
 
 const mountUpdateNotificationDialogPresentation = async (context?: {
   latestVersion?: string;
@@ -34,10 +35,10 @@ const mountUpdateNotificationDialogPresentation = async (context?: {
   const buttons = domWrapper.findAll("button");
 
   const skipButton = buttons.find((button) => button.text().match(/スキップ/));
-  if (skipButton == undefined) throw new Error("skipButton is undefined");
+  assertNonNullable(skipButton);
 
   const exitButton = buttons.find((button) => button.text().match(/閉じる/));
-  if (exitButton == undefined) throw new Error("exitButton is undefined");
+  assertNonNullable(exitButton);
 
   return { wrapper, skipButton, exitButton };
 };
