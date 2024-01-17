@@ -96,11 +96,11 @@ jobs:
               core.setOutput("updateSnapshots", false);
               process.exit(0);
             }
-            const updateSnapshots = commits.some((commit) =>
+            const shouldUpdateSnapshots = commits.some((commit) =>
               commit.message.toLowerCase().includes("[update snapshots]")
             );
-            core.setOutput("updateSnapshots", updateSnapshots);
-            console.log(`updateSnapshots: ${updateSnapshots}`);
+            core.setOutput("updateSnapshots", shouldUpdateSnapshots);
+            console.log(`updateSnapshots: ${shouldUpdateSnapshots}`);
 
       - name: Run npm run test:browser-e2e
         run: |
