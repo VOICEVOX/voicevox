@@ -5,9 +5,9 @@ import {
   AllActions,
   AllGetters,
   AllMutations,
+  Command,
   CommandStoreState,
   State,
-  StoreType,
 } from "@/store/type";
 import { commandStore } from "@/store/command";
 import { audioStore, audioCommandStore } from "@/store/audio";
@@ -27,7 +27,10 @@ import {
   PayloadRecipe,
 } from "@/store/command";
 
-function createDummyStore() {
+function createDummyStore(
+  initialUndoCommand?: Command[],
+  initialRedoCommand?: Command[]
+) {
   const engineId = EngineId("88022f86-c823-436e-85a3-500c629749c4");
   return createStore<State, AllGetters, AllActions, AllMutations>({
     state: {
@@ -48,8 +51,8 @@ function createDummyStore() {
       dialogLockCount: 0,
       reloadingLock: false,
       nowPlayingContinuously: false,
-      undoCommands: [],
-      redoCommands: [],
+      undoCommands: initialUndoCommand ?? [],
+      redoCommands: initialRedoCommand ?? [],
       inheritAudioInfo: true,
       activePointScrollMode: "OFF",
       isHelpDialogOpen: false,
@@ -207,9 +210,15 @@ function createDummyStore() {
   });
 }
 
+const dummyCommand: Command = {
+  unixMillisec: Date.now(),
+  undoPatches: [],
+  redoPatches: [],
+};
+
 describe("commandStoreのテスト", () => {
   it("CAN_UNDO getterが正しく動作する", () => {
-    const store = createDummyStore();
+    let store = createDummyStore();
     expect(
       commandStore.getters.CAN_UNDO(
         store.state,
@@ -218,11 +227,7 @@ describe("commandStoreのテスト", () => {
         store.getters
       )
     ).toBe(false);
-    store.state.undoCommands.push({
-      unixMillisec: Date.now(),
-      undoPatches: [],
-      redoPatches: [],
-    });
+    store = createDummyStore([dummyCommand]);
     expect(
       commandStore.getters.CAN_UNDO(
         store.state,
@@ -234,7 +239,7 @@ describe("commandStoreのテスト", () => {
   });
 
   it("CAN_REDO getterが正しく動作する", () => {
-    const store = createDummyStore();
+    let store = createDummyStore();
     expect(
       commandStore.getters.CAN_REDO(
         store.state,
@@ -243,11 +248,8 @@ describe("commandStoreのテスト", () => {
         store.getters
       )
     ).toBe(false);
-    store.state.redoCommands.push({
-      unixMillisec: Date.now(),
-      undoPatches: [],
-      redoPatches: [],
-    });
+    store = createDummyStore(undefined, [dummyCommand]);
+
     expect(
       commandStore.getters.CAN_REDO(
         store.state,
@@ -258,11 +260,8 @@ describe("commandStoreのテスト", () => {
     ).toBe(true);
   });
 
-  // UNDOとREDOのミューテーションは、applyPatchesImpl関数を使用しています。
-  // この関数の動作をモックするか、または実際のパッチを検証するテストを書く必要があります。
-
   it("LAST_COMMAND_UNIX_MILLISEC getterが正しく動作する", () => {
-    const store = createDummyStore();
+    let store = createDummyStore();
     expect(
       commandStore.getters.LAST_COMMAND_UNIX_MILLISEC(
         store.state,
@@ -271,12 +270,8 @@ describe("commandStoreのテスト", () => {
         store.getters
       )
     ).toBe(null);
-    const command = {
-      unixMillisec: Date.now(),
-      undoPatches: [],
-      redoPatches: [],
-    };
-    store.state.undoCommands.push(command);
+    store = createDummyStore([dummyCommand], undefined);
+
     expect(
       commandStore.getters.LAST_COMMAND_UNIX_MILLISEC(
         store.state,
@@ -284,22 +279,13 @@ describe("commandStoreのテスト", () => {
         store.state,
         store.getters
       )
-    ).toBe(command.unixMillisec);
+    ).toBe(store.state.undoCommands[0].unixMillisec);
   });
 
   it("CLEAR_COMMANDS mutationが正しく動作する", () => {
-    const store = createDummyStore();
-    store.state.undoCommands.push({
-      unixMillisec: Date.now(),
-      undoPatches: [],
-      redoPatches: [],
-    });
-    store.state.redoCommands.push({
-      unixMillisec: Date.now(),
-      undoPatches: [],
-      redoPatches: [],
-    });
-    commandStore.mutations.CLEAR_COMMANDS(store.state, undefined);
+    const store = createDummyStore([dummyCommand], [dummyCommand]);
+    store.commit("CLEAR_COMMANDS");
+
     expect(store.state.undoCommands.length).toBe(0);
     expect(store.state.redoCommands.length).toBe(0);
   });
