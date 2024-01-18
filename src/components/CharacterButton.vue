@@ -75,7 +75,7 @@
                 no-caps
                 class="col-grow"
                 @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
-                @mouseover="reassignSubMenuOpen(-1)"
+                @mouseover="reassignSubMenuOpen(-1, -1)"
                 @mouseleave="reassignSubMenuOpen.cancel()"
               >
                 <q-avatar rounded size="2rem" class="q-mr-md">
@@ -119,9 +119,11 @@
                   role="application"
                   :aria-label="`${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`"
                   tabindex="0"
-                  @mouseover="reassignSubMenuOpen(characterIndex)"
+                  @mouseover="reassignSubMenuOpen(sectionIndex, characterIndex)"
                   @mouseleave="reassignSubMenuOpen.cancel()"
-                  @keyup.right="reassignSubMenuOpen(characterIndex)"
+                  @keyup.right="
+                    reassignSubMenuOpen(sectionIndex, characterIndex)
+                  "
                 >
                   <q-icon
                     name="keyboard_arrow_right"
@@ -129,7 +131,7 @@
                     size="sm"
                   />
                   <q-menu
-                    v-model="subMenuOpenFlags[characterIndex]"
+                    v-model="subMenuOpenFlags[sectionIndex][characterIndex]"
                     no-parent-event
                     anchor="top end"
                     self="top start"
@@ -327,15 +329,16 @@ const onSelectSpeaker = (speakerUuid: SpeakerId) => {
   });
 };
 
-const subMenuOpenFlags = ref(
-  [...Array(props.characterInfos.length)].map(() => false)
+const emptySubMenuOpenFlags = props.characterInfos.map((ci) =>
+  ci.map(() => false)
 );
 
-const reassignSubMenuOpen = debounce((idx: number) => {
-  if (subMenuOpenFlags.value[idx]) return;
-  const arr = [...Array(props.characterInfos.length)].map(() => false);
-  arr[idx] = true;
-  subMenuOpenFlags.value = arr;
+const subMenuOpenFlags = ref(structuredClone(emptySubMenuOpenFlags));
+
+const reassignSubMenuOpen = debounce((firstIndex, secondIndex: number) => {
+  if (subMenuOpenFlags.value[firstIndex][secondIndex]) return;
+  subMenuOpenFlags.value = structuredClone(emptySubMenuOpenFlags);
+  subMenuOpenFlags.value[firstIndex][secondIndex] = true;
 }, 100);
 
 // 高さを制限してメニューが下方向に展開されるようにする
