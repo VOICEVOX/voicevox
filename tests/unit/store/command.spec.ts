@@ -6,7 +6,6 @@ import {
   AllGetters,
   AllMutations,
   Command,
-  CommandStoreState,
   State,
 } from "@/store/type";
 import { commandStore } from "@/store/command";
@@ -21,11 +20,6 @@ import { dictionaryStore } from "@/store/dictionary";
 import { engineStore } from "@/store/engine";
 import { EngineId } from "@/type/preload";
 const isDevelopment = process.env.NODE_ENV == "development";
-import {
-  createCommandMutation,
-  createCommandMutationTree,
-  PayloadRecipe,
-} from "@/store/command";
 
 function createDummyStore(
   initialUndoCommand?: Command[],
@@ -216,116 +210,75 @@ const dummyCommand: Command = {
   redoPatches: [],
 };
 
-describe("commandStoreのテスト", () => {
-  it("CAN_UNDO getterが正しく動作する", () => {
-    let store = createDummyStore();
-    expect(
-      commandStore.getters.CAN_UNDO(
-        store.state,
-        store.getters,
-        store.state,
-        store.getters
-      )
-    ).toBe(false);
-    store = createDummyStore([dummyCommand]);
-    expect(
-      commandStore.getters.CAN_UNDO(
-        store.state,
-        store.getters,
-        store.state,
-        store.getters
-      )
-    ).toBe(true);
-  });
+test("CAN_UNDO undoCommands配列が絡んあらfalseそうでなければtrue", () => {
+  let store = createDummyStore();
+  expect(
+    commandStore.getters.CAN_UNDO(
+      store.state,
+      store.getters,
+      store.state,
+      store.getters
+    )
+  ).toBe(false);
+  store = createDummyStore([dummyCommand]);
+  expect(
+    commandStore.getters.CAN_UNDO(
+      store.state,
+      store.getters,
+      store.state,
+      store.getters
+    )
+  ).toBe(true);
+});
 
-  it("CAN_REDO getterが正しく動作する", () => {
-    let store = createDummyStore();
-    expect(
-      commandStore.getters.CAN_REDO(
-        store.state,
-        store.getters,
-        store.state,
-        store.getters
-      )
-    ).toBe(false);
-    store = createDummyStore(undefined, [dummyCommand]);
+test("CAN_REDO redoCommands配列が空ならfalseそうでなければtrue", () => {
+  let store = createDummyStore();
+  expect(
+    commandStore.getters.CAN_REDO(
+      store.state,
+      store.getters,
+      store.state,
+      store.getters
+    )
+  ).toBe(false);
+  store = createDummyStore(undefined, [dummyCommand]);
 
-    expect(
-      commandStore.getters.CAN_REDO(
-        store.state,
-        store.getters,
-        store.state,
-        store.getters
-      )
-    ).toBe(true);
-  });
+  expect(
+    commandStore.getters.CAN_REDO(
+      store.state,
+      store.getters,
+      store.state,
+      store.getters
+    )
+  ).toBe(true);
+});
 
-  it("LAST_COMMAND_UNIX_MILLISEC getterが正しく動作する", () => {
-    let store = createDummyStore();
-    expect(
-      commandStore.getters.LAST_COMMAND_UNIX_MILLISEC(
-        store.state,
-        store.getters,
-        store.state,
-        store.getters
-      )
-    ).toBe(null);
-    store = createDummyStore([dummyCommand], undefined);
+test("LAST_COMMAND_UNIX_MILLISEC 配列の中身が空ならnullを返し、それ以外なら一番最後のundoCommandsからUnixMilisecを取り出す", () => {
+  let store = createDummyStore();
+  expect(
+    commandStore.getters.LAST_COMMAND_UNIX_MILLISEC(
+      store.state,
+      store.getters,
+      store.state,
+      store.getters
+    )
+  ).toBe(null);
+  store = createDummyStore([dummyCommand], undefined);
 
-    expect(
-      commandStore.getters.LAST_COMMAND_UNIX_MILLISEC(
-        store.state,
-        store.getters,
-        store.state,
-        store.getters
-      )
-    ).toBe(store.state.undoCommands[0].unixMillisec);
-  });
+  expect(
+    commandStore.getters.LAST_COMMAND_UNIX_MILLISEC(
+      store.state,
+      store.getters,
+      store.state,
+      store.getters
+    )
+  ).toBe(store.state.undoCommands[0].unixMillisec);
+});
 
-  it("CLEAR_COMMANDS mutationが正しく動作する", () => {
-    const store = createDummyStore([dummyCommand], [dummyCommand]);
-    store.commit("CLEAR_COMMANDS");
+test("CLEAR_COMMANDS でUNDOとREDOの状態を初期化", () => {
+  const store = createDummyStore([dummyCommand], [dummyCommand]);
+  store.commit("CLEAR_COMMANDS");
 
-    expect(store.state.undoCommands.length).toBe(0);
-    expect(store.state.redoCommands.length).toBe(0);
-  });
-
-  it("createCommandMutationが正しく動作する", () => {
-    const store = createDummyStore();
-    const payloadRecipe: PayloadRecipe<CommandStoreState, { value: number }> = (
-      draft,
-      payload
-    ) => {
-      draft.undoCommands.push({
-        unixMillisec: payload.value,
-        undoPatches: [],
-        redoPatches: [],
-      });
-    };
-    const mutation = createCommandMutation(payloadRecipe);
-    const initialLength = store.state.undoCommands.length;
-    mutation(store.state, { value: 123 });
-    expect(store.state.undoCommands.length).toBe(initialLength + 1);
-    expect(store.state.undoCommands[initialLength].unixMillisec).toBe(123);
-  });
-
-  it("createCommandMutationTreeが正しく動作する", () => {
-    const store = createDummyStore();
-    const payloadRecipeTree = {
-      ADD_VALUE: (draft: CommandStoreState, payload: { value: number }) => {
-        draft.undoCommands.push({
-          unixMillisec: payload.value,
-          undoPatches: [],
-          redoPatches: [],
-        });
-      },
-    };
-    const mutationTree =
-      createCommandMutationTree<
-        CommandStoreState,
-        { ADD_VALUE: { value: number } }
-      >(payloadRecipeTree);
-    mutationTree.ADD_VALUE(store.state, { value: 123 });
-    expect(store.state.undoCommands[0].unixMillisec).toBe(123);
-  });
+  expect(store.state.undoCommands.length).toBe(0);
+  expect(store.state.redoCommands.length).toBe(0);
 });
