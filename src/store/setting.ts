@@ -45,6 +45,7 @@ export const settingStoreState: SettingStoreState = {
   editorFont: "default",
   showTextLineNumber: false,
   showAddAudioItemButton: true,
+  acceptTerms: "Unconfirmed",
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -67,6 +68,8 @@ export const settingStoreState: SettingStoreState = {
   },
   engineSettings: {},
   enableMultiEngine: false,
+  enableMemoNotation: false,
+  enableRubyNotation: false,
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -140,6 +143,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "splitTextWhenPaste",
         "splitterPosition",
         "enableMultiEngine",
+        "enableRubyNotation",
+        "enableMemoNotation",
+        "skipUpdateVersion",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
