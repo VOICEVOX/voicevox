@@ -920,7 +920,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         .then((instance) =>
           instance.invoke("audioQueryAudioQueryPost")({
             text,
-            styleId,
+            speaker: styleId,
           })
         )
         .catch((error) => {
@@ -974,7 +974,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         .then((instance) =>
           instance.invoke("accentPhrasesAccentPhrasesPost")({
             text,
-            styleId,
+            speaker: styleId,
             isKana,
           })
         )
@@ -1092,7 +1092,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         .then((instance) =>
           instance.invoke("moraDataMoraDataPost")({
             accentPhrase: accentPhrases,
-            styleId,
+            speaker: styleId,
           })
         )
         .catch((error) => {
@@ -1297,7 +1297,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (audioQuery == undefined)
           throw new Error("audioQuery is not defined for audioItem");
 
-        const styleId = audioItem.voice.styleId;
+        const speaker = audioItem.voice.styleId;
 
         const engineAudioQuery = convertAudioQueryFromEditorToEngine(
           audioQuery,
@@ -1316,14 +1316,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               "synthesisMorphingSynthesisMorphingPost"
             )({
               audioQuery: engineAudioQuery,
-              baseStyleId: styleId,
-              targetStyleId: audioItem.morphingInfo.targetStyleId,
+              baseSpeaker: speaker,
+              targetSpeaker: audioItem.morphingInfo.targetStyleId,
               morphRate: audioItem.morphingInfo.rate,
             });
           } else {
             blob = await instance.invoke("synthesisSynthesisPost")({
               audioQuery: engineAudioQuery,
-              styleId,
+              speaker,
               enableInterrogativeUpspeak:
                 state.experimentalSetting.enableInterrogativeUpspeak,
             });

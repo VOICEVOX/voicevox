@@ -313,8 +313,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       const isInitialized = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
       }).then((instance) =>
-        instance.invoke("isInitializedStyleIdIsInitializedStyleIdGet")({
-          styleId,
+        instance.invoke("isInitializedSpeakerIsInitializedSpeakerGet")({
+          speaker: styleId,
         })
       );
 
@@ -332,8 +332,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
             engineId,
           }).then((instance) =>
-            instance.invoke("initializeStyleIdInitializeStyleIdPost")({
-              styleId,
+            instance.invoke("initializeSpeakerInitializeSpeakerPost")({
+              speaker: styleId,
             })
           ),
       });
