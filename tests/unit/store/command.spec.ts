@@ -231,7 +231,7 @@ test("CAN_UNDO undoCommands配列が絡んあらfalseそうでなければtrue",
   ).toBe(true);
 });
 
-test("CAN_REDO redoCommands配列が空ならfalseそうでなければtrue", () => {
+test("CAN_REDO: redoCommands配列が空ならfalseそうでなければtrue", () => {
   let store = createDummyStore();
   expect(
     commandStore.getters.CAN_REDO(
@@ -253,7 +253,7 @@ test("CAN_REDO redoCommands配列が空ならfalseそうでなければtrue", ()
   ).toBe(true);
 });
 
-test("LAST_COMMAND_UNIX_MILLISEC 配列の中身が空ならnullを返し、それ以外なら一番最後のundoCommandsからUnixMilisecを取り出す", () => {
+test("LAST_COMMAND_UNIX_MILLISEC: 配列の中身が空ならnullを返し、それ以外なら一番最後のundoCommandsからUnixMilisecを取り出す", () => {
   let store = createDummyStore();
   expect(
     commandStore.getters.LAST_COMMAND_UNIX_MILLISEC(
@@ -275,7 +275,7 @@ test("LAST_COMMAND_UNIX_MILLISEC 配列の中身が空ならnullを返し、そ�
   ).toBe(store.state.undoCommands[0].unixMillisec);
 });
 
-test("CLEAR_COMMANDS でUNDOとREDOの状態を初期化", () => {
+test("CLEAR_COMMANDS: UNDOとREDOの状態を初期化", () => {
   const store = createDummyStore([dummyCommand], [dummyCommand]);
   store.commit("CLEAR_COMMANDS");
 
