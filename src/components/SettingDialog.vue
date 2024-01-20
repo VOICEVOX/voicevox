@@ -924,8 +924,8 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md bg-surface">
-                <div>調整結果の保持</div>
+              <q-card-actions v-if="!isProduction" class="q-px-md bg-surface">
+                <div>[開発時のみ機能] 調整結果の保持</div>
                 <div
                   aria-label="テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。"
                 >
@@ -992,6 +992,7 @@ import { computed, ref } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
+  isProduction,
   SavingSetting,
   EngineSettingType,
   ExperimentalSettingType,
