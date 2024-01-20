@@ -21,7 +21,7 @@ import { defineComponent, ref, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
 import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 
 type SingMenuItemBase<T extends string> = {
@@ -216,7 +216,7 @@ export default defineComponent({
       }
     };
 
-    const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+    const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
       // NOTE: 初期設定なし
       // ["新規", createNewSingProject],
     ]);

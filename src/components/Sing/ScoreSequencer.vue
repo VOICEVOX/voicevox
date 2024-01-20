@@ -638,7 +638,7 @@ export default defineComponent({
     };
 
     const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
-      if (!isSelfEventTarget) {
+      if (!isSelfEventTarget(event)) {
         return;
       }
       if (event.button === 0) {
@@ -650,7 +650,7 @@ export default defineComponent({
     };
 
     const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
-      if (!isSelfEventTarget) {
+      if (!isSelfEventTarget(event)) {
         return;
       }
       if (event.button === 0) {
@@ -662,7 +662,7 @@ export default defineComponent({
     };
 
     const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
-      if (!isSelfEventTarget) {
+      if (!isSelfEventTarget(event)) {
         return;
       }
       if (event.button === 0) {
@@ -674,7 +674,7 @@ export default defineComponent({
     };
 
     const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
-      if (!isSelfEventTarget) {
+      if (!isSelfEventTarget(event)) {
         return;
       }
       if (!state.selectedNoteIds.has(note.id)) {
@@ -686,7 +686,7 @@ export default defineComponent({
     };
 
     const onMouseDown = (event: MouseEvent) => {
-      if (!isSelfEventTarget) {
+      if (!isSelfEventTarget(event)) {
         return;
       }
       if (event.button === 0) {

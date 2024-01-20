@@ -15,7 +15,7 @@ import {
   Phrase,
   PhraseState,
 } from "./type";
-import { AudioQuery, Mora } from "@/openapi";
+import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
   AudioEvent,
@@ -38,7 +38,6 @@ import {
   isValidScore,
   isValidTempo,
   isValidTimeSignature,
-  noteNumberToFrequency,
   secondToTick,
   tickToSecond,
 } from "@/sing/domain";
@@ -60,6 +59,7 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
+import { EngineId } from "@/type/preload";
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -555,12 +555,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_AUDIO_QUERY_TO_PHRASE: {
+  SET_FRAME_AUDIO_QUERY_TO_PHRASE: {
     mutation(
       state,
-      { phraseKey, audioQuery }: { phraseKey: string; audioQuery: AudioQuery }
+      {
+        phraseKey,
+        frameAudioQuery,
+      }: { phraseKey: string; frameAudioQuery: FrameAudioQuery }
     ) {
-      state.phrases[phraseKey].query = audioQuery;
+      state.phrases[phraseKey].query = frameAudioQuery;
     },
   },
 
@@ -767,23 +770,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  UPDATE_PERIODIC_PITCH: {
-    async action({ dispatch }, { audioQuery, engineId, styleId }) {
-      try {
-        const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        });
-        return await instance.invoke("periodicPitchPeriodicPitchPost")({
-          audioQuery,
-          speaker: styleId,
-        });
-      } catch (error) {
-        window.electron.logError(error, `Failed to update periodic pitch.`);
-        throw error;
-      }
-    },
-  },
-
   SET_START_RENDERING_REQUESTED: {
     mutation(state, { startRenderingRequested }) {
       state.startRenderingRequested = startRenderingRequested;
@@ -862,156 +848,119 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       };
 
-      const fetchQuery = async (singer: Singer, score: Score) => {
-        if (!getters.IS_ENGINE_READY(singer.engineId)) {
+      const fetchQuery = async (
+        engineId: EngineId,
+        score: Score,
+        frameRate: number,
+        restDurationSeconds: number
+      ) => {
+        if (!getters.IS_ENGINE_READY(engineId)) {
           throw new Error("Engine not ready.");
         }
 
-        // TODO: 助詞や拗音の扱いはあとで考える
-        const text = score.notes
-          .map((value) => value.lyric)
-          .map((value) => value.replace("じょ", "ジョ"))
-          .map((value) => value.replace("うぉ", "ウォ"))
-          .map((value) => value.replace("は", "ハ"))
-          .map((value) => value.replace("へ", "ヘ"))
-          .join("");
+        const restFrameLength = Math.round(restDurationSeconds * frameRate);
 
-        const query = await dispatch("FETCH_AUDIO_QUERY", {
-          text,
-          engineId: singer.engineId,
-          styleId: singer.styleId,
+        const notes: NoteForRequestToEngine[] = [];
+        // 先頭に休符を追加
+        notes.push({
+          key: undefined,
+          frameLength: restFrameLength,
+          lyric: "",
         });
-        return query;
-      };
+        // ノートを変換
+        const firstNoteOnTime = tickToSecond(
+          score.notes[0].position,
+          score.tempos,
+          score.tpqn
+        );
+        let frame = 0;
+        for (const note of score.notes) {
+          const noteOffTime = tickToSecond(
+            note.position + note.duration,
+            score.tempos,
+            score.tpqn
+          );
+          const noteOffFrame = Math.round(
+            (noteOffTime - firstNoteOnTime) * frameRate
+          );
+          const noteFrameLength = Math.max(1, noteOffFrame - frame);
+          // TODO: 助詞や拗音の扱いはあとで考える
+          const lyric = note.lyric
+            .replace("じょ", "ジョ")
+            .replace("うぉ", "ウォ")
+            .replace("は", "ハ")
+            .replace("へ", "ヘ");
+          notes.push({
+            key: note.noteNumber,
+            frameLength: noteFrameLength,
+            lyric,
+          });
+          frame += noteFrameLength;
+        }
+        // 末尾に休符を追加
+        notes.push({
+          key: undefined,
+          frameLength: restFrameLength,
+          lyric: "",
+        });
 
-      const getMoras = (query: AudioQuery) => {
-        return query.accentPhrases.map((value) => value.moras).flat();
-      };
-
-      const logPhonemes = (moras: Mora[]) => {
-        const phonemes = moras
-          .map((value) => {
-            if (value.consonant == undefined) {
-              return [value.vowel];
-            } else {
-              return [value.consonant, value.vowel];
-            }
-          })
-          .flat()
-          .join(" ");
-        window.electron.logInfo(`  phonemes: ${phonemes}`);
-      };
-
-      const editQuery = (score: Score, query: AudioQuery) => {
-        let noteIndex = 0;
-        for (let i = 0; i < query.accentPhrases.length; i++) {
-          const accentPhrase = query.accentPhrases[i];
-          const moras = accentPhrase.moras;
-          for (let j = 0; j < moras.length; j++) {
-            const mora = moras[j];
-            const note = score.notes[noteIndex];
-
-            const noteOnTime = tickToSecond(
-              note.position,
-              score.tempos,
-              score.tpqn
-            );
-            const noteOffTime = tickToSecond(
-              note.position + note.duration,
-              score.tempos,
-              score.tpqn
-            );
-
-            // 長さを編集
-            let nextMora: Mora | undefined;
-            if (j !== moras.length - 1) {
-              nextMora = moras[j + 1];
-            } else if (i !== query.accentPhrases.length - 1) {
-              const nextAccentPhrase = query.accentPhrases[i + 1];
-              nextMora = nextAccentPhrase.moras[0];
-            }
-            const minVowelLength = 0.01;
-            const minConsonantLength = 0.02;
-            const noteLength = noteOffTime - noteOnTime;
-            if (nextMora && nextMora.consonantLength != undefined) {
-              // 母音の後ろに子音がある場合
-              mora.vowelLength = noteLength - nextMora.consonantLength;
-              if (mora.vowelLength < minVowelLength) {
-                // 母音をこれ以上短くできない場合は、子音を短くする
-                mora.vowelLength = minVowelLength;
-                nextMora.consonantLength = noteLength - mora.vowelLength;
-                if (nextMora.consonantLength < minConsonantLength) {
-                  // 子音も短くできない場合は、比で母音と子音の長さを決定する
-                  const minMoraLength = minVowelLength + minConsonantLength;
-                  const vowelRatio = minVowelLength / minMoraLength;
-                  const consonantRatio = minConsonantLength / minMoraLength;
-                  mora.vowelLength = noteLength * vowelRatio;
-                  nextMora.consonantLength = noteLength * consonantRatio;
-                }
-              }
-            } else {
-              // 母音の後ろに子音がない場合
-              mora.vowelLength = noteLength;
-            }
-
-            // 音高を編集
-            const freq = noteNumberToFrequency(note.noteNumber);
-            mora.pitch = Math.log(freq);
-
-            // 無声化を解除
-            if (mora.vowel === "I") {
-              mora.vowel = "i";
-            }
-            if (mora.vowel === "U") {
-              mora.vowel = "u";
-            }
-
-            noteIndex++;
-          }
+        try {
+          const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+            engineId,
+          });
+          return await instance.invoke(
+            "singFrameAudioQuerySingFrameAudioQueryPost"
+          )({
+            score: { notes },
+            styleId: 999, // TODO: 設定できるようにする
+          });
+        } catch (error) {
+          const lyrics = notes.map((value) => value.lyric).join("");
+          window.electron.logError(
+            error,
+            `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`
+          );
+          throw error;
         }
       };
 
-      const updatePeriodicPitch = async (singer: Singer, query: AudioQuery) => {
-        if (!getters.IS_ENGINE_READY(singer.engineId)) {
-          throw new Error("Engine not ready.");
-        }
-
-        const newQuery = await dispatch("UPDATE_PERIODIC_PITCH", {
-          audioQuery: query,
-          engineId: singer.engineId,
-          styleId: singer.styleId,
-        });
-        return newQuery;
+      const getPhonemes = (frameAudioQuery: FrameAudioQuery) => {
+        return frameAudioQuery.phonemes.map((value) => value.phoneme).join(" ");
       };
 
-      const calcStartTime = (score: Score, query: AudioQuery) => {
-        const firstMora = query.accentPhrases[0].moras[0];
+      const calcStartTime = (score: Score, restDurationSeconds: number) => {
         let startTime = tickToSecond(
           score.notes[0].position,
           score.tempos,
           score.tpqn
         );
-        startTime -= query.prePhonemeLength;
-        startTime -= firstMora.consonantLength ?? 0;
+        startTime -= restDurationSeconds;
         return startTime;
       };
 
-      const synthesize = async (singer: Singer, query: AudioQuery) => {
+      const synthesize = async (singer: Singer, query: FrameAudioQuery) => {
         if (!getters.IS_ENGINE_READY(singer.engineId)) {
           throw new Error("Engine not ready.");
         }
 
-        const blob = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId: singer.engineId,
-        }).then((instance) => {
-          return instance.invoke("synthesisSynthesisPost")({
-            audioQuery: query,
-            speaker: singer.styleId,
-            enableInterrogativeUpspeak:
-              state.experimentalSetting.enableInterrogativeUpspeak,
+        try {
+          const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+            engineId: singer.engineId,
           });
-        });
-        return blob;
+          return await instance.invoke("frameSynthesisFrameSynthesisPost")({
+            frameAudioQuery: query,
+            styleId: singer.styleId,
+          });
+        } catch (error) {
+          const phonemes = query.phonemes
+            .map((value) => value.phoneme)
+            .join(" ");
+          window.electron.logError(
+            error,
+            `Failed to synthesis. Phonemes are "${phonemes}".`
+          );
+          throw error;
+        }
       };
 
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
@@ -1035,8 +984,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         deleteOverlappingNotes(score, state.overlappingNoteIds);
 
         // Score -> Phrases
-
-        window.electron.logInfo("Updating phrases...");
 
         const foundPhrases = await searchPhrases(singer, score);
         for (const [hash, phrase] of foundPhrases) {
@@ -1089,14 +1036,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
-        for (const [key, phrase] of getSortedPhrasesEntries(state.phrases)) {
+        const sortedPhrasesEntries = getSortedPhrasesEntries(state.phrases);
+        for (const [phraseKey, phrase] of sortedPhrasesEntries) {
           if (!phrase.singer) {
             continue;
           }
 
           if (phrase.state === "WAITING_TO_BE_RENDERED") {
             commit("SET_STATE_TO_PHRASE", {
-              phraseKey: key,
+              phraseKey,
               phraseState: "NOW_RENDERING",
             });
           }
@@ -1105,32 +1053,35 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // Score & AudioQuery -> StartTime
 
           if (!phrase.query) {
-            window.electron.logInfo(`Generating query...`);
+            const engineId = phrase.singer.engineId;
+            const frameRate = state.engineManifests[engineId].frameRate;
+            const restDurationSeconds = 1; // 仮置き
 
-            let audioQuery = await fetchQuery(phrase.singer, phrase.score);
-            const moras = getMoras(audioQuery);
-            logPhonemes(moras);
-            if (moras.length !== phrase.score.notes.length) {
-              commit("SET_STATE_TO_PHRASE", {
-                phraseKey: key,
-                phraseState: "COULD_NOT_RENDER",
-              });
-              continue;
-            }
-            editQuery(phrase.score, audioQuery);
-            audioQuery = await updatePeriodicPitch(phrase.singer, audioQuery);
-            const startTime = calcStartTime(phrase.score, audioQuery);
+            const frameAudioQuery = await fetchQuery(
+              phrase.singer.engineId,
+              phrase.score,
+              frameRate,
+              restDurationSeconds
+            );
+            const phonemes = getPhonemes(frameAudioQuery);
 
-            commit("SET_AUDIO_QUERY_TO_PHRASE", { phraseKey: key, audioQuery });
-            commit("SET_START_TIME_TO_PHRASE", { phraseKey: key, startTime });
+            window.electron.logInfo(
+              `Fetched frame audio query. Phonemes are "${phonemes}".`
+            );
 
-            window.electron.logInfo(`Query generated.`);
+            const startTime = calcStartTime(phrase.score, restDurationSeconds);
+
+            commit("SET_FRAME_AUDIO_QUERY_TO_PHRASE", {
+              phraseKey,
+              frameAudioQuery,
+            });
+            commit("SET_START_TIME_TO_PHRASE", { phraseKey, startTime });
           }
 
           if (startRenderingRequested() || stopRenderingRequested()) {
             if (phrase.state === "NOW_RENDERING") {
               commit("SET_STATE_TO_PHRASE", {
-                phraseKey: key,
+                phraseKey,
                 phraseState: "WAITING_TO_BE_RENDERED",
               });
             }
@@ -1140,7 +1091,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // AudioQuery -> Blob
           // Blob & StartTime -> AudioSequence
 
-          const phraseData = phraseDataMap.get(key);
+          const phraseData = phraseDataMap.get(phraseKey);
           if (!phraseData) {
             throw new Error("phraseData is undefined");
           }
@@ -1151,14 +1102,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             throw new Error("startTime is undefined.");
           }
           if (!phraseData.blob) {
-            phraseData.blob = phraseAudioBlobCache.get(key);
+            phraseData.blob = phraseAudioBlobCache.get(phraseKey);
             if (phraseData.blob) {
               window.electron.logInfo(`Loaded audio buffer from cache.`);
             } else {
-              window.electron.logInfo(`Synthesizing...`);
-
               phraseData.blob = await synthesize(phrase.singer, phrase.query);
-              phraseAudioBlobCache.set(key, phraseData.blob);
+              phraseAudioBlobCache.set(phraseKey, phraseData.blob);
 
               window.electron.logInfo(`Synthesized.`);
             }
@@ -1189,7 +1138,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (phrase.state === "NOW_RENDERING") {
             commit("SET_STATE_TO_PHRASE", {
-              phraseKey: key,
+              phraseKey,
               phraseState: "PLAYABLE",
             });
           }

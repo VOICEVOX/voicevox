@@ -124,6 +124,7 @@ describe("store/vuex.js test", () => {
               interrogativeUpspeak: true,
               synthesisMorphing: true,
             },
+            frameRate: 93.75,
           },
         },
         experimentalSetting: {

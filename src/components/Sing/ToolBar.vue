@@ -142,7 +142,7 @@ export default defineComponent({
 
     const setBpmInputBuffer = (bpmStr: string | number | null) => {
       const bpm = Number(bpmStr);
-      if (!Number.isFinite(bpm) || bpm <= 0) {
+      if (!Number.isFinite(bpm) || bpm < 40) {
         return;
       }
       bpmInputBuffer.value = bpm;

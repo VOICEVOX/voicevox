@@ -15,6 +15,7 @@ import {
   SupportedDevicesInfo,
   UserDictWord,
   MorphableTargetInfo,
+  FrameAudioQuery,
 } from "@/openapi";
 import {
   CharacterInfo,
@@ -758,7 +759,7 @@ export type Phrase = {
   startTicks: number;
   endTicks: number;
   state: PhraseState;
-  query?: AudioQuery;
+  query?: FrameAudioQuery;
   startTime?: number;
 };
 
@@ -868,8 +869,8 @@ export type SingingStoreTypes = {
     mutation: { phraseKey: string; phraseState: PhraseState };
   };
 
-  SET_AUDIO_QUERY_TO_PHRASE: {
-    mutation: { phraseKey: string; audioQuery: AudioQuery };
+  SET_FRAME_AUDIO_QUERY_TO_PHRASE: {
+    mutation: { phraseKey: string; frameAudioQuery: FrameAudioQuery };
   };
 
   SET_START_TIME_TO_PHRASE: {
@@ -969,14 +970,6 @@ export type SingingStoreTypes = {
 
   STOP_PREVIEW_SOUND: {
     action(payload: { noteNumber: number }): void;
-  };
-
-  UPDATE_PERIODIC_PITCH: {
-    action(payload: {
-      audioQuery: AudioQuery;
-      engineId: EngineId;
-      styleId: StyleId;
-    }): Promise<AudioQuery>;
   };
 
   SET_START_RENDERING_REQUESTED: {
