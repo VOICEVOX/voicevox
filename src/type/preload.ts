@@ -27,6 +27,10 @@ function checkIsMac(): boolean {
 }
 export const isMac = checkIsMac();
 
+const urlStringSchema = z.string().url().brand("URL");
+export type UrlString = z.infer<typeof urlStringSchema>;
+export const UrlString = (url: string): UrlString => urlStringSchema.parse(url);
+
 export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
 export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
