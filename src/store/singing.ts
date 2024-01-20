@@ -15,12 +15,7 @@ import {
   Phrase,
   PhraseState,
 } from "./type";
-import { EngineId, StyleId } from "@/type/preload";
-import {
-  FrameAudioQuery,
-  FramePhoneme,
-  Note as NoteForRequestToEngine,
-} from "@/openapi";
+import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
   AudioEvent,
@@ -861,27 +856,32 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("Engine not ready.");
         }
 
+        const firstNoteOnTime = tickToSecond(
+          score.notes[0].position,
+          score.tempos,
+          score.tpqn
+        );
+        const restFrameLength = Math.round(frameRate);
+
         const notes: NoteForRequestToEngine[] = [];
         // 先頭に休符を追加
         notes.push({
           key: undefined,
-          frameLength: Math.round(frameRate),
+          frameLength: restFrameLength,
           lyric: "",
         });
-        // リクエスト用のノートに変換
+        // ノートを変換
+        let frame = 0;
         for (const note of score.notes) {
-          const noteOnTime = tickToSecond(
-            note.position,
-            score.tempos,
-            score.tpqn
-          );
-          const noteOnFrame = Math.floor(noteOnTime * frameRate);
           const noteOffTime = tickToSecond(
             note.position + note.duration,
             score.tempos,
             score.tpqn
           );
-          const noteOffFrame = Math.floor(noteOffTime * frameRate);
+          const noteOffFrame = Math.round(
+            (noteOffTime - firstNoteOnTime) * frameRate
+          );
+          const noteFrameLength = Math.max(1, noteOffFrame - frame);
           // TODO: 助詞や拗音の扱いはあとで考える
           const lyric = note.lyric
             .replace("じょ", "ジョ")
@@ -890,14 +890,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             .replace("へ", "ヘ");
           notes.push({
             key: note.noteNumber,
-            frameLength: Math.round(noteOffFrame - noteOnFrame),
+            frameLength: noteFrameLength,
             lyric,
           });
+          frame += noteFrameLength;
         }
         // 末尾に休符を追加
         notes.push({
           key: undefined,
-          frameLength: Math.round(frameRate),
+          frameLength: restFrameLength,
           lyric: "",
         });
 
@@ -909,7 +910,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             "singFrameAudioQuerySingFrameAudioQueryPost"
           )({
             score: { notes },
-            styleId: 999,
+            styleId: 999, // TODO: 設定できるようにする
           });
         } catch (error) {
           const lyrics = notes.map((value) => value.lyric).join("");
