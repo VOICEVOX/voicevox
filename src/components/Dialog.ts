@@ -352,7 +352,7 @@ const showWriteErrorDialog = ({
   }
 };
 
-const NOTIFY_TIMEOUT = 5000;
+const NOTIFY_TIMEOUT = 7000;
 
 export const showNotifyAndNotShowAgainButton = (
   {
@@ -373,7 +373,7 @@ export const showNotifyAndNotShowAgainButton = (
     timeout: NOTIFY_TIMEOUT,
     actions: [
       {
-        label: "今後この通知をしない",
+        label: "今後このメッセージを表示しない",
         textColor: "toast-button-display" + suffix,
         handler: () => {
           dispatch("SET_CONFIRMED_TIP", {
@@ -382,6 +382,10 @@ export const showNotifyAndNotShowAgainButton = (
             },
           });
         },
+      },
+      {
+        label: "閉じる",
+        color: "toast-button-display" + suffix,
       },
     ],
   });
