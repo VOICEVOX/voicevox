@@ -7,7 +7,7 @@ const dotenvPath = path.join(process.cwd(), ".env.production");
 dotenv.config({ path: dotenvPath });
 
 const VOICEVOX_ENGINE_DIR =
-  process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/dist/run/";
+  process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/run.dist/";
 
 // ${productName} Web Setup ${version}.${ext}
 const NSIS_WEB_ARTIFACT_NAME = process.env.NSIS_WEB_ARTIFACT_NAME;
@@ -90,7 +90,7 @@ const builderOptions = {
     },
     {
       from: VOICEVOX_ENGINE_DIR,
-      to: path.join(extraFilePrefix, "vv-engine"),
+      to: extraFilePrefix,
     },
     {
       from: path.resolve(__dirname, "build", "vendored", "7z", sevenZipFile),
