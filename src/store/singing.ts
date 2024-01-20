@@ -774,63 +774,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  FETCH_FRAME_AUDIO_QUERY: {
-    async action(
-      { state, dispatch },
-      {
-        score,
-        engineId,
-        styleId,
-      }: { score: Score; engineId: EngineId; styleId: StyleId }
-    ) {
-      const frameRate = state.engineManifests[engineId].frameRate;
-      const notes: NoteForRequestToEngine[] = [];
-      for (const note of score.notes) {
-        const noteOnTime = tickToSecond(
-          note.position,
-          score.tempos,
-          score.tpqn
-        );
-        const noteOnFrame = Math.floor(noteOnTime * frameRate);
-        const noteOffTime = tickToSecond(
-          note.position + note.duration,
-          score.tempos,
-          score.tpqn
-        );
-        const noteOffFrame = Math.floor(noteOffTime * frameRate);
-        // TODO: 助詞や拗音の扱いはあとで考える
-        const lyric = note.lyric
-          .replace("じょ", "ジョ")
-          .replace("うぉ", "ウォ")
-          .replace("は", "ハ")
-          .replace("へ", "ヘ");
-        notes.push({
-          key: note.noteNumber,
-          frameLength: noteOffFrame - noteOnFrame,
-          lyric,
-        });
-      }
-      try {
-        const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        });
-        return await instance.invoke(
-          "singFrameAudioQuerySingFrameAudioQueryPost"
-        )({
-          score: { notes },
-          speaker: styleId,
-        });
-      } catch (error) {
-        const lyrics = notes.map((value) => value.lyric).join("");
-        window.electron.logError(
-          error,
-          `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`
-        );
-        throw error;
-      }
-    },
-  },
-
   SET_START_RENDERING_REQUESTED: {
     mutation(state, { startRenderingRequested }) {
       state.startRenderingRequested = startRenderingRequested;
@@ -909,42 +852,86 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       };
 
-      const fetchQuery = async (singer: Singer, score: Score) => {
+      const fetchQuery = async (
+        singer: Singer,
+        score: Score,
+        frameRate: number
+      ) => {
         if (!getters.IS_ENGINE_READY(singer.engineId)) {
           throw new Error("Engine not ready.");
         }
 
-        const query = await dispatch("FETCH_FRAME_AUDIO_QUERY", {
-          score,
-          engineId: singer.engineId,
-          styleId: singer.styleId,
+        const notes: NoteForRequestToEngine[] = [];
+        // 先頭に休符を追加
+        notes.push({
+          key: undefined,
+          frameLength: Math.round(frameRate),
+          lyric: "",
         });
-        return query;
+        // リクエスト用のノートに変換
+        for (const note of score.notes) {
+          const noteOnTime = tickToSecond(
+            note.position,
+            score.tempos,
+            score.tpqn
+          );
+          const noteOnFrame = Math.floor(noteOnTime * frameRate);
+          const noteOffTime = tickToSecond(
+            note.position + note.duration,
+            score.tempos,
+            score.tpqn
+          );
+          const noteOffFrame = Math.floor(noteOffTime * frameRate);
+          // TODO: 助詞や拗音の扱いはあとで考える
+          const lyric = note.lyric
+            .replace("じょ", "ジョ")
+            .replace("うぉ", "ウォ")
+            .replace("は", "ハ")
+            .replace("へ", "ヘ");
+          notes.push({
+            key: note.noteNumber,
+            frameLength: Math.round(noteOffFrame - noteOnFrame),
+            lyric,
+          });
+        }
+        // 末尾に休符を追加
+        notes.push({
+          key: undefined,
+          frameLength: Math.round(frameRate),
+          lyric: "",
+        });
+
+        try {
+          const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+            engineId: singer.engineId,
+          });
+          return await instance.invoke(
+            "singFrameAudioQuerySingFrameAudioQueryPost"
+          )({
+            score: { notes },
+            styleId: 999,
+          });
+        } catch (error) {
+          const lyrics = notes.map((value) => value.lyric).join("");
+          window.electron.logError(
+            error,
+            `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`
+          );
+          throw error;
+        }
       };
 
       const getPhonemes = (frameAudioQuery: FrameAudioQuery) => {
         return frameAudioQuery.phonemes.map((value) => value.phoneme).join(" ");
       };
 
-      const isVowel = (phoneme: FramePhoneme) => {
-        const vowels = new Set(["a", "I", "i", "U", "u", "e", "o", "N"]);
-        return vowels.has(phoneme.phoneme);
-      };
-
-      const calcStartTime = (
-        score: Score,
-        query: FrameAudioQuery,
-        frameRate: number
-      ) => {
-        const firstPhoneme = query.phonemes[0];
+      const calcStartTime = (score: Score) => {
         let startTime = tickToSecond(
           score.notes[0].position,
           score.tempos,
           score.tpqn
         );
-        if (!isVowel(firstPhoneme)) {
-          startTime -= firstPhoneme.frameLength / frameRate;
-        }
+        startTime -= 1; // 先頭に長さ1秒の休符があるので、その分を引く
         return startTime;
       };
 
@@ -1067,7 +1054,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
             const frameAudioQuery = await fetchQuery(
               phrase.singer,
-              phrase.score
+              phrase.score,
+              frameRate
             );
             const phonemes = getPhonemes(frameAudioQuery);
 
@@ -1075,11 +1063,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               `Fetched frame audio query. Phonemes are "${phonemes}".`
             );
 
-            const startTime = calcStartTime(
-              phrase.score,
-              frameAudioQuery,
-              frameRate
-            );
+            const startTime = calcStartTime(phrase.score);
 
             commit("SET_FRAME_AUDIO_QUERY_TO_PHRASE", {
               phraseKey: key,

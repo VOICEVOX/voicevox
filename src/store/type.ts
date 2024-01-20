@@ -972,14 +972,6 @@ export type SingingStoreTypes = {
     action(payload: { noteNumber: number }): void;
   };
 
-  FETCH_FRAME_AUDIO_QUERY: {
-    action(payload: {
-      score: Score;
-      engineId: EngineId;
-      styleId: StyleId;
-    }): Promise<FrameAudioQuery>;
-  };
-
   SET_START_RENDERING_REQUESTED: {
     mutation: { startRenderingRequested: boolean };
   };

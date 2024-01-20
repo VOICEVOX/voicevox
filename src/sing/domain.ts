@@ -15,7 +15,7 @@ export const isValidTempo = (tempo: Tempo) => {
     Number.isInteger(tempo.position) &&
     Number.isFinite(tempo.bpm) &&
     tempo.position >= 0 &&
-    tempo.bpm > 0
+    tempo.bpm >= 40
   );
 };
 
