@@ -1055,7 +1055,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!phrase.query) {
             const engineId = phrase.singer.engineId;
             const frameRate = state.engineManifests[engineId].frameRate;
-            const restDurationSeconds = 1;
+            const restDurationSeconds = 1; // 仮置き
 
             const frameAudioQuery = await fetchQuery(
               phrase.singer.engineId,
