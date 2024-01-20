@@ -27,8 +27,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.14.7
-  VOICEVOX_RESOURCE_VERSION: 0.15.0-preview.3
+  VOICEVOX_ENGINE_VERSION: 0.15.0
+  VOICEVOX_RESOURCE_VERSION: 0.15.0
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -278,24 +278,26 @@ jobs:
       - name: Merge VOICEVOX ENGINE into prepackage/
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
         run: |
-          mv voicevox_engine/ prepackage/vv-engine/
+          mv voicevox_engine/* prepackage/
+          rm -rf voicevox_engine
 
       - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/MacOS/
         if: startsWith(matrix.artifact_name, 'macos-')
         run: |
-          mv voicevox_engine/ prepackage/VOICEVOX.app/Contents/MacOS/vv-engine/
+          mv voicevox_engine/* prepackage/VOICEVOX.app/Contents/MacOS/
+          rm -rf voicevox_engine
 
       - name: Recover file permissions
         if: startsWith(matrix.artifact_name, 'linux-') # linux
         run: |
           chmod +x "prepackage/${{ matrix.linux_executable_name }}"
-          chmod +x "prepackage/vv-engine/run"
+          chmod +x "prepackage/run"
 
       - name: Recover file permissions for macOS build
         if: startsWith(matrix.artifact_name, 'macos-') # macOS
         run: |
           chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/${{ matrix.macos_executable_name }}"
-          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/vv-engine/run"
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/run"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
