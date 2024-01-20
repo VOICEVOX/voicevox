@@ -196,6 +196,7 @@
 import { debounce, QBtn } from "quasar";
 import { computed, Ref, ref } from "vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
+import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
 
@@ -225,6 +226,8 @@ const emit = defineEmits({
     );
   },
 });
+
+const store = useStore();
 
 const selectedCharacter = computed(() => {
   const selectedVoice = props.selectedVoice;
