@@ -95,7 +95,7 @@ import UpdateInfo from "./UpdateInfo.vue";
 import OssCommunityInfo from "./OssCommunityInfo.vue";
 import QAndA from "./QAndA.vue";
 import ContactInfo from "./ContactInfo.vue";
-import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
+import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 
@@ -139,7 +139,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
 }
 const newUpdateResult = useFetchNewUpdateInfos(
   () => window.electron.getAppInfos().then((obj) => obj.version), // アプリのバージョン
-  import.meta.env.VITE_LATEST_UPDATE_INFOS_URL
+  UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL)
 );
 
 // エディタのOSSライセンス取得
