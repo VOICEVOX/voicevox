@@ -59,6 +59,7 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
+import { EngineId } from "@/type/preload";
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -848,19 +849,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       };
 
       const fetchQuery = async (
-        singer: Singer,
+        engineId: EngineId,
         score: Score,
         frameRate: number
       ) => {
-        if (!getters.IS_ENGINE_READY(singer.engineId)) {
+        if (!getters.IS_ENGINE_READY(engineId)) {
           throw new Error("Engine not ready.");
         }
 
-        const firstNoteOnTime = tickToSecond(
-          score.notes[0].position,
-          score.tempos,
-          score.tpqn
-        );
         const restFrameLength = Math.round(frameRate);
 
         const notes: NoteForRequestToEngine[] = [];
@@ -871,6 +867,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           lyric: "",
         });
         // ノートを変換
+        const firstNoteOnTime = tickToSecond(
+          score.notes[0].position,
+          score.tempos,
+          score.tpqn
+        );
         let frame = 0;
         for (const note of score.notes) {
           const noteOffTime = tickToSecond(
@@ -904,7 +905,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         try {
           const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-            engineId: singer.engineId,
+            engineId,
           });
           return await instance.invoke(
             "singFrameAudioQuerySingFrameAudioQueryPost"
@@ -926,13 +927,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return frameAudioQuery.phonemes.map((value) => value.phoneme).join(" ");
       };
 
-      const calcStartTime = (score: Score) => {
+      const calcStartTime = (
+        score: Score,
+        frameAudioQuery: FrameAudioQuery,
+        frameRate: number
+      ) => {
         let startTime = tickToSecond(
           score.notes[0].position,
           score.tempos,
           score.tpqn
         );
-        startTime -= 1; // 先頭に長さ1秒の休符があるので、その分を引く
+        const pauPhoneme = frameAudioQuery.phonemes[0];
+        startTime -= pauPhoneme.frameLength / frameRate;
         return startTime;
       };
 
@@ -1034,14 +1040,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
-        for (const [key, phrase] of getSortedPhrasesEntries(state.phrases)) {
+        const sortedPhrasesEntries = getSortedPhrasesEntries(state.phrases);
+        for (const [phraseKey, phrase] of sortedPhrasesEntries) {
           if (!phrase.singer) {
             continue;
           }
 
           if (phrase.state === "WAITING_TO_BE_RENDERED") {
             commit("SET_STATE_TO_PHRASE", {
-              phraseKey: key,
+              phraseKey,
               phraseState: "NOW_RENDERING",
             });
           }
@@ -1054,7 +1061,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const frameRate = state.engineManifests[engineId].frameRate;
 
             const frameAudioQuery = await fetchQuery(
-              phrase.singer,
+              phrase.singer.engineId,
               phrase.score,
               frameRate
             );
@@ -1064,19 +1071,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               `Fetched frame audio query. Phonemes are "${phonemes}".`
             );
 
-            const startTime = calcStartTime(phrase.score);
+            const startTime = calcStartTime(
+              phrase.score,
+              frameAudioQuery,
+              frameRate
+            );
 
             commit("SET_FRAME_AUDIO_QUERY_TO_PHRASE", {
-              phraseKey: key,
+              phraseKey,
               frameAudioQuery,
             });
-            commit("SET_START_TIME_TO_PHRASE", { phraseKey: key, startTime });
+            commit("SET_START_TIME_TO_PHRASE", { phraseKey, startTime });
           }
 
           if (startRenderingRequested() || stopRenderingRequested()) {
             if (phrase.state === "NOW_RENDERING") {
               commit("SET_STATE_TO_PHRASE", {
-                phraseKey: key,
+                phraseKey,
                 phraseState: "WAITING_TO_BE_RENDERED",
               });
             }
@@ -1086,7 +1097,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // AudioQuery -> Blob
           // Blob & StartTime -> AudioSequence
 
-          const phraseData = phraseDataMap.get(key);
+          const phraseData = phraseDataMap.get(phraseKey);
           if (!phraseData) {
             throw new Error("phraseData is undefined");
           }
@@ -1097,12 +1108,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             throw new Error("startTime is undefined.");
           }
           if (!phraseData.blob) {
-            phraseData.blob = phraseAudioBlobCache.get(key);
+            phraseData.blob = phraseAudioBlobCache.get(phraseKey);
             if (phraseData.blob) {
               window.electron.logInfo(`Loaded audio buffer from cache.`);
             } else {
               phraseData.blob = await synthesize(phrase.singer, phrase.query);
-              phraseAudioBlobCache.set(key, phraseData.blob);
+              phraseAudioBlobCache.set(phraseKey, phraseData.blob);
 
               window.electron.logInfo(`Synthesized.`);
             }
@@ -1133,7 +1144,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (phrase.state === "NOW_RENDERING") {
             commit("SET_STATE_TO_PHRASE", {
-              phraseKey: key,
+              phraseKey,
               phraseState: "PLAYABLE",
             });
           }
