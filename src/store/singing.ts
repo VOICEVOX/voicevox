@@ -851,13 +851,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const fetchQuery = async (
         engineId: EngineId,
         score: Score,
-        frameRate: number
+        frameRate: number,
+        restDurationSeconds: number
       ) => {
         if (!getters.IS_ENGINE_READY(engineId)) {
           throw new Error("Engine not ready.");
         }
 
-        const restFrameLength = Math.round(frameRate);
+        const restFrameLength = Math.round(restDurationSeconds * frameRate);
 
         const notes: NoteForRequestToEngine[] = [];
         // 先頭に休符を追加
@@ -927,18 +928,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return frameAudioQuery.phonemes.map((value) => value.phoneme).join(" ");
       };
 
-      const calcStartTime = (
-        score: Score,
-        frameAudioQuery: FrameAudioQuery,
-        frameRate: number
-      ) => {
+      const calcStartTime = (score: Score, restDurationSeconds: number) => {
         let startTime = tickToSecond(
           score.notes[0].position,
           score.tempos,
           score.tpqn
         );
-        const pauPhoneme = frameAudioQuery.phonemes[0];
-        startTime -= pauPhoneme.frameLength / frameRate;
+        startTime -= restDurationSeconds;
         return startTime;
       };
 
@@ -1059,11 +1055,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!phrase.query) {
             const engineId = phrase.singer.engineId;
             const frameRate = state.engineManifests[engineId].frameRate;
+            const restDurationSeconds = 1;
 
             const frameAudioQuery = await fetchQuery(
               phrase.singer.engineId,
               phrase.score,
-              frameRate
+              frameRate,
+              restDurationSeconds
             );
             const phonemes = getPhonemes(frameAudioQuery);
 
@@ -1071,11 +1069,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               `Fetched frame audio query. Phonemes are "${phonemes}".`
             );
 
-            const startTime = calcStartTime(
-              phrase.score,
-              frameAudioQuery,
-              frameRate
-            );
+            const startTime = calcStartTime(phrase.score, restDurationSeconds);
 
             commit("SET_FRAME_AUDIO_QUERY_TO_PHRASE", {
               phraseKey,
