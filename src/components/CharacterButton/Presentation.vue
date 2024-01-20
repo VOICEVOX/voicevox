@@ -6,6 +6,7 @@
     :disable="uiLocked"
     :class="{ opaque: loading }"
     aria-haspopup="menu"
+    @click="isOpen = !isOpen"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
     <div class="icon-container">
@@ -22,181 +23,15 @@
     <div v-if="loading" class="loading">
       <q-spinner color="primary" size="1.6rem" :thickness="7" />
     </div>
-    <q-menu
-      class="character-menu"
-      transition-show="none"
-      transition-hide="none"
-      :max-height="maxMenuHeight"
-      @before-show="updateMenuHeight"
-    >
-      <q-list style="min-width: max-content" class="character-item-container">
-        <q-item
-          v-if="selectedStyleInfo == undefined && !emptiable"
-          class="warning-item row no-wrap items-center"
-        >
-          <span class="text-warning vertical-middle"
-            >有効なスタイルが選択されていません</span
-          >
-        </q-item>
-        <q-item
-          v-if="characterInfos.length === 0"
-          class="warning-item row no-wrap items-center"
-        >
-          <span class="text-warning vertical-middle"
-            >選択可能なスタイルがありません</span
-          >
-        </q-item>
-        <q-item v-if="emptiable" class="to-unselect-item q-pa-none">
-          <q-btn
-            v-close-popup
-            flat
-            no-caps
-            class="full-width"
-            :class="selectedCharacter == undefined && 'selected-background'"
-            @click="$emit('update:selectedVoice', undefined)"
-          >
-            <span>選択解除</span>
-          </q-btn>
-        </q-item>
-        <q-item
-          v-for="(characterInfo, characterIndex) in characterInfos"
-          :key="characterIndex"
-          class="q-pa-none"
-          :class="isSelectedItem(characterInfo) && 'selected-character-item'"
-        >
-          <q-btn-group flat class="col full-width">
-            <q-btn
-              v-close-popup
-              flat
-              no-caps
-              class="col-grow"
-              @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
-              @mouseover="reassignSubMenuOpen(-1)"
-              @mouseleave="reassignSubMenuOpen.cancel()"
-            >
-              <q-avatar rounded size="2rem" class="q-mr-md">
-                <q-img
-                  v-if="characterInfo"
-                  no-spinner
-                  no-transition
-                  :ratio="1"
-                  :src="
-                    getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
-                  "
-                />
-                <q-avatar
-                  v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
-                  class="engine-icon"
-                  rounded
-                >
-                  <img
-                    :src="
-                      engineIcons[
-                        getDefaultStyle(characterInfo.metas.speakerUuid)
-                          .engineId
-                      ]
-                    "
-                  />
-                </q-avatar>
-              </q-avatar>
-              <div>{{ characterInfo.metas.speakerName }}</div>
-            </q-btn>
-            <!-- スタイルが2つ以上あるものだけ、スタイル選択ボタンを表示する-->
-            <template v-if="characterInfo.metas.styles.length >= 2">
-              <q-separator vertical />
-
-              <div
-                class="flex items-center q-px-sm q-py-none cursor-pointer"
-                :class="
-                  subMenuOpenFlags[characterIndex] && 'selected-background'
-                "
-                role="application"
-                :aria-label="`${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`"
-                tabindex="0"
-                @mouseover="reassignSubMenuOpen(characterIndex)"
-                @mouseleave="reassignSubMenuOpen.cancel()"
-                @keyup.right="reassignSubMenuOpen(characterIndex)"
-              >
-                <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
-                <q-menu
-                  v-model="subMenuOpenFlags[characterIndex]"
-                  no-parent-event
-                  anchor="top end"
-                  self="top start"
-                  transition-show="none"
-                  transition-hide="none"
-                  class="character-menu"
-                >
-                  <q-list style="min-width: max-content">
-                    <q-item
-                      v-for="(style, styleIndex) in characterInfo.metas.styles"
-                      :key="styleIndex"
-                      v-close-popup
-                      clickable
-                      active-class="selected-style-item"
-                      :active="
-                        selectedVoice != undefined &&
-                        style.styleId === selectedVoice.styleId
-                      "
-                      :aria-pressed="
-                        selectedVoice != undefined &&
-                        style.styleId === selectedVoice.styleId
-                      "
-                      role="button"
-                      @click="
-                        $emit('update:selectedVoice', {
-                          engineId: style.engineId,
-                          speakerId: characterInfo.metas.speakerUuid,
-                          styleId: style.styleId,
-                        })
-                      "
-                    >
-                      <q-avatar rounded size="2rem" class="q-mr-md">
-                        <q-img
-                          no-spinner
-                          no-transition
-                          :ratio="1"
-                          :src="characterInfo.metas.styles[styleIndex].iconPath"
-                        />
-                        <q-avatar
-                          v-if="showEngineInfo"
-                          rounded
-                          class="engine-icon"
-                        >
-                          <img
-                            :src="
-                              engineIcons[
-                                characterInfo.metas.styles[styleIndex].engineId
-                              ]
-                            "
-                          />
-                        </q-avatar>
-                      </q-avatar>
-                      <q-item-section v-if="style.styleName"
-                        >{{ characterInfo.metas.speakerName }}（{{
-                          style.styleName
-                        }}）</q-item-section
-                      >
-                      <q-item-section v-else>{{
-                        characterInfo.metas.speakerName
-                      }}</q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-menu>
-              </div>
-            </template>
-          </q-btn-group>
-        </q-item>
-      </q-list>
-    </q-menu>
+    <character-tree v-model="isOpen" :items="characterTreeItems" />
   </q-btn>
 </template>
 
 <script setup lang="ts">
-import { debounce, QBtn } from "quasar";
-import { computed, Ref, ref } from "vue";
-import { base64ImageToUri } from "@/helpers/imageHelper";
-import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
+import { QBtn } from "quasar";
+import { Ref, computed, ref } from "vue";
+import CharacterTree, { ButtonData } from "./CharacterTree.vue";
+import { CharacterInfo, EngineId, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
 
 const props = withDefaults(
@@ -207,6 +42,14 @@ const props = withDefaults(
     showEngineInfo?: boolean;
     emptiable?: boolean;
     uiLocked: boolean;
+    engineIcons: Record<EngineId, string>;
+    defaultStyleIds: Record<
+      SpeakerId,
+      {
+        engineId: EngineId;
+        styleId: number;
+      }
+    >;
   }>(),
   {
     loading: false,
@@ -225,6 +68,8 @@ const emit = defineEmits({
     );
   },
 });
+
+const isOpen = ref(false);
 
 const selectedCharacter = computed(() => {
   const selectedVoice = props.selectedVoice;
@@ -270,27 +115,18 @@ const selectedStyleInfo = computed(() => {
   return style;
 });
 
-const engineIcons = computed(() =>
-  Object.fromEntries(
-    store.state.engineIds.map((engineId) => [
-      engineId,
-      base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ])
-  )
-);
-
 const getDefaultStyle = (speakerUuid: SpeakerId) => {
   // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
   const characterInfo = props.characterInfos.find(
     (info) => info.metas.speakerUuid === speakerUuid
   );
-  const defaultStyleId = store.state.defaultStyleIds.find(
-    (x) => x.speakerUuid === speakerUuid
-  )?.defaultStyleId;
+  const defaultStyleId = props.defaultStyleIds[speakerUuid];
 
   const defaultStyle =
     characterInfo?.metas.styles.find(
-      (style) => style.styleId === defaultStyleId
+      (style) =>
+        style.engineId === defaultStyleId.engineId &&
+        style.styleId === defaultStyleId.styleId
     ) ?? characterInfo?.metas.styles[0]; // デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
 
   if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
@@ -298,25 +134,24 @@ const getDefaultStyle = (speakerUuid: SpeakerId) => {
   return defaultStyle;
 };
 
-const onSelectSpeaker = (speakerUuid: SpeakerId) => {
-  const style = getDefaultStyle(speakerUuid);
-  emit("update:selectedVoice", {
-    engineId: style.engineId,
-    speakerId: speakerUuid,
-    styleId: style.styleId,
-  });
-};
-
-const subMenuOpenFlags = ref(
-  [...Array(props.characterInfos.length)].map(() => false)
+const characterTreeItems = computed<ButtonData[]>(() =>
+  props.characterInfos.map((characterInfo) => ({
+    id: characterInfo.metas.speakerUuid,
+    label: characterInfo.metas.speakerName,
+    icon:
+      characterInfo.metas.styles.find(
+        (style) =>
+          style.styleId ===
+          props.defaultStyleIds[characterInfo.metas.speakerUuid].styleId
+      )?.iconPath || "",
+    subIcon:
+      props.engineIcons[
+        getDefaultStyle(characterInfo.metas.speakerUuid).engineId
+      ],
+    treeAlt: `${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`,
+    selected: isSelectedItem(characterInfo),
+  }))
 );
-
-const reassignSubMenuOpen = debounce((idx: number) => {
-  if (subMenuOpenFlags.value[idx]) return;
-  const arr = [...Array(props.characterInfos.length)].map(() => false);
-  arr[idx] = true;
-  subMenuOpenFlags.value = arr;
-}, 100);
 
 // 高さを制限してメニューが下方向に展開されるようにする
 const buttonRef: Ref<InstanceType<typeof QBtn> | undefined> = ref();
