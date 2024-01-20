@@ -173,6 +173,7 @@
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
+  <library-manage-dialog v-model="isLibraryManageDialogOpenComputed" />
   <accept-retrieve-telemetry-dialog
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
@@ -212,6 +213,7 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
+import LibraryManageDialog from "@/components/LibraryManageDialog.vue";
 import UpdateNotificationDialog from "@/components/UpdateNotificationDialog.vue";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { AudioItem, EngineState } from "@/store/type";
@@ -839,6 +841,15 @@ const isDictionaryManageDialogOpenComputed = computed({
   set: (val) =>
     store.dispatch("SET_DIALOG_OPEN", {
       isDictionaryManageDialogOpen: val,
+    }),
+});
+
+// 音声ライブラリのダウンロード
+const isLibraryManageDialogOpenComputed = computed({
+  get: () => store.state.isLibraryManageDialogOpen,
+  set: (val) =>
+    store.dispatch("SET_DIALOG_OPEN", {
+      isLibraryManageDialogOpen: val,
     }),
 });
 
