@@ -15,6 +15,7 @@ import {
   Phrase,
   PhraseState,
 } from "./type";
+import { EngineId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
@@ -36,6 +37,7 @@ import {
   getMeasureDuration,
   isValidNote,
   isValidScore,
+  isValidSnapType,
   isValidTempo,
   isValidTimeSignature,
   secondToTick,
@@ -51,7 +53,6 @@ import {
   copyScore,
   copySinger,
   generateSingerAndScoreHash,
-  isValidSnapType,
 } from "@/sing/storeHelper";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import {
@@ -59,7 +60,6 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
-import { EngineId } from "@/type/preload";
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -136,12 +136,12 @@ export const singingStoreState: SingingStoreState = {
     ],
     notes: [],
   },
-  phrases: {},
+  phrases: new Map(),
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
-  sequencerSnapType: 16, // スナップタイプ
+  sequencerSnapType: 16,
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
   nowPlaying: false,
@@ -215,7 +215,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SCORE: {
     mutation(state, { score }: { score: Score }) {
-      overlappingNotesDetector.removeNotes(state.score.notes);
+      overlappingNotesDetector.clear();
       state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
       state.selectedNoteIds.clear();
@@ -384,6 +384,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  NOTE_IDS: {
+    getter(state) {
+      const noteIds = state.score.notes.map((value) => value.id);
+      return new Set(noteIds);
+    },
+  },
+
   ADD_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
       const scoreNotes = [...state.score.notes, ...notes];
@@ -393,11 +400,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
     },
-    async action({ state, commit, dispatch }, { notes }: { notes: Note[] }) {
-      const scoreNotes = state.score.notes;
-      const existingIds = new Set(scoreNotes.map((value) => value.id));
+    async action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
+      const existingNoteIds = getters.NOTE_IDS;
       const isValidNotes = notes.every((value) => {
-        return !existingIds.has(value.id) && isValidNote(value);
+        return !existingNoteIds.has(value.id) && isValidNote(value);
       });
       if (!isValidNotes) {
         throw new Error("The notes are invalid.");
@@ -423,11 +429,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
     },
-    async action({ state, commit, dispatch }, { notes }: { notes: Note[] }) {
-      const scoreNotes = state.score.notes;
-      const existingIds = new Set(scoreNotes.map((value) => value.id));
+    async action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
+      const existingNoteIds = getters.NOTE_IDS;
       const isValidNotes = notes.every((value) => {
-        return existingIds.has(value.id) && isValidNote(value);
+        return existingNoteIds.has(value.id) && isValidNote(value);
       });
       if (!isValidNotes) {
         throw new Error("The notes are invalid.");
@@ -461,12 +466,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       });
     },
     async action(
-      { state, commit, dispatch },
+      { getters, commit, dispatch },
       { noteIds }: { noteIds: string[] }
     ) {
-      const scoreNotes = state.score.notes;
-      const existingIds = new Set(scoreNotes.map((value) => value.id));
-      const isValidNoteIds = noteIds.every((value) => existingIds.has(value));
+      const existingNoteIds = getters.NOTE_IDS;
+      const isValidNoteIds = noteIds.every((value) => {
+        return existingNoteIds.has(value);
+      });
       if (!isValidNoteIds) {
         throw new Error("The note ids are invalid.");
       }
@@ -482,10 +488,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.selectedNoteIds.add(noteId);
       }
     },
-    async action({ state, commit }, { noteIds }: { noteIds: string[] }) {
-      const scoreNotes = state.score.notes;
-      const existingIds = new Set(scoreNotes.map((value) => value.id));
-      if (!noteIds.every((value) => existingIds.has(value))) {
+    async action({ getters, commit }, { noteIds }: { noteIds: string[] }) {
+      const existingNoteIds = getters.NOTE_IDS;
+      const isValidNoteIds = noteIds.every((value) => {
+        return existingNoteIds.has(value);
+      });
+      if (!isValidNoteIds) {
         throw new Error("The note ids are invalid.");
       }
       commit("SELECT_NOTES", { noteIds });
@@ -518,10 +526,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.editingLyricNoteId = noteId;
     },
-    async action({ state, commit }, { noteId }: { noteId?: string }) {
-      const scoreNotes = state.score.notes;
-      const existingIds = new Set(scoreNotes.map((value) => value.id));
-      if (noteId != undefined && !existingIds.has(noteId)) {
+    async action({ getters, commit }, { noteId }: { noteId?: string }) {
+      if (noteId != undefined && !getters.NOTE_IDS.has(noteId)) {
         throw new Error("The note id is invalid.");
       }
       commit("SET_EDITING_LYRIC_NOTE_ID", { noteId });
@@ -533,13 +539,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state,
       { phraseKey, phrase }: { phraseKey: string; phrase: Phrase }
     ) {
-      state.phrases[phraseKey] = phrase;
+      state.phrases.set(phraseKey, phrase);
     },
   },
 
   DELETE_PHRASE: {
     mutation(state, { phraseKey }: { phraseKey: string }) {
-      delete state.phrases[phraseKey];
+      state.phrases.delete(phraseKey);
     },
   },
 
@@ -551,7 +557,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseState,
       }: { phraseKey: string; phraseState: PhraseState }
     ) {
-      state.phrases[phraseKey].state = phraseState;
+      const phrase = state.phrases.get(phraseKey);
+      if (phrase == undefined) {
+        throw new Error("phrase is undefined.");
+      }
+      phrase.state = phraseState;
     },
   },
 
@@ -563,7 +573,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         frameAudioQuery,
       }: { phraseKey: string; frameAudioQuery: FrameAudioQuery }
     ) {
-      state.phrases[phraseKey].query = frameAudioQuery;
+      const phrase = state.phrases.get(phraseKey);
+      if (phrase == undefined) {
+        throw new Error("phrase is undefined.");
+      }
+      phrase.query = frameAudioQuery;
     },
   },
 
@@ -572,7 +586,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state,
       { phraseKey, startTime }: { phraseKey: string; startTime: number }
     ) {
-      state.phrases[phraseKey].startTime = startTime;
+      const phrase = state.phrases.get(phraseKey);
+      if (phrase == undefined) {
+        throw new Error("phrase is undefined.");
+      }
+      phrase.startTime = startTime;
     },
   },
 
@@ -842,8 +860,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return foundPhrases;
       };
 
-      const getSortedPhrasesEntries = (phrases: Record<string, Phrase>) => {
-        return Object.entries(phrases).sort((a, b) => {
+      const getSortedPhrasesEntries = (phrases: Map<string, Phrase>) => {
+        return [...phrases.entries()].sort((a, b) => {
           return a[1].startTicks - b[1].startTicks;
         });
       };
@@ -987,9 +1005,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const foundPhrases = await searchPhrases(singer, score);
         for (const [hash, phrase] of foundPhrases) {
-          const key = hash;
-          if (!Object.hasOwn(state.phrases, key)) {
-            commit("SET_PHRASE", { phraseKey: key, phrase });
+          const phraseKey = hash;
+          if (!state.phrases.has(phraseKey)) {
+            commit("SET_PHRASE", { phraseKey, phrase });
 
             // フレーズ追加時の処理
             const noteEvents = generateNoteEvents(
@@ -1005,13 +1023,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               noteEvents,
             };
             transportRef.addSequence(noteSequence);
-            phraseDataMap.set(key, {
+            phraseDataMap.set(phraseKey, {
               source: polySynth,
               sequence: noteSequence,
             });
           }
         }
-        for (const key of Object.keys(state.phrases)) {
+        for (const key of state.phrases.keys()) {
           if (!foundPhrases.has(key)) {
             commit("DELETE_PHRASE", { phraseKey: key });
 
@@ -1842,8 +1860,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             : undefined;
           const clipper = new Clipper(offlineAudioContext);
 
-          for (const [key, phrase] of Object.entries(state.phrases)) {
-            const phraseData = phraseDataMap.get(key);
+          for (const [phraseKey, phrase] of state.phrases) {
+            const phraseData = phraseDataMap.get(phraseKey);
             if (!phraseData) {
               throw new Error("phraseData is undefined");
             }

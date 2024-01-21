@@ -121,7 +121,7 @@ export default defineComponent({
     };
 
     const onMouseUp = () => {
-      if (noteNumberOfKeyBeingPressed.value !== undefined) {
+      if (noteNumberOfKeyBeingPressed.value != undefined) {
         const noteNumber = noteNumberOfKeyBeingPressed.value;
         noteNumberOfKeyBeingPressed.value = undefined;
         store.dispatch("STOP_PREVIEW_SOUND", { noteNumber });
@@ -130,7 +130,7 @@ export default defineComponent({
 
     const onMouseEnter = (noteNumber: number) => {
       if (
-        noteNumberOfKeyBeingPressed.value !== undefined &&
+        noteNumberOfKeyBeingPressed.value != undefined &&
         noteNumberOfKeyBeingPressed.value !== noteNumber
       ) {
         store.dispatch("STOP_PREVIEW_SOUND", {

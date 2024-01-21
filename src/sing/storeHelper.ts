@@ -1,23 +1,10 @@
 import { Note, Score, Singer } from "@/store/type";
-import { getRepresentableNoteTypes } from "@/sing/domain";
 import { generateHash } from "@/sing/utility";
-
-export const MAX_SNAP_TYPE = 32;
 
 export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
 export const DEFAULT_BEAT_TYPE = 4;
-
-export function getSnapTypes(tpqn: number) {
-  return getRepresentableNoteTypes(tpqn).filter((value) => {
-    return value <= MAX_SNAP_TYPE;
-  });
-}
-
-export function isValidSnapType(snapType: number, tpqn: number) {
-  return getSnapTypes(tpqn).some((value) => value === snapType);
-}
 
 export const copyScore = (score: Score): Score => {
   return {
@@ -168,5 +155,9 @@ export class OverlappingNotesDetector {
       }
     }
     return overlappingNoteIds;
+  }
+
+  clear() {
+    this.noteInfos.clear();
   }
 }

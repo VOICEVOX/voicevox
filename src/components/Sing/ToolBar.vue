@@ -99,8 +99,13 @@ import {
   onUnmounted,
 } from "vue";
 import { useStore } from "@/store";
-import { isTriplet, isValidBeatType } from "@/sing/domain";
-import { getSnapTypes } from "@/sing/storeHelper";
+import {
+  getSnapTypes,
+  isTriplet,
+  isValidBeatType,
+  isValidBeats,
+  isValidBpm,
+} from "@/sing/domain";
 
 export default defineComponent({
   name: "SingToolBar",
@@ -142,21 +147,21 @@ export default defineComponent({
 
     const setBpmInputBuffer = (bpmStr: string | number | null) => {
       const bpm = Number(bpmStr);
-      if (!Number.isFinite(bpm) || bpm < 40) {
+      if (!isValidBpm(bpm)) {
         return;
       }
       bpmInputBuffer.value = bpm;
     };
     const setBeatsInputBuffer = (beatsStr: string | number | null) => {
       const beats = Number(beatsStr);
-      if (!Number.isInteger(beats) || beats <= 0) {
+      if (!isValidBeats(beats)) {
         return;
       }
       beatsInputBuffer.value = beats;
     };
     const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
       const beatType = Number(beatTypeStr);
-      if (!Number.isInteger(beatType) || !isValidBeatType(beatType)) {
+      if (!isValidBeatType(beatType)) {
         return;
       }
       beatTypeInputBuffer.value = beatType;

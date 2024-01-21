@@ -180,7 +180,7 @@ export default defineComponent({
             )
         )
       );
-      if (engineId === undefined)
+      if (engineId == undefined)
         throw new Error(
           `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
         );
@@ -209,8 +209,8 @@ export default defineComponent({
 
     const selectedCharacterInfo = computed(() => {
       if (
-        userOrderedCharacterInfos.value === undefined ||
-        store.state.singer === undefined
+        userOrderedCharacterInfos.value == undefined ||
+        store.state.singer == undefined
       )
         return undefined;
       return store.getters.CHARACTER_INFO(

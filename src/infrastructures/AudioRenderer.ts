@@ -541,7 +541,7 @@ class AudioPlayerVoice {
    * @param offset オフセット（秒）
    */
   play(contextTime: number, offset: number) {
-    if (this.stopContextTime !== undefined) {
+    if (this.stopContextTime != undefined) {
       throw new Error("Already started.");
     }
     this.audioBufferSourceNode.start(contextTime, offset);
@@ -555,7 +555,7 @@ class AudioPlayerVoice {
    * @param contextTime 停止する時刻（コンテキスト時刻）
    */
   stop(contextTime: number) {
-    if (this.stopContextTime === undefined) {
+    if (this.stopContextTime == undefined) {
       throw new Error("Not started.");
     }
     if (contextTime < this.stopContextTime) {
@@ -740,7 +740,7 @@ class SynthVoice {
     const stopContextTime = t0 + rel * 4;
 
     if (
-      this.stopContextTime === undefined ||
+      this.stopContextTime == undefined ||
       stopContextTime < this.stopContextTime
     ) {
       // リリースのスケジュールを行う
@@ -796,7 +796,7 @@ export class PolySynth implements Instrument {
     };
 
     this.gainNode = new GainNode(this.audioContext);
-    this.gainNode.gain.value = options?.volume ?? 0.12;
+    this.gainNode.gain.value = options?.volume ?? 0.11;
   }
 
   /**
@@ -833,7 +833,7 @@ export class PolySynth implements Instrument {
       });
       this.voices.push(voice);
     }
-    if (duration !== undefined) {
+    if (duration != undefined) {
       voice.noteOff(contextTime + duration);
     }
   }
