@@ -169,7 +169,7 @@ describe("store/vuex.js test", () => {
           ],
           notes: [],
         },
-        phrases: {},
+        phrases: new Map(),
         isShowSinger: true,
         sequencerZoomX: 1,
         sequencerZoomY: 1,

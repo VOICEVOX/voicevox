@@ -766,10 +766,9 @@ export type Phrase = {
 export type SingingStoreState = {
   singer?: Singer;
   score: Score;
-  phrases: Record<string, Phrase>;
+  phrases: Map<string, Phrase>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
-  // NOTE: オーディオ再生はボイスと同様もしくは拡張して使う？
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
@@ -821,6 +820,10 @@ export type SingingStoreTypes = {
   REMOVE_TIME_SIGNATURE: {
     mutation: { measureNumber: number };
     action(payload: { measureNumber: number }): void;
+  };
+
+  NOTE_IDS: {
+    getter: Set<string>;
   };
 
   ADD_NOTES: {

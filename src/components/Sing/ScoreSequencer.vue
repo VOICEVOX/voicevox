@@ -308,7 +308,7 @@ export default defineComponent({
       return notes.value.filter((value) => selectedNoteIds.has(value.id));
     });
     const phraseInfos = computed(() => {
-      return Object.entries(state.phrases).map(([key, phrase]) => {
+      return [...state.phrases.entries()].map(([key, phrase]) => {
         const startBaseX = tickToBaseX(phrase.startTicks, tpqn.value);
         const endBaseX = tickToBaseX(phrase.endTicks, tpqn.value);
         const startX = startBaseX * zoomX.value;
@@ -330,6 +330,7 @@ export default defineComponent({
     let previewRequestId = 0;
     let dragStartTicks = 0;
     let dragStartNoteNumber = 0;
+    let dragStartGuideLineTicks = 0;
     let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
     let edited = false; // プレビュー終了時にScoreの変更を行うかどうかを表す変数
     // ダブルクリック
@@ -422,11 +423,10 @@ export default defineComponent({
         edited = true;
       }
 
-      // 当たり判定を0.25だけずらす
-      const guidelineTicks =
-        Math.round(dragStartTicks / snapTicks.value - 0.25) * snapTicks.value +
-        movingTicks;
-      const guideLineBaseX = tickToBaseX(guidelineTicks, tpqn.value);
+      const guideLineBaseX = tickToBaseX(
+        dragStartGuideLineTicks + movingTicks,
+        tpqn.value
+      );
       guideLineX.value = guideLineBaseX * zoomX.value;
     };
 
@@ -557,8 +557,7 @@ export default defineComponent({
       note?: Note
     ) => {
       if (nowPreviewing.value) {
-        // RESIZE_RIGHT・RESIZE_LEFTのあとにADDも発生するので、その場合は無視する
-        // TODO: stopPropagation付けたり、他のイベントではエラーを投げるようにする
+        store.dispatch("LOG_WARN", "startPreview was called during preview.");
         return;
       }
       const sequencerBodyElement = sequencerBody.value;
@@ -577,6 +576,8 @@ export default defineComponent({
       const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
       const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
+      const guideLineTicks =
+        Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
       const copiedNotes: Note[] = [];
       if (mode === "ADD") {
         if (cursorNoteNumber < 0) {
@@ -584,8 +585,7 @@ export default defineComponent({
         }
         note = {
           id: uuidv4(),
-          position:
-            Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value,
+          position: guideLineTicks,
           duration: snapTicks.value,
           noteNumber: cursorNoteNumber,
           lyric: getDoremiFromNoteNumber(cursorNoteNumber),
@@ -626,6 +626,7 @@ export default defineComponent({
       previewMode = mode;
       dragStartTicks = cursorTicks;
       dragStartNoteNumber = cursorNoteNumber;
+      dragStartGuideLineTicks = guideLineTicks;
       draggingNoteId = note.id;
       edited = mode === "ADD";
       copiedNotesForPreview.clear();

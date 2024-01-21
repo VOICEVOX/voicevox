@@ -1,6 +1,8 @@
 import { Note, Score, Tempo, TimeSignature } from "@/store/type";
 
 const BEAT_TYPES = [2, 4, 8, 16];
+const MIN_BPM = 40;
+const MAX_SNAP_TYPE = 32;
 
 export const isValidTpqn = (tpqn: number) => {
   return (
@@ -10,13 +12,20 @@ export const isValidTpqn = (tpqn: number) => {
   );
 };
 
+export const isValidBpm = (bpm: number) => {
+  return Number.isFinite(bpm) && bpm >= MIN_BPM;
+};
+
 export const isValidTempo = (tempo: Tempo) => {
   return (
     Number.isInteger(tempo.position) &&
-    Number.isFinite(tempo.bpm) &&
     tempo.position >= 0 &&
-    tempo.bpm >= 40
+    isValidBpm(tempo.bpm)
   );
+};
+
+export const isValidBeats = (beats: number) => {
+  return Number.isInteger(beats) && beats >= 1;
 };
 
 export const isValidBeatType = (beatType: number) => {
@@ -26,9 +35,8 @@ export const isValidBeatType = (beatType: number) => {
 export const isValidTimeSignature = (timeSignature: TimeSignature) => {
   return (
     Number.isInteger(timeSignature.measureNumber) &&
-    Number.isInteger(timeSignature.beats) &&
-    timeSignature.measureNumber > 0 &&
-    timeSignature.beats > 0 &&
+    timeSignature.measureNumber >= 1 &&
+    isValidBeats(timeSignature.beats) &&
     isValidBeatType(timeSignature.beatType)
   );
 };
@@ -39,7 +47,7 @@ export const isValidNote = (note: Note) => {
     Number.isInteger(note.duration) &&
     Number.isInteger(note.noteNumber) &&
     note.position >= 0 &&
-    note.duration > 0 &&
+    note.duration >= 1 &&
     note.noteNumber >= 0 &&
     note.noteNumber <= 127
   );
@@ -47,7 +55,7 @@ export const isValidNote = (note: Note) => {
 
 export const isValidTempos = (tempos: Tempo[]) => {
   return (
-    tempos.length > 0 &&
+    tempos.length >= 1 &&
     tempos[0].position === 0 &&
     tempos.every((value) => isValidTempo(value))
   );
@@ -55,7 +63,7 @@ export const isValidTempos = (tempos: Tempo[]) => {
 
 export const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
   return (
-    timeSignatures.length > 0 &&
+    timeSignatures.length >= 1 &&
     timeSignatures[0].measureNumber === 1 &&
     timeSignatures.every((value) => isValidTimeSignature(value))
   );
@@ -73,24 +81,6 @@ export const isValidScore = (score: Score) => {
     isValidNotes(score.notes)
   );
 };
-
-export function noteNumberToFrequency(noteNumber: number) {
-  return 440 * Math.pow(2, (noteNumber - 69) / 12);
-}
-
-export function linearToDecibel(linearValue: number) {
-  if (linearValue === 0) {
-    return -1000;
-  }
-  return 20 * Math.log10(linearValue);
-}
-
-export function decibelToLinear(decibelValue: number) {
-  if (decibelValue <= -1000) {
-    return 0;
-  }
-  return Math.pow(10, decibelValue / 20);
-}
 
 const tickToSecondForConstantBpm = (
   ticks: number,
@@ -255,4 +245,32 @@ export function getRepresentableNoteTypes(tpqn: number) {
 
 export function isTriplet(noteType: number) {
   return noteType % 3 === 0;
+}
+
+export function noteNumberToFrequency(noteNumber: number) {
+  return 440 * Math.pow(2, (noteNumber - 69) / 12);
+}
+
+export function linearToDecibel(linearValue: number) {
+  if (linearValue === 0) {
+    return -1000;
+  }
+  return 20 * Math.log10(linearValue);
+}
+
+export function decibelToLinear(decibelValue: number) {
+  if (decibelValue <= -1000) {
+    return 0;
+  }
+  return Math.pow(10, decibelValue / 20);
+}
+
+export function getSnapTypes(tpqn: number) {
+  return getRepresentableNoteTypes(tpqn).filter((value) => {
+    return value <= MAX_SNAP_TYPE;
+  });
+}
+
+export function isValidSnapType(snapType: number, tpqn: number) {
+  return getSnapTypes(tpqn).some((value) => value === snapType);
 }
