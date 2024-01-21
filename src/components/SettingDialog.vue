@@ -902,7 +902,9 @@
               </q-card-actions>
               <q-card-actions class="q-px-md bg-surface">
                 <div>複数選択</div>
-                <div aria-label="複数のテキスト欄を選択できるようにします。">
+                <div
+                  aria-label="複数のテキスト欄を選択できるようにします。（操作方法についてはヘルプを参照してください）"
+                >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
@@ -911,7 +913,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      複数のテキスト欄を選択できるようにします。
+                      複数のテキスト欄を選択できるようにします。（操作方法についてはヘルプを参照してください）
                     </q-tooltip>
                   </q-icon>
                 </div>
