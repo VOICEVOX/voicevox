@@ -2,9 +2,9 @@
 
 ## 動作環境・仕様に関する質問
 
-## Q. 動作環境を教えてください
+### Q. 動作環境を教えてください
 
-### CPU 版
+#### CPU 版
 
 Windows／Mac／Linux 搭載の PC に対応しています。
 
@@ -12,7 +12,7 @@ Windows／Mac／Linux 搭載の PC に対応しています。
 ※Mac：macOS Catalina 以降  
 ※Linux：Ubuntu 20.04
 
-### GPU 版
+#### GPU 版
 
 DirectML 対応の GPU を搭載した Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
 
