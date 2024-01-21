@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.15.2",
+    "descriptions": ["選択中のキャラの順番を元に戻す"],
+    "contributors": []
+  },
+  {
     "version": "0.15.1",
     "descriptions": ["Mac版が起動しない問題の解決"],
     "contributors": []
