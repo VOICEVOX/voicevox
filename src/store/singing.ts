@@ -15,6 +15,7 @@ import {
   Phrase,
   PhraseState,
 } from "./type";
+import { EngineId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
@@ -59,7 +60,6 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
-import { EngineId } from "@/type/preload";
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,

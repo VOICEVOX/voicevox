@@ -101,6 +101,7 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
+      <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
       <sequencer-note
         v-for="note in unselectedNotes"
         :key="note.id"
@@ -230,12 +231,20 @@ export default defineComponent({
     const state = store.state;
     // 分解能（Ticks Per Quarter Note）
     const tpqn = computed(() => state.score.tpqn);
-    // ノート
-    const notes = computed(() => state.score.notes);
     // テンポ
     const tempos = computed(() => state.score.tempos);
     // 拍子
     const timeSignatures = computed(() => state.score.timeSignatures);
+    // ノート
+    const notes = computed(() => state.score.notes);
+    const unselectedNotes = computed(() => {
+      const selectedNoteIds = state.selectedNoteIds;
+      return notes.value.filter((value) => !selectedNoteIds.has(value.id));
+    });
+    const selectedNotes = computed(() => {
+      const selectedNoteIds = state.selectedNoteIds;
+      return notes.value.filter((value) => selectedNoteIds.has(value.id));
+    });
     // ズーム状態
     const zoomX = computed(() => state.sequencerZoomX);
     const zoomY = computed(() => state.sequencerZoomY);
@@ -245,11 +254,8 @@ export default defineComponent({
     });
     // シーケンサグリッド
     const gridCellTicks = snapTicks; // ひとまずスナップ幅＝グリッドセル幅
-    const gridCellBaseWidth = computed(() => {
-      return tickToBaseX(gridCellTicks.value, tpqn.value);
-    });
     const gridCellWidth = computed(() => {
-      return gridCellBaseWidth.value * zoomX.value;
+      return tickToBaseX(gridCellTicks.value, tpqn.value) * zoomX.value;
     });
     const gridCellBaseHeight = getKeyBaseHeight();
     const gridCellHeight = computed(() => {
@@ -299,14 +305,7 @@ export default defineComponent({
       const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
       return Math.floor(baseX * zoomX.value);
     });
-    const unselectedNotes = computed(() => {
-      const selectedNoteIds = state.selectedNoteIds;
-      return notes.value.filter((value) => !selectedNoteIds.has(value.id));
-    });
-    const selectedNotes = computed(() => {
-      const selectedNoteIds = state.selectedNoteIds;
-      return notes.value.filter((value) => selectedNoteIds.has(value.id));
-    });
+    // フレーズ
     const phraseInfos = computed(() => {
       return [...state.phrases.entries()].map(([key, phrase]) => {
         const startBaseX = tickToBaseX(phrase.startTicks, tpqn.value);
@@ -340,7 +339,7 @@ export default defineComponent({
       undefined,
     ];
     let ignoreDoubleClick = false;
-    // ガイドライン
+    // 入力を補助する線
     const showGuideLine = ref(true);
     const guideLineX = ref(0);
 
@@ -576,6 +575,7 @@ export default defineComponent({
       const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
       const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
       const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
+      // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
       const guideLineTicks =
         Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
       const copiedNotes: Note[] = [];
@@ -710,6 +710,7 @@ export default defineComponent({
         const scrollLeft = sequencerBodyElement.scrollLeft;
         const cursorBaseX = (scrollLeft + cursorX) / zoomX.value;
         const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+        // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
         const guideLineTicks =
           Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
         const guideLineBaseX = tickToBaseX(guideLineTicks, tpqn.value);
@@ -1098,6 +1099,35 @@ export default defineComponent({
   position: relative;
 }
 
+.sequencer-grid {
+  display: block;
+  pointer-events: none;
+}
+
+.sequencer-grid-cell {
+  display: block;
+  stroke: #e8e8e8;
+  stroke-width: 1;
+}
+
+.sequencer-grid-cell-white {
+  fill: #fff;
+}
+
+.sequencer-grid-cell-black {
+  fill: #f2f2f2;
+}
+
+.sequencer-grid-measure-line {
+  backface-visibility: hidden;
+  stroke: #b0b0b0;
+}
+
+.sequencer-grid-beat-line {
+  backface-visibility: hidden;
+  stroke: #d0d0d0;
+}
+
 .sequencer-guideline {
   position: absolute;
   top: 0;
@@ -1132,34 +1162,5 @@ export default defineComponent({
   background: colors.$primary;
   border-left: 1px solid rgba(colors.$background-rgb, 0.83);
   border-right: 1px solid rgba(colors.$background-rgb, 0.83);
-}
-
-.sequencer-grid {
-  display: block;
-  pointer-events: none;
-}
-
-.sequencer-grid-cell {
-  display: block;
-  stroke: #e8e8e8;
-  stroke-width: 1;
-}
-
-.sequencer-grid-cell-white {
-  fill: #fff;
-}
-
-.sequencer-grid-cell-black {
-  fill: #f2f2f2;
-}
-
-.sequencer-grid-measure-line {
-  backface-visibility: hidden;
-  stroke: #b0b0b0;
-}
-
-.sequencer-grid-beat-line {
-  backface-visibility: hidden;
-  stroke: #d0d0d0;
 }
 </style>
