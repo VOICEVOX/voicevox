@@ -408,9 +408,6 @@ const updateMenuHeight = () => {
   .to-unselect-item {
     order: -2;
   }
-  .selected-character-item {
-    order: -1; // 選択中のキャラを上にする
-  }
 
   .selected-character-item,
   .selected-style-item,
