@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import semver from "semver";
 import { z } from "zod";
-import { UpdateInfo, updateInfoSchema } from "@/type/preload";
+import { UpdateInfo, UrlString, updateInfoSchema } from "@/type/preload";
 
 /**
  * 現在のバージョンより新しいバージョンがリリースされているか調べる。
@@ -9,7 +9,7 @@ import { UpdateInfo, updateInfoSchema } from "@/type/preload";
  */
 export const useFetchNewUpdateInfos = (
   currentVersionGetter: () => Promise<string>,
-  newUpdateInfosUrl: string
+  newUpdateInfosUrl: UrlString
 ) => {
   const result = ref<
     | {

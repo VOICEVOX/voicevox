@@ -269,6 +269,22 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  // Vuexが準備できるまで待つ
+  WAIT_VUEX_READY: {
+    async action({ state }, { timeout }) {
+      if (state.isVuexReady) return;
+
+      let vuexReadyTimeout = 0;
+      while (!state.isVuexReady) {
+        if (vuexReadyTimeout >= timeout) {
+          throw new Error("Vuexが準備できませんでした");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        vuexReadyTimeout += 300;
+      }
+    },
+  },
+
   SET_INHERIT_AUDIOINFO: {
     mutation(state, { inheritAudioInfo }: { inheritAudioInfo: boolean }) {
       state.inheritAudioInfo = inheritAudioInfo;
