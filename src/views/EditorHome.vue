@@ -189,7 +189,6 @@ import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
-import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
@@ -213,19 +212,18 @@ import SingerTab from "@/components/SingerTab.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
-  EngineId,
   HotkeyActionType,
   HotkeyReturnType,
   PresetKey,
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 const props =
   defineProps<{
-    projectFilePath: string;
+    projectFilePath?: string;
+    isEnginesReady: boolean;
   }>();
 
 const store = useStore();
@@ -500,17 +498,6 @@ const focusCell = ({
   });
 };
 
-// Electronのデフォルトのundo/redoを無効化
-const disableDefaultUndoRedo = (event: KeyboardEvent) => {
-  // ctrl+z, ctrl+shift+z, ctrl+y
-  if (
-    isOnCommandOrCtrlKeyDown(event) &&
-    (event.key == "z" || (!event.shiftKey && event.key == "y"))
-  ) {
-    event.preventDefault();
-  }
-};
-
 const userOrderedCharacterInfos = computed(
   () => store.state.userCharacterOrder
 );
@@ -549,94 +536,61 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
   }
 });
 
-// ソフトウェアを初期化
-const isCompletedInitialStartup = ref(false);
 onMounted(async () => {
-  await store.dispatch("GET_ENGINE_INFOS");
-
-  let engineIds: EngineId[];
-  if (store.state.isMultiEngineOffMode) {
-    // デフォルトエンジンだけを含める
-    const main = Object.values(store.state.engineInfos).find(
-      (engine) => engine.type === "default"
-    );
-    if (!main) {
-      throw new Error("No main engine found");
-    }
-    engineIds = [main.uuid];
-  } else {
-    engineIds = store.state.engineIds;
-  }
-  await store.dispatch("LOAD_USER_CHARACTER_ORDER");
-  await store.dispatch("POST_ENGINE_START", {
-    engineIds,
-  });
-
-  // 辞書を同期
-  await store.dispatch("SYNC_ALL_USER_DICT");
-
-  // プロジェクトファイルが指定されていればロード
-  let projectFileLoaded = false;
-  if (props.projectFilePath != undefined && props.projectFilePath !== "") {
-    projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
-      filePath: props.projectFilePath,
-    });
-  }
-
-  if (!projectFileLoaded) {
-    // 最初のAudioCellを作成
-    const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
-    const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
-      audioItem,
-    });
-    focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
-
-    // 最初の話者を初期化
-    store.dispatch("SETUP_SPEAKER", {
-      audioKeys: [newAudioKey],
-      engineId: audioItem.voice.engineId,
-      styleId: audioItem.voice.styleId,
-    });
-  }
-
-  // ショートカットキー操作を止める条件の設定
-  // 止めるなら`true`を返す
-  Mousetrap.prototype.stopCallback = (
-    e: Mousetrap.ExtendedKeyboardEvent, // 未使用
-    element: Element,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    combo: string // 未使用
-  ) => {
-    return (
-      element.tagName === "INPUT" ||
-      element.tagName === "SELECT" ||
-      element.tagName === "TEXTAREA" ||
-      (element instanceof HTMLElement && element.contentEditable === "true") ||
-      // メニュー項目ではショートカットキーを無効化
-      element.classList.contains("q-item")
-    );
-  };
-
   // ショートカットキーの設定
-  document.addEventListener("keydown", disableDefaultUndoRedo);
-
   hotkeyActionsNative.forEach((item) => {
     document.addEventListener("keyup", item);
   });
-
-  // 設定の読み込みを待機する
-  // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
-  await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
-
-  isAcceptRetrieveTelemetryDialogOpenComputed.value =
-    store.state.acceptRetrieveTelemetry === "Unconfirmed";
-
-  isAcceptTermsDialogOpenComputed.value =
-    import.meta.env.MODE !== "development" &&
-    store.state.acceptTerms !== "Accepted";
-
-  isCompletedInitialStartup.value = true;
 });
+
+// ソフトウェアを初期化
+const isCompletedInitialStartup = ref(false);
+const unwatchIsEnginesReady = watch(
+  // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
+  () => props.isEnginesReady,
+  async (isEnginesReady) => {
+    if (!isEnginesReady) throw new Error("isEnginesReady should be true");
+
+    // プロジェクトファイルが指定されていればロード
+    let projectFileLoaded = false;
+    if (props.projectFilePath != undefined && props.projectFilePath !== "") {
+      projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
+        filePath: props.projectFilePath,
+      });
+    }
+
+    if (!projectFileLoaded) {
+      // 最初のAudioCellを作成
+      const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
+      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+        audioItem,
+      });
+      focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
+
+      // 最初の話者を初期化
+      store.dispatch("SETUP_SPEAKER", {
+        audioKeys: [newAudioKey],
+        engineId: audioItem.voice.engineId,
+        styleId: audioItem.voice.styleId,
+      });
+    }
+
+    // 設定の読み込みを待機する
+    // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
+    await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
+
+    isAcceptRetrieveTelemetryDialogOpenComputed.value =
+      store.state.acceptRetrieveTelemetry === "Unconfirmed";
+
+    isAcceptTermsDialogOpenComputed.value =
+      import.meta.env.MODE !== "development" &&
+      store.state.acceptTerms !== "Accepted";
+
+    isCompletedInitialStartup.value = true;
+
+    unwatchIsEnginesReady();
+  }
+);
 
 // エンジン待機
 // TODO: 個別のエンジンの状態をUIで確認できるようにする
@@ -868,6 +822,7 @@ const showAddAudioItemButton = computed(() => {
   return store.state.showAddAudioItemButton;
 });
 
+// 台本欄の空きスペースがクリックされたら選択解除
 const onAudioCellPaneClick = () => {
   if (
     store.state.experimentalSetting.enableMultiSelect &&
