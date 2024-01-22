@@ -1,7 +1,7 @@
 <template>
   <error-boundary>
     <!-- TODO: メニューバーをEditorHomeから移動する -->
-    <router-view v-if="isVuexReady" v-slot="{ Component }">
+    <router-view v-slot="{ Component }">
       <keep-alive>
         <component
           :is="Component"
@@ -49,10 +49,9 @@ watch(
 );
 
 // ソフトウェアを初期化
-const isVuexReady = ref(false);
 const isEnginesReady = ref(false);
 onMounted(async () => {
-  const initVuexPromise = store.dispatch("INIT_VUEX");
+  await store.dispatch("INIT_VUEX");
 
   // Electronのデフォルトのundo/redoを無効化
   const disableDefaultUndoRedo = (event: KeyboardEvent) => {
@@ -83,9 +82,6 @@ onMounted(async () => {
       element.classList.contains("q-item")
     );
   };
-
-  await initVuexPromise;
-  isVuexReady.value = true;
 
   // エンジンの初期化開始
 
