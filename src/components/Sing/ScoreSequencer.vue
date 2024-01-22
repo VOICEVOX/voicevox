@@ -331,6 +331,7 @@ export default defineComponent({
     let dragStartNoteNumber = 0;
     let dragStartGuideLineTicks = 0;
     let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
+    let executePreviewProcess = false;
     let edited = false; // プレビュー終了時にScoreの変更を行うかどうかを表す変数
     // ダブルクリック
     let mouseDownNoteId: string | undefined;
@@ -518,17 +519,20 @@ export default defineComponent({
     };
 
     const preview = () => {
-      if (previewMode === "ADD") {
-        previewAdd();
-      }
-      if (previewMode === "MOVE") {
-        previewMove();
-      }
-      if (previewMode === "RESIZE_RIGHT") {
-        previewResizeRight();
-      }
-      if (previewMode === "RESIZE_LEFT") {
-        previewResizeLeft();
+      if (executePreviewProcess) {
+        if (previewMode === "ADD") {
+          previewAdd();
+        }
+        if (previewMode === "MOVE") {
+          previewMove();
+        }
+        if (previewMode === "RESIZE_RIGHT") {
+          previewResizeRight();
+        }
+        if (previewMode === "RESIZE_LEFT") {
+          previewResizeLeft();
+        }
+        executePreviewProcess = false;
       }
       previewRequestId = requestAnimationFrame(preview);
     };
@@ -628,6 +632,7 @@ export default defineComponent({
       dragStartNoteNumber = cursorNoteNumber;
       dragStartGuideLineTicks = guideLineTicks;
       draggingNoteId = note.id;
+      executePreviewProcess = true;
       edited = mode === "ADD";
       copiedNotesForPreview.clear();
       for (const copiedNote of copiedNotes) {
@@ -706,7 +711,9 @@ export default defineComponent({
       cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
       cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
 
-      if (!nowPreviewing.value) {
+      if (nowPreviewing.value) {
+        executePreviewProcess = true;
+      } else {
         const scrollLeft = sequencerBodyElement.scrollLeft;
         const cursorBaseX = (scrollLeft + cursorX) / zoomX.value;
         const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
