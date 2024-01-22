@@ -1060,7 +1060,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             continue;
           }
 
-          if (phrase.state === "WAITING_TO_BE_RENDERED") {
+          if (
+            phrase.state === "WAITING_TO_BE_RENDERED" ||
+            phrase.state === "COULD_NOT_RENDER"
+          ) {
             commit("SET_STATE_TO_PHRASE", {
               phraseKey,
               phraseState: "NOW_RENDERING",
@@ -1073,14 +1076,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!phrase.query) {
             const engineId = phrase.singer.engineId;
             const frameRate = state.engineManifests[engineId].frameRate;
-            const restDurationSeconds = 1; // 仮置き
+            const restDurationSeconds = 1; // 前後の休符の長さはとりあえず1秒に設定
 
             const frameAudioQuery = await fetchQuery(
               phrase.singer.engineId,
               phrase.score,
               frameRate,
               restDurationSeconds
-            );
+            ).catch((error) => {
+              commit("SET_STATE_TO_PHRASE", {
+                phraseKey,
+                phraseState: "COULD_NOT_RENDER",
+              });
+              throw error;
+            });
             const phonemes = getPhonemes(frameAudioQuery);
 
             window.electron.logInfo(
@@ -1124,7 +1133,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (phraseData.blob) {
               window.electron.logInfo(`Loaded audio buffer from cache.`);
             } else {
-              phraseData.blob = await synthesize(phrase.singer, phrase.query);
+              const blob = await synthesize(phrase.singer, phrase.query).catch(
+                (error) => {
+                  commit("SET_STATE_TO_PHRASE", {
+                    phraseKey,
+                    phraseState: "COULD_NOT_RENDER",
+                  });
+                  throw error;
+                }
+              );
+
+              phraseData.blob = blob;
               phraseAudioBlobCache.set(phraseKey, phraseData.blob);
 
               window.electron.logInfo(`Synthesized.`);
