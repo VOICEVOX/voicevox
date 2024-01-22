@@ -178,12 +178,8 @@
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
   <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
-  <update-notification-dialog
-    v-if="newUpdateResult.status == 'updateAvailable'"
-    v-model="isUpdateNotificationDialogOpenComputed"
-    :latest-version="newUpdateResult.latestVersion"
-    :new-update-infos="newUpdateResult.newUpdateInfos"
-    @skip-this-version-click="handleSkipThisVersionClick"
+  <update-notification-dialog-container
+    :can-open-dialog="canOpenNotificationDialog"
   />
 </template>
 
@@ -194,7 +190,6 @@ import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
 import Mousetrap from "mousetrap";
-import semver from "semver";
 import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
@@ -213,8 +208,6 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
-import UpdateNotificationDialog from "@/components/UpdateNotificationDialog.vue";
-import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import SingerTab from "@/components/SingerTab.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import {
@@ -555,23 +548,6 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
   }
 });
 
-// エディタのアップデート確認
-if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
-  throw new Error(
-    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。"
-  );
-}
-const newUpdateResult = useFetchNewUpdateInfos(
-  () => window.electron.getAppInfos().then((obj) => obj.version), // アプリのバージョン
-  import.meta.env.VITE_LATEST_UPDATE_INFOS_URL
-);
-const handleSkipThisVersionClick = (version: string) => {
-  store.dispatch("SET_ROOT_MISC_SETTING", {
-    key: "skipUpdateVersion",
-    value: version,
-  });
-};
-
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
 onMounted(async () => {
@@ -649,14 +625,7 @@ onMounted(async () => {
 
   // 設定の読み込みを待機する
   // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
-  let vuexReadyTimeout = 0;
-  while (!store.state.isVuexReady) {
-    if (vuexReadyTimeout >= 15000) {
-      throw new Error("Vuexが準備できませんでした");
-    }
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    vuexReadyTimeout += 300;
-  }
+  await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
 
   isAcceptRetrieveTelemetryDialogOpenComputed.value =
     store.state.acceptRetrieveTelemetry === "Unconfirmed";
@@ -664,22 +633,6 @@ onMounted(async () => {
   isAcceptTermsDialogOpenComputed.value =
     import.meta.env.MODE !== "development" &&
     store.state.acceptTerms !== "Accepted";
-
-  // アップデート通知ダイアログ
-  if (newUpdateResult.value.status === "updateAvailable") {
-    const skipUpdateVersion = store.state.skipUpdateVersion ?? "0.0.0";
-    if (semver.valid(skipUpdateVersion) == undefined) {
-      // 処理を止めるほどではないので警告だけ
-      store.dispatch(
-        "LOG_WARN",
-        `skipUpdateVersionが不正です: ${skipUpdateVersion}`
-      );
-    } else if (
-      semver.gt(newUpdateResult.value.latestVersion, skipUpdateVersion)
-    ) {
-      isUpdateNotificationDialogOpenComputed.value = true;
-    }
-  }
 
   isCompletedInitialStartup.value = true;
 });
@@ -856,18 +809,15 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
     }),
 });
 
-// アップデート通知
-const isUpdateNotificationDialogOpenComputed = computed({
-  get: () =>
+// エディタのアップデート確認ダイアログ
+const canOpenNotificationDialog = computed(() => {
+  return (
     !store.state.isAcceptTermsDialogOpen &&
     !store.state.isCharacterOrderDialogOpen &&
     !store.state.isDefaultStyleSelectDialogOpen &&
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
-    store.state.isUpdateNotificationDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isUpdateNotificationDialogOpen: val,
-    }),
+    isCompletedInitialStartup.value
+  );
 });
 
 // ドラッグ＆ドロップ

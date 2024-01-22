@@ -55,6 +55,12 @@ module.exports = {
         order: ["template", "script", "style"],
       },
     ],
+    "vue/multi-word-component-names": [
+      "error",
+      {
+        ignores: ["Container", "Presentation"],
+      },
+    ],
     "import/order": "error",
     "no-restricted-syntax": [
       "warn",

@@ -1559,6 +1559,10 @@ export type UiStoreTypes = {
     action(): void;
   };
 
+  WAIT_VUEX_READY: {
+    action(palyoad: { timeout: number }): Promise<void>;
+  };
+
   HYDRATE_UI_STORE: {
     action(): void;
   };
