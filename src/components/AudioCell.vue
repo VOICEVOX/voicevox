@@ -567,7 +567,7 @@ const contextMenudata = ref<
   { type: "separator" },
   {
     type: "button",
-    label: "内容をテキストのみに適用",
+    label: "読みを変えずに適用",
     onClick: async () => {
       contextMenu.value?.hide();
       isChangeFlag.value = false;
@@ -676,7 +676,8 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     height: 2rem;
     width: v-bind(textLineNumberWidth);
     line-height: 2rem;
-    margin-right: -0.3rem;
+    margin-left: -0.1rem;
+    margin-right: -0.4rem;
     opacity: 0.6;
     text-align: right;
     color: colors.$display;
