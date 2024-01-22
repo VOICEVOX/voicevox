@@ -1,6 +1,9 @@
 <template>
   <q-menu
-    :model-value="isOpen"
+    :model-value="isRoot ? undefined : isOpen"
+    :no-parent-event="!isRoot"
+    :anchor="isRoot ? 'top start' : 'top end'"
+    :self="isRoot ? 'bottom start' : 'top start'"
     class="character-menu"
     transition-show="none"
     transition-hide="none"
@@ -44,6 +47,7 @@
           >
             <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
             <character-tree
+              v-model="subMenuOpenFlags[index]"
               :items="item.items"
               @select="onChildSelect([item.id, ...$event])"
             />
@@ -68,16 +72,17 @@ export type ButtonData = {
   items?: ButtonData[];
 };
 
-const isOpen = defineModel<boolean>();
-
 const props =
   defineProps<{
     items: ButtonData[];
+    isRoot?: boolean;
   }>();
 const emit =
   defineEmits<{
     (event: "select", id: string[]): void;
   }>();
+
+const isOpen = defineModel<boolean | undefined>(undefined);
 
 const onSelect = (id: string) => {
   emit("select", [id]);

@@ -6,7 +6,6 @@
     :disable="uiLocked"
     :class="{ opaque: loading }"
     aria-haspopup="menu"
-    @click="isOpen = !isOpen"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
     <div class="icon-container">
@@ -23,13 +22,13 @@
     <div v-if="loading" class="loading">
       <q-spinner color="primary" size="1.6rem" :thickness="7" />
     </div>
-    <character-tree v-model="isOpen" :items="characterTreeItems" />
+    <character-tree :items="characterTreeItems" is-root />
   </q-btn>
 </template>
 
 <script setup lang="ts">
 import { QBtn } from "quasar";
-import { Ref, computed, ref } from "vue";
+import { computed } from "vue";
 import CharacterTree, { ButtonData } from "./CharacterTree.vue";
 import { CharacterInfo, EngineId, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
@@ -68,8 +67,6 @@ const emit = defineEmits({
     );
   },
 });
-
-const isOpen = ref(false);
 
 const selectedCharacter = computed(() => {
   const selectedVoice = props.selectedVoice;
@@ -135,39 +132,44 @@ const getDefaultStyle = (speakerUuid: SpeakerId) => {
 };
 
 const characterTreeItems = computed<ButtonData[]>(() =>
-  props.characterInfos.map((characterInfo) => ({
-    id: characterInfo.metas.speakerUuid,
-    label: characterInfo.metas.speakerName,
-    icon:
-      characterInfo.metas.styles.find(
-        (style) =>
-          style.styleId ===
-          props.defaultStyleIds[characterInfo.metas.speakerUuid].styleId
-      )?.iconPath || "",
-    subIcon:
-      props.engineIcons[
-        getDefaultStyle(characterInfo.metas.speakerUuid).engineId
-      ],
-    treeAlt: `${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`,
-    selected: isSelectedItem(characterInfo),
-  }))
-);
+  props.characterInfos.map((characterInfo) => {
+    const styles: ButtonData[] = characterInfo.metas.styles.map((style) => ({
+      id: `${style.engineId}-${style.styleId}`,
+      label: formatCharacterStyleName(
+        characterInfo.metas.speakerName,
+        style.styleName
+      ),
+      icon: style.iconPath,
+      subIcon: props.engineIcons[style.engineId],
+      treeAlt: `${characterInfo.metas.speakerName}の${style.styleName}スタイル`,
+      selected:
+        selectedCharacter.value != undefined &&
+        selectedCharacter.value.metas.speakerUuid ===
+          characterInfo.metas.speakerUuid &&
+        selectedStyleInfo.value != undefined &&
+        selectedStyleInfo.value.engineId === style.engineId &&
+        selectedStyleInfo.value.styleId === style.styleId,
+    }));
 
-// 高さを制限してメニューが下方向に展開されるようにする
-const buttonRef: Ref<InstanceType<typeof QBtn> | undefined> = ref();
-const heightLimit = "65vh"; // QMenuのデフォルト値
-const maxMenuHeight = ref(heightLimit);
-const updateMenuHeight = () => {
-  if (buttonRef.value == undefined)
-    throw new Error("buttonRef.value == undefined");
-  const el = buttonRef.value.$el;
-  if (!(el instanceof Element)) throw new Error("!(el instanceof Element)");
-  const buttonRect = el.getBoundingClientRect();
-  // QMenuは展開する方向のスペースが不足している場合、自動的に展開方向を変更してしまうためmax-heightで制限する。
-  // AudioDetailよりボタンが下に来ることはないのでその最低高185pxに余裕を持たせた170pxを最小の高さにする。
-  // pxで指定するとウインドウサイズ変更に追従できないので ウインドウの高さの96% - ボタンの下端の座標 でメニューの高さを決定する。
-  maxMenuHeight.value = `max(170px, min(${heightLimit}, calc(96vh - ${buttonRect.bottom}px)))`;
-};
+    return {
+      id: characterInfo.metas.speakerUuid,
+      label: characterInfo.metas.speakerName,
+      icon:
+        characterInfo.metas.styles.find(
+          (style) =>
+            style.styleId ===
+            props.defaultStyleIds[characterInfo.metas.speakerUuid].styleId
+        )?.iconPath || "",
+      subIcon:
+        props.engineIcons[
+          getDefaultStyle(characterInfo.metas.speakerUuid).engineId
+        ],
+      treeAlt: `${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`,
+      selected: isSelectedItem(characterInfo),
+      items: styles.length > 1 ? styles : [],
+    };
+  })
+);
 </script>
 
 <style scoped lang="scss">

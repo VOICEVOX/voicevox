@@ -20,11 +20,11 @@ export default {
 
 <script setup lang="ts">
 import { Ref, computed, ref } from "vue";
+import { QBtn } from "quasar";
 import Presentation from "./Presentation.vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, Voice } from "@/type/preload";
-import { QBtn } from "quasar";
 
 const props = withDefaults(
   defineProps<{
