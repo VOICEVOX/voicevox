@@ -1,5 +1,72 @@
 [
   {
+    "version": "0.15.2",
+    "descriptions": ["選択中のキャラの順番を元に戻す"],
+    "contributors": []
+  },
+  {
+    "version": "0.15.1",
+    "descriptions": ["Mac版が起動しない問題の解決"],
+    "contributors": []
+  },
+  {
+    "version": "0.15.0",
+    "descriptions": [
+      "デフォルトプリセット機能",
+      "最近開いたプロジェクト一覧を追加",
+      "行番号を表示するオプションを追加",
+      "自動でポートを変更するように",
+      "メモ機能・ルビ機能",
+      "テキスト追加ボタンの非表示機能",
+      "複数選択機能",
+      "アップデート通知機能",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "aoirint",
+      "finict",
+      "FujisakiEx",
+      "g-Ratie",
+      "henteko",
+      "Hiroshiba",
+      "Jun-1Il",
+      "k-chop",
+      "kebin628",
+      "K-shir0",
+      "liszt01",
+      "madosuki",
+      "My-MC",
+      "nagi-miaow",
+      "nmori",
+      "nohimazin",
+      "okaits",
+      "raa0121",
+      "risu729",
+      "sabonerune",
+      "sevenc-nanashi",
+      "shm11C3",
+      "siketyan",
+      "sousuke0422",
+      "stmtk1",
+      "takana-v",
+      "tarepan",
+      "thiramisu",
+      "Tksn07",
+      "tomoish",
+      "tuna2134",
+      "tunamaguro",
+      "umi1299",
+      "wappon28dev",
+      "weweweok",
+      "whiteball",
+      "yamachu",
+      "y-chan",
+      "yncat",
+      "yuriko0505"
+    ]
+  },
+  {
     "version": "0.14.11",
     "descriptions": [
       "キャラクター「小夜」「ずんだもん」「もち子さん」「青山龍星」のスタイルを追加・更新"

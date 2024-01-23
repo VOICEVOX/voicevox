@@ -275,16 +275,23 @@
                   engineManifests[selectedId].supportedFeatures
                 "
               >
-                <li
+                <template
                   v-for="(value, feature) in engineManifests[selectedId]
-                    .supportedFeatures !== null
+                    .supportedFeatures != null
                     ? engineManifests[selectedId].supportedFeatures
                     : null"
                   :key="feature"
-                  :class="value ? '' : 'text-warning'"
                 >
-                  {{ getFeatureName(feature) }}：{{ value ? "対応" : "非対応" }}
-                </li>
+                  <!-- TODO: vvlib機能がリリースされたらmanageLibraryも表示するようにする -->
+                  <li
+                    v-if="feature != 'manageLibrary'"
+                    :class="value ? '' : 'text-warning'"
+                  >
+                    {{ getFeatureName(feature) }}：{{
+                      value ? "対応" : "非対応"
+                    }}
+                  </li>
+                </template>
               </ul>
               <span v-else>（取得に失敗しました）</span>
             </div>
@@ -461,7 +468,7 @@ const getFeatureName = (name: keyof SupportedFeatures) => {
     adjustIntonationScale: "全体の抑揚の調整",
     adjustVolumeScale: "全体の音量の調整",
     interrogativeUpspeak: "疑問文の自動調整",
-    synthesisMorphing: "2人の話者でモーフィングした音声を合成",
+    synthesisMorphing: "2種類のスタイルでモーフィングした音声を合成",
     manageLibrary: "音声ライブラリ(vvlib)の管理",
   };
   return featureNameMap[name];

@@ -43,7 +43,7 @@
                   />
                 </template>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>エンジンモード</div>
                 <div
                   aria-label=" GPU モードの利用には GPU が必要です。Linux は
@@ -75,10 +75,7 @@
                   :disable="!gpuSwitchEnabled(selectedEngineId)"
                 >
                   <q-tooltip
-                    anchor="center start"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
+                    :delay="500"
                     :target="!gpuSwitchEnabled(selectedEngineId)"
                   >
                     {{
@@ -87,7 +84,7 @@
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>音声のサンプリングレート</div>
                 <div
                   aria-label="再生と保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。"
@@ -108,6 +105,7 @@
                 <q-select
                   v-model="outputSamplingRate"
                   borderless
+                  dense
                   name="samplingRate"
                   :options="samplingRateOptions"
                   :option-label="renderSamplingRateLabel"
@@ -120,7 +118,73 @@
               <q-card-actions>
                 <h5 class="text-h5">操作</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
+                <div>プリセット機能</div>
+                <div
+                  aria-label="プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
+                >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      プリセット機能を有効にします。パラメータを登録したり適用したりできます。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enablePreset"
+                  @update:model-value="changeEnablePreset"
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-slide-transition>
+                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
+                <div v-show="experimentalSetting.enablePreset">
+                  <q-card-actions
+                    class="q-px-md bg-surface in-slide-transition-workaround"
+                  >
+                    <div>スタイル変更時にデフォルトプリセットを適用</div>
+                    <div
+                      aria-label="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
+                    >
+                      <q-icon
+                        name="help_outline"
+                        size="sm"
+                        class="help-hover-icon"
+                      >
+                        <q-tooltip
+                          :delay="500"
+                          anchor="center right"
+                          self="center left"
+                          transition-show="jump-right"
+                          transition-hide="jump-left"
+                        >
+                          ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。
+                        </q-tooltip>
+                      </q-icon>
+                    </div>
+                    <q-space />
+                    <q-toggle
+                      :model-value="
+                        experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
+                      "
+                      @update:model-value="
+                        changeExperimentalSetting(
+                          'shouldApplyDefaultPresetOnVoiceChanged',
+                          $event
+                        )
+                      "
+                    >
+                    </q-toggle>
+                  </q-card-actions>
+                </div>
+              </q-slide-transition>
+              <q-card-actions class="q-px-md bg-surface">
                 <div>パラメータの引き継ぎ</div>
                 <div
                   aria-label="ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。"
@@ -144,17 +208,11 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>再生位置を追従</div>
                 <div
-                  aria-label="音声再生中の、下部パネルの自動スクロールのモードを選べます。"
+                  aria-label="音声再生中の、詳細調整欄の自動スクロールのモードを選べます。"
                 >
-                  <span
-                    v-for="(obj, key) in activePointScrollModeOptions"
-                    :key="key"
-                    class="visually-hidden"
-                    >{{ `「${obj.label}」モードの場合、${obj.desc}` }}</span
-                  >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
@@ -163,45 +221,56 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      音声再生中の、下部パネルの自動スクロールのモードを選べます。
+                      音声再生中の、詳細調整欄の自動スクロールのモードを選べます。
                     </q-tooltip>
                   </q-icon>
                 </div>
                 <q-space />
-                <div class="scroll-mode-toggle">
-                  <q-radio
-                    v-for="(obj, key) in activePointScrollModeOptions"
-                    :key="key"
-                    v-model="activePointScrollMode"
-                    :val="key"
-                    :label="obj.label"
-                    size="0"
-                    :class="[
-                      'q-px-md',
-                      'q-py-sm',
-                      key !== activePointScrollMode && 'scroll-mode-button',
-                      key === activePointScrollMode &&
-                        'scroll-mode-button-selected',
-                    ]"
-                    :style="[
-                      key === 'CONTINUOUSLY' && 'border-radius: 3px 0 0 3px',
-                      key === 'OFF' && 'border-radius: 0 3px 3px 0',
-                    ]"
-                  >
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      {{ obj.desc }}
+                <q-btn-toggle
+                  v-model="activePointScrollMode"
+                  padding="xs md"
+                  unelevated
+                  color="background"
+                  text-color="display"
+                  toggle-color="primary"
+                  toggle-text-color="display-on-primary"
+                  :options="[
+                    {
+                      label: '連続',
+                      value: 'CONTINUOUSLY',
+                      slot: 'CONTINUOUSLY',
+                    },
+                    {
+                      label: 'ページめくり',
+                      value: 'PAGE',
+                      slot: 'PAGE',
+                    },
+                    {
+                      label: 'オフ',
+                      value: 'OFF',
+                      slot: 'OFF',
+                    },
+                  ]"
+                >
+                  <template #CONTINUOUSLY>
+                    <q-tooltip :delay="500">
+                      現在の再生位置を真ん中に表示します。
                     </q-tooltip>
-                  </q-radio>
-                </div>
+                  </template>
+                  <template #PAGE>
+                    <q-tooltip :delay="500">
+                      現在の再生位置が表示範囲外にある場合にスクロールします。
+                    </q-tooltip>
+                  </template>
+                  <template #OFF>
+                    <q-tooltip :delay="500">
+                      自動でスクロールしません。
+                    </q-tooltip>
+                  </template>
+                </q-btn-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
-                <div>テキスト分割の区切り</div>
+              <q-card-actions class="q-px-md bg-surface">
+                <div>テキスト自動分割</div>
                 <div
                   aria-label="テキスト貼り付けの際のテキストの分割箇所を選べます。"
                 >
@@ -218,6 +287,7 @@
                   </q-icon>
                 </div>
                 <q-space />
+                <!-- FIXME: ツールチップの内容をaria-labelに付ける -->
                 <q-btn-toggle
                   padding="xs md"
                   unelevated
@@ -242,41 +312,21 @@
                   @update:model-value="changeSplitTextWhenPaste($event)"
                 >
                   <template #splitTextPeriodAndNewLine>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
+                    <q-tooltip :delay="500">
                       句点と改行を基にテキストを分割します。
                     </q-tooltip>
                   </template>
                   <template #splitTextNewLine>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
+                    <q-tooltip :delay="500">
                       改行のみを基にテキストを分割します。
                     </q-tooltip>
                   </template>
                   <template #splitTextOFF>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      分割を行いません。
-                    </q-tooltip>
+                    <q-tooltip :delay="500"> 分割を行いません。 </q-tooltip>
                   </template>
                 </q-btn-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>メモ機能</div>
                 <div
                   aria-label="ONの場合、テキストを [] で囲むことで、テキスト中にメモを書けます。"
@@ -301,7 +351,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>ルビ機能</div>
                 <div
                   aria-label="ONの場合、テキストに {ルビ対象|よみかた} と書くことで、テキストの読み方を変えられます。"
@@ -326,7 +376,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>非表示にしたヒントを全て再表示</div>
                 <div
                   aria-label="過去に非表示にしたヒントを全て再表示できます。"
@@ -375,7 +425,7 @@
               <q-card-actions>
                 <h5 class="text-h5">保存</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>書き出し先を固定</div>
                 <div
                   aria-label="ONの場合、書き出す際のフォルダをあらかじめ指定できます。"
@@ -441,7 +491,7 @@
                 v-model:open-dialog="showsFilePatternEditDialog"
               />
 
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>書き出しファイル名パターン</div>
                 <div
                   aria-label="書き出す際のファイル名のパターンをカスタマイズできます。"
@@ -472,10 +522,10 @@
                 />
               </q-card-actions>
 
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>上書き防止</div>
                 <div
-                  aria-label="ONの場合、書き出す際に同名ファイルが既にあった場合に、かわりに連番で保存され、上書きされません。"
+                  aria-label="ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -485,7 +535,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      ONの場合、書き出す際に同名ファイルが既にあった場合に、かわりに連番で保存され、上書きされません。
+                      ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -498,7 +548,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>文字コード</div>
                 <div
                   aria-label="テキストファイルを書き出す際の文字コードを選べます。"
@@ -533,10 +583,10 @@
                   "
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>txtファイルを書き出し</div>
                 <div
-                  aria-label="ONの場合、テキストがtxtファイルとして音声書き出し時に追加で書き出されます。"
+                  aria-label="ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -546,7 +596,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      ONの場合、テキストがtxtファイルとして音声書き出し時に追加で書き出されます。
+                      ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -560,10 +610,10 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>labファイルを書き出し</div>
                 <div
-                  aria-label="ONの場合、リップシンク用のlabファイルが音声書き出し時に追加で書き出されます。"
+                  aria-label="ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -573,7 +623,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      ONの場合、リップシンク用のlabファイルが音声書き出し時に追加で書き出されます。
+                      ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -592,7 +642,7 @@
               <q-card-actions>
                 <h5 class="text-h5">外観</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>テーマ</div>
                 <div aria-label="エディタの色を選べます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -620,7 +670,7 @@
                 />
               </q-card-actions>
 
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>フォント</div>
                 <div aria-label="エディタのフォントを選べます。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -651,7 +701,7 @@
                   @update:model-value="changeEditorFont($event)"
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>行番号の表示</div>
                 <div
                   aria-label="ONの場合、テキスト欄の左側に行番号が表示されます。"
@@ -675,10 +725,10 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>テキスト追加ボタンの表示</div>
                 <div
-                  aria-label="OFFの場合、右下にテキスト追加ボタンが表示されません。"
+                  aria-label="OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は Shift + Enter で追加できます）"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -688,7 +738,8 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      OFFの場合、右下にテキスト追加ボタンが表示されません。
+                      OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は
+                      Shift + Enter で追加できます）
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -706,16 +757,16 @@
               <q-card-actions>
                 <h5 class="text-h5">高度な設定</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>マルチエンジン機能</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
                     >
                       複数のVOICEVOX準拠エンジンを利用可能にする
                     </q-tooltip>
@@ -728,7 +779,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>起動時に前回開いていたプロジェクトを開く</div>
                 <div
                   aria-label="ONの場合、前回開いていたプロジェクトが開いた状態で立ち上がります。"
@@ -752,7 +803,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>音声をステレオ化</div>
                 <div
                   aria-label="ONの場合、音声データがモノラルからステレオに変換されてから再生・保存が行われます。"
@@ -779,7 +830,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions
-                class="q-px-md q-py-none bg-surface"
+                class="q-px-md bg-surface"
                 :class="{ disabled: !canSetAudioOutputDevice }"
               >
                 <div>再生デバイス</div>
@@ -804,7 +855,7 @@
                   v-model="currentAudioOutputDeviceComputed"
                   :disable="!canSetAudioOutputDevice"
                   dense
-                  label="再生デバイス"
+                  name="audioOutputDevice"
                   :options="availableAudioOutputDevices"
                   class="col-7"
                 >
@@ -818,63 +869,7 @@
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
               <!-- 今後実験的機能を追加する場合はここに追加 -->
-              <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>プリセット機能</div>
-                <div
-                  aria-label="プリセット機能を有効にします。あらかじめ登録しておいた話速などのパラメータを呼び出せるようになります。"
-                >
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      プリセット機能を有効にします。あらかじめ登録しておいた話速などのパラメータを呼び出せるようになります。
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-toggle
-                  :model-value="experimentalSetting.enablePreset"
-                  @update:model-value="changeEnablePreset"
-                >
-                </q-toggle>
-              </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>スタイル変更時にデフォルトプリセットを適用</div>
-                <div
-                  aria-label="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
-                >
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-toggle
-                  :model-value="
-                    experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
-                  "
-                  :disable="!experimentalSetting.enablePreset"
-                  @update:model-value="
-                    changeExperimentalSetting(
-                      'shouldApplyDefaultPresetOnVoiceChanged',
-                      $event
-                    )
-                  "
-                >
-                </q-toggle>
-              </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>疑問文を自動調整</div>
                 <div
                   aria-label="ONの場合、疑問文の語尾の音高が自動的に上げられます。"
@@ -903,10 +898,10 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>モーフィング機能</div>
                 <div
-                  aria-label="モーフィング機能を有効にします。2つのスタイルの中間を選べるようになります。"
+                  aria-label="モーフィング機能を有効にします。2つの音声混ぜられるようになります。"
                 >
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -916,7 +911,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      モーフィング機能を有効にします。2つのスタイルの中間を選べるようになります。
+                      モーフィング機能を有効にします。2つの音声混ぜられるようになります。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -929,7 +924,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>複数選択</div>
                 <div aria-label="複数のテキスト欄を選択できるようにします。">
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -953,8 +948,8 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>調整結果の保持</div>
+              <q-card-actions v-if="!isProduction" class="q-px-md bg-surface">
+                <div>[開発時のみ機能] 調整結果の保持</div>
                 <div
                   aria-label="テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。"
                 >
@@ -988,7 +983,7 @@
               <q-card-actions>
                 <h5 class="text-h5">データ収集</h5>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
+              <q-card-actions class="q-px-md bg-surface">
                 <div>ソフトウェア利用状況のデータ収集を許可</div>
                 <div
                   aria-label="ONの場合、各UIの利用率などのデータが送信され、VOICEVOXの改善に役立てられます。テキストデータや音声データは送信されません。"
@@ -1021,11 +1016,11 @@ import { computed, ref } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
+  isProduction,
   SavingSetting,
   EngineSettingType,
   ExperimentalSettingType,
   ActivePointScrollMode,
-  SplitTextWhenPasteType,
   RootMiscSettingType,
   EngineId,
 } from "@/type/preload";
@@ -1078,26 +1073,6 @@ const activePointScrollMode = computed({
     });
   },
 });
-const activePointScrollModeOptions: Record<
-  ActivePointScrollMode,
-  {
-    label: string;
-    desc: string;
-  }
-> = {
-  CONTINUOUSLY: {
-    label: "連続",
-    desc: "現在の再生位置を真ん中に表示します。",
-  },
-  PAGE: {
-    label: "ページめくり",
-    desc: "現在の再生位置が表示範囲外にある場合にスクロールします。",
-  },
-  OFF: {
-    label: "オフ",
-    desc: "自動でスクロールしません。",
-  },
-};
 const experimentalSetting = computed(() => store.state.experimentalSetting);
 
 // 非表示にしたヒントの再表示
@@ -1135,34 +1110,8 @@ const [enableAutoLoad, setEnableAutoLoad] =
 const [showTextLineNumber, changeShowTextLineNumber] =
   useRootMiscSetting("showTextLineNumber");
 
-// エディタの＋ボタン表示設定
-const showAddAudioItemButton = computed(
-  () => store.state.showAddAudioItemButton
-);
-const changeShowAddAudioItemButton = async (
-  showAddAudioItemButton: boolean
-) => {
-  store.dispatch("SET_ROOT_MISC_SETTING", {
-    key: "showAddAudioItemButton",
-    value: showAddAudioItemButton,
-  });
-
-  // 設定をオフにする場合はヒントを表示
-  if (!showAddAudioItemButton) {
-    const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
-      title: "エディタの＋ボタンを非表示にする",
-      message: "テキスト欄は Shift + Enter で追加できます",
-      actionName: "非表示",
-    });
-    if (result === "CANCEL") {
-      // キャンセルしたら設定を元に戻す
-      store.dispatch("SET_ROOT_MISC_SETTING", {
-        key: "showAddAudioItemButton",
-        value: true,
-      });
-    }
-  }
-};
+const [showAddAudioItemButton, changeShowAddAudioItemButton] =
+  useRootMiscSetting("showAddAudioItemButton");
 
 const [enableMemoNotation, changeEnableMemoNotation] =
   useRootMiscSetting("enableMemoNotation");
@@ -1378,10 +1327,6 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 @use '@/styles/visually-hidden' as visually-hidden;
 @use "@/styles/colors" as colors;
 
-.visually-hidden {
-  @include visually-hidden.visually-hidden;
-}
-
 .text-h5 {
   margin: 0;
 }
@@ -1408,30 +1353,10 @@ const renderEngineNameLabel = (engineId: EngineId) => {
   background: colors.$background;
 }
 
-.scroll-mode-toggle {
-  background: colors.$background;
-  border-radius: 3px;
-}
-
-.scroll-mode-button {
-  background: colors.$background;
-  color: colors.$display;
-  transition: 0.5s;
-}
-
-.scroll-mode-button-selected {
-  background: colors.$primary;
-  color: colors.$display-on-primary;
-}
-
 .text-ellipsis {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.scroll-mode-button:hover {
-  background: rgba(colors.$primary-rgb, 0.2);
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {
