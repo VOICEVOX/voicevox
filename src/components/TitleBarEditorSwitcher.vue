@@ -3,6 +3,8 @@
 -->
 
 <template>
+  <!-- FIXME: 画面サイズが小さくなると表示が崩れるのを直す -->
+  <!-- NOTE: デザインしづらいからQBtnかdivの方が良い -->
   <q-btn-toggle
     :model-value="nowEditor"
     unelevated
@@ -34,6 +36,7 @@ const gotoLink = (editor: "talk" | "song") => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 .q-btn-group {
   // 選択されているボタンの文字を太字にする
