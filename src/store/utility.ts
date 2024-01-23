@@ -145,7 +145,7 @@ function replaceTag(
 ): string {
   const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
     const replaceTagId = replaceTagStringToTagId[p1];
-    if (replaceTagId === undefined) {
+    if (replaceTagId == undefined) {
       return match;
     }
     return replacer[replaceTagId] ?? "";

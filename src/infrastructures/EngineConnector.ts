@@ -11,7 +11,7 @@ const OpenAPIEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
   return {
     instance: (host: string) => {
       const cached = instanceMapper[host];
-      if (cached !== undefined) {
+      if (cached != undefined) {
         return cached;
       }
       const api = new DefaultApi(new Configuration({ basePath: host }));
