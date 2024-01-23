@@ -8,6 +8,7 @@
   <q-btn-toggle
     :model-value="nowEditor"
     unelevated
+    dense
     toggle-color="primary"
     :options="[
       { label: 'トーク', value: 'talk' },
@@ -39,6 +40,11 @@ const gotoLink = (editor: "talk" | "song") => {
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 .q-btn-group {
+  :deep(.q-btn) {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
   // 選択されているボタンの文字を太字にする
   :deep(.q-btn[aria-pressed="true"]) {
     span {
