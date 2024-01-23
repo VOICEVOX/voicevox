@@ -194,7 +194,7 @@ import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
-import MenuBar from "@/components/MenuBar.vue";
+import MenuBar from "@/components/Talk/MenuBar.vue";
 import HelpDialog from "@/components/help/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
