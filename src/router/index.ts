@@ -6,7 +6,6 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/home",
     component: EditorHome,
-    props: (route) => ({ projectFilePath: route.query["projectFilePath"] }),
   },
   {
     path: "/singer-home",
