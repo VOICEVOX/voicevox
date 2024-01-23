@@ -22,15 +22,27 @@
     <div v-if="loading" class="loading">
       <q-spinner color="primary" size="1.6rem" :thickness="7" />
     </div>
-    <character-tree :items="characterTreeItems" is-root />
+    <character-tree
+      :items="characterTreeItems"
+      is-root
+      :max-height="maxMenuHeight"
+      @select="onSelect"
+      @before-show="updateMenuHeight"
+    />
   </q-btn>
 </template>
 
 <script setup lang="ts">
 import { QBtn } from "quasar";
-import { computed } from "vue";
+import { computed, ref, Ref } from "vue";
 import CharacterTree, { ButtonData } from "./CharacterTree.vue";
-import { CharacterInfo, EngineId, SpeakerId, Voice } from "@/type/preload";
+import {
+  CharacterInfo,
+  EngineId,
+  SpeakerId,
+  StyleId,
+  Voice,
+} from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
 
 const props = withDefaults(
@@ -57,16 +69,24 @@ const props = withDefaults(
   }
 );
 
-const emit = defineEmits({
-  "update:selectedVoice": (selectedVoice: Voice | undefined) => {
-    return (
-      selectedVoice == undefined ||
-      (typeof selectedVoice.engineId === "string" &&
-        typeof selectedVoice.speakerId === "string" &&
-        typeof selectedVoice.styleId === "number")
-    );
-  },
-});
+const emit =
+  defineEmits<{
+    (event: "select", value: Voice): void;
+  }>();
+
+const onSelect = (id: string[]) => {
+  const speakerId = SpeakerId(id[0]);
+  const engineId = EngineId(id[1].split(":")[0]);
+  const styleId = StyleId(parseInt(id[1].split(":")[1]));
+
+  const selectedVoice: Voice = {
+    speakerId,
+    engineId,
+    styleId,
+  };
+
+  emit("select", selectedVoice);
+};
 
 const selectedCharacter = computed(() => {
   const selectedVoice = props.selectedVoice;
@@ -134,7 +154,7 @@ const getDefaultStyle = (speakerUuid: SpeakerId) => {
 const characterTreeItems = computed<ButtonData[]>(() =>
   props.characterInfos.map((characterInfo) => {
     const styles: ButtonData[] = characterInfo.metas.styles.map((style) => ({
-      id: `${style.engineId}-${style.styleId}`,
+      id: `${style.engineId}:${style.styleId}`,
       label: formatCharacterStyleName(
         characterInfo.metas.speakerName,
         style.styleName
@@ -170,6 +190,21 @@ const characterTreeItems = computed<ButtonData[]>(() =>
     };
   })
 );
+// 高さを制限してメニューが下方向に展開されるようにする
+const buttonRef: Ref<InstanceType<typeof QBtn> | undefined> = ref();
+const heightLimit = "65vh"; // QMenuのデフォルト値
+const maxMenuHeight = ref(heightLimit);
+const updateMenuHeight = () => {
+  if (buttonRef.value == undefined)
+    throw new Error("buttonRef.value == undefined");
+  const el = buttonRef.value.$el;
+  if (!(el instanceof Element)) throw new Error("!(el instanceof Element)");
+  const buttonRect = el.getBoundingClientRect();
+  // QMenuは展開する方向のスペースが不足している場合、自動的に展開方向を変更してしまうためmax-heightで制限する。
+  // AudioDetailよりボタンが下に来ることはないのでその最低高185pxに余裕を持たせた170pxを最小の高さにする。
+  // pxで指定するとウインドウサイズ変更に追従できないので ウインドウの高さの96% - ボタンの下端の座標 でメニューの高さを決定する。
+  maxMenuHeight.value = `max(170px, min(${heightLimit}, calc(96vh - ${buttonRect.bottom}px)))`;
+};
 </script>
 
 <style scoped lang="scss">
@@ -214,50 +249,5 @@ const characterTreeItems = computed<ButtonData[]>(() =>
 
 .opaque {
   opacity: 1 !important;
-}
-
-.character-menu {
-  .character-item-container {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .q-item {
-    color: colors.$display;
-  }
-
-  .q-btn-group {
-    > .q-btn:first-child > :deep(.q-btn__content) {
-      justify-content: flex-start;
-    }
-
-    > div:last-child:hover {
-      background-color: rgba(colors.$primary-rgb, 0.1);
-    }
-  }
-
-  .warning-item {
-    order: -3;
-  }
-  .to-unselect-item {
-    order: -2;
-  }
-  .selected-character-item {
-    order: -1; // 選択中のキャラを上にする
-  }
-
-  .selected-character-item,
-  .selected-style-item,
-  .selected-background {
-    background-color: rgba(colors.$primary-rgb, 0.2);
-  }
-
-  .engine-icon {
-    position: absolute;
-    width: 13px;
-    height: 13px;
-    bottom: -6px;
-    right: -6px;
-  }
 }
 </style>

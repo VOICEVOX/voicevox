@@ -7,6 +7,7 @@
     class="character-menu"
     transition-show="none"
     transition-hide="none"
+    @before-show="reassignSubMenuOpenBase(-1)"
   >
     <q-item
       v-for="(item, index) in props.items"
@@ -60,7 +61,7 @@
 
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
-import { ref } from "vue";
+import { Ref, ref } from "vue";
 
 export type ButtonData = {
   id: string;
@@ -93,58 +94,17 @@ const onChildSelect = (id: string[]) => {
 
 const subMenuOpenFlags = ref([...Array(props.items.length)].map(() => false));
 
-const reassignSubMenuOpen = debounce((idx: number) => {
+const reassignSubMenuOpenBase = (idx: number) => {
   if (subMenuOpenFlags.value[idx]) return;
   const arr = [...Array(props.items.length)].map(() => false);
   arr[idx] = true;
   subMenuOpenFlags.value = arr;
-}, 100);
+};
+const reassignSubMenuOpen = debounce(reassignSubMenuOpenBase, 100);
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;
-
-.character-button {
-  border: solid 1px;
-  border-color: colors.$primary;
-  font-size: 0;
-  height: fit-content;
-
-  background: colors.$background;
-
-  .icon-container {
-    height: 2rem;
-    width: 2rem;
-
-    img {
-      max-height: 100%;
-      max-width: 100%;
-      object-fit: scale-down;
-    }
-  }
-
-  .loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: auto;
-    background-color: rgba(colors.$background-rgb, 0.74);
-    display: grid;
-    justify-content: center;
-    align-content: center;
-
-    svg {
-      filter: drop-shadow(0 0 1px colors.$background);
-    }
-  }
-}
-
-.opaque {
-  opacity: 1 !important;
-}
-
 .character-menu {
   .character-item-container {
     display: flex;
