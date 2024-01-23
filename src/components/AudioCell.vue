@@ -113,7 +113,7 @@
 import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "./CharacterButton.vue";
-import { MenuItemButton, MenuItemSeparator } from "./MenuBar.vue";
+import { MenuItemButton, MenuItemSeparator } from "./BaseMenuBar.vue";
 import ContextMenu from "./ContextMenu.vue";
 import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";

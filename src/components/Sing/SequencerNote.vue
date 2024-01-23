@@ -42,7 +42,7 @@ import {
   noteNumberToBaseY,
 } from "@/sing/viewHelper";
 import ContextMenu from "@/components/ContextMenu.vue";
-import { MenuItemButton } from "@/components/MenuBar.vue";
+import { MenuItemButton } from "@/components/BaseMenuBar.vue";
 
 type NoteState = "NORMAL" | "SELECTED" | "OVERLAPPING";
 
