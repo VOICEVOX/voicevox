@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
-import { Ref, ref } from "vue";
+import { ref } from "vue";
 
 export type ButtonData = {
   id: string;
