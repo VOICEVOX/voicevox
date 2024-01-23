@@ -4,11 +4,11 @@ import EditorHome from "../views/EditorHome.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: "/home",
+    path: "/talk",
     component: EditorHome,
   },
   {
-    path: "/singer-home",
+    path: "/song",
     component: SingerHome,
   },
 ];

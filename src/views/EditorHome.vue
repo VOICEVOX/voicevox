@@ -1,5 +1,4 @@
 <template>
-  <singer-tab />
   <menu-bar />
 
   <q-layout reveal elevated container class="layout-container">
@@ -208,7 +207,6 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/UpdateNotificationDialog/Container.vue";
-import SingerTab from "@/components/SingerTab.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,

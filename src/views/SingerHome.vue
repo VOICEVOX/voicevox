@@ -1,5 +1,4 @@
 <template>
-  <singer-tab />
   <menu-bar />
   <tool-bar />
   <div class="sing-main">
@@ -34,7 +33,6 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
-import SingerTab from "@/components/SingerTab.vue";
 import MenuBar from "@/components/Sing/MenuBar.vue";
 import ToolBar from "@/components/Sing/ToolBar.vue";
 import SingerPanel from "@/components/Sing/SingerPanel.vue";
@@ -43,7 +41,6 @@ import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 export default defineComponent({
   name: "SingerHome",
   components: {
-    SingerTab,
     MenuBar,
     ToolBar,
     SingerPanel,

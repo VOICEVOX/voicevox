@@ -21,6 +21,7 @@
       {{ titleText }}
     </div>
     <q-space />
+    <title-bar-editor-switcher />
     <title-bar-buttons />
   </q-bar>
 </template>
@@ -29,6 +30,7 @@
 import { ref, computed, watch } from "vue";
 import MenuButton from "./MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
+import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
@@ -144,7 +146,103 @@ const openHelpDialog = () => {
   });
 };
 
-const menudata = ref<MenuItemData[]>([
+// 「エンジン」メニューのエンジン毎の項目
+const engineSubMenuData = computed<MenuItemData[]>(() => {
+  let subMenu: MenuItemData[] = [];
+
+  if (Object.values(engineInfos.value).length === 1) {
+    const engineInfo = Object.values(engineInfos.value)[0];
+    subMenu = [
+      {
+        type: "button",
+        label: "再起動",
+        onClick: () => {
+          store.dispatch("RESTART_ENGINES", {
+            engineIds: [engineInfo.uuid],
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+    ].filter((x) => x) as MenuItemData[];
+  } else {
+    subMenu = [
+      ...store.getters.GET_SORTED_ENGINE_INFOS.map(
+        (engineInfo) =>
+          ({
+            type: "root",
+            label: engineInfo.name,
+            icon:
+              engineManifests.value[engineInfo.uuid] &&
+              base64ImageToUri(engineManifests.value[engineInfo.uuid].icon),
+            subMenu: [
+              engineInfo.path && {
+                type: "button",
+                label: "フォルダを開く",
+                onClick: () => {
+                  store.dispatch("OPEN_ENGINE_DIRECTORY", {
+                    engineId: engineInfo.uuid,
+                  });
+                },
+                disableWhenUiLocked: false,
+              },
+              {
+                type: "button",
+                label: "再起動",
+                onClick: () => {
+                  store.dispatch("RESTART_ENGINES", {
+                    engineIds: [engineInfo.uuid],
+                  });
+                },
+                disableWhenUiLocked: false,
+              },
+            ].filter((x) => x),
+          } as MenuItemRoot)
+      ),
+      {
+        type: "separator",
+      },
+      {
+        type: "button",
+        label: "全てのエンジンを再起動",
+        onClick: () => {
+          store.dispatch("RESTART_ENGINES", { engineIds: engineIds.value });
+        },
+        disableWhenUiLocked: false,
+      },
+    ];
+  }
+  if (enableMultiEngine.value) {
+    subMenu.push({
+      type: "button",
+      label: "エンジンの管理",
+      onClick: () => {
+        store.dispatch("SET_DIALOG_OPEN", {
+          isEngineManageDialogOpen: true,
+        });
+      },
+      disableWhenUiLocked: false,
+    });
+  }
+  // マルチエンジンオフモードの解除
+  if (store.state.isMultiEngineOffMode) {
+    subMenu.push({
+      type: "button",
+      label: "マルチエンジンをオンにして再読み込み",
+      onClick() {
+        store.dispatch("RELOAD_APP", {
+          isMultiEngineOffMode: false,
+        });
+      },
+      disableWhenUiLocked: false,
+      disablreloadingLocked: true,
+    });
+  }
+
+  return subMenu;
+});
+
+// メニュー一覧
+const menudata = computed<MenuItemData[]>(() => [
   {
     type: "root",
     label: "ファイル",
@@ -161,7 +259,7 @@ const menudata = ref<MenuItemData[]>([
       closeAllDialog();
     },
     disableWhenUiLocked: false,
-    subMenu: [],
+    subMenu: engineSubMenuData.value,
   },
   {
     type: "root",
@@ -261,151 +359,6 @@ const reassignSubMenuOpen = (idx: number) => {
   }
 };
 
-// エンジン毎の項目を追加
-async function updateEngines() {
-  const engineMenu = menudata.value.find(
-    (x) => x.type === "root" && x.label === "エンジン"
-  ) as MenuItemRoot;
-  if (Object.values(engineInfos.value).length === 1) {
-    const engineInfo = Object.values(engineInfos.value)[0];
-    engineMenu.subMenu = [
-      {
-        type: "button",
-        label: "再起動",
-        onClick: () => {
-          store.dispatch("RESTART_ENGINES", {
-            engineIds: [engineInfo.uuid],
-          });
-        },
-        disableWhenUiLocked: false,
-      },
-    ].filter((x) => x) as MenuItemData[];
-  } else {
-    engineMenu.subMenu = [
-      ...store.getters.GET_SORTED_ENGINE_INFOS.map(
-        (engineInfo) =>
-          ({
-            type: "root",
-            label: engineInfo.name,
-            icon:
-              engineManifests.value[engineInfo.uuid] &&
-              base64ImageToUri(engineManifests.value[engineInfo.uuid].icon),
-            subMenu: [
-              engineInfo.path && {
-                type: "button",
-                label: "フォルダを開く",
-                onClick: () => {
-                  store.dispatch("OPEN_ENGINE_DIRECTORY", {
-                    engineId: engineInfo.uuid,
-                  });
-                },
-                disableWhenUiLocked: false,
-              },
-              {
-                type: "button",
-                label: "再起動",
-                onClick: () => {
-                  store.dispatch("RESTART_ENGINES", {
-                    engineIds: [engineInfo.uuid],
-                  });
-                },
-                disableWhenUiLocked: false,
-              },
-            ].filter((x) => x),
-          } as MenuItemRoot)
-      ),
-      {
-        type: "separator",
-      },
-      {
-        type: "button",
-        label: "全てのエンジンを再起動",
-        onClick: () => {
-          store.dispatch("RESTART_ENGINES", { engineIds: engineIds.value });
-        },
-        disableWhenUiLocked: false,
-      },
-    ];
-  }
-  if (enableMultiEngine.value) {
-    engineMenu.subMenu.push({
-      type: "button",
-      label: "エンジンの管理",
-      onClick: () => {
-        store.dispatch("SET_DIALOG_OPEN", {
-          isEngineManageDialogOpen: true,
-        });
-      },
-      disableWhenUiLocked: false,
-    });
-  }
-  // マルチエンジンオフモードの解除
-  if (store.state.isMultiEngineOffMode) {
-    engineMenu.subMenu.push({
-      type: "button",
-      label: "マルチエンジンをオンにして再読み込み",
-      onClick() {
-        store.dispatch("RELOAD_APP", {
-          isMultiEngineOffMode: false,
-        });
-      },
-      disableWhenUiLocked: false,
-      disablreloadingLocked: true,
-    });
-  }
-}
-// engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
-// FIXME: computedにする
-watch([engineInfos, engineManifests, enableMultiEngine], updateEngines, {
-  immediate: true,
-});
-
-// 「最近開いたプロジェクト」の更新
-async function updateRecentProjects() {
-  const projectsMenu = menudata.value.find(
-    (x) => x.type === "root" && x.label === "ファイル"
-  ) as MenuItemRoot;
-  const recentProjectsMenu = projectsMenu.subMenu.find(
-    (x) => x.type === "root" && x.label === "最近使ったプロジェクト"
-  ) as MenuItemRoot;
-
-  const recentlyUsedProjects = await store.dispatch(
-    "GET_RECENTLY_USED_PROJECTS"
-  );
-  recentProjectsMenu.subMenu =
-    recentlyUsedProjects.length === 0
-      ? [
-          {
-            type: "button",
-            label: "最近使ったプロジェクトはありません",
-            onClick: () => {
-              // 何もしない
-            },
-            disabled: true,
-            disableWhenUiLocked: false,
-          },
-        ]
-      : recentlyUsedProjects.map(
-          (projectFilePath) =>
-            ({
-              type: "button",
-              label: projectFilePath,
-              onClick: () => {
-                store.dispatch("LOAD_PROJECT_FILE", {
-                  filePath: projectFilePath,
-                });
-              },
-              disableWhenUiLocked: false,
-            } as MenuItemData)
-        );
-}
-
-const projectFilePath = computed(() => store.state.projectFilePath);
-
-watch(projectFilePath, updateRecentProjects, {
-  immediate: true,
-});
-
 watch(uiLocked, () => {
   // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
   if (uiLocked.value) {
@@ -428,10 +381,10 @@ watch(uiLocked, () => {
 
 .q-bar {
   min-height: vars.$menubar-height;
-  -webkit-app-region: drag;
-  > .q-btn {
+  -webkit-app-region: drag; // Electronのドラッグ領域
+  :deep(.q-btn) {
     margin-left: 0;
-    -webkit-app-region: no-drag;
+    -webkit-app-region: no-drag; // Electronのドラッグ領域対象から外す
   }
 }
 
