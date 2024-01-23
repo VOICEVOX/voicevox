@@ -543,13 +543,13 @@ onMounted(async () => {
   });
 });
 
-// ソフトウェアを初期化
+// エンジン初期化後の処理
 const isCompletedInitialStartup = ref(false);
 const unwatchIsEnginesReady = watch(
   // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
   () => props.isEnginesReady,
   async (isEnginesReady) => {
-    if (!isEnginesReady) throw new Error("isEnginesReady should be true");
+    if (!isEnginesReady) return;
 
     // プロジェクトファイルが指定されていればロード
     let projectFileLoaded = false;
@@ -589,6 +589,9 @@ const unwatchIsEnginesReady = watch(
     isCompletedInitialStartup.value = true;
 
     unwatchIsEnginesReady();
+  },
+  {
+    immediate: true,
   }
 );
 
