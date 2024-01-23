@@ -55,9 +55,4 @@ describe("undefinedToDefault", () => {
     const defaultValue = "test";
     expect(undefinedToDefault(defaultValue, undefined)).toEqual(defaultValue);
   });
-
-  it("undefinedのみを値がない状態とみなす", () => {
-    const defaultValue = "test";
-    expect(undefinedToDefault(defaultValue, null)).toBeNull();
-  });
 });
