@@ -148,7 +148,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   IS_ENGINE_READY: {
     getter: (state) => (engineId) => {
       const engineState: EngineState | undefined = state.engineStates[engineId];
-      if (engineState === undefined)
+      if (engineState == undefined)
         throw new Error(`No such engineState set: engineId == ${engineId}`);
 
       return engineState === "READY";
@@ -159,12 +159,12 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     action: createUILockAction(
       async ({ state, commit, dispatch }, { engineId }) => {
         let engineState: EngineState | undefined = state.engineStates[engineId];
-        if (engineState === undefined)
+        if (engineState == undefined)
           throw new Error(`No such engineState set: engineId == ${engineId}`);
 
         for (let i = 0; i < 100; i++) {
           engineState = state.engineStates[engineId]; // FIXME: explicit undefined
-          if (engineState === undefined)
+          if (engineState == undefined)
             throw new Error(`No such engineState set: engineId == ${engineId}`);
 
           if (engineState === "FAILED_STARTING") {
@@ -268,7 +268,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   DETECTED_ENGINE_ERROR: {
     action({ state, commit }, { engineId }) {
       const engineState: EngineState | undefined = state.engineStates[engineId];
-      if (engineState === undefined)
+      if (engineState == undefined)
         throw new Error(`No such engineState set: engineId == ${engineId}`);
 
       switch (engineState) {
