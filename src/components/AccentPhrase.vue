@@ -210,7 +210,7 @@ import { computed, ref } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import ContextMenu from "./ContextMenu.vue";
-import { MenuItemButton } from "./MenuBar.vue";
+import { MenuItemButton } from "./BaseMenuBar.vue";
 import { useStore } from "@/store";
 import { AudioKey, MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";

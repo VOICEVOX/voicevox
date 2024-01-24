@@ -1,270 +1,123 @@
 <template>
-  <q-bar class="bg-background q-pa-none relative-position">
-    <menu-button
-      v-for="(root, index) of menudata"
-      :key="index"
-      v-model:selected="subMenuOpenFlags[index]"
-      :menudata="root"
-      :disable="menubarLocked"
-      @mouseover="reassignSubMenuOpen(index)"
-      @mouseleave="
-        root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
-      "
-    />
-    <q-space />
-    <min-max-close-buttons v-if="!$q.platform.is.mac" />
-  </q-bar>
+  <base-menu-bar :file-sub-menu-data="fileSubMenuData" />
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { defineComponent, ref, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
 import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
+import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
 
-type SingMenuItemBase<T extends string> = {
-  type: T;
-  label?: string;
+const store = useStore();
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const createNewSingProject = async () => {
+  if (uiLocked.value) return;
+  return null;
+  // await store.dispatch("CREATE_NEW_SING_PROJECT", {});
 };
 
-export type MenuItemSeparator = SingMenuItemBase<"separator">;
-
-export type MenuItemRoot = SingMenuItemBase<"root"> & {
-  onClick: () => void;
-  subMenu: MenuItemData[];
-  icon?: string;
-  disabled?: boolean;
-  disableWhenUiLocked: boolean;
-  disablreloadingLocked?: boolean;
+const openSingProject = async () => {
+  if (uiLocked.value) return;
+  return null;
+  // await store.dispatch("OPEN_SING_PROJECT", {});
 };
 
-export type MenuItemButton = SingMenuItemBase<"button"> & {
-  onClick: () => void;
-  icon?: string;
-  disabled?: boolean;
-  disableWhenUiLocked: boolean;
-  disablreloadingLocked?: boolean;
+const saveSingProject = async () => {
+  if (uiLocked.value) return;
+  return null;
+  // await store.dispatch("SAVE_SING_PROJECT", {});
 };
 
-export type MenuItemCheckbox = SingMenuItemBase<"checkbox"> & {
-  onClick: () => void;
-  checked: ComputedRef<boolean>;
-  icon?: string;
-  disabled?: boolean;
-  disableWhenUiLocked: boolean;
-  disablreloadingLocked?: boolean;
+const saveAsSingProject = async () => {
+  if (uiLocked.value) return;
+  return null;
+  // await store.dispatch("SAVE_AS_SING_PROJECT", {});
 };
 
-export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
+const importMidiFile = async () => {
+  if (uiLocked.value) return;
+  await store.dispatch("IMPORT_MIDI_FILE", {});
+};
 
-export type MenuItemType = MenuItemData["type"];
+const importMusicXMLFile = async () => {
+  if (uiLocked.value) return;
+  await store.dispatch("IMPORT_MUSICXML_FILE", {});
+};
 
-export default defineComponent({
-  name: "SingMenuBar",
+const exportWaveFile = async () => {
+  if (uiLocked.value) return;
+  await store.dispatch("EXPORT_WAVE_FILE", {});
+};
 
-  components: {
-    MenuButton,
-    MinMaxCloseButtons,
+const fileSubMenuData: MenuItemData[] = [
+  {
+    type: "button",
+    label: "新規",
+    onClick: () => {
+      createNewSingProject();
+    },
+    disableWhenUiLocked: true,
   },
-
-  setup() {
-    const store = useStore();
-    const currentVersion = ref("");
-    window.electron.getAppInfos().then((obj) => {
-      currentVersion.value = obj.version;
-    });
-    const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
-    const menubarLocked = false; // computed(() => store.getters.IS_SING_MENUBAR_LOCKED);
-
-    const createNewSingProject = async () => {
-      return null;
-      // await store.dispatch("CREATE_NEW_SING_PROJECT", {});
-    };
-
-    const openSingProject = async () => {
-      return null;
-      // await store.dispatch("OPEN_SING_PROJECT", {});
-    };
-
-    const saveSingProject = async () => {
-      return null;
-      // await store.dispatch("SAVE_SING_PROJECT", {});
-    };
-
-    const saveAsSingProject = async () => {
-      return null;
-      // await store.dispatch("SAVE_AS_SING_PROJECT", {});
-    };
-
-    const importMidiFile = async () => {
-      await store.dispatch("IMPORT_MIDI_FILE", {});
-    };
-
-    const importMusicXMLFile = async () => {
-      await store.dispatch("IMPORT_MUSICXML_FILE", {});
-    };
-
-    const exportWaveFile = async () => {
-      await store.dispatch("EXPORT_WAVE_FILE", {});
-    };
-
-    const openHelpDialog = () => {
-      store.dispatch("SET_DIALOG_OPEN", {
-        isHelpDialogOpen: true,
-      });
-    };
-
-    const closeAllDialog = () => {
-      return null;
-    };
-
-    const menudata = ref<MenuItemData[]>([
-      {
-        type: "root",
-        label: "ファイル",
-        onClick: () => {
-          closeAllDialog();
-        },
-        disableWhenUiLocked: false,
-        subMenu: [
-          {
-            type: "button",
-            label: "新規",
-            onClick: () => {
-              createNewSingProject();
-            },
-            disableWhenUiLocked: true,
-          },
-          {
-            type: "button",
-            label: "開く",
-            onClick: () => {
-              openSingProject();
-            },
-            disableWhenUiLocked: true,
-          },
-          {
-            type: "button",
-            label: "保存",
-            onClick: () => {
-              saveSingProject();
-            },
-            disableWhenUiLocked: true,
-          },
-          {
-            type: "button",
-            label: "別名で保存",
-            onClick: () => {
-              saveAsSingProject();
-            },
-            disableWhenUiLocked: true,
-          },
-          { type: "separator" },
-          {
-            type: "button",
-            label: "MIDI読み込み",
-            onClick: () => {
-              importMidiFile();
-            },
-            disableWhenUiLocked: true,
-          },
-          {
-            type: "button",
-            label: "MusicXML読み込み",
-            onClick: () => {
-              importMusicXMLFile();
-            },
-            disableWhenUiLocked: true,
-          },
-          { type: "separator" },
-          {
-            type: "button",
-            label: "音声を出力",
-            onClick: () => {
-              exportWaveFile();
-            },
-            disableWhenUiLocked: true,
-          },
-        ],
-      },
-      {
-        type: "button",
-        label: "ヘルプ",
-        onClick: () => {
-          if (store.state.isHelpDialogOpen) closeAllDialog();
-          else {
-            closeAllDialog();
-            openHelpDialog();
-          }
-        },
-        disableWhenUiLocked: false,
-      },
-    ]);
-
-    const subMenuOpenFlags = ref(
-      [...Array(menudata.value.length)].map(() => false)
-    );
-
-    const reassignSubMenuOpen = (idx: number) => {
-      if (subMenuOpenFlags.value[idx]) return;
-      if (subMenuOpenFlags.value.find((x) => x)) {
-        const arr = [...Array(menudata.value.length)].map(() => false);
-        arr[idx] = true;
-        subMenuOpenFlags.value = arr;
-      }
-    };
-
-    const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-      // NOTE: 初期設定なし
-      // ["新規", createNewSingProject],
-    ]);
-
-    setHotkeyFunctions(hotkeyMap);
-
-    return {
-      currentVersion,
-      isFullscreen,
-      menubarLocked,
-      subMenuOpenFlags,
-      reassignSubMenuOpen,
-      menudata,
-    };
+  {
+    type: "button",
+    label: "開く",
+    onClick: () => {
+      openSingProject();
+    },
+    disableWhenUiLocked: true,
   },
-});
+  {
+    type: "button",
+    label: "保存",
+    onClick: () => {
+      saveSingProject();
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "別名で保存",
+    onClick: () => {
+      saveAsSingProject();
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "MIDI読み込み",
+    onClick: () => {
+      importMidiFile();
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "MusicXML読み込み",
+    onClick: () => {
+      importMusicXMLFile();
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "音声を出力",
+    onClick: () => {
+      exportWaveFile();
+    },
+    disableWhenUiLocked: true,
+  },
+];
+
+const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
+  // NOTE: 初期設定なし
+  // ["新規", createNewSingProject],
+]);
+
+setHotkeyFunctions(hotkeyMap);
 </script>
-
-<style lang="scss">
-@use '@/styles/colors' as colors;
-
-.active-menu {
-  background-color: rgba(colors.$primary-rgb, 0.3) !important;
-}
-</style>
-
-<style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
-
-.q-bar {
-  align-items: center;
-  min-height: vars.$menubar-height;
-  -webkit-app-region: drag;
-  > .q-btn {
-    margin-left: 0;
-    -webkit-app-region: no-drag;
-  }
-}
-
-.window-logo {
-  height: vars.$menubar-height;
-}
-
-.window-title {
-  height: vars.$menubar-height;
-  margin-right: 10%;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-</style>

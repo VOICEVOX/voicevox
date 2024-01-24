@@ -1,5 +1,4 @@
 <template>
-  <singer-tab />
   <menu-bar />
 
   <q-layout reveal elevated container class="layout-container">
@@ -194,7 +193,7 @@ import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
-import MenuBar from "@/components/MenuBar.vue";
+import MenuBar from "@/components/Talk/MenuBar.vue";
 import HelpDialog from "@/components/help/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
@@ -208,7 +207,6 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/UpdateNotificationDialog/Container.vue";
-import SingerTab from "@/components/SingerTab.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
@@ -543,13 +541,13 @@ onMounted(async () => {
   });
 });
 
-// ソフトウェアを初期化
+// エンジン初期化後の処理
 const isCompletedInitialStartup = ref(false);
 const unwatchIsEnginesReady = watch(
   // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
   () => props.isEnginesReady,
   async (isEnginesReady) => {
-    if (!isEnginesReady) throw new Error("isEnginesReady should be true");
+    if (!isEnginesReady) return;
 
     // プロジェクトファイルが指定されていればロード
     let projectFileLoaded = false;
@@ -589,6 +587,9 @@ const unwatchIsEnginesReady = watch(
     isCompletedInitialStartup.value = true;
 
     unwatchIsEnginesReady();
+  },
+  {
+    immediate: true,
   }
 );
 

@@ -1,5 +1,4 @@
 <template>
-  <singer-tab />
   <menu-bar />
   <tool-bar />
   <div class="sing-main">
@@ -26,7 +25,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted } from "vue";
+import { computed, defineComponent, onMounted, watch } from "vue";
 import { useStore } from "@/store";
 import {
   DEFAULT_BEATS,
@@ -34,7 +33,6 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
-import SingerTab from "@/components/SingerTab.vue";
 import MenuBar from "@/components/Sing/MenuBar.vue";
 import ToolBar from "@/components/Sing/ToolBar.vue";
 import SingerPanel from "@/components/Sing/SingerPanel.vue";
@@ -43,14 +41,17 @@ import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 export default defineComponent({
   name: "SingerHome",
   components: {
-    SingerTab,
     MenuBar,
     ToolBar,
     SingerPanel,
     ScoreSequencer,
   },
+  props: {
+    projectFilePath: { type: String, default: undefined },
+    isEnginesReady: { type: Boolean, required: true },
+  },
 
-  setup() {
+  setup(props) {
     const store = useStore();
     //const $q = useQuasar();
 
@@ -86,7 +87,6 @@ export default defineComponent({
           notes: [],
         },
       });
-      await store.dispatch("SET_SINGER", {});
 
       await store.dispatch("SET_VOLUME", { volume: 0.6 });
       await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
@@ -98,6 +98,22 @@ export default defineComponent({
       });
       return {};
     });
+
+    // エンジン初期化後の処理
+    const unwatchIsEnginesReady = watch(
+      // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
+      () => props.isEnginesReady,
+      async (isEnginesReady) => {
+        if (!isEnginesReady) return;
+
+        await store.dispatch("SET_SINGER", {});
+
+        unwatchIsEnginesReady();
+      },
+      {
+        immediate: true,
+      }
+    );
 
     return {
       nowRendering,
