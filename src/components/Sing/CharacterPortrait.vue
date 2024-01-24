@@ -48,20 +48,20 @@ export default defineComponent({
 // 幅固定、高さ可変、画像のアスペクト比を保持、wrapのwidthに合わせてheightを調整
 // bottom位置はスクロールバーの上に表示
 .character-portrait-wrap {
-  opacity: 0.8;
+  opacity: 0.55;
   overflow: hidden;
+  contain: layout;
   pointer-events: none;
   position: fixed;
   bottom: 0;
-  right: 96px;
+  right: 88px;
   min-width: 200px;
   max-width: 20vw;
-  z-index: 10;
 }
 
 .character-portrait {
   width: 100%;
   height: auto;
-  transition: all 0.3s ease;
+  backface-visibility: hidden;
 }
 </style>

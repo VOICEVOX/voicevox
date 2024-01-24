@@ -27,6 +27,8 @@
       @wheel="onWheel"
       @scroll="onScroll"
     >
+      <!-- キャラクター全身 -->
+      <character-portrait />
       <!-- グリッド -->
       <!-- NOTE: 現状オクターブごとの罫線なし -->
       <svg
@@ -177,7 +179,6 @@
       }"
       @input="setZoomY"
     />
-    <character-portrait />
   </div>
 </template>
 
