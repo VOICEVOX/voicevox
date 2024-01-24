@@ -49,7 +49,7 @@ const gotoLink = (editor: "talk" | "song") => {
   :deep(.q-btn[aria-pressed="true"]) {
     span {
       font-weight: 700;
-      color: colors.$display !important;
+      color: colors.$display-on-primary !important;
     }
   }
 }
