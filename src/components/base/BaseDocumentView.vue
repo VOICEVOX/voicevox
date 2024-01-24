@@ -5,8 +5,8 @@
 </template>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
 @use '@/styles/mixin' as mixin;
+@use '@/styles/new-colors' as colors;
 
 .document {
   :deep(*) {
@@ -20,7 +20,7 @@
   :deep(h2) {
     @include mixin.headline-2;
     margin-top: 1.5rem;
-    border-bottom: 1px solid #0002;
+    border-bottom: 1px solid colors.$border;
   }
 
   :deep(h3) {
@@ -59,12 +59,12 @@
   }
 
   :deep(a) {
-    color: colors.$display-hyperlink;
+    color: colors.$display-link;
   }
 
   :deep(img) {
     margin-top: 0.5rem;
-    border: 1px solid #0002;
+    border: 1px solid colors.$border;
     border-radius: 8px;
     vertical-align: middle;
   }
@@ -72,7 +72,7 @@
   :deep(hr) {
     border: none;
     height: 1px;
-    background-color: #0002;
+    background-color: colors.$border;
     margin-top: 2rem;
     margin-bottom: 2rem;
   }
@@ -80,13 +80,13 @@
   :deep(pre) {
     padding: 8px;
     margin-top: 1rem;
-    background-color: #e9f3e7;
+    background-color: colors.$background;
     border-radius: 8px;
   }
 
   :deep(p > code) {
     padding: 4px;
-    background-color: #e9f3e7;
+    background-color: colors.$background;
     border-radius: 4px;
   }
 }

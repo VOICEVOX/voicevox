@@ -58,19 +58,19 @@ const props =
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
 @use '@/styles/mixin' as mixin;
+@use '@/styles/new-colors' as colors;
 
 .container {
   // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
   // height: 100%;
   height: calc(100vh - 90px);
-  background-color: #e9f3e7;
+  background-color: colors.$background;
 }
 
 .inner {
   padding: vars.$padding-2;
-  background-color: #fff;
+  background-color: colors.$surface;
 }
 
 .info {

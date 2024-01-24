@@ -27,6 +27,7 @@ import {
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
+@use '@/styles/new-colors' as colors;
 
 .ScrollAreaRoot {
   width: 100%;
@@ -61,13 +62,17 @@ import {
 .thumb {
   width: 100%;
   height: 100%;
-  background-color: #0002;
+  background-color: colors.$scrollbar;
   border-radius: vars.$size-scrollbar;
   position: relative;
   transition: background-color vars.$transition-duration;
 }
 
 .ScrollAreaScrollbar:hover .thumb {
-  background-color: #0003;
+  background-color: colors.$scrollbar-hovered;
+}
+
+.ScrollAreaScrollbar:active .thumb {
+  background-color: colors.$scrollbar-pressed;
 }
 </style>

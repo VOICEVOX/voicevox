@@ -28,15 +28,16 @@ defineEmits<{
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
 @use '@/styles/mixin' as mixin;
+@use '@/styles/new-colors' as colors;
 
 .row-card {
   display: flex;
   text-align: unset;
   align-items: center;
-  border: 1px solid #0002;
-  background-color: #fff;
+  border: 1px solid colors.$border;
+  background-color: colors.$surface;
+  color: colors.$display;
   border-radius: vars.$radius-2;
   padding: vars.$padding-2;
   gap: vars.$gap-2;
@@ -47,11 +48,11 @@ defineEmits<{
   cursor: pointer;
 
   &:hover {
-    background-color: #f4f5f4;
+    background-color: colors.$control-hovered;
   }
 
   &:active {
-    background-color: #ebeceb;
+    background-color: colors.$control-pressed;
   }
 
   &:focus-visible {
