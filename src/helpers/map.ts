@@ -1,13 +1,13 @@
-export function mapUndefinedPipe<T, U1>(
+export function mapNullablePipe<T, U1>(
   source: T | undefined,
   fn1: (_: NonNullable<T>) => U1 | undefined
 ): U1 | undefined;
-export function mapUndefinedPipe<T, U1, U2>(
+export function mapNullablePipe<T, U1, U2>(
   source: T | undefined,
   fn1: (_: NonNullable<T>) => U1 | undefined,
   fn2: (_: NonNullable<U1>) => U2 | undefined
 ): U2 | undefined;
-export function mapUndefinedPipe<T, U1, U2, U3>(
+export function mapNullablePipe<T, U1, U2, U3>(
   source: T | undefined,
   fn1: (_: NonNullable<T>) => U1 | undefined,
   fn2: (_: NonNullable<U1>) => U2 | undefined,
@@ -17,7 +17,7 @@ export function mapUndefinedPipe<T, U1, U2, U3>(
  * 一連の関数を実行する。途中でundefinedかnullを返すとその後undefinedを返す。
  */
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
-export function mapUndefinedPipe(source: any, ...fn: Function[]) {
+export function mapNullablePipe(source: any, ...fn: Function[]) {
   return fn.reduce((prev, curr) => {
     if (prev == undefined) {
       return undefined;
@@ -26,7 +26,7 @@ export function mapUndefinedPipe(source: any, ...fn: Function[]) {
   }, source);
 }
 
-export const undefinedToDefault = <T>(
+export const nullableToDefault = <T>(
   defaultValue: T,
   maybeValue: T | undefined
 ): T => {
