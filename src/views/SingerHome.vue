@@ -20,7 +20,6 @@
         />
       </div>
     </div>
-    <singer-panel />
     <score-sequencer />
   </div>
 </template>
@@ -37,7 +36,6 @@ import {
 import SingerTab from "@/components/SingerTab.vue";
 import MenuBar from "@/components/Sing/MenuBar.vue";
 import ToolBar from "@/components/Sing/ToolBar.vue";
-import SingerPanel from "@/components/Sing/SingerPanel.vue";
 import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 
 export default defineComponent({
@@ -46,7 +44,6 @@ export default defineComponent({
     SingerTab,
     MenuBar,
     ToolBar,
-    SingerPanel,
     ScoreSequencer,
   },
 

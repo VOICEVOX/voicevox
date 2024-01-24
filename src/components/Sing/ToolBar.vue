@@ -1,12 +1,29 @@
 <template>
   <div class="sing-toolbar">
-    <div
-      class="singer-panel-toggler"
-      :class="{ active: isShowSinger }"
-      @click="toggleShowSinger"
-    >
-      <img :src="selectedStyleIconPath" class="singer-avatar" />
-    </div>
+    <character-menu-button>
+      <div class="character-menu-toggle">
+        <q-avatar
+          v-if="selectedStyleIconPath"
+          class="character-avatar"
+          size="3.5rem"
+        >
+          <img :src="selectedStyleIconPath" class="character-avatar-icon" />
+        </q-avatar>
+        <div class="character-info">
+          <div class="character-name">
+            {{ selectedCharacterName }}
+          </div>
+          <div class="character-style">
+            {{ selectedCharacterStyle }}
+          </div>
+        </div>
+        <q-icon
+          name="arrow_drop_down"
+          size="sm"
+          class="character-menu-dropdown-icon"
+        />
+      </div>
+    </character-menu-button>
     <div class="sing-player">
       <q-btn
         flat
@@ -106,18 +123,17 @@ import {
   isValidBeats,
   isValidBpm,
 } from "@/sing/domain";
+import CharacterMenuButton from "@/components/Sing/CharacterMenuButton.vue";
 
 export default defineComponent({
   name: "SingToolBar",
-
+  components: {
+    CharacterMenuButton,
+  },
   setup() {
     const store = useStore();
-    const isShowSinger = computed(() => store.state.isShowSinger);
-    const toggleShowSinger = () => {
-      store.dispatch("SET_SHOW_SINGER", {
-        isShowSinger: !isShowSinger.value,
-      });
-    };
+
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
 
     const userOrderedCharacterInfos = computed(
       () => store.getters.USER_ORDERED_CHARACTER_INFOS
@@ -130,6 +146,17 @@ export default defineComponent({
         store.state.singer.engineId,
         store.state.singer.styleId
       );
+    });
+    const selectedCharacterName = computed(() => {
+      return selectedCharacterInfo.value?.metas.speakerName;
+    });
+    const selectedCharacterStyle = computed(() => {
+      return selectedCharacterInfo.value?.metas.styles.find((style) => {
+        return (
+          style.styleId === store.state.singer?.styleId &&
+          style.engineId === store.state.singer?.engineId
+        );
+      })?.styleName;
     });
     const selectedStyleIconPath = computed(() => {
       const styles = selectedCharacterInfo.value?.metas.styles;
@@ -299,8 +326,9 @@ export default defineComponent({
     });
 
     return {
-      isShowSinger,
-      toggleShowSinger,
+      uiLocked,
+      selectedCharacterName,
+      selectedCharacterStyle,
       selectedStyleIconPath,
       bpmInputBuffer,
       beatsInputBuffer,
@@ -327,38 +355,53 @@ export default defineComponent({
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
+.character-menu-toggle {
+  align-items: center;
+  display: flex;
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  position: relative;
+}
+.character-avatar-icon {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.character-info {
+  align-items: start;
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.5rem;
+  text-align: left;
+  justify-content: center;
+  white-space: nowrap;
+}
+.character-name {
+  font-size: 0.875rem;
+  font-weight: bold;
+  line-height: 1rem;
+  padding-top: 0.5rem;
+}
+
+.character-style {
+  color: #999;
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1rem;
+}
+
+.character-menu-dropdown-icon {
+  color: rgba(0, 0, 0, 0.54);
+  margin-left: 0.25rem;
+}
 .sing-toolbar {
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
   align-items: center;
   display: flex;
-  padding: 8px 16px;
-  width: 100%;
-}
-
-.singer-panel-toggler {
-  border: 2px solid #bbb;
-  border-radius: 50%;
-  display: block;
-  height: 48px;
-  margin-right: auto;
-  overflow: hidden;
-  width: 48px;
-
-  &:hover {
-    cursor: pointer;
-  }
-
-  &.active {
-    border-color: colors.$primary;
-  }
-}
-
-.singer-avatar {
-  background: colors.$background;
-  display: block;
-  object-fit: cover;
-  height: 100%;
+  justify-content: space-between;
+  padding: 0 16px 0 0;
   width: 100%;
 }
 
@@ -396,7 +439,6 @@ export default defineComponent({
 .sing-setting {
   align-items: center;
   display: flex;
-  margin-left: auto;
 }
 
 .sing-volume {
