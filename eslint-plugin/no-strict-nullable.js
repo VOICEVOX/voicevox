@@ -1,9 +1,6 @@
 // @ts-check
-const { ESLintUtils, AST_NODE_TYPES } = require("@typescript-eslint/utils");
-
-const createRule = ESLintUtils.RuleCreator(
-  (name) => `https://github.com/VOICEVOX/voicevox/blob/main/rules/${name}.md`
-);
+const { AST_NODE_TYPES } = require("@typescript-eslint/utils");
+const { createRule } = require("./create-rule");
 
 /**
  * @param {import("@typescript-eslint/types").TSESTree.BinaryExpression["left"]} node
