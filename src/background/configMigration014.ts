@@ -25,7 +25,7 @@ export default function ({
     if (fs.existsSync(configPath)) {
       const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
-      if (config?.__internal__?.migrations?.version === undefined) {
+      if (config?.__internal__?.migrations?.version == undefined) {
         throw new Error("configMigration014: config.json is invalid");
       }
 

@@ -15,7 +15,7 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
       action({ state }, payload) {
         const engineId = payload.engineId;
         const engineInfo: EngineInfo | undefined = state.engineInfos[engineId];
-        if (engineInfo === undefined)
+        if (engineInfo == undefined)
           return Promise.reject(
             new Error(`No such engineInfo registered: engineId == ${engineId}`)
           );

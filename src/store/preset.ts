@@ -134,9 +134,9 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
       const presetConfig = await window.electron.getSetting("presets");
       if (
-        presetConfig === undefined ||
-        presetConfig.items === undefined ||
-        presetConfig.keys === undefined
+        presetConfig == undefined ||
+        presetConfig.items == undefined ||
+        presetConfig.keys == undefined
       )
         return;
       commit("SET_PRESET_ITEMS", {

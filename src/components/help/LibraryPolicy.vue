@@ -15,11 +15,11 @@
           <template v-if="engineInfos.size > 1">
             <q-separator v-if="engineIndex > 0" spaced />
             <q-item-label header>{{
-              mapUndefinedPipe(engineInfos.get(engineId), (v) => v.name)
+              mapNullablePipe(engineInfos.get(engineId), (v) => v.name)
             }}</q-item-label>
           </template>
           <template
-            v-for="([, characterInfo], characterIndex) in mapUndefinedPipe(
+            v-for="([, characterInfo], characterIndex) in mapNullablePipe(
               engineInfos.get(engineId),
               (v) => v.characterInfos
             )"
@@ -53,10 +53,10 @@
         </div>
         <div class="text-subtitle">
           {{
-            mapUndefinedPipe(
+            mapNullablePipe(
               engineInfos.get(selectedInfo.engine),
               (v) => v.characterInfos,
-              (v) => mapUndefinedPipe(selectedInfo, (i) => v.get(i.character)),
+              (v) => mapNullablePipe(selectedInfo, (i) => v.get(i.character)),
               (v) => v.metas.speakerName
             )
           }}
@@ -73,7 +73,7 @@ import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
-import { mapUndefinedPipe } from "@/helpers/map";
+import { mapNullablePipe } from "@/helpers/map";
 
 type DetailKey = { engine: EngineId; character: SpeakerId };
 
