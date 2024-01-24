@@ -49,7 +49,7 @@ module.exports = createRule({
     },
     messages: {
       report:
-        "`{{ operator }}= {{ expression }}'ではなく'{{ operator }} {{ expression }}'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
+        "'{{ operator }}= {{ expression }}'ではなく'{{ operator }} {{ expression }}'を使用してください。",
     },
     schema: [],
     fixable: "code",
