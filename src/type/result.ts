@@ -78,7 +78,7 @@ export const failure: Failure = <C extends string>(
       error: codeOrError,
     };
   } else if (codeOrError == undefined || typeof codeOrError === "string") {
-    if (error === undefined) {
+    if (error == undefined) {
       throw new Error("Error must be specified");
     }
     return { ok: false as const, code: codeOrError, error };

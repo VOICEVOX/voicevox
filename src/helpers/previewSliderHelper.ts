@@ -112,7 +112,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     previewValue.value = value;
   };
   const changePreviewValue = async () => {
-    if (previewValue.value === null)
+    if (previewValue.value == null)
       throw new Error("previewValue.value === null");
     if (modelValue.value !== previewValue.value && props.onChange) {
       await props.onChange(previewValue.value);
@@ -128,7 +128,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   };
   // start awaiting
   const fireChange = () => {
-    if (awaitingChange !== null) awaitingChange.cancel();
+    if (awaitingChange != null) awaitingChange.cancel();
     isAwaiting.value = true;
     awaitingChange = new CancelableFinary(changePreviewValue(), endAwaiting);
   };
@@ -165,7 +165,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   );
   // This function is called when the q-slider fire onWheel.
   const onWheel = (event: Events["onWheel"]) => {
-    if (disableScroll.value || disable.value || currentValue.value === null)
+    if (disableScroll.value || disable.value || currentValue.value == null)
       return;
     event.preventDefault();
     const deltaY = event.deltaY;
