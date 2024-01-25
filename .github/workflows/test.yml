@@ -140,7 +140,8 @@ jobs:
         if: steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots == 'true'
         run: |
           git add --intent-to-add tests/  # git diff に表示されるようにする
-          git diff tests/ | tee patch-${{ matrix.os }}.diff
+          git diff tests/  # ロギング用
+          git diff --binary tests/ > patch-${{ matrix.os }}.diff
 
       - name: Upload updated snapshots to artifact
         if: steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots == 'true'
