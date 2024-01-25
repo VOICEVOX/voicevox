@@ -59,7 +59,7 @@
     "systeminformation": "5.21.15",
     "tree-kill": "1.2.2",
     "uuid": "9.0.0",
-    "vue": "3.2.45",
+    "vue": "3.4.15",
     "vue-router": "4.0.8",
     "vuedraggable": "4.1.0",
     "vuex": "4.0.2",
@@ -104,7 +104,7 @@
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-import": "2.27.5",
     "eslint-plugin-prettier": "3.4.0",
-    "eslint-plugin-vue": "9.5.1",
+    "eslint-plugin-vue": "9.20.1",
     "happy-dom": "8.4.2",
     "license-checker": "25.0.1",
     "markdownlint": "0.31.1",
@@ -125,7 +125,7 @@
     "vite-plugin-node-polyfills": "0.15.0",
     "vite-tsconfig-paths": "4.2.1",
     "vitest": "0.34.6",
-    "vue-tsc": "1.8.19",
+    "vue-tsc": "1.8.27",
     "yargs": "17.2.1"
   },
   "overrides": {
