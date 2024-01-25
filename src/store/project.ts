@@ -181,7 +181,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
                 // set phoneme length
                 // 0.7 未満のプロジェクトファイルは styleId ではなく characterIndex なので、ここだけ characterIndex とした
-                if (audioItem.characterIndex === undefined)
+                if (audioItem.characterIndex == undefined)
                   throw new Error("audioItem.characterIndex === undefined");
                 await context
                   .dispatch("FETCH_MORA_DATA", {
@@ -233,7 +233,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           ) {
             for (const audioItemsKey in projectData.audioItems) {
               const audioItem = projectData.audioItems[audioItemsKey];
-              if (audioItem.speaker !== null) {
+              if (audioItem.speaker != null) {
                 audioItem.styleId = audioItem.speaker;
                 delete audioItem.speaker;
               }
@@ -245,7 +245,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           ) {
             for (const audioItemsKey in projectData.audioItems) {
               const audioItem = projectData.audioItems[audioItemsKey];
-              if (audioItem.engineId === undefined) {
+              if (audioItem.engineId == undefined) {
                 audioItem.engineId = engineId;
               }
             }

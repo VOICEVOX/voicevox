@@ -23,7 +23,7 @@ export const audioPlayerStoreState: AudioPlayerStoreState = {
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: (state) => {
-      return state._activeAudioKey !== undefined
+      return state._activeAudioKey != undefined
         ? getAudioElement().currentTime
         : undefined;
     },
@@ -61,7 +61,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     ) {
       const audioElement = getAudioElement();
 
-      if (offset !== undefined) {
+      if (offset != undefined) {
         audioElement.currentTime = offset;
       }
 
