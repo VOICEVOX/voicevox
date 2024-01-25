@@ -255,12 +255,12 @@ const api: Sandbox = {
     );
   },
 
-  getTempProject: async () => {
-    return await ipcRendererInvoke("GET_TEMP_PROJECT");
+  getWorkspace: async () => {
+    return await ipcRendererInvoke("GET_WORKSPACE");
   },
 
-  setTempProject: async (tempProject) => {
-    return await ipcRendererInvoke("SET_TEMP_PROJECT", tempProject);
+  saveWorkspace: async (workspace) => {
+    return await ipcRendererInvoke("SAVE_WORKSPACE", workspace);
   },
 
   getFileModifiedAt: async (filePath) => {

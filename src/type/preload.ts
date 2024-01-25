@@ -235,8 +235,8 @@ export interface Sandbox {
     key: Key,
     newValue: ConfigType[Key]
   ): Promise<ConfigType[Key]>;
-  getTempProject(): Promise<Result<WorkspaceType>>;
-  setTempProject(tempProject: WorkspaceType): Promise<Result<undefined>>;
+  getWorkspace(): Promise<Result<WorkspaceType>>;
+  saveWorkspace(workspace: WorkspaceType): Promise<Result<undefined>>;
   getFileModifiedAt(filePath: string): Promise<Result<number>>;
   setEngineSetting(
     engineId: EngineId,

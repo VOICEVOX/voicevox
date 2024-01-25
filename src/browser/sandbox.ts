@@ -294,11 +294,11 @@ export const api: Sandbox = {
     configManager.set(key, newValue);
     return newValue;
   },
-  getTempProject() {
-    throw new Error("Not supported on Browser version: getTempProject");
+  getWorkspace() {
+    throw new Error("Not supported on Browser version: getWorkspace");
   },
-  setTempProject(/* tempProject: WorkspaceType */) {
-    throw new Error("Not supported on Browser version: setTempProject");
+  saveWorkspace(/* workspace: WorkspaceType */) {
+    throw new Error("Not supported on Browser version: saveWorkspace");
   },
   getFileModifiedAt(/* getFileModifiedAt: number */) {
     throw new Error("Not supported on Browser version: getFileModifiedAt");

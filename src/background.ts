@@ -139,14 +139,14 @@ protocol.registerSchemesAsPrivileged([
 
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
-const tempProjectPath = path.join(fixedUserDataDir, "project.tmp.json");
+const workspaceFilePath = path.join(fixedUserDataDir, "workspace.json");
 
-const setTempProject = async (tempProject: WorkspaceType) => {
+const saveWorkspace = async (workspace: WorkspaceType) => {
   try {
-    const buf = new TextEncoder().encode(JSON.stringify(tempProject)).buffer;
+    const buf = new TextEncoder().encode(JSON.stringify(workspace)).buffer;
 
-    await fs.promises.writeFile(tempProjectPath + ".bk", new DataView(buf));
-    await fs.promises.rename(tempProjectPath + ".bk", tempProjectPath);
+    await fs.promises.writeFile(workspaceFilePath + ".bk", new DataView(buf));
+    await fs.promises.rename(workspaceFilePath + ".bk", workspaceFilePath);
 
     return success(undefined);
   } catch (e) {
@@ -846,18 +846,18 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return configManager.get(key);
 });
 
-ipcMainHandle("GET_TEMP_PROJECT", async () => {
+ipcMainHandle("GET_WORKSPACE", async () => {
   try {
-    if (!fs.existsSync(tempProjectPath)) {
-      const defaultTempProject: WorkspaceType = {
+    if (!fs.existsSync(workspaceFilePath)) {
+      const defaultWorkspace: WorkspaceType = {
         state: "none",
       };
 
-      await setTempProject(defaultTempProject);
+      await saveWorkspace(defaultWorkspace);
     }
 
     const workspace: WorkspaceType = JSON.parse(
-      await fs.promises.readFile(tempProjectPath, {
+      await fs.promises.readFile(workspaceFilePath, {
         encoding: "utf-8",
       })
     );
@@ -879,8 +879,8 @@ ipcMainHandle("GET_TEMP_PROJECT", async () => {
   }
 });
 
-ipcMainHandle("SET_TEMP_PROJECT", (_, tempProject) => {
-  return setTempProject(tempProject);
+ipcMainHandle("SAVE_WORKSPACE", (_, workspace) => {
+  return saveWorkspace(workspace);
 });
 
 ipcMainHandle("GET_FILE_MODIFIED_AT", async (_, filePath) => {

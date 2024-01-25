@@ -681,7 +681,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     },
     async action({ commit }, { workspace }) {
       await window.electron
-        .setTempProject(JSON.parse(JSON.stringify(workspace)))
+        .saveWorkspace(JSON.parse(JSON.stringify(workspace)))
         .then(getValueOrThrow);
 
       commit("SET_WORKSPACE", { workspace });
@@ -692,7 +692,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     async action({ commit }) {
       try {
         const workspace: WorkspaceType = await window.electron
-          .getTempProject()
+          .getWorkspace()
           .then(getValueOrThrow);
 
         await commit("SET_WORKSPACE", { workspace });

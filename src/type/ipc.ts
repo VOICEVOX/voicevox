@@ -260,13 +260,13 @@ export type IpcIHData = {
     return: ConfigType[keyof ConfigType];
   };
 
-  GET_TEMP_PROJECT: {
+  GET_WORKSPACE: {
     args: [];
     return: Result<WorkspaceType>;
   };
 
-  SET_TEMP_PROJECT: {
-    args: [tempProject: WorkspaceType];
+  SAVE_WORKSPACE: {
+    args: [workspace: WorkspaceType];
     return: Result<undefined>;
   };
 
