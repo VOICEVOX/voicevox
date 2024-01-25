@@ -119,6 +119,8 @@ npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
 現在 VRT テストは[不具合があるため](https://github.com/VOICEVOX/voicevox/issues/1724) Windows のみで行っています。
 以下の手順でスクリーンショットを更新できます：
 
+##### Github Actions で更新する場合
+
 1. フォークしたリポジトリの設定で GitHub Actions を有効にします。
 2. リポジトリの設定の Actions > General > Workflow permissions で Read and write permissions を選択します。
 3. `[update snapshots]` という文字列をコミットメッセージに含めてコミットします。
@@ -128,6 +130,14 @@ npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
    ```
 
 4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
+
+##### ローカルで更新する場合
+
+ローカル PC の OS に対応したもののみが更新されます。
+
+```bash
+npm run test:browser-e2e -- --update-snapshots
+```
 
 ### Electron End to End テスト
 
