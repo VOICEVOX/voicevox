@@ -88,6 +88,7 @@ jobs:
           cp .env.test .env
 
       - name: Check if commit message includes [update snapshots]
+        if: startsWith(matrix.os, 'windows') # FIXME: 不具合のためWindowsのみ https://github.com/VOICEVOX/voicevox/issues/1724
         id: check-whether-to-update-snapshots
         uses: actions/github-script@v7
         with:

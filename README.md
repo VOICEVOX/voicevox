@@ -116,6 +116,7 @@ npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
 #### スクリーンショットの更新
 
 ブラウザ End to End テストでは Visual Regression Testing を行っています。
+現在 VRT テストは[不具合があるため](https://github.com/VOICEVOX/voicevox/issues/1724) Windows のみで行っています。
 以下の手順でスクリーンショットを更新できます：
 
 1. フォークしたリポジトリの設定で GitHub Actions を有効にします。
