@@ -122,7 +122,6 @@ test.beforeEach(async ({ page }) => {
 test.beforeEach(gotoHome);
 
 test("メイン画面の表示", async ({ page }) => {
-  test.skip(process.platform !== "win32", "Windows以外のためスキップします");
   await navigateToMain(page);
 
   // eslint-disable-next-line no-constant-condition
