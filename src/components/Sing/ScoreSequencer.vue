@@ -27,6 +27,8 @@
       @wheel="onWheel"
       @scroll="onScroll"
     >
+      <!-- キャラクター全身 -->
+      <character-portrait />
       <!-- グリッド -->
       <!-- NOTE: 現状オクターブごとの罫線なし -->
       <svg
@@ -210,6 +212,7 @@ import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
+import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -225,6 +228,7 @@ export default defineComponent({
     SequencerKeys,
     SequencerNote,
     SequencerPhraseIndicator,
+    CharacterPortrait,
   },
   setup() {
     const store = useStore();

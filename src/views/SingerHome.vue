@@ -19,7 +19,6 @@
         />
       </div>
     </div>
-    <singer-panel />
     <score-sequencer />
   </div>
 </template>
@@ -35,7 +34,6 @@ import {
 } from "@/sing/storeHelper";
 import MenuBar from "@/components/Sing/MenuBar.vue";
 import ToolBar from "@/components/Sing/ToolBar.vue";
-import SingerPanel from "@/components/Sing/SingerPanel.vue";
 import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 
 export default defineComponent({
@@ -43,7 +41,6 @@ export default defineComponent({
   components: {
     MenuBar,
     ToolBar,
-    SingerPanel,
     ScoreSequencer,
   },
   props: {
