@@ -518,12 +518,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   SAVE_TEMP_PROJECT_FILE: {
     async action(context) {
       try {
-        const { audioItems, audioKeys } = context.state;
-
-        // 初期状態の audioItems の場合
-        if (audioKeys.length <= 1 && !audioItems[audioKeys[0]].text) {
-          return;
-        }
         context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "unSaved" });
       } catch (err) {
         window.electron.logError(err);
