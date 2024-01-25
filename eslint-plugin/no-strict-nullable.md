@@ -15,4 +15,4 @@ const c = button.text !== null;
 
 ## リンク
 
-https://github.com/VOICEVOX/voicevox/issues/1513
+[#1513](https://github.com/VOICEVOX/voicevox/issues/1513)
