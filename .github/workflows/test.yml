@@ -16,6 +16,29 @@ defaults:
     shell: bash
 
 jobs:
+  config: # 全 jobs で利用する定数の定義. `env` が利用できないコンテキストでも利用できる.
+    runs-on: ubuntu-latest
+    outputs:
+      shouldUpdateSnapshots: ${{ steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots }}
+    steps:
+      - name: Check if commit message includes [update snapshots]
+        id: check-whether-to-update-snapshots
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commits = ${{ toJson(github.event.commits) }};
+            if (!commits) {
+              // pull_request などでコミットがない場合はスキップ
+              core.setOutput("shouldUpdateSnapshots", false);
+              process.exit(0);
+            }
+            const shouldUpdateSnapshots = commits.some((commit) =>
+              commit.message.toLowerCase().includes("[update snapshots]")
+            );
+            core.setOutput("shouldUpdateSnapshots", shouldUpdateSnapshots);
+            console.log(`shouldUpdateSnapshots: ${shouldUpdateSnapshots}`);
+
   # ビルドのテスト
   build-test:
     runs-on: windows-latest
@@ -38,6 +61,7 @@ jobs:
   # e2e テスト
   e2e-test:
     runs-on: ${{ matrix.os }}
+    needs: [config]
     strategy:
       fail-fast: false
       matrix:
@@ -49,8 +73,6 @@ jobs:
             voicevox_engine_asset_name: macos-x64
           - os: windows-latest
             voicevox_engine_asset_name: windows-cpu
-    outputs:
-      shouldUpdateSnapshots: ${{ steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots }}
     steps:
       - uses: actions/checkout@v3
       - name: Setup environment
@@ -89,31 +111,13 @@ jobs:
           sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port='$PORT'"],|' .env.test
           cp .env.test .env
 
-      - name: Check if commit message includes [update snapshots]
-        id: check-whether-to-update-snapshots
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const commits = ${{ toJson(github.event.commits) }};
-            if (!commits) {
-              // pull_request などでコミットがない場合はスキップ
-              core.setOutput("shouldUpdateSnapshots", false);
-              process.exit(0);
-            }
-            const shouldUpdateSnapshots = commits.some((commit) =>
-              commit.message.toLowerCase().includes("[update snapshots]")
-            );
-            core.setOutput("shouldUpdateSnapshots", shouldUpdateSnapshots);
-            console.log(`shouldUpdateSnapshots: ${shouldUpdateSnapshots}`);
-
       - name: Run npm run test:browser-e2e
         run: |
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
           fi
           ARGS=""
-          if [[ ${{ steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots }} == 'true' ]]; then
+          if [[ ${{ needs.config.outputs.shouldUpdateSnapshots }} == 'true' ]]; then
             ARGS="--update-snapshots"
           fi
           npm run test:browser-e2e -- $ARGS
@@ -137,14 +141,14 @@ jobs:
           path: playwright-report
 
       - name: Collect patch for snapshots
-        if: steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots == 'true'
+        if: needs.config.outputs.shouldUpdateSnapshots == 'true'
         run: |
           git add --intent-to-add tests/  # git diff に表示されるようにする
           git diff tests/  # ロギング用
           git diff --binary tests/ > patch-${{ matrix.os }}.diff
 
       - name: Upload patch to artifact
-        if: steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots == 'true'
+        if: needs.config.outputs.shouldUpdateSnapshots == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updated-snapshots-${{ matrix.os }}
@@ -154,9 +158,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    needs:
-      - e2e-test
-    if: needs.e2e-test.outputs.shouldUpdateSnapshots == 'true'
+    needs: [config, e2e-test]
+    if: needs.config.outputs.shouldUpdateSnapshots == 'true'
     steps:
       - uses: actions/checkout@v3
 
