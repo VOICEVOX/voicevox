@@ -14,7 +14,7 @@
             {{ selectedCharacterName }}
           </div>
           <div class="character-style">
-            {{ selectedCharacterStyle }}
+            {{ selectedCharacterStyleDescription }}
           </div>
         </div>
         <q-icon
@@ -124,6 +124,7 @@ import {
   isValidBpm,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton.vue";
+import { getStyleDescription } from "@/sing/viewHelper";
 
 export default defineComponent({
   name: "SingToolBar",
@@ -150,13 +151,14 @@ export default defineComponent({
     const selectedCharacterName = computed(() => {
       return selectedCharacterInfo.value?.metas.speakerName;
     });
-    const selectedCharacterStyle = computed(() => {
-      return selectedCharacterInfo.value?.metas.styles.find((style) => {
+    const selectedCharacterStyleDescription = computed(() => {
+      const style = selectedCharacterInfo.value?.metas.styles.find((style) => {
         return (
           style.styleId === store.state.singer?.styleId &&
           style.engineId === store.state.singer?.engineId
         );
-      })?.styleName;
+      });
+      return style != undefined ? getStyleDescription(style) : "";
     });
     const selectedStyleIconPath = computed(() => {
       const styles = selectedCharacterInfo.value?.metas.styles;
@@ -328,7 +330,7 @@ export default defineComponent({
     return {
       uiLocked,
       selectedCharacterName,
-      selectedCharacterStyle,
+      selectedCharacterStyleDescription,
       selectedStyleIconPath,
       bpmInputBuffer,
       beatsInputBuffer,

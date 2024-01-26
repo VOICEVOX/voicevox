@@ -1,3 +1,5 @@
+import { StyleInfo } from "@/type/preload";
+
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_SEMITONE = 30;
 
@@ -97,3 +99,20 @@ export const keyInfos = [...Array(128)]
     };
   })
   .reverse();
+
+export const getStyleDescription = (style: StyleInfo) => {
+  const description: string[] = [];
+  if (style.styleType === "talk") {
+    description.push("トーク");
+  } else if (style.styleType === "humming") {
+    description.push("ハミング");
+  } else if (style.styleType === "sing_teacher") {
+    description.push("歌");
+  } else {
+    throw new Error("Unknown style type.");
+  }
+  if (style.styleName != undefined) {
+    description.push(style.styleName);
+  }
+  return description.join("・");
+};

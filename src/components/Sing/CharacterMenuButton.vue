@@ -1,6 +1,6 @@
 <template>
   <q-btn flat class="q-pa-none">
-    <slot />
+    <slot></slot>
     <q-menu
       class="character-menu"
       transition-show="none"
@@ -86,7 +86,9 @@
                 >
                   <q-list>
                     <q-item
-                      v-for="(style, styleIndex) in characterInfo.metas.styles"
+                      v-for="(style, styleIndex) in getSingingStyles(
+                        characterInfo
+                      )"
                       :key="styleIndex"
                       v-close-popup
                       clickable
@@ -104,27 +106,21 @@
                           no-spinner
                           no-transition
                           :ratio="1"
-                          :src="characterInfo.metas.styles[styleIndex].iconPath"
+                          :src="style.iconPath"
                         />
                         <q-avatar
                           v-if="isMultipleEngine"
                           rounded
                           class="engine-icon"
                         >
-                          <img
-                            :src="
-                              engineIcons[
-                                characterInfo.metas.styles[styleIndex].engineId
-                              ]
-                            "
-                          />
+                          <img :src="engineIcons[style.engineId]" />
                         </q-avatar>
                       </q-avatar>
-                      <q-item-section v-if="style.styleName"
-                        >{{ characterInfo.metas.speakerName }} ({{
-                          style.styleName
-                        }})</q-item-section
-                      >
+                      <q-item-section v-if="style.styleName">
+                        {{ characterInfo.metas.speakerName }} ({{
+                          getStyleDescription(style)
+                        }})
+                      </q-item-section>
                       <q-item-section v-else>{{
                         characterInfo.metas.speakerName
                       }}</q-item-section>
@@ -145,7 +141,8 @@ import { defineComponent, computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { SpeakerId, StyleId } from "@/type/preload";
+import { CharacterInfo, SpeakerId, StyleId } from "@/type/preload";
+import { getStyleDescription } from "@/sing/viewHelper";
 
 export default defineComponent({
   name: "CharacterMenuButton",
@@ -153,9 +150,11 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    const userOrderedCharacterInfos = computed(
-      () => store.getters.USER_ORDERED_CHARACTER_INFOS
-    );
+    const userOrderedCharacterInfos = computed(() => {
+      return store.getters.USER_ORDERED_CHARACTER_INFOS?.filter(
+        (characterInfo) => getSingingStyles(characterInfo).length !== 0
+      );
+    });
 
     const subMenuOpenFlags = ref(
       [...Array(userOrderedCharacterInfos.value?.length)].map(() => false)
@@ -207,6 +206,13 @@ export default defineComponent({
       return defaultStyle;
     };
 
+    const getSingingStyles = (characterInfo: CharacterInfo) => {
+      return characterInfo.metas.styles.filter(
+        (value) =>
+          value.styleType === "humming" || value.styleType === "sing_teacher"
+      );
+    };
+
     const selectedCharacterInfo = computed(() => {
       if (
         userOrderedCharacterInfos.value == undefined ||
@@ -250,6 +256,8 @@ export default defineComponent({
       reassignSubMenuOpen,
       changeStyleId,
       getDefaultStyle,
+      getSingingStyles,
+      getStyleDescription,
       selectedCharacterInfo,
       selectedSpeakerUuid,
       selectedStyleId,
