@@ -253,9 +253,12 @@ export type AppInfos = {
   version: string;
 };
 
+export type StyleType = "talk" | "humming" | "sing_teacher";
+
 export type StyleInfo = {
   styleName?: string;
   styleId: StyleId;
+  styleType?: StyleType;
   iconPath: string;
   portraitPath: string | undefined;
   engineId: EngineId;
