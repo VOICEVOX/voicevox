@@ -3,7 +3,7 @@ import { createStore } from "vuex";
 import { describe, it } from "vitest";
 import { Quasar } from "quasar";
 import { wrapQPage } from "../../utils";
-import HowToUse from "@/components/HelpDialog/HowToUse.vue";
+import HowToUse from "@/components/Dialog/HelpDialog/HowToUse.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 import { storeKey } from "@/store";
 

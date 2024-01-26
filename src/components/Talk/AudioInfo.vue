@@ -302,7 +302,7 @@
 import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
-import PresetManageDialog from "@/components/PresetManageDialog.vue";
+import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
 import { useStore } from "@/store";
 
 import {
