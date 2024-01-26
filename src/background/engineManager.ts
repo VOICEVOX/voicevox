@@ -210,6 +210,8 @@ export class EngineManager {
       log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
       await this.runEngine(engineInfo.uuid);
     }
+
+    await this.makeEngineInfoFor3rdParty();
   }
 
   /**
@@ -469,6 +471,7 @@ export class EngineManager {
         );
 
         this.runEngine(engineId);
+        this.makeEngineInfoFor3rdParty();
         resolve();
         return;
       }
@@ -482,6 +485,7 @@ export class EngineManager {
         log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
         this.runEngine(engineId);
+        this.makeEngineInfoFor3rdParty();
         resolve();
       };
 
@@ -543,6 +547,41 @@ export class EngineManager {
       return "alreadyExists";
     }
     return "ok";
+  }
+
+  /**
+   * サードパーティ向けの設定ファイルを書き出す
+   */
+  async makeEngineInfoFor3rdParty() {
+    const exportEngineInfoFilename = path.join(
+      app.getPath("userData"),
+      "runtime-info.json"
+    );
+    const engineInfos = this.fetchEngineInfos();
+
+    log.info(`Update list of engines...` + exportEngineInfoFilename);
+
+    const engineInfoList = engineInfos.map((engineInfo) => {
+      return {
+        uuid: engineInfo.uuid,
+        host: engineInfo.host,
+        name: engineInfo.name,
+        path: engineInfo.path,
+        executionEnabled: engineInfo.executionEnabled,
+        executionFilePath: engineInfo.executionFilePath,
+        executionArgs: engineInfo.executionArgs,
+        type: engineInfo.type,
+      };
+    });
+
+    try {
+      fs.writeFileSync(
+        exportEngineInfoFilename,
+        JSON.stringify(engineInfoList)
+      );
+    } catch (e) {
+      return "failedToWriteFile";
+    }
   }
 }
 
