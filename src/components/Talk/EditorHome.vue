@@ -195,7 +195,7 @@ import CharacterPortrait from "./CharacterPortrait.vue";
 import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import MenuBar from "@/components/Talk/MenuBar.vue";
-import HelpDialog from "@/components/help/HelpDialog.vue";
+import HelpDialog from "@/components/HelpDialog/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
