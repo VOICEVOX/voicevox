@@ -55,5 +55,5 @@
     - 追加キャラクターの紹介 ･･･ [CharacterOrderDialog](../src/components/CharacterOrderDialog.vue)（設定 / キャラクター並び替え・試聴 と共通）
   - 「音声書き出し」時の成否の通知 ･･･ [SaveAllResultDialog](../src/components/SaveAllResultDialog.vue)
   - 一度のみ表示されるヒント ･･･ [ToolTip](../src/components/ToolTip.vue)
-  - 音声生成中の進捗表示 ･･･ [ProgressDialog](../src/components/ProgressDialog.vue)
+  - 音声生成中の進捗表示 ･･･ [ProgressView](../src/components/ProgressView.vue)
   - エラー記録用（UI には影響なし） ･･･ [ErrorBoundary](../src/components/ErrorBoundary.vue)
