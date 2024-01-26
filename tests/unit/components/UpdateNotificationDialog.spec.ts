@@ -7,7 +7,7 @@ import {
 import { describe, it } from "vitest";
 import { Quasar } from "quasar";
 
-import UpdateNotificationDialogPresentation from "@/components/UpdateNotificationDialog/Presentation.vue";
+import UpdateNotificationDialogPresentation from "@/components/Dialog/UpdateNotificationDialog/Presentation.vue";
 import { assertNonNullable } from "@/type/utility";
 
 const mountUpdateNotificationDialogPresentation = async (context?: {
