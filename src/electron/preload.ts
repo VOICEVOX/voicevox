@@ -5,7 +5,7 @@ import {
   IpcRendererEvent,
 } from "electron";
 
-import { Sandbox, ElectronStoreType, EngineId } from "@/type/preload";
+import { Sandbox, ConfigType, EngineId, SandboxKey } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -26,8 +26,6 @@ function ipcRendererOn(
 ) {
   return ipcRenderer.on(channel, listener);
 }
-
-let tempDir: string;
 
 const api: Sandbox = {
   getAppInfos: async () => {
@@ -66,30 +64,8 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_PRIVACY_POLICY_TEXT");
   },
 
-  saveTempAudioFile: async ({ relativePath, buffer }) => {
-    if (!tempDir) {
-      tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
-    }
-    const tempFilePath = await ipcRendererInvoke("JOIN_PATH", {
-      pathArray: [tempDir, relativePath],
-    });
-    await ipcRendererInvoke("WRITE_FILE", {
-      filePath: tempFilePath,
-      buffer: buffer,
-    });
-  },
-
-  loadTempFile: async () => {
-    if (!tempDir) {
-      tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
-    }
-    const tempFilePath = await ipcRendererInvoke("JOIN_PATH", {
-      pathArray: [tempDir, "hoge.txt"],
-    });
-    const buf = await ipcRendererInvoke("READ_FILE", {
-      filePath: tempFilePath,
-    });
-    return new TextDecoder().decode(buf);
+  getAltPortInfos: async () => {
+    return await ipcRendererInvoke("GET_ALT_PORT_INFOS");
   },
 
   showAudioSaveDialog: ({ title, defaultPath }) => {
@@ -123,13 +99,21 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_MESSAGE_DIALOG", { type, title, message });
   },
 
-  showQuestionDialog: ({ type, title, message, buttons, cancelId }) => {
+  showQuestionDialog: ({
+    type,
+    title,
+    message,
+    buttons,
+    cancelId,
+    defaultId,
+  }) => {
     return ipcRendererInvoke("SHOW_QUESTION_DIALOG", {
       type,
       title,
       message,
       buttons,
       cancelId,
+      defaultId,
     });
   },
 
@@ -143,10 +127,6 @@ const api: Sandbox = {
 
   readFile: async ({ filePath }) => {
     return await ipcRendererInvoke("READ_FILE", { filePath });
-  },
-
-  openTextEditContextMenu: () => {
-    return ipcRendererInvoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
   isAvailableGPUMode: () => {
@@ -175,17 +155,31 @@ const api: Sandbox = {
 
   logError: (...params) => {
     console.error(...params);
-    return ipcRenderer.invoke("LOG_ERROR", ...params);
+    // 経緯 https://github.com/VOICEVOX/voicevox/pull/1620#discussion_r1371804569
+    ipcRenderer.send("__ELECTRON_LOG__", {
+      data: [...params],
+      level: "error",
+    });
   },
 
   logWarn: (...params) => {
     console.warn(...params);
-    return ipcRenderer.invoke("LOG_WARN", ...params);
+    ipcRenderer.send("__ELECTRON_LOG__", {
+      data: [...params],
+      level: "warn",
+    });
   },
 
   logInfo: (...params) => {
     console.info(...params);
-    return ipcRenderer.invoke("LOG_INFO", ...params);
+    ipcRenderer.send("__ELECTRON_LOG__", {
+      data: [...params],
+      level: "info",
+    });
+  },
+
+  openLogDirectory: () => {
+    ipcRenderer.invoke("OPEN_LOG_DIRECTORY");
   },
 
   engineInfos: () => {
@@ -239,7 +233,7 @@ const api: Sandbox = {
     return (await ipcRendererInvoke(
       "GET_SETTING",
       key
-    )) as ElectronStoreType[typeof key];
+    )) as ConfigType[typeof key];
   },
 
   /**
@@ -273,9 +267,13 @@ const api: Sandbox = {
     return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
   },
 
-  restartApp: ({ isMultiEngineOffMode }: { isMultiEngineOffMode: boolean }) => {
-    ipcRendererInvoke("RESTART_APP", { isMultiEngineOffMode });
+  /**
+   * アプリを再読み込みする。
+   * 画面以外の情報を刷新する。
+   */
+  reloadApp: async ({ isMultiEngineOffMode }) => {
+    return await ipcRendererInvoke("RELOAD_APP", { isMultiEngineOffMode });
   },
 };
 
-contextBridge.exposeInMainWorld("electron", api);
+contextBridge.exposeInMainWorld(SandboxKey, api);

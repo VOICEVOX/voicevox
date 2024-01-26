@@ -1,6 +1,6 @@
 @use './variables' as vars;
 @use './colors' as colors;
-@import './fonts';
+@import "./fonts";
 
 // 優先度を強引に上げる
 body:not(#dummy) {
@@ -24,17 +24,17 @@ img {
 ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
-  background-color: rgba(colors.$primary-light-rgb, 0.2);
+  background-color: rgba(colors.$primary-rgb, 0.2);
   border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(colors.$primary-light-rgb, 0.6);
+  background-color: rgba(colors.$primary-rgb, 0.6);
   border-radius: 5px;
   &:hover {
-    background-color: rgba(colors.$primary-light-rgb, 0.7);
+    background-color: rgba(colors.$primary-rgb, 0.7);
   }
   &:active {
-    background-color: rgba(colors.$primary-light-rgb, 0.8);
+    background-color: rgba(colors.$primary-rgb, 0.8);
   }
 }
 ::-webkit-scrollbar-corner {
@@ -102,6 +102,13 @@ img {
   background: transparent; // デフォルトの設定だと全画面ダイアログが出る際に黒背景がちらつく
 }
 
+// トースト通知と通知内にあるボタン
+.text-toast-display,
+.text-toast-display-warning,
+.q-notification__actions .q-btn {
+  font-weight: bold;
+}
+
 // 設定とかのヘッダーの色
 .q-layout__section--marginal {
   background: colors.$toolbar !important;
@@ -163,11 +170,11 @@ img {
 }
 
 // Quasar用のカラー設定
-.text-primary-light {
-  color: colors.$primary-light;
+.text-primary {
+  color: colors.$primary;
 }
-.bg-primary-light {
-  background: colors.$primary-light;
+.bg-primary {
+  background: colors.$primary;
 }
 
 .text-display {
@@ -231,4 +238,24 @@ img {
 }
 .bg-toolbar-button-display {
   background: colors.$toolbar-button-display;
+}
+
+.bg-toast {
+  background: colors.$toast;
+}
+.text-toast-display {
+  color: colors.$toast-display;
+}
+.text-toast-button-display {
+  color: colors.$toast-button-display;
+}
+
+.bg-toast-warning {
+  background: colors.$toast-warning;
+}
+.text-toast-display-warning {
+  color: colors.$toast-display-warning;
+}
+.text-toast-button-display-warning {
+  color: colors.$toast-button-display-warning;
 }

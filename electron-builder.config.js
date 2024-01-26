@@ -1,8 +1,13 @@
+// @ts-check
 const path = require("path");
 const fs = require("fs");
+const dotenv = require("dotenv");
+
+const dotenvPath = path.join(process.cwd(), ".env.production");
+dotenv.config({ path: dotenvPath });
 
 const VOICEVOX_ENGINE_DIR =
-  process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/run.dist/";
+  process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/dist/run/";
 
 // ${productName} Web Setup ${version}.${ext}
 const NSIS_WEB_ARTIFACT_NAME = process.env.NSIS_WEB_ARTIFACT_NAME;
@@ -16,6 +21,12 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 // ${productName}-${version}.${ext}
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
+// コード署名証明書
+const WIN_CERTIFICATE_SHA1 = process.env.WIN_CERTIFICATE_SHA1;
+const WIN_SIGNING_HASH_ALGORITHMS = process.env.WIN_SIGNING_HASH_ALGORITHMS
+  ? JSON.parse(process.env.WIN_SIGNING_HASH_ALGORITHMS)
+  : undefined;
+
 const isMac = process.platform === "darwin";
 
 // electron-builderのextraFilesは、ファイルのコピー先としてVOICEVOX.app/Contents/を使用する。
@@ -23,6 +34,19 @@ const isMac = process.platform === "darwin";
 // VOICEVOX.app/Contents/MacOS/ディレクトリにコピーされるように修正する。
 // cf: https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
 const extraFilePrefix = isMac ? "MacOS/" : "";
+
+const sevenZipFile = fs
+  .readdirSync(path.resolve(__dirname, "build", "vendored", "7z"))
+  .find(
+    // Windows: 7za.exe, Linux: 7zzs, macOS: 7zz
+    (fileName) => ["7za.exe", "7zzs", "7zz"].includes(fileName)
+  );
+
+if (!sevenZipFile) {
+  throw new Error(
+    "7z binary file not found. Run `node ./build/download7z.js` first."
+  );
+}
 
 /** @type {import("electron-builder").Configuration} */
 const builderOptions = {
@@ -65,12 +89,12 @@ const builderOptions = {
       to: extraFilePrefix + "README.txt",
     },
     {
-      from: ".env.production",
-      to: extraFilePrefix + ".env",
+      from: VOICEVOX_ENGINE_DIR,
+      to: path.join(extraFilePrefix, "vv-engine"),
     },
     {
-      from: VOICEVOX_ENGINE_DIR,
-      to: extraFilePrefix,
+      from: path.resolve(__dirname, "build", "vendored", "7z", sevenZipFile),
+      to: extraFilePrefix + sevenZipFile,
     },
   ],
   // electron-builder installer
@@ -90,6 +114,12 @@ const builderOptions = {
         arch: ["x64"],
       },
     ],
+    certificateSha1:
+      WIN_CERTIFICATE_SHA1 !== "" ? WIN_CERTIFICATE_SHA1 : undefined,
+    signingHashAlgorithms:
+      WIN_SIGNING_HASH_ALGORITHMS !== ""
+        ? WIN_SIGNING_HASH_ALGORITHMS
+        : undefined,
   },
   nsisWeb: {
     artifactName:

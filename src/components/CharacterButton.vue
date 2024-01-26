@@ -1,9 +1,11 @@
 <template>
   <q-btn
+    ref="buttonRef"
     flat
     class="q-pa-none character-button"
     :disable="uiLocked"
     :class="{ opaque: loading }"
+    aria-haspopup="menu"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
     <div class="icon-container">
@@ -11,6 +13,7 @@
         v-if="selectedStyleInfo != undefined"
         class="q-pa-none q-ma-none"
         :src="selectedStyleInfo.iconPath"
+        :alt="selectedVoiceInfoText"
       />
       <q-avatar v-else-if="!emptiable" rounded size="2rem" color="primary"
         ><span color="text-display-on-primary">?</span></q-avatar
@@ -23,6 +26,8 @@
       class="character-menu"
       transition-show="none"
       transition-hide="none"
+      :max-height="maxMenuHeight"
+      @before-show="updateMenuHeight"
     >
       <q-list style="min-width: max-content" class="character-item-container">
         <q-item
@@ -43,9 +48,9 @@
         </q-item>
         <q-item v-if="emptiable" class="to-unselect-item q-pa-none">
           <q-btn
+            v-close-popup
             flat
             no-caps
-            v-close-popup
             class="full-width"
             :class="selectedCharacter == undefined && 'selected-background'"
             @click="$emit('update:selectedVoice', undefined)"
@@ -61,9 +66,9 @@
         >
           <q-btn-group flat class="col full-width">
             <q-btn
+              v-close-popup
               flat
               no-caps
-              v-close-popup
               class="col-grow"
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
               @mouseover="reassignSubMenuOpen(-1)"
@@ -80,9 +85,9 @@
                   "
                 />
                 <q-avatar
+                  v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
                   class="engine-icon"
                   rounded
-                  v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
                 >
                   <img
                     :src="
@@ -105,30 +110,39 @@
                 :class="
                   subMenuOpenFlags[characterIndex] && 'selected-background'
                 "
+                role="application"
+                :aria-label="`${characterInfo.metas.speakerName}のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます`"
+                tabindex="0"
                 @mouseover="reassignSubMenuOpen(characterIndex)"
                 @mouseleave="reassignSubMenuOpen.cancel()"
+                @keyup.right="reassignSubMenuOpen(characterIndex)"
               >
                 <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
                 <q-menu
+                  v-model="subMenuOpenFlags[characterIndex]"
                   no-parent-event
                   anchor="top end"
                   self="top start"
                   transition-show="none"
                   transition-hide="none"
                   class="character-menu"
-                  v-model="subMenuOpenFlags[characterIndex]"
                 >
                   <q-list style="min-width: max-content">
                     <q-item
                       v-for="(style, styleIndex) in characterInfo.metas.styles"
                       :key="styleIndex"
-                      clickable
                       v-close-popup
+                      clickable
                       active-class="selected-style-item"
                       :active="
                         selectedVoice != undefined &&
                         style.styleId === selectedVoice.styleId
                       "
+                      :aria-pressed="
+                        selectedVoice != undefined &&
+                        style.styleId === selectedVoice.styleId
+                      "
+                      role="button"
                       @click="
                         $emit('update:selectedVoice', {
                           engineId: style.engineId,
@@ -145,9 +159,9 @@
                           :src="characterInfo.metas.styles[styleIndex].iconPath"
                         />
                         <q-avatar
+                          v-if="showEngineInfo"
                           rounded
                           class="engine-icon"
-                          v-if="showEngineInfo"
                         >
                           <img
                             :src="
@@ -159,9 +173,9 @@
                         </q-avatar>
                       </q-avatar>
                       <q-item-section v-if="style.styleName"
-                        >{{ characterInfo.metas.speakerName }} ({{
+                        >{{ characterInfo.metas.speakerName }}（{{
                           style.styleName
-                        }})</q-item-section
+                        }}）</q-item-section
                       >
                       <q-item-section v-else>{{
                         characterInfo.metas.speakerName
@@ -179,11 +193,12 @@
 </template>
 
 <script setup lang="ts">
+import { debounce, QBtn } from "quasar";
+import { computed, Ref, ref } from "vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
-import { debounce } from "quasar";
-import { computed, ref } from "vue";
+import { formatCharacterStyleName } from "@/store/utility";
 
 const props = withDefaults(
   defineProps<{
@@ -227,6 +242,20 @@ const selectedCharacter = computed(() => {
       )
   );
   return character;
+});
+
+const selectedVoiceInfoText = computed(() => {
+  if (!selectedCharacter.value) {
+    return "キャラクター未選択";
+  }
+
+  const speakerName = selectedCharacter.value.metas.speakerName;
+  if (!selectedStyleInfo.value) {
+    return speakerName;
+  }
+
+  const styleName = selectedStyleInfo.value.styleName;
+  return formatCharacterStyleName(speakerName, styleName);
 });
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>
@@ -291,6 +320,22 @@ const reassignSubMenuOpen = debounce((idx: number) => {
   arr[idx] = true;
   subMenuOpenFlags.value = arr;
 }, 100);
+
+// 高さを制限してメニューが下方向に展開されるようにする
+const buttonRef: Ref<InstanceType<typeof QBtn> | undefined> = ref();
+const heightLimit = "65vh"; // QMenuのデフォルト値
+const maxMenuHeight = ref(heightLimit);
+const updateMenuHeight = () => {
+  if (buttonRef.value == undefined)
+    throw new Error("buttonRef.value == undefined");
+  const el = buttonRef.value.$el;
+  if (!(el instanceof Element)) throw new Error("!(el instanceof Element)");
+  const buttonRect = el.getBoundingClientRect();
+  // QMenuは展開する方向のスペースが不足している場合、自動的に展開方向を変更してしまうためmax-heightで制限する。
+  // AudioDetailよりボタンが下に来ることはないのでその最低高185pxに余裕を持たせた170pxを最小の高さにする。
+  // pxで指定するとウインドウサイズ変更に追従できないので ウインドウの高さの96% - ボタンの下端の座標 でメニューの高さを決定する。
+  maxMenuHeight.value = `max(170px, min(${heightLimit}, calc(96vh - ${buttonRect.bottom}px)))`;
+};
 </script>
 
 <style scoped lang="scss">
@@ -298,9 +343,11 @@ const reassignSubMenuOpen = debounce((idx: number) => {
 
 .character-button {
   border: solid 1px;
-  border-color: colors.$primary-light;
+  border-color: colors.$primary;
   font-size: 0;
   height: fit-content;
+
+  background: colors.$background;
 
   .icon-container {
     height: 2rem;
@@ -360,9 +407,6 @@ const reassignSubMenuOpen = debounce((idx: number) => {
   }
   .to-unselect-item {
     order: -2;
-  }
-  .selected-character-item {
-    order: -1; // 選択中のキャラを上にする
   }
 
   .selected-character-item,

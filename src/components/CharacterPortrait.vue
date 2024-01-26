@@ -1,10 +1,10 @@
 <template>
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
-    <span class="character-engine-name" v-if="isMultipleEngine">{{
+    <span v-if="isMultipleEngine" class="character-engine-name">{{
       engineName
     }}</span>
-    <img :src="portraitPath" class="character-portrait" />
+    <img :src="portraitPath" class="character-portrait" :alt="characterName" />
     <div v-if="isInitializingSpeaker" class="loading">
       <q-spinner color="primary" size="5rem" :thickness="4" />
     </div>
@@ -15,6 +15,7 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { AudioKey } from "@/type/preload";
+import { formatCharacterStyleName } from "@/store/utility";
 
 const store = useStore();
 
@@ -28,8 +29,8 @@ const characterInfo = computed(() => {
   const styleId = audioItem?.voice.styleId;
 
   if (
-    engineId === undefined ||
-    styleId === undefined ||
+    engineId == undefined ||
+    styleId == undefined ||
     !store.state.engineIds.some((id) => id === engineId)
   )
     return undefined;
@@ -52,9 +53,16 @@ const styleInfo = computed(() => {
 });
 
 const characterName = computed(() => {
-  return styleInfo.value?.styleName
-    ? `${characterInfo.value?.metas.speakerName} (${styleInfo.value?.styleName})`
-    : characterInfo.value?.metas.speakerName;
+  // 初期化前・未選択時
+  if (characterInfo.value == undefined) {
+    return "（表示エラー）";
+  }
+
+  const speakerName = characterInfo.value.metas.speakerName;
+  const styleName = styleInfo.value?.styleName;
+  return styleName
+    ? formatCharacterStyleName(speakerName, styleName)
+    : speakerName;
 });
 
 const engineName = computed(() => {
@@ -74,7 +82,10 @@ const portraitPath = computed(
 
 const isInitializingSpeaker = computed(() => {
   const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-  return store.state.audioKeyInitializingSpeaker === activeAudioKey;
+  return (
+    activeAudioKey &&
+    store.state.audioKeysWithInitializingSpeaker.includes(activeAudioKey)
+  );
 });
 
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);

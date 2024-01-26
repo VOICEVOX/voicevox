@@ -4,7 +4,8 @@
 [default.extend-identifiers]
 
 [default.extend-words]
-ba="ba" # 7zコマンドの-baオプション
+ba = "ba" # 7zコマンドの-baオプション
+commitish = "commitish" # softprops/action-gh-releaseのオプションの１つ
 
 [files]
 extend-exclude = ["package-lock.json", "src/store/project.ts", "*.svg"]

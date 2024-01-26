@@ -8,8 +8,8 @@
     <menu-button
       v-for="(root, index) of menudata"
       :key="index"
-      :menudata="root"
       v-model:selected="subMenuOpenFlags[index]"
+      :menudata="root"
       :disable="menubarLocked"
       @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
@@ -26,19 +26,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, ComputedRef, watch } from "vue";
-import { useStore } from "@/store";
-import MenuButton from "@/components/MenuButton.vue";
-import TitleBarButtons from "@/components/TitleBarButtons.vue";
-import { useQuasar } from "quasar";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
+import { ref, computed, watch } from "vue";
 import {
   generateAndConnectAndSaveAudioWithDialog,
-  generateAndSaveAllAudioWithDialog,
+  multiGenerateAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
   connectAndExportTextWithDialog,
-} from "@/components/Dialog";
+} from "./Dialog";
+import MenuButton from "./MenuButton.vue";
+import TitleBarButtons from "./TitleBarButtons.vue";
+import { useStore } from "@/store";
+import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
+import { setHotkeyFunctions } from "@/store/setting";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
 export type MenuItemBase<T extends string> = {
@@ -49,35 +48,47 @@ export type MenuItemBase<T extends string> = {
 export type MenuItemSeparator = MenuItemBase<"separator">;
 
 export type MenuItemRoot = MenuItemBase<"root"> & {
-  onClick: () => void;
+  onClick?: () => void;
   subMenu: MenuItemData[];
   icon?: string;
+  disabled?: boolean;
   disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
   icon?: string;
+  disabled?: boolean;
   disableWhenUiLocked: boolean;
+  disablreloadingLocked?: boolean;
 };
 
-export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
-  checked: ComputedRef<boolean>;
-  onClick: () => void;
-  disableWhenUiLocked: boolean;
-};
-
-export type MenuItemData =
-  | MenuItemSeparator
-  | MenuItemRoot
-  | MenuItemButton
-  | MenuItemCheckbox;
+export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
 
 export type MenuItemType = MenuItemData["type"];
 
 const store = useStore();
-const $q = useQuasar();
 const currentVersion = ref("");
+
+// デフォルトエンジンの代替先ポート
+const defaultEngineAltPortTo = computed<number | undefined>(() => {
+  const altPortInfos = store.state.altPortInfos;
+
+  // ref: https://github.com/VOICEVOX/voicevox/blob/32940eab36f4f729dd0390dca98f18656240d60d/src/views/EditorHome.vue#L522-L528
+  const defaultEngineInfo = Object.values(store.state.engineInfos).find(
+    (engine) => engine.type === "default"
+  );
+  if (defaultEngineInfo == undefined) return undefined;
+
+  // <defaultEngineId>: { from: number, to: number } -> to (代替先ポート)
+  if (defaultEngineInfo.uuid in altPortInfos) {
+    return altPortInfos[defaultEngineInfo.uuid].to;
+  } else {
+    return undefined;
+  }
+});
+
 window.electron.getAppInfos().then((obj) => {
   currentVersion.value = obj.version;
 });
@@ -90,17 +101,17 @@ const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
-const enableMultiEngine = computed(
-  () => store.state.experimentalSetting.enableMultiEngine
-);
-
+const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 const titleText = computed(
   () =>
     (isEdited.value ? "*" : "") +
-    (projectName.value !== undefined ? projectName.value + " - " : "") +
+    (projectName.value != undefined ? projectName.value + " - " : "") +
     "VOICEVOX" +
     (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
-    (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "")
+    (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
+    (defaultEngineAltPortTo.value != null
+      ? ` - Port: ${defaultEngineAltPortTo.value}`
+      : "")
 );
 
 // FIXME: App.vue内に移動する
@@ -116,9 +127,9 @@ const createNewProject = async () => {
 
 const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
-    await generateAndSaveAllAudioWithDialog({
-      encoding: store.state.savingSetting.fileEncoding,
-      quasarDialog: $q.dialog,
+    await multiGenerateAndSaveAudioWithDialog({
+      audioKeys: store.state.audioKeys,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
       dispatch: store.dispatch,
     });
   }
@@ -127,44 +138,48 @@ const generateAndSaveAllAudio = async () => {
 const generateAndConnectAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
     await generateAndConnectAndSaveAudioWithDialog({
-      quasarDialog: $q.dialog,
       dispatch: store.dispatch,
-      encoding: store.state.savingSetting.fileEncoding,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
 };
 
-const generateAndSaveOneAudio = async () => {
+const generateAndSaveSelectedAudio = async () => {
   if (uiLocked.value) return;
 
   const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
   if (activeAudioKey == undefined) {
-    $q.dialog({
+    store.dispatch("SHOW_ALERT_DIALOG", {
       title: "テキスト欄が選択されていません",
       message: "音声を書き出したいテキスト欄を選択してください。",
-      ok: {
-        label: "閉じる",
-        flat: true,
-        textColor: "secondary",
-      },
     });
     return;
   }
 
-  await generateAndSaveOneAudioWithDialog({
-    audioKey: activeAudioKey,
-    encoding: store.state.savingSetting.fileEncoding,
-    quasarDialog: $q.dialog,
-    dispatch: store.dispatch,
-  });
+  const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
+  if (
+    store.state.experimentalSetting.enableMultiSelect &&
+    selectedAudioKeys.length > 1
+  ) {
+    await multiGenerateAndSaveAudioWithDialog({
+      audioKeys: selectedAudioKeys,
+      dispatch: store.dispatch,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+    });
+  } else {
+    await generateAndSaveOneAudioWithDialog({
+      audioKey: activeAudioKey,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+      dispatch: store.dispatch,
+    });
+  }
 };
 
 const connectAndExportText = async () => {
   if (!uiLocked.value) {
     await connectAndExportTextWithDialog({
-      quasarDialog: $q.dialog,
       dispatch: store.dispatch,
-      encoding: store.state.savingSetting.fileEncoding,
+      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
     });
   }
 };
@@ -175,15 +190,15 @@ const importTextFile = () => {
   }
 };
 
-const saveProject = () => {
+const saveProject = async () => {
   if (!uiLocked.value) {
-    store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+    await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
   }
 };
 
-const saveProjectAs = () => {
+const saveProjectAs = async () => {
   if (!uiLocked.value) {
-    store.dispatch("SAVE_PROJECT_FILE", {});
+    await store.dispatch("SAVE_PROJECT_FILE", {});
   }
 };
 
@@ -238,9 +253,9 @@ const menudata = ref<MenuItemData[]>([
       },
       {
         type: "button",
-        label: "一つだけ書き出し",
+        label: "選択音声を書き出し",
         onClick: () => {
-          generateAndSaveOneAudio();
+          generateAndSaveSelectedAudio();
         },
         disableWhenUiLocked: true,
       },
@@ -279,16 +294,16 @@ const menudata = ref<MenuItemData[]>([
       {
         type: "button",
         label: "プロジェクトを上書き保存",
-        onClick: () => {
-          saveProject();
+        onClick: async () => {
+          await saveProject();
         },
         disableWhenUiLocked: true,
       },
       {
         type: "button",
         label: "プロジェクトを名前を付けて保存",
-        onClick: () => {
-          saveProjectAs();
+        onClick: async () => {
+          await saveProjectAs();
         },
         disableWhenUiLocked: true,
       },
@@ -299,6 +314,12 @@ const menudata = ref<MenuItemData[]>([
           importProject();
         },
         disableWhenUiLocked: true,
+      },
+      {
+        type: "root",
+        label: "最近使ったプロジェクト",
+        disableWhenUiLocked: true,
+        subMenu: [],
       },
     ],
   },
@@ -409,10 +430,10 @@ const reassignSubMenuOpen = (idx: number) => {
   }
 };
 
-const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
   ["新規プロジェクト", createNewProject],
   ["音声書き出し", generateAndSaveAllAudio],
-  ["一つだけ書き出し", generateAndSaveOneAudio],
+  ["選択音声を書き出し", generateAndSaveSelectedAudio],
   ["音声を繋げて書き出し", generateAndConnectAndSaveAllAudio],
   ["テキスト読み込む", importTextFile],
   ["プロジェクトを上書き保存", saveProject],
@@ -500,6 +521,20 @@ async function updateEngines() {
       disableWhenUiLocked: false,
     });
   }
+  // マルチエンジンオフモードの解除
+  if (store.state.isMultiEngineOffMode) {
+    engineMenu.subMenu.push({
+      type: "button",
+      label: "マルチエンジンをオンにして再読み込み",
+      onClick() {
+        store.dispatch("RELOAD_APP", {
+          isMultiEngineOffMode: false,
+        });
+      },
+      disableWhenUiLocked: false,
+      disablreloadingLocked: true,
+    });
+  }
 }
 // engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
 // FIXME: computedにする
@@ -507,21 +542,51 @@ watch([engineInfos, engineManifests, enableMultiEngine], updateEngines, {
   immediate: true,
 });
 
-// マルチエンジンオフモードの解除
-if (store.state.isMultiEngineOffMode) {
-  (
-    menudata.value.find((data) => data.label === "エンジン") as MenuItemRoot
-  ).subMenu.push({
-    type: "button",
-    label: "マルチエンジンをオンにして再起動",
-    onClick() {
-      store.dispatch("RESTART_APP", {
-        isMultiEngineOffMode: false,
-      });
-    },
-    disableWhenUiLocked: false,
-  });
+// 「最近開いたプロジェクト」の更新
+async function updateRecentProjects() {
+  const projectsMenu = menudata.value.find(
+    (x) => x.type === "root" && x.label === "ファイル"
+  ) as MenuItemRoot;
+  const recentProjectsMenu = projectsMenu.subMenu.find(
+    (x) => x.type === "root" && x.label === "最近使ったプロジェクト"
+  ) as MenuItemRoot;
+
+  const recentlyUsedProjects = await store.dispatch(
+    "GET_RECENTLY_USED_PROJECTS"
+  );
+  recentProjectsMenu.subMenu =
+    recentlyUsedProjects.length === 0
+      ? [
+          {
+            type: "button",
+            label: "最近使ったプロジェクトはありません",
+            onClick: () => {
+              // 何もしない
+            },
+            disabled: true,
+            disableWhenUiLocked: false,
+          },
+        ]
+      : recentlyUsedProjects.map(
+          (projectFilePath) =>
+            ({
+              type: "button",
+              label: projectFilePath,
+              onClick: () => {
+                store.dispatch("LOAD_PROJECT_FILE", {
+                  filePath: projectFilePath,
+                });
+              },
+              disableWhenUiLocked: false,
+            } as MenuItemData)
+        );
 }
+
+const projectFilePath = computed(() => store.state.projectFilePath);
+
+watch(projectFilePath, updateRecentProjects, {
+  immediate: true,
+});
 
 watch(uiLocked, () => {
   // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ

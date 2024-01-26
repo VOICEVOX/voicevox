@@ -11,26 +11,27 @@
     "
     :class="selected ? 'active-menu' : 'bg-transparent'"
     :disable="disable"
+    aria-haspopup="menu"
     @click="
       (menudata.type === 'button' || menudata.type === 'root') &&
-        menudata.onClick()
+        menudata.onClick?.()
     "
   >
     {{ menudata.label }}
     <q-menu
-      v-if="menudata.subMenu"
+      v-if="'subMenu' in menudata"
+      v-model="selectedComputed"
       transition-show="none"
       transition-hide="none"
       :fit="true"
-      v-model="selectedComputed"
     >
       <q-list dense>
         <menu-item
           v-for="(menu, index) of menudata.subMenu"
           :key="index"
-          :menudata="menu"
-          :disable="uiLocked && menu.disableWhenUiLocked"
           v-model:selected="subMenuOpenFlags[index]"
+          :menudata="menu"
+          :disable="isDisabledMenuItem(menu)"
           @mouseenter="reassignSubMenuOpen(index)"
           @mouseleave="reassignSubMenuOpen.cancel()"
         />
@@ -64,6 +65,7 @@ const emit =
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+const reloadingLocked = computed(() => store.state.reloadingLock);
 const selectedComputed = computed({
   get: () => props.selected,
   set: (val) => emit("update:selected", val),
@@ -74,6 +76,13 @@ const subMenuOpenFlags = ref(
     ? [...Array(props.menudata.subMenu.length)].map(() => false)
     : []
 );
+
+const isDisabledMenuItem = computed(() => (menu: MenuItemData) => {
+  if (menu.type === "separator") return false;
+  if (menu.disableWhenUiLocked && uiLocked.value) return true;
+  if (menu.disablreloadingLocked && reloadingLocked.value) return true;
+  return false;
+});
 
 const reassignSubMenuOpen = debounce((idx: number) => {
   if (subMenuOpenFlags.value[idx]) return;

@@ -1,5 +1,10 @@
 # VOICEVOX
 
+[![releases](https://img.shields.io/github/v/release/VOICEVOX/voicevox?label=Release)](https://github.com/VOICEVOX/voicevox/releases)
+[![build](https://github.com/VOICEVOX/voicevox/actions/workflows/build.yml/badge.svg)](https://github.com/VOICEVOX/voicevox/actions/workflows/build.yml)
+[![test](https://github.com/VOICEVOX/voicevox/actions/workflows/test.yml/badge.svg)](https://github.com/VOICEVOX/voicevox/actions/workflows/test.yml)
+[![Discord](https://img.shields.io/discord/879570910208733277?color=5865f2&label=&logo=discord&logoColor=ffffff)](https://discord.gg/WMwWetrzuh)
+
 [VOICEVOX](https://voicevox.hiroshiba.jp/) のエディターです。
 
 （エンジンは [VOICEVOX ENGINE](https://github.com/VOICEVOX/voicevox_engine/) 、
@@ -18,18 +23,19 @@ VOICEVOX のエディタは Electron・TypeScript・Vue・Vuex などが活用�
 Issue を解決するプルリクエストを作成される際は、別の方と同じ Issue に取り組むことを避けるため、
 Issue 側で取り組み始めたことを伝えるか、最初に Draft プルリクエストを作成してください。
 
+[VOICEVOX 非公式 Discord サーバー](https://discord.gg/WMwWetrzuh)にて、開発の議論や雑談を行っています。気軽にご参加ください。
+
 ### デザインガイドライン
 
-[UX・UIデザインの方針](./docs/UX・UIデザインの方針.md)をご参照ください。
+[UX・UI デザインの方針](./docs/UX・UIデザインの方針.md)をご参照ください。
 
 ## 環境構築
 
-[.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
+[.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。  
+Node.js の管理ツール（[nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など）を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
+
 Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を
 Fork して `git clone` し、次のコマンドを実行してください。
-
-Node.js の管理ツール ([nvs](https://github.com/jasongin/nvs)など)を利用すると、
-[.node-version](.node-version) を簡単にインストールすることができます。
 
 ```bash
 npm ci
@@ -37,27 +43,38 @@ npm ci
 
 ## 実行
 
-`.env.production`をコピーして`.env`を作成し、`DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`のフルパスを指定します。
+`.env.production`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`のパスを指定します。
 
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
 
-Windowsの場合でもパスの区切り文字は`\`ではなく`/`なのでご注意ください。
+Windows の場合でもパスの区切り文字は`\`ではなく`/`なのでご注意ください。
 
-また、macOS向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Contents/MacOS/run`を指定してください。
+また、macOS 向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Contents/MacOS/run`を指定してください。
 
-Linuxの場合は、[Releases](https://github.com/VOICEVOX/voicevox/releases/)から入手できるtar.gz版に含まれる`run`コマンドを指定してください。
-AppImage版の場合は`$ /path/to/VOICEVOX.AppImage --appimage-mount`でファイルシステムをマウントできます。
+Linux の場合は、[Releases](https://github.com/VOICEVOX/voicevox/releases/)から入手できる tar.gz 版に含まれる`run`コマンドを指定してください。
+AppImage 版の場合は`$ /path/to/VOICEVOX.AppImage --appimage-mount`でファイルシステムをマウントできます。
 
-VOICEVOXエディタの実行とは別にエンジンAPIのサーバを立てている場合は`executionFilePath`を指定する必要はありません。
-これは製品版VOICEVOXを起動している場合もあてはまります。
+VOICEVOX エディタの実行とは別にエンジン API のサーバを立てている場合は`executionFilePath`を指定する必要はありません。
+これは製品版 VOICEVOX を起動している場合もあてはまります。
 
-また、エンジンAPIの宛先エンドポイントを変更する場合は`DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
+また、エンジン API の宛先エンドポイントを変更する場合は`VITE_DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
 
 ```bash
 npm run electron:serve
 ```
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
+
+### ブラウザ版の実行（開発中）
+
+別途音声合成エンジンを起動し、以下を実行して表示された localhost へアクセスします。
+
+```bash
+npm run browser:serve
+```
+
+また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/#/home>  
+今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド
 
@@ -67,12 +84,62 @@ npm run electron:build
 
 ## テスト
 
+### 単体テスト
+
 ```bash
 npm run test:unit
-npm run test:e2e
+npm run test-watch:unit # 監視モード
+```
+
+### ブラウザ End to End テスト
+
+Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
+
+> **Note**
+> 一部のエンジンの設定を書き換えるテストは、CI(Github Actions)上でのみ実行されるようになっています。
+
+```bash
+npm run test:browser-e2e
+npm run test-watch:browser-e2e # 監視モード
+npm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
+```
+
+Playwright を使用しているためテストパターンを生成することもできます。
+**ブラウザ版を起動している状態で**以下のコマンドを実行してください。
+
+```bash
+npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
+```
+
+詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。
+
+#### スクリーンショットの更新
+
+ブラウザ End to End テストでは Visual Regression Testing を行っています。
+以下の手順でスクリーンショットを更新できます：
+
+1. フォークしたリポジトリの設定で GitHub Actions を有効にします。
+2. リポジトリの設定の Actions > General > Workflow permissions で Read and write permissions を選択します。
+3. `[update snapshots]` という文字列をコミットメッセージに含めてコミットします。
+
+   ```bash
+   git commit -m "UIを変更 [update snapshots]"
+   ```
+
+4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
+
+### Electron End to End テスト
+
+Electron の機能が必要な、エンジン起動・終了などを含めた End to End テストを実行します。
+
+```bash
+npm run test:electron-e2e
+npm run test-watch:electron-e2e # 監視モード
 ```
 
 ## 依存ライブラリのライセンス情報の生成
+
+依存ライブラリのライセンス情報は Github Workflow でのビルド時に自動生成されます。以下のコマンドで生成できます。
 
 ```bash
 # get licenses.json from voicevox_engine as engine_licenses.json
@@ -104,16 +171,10 @@ typos
 
 ## 型チェック
 
-TypeScriptの型チェックを行います。
-※ 現在チェック方法は2種類ありますが、将来的に1つになります。
+TypeScript の型チェックを行います。
 
 ```bash
-# .tsのみ型チェック
 npm run typecheck
-
-# .vueも含めて型チェック
-# ※ 現状、大量にエラーが検出されます。
-npm run typecheck:vue-tsc
 ```
 
 ## Markdownlint
@@ -149,7 +210,22 @@ npx openapi-generator-cli generate \
 npm run fmt
 ```
 
+### OpanAPI generator のバージョンアップ
+
+新しいバージョンの確認・インストールは次のコマンドで行えます。
+
+```bash
+npx openapi-generator-cli version-manager list
+```
+
+## VS Code でのデバッグ実行
+
+npm scripts の `serve` や `electron:serve` などの開発ビルド下では、ビルドに使用している vite で sourcemap を出力するため、ソースコードと出力されたコードの対応付けが行われます。
+
+`.vscode/launch.template.json` をコピーして `.vscode/launch.json` を作成することで、開発ビルドを VS Code から実行し、デバッグを可能にするタスクが有効になります。
+
 ## ライセンス
 
 LGPL v3 と、ソースコードの公開が不要な別ライセンスのデュアルライセンスです。
-別ライセンスを取得したい場合は、ヒホ（twitter: [@hiho_karuta](https://twitter.com/hiho_karuta)）に求めてください。
+別ライセンスを取得したい場合は、ヒホに求めてください。  
+X アカウント: [@hiho_karuta](https://x.com/hiho_karuta)

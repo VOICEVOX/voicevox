@@ -1,24 +1,50 @@
 /// <reference types="vitest" />
 import path from "path";
-import treeKill from "tree-kill";
 import { rmSync } from "fs";
+import treeKill from "tree-kill";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
-import { defineConfig } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
+import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
+import { quasar } from "@quasar/vite-plugin";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
-const isElectron = process.env.VITE_IS_ELECTRON === "true";
+const isElectron = process.env.VITE_TARGET === "electron";
+const isBrowser = process.env.VITE_TARGET === "browser";
 
 export default defineConfig((options) => {
+  const packageName = process.env.npm_package_name;
+  const env = loadEnv(options.mode, __dirname);
+  if (!packageName?.startsWith(env.VITE_APP_NAME)) {
+    throw new Error(
+      `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`
+    );
+  }
+  const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+  process.env.VITE_7Z_BIN_NAME =
+    (options.mode === "development"
+      ? path.join(__dirname, "build", "vendored", "7z") + path.sep
+      : "") +
+    {
+      win32: "7za.exe",
+      linux: "7zzs",
+      darwin: "7zz",
+    }[process.platform];
+  process.env.VITE_APP_VERSION = process.env.npm_package_version;
+  const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
+    ? "inline"
+    : false;
   return {
     root: path.resolve(__dirname, "src"),
+    envDir: __dirname,
     build: {
       outDir: path.resolve(__dirname, "dist"),
       chunkSizeWarningLimit: 10000,
+      sourcemap,
     },
     publicDir: path.resolve(__dirname, "public"),
     css: {
@@ -38,19 +64,28 @@ export default defineConfig((options) => {
         path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
       ],
       environment: "happy-dom",
+      environmentMatchGlobs: [
+        [
+          path
+            .resolve(__dirname, "tests/unit/background/**/*.spec.ts")
+            .replace(/\\/g, "/"),
+          "node",
+        ],
+      ],
+      globals: true,
     },
 
     plugins: [
       vue(),
+      quasar(),
+      nodePolyfills(),
       options.mode !== "test" &&
         checker({
           overlay: false,
           eslint: {
             lintCommand: "eslint --ext .ts,.vue .",
           },
-          typescript: true,
-          // FIXME: vue-tscの型エラーを解決したら有効化する
-          // vueTsc: true,
+          vueTsc: true,
         }),
       isElectron &&
         electron({
@@ -71,9 +106,25 @@ export default defineConfig((options) => {
             plugins: [tsconfigPaths({ root: __dirname })],
             build: {
               outDir: path.resolve(__dirname, "dist"),
+              sourcemap,
             },
           },
         }),
+      isBrowser && injectBrowserPreloadPlugin(),
     ],
   };
 });
+
+const injectBrowserPreloadPlugin = (): Plugin => {
+  return {
+    name: "inject-browser-preload",
+    transformIndexHtml: {
+      enforce: "pre" as const,
+      transform: (html: string) =>
+        html.replace(
+          "<!-- %BROWSER_PRELOAD% -->",
+          `<script type="module" src="./browser/preload.ts"></script>`
+        ),
+    },
+  };
+};

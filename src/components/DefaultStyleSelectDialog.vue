@@ -1,11 +1,11 @@
 <template>
   <q-dialog
+    v-model="isOpenComputed"
     maximized
     transition-show="none"
     transition-hide="none"
     transition-duration="100"
     class="default-style-select-dialog transparent-backdrop"
-    v-model="isOpenComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -51,8 +51,8 @@
               <q-item
                 v-for="(style, styleIndex) of characterInfo.metas.styles"
                 :key="styleIndex"
-                clickable
                 v-ripple="isHoverableStyleItem"
+                clickable
                 class="q-pa-none style-item"
                 :class="[
                   selectedStyleIndexComputed === styleIndex &&
@@ -64,7 +64,7 @@
                 <div class="style-item-inner">
                   <img :src="style.iconPath" class="style-icon" />
                   <span class="text-subtitle1 q-ma-sm">{{
-                    style.styleName || "ノーマル"
+                    style.styleName || DEFAULT_STYLE_NAME
                   }}</span>
                   <div class="voice-samples">
                     <q-btn
@@ -81,7 +81,7 @@
                           ? 'stop'
                           : 'play_arrow'
                       "
-                      color="primary-light"
+                      color="primary"
                       class="voice-sample-btn"
                       @mouseenter="isHoverableStyleItem = false"
                       @mouseleave="isHoverableStyleItem = true"
@@ -100,11 +100,7 @@
                       "
                     />
                     <q-radio
-                      class="
-                        absolute-top-right
-                        no-pointer-events
-                        text-primary-light
-                      "
+                      class="absolute-top-right no-pointer-events text-primary"
                       :model-value="selectedStyleIndexComputed"
                       :val="styleIndex"
                       @update:model-value="selectStyleIndex(styleIndex)"
@@ -123,6 +119,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
+import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import {
   CharacterInfo,
   DefaultStyleId,
@@ -176,7 +173,7 @@ const selectStyleIndex = (styleIndex: number) => {
   // 音声を再生する。同じ話者/styleIndexだったら停止する。
   const selectedStyleInfo = props.characterInfo.metas.styles[styleIndex];
   if (
-    playing.value !== undefined &&
+    playing.value != undefined &&
     playing.value.styleId === selectedStyleInfo.styleId
   ) {
     stop();
@@ -283,11 +280,11 @@ const closeDialog = () => {
       align-content: center;
       justify-content: center;
       .style-item {
-        box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
+        box-shadow: 0 0 0 1px rgba(colors.$primary-rgb, 0.5);
         border-radius: 10px;
         overflow: hidden;
         &.active-style-item {
-          box-shadow: 0 0 0 2px colors.$primary-light;
+          box-shadow: 0 0 0 2px colors.$primary;
         }
         &:hover :deep(.q-focus-helper) {
           opacity: 0 !important;

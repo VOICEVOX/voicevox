@@ -17,6 +17,7 @@ import {
   audioCommandStoreState,
   getCharacterInfo,
 } from "./audio";
+import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
@@ -24,8 +25,14 @@ import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
-import { DefaultStyleId } from "@/type/preload";
 import { engineStoreState, engineStore } from "./engine";
+import {
+  DefaultStyleId,
+  EngineId,
+  SpeakerId,
+  StyleId,
+  Voice,
+} from "@/type/preload";
 
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
@@ -108,6 +115,23 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
+  GET_ALL_VOICES: {
+    getter(state) {
+      const flattenCharacters = Object.values(state.characterInfos).flatMap(
+        (characterInfos) => characterInfos
+      );
+      const flattenVoices: Voice[] = flattenCharacters.flatMap((c) =>
+        c.metas.styles.map((s) => ({
+          engineId: EngineId(s.engineId),
+          speakerId: SpeakerId(c.metas.speakerUuid),
+          styleId: StyleId(s.styleId),
+        }))
+      );
+
+      return flattenVoices;
+    },
+  },
+
   GET_HOW_TO_USE_TEXT: {
     async action() {
       return await window.electron.getHowToUseText();
@@ -170,7 +194,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
           const defaultStyleId = defaultStyleIds.find(
             (styleId) => styleId.speakerUuid == speakerUuid
           );
-          if (defaultStyleId === undefined) {
+          if (defaultStyleId == undefined) {
             return true;
           }
 
@@ -220,7 +244,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
             audioItem.voice.styleId
           );
 
-          if (characterInfo === undefined)
+          if (characterInfo == undefined)
             throw new Error("assert characterInfo !== undefined");
 
           const speakerUuid = characterInfo.metas.speakerUuid;
@@ -326,6 +350,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   state: {
     ...uiStoreState,
     ...audioStoreState,
+    ...audioPlayerStoreState,
     ...commandStoreState,
     ...engineStoreState,
     ...projectStoreState,
@@ -340,6 +365,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   getters: {
     ...uiStore.getters,
     ...audioStore.getters,
+    ...audioPlayerStore.getters,
     ...commandStore.getters,
     ...engineStore.getters,
     ...projectStore.getters,
@@ -354,6 +380,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   mutations: {
     ...uiStore.mutations,
     ...audioStore.mutations,
+    ...audioPlayerStore.mutations,
     ...commandStore.mutations,
     ...engineStore.mutations,
     ...projectStore.mutations,
@@ -368,6 +395,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   actions: {
     ...uiStore.actions,
     ...audioStore.actions,
+    ...audioPlayerStore.actions,
     ...engineStore.actions,
     ...commandStore.actions,
     ...projectStore.actions,

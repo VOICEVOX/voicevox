@@ -12,11 +12,11 @@
     :character-info="selectedCharacterInfo"
   />
   <q-dialog
+    v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="transparent-backdrop"
-    v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -49,8 +49,8 @@
               <q-item
                 v-for="speaker of speakerWithMultipleStyles"
                 :key="speaker.metas.speakerUuid"
-                clickable
                 v-ripple="isHoverableItem"
+                clickable
                 class="q-pa-none character-item"
                 :class="[isHoverableItem && 'hoverable-character-item']"
                 @click="openStyleSelectDialog(speaker)"
@@ -64,10 +64,13 @@
                     "
                     class="style-icon"
                   />
-                  <span class="text-subtitle1 q-ma-sm">{{
-                    characterInfosMap[speaker.metas.speakerUuid].metas
-                      .speakerName
-                  }}</span>
+                  <span
+                    class="text-subtitle1 q-mt-sm q-mb-xs text-weight-bold"
+                    >{{
+                      characterInfosMap[speaker.metas.speakerUuid].metas
+                        .speakerName
+                    }}</span
+                  >
                   <div
                     v-if="
                       characterInfosMap[speaker.metas.speakerUuid].metas.styles
@@ -75,15 +78,16 @@
                     "
                     class="style-select-container"
                   >
-                    <span
-                      >{{
-                        selectedStyles[speaker.metas.speakerUuid]
-                          ? selectedStyles[speaker.metas.speakerUuid].styleName
-                          : "ノーマル"
-                      }}（{{
+                    <span>{{
+                      selectedStyles[speaker.metas.speakerUuid]
+                        ? selectedStyles[speaker.metas.speakerUuid].styleName
+                        : DEFAULT_STYLE_NAME
+                    }}</span
+                    ><span class="text-caption"
+                      >全{{
                         characterInfosMap[speaker.metas.speakerUuid].metas
                           .styles.length
-                      }}スタイル）</span
+                      }}スタイル</span
                     >
                   </div>
                 </div>
@@ -99,9 +103,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
+import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
-
 const props =
   defineProps<{
     modelValue: boolean;
@@ -159,7 +163,7 @@ watch([() => props.modelValue], async ([newValue]) => {
   if (newValue) {
     speakerWithMultipleStyles.value = store.state.userCharacterOrder
       .map((speakerUuid) => characterInfosMap.value[speakerUuid])
-      .filter((characterInfo) => characterInfo !== undefined)
+      .filter((characterInfo) => characterInfo != undefined)
       .filter(
         (characterInfo) => characterInfo.metas.styles.length > 1
       ) as CharacterInfo[];
@@ -256,11 +260,11 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
     align-content: center;
     justify-content: center;
     .character-item {
-      box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
+      box-shadow: 0 0 0 1px rgba(colors.$primary-rgb, 0.5);
       border-radius: 10px;
       overflow: hidden;
       &.selected-character-item {
-        box-shadow: 0 0 0 2px colors.$primary-light;
+        box-shadow: 0 0 0 2px colors.$primary;
       }
       &:hover :deep(.q-focus-helper) {
         opacity: 0 !important;
@@ -283,10 +287,9 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
         }
         .style-select-container {
           display: flex;
-          flex-direction: row;
+          flex-direction: column;
           justify-content: center;
           align-items: center;
-          margin-top: -1rem;
         }
       }
     }

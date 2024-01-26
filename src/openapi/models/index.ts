@@ -2,9 +2,13 @@
 /* eslint-disable */
 export * from './AccentPhrase';
 export * from './AudioQuery';
-export * from './DownloadableLibrary';
+export * from './BaseLibraryInfo';
+export * from './CorsPolicyMode';
+export * from './DownloadableLibraryInfo';
 export * from './EngineManifest';
 export * from './HTTPValidationError';
+export * from './InstalledLibraryInfo';
+export * from './LibrarySpeaker';
 export * from './LicenseInfo';
 export * from './Mora';
 export * from './MorphableTargetInfo';
@@ -21,4 +25,6 @@ export * from './SupportedFeatures';
 export * from './UpdateInfo';
 export * from './UserDictWord';
 export * from './ValidationError';
+export * from './ValidationErrorLocInner';
+export * from './VvlibManifest';
 export * from './WordTypes';

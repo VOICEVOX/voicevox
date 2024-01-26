@@ -1,10 +1,10 @@
 <template>
   <q-dialog
+    v-model="engineManageDialogOpenedComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="setting-dialog transparent-backdrop"
-    v-model="engineManageDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container>
@@ -20,13 +20,13 @@
               flat
               icon="close"
               color="display"
-              @click="toDialogClosedState"
               :disabled="isAddingEngine || uiLocked"
+              @click="toDialogClosedState"
             />
           </q-toolbar>
         </q-header>
         <q-page class="row">
-          <div class="ui-lock-popup" v-if="uiLockedState">
+          <div v-if="uiLockedState" class="ui-lock-popup">
             <div class="q-pa-md">
               <q-spinner color="primary" size="2.5rem" />
               <div class="q-mt-xs">
@@ -48,8 +48,8 @@
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="toAddEngineState"
                   :disable="uiLocked"
+                  @click="toAddEngineState"
                   >追加</q-btn
                 >
               </div>
@@ -68,19 +68,19 @@
                 <q-item
                   v-for="id in engineIds"
                   :key="id"
-                  tag="label"
                   v-ripple
+                  tag="label"
                   clickable
-                  @click="selectEngine(id)"
                   :active="selectedId === id"
                   active-class="active-engine"
+                  @click="selectEngine(id)"
                 >
                   <q-item-section avatar>
                     <q-avatar rounded color="primary">
                       <img
+                        v-if="engineIcons[id]"
                         :src="engineIcons[id]"
                         :alt="engineInfos[id].name"
-                        v-if="engineIcons[id]"
                       />
                       <span v-else class="text-display-on-primary"> ? </span>
                     </q-avatar>
@@ -110,11 +110,11 @@
 
               <div class="q-ma-sm">
                 <q-btn-toggle
+                  v-model="engineLoaderType"
                   :options="[
                     { value: 'vvpp', label: 'VVPPファイル' },
                     { value: 'dir', label: '既存エンジン' },
                   ]"
-                  v-model="engineLoaderType"
                   color="surface"
                   unelevated
                   text-color="display"
@@ -124,7 +124,7 @@
               </div>
             </div>
 
-            <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'vvpp'">
+            <div v-if="engineLoaderType === 'vvpp'" class="no-wrap q-pl-md">
               <div class="q-ma-sm">
                 VVPPファイルでエンジンをインストールします。
               </div>
@@ -137,7 +137,7 @@
                   placeholder="VVPPファイルの場所"
                   @click="selectVvppFile"
                 >
-                  <template v-slot:append>
+                  <template #append>
                     <q-btn
                       square
                       dense
@@ -151,15 +151,19 @@
                       </q-tooltip>
                     </q-btn>
                   </template>
-                  <template v-slot:error>
+                  <template #error>
                     {{
-                      getEngineDirValidationMessage(newEngineDirValidationState)
+                      newEngineDirValidationState
+                        ? getEngineDirValidationMessage(
+                            newEngineDirValidationState
+                          )
+                        : undefined
                     }}
                   </template>
                 </q-input>
               </div>
             </div>
-            <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'dir'">
+            <div v-if="engineLoaderType === 'dir'" class="no-wrap q-pl-md">
               <div class="q-ma-sm">PC内にあるエンジンを追加します。</div>
               <div class="q-ma-sm">
                 <q-input
@@ -168,13 +172,13 @@
                   dense
                   readonly
                   :error="
-                    newEngineDirValidationState &&
+                    newEngineDirValidationState != undefined &&
                     newEngineDirValidationState !== 'ok'
                   "
                   placeholder="エンジンフォルダの場所"
                   @click="selectEngineDir"
                 >
-                  <template v-slot:append>
+                  <template #append>
                     <q-btn
                       square
                       dense
@@ -188,9 +192,13 @@
                       </q-tooltip>
                     </q-btn>
                   </template>
-                  <template v-slot:error>
+                  <template #error>
                     {{
-                      getEngineDirValidationMessage(newEngineDirValidationState)
+                      newEngineDirValidationState
+                        ? getEngineDirValidationMessage(
+                            newEngineDirValidationState
+                          )
+                        : undefined
                     }}
                   </template>
                 </q-input>
@@ -210,8 +218,8 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="addEngine"
                 :disabled="!canAddEngine"
+                @click="addEngine"
                 >追加</q-btn
               >
             </div>
@@ -227,7 +235,7 @@
                 :alt="engineInfos[selectedId].name"
                 class="engine-icon"
               />
-              <div class="q-mt-sm inline-block" v-else>
+              <div v-else class="q-mt-sm inline-block">
                 <q-avatar rounded color="primary" size="2rem">
                   <span class="text-display-on-primary"> ? </span>
                 </q-avatar>
@@ -267,15 +275,23 @@
                   engineManifests[selectedId].supportedFeatures
                 "
               >
-                <li
-                  v-for="[feature, value] in Object.entries(
-                    engineManifests[selectedId].supportedFeatures
-                  )"
+                <template
+                  v-for="(value, feature) in engineManifests[selectedId]
+                    .supportedFeatures != null
+                    ? engineManifests[selectedId].supportedFeatures
+                    : null"
                   :key="feature"
-                  :class="value ? '' : 'text-warning'"
                 >
-                  {{ getFeatureName(feature) }}：{{ value ? "対応" : "非対応" }}
-                </li>
+                  <!-- TODO: vvlib機能がリリースされたらmanageLibraryも表示するようにする -->
+                  <li
+                    v-if="feature != 'manageLibrary'"
+                    :class="value ? '' : 'text-warning'"
+                  >
+                    {{ getFeatureName(feature) }}：{{
+                      value ? "対応" : "非対応"
+                    }}
+                  </li>
+                </template>
               </ul>
               <span v-else>（取得に失敗しました）</span>
             </div>
@@ -302,27 +318,27 @@
                 outline
                 text-color="warning"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="deleteEngine"
                 :disable="
                   uiLocked ||
                   !['path', 'vvpp'].includes(engineInfos[selectedId].type)
                 "
+                @click="deleteEngine"
                 >削除</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="openSelectedEngineDirectory"
                 :disable="uiLocked || !engineInfos[selectedId].path"
+                @click="openSelectedEngineDirectory"
                 >フォルダを開く</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="restartSelectedEngine"
                 :disable="uiLocked || engineStates[selectedId] === 'STARTING'"
+                @click="restartSelectedEngine"
                 >再起動</q-btn
               >
             </div>
@@ -333,389 +349,317 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, ref, watch } from "vue";
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { useQuasar } from "quasar";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 
 type EngineLoaderType = "dir" | "vvpp";
 
-export default defineComponent({
-  name: "EngineManageDialog",
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", val: boolean): void;
+  }>();
 
-  setup(props, { emit }) {
-    const store = useStore();
-    const $q = useQuasar();
+const store = useStore();
 
-    const engineManageDialogOpenedComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
-    const uiLockedState = ref<null | "addingEngine" | "deletingEngine">(null); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
-    const uiLocked = computed(() => uiLockedState.value !== null);
-    const isAddingEngine = ref(false);
-    const engineLoaderType = ref<EngineLoaderType>("vvpp");
-
-    const lockUi = function <T>(
-      lockType: "addingEngine" | "deletingEngine",
-      action: Promise<T>
-    ): Promise<T> {
-      uiLockedState.value = lockType;
-      return action.finally(() => {
-        uiLockedState.value = null;
-      });
-    };
-
-    const categorizedEngineIds = computed(() => {
-      const sortedEngineInfos = store.getters.GET_SORTED_ENGINE_INFOS;
-      const result = {
-        default: Object.values(sortedEngineInfos)
-          .filter((info) => info.type === "default")
-          .map((info) => info.uuid),
-        plugin: Object.values(sortedEngineInfos)
-          .filter((info) => info.type === "path" || info.type === "vvpp")
-          .map((info) => info.uuid),
-      };
-      return Object.fromEntries(
-        Object.entries(result).filter(([, ids]) => ids.length > 0)
-      );
-    });
-    const engineInfos = computed(() => store.state.engineInfos);
-    const engineStates = computed(() => store.state.engineStates);
-    const engineManifests = computed(() => store.state.engineManifests);
-    const engineIcons = computed(() =>
-      Object.fromEntries(
-        Object.entries(store.state.engineManifests).map(([id, manifest]) => [
-          id,
-          base64ImageToUri(manifest.icon),
-        ])
-      )
-    );
-    const engineVersions = ref<Record<EngineId, string>>({});
-
-    watch(
-      [engineInfos, engineStates, engineManifests],
-      async () => {
-        // FIXME: engineInfosをMapにする
-        for (const idStr of Object.keys(engineInfos.value)) {
-          const id = EngineId(idStr);
-          if (engineStates.value[id] !== "READY") continue;
-          if (engineVersions.value[id]) continue;
-          const version = await store
-            .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
-            .then((instance) => instance.invoke("versionVersionGet")({}))
-            .catch(() => null);
-          if (!version) continue;
-          // "latest"のようにダブルクォーテーションで囲まれているので、JSON.parseで外す。
-          engineVersions.value = {
-            ...engineVersions.value,
-            [id]: JSON.parse(version),
-          };
-        }
-      },
-      { immediate: true }
-    );
-
-    const selectedId = ref<EngineId | undefined>(undefined);
-
-    const isDeletable = computed(() => {
-      // FIXME: いたるところにエンジンが選択済みかを検証するコードがある。
-      // 選択後に現れる領域は別ComponentにしてselectedIdをpropで渡せばこれは不要になる
-      if (selectedId.value == undefined)
-        throw new Error("engine is not selected");
-      return (
-        engineInfos.value[selectedId.value] &&
-        engineInfos.value[selectedId.value].type === "path"
-      );
-    });
-    const engineDir = computed(() => {
-      if (selectedId.value == undefined)
-        throw new Error("engine is not selected");
-      return engineInfos.value[selectedId.value]?.path || "（組み込み）";
-    });
-
-    const getEngineTypeName = (name: string) => {
-      const engineTypeMap = {
-        default: "デフォルトエンジン",
-        plugin: "追加エンジン",
-      };
-      return engineTypeMap[name as keyof typeof engineTypeMap];
-    };
-
-    const getFeatureName = (name: keyof SupportedFeatures) => {
-      const featureNameMap: { [key in keyof SupportedFeatures]: string } = {
-        adjustMoraPitch: "モーラごとの音高の調整",
-        adjustPhonemeLength: "音素ごとの長さの調整",
-        adjustSpeedScale: "全体の話速の調整",
-        adjustPitchScale: "全体の音高の調整",
-        adjustIntonationScale: "全体の抑揚の調整",
-        adjustVolumeScale: "全体の音量の調整",
-        interrogativeUpspeak: "疑問文の自動調整",
-        synthesisMorphing: "2人の話者でモーフィングした音声を合成",
-      };
-      return featureNameMap[name];
-    };
-
-    const getEngineDirValidationMessage = (
-      result: EngineDirValidationResult
-    ) => {
-      const messageMap: {
-        [key in EngineDirValidationResult]: string | undefined;
-      } = {
-        directoryNotFound: "フォルダが見つかりませんでした。",
-        notADirectory: "フォルダではありません。",
-        manifestNotFound: "engine_manifest.jsonが見つかりませんでした。",
-        invalidManifest: "engine_manifest.jsonの内容が不正です。",
-        alreadyExists: "同じIDのエンジンが既に登録されています。",
-        ok: undefined,
-      };
-      return messageMap[result];
-    };
-
-    const addEngine = () => {
-      $q.dialog({
-        title: "エンジン追加の確認",
-        message:
-          "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
-        cancel: {
-          label: "キャンセル",
-          color: "display",
-          flat: true,
-        },
-        ok: {
-          label: "追加",
-          flat: true,
-          textColor: "warning",
-        },
-      }).onOk(async () => {
-        if (engineLoaderType.value === "dir") {
-          await lockUi(
-            "addingEngine",
-            store.dispatch("ADD_ENGINE_DIR", {
-              engineDir: newEngineDir.value,
-            })
-          );
-
-          requireRestart(
-            "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
-          );
-        } else {
-          const success = await lockUi(
-            "addingEngine",
-            store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
-          );
-          if (success) {
-            requireRestart(
-              "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
-            );
-          }
-        }
-      });
-    };
-    const deleteEngine = () => {
-      $q.dialog({
-        title: "確認",
-        message: "選択中のエンジンを削除します。よろしいですか？",
-        cancel: {
-          label: "キャンセル",
-          color: "display",
-          flat: true,
-        },
-        ok: {
-          label: "削除",
-          flat: true,
-          textColor: "warning",
-        },
-      }).onOk(async () => {
-        if (selectedId.value == undefined)
-          throw new Error("engine is not selected");
-        switch (engineInfos.value[selectedId.value].type) {
-          case "path": {
-            const engineDir = store.state.engineInfos[selectedId.value].path;
-            if (!engineDir)
-              throw new Error("assert engineInfos[selectedId.value].path");
-            await lockUi(
-              "deletingEngine",
-              store.dispatch("REMOVE_ENGINE_DIR", {
-                engineDir,
-              })
-            );
-            requireRestart(
-              "エンジンを削除しました。反映には再起動が必要です。今すぐ再起動しますか？"
-            );
-            break;
-          }
-          case "vvpp": {
-            const success = await lockUi(
-              "deletingEngine",
-              store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value)
-            );
-            if (success) {
-              requireRestart(
-                "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
-              );
-            }
-            break;
-          }
-          default:
-            throw new Error("assert engineInfos[selectedId.value].type");
-        }
-      });
-    };
-
-    const selectEngine = (id: EngineId) => {
-      selectedId.value = id;
-    };
-
-    const openSelectedEngineDirectory = () => {
-      if (selectedId.value == undefined)
-        throw new Error("assert selectedId.value != undefined");
-      store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
-    };
-
-    const restartSelectedEngine = () => {
-      if (selectedId.value == undefined)
-        throw new Error("assert selectedId.value != undefined");
-      store.dispatch("RESTART_ENGINES", {
-        engineIds: [selectedId.value],
-      });
-    };
-
-    const requireRestart = (message: string) => {
-      $q.dialog({
-        title: "再起動が必要です",
-        message: message,
-        noBackdropDismiss: true,
-        cancel: {
-          label: "後で",
-          color: "display",
-          flat: true,
-        },
-        ok: {
-          label: "再起動",
-          flat: true,
-          textColor: "warning",
-        },
-      })
-        .onOk(() => {
-          store.dispatch("RESTART_APP", {});
-        })
-        .onCancel(() => {
-          toInitialState();
-        });
-    };
-
-    const newEngineDir = ref("");
-    const newEngineDirValidationState =
-      ref<EngineDirValidationResult | null>(null);
-    const selectEngineDir = async () => {
-      const path = await window.electron.showOpenDirectoryDialog({
-        title: "エンジンのフォルダを選択",
-      });
-      if (path) {
-        newEngineDir.value = path;
-        if (path === "") {
-          newEngineDirValidationState.value = null;
-          return;
-        }
-        newEngineDirValidationState.value = await store.dispatch(
-          "VALIDATE_ENGINE_DIR",
-          {
-            engineDir: path,
-          }
-        );
-      }
-    };
-
-    const vvppFilePath = ref("");
-    const selectVvppFile = async () => {
-      const path = await window.electron.showVvppOpenDialog({
-        title: "vvppファイルを選択",
-        defaultPath: vvppFilePath.value,
-      });
-      if (path) {
-        vvppFilePath.value = path;
-      }
-    };
-
-    const canAddEngine = computed(() => {
-      if (uiLocked.value) return false;
-      if (engineLoaderType.value === "dir") {
-        return (
-          newEngineDir.value !== "" &&
-          newEngineDirValidationState.value === "ok"
-        );
-      } else if (engineLoaderType.value === "vvpp") {
-        return vvppFilePath.value !== "";
-      } else {
-        return false;
-      }
-    });
-
-    // ステートの移動
-    // 初期状態
-    const toInitialState = () => {
-      selectedId.value = undefined;
-      isAddingEngine.value = false;
-    };
-    // エンジン追加状態
-    const toAddEngineState = () => {
-      isAddingEngine.value = true;
-      selectedId.value = undefined;
-      newEngineDirValidationState.value = null;
-      newEngineDir.value = "";
-      vvppFilePath.value = "";
-    };
-    // ダイアログが閉じている状態
-    const toDialogClosedState = () => {
-      engineManageDialogOpenedComputed.value = false;
-      isAddingEngine.value = false;
-    };
-
-    return {
-      engineManageDialogOpenedComputed,
-      categorizedEngineIds,
-      engineInfos,
-      engineStates,
-      engineManifests,
-      engineIcons,
-      engineVersions,
-      engineLoaderType,
-      selectEngine,
-      addEngine,
-      deleteEngine,
-      isDeletable,
-      getFeatureName,
-      getEngineTypeName,
-      getEngineDirValidationMessage,
-      uiLockedState,
-      uiLocked,
-      isAddingEngine,
-      selectedId,
-      toInitialState,
-      toAddEngineState,
-      toDialogClosedState,
-      openSelectedEngineDirectory,
-      restartSelectedEngine,
-      engineDir,
-      newEngineDir,
-      selectEngineDir,
-      newEngineDirValidationState,
-      vvppFilePath,
-      selectVvppFile,
-      canAddEngine,
-    };
-  },
+const engineManageDialogOpenedComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
 });
+const uiLockedState = ref<null | "addingEngine" | "deletingEngine">(null); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
+const uiLocked = computed(() => uiLockedState.value != null);
+const isAddingEngine = ref(false);
+const engineLoaderType = ref<EngineLoaderType>("vvpp");
+
+const lockUi = function <T>(
+  lockType: "addingEngine" | "deletingEngine",
+  action: Promise<T>
+): Promise<T> {
+  uiLockedState.value = lockType;
+  return action.finally(() => {
+    uiLockedState.value = null;
+  });
+};
+
+const categorizedEngineIds = computed(() => {
+  const sortedEngineInfos = store.getters.GET_SORTED_ENGINE_INFOS;
+  const result = {
+    default: Object.values(sortedEngineInfos)
+      .filter((info) => info.type === "default")
+      .map((info) => info.uuid),
+    plugin: Object.values(sortedEngineInfos)
+      .filter((info) => info.type === "path" || info.type === "vvpp")
+      .map((info) => info.uuid),
+  };
+  return Object.fromEntries(
+    Object.entries(result).filter(([, ids]) => ids.length > 0)
+  );
+});
+const engineInfos = computed(() => store.state.engineInfos);
+const engineStates = computed(() => store.state.engineStates);
+const engineManifests = computed(() => store.state.engineManifests);
+const engineIcons = computed(() =>
+  Object.fromEntries(
+    Object.entries(store.state.engineManifests).map(([id, manifest]) => [
+      id,
+      base64ImageToUri(manifest.icon),
+    ])
+  )
+);
+const engineVersions = ref<Record<EngineId, string>>({});
+
+watch(
+  [engineInfos, engineStates, engineManifests],
+  async () => {
+    // FIXME: engineInfosをMapにする
+    for (const idStr of Object.keys(engineInfos.value)) {
+      const id = EngineId(idStr);
+      if (engineStates.value[id] !== "READY") continue;
+      if (engineVersions.value[id]) continue;
+      const version = await store
+        .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
+        .then((instance) => instance.invoke("versionVersionGet")({}))
+        .then((version) => {
+          // OpenAPIのバグで"latest"のようにダブルクォーテーションで囲まれていることがあるので外す
+          if (version.startsWith('"') && version.endsWith('"')) {
+            return version.slice(1, -1);
+          }
+          return version;
+        })
+        .catch(() => null);
+      if (!version) continue;
+      engineVersions.value = {
+        ...engineVersions.value,
+        [id]: version,
+      };
+    }
+  },
+  { immediate: true }
+);
+
+const selectedId = ref<EngineId | undefined>(undefined);
+
+const engineDir = computed(() => {
+  if (selectedId.value == undefined) throw new Error("engine is not selected");
+  return engineInfos.value[selectedId.value]?.path || "（組み込み）";
+});
+
+const getEngineTypeName = (name: string) => {
+  const engineTypeMap = {
+    default: "デフォルトエンジン",
+    plugin: "追加エンジン",
+  };
+  return engineTypeMap[name as keyof typeof engineTypeMap];
+};
+
+const getFeatureName = (name: keyof SupportedFeatures) => {
+  const featureNameMap: { [key in keyof SupportedFeatures]: string } = {
+    adjustMoraPitch: "モーラごとの音高の調整",
+    adjustPhonemeLength: "音素ごとの長さの調整",
+    adjustSpeedScale: "全体の話速の調整",
+    adjustPitchScale: "全体の音高の調整",
+    adjustIntonationScale: "全体の抑揚の調整",
+    adjustVolumeScale: "全体の音量の調整",
+    interrogativeUpspeak: "疑問文の自動調整",
+    synthesisMorphing: "2種類のスタイルでモーフィングした音声を合成",
+    manageLibrary: "音声ライブラリ(vvlib)の管理",
+  };
+  return featureNameMap[name];
+};
+
+const getEngineDirValidationMessage = (result: EngineDirValidationResult) => {
+  const messageMap: {
+    [key in EngineDirValidationResult]: string | undefined;
+  } = {
+    directoryNotFound: "フォルダが見つかりませんでした。",
+    notADirectory: "フォルダではありません。",
+    manifestNotFound: "engine_manifest.jsonが見つかりませんでした。",
+    invalidManifest: "engine_manifest.jsonの内容が不正です。",
+    alreadyExists: "同じIDのエンジンが既に登録されています。",
+    ok: undefined,
+  };
+  return messageMap[result];
+};
+
+const addEngine = async () => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+    title: "エンジン追加の確認",
+    message:
+      "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
+    actionName: "追加",
+  });
+  if (result === "OK") {
+    if (engineLoaderType.value === "dir") {
+      await lockUi(
+        "addingEngine",
+        store.dispatch("ADD_ENGINE_DIR", {
+          engineDir: newEngineDir.value,
+        })
+      );
+
+      requireReload(
+        "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
+      );
+    } else {
+      const success = await lockUi(
+        "addingEngine",
+        store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
+      );
+      if (success) {
+        requireReload(
+          "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
+        );
+      }
+    }
+  }
+};
+const deleteEngine = async () => {
+  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+    title: "エンジン削除の確認",
+    message: "選択中のエンジンを削除します。よろしいですか？",
+    actionName: "削除",
+  });
+  if (result === "OK") {
+    if (selectedId.value == undefined)
+      throw new Error("engine is not selected");
+    switch (engineInfos.value[selectedId.value].type) {
+      case "path": {
+        const engineDir = store.state.engineInfos[selectedId.value].path;
+        if (!engineDir)
+          throw new Error("assert engineInfos[selectedId.value].path");
+        await lockUi(
+          "deletingEngine",
+          store.dispatch("REMOVE_ENGINE_DIR", {
+            engineDir,
+          })
+        );
+        requireReload(
+          "エンジンを削除しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
+        );
+        break;
+      }
+      case "vvpp": {
+        const success = await lockUi(
+          "deletingEngine",
+          store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value)
+        );
+        if (success) {
+          requireReload(
+            "エンジンの削除には再読み込みが必要です。今すぐ再読み込みしますか？"
+          );
+        }
+        break;
+      }
+      default:
+        throw new Error("assert engineInfos[selectedId.value].type");
+    }
+  }
+};
+
+const selectEngine = (id: EngineId) => {
+  selectedId.value = id;
+};
+
+const openSelectedEngineDirectory = () => {
+  if (selectedId.value == undefined)
+    throw new Error("assert selectedId.value != undefined");
+  store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
+};
+
+const restartSelectedEngine = () => {
+  if (selectedId.value == undefined)
+    throw new Error("assert selectedId.value != undefined");
+  store.dispatch("RESTART_ENGINES", {
+    engineIds: [selectedId.value],
+  });
+};
+
+const requireReload = async (message: string) => {
+  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+    title: "再読み込みが必要です",
+    message: message,
+    actionName: "再読み込み",
+    cancel: "後で",
+  });
+  toInitialState();
+  if (result === "OK") {
+    store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+      closeOrReload: "reload",
+    });
+  }
+};
+
+const newEngineDir = ref("");
+const newEngineDirValidationState = ref<EngineDirValidationResult | null>(null);
+const selectEngineDir = async () => {
+  const path = await window.electron.showOpenDirectoryDialog({
+    title: "エンジンのフォルダを選択",
+  });
+  if (path) {
+    newEngineDir.value = path;
+    if (path === "") {
+      newEngineDirValidationState.value = null;
+      return;
+    }
+    newEngineDirValidationState.value = await store.dispatch(
+      "VALIDATE_ENGINE_DIR",
+      {
+        engineDir: path,
+      }
+    );
+  }
+};
+
+const vvppFilePath = ref("");
+const selectVvppFile = async () => {
+  const path = await window.electron.showVvppOpenDialog({
+    title: "vvppファイルを選択",
+    defaultPath: vvppFilePath.value,
+  });
+  if (path) {
+    vvppFilePath.value = path;
+  }
+};
+
+const canAddEngine = computed(() => {
+  if (uiLocked.value) return false;
+  if (engineLoaderType.value === "dir") {
+    return (
+      newEngineDir.value !== "" && newEngineDirValidationState.value === "ok"
+    );
+  } else if (engineLoaderType.value === "vvpp") {
+    return vvppFilePath.value !== "";
+  } else {
+    return false;
+  }
+});
+
+// ステートの移動
+// 初期状態
+const toInitialState = () => {
+  selectedId.value = undefined;
+  isAddingEngine.value = false;
+};
+// エンジン追加状態
+const toAddEngineState = () => {
+  isAddingEngine.value = true;
+  selectedId.value = undefined;
+  newEngineDirValidationState.value = null;
+  newEngineDir.value = "";
+  vvppFilePath.value = "";
+};
+// ダイアログが閉じている状態
+const toDialogClosedState = () => {
+  engineManageDialogOpenedComputed.value = false;
+  isAddingEngine.value = false;
+};
 </script>
 
 <style lang="scss" scoped>

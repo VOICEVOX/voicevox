@@ -1,17 +1,19 @@
 import {
   AppInfos,
-  ElectronStoreType,
+  ConfigType,
   EngineInfo,
   EngineDirValidationResult,
-  HotkeySetting,
+  HotkeySettingType,
   ThemeSetting,
-  ToolbarSetting,
+  ToolbarSettingType,
   UpdateInfo,
-  WriteFileErrorResult,
   NativeThemeType,
-  EngineSetting,
+  EngineSettingType,
   EngineId,
+  MessageBoxReturnValue,
 } from "@/type/preload";
+import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
 /**
  * invoke, handle
@@ -20,11 +22,6 @@ export type IpcIHData = {
   GET_APP_INFOS: {
     args: [];
     return: AppInfos;
-  };
-
-  GET_TEMP_DIR: {
-    args: [];
-    return: string;
   };
 
   GET_HOW_TO_USE_TEXT: {
@@ -65,6 +62,11 @@ export type IpcIHData = {
   GET_PRIVACY_POLICY_TEXT: {
     args: [];
     return: string;
+  };
+
+  GET_ALT_PORT_INFOS: {
+    args: [];
+    return: AltPortInfos;
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {
@@ -110,7 +112,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   SHOW_QUESTION_DIALOG: {
@@ -121,6 +123,7 @@ export type IpcIHData = {
         message: string;
         buttons: string[];
         cancelId?: number;
+        defaultId?: number;
       }
     ];
     return: number;
@@ -133,7 +136,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
+    return: MessageBoxReturnValue;
   };
 
   SHOW_ERROR_DIALOG: {
@@ -143,12 +146,7 @@ export type IpcIHData = {
         message: string;
       }
     ];
-    return: Electron.MessageBoxReturnValue;
-  };
-
-  OPEN_TEXT_EDIT_CONTEXT_MENU: {
-    args: [];
-    return: void;
+    return: MessageBoxReturnValue;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -191,6 +189,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  OPEN_LOG_DIRECTORY: {
+    args: [];
+    return: void;
+  };
+
   ENGINE_INFOS: {
     args: [];
     return: EngineInfo[];
@@ -222,18 +225,18 @@ export type IpcIHData = {
   };
 
   HOTKEY_SETTINGS: {
-    args: [obj: { newData?: HotkeySetting }];
-    return: HotkeySetting[];
+    args: [obj: { newData?: HotkeySettingType }];
+    return: HotkeySettingType[];
   };
 
   GET_DEFAULT_HOTKEY_SETTINGS: {
     args: [];
-    return: HotkeySetting[];
+    return: HotkeySettingType[];
   };
 
   GET_DEFAULT_TOOLBAR_SETTING: {
     args: [];
-    return: ToolbarSetting;
+    return: ToolbarSettingType;
   };
 
   THEME: {
@@ -247,20 +250,17 @@ export type IpcIHData = {
   };
 
   GET_SETTING: {
-    args: [key: keyof ElectronStoreType];
-    return: ElectronStoreType[keyof ElectronStoreType];
+    args: [key: keyof ConfigType];
+    return: ConfigType[keyof ConfigType];
   };
 
   SET_SETTING: {
-    args: [
-      key: keyof ElectronStoreType,
-      newValue: ElectronStoreType[keyof ElectronStoreType]
-    ];
-    return: ElectronStoreType[keyof ElectronStoreType];
+    args: [key: keyof ConfigType, newValue: ConfigType[keyof ConfigType]];
+    return: ConfigType[keyof ConfigType];
   };
 
   SET_ENGINE_SETTING: {
-    args: [engineId: EngineId, engineSetting: EngineSetting];
+    args: [engineId: EngineId, engineSetting: EngineSettingType];
     return: void;
   };
 
@@ -284,24 +284,19 @@ export type IpcIHData = {
     return: EngineDirValidationResult;
   };
 
-  RESTART_APP: {
-    args: [obj: { isMultiEngineOffMode: boolean }];
+  RELOAD_APP: {
+    args: [obj: { isMultiEngineOffMode?: boolean }];
     return: void;
-  };
-
-  JOIN_PATH: {
-    args: [obj: { pathArray: string[] }];
-    return: string;
   };
 
   WRITE_FILE: {
     args: [obj: { filePath: string; buffer: ArrayBuffer }];
-    return: WriteFileErrorResult | undefined;
+    return: Result<undefined>;
   };
 
   READ_FILE: {
     args: [obj: { filePath: string }];
-    return: ArrayBuffer;
+    return: Result<ArrayBuffer>;
   };
 };
 
@@ -350,7 +345,12 @@ export type IpcSOData = {
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    args: [];
+    args: [
+      obj: {
+        closeOrReload: "close" | "reload";
+        isMultiEngineOffMode?: boolean;
+      }
+    ];
     return: void;
   };
 

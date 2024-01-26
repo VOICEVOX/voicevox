@@ -2,19 +2,19 @@
 
 ## 動作環境・仕様に関する質問
 
-## Q. 動作環境を教えてください
+### Q. 動作環境を教えてください
 
-### CPU版
+#### CPU 版
 
 Windows／Mac／Linux 搭載の PC に対応しています。
 
 ※Windows：Windows 10・Windows 11  
 ※Mac：macOS Catalina 以降  
-※Linux：Ubuntu 18.04・Ubuntu 20.04
+※Linux：Ubuntu 20.04
 
-### GPU版
+#### GPU 版
 
-GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
+DirectML 対応の GPU を搭載した Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
 
 ## インストールに関する質問
 
@@ -45,13 +45,17 @@ GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応して
 
 デフォルトのインストール先は下記の場所です。
 
-#### Windows版のインストール先
+#### Windows 版のインストール先
 
-`C:\Users\(ユーザー名)\AppData\Local\Programs\VOICEVOX`
+`C:\Users\（ユーザー名）\AppData\Local\Programs\VOICEVOX`
 
-#### Mac版のインストール先
+#### Mac 版のインストール先
 
-`/Applications/VOICEVOX` もしくは `/Users/(ユーザー名)/Applications/VOICEVOX`
+`/Applications/VOICEVOX` もしくは `/Users/（ユーザー名）/Applications/VOICEVOX`
+
+#### Ubuntu 版のインストール先
+
+`/home/（ユーザー名）/.voicevox`
 
 ### Q. アップデート方法を教えてください
 
@@ -70,30 +74,34 @@ GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応して
 ### Q. 使い方がわかりません
 
 [使い方](https://voicevox.hiroshiba.jp/how_to_use) Web ページか、ソフトウェアのヘルプからご確認ください。  
-わからないところがあれば Twitter にて `#VOICEVOX` を付けてツイートすると、解決策を教えてくれる方がいらっしゃるかもしれません。
+わからないところがあれば X（旧 Twitter）にて `#VOICEVOX` を付けてポストすると、解決策を教えてくれる方がいらっしゃるかもしれません。
 
 ### Q. オフラインのパソコンで使用できますか？
 
 お使いいただけます。
 
+### Q. 辞書をインポート／エクスポートしたいです
+
+起動中のエンジンの設定画面で行えます。ソフトウェア起動中にブラウザから`http://127.0.0.1:[エンジンのポート番号]/setting`にアクセスするとエンジンの設定画面が開きます。エンジンのポート番号はデフォルトで`50021`です。
+
 ## 不具合・エラーに関する質問
 
 ### Q. バグを見つけました。どこに報告すれば良いですか？
 
-バグを見つけられた方はツイッターにてご報告いただけると助かります。  
-VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
+バグを見つけられた方は X にてご報告いただけると助かります。  
+VOICEVOX X アカウント [@voicevox_pj](https://x.com/voicevox_pj)
 
 ### Q. バージョンアップすると表示がおかしくなりました
 
 設定がなにか問題を起こしている可能性があります。ソフトウェアを終了して後述のパスにある設定ファイルを消去してもう一度起動してみてください。
 
-#### Windows版の設定ファイル
+#### Windows 版の設定ファイル
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\config.json`
+`C:\Users\（ユーザー名）\AppData\Roaming\voicevox\config.json`
 
-#### Mac版の設定ファイル
+#### Mac 版の設定ファイル
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox/config.json`
+`/Users/（ユーザー名）/Library/Application Support/voicevox/config.json`
 
 ### Q. エンジンの起動が失敗したというエラーが表示されます
 
@@ -129,15 +137,15 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 ### Q. エラーログはどこで確認できますか？
 
-以下のフォルダに保存されています。
+ヘルプ → お問い合わせ → ログフォルダを開くボタン から確認できます。具体的には以下のフォルダに保存されています。
 
-#### Windows版
+#### Windows 版
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs`
+`C:\Users\（ユーザー名）\AppData\Roaming\voicevox\logs`
 
-#### Mac版
+#### Mac 版
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox/logs`
+`/Users/（ユーザー名）/Library/Logs/voicevox-cpu`
 
 ### Q. Ubuntu 22.04 で動きません
 
@@ -165,6 +173,17 @@ sudo apt install libfuse2
 音声の最初や最後に音声クレジットを挿入してください。  
 キャラクターの利用規約に案内がある場合はそちらを優先してください。
 
+### Q. 音楽配信サービスなどで公開する場合のクレジット表記はどうすれば良いですか？
+
+概要欄の無い楽曲投稿系プラットフォームの場合、タイトルやアーティストなどの欄にクレジットを記載するか、楽曲中に音声クレジットを挿入してください。  
+タイトルの例「タイトル（VOICEVOX:キャラクター名）」「タイトル feat. キャラクター名(VOICEVOX)」など  
+アーティストの例「キャラクター名(VOICEVOX)」「VOICEVOX:キャラクター名」など
+
+### Q. スピーカーでの音声案内など、機械で音声を流したい場合のクレジット記載はどうすれば良いですか？
+
+音声の最初や最後に音声クレジットを挿入するか、その機械や周辺にてクレジットを表記してください。  
+キャラクターの利用規約に案内がある場合はそちらを優先してください。
+
 ### Q. 会社や学校で使いたいです
 
 VOICEVOX で作成された音声は、クレジット表記をして頂ければ商用・非商用問わず使用できます。  
@@ -176,6 +195,10 @@ VOICEVOX で作成された音声は、クレジット表記をして頂けれ�
 詳細は各キャラクターの利用規約をご確認ください。
 
 ## その他
+
+### Q. 金銭的な支援は受け付けていますか？
+
+[pixiv FANBOX](https://hiho.fanbox.cc/)にて募集しています。支援頂いたお金は全て VOICEVOX のために活用させて頂きます。
 
 ### Q. 公式イラストや立ち絵はどこからダウンロードできますか？
 
@@ -203,8 +226,8 @@ VOICEVOX は、キャラクターとソフトウェアで権利者が異なり�
 
 ### Q. 問い合わせ先を教えてください
 
-ご感想・ご要望は、ぜひ Twitter にてハッシュタグ `#VOICEVOX` を付けてツイートしてください。開発の励みになります。
+ご感想・ご要望は、ぜひ X（旧 Twitter）にてハッシュタグ `#VOICEVOX` を付けてポストしてください。開発の励みになります。
 
-うまく動かない場合や不具合を見つけられた方は、Twitter にて不具合をハッシュタグ `#VOICEVOX` を付けてツイートしていただくか、VOICEVOX 公式（[@voicevox_pj](https://twitter.com/voicevox_pj)）までご報告ください。
+うまく動かない場合や不具合を見つけられた方は、X にて不具合をハッシュタグ `#VOICEVOX` を付けてポストしていただくか、VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj)）までご報告ください。
 
-その他、 Q&A に掲載されていないご質問があれば VOICEVOX 公式（[@voicevox_pj](https://twitter.com/voicevox_pj)）にお問い合わせください。
+その他、 Q&A に掲載されていないご質問があれば VOICEVOX 公式（[@voicevox_pj](https://x.com/voicevox_pj)）にお問い合わせください。

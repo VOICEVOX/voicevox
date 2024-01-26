@@ -1,20 +1,20 @@
 <template>
-  <div class="root full-height q-py-md" v-if="query">
+  <div v-if="query" class="root full-height q-py-md" data-testid="AudioInfo">
     <div v-if="enablePreset" class="q-px-md">
       <div class="row items-center no-wrap q-mb-xs">
         <div class="text-body1">プリセット</div>
-        <q-btn dense flat icon="more_vert">
+        <q-btn dense flat icon="more_vert" :disable="uiLocked">
           <q-menu transition-duration="100">
             <q-list>
               <q-item
-                clickable
                 v-close-popup
+                clickable
                 @click="registerPreset({ overwrite: false })"
               >
                 <q-item-section avatar>
                   <q-avatar
                     icon="add_circle_outline"
-                    color="primary-light"
+                    color="primary"
                     text-color="display-on-primary"
                   ></q-avatar>
                 </q-item-section>
@@ -23,14 +23,14 @@
                 </q-item-section>
               </q-item>
               <q-item
-                clickable
                 v-close-popup
+                clickable
                 @click="showsPresetEditDialog = true"
               >
                 <q-item-section avatar>
                   <q-avatar
                     icon="edit_note"
-                    color="primary-light"
+                    color="primary"
                     text-color="display-on-primary"
                   ></q-avatar>
                 </q-item-section>
@@ -44,23 +44,25 @@
       </div>
 
       <div class="full-width row" @wheel="setPresetByScroll($event)">
+        <!-- TODO: 同じプリセットを選択したときにも複数選択中の他のAudioItemのプリセットを変更するようにする -->
         <q-select
           v-model="presetSelectModel"
           :options="selectablePresetList"
           class="col overflow-hidden"
-          color="primary-light"
+          color="primary"
           text-color="display-on-primary"
           outlined
           dense
           transition-show="none"
           transition-hide="none"
+          :disable="uiLocked"
         >
-          <template v-slot:selected-item="scope">
+          <template #selected-item="scope">
             <div class="preset-select-label">
               {{ scope.opt.label }}
             </div>
           </template>
-          <template v-slot:no-option>
+          <template #no-option>
             <q-item>
               <q-item-section class="text-grey">
                 プリセットはありません
@@ -70,13 +72,13 @@
         </q-select>
 
         <q-btn
+          v-show="!isRegisteredPreset || isChangedPreset"
           dense
           outline
           class="col-auto q-ml-xs"
           size="sm"
           text-color="display"
           :label="isRegisteredPreset ? '再登録' : '登録'"
-          v-show="!isRegisteredPreset || isChangedPreset"
           @click="registerPreset({ overwrite: isRegisteredPreset })"
         />
       </div>
@@ -97,7 +99,7 @@
                 autofocus
                 hide-selected
                 label="タイトル"
-                color="primary-light"
+                color="primary"
                 use-input
                 input-debounce="0"
                 :model-value="presetName"
@@ -109,10 +111,10 @@
 
             <q-card-actions align="right">
               <q-btn
+                v-close-popup
                 flat
                 label="キャンセル"
                 @click="closeAllDialog"
-                v-close-popup
               />
               <q-btn flat type="submit" label="確定" />
             </q-card-actions>
@@ -146,10 +148,10 @@
                 <q-item-section> プリセットの再登録のみ行う </q-item-section>
               </q-item>
               <q-item
+                v-close-popup
                 clickable
                 class="no-margin"
                 @click="closeAllDialog"
-                v-close-popup
               >
                 <q-item-section avatar>
                   <q-avatar icon="arrow_forward" text-color="blue" />
@@ -164,233 +166,47 @@
       <q-separator class="q-mt-md" />
     </div>
 
-    <div class="q-mx-md">
-      <q-input
-        dense
-        borderless
-        maxlength="5"
-        :class="{
-          disabled: speedScaleSlider.qSliderProps.disable.value,
-        }"
-        :disable="speedScaleSlider.qSliderProps.disable.value"
-        :model-value="
-          speedScaleSlider.state.currentValue.value != undefined
-            ? speedScaleSlider.state.currentValue.value.toFixed(2)
-            : speedScaleSlider.qSliderProps.min.value.toFixed(2)
-        "
-        @change="handleChangeSpeedScaleInput"
-      >
-        <template v-slot:before
-          ><span class="text-body1 text-display">話速</span></template
+    <div class="parameters q-px-md">
+      <div v-for="parameter in parameters" :key="parameter.label">
+        <q-input
+          dense
+          borderless
+          maxlength="5"
+          :class="{
+            disabled: parameter.slider.qSliderProps.disable.value,
+          }"
+          :disable="parameter.slider.qSliderProps.disable.value"
+          :model-value="
+            parameter.slider.state.currentValue.value != undefined
+              ? parameter.slider.state.currentValue.value.toFixed(2)
+              : parameter.slider.qSliderProps.min.value.toFixed(2)
+          "
+          @change="handleParameterChange(parameter, $event)"
         >
-      </q-input>
-      <q-slider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="speedScaleSlider.qSliderProps.min.value"
-        :max="speedScaleSlider.qSliderProps.max.value"
-        :step="speedScaleSlider.qSliderProps.step.value"
-        :disable="speedScaleSlider.qSliderProps.disable.value"
-        :model-value="speedScaleSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          speedScaleSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="speedScaleSlider.qSliderProps.onChange"
-        @wheel="speedScaleSlider.qSliderProps.onWheel"
-        @pan="speedScaleSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <q-input
-        dense
-        borderless
-        maxlength="5"
-        :class="{
-          disabled: pitchScaleSlider.qSliderProps.disable.value,
-        }"
-        :disable="pitchScaleSlider.qSliderProps.disable.value"
-        :model-value="
-          pitchScaleSlider.state.currentValue.value != undefined
-            ? pitchScaleSlider.state.currentValue.value.toFixed(2)
-            : pitchScaleSlider.qSliderProps.min.value.toFixed(2)
-        "
-        @change="handleChangePitchScaleInput"
-      >
-        <template v-slot:before
-          ><span class="text-body1 text-display">音高</span></template
-        >
-      </q-input>
-      <q-slider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="pitchScaleSlider.qSliderProps.min.value"
-        :max="pitchScaleSlider.qSliderProps.max.value"
-        :step="pitchScaleSlider.qSliderProps.step.value"
-        :disable="pitchScaleSlider.qSliderProps.disable.value"
-        :model-value="pitchScaleSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          pitchScaleSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="pitchScaleSlider.qSliderProps.onChange"
-        @wheel="pitchScaleSlider.qSliderProps.onWheel"
-        @pan="pitchScaleSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <q-input
-        dense
-        borderless
-        maxlength="5"
-        :class="{
-          disabled: intonationScaleSlider.qSliderProps.disable.value,
-        }"
-        :model-value="
-          intonationScaleSlider.state.currentValue.value != undefined
-            ? intonationScaleSlider.state.currentValue.value.toFixed(2)
-            : intonationScaleSlider.qSliderProps.min.value.toFixed(2)
-        "
-        :disable="intonationScaleSlider.qSliderProps.disable.value"
-        @change="handleChangeIntonationInput"
-      >
-        <template v-slot:before
-          ><span class="text-body1 text-display">抑揚</span></template
-        >
-      </q-input>
-      <q-slider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="intonationScaleSlider.qSliderProps.min.value"
-        :max="intonationScaleSlider.qSliderProps.max.value"
-        :step="intonationScaleSlider.qSliderProps.step.value"
-        :disable="intonationScaleSlider.qSliderProps.disable.value"
-        :model-value="intonationScaleSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          intonationScaleSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="intonationScaleSlider.qSliderProps.onChange"
-        @wheel="intonationScaleSlider.qSliderProps.onWheel"
-        @pan="intonationScaleSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <q-input
-        dense
-        borderless
-        maxlength="5"
-        :class="{
-          disabled: volumeScaleSlider.qSliderProps.disable.value,
-        }"
-        :disable="volumeScaleSlider.qSliderProps.disable.value"
-        :model-value="
-          volumeScaleSlider.state.currentValue.value != undefined
-            ? volumeScaleSlider.state.currentValue.value.toFixed(2)
-            : volumeScaleSlider.qSliderProps.min.value.toFixed(2)
-        "
-        @change="handleChangeVolumeInput"
-      >
-        <template v-slot:before
-          ><span class="text-body1 text-display">音量</span></template
-        >
-      </q-input>
-      <q-slider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="volumeScaleSlider.qSliderProps.min.value"
-        :max="volumeScaleSlider.qSliderProps.max.value"
-        :step="volumeScaleSlider.qSliderProps.step.value"
-        :disable="volumeScaleSlider.qSliderProps.disable.value"
-        :model-value="volumeScaleSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          volumeScaleSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="volumeScaleSlider.qSliderProps.onChange"
-        @wheel="volumeScaleSlider.qSliderProps.onWheel"
-        @pan="volumeScaleSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <q-input
-        dense
-        borderless
-        maxlength="5"
-        :class="{
-          disabled: prePhonemeLengthSlider.qSliderProps.disable.value,
-        }"
-        :disable="prePhonemeLengthSlider.qSliderProps.disable.value"
-        :model-value="
-          prePhonemeLengthSlider.state.currentValue.value != undefined
-            ? prePhonemeLengthSlider.state.currentValue.value.toFixed(2)
-            : prePhonemeLengthSlider.qSliderProps.min.value.toFixed(2)
-        "
-        @change="handleChangePrePhonemeLengthInput"
-      >
-        <template v-slot:before
-          ><span class="text-body1 text-display">開始無音</span></template
-        >
-      </q-input>
-      <q-slider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="prePhonemeLengthSlider.qSliderProps.min.value"
-        :max="prePhonemeLengthSlider.qSliderProps.max.value"
-        :step="prePhonemeLengthSlider.qSliderProps.step.value"
-        :disable="prePhonemeLengthSlider.qSliderProps.disable.value"
-        :model-value="prePhonemeLengthSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          prePhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="prePhonemeLengthSlider.qSliderProps.onChange"
-        @wheel="prePhonemeLengthSlider.qSliderProps.onWheel"
-        @pan="prePhonemeLengthSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <q-input
-        dense
-        borderless
-        maxlength="5"
-        :class="{
-          disabled: postPhonemeLengthSlider.qSliderProps.disable.value,
-        }"
-        :disable="postPhonemeLengthSlider.qSliderProps.disable.value"
-        :model-value="
-          postPhonemeLengthSlider.state.currentValue.value != undefined
-            ? postPhonemeLengthSlider.state.currentValue.value.toFixed(2)
-            : postPhonemeLengthSlider.qSliderProps.min.value.toFixed(2)
-        "
-        @change="handleChangePostPhonemeLengthInput"
-      >
-        <template v-slot:before
-          ><span class="text-body1 text-display">終了無音</span></template
-        >
-      </q-input>
-      <q-slider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="postPhonemeLengthSlider.qSliderProps.min.value"
-        :max="postPhonemeLengthSlider.qSliderProps.max.value"
-        :step="postPhonemeLengthSlider.qSliderProps.step.value"
-        :disable="postPhonemeLengthSlider.qSliderProps.disable.value"
-        :model-value="postPhonemeLengthSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          postPhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="postPhonemeLengthSlider.qSliderProps.onChange"
-        @wheel="postPhonemeLengthSlider.qSliderProps.onWheel"
-        @pan="postPhonemeLengthSlider.qSliderProps.onPan"
-      />
+          <template #before
+            ><span class="text-body1 text-display">{{
+              parameter.label
+            }}</span></template
+          >
+        </q-input>
+        <q-slider
+          dense
+          snap
+          color="primary"
+          track-size="2px"
+          :min="parameter.slider.qSliderProps.min.value"
+          :max="parameter.slider.qSliderProps.max.value"
+          :step="parameter.slider.qSliderProps.step.value"
+          :disable="parameter.slider.qSliderProps.disable.value"
+          :model-value="parameter.slider.qSliderProps.modelValue.value"
+          @update:model-value="
+            parameter.slider.qSliderProps['onUpdate:modelValue']
+          "
+          @change="handleParameterChange(parameter, $event)"
+          @wheel="parameter.slider.qSliderProps.onWheel"
+          @pan="parameter.slider.qSliderProps.onPan"
+        />
+      </div>
     </div>
     <div
       v-if="shouldShowMorphing"
@@ -403,12 +219,12 @@
       <span class="text-body1 q-mb-xs">モーフィング</span>
       <div class="row no-wrap items-center">
         <character-button
+          v-model:selected-voice="morphingTargetVoice"
           class="q-my-xs"
           :character-infos="morphingTargetCharacters"
           :show-engine-info="morphingTargetEngines.length >= 2"
           :emptiable="true"
           :ui-locked="uiLocked"
-          v-model:selected-voice="morphingTargetVoice"
         />
         <div class="q-pl-xs row overflow-hidden">
           <div class="text-body2 ellipsis overflow-hidden">
@@ -418,6 +234,7 @@
                 : "未設定"
             }}
           </div>
+          <!-- 横幅が狭い場合に改行させるため分割 -->
           <div
             v-if="
               morphingTargetCharacterInfo &&
@@ -459,8 +276,8 @@
         <q-slider
           dense
           snap
-          color="primary-light"
-          trackSize="2px"
+          color="primary"
+          track-size="2px"
           :min="morphingRateSlider.qSliderProps.min.value"
           :max="morphingRateSlider.qSliderProps.max.value"
           :step="morphingRateSlider.qSliderProps.step.value"
@@ -484,6 +301,8 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
+import CharacterButton from "./CharacterButton.vue";
+import PresetManageDialog from "./PresetManageDialog.vue";
 import { useStore } from "@/store";
 
 import {
@@ -491,12 +310,16 @@ import {
   CharacterInfo,
   MorphingInfo,
   Preset,
+  PresetKey,
   Voice,
 } from "@/type/preload";
-import { previewSliderHelper } from "@/helpers/previewSliderHelper";
-import CharacterButton from "./CharacterButton.vue";
-import PresetManageDialog from "./PresetManageDialog.vue";
+import {
+  PreviewSliderHelper,
+  previewSliderHelper,
+} from "@/helpers/previewSliderHelper";
 import { EngineManifest } from "@/openapi";
+import { useDefaultPreset } from "@/composables/useDefaultPreset";
+import { SLIDER_PARAMETERS } from "@/store/utility";
 
 const props =
   defineProps<{
@@ -520,127 +343,154 @@ const supportedFeatures = computed(
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
 
-const setAudioSpeedScale = (speedScale: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
-    audioKey: props.activeAudioKey,
-    speedScale,
+// FIXME: slider.onChangeとhandleParameterChangeでstate変更が２経路になっているので統一する
+type Parameter = {
+  label: string;
+  slider: PreviewSliderHelper;
+  action: Parameters<typeof store.dispatch>[0]["type"];
+  key: keyof Omit<Preset, "name" | "morphingInfo">;
+};
+const selectedAudioKeys = computed(() =>
+  store.state.experimentalSetting.enableMultiSelect
+    ? store.getters.SELECTED_AUDIO_KEYS
+    : [props.activeAudioKey]
+);
+const parameters = computed<Parameter[]>(() => [
+  {
+    label: "話速",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.speedScale ?? null,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
+      max: SLIDER_PARAMETERS.SPEED.max,
+      min: SLIDER_PARAMETERS.SPEED.min,
+      step: SLIDER_PARAMETERS.SPEED.step,
+      scrollStep: SLIDER_PARAMETERS.SPEED.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.SPEED.scrollMinStep,
+      onChange: (speedScale: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_SPEED_SCALE", {
+          audioKeys: selectedAudioKeys.value,
+          speedScale,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_SPEED_SCALE",
+    key: "speedScale",
+  },
+  {
+    label: "音高",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.pitchScale ?? null,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
+      max: SLIDER_PARAMETERS.PITCH.max,
+      min: SLIDER_PARAMETERS.PITCH.min,
+      step: SLIDER_PARAMETERS.PITCH.step,
+      scrollStep: SLIDER_PARAMETERS.PITCH.scrollStep,
+      onChange: (pitchScale: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_PITCH_SCALE", {
+          audioKeys: selectedAudioKeys.value,
+          pitchScale,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_PITCH_SCALE",
+    key: "pitchScale",
+  },
+  {
+    label: "抑揚",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.intonationScale ?? null,
+      disable: () =>
+        uiLocked.value ||
+        supportedFeatures.value?.adjustIntonationScale === false,
+      max: SLIDER_PARAMETERS.INTONATION.max,
+      min: SLIDER_PARAMETERS.INTONATION.min,
+      step: SLIDER_PARAMETERS.INTONATION.step,
+      scrollStep: SLIDER_PARAMETERS.INTONATION.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.INTONATION.scrollMinStep,
+      onChange: (intonationScale: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE", {
+          audioKeys: selectedAudioKeys.value,
+          intonationScale,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE",
+    key: "intonationScale",
+  },
+  {
+    label: "音量",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.volumeScale ?? null,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustVolumeScale === false,
+      max: SLIDER_PARAMETERS.VOLUME.max,
+      min: SLIDER_PARAMETERS.VOLUME.min,
+      step: SLIDER_PARAMETERS.VOLUME.step,
+      scrollStep: SLIDER_PARAMETERS.VOLUME.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.VOLUME.scrollMinStep,
+      onChange: (volumeScale: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE", {
+          audioKeys: selectedAudioKeys.value,
+          volumeScale,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE",
+    key: "volumeScale",
+  },
+  {
+    label: "開始無音",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.prePhonemeLength ?? null,
+      disable: () => uiLocked.value,
+      max: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.max,
+      min: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.min,
+      step: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.step,
+      scrollStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollMinStep,
+      onChange: (prePhonemeLength: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH", {
+          audioKeys: selectedAudioKeys.value,
+          prePhonemeLength,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH",
+    key: "prePhonemeLength",
+  },
+  {
+    label: "終了無音",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.postPhonemeLength ?? null,
+      disable: () => uiLocked.value,
+      max: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.max,
+      min: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.min,
+      step: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.step,
+      scrollStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollMinStep,
+      onChange: (postPhonemeLength: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH", {
+          audioKeys: selectedAudioKeys.value,
+          postPhonemeLength,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH",
+    key: "postPhonemeLength",
+  },
+]);
+const handleParameterChange = (
+  parameter: Parameter,
+  inputValue: string | number | null
+) => {
+  if (inputValue == null) throw new Error("inputValue is null");
+  const value = adjustSliderValue(
+    parameter.label + "入力",
+    inputValue.toString(),
+    parameter.slider.qSliderProps.min.value,
+    parameter.slider.qSliderProps.max.value
+  );
+  store.dispatch(parameter.action, {
+    audioKeys: selectedAudioKeys.value,
+    [parameter.key]: value,
   });
 };
-
-const setAudioPitchScale = (pitchScale: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_PITCH_SCALE", {
-    audioKey: props.activeAudioKey,
-    pitchScale,
-  });
-};
-
-const setAudioIntonationScale = (intonationScale: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_INTONATION_SCALE", {
-    audioKey: props.activeAudioKey,
-    intonationScale,
-  });
-};
-
-const setAudioVolumeScale = (volumeScale: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_VOLUME_SCALE", {
-    audioKey: props.activeAudioKey,
-    volumeScale,
-  });
-};
-
-const setAudioPrePhonemeLength = (prePhonemeLength: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", {
-    audioKey: props.activeAudioKey,
-    prePhonemeLength,
-  });
-};
-
-const setAudioPostPhonemeLength = (postPhonemeLength: number) => {
-  store.dispatch("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", {
-    audioKey: props.activeAudioKey,
-    postPhonemeLength,
-  });
-};
-
-const setMorphingRate = (rate: number) => {
-  const info = audioItem.value.morphingInfo;
-  if (info == undefined) {
-    throw new Error("audioItem.value.morphingInfo == undefined");
-  }
-  store.dispatch("COMMAND_SET_MORPHING_INFO", {
-    audioKey: props.activeAudioKey,
-    morphingInfo: {
-      rate,
-      targetEngineId: info.targetEngineId,
-      targetSpeakerId: info.targetSpeakerId,
-      targetStyleId: info.targetStyleId,
-    },
-  });
-};
-
-const speedScaleSlider = previewSliderHelper({
-  modelValue: () => query.value?.speedScale ?? null,
-  disable: () =>
-    uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
-  onChange: setAudioSpeedScale,
-  max: () => 2,
-  min: () => 0.5,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
-const pitchScaleSlider = previewSliderHelper({
-  modelValue: () => query.value?.pitchScale ?? null,
-  disable: () =>
-    uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
-  onChange: setAudioPitchScale,
-  max: () => 0.15,
-  min: () => -0.15,
-  step: () => 0.01,
-  scrollStep: () => 0.01,
-});
-const intonationScaleSlider = previewSliderHelper({
-  modelValue: () => query.value?.intonationScale ?? null,
-  disable: () =>
-    uiLocked.value || supportedFeatures.value?.adjustIntonationScale === false,
-  onChange: setAudioIntonationScale,
-  max: () => 2,
-  min: () => 0,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
-const volumeScaleSlider = previewSliderHelper({
-  modelValue: () => query.value?.volumeScale ?? null,
-  disable: () =>
-    uiLocked.value || supportedFeatures.value?.adjustVolumeScale === false,
-  onChange: setAudioVolumeScale,
-  max: () => 2,
-  min: () => 0,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
-const prePhonemeLengthSlider = previewSliderHelper({
-  modelValue: () => query.value?.prePhonemeLength ?? null,
-  disable: () => uiLocked.value,
-  onChange: setAudioPrePhonemeLength,
-  max: () => 1.5,
-  min: () => 0,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
-const postPhonemeLengthSlider = previewSliderHelper({
-  modelValue: () => query.value?.postPhonemeLength ?? null,
-  disable: () => uiLocked.value,
-  onChange: setAudioPostPhonemeLength,
-  max: () => 1.5,
-  min: () => 0,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
-});
 
 // モーフィング
 const shouldShowMorphing = computed(
@@ -740,8 +590,8 @@ const morphingTargetVoice = computed({
             targetStyleId: voice.styleId,
           }
         : undefined;
-    store.dispatch("COMMAND_SET_MORPHING_INFO", {
-      audioKey: props.activeAudioKey,
+    store.dispatch("COMMAND_MULTI_SET_MORPHING_INFO", {
+      audioKeys: selectedAudioKeys.value,
       morphingInfo,
     });
   },
@@ -763,15 +613,30 @@ const morphingTargetStyleInfo = computed(() => {
   );
 });
 
+const setMorphingRate = (rate: number) => {
+  const info = audioItem.value.morphingInfo;
+  if (info == undefined) {
+    throw new Error("audioItem.value.morphingInfo == undefined");
+  }
+  return store.dispatch("COMMAND_MULTI_SET_MORPHING_INFO", {
+    audioKeys: selectedAudioKeys.value,
+    morphingInfo: {
+      rate,
+      targetEngineId: info.targetEngineId,
+      targetSpeakerId: info.targetSpeakerId,
+      targetStyleId: info.targetStyleId,
+    },
+  });
+};
 const morphingRateSlider = previewSliderHelper({
   modelValue: () => audioItem.value.morphingInfo?.rate ?? null,
   disable: () => uiLocked.value,
   onChange: setMorphingRate,
-  max: () => 1,
-  min: () => 0,
-  step: () => 0.01,
-  scrollStep: () => 0.1,
-  scrollMinStep: () => 0.01,
+  max: SLIDER_PARAMETERS.MORPHING_RATE.max,
+  min: SLIDER_PARAMETERS.MORPHING_RATE.min,
+  step: SLIDER_PARAMETERS.MORPHING_RATE.step,
+  scrollStep: SLIDER_PARAMETERS.MORPHING_RATE.scrollStep,
+  scrollMinStep: SLIDER_PARAMETERS.MORPHING_RATE.scrollMinStep,
 });
 
 // プリセット
@@ -786,6 +651,12 @@ const isRegisteredPreset = computed(
   () =>
     audioPresetKey.value != undefined &&
     presetItems.value[audioPresetKey.value] != undefined
+);
+
+const { isDefaultPresetKey, getDefaultPresetKeyForVoice } = useDefaultPreset();
+
+const currentDefaultPresetKey = computed(() =>
+  getDefaultPresetKeyForVoice(audioItem.value.voice)
 );
 
 // 入力パラメータがプリセットから変更されたか
@@ -821,24 +692,17 @@ const isChangedPreset = computed(() => {
 
 type PresetSelectModelType = {
   label: string;
-  key: string | undefined;
+  key: PresetKey | undefined;
 };
 
 // プリセットの変更
-const changePreset = (
-  presetOrPresetKey: PresetSelectModelType | string
-): void => {
-  const presetKey =
-    typeof presetOrPresetKey === "string"
-      ? presetOrPresetKey
-      : presetOrPresetKey.key;
-  store.dispatch("COMMAND_SET_AUDIO_PRESET", {
-    audioKey: props.activeAudioKey,
+const changePreset = (presetKey: PresetKey | undefined) =>
+  store.dispatch("COMMAND_MULTI_SET_AUDIO_PRESET", {
+    audioKeys: selectedAudioKeys.value,
     presetKey,
   });
-};
 
-const presetList = computed<{ label: string; key: string }[]>(() =>
+const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
   presetKeys.value
     .filter((key) => presetItems.value[key] != undefined)
     .map((key) => ({
@@ -849,14 +713,27 @@ const presetList = computed<{ label: string; key: string }[]>(() =>
 
 // セルへのプリセットの設定
 const selectablePresetList = computed<PresetSelectModelType[]>(() => {
-  const restPresetList = [];
+  const topPresetList: { key: PresetKey | undefined; label: string }[] = [];
+
   if (isRegisteredPreset.value) {
-    restPresetList.push({
+    topPresetList.push({
       key: undefined,
       label: "プリセット解除",
     });
   }
-  return [...restPresetList, ...presetList.value];
+
+  // 選択中のstyleのデフォルトプリセットは常に一番上
+  topPresetList.push(
+    ...presetList.value.filter(
+      (preset) => preset.key === currentDefaultPresetKey.value
+    )
+  );
+  // 他のstyleのデフォルトプリセットを除外
+  const commonPresets = presetList.value.filter(
+    (preset) => !isDefaultPresetKey(preset.key)
+  );
+
+  return [...topPresetList, ...commonPresets];
 });
 
 const presetSelectModel = computed<PresetSelectModelType>({
@@ -866,16 +743,16 @@ const presetSelectModel = computed<PresetSelectModelType>({
         label: "プリセット選択",
         key: undefined,
       };
-
     if (audioPresetKey.value == undefined)
       throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
+
     return {
       label: presetItems.value[audioPresetKey.value].name,
       key: audioPresetKey.value,
     };
   },
   set: (newVal) => {
-    changePreset(newVal);
+    changePreset(newVal.key);
   },
 });
 
@@ -883,7 +760,7 @@ const setPresetByScroll = (event: WheelEvent) => {
   event.preventDefault();
 
   const presetNumber = selectablePresetList.value.length;
-  if (presetNumber === 0 || presetNumber === undefined) return;
+  if (presetNumber === 0 || presetNumber == undefined) return;
 
   const nowIndex = selectablePresetList.value.findIndex(
     (value) => value.key == presetSelectModel.value.key
@@ -893,9 +770,9 @@ const setPresetByScroll = (event: WheelEvent) => {
   const newIndex = isUp ? nowIndex + 1 : nowIndex - 1;
   if (newIndex < 0 || presetNumber <= newIndex) return;
 
-  if (selectablePresetList.value[newIndex] === undefined) return;
+  if (selectablePresetList.value[newIndex] == undefined) return;
 
-  changePreset(selectablePresetList.value[newIndex]);
+  changePreset(selectablePresetList.value[newIndex].key);
 };
 
 // プリセットの登録・再登録
@@ -938,6 +815,7 @@ const filterPresetOptionsList: QSelectProps["onFilter"] = (
   doneFn
 ) => {
   const presetNames = presetKeys.value
+    .filter((presetKey) => !isDefaultPresetKey(presetKey))
     .map((presetKey) => presetItems.value[presetKey]?.name)
     .filter((value) => value != undefined);
   doneFn(() => {
@@ -959,22 +837,22 @@ const checkRewritePreset = async () => {
 // 入力パラメータから、name以外のPresetを取得
 const presetPartsFromParameter = computed<Omit<Preset, "name">>(() => {
   if (
-    speedScaleSlider.state.currentValue.value == null ||
-    pitchScaleSlider.state.currentValue.value == null ||
-    intonationScaleSlider.state.currentValue.value == null ||
-    volumeScaleSlider.state.currentValue.value == null ||
-    prePhonemeLengthSlider.state.currentValue.value == null ||
-    postPhonemeLengthSlider.state.currentValue.value == null
+    parameters.value.some(
+      (parameter) => parameter.slider.state.currentValue.value == undefined
+    )
   )
     throw new Error("slider value is null");
 
   return {
-    speedScale: speedScaleSlider.state.currentValue.value,
-    pitchScale: pitchScaleSlider.state.currentValue.value,
-    intonationScale: intonationScaleSlider.state.currentValue.value,
-    volumeScale: volumeScaleSlider.state.currentValue.value,
-    prePhonemeLength: prePhonemeLengthSlider.state.currentValue.value,
-    postPhonemeLength: postPhonemeLengthSlider.state.currentValue.value,
+    ...parameters.value.reduce(
+      (acc, parameter) => ({
+        ...acc,
+        [parameter.key]: parameter.slider.state.currentValue.value,
+      }),
+      {} as {
+        [K in typeof parameters.value[number]["key"]]: number;
+      }
+    ),
     morphingInfo:
       morphingTargetStyleInfo.value &&
       morphingTargetCharacterInfo.value &&
@@ -1011,7 +889,7 @@ const updatePreset = async (fullApply: boolean) => {
   const key = presetList.value.find(
     (preset) => preset.label === presetName.value
   )?.key;
-  if (key === undefined) return;
+  if (key == undefined) return;
 
   const title = presetName.value;
   const newPreset = createPresetData(title);
@@ -1029,84 +907,6 @@ const updatePreset = async (fullApply: boolean) => {
   }
 
   closeAllDialog();
-};
-
-const handleChangeSpeedScaleInput = (inputValue: string) => {
-  const speedScale = adjustSliderValue(
-    "話速入力",
-    inputValue,
-    speedScaleSlider.qSliderProps.min.value,
-    speedScaleSlider.qSliderProps.max.value
-  );
-  store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
-    audioKey: props.activeAudioKey,
-    speedScale,
-  });
-};
-
-const handleChangePitchScaleInput = (inputValue: string) => {
-  const pitchScale = adjustSliderValue(
-    "音高入力",
-    inputValue,
-    pitchScaleSlider.qSliderProps.min.value,
-    pitchScaleSlider.qSliderProps.max.value
-  );
-  store.dispatch("COMMAND_SET_AUDIO_PITCH_SCALE", {
-    audioKey: props.activeAudioKey,
-    pitchScale,
-  });
-};
-
-const handleChangeIntonationInput = (inputValue: string) => {
-  const intonationScale = adjustSliderValue(
-    "抑揚入力",
-    inputValue,
-    intonationScaleSlider.qSliderProps.min.value,
-    intonationScaleSlider.qSliderProps.max.value
-  );
-  store.dispatch("COMMAND_SET_AUDIO_INTONATION_SCALE", {
-    audioKey: props.activeAudioKey,
-    intonationScale,
-  });
-};
-
-const handleChangeVolumeInput = (inputValue: string) => {
-  const volumeScale = adjustSliderValue(
-    "音量入力",
-    inputValue,
-    volumeScaleSlider.qSliderProps.min.value,
-    volumeScaleSlider.qSliderProps.max.value
-  );
-  store.dispatch("COMMAND_SET_AUDIO_VOLUME_SCALE", {
-    audioKey: props.activeAudioKey,
-    volumeScale,
-  });
-};
-
-const handleChangePrePhonemeLengthInput = (inputValue: string) => {
-  const prePhonemeLength = adjustSliderValue(
-    "開始無音",
-    inputValue,
-    prePhonemeLengthSlider.qSliderProps.min.value,
-    prePhonemeLengthSlider.qSliderProps.max.value
-  );
-  store.dispatch("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", {
-    audioKey: props.activeAudioKey,
-    prePhonemeLength,
-  });
-};
-
-const handleChangePostPhonemeLengthInput = (inputValue: string) => {
-  const postPhonemeLength = adjustSliderValue(
-    "終了無音",
-    inputValue,
-    postPhonemeLengthSlider.qSliderProps.min.value,
-    postPhonemeLengthSlider.qSliderProps.max.value
-  );
-  store.dispatch("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", {
-    audioKey: props.activeAudioKey,
-    postPhonemeLength,
-  });
 };
 
 // プリセットの編集
@@ -1146,11 +946,16 @@ const adjustSliderValue = (
   overflow-y: scroll;
 }
 
+.parameters {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .preset-select-label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   width: fit-content;
-  max-width: 8rem;
 }
 </style>

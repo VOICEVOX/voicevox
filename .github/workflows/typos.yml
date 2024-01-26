@@ -7,8 +7,12 @@ on:
       - '**'
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+    
 jobs:
-  build:
+  typos:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,3 +20,5 @@ jobs:
 
       - name: typos-action
         uses: crate-ci/typos@v1.12.12
+        with:
+          files: ". .github"

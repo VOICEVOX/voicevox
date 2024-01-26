@@ -12,8 +12,8 @@
           v-if="accentPhrase.moras.length > 1"
           snap
           dense
-          color="primary-light"
-          trackSize="2px"
+          color="primary"
+          track-size="2px"
           :min="previewAccentSlider.qSliderProps.min.value"
           :max="previewAccentSlider.qSliderProps.max.value"
           :step="previewAccentSlider.qSliderProps.step.value"
@@ -42,7 +42,6 @@
   </div>
   <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
     <div
-      @click="uiLocked || changeAccent(moraIndex + 1)"
       :class="[
         'accent-select-cell',
         {
@@ -51,6 +50,7 @@
         },
       ]"
       :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+      @click="uiLocked || changeAccent(moraIndex + 1)"
     >
       <svg width="19" height="50" viewBox="0 0 19 50">
         <line x1="9" y1="0" x2="9" y2="50" stroke-width="1" />
@@ -60,9 +60,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { AccentPhrase } from "@/openapi";
-import { computed } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -95,16 +95,20 @@ const previewAccentSlider = previewSliderHelper({
 
 const accentLine = computed(() => {
   const accent = previewAccentSlider.state.currentValue.value ?? 0;
-  return [...Array(props.accentPhrase.moras.length).keys()].map(
-    (index) =>
-      `${index * 40 + 10} ${
-        index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
-      }`
-  );
+  return [...Array(props.accentPhrase.moras.length).keys()]
+    .map(
+      (index) =>
+        `${index * 40 + 10} ${
+          index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
+        }`
+    )
+    .toString();
 });
 
 // クリックでアクセント句が選択されないように、@click.stopに渡す
-const stopPropagation = undefined;
+const stopPropagation = () => {
+  // fn is not a function エラーを回避するために何もしない関数を渡す
+};
 </script>
 
 <style scoped lang="scss">
@@ -147,7 +151,7 @@ div {
     text-align: center;
     cursor: pointer;
     svg line {
-      stroke: colors.$primary-light;
+      stroke: colors.$primary;
       stroke-dasharray: 3;
     }
   }

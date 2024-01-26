@@ -9,8 +9,16 @@
         <progress-dialog />
 
         <!-- TODO: 複数エンジン対応 -->
+        <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
+        <div v-if="allEngineState === 'FAILED_STARTING'" class="waiting-engine">
+          <div>
+            エンジンの起動に失敗しました。エンジンの再起動をお試しください。
+          </div>
+        </div>
         <div
-          v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
+          v-else-if="
+            !isCompletedInitialStartup || allEngineState === 'STARTING'
+          "
           class="waiting-engine"
         >
           <div>
@@ -27,13 +35,14 @@
               <q-separator spaced />
               エンジン起動に時間がかかっています。<br />
               <q-btn
-                outline
-                @click="restartAppWithMultiEngineOffMode"
                 v-if="isMultipleEngine"
+                outline
+                :disable="reloadingLocked"
+                @click="reloadAppWithMultiEngineOffMode"
               >
-                マルチエンジンをオフにして再起動する</q-btn
+                マルチエンジンをオフにして再読み込みする</q-btn
               >
-              <q-btn outline @click="openFaq" v-else>FAQを見る</q-btn>
+              <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
             </template>
           </div>
         </div>
@@ -86,32 +95,38 @@
                         dragEventCounter = 0;
                         loadDraggedFile($event);
                       "
+                      @click="onAudioCellPaneClick"
                     >
                       <draggable
+                        ref="cellsRef"
                         class="audio-cells"
-                        :modelValue="audioKeys"
-                        @update:modelValue="updateAudioKeys"
-                        :itemKey="itemKey"
+                        :model-value="audioKeys"
+                        :item-key="itemKey"
                         ghost-class="ghost"
                         filter="input"
-                        :preventOnFilter="false"
+                        :prevent-on-filter="false"
+                        @update:model-value="updateAudioKeys"
                       >
-                        <template v-slot:item="{ element }">
+                        <template #item="{ element }">
                           <audio-cell
-                            class="draggable-cursor"
-                            :audioKey="element"
                             :ref="addAudioCellRef"
-                            @focusCell="focusCell"
+                            class="draggable-cursor"
+                            :audio-key="element"
+                            @focus-cell="focusCell"
                           />
                         </template>
                       </draggable>
-                      <div class="add-button-wrapper">
+                      <div
+                        v-if="showAddAudioItemButton"
+                        class="add-button-wrapper"
+                      >
                         <q-btn
                           fab
                           icon="add"
-                          color="primary-light"
+                          color="primary"
                           text-color="display-on-primary"
                           :disable="uiLocked"
+                          aria-label="テキストを追加"
                           @click="addAudioItem"
                         ></q-btn>
                       </div>
@@ -120,7 +135,7 @@
                   <template #after>
                     <audio-info
                       v-if="activeAudioKey != undefined"
-                      :activeAudioKey="activeAudioKey"
+                      :active-audio-key="activeAudioKey"
                     />
                   </template>
                 </q-splitter>
@@ -130,7 +145,7 @@
           <template #after>
             <audio-detail
               v-if="activeAudioKey != undefined"
-              :activeAudioKey="activeAudioKey"
+              :active-audio-key="activeAudioKey"
             />
           </template>
         </q-splitter>
@@ -148,13 +163,13 @@
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
     v-if="orderedAllCharacterInfos.length > 0"
-    :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
+    :character-infos="orderedAllCharacterInfos"
   />
   <default-style-list-dialog
     v-if="orderedAllCharacterInfos.length > 0"
-    :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
+    :character-infos="orderedAllCharacterInfos"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
@@ -162,18 +177,25 @@
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
   <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
+  <update-notification-dialog-container
+    :can-open-dialog="canOpenNotificationDialog"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUpdate, onMounted, ref, watch } from "vue";
-import { useStore } from "@/store";
+import path from "path";
+import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
+import { QResizeObserver } from "quasar";
+import cloneDeep from "clone-deep";
+import Mousetrap from "mousetrap";
+import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
-import HelpDialog from "@/components/HelpDialog.vue";
+import HelpDialog from "@/components/help/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
@@ -185,19 +207,19 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
+import UpdateNotificationDialogContainer from "@/components/UpdateNotificationDialog/Container.vue";
 import { AudioItem, EngineState } from "@/store/type";
-import { QResizeObserver, useQuasar } from "quasar";
-import path from "path";
 import {
   AudioKey,
   EngineId,
-  HotkeyAction,
+  HotkeyActionType,
   HotkeyReturnType,
-  SplitterPosition,
+  PresetKey,
+  SplitterPositionType,
   Voice,
 } from "@/type/preload";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
-import cloneDeep from "clone-deep";
 
 const props =
   defineProps<{
@@ -205,20 +227,20 @@ const props =
   }>();
 
 const store = useStore();
-const $q = useQuasar();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+const reloadingLocked = computed(() => store.state.reloadingLock);
 
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
 // hotkeys handled by Mousetrap
-const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
   [
     "テキスト欄にフォーカスを戻す",
     () => {
-      if (activeAudioKey.value !== undefined) {
-        focusCell({ audioKey: activeAudioKey.value });
+      if (activeAudioKey.value != undefined) {
+        focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
       }
       return false; // this is the same with event.preventDefault()
     },
@@ -321,20 +343,21 @@ const changeAudioDetailPaneMaxHeight = (height: number) => {
   }
 };
 
-const splitterPosition = computed<SplitterPosition>(
+const splitterPosition = computed<SplitterPositionType>(
   () => store.state.splitterPosition
 );
 
 const updateSplitterPosition = async (
-  propertyName: keyof SplitterPosition,
+  propertyName: keyof SplitterPositionType,
   newValue: number
 ) => {
   const newSplitterPosition = {
     ...splitterPosition.value,
     [propertyName]: newValue,
   };
-  store.dispatch("SET_SPLITTER_POSITION", {
-    splitterPosition: newSplitterPosition,
+  await store.dispatch("SET_ROOT_MISC_SETTING", {
+    key: "splitterPosition",
+    value: newSplitterPosition,
   });
 };
 
@@ -352,12 +375,12 @@ const updateAudioDetailPane = async (height: number) => {
   audioDetailPaneHeight.value = height;
   await updateSplitterPosition("audioDetailPaneHeight", height);
 };
-
 // component
-let audioCellRefs: Record<AudioKey, typeof AudioCell> = {};
-const addAudioCellRef = (audioCellRef: typeof AudioCell) => {
-  if (audioCellRef) {
-    audioCellRefs[audioCellRef.audioKey] = audioCellRef;
+let audioCellRefs: Record<AudioKey, InstanceType<typeof AudioCell>> = {};
+const addAudioCellRef: VNodeRef = (audioCellRef) => {
+  if (audioCellRef && !(audioCellRef instanceof Element)) {
+    const typedAudioCellRef = audioCellRef as InstanceType<typeof AudioCell>;
+    audioCellRefs[typedAudioCellRef.audioKey] = typedAudioCellRef;
   }
 };
 onBeforeUpdate(() => {
@@ -378,19 +401,15 @@ const activeAudioKey = computed<AudioKey | undefined>(
 const addAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
   let voice: Voice | undefined = undefined;
-  let presetKey: string | undefined = undefined;
-  if (prevAudioKey !== undefined) {
+  let presetKey: PresetKey | undefined = undefined;
+  let baseAudioItem: AudioItem | undefined = undefined;
+
+  if (prevAudioKey != undefined) {
     voice = store.state.audioItems[prevAudioKey].voice;
     presetKey = store.state.audioItems[prevAudioKey].presetKey;
+    baseAudioItem = store.state.audioItems[prevAudioKey];
   }
-  let baseAudioItem: AudioItem | undefined = undefined;
-  if (store.state.inheritAudioInfo) {
-    baseAudioItem = prevAudioKey
-      ? store.state.audioItems[prevAudioKey]
-      : undefined;
-  }
-  //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
-  //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
+
   const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
     voice,
     presetKey,
@@ -400,9 +419,8 @@ const addAudioItem = async () => {
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem,
     prevAudioKey: activeAudioKey.value,
-    applyPreset: true,
   });
-  audioCellRefs[newAudioKey].focusTextField();
+  audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
 };
 const duplicateAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
@@ -415,9 +433,8 @@ const duplicateAudioItem = async () => {
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem: cloneDeep(prevAudioItem),
     prevAudioKey: activeAudioKey.value,
-    applyPreset: false,
   });
-  audioCellRefs[newAudioKey].focusTextField();
+  audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
 };
 
 // Pane
@@ -469,20 +486,66 @@ watch(shouldShowPanes, (val, old) => {
 });
 
 // セルをフォーカス
-const focusCell = ({ audioKey }: { audioKey: AudioKey }) => {
-  audioCellRefs[audioKey].focusTextField();
+const focusCell = ({
+  audioKey,
+  focusTarget,
+}: {
+  audioKey: AudioKey;
+  focusTarget?: "root" | "textField";
+}) => {
+  audioCellRefs[audioKey].focusCell({
+    focusTarget: focusTarget ?? "textField",
+  });
 };
 
 // Electronのデフォルトのundo/redoを無効化
 const disableDefaultUndoRedo = (event: KeyboardEvent) => {
   // ctrl+z, ctrl+shift+z, ctrl+y
   if (
-    event.ctrlKey &&
+    isOnCommandOrCtrlKeyDown(event) &&
     (event.key == "z" || (!event.shiftKey && event.key == "y"))
   ) {
     event.preventDefault();
   }
 };
+
+const userOrderedCharacterInfos = computed(
+  () => store.state.userCharacterOrder
+);
+const audioItems = computed(() => store.state.audioItems);
+// 並び替え後、テキスト欄が１つで空欄なら話者を更新
+// 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
+watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
+  if (userOrderedCharacterInfos.length < 1) {
+    return;
+  }
+
+  if (audioKeys.value.length === 1) {
+    const first = audioKeys.value[0] as AudioKey;
+    const audioItem = audioItems.value[first];
+    if (audioItem.text.length > 0) {
+      return;
+    }
+
+    const speakerId = userOrderedCharacterInfos[0];
+    const defaultStyleId = store.state.defaultStyleIds.find(
+      (styleId) => styleId.speakerUuid === speakerId
+    );
+    if (!defaultStyleId || audioItem.voice.speakerId === speakerId) return;
+
+    const voice: Voice = {
+      engineId: defaultStyleId.engineId,
+      speakerId: defaultStyleId.speakerUuid,
+      styleId: defaultStyleId.defaultStyleId,
+    };
+
+    // FIXME: UNDOができてしまうのでできれば直したい
+    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+      audioKeys: [first],
+      voice: voice,
+    });
+  }
+});
 
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
@@ -524,15 +587,33 @@ onMounted(async () => {
     const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
       audioItem,
     });
-    focusCell({ audioKey: newAudioKey });
+    focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
 
     // 最初の話者を初期化
     store.dispatch("SETUP_SPEAKER", {
-      audioKey: newAudioKey,
+      audioKeys: [newAudioKey],
       engineId: audioItem.voice.engineId,
       styleId: audioItem.voice.styleId,
     });
   }
+
+  // ショートカットキー操作を止める条件の設定
+  // 止めるなら`true`を返す
+  Mousetrap.prototype.stopCallback = (
+    e: Mousetrap.ExtendedKeyboardEvent, // 未使用
+    element: Element,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    combo: string // 未使用
+  ) => {
+    return (
+      element.tagName === "INPUT" ||
+      element.tagName === "SELECT" ||
+      element.tagName === "TEXTAREA" ||
+      (element instanceof HTMLElement && element.contentEditable === "true") ||
+      // メニュー項目ではショートカットキーを無効化
+      element.classList.contains("q-item")
+    );
+  };
 
   // ショートカットキーの設定
   document.addEventListener("keydown", disableDefaultUndoRedo);
@@ -540,6 +621,10 @@ onMounted(async () => {
   hotkeyActionsNative.forEach((item) => {
     document.addEventListener("keyup", item);
   });
+
+  // 設定の読み込みを待機する
+  // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
+  await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
 
   isAcceptRetrieveTelemetryDialogOpenComputed.value =
     store.state.acceptRetrieveTelemetry === "Unconfirmed";
@@ -561,7 +646,7 @@ const allEngineState = computed(() => {
   // 登録されているすべてのエンジンについて状態を確認する
   for (const engineId of store.state.engineIds) {
     const engineState: EngineState | undefined = engineStates[engineId];
-    if (engineState === undefined)
+    if (engineState == undefined)
       throw new Error(`No such engineState set: engineId == ${engineId}`);
 
     // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
@@ -578,7 +663,7 @@ const allEngineState = computed(() => {
 const isEngineWaitingLong = ref<boolean>(false);
 let engineTimer: number | undefined = undefined;
 watch(allEngineState, (newEngineState) => {
-  if (engineTimer !== undefined) {
+  if (engineTimer != undefined) {
     clearTimeout(engineTimer);
     engineTimer = undefined;
   }
@@ -591,11 +676,40 @@ watch(allEngineState, (newEngineState) => {
     isEngineWaitingLong.value = false;
   }
 });
-const restartAppWithMultiEngineOffMode = () => {
-  store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
+
+// 代替ポート情報の変更を監視
+watch(
+  () => [store.state.altPortInfos, store.state.isVuexReady],
+  async () => {
+    // この watch がエンジンが起動した時 (=> 設定ファイルを読み込む前) に発火して, "今後この通知をしない" を無視するのを防ぐ
+    if (!store.state.isVuexReady) return;
+
+    // "今後この通知をしない" を考慮
+    if (store.state.confirmedTips.engineStartedOnAltPort) return;
+
+    // 代替ポートをトースト通知する
+    for (const engineId of store.state.engineIds) {
+      const engineName = store.state.engineInfos[engineId].name;
+      const altPort = store.state.altPortInfos[engineId];
+      if (!altPort) return;
+
+      store.dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
+        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+        icon: "compare_arrows",
+        tipName: "engineStartedOnAltPort",
+      });
+    }
+  }
+);
+
+const reloadAppWithMultiEngineOffMode = () => {
+  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+    closeOrReload: "reload",
+    isMultiEngineOffMode: true,
+  });
 };
 
-const openFaq = () => {
+const openQa = () => {
   window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
 };
 
@@ -694,10 +808,21 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
     }),
 });
 
+// エディタのアップデート確認ダイアログ
+const canOpenNotificationDialog = computed(() => {
+  return (
+    !store.state.isAcceptTermsDialogOpen &&
+    !store.state.isCharacterOrderDialogOpen &&
+    !store.state.isDefaultStyleSelectDialogOpen &&
+    !store.state.isAcceptRetrieveTelemetryDialogOpen &&
+    isCompletedInitialStartup.value
+  );
+});
+
 // ドラッグ＆ドロップ
 const dragEventCounter = ref(0);
-const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
-  if (!event || event.dataTransfer.files.length === 0) return;
+const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
+  if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
   switch (path.extname(file.name)) {
     case ".txt":
@@ -707,16 +832,48 @@ const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
       store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
       break;
     default:
-      $q.dialog({
+      store.dispatch("SHOW_ALERT_DIALOG", {
         title: "対応していないファイルです",
         message:
           "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "display",
-        },
       });
+  }
+};
+
+// AudioCellの自動スクロール
+const cellsRef = ref<InstanceType<typeof draggable> | undefined>();
+watch(activeAudioKey, (audioKey) => {
+  if (audioKey == undefined) return;
+  const activeCellElement = audioCellRefs[audioKey].$el;
+  const cellsElement = cellsRef.value?.$el;
+  if (
+    !(activeCellElement instanceof Element) ||
+    !(cellsElement instanceof Element)
+  )
+    throw new Error(
+      `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`
+    );
+  const activeCellRect = activeCellElement.getBoundingClientRect();
+  const cellsRect = cellsElement.getBoundingClientRect();
+  const overflowTop = activeCellRect.top <= cellsRect.top;
+  const overflowBottom = activeCellRect.bottom >= cellsRect.bottom;
+  if (overflowTop || overflowBottom) {
+    activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
+  }
+});
+
+const showAddAudioItemButton = computed(() => {
+  return store.state.showAddAudioItemButton;
+});
+
+const onAudioCellPaneClick = () => {
+  if (
+    store.state.experimentalSetting.enableMultiSelect &&
+    activeAudioKey.value
+  ) {
+    store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+      audioKeys: [activeAudioKey.value],
+    });
   }
 };
 </script>
