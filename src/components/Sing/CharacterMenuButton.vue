@@ -141,7 +141,7 @@ import { defineComponent, computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { CharacterInfo, SpeakerId, StyleId } from "@/type/preload";
+import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 
 export default defineComponent({
@@ -150,9 +150,17 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
+    const isSingingStyle = (styleInfo: StyleInfo) => {
+      return (
+        styleInfo.styleType === "humming" ||
+        styleInfo.styleType === "sing_teacher"
+      );
+    };
+
     const userOrderedCharacterInfos = computed(() => {
       return store.getters.USER_ORDERED_CHARACTER_INFOS?.filter(
-        (characterInfo) => getSingingStyles(characterInfo).length !== 0
+        (characterInfo) =>
+          characterInfo.metas.styles.some((value) => isSingingStyle(value))
       );
     });
 
@@ -207,9 +215,8 @@ export default defineComponent({
     };
 
     const getSingingStyles = (characterInfo: CharacterInfo) => {
-      return characterInfo.metas.styles.filter(
-        (value) =>
-          value.styleType === "humming" || value.styleType === "sing_teacher"
+      return characterInfo.metas.styles.filter((value) =>
+        isSingingStyle(value)
       );
     };
 
