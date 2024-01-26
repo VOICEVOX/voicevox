@@ -251,7 +251,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
-import AudioAccent from "./AudioAccent.vue";
+import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
