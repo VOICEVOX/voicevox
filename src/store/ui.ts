@@ -18,7 +18,7 @@ import {
   showLoadingScreen,
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
-} from "@/components/Dialog";
+} from "@/components/Dialog/Dialog";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
