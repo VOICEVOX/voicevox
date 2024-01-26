@@ -6,7 +6,7 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
-        <progress-dialog />
+        <progress-view />
 
         <!-- TODO: 複数エンジン対応 -->
         <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
@@ -205,7 +205,7 @@ import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryD
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
-import ProgressDialog from "@/components/ProgressDialog.vue";
+import ProgressView from "@/components/ProgressView.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import {
