@@ -608,39 +608,37 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
         );
 
-        if (applyRestoredProject === "OK") {
-          // 復元ボタン押下時
-          // プロジェクト保存先の復元
-          if (autoLoadProjectInfo) {
-            context.commit("SET_PROJECT_FILEPATH", {
-              filePath: autoLoadProjectInfo.projectFilePath,
-            });
-          }
-
-          // AudioItems の復元
-          await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
-
-          const parsedProjectData = projectSchema.parse(
-            tempProject.project
-          ) as ProjectType;
-          const { audioItems, audioKeys } = parsedProjectData;
-
-          let prevAudioKey: AudioKey | undefined;
-          for (const audioKey of audioKeys) {
-            const audioItem = audioItems[audioKey];
-            prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
-              prevAudioKey,
-              audioItem,
-            });
-          }
-
-          return;
-        } else {
+        if (applyRestoredProject === "CANCEL") {
           // 破棄ボタン押下時
           await context.dispatch("GENERATE_WORKSPACE", {
             tempProjectState: "none",
           });
           return;
+        }
+
+        // 復元ボタン押下時
+        // プロジェクト保存先の復元
+        if (autoLoadProjectInfo) {
+          context.commit("SET_PROJECT_FILEPATH", {
+            filePath: autoLoadProjectInfo.projectFilePath,
+          });
+        }
+
+        // AudioItems の復元
+        await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
+
+        const parsedProjectData = projectSchema.parse(
+          tempProject.project
+        ) as ProjectType;
+        const { audioItems, audioKeys } = parsedProjectData;
+
+        let prevAudioKey: AudioKey | undefined;
+        for (const audioKey of audioKeys) {
+          const audioItem = audioItems[audioKey];
+          prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
+            prevAudioKey,
+            audioItem,
+          });
         }
       } catch (err) {
         window.electron.logError(err);
