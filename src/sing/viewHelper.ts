@@ -7,7 +7,7 @@ export const ZOOM_X_STEP = 0.05;
 export const ZOOM_Y_MIN = 0.35;
 export const ZOOM_Y_MAX = 1;
 export const ZOOM_Y_STEP = 0.05;
-export const PREVIEW_SOUND_DURATION = 0.1;
+export const PREVIEW_SOUND_DURATION = 0.15;
 
 export function getKeyBaseHeight() {
   return BASE_Y_PER_SEMITONE;

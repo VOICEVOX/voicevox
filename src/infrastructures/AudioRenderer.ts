@@ -784,19 +784,19 @@ export class PolySynth implements Instrument {
       type: "square",
     };
     this.filterParams = options?.filter ?? {
-      cutoff: 3000,
+      cutoff: 2500,
       resonance: 0,
-      keyTrack: 0.26,
+      keyTrack: 0.25,
     };
     this.ampParams = options?.amp ?? {
       attack: 0.001,
       decay: 0.18,
-      sustain: 0.4,
+      sustain: 0.5,
       release: 0.02,
     };
 
     this.gainNode = new GainNode(this.audioContext);
-    this.gainNode.gain.value = options?.volume ?? 0.11;
+    this.gainNode.gain.value = options?.volume ?? 0.1;
   }
 
   /**
