@@ -255,6 +255,18 @@ const api: Sandbox = {
     );
   },
 
+  getWorkspace: async () => {
+    return await ipcRendererInvoke("GET_WORKSPACE");
+  },
+
+  saveWorkspace: async (workspace) => {
+    return await ipcRendererInvoke("SAVE_WORKSPACE", workspace);
+  },
+
+  getFileModifiedAt: async (filePath) => {
+    return await ipcRendererInvoke("GET_FILE_MODIFIED_AT", filePath);
+  },
+
   installVvppEngine: async (filePath) => {
     return await ipcRendererInvoke("INSTALL_VVPP_ENGINE", filePath);
   },

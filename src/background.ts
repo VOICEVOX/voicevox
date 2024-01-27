@@ -28,6 +28,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  WorkspaceType,
 } from "./type/preload";
 import {
   ContactTextFileName,
@@ -137,6 +138,22 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
+
+const workspaceFilePath = path.join(fixedUserDataDir, "workspace.json");
+
+const saveWorkspace = async (workspace: WorkspaceType) => {
+  try {
+    const buf = new TextEncoder().encode(JSON.stringify(workspace)).buffer;
+
+    await fs.promises.writeFile(workspaceFilePath + ".bk", new DataView(buf));
+    await fs.promises.rename(workspaceFilePath + ".bk", workspaceFilePath);
+
+    return success(undefined);
+  } catch (e) {
+    const a = e as SystemError;
+    return failure(a.code, a);
+  }
+};
 
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
@@ -827,6 +844,53 @@ ipcMainHandle("GET_SETTING", (_, key) => {
 ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   configManager.set(key, newValue);
   return configManager.get(key);
+});
+
+ipcMainHandle("GET_WORKSPACE", async () => {
+  try {
+    if (!fs.existsSync(workspaceFilePath)) {
+      const defaultWorkspace: WorkspaceType = {
+        state: "none",
+      };
+
+      await saveWorkspace(defaultWorkspace);
+    }
+
+    const workspace: WorkspaceType = JSON.parse(
+      await fs.promises.readFile(workspaceFilePath, {
+        encoding: "utf-8",
+      })
+    );
+
+    if (workspace.state !== "none" && workspace.autoLoadProjectInfo) {
+      // 実際のファイル変更日時を取得
+      const state = await fs.promises.stat(
+        workspace.autoLoadProjectInfo.projectFilePath
+      );
+      workspace.autoLoadProjectInfo.fileModifiedAt = state.mtime.getTime();
+
+      return success(workspace);
+    }
+
+    return success(workspace);
+  } catch (e) {
+    const a = e as SystemError;
+    return failure(a.code, a);
+  }
+});
+
+ipcMainHandle("SAVE_WORKSPACE", (_, workspace) => {
+  return saveWorkspace(workspace);
+});
+
+ipcMainHandle("GET_FILE_MODIFIED_AT", async (_, filePath) => {
+  try {
+    const result = (await fs.promises.stat(filePath)).mtime.getTime();
+    return success(result);
+  } catch (e) {
+    const result = e as SystemError;
+    return failure(result.code, result);
+  }
 });
 
 ipcMainHandle("SET_ENGINE_SETTING", async (_, engineId, engineSetting) => {

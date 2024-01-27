@@ -2,6 +2,7 @@ import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { ProjectType } from "@/store/project";
 
 export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
@@ -234,6 +235,9 @@ export interface Sandbox {
     key: Key,
     newValue: ConfigType[Key]
   ): Promise<ConfigType[Key]>;
+  getWorkspace(): Promise<Result<WorkspaceType>>;
+  saveWorkspace(workspace: WorkspaceType): Promise<Result<undefined>>;
+  getFileModifiedAt(filePath: string): Promise<Result<number>>;
   setEngineSetting(
     engineId: EngineId,
     engineSetting: EngineSettingType
@@ -525,6 +529,7 @@ export const rootMiscSettingSchema = z.object({
     .default("PERIOD_AND_NEW_LINE"),
   splitterPosition: splitterPositionSchema.default({}),
   enableMultiEngine: z.boolean().default(false),
+  enableAutoLoad: z.boolean().default(false),
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
@@ -659,3 +664,40 @@ export interface MessageBoxReturnValue {
 }
 
 export const SandboxKey = "electron" as const;
+
+/**
+ * 一時プロジェクト情報
+ * プロジェクトの復元に必要な情報を保持する
+ * 変更時はマイグレーションが必要
+ */
+export type TempProjectType = {
+  project: ProjectType;
+};
+
+/**
+ * 起動時のプロジェクト自動読み込みに必要な情報
+ */
+export type AutoLoadProjectInfo = {
+  projectFilePath: string;
+  /** projectFilePath のファイル保存時刻（外部で編集された場合も値は変わらない） */
+  projectSavedAt: number | null;
+  /** projectFilePath のファイル物理変更時刻 */
+  fileModifiedAt?: number;
+};
+
+export type WorkspaceType =
+  | {
+      /** プロジェクトの一部・またはすべてが未保存の状態 */
+      state: "unSaved";
+      tempProject: TempProjectType;
+      autoLoadProjectInfo?: AutoLoadProjectInfo;
+    }
+  | {
+      /** プロジェクトが保存されている状態 */
+      state: "saved";
+      autoLoadProjectInfo: AutoLoadProjectInfo;
+    }
+  | {
+      /** プロジェクト一時ファイルの初期状態 */
+      state: "none";
+    };

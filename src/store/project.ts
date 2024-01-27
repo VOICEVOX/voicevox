@@ -13,13 +13,18 @@ import {
   engineIdSchema,
   speakerIdSchema,
   styleIdSchema,
+  WorkspaceType,
 } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
+import { escapeHtml } from "@/helpers/htmlHelper";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandUnixMillisec: null,
+  workspace: {
+    state: "none",
+  },
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -63,6 +68,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         context.commit("CLEAR_COMMANDS");
+        context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "none" });
       }
     ),
   },
@@ -356,6 +362,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
+          context.dispatch("GENERATE_WORKSPACE", {
+            tempProjectState: "saved",
+          });
           return true;
         } catch (err) {
           window.electron.logError(err);
@@ -444,6 +453,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
             context.getters.LAST_COMMAND_UNIX_MILLISEC
           );
+          // 保存完了時にワークスペースを更新する
+          context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "saved" });
           return true;
         } catch (err) {
           window.electron.logError(err);
@@ -490,6 +501,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
         return saved ? "saved" : "canceled";
       } else if (result == 1) {
+        // 変更内容を破棄する場合一時ファイルをクリアする
+        await dispatch("GENERATE_WORKSPACE", {
+          tempProjectState: "none",
+        });
         return "discarded";
       } else {
         return "canceled";
@@ -497,11 +512,278 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     }),
   },
 
+  /**
+   * プロジェクトを一時ファイルに保存する
+   */
+  SAVE_TEMP_PROJECT_FILE: {
+    async action(context) {
+      try {
+        context.dispatch("GENERATE_WORKSPACE", { tempProjectState: "unSaved" });
+      } catch (err) {
+        window.electron.logError(err);
+      }
+    },
+  },
+
+  /**
+   * 一時ファイルを読み込む
+   * 一時ファイルにプロジェクトがある場合は、復元するか破棄するかのダイアログを出す
+   */
+  LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
+    action: createUILockAction(async (context) => {
+      try {
+        const workspace = context.state.workspace;
+
+        if (workspace.state === "none") {
+          return;
+        }
+
+        const { autoLoadProjectInfo } = workspace;
+
+        if (workspace.state === "saved") {
+          // 自動読み込み機能OFFで保存済みの場合は何もしない
+          if (!context.state.enableAutoLoad || !autoLoadProjectInfo) {
+            return;
+          }
+
+          // プロジェクト保存先のファイル変更チェック
+          if (context.getters.IS_PROJECT_EXTERNAL_MODIFIED) {
+            const applyRestoredProject = await context.dispatch(
+              "SHOW_CONFIRM_DIALOG",
+              {
+                title: "読み込みファイルの変更",
+                message: `前回開いていたプロジェクトがエディタ外で変更されています。読み込みますか？<br />
+                  読み込み先ファイル名：${escapeHtml(
+                    getBaseName(autoLoadProjectInfo.projectFilePath)
+                  )}`,
+                actionName: "読み込む",
+                cancel: "読み込まない",
+                html: true,
+              }
+            );
+
+            if (applyRestoredProject === "CANCEL") {
+              return;
+            }
+          }
+
+          // 自動読み込み機能有効時保存されたプロジェクトを復元する
+          await context.dispatch("LOAD_PROJECT_FILE", {
+            filePath: autoLoadProjectInfo.projectFilePath,
+            confirm: false,
+          });
+          return;
+        }
+
+        const { tempProject } = workspace;
+
+        // ダイアログに表示するメッセージを生成
+        let dialogMessage = `復元されたプロジェクトがあります。復元しますか？<br /><br />
+          復元内容：${escapeHtml(
+            tempProject.project.audioItems[tempProject.project.audioKeys[0]]
+              .text
+          )}...`;
+
+        // 保存済みプロジェクトの場合は保存先ファイル名を表示
+        if (autoLoadProjectInfo) {
+          dialogMessage += `<br />保存先ファイル名 : <span style='overflow-wrap: break-word;'>${escapeHtml(
+            getBaseName(autoLoadProjectInfo.projectFilePath)
+          )}</span>`;
+        }
+
+        if (context.getters.IS_PROJECT_EXTERNAL_MODIFIED) {
+          dialogMessage +=
+            "<br />※保存先のファイルが保存後にエディタ外で変更されています。";
+        }
+
+        // 未保存時の復元確認
+        const applyRestoredProject = await context.dispatch(
+          "SHOW_CONFIRM_DIALOG",
+          {
+            title: "復元されたプロジェクト",
+            message: dialogMessage,
+            actionName: "復元",
+            cancel: "破棄",
+            html: true,
+          }
+        );
+
+        if (applyRestoredProject === "CANCEL") {
+          // 破棄ボタン押下時
+          await context.dispatch("GENERATE_WORKSPACE", {
+            tempProjectState: "none",
+          });
+          return;
+        }
+
+        // 復元ボタン押下時
+        // プロジェクト保存先の復元
+        if (autoLoadProjectInfo) {
+          context.commit("SET_PROJECT_FILEPATH", {
+            filePath: autoLoadProjectInfo.projectFilePath,
+          });
+        }
+
+        // AudioItems の復元
+        await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
+
+        const parsedProjectData = projectSchema.parse(
+          tempProject.project
+        ) as ProjectType;
+        const { audioItems, audioKeys } = parsedProjectData;
+
+        let prevAudioKey: AudioKey | undefined;
+        for (const audioKey of audioKeys) {
+          const audioItem = audioItems[audioKey];
+          prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
+            prevAudioKey,
+            audioItem,
+          });
+        }
+      } catch (err) {
+        window.electron.logError(err);
+
+        const message = (() => {
+          if (typeof err === "string") return err;
+          if (!(err instanceof Error)) return "エラーが発生しました。";
+          return err.message;
+        })();
+        await window.electron.showMessageDialog({
+          type: "error",
+          title: "エラー",
+          message: `プロジェクト一時ファイルの読み込みに失敗しました。\n${message}`,
+        });
+
+        // エラー発生時に audioItem を再生成する
+        if (context.state.audioKeys.length === 0) {
+          const audioItem = await context.dispatch("GENERATE_AUDIO_ITEM", {});
+          await context.dispatch("REGISTER_AUDIO_ITEM", {
+            audioItem,
+          });
+        }
+
+        return;
+      }
+    }),
+  },
+
+  SET_WORKSPACE: {
+    mutation(state, { workspace }) {
+      state.workspace = workspace;
+    },
+    async action({ commit }, { workspace }) {
+      await window.electron
+        .saveWorkspace(JSON.parse(JSON.stringify(workspace)))
+        .then(getValueOrThrow);
+
+      commit("SET_WORKSPACE", { workspace });
+    },
+  },
+
+  HYDRATE_PROJECT_STORE: {
+    async action({ commit }) {
+      try {
+        const workspace: WorkspaceType = await window.electron
+          .getWorkspace()
+          .then(getValueOrThrow);
+
+        await commit("SET_WORKSPACE", { workspace });
+      } catch (e) {
+        window.electron.logError(e);
+      }
+    },
+  },
+
+  /**
+   * ワークスペース情報を生成し、一時ファイルに保存する
+   */
+  GENERATE_WORKSPACE: {
+    async action({ state, dispatch, commit }, { tempProjectState }) {
+      const backupState = state.workspace;
+      let workspace = state.workspace as WorkspaceType;
+
+      switch (tempProjectState) {
+        case "unSaved": {
+          const appInfos = await window.electron.getAppInfos();
+          const { audioItems, audioKeys } = state;
+
+          if (state.projectFilePath && state.workspace.state !== "none") {
+            // プロジェクト保存または読み込み後に編集し、保存していない状態
+            workspace = {
+              state: "unSaved",
+              tempProject: {
+                project: {
+                  appVersion: appInfos.version,
+                  audioKeys,
+                  audioItems,
+                },
+              },
+              autoLoadProjectInfo: {
+                projectFilePath: state.projectFilePath,
+                projectSavedAt:
+                  state.workspace.autoLoadProjectInfo?.projectSavedAt ?? null,
+              },
+            };
+          } else {
+            // プロジェクト新規作成後に編集し、保存していない状態
+            workspace = {
+              state: "unSaved",
+              tempProject: {
+                project: {
+                  appVersion: appInfos.version,
+                  audioKeys,
+                  audioItems,
+                },
+              },
+            };
+          }
+          break;
+        }
+        case "saved": {
+          if (state.projectFilePath) {
+            const fileModifiedAt = await window.electron
+              .getFileModifiedAt(state.projectFilePath)
+              .then(getValueOrThrow);
+
+            workspace = {
+              state: "saved",
+              autoLoadProjectInfo: {
+                projectFilePath: state.projectFilePath,
+                projectSavedAt: fileModifiedAt,
+                fileModifiedAt: fileModifiedAt,
+              },
+            };
+          } else {
+            // projectFilePath がない場合は none にする
+            workspace = {
+              state: "none",
+            };
+          }
+
+          break;
+        }
+        case "none":
+          workspace = {
+            state: "none",
+          };
+      }
+
+      try {
+        await dispatch("SET_WORKSPACE", { workspace });
+      } catch (err) {
+        // ファイルの更新に失敗した場合はロールバック
+        commit("SET_WORKSPACE", { workspace: backupState });
+        window.electron.logError(err);
+      }
+    },
+  },
+
   IS_EDITED: {
     getter(state, getters) {
       return (
         getters.LAST_COMMAND_UNIX_MILLISEC !==
-        state.savedLastCommandUnixMillisec
+          state.savedLastCommandUnixMillisec ||
+        state.workspace.state === "unSaved"
       );
     },
   },
@@ -509,6 +791,23 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
     mutation(state, unixMillisec) {
       state.savedLastCommandUnixMillisec = unixMillisec;
+    },
+  },
+
+  // 自動読み込み対象のプロジェクトファイルが外部で変更されていないかチェックする
+  IS_PROJECT_EXTERNAL_MODIFIED: {
+    getter(state) {
+      if (
+        state.workspace.state === "none" ||
+        !state.workspace.autoLoadProjectInfo
+      ) {
+        return false;
+      }
+
+      return (
+        state.workspace.autoLoadProjectInfo.fileModifiedAt !==
+        state.workspace.autoLoadProjectInfo.projectSavedAt
+      );
     },
   },
 });
@@ -570,7 +869,7 @@ const projectSchema = z.object({
 });
 
 export type LatestProjectType = z.infer<typeof projectSchema>;
-interface ProjectType {
+export interface ProjectType {
   appVersion: string;
   audioKeys: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;

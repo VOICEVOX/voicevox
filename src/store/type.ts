@@ -45,6 +45,7 @@ import {
   StyleId,
   AudioKey,
   PresetKey,
+  WorkspaceType,
   RootMiscSettingType,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -988,6 +989,7 @@ export type IndexStoreTypes = {
 export type ProjectStoreState = {
   projectFilePath?: string;
   savedLastCommandUnixMillisec: number | null;
+  workspace: WorkspaceType;
 };
 
 export type ProjectStoreTypes = {
@@ -1011,10 +1013,31 @@ export type ProjectStoreTypes = {
     action(payload: { overwrite?: boolean }): boolean;
   };
 
+  SAVE_TEMP_PROJECT_FILE: {
+    action(): void;
+  };
+
+  LOAD_OR_DISCARD_TEMP_PROJECT_FILE: {
+    action(): void;
+  };
+
   SAVE_OR_DISCARD_PROJECT_FILE: {
     action(palyoad: {
       additionalMessage?: string;
     }): "saved" | "discarded" | "canceled";
+  };
+
+  SET_WORKSPACE: {
+    mutation: { workspace: WorkspaceType };
+    action(payload: { workspace: WorkspaceType }): void;
+  };
+
+  HYDRATE_PROJECT_STORE: {
+    action(): void;
+  };
+
+  GENERATE_WORKSPACE: {
+    action(payload: { tempProjectState: "unSaved" | "saved" | "none" }): void;
   };
 
   IS_EDITED: {
@@ -1023,6 +1046,10 @@ export type ProjectStoreTypes = {
 
   SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
     mutation: number | null;
+  };
+
+  IS_PROJECT_EXTERNAL_MODIFIED: {
+    getter: boolean;
   };
 };
 

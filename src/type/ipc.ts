@@ -11,6 +11,7 @@ import {
   EngineSettingType,
   EngineId,
   MessageBoxReturnValue,
+  WorkspaceType,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -257,6 +258,21 @@ export type IpcIHData = {
   SET_SETTING: {
     args: [key: keyof ConfigType, newValue: ConfigType[keyof ConfigType]];
     return: ConfigType[keyof ConfigType];
+  };
+
+  GET_WORKSPACE: {
+    args: [];
+    return: Result<WorkspaceType>;
+  };
+
+  SAVE_WORKSPACE: {
+    args: [workspace: WorkspaceType];
+    return: Result<undefined>;
+  };
+
+  GET_FILE_MODIFIED_AT: {
+    args: [filePath: string];
+    return: Result<number>;
   };
 
   SET_ENGINE_SETTING: {

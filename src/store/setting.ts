@@ -68,6 +68,7 @@ export const settingStoreState: SettingStoreState = {
   },
   engineSettings: {},
   enableMultiEngine: false,
+  enableAutoLoad: false,
   enableMemoNotation: false,
   enableRubyNotation: false,
 };
@@ -143,6 +144,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "splitTextWhenPaste",
         "splitterPosition",
         "enableMultiEngine",
+        "enableAutoLoad",
         "enableRubyNotation",
         "enableMemoNotation",
         "skipUpdateVersion",

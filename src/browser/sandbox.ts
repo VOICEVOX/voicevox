@@ -294,6 +294,15 @@ export const api: Sandbox = {
     configManager.set(key, newValue);
     return newValue;
   },
+  getWorkspace() {
+    throw new Error("Not supported on Browser version: getWorkspace");
+  },
+  saveWorkspace(/* workspace: WorkspaceType */) {
+    throw new Error("Not supported on Browser version: saveWorkspace");
+  },
+  getFileModifiedAt(/* getFileModifiedAt: number */) {
+    throw new Error("Not supported on Browser version: getFileModifiedAt");
+  },
   async setEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
     const engineSettings = (await this.getSetting(
       "engineSettings"

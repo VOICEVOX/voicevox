@@ -57,6 +57,9 @@ describe("store/vuex.js test", () => {
         isMaximized: false,
         isMultiEngineOffMode: false,
         savedLastCommandUnixMillisec: null,
+        workspace: {
+          state: "none",
+        },
         savingSetting: {
           fileEncoding: "UTF-8",
           fileNamePattern: "",
@@ -145,6 +148,7 @@ describe("store/vuex.js test", () => {
           notifyOnGenerate: false,
         },
         enableMultiEngine: false,
+        enableAutoLoad: false,
         enableMemoNotation: false,
         enableRubyNotation: false,
         progress: -1,
@@ -268,5 +272,7 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.confirmedTips.tweakableSliderByScroll, false);
     assert.equal(store.state.confirmedTips.engineStartedOnAltPort, false);
     assert.equal(store.state.confirmedTips.notifyOnGenerate, false);
+    assert.isNotEmpty(store.state.workspace);
+    assert.equal(store.state.workspace.state, "none");
   });
 });
