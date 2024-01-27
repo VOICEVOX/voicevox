@@ -55,7 +55,7 @@ test("「labファイルを書き出し」のトグルがオンの場合のみ�
   // labファイルを生成しない
   await navigateToMain(page);
   await commonAction(page, false, "おはようございます");
-  const downloadWav = await downloadAction(page, 5100); // labファイル生成時より長く待つ(ダウンロード漏れがないことを保証したい)
+  const downloadWav = await downloadAction(page, 5100); // 「おはようございます」が既に入力されているため、空文字列にする
   await expect(downloadWav.length).toBe(1);
   await expect(downloadWav[0]).toBe("おはようございます.wav");
 
