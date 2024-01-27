@@ -49,18 +49,20 @@ async function downloadAction(page: Page, timeout: number) {
   return downloads;
 }
 
-test("labファイルの生成", async ({ page }) => {
+test("「labファイルを書き出し」のトグルがオンの場合のみ、labファイルが書き出される", async ({
+  page,
+}) => {
   // labファイルを生成しない
   await navigateToMain(page);
-  const notDownloadLab = false;
-  await commonAction(page, notDownloadLab, "おはようございます");
-  const downloads = await downloadAction(page, 6100);
-  expect(downloads.length).toBe(1);
+  await commonAction(page, false, "おはようございます");
+  const downloadWav = await downloadAction(page, 5100); // labファイル生成時より長く待つ(ダウンロード漏れがないことを保証したい)
+  await expect(downloadWav.length).toBe(1);
+  await expect(downloadWav[0]).toBe("おはようございます.wav");
 
   // labファイルを生成する
-  const DownloadLab = true;
-  await commonAction(page, DownloadLab, "");
-  const downloads2 = await downloadAction(page, 6000);
-  expect(downloads2.length).toBe(2);
-  expect(downloads2[0]).toBe(downloads[0]);
+  await commonAction(page, true, ""); // おはようございます」がすでに入力されているためから文字列にする
+  const downloads = await downloadAction(page, 5000);
+  await expect(downloads.length).toBe(2);
+  await expect(downloads[0]).toBe("おはようございます.wav");
+  await expect(downloads[1]).toBe("おはようございます.lab");
 });
