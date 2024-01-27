@@ -4,6 +4,9 @@ import fs from "fs";
 import treeKill from "tree-kill";
 import shlex from "shlex";
 
+import AsyncLock from "async-lock";
+import fsExtra from "fs-extra";
+
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
 import log from "electron-log/main";
@@ -211,7 +214,7 @@ export class EngineManager {
       await this.runEngine(engineInfo.uuid);
     }
 
-    await this.makeEngineInfoFor3rdParty();
+    await this.writeEngineInfoFor3rdParty();
   }
 
   /**
@@ -471,7 +474,7 @@ export class EngineManager {
         );
 
         this.runEngine(engineId);
-        this.makeEngineInfoFor3rdParty();
+        this.writeEngineInfoFor3rdParty();
         resolve();
         return;
       }
@@ -485,7 +488,7 @@ export class EngineManager {
         log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
         this.runEngine(engineId);
-        this.makeEngineInfoFor3rdParty();
+        this.writeEngineInfoFor3rdParty();
         resolve();
       };
 
@@ -552,36 +555,41 @@ export class EngineManager {
   /**
    * サードパーティ向けの設定ファイルを書き出す
    */
-  async makeEngineInfoFor3rdParty() {
-    const exportEngineInfoFilename = path.join(
-      app.getPath("userData"),
-      "runtime-info.json"
-    );
-    const engineInfos = this.fetchEngineInfos();
+  private lock = new AsyncLock({
+    timeout: 1000,
+  });
+  private lockKey = "write";
 
-    log.info(`Update list of engines...` + exportEngineInfoFilename);
-
-    const engineInfoList = engineInfos.map((engineInfo) => {
-      return {
-        uuid: engineInfo.uuid,
-        host: engineInfo.host,
-        name: engineInfo.name,
-        path: engineInfo.path,
-        executionEnabled: engineInfo.executionEnabled,
-        executionFilePath: engineInfo.executionFilePath,
-        executionArgs: engineInfo.executionArgs,
-        type: engineInfo.type,
-      };
-    });
-
-    try {
-      fs.writeFileSync(
-        exportEngineInfoFilename,
-        JSON.stringify(engineInfoList)
+  async writeEngineInfoFor3rdParty() {
+    await this.lock.acquire(this.lockKey, async () => {
+      const exportEngineInfoFilename = path.join(
+        app.getPath("userData"),
+        "runtime-info.json"
       );
-    } catch (e) {
-      return "failedToWriteFile";
-    }
+      log.info(`Update list of engines...` + exportEngineInfoFilename);
+
+      const engineInfos = this.fetchEngineInfos();
+      const engineInfoList = engineInfos.map((engineInfo) => {
+        return {
+          uuid: engineInfo.uuid,
+          host: engineInfo.host,
+          name: engineInfo.name,
+          path: engineInfo.path,
+          executionEnabled: engineInfo.executionEnabled,
+          executionFilePath: engineInfo.executionFilePath,
+          executionArgs: engineInfo.executionArgs,
+          type: engineInfo.type,
+        };
+      });
+
+      try {
+        await fsExtra.writeJSON(exportEngineInfoFilename, engineInfoList);
+      } catch (e) {
+        // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。
+        // サードパーティ向けなのでVOICEVOX側には通知せず、エラー記録して継続
+        log.error(`Failed to write file : ${e}`);
+      }
+    });
   }
 }
 
