@@ -364,10 +364,10 @@ export default defineComponent({
       if (!draggingNote) {
         throw new Error("draggingNote is undefined.");
       }
-      const noteEndPos = draggingNote.position + draggingNote.duration;
-      const newNoteEndPos =
-        Math.round(cursorTicks / snapTicks.value) * snapTicks.value;
-      const movingTicks = newNoteEndPos - noteEndPos;
+      const dragTicks = cursorTicks - dragStartTicks;
+      const noteDuration =
+        Math.round(dragTicks / snapTicks.value) * snapTicks.value;
+      const noteEndPos = draggingNote.position + noteDuration;
 
       const editedNotes = new Map<string, Note>();
       for (const note of previewNotes.value) {
@@ -375,12 +375,7 @@ export default defineComponent({
         if (!copiedNote) {
           throw new Error("copiedNote is undefined.");
         }
-        const notePos = copiedNote.position;
-        const noteEndPos = copiedNote.position + copiedNote.duration;
-        const duration = Math.max(
-          snapTicks.value,
-          noteEndPos + movingTicks - notePos
-        );
+        const duration = Math.max(snapTicks.value, noteDuration);
         if (note.duration !== duration) {
           editedNotes.set(note.id, { ...note, duration });
         }
@@ -391,7 +386,7 @@ export default defineComponent({
         });
       }
 
-      const guideLineBaseX = tickToBaseX(newNoteEndPos, tpqn.value);
+      const guideLineBaseX = tickToBaseX(noteEndPos, tpqn.value);
       guideLineX.value = guideLineBaseX * zoomX.value;
     };
 
