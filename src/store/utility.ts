@@ -1,6 +1,7 @@
 import path from "path";
 import { Platform } from "quasar";
 import { diffArrays } from "diff";
+import { toRaw } from "vue";
 import { ToolbarButtonTagType, isMac } from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
 
@@ -221,8 +222,8 @@ export class TuningTranscription {
   beforeAccent: AccentPhrase[];
   afterAccent: AccentPhrase[];
   constructor(beforeAccent: AccentPhrase[], afterAccent: AccentPhrase[]) {
-    this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
-    this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
+    this.beforeAccent = structuredClone(toRaw(beforeAccent));
+    this.afterAccent = structuredClone(toRaw(afterAccent));
   }
 
   private createFlatArray<T, K extends keyof T>(

@@ -1,6 +1,7 @@
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import Encoding from "encoding-japanese";
+import { toRaw } from "vue";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -57,7 +58,7 @@ async function generateUniqueIdAndQuery(
   state: State,
   audioItem: AudioItem
 ): Promise<[string, EditorAudioQuery | undefined]> {
-  audioItem = JSON.parse(JSON.stringify(audioItem)) as AudioItem;
+  audioItem = structuredClone(toRaw(audioItem));
   const audioQuery = audioItem.query;
   if (audioQuery != undefined) {
     audioQuery.outputSamplingRate =
@@ -1275,9 +1276,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   GENERATE_AUDIO: {
     async action({ dispatch, state }, { audioKey }: { audioKey: AudioKey }) {
-      const audioItem: AudioItem = JSON.parse(
-        JSON.stringify(state.audioItems[audioKey])
-      );
+      const audioItem = structuredClone(toRaw(state.audioItems[audioKey]));
       return dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", { audioItem });
     },
   },
@@ -2182,9 +2181,7 @@ export const audioCommandStore = transformCommandStore(
       ) {
         const query = state.audioItems[audioKey].query;
         if (query != undefined) {
-          const newAccentPhrases: AccentPhrase[] = JSON.parse(
-            JSON.stringify(query.accentPhrases)
-          );
+          const newAccentPhrases = structuredClone(toRaw(query.accentPhrases));
           newAccentPhrases[accentPhraseIndex].accent = accent;
 
           try {
@@ -2244,9 +2241,7 @@ export const audioCommandStore = transformCommandStore(
             "`COMMAND_CHANGE_ACCENT_PHRASE_SPLIT` should not be called if the query does not exist."
           );
         }
-        const newAccentPhrases: AccentPhrase[] = JSON.parse(
-          JSON.stringify(query.accentPhrases)
-        );
+        const newAccentPhrases = structuredClone(toRaw(query.accentPhrases));
         const changeIndexes = [accentPhraseIndex];
         // toggleAccentPhrase to newAccentPhrases and record changeIndexes
         {
