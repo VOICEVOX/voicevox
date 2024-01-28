@@ -35,6 +35,7 @@
           :type="'pitch'"
           :clip="false"
           :shift-key-flag="shiftKeyFlag"
+          :vertical-offset="0"
           @change-value="changeMoraData"
         />
       </div>
@@ -60,6 +61,7 @@
           :type="'consonant'"
           :clip="true"
           :shift-key-flag="shiftKeyFlag"
+          :vertical-offset="-10"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
@@ -74,6 +76,7 @@
           :type="'vowel'"
           :clip="mora.consonant ? true : false"
           :shift-key-flag="shiftKeyFlag"
+          :vertical-offset="0"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
@@ -95,6 +98,7 @@
           :step="0.01"
           :type="'pause'"
           :shift-key-flag="shiftKeyFlag"
+          :vertical-offset="0"
           @change-value="changeMoraData"
         />
       </div>

@@ -3,20 +3,27 @@
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
-    <q-badge
-      v-if="
-        !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
-      "
-      class="value-label"
-      color="primary"
-      text-color="display-on-primary"
-    >
-      {{
-        previewSlider.state.currentValue.value != undefined
-          ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
-          : undefined
-      }}
-    </q-badge>
+    <div>
+      <q-input
+        v-if="!disable"
+        dense
+        borderless
+        :model-value="
+          previewSlider.qSliderProps.modelValue.value
+            ? previewSlider.qSliderProps.modelValue.value.toFixed(2)
+            : previewSlider.qSliderProps.min.value
+        "
+        :style="{
+          width: '25px',
+          height: '20px',
+          'font-size': 'x-small',
+          position: 'relative',
+          top: `${verticalOffset}px`,
+        }"
+        @change="changeValue"
+      >
+      </q-input>
+    </div>
     <q-slider
       vertical
       reverse
@@ -55,6 +62,7 @@ const props = withDefaults(
     type?: MoraDataType;
     clip?: boolean;
     shiftKeyFlag?: boolean;
+    verticalOffset: number;
   }>(),
   {
     min: 0.0,
@@ -64,6 +72,7 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
+    verticalOffset: 0,
   }
 );
 
@@ -83,8 +92,13 @@ const emit =
     ): void;
   }>();
 
-const changeValue = (newValue: number, type: MoraDataType = props.type) =>
-  emit("changeValue", props.moraIndex, newValue, type);
+const changeValue = (newValue: number, type: MoraDataType = props.type) => {
+  newValue = formatValue(newValue, props.min, props.max);
+  return emit("changeValue", props.moraIndex, newValue, type);
+};
+// 参考用
+// const changeValue = (newValue: number, type: MoraDataType = props.type) =>
+//   emit("changeValue", props.moraIndex, newValue, type);
 
 const previewSlider = previewSliderHelper({
   modelValue: () => props.value,
@@ -121,13 +135,33 @@ const handleMouseHover = (isOver: boolean) => {
   }
 };
 
-const precisionComputed = computed(() => {
-  if (props.type == "pause" || props.type == "pitch") {
-    return 2;
-  } else {
-    return 3;
+const formatValue = (
+  value: number | null,
+  defaultMinValue: number,
+  defaultMaxValue: number
+): number => {
+  if (typeof value === "number") {
+    return parseFloat(value.toFixed(2));
   }
-});
+
+  if (value == null) {
+    return parseFloat(defaultMinValue.toFixed(2));
+  }
+
+  const tmp = Number(value);
+  if (Number.isNaN(tmp)) {
+    return parseFloat(defaultMinValue.toFixed(2));
+  }
+
+  if (tmp <= defaultMinValue) {
+    return parseFloat(defaultMinValue.toFixed(2));
+  }
+  if (defaultMaxValue <= tmp) {
+    return parseFloat(defaultMaxValue.toFixed(2));
+  }
+
+  return parseFloat(tmp.toFixed(2));
+};
 
 // クリックでアクセント句が選択されないように@click.stopに渡す
 const stopPropagation = () => {
@@ -140,7 +174,7 @@ $value-label-height: 24px;
 
 div {
   position: absolute;
-  top: 8px;
+  top: 0px;
   bottom: 8px;
   .q-slider {
     height: calc(100% - #{$value-label-height + 12px});
