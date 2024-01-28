@@ -32,7 +32,7 @@ import {
   PolySynth,
   Sequence,
   Transport,
-} from "@/infrastructures/AudioRenderer";
+} from "@/sing/audioRendering";
 import {
   getMeasureDuration,
   isValidNote,
