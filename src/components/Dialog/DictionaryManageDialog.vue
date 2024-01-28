@@ -253,6 +253,7 @@ import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { useStore } from "@/store";
+import type { FetchAudioResult } from "@/store/type";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
@@ -448,9 +449,9 @@ const play = async () => {
 
   audioItem.query.accentPhrases = [accentPhrase.value];
 
-  let blob: Blob;
+  let fetchAudioResult: FetchAudioResult;
   try {
-    blob = await store.dispatch("FETCH_AUDIO_FROM_AUDIO_ITEM", {
+    fetchAudioResult = await store.dispatch("FETCH_AUDIO_FROM_AUDIO_ITEM", {
       audioItem,
     });
   } catch (e) {
@@ -463,6 +464,7 @@ const play = async () => {
     return;
   }
 
+  const { blob } = fetchAudioResult;
   nowGenerating.value = false;
   nowPlaying.value = true;
   await store.dispatch("PLAY_AUDIO_BLOB", { audioBlob: blob });
