@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 import SingerHome from "../views/SingerHome.vue";
-import EditorHome from "../views/EditorHome.vue";
+import EditorHome from "@/components/Talk/EditorHome.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
