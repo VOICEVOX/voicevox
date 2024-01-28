@@ -756,7 +756,6 @@ export default defineComponent({
           });
         } else {
           store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
-          store.dispatch("DESELECT_ALL_NOTES");
         }
         if (previewNotes.value.length === 1) {
           store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -890,7 +889,8 @@ export default defineComponent({
         case "Delete":
           handleNotesBackspaceOrDelete();
           break;
-        default:
+        case "Escape":
+          store.dispatch("DESELECT_ALL_NOTES");
           break;
       }
     };
