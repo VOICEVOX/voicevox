@@ -139,7 +139,7 @@ import { defineComponent, computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { CharacterInfo, SpeakerId, StyleId } from "@/type/preload";
+import { SpeakerId, StyleId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 
 export default defineComponent({
@@ -149,7 +149,7 @@ export default defineComponent({
     const store = useStore();
 
     const userOrderedCharacterInfos = computed(() => {
-      return store.getters.USER_ORDERED_CHARACTER_INFOS("sing");
+      return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
     });
 
     const subMenuOpenFlags = ref(

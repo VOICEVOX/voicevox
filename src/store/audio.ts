@@ -471,35 +471,42 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   USER_ORDERED_CHARACTER_INFOS: {
-    getter: (state, getters) => (type: "all" | "sing" | "talk") => {
+    /**
+     * ユーザーが並び替えたキャラクターの順番でキャラクター情報を返す。
+     * `singerLike`の場合はhummingかsingなスタイルのみを返す。
+     */
+    getter: (state, getters) => (styleType: "all" | "singerLike" | "talk") => {
       const isSingingStyle = (styleInfo: StyleInfo) => {
         return (
-          styleInfo.styleType === "humming" ||
-          styleInfo.styleType === "sing_teacher"
+          styleInfo.styleType === "humming" || styleInfo.styleType === "sing"
         );
       };
 
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
-      return allCharacterInfos.size !== 0
-        ? [...allCharacterInfos.values()]
-            .map((info) => {
-              info.metas.styles = info.metas.styles.filter((style) => {
-                const isSinging = isSingingStyle(style);
-                return (
-                  type === "all" ||
-                  (type === "sing" && isSinging) ||
-                  (type === "talk" && !isSinging)
-                );
-              });
-              return info;
-            })
-            .filter((info) => info.metas.styles.length !== 0)
-            .sort(
-              (a, b) =>
-                state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
-                state.userCharacterOrder.indexOf(b.metas.speakerUuid)
-            )
-        : undefined;
+      if (allCharacterInfos.size === 0) return undefined;
+      return (
+        [...allCharacterInfos.values()]
+          // スタイルタイプでフィルタリング
+          .map((info) => {
+            info.metas.styles = info.metas.styles.filter((style) => {
+              const isSinging = isSingingStyle(style);
+              return (
+                styleType === "all" ||
+                (styleType === "singerLike" && isSinging) ||
+                (styleType === "talk" && !isSinging)
+              );
+            });
+            return info;
+          })
+          // スタイルがなくなったキャラクターを除外
+          .filter((info) => info.metas.styles.length !== 0)
+          // ユーザーが並び替えた順番に並び替え
+          .sort(
+            (a, b) =>
+              state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
+              state.userCharacterOrder.indexOf(b.metas.speakerUuid)
+          )
+      );
     },
   },
 

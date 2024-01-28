@@ -178,7 +178,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
       const userOrderedCharacterInfos =
-        getters.USER_ORDERED_CHARACTER_INFOS("sing");
+        getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
       if (userOrderedCharacterInfos == undefined)
         throw new Error("userOrderedCharacterInfos == undefined");
 
