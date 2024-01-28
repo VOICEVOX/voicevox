@@ -183,7 +183,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
+import {
+  defineComponent,
+  computed,
+  ref,
+  onActivated,
+  onDeactivated,
+  nextTick,
+} from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
@@ -355,10 +362,10 @@ export default defineComponent({
       if (!draggingNote) {
         throw new Error("draggingNote is undefined.");
       }
-      const noteEndPos = draggingNote.position + draggingNote.duration;
-      const newNoteEndPos =
-        Math.round(cursorTicks / snapTicks.value) * snapTicks.value;
-      const movingTicks = newNoteEndPos - noteEndPos;
+      const dragTicks = cursorTicks - dragStartTicks;
+      const noteDuration =
+        Math.round(dragTicks / snapTicks.value) * snapTicks.value;
+      const noteEndPos = draggingNote.position + noteDuration;
 
       const editedNotes = new Map<string, Note>();
       for (const note of previewNotes.value) {
@@ -366,12 +373,7 @@ export default defineComponent({
         if (!copiedNote) {
           throw new Error("copiedNote is undefined.");
         }
-        const notePos = copiedNote.position;
-        const noteEndPos = copiedNote.position + copiedNote.duration;
-        const duration = Math.max(
-          snapTicks.value,
-          noteEndPos + movingTicks - notePos
-        );
+        const duration = Math.max(snapTicks.value, noteDuration);
         if (note.duration !== duration) {
           editedNotes.set(note.id, { ...note, duration });
         }
@@ -382,7 +384,7 @@ export default defineComponent({
         });
       }
 
-      const guideLineBaseX = tickToBaseX(newNoteEndPos, tpqn.value);
+      const guideLineBaseX = tickToBaseX(noteEndPos, tpqn.value);
       guideLineX.value = guideLineBaseX * zoomX.value;
     };
 
@@ -992,22 +994,39 @@ export default defineComponent({
       }
     };
 
-    onMounted(() => {
+    // 最初のonActivatedか判断するためのフラグ
+    let firstActivation = true;
+    onActivated(() => {
       const sequencerBodyElement = sequencerBody.value;
       if (!sequencerBodyElement) {
         throw new Error("sequencerBodyElement is null.");
       }
-      // 上から2/3の位置がC4になるようにスクロールする
-      const clientHeight = sequencerBodyElement.clientHeight;
-      const c4BaseY = noteNumberToBaseY(60);
-      const clientBaseHeight = clientHeight / zoomY.value;
-      const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
-      sequencerBodyElement.scrollTo(0, scrollBaseY * zoomY.value);
 
-      // スクロールバーの幅を取得する
-      const clientWidth = sequencerBodyElement.clientWidth;
-      const offsetWidth = sequencerBodyElement.offsetWidth;
-      scrollBarWidth.value = offsetWidth - clientWidth;
+      let xToScroll = 0;
+      let yToScroll = 0;
+      if (firstActivation) {
+        // スクロール位置を設定（C4が上から2/3の位置になるようにする）
+        const clientHeight = sequencerBodyElement.clientHeight;
+        const c4BaseY = noteNumberToBaseY(60);
+        const clientBaseHeight = clientHeight / zoomY.value;
+        const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
+        xToScroll = 0;
+        yToScroll = scrollBaseY * zoomY.value;
+
+        // スクロールバーの幅を取得する
+        const clientWidth = sequencerBodyElement.clientWidth;
+        const offsetWidth = sequencerBodyElement.offsetWidth;
+        scrollBarWidth.value = offsetWidth - clientWidth;
+
+        firstActivation = false;
+      } else {
+        xToScroll = scrollX.value;
+        yToScroll = scrollY.value;
+      }
+      // 実際にスクロールする
+      nextTick().then(() => {
+        sequencerBodyElement.scrollTo(xToScroll, yToScroll);
+      });
 
       store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
         listener: playheadPositionChangeListener,
@@ -1016,7 +1035,7 @@ export default defineComponent({
       document.addEventListener("keydown", handleKeydown);
     });
 
-    onUnmounted(() => {
+    onDeactivated(() => {
       store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
         listener: playheadPositionChangeListener,
       });
