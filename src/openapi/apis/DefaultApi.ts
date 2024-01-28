@@ -120,9 +120,8 @@ export interface DeleteUserDictWordUserDictWordWordUuidDeleteRequest {
 }
 
 export interface FrameSynthesisFrameSynthesisPostRequest {
+    speaker: number;
     frameAudioQuery: FrameAudioQuery;
-    styleId?: number;
-    speaker?: number;
     coreVersion?: string;
 }
 
@@ -190,9 +189,8 @@ export interface SettingPostSettingPostRequest {
 }
 
 export interface SingFrameAudioQuerySingFrameAudioQueryPostRequest {
+    speaker: number;
     score: Score;
-    styleId?: number;
-    speaker?: number;
     coreVersion?: string;
 }
 
@@ -445,9 +443,8 @@ export interface DefaultApiInterface {
     /**
      * 歌唱音声合成を行います。
      * @summary Frame Synthesis
+     * @param {number} speaker 
      * @param {FrameAudioQuery} frameAudioQuery 
-     * @param {number} [styleId] 
-     * @param {number} [speaker] 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -715,9 +712,8 @@ export interface DefaultApiInterface {
     /**
      * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * @summary 歌唱音声合成用のクエリを作成する
+     * @param {number} speaker 
      * @param {Score} score 
-     * @param {number} [styleId] 
-     * @param {number} [speaker] 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1367,15 +1363,15 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Frame Synthesis
      */
     async frameSynthesisFrameSynthesisPostRaw(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling frameSynthesisFrameSynthesisPost.');
+        }
+
         if (requestParameters.frameAudioQuery === null || requestParameters.frameAudioQuery === undefined) {
             throw new runtime.RequiredError('frameAudioQuery','Required parameter requestParameters.frameAudioQuery was null or undefined when calling frameSynthesisFrameSynthesisPost.');
         }
 
         const queryParameters: any = {};
-
-        if (requestParameters.styleId !== undefined) {
-            queryParameters['style_id'] = requestParameters.styleId;
-        }
 
         if (requestParameters.speaker !== undefined) {
             queryParameters['speaker'] = requestParameters.speaker;
@@ -2021,15 +2017,15 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 歌唱音声合成用のクエリを作成する
      */
     async singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FrameAudioQuery>> {
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
+        }
+
         if (requestParameters.score === null || requestParameters.score === undefined) {
             throw new runtime.RequiredError('score','Required parameter requestParameters.score was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
         }
 
         const queryParameters: any = {};
-
-        if (requestParameters.styleId !== undefined) {
-            queryParameters['style_id'] = requestParameters.styleId;
-        }
 
         if (requestParameters.speaker !== undefined) {
             queryParameters['speaker'] = requestParameters.speaker;

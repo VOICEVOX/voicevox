@@ -46,7 +46,8 @@ export interface SpeakerStyle {
 export const SpeakerStyleTypeEnum = {
     Talk: 'talk',
     Humming: 'humming',
-    SingTeacher: 'sing_teacher'
+    SingTeacher: 'sing_teacher',
+    Sing: 'sing'
 } as const;
 export type SpeakerStyleTypeEnum = typeof SpeakerStyleTypeEnum[keyof typeof SpeakerStyleTypeEnum];
 
