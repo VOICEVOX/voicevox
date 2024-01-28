@@ -37,6 +37,11 @@ import {
   isMorphable,
 } from "./audioGenerate";
 import {
+  ContinuousPlayer,
+  GenerateEndEvent,
+  PlayEndEvent,
+} from "./audioContinuousPlayer";
+import {
   AudioKey,
   CharacterInfo,
   DefaultStyleId,
@@ -1728,23 +1733,46 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         index = state.audioKeys.findIndex((v) => v === currentAudioKey);
       }
 
-      commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
-      try {
-        for (let i = index; i < state.audioKeys.length; ++i) {
-          const audioKey = state.audioKeys[i];
-          commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
-          const isEnded = await dispatch("PLAY_AUDIO", { audioKey });
-          if (!isEnded) {
-            break;
-          }
-        }
-      } finally {
-        commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
-        commit("SET_AUDIO_PLAY_START_POINT", {
-          startPoint: currentAudioPlayStartPoint,
+      const player = new ContinuousPlayer(state.audioKeys.slice(index));
+      player.addEventListener("generatestart", async (e) => {
+        const result = await dispatch("FETCH_AUDIO", {
+          audioKey: e.audioKey,
         });
-        commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
-      }
+        player.dispatchEvent(new GenerateEndEvent(e.audioKey, result));
+      });
+      player.addEventListener("playstart", async (e) => {
+        commit("SET_ACTIVE_AUDIO_KEY", { audioKey: e.audioKey });
+        const isEnded = await dispatch("PLAY_AUDIO_BLOB", {
+          audioBlob: e.result.blob,
+          audioKey: e.audioKey,
+        });
+        player.dispatchEvent(new PlayEndEvent(e.audioKey, !isEnded));
+      });
+      player.addEventListener("waitstart", async (e) => {
+        dispatch("START_PROGRESS");
+        commit("SET_ACTIVE_AUDIO_KEY", { audioKey: e.audioKey });
+        commit("SET_AUDIO_NOW_GENERATING", {
+          audioKey: e.audioKey,
+          nowGenerating: true,
+        });
+      });
+      player.addEventListener("waitend", async (e) => {
+        dispatch("RESET_PROGRESS");
+        commit("SET_AUDIO_NOW_GENERATING", {
+          audioKey: e.audioKey,
+          nowGenerating: false,
+        });
+      });
+
+      commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
+
+      await player.play();
+
+      commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
+      commit("SET_AUDIO_PLAY_START_POINT", {
+        startPoint: currentAudioPlayStartPoint,
+      });
+      commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
     }),
   },
 });
