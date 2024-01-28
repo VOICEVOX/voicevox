@@ -20,11 +20,13 @@ import type {
   CorsPolicyMode,
   DownloadableLibraryInfo,
   EngineManifest,
+  FrameAudioQuery,
   HTTPValidationError,
   InstalledLibraryInfo,
   MorphableTargetInfo,
   ParseKanaBadRequest,
   Preset,
+  Score,
   Speaker,
   SpeakerInfo,
   SupportedDevicesInfo,
@@ -42,6 +44,8 @@ import {
     DownloadableLibraryInfoToJSON,
     EngineManifestFromJSON,
     EngineManifestToJSON,
+    FrameAudioQueryFromJSON,
+    FrameAudioQueryToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     InstalledLibraryInfoFromJSON,
@@ -52,6 +56,8 @@ import {
     ParseKanaBadRequestToJSON,
     PresetFromJSON,
     PresetToJSON,
+    ScoreFromJSON,
+    ScoreToJSON,
     SpeakerFromJSON,
     SpeakerToJSON,
     SpeakerInfoFromJSON,
@@ -111,6 +117,12 @@ export interface DeletePresetDeletePresetPostRequest {
 
 export interface DeleteUserDictWordUserDictWordWordUuidDeleteRequest {
     wordUuid: string;
+}
+
+export interface FrameSynthesisFrameSynthesisPostRequest {
+    speaker: number;
+    frameAudioQuery: FrameAudioQuery;
+    coreVersion?: string;
 }
 
 export interface ImportUserDictWordsImportUserDictPostRequest {
@@ -174,6 +186,12 @@ export interface RewriteUserDictWordUserDictWordWordUuidPutRequest {
 export interface SettingPostSettingPostRequest {
     corsPolicyMode: CorsPolicyMode;
     allowOrigin?: string;
+}
+
+export interface SingFrameAudioQuerySingFrameAudioQueryPostRequest {
+    speaker: number;
+    score: Score;
+    coreVersion?: string;
 }
 
 export interface SpeakerInfoSpeakerInfoGetRequest {
@@ -421,6 +439,24 @@ export interface DefaultApiInterface {
      * Engine Manifest
      */
     engineManifestEngineManifestGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EngineManifest>;
+
+    /**
+     * 歌唱音声合成を行います。
+     * @summary Frame Synthesis
+     * @param {number} speaker 
+     * @param {FrameAudioQuery} frameAudioQuery 
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    frameSynthesisFrameSynthesisPostRaw(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
+
+    /**
+     * 歌唱音声合成を行います。
+     * Frame Synthesis
+     */
+    frameSynthesisFrameSynthesisPost(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
     /**
      * エンジンが保持しているプリセットの設定を返します  Returns ------- presets: list[Preset]     プリセットのリスト
@@ -672,6 +708,24 @@ export interface DefaultApiInterface {
      * Setting Post
      */
     settingPostSettingPost(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
+
+    /**
+     * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
+     * @summary 歌唱音声合成用のクエリを作成する
+     * @param {number} speaker 
+     * @param {Score} score 
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FrameAudioQuery>>;
+
+    /**
+     * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
+     * 歌唱音声合成用のクエリを作成する
+     */
+    singFrameAudioQuerySingFrameAudioQueryPost(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FrameAudioQuery>;
 
     /**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: SpeakerInfo
@@ -1305,6 +1359,53 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 歌唱音声合成を行います。
+     * Frame Synthesis
+     */
+    async frameSynthesisFrameSynthesisPostRaw(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling frameSynthesisFrameSynthesisPost.');
+        }
+
+        if (requestParameters.frameAudioQuery === null || requestParameters.frameAudioQuery === undefined) {
+            throw new runtime.RequiredError('frameAudioQuery','Required parameter requestParameters.frameAudioQuery was null or undefined when calling frameSynthesisFrameSynthesisPost.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.speaker !== undefined) {
+            queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/frame_synthesis`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: FrameAudioQueryToJSON(requestParameters.frameAudioQuery),
+        }, initOverrides);
+
+        return new runtime.BlobApiResponse(response);
+    }
+
+    /**
+     * 歌唱音声合成を行います。
+     * Frame Synthesis
+     */
+    async frameSynthesisFrameSynthesisPost(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+        const response = await this.frameSynthesisFrameSynthesisPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * エンジンが保持しているプリセットの設定を返します  Returns ------- presets: list[Preset]     プリセットのリスト
      * Get Presets
      */
@@ -1909,6 +2010,53 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      */
     async settingPostSettingPost(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.settingPostSettingPostRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
+     * 歌唱音声合成用のクエリを作成する
+     */
+    async singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FrameAudioQuery>> {
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
+        }
+
+        if (requestParameters.score === null || requestParameters.score === undefined) {
+            throw new runtime.RequiredError('score','Required parameter requestParameters.score was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.speaker !== undefined) {
+            queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/sing_frame_audio_query`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ScoreToJSON(requestParameters.score),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => FrameAudioQueryFromJSON(jsonValue));
+    }
+
+    /**
+     * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
+     * 歌唱音声合成用のクエリを作成する
+     */
+    async singFrameAudioQuerySingFrameAudioQueryPost(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FrameAudioQuery> {
+        const response = await this.singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

@@ -301,8 +301,8 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
-import CharacterButton from "./CharacterButton.vue";
-import PresetManageDialog from "./PresetManageDialog.vue";
+import CharacterButton from "@/components/CharacterButton.vue";
+import PresetManageDialog from "@/components/PresetManageDialog.vue";
 import { useStore } from "@/store";
 
 import {

@@ -12,7 +12,7 @@
 
 ### views ディレクトリ
 
-- メイン画面全体 ･･･ [EditorHome](../src/views/EditorHome.vue)
+- メイン画面全体 ･･･ [EditorHome](../src/components/Talk/EditorHome.vue)
 
 ### compornents ディレクトリ
 
@@ -37,16 +37,16 @@
   - ウィンドウ右上のボタン群（ピンボタン含む） ･･･ [TitleBarButtons](../src/components/TitleBarButtons.vue)
     - ピンボタン以外のボタン ･･･ [MinMaxCloseButtons](../src/components/MinMaxCloseButtons.vue)
 - ツールバー ･･･ [HeaderBar](../src/components/HeaderBar.vue)
-- キャラクター表示欄 ･･･ [CharacterPortrait](../src/components/CharacterPortrait.vue)
+- キャラクター表示欄 ･･･ [CharacterPortrait](../src/components/Talk/CharacterPortrait.vue)
 - 台本欄（テキスト欄追加ボタンを含む） ･･･ [views/EditorHome](../src/views/EditorHome.vue) に含まれる
-  - レーン（行番号・テキスト欄含む） ･･･ [AudioCell](../src/components/AudioCell.vue)
+  - レーン（行番号・テキスト欄含む） ･･･ [AudioCell](../src/components/Talk/AudioCell.vue)
     - キャラクターアイコン ･･･ [CharacterButton](../src/components/CharacterButton.vue)
     - コンテキスト（右クリック）メニュー ･･･ [ContextMenu](../src/components/ContextMenu.vue)
-- パラメータ調整欄 ･･･ [AudioInfo](../src/components/AudioInfo.vue)
+- パラメータ調整欄 ･･･ [AudioInfo](../src/components/Talk/AudioInfo.vue)
   - プリセット管理 ･･･ [PresetManageDialog](../src/components/PresetManageDialog.vue)
-- 詳細調整欄（各項目・再生ボタンを含む） ･･･ [AudioDetail](../src/components/AudioDetail.vue)
-  - ｱｸｾﾝﾄ項目のうち、文字以外の部分の UI ･･･ [AudioAccent](../src/components/AudioAccent.vue)
-  - ｲﾝﾄﾈｰｼｮﾝ・長さ項目のスライダー [AudioParameter](../src/components/AudioParameter.vue)
+- 詳細調整欄（各項目・再生ボタンを含む） ･･･ [AudioDetail](../src/components/Talk/AudioDetail.vue)
+  - ｱｸｾﾝﾄ項目のうち、文字以外の部分の UI ･･･ [AudioAccent](../src/components/Talk/AudioAccent.vue)
+  - ｲﾝﾄﾈｰｼｮﾝ・長さ項目のスライダー [AudioParameter](../src/components/Talk/AudioParameter.vue)
 - その他
   - 初回起動時に表示される画面
     - 利用規約 ･･･ [AcceptTermsDialog](../src/components/AcceptTermsDialog.vue)

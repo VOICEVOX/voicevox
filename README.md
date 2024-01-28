@@ -73,7 +73,7 @@ npm run electron:serve
 npm run browser:serve
 ```
 
-また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/#/home>  
+また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/#/talk>  
 今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド
@@ -108,7 +108,7 @@ Playwright を使用しているためテストパターンを生成すること
 **ブラウザ版を起動している状態で**以下のコマンドを実行してください。
 
 ```bash
-npx playwright codegen http://localhost:5173/#/home  --viewport-size=800,600
+npx playwright codegen http://localhost:5173/#/talk  --viewport-size=800,600
 ```
 
 詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。

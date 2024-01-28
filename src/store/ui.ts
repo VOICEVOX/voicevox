@@ -393,12 +393,16 @@ export const uiStore = createPartialStore<UiStoreTypes>({
      * 保存がキャンセルされた場合は何もしない。
      */
     async action({ dispatch, getters }, obj) {
+      await dispatch("SING_STOP_AUDIO"); // FIXME: ON_BEFORE_QUITTINGなどを作成して移動すべき
+
       if (getters.IS_EDITED) {
         const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {});
         if (result == "canceled") {
           return;
         }
       }
+
+      await dispatch("STOP_RENDERING"); // FIXME: FINISH_VUEXなどを作成して移動すべき
 
       if (obj.closeOrReload == "close") {
         window.electron.closeWindow();

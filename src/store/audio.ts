@@ -335,6 +335,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           styles[i] = {
             styleName: style.name,
             styleId: StyleId(style.id),
+            styleType: style.type,
             engineId,
             iconPath: base64ImageToUri(styleInfo.icon),
             portraitPath:
