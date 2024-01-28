@@ -253,7 +253,7 @@ export type AppInfos = {
   version: string;
 };
 
-export type StyleType = "talk" | "humming" | "sing_teacher";
+export type StyleType = "talk" | "humming" | "sing_teacher" | "sing";
 
 export type StyleInfo = {
   styleName?: string;
