@@ -248,9 +248,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             semver.satisfies(projectAppVersion, "<0.15", semverSatisfiesOptions)
           ) {
-            const characterInfos = context.getters.USER_ORDERED_CHARACTER_INFOS;
+            const characterInfos =
+              context.getters.USER_ORDERED_CHARACTER_INFOS("talk");
             if (characterInfos == undefined)
-              throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+              throw new Error("characterInfos == undefined");
             for (const audioItemsKey in projectData.audioItems) {
               const audioItem = projectData.audioItems[audioItemsKey];
               if (audioItem.voice == undefined) {

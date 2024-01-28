@@ -14,8 +14,8 @@ export default defineComponent({
     const store = useStore();
     const isShowSinger = computed(() => store.state.isShowSinger);
 
-    const userOrderedCharacterInfos = computed(
-      () => store.getters.USER_ORDERED_CHARACTER_INFOS
+    const userOrderedCharacterInfos = computed(() =>
+      store.getters.USER_ORDERED_CHARACTER_INFOS("all")
     );
 
     const characterInfo = computed(() => {

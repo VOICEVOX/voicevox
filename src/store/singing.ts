@@ -177,9 +177,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ) {
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
-      if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
-        throw new Error("state.characterInfos == undefined");
-      const userOrderedCharacterInfos = getters.USER_ORDERED_CHARACTER_INFOS;
+      const userOrderedCharacterInfos =
+        getters.USER_ORDERED_CHARACTER_INFOS("sing");
+      if (userOrderedCharacterInfos == undefined)
+        throw new Error("userOrderedCharacterInfos == undefined");
 
       const engineId = singer?.engineId ?? state.engineIds[0];
 

@@ -518,7 +518,7 @@ watchEffect(() => {
 });
 
 const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
-  const allCharacterInfos = store.getters.USER_ORDERED_CHARACTER_INFOS;
+  const allCharacterInfos = store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
   if (allCharacterInfos == undefined)
     throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
@@ -598,10 +598,12 @@ const morphingTargetVoice = computed({
 });
 
 const morphingTargetCharacterInfo = computed(() =>
-  store.getters.USER_ORDERED_CHARACTER_INFOS?.find(
-    (character) =>
-      character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
-  )
+  store.getters
+    .USER_ORDERED_CHARACTER_INFOS("talk")
+    ?.find(
+      (character) =>
+        character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
+    )
 );
 
 const morphingTargetStyleInfo = computed(() => {

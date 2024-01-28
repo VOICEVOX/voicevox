@@ -471,14 +471,34 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   USER_ORDERED_CHARACTER_INFOS: {
-    getter: (state, getters) => {
+    getter: (state, getters) => (type: "all" | "sing" | "talk") => {
+      const isSingingStyle = (styleInfo: StyleInfo) => {
+        return (
+          styleInfo.styleType === "humming" ||
+          styleInfo.styleType === "sing_teacher"
+        );
+      };
+
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
       return allCharacterInfos.size !== 0
-        ? [...allCharacterInfos.values()].sort(
-            (a, b) =>
-              state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
-              state.userCharacterOrder.indexOf(b.metas.speakerUuid)
-          )
+        ? [...allCharacterInfos.values()]
+            .map((info) => {
+              info.metas.styles = info.metas.styles.filter((style) => {
+                const isSinging = isSingingStyle(style);
+                return (
+                  type === "all" ||
+                  (type === "sing" && isSinging) ||
+                  (type === "talk" && !isSinging)
+                );
+              });
+              return info;
+            })
+            .filter((info) => info.metas.styles.length !== 0)
+            .sort(
+              (a, b) =>
+                state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
+                state.userCharacterOrder.indexOf(b.metas.speakerUuid)
+            )
         : undefined;
     },
   },
@@ -588,13 +608,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       //baseAudioItemのうち、textとstyleIdは別途与えられるので引き継がない
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
-      if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
+      const userOrderedCharacterInfos =
+        getters.USER_ORDERED_CHARACTER_INFOS("talk");
+      if (userOrderedCharacterInfos == undefined)
         throw new Error("state.characterInfos == undefined");
 
       const text = payload.text ?? "";
 
-      const defaultSpeakerId =
-        getters.USER_ORDERED_CHARACTER_INFOS[0].metas.speakerUuid;
+      const defaultSpeakerId = userOrderedCharacterInfos[0].metas.speakerUuid;
       const defaultStyleId = state.defaultStyleIds.find(
         (styleId) => styleId.speakerUuid === defaultSpeakerId
       );
@@ -1697,10 +1718,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         const characters = new Map<string, string>();
 
-        if (!getters.USER_ORDERED_CHARACTER_INFOS)
+        const userOrderedCharacterInfos =
+          getters.USER_ORDERED_CHARACTER_INFOS("talk");
+        if (!userOrderedCharacterInfos)
           throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
-        for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
+        for (const characterInfo of userOrderedCharacterInfos) {
           const speakerName = characterInfo.metas.speakerName;
           for (const style of characterInfo.metas.styles) {
             characters.set(
@@ -2883,12 +2906,14 @@ export const audioCommandStore = transformCommandStore(
             baseAudioItem = state.audioItems[state._activeAudioKey];
           }
 
-          if (!getters.USER_ORDERED_CHARACTER_INFOS)
+          const userOrderedCharacterInfos =
+            getters.USER_ORDERED_CHARACTER_INFOS("talk");
+          if (!userOrderedCharacterInfos)
             throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
           for (const { text, voice } of parseTextFile(
             body,
             state.defaultStyleIds,
-            getters.USER_ORDERED_CHARACTER_INFOS,
+            userOrderedCharacterInfos,
             baseAudioItem?.voice
           )) {
             audioItems.push(
