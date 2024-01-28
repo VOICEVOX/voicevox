@@ -930,7 +930,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             "singFrameAudioQuerySingFrameAudioQueryPost"
           )({
             score: { notes },
-            styleId: 999, // TODO: 設定できるようにする
+            speaker: 6000, // TODO: 設定できるようにする
           });
         } catch (error) {
           const lyrics = notes.map((value) => value.lyric).join("");
@@ -967,7 +967,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
           return await instance.invoke("frameSynthesisFrameSynthesisPost")({
             frameAudioQuery: query,
-            styleId: singer.styleId,
+            speaker: singer.styleId,
           });
         } catch (error) {
           const phonemes = query.phonemes
