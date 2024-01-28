@@ -354,8 +354,6 @@ export default defineComponent({
     // 入力を補助する線
     const showGuideLine = ref(true);
     const guideLineX = ref(0);
-    // 最初のonActivatedか判断するためのフラグ
-    let firstActivation = true;
 
     const previewAdd = () => {
       const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
@@ -996,6 +994,8 @@ export default defineComponent({
       }
     };
 
+    // 最初のonActivatedか判断するためのフラグ
+    let firstActivation = true;
     onActivated(() => {
       const sequencerBodyElement = sequencerBody.value;
       if (!sequencerBodyElement) {
