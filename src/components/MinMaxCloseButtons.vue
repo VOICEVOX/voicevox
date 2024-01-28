@@ -118,7 +118,6 @@ const isMaximized = computed(() => store.state.isMaximized);
 }
 
 .title-bar-buttons {
-  -webkit-app-region: no-drag;
   overflow: visible;
 }
 

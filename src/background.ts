@@ -465,7 +465,7 @@ async function loadUrl(obj: {
   projectFilePath?: string;
 }) {
   const fragment =
-    "#/home" +
+    "#/talk" +
     `?isMultiEngineOffMode=${obj?.isMultiEngineOffMode ?? false}` +
     `&projectFilePath=${obj?.projectFilePath ?? ""}`;
   return win.loadURL(`${firstUrl}${fragment}`);
@@ -722,10 +722,10 @@ ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
   });
 });
 
-ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {
+ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title, name, extensions }) => {
   return dialog.showOpenDialogSync(win, {
     title,
-    filters: [{ name: "Text", extensions: ["txt"] }],
+    filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
     properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
   })?.[0];
 });

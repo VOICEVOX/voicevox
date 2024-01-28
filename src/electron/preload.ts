@@ -117,8 +117,12 @@ const api: Sandbox = {
     });
   },
 
-  showImportFileDialog: ({ title }) => {
-    return ipcRendererInvoke("SHOW_IMPORT_FILE_DIALOG", { title });
+  showImportFileDialog: ({ title, name, extensions }) => {
+    return ipcRendererInvoke("SHOW_IMPORT_FILE_DIALOG", {
+      title,
+      name,
+      extensions,
+    });
   },
 
   writeFile: async ({ filePath, buffer }) => {

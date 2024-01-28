@@ -111,7 +111,6 @@ const isPinned = computed(() => store.state.isPinned);
 }
 
 .title-bar-buttons {
-  -webkit-app-region: no-drag;
   overflow: visible;
 }
 </style>

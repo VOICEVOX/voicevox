@@ -1,11 +1,15 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
-import EditorHome from "../views/EditorHome.vue";
+import SingerHome from "../views/SingerHome.vue";
+import EditorHome from "@/components/Talk/EditorHome.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: "/home",
+    path: "/talk",
     component: EditorHome,
-    props: (route) => ({ projectFilePath: route.query["projectFilePath"] }),
+  },
+  {
+    path: "/song",
+    component: SingerHome,
   },
 ];
 
