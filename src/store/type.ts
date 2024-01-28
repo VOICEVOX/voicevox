@@ -163,7 +163,7 @@ export type AudioStoreTypes = {
   };
 
   USER_ORDERED_CHARACTER_INFOS: {
-    getter: CharacterInfo[] | undefined;
+    getter(type: "all" | "singerLike" | "talk"): CharacterInfo[] | undefined;
   };
 
   SETUP_SPEAKER: {
