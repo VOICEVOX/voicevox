@@ -1,13 +1,21 @@
 <template>
-  <div
-    @mouseenter="handleMouseHover(true)"
-    @mouseleave="handleMouseHover(false)"
-  >
+  <div class="audio-parameter">
+    <!--
+      z-index は値ラベルの全表示中の重なる順番を逆順にするために必要。
+      FIXME: 重ならない実装にできたら外す
+    -->
     <q-badge
-      v-if="
-        !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
-      "
+      v-if="shouldDisplayValueLabel"
       class="value-label"
+      :class="{
+        'value-label-highlighted': isOperating && valueLabelForce,
+        'value-label-consonant':
+          valueLabelForce && clip && type === 'consonant',
+        'value-label-vowel': valueLabelForce && clip && type === 'vowel',
+      }"
+      :style="{
+        'z-index': isOperating ? 101 : 100 - moraIndex,
+      }"
       color="primary"
       text-color="display-on-primary"
     >
@@ -34,12 +42,14 @@
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"
       @pan="previewSlider.qSliderProps.onPan"
+      @mouseenter="handleMouseHover(true)"
+      @mouseleave="handleMouseHover(false)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from "vue";
+import { computed, ref } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
 
@@ -55,6 +65,7 @@ const props = withDefaults(
     type?: MoraDataType;
     clip?: boolean;
     shiftKeyFlag?: boolean;
+    valueLabelForce?: boolean;
   }>(),
   {
     min: 0.0,
@@ -64,6 +75,7 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
+    valueLabelForce: false,
   }
 );
 
@@ -98,10 +110,6 @@ const previewSlider = previewSliderHelper({
   disableScroll: () => props.shiftKeyFlag, // shift+ホイール操作の横方向スクロール中にスライダー操作を無視するため
 });
 
-const valueLabel = reactive({
-  visible: false,
-});
-
 const clipPathComputed = computed((): string => {
   if (!props.clip) {
     return "";
@@ -114,12 +122,30 @@ const clipPathComputed = computed((): string => {
   }
 });
 
+const isHovered = ref(false);
+
 const handleMouseHover = (isOver: boolean) => {
-  valueLabel.visible = isOver;
+  isHovered.value = isOver;
   if (props.type == "consonant" || props.type == "vowel") {
     emit("mouseOver", isOver, props.type, props.moraIndex);
   }
 };
+
+// FIXME: キーボード操作(フォーカス、値変更)に対応する
+const isOperating = computed(
+  () => isHovered.value || previewSlider.state.isPanning.value
+);
+
+defineExpose({
+  isOperating,
+});
+
+const shouldDisplayValueLabel = computed(
+  () =>
+    !props.uiLocked &&
+    !props.disable &&
+    (props.valueLabelForce || isOperating.value)
+);
 
 const precisionComputed = computed(() => {
   if (props.type == "pause" || props.type == "pitch") {
@@ -155,6 +181,18 @@ div {
     height: $value-label-height;
     padding: 0px 8px;
     transform: translateX(-50%) translateX(15px);
+
+    // altキー押下中は母音と子音の値ラベルの表示位置が被らないようにずらす
+    &.value-label-consonant {
+      transform: translateX(-50%) translateX(15px) translateY(-60%);
+    }
+    &.value-label-vowel {
+      transform: translateX(-50%) translateX(15px) translateY(60%);
+    }
   }
+}
+
+.value-label-highlighted {
+  font-weight: bold;
 }
 </style>

@@ -70,3 +70,52 @@ test("詳細調整欄のコンテキストメニュー", async ({ page }) => {
   await expect(page.getByText("ニヒャク")).toBeVisible();
   await expect(page.getByText("ヨン")).toBeVisible();
 });
+
+test("アクセント区間全体の値変更", async ({ page }) => {
+  const otherSliderValue = process.env.CI ? "0.106" : "0.064";
+
+  await navigateToMain(page);
+  await page.waitForTimeout(100);
+
+  const textField = page.getByRole("textbox", { name: "1行目" });
+  await textField.click();
+  await textField.fill("1234");
+  await textField.press("Enter");
+
+  await page.getByText("長さ").click();
+  await page.waitForTimeout(1000);
+
+  const moraTable = page.locator(".mora-table").last();
+  await moraTable.hover({
+    // Alt 押下中はスライダー以外にも当たり判定があることを確認するため
+    position: { x: 20, y: 20 },
+  });
+  await page.keyboard.down("Alt");
+
+  // Alt 押下中は hover 中のアクセント区間の他モーラの値ラベルも表示される
+  await expect(page.getByText(otherSliderValue)).toBeVisible();
+
+  const sliderThumb = page.locator(".q-slider__thumb").last();
+  await sliderThumb.hover();
+  await page.mouse.down();
+  await page.waitForTimeout(1000);
+
+  // alt 押下中に pan しても値ラベルが表示されたまま
+  // pan 中は Quasar によって当たり判定が消える都合で別処理のため、個別にテストが必要。
+  await expect(page.getByText(otherSliderValue)).toBeVisible();
+
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
+
+  await moraTable.hover({
+    position: { x: 20, y: 20 },
+  });
+  await page.keyboard.down("Alt");
+  await page.waitForTimeout(1000);
+
+  // 他モーラの変更ができるかどうかを確認
+  await expect(page.getByText(otherSliderValue)).not.toBeVisible();
+
+  await page.mouse.up();
+  await page.keyboard.up("Alt");
+});

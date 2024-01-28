@@ -4,6 +4,8 @@
     class="mora-table"
     :class="[isActive && 'mora-table-focus', uiLocked || 'mora-table-hover']"
     @click="$emit('click', index)"
+    @mouseenter="hoveredTarget = 'self'"
+    @mouseleave="hoveredTarget = undefined"
   >
     <context-menu :menudata="contextMenudata" />
     <!-- スライダーここから -->
@@ -26,6 +28,7 @@
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
       >
         <audio-parameter
+          ref="pitchAudioParameters"
           :mora-index="moraIndex"
           :value="mora.pitch"
           :ui-locked="uiLocked"
@@ -35,6 +38,7 @@
           :type="'pitch'"
           :clip="false"
           :shift-key-flag="shiftKeyFlag"
+          :value-label-force="shouldForciblyDisplayValueLabel"
           @change-value="changeMoraData"
         />
       </div>
@@ -51,6 +55,7 @@
         <!-- consonant length -->
         <audio-parameter
           v-if="mora.consonant && mora.consonantLength != undefined"
+          ref="consonantAudioParameters"
           :mora-index="moraIndex"
           :value="mora.consonantLength"
           :ui-locked="uiLocked"
@@ -60,11 +65,13 @@
           :type="'consonant'"
           :clip="true"
           :shift-key-flag="shiftKeyFlag"
+          :value-label-force="shouldForciblyDisplayValueLabel"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
         <!-- vowel length -->
         <audio-parameter
+          ref="vowelAudioParameters"
           :mora-index="moraIndex"
           :value="mora.vowelLength"
           :ui-locked="uiLocked"
@@ -74,6 +81,7 @@
           :type="'vowel'"
           :clip="mora.consonant ? true : false"
           :shift-key-flag="shiftKeyFlag"
+          :value-label-force="shouldForciblyDisplayValueLabel"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
@@ -110,8 +118,14 @@
         :style="{
           'grid-column': `${moraIndex * 2 + 1} / span 1`,
         }"
-        @mouseover="handleHoverText(true, moraIndex)"
-        @mouseleave="handleHoverText(false, moraIndex)"
+        @mouseover="
+          hoveredMoraIndex = moraIndex;
+          hoveredTarget = 'text';
+        "
+        @mouseleave="
+          hoveredMoraIndex = undefined;
+          hoveredTarget = 'self';
+        "
         @click.stop="uiLocked || handleChangeVoicing(mora, moraIndex)"
       >
         <!-- tooltipを変更する場合、pauseMoraのものも合わせて変更すること-->
@@ -290,13 +304,12 @@ const handleChangePronounce = (newPronunciation: string) => {
 };
 
 const hoveredMoraIndex = ref<number | undefined>(undefined);
-const handleHoverText = (isOver: boolean, moraIndex: number) => {
-  if (props.selectedDetail == "accent" || props.selectedDetail == "pitch") {
-    hoveredMoraIndex.value = isOver ? moraIndex : undefined;
-  }
-};
 
-const lengthHoveredPhonemeType = ref<"vowel" | "consonant">("vowel");
+// self: アクセント区間全体, text: 文字部分
+const hoveredTarget = ref<"self" | "text" | undefined>(undefined);
+
+const lengthHoveredPhonemeType =
+  ref<"vowel" | "consonant" | undefined>(undefined);
 const handleLengthHoverText = (
   isOver: boolean,
   phoneme: MoraDataType,
@@ -304,7 +317,7 @@ const handleLengthHoverText = (
 ) => {
   if (phoneme !== "vowel" && phoneme !== "consonant")
     throw new Error("phoneme != hoveredType");
-  lengthHoveredPhonemeType.value = phoneme;
+  lengthHoveredPhonemeType.value = isOver ? phoneme : undefined;
   // the pause and pitch templates don't emit a mouseOver event
   hoveredMoraIndex.value = isOver ? moraIndex : undefined;
 };
@@ -316,7 +329,7 @@ const unvoicableVowels = ["U", "I", "i", "u"];
  * 強調表示するかの判定に使われる。
  */
 const isEditableMora = (vowel: string, moraIndex: number) => {
-  if (uiLocked.value) {
+  if (uiLocked.value || hoveredTarget.value !== "text") {
     return false;
   }
   if (props.selectedDetail == "accent") {
@@ -334,9 +347,42 @@ const isEditableMora = (vowel: string, moraIndex: number) => {
   return false;
 };
 
+const pitchAudioParameters = ref<InstanceType<typeof AudioParameter>[]>();
+const consonantAudioParameters = ref<InstanceType<typeof AudioParameter>[]>();
+const vowelAudioParameters = ref<InstanceType<typeof AudioParameter>[]>();
+
+const isAnyParameterOperating = (
+  audioParameters: InstanceType<typeof AudioParameter>[] | undefined
+) => {
+  return (
+    audioParameters?.some?.((audioParameter) => audioParameter.isOperating) ??
+    false
+  );
+};
+
+// pan中は当たり判定が消えるため
+const isOperatingParameterSlider = computed(() => {
+  return (
+    isAnyParameterOperating(pitchAudioParameters.value) ||
+    isAnyParameterOperating(consonantAudioParameters.value) ||
+    isAnyParameterOperating(vowelAudioParameters.value)
+  );
+});
+
+const shouldForciblyDisplayValueLabel = computed(() => {
+  return (
+    // 再計算が走る回数を抑制するため、props.altKeyFlag を後ろにする
+    (hoveredTarget.value != undefined || isOperatingParameterSlider.value) &&
+    props.altKeyFlag
+  );
+});
+
 const getHoveredText = (mora: Mora, moraIndex: number) => {
   if (props.selectedDetail != "length") return mora.text;
-  if (moraIndex === hoveredMoraIndex.value) {
+  if (
+    moraIndex === hoveredMoraIndex.value &&
+    lengthHoveredPhonemeType.value != undefined
+  ) {
     if (lengthHoveredPhonemeType.value == "vowel") {
       return mora.vowel.toUpperCase();
     } else {
