@@ -188,9 +188,11 @@ export default defineComponent({
       const characterInfo = userOrderedCharacterInfos.value?.find(
         (info) => info.metas.speakerUuid === speakerUuid
       );
-      const defaultStyleId = store.state.defaultStyleIds.find(
-        (x) => x.speakerUuid === speakerUuid
-      )?.defaultStyleId;
+
+      // FIXME: ソングエディタ向けのデフォルトスタイルを選択できるようにする
+      // ここで取得されるcharacterInfoには、ソングエディタ向けのスタイルのみ含まれるので、
+      // その中の最初のスタイルをソングエディタにおけるデフォルトスタイルとする
+      const defaultStyleId = characterInfo?.metas.styles[0].styleId;
 
       const defaultStyle = characterInfo?.metas.styles.find(
         (style) => style.styleId === defaultStyleId
