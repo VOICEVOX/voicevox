@@ -167,9 +167,9 @@
     :character-infos="orderedAllCharacterInfos"
   />
   <default-style-list-dialog
-    v-if="orderedAllCharacterInfos.length > 0"
+    v-if="orderedTalkCharacterInfos.length > 0"
     v-model="isDefaultStyleSelectDialogOpenComputed"
-    :character-infos="orderedAllCharacterInfos"
+    :character-infos="orderedTalkCharacterInfos"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
@@ -723,7 +723,15 @@ const isCharacterOrderDialogOpenComputed = computed({
     }),
 });
 
-// デフォルトスタイル選択
+// TODO: デフォルトスタイル選択(ソング)の実装
+// デフォルトスタイル選択(トーク)
+const orderedTalkCharacterInfos = computed(() => {
+  const userOrderedCharacterInfos =
+    store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
+  if (userOrderedCharacterInfos == undefined)
+    throw new Error("userOrderedCharacterInfos == undefined");
+  return userOrderedCharacterInfos;
+});
 const isDefaultStyleSelectDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
