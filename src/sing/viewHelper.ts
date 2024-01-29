@@ -106,7 +106,7 @@ export const getStyleDescription = (style: StyleInfo) => {
     description.push("トーク");
   } else if (style.styleType === "humming") {
     description.push("ハミング");
-  } else if (style.styleType === "sing_teacher") {
+  } else if (style.styleType === "sing") {
     description.push("歌");
   } else {
     throw new Error("Unknown style type.");
