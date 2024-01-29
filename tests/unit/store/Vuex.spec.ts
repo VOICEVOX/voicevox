@@ -13,6 +13,7 @@ import { presetStore } from "@/store/preset";
 import { proxyStore } from "@/store/proxy";
 import { dictionaryStore } from "@/store/dictionary";
 import { engineStore } from "@/store/engine";
+import { singingStore } from "@/store/singing";
 import { EngineId } from "@/type/preload";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
@@ -123,6 +124,7 @@ describe("store/vuex.js test", () => {
               interrogativeUpspeak: true,
               synthesisMorphing: true,
             },
+            frameRate: 93.75,
           },
         },
         experimentalSetting: {
@@ -150,6 +152,39 @@ describe("store/vuex.js test", () => {
         progress: -1,
         isVuexReady: false,
         defaultPresetKeys: {},
+        score: {
+          tpqn: 480,
+          tempos: [
+            {
+              position: 0,
+              bpm: 120,
+            },
+          ],
+          timeSignatures: [
+            {
+              measureNumber: 1,
+              beats: 4,
+              beatType: 4,
+            },
+          ],
+          notes: [],
+        },
+        phrases: new Map(),
+        isShowSinger: true,
+        sequencerZoomX: 1,
+        sequencerZoomY: 1,
+        sequencerSnapType: 16,
+        selectedNoteIds: new Set(),
+        overlappingNoteIds: new Set(),
+        nowPlaying: false,
+        volume: 0,
+        leftLocatorPosition: 0,
+        rightLocatorPosition: 0,
+        startRenderingRequested: false,
+        stopRenderingRequested: false,
+        nowRendering: false,
+        nowAudioExporting: false,
+        cancellationOfAudioExportRequested: false,
       },
       getters: {
         ...uiStore.getters,
@@ -164,6 +199,7 @@ describe("store/vuex.js test", () => {
         ...presetStore.getters,
         ...proxyStore.getters,
         ...dictionaryStore.getters,
+        ...singingStore.getters,
       },
       mutations: {
         ...uiStore.mutations,
@@ -178,6 +214,7 @@ describe("store/vuex.js test", () => {
         ...presetStore.mutations,
         ...proxyStore.mutations,
         ...dictionaryStore.mutations,
+        ...singingStore.mutations,
       },
       actions: {
         ...uiStore.actions,
@@ -192,6 +229,7 @@ describe("store/vuex.js test", () => {
         ...presetStore.actions,
         ...proxyStore.actions,
         ...dictionaryStore.actions,
+        ...singingStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
       strict: process.env.NODE_ENV !== "production",

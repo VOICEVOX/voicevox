@@ -251,7 +251,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
-import AudioAccent from "./AudioAccent.vue";
+import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
@@ -345,11 +345,13 @@ const surface = ref("");
 const yomi = ref("");
 
 const voiceComputed = computed(() => {
-  if (store.getters.USER_ORDERED_CHARACTER_INFOS == undefined)
+  const userOrderedCharacterInfos =
+    store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
+  if (userOrderedCharacterInfos == undefined)
     throw new Error("assert USER_ORDERED_CHARACTER_INFOS");
   if (store.state.engineIds.length === 0)
     throw new Error("assert engineId.length > 0");
-  const characterInfo = store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas;
+  const characterInfo = userOrderedCharacterInfos[0].metas;
   const speakerId = characterInfo.speakerUuid;
   const { engineId, styleId } = characterInfo.styles[0];
   return { engineId, speakerId, styleId };

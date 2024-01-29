@@ -29,7 +29,10 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { QMenu } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
-import { MenuItemButton, MenuItemSeparator } from "@/components/MenuBar.vue";
+import {
+  MenuItemButton,
+  MenuItemSeparator,
+} from "@/components/BaseMenuBar.vue";
 import { useStore } from "@/store";
 
 defineProps<{

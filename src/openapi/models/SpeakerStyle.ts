@@ -31,7 +31,26 @@ export interface SpeakerStyle {
      * @memberof SpeakerStyle
      */
     id: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof SpeakerStyle
+     */
+    type?: SpeakerStyleTypeEnum;
 }
+
+
+/**
+ * @export
+ */
+export const SpeakerStyleTypeEnum = {
+    Talk: 'talk',
+    Humming: 'humming',
+    SingTeacher: 'sing_teacher',
+    Sing: 'sing'
+} as const;
+export type SpeakerStyleTypeEnum = typeof SpeakerStyleTypeEnum[keyof typeof SpeakerStyleTypeEnum];
+
 
 /**
  * Check if a given object implements the SpeakerStyle interface.
@@ -56,6 +75,7 @@ export function SpeakerStyleFromJSONTyped(json: any, ignoreDiscriminator: boolea
         
         'name': json['name'],
         'id': json['id'],
+        'type': !exists(json, 'type') ? undefined : json['type'],
     };
 }
 
@@ -70,6 +90,7 @@ export function SpeakerStyleToJSON(value?: SpeakerStyle | null): any {
         
         'name': value.name,
         'id': value.id,
+        'type': value.type,
     };
 }
 

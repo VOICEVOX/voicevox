@@ -15,6 +15,7 @@ import {
   SupportedDevicesInfo,
   UserDictWord,
   MorphableTargetInfo,
+  FrameAudioQuery,
 } from "@/openapi";
 import {
   CharacterInfo,
@@ -162,7 +163,7 @@ export type AudioStoreTypes = {
   };
 
   USER_ORDERED_CHARACTER_INFOS: {
-    getter: CharacterInfo[] | undefined;
+    getter(type: "all" | "singerLike" | "talk"): CharacterInfo[] | undefined;
   };
 
   SETUP_SPEAKER: {
@@ -707,6 +708,298 @@ export type AudioPlayerStoreTypes = {
   };
 
   STOP_AUDIO: {
+    action(): void;
+  };
+};
+
+/*
+ * Singing Store Types
+ */
+
+export type Tempo = {
+  position: number;
+  bpm: number;
+};
+
+export type TimeSignature = {
+  measureNumber: number;
+  beats: number;
+  beatType: number;
+};
+
+export type Note = {
+  id: string;
+  position: number;
+  duration: number;
+  noteNumber: number;
+  lyric: string;
+};
+
+export type Score = {
+  tpqn: number;
+  tempos: Tempo[];
+  timeSignatures: TimeSignature[];
+  notes: Note[];
+};
+
+export type Singer = {
+  engineId: EngineId;
+  styleId: StyleId;
+};
+
+export type PhraseState =
+  | "WAITING_TO_BE_RENDERED"
+  | "NOW_RENDERING"
+  | "COULD_NOT_RENDER"
+  | "PLAYABLE";
+
+export type Phrase = {
+  singer?: Singer;
+  score: Score;
+  startTicks: number;
+  endTicks: number;
+  state: PhraseState;
+  query?: FrameAudioQuery;
+  startTime?: number;
+};
+
+export type SingingStoreState = {
+  singer?: Singer;
+  score: Score;
+  phrases: Map<string, Phrase>;
+  // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
+  isShowSinger: boolean;
+  sequencerZoomX: number;
+  sequencerZoomY: number;
+  sequencerSnapType: number;
+  selectedNoteIds: Set<string>;
+  overlappingNoteIds: Set<string>;
+  editingLyricNoteId?: string;
+  nowPlaying: boolean;
+  volume: number;
+  leftLocatorPosition: number;
+  rightLocatorPosition: number;
+  startRenderingRequested: boolean;
+  stopRenderingRequested: boolean;
+  nowRendering: boolean;
+  nowAudioExporting: boolean;
+  cancellationOfAudioExportRequested: boolean;
+};
+
+export type SingingStoreTypes = {
+  SET_SHOW_SINGER: {
+    mutation: { isShowSinger: boolean };
+    action(payload: { isShowSinger: boolean }): void;
+  };
+
+  SET_SINGER: {
+    mutation: { singer?: Singer };
+    action(payload: { singer?: Singer }): void;
+  };
+
+  SET_SCORE: {
+    mutation: { score: Score };
+    action(payload: { score: Score }): void;
+  };
+
+  SET_TEMPO: {
+    mutation: { tempo: Tempo };
+    action(payload: { tempo: Tempo }): void;
+  };
+
+  REMOVE_TEMPO: {
+    mutation: { position: number };
+    action(payload: { position: number }): void;
+  };
+
+  SET_TIME_SIGNATURE: {
+    mutation: { timeSignature: TimeSignature };
+    action(payload: { timeSignature: TimeSignature }): void;
+  };
+
+  REMOVE_TIME_SIGNATURE: {
+    mutation: { measureNumber: number };
+    action(payload: { measureNumber: number }): void;
+  };
+
+  NOTE_IDS: {
+    getter: Set<string>;
+  };
+
+  ADD_NOTES: {
+    mutation: { notes: Note[] };
+    action(payload: { notes: Note[] }): void;
+  };
+
+  UPDATE_NOTES: {
+    mutation: { notes: Note[] };
+    action(payload: { notes: Note[] }): void;
+  };
+
+  REMOVE_NOTES: {
+    mutation: { noteIds: string[] };
+    action(payload: { noteIds: string[] }): void;
+  };
+
+  SELECT_NOTES: {
+    mutation: { noteIds: string[] };
+    action(payload: { noteIds: string[] }): void;
+  };
+
+  DESELECT_ALL_NOTES: {
+    mutation: undefined;
+    action(): void;
+  };
+
+  REMOVE_SELECTED_NOTES: {
+    action(): void;
+  };
+
+  SET_EDITING_LYRIC_NOTE_ID: {
+    mutation: { noteId?: string };
+    action(payload: { noteId?: string }): void;
+  };
+
+  SET_PHRASE: {
+    mutation: { phraseKey: string; phrase: Phrase };
+  };
+
+  DELETE_PHRASE: {
+    mutation: { phraseKey: string };
+  };
+
+  SET_STATE_TO_PHRASE: {
+    mutation: { phraseKey: string; phraseState: PhraseState };
+  };
+
+  SET_FRAME_AUDIO_QUERY_TO_PHRASE: {
+    mutation: { phraseKey: string; frameAudioQuery: FrameAudioQuery };
+  };
+
+  SET_START_TIME_TO_PHRASE: {
+    mutation: { phraseKey: string; startTime: number };
+  };
+
+  SET_SNAP_TYPE: {
+    mutation: { snapType: number };
+    action(payload: { snapType: number }): void;
+  };
+
+  SET_ZOOM_X: {
+    mutation: { zoomX: number };
+    action(payload: { zoomX: number }): void;
+  };
+
+  SET_ZOOM_Y: {
+    mutation: { zoomY: number };
+    action(payload: { zoomY: number }): void;
+  };
+
+  SET_IS_DRAG: {
+    mutation: { isDrag: boolean };
+    action(payload: { isDrag: boolean }): void;
+  };
+
+  IMPORT_MIDI_FILE: {
+    action(payload: { filePath?: string }): void;
+  };
+
+  IMPORT_MUSICXML_FILE: {
+    action(payload: { filePath?: string }): void;
+  };
+
+  EXPORT_WAVE_FILE: {
+    action(payload: { filePath?: string }): SaveResultObject;
+  };
+
+  CANCEL_AUDIO_EXPORT: {
+    action(): void;
+  };
+
+  TICK_TO_SECOND: {
+    getter(position: number): number;
+  };
+
+  SECOND_TO_TICK: {
+    getter(time: number): number;
+  };
+
+  GET_PLAYHEAD_POSITION: {
+    getter(): number;
+  };
+
+  SET_PLAYHEAD_POSITION: {
+    action(payload: { position: number }): void;
+  };
+
+  ADD_PLAYHEAD_POSITION_CHANGE_LISTENER: {
+    action(payload: { listener: (position: number) => void }): void;
+  };
+
+  REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
+    action(payload: { listener: (position: number) => void }): void;
+  };
+
+  SET_LEFT_LOCATOR_POSITION: {
+    mutation: { position: number };
+    action(payload: { position: number }): void;
+  };
+
+  SET_RIGHT_LOCATOR_POSITION: {
+    mutation: { position: number };
+    action(payload: { position: number }): void;
+  };
+
+  SET_PLAYBACK_STATE: {
+    mutation: { nowPlaying: boolean };
+  };
+
+  SING_PLAY_AUDIO: {
+    action(): void;
+  };
+
+  SING_STOP_AUDIO: {
+    action(): void;
+  };
+
+  SET_VOLUME: {
+    mutation: { volume: number };
+    action(payload: { volume: number }): void;
+  };
+
+  PLAY_PREVIEW_SOUND: {
+    action(payload: { noteNumber: number; duration?: number }): void;
+  };
+
+  STOP_PREVIEW_SOUND: {
+    action(payload: { noteNumber: number }): void;
+  };
+
+  SET_START_RENDERING_REQUESTED: {
+    mutation: { startRenderingRequested: boolean };
+  };
+
+  SET_STOP_RENDERING_REQUESTED: {
+    mutation: { stopRenderingRequested: boolean };
+  };
+
+  SET_NOW_RENDERING: {
+    mutation: { nowRendering: boolean };
+  };
+
+  SET_NOW_AUDIO_EXPORTING: {
+    mutation: { nowAudioExporting: boolean };
+  };
+
+  SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {
+    mutation: { cancellationOfAudioExportRequested: boolean };
+  };
+
+  RENDER: {
+    action(): void;
+  };
+
+  STOP_RENDERING: {
     action(): void;
   };
 };
@@ -1480,6 +1773,7 @@ export type ProxyStoreTypes = {
 export type State = AudioStoreState &
   AudioPlayerStoreState &
   AudioCommandStoreState &
+  SingingStoreState &
   CommandStoreState &
   EngineStoreState &
   IndexStoreState &
@@ -1488,7 +1782,8 @@ export type State = AudioStoreState &
   UiStoreState &
   PresetStoreState &
   DictionaryStoreState &
-  ProxyStoreState;
+  ProxyStoreState &
+  SingingStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
   AudioPlayerStoreTypes &
@@ -1501,7 +1796,8 @@ type AllStoreTypes = AudioStoreTypes &
   UiStoreTypes &
   PresetStoreTypes &
   DictionaryStoreTypes &
-  ProxyStoreTypes;
+  ProxyStoreTypes &
+  SingingStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;

@@ -112,9 +112,12 @@
 <script setup lang="ts">
 import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
-import CharacterButton from "./CharacterButton.vue";
-import { MenuItemButton, MenuItemSeparator } from "./MenuBar.vue";
-import ContextMenu from "./ContextMenu.vue";
+import CharacterButton from "@/components/CharacterButton.vue";
+import {
+  MenuItemButton,
+  MenuItemSeparator,
+} from "@/components/BaseMenuBar.vue";
+import ContextMenu from "@/components/ContextMenu.vue";
 import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
@@ -161,7 +164,7 @@ defineExpose({
 
 const store = useStore();
 const userOrderedCharacterInfos = computed(() => {
-  const infos = store.getters.USER_ORDERED_CHARACTER_INFOS;
+  const infos = store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
   if (infos == undefined)
     throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
   return infos;
