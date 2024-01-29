@@ -164,7 +164,7 @@ defineExpose({
 
 const store = useStore();
 const userOrderedCharacterInfos = computed(() => {
-  const infos = store.getters.USER_ORDERED_CHARACTER_INFOS;
+  const infos = store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
   if (infos == undefined)
     throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
   return infos;

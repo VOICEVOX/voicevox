@@ -136,8 +136,8 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const userOrderedCharacterInfos = computed(
-      () => store.getters.USER_ORDERED_CHARACTER_INFOS
+    const userOrderedCharacterInfos = computed(() =>
+      store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike")
     );
     const selectedCharacterInfo = computed(() => {
       if (!userOrderedCharacterInfos.value || !store.state.singer) {

@@ -86,9 +86,7 @@
                 >
                   <q-list>
                     <q-item
-                      v-for="(style, styleIndex) in getSingingStyles(
-                        characterInfo
-                      )"
+                      v-for="(style, styleIndex) in characterInfo.metas.styles"
                       :key="styleIndex"
                       v-close-popup
                       clickable
@@ -141,7 +139,7 @@ import { defineComponent, computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
+import { SpeakerId, StyleId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 
 export default defineComponent({
@@ -150,18 +148,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    const isSingingStyle = (styleInfo: StyleInfo) => {
-      return (
-        styleInfo.styleType === "humming" ||
-        styleInfo.styleType === "sing_teacher"
-      );
-    };
-
     const userOrderedCharacterInfos = computed(() => {
-      return store.getters.USER_ORDERED_CHARACTER_INFOS?.filter(
-        (characterInfo) =>
-          characterInfo.metas.styles.some((value) => isSingingStyle(value))
-      );
+      return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
     });
 
     const subMenuOpenFlags = ref(
@@ -214,12 +202,6 @@ export default defineComponent({
       return defaultStyle;
     };
 
-    const getSingingStyles = (characterInfo: CharacterInfo) => {
-      return characterInfo.metas.styles.filter((value) =>
-        isSingingStyle(value)
-      );
-    };
-
     const selectedCharacterInfo = computed(() => {
       if (
         userOrderedCharacterInfos.value == undefined ||
@@ -263,7 +245,6 @@ export default defineComponent({
       reassignSubMenuOpen,
       changeStyleId,
       getDefaultStyle,
-      getSingingStyles,
       getStyleDescription,
       selectedCharacterInfo,
       selectedSpeakerUuid,
