@@ -38,7 +38,7 @@ import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 
 const props = withDefaults(
   defineProps<{
-    projectFilePath: string | undefined;
+    projectFilePath?: string;
     isEnginesReady: boolean;
   }>(),
   {

@@ -108,6 +108,7 @@
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
+        :is-selected="false"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
@@ -117,7 +118,7 @@
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
-        is-selected
+        :is-selected="true"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
