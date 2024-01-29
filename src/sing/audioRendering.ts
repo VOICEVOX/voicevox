@@ -744,7 +744,7 @@ class SynthVoice {
       stopContextTime < this.stopContextTime
     ) {
       // リリースのスケジュールを行う
-      this.gainNode.gain.cancelAndHoldAtTime(t0);
+      this.gainNode.gain.cancelAndHoldAtTime?.(t0);
       this.gainNode.gain.setTargetAtTime(0, t0, rel);
 
       this.oscNode.stop(stopContextTime);
