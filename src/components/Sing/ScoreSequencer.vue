@@ -111,7 +111,6 @@
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
       <sequencer-note
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
@@ -121,7 +120,6 @@
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
     </div>
     <div
@@ -685,18 +683,6 @@ export default defineComponent({
       }
     };
 
-    const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
-      if (!isSelfEventTarget(event)) {
-        return;
-      }
-      if (!state.selectedNoteIds.has(note.id)) {
-        selectOnlyThis(note);
-      }
-      if (event.button === 0) {
-        mouseDownNoteId = note.id;
-      }
-    };
-
     const onMouseDown = (event: MouseEvent) => {
       if (!isSelfEventTarget(event)) {
         return;
@@ -1078,7 +1064,6 @@ export default defineComponent({
       onNoteBarMouseDown,
       onNoteLeftEdgeMouseDown,
       onNoteRightEdgeMouseDown,
-      onNoteLyricMouseDown,
       onMouseDown,
       onMouseMove,
       onMouseUp,

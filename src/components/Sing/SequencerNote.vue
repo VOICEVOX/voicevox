@@ -11,16 +11,17 @@
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
   >
-    <div class="note-lyric" @mousedown="onLyricMouseDown">
-      {{ lyric }}
-    </div>
     <div class="note-bar" @mousedown="onBarMouseDown">
       <div class="note-left-edge" @mousedown="onLeftEdgeMouseDown"></div>
       <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
       <context-menu ref="contextMenu" :menudata="contextMenuData" />
     </div>
+    <div class="note-lyric">
+      {{ lyric }}
+    </div>
     <input
       v-if="showLyricInput"
+      ref="lyricInputRef"
       v-model.lazy.trim="lyric"
       v-focus
       class="note-lyric-input"
@@ -52,21 +53,22 @@ export default defineComponent({
     ContextMenu,
   },
   directives: {
-    focus: { mounted: (el: HTMLElement) => el.focus() },
+    focus: {
+      mounted: (el: HTMLInputElement) => {
+        el.focus();
+        el.select();
+      },
+    },
   },
   props: {
     note: { type: Object as PropType<Note>, required: true },
     isSelected: { type: Boolean },
   },
-  emits: [
-    "barMousedown",
-    "rightEdgeMousedown",
-    "leftEdgeMousedown",
-    "lyricMouseDown",
-  ],
+  emits: ["barMousedown", "rightEdgeMousedown", "leftEdgeMousedown"],
   setup(props, { emit }) {
     const store = useStore();
     const state = store.state;
+    const lyricInputRef = ref(null);
     const tpqn = computed(() => state.score.tpqn);
     const zoomX = computed(() => state.sequencerZoomX);
     const zoomY = computed(() => state.sequencerZoomY);
@@ -135,10 +137,6 @@ export default defineComponent({
       emit("leftEdgeMousedown", event);
     };
 
-    const onLyricMouseDown = (event: MouseEvent) => {
-      emit("lyricMouseDown", event);
-    };
-
     const onLyricInputKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Tab") {
         event.preventDefault();
@@ -169,6 +167,7 @@ export default defineComponent({
     };
 
     return {
+      lyricInputRef,
       zoomX,
       zoomY,
       positionX,
@@ -183,7 +182,6 @@ export default defineComponent({
       onBarMouseDown,
       onRightEdgeMouseDown,
       onLeftEdgeMouseDown,
-      onLyricMouseDown,
       onLyricInputKeyDown,
       onLyricInputBlur,
     };
@@ -222,19 +220,20 @@ export default defineComponent({
 
 .note-lyric {
   position: absolute;
-  left: 0;
-  bottom: calc(100% - 3px);
-  min-width: 20px;
-  padding: 0 1px 2px;
-  background: white;
+  left: 0.125rem;
+  bottom: 1px;
+  min-width: 2rem;
+  padding: 0;
+  background: transparent;
   color: colors.$display;
-  border: 1px solid hsl(130, 0%, 91%);
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 700;
   font-feature-settings: "palt" 1;
   letter-spacing: 0.05em;
+  text-shadow: -1px -1px 0 #{colors.$surface}, 1px -1px 0 #{colors.$surface},
+    -1px 1px 0 #{colors.$surface}, 1px 1px 0 #{colors.$surface};
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .note-bar {
@@ -267,9 +266,9 @@ export default defineComponent({
 
 .note-lyric-input {
   position: absolute;
-  top: 1px;
+  bottom: 0;
   width: 40px;
-  border: 1px solid hsl(33, 100%, 73%);
-  border-radius: 3px;
+  border: 0.125rem solid hsl(33, 100%, 73%);
+  border-radius: 0.25rem;
 }
 </style>
