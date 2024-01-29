@@ -32,8 +32,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, PropType, ref } from "vue";
+<script setup lang="ts">
+import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
@@ -46,149 +46,133 @@ import { MenuItemButton } from "@/components/BaseMenuBar.vue";
 
 type NoteState = "NORMAL" | "SELECTED" | "OVERLAPPING";
 
-export default defineComponent({
-  name: "SingSequencerNote",
-  components: {
-    ContextMenu,
+const vFocus = {
+  mounted(el: HTMLElement) {
+    el.focus();
   },
-  directives: {
-    focus: { mounted: (el: HTMLElement) => el.focus() },
+};
+
+const props = withDefaults(
+  defineProps<{
+    note: Note;
+    isSelected: boolean;
+  }>(),
+  {
+    isSelected: false,
+  }
+);
+// emits: [
+
+const emit =
+  defineEmits<{
+    (name: "barMousedown", event: MouseEvent): void;
+    (name: "rightEdgeMousedown", event: MouseEvent): void;
+    (name: "leftEdgeMousedown", event: MouseEvent): void;
+    (name: "lyricMouseDown", event: MouseEvent): void;
+  }>();
+
+const store = useStore();
+const state = store.state;
+const tpqn = computed(() => state.score.tpqn);
+const zoomX = computed(() => state.sequencerZoomX);
+const zoomY = computed(() => state.sequencerZoomY);
+const positionX = computed(() => {
+  const noteStartTicks = props.note.position;
+  return tickToBaseX(noteStartTicks, tpqn.value) * zoomX.value;
+});
+const positionY = computed(() => {
+  const noteNumber = props.note.noteNumber;
+  return noteNumberToBaseY(noteNumber + 0.5) * zoomY.value;
+});
+const height = computed(() => getKeyBaseHeight() * zoomY.value);
+const width = computed(() => {
+  const noteStartTicks = props.note.position;
+  const noteEndTicks = props.note.position + props.note.duration;
+  const noteStartBaseX = tickToBaseX(noteStartTicks, tpqn.value);
+  const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
+  return (noteEndBaseX - noteStartBaseX) * zoomX.value;
+});
+const noteState = computed((): NoteState => {
+  if (props.isSelected) {
+    return "SELECTED";
+  }
+  if (state.overlappingNoteIds.has(props.note.id)) {
+    return "OVERLAPPING";
+  }
+  return "NORMAL";
+});
+const lyric = computed({
+  get() {
+    return props.note.lyric;
   },
-  props: {
-    note: { type: Object as PropType<Note>, required: true },
-    isSelected: { type: Boolean },
-  },
-  emits: [
-    "barMousedown",
-    "rightEdgeMousedown",
-    "leftEdgeMousedown",
-    "lyricMouseDown",
-  ],
-  setup(props, { emit }) {
-    const store = useStore();
-    const state = store.state;
-    const tpqn = computed(() => state.score.tpqn);
-    const zoomX = computed(() => state.sequencerZoomX);
-    const zoomY = computed(() => state.sequencerZoomY);
-    const positionX = computed(() => {
-      const noteStartTicks = props.note.position;
-      return tickToBaseX(noteStartTicks, tpqn.value) * zoomX.value;
-    });
-    const positionY = computed(() => {
-      const noteNumber = props.note.noteNumber;
-      return noteNumberToBaseY(noteNumber + 0.5) * zoomY.value;
-    });
-    const height = computed(() => getKeyBaseHeight() * zoomY.value);
-    const width = computed(() => {
-      const noteStartTicks = props.note.position;
-      const noteEndTicks = props.note.position + props.note.duration;
-      const noteStartBaseX = tickToBaseX(noteStartTicks, tpqn.value);
-      const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
-      return (noteEndBaseX - noteStartBaseX) * zoomX.value;
-    });
-    const noteState = computed((): NoteState => {
-      if (props.isSelected) {
-        return "SELECTED";
-      }
-      if (state.overlappingNoteIds.has(props.note.id)) {
-        return "OVERLAPPING";
-      }
-      return "NORMAL";
-    });
-    const lyric = computed({
-      get() {
-        return props.note.lyric;
-      },
-      set(value) {
-        if (!value) {
-          return;
-        }
-        const note: Note = { ...props.note, lyric: value };
-        store.dispatch("UPDATE_NOTES", { notes: [note] });
-      },
-    });
-    const showLyricInput = computed(() => {
-      return state.editingLyricNoteId === props.note.id;
-    });
-    const contextMenu = ref<InstanceType<typeof ContextMenu>>();
-    const contextMenuData = ref<[MenuItemButton]>([
-      {
-        type: "button",
-        label: "削除",
-        onClick: async () => {
-          contextMenu.value?.hide();
-          store.dispatch("REMOVE_SELECTED_NOTES");
-        },
-        disableWhenUiLocked: true,
-      },
-    ]);
-
-    const onBarMouseDown = (event: MouseEvent) => {
-      emit("barMousedown", event);
-    };
-
-    const onRightEdgeMouseDown = (event: MouseEvent) => {
-      emit("rightEdgeMousedown", event);
-    };
-
-    const onLeftEdgeMouseDown = (event: MouseEvent) => {
-      emit("leftEdgeMousedown", event);
-    };
-
-    const onLyricMouseDown = (event: MouseEvent) => {
-      emit("lyricMouseDown", event);
-    };
-
-    const onLyricInputKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Tab") {
-        event.preventDefault();
-        const noteId = props.note.id;
-        const notes = state.score.notes;
-        const index = notes.findIndex((value) => value.id === noteId);
-        if (index === -1) {
-          return;
-        }
-        if (event.shiftKey && index - 1 < 0) {
-          return;
-        }
-        if (!event.shiftKey && index + 1 >= notes.length) {
-          return;
-        }
-        const nextNoteId = notes[index + (event.shiftKey ? -1 : 1)].id;
-        store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
-      }
-      if (event.key === "Enter") {
-        store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
-      }
-    };
-
-    const onLyricInputBlur = () => {
-      if (state.editingLyricNoteId === props.note.id) {
-        store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
-      }
-    };
-
-    return {
-      zoomX,
-      zoomY,
-      positionX,
-      positionY,
-      height,
-      width,
-      noteState,
-      lyric,
-      showLyricInput,
-      contextMenu,
-      contextMenuData,
-      onBarMouseDown,
-      onRightEdgeMouseDown,
-      onLeftEdgeMouseDown,
-      onLyricMouseDown,
-      onLyricInputKeyDown,
-      onLyricInputBlur,
-    };
+  set(value) {
+    if (!value) {
+      return;
+    }
+    const note: Note = { ...props.note, lyric: value };
+    store.dispatch("UPDATE_NOTES", { notes: [note] });
   },
 });
+const showLyricInput = computed(() => {
+  return state.editingLyricNoteId === props.note.id;
+});
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+const contextMenuData = ref<[MenuItemButton]>([
+  {
+    type: "button",
+    label: "削除",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      store.dispatch("REMOVE_SELECTED_NOTES");
+    },
+    disableWhenUiLocked: true,
+  },
+]);
+
+const onBarMouseDown = (event: MouseEvent) => {
+  emit("barMousedown", event);
+};
+
+const onRightEdgeMouseDown = (event: MouseEvent) => {
+  emit("rightEdgeMousedown", event);
+};
+
+const onLeftEdgeMouseDown = (event: MouseEvent) => {
+  emit("leftEdgeMousedown", event);
+};
+
+const onLyricMouseDown = (event: MouseEvent) => {
+  emit("lyricMouseDown", event);
+};
+
+const onLyricInputKeyDown = (event: KeyboardEvent) => {
+  if (event.key === "Tab") {
+    event.preventDefault();
+    const noteId = props.note.id;
+    const notes = state.score.notes;
+    const index = notes.findIndex((value) => value.id === noteId);
+    if (index === -1) {
+      return;
+    }
+    if (event.shiftKey && index - 1 < 0) {
+      return;
+    }
+    if (!event.shiftKey && index + 1 >= notes.length) {
+      return;
+    }
+    const nextNoteId = notes[index + (event.shiftKey ? -1 : 1)].id;
+    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
+  }
+  if (event.key === "Enter") {
+    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
+  }
+};
+
+const onLyricInputBlur = () => {
+  if (state.editingLyricNoteId === props.note.id) {
+    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
+  }
+};
 </script>
 
 <style scoped lang="scss">
