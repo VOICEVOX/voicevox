@@ -61,7 +61,6 @@ const props = withDefaults(
     isSelected: false,
   }
 );
-// emits: [
 
 const emit =
   defineEmits<{
