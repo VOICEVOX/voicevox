@@ -4,40 +4,28 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from "vue";
+<script setup lang="ts">
+import { computed } from "vue";
 import { useStore } from "@/store";
 
-export default defineComponent({
-  name: "CharacterPortrait",
-  setup() {
-    const store = useStore();
-    const isShowSinger = computed(() => store.state.isShowSinger);
+const store = useStore();
+const isShowSinger = computed(() => store.state.isShowSinger);
 
-    const userOrderedCharacterInfos = computed(() =>
-      store.getters.USER_ORDERED_CHARACTER_INFOS("all")
-    );
+const userOrderedCharacterInfos = computed(() =>
+  store.getters.USER_ORDERED_CHARACTER_INFOS("all")
+);
 
-    const characterInfo = computed(() => {
-      if (!userOrderedCharacterInfos.value || !store.state.singer) {
-        return undefined;
-      }
-      return store.getters.CHARACTER_INFO(
-        store.state.singer.engineId,
-        store.state.singer.styleId
-      );
-    });
-
-    const portraitPath = computed(() => characterInfo.value?.portraitPath);
-
-    return {
-      isShowSinger,
-      userOrderedCharacterInfos,
-      characterInfo,
-      portraitPath,
-    };
-  },
+const characterInfo = computed(() => {
+  if (!userOrderedCharacterInfos.value || !store.state.singer) {
+    return undefined;
+  }
+  return store.getters.CHARACTER_INFO(
+    store.state.singer.engineId,
+    store.state.singer.styleId
+  );
 });
+
+const portraitPath = computed(() => characterInfo.value?.portraitPath);
 </script>
 
 <style scoped lang="scss">

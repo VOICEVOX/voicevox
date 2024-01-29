@@ -42,8 +42,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, onMounted, watch } from "vue";
+<script setup lang="ts">
+import { computed, onMounted, watch } from "vue";
 import { useStore } from "@/store";
 import {
   DEFAULT_BEATS,
@@ -56,113 +56,102 @@ import ToolBar from "@/components/Sing/ToolBar.vue";
 import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 import { EngineState } from "@/store/type";
 
-export default defineComponent({
-  name: "SingerHome",
-  components: {
-    MenuBar,
-    ToolBar,
-    ScoreSequencer,
-  },
-  props: {
-    projectFilePath: { type: String, default: undefined },
-    isEnginesReady: { type: Boolean, required: true },
-  },
+const props = withDefaults(
+  defineProps<{
+    projectFilePath?: string;
+    isEnginesReady: boolean;
+  }>(),
+  {
+    projectFilePath: undefined,
+    isEnginesReady: false,
+  }
+);
 
-  setup(props) {
-    const store = useStore();
-    //const $q = useQuasar();
+const store = useStore();
+//const $q = useQuasar();
 
-    // TODO: Talk側のEditorHome.vueと共通化する
-    const allEngineState = computed(() => {
-      const engineStates = store.state.engineStates;
+// TODO: Talk側のEditorHome.vueと共通化する
+const allEngineState = computed(() => {
+  const engineStates = store.state.engineStates;
 
-      let lastEngineState: EngineState | undefined = undefined;
+  let lastEngineState: EngineState | undefined = undefined;
 
-      // 登録されているすべてのエンジンについて状態を確認する
-      for (const engineId of store.state.engineIds) {
-        const engineState: EngineState | undefined = engineStates[engineId];
-        if (engineState == undefined)
-          throw new Error(`No such engineState set: engineId == ${engineId}`);
+  // 登録されているすべてのエンジンについて状態を確認する
+  for (const engineId of store.state.engineIds) {
+    const engineState: EngineState | undefined = engineStates[engineId];
+    if (engineState == undefined)
+      throw new Error(`No such engineState set: engineId == ${engineId}`);
 
-        // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
-        if (engineState === "STARTING") {
-          return engineState;
-        }
+    // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
+    if (engineState === "STARTING") {
+      return engineState;
+    }
 
-        lastEngineState = engineState;
-      }
+    lastEngineState = engineState;
+  }
 
-      return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
-    });
-
-    const nowRendering = computed(() => {
-      return store.state.nowRendering;
-    });
-    const nowAudioExporting = computed(() => {
-      return store.state.nowAudioExporting;
-    });
-
-    const cancelExport = () => {
-      store.dispatch("CANCEL_AUDIO_EXPORT");
-    };
-
-    // 歌声合成エディターの初期化
-    onMounted(async () => {
-      await store.dispatch("SET_SCORE", {
-        score: {
-          tpqn: DEFAULT_TPQN,
-          tempos: [
-            {
-              position: 0,
-              bpm: DEFAULT_BPM,
-            },
-          ],
-          timeSignatures: [
-            {
-              measureNumber: 1,
-              beats: DEFAULT_BEATS,
-              beatType: DEFAULT_BEAT_TYPE,
-            },
-          ],
-          notes: [],
-        },
-      });
-
-      await store.dispatch("SET_VOLUME", { volume: 0.6 });
-      await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
-      await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
-        position: 0,
-      });
-      await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
-        position: 480 * 4 * 16,
-      });
-      return {};
-    });
-
-    // エンジン初期化後の処理
-    const unwatchIsEnginesReady = watch(
-      // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
-      () => props.isEnginesReady,
-      async (isEnginesReady) => {
-        if (!isEnginesReady) return;
-
-        await store.dispatch("SET_SINGER", {});
-
-        unwatchIsEnginesReady();
-      },
-      {
-        immediate: true,
-      }
-    );
-
-    return {
-      nowRendering,
-      nowAudioExporting,
-      cancelExport,
-      allEngineState,
-    };
-  },
+  return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
 });
+
+const nowRendering = computed(() => {
+  return store.state.nowRendering;
+});
+const nowAudioExporting = computed(() => {
+  return store.state.nowAudioExporting;
+});
+
+const cancelExport = () => {
+  store.dispatch("CANCEL_AUDIO_EXPORT");
+};
+
+// 歌声合成エディターの初期化
+onMounted(async () => {
+  await store.dispatch("SET_SCORE", {
+    score: {
+      tpqn: DEFAULT_TPQN,
+      tempos: [
+        {
+          position: 0,
+          bpm: DEFAULT_BPM,
+        },
+      ],
+      timeSignatures: [
+        {
+          measureNumber: 1,
+          beats: DEFAULT_BEATS,
+          beatType: DEFAULT_BEAT_TYPE,
+        },
+      ],
+      notes: [],
+    },
+  });
+
+  await store.dispatch("SET_VOLUME", { volume: 0.6 });
+  await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+  await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
+    position: 0,
+  });
+  await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
+    position: 480 * 4 * 16,
+  });
+  return {};
+});
+
+// エンジン初期化後の処理
+const unwatchIsEnginesReady = watch(
+  // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
+  () => props.isEnginesReady,
+  async (isEnginesReady) => {
+    if (!isEnginesReady) return;
+
+    await store.dispatch("SET_SINGER", {});
+
+    unwatchIsEnginesReady();
+  },
+  {
+    immediate: true,
+  }
+);
 </script>
 
 <style scoped lang="scss">
