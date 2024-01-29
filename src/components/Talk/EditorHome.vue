@@ -6,7 +6,7 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
-        <progress-dialog />
+        <progress-view />
 
         <!-- TODO: 複数エンジン対応 -->
         <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
@@ -167,9 +167,9 @@
     :character-infos="orderedAllCharacterInfos"
   />
   <default-style-list-dialog
-    v-if="orderedAllCharacterInfos.length > 0"
+    v-if="orderedTalkCharacterInfos.length > 0"
     v-model="isDefaultStyleSelectDialogOpenComputed"
-    :character-infos="orderedAllCharacterInfos"
+    :character-infos="orderedTalkCharacterInfos"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
@@ -195,18 +195,18 @@ import CharacterPortrait from "./CharacterPortrait.vue";
 import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import MenuBar from "@/components/Talk/MenuBar.vue";
-import HelpDialog from "@/components/help/HelpDialog.vue";
-import SettingDialog from "@/components/SettingDialog.vue";
-import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
-import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
-import DefaultStyleListDialog from "@/components/DefaultStyleListDialog.vue";
-import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
-import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
-import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
-import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
-import EngineManageDialog from "@/components/EngineManageDialog.vue";
-import ProgressDialog from "@/components/ProgressDialog.vue";
-import UpdateNotificationDialogContainer from "@/components/UpdateNotificationDialog/Container.vue";
+import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
+import SettingDialog from "@/components/Dialog/SettingDialog.vue";
+import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
+import HeaderBarCustomDialog from "@/components/Dialog/HeaderBarCustomDialog.vue";
+import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
+import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
+import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptRetrieveTelemetryDialog.vue";
+import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
+import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
+import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
+import ProgressView from "@/components/ProgressView.vue";
+import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
@@ -723,7 +723,15 @@ const isCharacterOrderDialogOpenComputed = computed({
     }),
 });
 
-// デフォルトスタイル選択
+// TODO: デフォルトスタイル選択(ソング)の実装
+// デフォルトスタイル選択(トーク)
+const orderedTalkCharacterInfos = computed(() => {
+  const userOrderedCharacterInfos =
+    store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
+  if (userOrderedCharacterInfos == undefined)
+    throw new Error("userOrderedCharacterInfos == undefined");
+  return userOrderedCharacterInfos;
+});
 const isDefaultStyleSelectDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&

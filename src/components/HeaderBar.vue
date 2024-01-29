@@ -24,7 +24,7 @@ import {
   generateAndConnectAndSaveAudioWithDialog,
   multiGenerateAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
-} from "./Dialog";
+} from "@/components/Dialog/Dialog";
 import { useStore } from "@/store";
 import { setHotkeyFunctions } from "@/store/setting";
 import {

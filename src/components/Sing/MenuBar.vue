@@ -3,40 +3,14 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent, ref, computed, ComputedRef } from "vue";
+import { computed } from "vue";
 import { useStore } from "@/store";
-import MenuButton from "@/components/MenuButton.vue";
-import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-const createNewSingProject = async () => {
-  if (uiLocked.value) return;
-  return null;
-  // await store.dispatch("CREATE_NEW_SING_PROJECT", {});
-};
-
-const openSingProject = async () => {
-  if (uiLocked.value) return;
-  return null;
-  // await store.dispatch("OPEN_SING_PROJECT", {});
-};
-
-const saveSingProject = async () => {
-  if (uiLocked.value) return;
-  return null;
-  // await store.dispatch("SAVE_SING_PROJECT", {});
-};
-
-const saveAsSingProject = async () => {
-  if (uiLocked.value) return;
-  return null;
-  // await store.dispatch("SAVE_AS_SING_PROJECT", {});
-};
 
 const importMidiFile = async () => {
   if (uiLocked.value) return;
@@ -54,39 +28,6 @@ const exportWaveFile = async () => {
 };
 
 const fileSubMenuData: MenuItemData[] = [
-  {
-    type: "button",
-    label: "新規",
-    onClick: () => {
-      createNewSingProject();
-    },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "開く",
-    onClick: () => {
-      openSingProject();
-    },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "保存",
-    onClick: () => {
-      saveSingProject();
-    },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "別名で保存",
-    onClick: () => {
-      saveAsSingProject();
-    },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
   {
     type: "button",
     label: "MIDI読み込み",
