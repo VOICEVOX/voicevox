@@ -3,10 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent, ref, computed, ComputedRef } from "vue";
+import { computed } from "vue";
 import { useStore } from "@/store";
-import MenuButton from "@/components/MenuButton.vue";
-import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
