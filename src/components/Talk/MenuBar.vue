@@ -9,7 +9,7 @@ import {
   multiGenerateAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
   connectAndExportTextWithDialog,
-} from "@/components/Dialog";
+} from "@/components/Dialog/Dialog";
 import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
 
 import { useStore } from "@/store";

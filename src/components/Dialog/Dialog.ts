@@ -1,4 +1,5 @@
 import { Dialog, DialogChainObject, Notify, Loading } from "quasar";
+import SaveAllResultDialog from "./SaveAllResultDialog.vue";
 import { AudioKey, ConfirmedTips } from "@/type/preload";
 import {
   AllActions,
@@ -6,7 +7,6 @@ import {
   SaveResult,
   ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
-import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { Dispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 
