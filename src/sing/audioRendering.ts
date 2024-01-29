@@ -744,6 +744,8 @@ class SynthVoice {
       stopContextTime < this.stopContextTime
     ) {
       // リリースのスケジュールを行う
+
+      // cancelAndHoldAtTimeはFirefoxでサポートされていないので、?.()で呼び出す
       this.gainNode.gain.cancelAndHoldAtTime?.(t0);
       this.gainNode.gain.setTargetAtTime(0, t0, rel);
 
