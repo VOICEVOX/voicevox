@@ -2,6 +2,25 @@
   <menu-bar />
   <tool-bar />
   <div class="sing-main">
+    <!-- TODO: 複数エンジン対応 -->
+    <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
+    <div v-if="allEngineState === 'FAILED_STARTING'" class="waiting-engine">
+      <div>
+        エンジンの起動に失敗しました。エンジンの再起動をお試しください。
+      </div>
+    </div>
+    <div v-else-if="allEngineState === 'STARTING'" class="waiting-engine">
+      <div>
+        <q-spinner color="primary" size="2.5rem" />
+        <div class="q-mt-xs">
+          {{
+            allEngineState === "STARTING"
+              ? "エンジン起動中・・・"
+              : "データ準備中・・・"
+          }}
+        </div>
+      </div>
+    </div>
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <q-spinner color="primary" size="2.5rem" />
@@ -35,6 +54,7 @@ import {
 import MenuBar from "@/components/Sing/MenuBar.vue";
 import ToolBar from "@/components/Sing/ToolBar.vue";
 import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
+import { EngineState } from "@/store/type";
 
 export default defineComponent({
   name: "SingerHome",
@@ -51,6 +71,29 @@ export default defineComponent({
   setup(props) {
     const store = useStore();
     //const $q = useQuasar();
+
+    // TODO: Talk側のEditorHome.vueと共通化する
+    const allEngineState = computed(() => {
+      const engineStates = store.state.engineStates;
+
+      let lastEngineState: EngineState | undefined = undefined;
+
+      // 登録されているすべてのエンジンについて状態を確認する
+      for (const engineId of store.state.engineIds) {
+        const engineState: EngineState | undefined = engineStates[engineId];
+        if (engineState == undefined)
+          throw new Error(`No such engineState set: engineId == ${engineId}`);
+
+        // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
+        if (engineState === "STARTING") {
+          return engineState;
+        }
+
+        lastEngineState = engineState;
+      }
+
+      return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
+    });
 
     const nowRendering = computed(() => {
       return store.state.nowRendering;
@@ -116,6 +159,7 @@ export default defineComponent({
       nowRendering,
       nowAudioExporting,
       cancelExport,
+      allEngineState,
     };
   },
 });
@@ -137,6 +181,25 @@ export default defineComponent({
   background-color: rgba(colors.$display-rgb, 0.15);
   position: absolute;
   inset: 0;
+  z-index: 10;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+
+  > div {
+    color: colors.$display;
+    background: colors.$surface;
+    border-radius: 6px;
+    padding: 14px;
+  }
+}
+
+.waiting-engine {
+  background-color: rgba(colors.$display-rgb, 0.15);
+  position: absolute;
+  inset: 0;
+  top: vars.$menubar-height;
   z-index: 10;
   display: flex;
   text-align: center;
