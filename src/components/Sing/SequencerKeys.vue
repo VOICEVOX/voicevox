@@ -68,7 +68,6 @@ const props = withDefaults(
 );
 const store = useStore();
 const width = ref(48);
-// const zoomX = computed(() => store.state.sequencerZoomX);
 const zoomY = computed(() => store.state.sequencerZoomY);
 const keyBaseHeight = getKeyBaseHeight();
 const whiteKeyInfos = keyInfos.filter((value) => value.color === "white");
