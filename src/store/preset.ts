@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
 import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
@@ -168,8 +169,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       }: { presetItems: Record<PresetKey, Preset>; presetKeys: PresetKey[] }
     ) {
       const result = await window.electron.setSetting("presets", {
-        items: JSON.parse(JSON.stringify(presetItems)),
-        keys: JSON.parse(JSON.stringify(presetKeys)),
+        items: structuredClone(toRaw(presetItems)),
+        keys: structuredClone(toRaw(presetKeys)),
       });
       context.commit("SET_PRESET_ITEMS", {
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換

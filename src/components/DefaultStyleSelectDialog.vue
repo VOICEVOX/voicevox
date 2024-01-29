@@ -117,16 +117,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, toRaw, watch } from "vue";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
-import {
-  CharacterInfo,
-  DefaultStyleId,
-  SpeakerId,
-  StyleId,
-  StyleInfo,
-} from "@/type/preload";
+import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 
 const props =
   defineProps<{
@@ -211,9 +205,7 @@ const stop = () => {
 
 // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
 const closeDialog = () => {
-  const defaultStyleIds = JSON.parse(
-    JSON.stringify(store.state.defaultStyleIds)
-  ) as DefaultStyleId[];
+  const defaultStyleIds = structuredClone(toRaw(store.state.defaultStyleIds));
   store.dispatch("SET_DEFAULT_STYLE_IDS", [
     ...defaultStyleIds.filter(
       (defaultStyleId) =>
