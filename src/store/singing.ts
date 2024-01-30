@@ -184,21 +184,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const engineId = singer?.engineId ?? state.engineIds[0];
 
-      // FIXME: engineIdも含めて探査する
-      /*
-      const styleId =
-        singer?.styleId ??
-        state.defaultStyleIds[
-          state.defaultStyleIds.findIndex(
-            (x) =>
-              x.speakerUuid === userOrderedCharacterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
-          )
-        ].defaultStyleId;
-      */
-      /* 
-         Sing/CharacterMenuButton.vue内のgetDefaultStyle関数内の問題と同じ
-         対処療法として最初のスタイルを仮のスタイルにしている
-      */
+      // 最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
+      // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
       const defaultStyleId =
         userOrderedCharacterInfos[0].metas.styles[0].styleId;
 
