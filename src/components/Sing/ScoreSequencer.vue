@@ -108,18 +108,21 @@
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
+        :is-selected="false"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
       <sequencer-note
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
-        is-selected
+        :is-selected="true"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
     </div>
     <div
@@ -180,15 +183,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import {
-  defineComponent,
-  computed,
-  ref,
-  onActivated,
-  onDeactivated,
-  nextTick,
-} from "vue";
+<script setup lang="ts">
+import { computed, ref, onActivated, onDeactivated, nextTick } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
@@ -226,854 +222,804 @@ const isSelfEventTarget = (event: UIEvent) => {
   return event.target === event.currentTarget;
 };
 
-export default defineComponent({
-  name: "SingScoreSequencer",
-  components: {
-    SequencerRuler,
-    SequencerKeys,
-    SequencerNote,
-    SequencerPhraseIndicator,
-    CharacterPortrait,
-  },
-  setup() {
-    const store = useStore();
-    const state = store.state;
-    // 分解能（Ticks Per Quarter Note）
-    const tpqn = computed(() => state.score.tpqn);
-    // テンポ
-    const tempos = computed(() => state.score.tempos);
-    // 拍子
-    const timeSignatures = computed(() => state.score.timeSignatures);
-    // ノート
-    const notes = computed(() => state.score.notes);
-    const unselectedNotes = computed(() => {
-      const selectedNoteIds = state.selectedNoteIds;
-      return notes.value.filter((value) => !selectedNoteIds.has(value.id));
-    });
-    const selectedNotes = computed(() => {
-      const selectedNoteIds = state.selectedNoteIds;
-      return notes.value.filter((value) => selectedNoteIds.has(value.id));
-    });
-    // ズーム状態
-    const zoomX = computed(() => state.sequencerZoomX);
-    const zoomY = computed(() => state.sequencerZoomY);
-    // スナップ
-    const snapTicks = computed(() => {
-      return getNoteDuration(state.sequencerSnapType, tpqn.value);
-    });
-    // シーケンサグリッド
-    const gridCellTicks = snapTicks; // ひとまずスナップ幅＝グリッドセル幅
-    const gridCellWidth = computed(() => {
-      return tickToBaseX(gridCellTicks.value, tpqn.value) * zoomX.value;
-    });
-    const gridCellBaseHeight = getKeyBaseHeight();
-    const gridCellHeight = computed(() => {
-      return gridCellBaseHeight * zoomY.value;
-    });
-    const numOfMeasures = computed(() => {
-      // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
-      const minNumOfMeasures = 32;
-      // NOTE: いったん最後尾に足した場合は伸びるようにする
-      return Math.max(
-        minNumOfMeasures,
-        getNumOfMeasures(
-          notes.value,
-          tempos.value,
-          timeSignatures.value,
-          tpqn.value
-        ) + 1
-      );
-    });
-    const beatsPerMeasure = computed(() => {
-      return timeSignatures.value[0].beats;
-    });
-    const beatWidth = computed(() => {
-      const beatType = timeSignatures.value[0].beatType;
-      const wholeNoteDuration = tpqn.value * 4;
-      const beatTicks = wholeNoteDuration / beatType;
-      return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
-    });
-    const gridWidth = computed(() => {
-      // TODO: 複数拍子に対応する
-      const beats = timeSignatures.value[0].beats;
-      const beatType = timeSignatures.value[0].beatType;
-      const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
-      const numOfGridColumns =
-        Math.round(measureDuration / gridCellTicks.value) * numOfMeasures.value;
-      return gridCellWidth.value * numOfGridColumns;
-    });
-    const gridHeight = computed(() => {
-      return gridCellHeight.value * keyInfos.length;
-    });
-    // スクロール位置
-    const scrollX = ref(0);
-    const scrollY = ref(0);
-    // 再生ヘッドの位置
-    const playheadTicks = ref(0);
-    const playheadX = computed(() => {
-      const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
-      return Math.floor(baseX * zoomX.value);
-    });
-    // フレーズ
-    const phraseInfos = computed(() => {
-      return [...state.phrases.entries()].map(([key, phrase]) => {
-        const startBaseX = tickToBaseX(phrase.startTicks, tpqn.value);
-        const endBaseX = tickToBaseX(phrase.endTicks, tpqn.value);
-        const startX = startBaseX * zoomX.value;
-        const endX = endBaseX * zoomX.value;
-        return { key, x: startX, width: endX - startX };
-      });
-    });
-    const scrollBarWidth = ref(12);
-    const sequencerBody = ref<HTMLElement | null>(null);
-    // マウスカーソル位置
-    let cursorX = 0;
-    let cursorY = 0;
-    // プレビュー
-    // FIXME: 関連する値を１つのobjectにまとめる
-    const nowPreviewing = ref(false);
-    const previewNotes = ref<Note[]>([]);
-    const copiedNotesForPreview = new Map<string, Note>();
-    let previewMode: PreviewMode = "ADD";
-    let previewRequestId = 0;
-    let dragStartTicks = 0;
-    let dragStartNoteNumber = 0;
-    let dragStartGuideLineTicks = 0;
-    let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
-    let executePreviewProcess = false;
-    let edited = false; // プレビュー終了時にScoreの変更を行うかどうかを表す変数
-    // ダブルクリック
-    let mouseDownNoteId: string | undefined;
-    const clickedNoteIds: [string | undefined, string | undefined] = [
-      undefined,
-      undefined,
-    ];
-    let ignoreDoubleClick = false;
-    // 入力を補助する線
-    const showGuideLine = ref(true);
-    const guideLineX = ref(0);
+const store = useStore();
+const state = store.state;
+// 分解能（Ticks Per Quarter Note）
+const tpqn = computed(() => state.score.tpqn);
+// テンポ
+const tempos = computed(() => state.score.tempos);
+// 拍子
+const timeSignatures = computed(() => state.score.timeSignatures);
+// ノート
+const notes = computed(() => state.score.notes);
+const unselectedNotes = computed(() => {
+  const selectedNoteIds = state.selectedNoteIds;
+  return notes.value.filter((value) => !selectedNoteIds.has(value.id));
+});
+const selectedNotes = computed(() => {
+  const selectedNoteIds = state.selectedNoteIds;
+  return notes.value.filter((value) => selectedNoteIds.has(value.id));
+});
+// ズーム状態
+const zoomX = computed(() => state.sequencerZoomX);
+const zoomY = computed(() => state.sequencerZoomY);
+// スナップ
+const snapTicks = computed(() => {
+  return getNoteDuration(state.sequencerSnapType, tpqn.value);
+});
+// シーケンサグリッド
+const gridCellTicks = snapTicks; // ひとまずスナップ幅＝グリッドセル幅
+const gridCellWidth = computed(() => {
+  return tickToBaseX(gridCellTicks.value, tpqn.value) * zoomX.value;
+});
+const gridCellBaseHeight = getKeyBaseHeight();
+const gridCellHeight = computed(() => {
+  return gridCellBaseHeight * zoomY.value;
+});
+const numOfMeasures = computed(() => {
+  // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
+  const minNumOfMeasures = 32;
+  // NOTE: いったん最後尾に足した場合は伸びるようにする
+  return Math.max(
+    minNumOfMeasures,
+    getNumOfMeasures(
+      notes.value,
+      tempos.value,
+      timeSignatures.value,
+      tpqn.value
+    ) + 1
+  );
+});
+const beatsPerMeasure = computed(() => {
+  return timeSignatures.value[0].beats;
+});
+const beatWidth = computed(() => {
+  const beatType = timeSignatures.value[0].beatType;
+  const wholeNoteDuration = tpqn.value * 4;
+  const beatTicks = wholeNoteDuration / beatType;
+  return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
+});
+const gridWidth = computed(() => {
+  // TODO: 複数拍子に対応する
+  const beats = timeSignatures.value[0].beats;
+  const beatType = timeSignatures.value[0].beatType;
+  const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
+  const numOfGridColumns =
+    Math.round(measureDuration / gridCellTicks.value) * numOfMeasures.value;
+  return gridCellWidth.value * numOfGridColumns;
+});
+const gridHeight = computed(() => {
+  return gridCellHeight.value * keyInfos.length;
+});
+// スクロール位置
+const scrollX = ref(0);
+const scrollY = ref(0);
+// 再生ヘッドの位置
+const playheadTicks = ref(0);
+const playheadX = computed(() => {
+  const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
+  return Math.floor(baseX * zoomX.value);
+});
+// フレーズ
+const phraseInfos = computed(() => {
+  return [...state.phrases.entries()].map(([key, phrase]) => {
+    const startBaseX = tickToBaseX(phrase.startTicks, tpqn.value);
+    const endBaseX = tickToBaseX(phrase.endTicks, tpqn.value);
+    const startX = startBaseX * zoomX.value;
+    const endX = endBaseX * zoomX.value;
+    return { key, x: startX, width: endX - startX };
+  });
+});
+const scrollBarWidth = ref(12);
+const sequencerBody = ref<HTMLElement | null>(null);
+// マウスカーソル位置
+let cursorX = 0;
+let cursorY = 0;
+// プレビュー
+// FIXME: 関連する値を１つのobjectにまとめる
+const nowPreviewing = ref(false);
+const previewNotes = ref<Note[]>([]);
+const copiedNotesForPreview = new Map<string, Note>();
+let previewMode: PreviewMode = "ADD";
+let previewRequestId = 0;
+let dragStartTicks = 0;
+let dragStartNoteNumber = 0;
+let dragStartGuideLineTicks = 0;
+let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
+let executePreviewProcess = false;
+let edited = false; // プレビュー終了時にScoreの変更を行うかどうかを表す変数
+// ダブルクリック
+let mouseDownNoteId: string | undefined;
+const clickedNoteIds: [string | undefined, string | undefined] = [
+  undefined,
+  undefined,
+];
+let ignoreDoubleClick = false;
+// 入力を補助する線
+const showGuideLine = ref(true);
+const guideLineX = ref(0);
 
-    const previewAdd = () => {
-      const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
-      const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-      const draggingNote = copiedNotesForPreview.get(draggingNoteId);
-      if (!draggingNote) {
-        throw new Error("draggingNote is undefined.");
-      }
-      const dragTicks = cursorTicks - dragStartTicks;
-      const noteDuration =
-        Math.round(dragTicks / snapTicks.value) * snapTicks.value;
-      const noteEndPos = draggingNote.position + noteDuration;
+const previewAdd = () => {
+  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+  const draggingNote = copiedNotesForPreview.get(draggingNoteId);
+  if (!draggingNote) {
+    throw new Error("draggingNote is undefined.");
+  }
+  const dragTicks = cursorTicks - dragStartTicks;
+  const noteDuration =
+    Math.round(dragTicks / snapTicks.value) * snapTicks.value;
+  const noteEndPos = draggingNote.position + noteDuration;
 
-      const editedNotes = new Map<string, Note>();
-      for (const note of previewNotes.value) {
-        const copiedNote = copiedNotesForPreview.get(note.id);
-        if (!copiedNote) {
-          throw new Error("copiedNote is undefined.");
-        }
-        const duration = Math.max(snapTicks.value, noteDuration);
-        if (note.duration !== duration) {
-          editedNotes.set(note.id, { ...note, duration });
-        }
-      }
-      if (editedNotes.size !== 0) {
-        previewNotes.value = previewNotes.value.map((value) => {
-          return editedNotes.get(value.id) ?? value;
-        });
-      }
+  const editedNotes = new Map<string, Note>();
+  for (const note of previewNotes.value) {
+    const copiedNote = copiedNotesForPreview.get(note.id);
+    if (!copiedNote) {
+      throw new Error("copiedNote is undefined.");
+    }
+    const duration = Math.max(snapTicks.value, noteDuration);
+    if (note.duration !== duration) {
+      editedNotes.set(note.id, { ...note, duration });
+    }
+  }
+  if (editedNotes.size !== 0) {
+    previewNotes.value = previewNotes.value.map((value) => {
+      return editedNotes.get(value.id) ?? value;
+    });
+  }
 
-      const guideLineBaseX = tickToBaseX(noteEndPos, tpqn.value);
-      guideLineX.value = guideLineBaseX * zoomX.value;
+  const guideLineBaseX = tickToBaseX(noteEndPos, tpqn.value);
+  guideLineX.value = guideLineBaseX * zoomX.value;
+};
+
+const previewMove = () => {
+  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
+  const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+  const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
+  const draggingNote = copiedNotesForPreview.get(draggingNoteId);
+  if (!draggingNote) {
+    throw new Error("draggingNote is undefined.");
+  }
+  const dragTicks = cursorTicks - dragStartTicks;
+  const notePos = draggingNote.position;
+  const newNotePos =
+    Math.round((notePos + dragTicks) / snapTicks.value) * snapTicks.value;
+  const movingTicks = newNotePos - notePos;
+  const movingSemitones = cursorNoteNumber - dragStartNoteNumber;
+
+  const editedNotes = new Map<string, Note>();
+  for (const note of previewNotes.value) {
+    const copiedNote = copiedNotesForPreview.get(note.id);
+    if (!copiedNote) {
+      throw new Error("copiedNote is undefined.");
+    }
+    const position = copiedNote.position + movingTicks;
+    const noteNumber = copiedNote.noteNumber + movingSemitones;
+    if (note.position !== position || note.noteNumber !== noteNumber) {
+      editedNotes.set(note.id, { ...note, noteNumber, position });
+    }
+  }
+  for (const note of editedNotes.values()) {
+    if (note.position < 0) {
+      // 左端より前はドラッグしない
+      return;
+    }
+  }
+  if (editedNotes.size !== 0) {
+    previewNotes.value = previewNotes.value.map((value) => {
+      return editedNotes.get(value.id) ?? value;
+    });
+    edited = true;
+  }
+
+  const guideLineBaseX = tickToBaseX(
+    dragStartGuideLineTicks + movingTicks,
+    tpqn.value
+  );
+  guideLineX.value = guideLineBaseX * zoomX.value;
+};
+
+const previewResizeRight = () => {
+  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+  const draggingNote = copiedNotesForPreview.get(draggingNoteId);
+  if (!draggingNote) {
+    throw new Error("draggingNote is undefined.");
+  }
+  const dragTicks = cursorTicks - dragStartTicks;
+  const noteEndPos = draggingNote.position + draggingNote.duration;
+  const newNoteEndPos =
+    Math.round((noteEndPos + dragTicks) / snapTicks.value) * snapTicks.value;
+  const movingTicks = newNoteEndPos - noteEndPos;
+
+  const editedNotes = new Map<string, Note>();
+  for (const note of previewNotes.value) {
+    const copiedNote = copiedNotesForPreview.get(note.id);
+    if (!copiedNote) {
+      throw new Error("copiedNote is undefined.");
+    }
+    const notePos = copiedNote.position;
+    const noteEndPos = copiedNote.position + copiedNote.duration;
+    const duration = Math.max(
+      snapTicks.value,
+      noteEndPos + movingTicks - notePos
+    );
+    if (note.duration !== duration) {
+      editedNotes.set(note.id, { ...note, duration });
+    }
+  }
+  if (editedNotes.size !== 0) {
+    previewNotes.value = previewNotes.value.map((value) => {
+      return editedNotes.get(value.id) ?? value;
+    });
+    edited = true;
+  }
+
+  const guideLineBaseX = tickToBaseX(newNoteEndPos, tpqn.value);
+  guideLineX.value = guideLineBaseX * zoomX.value;
+};
+
+const previewResizeLeft = () => {
+  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+  const draggingNote = copiedNotesForPreview.get(draggingNoteId);
+  if (!draggingNote) {
+    throw new Error("draggingNote is undefined.");
+  }
+  const dragTicks = cursorTicks - dragStartTicks;
+  const notePos = draggingNote.position;
+  const newNotePos =
+    Math.round((notePos + dragTicks) / snapTicks.value) * snapTicks.value;
+  const movingTicks = newNotePos - notePos;
+
+  const editedNotes = new Map<string, Note>();
+  for (const note of previewNotes.value) {
+    const copiedNote = copiedNotesForPreview.get(note.id);
+    if (!copiedNote) {
+      throw new Error("copiedNote is undefined.");
+    }
+    const notePos = copiedNote.position;
+    const noteEndPos = copiedNote.position + copiedNote.duration;
+    const position = Math.min(
+      noteEndPos - snapTicks.value,
+      notePos + movingTicks
+    );
+    const duration = noteEndPos - position;
+    if (note.position !== position && note.duration !== duration) {
+      editedNotes.set(note.id, { ...note, position, duration });
+    }
+  }
+  for (const note of editedNotes.values()) {
+    if (note.position < 0) {
+      // 左端より前はドラッグしない
+      return;
+    }
+  }
+  if (editedNotes.size !== 0) {
+    previewNotes.value = previewNotes.value.map((value) => {
+      return editedNotes.get(value.id) ?? value;
+    });
+    edited = true;
+  }
+
+  const guideLineBaseX = tickToBaseX(newNotePos, tpqn.value);
+  guideLineX.value = guideLineBaseX * zoomX.value;
+};
+
+const preview = () => {
+  if (executePreviewProcess) {
+    if (previewMode === "ADD") {
+      previewAdd();
+    }
+    if (previewMode === "MOVE") {
+      previewMove();
+    }
+    if (previewMode === "RESIZE_RIGHT") {
+      previewResizeRight();
+    }
+    if (previewMode === "RESIZE_LEFT") {
+      previewResizeLeft();
+    }
+    executePreviewProcess = false;
+  }
+  previewRequestId = requestAnimationFrame(preview);
+};
+
+const getXInBorderBox = (clientX: number, element: HTMLElement) => {
+  return clientX - element.getBoundingClientRect().left;
+};
+
+const getYInBorderBox = (clientY: number, element: HTMLElement) => {
+  return clientY - element.getBoundingClientRect().top;
+};
+
+const selectOnlyThis = (note: Note) => {
+  store.dispatch("DESELECT_ALL_NOTES");
+  store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+  store.dispatch("PLAY_PREVIEW_SOUND", {
+    noteNumber: note.noteNumber,
+    duration: PREVIEW_SOUND_DURATION,
+  });
+};
+
+const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
+  if (nowPreviewing.value) {
+    store.dispatch("LOG_WARN", "startPreview was called during preview.");
+    return;
+  }
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
+  }
+  cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
+  cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
+  if (cursorX >= sequencerBodyElement.clientWidth) {
+    return;
+  }
+  if (cursorY >= sequencerBodyElement.clientHeight) {
+    return;
+  }
+  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
+  const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+  const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
+  // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
+  const guideLineTicks =
+    Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
+  const copiedNotes: Note[] = [];
+  if (mode === "ADD") {
+    if (cursorNoteNumber < 0) {
+      return;
+    }
+    note = {
+      id: uuidv4(),
+      position: guideLineTicks,
+      duration: snapTicks.value,
+      noteNumber: cursorNoteNumber,
+      lyric: getDoremiFromNoteNumber(cursorNoteNumber),
     };
-
-    const previewMove = () => {
-      const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
-      const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
-      const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-      const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
-      const draggingNote = copiedNotesForPreview.get(draggingNoteId);
-      if (!draggingNote) {
-        throw new Error("draggingNote is undefined.");
-      }
-      const dragTicks = cursorTicks - dragStartTicks;
-      const notePos = draggingNote.position;
-      const newNotePos =
-        Math.round((notePos + dragTicks) / snapTicks.value) * snapTicks.value;
-      const movingTicks = newNotePos - notePos;
-      const movingSemitones = cursorNoteNumber - dragStartNoteNumber;
-
-      const editedNotes = new Map<string, Note>();
-      for (const note of previewNotes.value) {
-        const copiedNote = copiedNotesForPreview.get(note.id);
-        if (!copiedNote) {
-          throw new Error("copiedNote is undefined.");
-        }
-        const position = copiedNote.position + movingTicks;
-        const noteNumber = copiedNote.noteNumber + movingSemitones;
-        if (note.position !== position || note.noteNumber !== noteNumber) {
-          editedNotes.set(note.id, { ...note, noteNumber, position });
+    store.dispatch("DESELECT_ALL_NOTES");
+    copiedNotes.push(note);
+  } else {
+    if (!note) {
+      throw new Error("note is undefined.");
+    }
+    if (event.shiftKey) {
+      let minIndex = notes.value.length - 1;
+      let maxIndex = 0;
+      for (let i = 0; i < notes.value.length; i++) {
+        const noteId = notes.value[i].id;
+        if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
+          minIndex = Math.min(minIndex, i);
+          maxIndex = Math.max(maxIndex, i);
         }
       }
-      for (const note of editedNotes.values()) {
-        if (note.position < 0) {
-          // 左端より前はドラッグしない
-          return;
+      const noteIdsToSelect: string[] = [];
+      for (let i = minIndex; i <= maxIndex; i++) {
+        const noteId = notes.value[i].id;
+        if (!state.selectedNoteIds.has(noteId)) {
+          noteIdsToSelect.push(noteId);
         }
       }
-      if (editedNotes.size !== 0) {
-        previewNotes.value = previewNotes.value.map((value) => {
-          return editedNotes.get(value.id) ?? value;
-        });
-        edited = true;
-      }
-
-      const guideLineBaseX = tickToBaseX(
-        dragStartGuideLineTicks + movingTicks,
-        tpqn.value
-      );
-      guideLineX.value = guideLineBaseX * zoomX.value;
-    };
-
-    const previewResizeRight = () => {
-      const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
-      const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-      const draggingNote = copiedNotesForPreview.get(draggingNoteId);
-      if (!draggingNote) {
-        throw new Error("draggingNote is undefined.");
-      }
-      const dragTicks = cursorTicks - dragStartTicks;
-      const noteEndPos = draggingNote.position + draggingNote.duration;
-      const newNoteEndPos =
-        Math.round((noteEndPos + dragTicks) / snapTicks.value) *
-        snapTicks.value;
-      const movingTicks = newNoteEndPos - noteEndPos;
-
-      const editedNotes = new Map<string, Note>();
-      for (const note of previewNotes.value) {
-        const copiedNote = copiedNotesForPreview.get(note.id);
-        if (!copiedNote) {
-          throw new Error("copiedNote is undefined.");
-        }
-        const notePos = copiedNote.position;
-        const noteEndPos = copiedNote.position + copiedNote.duration;
-        const duration = Math.max(
-          snapTicks.value,
-          noteEndPos + movingTicks - notePos
-        );
-        if (note.duration !== duration) {
-          editedNotes.set(note.id, { ...note, duration });
-        }
-      }
-      if (editedNotes.size !== 0) {
-        previewNotes.value = previewNotes.value.map((value) => {
-          return editedNotes.get(value.id) ?? value;
-        });
-        edited = true;
-      }
-
-      const guideLineBaseX = tickToBaseX(newNoteEndPos, tpqn.value);
-      guideLineX.value = guideLineBaseX * zoomX.value;
-    };
-
-    const previewResizeLeft = () => {
-      const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
-      const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-      const draggingNote = copiedNotesForPreview.get(draggingNoteId);
-      if (!draggingNote) {
-        throw new Error("draggingNote is undefined.");
-      }
-      const dragTicks = cursorTicks - dragStartTicks;
-      const notePos = draggingNote.position;
-      const newNotePos =
-        Math.round((notePos + dragTicks) / snapTicks.value) * snapTicks.value;
-      const movingTicks = newNotePos - notePos;
-
-      const editedNotes = new Map<string, Note>();
-      for (const note of previewNotes.value) {
-        const copiedNote = copiedNotesForPreview.get(note.id);
-        if (!copiedNote) {
-          throw new Error("copiedNote is undefined.");
-        }
-        const notePos = copiedNote.position;
-        const noteEndPos = copiedNote.position + copiedNote.duration;
-        const position = Math.min(
-          noteEndPos - snapTicks.value,
-          notePos + movingTicks
-        );
-        const duration = noteEndPos - position;
-        if (note.position !== position && note.duration !== duration) {
-          editedNotes.set(note.id, { ...note, position, duration });
-        }
-      }
-      for (const note of editedNotes.values()) {
-        if (note.position < 0) {
-          // 左端より前はドラッグしない
-          return;
-        }
-      }
-      if (editedNotes.size !== 0) {
-        previewNotes.value = previewNotes.value.map((value) => {
-          return editedNotes.get(value.id) ?? value;
-        });
-        edited = true;
-      }
-
-      const guideLineBaseX = tickToBaseX(newNotePos, tpqn.value);
-      guideLineX.value = guideLineBaseX * zoomX.value;
-    };
-
-    const preview = () => {
-      if (executePreviewProcess) {
-        if (previewMode === "ADD") {
-          previewAdd();
-        }
-        if (previewMode === "MOVE") {
-          previewMove();
-        }
-        if (previewMode === "RESIZE_RIGHT") {
-          previewResizeRight();
-        }
-        if (previewMode === "RESIZE_LEFT") {
-          previewResizeLeft();
-        }
-        executePreviewProcess = false;
-      }
-      previewRequestId = requestAnimationFrame(preview);
-    };
-
-    const getXInBorderBox = (clientX: number, element: HTMLElement) => {
-      return clientX - element.getBoundingClientRect().left;
-    };
-
-    const getYInBorderBox = (clientY: number, element: HTMLElement) => {
-      return clientY - element.getBoundingClientRect().top;
-    };
-
-    const selectOnlyThis = (note: Note) => {
-      store.dispatch("DESELECT_ALL_NOTES");
+      store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+    } else if (event.ctrlKey) {
       store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+    } else if (!state.selectedNoteIds.has(note.id)) {
+      selectOnlyThis(note);
+    }
+    for (const note of selectedNotes.value) {
+      copiedNotes.push({ ...note });
+    }
+  }
+  previewMode = mode;
+  dragStartTicks = cursorTicks;
+  dragStartNoteNumber = cursorNoteNumber;
+  dragStartGuideLineTicks = guideLineTicks;
+  draggingNoteId = note.id;
+  executePreviewProcess = true;
+  edited = mode === "ADD";
+  copiedNotesForPreview.clear();
+  for (const copiedNote of copiedNotes) {
+    copiedNotesForPreview.set(copiedNote.id, copiedNote);
+  }
+  previewNotes.value = copiedNotes;
+  nowPreviewing.value = true;
+  previewRequestId = requestAnimationFrame(preview);
+};
+
+const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
+  if (!isSelfEventTarget(event)) {
+    return;
+  }
+  if (event.button === 0) {
+    startPreview(event, "MOVE", note);
+    mouseDownNoteId = note.id;
+  } else if (!state.selectedNoteIds.has(note.id)) {
+    selectOnlyThis(note);
+  }
+};
+
+const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
+  if (!isSelfEventTarget(event)) {
+    return;
+  }
+  if (event.button === 0) {
+    startPreview(event, "RESIZE_LEFT", note);
+    mouseDownNoteId = note.id;
+  } else if (!state.selectedNoteIds.has(note.id)) {
+    selectOnlyThis(note);
+  }
+};
+
+const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
+  if (!isSelfEventTarget(event)) {
+    return;
+  }
+  if (event.button === 0) {
+    startPreview(event, "RESIZE_RIGHT", note);
+    mouseDownNoteId = note.id;
+  } else if (!state.selectedNoteIds.has(note.id)) {
+    selectOnlyThis(note);
+  }
+};
+
+const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
+  if (!isSelfEventTarget(event)) {
+    return;
+  }
+  if (!state.selectedNoteIds.has(note.id)) {
+    selectOnlyThis(note);
+  }
+  if (event.button === 0) {
+    mouseDownNoteId = note.id;
+  }
+};
+
+const onMouseDown = (event: MouseEvent) => {
+  if (!isSelfEventTarget(event)) {
+    return;
+  }
+  if (event.button === 0) {
+    startPreview(event, "ADD");
+    mouseDownNoteId = undefined;
+  } else {
+    store.dispatch("DESELECT_ALL_NOTES");
+  }
+};
+
+const onMouseMove = (event: MouseEvent) => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
+  }
+  cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
+  cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
+
+  if (nowPreviewing.value) {
+    executePreviewProcess = true;
+  } else {
+    const scrollLeft = sequencerBodyElement.scrollLeft;
+    const cursorBaseX = (scrollLeft + cursorX) / zoomX.value;
+    const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+    // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
+    const guideLineTicks =
+      Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
+    const guideLineBaseX = tickToBaseX(guideLineTicks, tpqn.value);
+    guideLineX.value = guideLineBaseX * zoomX.value;
+  }
+};
+
+const onMouseUp = (event: MouseEvent) => {
+  if (event.button !== 0) {
+    return;
+  }
+  clickedNoteIds[0] = clickedNoteIds[1];
+  clickedNoteIds[1] = mouseDownNoteId;
+  if (event.detail === 1) {
+    ignoreDoubleClick = false;
+  }
+  if (nowPreviewing.value && edited) {
+    ignoreDoubleClick = true;
+  }
+
+  if (!nowPreviewing.value) {
+    return;
+  }
+  cancelAnimationFrame(previewRequestId);
+  if (edited) {
+    if (previewMode === "ADD") {
+      store.dispatch("ADD_NOTES", { notes: previewNotes.value });
+      store.dispatch("SELECT_NOTES", {
+        noteIds: previewNotes.value.map((value) => value.id),
+      });
+    } else {
+      store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
+    }
+    if (previewNotes.value.length === 1) {
       store.dispatch("PLAY_PREVIEW_SOUND", {
-        noteNumber: note.noteNumber,
+        noteNumber: previewNotes.value[0].noteNumber,
         duration: PREVIEW_SOUND_DURATION,
       });
-    };
+    }
+  }
+  nowPreviewing.value = false;
+};
 
-    const startPreview = (
-      event: MouseEvent,
-      mode: PreviewMode,
-      note?: Note
-    ) => {
-      if (nowPreviewing.value) {
-        store.dispatch("LOG_WARN", "startPreview was called during preview.");
-        return;
-      }
-      const sequencerBodyElement = sequencerBody.value;
-      if (!sequencerBodyElement) {
-        throw new Error("sequencerBodyElement is null.");
-      }
-      cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-      cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
-      if (cursorX >= sequencerBodyElement.clientWidth) {
-        return;
-      }
-      if (cursorY >= sequencerBodyElement.clientHeight) {
-        return;
-      }
-      const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
-      const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
-      const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-      const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
-      // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
-      const guideLineTicks =
-        Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
-      const copiedNotes: Note[] = [];
-      if (mode === "ADD") {
-        if (cursorNoteNumber < 0) {
-          return;
-        }
-        note = {
-          id: uuidv4(),
-          position: guideLineTicks,
-          duration: snapTicks.value,
-          noteNumber: cursorNoteNumber,
-          lyric: getDoremiFromNoteNumber(cursorNoteNumber),
-        };
-        store.dispatch("DESELECT_ALL_NOTES");
-        copiedNotes.push(note);
-      } else {
-        if (!note) {
-          throw new Error("note is undefined.");
-        }
-        if (event.shiftKey) {
-          let minIndex = notes.value.length - 1;
-          let maxIndex = 0;
-          for (let i = 0; i < notes.value.length; i++) {
-            const noteId = notes.value[i].id;
-            if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
-              minIndex = Math.min(minIndex, i);
-              maxIndex = Math.max(maxIndex, i);
-            }
-          }
-          const noteIdsToSelect: string[] = [];
-          for (let i = minIndex; i <= maxIndex; i++) {
-            const noteId = notes.value[i].id;
-            if (!state.selectedNoteIds.has(noteId)) {
-              noteIdsToSelect.push(noteId);
-            }
-          }
-          store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
-        } else if (event.ctrlKey) {
-          store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-        } else if (!state.selectedNoteIds.has(note.id)) {
-          selectOnlyThis(note);
-        }
-        for (const note of selectedNotes.value) {
-          copiedNotes.push({ ...note });
-        }
-      }
-      previewMode = mode;
-      dragStartTicks = cursorTicks;
-      dragStartNoteNumber = cursorNoteNumber;
-      dragStartGuideLineTicks = guideLineTicks;
-      draggingNoteId = note.id;
-      executePreviewProcess = true;
-      edited = mode === "ADD";
-      copiedNotesForPreview.clear();
-      for (const copiedNote of copiedNotes) {
-        copiedNotesForPreview.set(copiedNote.id, copiedNote);
-      }
-      previewNotes.value = copiedNotes;
-      nowPreviewing.value = true;
-      previewRequestId = requestAnimationFrame(preview);
-    };
+const onDoubleClick = () => {
+  if (
+    ignoreDoubleClick ||
+    clickedNoteIds[0] !== clickedNoteIds[1] ||
+    clickedNoteIds[1] == undefined
+  ) {
+    return;
+  }
 
-    const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
-      if (!isSelfEventTarget(event)) {
-        return;
-      }
-      if (event.button === 0) {
-        startPreview(event, "MOVE", note);
-        mouseDownNoteId = note.id;
-      } else if (!state.selectedNoteIds.has(note.id)) {
-        selectOnlyThis(note);
-      }
-    };
+  const noteId = clickedNoteIds[1];
+  if (state.editingLyricNoteId !== noteId) {
+    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId });
+  }
+};
 
-    const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
-      if (!isSelfEventTarget(event)) {
-        return;
-      }
-      if (event.button === 0) {
-        startPreview(event, "RESIZE_LEFT", note);
-        mouseDownNoteId = note.id;
-      } else if (!state.selectedNoteIds.has(note.id)) {
-        selectOnlyThis(note);
-      }
-    };
+const onMouseEnter = () => {
+  showGuideLine.value = true;
+};
 
-    const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
-      if (!isSelfEventTarget(event)) {
-        return;
-      }
-      if (event.button === 0) {
-        startPreview(event, "RESIZE_RIGHT", note);
-        mouseDownNoteId = note.id;
-      } else if (!state.selectedNoteIds.has(note.id)) {
-        selectOnlyThis(note);
-      }
-    };
+const onMouseLeave = () => {
+  showGuideLine.value = false;
+};
 
-    const onMouseDown = (event: MouseEvent) => {
-      if (!isSelfEventTarget(event)) {
-        return;
-      }
-      if (event.button === 0) {
-        startPreview(event, "ADD");
-        mouseDownNoteId = undefined;
-      } else {
-        store.dispatch("DESELECT_ALL_NOTES");
-      }
-    };
+// キーボードイベント
+const handleNotesArrowUp = () => {
+  const editedNotes: Note[] = [];
+  for (const note of selectedNotes.value) {
+    const noteNumber = Math.min(note.noteNumber + 1, 127);
+    editedNotes.push({ ...note, noteNumber });
+  }
+  if (editedNotes.some((note) => note.noteNumber > 127)) {
+    return;
+  }
+  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
 
-    const onMouseMove = (event: MouseEvent) => {
-      const sequencerBodyElement = sequencerBody.value;
-      if (!sequencerBodyElement) {
-        throw new Error("sequencerBodyElement is null.");
-      }
-      cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-      cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
-
-      if (nowPreviewing.value) {
-        executePreviewProcess = true;
-      } else {
-        const scrollLeft = sequencerBodyElement.scrollLeft;
-        const cursorBaseX = (scrollLeft + cursorX) / zoomX.value;
-        const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-        // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
-        const guideLineTicks =
-          Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
-        const guideLineBaseX = tickToBaseX(guideLineTicks, tpqn.value);
-        guideLineX.value = guideLineBaseX * zoomX.value;
-      }
-    };
-
-    const onMouseUp = (event: MouseEvent) => {
-      if (event.button !== 0) {
-        return;
-      }
-      clickedNoteIds[0] = clickedNoteIds[1];
-      clickedNoteIds[1] = mouseDownNoteId;
-      if (event.detail === 1) {
-        ignoreDoubleClick = false;
-      }
-      if (nowPreviewing.value && edited) {
-        ignoreDoubleClick = true;
-      }
-
-      if (!nowPreviewing.value) {
-        return;
-      }
-      cancelAnimationFrame(previewRequestId);
-      if (edited) {
-        if (previewMode === "ADD") {
-          store.dispatch("ADD_NOTES", { notes: previewNotes.value });
-          store.dispatch("SELECT_NOTES", {
-            noteIds: previewNotes.value.map((value) => value.id),
-          });
-        } else {
-          store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
-        }
-        if (previewNotes.value.length === 1) {
-          store.dispatch("PLAY_PREVIEW_SOUND", {
-            noteNumber: previewNotes.value[0].noteNumber,
-            duration: PREVIEW_SOUND_DURATION,
-          });
-        }
-      }
-      nowPreviewing.value = false;
-    };
-
-    const onDoubleClick = () => {
-      if (
-        ignoreDoubleClick ||
-        clickedNoteIds[0] !== clickedNoteIds[1] ||
-        clickedNoteIds[1] == undefined
-      ) {
-        return;
-      }
-
-      const noteId = clickedNoteIds[1];
-      if (state.editingLyricNoteId !== noteId) {
-        store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId });
-      }
-    };
-
-    const onMouseEnter = () => {
-      showGuideLine.value = true;
-    };
-
-    const onMouseLeave = () => {
-      showGuideLine.value = false;
-    };
-
-    // キーボードイベント
-    const handleNotesArrowUp = () => {
-      const editedNotes: Note[] = [];
-      for (const note of selectedNotes.value) {
-        const noteNumber = Math.min(note.noteNumber + 1, 127);
-        editedNotes.push({ ...note, noteNumber });
-      }
-      if (editedNotes.some((note) => note.noteNumber > 127)) {
-        return;
-      }
-      store.dispatch("UPDATE_NOTES", { notes: editedNotes });
-
-      if (editedNotes.length === 1) {
-        store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: editedNotes[0].noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
-        });
-      }
-    };
-
-    const handleNotesArrowDown = () => {
-      const editedNotes: Note[] = [];
-      for (const note of selectedNotes.value) {
-        const noteNumber = Math.max(note.noteNumber - 1, 0);
-        editedNotes.push({ ...note, noteNumber });
-      }
-      if (editedNotes.some((note) => note.noteNumber < 0)) {
-        return;
-      }
-      store.dispatch("UPDATE_NOTES", { notes: editedNotes });
-
-      if (editedNotes.length === 1) {
-        store.dispatch("PLAY_PREVIEW_SOUND", {
-          noteNumber: editedNotes[0].noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
-        });
-      }
-    };
-
-    const handleNotesArrowRight = () => {
-      const editedNotes: Note[] = [];
-      for (const note of selectedNotes.value) {
-        const position = note.position + snapTicks.value;
-        editedNotes.push({ ...note, position });
-      }
-      if (editedNotes.length === 0) {
-        // TODO: 例外処理は`UPDATE_NOTES`内に移す？
-        return;
-      }
-      store.dispatch("UPDATE_NOTES", { notes: editedNotes });
-    };
-
-    const handleNotesArrowLeft = () => {
-      const editedNotes: Note[] = [];
-      for (const note of selectedNotes.value) {
-        const position = note.position - snapTicks.value;
-        editedNotes.push({ ...note, position });
-      }
-      if (
-        editedNotes.length === 0 ||
-        editedNotes.some((note) => note.position < 0)
-      ) {
-        return;
-      }
-      store.dispatch("UPDATE_NOTES", { notes: editedNotes });
-    };
-
-    const handleNotesBackspaceOrDelete = () => {
-      if (state.selectedNoteIds.size === 0) {
-        // TODO: 例外処理は`REMOVE_SELECTED_NOTES`内に移す？
-        return;
-      }
-      store.dispatch("REMOVE_SELECTED_NOTES");
-    };
-
-    const handleKeydown = (event: KeyboardEvent) => {
-      // プレビュー中の操作は想定外の挙動をしそうなので防止
-      if (nowPreviewing.value) {
-        return;
-      }
-      switch (event.key) {
-        case "ArrowUp":
-          handleNotesArrowUp();
-          break;
-        case "ArrowDown":
-          handleNotesArrowDown();
-          break;
-        case "ArrowRight":
-          handleNotesArrowRight();
-          break;
-        case "ArrowLeft":
-          handleNotesArrowLeft();
-          break;
-        case "Backspace":
-          handleNotesBackspaceOrDelete();
-          break;
-        case "Delete":
-          handleNotesBackspaceOrDelete();
-          break;
-        case "Escape":
-          store.dispatch("DESELECT_ALL_NOTES");
-          break;
-      }
-    };
-
-    // X軸ズーム
-    const setZoomX = (event: Event) => {
-      const sequencerBodyElement = sequencerBody.value;
-      if (!sequencerBodyElement) {
-        throw new Error("sequencerBodyElement is null.");
-      }
-      if (event.target instanceof HTMLInputElement) {
-        // 画面の中央を基準に水平方向のズームを行う
-        const oldZoomX = zoomX.value;
-        const newZoomX = Number(event.target.value);
-        const scrollLeft = sequencerBodyElement.scrollLeft;
-        const scrollTop = sequencerBodyElement.scrollTop;
-        const clientWidth = sequencerBodyElement.clientWidth;
-
-        store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
-          const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
-          const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
-          sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
-        });
-      }
-    };
-
-    // Y軸ズーム
-    const setZoomY = (event: Event) => {
-      const sequencerBodyElement = sequencerBody.value;
-      if (!sequencerBodyElement) {
-        throw new Error("sequencerBodyElement is null.");
-      }
-      if (event.target instanceof HTMLInputElement) {
-        // 画面の中央を基準に垂直方向のズームを行う
-        const oldZoomY = zoomY.value;
-        const newZoomY = Number(event.target.value);
-        const scrollLeft = sequencerBodyElement.scrollLeft;
-        const scrollTop = sequencerBodyElement.scrollTop;
-        const clientHeight = sequencerBodyElement.clientHeight;
-
-        store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
-          const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
-          const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
-          sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
-        });
-      }
-    };
-
-    const onWheel = (event: WheelEvent) => {
-      const sequencerBodyElement = sequencerBody.value;
-      if (!sequencerBodyElement) {
-        throw new Error("sequencerBodyElement is null.");
-      }
-      if (event.ctrlKey) {
-        cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-        // マウスカーソル位置を基準に水平方向のズームを行う
-        const oldZoomX = zoomX.value;
-        let newZoomX = zoomX.value;
-        newZoomX -= event.deltaY * (ZOOM_X_STEP * 0.01);
-        newZoomX = Math.min(ZOOM_X_MAX, newZoomX);
-        newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
-        const scrollLeft = sequencerBodyElement.scrollLeft;
-        const scrollTop = sequencerBodyElement.scrollTop;
-
-        store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
-          const cursorBaseX = (scrollLeft + cursorX) / oldZoomX;
-          const newScrollLeft = cursorBaseX * newZoomX - cursorX;
-          sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
-        });
-      }
-    };
-
-    const onScroll = (event: Event) => {
-      if (event.target instanceof HTMLElement) {
-        scrollX.value = event.target.scrollLeft;
-        scrollY.value = event.target.scrollTop;
-      }
-    };
-
-    const playheadPositionChangeListener = (position: number) => {
-      playheadTicks.value = position;
-
-      // オートスクロール
-      const sequencerBodyElement = sequencerBody.value;
-      if (!sequencerBodyElement) {
-        throw new Error("sequencerBodyElement is null.");
-      }
-      const scrollLeft = sequencerBodyElement.scrollLeft;
-      const scrollTop = sequencerBodyElement.scrollTop;
-      const scrollWidth = sequencerBodyElement.scrollWidth;
-      const clientWidth = sequencerBodyElement.clientWidth;
-      const playheadX = tickToBaseX(position, tpqn.value) * zoomX.value;
-      const tolerance = 3;
-      if (playheadX < scrollLeft) {
-        sequencerBodyElement.scrollTo(playheadX, scrollTop);
-      } else if (
-        scrollLeft < scrollWidth - clientWidth - tolerance &&
-        playheadX >= scrollLeft + clientWidth
-      ) {
-        sequencerBodyElement.scrollTo(playheadX, scrollTop);
-      }
-    };
-
-    // 最初のonActivatedか判断するためのフラグ
-    let firstActivation = true;
-    onActivated(() => {
-      const sequencerBodyElement = sequencerBody.value;
-      if (!sequencerBodyElement) {
-        throw new Error("sequencerBodyElement is null.");
-      }
-
-      let xToScroll = 0;
-      let yToScroll = 0;
-      if (firstActivation) {
-        // スクロール位置を設定（C4が上から2/3の位置になるようにする）
-        const clientHeight = sequencerBodyElement.clientHeight;
-        const c4BaseY = noteNumberToBaseY(60);
-        const clientBaseHeight = clientHeight / zoomY.value;
-        const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
-        xToScroll = 0;
-        yToScroll = scrollBaseY * zoomY.value;
-
-        // スクロールバーの幅を取得する
-        const clientWidth = sequencerBodyElement.clientWidth;
-        const offsetWidth = sequencerBodyElement.offsetWidth;
-        scrollBarWidth.value = offsetWidth - clientWidth;
-
-        firstActivation = false;
-      } else {
-        xToScroll = scrollX.value;
-        yToScroll = scrollY.value;
-      }
-      // 実際にスクロールする
-      nextTick().then(() => {
-        sequencerBodyElement.scrollTo(xToScroll, yToScroll);
-      });
-
-      store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-        listener: playheadPositionChangeListener,
-      });
-
-      document.addEventListener("keydown", handleKeydown);
+  if (editedNotes.length === 1) {
+    store.dispatch("PLAY_PREVIEW_SOUND", {
+      noteNumber: editedNotes[0].noteNumber,
+      duration: PREVIEW_SOUND_DURATION,
     });
+  }
+};
 
-    onDeactivated(() => {
-      store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-        listener: playheadPositionChangeListener,
-      });
+const handleNotesArrowDown = () => {
+  const editedNotes: Note[] = [];
+  for (const note of selectedNotes.value) {
+    const noteNumber = Math.max(note.noteNumber - 1, 0);
+    editedNotes.push({ ...note, noteNumber });
+  }
+  if (editedNotes.some((note) => note.noteNumber < 0)) {
+    return;
+  }
+  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
 
-      document.removeEventListener("keydown", handleKeydown);
+  if (editedNotes.length === 1) {
+    store.dispatch("PLAY_PREVIEW_SOUND", {
+      noteNumber: editedNotes[0].noteNumber,
+      duration: PREVIEW_SOUND_DURATION,
     });
+  }
+};
 
-    return {
-      ZOOM_X_MIN,
-      ZOOM_X_MAX,
-      ZOOM_X_STEP,
-      ZOOM_Y_MIN,
-      ZOOM_Y_MAX,
-      ZOOM_Y_STEP,
-      beatsPerMeasure,
-      beatWidth,
-      gridCellWidth,
-      gridCellHeight,
-      numOfMeasures,
-      gridWidth,
-      gridHeight,
-      keyInfos,
-      notes,
-      zoomX,
-      zoomY,
-      scrollX,
-      scrollY,
-      playheadX,
-      phraseInfos,
-      scrollBarWidth,
-      sequencerBody,
-      nowPreviewing,
-      previewNotes,
-      selectedNotes,
-      unselectedNotes,
-      showGuideLine,
-      guideLineX,
-      setZoomX,
-      setZoomY,
-      onNoteBarMouseDown,
-      onNoteLeftEdgeMouseDown,
-      onNoteRightEdgeMouseDown,
-      onMouseDown,
-      onMouseMove,
-      onMouseUp,
-      onDoubleClick,
-      onMouseEnter,
-      onMouseLeave,
-      onWheel,
-      onScroll,
-    };
-  },
+const handleNotesArrowRight = () => {
+  const editedNotes: Note[] = [];
+  for (const note of selectedNotes.value) {
+    const position = note.position + snapTicks.value;
+    editedNotes.push({ ...note, position });
+  }
+  if (editedNotes.length === 0) {
+    // TODO: 例外処理は`UPDATE_NOTES`内に移す？
+    return;
+  }
+  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+};
+
+const handleNotesArrowLeft = () => {
+  const editedNotes: Note[] = [];
+  for (const note of selectedNotes.value) {
+    const position = note.position - snapTicks.value;
+    editedNotes.push({ ...note, position });
+  }
+  if (
+    editedNotes.length === 0 ||
+    editedNotes.some((note) => note.position < 0)
+  ) {
+    return;
+  }
+  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+};
+
+const handleNotesBackspaceOrDelete = () => {
+  if (state.selectedNoteIds.size === 0) {
+    // TODO: 例外処理は`REMOVE_SELECTED_NOTES`内に移す？
+    return;
+  }
+  store.dispatch("REMOVE_SELECTED_NOTES");
+};
+
+const handleKeydown = (event: KeyboardEvent) => {
+  // プレビュー中の操作は想定外の挙動をしそうなので防止
+  if (nowPreviewing.value) {
+    return;
+  }
+  switch (event.key) {
+    case "ArrowUp":
+      handleNotesArrowUp();
+      break;
+    case "ArrowDown":
+      handleNotesArrowDown();
+      break;
+    case "ArrowRight":
+      handleNotesArrowRight();
+      break;
+    case "ArrowLeft":
+      handleNotesArrowLeft();
+      break;
+    case "Backspace":
+      handleNotesBackspaceOrDelete();
+      break;
+    case "Delete":
+      handleNotesBackspaceOrDelete();
+      break;
+    case "Escape":
+      store.dispatch("DESELECT_ALL_NOTES");
+      break;
+  }
+};
+
+// X軸ズーム
+const setZoomX = (event: Event) => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
+  }
+  if (event.target instanceof HTMLInputElement) {
+    // 画面の中央を基準に水平方向のズームを行う
+    const oldZoomX = zoomX.value;
+    const newZoomX = Number(event.target.value);
+    const scrollLeft = sequencerBodyElement.scrollLeft;
+    const scrollTop = sequencerBodyElement.scrollTop;
+    const clientWidth = sequencerBodyElement.clientWidth;
+
+    store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+      const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
+      const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
+      sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+    });
+  }
+};
+
+// Y軸ズーム
+const setZoomY = (event: Event) => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
+  }
+  if (event.target instanceof HTMLInputElement) {
+    // 画面の中央を基準に垂直方向のズームを行う
+    const oldZoomY = zoomY.value;
+    const newZoomY = Number(event.target.value);
+    const scrollLeft = sequencerBodyElement.scrollLeft;
+    const scrollTop = sequencerBodyElement.scrollTop;
+    const clientHeight = sequencerBodyElement.clientHeight;
+
+    store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
+      const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
+      const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
+      sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
+    });
+  }
+};
+
+const onWheel = (event: WheelEvent) => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
+  }
+  if (event.ctrlKey) {
+    cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
+    // マウスカーソル位置を基準に水平方向のズームを行う
+    const oldZoomX = zoomX.value;
+    let newZoomX = zoomX.value;
+    newZoomX -= event.deltaY * (ZOOM_X_STEP * 0.01);
+    newZoomX = Math.min(ZOOM_X_MAX, newZoomX);
+    newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
+    const scrollLeft = sequencerBodyElement.scrollLeft;
+    const scrollTop = sequencerBodyElement.scrollTop;
+
+    store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+      const cursorBaseX = (scrollLeft + cursorX) / oldZoomX;
+      const newScrollLeft = cursorBaseX * newZoomX - cursorX;
+      sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+    });
+  }
+};
+
+const onScroll = (event: Event) => {
+  if (event.target instanceof HTMLElement) {
+    scrollX.value = event.target.scrollLeft;
+    scrollY.value = event.target.scrollTop;
+  }
+};
+
+const playheadPositionChangeListener = (position: number) => {
+  playheadTicks.value = position;
+
+  // オートスクロール
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
+  }
+  const scrollLeft = sequencerBodyElement.scrollLeft;
+  const scrollTop = sequencerBodyElement.scrollTop;
+  const scrollWidth = sequencerBodyElement.scrollWidth;
+  const clientWidth = sequencerBodyElement.clientWidth;
+  const playheadX = tickToBaseX(position, tpqn.value) * zoomX.value;
+  const tolerance = 3;
+  if (playheadX < scrollLeft) {
+    sequencerBodyElement.scrollTo(playheadX, scrollTop);
+  } else if (
+    scrollLeft < scrollWidth - clientWidth - tolerance &&
+    playheadX >= scrollLeft + clientWidth
+  ) {
+    sequencerBodyElement.scrollTo(playheadX, scrollTop);
+  }
+};
+
+// 最初のonActivatedか判断するためのフラグ
+let firstActivation = true;
+onActivated(() => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
+  }
+
+  let xToScroll = 0;
+  let yToScroll = 0;
+  if (firstActivation) {
+    // スクロール位置を設定（C4が上から2/3の位置になるようにする）
+    const clientHeight = sequencerBodyElement.clientHeight;
+    const c4BaseY = noteNumberToBaseY(60);
+    const clientBaseHeight = clientHeight / zoomY.value;
+    const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
+    xToScroll = 0;
+    yToScroll = scrollBaseY * zoomY.value;
+
+    // スクロールバーの幅を取得する
+    const clientWidth = sequencerBodyElement.clientWidth;
+    const offsetWidth = sequencerBodyElement.offsetWidth;
+    scrollBarWidth.value = offsetWidth - clientWidth;
+
+    firstActivation = false;
+  } else {
+    xToScroll = scrollX.value;
+    yToScroll = scrollY.value;
+  }
+  // 実際にスクロールする
+  nextTick().then(() => {
+    sequencerBodyElement.scrollTo(xToScroll, yToScroll);
+  });
+
+  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+    listener: playheadPositionChangeListener,
+  });
+
+  document.addEventListener("keydown", handleKeydown);
+});
+
+onDeactivated(() => {
+  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+    listener: playheadPositionChangeListener,
+  });
+
+  document.removeEventListener("keydown", handleKeydown);
 });
 </script>
 
