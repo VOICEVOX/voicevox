@@ -53,16 +53,17 @@
               :height="gridCellHeight"
               :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
             />
-            <line
-              v-for="octaveKeyIndex in octaveKeyIndexes"
-              :key="octaveKeyIndex"
-              x1="0"
-              x2="100%"
-              :y1="gridCellHeight * octaveKeyIndex + 0.5"
-              :y2="gridCellHeight * octaveKeyIndex + 0.5"
-              stroke-width="1"
-              class="sequencer-grid-octave-line"
-            />
+            <template v-for="(keyInfo, index) in keyInfos" :key="index">
+              <line
+                v-if="keyInfo.pitch === 'C'"
+                x1="0"
+                :x2="gridCellWidth"
+                :y1="gridCellHeight * (index + 1)"
+                :y2="gridCellHeight * (index + 1)"
+                stroke-width="1"
+                class="sequencer-grid-octave-line"
+              />
+            </template>
           </pattern>
           <pattern
             id="sequencer-grid-measure"
@@ -292,15 +293,6 @@ const gridWidth = computed(() => {
 });
 const gridHeight = computed(() => {
   return gridCellHeight.value * keyInfos.length;
-});
-// オクターブ表示
-const octaveKeyIndexes = computed(() => {
-  return keyInfos.reduce((indexes, keyInfo, index) => {
-    if (keyInfo.pitch === "C") {
-      indexes.push(index + 1);
-    }
-    return indexes;
-  }, [] as number[]);
 });
 // スクロール位置
 const scrollX = ref(0);

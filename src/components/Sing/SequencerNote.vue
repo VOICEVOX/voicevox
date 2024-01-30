@@ -210,7 +210,7 @@ const onLyricInputBlur = () => {
   min-width: 20px;
   padding: 0 1px 2px;
   background: white;
-  color: #000;
+  color: colors.$display-on-primary;
   border: 1px solid hsl(130, 0%, 91%);
   border-radius: 3px;
   font-size: 12px;
