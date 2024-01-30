@@ -46,7 +46,7 @@ const characterInfos: CharacterInfo[] = [
     metas: {
       policy: "policy",
       speakerName: "Speaker without styleType",
-      speakerUuid: SpeakerId("00000000-0000-0000-0000-000000000002"),
+      speakerUuid: SpeakerId("00000000-0000-0000-0000-000000000001"),
       styles: [
         {
           styleName: "styleName",
