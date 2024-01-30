@@ -2,36 +2,29 @@
   <div :class="`${className}`"></div>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from "vue";
+<script setup lang="ts">
+import { computed } from "vue";
 import { useStore } from "@/store";
 import { PhraseState } from "@/store/type";
 
-export default defineComponent({
-  name: "SingSequencerPhraseIndicator",
-  props: {
-    phraseKey: { type: String, required: true },
-  },
-  setup(props) {
-    const store = useStore();
-    const classNames: Record<PhraseState, string> = {
-      WAITING_TO_BE_RENDERED: "waiting-to-be-rendered",
-      NOW_RENDERING: "now-rendering",
-      COULD_NOT_RENDER: "could-not-render",
-      PLAYABLE: "playable",
-    };
-    const className = computed(() => {
-      const phrase = store.state.phrases.get(props.phraseKey);
-      if (phrase == undefined) {
-        throw new Error("phrase is undefined.");
-      }
-      return classNames[phrase.state];
-    });
+const props =
+  defineProps<{
+    phraseKey: string;
+  }>();
 
-    return {
-      className,
-    };
-  },
+const store = useStore();
+const classNames: Record<PhraseState, string> = {
+  WAITING_TO_BE_RENDERED: "waiting-to-be-rendered",
+  NOW_RENDERING: "now-rendering",
+  COULD_NOT_RENDER: "could-not-render",
+  PLAYABLE: "playable",
+};
+const className = computed(() => {
+  const phrase = store.state.phrases.get(props.phraseKey);
+  if (phrase == undefined) {
+    throw new Error("phrase is undefined.");
+  }
+  return classNames[phrase.state];
 });
 </script>
 

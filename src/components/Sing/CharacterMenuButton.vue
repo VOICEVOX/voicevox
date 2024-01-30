@@ -134,128 +134,105 @@
   </q-btn>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+<script setup lang="ts">
+import { computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { SpeakerId, StyleId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 
-export default defineComponent({
-  name: "CharacterMenuButton",
+const store = useStore();
 
-  setup() {
-    const store = useStore();
-
-    const userOrderedCharacterInfos = computed(() => {
-      return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
-    });
-
-    const subMenuOpenFlags = ref(
-      [...Array(userOrderedCharacterInfos.value?.length)].map(() => false)
-    );
-
-    const reassignSubMenuOpen = debounce((idx: number) => {
-      if (subMenuOpenFlags.value[idx]) return;
-      const arr = [...Array(userOrderedCharacterInfos.value?.length)].map(
-        () => false
-      );
-      arr[idx] = true;
-      subMenuOpenFlags.value = arr;
-    }, 100);
-
-    const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
-      const engineId = store.state.engineIds.find((_engineId) =>
-        (store.state.characterInfos[_engineId] ?? []).some(
-          (characterInfo) =>
-            characterInfo.metas.speakerUuid === speakerUuid &&
-            characterInfo.metas.styles.some(
-              (style) => style.styleId === styleId
-            )
-        )
-      );
-      if (engineId == undefined)
-        throw new Error(
-          `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
-        );
-
-      store.dispatch("SET_SINGER", { singer: { engineId, styleId } });
-    };
-
-    const getDefaultStyle = (speakerUuid: string) => {
-      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
-      const characterInfo = userOrderedCharacterInfos.value?.find(
-        (info) => info.metas.speakerUuid === speakerUuid
-      );
-
-      // ここで取得されるcharacterInfoには、ソングエディタ向けのスタイルのみ含まれるので、
-      // その中の最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
-      // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
-      const defaultStyleId = characterInfo?.metas.styles[0].styleId;
-
-      const defaultStyle = characterInfo?.metas.styles.find(
-        (style) => style.styleId === defaultStyleId
-      );
-
-      if (defaultStyle == undefined)
-        throw new Error("defaultStyle == undefined");
-
-      return defaultStyle;
-    };
-
-    const selectedCharacterInfo = computed(() => {
-      if (
-        userOrderedCharacterInfos.value == undefined ||
-        store.state.singer == undefined
-      )
-        return undefined;
-      return store.getters.CHARACTER_INFO(
-        store.state.singer.engineId,
-        store.state.singer.styleId
-      );
-    });
-
-    const selectedSpeakerUuid = computed(() => {
-      return selectedCharacterInfo.value?.metas.speakerUuid;
-    });
-
-    const selectedStyleId = computed(
-      () =>
-        selectedCharacterInfo.value?.metas.styles.find(
-          (style) =>
-            style.styleId === store.state.singer?.styleId &&
-            style.engineId === store.state.singer?.engineId
-        )?.styleId
-    );
-
-    // 複数エンジン
-    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
-
-    const engineIcons = computed(() =>
-      Object.fromEntries(
-        store.state.engineIds.map((engineId) => [
-          engineId,
-          base64ImageToUri(store.state.engineManifests[engineId].icon),
-        ])
-      )
-    );
-
-    return {
-      userOrderedCharacterInfos,
-      subMenuOpenFlags,
-      reassignSubMenuOpen,
-      changeStyleId,
-      getDefaultStyle,
-      getStyleDescription,
-      selectedCharacterInfo,
-      selectedSpeakerUuid,
-      selectedStyleId,
-      isMultipleEngine,
-      engineIcons,
-    };
-  },
+const userOrderedCharacterInfos = computed(() => {
+  return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
 });
+
+const subMenuOpenFlags = ref(
+  [...Array(userOrderedCharacterInfos.value?.length)].map(() => false)
+);
+
+const reassignSubMenuOpen = debounce((idx: number) => {
+  if (subMenuOpenFlags.value[idx]) return;
+  const arr = [...Array(userOrderedCharacterInfos.value?.length)].map(
+    () => false
+  );
+  arr[idx] = true;
+  subMenuOpenFlags.value = arr;
+}, 100);
+
+const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
+  const engineId = store.state.engineIds.find((_engineId) =>
+    (store.state.characterInfos[_engineId] ?? []).some(
+      (characterInfo) =>
+        characterInfo.metas.speakerUuid === speakerUuid &&
+        characterInfo.metas.styles.some((style) => style.styleId === styleId)
+    )
+  );
+  if (engineId == undefined)
+    throw new Error(
+      `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
+    );
+
+  store.dispatch("SET_SINGER", { singer: { engineId, styleId } });
+};
+
+const getDefaultStyle = (speakerUuid: string) => {
+  // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
+  const characterInfo = userOrderedCharacterInfos.value?.find(
+    (info) => info.metas.speakerUuid === speakerUuid
+  );
+
+  // ここで取得されるcharacterInfoには、ソングエディタ向けのスタイルのみ含まれるので、
+  // その中の最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
+  // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
+  const defaultStyleId = characterInfo?.metas.styles[0].styleId;
+
+  const defaultStyle = characterInfo?.metas.styles.find(
+    (style) => style.styleId === defaultStyleId
+  );
+
+  if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
+
+  return defaultStyle;
+};
+
+const selectedCharacterInfo = computed(() => {
+  if (
+    userOrderedCharacterInfos.value == undefined ||
+    store.state.singer == undefined
+  )
+    return undefined;
+  return store.getters.CHARACTER_INFO(
+    store.state.singer.engineId,
+    store.state.singer.styleId
+  );
+});
+
+const selectedSpeakerUuid = computed(() => {
+  return selectedCharacterInfo.value?.metas.speakerUuid;
+});
+
+const selectedStyleId = computed(
+  () =>
+    selectedCharacterInfo.value?.metas.styles.find(
+      (style) =>
+        style.styleId === store.state.singer?.styleId &&
+        style.engineId === store.state.singer?.engineId
+    )?.styleId
+);
+
+// 複数エンジン
+const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
+
+const engineIcons = computed(() =>
+  Object.fromEntries(
+    store.state.engineIds.map((engineId) => [
+      engineId,
+      base64ImageToUri(store.state.engineManifests[engineId].icon),
+    ])
+  )
+);
 </script>
 
 <style scoped lang="scss">

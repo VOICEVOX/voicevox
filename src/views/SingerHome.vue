@@ -23,8 +23,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, onMounted, watch } from "vue";
+<script setup lang="ts">
+import { computed, onMounted, watch } from "vue";
 import { useStore } from "@/store";
 import {
   DEFAULT_BEATS,
@@ -36,89 +36,79 @@ import MenuBar from "@/components/Sing/MenuBar.vue";
 import ToolBar from "@/components/Sing/ToolBar.vue";
 import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
 
-export default defineComponent({
-  name: "SingerHome",
-  components: {
-    MenuBar,
-    ToolBar,
-    ScoreSequencer,
-  },
-  props: {
-    projectFilePath: { type: String, default: undefined },
-    isEnginesReady: { type: Boolean, required: true },
-  },
+const props = withDefaults(
+  defineProps<{
+    projectFilePath?: string;
+    isEnginesReady: boolean;
+  }>(),
+  {
+    projectFilePath: undefined,
+    isEnginesReady: false,
+  }
+);
 
-  setup(props) {
-    const store = useStore();
-    //const $q = useQuasar();
+const store = useStore();
+//const $q = useQuasar();
 
-    const nowRendering = computed(() => {
-      return store.state.nowRendering;
-    });
-    const nowAudioExporting = computed(() => {
-      return store.state.nowAudioExporting;
-    });
-
-    const cancelExport = () => {
-      store.dispatch("CANCEL_AUDIO_EXPORT");
-    };
-
-    // 歌声合成エディターの初期化
-    onMounted(async () => {
-      await store.dispatch("SET_SCORE", {
-        score: {
-          tpqn: DEFAULT_TPQN,
-          tempos: [
-            {
-              position: 0,
-              bpm: DEFAULT_BPM,
-            },
-          ],
-          timeSignatures: [
-            {
-              measureNumber: 1,
-              beats: DEFAULT_BEATS,
-              beatType: DEFAULT_BEAT_TYPE,
-            },
-          ],
-          notes: [],
-        },
-      });
-
-      await store.dispatch("SET_VOLUME", { volume: 0.6 });
-      await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
-      await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
-        position: 0,
-      });
-      await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
-        position: 480 * 4 * 16,
-      });
-      return {};
-    });
-
-    // エンジン初期化後の処理
-    const unwatchIsEnginesReady = watch(
-      // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
-      () => props.isEnginesReady,
-      async (isEnginesReady) => {
-        if (!isEnginesReady) return;
-
-        await store.dispatch("SET_SINGER", {});
-
-        unwatchIsEnginesReady();
-      },
-      {
-        immediate: true,
-      }
-    );
-
-    return {
-      nowRendering,
-      nowAudioExporting,
-      cancelExport,
-    };
-  },
+const nowRendering = computed(() => {
+  return store.state.nowRendering;
 });
+const nowAudioExporting = computed(() => {
+  return store.state.nowAudioExporting;
+});
+
+const cancelExport = () => {
+  store.dispatch("CANCEL_AUDIO_EXPORT");
+};
+
+// 歌声合成エディターの初期化
+onMounted(async () => {
+  await store.dispatch("SET_SCORE", {
+    score: {
+      tpqn: DEFAULT_TPQN,
+      tempos: [
+        {
+          position: 0,
+          bpm: DEFAULT_BPM,
+        },
+      ],
+      timeSignatures: [
+        {
+          measureNumber: 1,
+          beats: DEFAULT_BEATS,
+          beatType: DEFAULT_BEAT_TYPE,
+        },
+      ],
+      notes: [],
+    },
+  });
+
+  await store.dispatch("SET_VOLUME", { volume: 0.6 });
+  await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+  await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
+    position: 0,
+  });
+  await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
+    position: 480 * 4 * 16,
+  });
+  return {};
+});
+
+// エンジン初期化後の処理
+const unwatchIsEnginesReady = watch(
+  // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
+  () => props.isEnginesReady,
+  async (isEnginesReady) => {
+    if (!isEnginesReady) return;
+
+    await store.dispatch("SET_SINGER", {});
+
+    unwatchIsEnginesReady();
+  },
+  {
+    immediate: true,
+  }
+);
 </script>
 
 <style scoped lang="scss">
