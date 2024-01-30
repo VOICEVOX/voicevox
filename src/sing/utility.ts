@@ -1,3 +1,28 @@
+import { CharacterInfo, StyleInfo, StyleType } from "@/type/preload";
+
+export const isSingingStyle = (styleInfo: StyleInfo) => {
+  return styleInfo.styleType === "humming" || styleInfo.styleType === "sing";
+};
+
+export const filterCharacterInfosByStyleType = (
+  characterInfos: CharacterInfo[],
+  styleType: StyleType | "singerLike"
+) => {
+  const withStylesFiltered = characterInfos.map((characterInfo) => {
+    const styles = characterInfo.metas.styles.filter(
+      styleType === "singerLike"
+        ? isSingingStyle
+        : (styleInfo) => styleInfo.styleType === styleType
+    );
+    return { ...characterInfo, styles };
+  });
+  const withoutEmptyStyles = withStylesFiltered.filter(
+    (characterInfo) => characterInfo.styles.length > 0
+  );
+
+  return withoutEmptyStyles;
+};
+
 export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;

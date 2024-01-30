@@ -48,6 +48,7 @@ import {
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
+import { isSingingStyle } from "@/sing/utility";
 
 function generateAudioKey() {
   return AudioKey(uuidv4());
@@ -476,12 +477,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
      * `singerLike`の場合はhummingかsingなスタイルのみを返す。
      */
     getter: (state, getters) => (styleType: "all" | "singerLike" | "talk") => {
-      const isSingingStyle = (styleInfo: StyleInfo) => {
-        return (
-          styleInfo.styleType === "humming" || styleInfo.styleType === "sing"
-        );
-      };
-
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
       if (allCharacterInfos.size === 0) return undefined;
       return (
