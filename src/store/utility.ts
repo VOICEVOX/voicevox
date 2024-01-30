@@ -498,6 +498,8 @@ export const isSingingStyle = (styleInfo: StyleInfo) => {
 
 /**
  * CharacterInfoの配列を、指定されたスタイルタイプでフィルタリングします。
+ * singerLikeはソング系スタイルのみを残します。
+ * talkはソング系スタイルをすべて除外します。
  */
 export const filterCharacterInfosByStyleType = (
   characterInfos: CharacterInfo[],
