@@ -2,7 +2,7 @@
   <menu-bar />
   <div class="sing-main">
     <tool-bar />
-    <engine-startup-popup :is-completed-initial-startup="true" />
+    <engine-startup-popup :is-completed-initial-startup="isEnginesReady" />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <q-spinner color="primary" size="2.5rem" />

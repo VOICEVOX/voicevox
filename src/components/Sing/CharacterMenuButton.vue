@@ -186,10 +186,6 @@ const userOrderedCharacterInfos = computed(() => {
   return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
 });
 
-const isLoading = computed(() => {
-  return userOrderedCharacterInfos.value == undefined;
-});
-
 const subMenuOpenFlags = ref(
   [...Array(userOrderedCharacterInfos.value?.length)].map(() => false)
 );
@@ -202,6 +198,34 @@ const reassignSubMenuOpen = debounce((idx: number) => {
   arr[idx] = true;
   subMenuOpenFlags.value = arr;
 }, 100);
+const selectedCharacterInfo = computed(() => {
+  if (
+    userOrderedCharacterInfos.value == undefined ||
+    store.state.singer == undefined
+  )
+    return undefined;
+  return store.getters.CHARACTER_INFO(
+    store.state.singer.engineId,
+    store.state.singer.styleId
+  );
+});
+
+const isLoading = computed(() => {
+  return selectedCharacterInfo.value == undefined;
+});
+
+const selectedSpeakerUuid = computed(() => {
+  return selectedCharacterInfo.value?.metas.speakerUuid;
+});
+
+const selectedStyleId = computed(
+  () =>
+    selectedCharacterInfo.value?.metas.styles.find(
+      (style) =>
+        style.styleId === store.state.singer?.styleId &&
+        style.engineId === store.state.singer?.engineId
+    )?.styleId
+);
 
 const selectedCharacterName = computed(() => {
   return selectedCharacterInfo.value?.metas.speakerName;
@@ -260,31 +284,6 @@ const getDefaultStyle = (speakerUuid: string) => {
 
   return defaultStyle;
 };
-
-const selectedCharacterInfo = computed(() => {
-  if (
-    userOrderedCharacterInfos.value == undefined ||
-    store.state.singer == undefined
-  )
-    return undefined;
-  return store.getters.CHARACTER_INFO(
-    store.state.singer.engineId,
-    store.state.singer.styleId
-  );
-});
-
-const selectedSpeakerUuid = computed(() => {
-  return selectedCharacterInfo.value?.metas.speakerUuid;
-});
-
-const selectedStyleId = computed(
-  () =>
-    selectedCharacterInfo.value?.metas.styles.find(
-      (style) =>
-        style.styleId === store.state.singer?.styleId &&
-        style.engineId === store.state.singer?.engineId
-    )?.styleId
-);
 
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
