@@ -260,46 +260,6 @@ onUnmounted(() => {
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
-.character-menu-toggle {
-  align-items: center;
-  display: flex;
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-  position: relative;
-}
-.character-avatar-icon {
-  display: block;
-  height: 100%;
-  object-fit: cover;
-  width: 100%;
-}
-
-.character-info {
-  align-items: start;
-  display: flex;
-  flex-direction: column;
-  margin-left: 0.5rem;
-  text-align: left;
-  justify-content: center;
-  white-space: nowrap;
-}
-.character-name {
-  font-size: 0.875rem;
-  font-weight: bold;
-  line-height: 1rem;
-  padding-top: 0.5rem;
-}
-
-.character-style {
-  color: #999;
-  font-size: 0.75rem;
-  font-weight: bold;
-  line-height: 1rem;
-}
-
-.character-menu-dropdown-icon {
-  color: rgba(0, 0, 0, 0.54);
-  margin-left: 0.25rem;
-}
 .sing-toolbar {
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;

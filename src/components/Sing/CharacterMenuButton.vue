@@ -1,6 +1,6 @@
 <template>
   <q-btn flat class="q-pa-none">
-    <div class="character-menu-toggle">
+    <div class="selected-character">
       <q-avatar
         v-if="selectedStyleIconPath"
         class="character-avatar"
@@ -282,18 +282,46 @@ const engineIcons = computed(() =>
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
-.character-name {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  padding: 1px 24px 1px 8px;
-  background-image: linear-gradient(
-    90deg,
-    rgba(colors.$background-rgb, 0.5) 0%,
-    rgba(colors.$background-rgb, 0.5) 75%,
-    transparent 100%
-  );
-  overflow-wrap: anywhere;
+.selected-character {
+  align-items: center;
+  display: flex;
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  position: relative;
+
+  .character-avatar-icon {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+  }
+
+  .character-info {
+    align-items: start;
+    display: flex;
+    flex-direction: column;
+    margin-left: 0.5rem;
+    text-align: left;
+    justify-content: center;
+    white-space: nowrap;
+  }
+  .character-name {
+    font-size: 0.875rem;
+    font-weight: bold;
+    line-height: 1rem;
+    padding-top: 0.5rem;
+  }
+
+  .character-style {
+    color: #999;
+    font-size: 0.75rem;
+    font-weight: bold;
+    line-height: 1rem;
+  }
+
+  .character-menu-dropdown-icon {
+    color: rgba(0, 0, 0, 0.54);
+    margin-left: 0.25rem;
+  }
 }
 
 .character-menu {
@@ -318,6 +346,19 @@ const engineIcons = computed(() =>
     height: 13px;
     bottom: -6px;
     right: -6px;
+  }
+  .character-name {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    padding: 1px 24px 1px 8px;
+    background-image: linear-gradient(
+      90deg,
+      rgba(colors.$background-rgb, 0.5) 0%,
+      rgba(colors.$background-rgb, 0.5) 75%,
+      transparent 100%
+    );
+    overflow-wrap: anywhere;
   }
 }
 </style>
