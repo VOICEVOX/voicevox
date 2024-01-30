@@ -21,7 +21,6 @@
     </div>
     <input
       v-if="showLyricInput"
-      ref="lyricInputRef"
       v-model.lazy.trim="lyric"
       v-focus
       class="note-lyric-input"
@@ -74,7 +73,6 @@ const emit =
 
 const store = useStore();
 const state = store.state;
-const lyricInputRef = ref(null);
 const tpqn = computed(() => state.score.tpqn);
 const zoomX = computed(() => state.sequencerZoomX);
 const zoomY = computed(() => state.sequencerZoomY);
