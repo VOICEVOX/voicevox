@@ -216,7 +216,7 @@ import {
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
-import { filterCharacterInfosByStyleType } from "@/sing/utility";
+import { filterCharacterInfosByStyleType } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 const props =

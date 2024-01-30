@@ -1,7 +1,13 @@
 import path from "path";
 import { Platform } from "quasar";
 import { diffArrays } from "diff";
-import { ToolbarButtonTagType, isMac } from "@/type/preload";
+import {
+  CharacterInfo,
+  StyleInfo,
+  StyleType,
+  ToolbarButtonTagType,
+  isMac,
+} from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
@@ -478,3 +484,46 @@ export const isOnCommandOrCtrlKeyDown = (event: {
   metaKey: boolean;
   ctrlKey: boolean;
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
+
+/**
+ * スタイルがシングエディタで利用可能なスタイルかどうかを判定します。
+ */
+export const isSingingStyle = (styleInfo: StyleInfo) => {
+  return (
+    styleInfo.styleType === "humming" ||
+    styleInfo.styleType === "sing" ||
+    styleInfo.styleType === "sing_teacher"
+  );
+};
+
+/**
+ * CharacterInfoの配列を、指定されたスタイルタイプでフィルタリングします。
+ */
+export const filterCharacterInfosByStyleType = (
+  characterInfos: CharacterInfo[],
+  styleType: StyleType | "singerLike"
+): CharacterInfo[] => {
+  const withStylesFiltered: CharacterInfo[] = characterInfos.map(
+    (characterInfo) => {
+      const styles = characterInfo.metas.styles.filter((styleInfo) => {
+        // singerLike：歌う系のスタイル
+        if (styleType === "singerLike") {
+          return isSingingStyle(styleInfo);
+        }
+        // talk：singerLike以外のスタイル。
+        // styleTypeが存在しない（マルチエンジン）場合があるので、「singerLike以外」をtalkとして扱っている。
+        if (styleType === "talk") {
+          return !isSingingStyle(styleInfo);
+        }
+        return styleInfo.styleType === styleType;
+      });
+      return { ...characterInfo, metas: { ...characterInfo.metas, styles } };
+    }
+  );
+
+  const withoutEmptyStyles = withStylesFiltered.filter(
+    (characterInfo) => characterInfo.metas.styles.length > 0
+  );
+
+  return withoutEmptyStyles;
+};
