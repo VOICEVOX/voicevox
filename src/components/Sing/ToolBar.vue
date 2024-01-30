@@ -1,29 +1,6 @@
 <template>
   <div class="sing-toolbar">
-    <character-menu-button>
-      <div class="character-menu-toggle">
-        <q-avatar
-          v-if="selectedStyleIconPath"
-          class="character-avatar"
-          size="3.5rem"
-        >
-          <img :src="selectedStyleIconPath" class="character-avatar-icon" />
-        </q-avatar>
-        <div class="character-info">
-          <div class="character-name">
-            {{ selectedCharacterName }}
-          </div>
-          <div class="character-style">
-            {{ selectedCharacterStyleDescription }}
-          </div>
-        </div>
-        <q-icon
-          name="arrow_drop_down"
-          size="sm"
-          class="character-menu-dropdown-icon"
-        />
-      </div>
-    </character-menu-button>
+    <character-menu-button />
     <div class="sing-player">
       <q-btn
         flat
@@ -120,40 +97,6 @@ import CharacterMenuButton from "@/components/Sing/CharacterMenuButton.vue";
 import { getStyleDescription } from "@/sing/viewHelper";
 
 const store = useStore();
-
-const userOrderedCharacterInfos = computed(() =>
-  store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike")
-);
-const selectedCharacterInfo = computed(() => {
-  if (!userOrderedCharacterInfos.value || !store.state.singer) {
-    return undefined;
-  }
-  return store.getters.CHARACTER_INFO(
-    store.state.singer.engineId,
-    store.state.singer.styleId
-  );
-});
-const selectedCharacterName = computed(() => {
-  return selectedCharacterInfo.value?.metas.speakerName;
-});
-const selectedCharacterStyleDescription = computed(() => {
-  const style = selectedCharacterInfo.value?.metas.styles.find((style) => {
-    return (
-      style.styleId === store.state.singer?.styleId &&
-      style.engineId === store.state.singer?.engineId
-    );
-  });
-  return style != undefined ? getStyleDescription(style) : "";
-});
-const selectedStyleIconPath = computed(() => {
-  const styles = selectedCharacterInfo.value?.metas.styles;
-  return styles?.find((style) => {
-    return (
-      style.styleId === store.state.singer?.styleId &&
-      style.engineId === store.state.singer?.engineId
-    );
-  })?.iconPath;
-});
 
 const bpmInputBuffer = ref(0);
 const beatsInputBuffer = ref(0);

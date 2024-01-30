@@ -1,6 +1,27 @@
 <template>
   <q-btn flat class="q-pa-none">
-    <slot></slot>
+    <div class="character-menu-toggle">
+      <q-avatar
+        v-if="selectedStyleIconPath"
+        class="character-avatar"
+        size="3.5rem"
+      >
+        <img :src="selectedStyleIconPath" class="character-avatar-icon" />
+      </q-avatar>
+      <div class="character-info">
+        <div class="character-name">
+          {{ selectedCharacterName }}
+        </div>
+        <div class="character-style">
+          {{ selectedCharacterStyleDescription }}
+        </div>
+      </div>
+      <q-icon
+        name="arrow_drop_down"
+        size="sm"
+        class="character-menu-dropdown-icon"
+      />
+    </div>
     <q-menu
       class="character-menu"
       transition-show="none"
@@ -160,6 +181,28 @@ const reassignSubMenuOpen = debounce((idx: number) => {
   arr[idx] = true;
   subMenuOpenFlags.value = arr;
 }, 100);
+
+const selectedCharacterName = computed(() => {
+  return selectedCharacterInfo.value?.metas.speakerName;
+});
+const selectedCharacterStyleDescription = computed(() => {
+  const style = selectedCharacterInfo.value?.metas.styles.find((style) => {
+    return (
+      style.styleId === store.state.singer?.styleId &&
+      style.engineId === store.state.singer?.engineId
+    );
+  });
+  return style != undefined ? getStyleDescription(style) : "";
+});
+const selectedStyleIconPath = computed(() => {
+  const styles = selectedCharacterInfo.value?.metas.styles;
+  return styles?.find((style) => {
+    return (
+      style.styleId === store.state.singer?.styleId &&
+      style.engineId === store.state.singer?.engineId
+    );
+  })?.iconPath;
+});
 
 const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
   const engineId = store.state.engineIds.find((_engineId) =>
