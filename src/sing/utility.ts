@@ -10,14 +10,22 @@ export const filterCharacterInfosByStyleType = (
 ): CharacterInfo[] => {
   const withStylesFiltered: CharacterInfo[] = characterInfos.map(
     (characterInfo) => {
-      const styles = characterInfo.metas.styles.filter(
-        styleType === "singerLike"
-          ? isSingingStyle
-          : (styleInfo) => styleInfo.styleType === styleType
-      );
+      const styles = characterInfo.metas.styles.filter((styleInfo) => {
+        // singerLike：歌う系のスタイル
+        if (styleType === "singerLike") {
+          return isSingingStyle(styleInfo);
+        }
+        // talk：singerLike以外のスタイル。
+        // styleTypeが存在しない（マルチエンジン）場合があるので、「singerLike以外」をtalkとして扱っている。
+        if (styleType === "talk") {
+          return !isSingingStyle(styleInfo);
+        }
+        return styleInfo.styleType === styleType;
+      });
       return { ...characterInfo, metas: { ...characterInfo.metas, styles } };
     }
   );
+
   const withoutEmptyStyles = withStylesFiltered.filter(
     (characterInfo) => characterInfo.metas.styles.length > 0
   );
