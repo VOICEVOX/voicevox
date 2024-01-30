@@ -53,16 +53,15 @@
               :height="gridCellHeight"
               :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
             />
-            <!-- オクターブのライン / オクターブのみに引きたい -->
             <line
-              v-for="(keyInfo, index) in keyInfos"
-              :key="index"
+              v-for="octaveKeyIndex in octaveKeyIndexes"
+              :key="octaveKeyIndex"
               x1="0"
-              :x2="gridCellWidth"
-              :y1="gridCellHeight * index"
-              :y2="gridCellHeight * index"
+              x2="100%"
+              :y1="gridCellHeight * octaveKeyIndex + 0.5"
+              :y2="gridCellHeight * octaveKeyIndex + 0.5"
               stroke-width="1"
-              :class="`sequencer-grid-p-line-${keyInfo.pitch.toLowerCase()}`"
+              class="sequencer-grid-octave-line"
             />
           </pattern>
           <pattern
@@ -80,14 +79,6 @@
               y2="100%"
               stroke-width="1"
               :class="`sequencer-grid-${n === 1 ? 'measure' : 'beat'}-line`"
-            />
-            <line
-              :x1="beatWidth * beatsPerMeasure"
-              :x2="beatWidth * beatsPerMeasure"
-              y1="0"
-              y2="100%"
-              stroke-width="1"
-              class="sequencer-grid-measure-line"
             />
           </pattern>
         </defs>
@@ -301,6 +292,15 @@ const gridWidth = computed(() => {
 });
 const gridHeight = computed(() => {
   return gridCellHeight.value * keyInfos.length;
+});
+// オクターブ表示
+const octaveKeyIndexes = computed(() => {
+  return keyInfos.reduce((indexes, keyInfo, index) => {
+    if (keyInfo.pitch === "C") {
+      indexes.push(index + 1);
+    }
+    return indexes;
+  }, [] as number[]);
 });
 // スクロール位置
 const scrollX = ref(0);
@@ -1049,6 +1049,7 @@ onDeactivated(() => {
   grid-row: 1;
   grid-column: 1;
   background: colors.$background;
+  border-top: 1px solid colors.$surface;
 }
 
 .sequencer-ruler {
@@ -1084,17 +1085,17 @@ onDeactivated(() => {
   stroke: colors.$sequencer-main-divider;
 }
 
+.sequencer-grid-octave-line {
+  backface-visibility: hidden;
+  stroke: colors.$sequencer-main-divider;
+}
+
 .sequencer-grid-cell-white {
-  fill: colors.$sequencer-white-cell;
+  fill: colors.$sequencer-whitekey-cell;
 }
 
 .sequencer-grid-cell-black {
-  fill: colors.$sequencer-black-cell;
-}
-
-.sequencer-grid-pitch-line-c {
-  backface-visibility: hidden;
-  stroke: colors.$sequencer-main-divider;
+  fill: colors.$sequencer-blackkey-cell;
 }
 
 .sequencer-grid-measure-line {

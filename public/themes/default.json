@@ -14,9 +14,9 @@
     "text-splitter-hover": "#CCDDFF",
     "active-point-focus": "#E0EAFF",
     "active-point-hover": "#EEF3FF",
-    "sequencer-white-cell": "#F5F7F5",
-    "sequencer-black-cell": "#EAECEA",
-    "sequencer-main-divider": "#CCCCCC",
+    "sequencer-whitekey-cell": "#F5F7F5",
+    "sequencer-blackkey-cell": "#EAECEA",
+    "sequencer-main-divider": "#B0B0B0",
     "sequencer-sub-divider": "#DDDDDD",
     "sequencer-white-key": "#FFFFFF",
     "sequencer-black-key": "#333333"

@@ -31,8 +31,8 @@
             v-for="measureInfo in measureInfos"
             :key="measureInfo.number"
             font-size="12"
-            :x="measureInfo.x + 6"
-            y="18"
+            :x="measureInfo.x + 4"
+            y="20"
             class="sequencer-ruler-measure-number"
           >
             {{ measureInfo.number }}
@@ -221,7 +221,7 @@ onUnmounted(() => {
 }
 
 .sequencer-ruler-measure-number {
-  fill: rgba(colors.$display-rgb, 0.6);
+  fill: colors.$display;
 }
 
 .sequencer-ruler-measure-line {
