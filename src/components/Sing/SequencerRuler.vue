@@ -204,8 +204,8 @@ onUnmounted(() => {
   top: 0;
   width: 100%;
   height: 100%;
-  border-top: 1px solid colors.$surface;
-  border-bottom: 1px solid colors.$surface;
+  border-top: 1px solid colors.$sequencer-sub-divider;
+  border-bottom: 1px solid colors.$sequencer-sub-divider;
 }
 
 .sequencer-ruler-playhead {

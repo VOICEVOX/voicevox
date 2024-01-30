@@ -1041,7 +1041,8 @@ onDeactivated(() => {
   grid-row: 1;
   grid-column: 1;
   background: colors.$background;
-  border-top: 1px solid colors.$surface;
+  border-top: 1px solid colors.$sequencer-sub-divider;
+  border-bottom: 1px solid colors.$sequencer-sub-divider;
 }
 
 .sequencer-ruler {
@@ -1069,7 +1070,7 @@ onDeactivated(() => {
 
 .sequencer-grid-cell {
   display: block;
-  stroke: colors.$sequencer-sub-divider;
+  stroke: rgba(colors.$sequencer-sub-divider-rgb, 0.3);
   stroke-width: 1;
 }
 
