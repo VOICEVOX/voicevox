@@ -94,7 +94,6 @@ import {
   isValidBpm,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton.vue";
-import { getStyleDescription } from "@/sing/viewHelper";
 
 const store = useStore();
 

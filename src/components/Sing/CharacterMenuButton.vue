@@ -1,6 +1,23 @@
 <template>
   <q-btn flat class="q-pa-none">
-    <div class="selected-character">
+    <div v-if="isLoading" class="selected-character">
+      <q-skeleton class="character-avatar" type="QAvatar" size="52px" />
+      <div class="character-info">
+        <q-skeleton
+          class="character-name skeleton"
+          type="rect"
+          width="65px"
+          height="15px"
+        />
+        <q-skeleton
+          class="character-style"
+          type="rect"
+          width="110px"
+          height="12px"
+        />
+      </div>
+    </div>
+    <div v-else class="selected-character">
       <q-avatar
         v-if="selectedStyleIconPath"
         class="character-avatar"
@@ -169,6 +186,10 @@ const userOrderedCharacterInfos = computed(() => {
   return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
 });
 
+const isLoading = computed(() => {
+  return userOrderedCharacterInfos.value == undefined;
+});
+
 const subMenuOpenFlags = ref(
   [...Array(userOrderedCharacterInfos.value?.length)].map(() => false)
 );
@@ -309,6 +330,11 @@ const engineIcons = computed(() =>
     font-weight: bold;
     line-height: 1rem;
     padding-top: 0.5rem;
+
+    &.skeleton {
+      margin-top: 0.4rem;
+      margin-bottom: 0.2rem;
+    }
   }
 
   .character-style {
