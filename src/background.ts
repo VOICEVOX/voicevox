@@ -145,6 +145,11 @@ if (!fs.existsSync(vvppEngineDir)) {
   fs.mkdirSync(vvppEngineDir);
 }
 
+const exportEngineInfoFilename = path.join(
+  app.getPath("userData"),
+  "runtime-info.json"
+);
+
 const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   const engineId = engineInfo.uuid;
   log.error(`ENGINE ${engineId} ERROR: ${error}`);
@@ -167,6 +172,7 @@ const engineManager = new EngineManager({
   defaultEngineDir: appDirPath,
   vvppEngineDir,
   onEngineProcessError,
+  exportEngineInfoFilename,
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
 

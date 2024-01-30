@@ -5,7 +5,6 @@ import treeKill from "tree-kill";
 import shlex from "shlex";
 
 import AsyncLock from "async-lock";
-import fsExtra from "fs-extra";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
@@ -63,6 +62,7 @@ export class EngineManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
+  exportEngineInfoFilename: string;
 
   defaultEngineInfos: EngineInfo[] = [];
   additionalEngineInfos: EngineInfo[] = [];
@@ -75,17 +75,19 @@ export class EngineManager {
     defaultEngineDir,
     vvppEngineDir,
     onEngineProcessError,
+    exportEngineInfoFilename,
   }: {
     configManager: BaseConfigManager;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
+    exportEngineInfoFilename: string;
   }) {
     this.configManager = configManager;
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
-
+    this.exportEngineInfoFilename = exportEngineInfoFilename;
     this.engineProcessContainers = {};
   }
 
@@ -552,21 +554,17 @@ export class EngineManager {
     return "ok";
   }
 
-  /**
-   * サードパーティ向けの設定ファイルを書き出す
-   */
   private lock = new AsyncLock({
     timeout: 1000,
   });
   private lockKey = "write";
 
+  /**
+   * サードパーティ向けの設定ファイルを書き出す
+   */
   async writeEngineInfoFor3rdParty() {
     await this.lock.acquire(this.lockKey, async () => {
-      const exportEngineInfoFilename = path.join(
-        app.getPath("userData"),
-        "runtime-info.json"
-      );
-      log.info(`Update list of engines...` + exportEngineInfoFilename);
+      log.info(`Engine information file (runtime-info.json) has been updated.`);
 
       const engineInfos = this.fetchEngineInfos();
       const engineInfoList = engineInfos.map((engineInfo) => {
@@ -583,7 +581,10 @@ export class EngineManager {
       });
 
       try {
-        await fsExtra.writeJSON(exportEngineInfoFilename, engineInfoList);
+        await fs.promises.writeFile(
+          this.exportEngineInfoFilename,
+          JSON.stringify(engineInfoList)
+        );
       } catch (e) {
         // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。
         // サードパーティ向けなのでVOICEVOX側には通知せず、エラー記録して継続
