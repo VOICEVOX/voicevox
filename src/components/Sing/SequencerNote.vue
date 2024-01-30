@@ -11,13 +11,13 @@
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
   >
-    <div class="note-lyric" @mousedown="onLyricMouseDown">
-      {{ lyric }}
-    </div>
     <div class="note-bar" @mousedown="onBarMouseDown">
       <div class="note-left-edge" @mousedown="onLeftEdgeMouseDown"></div>
       <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
       <context-menu ref="contextMenu" :menudata="contextMenuData" />
+    </div>
+    <div class="note-lyric" @mousedown="onLyricMouseDown">
+      {{ lyric }}
     </div>
     <input
       v-if="showLyricInput"
@@ -47,8 +47,9 @@ import { MenuItemButton } from "@/components/BaseMenuBar.vue";
 type NoteState = "NORMAL" | "SELECTED" | "OVERLAPPING";
 
 const vFocus = {
-  mounted(el: HTMLElement) {
+  mounted(el: HTMLInputElement) {
     el.focus();
+    el.select();
   },
 };
 
@@ -145,6 +146,7 @@ const onLyricMouseDown = (event: MouseEvent) => {
 };
 
 const onLyricInputKeyDown = (event: KeyboardEvent) => {
+  // タブキーで次のノート入力に移動
   if (event.key === "Tab") {
     event.preventDefault();
     const noteId = props.note.id;
@@ -162,7 +164,12 @@ const onLyricInputKeyDown = (event: KeyboardEvent) => {
     const nextNoteId = notes[index + (event.shiftKey ? -1 : 1)].id;
     store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
   }
-  if (event.key === "Enter") {
+  // IME変換確定時のEnterを無視する
+  if (event.key === "Enter" && event.isComposing) {
+    return;
+  }
+  // IME変換でなければ入力モードを終了
+  if (event.key === "Enter" && !event.isComposing) {
     store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
   }
 };
@@ -205,19 +212,18 @@ const onLyricInputBlur = () => {
 
 .note-lyric {
   position: absolute;
-  left: 0;
-  bottom: calc(100% - 3px);
-  min-width: 20px;
-  padding: 0 1px 2px;
-  background: white;
-  color: colors.$display;
-  border: 1px solid hsl(130, 0%, 91%);
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: bold;
-  font-feature-settings: "palt" 1;
-  letter-spacing: 0.05em;
+  left: 0.125rem;
+  bottom: 0;
+  min-width: 2rem;
+  padding: 0;
+  background: transparent;
+  color: colors.$display-on-primary;
+  font-size: 1rem;
+  font-weight: 700;
+  text-shadow: -1px -1px 0 #{colors.$surface}, 1px -1px 0 #{colors.$surface},
+    -1px 1px 0 #{colors.$surface}, 1px 1px 0 #{colors.$surface};
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .note-bar {
@@ -250,9 +256,10 @@ const onLyricInputBlur = () => {
 
 .note-lyric-input {
   position: absolute;
-  top: 1px;
-  width: 40px;
+  bottom: 0;
+  font-weight: 700;
+  width: 2rem;
   border: 1px solid hsl(33, 100%, 73%);
-  border-radius: 3px;
+  border-radius: 0.25rem;
 }
 </style>
