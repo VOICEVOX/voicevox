@@ -7,17 +7,19 @@ export const isSingingStyle = (styleInfo: StyleInfo) => {
 export const filterCharacterInfosByStyleType = (
   characterInfos: CharacterInfo[],
   styleType: StyleType | "singerLike"
-) => {
-  const withStylesFiltered = characterInfos.map((characterInfo) => {
-    const styles = characterInfo.metas.styles.filter(
-      styleType === "singerLike"
-        ? isSingingStyle
-        : (styleInfo) => styleInfo.styleType === styleType
-    );
-    return { ...characterInfo, styles };
-  });
+): CharacterInfo[] => {
+  const withStylesFiltered: CharacterInfo[] = characterInfos.map(
+    (characterInfo) => {
+      const styles = characterInfo.metas.styles.filter(
+        styleType === "singerLike"
+          ? isSingingStyle
+          : (styleInfo) => styleInfo.styleType === styleType
+      );
+      return { ...characterInfo, metas: { ...characterInfo.metas, styles } };
+    }
+  );
   const withoutEmptyStyles = withStylesFiltered.filter(
-    (characterInfo) => characterInfo.styles.length > 0
+    (characterInfo) => characterInfo.metas.styles.length > 0
   );
 
   return withoutEmptyStyles;
