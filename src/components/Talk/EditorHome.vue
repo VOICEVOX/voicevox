@@ -7,45 +7,10 @@
     <q-page-container>
       <q-page class="main-row-panes">
         <progress-view />
+        <engine-startup-popup
+          :is-completed-initial-startup="isCompletedInitialStartup"
+        />
 
-        <!-- TODO: 複数エンジン対応 -->
-        <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
-        <div v-if="allEngineState === 'FAILED_STARTING'" class="waiting-engine">
-          <div>
-            エンジンの起動に失敗しました。エンジンの再起動をお試しください。
-          </div>
-        </div>
-        <div
-          v-else-if="
-            !isCompletedInitialStartup || allEngineState === 'STARTING'
-          "
-          class="waiting-engine"
-        >
-          <div>
-            <q-spinner color="primary" size="2.5rem" />
-            <div class="q-mt-xs">
-              {{
-                allEngineState === "STARTING"
-                  ? "エンジン起動中・・・"
-                  : "データ準備中・・・"
-              }}
-            </div>
-
-            <template v-if="isEngineWaitingLong">
-              <q-separator spaced />
-              エンジン起動に時間がかかっています。<br />
-              <q-btn
-                v-if="isMultipleEngine"
-                outline
-                :disable="reloadingLocked"
-                @click="reloadAppWithMultiEngineOffMode"
-              >
-                マルチエンジンをオフにして再読み込みする</q-btn
-              >
-              <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
-            </template>
-          </div>
-        </div>
         <q-splitter
           horizontal
           reverse
@@ -207,7 +172,8 @@ import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.v
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import ProgressView from "@/components/ProgressView.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
-import { AudioItem, EngineState } from "@/store/type";
+import EngineStartupPopup from "@/components/EngineStartupPopup.vue";
+import { AudioItem } from "@/store/type";
 import {
   AudioKey,
   HotkeyActionType,
@@ -228,9 +194,6 @@ const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-const reloadingLocked = computed(() => store.state.reloadingLock);
-
-const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
 // hotkeys handled by Mousetrap
 const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
@@ -593,47 +556,6 @@ const unwatchIsEnginesReady = watch(
   }
 );
 
-// エンジン待機
-// TODO: 個別のエンジンの状態をUIで確認できるようにする
-const allEngineState = computed(() => {
-  const engineStates = store.state.engineStates;
-
-  let lastEngineState: EngineState | undefined = undefined;
-
-  // 登録されているすべてのエンジンについて状態を確認する
-  for (const engineId of store.state.engineIds) {
-    const engineState: EngineState | undefined = engineStates[engineId];
-    if (engineState == undefined)
-      throw new Error(`No such engineState set: engineId == ${engineId}`);
-
-    // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
-    if (engineState === "STARTING") {
-      return engineState;
-    }
-
-    lastEngineState = engineState;
-  }
-
-  return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
-});
-
-const isEngineWaitingLong = ref<boolean>(false);
-let engineTimer: number | undefined = undefined;
-watch(allEngineState, (newEngineState) => {
-  if (engineTimer != undefined) {
-    clearTimeout(engineTimer);
-    engineTimer = undefined;
-  }
-  if (newEngineState === "STARTING") {
-    isEngineWaitingLong.value = false;
-    engineTimer = window.setTimeout(() => {
-      isEngineWaitingLong.value = true;
-    }, 30000);
-  } else {
-    isEngineWaitingLong.value = false;
-  }
-});
-
 // 代替ポート情報の変更を監視
 watch(
   () => [store.state.altPortInfos, store.state.isVuexReady],
@@ -658,17 +580,6 @@ watch(
     }
   }
 );
-
-const reloadAppWithMultiEngineOffMode = () => {
-  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
-    closeOrReload: "reload",
-    isMultiEngineOffMode: true,
-  });
-};
-
-const openQa = () => {
-  window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
-};
 
 // ライセンス表示
 const isHelpDialogOpenComputed = computed({
@@ -728,8 +639,8 @@ const isCharacterOrderDialogOpenComputed = computed({
 const orderedTalkCharacterInfos = computed(() => {
   const userOrderedCharacterInfos =
     store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
-  if (userOrderedCharacterInfos == undefined)
-    throw new Error("userOrderedCharacterInfos == undefined");
+  if (userOrderedCharacterInfos == undefined) return [];
+  // throw new Error("userOrderedCharacterInfos == undefined");
   return userOrderedCharacterInfos;
 });
 const isDefaultStyleSelectDialogOpenComputed = computed({
@@ -861,24 +772,6 @@ const onAudioCellPaneClick = () => {
   > .scroll {
     width: unset !important;
     overflow: hidden;
-  }
-}
-
-.waiting-engine {
-  background-color: rgba(colors.$display-rgb, 0.15);
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-
-  > div {
-    color: colors.$display;
-    background: colors.$surface;
-    border-radius: 6px;
-    padding: 14px;
   }
 }
 
