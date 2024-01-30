@@ -338,7 +338,7 @@ const baseStyleInfo: StyleInfo = {
   iconPath: "path/to/icon",
   portraitPath: "path/to/portrait",
   voiceSamplePaths: [],
-}
+};
 const characterInfos: CharacterInfo[] = [
   {
     portraitPath: "path/to/portrait",
@@ -385,7 +385,10 @@ const characterInfos: CharacterInfo[] = [
 describe("filterCharacterInfosByStyleType", () => {
   for (const styleType of ["humming", "sing"] as const) {
     test(`${styleType}のキャラクターが取得できる`, () => {
-      const filtered = filterCharacterInfosByStyleType(characterInfos, styleType);
+      const filtered = filterCharacterInfosByStyleType(
+        characterInfos,
+        styleType
+      );
       // talkしかないキャラクターは除外される
       expect(filtered.length).toBe(1);
       // styleTypeが指定したものになっている
@@ -394,7 +397,7 @@ describe("filterCharacterInfosByStyleType", () => {
       expect(filtered[0].metas.styles.length).toBe(1);
     });
   }
-  
+
   test(`singerLikeを指定するとsingとhummingのキャラクターが取得できる`, () => {
     const filtered = filterCharacterInfosByStyleType(
       characterInfos,
@@ -403,7 +406,7 @@ describe("filterCharacterInfosByStyleType", () => {
     expect(filtered.length).toBe(1);
     expect(filtered[0].metas.styles.length).toBe(2);
   });
-  
+
   test(`talkを指定するとsingerLike以外のキャラクターが取得できる`, () => {
     const filtered = filterCharacterInfosByStyleType(characterInfos, "talk");
     expect(filtered.length).toBe(2);
