@@ -53,6 +53,17 @@
               :height="gridCellHeight"
               :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
             />
+            <!-- オクターブのライン / オクターブのみに引きたい -->
+            <line
+              v-for="(keyInfo, index) in keyInfos"
+              :key="index"
+              x1="0"
+              :x2="gridCellWidth"
+              :y1="gridCellHeight * index"
+              :y2="gridCellHeight * index"
+              stroke-width="1"
+              :class="`sequencer-grid-p-line-${keyInfo.pitch.toLowerCase()}`"
+            />
           </pattern>
           <pattern
             id="sequencer-grid-measure"
@@ -1037,9 +1048,7 @@ onDeactivated(() => {
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: #fff;
-  border-bottom: 1px solid #ccc;
-  border-right: 1px solid #ccc;
+  background: colors.$background;
 }
 
 .sequencer-ruler {
@@ -1067,26 +1076,35 @@ onDeactivated(() => {
 
 .sequencer-grid-cell {
   display: block;
-  stroke: #e8e8e8;
+  stroke: colors.$sequencer-sub-divider;
   stroke-width: 1;
 }
 
+.sequencer-grid-octave-cell {
+  stroke: colors.$sequencer-main-divider;
+}
+
 .sequencer-grid-cell-white {
-  fill: #fff;
+  fill: colors.$sequencer-white-cell;
 }
 
 .sequencer-grid-cell-black {
-  fill: #f2f2f2;
+  fill: colors.$sequencer-black-cell;
+}
+
+.sequencer-grid-pitch-line-c {
+  backface-visibility: hidden;
+  stroke: colors.$sequencer-main-divider;
 }
 
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
-  stroke: #b0b0b0;
+  stroke: colors.$sequencer-main-divider;
 }
 
 .sequencer-grid-beat-line {
   backface-visibility: hidden;
-  stroke: #d0d0d0;
+  stroke: colors.$sequencer-sub-divider;
 }
 
 .sequencer-guideline {
