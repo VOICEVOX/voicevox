@@ -72,7 +72,7 @@ export interface SupportedFeatures {
      * @type {boolean}
      * @memberof SupportedFeatures
      */
-    sing: boolean;
+    sing?: boolean;
     /**
      * 
      * @type {boolean}
@@ -94,7 +94,6 @@ export function instanceOfSupportedFeatures(value: object): boolean {
     isInstance = isInstance && "adjustVolumeScale" in value;
     isInstance = isInstance && "interrogativeUpspeak" in value;
     isInstance = isInstance && "synthesisMorphing" in value;
-    isInstance = isInstance && "sing" in value;
 
     return isInstance;
 }
@@ -117,7 +116,7 @@ export function SupportedFeaturesFromJSONTyped(json: any, ignoreDiscriminator: b
         'adjustVolumeScale': json['adjust_volume_scale'],
         'interrogativeUpspeak': json['interrogative_upspeak'],
         'synthesisMorphing': json['synthesis_morphing'],
-        'sing': json['sing'],
+        'sing': !exists(json, 'sing') ? undefined : json['sing'],
         'manageLibrary': !exists(json, 'manage_library') ? undefined : json['manage_library'],
     };
 }
