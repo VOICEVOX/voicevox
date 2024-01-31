@@ -307,10 +307,18 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   LOAD_CHARACTER: {
     action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
-      const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineId,
-      })
-        .then((instance) => instance.invoke("speakersSpeakersGet")({}))
+      const { speakers, singers } = await dispatch(
+        "INSTANTIATE_ENGINE_CONNECTOR",
+        {
+          engineId,
+        }
+      )
+        .then(async (instance) => {
+          return {
+            speakers: await instance.invoke("speakersSpeakersGet")({}),
+            singers: await instance.invoke("singersSingersGet")({}),
+          };
+        })
         .catch((error) => {
           window.electron.logError(error, `Failed to get speakers.`);
           throw error;
@@ -347,19 +355,39 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         return styles;
       };
       const getSpeakerInfo = async function (speaker: Speaker) {
-        const speakerInfo = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        })
-          .then((instance) =>
-            instance.invoke("speakerInfoSpeakerInfoGet")({
+        // 同じIDの歌手がいる場合は歌手情報を取得し、スタイルをマージする
+        // FIXME: ソングのみのキャラも考慮する
+        const singer = singers.find(
+          (singer) => singer.speakerUuid === speaker.speakerUuid
+        );
+        const { speakerInfo, singerInfo } = await dispatch(
+          "INSTANTIATE_ENGINE_CONNECTOR",
+          {
+            engineId,
+          }
+        )
+          .then(async (instance) => {
+            const speakerInfo = await instance.invoke(
+              "speakerInfoSpeakerInfoGet"
+            )({
               speakerUuid: speaker.speakerUuid,
-            })
-          )
+            });
+            let singerInfo: SpeakerInfo | undefined = undefined;
+            if (singer) {
+              singerInfo = await instance.invoke("singerInfoSingerInfoGet")({
+                speakerUuid: singer.speakerUuid,
+              });
+            }
+            return { speakerInfo, singerInfo };
+          })
           .catch((error) => {
             window.electron.logError(error, `Failed to get speakers.`);
             throw error;
           });
         const styles = getStyles(speaker, speakerInfo);
+        if (singer && singerInfo) {
+          styles.push(...getStyles(singer, singerInfo));
+        }
         const characterInfo: CharacterInfo = {
           portraitPath: base64ImageToUri(speakerInfo.portrait),
           metas: {
