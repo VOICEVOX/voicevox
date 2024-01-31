@@ -187,7 +187,7 @@ sudo apt install libfuse2
 VOICEVOX で作成された音声は、クレジット表記をして頂ければ商用・非商用問わず使用できます。  
 詳しくは VOICEVOX の利用規約及び各キャラクターの利用規約をご確認ください。
 
-### Q. 音声の中間表現(AudioQuery)を VOICEVOX 以外の音声合成に利用した場合はクレジット記載が必要ですか？
+### Q. 音声の中間表現(AudioQuery/FrameAudioQuery)を VOICEVOX 以外の音声合成に利用した場合はクレジット記載が必要ですか？
 
 必要です。
 
