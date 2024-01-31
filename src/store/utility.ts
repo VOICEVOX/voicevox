@@ -500,6 +500,7 @@ export const isSingingStyle = (styleInfo: StyleInfo) => {
  * CharacterInfoの配列を、指定されたスタイルタイプでフィルタリングします。
  * singerLikeはソング系スタイルのみを残します。
  * talkはソング系スタイルをすべて除外します。
+ * FIXME: 上記以外のフィルタリング機能はテストでしか使っていないので、しばらくそのままなら削除する
  */
 export const filterCharacterInfosByStyleType = (
   characterInfos: CharacterInfo[],
@@ -508,12 +509,10 @@ export const filterCharacterInfosByStyleType = (
   const withStylesFiltered: CharacterInfo[] = characterInfos.map(
     (characterInfo) => {
       const styles = characterInfo.metas.styles.filter((styleInfo) => {
-        // singerLike：歌う系のスタイル
         if (styleType === "singerLike") {
           return isSingingStyle(styleInfo);
         }
-        // talk：singerLike以外のスタイル。
-        // styleTypeが存在しない（マルチエンジン）場合があるので、「singerLike以外」をtalkとして扱っている。
+        // 過去のエンジンにはstyleTypeが存在しないので、「singerLike以外」をtalkとして扱っている。
         if (styleType === "talk") {
           return !isSingingStyle(styleInfo);
         }
