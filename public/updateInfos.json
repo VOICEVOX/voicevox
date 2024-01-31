@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.16.1",
+    "descriptions": ["マルチエンジン稼働時に起動しないバグを修正"],
+    "contributors": ["sevenc-nanashi"]
+  },
+  {
     "version": "0.16.0",
     "descriptions": [
       "ソング機能",
