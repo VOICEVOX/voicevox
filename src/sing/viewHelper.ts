@@ -107,7 +107,7 @@ export const getStyleDescription = (style: StyleInfo) => {
   } else if (style.styleType === "frame_decode") {
     description.push("ハミング");
   } else if (style.styleType === "sing") {
-    description.push("歌");
+    description.push("ソング");
   } else {
     throw new Error("Unknown style type.");
   }

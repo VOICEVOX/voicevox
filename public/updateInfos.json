@@ -1,5 +1,22 @@
 [
   {
+    "version": "0.16.0",
+    "descriptions": [
+      "ソング機能",
+      "キャラクター「四国めたん」「ずんだもん」「春日部つむぎ」「雨晴はう」「波音リツ」のハミングを追加",
+      "キャラクター「波音リツ」のソングを追加"
+    ],
+    "contributors": [
+      "cm-ayf",
+      "Hiroshiba",
+      "madosuki",
+      "romot-co",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "y-chan"
+    ]
+  },
+  {
     "version": "0.15.2",
     "descriptions": ["選択中のキャラの順番を元に戻す"],
     "contributors": []
