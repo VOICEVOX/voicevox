@@ -306,107 +306,114 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   LOAD_CHARACTER: {
-    action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
-      const { speakers, singers } = await dispatch(
-        "INSTANTIATE_ENGINE_CONNECTOR",
-        {
-          engineId,
-        }
-      )
-        .then(async (instance) => {
-          return {
-            speakers: await instance.invoke("speakersSpeakersGet")({}),
-            singers: await instance.invoke("singersSingersGet")({}),
-          };
-        })
-        .catch((error) => {
-          window.electron.logError(error, `Failed to get speakers.`);
-          throw error;
-        });
-      const base64ToUrl = function (base64: string, type: string) {
-        const buffer = Buffer.from(base64, "base64");
-        const iconBlob = new Blob([buffer.buffer], { type: type });
-        return URL.createObjectURL(iconBlob);
-      };
-      const getStyles = function (speaker: Speaker, speakerInfo: SpeakerInfo) {
-        const styles: StyleInfo[] = new Array(speaker.styles.length);
-        speaker.styles.forEach((style, i) => {
-          const styleInfo = speakerInfo.styleInfos.find(
-            (styleInfo) => style.id === styleInfo.id
-          );
-          if (!styleInfo)
-            throw new Error(
-              `Not found the style id "${style.id}" of "${speaker.name}". `
-            );
-          const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
-            return base64ToUrl(voiceSample, "audio/wav");
-          });
-          styles[i] = {
-            styleName: style.name,
-            styleId: StyleId(style.id),
-            styleType: style.type,
-            engineId,
-            iconPath: base64ImageToUri(styleInfo.icon),
-            portraitPath:
-              styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
-            voiceSamplePaths: voiceSamples,
-          };
-        });
-        return styles;
-      };
-      const getSpeakerInfo = async function (speaker: Speaker) {
-        // 同じIDの歌手がいる場合は歌手情報を取得し、スタイルをマージする
-        // FIXME: ソングのみのキャラも考慮する
-        const singer = singers.find(
-          (singer) => singer.speakerUuid === speaker.speakerUuid
-        );
-        const { speakerInfo, singerInfo } = await dispatch(
+    action: createUILockAction(
+      async ({ commit, dispatch, state }, { engineId }) => {
+        const { speakers, singers } = await dispatch(
           "INSTANTIATE_ENGINE_CONNECTOR",
           {
             engineId,
           }
         )
           .then(async (instance) => {
-            const speakerInfo = await instance.invoke(
-              "speakerInfoSpeakerInfoGet"
-            )({
-              speakerUuid: speaker.speakerUuid,
-            });
-            let singerInfo: SpeakerInfo | undefined = undefined;
-            if (singer) {
-              singerInfo = await instance.invoke("singerInfoSingerInfoGet")({
-                speakerUuid: singer.speakerUuid,
-              });
-            }
-            return { speakerInfo, singerInfo };
+            return {
+              speakers: await instance.invoke("speakersSpeakersGet")({}),
+              singers: state.engineManifests[engineId].supportedFeatures.sing
+                ? await instance.invoke("singersSingersGet")({})
+                : [],
+            };
           })
           .catch((error) => {
             window.electron.logError(error, `Failed to get speakers.`);
             throw error;
           });
-        const styles = getStyles(speaker, speakerInfo);
-        if (singer && singerInfo) {
-          styles.push(...getStyles(singer, singerInfo));
-        }
-        const characterInfo: CharacterInfo = {
-          portraitPath: base64ImageToUri(speakerInfo.portrait),
-          metas: {
-            speakerUuid: SpeakerId(speaker.speakerUuid),
-            speakerName: speaker.name,
-            styles,
-            policy: speakerInfo.policy,
-          },
+        const base64ToUrl = function (base64: string, type: string) {
+          const buffer = Buffer.from(base64, "base64");
+          const iconBlob = new Blob([buffer.buffer], { type: type });
+          return URL.createObjectURL(iconBlob);
         };
-        return characterInfo;
-      };
-      const characterInfos: CharacterInfo[] = await Promise.all(
-        speakers.map(async (speaker) => {
-          return await getSpeakerInfo(speaker);
-        })
-      );
+        const getStyles = function (
+          speaker: Speaker,
+          speakerInfo: SpeakerInfo
+        ) {
+          const styles: StyleInfo[] = new Array(speaker.styles.length);
+          speaker.styles.forEach((style, i) => {
+            const styleInfo = speakerInfo.styleInfos.find(
+              (styleInfo) => style.id === styleInfo.id
+            );
+            if (!styleInfo)
+              throw new Error(
+                `Not found the style id "${style.id}" of "${speaker.name}". `
+              );
+            const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
+              return base64ToUrl(voiceSample, "audio/wav");
+            });
+            styles[i] = {
+              styleName: style.name,
+              styleId: StyleId(style.id),
+              styleType: style.type,
+              engineId,
+              iconPath: base64ImageToUri(styleInfo.icon),
+              portraitPath:
+                styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
+              voiceSamplePaths: voiceSamples,
+            };
+          });
+          return styles;
+        };
+        const getSpeakerInfo = async function (speaker: Speaker) {
+          // 同じIDの歌手がいる場合は歌手情報を取得し、スタイルをマージする
+          // FIXME: ソングのみのキャラも考慮する
+          const singer = singers.find(
+            (singer) => singer.speakerUuid === speaker.speakerUuid
+          );
+          const { speakerInfo, singerInfo } = await dispatch(
+            "INSTANTIATE_ENGINE_CONNECTOR",
+            {
+              engineId,
+            }
+          )
+            .then(async (instance) => {
+              const speakerInfo = await instance.invoke(
+                "speakerInfoSpeakerInfoGet"
+              )({
+                speakerUuid: speaker.speakerUuid,
+              });
+              let singerInfo: SpeakerInfo | undefined = undefined;
+              if (singer) {
+                singerInfo = await instance.invoke("singerInfoSingerInfoGet")({
+                  speakerUuid: singer.speakerUuid,
+                });
+              }
+              return { speakerInfo, singerInfo };
+            })
+            .catch((error) => {
+              window.electron.logError(error, `Failed to get speakers.`);
+              throw error;
+            });
+          const styles = getStyles(speaker, speakerInfo);
+          if (singer && singerInfo) {
+            styles.push(...getStyles(singer, singerInfo));
+          }
+          const characterInfo: CharacterInfo = {
+            portraitPath: base64ImageToUri(speakerInfo.portrait),
+            metas: {
+              speakerUuid: SpeakerId(speaker.speakerUuid),
+              speakerName: speaker.name,
+              styles,
+              policy: speakerInfo.policy,
+            },
+          };
+          return characterInfo;
+        };
+        const characterInfos: CharacterInfo[] = await Promise.all(
+          speakers.map(async (speaker) => {
+            return await getSpeakerInfo(speaker);
+          })
+        );
 
-      commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
-    }),
+        commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
+      }
+    ),
   },
 
   SET_CHARACTER_INFOS: {
