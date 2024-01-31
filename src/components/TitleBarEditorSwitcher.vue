@@ -8,6 +8,7 @@
   <q-btn-toggle
     :model-value="nowEditor"
     unelevated
+    :disable="uiLocked"
     dense
     toggle-color="primary"
     :options="[
@@ -21,8 +22,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRouter } from "vue-router";
+import { useStore } from "@/store";
 
+const store = useStore();
 const router = useRouter();
+
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+
 const nowEditor = computed<"talk" | "song">(() => {
   const path = router.currentRoute.value.path;
   if (path === "/talk") return "talk";
