@@ -12,7 +12,7 @@
           <line
             x1="0"
             x2="0"
-            y1="0"
+            y1="20"
             :y2="height"
             stroke-width="1"
             class="sequencer-ruler-measure-line"
@@ -20,7 +20,7 @@
           <line
             :x1="measureWidth"
             :x2="measureWidth"
-            y1="0"
+            y1="20"
             :y2="height"
             stroke-width="1"
             class="sequencer-ruler-measure-line"
@@ -30,9 +30,9 @@
           <text
             v-for="measureInfo in measureInfos"
             :key="measureInfo.number"
-            font-size="14"
-            :x="measureInfo.x + 6"
-            y="18"
+            font-size="12"
+            :x="measureInfo.x + 4"
+            y="20"
             class="sequencer-ruler-measure-number"
           >
             {{ measureInfo.number }}
@@ -204,7 +204,8 @@ onUnmounted(() => {
   top: 0;
   width: 100%;
   height: 100%;
-  border-bottom: 1px solid #ccc;
+  border-top: 1px solid colors.$sequencer-sub-divider;
+  border-bottom: 1px solid colors.$sequencer-sub-divider;
 }
 
 .sequencer-ruler-playhead {
@@ -220,11 +221,11 @@ onUnmounted(() => {
 }
 
 .sequencer-ruler-measure-number {
-  fill: #555;
+  fill: colors.$display;
 }
 
 .sequencer-ruler-measure-line {
   backface-visibility: hidden;
-  stroke: #b0b0b0;
+  stroke: rgba(colors.$display-rgb, 0.3);
 }
 </style>

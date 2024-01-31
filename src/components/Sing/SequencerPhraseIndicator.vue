@@ -69,7 +69,7 @@ const className = computed(() => {
 }
 
 .could-not-render {
-  background-color: #ff6a64;
+  background-color: colors.$warning;
 }
 
 .playable {
