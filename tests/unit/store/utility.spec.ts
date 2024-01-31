@@ -332,7 +332,7 @@ test("isOnCommandOrCtrlKeyDown", () => {
 
 describe("filterCharacterInfosByStyleType", () => {
   const createCharacterInfo = (
-    styleTypes: (undefined | "talk" | "humming" | "sing")[]
+    styleTypes: (undefined | "talk" | "frame_decode" | "sing")[]
   ): CharacterInfo => {
     const engineId = EngineId(uuidv4());
     return {
@@ -355,13 +355,13 @@ describe("filterCharacterInfosByStyleType", () => {
   };
   const characterInfos: CharacterInfo[] = [
     createCharacterInfo(["talk"]),
-    createCharacterInfo(["humming"]),
+    createCharacterInfo(["frame_decode"]),
     createCharacterInfo(["sing"]),
-    createCharacterInfo(["talk", "humming", "sing"]),
+    createCharacterInfo(["talk", "frame_decode", "sing"]),
     createCharacterInfo([undefined]),
   ];
 
-  for (const styleType of ["humming", "sing"] as const) {
+  for (const styleType of ["frame_decode", "sing"] as const) {
     test(`${styleType}のキャラクターが取得できる`, () => {
       const filtered = filterCharacterInfosByStyleType(
         characterInfos,
