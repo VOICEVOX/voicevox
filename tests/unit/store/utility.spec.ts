@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import { AccentPhrase, Mora } from "@/openapi";
 import {
   CharacterInfo,
@@ -329,60 +330,37 @@ test("isOnCommandOrCtrlKeyDown", () => {
   );
 });
 
-const engineId = EngineId("00000000-0000-0000-0000-000000000000");
-const otherEngineId = EngineId("00000000-0000-0000-0000-000000000001");
-const baseStyleInfo: StyleInfo = {
-  styleName: "styleName",
-  engineId,
-  styleId: StyleId(0),
-  iconPath: "path/to/icon",
-  portraitPath: "path/to/portrait",
-  voiceSamplePaths: [],
-};
-const characterInfos: CharacterInfo[] = [
-  {
-    portraitPath: "path/to/portrait",
-    metas: {
-      policy: "policy",
-      speakerName: "Speaker 1",
-      speakerUuid: SpeakerId("00000000-0000-0000-0000-000000000000"),
-      styles: [
-        {
-          ...baseStyleInfo,
-          styleType: "talk",
-          styleId: StyleId(0),
-        },
-        {
-          ...baseStyleInfo,
-          styleType: "humming",
-          styleId: StyleId(1),
-        },
-        {
-          ...baseStyleInfo,
-          styleType: "sing",
-          styleId: StyleId(2),
-        },
-      ],
-    },
-  },
-  {
-    portraitPath: "path/to/portrait",
-    metas: {
-      policy: "policy",
-      speakerName: "Speaker without styleType",
-      speakerUuid: SpeakerId("00000000-0000-0000-0000-000000000001"),
-      styles: [
-        {
-          ...baseStyleInfo,
-          engineId: otherEngineId,
-          styleId: StyleId(0),
-        },
-      ],
-    },
-  },
-];
-
 describe("filterCharacterInfosByStyleType", () => {
+  const createCharacterInfo = (
+    styleTypes: (undefined | "talk" | "humming" | "sing")[]
+  ): CharacterInfo => {
+    const engineId = EngineId(uuidv4());
+    return {
+      portraitPath: "path/to/portrait",
+      metas: {
+        policy: "policy",
+        speakerName: "speakerName",
+        speakerUuid: SpeakerId(uuidv4()),
+        styles: styleTypes.map((styleType) => ({
+          styleType,
+          styleName: "styleName",
+          engineId,
+          styleId: StyleId(Math.random()),
+          iconPath: "path/to/icon",
+          portraitPath: "path/to/portrait",
+          voiceSamplePaths: [],
+        })),
+      },
+    };
+  };
+  const characterInfos: CharacterInfo[] = [
+    createCharacterInfo(["talk"]),
+    createCharacterInfo(["humming"]),
+    createCharacterInfo(["sing"]),
+    createCharacterInfo(["talk", "humming", "sing"]),
+    createCharacterInfo([undefined]),
+  ];
+
   for (const styleType of ["humming", "sing"] as const) {
     test(`${styleType}のキャラクターが取得できる`, () => {
       const filtered = filterCharacterInfosByStyleType(
@@ -390,11 +368,13 @@ describe("filterCharacterInfosByStyleType", () => {
         styleType
       );
       // talkしかないキャラクターは除外される
-      expect(filtered.length).toBe(1);
-      // styleTypeが指定したものになっている
-      expect(filtered[0].metas.styles[0].styleType).toBe(styleType);
-      // stylesの数が正しい
-      expect(filtered[0].metas.styles.length).toBe(1);
+      expect(filtered.length).toBe(2);
+      filtered.forEach((c) => {
+        // styleTypeが指定したものになっている
+        expect(c.metas.styles[0].styleType).toBe(styleType);
+        // stylesの数が正しい
+        expect(c.metas.styles.length).toBe(1);
+      });
     });
   }
 
@@ -403,14 +383,17 @@ describe("filterCharacterInfosByStyleType", () => {
       characterInfos,
       "singerLike"
     );
-    expect(filtered.length).toBe(1);
-    expect(filtered[0].metas.styles.length).toBe(2);
+    expect(filtered.length).toBe(3);
+    expect(filtered[0].metas.styles.length).toBe(1);
+    expect(filtered[1].metas.styles.length).toBe(1);
+    expect(filtered[2].metas.styles.length).toBe(2);
   });
 
   test(`talkを指定するとsingerLike以外のキャラクターが取得できる`, () => {
     const filtered = filterCharacterInfosByStyleType(characterInfos, "talk");
-    expect(filtered.length).toBe(2);
+    expect(filtered.length).toBe(3);
     expect(filtered[0].metas.styles.length).toBe(1);
     expect(filtered[1].metas.styles.length).toBe(1);
+    expect(filtered[2].metas.styles.length).toBe(1);
   });
 });
