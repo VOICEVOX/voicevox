@@ -217,11 +217,11 @@ const onLyricInputBlur = () => {
   min-width: 2rem;
   padding: 0;
   background: transparent;
-  color: colors.$display-on-primary;
+  color: #121212;
   font-size: 1rem;
   font-weight: 700;
-  text-shadow: -1px -1px 0 #{colors.$surface}, 1px -1px 0 #{colors.$surface},
-    -1px 1px 0 #{colors.$surface}, 1px 1px 0 #{colors.$surface};
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff,
+    1px 1px 0 #fff;
   white-space: nowrap;
   pointer-events: none;
 }

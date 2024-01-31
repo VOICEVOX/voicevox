@@ -53,6 +53,17 @@
               :height="gridCellHeight"
               :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
             />
+            <template v-for="(keyInfo, index) in keyInfos" :key="index">
+              <line
+                v-if="keyInfo.pitch === 'C'"
+                x1="0"
+                :x2="gridCellWidth"
+                :y1="gridCellHeight * (index + 1)"
+                :y2="gridCellHeight * (index + 1)"
+                stroke-width="1"
+                class="sequencer-grid-octave-line"
+              />
+            </template>
           </pattern>
           <pattern
             id="sequencer-grid-measure"
@@ -69,14 +80,6 @@
               y2="100%"
               stroke-width="1"
               :class="`sequencer-grid-${n === 1 ? 'measure' : 'beat'}-line`"
-            />
-            <line
-              :x1="beatWidth * beatsPerMeasure"
-              :x2="beatWidth * beatsPerMeasure"
-              y1="0"
-              y2="100%"
-              stroke-width="1"
-              class="sequencer-grid-measure-line"
             />
           </pattern>
         </defs>
@@ -1037,9 +1040,9 @@ onDeactivated(() => {
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: #fff;
-  border-bottom: 1px solid #ccc;
-  border-right: 1px solid #ccc;
+  background: colors.$background;
+  border-top: 1px solid colors.$sequencer-sub-divider;
+  border-bottom: 1px solid colors.$sequencer-sub-divider;
 }
 
 .sequencer-ruler {
@@ -1067,26 +1070,35 @@ onDeactivated(() => {
 
 .sequencer-grid-cell {
   display: block;
-  stroke: #e8e8e8;
+  stroke: rgba(colors.$sequencer-sub-divider-rgb, 0.3);
   stroke-width: 1;
 }
 
+.sequencer-grid-octave-cell {
+  stroke: colors.$sequencer-main-divider;
+}
+
+.sequencer-grid-octave-line {
+  backface-visibility: hidden;
+  stroke: colors.$sequencer-main-divider;
+}
+
 .sequencer-grid-cell-white {
-  fill: #fff;
+  fill: colors.$sequencer-whitekey-cell;
 }
 
 .sequencer-grid-cell-black {
-  fill: #f2f2f2;
+  fill: colors.$sequencer-blackkey-cell;
 }
 
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
-  stroke: #b0b0b0;
+  stroke: colors.$sequencer-main-divider;
 }
 
 .sequencer-grid-beat-line {
   backface-visibility: hidden;
-  stroke: #d0d0d0;
+  stroke: colors.$sequencer-sub-divider;
 }
 
 .sequencer-guideline {

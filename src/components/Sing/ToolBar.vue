@@ -347,22 +347,22 @@ onUnmounted(() => {
 }
 
 .character-style {
-  color: #999;
+  color: rgba(colors.$display-rgb, 0.6);
   font-size: 0.75rem;
   font-weight: bold;
   line-height: 1rem;
 }
 
 .character-menu-dropdown-icon {
-  color: rgba(0, 0, 0, 0.54);
+  color: rgba(colors.$display-rgb, 0.8);
   margin-left: 0.25rem;
 }
 .sing-toolbar {
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+  background: colors.$sing-toolbar;
   align-items: center;
   display: flex;
   justify-content: space-between;
+  min-height: 56px;
   padding: 0 16px 0 0;
   width: 100%;
 }

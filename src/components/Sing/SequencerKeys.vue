@@ -176,13 +176,12 @@ onUnmounted(() => {
 .sequencer-keys {
   backface-visibility: hidden;
   background: colors.$background;
-  border-right: 1px solid #ccc;
   overflow: hidden;
 }
 
 .white-key {
-  fill: #fff;
-  stroke: #ccc;
+  fill: colors.$sequencer-white-key;
+  stroke: colors.$sequencer-main-divider;
 }
 
 .white-key-being-pressed {
@@ -191,7 +190,7 @@ onUnmounted(() => {
 }
 
 .black-key {
-  fill: #5a5a5a;
+  fill: colors.$sequencer-black-key;
 }
 
 .black-key-being-pressed {
@@ -199,6 +198,6 @@ onUnmounted(() => {
 }
 
 .pitchname {
-  fill: #555;
+  fill: colors.$sequencer-black-key;
 }
 </style>
