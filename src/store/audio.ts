@@ -26,6 +26,7 @@ import {
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
   TuningTranscription,
+  filterCharacterInfosByStyleType,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -476,30 +477,19 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
      * `singerLike`の場合はhummingかsingなスタイルのみを返す。
      */
     getter: (state, getters) => (styleType: "all" | "singerLike" | "talk") => {
-      const isSingingStyle = (styleInfo: StyleInfo) => {
-        return (
-          styleInfo.styleType === "humming" || styleInfo.styleType === "sing"
-        );
-      };
-
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
       if (allCharacterInfos.size === 0) return undefined;
+
+      let flattenCharacterInfos = [...allCharacterInfos.values()];
+      // "all"以外の場合は、スタイル・キャラクターをフィルタリングする
+      if (styleType !== "all") {
+        flattenCharacterInfos = filterCharacterInfosByStyleType(
+          flattenCharacterInfos,
+          styleType
+        );
+      }
       return (
-        [...allCharacterInfos.values()]
-          // スタイルタイプでフィルタリング
-          .map((info) => {
-            info.metas.styles = info.metas.styles.filter((style) => {
-              const isSinging = isSingingStyle(style);
-              return (
-                styleType === "all" ||
-                (styleType === "singerLike" && isSinging) ||
-                (styleType === "talk" && !isSinging)
-              );
-            });
-            return info;
-          })
-          // スタイルがなくなったキャラクターを除外
-          .filter((info) => info.metas.styles.length !== 0)
+        flattenCharacterInfos
           // ユーザーが並び替えた順番に並び替え
           .sort(
             (a, b) =>
