@@ -11,21 +11,22 @@ import { useStore } from "@/store";
 const store = useStore();
 const isShowSinger = computed(() => store.state.isShowSinger);
 
-const userOrderedCharacterInfos = computed(() =>
-  store.getters.USER_ORDERED_CHARACTER_INFOS("all")
-);
-
-const characterInfo = computed(() => {
-  if (!userOrderedCharacterInfos.value || !store.state.singer) {
+const portraitPath = computed(() => {
+  const userOrderedCharacterInfos =
+    store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
+  const singer = store.state.singer;
+  if (!userOrderedCharacterInfos || !singer) {
     return undefined;
   }
-  return store.getters.CHARACTER_INFO(
-    store.state.singer.engineId,
-    store.state.singer.styleId
+  const characterInfo = store.getters.CHARACTER_INFO(
+    singer.engineId,
+    singer.styleId
   );
+  const styleInfo = characterInfo?.metas.styles.find(
+    (style) => style.styleId === singer.styleId
+  );
+  return styleInfo?.portraitPath || characterInfo?.portraitPath;
 });
-
-const portraitPath = computed(() => characterInfo.value?.portraitPath);
 </script>
 
 <style scoped lang="scss">
