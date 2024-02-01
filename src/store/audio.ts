@@ -1394,7 +1394,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (state.savingSetting.fixedExportEnabled) {
           dirPath = state.savingSetting.fixedExportDir;
         } else {
-          dirPath ??= await window.electron.showOpenDirectoryDialog({
+          dirPath ??= await window.electron.showSaveDirectoryDialog({
             title: "音声を保存",
           });
         }

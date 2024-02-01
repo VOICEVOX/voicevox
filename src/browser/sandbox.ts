@@ -101,6 +101,9 @@ export const api: Sandbox = {
       }
     });
   },
+  showSaveDirectoryDialog(obj: { title: string }) {
+    return showOpenDirectoryDialogImpl(obj);
+  },
   showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
     // NOTE: 今後接続先を変える手段としてVvppが使われるかもしれないので、そのタイミングで実装する
     throw new Error(

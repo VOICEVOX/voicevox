@@ -611,24 +611,93 @@ ipcMainHandle("GET_ALT_PORT_INFOS", () => {
   return engineManager.altPortInfo;
 });
 
+/**
+ * 保存に適したフォルダを選択するかキャンセルをするまでダイアログを繰り返し表示し続ける
+ * @param showDialogFunction ダイアログを表示する関数
+ */
+const retryShowSaveDialogWhileSafeDir = async <
+  T extends Electron.OpenDialogReturnValue | Electron.SaveDialogReturnValue
+>(
+  showDialogFunction: () => Promise<T>
+): Promise<T> => {
+  const unsafeSaveDirs = [appDirPath, app.getPath("userData")];
+  let isUnsafeDir: boolean;
+  let result: T;
+  do {
+    isUnsafeDir = false;
+    result = await showDialogFunction();
+    let filePath: string;
+    if (result.canceled) {
+      return result;
+    }
+    if ("filePaths" in result) {
+      filePath = result.filePaths[0];
+    } else {
+      if (result.filePath == undefined) {
+        return result;
+      }
+      filePath = result.filePath;
+    }
+    for (const unsafeDir of unsafeSaveDirs) {
+      const relativePath = path.relative(unsafeDir, filePath);
+      if (
+        !(
+          path.isAbsolute(relativePath) ||
+          relativePath === ".." ||
+          relativePath.startsWith(`..${path.sep}`)
+        )
+      ) {
+        isUnsafeDir = true;
+        dialog.showErrorBox(
+          "このフォルダには保存できません",
+          `"${unsafeDir}"には保存できません`
+        );
+        break;
+      }
+    }
+  } while (isUnsafeDir);
+  return result;
+};
+
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
-  const result = await dialog.showSaveDialog(win, {
-    title,
-    defaultPath,
-    filters: [{ name: "Wave File", extensions: ["wav"] }],
-    properties: ["createDirectory"],
-  });
+  const result = await retryShowSaveDialogWhileSafeDir(() =>
+    dialog.showSaveDialog(win, {
+      title,
+      defaultPath,
+      filters: [{ name: "Wave File", extensions: ["wav"] }],
+      properties: ["createDirectory"],
+    })
+  );
   return result.filePath;
 });
 
 ipcMainHandle("SHOW_TEXT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
-  const result = await dialog.showSaveDialog(win, {
-    title,
-    defaultPath,
-    filters: [{ name: "Text File", extensions: ["txt"] }],
-    properties: ["createDirectory"],
-  });
+  const result = await retryShowSaveDialogWhileSafeDir(() =>
+    dialog.showSaveDialog(win, {
+      title,
+      defaultPath,
+      filters: [{ name: "Text File", extensions: ["txt"] }],
+      properties: ["createDirectory"],
+    })
+  );
   return result.filePath;
+});
+
+ipcMainHandle("SHOW_SAVE_DIRECTORY_DIALOG", async (_, { title }) => {
+  const result = await retryShowSaveDialogWhileSafeDir(() =>
+    dialog.showOpenDialog(win, {
+      title,
+      properties: [
+        "openDirectory",
+        "createDirectory",
+        "treatPackageAsDirectory",
+      ],
+    })
+  );
+  if (result.canceled) {
+    return undefined;
+  }
+  return result.filePaths[0];
 });
 
 ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
@@ -655,12 +724,14 @@ ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
 });
 
 ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
-  const result = await dialog.showSaveDialog(win, {
-    title,
-    defaultPath,
-    filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-    properties: ["showOverwriteConfirmation"],
-  });
+  const result = await retryShowSaveDialogWhileSafeDir(() =>
+    dialog.showSaveDialog(win, {
+      title,
+      defaultPath,
+      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
+      properties: ["showOverwriteConfirmation"],
+    })
+  );
   if (result.canceled) {
     return undefined;
   }
