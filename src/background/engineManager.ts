@@ -27,6 +27,10 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/shared/ConfigManager";
+import {
+  OutputInfoDataFor3rdParty,
+  RuntimeInfoManager,
+} from "@/shared/RuntimeInfoManager";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -62,7 +66,7 @@ export class EngineManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
-  exportEngineInfoFilename: string;
+  runtimeInfoPath: RuntimeInfoManager;
 
   defaultEngineInfos: EngineInfo[] = [];
   additionalEngineInfos: EngineInfo[] = [];
@@ -75,19 +79,19 @@ export class EngineManager {
     defaultEngineDir,
     vvppEngineDir,
     onEngineProcessError,
-    exportEngineInfoFilename,
+    runtimeInfoPath,
   }: {
     configManager: BaseConfigManager;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
-    exportEngineInfoFilename: string;
+    runtimeInfoPath: RuntimeInfoManager;
   }) {
     this.configManager = configManager;
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
-    this.exportEngineInfoFilename = exportEngineInfoFilename;
+    this.runtimeInfoPath = runtimeInfoPath;
     this.engineProcessContainers = {};
   }
 
@@ -216,7 +220,7 @@ export class EngineManager {
       await this.runEngine(engineInfo.uuid);
     }
 
-    await this.writeEngineInfoFor3rdParty();
+    await this.writeEngineInfosFor3rdParty();
   }
 
   /**
@@ -476,7 +480,7 @@ export class EngineManager {
         );
 
         this.runEngine(engineId);
-        this.writeEngineInfoFor3rdParty();
+        this.writeEngineInfosFor3rdParty();
         resolve();
         return;
       }
@@ -490,7 +494,7 @@ export class EngineManager {
         log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
         this.runEngine(engineId);
-        this.writeEngineInfoFor3rdParty();
+        this.writeEngineInfosFor3rdParty();
         resolve();
       };
 
@@ -562,28 +566,18 @@ export class EngineManager {
   /**
    * サードパーティ向けの設定ファイルを書き出す
    */
-  async writeEngineInfoFor3rdParty() {
+  async writeEngineInfosFor3rdParty() {
     await this.lock.acquire(this.lockKey, async () => {
       log.info(`Engine information file (runtime-info.json) has been updated.`);
 
       const engineInfos = this.fetchEngineInfos();
-      const engineInfoList = engineInfos.map((engineInfo) => {
-        return {
-          uuid: engineInfo.uuid,
-          host: engineInfo.host,
-          name: engineInfo.name,
-          path: engineInfo.path,
-          executionEnabled: engineInfo.executionEnabled,
-          executionFilePath: engineInfo.executionFilePath,
-          executionArgs: engineInfo.executionArgs,
-          type: engineInfo.type,
-        };
-      });
+      const outputInfoData = new OutputInfoDataFor3rdParty(app.getVersion());
 
+      // ファイルに書き出すデータをつくる
       try {
         await fs.promises.writeFile(
-          this.exportEngineInfoFilename,
-          JSON.stringify(engineInfoList)
+          this.runtimeInfoPath.getRuntimeInfoPath(),
+          JSON.stringify(outputInfoData.getOutputInfoData(engineInfos))
         );
       } catch (e) {
         // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。

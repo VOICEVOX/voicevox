@@ -44,6 +44,7 @@ import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
+import { RuntimeInfoManager } from "./shared/RuntimeInfoManager";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { getConfigManager } from "@/background/electronConfig";
 
@@ -145,10 +146,7 @@ if (!fs.existsSync(vvppEngineDir)) {
   fs.mkdirSync(vvppEngineDir);
 }
 
-const exportEngineInfoFilename = path.join(
-  app.getPath("userData"),
-  "runtime-info.json"
-);
+const runtimeInfoPath = new RuntimeInfoManager(app.getPath("userData"));
 
 const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   const engineId = engineInfo.uuid;
@@ -172,7 +170,7 @@ const engineManager = new EngineManager({
   defaultEngineDir: appDirPath,
   vvppEngineDir,
   onEngineProcessError,
-  exportEngineInfoFilename,
+  runtimeInfoPath,
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
 
