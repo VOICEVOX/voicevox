@@ -7,7 +7,7 @@
     <q-page-container>
       <q-page class="main-row-panes">
         <progress-view />
-        <engine-startup-popup
+        <engine-startup-overlay
           :is-completed-initial-startup="isCompletedInitialStartup"
         />
 
@@ -172,7 +172,7 @@ import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.v
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import ProgressView from "@/components/ProgressView.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
-import EngineStartupPopup from "@/components/EngineStartupPopup.vue";
+import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { AudioItem } from "@/store/type";
 import {
   AudioKey,

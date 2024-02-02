@@ -2,7 +2,7 @@
   <menu-bar />
   <div class="sing-main">
     <tool-bar />
-    <engine-startup-popup :is-completed-initial-startup="isEnginesReady" />
+    <engine-startup-overlay :is-completed-initial-startup="isEnginesReady" />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <q-spinner color="primary" size="2.5rem" />
@@ -33,7 +33,7 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
-import EngineStartupPopup from "@/components/EngineStartupPopup.vue";
+import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import MenuBar from "@/components/Sing/MenuBar.vue";
 import ToolBar from "@/components/Sing/ToolBar.vue";
 import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
