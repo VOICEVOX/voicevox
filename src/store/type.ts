@@ -747,6 +747,10 @@ export type Singer = {
   styleId: StyleId;
 };
 
+export type Track = {
+  notes: Note[];
+};
+
 export type PhraseState =
   | "WAITING_TO_BE_RENDERED"
   | "NOW_RENDERING"
@@ -755,7 +759,9 @@ export type PhraseState =
 
 export type Phrase = {
   singer?: Singer;
-  score: Score;
+  tpqn: number;
+  tempos: Tempo[];
+  notes: Note[];
   startTicks: number;
   endTicks: number;
   state: PhraseState;
@@ -765,7 +771,10 @@ export type Phrase = {
 
 export type SingingStoreState = {
   singer?: Singer;
-  score: Score;
+  tpqn: number;
+  tempos: Tempo[];
+  timeSignatures: TimeSignature[];
+  tracks: Track[];
   phrases: Map<string, Phrase>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;

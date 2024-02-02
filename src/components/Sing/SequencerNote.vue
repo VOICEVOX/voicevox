@@ -73,7 +73,7 @@ const emit =
 
 const store = useStore();
 const state = store.state;
-const tpqn = computed(() => state.score.tpqn);
+const tpqn = computed(() => state.tpqn);
 const zoomX = computed(() => state.sequencerZoomX);
 const zoomY = computed(() => state.sequencerZoomY);
 const positionX = computed(() => {
@@ -150,7 +150,7 @@ const onLyricInputKeyDown = (event: KeyboardEvent) => {
   if (event.key === "Tab") {
     event.preventDefault();
     const noteId = props.note.id;
-    const notes = state.score.notes;
+    const notes = state.tracks[0].notes;
     const index = notes.findIndex((value) => value.id === noteId);
     if (index === -1) {
       return;
