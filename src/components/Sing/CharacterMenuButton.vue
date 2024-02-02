@@ -308,6 +308,12 @@ const engineIcons = computed(() =>
   padding: 0.25rem 0.5rem 0.25rem 0.25rem;
   position: relative;
 
+  .character-menu-toggle {
+    align-items: center;
+    display: flex;
+    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+    position: relative;
+  }
   .character-avatar-icon {
     display: block;
     height: 100%;
@@ -337,14 +343,14 @@ const engineIcons = computed(() =>
   }
 
   .character-style {
-    color: #999;
+    color: rgba(colors.$display-rgb, 0.6);
     font-size: 0.75rem;
     font-weight: bold;
     line-height: 1rem;
   }
 
   .character-menu-dropdown-icon {
-    color: rgba(0, 0, 0, 0.54);
+    color: rgba(colors.$display-rgb, 0.8);
     margin-left: 0.25rem;
   }
 }
