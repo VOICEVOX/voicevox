@@ -260,11 +260,11 @@ onUnmounted(() => {
 @use '@/styles/colors' as colors;
 
 .sing-toolbar {
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+  background: colors.$sing-toolbar;
   align-items: center;
   display: flex;
   justify-content: space-between;
+  min-height: 56px;
   padding: 0 16px 0 0;
   width: 100%;
 }

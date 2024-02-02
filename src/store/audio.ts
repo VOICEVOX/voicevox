@@ -26,6 +26,7 @@ import {
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
   TuningTranscription,
+  filterCharacterInfosByStyleType,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -305,79 +306,114 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   LOAD_CHARACTER: {
-    action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
-      const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineId,
-      })
-        .then((instance) => instance.invoke("speakersSpeakersGet")({}))
-        .catch((error) => {
-          window.electron.logError(error, `Failed to get speakers.`);
-          throw error;
-        });
-      const base64ToUrl = function (base64: string, type: string) {
-        const buffer = Buffer.from(base64, "base64");
-        const iconBlob = new Blob([buffer.buffer], { type: type });
-        return URL.createObjectURL(iconBlob);
-      };
-      const getStyles = function (speaker: Speaker, speakerInfo: SpeakerInfo) {
-        const styles: StyleInfo[] = new Array(speaker.styles.length);
-        speaker.styles.forEach((style, i) => {
-          const styleInfo = speakerInfo.styleInfos.find(
-            (styleInfo) => style.id === styleInfo.id
-          );
-          if (!styleInfo)
-            throw new Error(
-              `Not found the style id "${style.id}" of "${speaker.name}". `
-            );
-          const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
-            return base64ToUrl(voiceSample, "audio/wav");
-          });
-          styles[i] = {
-            styleName: style.name,
-            styleId: StyleId(style.id),
-            styleType: style.type,
+    action: createUILockAction(
+      async ({ commit, dispatch, state }, { engineId }) => {
+        const { speakers, singers } = await dispatch(
+          "INSTANTIATE_ENGINE_CONNECTOR",
+          {
             engineId,
-            iconPath: base64ImageToUri(styleInfo.icon),
-            portraitPath:
-              styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
-            voiceSamplePaths: voiceSamples,
-          };
-        });
-        return styles;
-      };
-      const getSpeakerInfo = async function (speaker: Speaker) {
-        const speakerInfo = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        })
-          .then((instance) =>
-            instance.invoke("speakerInfoSpeakerInfoGet")({
-              speakerUuid: speaker.speakerUuid,
-            })
-          )
+          }
+        )
+          .then(async (instance) => {
+            return {
+              speakers: await instance.invoke("speakersSpeakersGet")({}),
+              singers: state.engineManifests[engineId].supportedFeatures.sing
+                ? await instance.invoke("singersSingersGet")({})
+                : [],
+            };
+          })
           .catch((error) => {
             window.electron.logError(error, `Failed to get speakers.`);
             throw error;
           });
-        const styles = getStyles(speaker, speakerInfo);
-        const characterInfo: CharacterInfo = {
-          portraitPath: base64ImageToUri(speakerInfo.portrait),
-          metas: {
-            speakerUuid: SpeakerId(speaker.speakerUuid),
-            speakerName: speaker.name,
-            styles,
-            policy: speakerInfo.policy,
-          },
+        const base64ToUrl = function (base64: string, type: string) {
+          const buffer = Buffer.from(base64, "base64");
+          const iconBlob = new Blob([buffer.buffer], { type: type });
+          return URL.createObjectURL(iconBlob);
         };
-        return characterInfo;
-      };
-      const characterInfos: CharacterInfo[] = await Promise.all(
-        speakers.map(async (speaker) => {
-          return await getSpeakerInfo(speaker);
-        })
-      );
+        const getStyles = function (
+          speaker: Speaker,
+          speakerInfo: SpeakerInfo
+        ) {
+          const styles: StyleInfo[] = new Array(speaker.styles.length);
+          speaker.styles.forEach((style, i) => {
+            const styleInfo = speakerInfo.styleInfos.find(
+              (styleInfo) => style.id === styleInfo.id
+            );
+            if (!styleInfo)
+              throw new Error(
+                `Not found the style id "${style.id}" of "${speaker.name}". `
+              );
+            const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
+              return base64ToUrl(voiceSample, "audio/wav");
+            });
+            styles[i] = {
+              styleName: style.name,
+              styleId: StyleId(style.id),
+              styleType: style.type,
+              engineId,
+              iconPath: base64ImageToUri(styleInfo.icon),
+              portraitPath:
+                styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
+              voiceSamplePaths: voiceSamples,
+            };
+          });
+          return styles;
+        };
+        const getSpeakerInfo = async function (speaker: Speaker) {
+          // 同じIDの歌手がいる場合は歌手情報を取得し、スタイルをマージする
+          // FIXME: ソングのみのキャラも考慮する
+          const singer = singers.find(
+            (singer) => singer.speakerUuid === speaker.speakerUuid
+          );
+          const { speakerInfo, singerInfo } = await dispatch(
+            "INSTANTIATE_ENGINE_CONNECTOR",
+            {
+              engineId,
+            }
+          )
+            .then(async (instance) => {
+              const speakerInfo = await instance.invoke(
+                "speakerInfoSpeakerInfoGet"
+              )({
+                speakerUuid: speaker.speakerUuid,
+              });
+              let singerInfo: SpeakerInfo | undefined = undefined;
+              if (singer) {
+                singerInfo = await instance.invoke("singerInfoSingerInfoGet")({
+                  speakerUuid: singer.speakerUuid,
+                });
+              }
+              return { speakerInfo, singerInfo };
+            })
+            .catch((error) => {
+              window.electron.logError(error, `Failed to get speakers.`);
+              throw error;
+            });
+          const styles = getStyles(speaker, speakerInfo);
+          if (singer && singerInfo) {
+            styles.push(...getStyles(singer, singerInfo));
+          }
+          const characterInfo: CharacterInfo = {
+            portraitPath: base64ImageToUri(speakerInfo.portrait),
+            metas: {
+              speakerUuid: SpeakerId(speaker.speakerUuid),
+              speakerName: speaker.name,
+              styles,
+              policy: speakerInfo.policy,
+            },
+          };
+          return characterInfo;
+        };
+        const characterInfos: CharacterInfo[] = await Promise.all(
+          speakers.map(async (speaker) => {
+            return await getSpeakerInfo(speaker);
+          })
+        );
 
-      commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
-    }),
+        commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
+      }
+    ),
   },
 
   SET_CHARACTER_INFOS: {
@@ -476,30 +512,19 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
      * `singerLike`の場合はhummingかsingなスタイルのみを返す。
      */
     getter: (state, getters) => (styleType: "all" | "singerLike" | "talk") => {
-      const isSingingStyle = (styleInfo: StyleInfo) => {
-        return (
-          styleInfo.styleType === "humming" || styleInfo.styleType === "sing"
-        );
-      };
-
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
       if (allCharacterInfos.size === 0) return undefined;
+
+      let flattenCharacterInfos = [...allCharacterInfos.values()];
+      // "all"以外の場合は、スタイル・キャラクターをフィルタリングする
+      if (styleType !== "all") {
+        flattenCharacterInfos = filterCharacterInfosByStyleType(
+          flattenCharacterInfos,
+          styleType
+        );
+      }
       return (
-        [...allCharacterInfos.values()]
-          // スタイルタイプでフィルタリング
-          .map((info) => {
-            info.metas.styles = info.metas.styles.filter((style) => {
-              const isSinging = isSingingStyle(style);
-              return (
-                styleType === "all" ||
-                (styleType === "singerLike" && isSinging) ||
-                (styleType === "talk" && !isSinging)
-              );
-            });
-            return info;
-          })
-          // スタイルがなくなったキャラクターを除外
-          .filter((info) => info.metas.styles.length !== 0)
+        flattenCharacterInfos
           // ユーザーが並び替えた順番に並び替え
           .sort(
             (a, b) =>

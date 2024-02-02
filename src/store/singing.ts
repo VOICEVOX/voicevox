@@ -184,15 +184,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const engineId = singer?.engineId ?? state.engineIds[0];
 
-      // FIXME: engineIdも含めて探査する
-      const styleId =
-        singer?.styleId ??
-        state.defaultStyleIds[
-          state.defaultStyleIds.findIndex(
-            (x) =>
-              x.speakerUuid === userOrderedCharacterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
-          )
-        ].defaultStyleId;
+      // 最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
+      // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
+      const defaultStyleId =
+        userOrderedCharacterInfos[0].metas.styles[0].styleId;
+
+      const styleId = singer?.styleId ?? defaultStyleId;
 
       try {
         // 指定されたstyleIdに対して、エンジン側の初期化を行う

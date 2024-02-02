@@ -182,6 +182,7 @@ import {
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
+import { filterCharacterInfosByStyleType } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 const props =
@@ -637,11 +638,10 @@ const isCharacterOrderDialogOpenComputed = computed({
 // TODO: デフォルトスタイル選択(ソング)の実装
 // デフォルトスタイル選択(トーク)
 const orderedTalkCharacterInfos = computed(() => {
-  const userOrderedCharacterInfos =
-    store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
-  if (userOrderedCharacterInfos == undefined) return [];
-  // throw new Error("userOrderedCharacterInfos == undefined");
-  return userOrderedCharacterInfos;
+  return filterCharacterInfosByStyleType(
+    store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
+    "talk"
+  );
 });
 const isDefaultStyleSelectDialogOpenComputed = computed({
   get: () =>

@@ -104,10 +104,10 @@ export const getStyleDescription = (style: StyleInfo) => {
   const description: string[] = [];
   if (style.styleType === "talk") {
     description.push("トーク");
-  } else if (style.styleType === "humming") {
+  } else if (style.styleType === "frame_decode") {
     description.push("ハミング");
   } else if (style.styleType === "sing") {
-    description.push("歌");
+    description.push("ソング");
   } else {
     throw new Error("Unknown style type.");
   }
