@@ -748,6 +748,7 @@ export type Singer = {
 };
 
 export type Track = {
+  singer?: Singer;
   notes: Note[];
 };
 
@@ -770,7 +771,6 @@ export type Phrase = {
 };
 
 export type SingingStoreState = {
-  singer?: Singer;
   tpqn: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];

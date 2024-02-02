@@ -50,7 +50,6 @@ import {
   DEFAULT_TPQN,
   FrequentlyUpdatedState,
   OverlappingNotesDetector,
-  copySinger,
   generatePhraseHash,
 } from "@/sing/storeHelper";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
@@ -117,7 +116,6 @@ const phraseAudioBlobCache = new Map<string, Blob>();
 const animationTimer = new AnimationTimer();
 
 export const singingStoreState: SingingStoreState = {
-  singer: undefined,
   tpqn: DEFAULT_TPQN,
   tempos: [
     {
@@ -134,6 +132,7 @@ export const singingStoreState: SingingStoreState = {
   ],
   tracks: [
     {
+      singer: undefined,
       notes: [],
     },
   ],
@@ -170,7 +169,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SINGER: {
     mutation(state, { singer }: { singer?: Singer }) {
-      state.singer = singer;
+      state.tracks[0].singer = singer;
     },
     async action(
       { state, getters, dispatch, commit },
@@ -992,7 +991,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const notes = state.tracks[0].notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
-        const singer = copySinger(state.singer);
+        const singer = state.tracks[0].singer
+          ? { ...state.tracks[0].singer }
+          : undefined;
 
         // フレーズを更新する
         const foundPhrases = await searchPhrases(singer, tpqn, tempos, notes);

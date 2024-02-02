@@ -6,16 +6,6 @@ export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
 export const DEFAULT_BEAT_TYPE = 4;
 
-export const copySinger = (singer?: Singer): Singer | undefined => {
-  if (!singer) {
-    return undefined;
-  }
-  return {
-    engineId: singer.engineId,
-    styleId: singer.styleId,
-  };
-};
-
 export const generatePhraseHash = async (obj: {
   singer: Singer | undefined;
   tpqn: number;
