@@ -53,6 +53,7 @@
     "markdown-it": "13.0.2",
     "move-file": "3.0.0",
     "multistream": "4.1.0",
+    "pixi.js": "7.4.0",
     "quasar": "2.11.6",
     "semver": "7.5.4",
     "shlex": "2.1.2",
