@@ -160,7 +160,7 @@
       :value="zoomX"
       :style="{
         position: 'fixed',
-        zIndex: 10000,
+        zIndex: 100,
         bottom: '20px',
         right: '36px',
         width: '80px',
@@ -175,7 +175,7 @@
       :value="zoomY"
       :style="{
         position: 'fixed',
-        zIndex: 10000,
+        zIndex: 100,
         bottom: '68px',
         right: '-12px',
         transform: 'rotate(-90deg)',
