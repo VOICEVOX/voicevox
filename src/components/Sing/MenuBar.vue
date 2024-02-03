@@ -5,8 +5,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useStore } from "@/store";
-import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
 import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
 
 const store = useStore();
@@ -54,11 +52,4 @@ const fileSubMenuData: MenuItemData[] = [
     disableWhenUiLocked: true,
   },
 ];
-
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  // NOTE: 初期設定なし
-  // ["新規", createNewSingProject],
-]);
-
-setHotkeyFunctions(hotkeyMap);
 </script>

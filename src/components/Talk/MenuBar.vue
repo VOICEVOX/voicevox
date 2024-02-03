@@ -13,10 +13,11 @@ import {
 import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
 
 import { useStore } from "@/store";
-import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
+const hotkeyManager = useHotkeyManager();
+
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const createNewProject = async () => {
@@ -225,16 +226,68 @@ const fileSubMenuData = computed<MenuItemData[]>(() => [
   },
 ]);
 
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  ["新規プロジェクト", createNewProject],
-  ["音声書き出し", generateAndSaveAllAudio],
-  ["選択音声を書き出し", generateAndSaveSelectedAudio],
-  ["音声を繋げて書き出し", generateAndConnectAndSaveAllAudio],
-  ["テキスト読み込む", importTextFile],
-  ["プロジェクトを上書き保存", saveProject],
-  ["プロジェクトを名前を付けて保存", saveProjectAs],
-  ["プロジェクト読み込み", importProject],
-]);
-
-setHotkeyFunctions(hotkeyMap);
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "新規プロジェクト",
+  callback: () => {
+    createNewProject();
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "音声書き出し",
+  callback: () => {
+    generateAndSaveAllAudio();
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "選択音声を書き出し",
+  callback: () => {
+    generateAndSaveSelectedAudio();
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "音声を繋げて書き出し",
+  callback: () => {
+    generateAndConnectAndSaveAllAudio();
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "テキスト読み込む",
+  callback: () => {
+    importTextFile();
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "プロジェクトを上書き保存",
+  callback: () => {
+    saveProject();
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "プロジェクトを名前を付けて保存",
+  callback: () => {
+    saveProjectAs();
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "プロジェクト読み込み",
+  callback: () => {
+    importProject();
+  },
+});
 </script>

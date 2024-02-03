@@ -26,12 +26,7 @@ import {
   generateAndSaveOneAudioWithDialog,
 } from "@/components/Dialog/Dialog";
 import { useStore } from "@/store";
-import { setHotkeyFunctions } from "@/store/setting";
-import {
-  HotkeyActionType,
-  HotkeyReturnType,
-  ToolbarButtonTagType,
-} from "@/type/preload";
+import { ToolbarButtonTagType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
@@ -60,9 +55,8 @@ hotkeyManager.register({
   editor: "talk",
   enableInTextbox: false,
   action: "元に戻す",
-  callback: (e) => {
+  callback: () => {
     if (!uiLocked.value && canUndo.value) {
-      e.preventDefault();
       undo();
     }
   },
@@ -71,31 +65,27 @@ hotkeyManager.register({
   editor: "talk",
   enableInTextbox: false,
   action: "やり直す",
-  callback: (e) => {
+  callback: () => {
     if (!uiLocked.value && canRedo.value) {
-      e.preventDefault();
       redo();
     }
   },
 });
 
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  // play/stop continuously
-  [
-    "連続再生/停止",
-    () => {
-      if (!uiLocked.value) {
-        if (nowPlayingContinuously.value) {
-          stop();
-        } else {
-          playContinuously();
-        }
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "連続再生/停止",
+  callback: () => {
+    if (!uiLocked.value) {
+      if (nowPlayingContinuously.value) {
+        stop();
+      } else {
+        playContinuously();
       }
-    },
-  ],
-]);
-
-setHotkeyFunctions(hotkeyMap);
+    }
+  },
+});
 
 const undo = () => {
   store.dispatch("UNDO");

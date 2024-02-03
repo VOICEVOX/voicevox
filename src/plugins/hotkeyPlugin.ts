@@ -15,6 +15,7 @@ type HotkeyRegistration = {
   editor: "talk" | "song";
   enableInTextbox: boolean;
   action: HotkeyActionType;
+  keepDefaultBehavior?: boolean;
   callback: (e: KeyboardEvent) => void;
 };
 
@@ -70,6 +71,7 @@ export class HotkeyManager {
         // TODO: もっと良い感じの取得方法があれば変更する
         const path = location.hash.split("/")[1] as "talk" | "song";
         if (path === action.editor) {
+          if (!action.keepDefaultBehavior) e.preventDefault();
           action.callback(e);
         }
       });
@@ -102,4 +104,32 @@ export const hotkeyPlugin: Plugin = {
 
     app.provide(hotkeyManagerKey, hotkeyManager);
   },
+};
+
+export const parseCombo = (event: KeyboardEvent): string => {
+  let recordedCombo = "";
+  if (event.ctrlKey) {
+    recordedCombo += "Ctrl ";
+  }
+  if (event.altKey) {
+    recordedCombo += "Alt ";
+  }
+  if (event.shiftKey) {
+    recordedCombo += "Shift ";
+  }
+  // event.metaKey は Mac キーボードでは Cmd キー、Windows キーボードでは Windows キーの押下で true になる
+  if (event.metaKey) {
+    recordedCombo += "Meta ";
+  }
+  if (event.key === " ") {
+    recordedCombo += "Space";
+  } else {
+    if (["Control", "Shift", "Alt", "Meta"].includes(event.key)) {
+      recordedCombo = recordedCombo.slice(0, -1);
+    } else {
+      recordedCombo +=
+        event.key.length > 1 ? event.key : event.key.toUpperCase();
+    }
+  }
+  return recordedCombo;
 };

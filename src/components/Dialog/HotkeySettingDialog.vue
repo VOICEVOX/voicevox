@@ -215,9 +215,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
-import { parseCombo } from "@/store/setting";
 import { HotkeyActionType, HotkeySettingType } from "@/type/preload";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { useHotkeyManager, parseCombo } from "@/plugins/hotkeyPlugin";
 
 const props =
   defineProps<{

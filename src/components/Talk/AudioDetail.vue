@@ -85,15 +85,10 @@ import { computed, nextTick, ref, watch } from "vue";
 import AccentPhrase from "./AccentPhrase.vue";
 import ToolTip from "@/components/ToolTip.vue";
 import { useStore } from "@/store";
-import {
-  AudioKey,
-  HotkeyActionType,
-  HotkeyReturnType,
-  isMac,
-} from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
+import { AudioKey, isMac } from "@/type/preload";
 import { EngineManifest } from "@/openapi/models";
 import { useShiftKey, useAltKey } from "@/composables/useModifierKey";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props =
   defineProps<{
@@ -112,70 +107,80 @@ const supportedFeatures = computed(
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
 
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  [
-    "再生/停止",
-    () => {
-      if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
-        play();
-      } else {
-        stop();
-      }
-    },
-  ],
-  [
-    "ｱｸｾﾝﾄ欄を表示",
-    () => {
-      selectedDetail.value = "accent";
-    },
-  ],
-  [
-    "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-    () => {
-      if (supportedFeatures.value?.adjustMoraPitch) {
-        selectedDetail.value = "pitch";
-      }
-    },
-  ],
-  [
-    "長さ欄を表示",
-    () => {
-      if (supportedFeatures.value?.adjustPhonemeLength) {
-        selectedDetail.value = "length";
-      }
-    },
-  ],
-  [
-    "全体のイントネーションをリセット",
-    () => {
-      if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
-        const audioKeys = store.state.experimentalSetting.enableMultiSelect
-          ? store.getters.SELECTED_AUDIO_KEYS
-          : [store.getters.ACTIVE_AUDIO_KEY];
-        store.dispatch("COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH", {
-          audioKeys,
-        });
-      }
-    },
-  ],
-  [
-    "選択中のアクセント句のイントネーションをリセット",
-    () => {
-      if (
-        !uiLocked.value &&
-        store.getters.ACTIVE_AUDIO_KEY &&
-        store.getters.AUDIO_PLAY_START_POINT != undefined
-      ) {
-        store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
-          audioKey: store.getters.ACTIVE_AUDIO_KEY,
-          accentPhraseIndex: store.getters.AUDIO_PLAY_START_POINT,
-        });
-      }
-    },
-  ],
-]);
-// このコンポーネントは遅延評価なので手動でバインディングを行う
-setHotkeyFunctions(hotkeyMap, true);
+const hotkeyManager = useHotkeyManager();
+
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "再生/停止",
+  callback: () => {
+    if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+      play();
+    } else {
+      stop();
+    }
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "ｱｸｾﾝﾄ欄を表示",
+  callback: () => {
+    selectedDetail.value = "accent";
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+  callback: () => {
+    if (supportedFeatures.value?.adjustMoraPitch) {
+      selectedDetail.value = "pitch";
+    }
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "長さ欄を表示",
+  callback: () => {
+    if (supportedFeatures.value?.adjustPhonemeLength) {
+      selectedDetail.value = "length";
+    }
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "全体のイントネーションをリセット",
+  callback: () => {
+    if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
+      const audioKeys = store.state.experimentalSetting.enableMultiSelect
+        ? store.getters.SELECTED_AUDIO_KEYS
+        : [store.getters.ACTIVE_AUDIO_KEY];
+      store.dispatch("COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH", {
+        audioKeys,
+      });
+    }
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "選択中のアクセント句のイントネーションをリセット",
+  callback: () => {
+    if (
+      !uiLocked.value &&
+      store.getters.ACTIVE_AUDIO_KEY &&
+      store.getters.AUDIO_PLAY_START_POINT != undefined
+    ) {
+      store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
+        audioKey: store.getters.ACTIVE_AUDIO_KEY,
+        accentPhraseIndex: store.getters.AUDIO_PLAY_START_POINT,
+      });
+    }
+  },
+});
 
 // detail selector
 type DetailTypes = "accent" | "pitch" | "length";
