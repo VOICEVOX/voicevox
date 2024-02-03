@@ -93,7 +93,7 @@ import {
   isValidBeats,
   isValidBpm,
 } from "@/sing/domain";
-import CharacterMenuButton from "@/components/Sing/CharacterMenuButton.vue";
+import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 
 const store = useStore();
 

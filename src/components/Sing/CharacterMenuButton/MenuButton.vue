@@ -1,44 +1,10 @@
 <template>
   <q-btn flat class="q-pa-none">
-    <div v-if="isLoading" class="selected-character">
-      <q-skeleton class="character-avatar" type="QAvatar" size="52px" />
-      <div class="character-info">
-        <q-skeleton
-          class="character-name skeleton"
-          type="rect"
-          width="65px"
-          height="15px"
-        />
-        <q-skeleton
-          class="character-style"
-          type="rect"
-          width="110px"
-          height="12px"
-        />
-      </div>
-    </div>
-    <div v-else class="selected-character">
-      <q-avatar
-        v-if="selectedStyleIconPath"
-        class="character-avatar"
-        size="3.5rem"
-      >
-        <img :src="selectedStyleIconPath" class="character-avatar-icon" />
-      </q-avatar>
-      <div class="character-info">
-        <div class="character-name">
-          {{ selectedCharacterName }}
-        </div>
-        <div class="character-style">
-          {{ selectedCharacterStyleDescription }}
-        </div>
-      </div>
-      <q-icon
-        name="arrow_drop_down"
-        size="sm"
-        class="character-menu-dropdown-icon"
-      />
-    </div>
+    <selected-character
+      :show-skeleton="showSkeleton"
+      :selected-character-info="selectedCharacterInfo"
+      :selected-singer="selectedSinger"
+    />
     <q-menu
       class="character-menu"
       transition-show="none"
@@ -172,9 +138,15 @@
   </q-btn>
 </template>
 
+<script lang="ts">
+export default {
+  name: "CharacterMenuButton",
+};
+</script>
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { debounce } from "quasar";
+import SelectedCharacter from "./SelectedCharacter.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { SpeakerId, StyleId } from "@/type/preload";
@@ -209,9 +181,9 @@ const selectedCharacterInfo = computed(() => {
     store.state.singer.styleId
   );
 });
-
-const isLoading = computed(() => {
-  return selectedCharacterInfo.value == undefined;
+const showSkeleton = computed(() => selectedCharacterInfo.value == undefined);
+const selectedSinger = computed(() => {
+  return store.state.singer;
 });
 
 const selectedSpeakerUuid = computed(() => {
@@ -226,28 +198,6 @@ const selectedStyleId = computed(
         style.engineId === store.state.singer?.engineId
     )?.styleId
 );
-
-const selectedCharacterName = computed(() => {
-  return selectedCharacterInfo.value?.metas.speakerName;
-});
-const selectedCharacterStyleDescription = computed(() => {
-  const style = selectedCharacterInfo.value?.metas.styles.find((style) => {
-    return (
-      style.styleId === store.state.singer?.styleId &&
-      style.engineId === store.state.singer?.engineId
-    );
-  });
-  return style != undefined ? getStyleDescription(style) : "";
-});
-const selectedStyleIconPath = computed(() => {
-  const styles = selectedCharacterInfo.value?.metas.styles;
-  return styles?.find((style) => {
-    return (
-      style.styleId === store.state.singer?.styleId &&
-      style.engineId === store.state.singer?.engineId
-    );
-  })?.iconPath;
-});
 
 const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
   const engineId = store.state.engineIds.find((_engineId) =>
@@ -301,59 +251,6 @@ const engineIcons = computed(() =>
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
-
-.selected-character {
-  align-items: center;
-  display: flex;
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-  position: relative;
-
-  .character-menu-toggle {
-    align-items: center;
-    display: flex;
-    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-    position: relative;
-  }
-  .character-avatar-icon {
-    display: block;
-    height: 100%;
-    object-fit: cover;
-    width: 100%;
-  }
-
-  .character-info {
-    align-items: start;
-    display: flex;
-    flex-direction: column;
-    margin-left: 0.5rem;
-    text-align: left;
-    justify-content: center;
-    white-space: nowrap;
-  }
-  .character-name {
-    font-size: 0.875rem;
-    font-weight: bold;
-    line-height: 1rem;
-    padding-top: 0.5rem;
-
-    &.skeleton {
-      margin-top: 0.4rem;
-      margin-bottom: 0.2rem;
-    }
-  }
-
-  .character-style {
-    color: rgba(colors.$display-rgb, 0.6);
-    font-size: 0.75rem;
-    font-weight: bold;
-    line-height: 1rem;
-  }
-
-  .character-menu-dropdown-icon {
-    color: rgba(colors.$display-rgb, 0.8);
-    margin-left: 0.25rem;
-  }
-}
 
 .character-menu {
   .q-item {
