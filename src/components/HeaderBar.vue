@@ -33,7 +33,7 @@ import {
   ToolbarButtonTagType,
 } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
-import { useHotkeyManager } from "@/composables/useHotkeyManager";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 type ButtonContent = {
   text: string;
@@ -56,27 +56,6 @@ const nowPlayingContinuously = computed(
 );
 
 const hotkeyManager = useHotkeyManager();
-//  // undo
-//  [
-//    "元に戻す",
-//    () => {
-//      if (!uiLocked.value && canUndo.value) {
-//        undo();
-//      }
-//      return false;
-//    },
-//  ],
-//  // redo
-//  [
-//    "やり直す",
-//    () => {
-//      if (!uiLocked.value && canRedo.value) {
-//        redo();
-//      }
-//      return false;
-//    },
-//  ],
-
 hotkeyManager.register({
   editor: "talk",
   enableInTextbox: false,

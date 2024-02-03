@@ -210,15 +210,13 @@ import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotific
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
-  HotkeyActionType,
-  HotkeyReturnType,
   PresetKey,
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
-import { parseCombo, setHotkeyFunctions } from "@/store/setting";
-import { useHotkeyManager } from "@/composables/useHotkeyManager";
+import { parseCombo } from "@/store/setting";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props =
   defineProps<{

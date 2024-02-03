@@ -1,4 +1,3 @@
-import Mousetrap from "mousetrap";
 import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
@@ -18,7 +17,6 @@ import {
   RootMiscSettingType,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
-import { useHotkeyManager } from "@/composables/useHotkeyManager";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -82,8 +80,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
             data: hotkey,
           });
         });
-        const hotkeyManager = useHotkeyManager();
-        hotkeyManager.load(hotkeys);
       });
 
       const theme = await window.electron.theme();
@@ -192,25 +188,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       });
       if (flag) state.hotkeySettings.push(newHotkey);
     },
-    action({ state, commit }, { data }: { data: HotkeySettingType }) {
+    action({ commit }, { data }: { data: HotkeySettingType }) {
       window.electron.hotkeySettings(data);
-      const oldHotkey = state.hotkeySettings.find((value) => {
-        return value.action == data.action;
-      });
-      if (oldHotkey != undefined) {
-        if (oldHotkey.combination != "") {
-          Mousetrap.unbind(hotkey2Combo(oldHotkey.combination));
-        }
-      }
-      if (
-        data.combination != "" &&
-        hotkeyFunctionCache[data.action] != undefined
-      ) {
-        Mousetrap.bind(
-          hotkey2Combo(data.combination),
-          hotkeyFunctionCache[data.action]
-        );
-      }
       commit("SET_HOTKEY_SETTINGS", {
         newHotkey: data,
       });

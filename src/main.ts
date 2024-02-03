@@ -6,6 +6,7 @@ import App from "./App.vue";
 import router from "./router";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
+import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
@@ -42,6 +43,7 @@ createApp(App)
       Notify,
     },
   })
+  .use(hotkeyPlugin)
   .use(ipcMessageReceiver, { store })
   .use(markdownItPlugin)
   .mount("#app");
