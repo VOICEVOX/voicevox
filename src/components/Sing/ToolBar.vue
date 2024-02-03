@@ -139,8 +139,8 @@ const playheadPositionStr = computed(() => {
   return `${minStr}:${secStr}.${milliSecStr}`;
 });
 
-const tempos = computed(() => store.state.score.tempos);
-const timeSignatures = computed(() => store.state.score.timeSignatures);
+const tempos = computed(() => store.state.tempos);
+const timeSignatures = computed(() => store.state.timeSignatures);
 const nowPlaying = computed(() => store.state.nowPlaying);
 
 watch(
@@ -205,7 +205,7 @@ const volume = computed({
 });
 
 const snapTypeSelectOptions = computed(() => {
-  const tpqn = store.state.score.tpqn;
+  const tpqn = store.state.tpqn;
   return getSnapTypes(tpqn)
     .sort((a, b) => {
       if (isTriplet(a) === isTriplet(b)) {

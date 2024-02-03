@@ -170,20 +170,17 @@ const reassignSubMenuOpen = debounce((idx: number) => {
   arr[idx] = true;
   subMenuOpenFlags.value = arr;
 }, 100);
-const selectedCharacterInfo = computed(() => {
-  if (
-    userOrderedCharacterInfos.value == undefined ||
-    store.state.singer == undefined
-  )
-    return undefined;
-  return store.getters.CHARACTER_INFO(
-    store.state.singer.engineId,
-    store.state.singer.styleId
-  );
-});
 const showSkeleton = computed(() => selectedCharacterInfo.value == undefined);
 const selectedSinger = computed(() => {
-  return store.state.singer;
+  return store.state.tracks[0].singer;
+});
+
+const selectedCharacterInfo = computed(() => {
+  const singer = store.state.tracks[0].singer;
+  if (userOrderedCharacterInfos.value == undefined || !singer) {
+    return undefined;
+  }
+  return store.getters.CHARACTER_INFO(singer.engineId, singer.styleId);
 });
 
 const selectedSpeakerUuid = computed(() => {
@@ -194,8 +191,8 @@ const selectedStyleId = computed(
   () =>
     selectedCharacterInfo.value?.metas.styles.find(
       (style) =>
-        style.styleId === store.state.singer?.styleId &&
-        style.engineId === store.state.singer?.engineId
+        style.styleId === store.state.tracks[0].singer?.styleId &&
+        style.engineId === store.state.tracks[0].singer?.engineId
     )?.styleId
 );
 
