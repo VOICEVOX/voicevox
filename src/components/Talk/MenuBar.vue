@@ -228,7 +228,6 @@ const fileSubMenuData = computed<MenuItemData[]>(() => [
 
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "新規プロジェクト",
   callback: () => {
     createNewProject();
@@ -236,7 +235,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "音声書き出し",
   callback: () => {
     generateAndSaveAllAudio();
@@ -244,7 +242,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "選択音声を書き出し",
   callback: () => {
     generateAndSaveSelectedAudio();
@@ -252,7 +249,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "音声を繋げて書き出し",
   callback: () => {
     generateAndConnectAndSaveAllAudio();
@@ -260,7 +256,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "テキスト読み込む",
   callback: () => {
     importTextFile();
@@ -268,7 +263,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "プロジェクトを上書き保存",
   callback: () => {
     saveProject();
@@ -276,7 +270,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "プロジェクトを名前を付けて保存",
   callback: () => {
     saveProjectAs();
@@ -284,7 +277,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "プロジェクト読み込み",
   callback: () => {
     importProject();

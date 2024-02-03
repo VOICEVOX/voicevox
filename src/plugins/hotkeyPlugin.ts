@@ -13,7 +13,7 @@ export const useHotkeyManager = () => {
 
 type HotkeyRegistration = {
   editor: "talk" | "song";
-  enableInTextbox: boolean;
+  enableInTextbox?: boolean;
   action: HotkeyActionType;
   keepDefaultBehavior?: boolean;
   callback: (e: KeyboardEvent) => void;

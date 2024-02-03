@@ -111,7 +111,6 @@ const hotkeyManager = useHotkeyManager();
 
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "再生/停止",
   callback: () => {
     if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
@@ -123,7 +122,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "ｱｸｾﾝﾄ欄を表示",
   callback: () => {
     selectedDetail.value = "accent";
@@ -131,7 +129,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
   callback: () => {
     if (supportedFeatures.value?.adjustMoraPitch) {
@@ -141,7 +138,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "長さ欄を表示",
   callback: () => {
     if (supportedFeatures.value?.adjustPhonemeLength) {
@@ -151,7 +147,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "全体のイントネーションをリセット",
   callback: () => {
     if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
@@ -166,7 +161,6 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "選択中のアクセント句のイントネーションをリセット",
   callback: () => {
     if (

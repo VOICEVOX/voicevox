@@ -236,7 +236,6 @@ const hotkeyManager = useHotkeyManager();
 
 hotkeyManager.register({
   editor: "talk",
-  enableInTextbox: false,
   action: "テキスト欄にフォーカスを戻す",
   callback: () => {
     if (activeAudioKey.value != undefined) {
