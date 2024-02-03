@@ -198,7 +198,7 @@ const getDefaultStyle = (speakerUuid: string) => {
 };
 
 const selectedCharacterInfo = computed(() => {
-  const singer = store.state.tracks[0].singer;
+  const singer = store.getters.SELECTED_TRACK.singer;
   if (userOrderedCharacterInfos.value == undefined || !singer) {
     return undefined;
   }
@@ -213,8 +213,8 @@ const selectedStyleId = computed(
   () =>
     selectedCharacterInfo.value?.metas.styles.find(
       (style) =>
-        style.styleId === store.state.tracks[0].singer?.styleId &&
-        style.engineId === store.state.tracks[0].singer?.engineId
+        style.styleId === store.getters.SELECTED_TRACK.singer?.styleId &&
+        style.engineId === store.getters.SELECTED_TRACK.singer?.engineId
     )?.styleId
 );
 

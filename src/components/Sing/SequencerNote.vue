@@ -150,7 +150,7 @@ const onLyricInputKeyDown = (event: KeyboardEvent) => {
   if (event.key === "Tab") {
     event.preventDefault();
     const noteId = props.note.id;
-    const notes = state.tracks[0].notes;
+    const notes = store.getters.SELECTED_TRACK.notes;
     const index = notes.findIndex((value) => value.id === noteId);
     if (index === -1) {
       return;
