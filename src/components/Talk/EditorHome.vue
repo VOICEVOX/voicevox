@@ -239,22 +239,22 @@ hotkeyManager.register({
   editor: "talk",
   enableInTextbox: false,
   action: "テキスト欄にフォーカスを戻す",
-  callback: () => {
+  callback: (e) => {
     if (activeAudioKey.value != undefined) {
+      e.preventDefault();
       focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
     }
-    return false;
   },
 });
 hotkeyManager.register({
   editor: "talk",
   enableInTextbox: true,
   action: "テキスト欄を複製",
-  callback: () => {
+  callback: (e) => {
     if (activeAudioKey.value != undefined) {
+      e.preventDefault();
       duplicateAudioItem();
     }
-    return false;
   },
 });
 

@@ -20,7 +20,6 @@ import { useRoute } from "vue-router";
 import { EngineId } from "./type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
@@ -53,18 +52,6 @@ const hotkeyManager = useHotkeyManager();
 const isEnginesReady = ref(false);
 onMounted(async () => {
   await store.dispatch("INIT_VUEX");
-
-  // Electronのデフォルトのundo/redoを無効化
-  const disableDefaultUndoRedo = (event: KeyboardEvent) => {
-    // ctrl+z, ctrl+shift+z, ctrl+y
-    if (
-      isOnCommandOrCtrlKeyDown(event) &&
-      (event.key == "z" || (!event.shiftKey && event.key == "y"))
-    ) {
-      event.preventDefault();
-    }
-  };
-  document.addEventListener("keydown", disableDefaultUndoRedo);
 
   const hotkeySettings = store.state.hotkeySettings;
 

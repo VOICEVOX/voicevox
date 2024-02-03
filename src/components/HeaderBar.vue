@@ -60,22 +60,22 @@ hotkeyManager.register({
   editor: "talk",
   enableInTextbox: false,
   action: "元に戻す",
-  callback: () => {
+  callback: (e) => {
     if (!uiLocked.value && canUndo.value) {
+      e.preventDefault();
       undo();
     }
-    return false;
   },
 });
 hotkeyManager.register({
   editor: "talk",
   enableInTextbox: false,
   action: "やり直す",
-  callback: () => {
+  callback: (e) => {
     if (!uiLocked.value && canRedo.value) {
+      e.preventDefault();
       redo();
     }
-    return false;
   },
 });
 

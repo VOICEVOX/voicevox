@@ -1,5 +1,5 @@
-import Mousetrap from "mousetrap";
 import { Plugin, inject } from "vue";
+import hotkeys from "hotkeys-js";
 import { HotkeyActionType, HotkeySettingType } from "@/type/preload";
 
 const hotkeyManagerKey = "hotkeyManager";
@@ -15,13 +15,17 @@ type HotkeyRegistration = {
   editor: "talk" | "song";
   enableInTextbox: boolean;
   action: HotkeyActionType;
-  callback: () => boolean;
+  callback: (e: KeyboardEvent) => void;
 };
 
 export class HotkeyManager {
   actions: HotkeyRegistration[] = [];
   settings: HotkeySettingType[] = [];
   registered: Partial<Record<HotkeyActionType, string>> = {};
+
+  constructor() {
+    hotkeys.filter = () => true;
+  }
 
   load(data: HotkeySettingType[]): void {
     this.settings = data;
@@ -40,7 +44,7 @@ export class HotkeyManager {
     for (const action of changedActions) {
       const registered = this.registered[action.action];
       if (registered) {
-        Mousetrap.unbind(hotkeyToCombo(registered));
+        hotkeys.unbind(hotkeyToCombo(registered));
       }
       const setting = this.settings.find((s) => s.action === action.action);
       if (!setting) {
@@ -48,7 +52,7 @@ export class HotkeyManager {
         throw new Error("assert: setting == undefined");
       }
 
-      Mousetrap.bind(hotkeyToCombo(setting.combination), (e) => {
+      hotkeys(hotkeyToCombo(setting.combination), (e) => {
         if (!action.enableInTextbox) {
           const element = e.target as HTMLElement;
           if (
@@ -60,13 +64,13 @@ export class HotkeyManager {
             // メニュー項目ではショートカットキーを無効化
             element.classList.contains("q-item")
           ) {
-            return true;
+            return;
           }
         }
         // TODO: もっと良い感じの取得方法があれば変更する
         const path = location.hash.split("/")[1] as "talk" | "song";
         if (path === action.editor) {
-          return action.callback();
+          action.callback(e);
         }
       });
       this.registered[action.action] = setting.combination;
