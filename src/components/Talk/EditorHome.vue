@@ -218,6 +218,7 @@ import {
 } from "@/type/preload";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import { useHotkeyManager } from "@/composables/useHotkeyManager";
 
 const props =
   defineProps<{
@@ -234,30 +235,30 @@ const reloadingLocked = computed(() => store.state.reloadingLock);
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
 // hotkeys handled by Mousetrap
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  [
-    "テキスト欄にフォーカスを戻す",
-    () => {
-      if (activeAudioKey.value != undefined) {
-        focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
-      }
-      return false; // this is the same with event.preventDefault()
-    },
-  ],
-  [
-    // FIXME: テキスト欄にフォーカスがある状態でも実行できるようにする
-    // https://github.com/VOICEVOX/voicevox/pull/1096#issuecomment-1378651920
-    "テキスト欄を複製",
-    () => {
-      if (activeAudioKey.value != undefined) {
-        duplicateAudioItem();
-      }
-      return false;
-    },
-  ],
-]);
+const hotkeyManager = useHotkeyManager();
 
-setHotkeyFunctions(hotkeyMap);
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "テキスト欄にフォーカスを戻す",
+  callback: () => {
+    if (activeAudioKey.value != undefined) {
+      focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
+    }
+    return false;
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: true,
+  action: "テキスト欄を複製",
+  callback: () => {
+    if (activeAudioKey.value != undefined) {
+      duplicateAudioItem();
+    }
+    return false;
+  },
+});
 
 const removeAudioItem = async () => {
   if (activeAudioKey.value == undefined) throw new Error();

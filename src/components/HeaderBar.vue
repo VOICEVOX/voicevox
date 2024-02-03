@@ -33,6 +33,7 @@ import {
   ToolbarButtonTagType,
 } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
+import { useHotkeyManager } from "@/composables/useHotkeyManager";
 
 type ButtonContent = {
   text: string;
@@ -54,29 +55,50 @@ const nowPlayingContinuously = computed(
   () => store.state.nowPlayingContinuously
 );
 
-const undoRedoHotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  // undo
-  [
-    "元に戻す",
-    () => {
-      if (!uiLocked.value && canUndo.value) {
-        undo();
-      }
-      return false;
-    },
-  ],
-  // redo
-  [
-    "やり直す",
-    () => {
-      if (!uiLocked.value && canRedo.value) {
-        redo();
-      }
-      return false;
-    },
-  ],
-]);
-setHotkeyFunctions(undoRedoHotkeyMap);
+const hotkeyManager = useHotkeyManager();
+//  // undo
+//  [
+//    "元に戻す",
+//    () => {
+//      if (!uiLocked.value && canUndo.value) {
+//        undo();
+//      }
+//      return false;
+//    },
+//  ],
+//  // redo
+//  [
+//    "やり直す",
+//    () => {
+//      if (!uiLocked.value && canRedo.value) {
+//        redo();
+//      }
+//      return false;
+//    },
+//  ],
+
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "元に戻す",
+  callback: () => {
+    if (!uiLocked.value && canUndo.value) {
+      undo();
+    }
+    return false;
+  },
+});
+hotkeyManager.register({
+  editor: "talk",
+  enableInTextbox: false,
+  action: "やり直す",
+  callback: () => {
+    if (!uiLocked.value && canRedo.value) {
+      redo();
+    }
+    return false;
+  },
+});
 
 const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
   // play/stop continuously

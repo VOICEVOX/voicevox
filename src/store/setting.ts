@@ -18,6 +18,7 @@ import {
   RootMiscSettingType,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
+import { useHotkeyManager } from "@/composables/useHotkeyManager";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -81,6 +82,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
             data: hotkey,
           });
         });
+        const hotkeyManager = useHotkeyManager();
+        hotkeyManager.load(hotkeys);
       });
 
       const theme = await window.electron.theme();
