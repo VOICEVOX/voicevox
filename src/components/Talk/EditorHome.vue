@@ -162,7 +162,7 @@
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
-    v-if="allCharacterInfos.length > 0"
+    v-if="allCharacterInfos.size > 0"
     v-model="isCharacterOrderDialogOpenComputed"
     :character-infos="allCharacterInfos"
   />
@@ -711,9 +711,7 @@ const isAcceptTermsDialogOpenComputed = computed({
 });
 
 // キャラクター並び替え
-const allCharacterInfos = computed(() => [
-  ...store.getters.GET_ALL_CHARACTER_INFOS.values(),
-]);
+const allCharacterInfos = computed(() => store.getters.GET_ALL_CHARACTER_INFOS);
 const isCharacterOrderDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
@@ -727,7 +725,10 @@ const isCharacterOrderDialogOpenComputed = computed({
 // TODO: デフォルトスタイル選択(ソング)の実装
 // デフォルトスタイル選択(トーク)
 const allTalkCharacterInfos = computed(() => {
-  return filterCharacterInfosByStyleType(allCharacterInfos.value, "talk");
+  return filterCharacterInfosByStyleType(
+    [...store.getters.GET_ALL_CHARACTER_INFOS.values()],
+    "talk"
+  );
 });
 const isDefaultStyleSelectDialogOpenComputed = computed({
   get: () =>

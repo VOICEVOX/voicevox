@@ -50,7 +50,7 @@
             <span class="text-h6 q-py-md">サンプルボイス一覧</span>
             <div>
               <CharacterTryListenCard
-                v-for="characterInfo of characterInfos"
+                v-for="characterInfo of characterInfosArray"
                 :key="characterInfo.metas.speakerUuid"
                 :character-info="characterInfo"
                 :is-selected="
@@ -114,7 +114,7 @@ import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 const props =
   defineProps<{
     modelValue: boolean;
-    characterInfos: CharacterInfo[];
+    characterInfos: Map<SpeakerId, CharacterInfo>;
   }>();
 
 const emit =
@@ -129,12 +129,8 @@ const modelValueComputed = computed({
   set: (val) => emit("update:modelValue", val),
 });
 
-const characterInfosMap = computed(() => {
-  const map: { [key: SpeakerId]: CharacterInfo } = {};
-  props.characterInfos.forEach((characterInfo) => {
-    map[characterInfo.metas.speakerUuid] = characterInfo;
-  });
-  return map;
+const characterInfosArray = computed(() => {
+  return [...props.characterInfos.values()];
 });
 
 // 新しいキャラクター
@@ -145,13 +141,15 @@ const hasNewCharacter = computed(() => newCharacters.value.length > 0);
 const sampleCharacterOrder = ref<SpeakerId[]>([]);
 
 // 選択中のキャラクター
-const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
+const selectedCharacter = ref(characterInfosArray.value[0].metas.speakerUuid);
 const selectCharacter = (speakerUuid: SpeakerId) => {
   selectedCharacter.value = speakerUuid;
 };
 const selectCharacterWithChangePortrait = (speakerUuid: SpeakerId) => {
   selectCharacter(speakerUuid);
-  portrait.value = characterInfosMap.value[speakerUuid].portraitPath;
+  const characterInfo = props.characterInfos.get(speakerUuid);
+  if (characterInfo == undefined) throw new Error("characterInfo is undefined");
+  portrait.value = characterInfo.portraitPath;
 };
 
 // キャラクター表示順序
@@ -168,7 +166,7 @@ watch(
       // サンプルの順番、新しいキャラクターは上に
       sampleCharacterOrder.value = [
         ...newCharacters.value,
-        ...props.characterInfos
+        ...characterInfosArray.value
           .filter(
             (info) => !newCharacters.value.includes(info.metas.speakerUuid)
           )
@@ -180,11 +178,11 @@ watch(
       // 保存済みのキャラクターリストを取得
       // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
       characterOrder.value = store.state.userCharacterOrder
-        .map((speakerUuid) => characterInfosMap.value[speakerUuid])
+        .map((speakerUuid) => props.characterInfos.get(speakerUuid))
         .filter((info) => info != undefined) as CharacterInfo[];
 
       // 含まれていないキャラクターを足す
-      const notIncludesCharacterInfos = props.characterInfos.filter(
+      const notIncludesCharacterInfos = characterInfosArray.value.filter(
         (characterInfo) =>
           !characterOrder.value.find(
             (characterInfoInList) =>
@@ -261,7 +259,7 @@ const closeDialog = () => {
 };
 
 const portrait = ref<string | undefined>(
-  characterInfosMap.value[selectedCharacter.value].portraitPath
+  props.characterInfos.get(selectedCharacter.value)?.portraitPath
 );
 const updatePortrait = (portraitPath: string) => {
   portrait.value = portraitPath;
