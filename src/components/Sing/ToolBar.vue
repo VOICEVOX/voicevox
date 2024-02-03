@@ -1,29 +1,71 @@
 <template>
-  <div class="sing-toolbar">
-    <character-menu-button>
-      <div class="character-menu-toggle">
-        <q-avatar
-          v-if="selectedStyleIconPath"
-          class="character-avatar"
-          size="3.5rem"
-        >
-          <img :src="selectedStyleIconPath" class="character-avatar-icon" />
-        </q-avatar>
-        <div class="character-info">
-          <div class="character-name">
-            {{ selectedCharacterName }}
+  <q-toolbar class="sing-toolbar">
+    <!-- settings for entire song -->
+    <div class="sing-settings">
+      <character-menu-button>
+        <div class="character-menu-toggle">
+          <q-avatar
+            v-if="selectedStyleIconPath"
+            class="character-avatar"
+            size="48px"
+          >
+            <img :src="selectedStyleIconPath" class="character-avatar-icon" />
+          </q-avatar>
+          <div class="character-info">
+            <div class="character-name">
+              {{ selectedCharacterName }}
+            </div>
+            <div class="character-style">
+              {{ selectedCharacterStyleDescription }}
+            </div>
           </div>
-          <div class="character-style">
-            {{ selectedCharacterStyleDescription }}
-          </div>
+          <q-icon
+            name="arrow_drop_down"
+            size="sm"
+            class="character-menu-dropdown-icon"
+          />
         </div>
-        <q-icon
-          name="arrow_drop_down"
-          size="sm"
-          class="character-menu-dropdown-icon"
+      </character-menu-button>
+      <q-input
+        type="number"
+        :model-value="bpmInputBuffer"
+        label="テンポ"
+        dense
+        border-color="surface"
+        hide-bottom-space
+        class="sing-tempo"
+        @update:model-value="setBpmInputBuffer"
+        @change="setTempo"
+      >
+        <template #prepend>
+          <q-icon name="music_note" size="xs" class="sing-tempo-icon" />
+        </template>
+      </q-input>
+      <div class="sing-beats">
+        <q-input
+          type="number"
+          :model-value="beatsInputBuffer"
+          label="拍子"
+          dense
+          hide-bottom-space
+          class="sing-time-signature"
+          @update:model-value="setBeatsInputBuffer"
+          @change="setTimeSignature"
+        />
+        <div class="sing-beats-separator">/</div>
+        <q-input
+          type="number"
+          :model-value="beatTypeInputBuffer"
+          label=""
+          dense
+          hide-bottom-space
+          class="sing-time-signature"
+          @update:model-value="setBeatTypeInputBuffer"
+          @change="setTimeSignature"
         />
       </div>
-    </character-menu-button>
+    </div>
+    <!-- player -->
     <div class="sing-player">
       <q-btn
         flat
@@ -46,64 +88,33 @@
         icon="stop"
         @click="stop"
       ></q-btn>
-      <div class="sing-playhead-position">{{ playheadPositionStr }}</div>
-      <q-input
-        type="number"
-        :model-value="bpmInputBuffer"
-        dense
-        hide-bottom-space
-        class="sing-tempo"
-        @update:model-value="setBpmInputBuffer"
-        @change="setTempo"
-      >
-        <template #prepend>
-          <div></div>
-        </template>
-      </q-input>
-      <q-input
-        type="number"
-        :model-value="beatsInputBuffer"
-        dense
-        hide-bottom-space
-        class="sing-time-signature"
-        @update:model-value="setBeatsInputBuffer"
-        @change="setTimeSignature"
-      >
-        <template #prepend>
-          <div></div>
-        </template>
-      </q-input>
-      /
-      <q-input
-        type="number"
-        :model-value="beatTypeInputBuffer"
-        dense
-        hide-bottom-space
-        class="sing-time-signature"
-        @update:model-value="setBeatTypeInputBuffer"
-        @change="setTimeSignature"
-      >
-        <template #prepend>
-          <div></div>
-        </template>
-      </q-input>
+      <div class="sing-playhead-position">
+        <div>{{ playheadPositionMinSecStr }}</div>
+        <div class="sing-playhead-position-millisec">
+          .{{ playHeadPositionMilliSecStr }}
+        </div>
+      </div>
     </div>
-    <div class="sing-setting">
+    <!-- settings for edit controls -->
+    <div class="sing-controls">
+      <q-icon name="volume_up" size="xs" class="sing-volume-icon" />
       <q-slider v-model.number="volume" class="sing-volume" />
       <q-select
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
-        color="primary"
-        text-color="display-on-primary"
         outlined
+        color="primary"
         dense
+        text-color="display-on-primary"
+        hide-bottom-space
         options-dense
+        label="スナップ"
         transition-show="none"
         transition-hide="none"
         class="sing-snap"
       />
     </div>
-  </div>
+  </q-toolbar>
 </template>
 
 <script setup lang="ts">
@@ -181,7 +192,7 @@ const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
 
 const playheadTicks = ref(0);
 
-const playheadPositionStr = computed(() => {
+const playheadPositionMinSecStr = computed(() => {
   const ticks = playheadTicks.value;
   const time = store.getters.TICK_TO_SECOND(ticks);
 
@@ -189,10 +200,17 @@ const playheadPositionStr = computed(() => {
   const min = Math.trunc(intTime / 60);
   const minStr = String(min).padStart(2, "0");
   const secStr = String(intTime - min * 60).padStart(2, "0");
+
+  return `${minStr}:${secStr}`;
+});
+
+const playHeadPositionMilliSecStr = computed(() => {
+  const ticks = playheadTicks.value;
+  const time = store.getters.TICK_TO_SECOND(ticks);
+  const intTime = Math.trunc(time);
   const milliSec = Math.trunc((time - intTime) * 1000);
   const milliSecStr = String(milliSec).padStart(3, "0");
-
-  return `${minStr}:${secStr}.${milliSecStr}`;
+  return milliSecStr;
 });
 
 const tempos = computed(() => store.state.tempos);
@@ -272,7 +290,7 @@ const snapTypeSelectOptions = computed(() => {
     })
     .map((snapType) => {
       if (isTriplet(snapType)) {
-        return { snapType, label: `1/${(snapType / 3) * 2}（三連符）` };
+        return { snapType, label: `1/${(snapType / 3) * 2} T` };
       } else {
         return { snapType, label: `1/${snapType}` };
       }
@@ -315,6 +333,26 @@ onUnmounted(() => {
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
+.q-input {
+  :deep(.q-field__control::before) {
+    border-color: rgba(colors.$display-rgb, 0.2);
+  }
+
+  :deep(.q-field__label) {
+    top: 4px;
+  }
+}
+
+.q-select {
+  :deep(.q-field__control::before) {
+    border-color: rgba(colors.$display-rgb, 0.2);
+  }
+
+  :deep(.q-field__label) {
+    top: 10px;
+  }
+}
+
 .character-menu-toggle {
   align-items: center;
   display: flex;
@@ -341,14 +379,14 @@ onUnmounted(() => {
   font-size: 0.875rem;
   font-weight: bold;
   line-height: 1rem;
-  padding-top: 0.5rem;
+  padding-top: 4px;
 }
 
 .character-style {
-  color: rgba(colors.$display-rgb, 0.6);
-  font-size: 0.75rem;
-  font-weight: bold;
+  color: rgba(colors.$display-rgb, 0.8);
+  font-size: 11px;
   line-height: 1rem;
+  vertical-align: text-bottom;
 }
 
 .character-menu-dropdown-icon {
@@ -361,17 +399,18 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   min-height: 56px;
-  padding: 0 16px 0 0;
+  padding: 0 8px 0 0;
   width: 100%;
+}
+
+.sing-settings {
+  align-items: center;
+  display: flex;
 }
 
 .sing-player {
   align-items: center;
   display: flex;
-}
-
-.sing-transport-button {
-  margin: 0 1px;
 }
 
 .sing-playback-button {
@@ -381,33 +420,68 @@ onUnmounted(() => {
 .sing-tempo {
   margin-left: 16px;
   margin-right: 4px;
-  width: 64px;
+  width: 72px;
+}
+
+.sing-tempo-icon {
+  color: rgba(colors.$display-rgb, 0.6);
+  padding-right: 0px;
+  position: relative;
+  top: 4px;
+  left: 0;
+}
+
+.sing-beats {
+  align-items: center;
+  display: flex;
+  margin-left: 8px;
+  position: relative;
 }
 
 .sing-time-signature {
-  margin: 0 4px;
-  width: 36px;
+  margin: 0;
+  position: relative;
+  width: 32px;
+}
+.sing-beats-separator {
+  color: rgba(colors.$display-rgb, 0.6);
+  position: relative;
+  top: 5px;
+  margin-right: 8px;
+  pointer-events: none;
 }
 
 .sing-playhead-position {
-  font-size: 18px;
-  margin-left: 14px;
-  margin-right: 4px;
-  min-width: 82px;
+  align-items: center;
+  display: flex;
+  font-size: 28px;
+  font-weight: 700;
+  margin-left: 16px;
+  color: rgba(colors.$display-rgb, 0.9);
 }
 
-.sing-setting {
+.sing-playhead-position-millisec {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 10px 0 0 2px;
+  color: rgba(colors.$display-rgb, 0.6);
+}
+
+.sing-controls {
   align-items: center;
   display: flex;
 }
 
+.sing-volume-icon {
+  margin-right: 8px;
+  opacity: 0.6;
+}
 .sing-volume {
   margin-right: 16px;
   width: 72px;
 }
 
 .sing-snap {
-  margin-right: 2px;
-  min-width: 160px;
+  min-width: 104px;
 }
 </style>
