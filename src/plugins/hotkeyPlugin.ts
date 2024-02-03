@@ -11,29 +11,44 @@ export const useHotkeyManager = () => {
   return hotkeyManager;
 };
 
-type HotkeyRegistration = {
+/**
+ * ショートカットキーの情報を格納する型。
+ */
+type HotkeyEntry = {
+  /** どちらのエディタで有効か */
   editor: "talk" | "song";
+  /** テキストボックス内で有効か。デフォルトはfalse。 */
   enableInTextbox?: boolean;
+  /** 名前。 */
   action: HotkeyActionType;
+  /** ブラウザのデフォルトの挙動をキャンセルするか。デフォルトはfalse。 */
   keepDefaultBehavior?: boolean;
+  /** ショートカットキーが押されたときの処理。 */
   callback: (e: KeyboardEvent) => void;
 };
 
+/**
+ * ショートカットキーの管理を行うクラス。
+ */
 export class HotkeyManager {
-  actions: HotkeyRegistration[] = [];
+  actions: HotkeyEntry[] = [];
   settings: HotkeySettingType[] = [];
   registered: Partial<Record<HotkeyActionType, string>> = {};
 
   constructor() {
+    // デフォルトだとテキスト欄でのショートカットキーが効かないので、テキスト欄でも効くようにする
     hotkeys.filter = () => true;
   }
 
+  /**
+   * ショートカットキーの設定を読み込む。
+   */
   load(data: HotkeySettingType[]): void {
     this.settings = data;
-    this.refresh();
+    this.refreshBinding();
   }
 
-  private refresh(): void {
+  private refreshBinding(): void {
     if (this.settings.length === 0) {
       return;
     }
@@ -79,18 +94,24 @@ export class HotkeyManager {
     }
   }
 
+  /**
+   * ショートカットキーの設定を変更する。
+   */
   replace(data: HotkeySettingType): void {
     const index = this.settings.findIndex((s) => s.action === data.action);
     if (index === -1) {
       throw new Error("assert: index !== -1");
     }
     this.settings[index] = data;
-    this.refresh();
+    this.refreshBinding();
   }
 
-  register(data: HotkeyRegistration): void {
+  /**
+   * ショートカットキーの登録を行う。
+   */
+  register(data: HotkeyEntry): void {
     this.actions.push(data);
-    this.refresh();
+    this.refreshBinding();
   }
 }
 
