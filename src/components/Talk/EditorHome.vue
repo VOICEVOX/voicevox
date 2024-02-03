@@ -167,9 +167,9 @@
     :character-infos="allCharacterInfos"
   />
   <default-style-list-dialog
-    v-if="orderedTalkCharacterInfos.length > 0"
+    v-if="allTalkCharacterInfos.length > 0"
     v-model="isDefaultStyleSelectDialogOpenComputed"
-    :character-infos="orderedTalkCharacterInfos"
+    :character-infos="allTalkCharacterInfos"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
@@ -726,7 +726,7 @@ const isCharacterOrderDialogOpenComputed = computed({
 
 // TODO: デフォルトスタイル選択(ソング)の実装
 // デフォルトスタイル選択(トーク)
-const orderedTalkCharacterInfos = computed(() => {
+const allTalkCharacterInfos = computed(() => {
   return filterCharacterInfosByStyleType(allCharacterInfos.value, "talk");
 });
 const isDefaultStyleSelectDialogOpenComputed = computed({
