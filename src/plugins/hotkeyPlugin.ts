@@ -68,28 +68,58 @@ export class HotkeyManager {
         throw new Error("assert: setting == undefined");
       }
 
-      hotkeys(hotkeyToCombo(setting.combination), (e) => {
-        if (!action.enableInTextbox) {
-          const element = e.target as HTMLElement;
-          if (
-            element.tagName === "INPUT" ||
-            element.tagName === "SELECT" ||
-            element.tagName === "TEXTAREA" ||
-            (element instanceof HTMLElement &&
-              element.contentEditable === "true") ||
-            // メニュー項目ではショートカットキーを無効化
-            element.classList.contains("q-item")
-          ) {
-            return;
-          }
+      const actions = this.actions.filter((a) => a.action === action.action);
+      if (actions.length > 1) {
+        const songAction = actions.find((a) => a.editor === "song");
+        const talkAction = actions.find((a) => a.editor === "talk");
+        if (!songAction || !talkAction) {
+          throw new Error("assert: songAction && talkAction");
         }
-        // TODO: もっと良い感じの取得方法があれば変更する
-        const path = location.hash.split("/")[1] as "talk" | "song";
-        if (path === action.editor) {
+        // talk/song両方で有効なショートカットキー
+        hotkeys(hotkeyToCombo(setting.combination), (e) => {
+          const path = location.hash.split("/")[1] as "talk" | "song";
+          const action = path === "talk" ? talkAction : songAction;
+          if (!action.enableInTextbox) {
+            const element = e.target as HTMLElement;
+            if (
+              element.tagName === "INPUT" ||
+              element.tagName === "SELECT" ||
+              element.tagName === "TEXTAREA" ||
+              (element instanceof HTMLElement &&
+                element.contentEditable === "true") ||
+              // メニュー項目ではショートカットキーを無効化
+              element.classList.contains("q-item")
+            ) {
+              return;
+            }
+          }
           if (!action.keepDefaultBehavior) e.preventDefault();
           action.callback(e);
-        }
-      });
+        });
+      } else {
+        hotkeys(hotkeyToCombo(setting.combination), (e) => {
+          if (!action.enableInTextbox) {
+            const element = e.target as HTMLElement;
+            if (
+              element.tagName === "INPUT" ||
+              element.tagName === "SELECT" ||
+              element.tagName === "TEXTAREA" ||
+              (element instanceof HTMLElement &&
+                element.contentEditable === "true") ||
+              // メニュー項目ではショートカットキーを無効化
+              element.classList.contains("q-item")
+            ) {
+              return;
+            }
+          }
+          // TODO: もっと良い感じの取得方法があれば変更する
+          const path = location.hash.split("/")[1] as "talk" | "song";
+          if (path === action.editor) {
+            if (!action.keepDefaultBehavior) e.preventDefault();
+            action.callback(e);
+          }
+        });
+      }
       this.registered[action.action] = setting.combination;
     }
   }

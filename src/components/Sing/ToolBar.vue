@@ -118,8 +118,22 @@ import {
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton.vue";
 import { getStyleDescription } from "@/sing/viewHelper";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
+const hotkeyManager = useHotkeyManager();
+
+hotkeyManager.register({
+  action: "再生/停止",
+  editor: "song",
+  callback: () => {
+    if (nowPlaying.value) {
+      stop();
+    } else {
+      play();
+    }
+  },
+});
 
 const userOrderedCharacterInfos = computed(() =>
   store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike")
