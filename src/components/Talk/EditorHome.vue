@@ -2,7 +2,7 @@
   <menu-bar />
 
   <q-layout reveal elevated container class="layout-container">
-    <header-bar />
+    <tool-bar />
 
     <q-page-container>
       <q-page class="main-row-panes">
@@ -160,7 +160,7 @@
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
-  <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
+  <tool-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
     v-if="orderedAllCharacterInfos.length > 0"
     v-model="isCharacterOrderDialogOpenComputed"
@@ -192,13 +192,13 @@ import AudioCell from "./AudioCell.vue";
 import AudioDetail from "./AudioDetail.vue";
 import AudioInfo from "./AudioInfo.vue";
 import CharacterPortrait from "./CharacterPortrait.vue";
+import ToolBar from "./ToolBar.vue";
 import { useStore } from "@/store";
-import HeaderBar from "@/components/HeaderBar.vue";
 import MenuBar from "@/components/Talk/MenuBar.vue";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 import SettingDialog from "@/components/Dialog/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
-import HeaderBarCustomDialog from "@/components/Dialog/HeaderBarCustomDialog.vue";
+import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
 import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
 import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptRetrieveTelemetryDialog.vue";
@@ -849,7 +849,7 @@ const onAudioCellPaneClick = () => {
 @use '@/styles/colors' as colors;
 
 .q-header {
-  height: vars.$header-height;
+  height: vars.$toolbar-height;
 }
 
 .layout-container {
@@ -891,7 +891,7 @@ const onAudioCellPaneClick = () => {
 
   .q-splitter--horizontal {
     height: calc(
-      100vh - #{vars.$menubar-height + vars.$header-height +
+      100vh - #{vars.$menubar-height + vars.$toolbar-height +
         vars.$window-border-width}
     );
   }
