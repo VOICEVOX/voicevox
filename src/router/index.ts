@@ -1,15 +1,15 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
-import SingEditorHome from "@/components/Sing/EditorHome.vue";
-import TalkEditorHome from "@/components/Talk/EditorHome.vue";
+import SingEditor from "@/components/Sing/SingEditor.vue";
+import TalkEditor from "@/components/Talk/TalkEditor.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/talk",
-    component: TalkEditorHome,
+    component: TalkEditor,
   },
   {
     path: "/song",
-    component: SingEditorHome,
+    component: SingEditor,
   },
 ];
 
