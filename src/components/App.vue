@@ -18,7 +18,7 @@ import { watch, onMounted, ref, computed } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
 import { useRoute } from "vue-router";
 import Mousetrap from "mousetrap";
-import { EngineId } from "./type/preload";
+import { EngineId } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
