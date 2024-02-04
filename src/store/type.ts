@@ -1203,10 +1203,6 @@ export type IndexStoreTypes = {
     getter: Map<SpeakerId, CharacterInfo>;
   };
 
-  GET_ORDERED_ALL_CHARACTER_INFOS: {
-    getter: CharacterInfo[];
-  };
-
   GET_ALL_VOICES: {
     getter: Voice[];
   };

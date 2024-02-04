@@ -53,15 +53,11 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
      * キャラクター情報が読み出されていないときは、空リストを返す。
      */
     getter(state) {
-      const speakerUuids = [
-        ...new Set(
-          state.engineIds.flatMap((engineId) =>
-            (state.characterInfos[engineId] ?? []).map(
-              (c) => c.metas.speakerUuid
-            )
-          )
-        ),
-      ];
+      const speakerUuids = state.engineIds
+        .flatMap((engineId) =>
+          (state.characterInfos[engineId] ?? []).map((c) => c.metas.speakerUuid)
+        )
+        .filter((uuid, index, uuids) => uuids.indexOf(uuid) === index);
       const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
         const characterInfos = state.engineIds.flatMap(
           (engineId) =>
@@ -82,37 +78,6 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       return new Map(
         flattenCharacterInfos.map((c) => [c.metas.speakerUuid, c])
       );
-    },
-  },
-  /**
-   * すべてのエンジンのキャラクター情報のリスト。
-   * GET_ALL_CHARACTER_INFOSとは違い、話者の順番が保持される。
-   */
-  GET_ORDERED_ALL_CHARACTER_INFOS: {
-    getter(state) {
-      const speakerUuids = state.engineIds
-        .flatMap((engineId) =>
-          (state.characterInfos[engineId] ?? []).map((c) => c.metas.speakerUuid)
-        )
-        .filter((uuid, index, uuids) => uuids.indexOf(uuid) === index); // Setを使うと順番が保証されないのでindexOfで重複削除をする。
-      const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
-        const characterInfos = state.engineIds.flatMap(
-          (engineId) =>
-            state.characterInfos[engineId]?.find(
-              (c) => c.metas.speakerUuid === speakerUuid
-            ) ?? []
-        );
-
-        // エンジンの登録順が早い方が優先される。
-        return {
-          ...characterInfos[0],
-          metas: {
-            ...characterInfos[0].metas,
-            styles: characterInfos.flatMap((c) => c.metas.styles),
-          },
-        };
-      });
-      return flattenCharacterInfos;
     },
   },
 
