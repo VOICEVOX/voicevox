@@ -1,0 +1,105 @@
+// 基本色
+$primitive-black: #242626;
+$primitive-white: #ffffff;
+$primitive-primary: #a5d4ad;
+$primitive-blue: #0969da;
+$primitive-red: #d04756;
+
+// ライトテーマの色
+:root[is-dark-theme="false"] {
+  --newcolor-background: #{lighten($primitive-primary, 20%)};
+  --newcolor-surface: #{lighten($primitive-primary, 25%)};
+  --newcolor-border: #{rgba($primitive-black, 0.2)};
+  --newcolor-selected: #{rgba($primitive-primary, 0.3)};
+
+  --newcolor-display: #{$primitive-black, 10%};
+  --newcolor-display-oncolor: #{$primitive-black, 10%};
+  --newcolor-display-placeholder: #{rgba($primitive-black, 0.5)};
+  --newcolor-display-link: #{$primitive-blue};
+  --newcolor-display-warning: #{$primitive-red};
+
+  --newcolor-control: #{$primitive-white};
+  --newcolor-control-hovered: #{darken($primitive-white, 5%)};
+  --newcolor-control-pressed: #{darken($primitive-white, 10%)};
+
+  --newcolor-clear: #{rgba($primitive-black, 0)};
+  --newcolor-clear-hovered: #{rgba($primitive-black, 0.05)};
+  --newcolor-clear-pressed: #{rgba($primitive-black, 0.1)};
+
+  --newcolor-primary: #{$primitive-primary};
+  --newcolor-primary-hovered: #{darken($primitive-primary, 5%)};
+  --newcolor-primary-pressed: #{darken($primitive-primary, 10%)};
+
+  --newcolor-warning: #{$primitive-white};
+  --newcolor-warning-hovered: #{lighten($primitive-red, 40%)};
+  --newcolor-warning-pressed: #{lighten($primitive-red, 35%)};
+
+  --newcolor-scrollbar: #{rgba($primitive-black, 0.2)};
+  --newcolor-scrollbar-hovered: #{rgba($primitive-black, 0.3)};
+  --newcolor-scrollbar-pressed: #{rgba($primitive-black, 0.4)};
+}
+
+// ダークテーマの色
+:root[is-dark-theme="true"] {
+  --newcolor-background: #{$primitive-black};
+  --newcolor-surface: #{lighten($primitive-black, 3%)};
+  --newcolor-border: #{rgba($primitive-white, 0.2)};
+  --newcolor-selected: #{rgba($primitive-primary, 0.3)};
+
+  --newcolor-display: #{$primitive-white};
+  --newcolor-display-oncolor: #{$primitive-black};
+  --newcolor-display-placeholder: #{rgba($primitive-white, 0.5)};
+  --newcolor-display-link: #{lighten($primitive-blue, 25%)};
+  --newcolor-display-warning: #{lighten($primitive-red, 25%)};
+
+  --newcolor-control: #{lighten($primitive-black, 10%)};
+  --newcolor-control-hovered: #{lighten($primitive-black, 15%)};
+  --newcolor-control-pressed: #{lighten($primitive-black, 20%)};
+
+  --newcolor-clear: #{rgba($primitive-white, 0)};
+  --newcolor-clear-hovered: #{rgba($primitive-white, 0.05)};
+  --newcolor-clear-pressed: #{rgba($primitive-white, 0.1)};
+
+  --newcolor-primary: #{darken($primitive-primary, 10%)};
+  --newcolor-primary-hovered: #{darken($primitive-primary, 5%)};
+  --newcolor-primary-pressed: #{$primitive-primary};
+
+  --newcolor-warning: #{lighten($primitive-black, 10%)};
+  --newcolor-warning-hovered: #{darken($primitive-red, 35%)};
+  --newcolor-warning-pressed: #{darken($primitive-red, 30%)};
+
+  --newcolor-scrollbar: #{rgba($primitive-white, 0.2)};
+  --newcolor-scrollbar-hovered: #{rgba($primitive-white, 0.3)};
+  --newcolor-scrollbar-pressed: #{rgba($primitive-white, 0.4)};
+}
+
+$background: var(--newcolor-background);
+$surface: var(--newcolor-surface);
+$border: var(--newcolor-border);
+$selected: var(--newcolor-selected);
+
+$display: var(--newcolor-display);
+$display-oncolor: var(--newcolor-display-oncolor);
+$display-placeholder: var(--newcolor-display-placeholder);
+$display-link: var(--newcolor-display-link);
+$display-warning: var(--newcolor-display-warning);
+
+$control: var(--newcolor-control);
+$control-hovered: var(--newcolor-control-hovered);
+$control-pressed: var(--newcolor-control-pressed);
+
+$clear: var(--newcolor-clear);
+$clear-hovered: var(--newcolor-clear-hovered);
+$clear-pressed: var(--newcolor-clear-pressed);
+
+$primary: var(--newcolor-primary);
+$primary-hovered: var(--newcolor-primary-hovered);
+$primary-pressed: var(--newcolor-primary-pressed);
+
+$warning: var(--newcolor-warning);
+$warning-hovered: var(--newcolor-warning-hovered);
+$warning-pressed: var(--newcolor-warning-pressed);
+
+$scrollbar: var(--newcolor-scrollbar);
+$scrollbar-hovered: var(--newcolor-scrollbar-hovered);
+$scrollbar-pressed: var(--newcolor-scrollbar-pressed);

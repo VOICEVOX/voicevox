@@ -25,6 +25,7 @@ defineEmits<{
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
 @use '@/styles/mixin' as mixin;
+@use '@/styles/new-colors' as colors;
 
 .button {
   display: flex;
@@ -49,44 +50,44 @@ defineEmits<{
 }
 
 .default {
-  color: #222;
-  background-color: #fff;
-  border-color: #0002;
+  color: colors.$display;
+  border-color: colors.$border;
+  background-color: colors.$control;
 
   &:hover:not(:disabled) {
-    background-color: #f4f5f4;
+    background-color: colors.$control-hovered;
   }
 
   &:active:not(:disabled) {
-    background-color: #ebeceb;
+    background-color: colors.$control-pressed;
   }
 }
 
 .primary {
-  color: #fff;
-  border-color: #0002;
-  background-color: #a5d4ad;
+  color: colors.$display-oncolor;
+  border-color: colors.$border;
+  background-color: colors.$primary;
 
   &:hover:not(:disabled) {
-    background-color: #97cfa1;
+    background-color: colors.$primary-hovered;
   }
 
   &:active:not(:disabled) {
-    background-color: #86c291;
+    background-color: colors.$primary-pressed;
   }
 }
 
 .danger {
-  color: #d04756;
-  border-color: #d04756;
-  background-color: #fff;
+  color: colors.$display-warning;
+  border-color: colors.$display-warning;
+  background-color: colors.$warning;
 
   &:hover:not(:disabled) {
-    background-color: #ffe0e0;
+    background-color: colors.$warning-hovered;
   }
 
   &:active:not(:disabled) {
-    background-color: #ffc1c1;
+    background-color: colors.$warning-pressed;
   }
 }
 </style>
