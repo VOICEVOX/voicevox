@@ -7,6 +7,7 @@
         round
         class="sing-transport-button"
         icon="skip_previous"
+        :disable="uiLocked"
         @click="goToZero"
       ></q-btn>
       <q-btn
@@ -14,6 +15,7 @@
         round
         class="sing-playback-button"
         icon="play_arrow"
+        :disable="uiLocked"
         @click="play"
       ></q-btn>
       <q-btn
@@ -21,15 +23,19 @@
         round
         class="sing-playback-button"
         icon="stop"
+        :disable="uiLocked"
         @click="stop"
       ></q-btn>
-      <div class="sing-playhead-position">{{ playheadPositionStr }}</div>
+      <div class="sing-playhead-position" :class="{ disabled: uiLocked }">
+        {{ playheadPositionStr }}
+      </div>
       <q-input
         type="number"
         :model-value="bpmInputBuffer"
         dense
         hide-bottom-space
         class="sing-tempo"
+        :disable="uiLocked"
         @update:model-value="setBpmInputBuffer"
         @change="setTempo"
       >
@@ -43,6 +49,7 @@
         dense
         hide-bottom-space
         class="sing-time-signature"
+        :disable="uiLocked"
         @update:model-value="setBeatsInputBuffer"
         @change="setTimeSignature"
       >
@@ -57,6 +64,7 @@
         dense
         hide-bottom-space
         class="sing-time-signature"
+        :disable="uiLocked"
         @update:model-value="setBeatTypeInputBuffer"
         @change="setTimeSignature"
       >
@@ -66,7 +74,11 @@
       </q-input>
     </div>
     <div class="sing-setting">
-      <q-slider v-model.number="volume" class="sing-volume" />
+      <q-slider
+        v-model.number="volume"
+        class="sing-volume"
+        :disable="uiLocked"
+      />
       <q-select
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
@@ -78,6 +90,7 @@
         transition-show="none"
         transition-hide="none"
         class="sing-snap"
+        :disable="uiLocked"
       />
     </div>
   </div>
@@ -96,6 +109,7 @@ import {
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 
 const store = useStore();
+const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const bpmInputBuffer = ref(0);
 const beatsInputBuffer = ref(0);

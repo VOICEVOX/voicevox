@@ -1,7 +1,7 @@
 <template>
   <menu-bar />
+  <tool-bar />
   <div class="sing-main">
-    <tool-bar />
     <engine-startup-overlay :is-completed-initial-startup="isEnginesReady" />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>

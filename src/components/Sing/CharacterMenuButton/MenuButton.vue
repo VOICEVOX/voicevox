@@ -1,5 +1,5 @@
 <template>
-  <q-btn flat class="q-pa-none">
+  <q-btn flat class="q-pa-none" :disable="uiLocked">
     <selected-character
       :show-skeleton="showSkeleton"
       :selected-character-info="selectedCharacterInfo"
@@ -153,6 +153,7 @@ import { SpeakerId, StyleId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 
 const store = useStore();
+const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const userOrderedCharacterInfos = computed(() => {
   return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
