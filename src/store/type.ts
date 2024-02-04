@@ -889,6 +889,10 @@ export type SingingStoreTypes = {
     mutation: { phraseKey: string; startTime: number };
   };
 
+  SELECTED_TRACK: {
+    getter: Track;
+  };
+
   SET_SNAP_TYPE: {
     mutation: { snapType: number };
     action(payload: { snapType: number }): void;

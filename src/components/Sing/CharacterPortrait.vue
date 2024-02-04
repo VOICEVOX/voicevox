@@ -14,7 +14,7 @@ const isShowSinger = computed(() => store.state.isShowSinger);
 const portraitPath = computed(() => {
   const userOrderedCharacterInfos =
     store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
-  const singer = store.state.tracks[0].singer;
+  const singer = store.getters.SELECTED_TRACK.singer;
   if (!userOrderedCharacterInfos || !singer) {
     return undefined;
   }
