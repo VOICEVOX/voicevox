@@ -41,8 +41,8 @@ import {
   tickToBaseX,
   noteNumberToBaseY,
 } from "@/sing/viewHelper";
-import ContextMenu from "@/components/ContextMenu.vue";
-import { MenuItemButton } from "@/components/BaseMenuBar.vue";
+import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import { MenuItemButton } from "@/components/Menu/type";
 
 type NoteState = "NORMAL" | "SELECTED" | "OVERLAPPING";
 
