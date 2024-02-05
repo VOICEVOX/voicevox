@@ -490,9 +490,9 @@ export const isOnCommandOrCtrlKeyDown = (event: {
  */
 export const isSingingStyle = (styleInfo: StyleInfo) => {
   return (
-    styleInfo.styleType === "humming" ||
+    styleInfo.styleType === "frame_decode" ||
     styleInfo.styleType === "sing" ||
-    styleInfo.styleType === "sing_teacher"
+    styleInfo.styleType === "singing_teacher"
   );
 };
 

@@ -50,9 +50,7 @@ import {
   DEFAULT_TPQN,
   FrequentlyUpdatedState,
   OverlappingNotesDetector,
-  copyScore,
-  copySinger,
-  generateSingerAndScoreHash,
+  generatePhraseHash,
 } from "@/sing/storeHelper";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import {
@@ -117,25 +115,30 @@ const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationTimer = new AnimationTimer();
 
+// TODO: マルチトラックに対応する
+const selectedTrackIndex = 0;
+
 export const singingStoreState: SingingStoreState = {
-  singer: undefined,
-  score: {
-    tpqn: DEFAULT_TPQN,
-    tempos: [
-      {
-        position: 0,
-        bpm: DEFAULT_BPM,
-      },
-    ],
-    timeSignatures: [
-      {
-        measureNumber: 1,
-        beats: DEFAULT_BEATS,
-        beatType: DEFAULT_BEAT_TYPE,
-      },
-    ],
-    notes: [],
-  },
+  tpqn: DEFAULT_TPQN,
+  tempos: [
+    {
+      position: 0,
+      bpm: DEFAULT_BPM,
+    },
+  ],
+  timeSignatures: [
+    {
+      measureNumber: 1,
+      beats: DEFAULT_BEATS,
+      beatType: DEFAULT_BEAT_TYPE,
+    },
+  ],
+  tracks: [
+    {
+      singer: undefined,
+      notes: [],
+    },
+  ],
   phrases: new Map(),
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
@@ -169,7 +172,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SINGER: {
     mutation(state, { singer }: { singer?: Singer }) {
-      state.singer = singer;
+      state.tracks[selectedTrackIndex].singer = singer;
     },
     async action(
       { state, getters, dispatch, commit },
@@ -217,7 +220,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
       state.selectedNoteIds.clear();
-      state.score = score;
+      state.tpqn = score.tpqn;
+      state.tempos = score.tempos;
+      state.timeSignatures = score.timeSignatures;
+      state.tracks[selectedTrackIndex].notes = score.notes;
       overlappingNotesDetector.addNotes(score.notes);
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
@@ -244,17 +250,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_TEMPO: {
     mutation(state, { tempo }: { tempo: Tempo }) {
-      const index = state.score.tempos.findIndex((value) => {
+      const index = state.tempos.findIndex((value) => {
         return value.position === tempo.position;
       });
-      const tempos = [...state.score.tempos];
+      const tempos = [...state.tempos];
       if (index !== -1) {
         tempos.splice(index, 1, tempo);
       } else {
         tempos.push(tempo);
         tempos.sort((a, b) => a.position - b.position);
       }
-      state.score.tempos = tempos;
+      state.tempos = tempos;
     },
     // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
     async action(
@@ -280,13 +286,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REMOVE_TEMPO: {
     mutation(state, { position }: { position: number }) {
-      const index = state.score.tempos.findIndex((value) => {
+      const index = state.tempos.findIndex((value) => {
         return value.position === position;
       });
       if (index === -1) {
         throw new Error("The tempo does not exist.");
       }
-      const tempos = [...state.score.tempos];
+      const tempos = [...state.tempos];
       if (index === 0) {
         tempos.splice(index, 1, {
           position: 0,
@@ -295,14 +301,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       } else {
         tempos.splice(index, 1);
       }
-      state.score.tempos = tempos;
+      state.tempos = tempos;
     },
     // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
     async action(
       { state, getters, commit, dispatch },
       { position }: { position: number }
     ) {
-      const exists = state.score.tempos.some((value) => {
+      const exists = state.tempos.some((value) => {
         return value.position === position;
       });
       if (!exists) {
@@ -323,17 +329,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_TIME_SIGNATURE: {
     mutation(state, { timeSignature }: { timeSignature: TimeSignature }) {
-      const index = state.score.timeSignatures.findIndex((value) => {
+      const index = state.timeSignatures.findIndex((value) => {
         return value.measureNumber === timeSignature.measureNumber;
       });
-      const timeSignatures = [...state.score.timeSignatures];
+      const timeSignatures = [...state.timeSignatures];
       if (index !== -1) {
         timeSignatures.splice(index, 1, timeSignature);
       } else {
         timeSignatures.push(timeSignature);
         timeSignatures.sort((a, b) => a.measureNumber - b.measureNumber);
       }
-      state.score.timeSignatures = timeSignatures;
+      state.timeSignatures = timeSignatures;
     },
     // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
     async action(
@@ -349,13 +355,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REMOVE_TIME_SIGNATURE: {
     mutation(state, { measureNumber }: { measureNumber: number }) {
-      const index = state.score.timeSignatures.findIndex((value) => {
+      const index = state.timeSignatures.findIndex((value) => {
         return value.measureNumber === measureNumber;
       });
       if (index === -1) {
         throw new Error("The time signature does not exist.");
       }
-      const timeSignatures = [...state.score.timeSignatures];
+      const timeSignatures = [...state.timeSignatures];
       if (index === 0) {
         timeSignatures.splice(index, 1, {
           measureNumber: 1,
@@ -365,14 +371,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       } else {
         timeSignatures.splice(index, 1);
       }
-      state.score.timeSignatures = timeSignatures;
+      state.timeSignatures = timeSignatures;
     },
     // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
     async action(
       { state, commit },
       { measureNumber }: { measureNumber: number }
     ) {
-      const exists = state.score.timeSignatures.some((value) => {
+      const exists = state.timeSignatures.some((value) => {
         return value.measureNumber === measureNumber;
       });
       if (!exists) {
@@ -384,16 +390,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   NOTE_IDS: {
     getter(state) {
-      const noteIds = state.score.notes.map((value) => value.id);
+      const selectedTrack = state.tracks[selectedTrackIndex];
+      const noteIds = selectedTrack.notes.map((value) => value.id);
       return new Set(noteIds);
     },
   },
 
   ADD_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
-      const scoreNotes = [...state.score.notes, ...notes];
-      scoreNotes.sort((a, b) => a.position - b.position);
-      state.score.notes = scoreNotes;
+      const selectedTrack = state.tracks[selectedTrackIndex];
+      const newNotes = [...selectedTrack.notes, ...notes];
+      newNotes.sort((a, b) => a.position - b.position);
+      selectedTrack.notes = newNotes;
       overlappingNotesDetector.addNotes(notes);
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
@@ -418,11 +426,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       for (const note of notes) {
         notesMap.set(note.id, note);
       }
-      const scoreNotes = state.score.notes.map((value) => {
-        return notesMap.get(value.id) ?? value;
-      });
-      scoreNotes.sort((a, b) => a.position - b.position);
-      state.score.notes = scoreNotes;
+      const selectedTrack = state.tracks[selectedTrackIndex];
+      selectedTrack.notes = selectedTrack.notes
+        .map((value) => notesMap.get(value.id) ?? value)
+        .sort((a, b) => a.position - b.position);
       overlappingNotesDetector.updateNotes(notes);
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
@@ -444,7 +451,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REMOVE_NOTES: {
     mutation(state, { noteIds }: { noteIds: string[] }) {
       const noteIdsSet = new Set(noteIds);
-      const notes = state.score.notes.filter((value) => {
+      const selectedTrack = state.tracks[selectedTrackIndex];
+      const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
       overlappingNotesDetector.removeNotes(notes);
@@ -459,7 +467,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       for (const noteId of noteIds) {
         state.selectedNoteIds.delete(noteId);
       }
-      state.score.notes = state.score.notes.filter((value) => {
+      selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
     },
@@ -592,12 +600,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SELECTED_TRACK: {
+    getter(state) {
+      return state.tracks[selectedTrackIndex];
+    },
+  },
+
   SET_SNAP_TYPE: {
     mutation(state, { snapType }) {
       state.sequencerSnapType = snapType;
     },
     async action({ state, commit }, { snapType }) {
-      const tpqn = state.score.tpqn;
+      const tpqn = state.tpqn;
       if (!isValidSnapType(snapType, tpqn)) {
         throw new Error("The snap type is invalid.");
       }
@@ -629,17 +643,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   TICK_TO_SECOND: {
     getter: (state) => (position) => {
-      const tpqn = state.score.tpqn;
-      const tempos = state.score.tempos;
-      return tickToSecond(position, tempos, tpqn);
+      return tickToSecond(position, state.tempos, state.tpqn);
     },
   },
 
   SECOND_TO_TICK: {
     getter: (state) => (time) => {
-      const tpqn = state.score.tpqn;
-      const tempos = state.score.tempos;
-      return secondToTick(time, tempos, tpqn);
+      return secondToTick(time, state.tempos, state.tpqn);
     },
   },
 
@@ -809,20 +819,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, commit, dispatch }) {
-      const deleteOverlappingNotes = (
-        score: Score,
-        overlappingNoteIds: Set<string>
-      ) => {
-        score.notes = score.notes.filter((value) => {
-          return !overlappingNoteIds.has(value.id);
-        });
-      };
-
       const searchPhrases = async (
         singer: Singer | undefined,
-        score: Score
+        tpqn: number,
+        tempos: Tempo[],
+        notes: Note[]
       ) => {
-        const notes = score.notes;
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
         for (let i = 0; i < notes.length; i++) {
@@ -834,19 +836,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             i === notes.length - 1 ||
             note.position + note.duration !== notes[i + 1].position
           ) {
-            const phraseScore = {
-              ...score,
-              notes: phraseNotes,
-            };
             const phraseFirstNote = phraseNotes[0];
             const phraseLastNote = phraseNotes[phraseNotes.length - 1];
-            const hash = await generateSingerAndScoreHash({
+            const hash = await generatePhraseHash({
               singer,
-              score: phraseScore, // NOTE: とりあえず拍子も含めてハッシュ生成する
+              tpqn,
+              tempos,
+              notes: phraseNotes,
             });
             foundPhrases.set(hash, {
               singer,
-              score: phraseScore,
+              tpqn,
+              tempos,
+              notes: phraseNotes,
               startTicks: phraseFirstNote.position,
               endTicks: phraseLastNote.position + phraseLastNote.duration,
               state: "WAITING_TO_BE_RENDERED",
@@ -866,35 +868,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const fetchQuery = async (
         engineId: EngineId,
-        score: Score,
+        notes: Note[],
+        tempos: Tempo[],
+        tpqn: number,
         frameRate: number,
         restDurationSeconds: number
       ) => {
-        if (!getters.IS_ENGINE_READY(engineId)) {
-          throw new Error("Engine not ready.");
-        }
-
         const restFrameLength = Math.round(restDurationSeconds * frameRate);
+        const notesForRequestToEngine: NoteForRequestToEngine[] = [];
 
-        const notes: NoteForRequestToEngine[] = [];
         // 先頭に休符を追加
-        notes.push({
+        notesForRequestToEngine.push({
           key: undefined,
           frameLength: restFrameLength,
           lyric: "",
         });
         // ノートを変換
-        const firstNoteOnTime = tickToSecond(
-          score.notes[0].position,
-          score.tempos,
-          score.tpqn
-        );
+        const firstNoteOnTime = tickToSecond(notes[0].position, tempos, tpqn);
         let frame = 0;
-        for (const note of score.notes) {
+        for (const note of notes) {
           const noteOffTime = tickToSecond(
             note.position + note.duration,
-            score.tempos,
-            score.tpqn
+            tempos,
+            tpqn
           );
           const noteOffFrame = Math.round(
             (noteOffTime - firstNoteOnTime) * frameRate
@@ -906,7 +902,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             .replace("うぉ", "ウォ")
             .replace("は", "ハ")
             .replace("へ", "ヘ");
-          notes.push({
+          notesForRequestToEngine.push({
             key: note.noteNumber,
             frameLength: noteFrameLength,
             lyric,
@@ -914,24 +910,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           frame += noteFrameLength;
         }
         // 末尾に休符を追加
-        notes.push({
+        notesForRequestToEngine.push({
           key: undefined,
           frameLength: restFrameLength,
           lyric: "",
         });
 
         try {
+          if (!getters.IS_ENGINE_READY(engineId)) {
+            throw new Error("Engine not ready.");
+          }
           const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
             engineId,
           });
           return await instance.invoke(
             "singFrameAudioQuerySingFrameAudioQueryPost"
           )({
-            score: { notes },
+            score: { notes: notesForRequestToEngine },
             speaker: 6000, // TODO: 設定できるようにする
           });
         } catch (error) {
-          const lyrics = notes.map((value) => value.lyric).join("");
+          const lyrics = notesForRequestToEngine
+            .map((value) => value.lyric)
+            .join("");
           window.electron.logError(
             error,
             `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`
@@ -944,12 +945,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return frameAudioQuery.phonemes.map((value) => value.phoneme).join(" ");
       };
 
-      const calcStartTime = (score: Score, restDurationSeconds: number) => {
-        let startTime = tickToSecond(
-          score.notes[0].position,
-          score.tempos,
-          score.tpqn
-        );
+      const calcStartTime = (
+        notes: Note[],
+        tempos: Tempo[],
+        tpqn: number,
+        restDurationSeconds: number
+      ) => {
+        let startTime = tickToSecond(notes[0].position, tempos, tpqn);
         startTime -= restDurationSeconds;
         return startTime;
       };
@@ -994,14 +996,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const channelStripRef = channelStrip;
 
         // レンダリング中に変更される可能性のあるデータをコピーする
-        const score = copyScore(state.score);
-        const singer = copySinger(state.singer);
+        // 重なっているノートの削除も行う
+        const tpqn = state.tpqn;
+        const tempos = state.tempos.map((value) => ({ ...value }));
+        const track = getters.SELECTED_TRACK;
+        const notes = track.notes
+          .map((value) => ({ ...value }))
+          .filter((value) => !state.overlappingNoteIds.has(value.id));
+        const singer = track.singer ? { ...track.singer } : undefined;
 
-        deleteOverlappingNotes(score, state.overlappingNoteIds);
-
-        // Score -> Phrases
-
-        const foundPhrases = await searchPhrases(singer, score);
+        // フレーズを更新する
+        const foundPhrases = await searchPhrases(singer, tpqn, tempos, notes);
         for (const [hash, phrase] of foundPhrases) {
           const phraseKey = hash;
           if (!state.phrases.has(phraseKey)) {
@@ -1009,9 +1014,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
             // フレーズ追加時の処理
             const noteEvents = generateNoteEvents(
-              phrase.score.notes,
-              phrase.score.tempos,
-              phrase.score.tpqn
+              phrase.notes,
+              phrase.tempos,
+              phrase.tpqn
             );
             const polySynth = new PolySynth(audioContextRef);
             polySynth.output.connect(channelStripRef.input);
@@ -1052,6 +1057,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
+        // 各フレーズのレンダリングを行う
         const sortedPhrasesEntries = getSortedPhrasesEntries(state.phrases);
         for (const [phraseKey, phrase] of sortedPhrasesEntries) {
           if (!phrase.singer) {
@@ -1068,8 +1074,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             });
           }
 
-          // Singer & Score -> AudioQuery
-          // Score & AudioQuery -> StartTime
+          // 推論（クエリのフェッチ）とフレーズの開始時刻の算出を行う
 
           if (!phrase.query) {
             const engineId = phrase.singer.engineId;
@@ -1078,7 +1083,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
             const frameAudioQuery = await fetchQuery(
               phrase.singer.engineId,
-              phrase.score,
+              phrase.notes,
+              phrase.tempos,
+              phrase.tpqn,
               frameRate,
               restDurationSeconds
             ).catch((error) => {
@@ -1094,7 +1101,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               `Fetched frame audio query. Phonemes are "${phonemes}".`
             );
 
-            const startTime = calcStartTime(phrase.score, restDurationSeconds);
+            const startTime = calcStartTime(
+              phrase.notes,
+              phrase.tempos,
+              phrase.tpqn,
+              restDurationSeconds
+            );
 
             commit("SET_FRAME_AUDIO_QUERY_TO_PHRASE", {
               phraseKey,
@@ -1113,8 +1125,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             return;
           }
 
-          // AudioQuery -> Blob
-          // Blob & StartTime -> AudioSequence
+          // 音声合成を行って、音声を再生できるようにする
 
           const phraseData = phraseDataMap.get(phraseKey);
           if (!phraseData) {
@@ -1811,7 +1822,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         const calcRenderDuration = () => {
-          const notes = state.score.notes;
+          // TODO: マルチトラックに対応する
+          const notes = getters.SELECTED_TRACK.notes;
           if (notes.length === 0) {
             return 1;
           }

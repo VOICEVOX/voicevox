@@ -76,8 +76,8 @@ const store = useStore();
 const state = store.state;
 const height = ref(32);
 const playheadTicks = ref(0);
-const tpqn = computed(() => state.score.tpqn);
-const timeSignatures = computed(() => state.score.timeSignatures);
+const tpqn = computed(() => state.tpqn);
+const timeSignatures = computed(() => state.timeSignatures);
 const zoomX = computed(() => state.sequencerZoomX);
 const measureWidth = computed(() => {
   const measureDuration = getMeasureDuration(
