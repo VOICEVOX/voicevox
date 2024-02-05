@@ -1,4 +1,4 @@
-import { Note, Score, Singer } from "@/store/type";
+import { Note, Singer, Tempo } from "@/store/type";
 import { generateHash } from "@/sing/utility";
 
 export const DEFAULT_TPQN = 480;
@@ -6,28 +6,11 @@ export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
 export const DEFAULT_BEAT_TYPE = 4;
 
-export const copyScore = (score: Score): Score => {
-  return {
-    tpqn: score.tpqn,
-    tempos: score.tempos.map((value) => ({ ...value })),
-    timeSignatures: score.timeSignatures.map((value) => ({ ...value })),
-    notes: score.notes.map((value) => ({ ...value })),
-  };
-};
-
-export const copySinger = (singer?: Singer): Singer | undefined => {
-  if (!singer) {
-    return undefined;
-  }
-  return {
-    engineId: singer.engineId,
-    styleId: singer.styleId,
-  };
-};
-
-export const generateSingerAndScoreHash = async (obj: {
+export const generatePhraseHash = async (obj: {
   singer: Singer | undefined;
-  score: Score;
+  tpqn: number;
+  tempos: Tempo[];
+  notes: Note[];
 }) => {
   return generateHash(obj);
 };

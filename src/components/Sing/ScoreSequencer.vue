@@ -228,13 +228,13 @@ const isSelfEventTarget = (event: UIEvent) => {
 const store = useStore();
 const state = store.state;
 // 分解能（Ticks Per Quarter Note）
-const tpqn = computed(() => state.score.tpqn);
+const tpqn = computed(() => state.tpqn);
 // テンポ
-const tempos = computed(() => state.score.tempos);
+const tempos = computed(() => state.tempos);
 // 拍子
-const timeSignatures = computed(() => state.score.timeSignatures);
+const timeSignatures = computed(() => state.timeSignatures);
 // ノート
-const notes = computed(() => state.score.notes);
+const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 const unselectedNotes = computed(() => {
   const selectedNoteIds = state.selectedNoteIds;
   return notes.value.filter((value) => !selectedNoteIds.has(value.id));
@@ -330,7 +330,7 @@ let dragStartNoteNumber = 0;
 let dragStartGuideLineTicks = 0;
 let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
 let executePreviewProcess = false;
-let edited = false; // プレビュー終了時にScoreの変更を行うかどうかを表す変数
+let edited = false; // プレビュー終了時にstore.stateの更新を行うかどうかを表す変数
 // ダブルクリック
 let mouseDownNoteId: string | undefined;
 const clickedNoteIds: [string | undefined, string | undefined] = [

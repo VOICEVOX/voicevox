@@ -125,32 +125,30 @@ const userOrderedCharacterInfos = computed(() =>
   store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike")
 );
 const selectedCharacterInfo = computed(() => {
-  if (!userOrderedCharacterInfos.value || !store.state.singer) {
+  const singer = store.getters.SELECTED_TRACK.singer;
+  if (!userOrderedCharacterInfos.value || !singer) {
     return undefined;
   }
-  return store.getters.CHARACTER_INFO(
-    store.state.singer.engineId,
-    store.state.singer.styleId
-  );
+  return store.getters.CHARACTER_INFO(singer.engineId, singer.styleId);
 });
 const selectedCharacterName = computed(() => {
   return selectedCharacterInfo.value?.metas.speakerName;
 });
 const selectedCharacterStyleDescription = computed(() => {
   const style = selectedCharacterInfo.value?.metas.styles.find((style) => {
+    const singer = store.getters.SELECTED_TRACK.singer;
     return (
-      style.styleId === store.state.singer?.styleId &&
-      style.engineId === store.state.singer?.engineId
+      style.styleId === singer?.styleId && style.engineId === singer?.engineId
     );
   });
   return style != undefined ? getStyleDescription(style) : "";
 });
 const selectedStyleIconPath = computed(() => {
   const styles = selectedCharacterInfo.value?.metas.styles;
+  const singer = store.getters.SELECTED_TRACK.singer;
   return styles?.find((style) => {
     return (
-      style.styleId === store.state.singer?.styleId &&
-      style.engineId === store.state.singer?.engineId
+      style.styleId === singer?.styleId && style.engineId === singer?.engineId
     );
   })?.iconPath;
 });
@@ -197,8 +195,8 @@ const playheadPositionStr = computed(() => {
   return `${minStr}:${secStr}.${milliSecStr}`;
 });
 
-const tempos = computed(() => store.state.score.tempos);
-const timeSignatures = computed(() => store.state.score.timeSignatures);
+const tempos = computed(() => store.state.tempos);
+const timeSignatures = computed(() => store.state.timeSignatures);
 const nowPlaying = computed(() => store.state.nowPlaying);
 
 watch(
@@ -263,7 +261,7 @@ const volume = computed({
 });
 
 const snapTypeSelectOptions = computed(() => {
-  const tpqn = store.state.score.tpqn;
+  const tpqn = store.state.tpqn;
   return getSnapTypes(tpqn)
     .sort((a, b) => {
       if (isTriplet(a) === isTriplet(b)) {
