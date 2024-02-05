@@ -34,6 +34,7 @@ import {
   fetchAudioFromAudioItem,
   generateLabFromAudioQuery,
   handlePossiblyNotMorphableError,
+  isMorphable,
 } from "./audioGenerate";
 import {
   AudioKey,
@@ -888,14 +889,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   VALID_MORPHING_INFO: {
     getter: (state) => (audioItem: AudioItem) => {
-      if (audioItem.morphingInfo?.targetStyleId == undefined) return false;
-      const { engineId, styleId } = audioItem.voice;
-      const info =
-        state.morphableTargetsInfo[engineId]?.[styleId]?.[
-          audioItem.morphingInfo.targetStyleId
-        ];
-      if (info == undefined) return false;
-      return info.isMorphable;
+      return isMorphable(state, { audioItem });
     },
   },
 

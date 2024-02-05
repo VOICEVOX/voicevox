@@ -136,7 +136,7 @@ async function generateUniqueIdAndQuery(
   return [id, audioQuery];
 }
 
-function isMorphable(
+export function isMorphable(
   state: AudioStoreState,
   {
     audioItem,
