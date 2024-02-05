@@ -128,6 +128,16 @@
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
     </div>
+    <sequencer-pitch
+      v-if="showPitch"
+      class="sequencer-pitch"
+      :style="{
+        marginRight: `${scrollBarWidth}px`,
+        marginBottom: `${scrollBarWidth}px`,
+      }"
+      :offset-x="scrollX"
+      :offset-y="scrollY"
+    />
     <div
       class="sequencer-overlay"
       :style="{
@@ -217,6 +227,7 @@ import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
+import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -313,6 +324,7 @@ const phraseInfos = computed(() => {
     return { key, x: startX, width: endX - startX };
   });
 });
+const showPitch = computed(() => state.showPitch);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 // マウスカーソル位置
@@ -1108,6 +1120,11 @@ onDeactivated(() => {
   width: 2px;
   background: hsl(130, 35%, 82%);
   pointer-events: none;
+}
+
+.sequencer-pitch {
+  grid-row: 2;
+  grid-column: 2;
 }
 
 .sequencer-overlay {

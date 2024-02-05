@@ -4,6 +4,7 @@
     :class="{
       selected: noteState === 'SELECTED',
       overlapping: noteState === 'OVERLAPPING',
+      'below-pitch': showPitch,
     }"
     :style="{
       width: `${width}px`,
@@ -16,6 +17,7 @@
       <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
       <context-menu ref="contextMenu" :menudata="contextMenuData" />
     </div>
+    <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
     <div class="note-lyric" @mousedown="onLyricMouseDown">
       {{ lyric }}
     </div>
@@ -116,6 +118,7 @@ const lyric = computed({
 const showLyricInput = computed(() => {
   return state.editingLyricNoteId === props.note.id;
 });
+const showPitch = computed(() => state.showPitch);
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuData = ref<[MenuItemButton]>([
   {
@@ -190,6 +193,13 @@ const onLyricInputBlur = () => {
   top: 0;
   left: 0;
 
+  &.below-pitch {
+    .note-bar {
+      background-color: rgba(colors.$primary-rgb, 0.18);
+      border-color: hsl(130, 35%, 78%);
+    }
+  }
+
   &.selected {
     // 色は仮
     .note-bar {
@@ -197,8 +207,10 @@ const onLyricInputBlur = () => {
       border-color: hsl(33, 100%, 78%);
     }
 
-    .note-lyric {
-      border-color: hsl(33, 0%, 90%);
+    &.below-pitch {
+      .note-bar {
+        background-color: rgba(hsl(33, 100%, 50%), 0.18);
+      }
     }
   }
 
