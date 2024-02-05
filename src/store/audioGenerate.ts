@@ -15,15 +15,16 @@ type Instance = {
   invoke: IEngineConnectorFactoryActionsMapper;
 };
 
+/**
+ * エンジンで音声を合成する。音声のキャッシュ機構も備える。
+ */
 export async function fetchAudioFromAudioItem(
   state: AudioStoreState & SettingStoreState,
   instance: Instance,
   {
     audioItem,
-    cacheOnly,
   }: {
     audioItem: AudioItem;
-    cacheOnly?: boolean;
   }
 ): Promise<FetchAudioResult> {
   const engineId = audioItem.voice.engineId;
@@ -32,7 +33,7 @@ export async function fetchAudioFromAudioItem(
   if (audioQuery == undefined)
     throw new Error("audioQuery is not defined for audioItem");
 
-  if (Object.prototype.hasOwnProperty.call(audioBlobCache, id) || cacheOnly) {
+  if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
     const blob = audioBlobCache[id];
     return { audioQuery, blob };
   }
