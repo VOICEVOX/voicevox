@@ -29,8 +29,6 @@ type HotkeyEntry = {
   enableInTextbox?: boolean;
   /** 名前。 */
   action: HotkeyActionType;
-  /** ブラウザのデフォルトの挙動をキャンセルするか。デフォルトはfalse。 */
-  keepDefaultBehavior?: boolean;
   /** ショートカットキーが押されたときの処理。 */
   callback: (e: KeyboardEvent) => void;
 };
@@ -39,9 +37,9 @@ type HotkeyEntry = {
  * ショートカットキーの管理を行うクラス。
  */
 export class HotkeyManager {
-  entries: HotkeyEntry[] = [];
-  settings: HotkeySettingType[] = [];
-  registeredCombination: Partial<Record<HotkeyActionType, string>> = {};
+  private entries: HotkeyEntry[] = [];
+  private settings: HotkeySettingType[] = [];
+  private registeredCombination: Partial<Record<HotkeyActionType, string>> = {};
 
   constructor() {
     // デフォルトだとテキスト欄でのショートカットキーが効かないので、テキスト欄でも効くようにする
@@ -101,7 +99,7 @@ export class HotkeyManager {
               return;
             }
           }
-          if (!action.keepDefaultBehavior) e.preventDefault();
+          e.preventDefault();
           action.callback(e);
         });
       } else {
@@ -123,7 +121,7 @@ export class HotkeyManager {
           // TODO: もっと良い感じの取得方法があれば変更する
           const path = location.hash.split("/")[1] as "talk" | "song";
           if (path === action.editor) {
-            if (!action.keepDefaultBehavior) e.preventDefault();
+            e.preventDefault();
             action.callback(e);
           }
         });
