@@ -1,4 +1,3 @@
-precision mediump float;
 attribute vec3 pos;
 attribute vec2 p1, p2;
 

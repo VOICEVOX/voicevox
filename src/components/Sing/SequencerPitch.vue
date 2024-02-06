@@ -219,6 +219,7 @@ onActivated(() => {
 
   canvasWidth = canvasContainerElement.clientWidth;
   canvasHeight = canvasContainerElement.clientHeight;
+
   const canvasElement = document.createElement("canvas");
   canvasElement.width = canvasWidth;
   canvasElement.height = canvasHeight;
@@ -229,7 +230,6 @@ onActivated(() => {
     backgroundAlpha: 0,
     antialias: true,
   });
-
   stage = new PIXI.Container();
 
   const callback = () => {
@@ -239,8 +239,8 @@ onActivated(() => {
     }
     requestId = window.requestAnimationFrame(callback);
   };
-  requestId = window.requestAnimationFrame(callback);
   renderInNextFrame = true;
+  requestId = window.requestAnimationFrame(callback);
 
   resizeObserver = new ResizeObserver(() => {
     if (renderer == undefined) {
