@@ -20,7 +20,7 @@ export const useHotkeyManager = () => {
 };
 
 /**
- * ショートカットキーの情報を格納する型。
+ * ショートカットキーの処理を登録するための型。
  */
 type HotkeyEntry = {
   /** どちらのエディタで有効か */
@@ -109,7 +109,7 @@ export class HotkeyManager {
   }
 
   /**
-   * ショートカットキーの登録を行う。
+   * ショートカットキーの処理を登録する。
    */
   register(data: HotkeyEntry): void {
     this.entries.push(data);
