@@ -1,3 +1,11 @@
+/**
+ * ショートカットキーを管理するプラグイン。
+ *
+ * HotkeyAction: 何をするか（再生するなど）の名称
+ * Combination: ショートカットキーを文字列で表したもの
+ * HotkeySetting: ユーザーが設定できるもの。ActionとCobinationのペア
+ * HotkeyEntry: プログラムが管理するもの。関数や発動条件など
+ */
 import { Plugin, inject } from "vue";
 import hotkeys from "hotkeys-js";
 import { HotkeyActionType, HotkeySettingType } from "@/type/preload";
@@ -31,9 +39,9 @@ type HotkeyEntry = {
  * ショートカットキーの管理を行うクラス。
  */
 export class HotkeyManager {
-  actions: HotkeyEntry[] = [];
+  entries: HotkeyEntry[] = [];
   settings: HotkeySettingType[] = [];
-  registered: Partial<Record<HotkeyActionType, string>> = {};
+  registeredCombination: Partial<Record<HotkeyActionType, string>> = {};
 
   constructor() {
     // デフォルトだとテキスト欄でのショートカットキーが効かないので、テキスト欄でも効くようにする
@@ -52,13 +60,13 @@ export class HotkeyManager {
     if (this.settings.length === 0) {
       return;
     }
-    const changedActions = this.actions.filter(
+    const changedActions = this.entries.filter(
       (a) =>
-        this.registered[a.action] !==
+        this.registeredCombination[a.action] !==
         this.settings.find((s) => s.action === a.action)?.combination
     );
     for (const action of changedActions) {
-      const registered = this.registered[action.action];
+      const registered = this.registeredCombination[action.action];
       if (registered) {
         hotkeys.unbind(hotkeyToCombo(registered));
       }
@@ -68,7 +76,7 @@ export class HotkeyManager {
         throw new Error("assert: setting == undefined");
       }
 
-      const actions = this.actions.filter((a) => a.action === action.action);
+      const actions = this.entries.filter((a) => a.action === action.action);
       if (actions.length > 1) {
         const songAction = actions.find((a) => a.editor === "song");
         const talkAction = actions.find((a) => a.editor === "talk");
@@ -120,7 +128,7 @@ export class HotkeyManager {
           }
         });
       }
-      this.registered[action.action] = setting.combination;
+      this.registeredCombination[action.action] = setting.combination;
     }
   }
 
@@ -140,7 +148,7 @@ export class HotkeyManager {
    * ショートカットキーの登録を行う。
    */
   register(data: HotkeyEntry): void {
-    this.actions.push(data);
+    this.entries.push(data);
     this.refreshBinding();
   }
 }
