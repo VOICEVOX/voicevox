@@ -1,31 +1,26 @@
 <template>
-  <q-page
-    ref="scroller"
-    class="relative-absolute-wrapper scroller bg-background"
-  >
-    <div class="q-pa-md markdown-body">
-      <q-list v-if="selectedInfo === undefined">
-        <template
-          v-for="(engineId, engineIndex) in sortedEngineInfos.map(
-            (engineInfo) => engineInfo.uuid
-          )"
-          :key="engineIndex"
-        >
-          <!-- エンジンが一つだけの場合は名前を表示しない -->
-          <template v-if="engineInfos.size > 1">
-            <q-separator v-if="engineIndex > 0" spaced />
-            <q-item-label header>{{
-              mapUndefinedPipe(engineInfos.get(engineId), (v) => v.name)
-            }}</q-item-label>
-          </template>
+  <div v-if="selectedInfo === undefined" class="container">
+    <BaseScrollArea>
+      <div class="inner inner-list">
+        <h1 class="title">音声ライブラリの利用規約</h1>
+        <div class="list">
           <template
-            v-for="([, characterInfo], characterIndex) in mapUndefinedPipe(
-              engineInfos.get(engineId),
-              (v) => v.characterInfos
+            v-for="(engineId, engineIndex) in sortedEngineInfos.map(
+              (engineInfo) => engineInfo.uuid
             )"
-            :key="characterIndex"
+            :key="engineIndex"
           >
-            <q-item
+            <!-- エンジンが一つだけの場合は名前を表示しない -->
+            <h2 v-if="engineInfos.size > 1" class="subtitle">
+              {{ mapUndefinedPipe(engineInfos.get(engineId), (v) => v.name) }}
+            </h2>
+            <BaseRowCard
+              v-for="([, characterInfo], characterIndex) in mapUndefinedPipe(
+                engineInfos.get(engineId),
+                (v) => v.characterInfos
+              )"
+              :key="characterIndex"
+              :title="characterInfo.metas.speakerName"
               clickable
               @click="
                 selectCharacterInfo({
@@ -34,24 +29,25 @@
                 })
               "
             >
-              <q-item-section>{{
-                characterInfo.metas.speakerName
-              }}</q-item-section>
-            </q-item>
+              <!-- 暫定でq-iconを使用 -->
+              <q-icon name="keyboard_arrow_right" size="sm" />
+            </BaseRowCard>
           </template>
-        </template>
-      </q-list>
-      <div v-else>
-        <div class="q-mb-md">
-          <q-btn
-            outline
-            color="primary"
-            icon="keyboard_arrow_left"
+        </div>
+      </div>
+    </BaseScrollArea>
+  </div>
+  <div v-else class="container container-detail">
+    <BaseScrollArea>
+      <div class="inner">
+        <div>
+          <BaseButton
             label="戻る"
+            icon="keyboard_arrow_left"
             @click="selectCharacterInfo(undefined)"
           />
         </div>
-        <div class="text-subtitle">
+        <h1 class="title">
           {{
             mapUndefinedPipe(
               engineInfos.get(selectedInfo.engine),
@@ -60,16 +56,22 @@
               (v) => v.metas.speakerName
             )
           }}
-        </div>
+        </h1>
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <div v-if="policy" class="markdown" v-html="policy"></div>
+        <BaseDocumentView>
+          <div v-if="policy" class="markdown" v-html="policy"></div>
+        </BaseDocumentView>
       </div>
-    </div>
-  </q-page>
+    </BaseScrollArea>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import BaseRowCard from "../base/BaseRowCard.vue";
+import BaseScrollArea from "../base/BaseScrollArea.vue";
+import BaseButton from "../base/BaseButton.vue";
+import BaseDocumentView from "../base/BaseDocumentView.vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
@@ -118,24 +120,45 @@ const policy = computed<string | undefined>(() => {
 });
 
 const selectedInfo = ref<DetailKey | undefined>(undefined);
-
-const scroller = ref<HTMLElement>();
 const selectCharacterInfo = (index: DetailKey | undefined) => {
-  if (scroller.value == undefined)
-    throw new Error("scroller.value == undefined");
-  scroller.value.scrollTop = 0;
   selectedInfo.value = index;
 };
 </script>
 
 <style scoped lang="scss">
-.root {
-  .scroller {
-    width: 100%;
-    overflow: auto;
-    > div {
-      overflow-wrap: break-word;
-    }
-  }
+@use '@/styles/variables' as vars;
+@use '@/styles/mixin' as mixin;
+@use '@/styles/new-colors' as colors;
+
+.container {
+  // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
+  // height: 100%;
+  height: calc(100vh - 90px);
+}
+
+.container-detail {
+  border-left: 1px solid colors.$border;
+  background-color: colors.$surface;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  padding: vars.$padding-2;
+  gap: vars.$gap-1;
+}
+
+.title {
+  @include mixin.headline-1;
+}
+
+.subtitle {
+  @include mixin.headline-2;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$gap-1;
 }
 </style>
