@@ -31,7 +31,6 @@
         :model-value="bpmInputBuffer"
         label="テンポ"
         dense
-        border-color="surface"
         hide-bottom-space
         class="sing-tempo"
         @update:model-value="setBpmInputBuffer"
@@ -348,7 +347,7 @@ onUnmounted(() => {
 .character-menu-toggle {
   align-items: center;
   display: flex;
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  padding: 4px 8px 8px 8px;
   position: relative;
 }
 .character-avatar-icon {
@@ -375,14 +374,14 @@ onUnmounted(() => {
 }
 
 .character-style {
-  color: rgba(colors.$display-rgb, 0.8);
+  color: rgba(colors.$display-rgb, 0.73);
   font-size: 11px;
   line-height: 1rem;
   vertical-align: text-bottom;
 }
 
 .character-menu-dropdown-icon {
-  color: rgba(colors.$display-rgb, 0.8);
+  color: rgba(colors.$display-rgb, 0.73);
   margin-left: 0.25rem;
 }
 .sing-toolbar {
