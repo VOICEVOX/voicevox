@@ -1,8 +1,8 @@
 <template>
   <q-toolbar class="sing-toolbar">
-    <!-- settings for entire song -->
-    <div class="sing-settings">
-      <character-menu-button>
+    <!-- configs for entire song -->
+    <div class="sing-configs">
+      <character-menu-button class="q-mr-sm">
         <div class="character-menu-toggle">
           <q-avatar
             v-if="selectedStyleIconPath"
@@ -73,21 +73,21 @@
         class="sing-transport-button"
         icon="skip_previous"
         @click="goToZero"
-      ></q-btn>
+      />
       <q-btn
         v-if="!nowPlaying"
         round
         class="sing-playback-button"
         icon="play_arrow"
         @click="play"
-      ></q-btn>
+      />
       <q-btn
         v-else
         round
         class="sing-playback-button"
         icon="stop"
         @click="stop"
-      ></q-btn>
+      />
       <div class="sing-playhead-position">
         <div>{{ playheadPositionMinSecStr }}</div>
         <div class="sing-playhead-position-millisec">
@@ -335,21 +335,13 @@ onUnmounted(() => {
 
 .q-input {
   :deep(.q-field__control::before) {
-    border-color: rgba(colors.$display-rgb, 0.2);
-  }
-
-  :deep(.q-field__label) {
-    top: 4px;
+    border-color: rgba(colors.$display-rgb, 0.3);
   }
 }
 
 .q-select {
   :deep(.q-field__control::before) {
-    border-color: rgba(colors.$display-rgb, 0.2);
-  }
-
-  :deep(.q-field__label) {
-    top: 10px;
+    border-color: rgba(colors.$display-rgb, 0.3);
   }
 }
 
@@ -403,18 +395,17 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.sing-settings {
+.sing-configs {
   align-items: center;
   display: flex;
+  flex: 1;
 }
 
 .sing-player {
   align-items: center;
+  justify-content: center;
   display: flex;
-}
-
-.sing-playback-button {
-  margin: 0 4px;
+  flex: 1;
 }
 
 .sing-tempo {
@@ -457,19 +448,21 @@ onUnmounted(() => {
   font-size: 28px;
   font-weight: 700;
   margin-left: 16px;
-  color: rgba(colors.$display-rgb, 0.9);
+  color: colors.$display;
 }
 
 .sing-playhead-position-millisec {
   font-size: 16px;
   font-weight: 700;
   margin: 10px 0 0 2px;
-  color: rgba(colors.$display-rgb, 0.6);
+  color: rgba(colors.$display-rgb, 0.73);
 }
 
 .sing-controls {
   align-items: center;
+  justify-content: flex-end;
   display: flex;
+  flex: 1;
 }
 
 .sing-volume-icon {
