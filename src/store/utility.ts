@@ -404,7 +404,11 @@ export function buildAudioFileNameFromRawData(
   });
 }
 
-export async function generateUniqueId(serializable: unknown) {
+/**
+ * オブジェクトごとに一意なキーを作る。
+ * 一時的な利用のみを想定しているため、保存に利用すべきではない。
+ */
+export async function generateTempUniqueId(serializable: unknown) {
   const data = new TextEncoder().encode(JSON.stringify(serializable));
   const digest = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(digest))
