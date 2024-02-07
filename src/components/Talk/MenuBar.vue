@@ -4,13 +4,14 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { MenuItemData } from "@/components/Menu/type";
 import {
   generateAndConnectAndSaveAudioWithDialog,
   multiGenerateAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
   connectAndExportTextWithDialog,
 } from "@/components/Dialog/Dialog";
-import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
+import BaseMenuBar from "@/components/Menu/MenuBar/BaseMenuBar.vue";
 
 import { useStore } from "@/store";
 import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";

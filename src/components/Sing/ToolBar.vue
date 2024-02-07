@@ -136,7 +136,7 @@ const userOrderedCharacterInfos = computed(() =>
   store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike")
 );
 const selectedCharacterInfo = computed(() => {
-  const singer = store.state.tracks[0].singer;
+  const singer = store.getters.SELECTED_TRACK.singer;
   if (!userOrderedCharacterInfos.value || !singer) {
     return undefined;
   }
@@ -147,7 +147,7 @@ const selectedCharacterName = computed(() => {
 });
 const selectedCharacterStyleDescription = computed(() => {
   const style = selectedCharacterInfo.value?.metas.styles.find((style) => {
-    const singer = store.state.tracks[0].singer;
+    const singer = store.getters.SELECTED_TRACK.singer;
     return (
       style.styleId === singer?.styleId && style.engineId === singer?.engineId
     );
@@ -156,7 +156,7 @@ const selectedCharacterStyleDescription = computed(() => {
 });
 const selectedStyleIconPath = computed(() => {
   const styles = selectedCharacterInfo.value?.metas.styles;
-  const singer = store.state.tracks[0].singer;
+  const singer = store.getters.SELECTED_TRACK.singer;
   return styles?.find((style) => {
     return (
       style.styleId === singer?.styleId && style.engineId === singer?.engineId

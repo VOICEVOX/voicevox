@@ -115,6 +115,9 @@ const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationTimer = new AnimationTimer();
 
+// TODO: マルチトラックに対応する
+const selectedTrackIndex = 0;
+
 export const singingStoreState: SingingStoreState = {
   tpqn: DEFAULT_TPQN,
   tempos: [
@@ -169,7 +172,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SINGER: {
     mutation(state, { singer }: { singer?: Singer }) {
-      state.tracks[0].singer = singer;
+      state.tracks[selectedTrackIndex].singer = singer;
     },
     async action(
       { state, getters, dispatch, commit },
@@ -220,7 +223,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tpqn = score.tpqn;
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
-      state.tracks[0].notes = score.notes;
+      state.tracks[selectedTrackIndex].notes = score.notes;
       overlappingNotesDetector.addNotes(score.notes);
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
@@ -387,16 +390,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   NOTE_IDS: {
     getter(state) {
-      const noteIds = state.tracks[0].notes.map((value) => value.id);
+      const selectedTrack = state.tracks[selectedTrackIndex];
+      const noteIds = selectedTrack.notes.map((value) => value.id);
       return new Set(noteIds);
     },
   },
 
   ADD_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
-      const newNotes = [...state.tracks[0].notes, ...notes];
+      const selectedTrack = state.tracks[selectedTrackIndex];
+      const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
-      state.tracks[0].notes = newNotes;
+      selectedTrack.notes = newNotes;
       overlappingNotesDetector.addNotes(notes);
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
@@ -421,11 +426,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       for (const note of notes) {
         notesMap.set(note.id, note);
       }
-      const newNotes = state.tracks[0].notes.map((value) => {
-        return notesMap.get(value.id) ?? value;
-      });
-      newNotes.sort((a, b) => a.position - b.position);
-      state.tracks[0].notes = newNotes;
+      const selectedTrack = state.tracks[selectedTrackIndex];
+      selectedTrack.notes = selectedTrack.notes
+        .map((value) => notesMap.get(value.id) ?? value)
+        .sort((a, b) => a.position - b.position);
       overlappingNotesDetector.updateNotes(notes);
       state.overlappingNoteIds =
         overlappingNotesDetector.getOverlappingNoteIds();
@@ -447,7 +451,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REMOVE_NOTES: {
     mutation(state, { noteIds }: { noteIds: string[] }) {
       const noteIdsSet = new Set(noteIds);
-      const notes = state.tracks[0].notes.filter((value) => {
+      const selectedTrack = state.tracks[selectedTrackIndex];
+      const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
       overlappingNotesDetector.removeNotes(notes);
@@ -462,7 +467,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       for (const noteId of noteIds) {
         state.selectedNoteIds.delete(noteId);
       }
-      state.tracks[0].notes = state.tracks[0].notes.filter((value) => {
+      selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
     },
@@ -592,6 +597,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("phrase is undefined.");
       }
       phrase.startTime = startTime;
+    },
+  },
+
+  SELECTED_TRACK: {
+    getter(state) {
+      return state.tracks[selectedTrackIndex];
     },
   },
 
@@ -988,12 +999,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // 重なっているノートの削除も行う
         const tpqn = state.tpqn;
         const tempos = state.tempos.map((value) => ({ ...value }));
-        const notes = state.tracks[0].notes
+        const track = getters.SELECTED_TRACK;
+        const notes = track.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
-        const singer = state.tracks[0].singer
-          ? { ...state.tracks[0].singer }
-          : undefined;
+        const singer = track.singer ? { ...track.singer } : undefined;
 
         // フレーズを更新する
         const foundPhrases = await searchPhrases(singer, tpqn, tempos, notes);
@@ -1812,7 +1822,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         const calcRenderDuration = () => {
-          const notes = state.tracks[0].notes;
+          // TODO: マルチトラックに対応する
+          const notes = getters.SELECTED_TRACK.notes;
           if (notes.length === 0) {
             return 1;
           }

@@ -234,7 +234,7 @@ const tempos = computed(() => state.tempos);
 // 拍子
 const timeSignatures = computed(() => state.timeSignatures);
 // ノート
-const notes = computed(() => state.tracks[0].notes);
+const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 const unselectedNotes = computed(() => {
   const selectedNoteIds = state.selectedNoteIds;
   return notes.value.filter((value) => !selectedNoteIds.has(value.id));

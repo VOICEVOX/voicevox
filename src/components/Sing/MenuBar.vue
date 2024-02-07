@@ -4,10 +4,11 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { MenuItemData } from "@/components/Menu/type";
 import { useStore } from "@/store";
 import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
+import BaseMenuBar from "@/components/Menu/MenuBar/BaseMenuBar.vue";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
