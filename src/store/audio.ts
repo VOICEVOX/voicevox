@@ -635,12 +635,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       //引数にbaseAudioItemが与えられた場合、baseAudioItemから話速等のパラメータを引き継いだAudioItemを返す
       //baseAudioItem.queryのうち、accentPhrasesとkanaは基本設定パラメータではないので引き継がない
       //baseAudioItemのうち、textとstyleIdは別途与えられるので引き継がない
-      if (state.defaultStyleIds == undefined)
+      if (state.defaultStyleIds == undefined) {
         throw new Error("state.defaultStyleIds == undefined");
+      }
       const userOrderedCharacterInfos =
         getters.USER_ORDERED_CHARACTER_INFOS("talk");
-      if (userOrderedCharacterInfos == undefined)
+
+      if (userOrderedCharacterInfos == undefined) {
         throw new Error("state.characterInfos == undefined");
+      }
 
       const text = payload.text ?? "";
 
@@ -659,12 +662,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const baseAudioItem = payload.baseAudioItem;
 
+      const fetchQueryParams = {
+        text,
+        engineId: voice.engineId,
+        styleId: voice.styleId,
+      };
+
       const query = getters.IS_ENGINE_READY(voice.engineId)
-        ? await dispatch("FETCH_AUDIO_QUERY", {
-            text,
-            engineId: voice.engineId,
-            styleId: voice.styleId,
-          }).catch(() => undefined)
+        ? await dispatch("FETCH_AUDIO_QUERY", fetchQueryParams).catch(
+            () => undefined
+          )
         : undefined;
 
       const newAudioItem: AudioItem = { text, voice };
@@ -683,11 +690,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       newAudioItem.presetKey = nextPresetKey;
 
       // audioItemに対してプリセットを適用する
-      if (shouldApplyPreset) {
-        if (nextPresetKey) {
-          const preset = state.presetItems[nextPresetKey];
-          return applyAudioPresetToAudioItem(newAudioItem, preset);
-        }
+      if (shouldApplyPreset && nextPresetKey) {
+        const preset = state.presetItems[nextPresetKey];
+        return applyAudioPresetToAudioItem(newAudioItem, preset);
       }
 
       // プリセットを適用しないならパラメータを引き継ぐ
