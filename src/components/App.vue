@@ -47,6 +47,21 @@ watch(
   { immediate: true }
 );
 
+// エディタの切り替えを監視する
+watch(
+  () => route.path,
+  async (unknownPath) => {
+    let path: "talk" | "song";
+    if (["/talk", "/song"].includes(unknownPath)) {
+      path = unknownPath.slice(1) as "talk" | "song";
+    } else {
+      path = "talk";
+    }
+
+    hotkeyManager.onEditorChange(path);
+  }
+);
+
 // ソフトウェアを初期化
 const hotkeyManager = useHotkeyManager();
 const isEnginesReady = ref(false);

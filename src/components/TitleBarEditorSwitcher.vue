@@ -20,8 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watchEffect } from "vue";
-import hotkeys from "hotkeys-js";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
 
@@ -36,11 +35,6 @@ const nowEditor = computed<"talk" | "song">(() => {
   if (path === "/song") return "song";
   window.electron.logWarn(`unknown path: ${path}`);
   return "talk";
-});
-
-watchEffect(() => {
-  const editor = nowEditor.value;
-  hotkeys.setScope(editor);
 });
 
 const gotoLink = (editor: "talk" | "song") => {
