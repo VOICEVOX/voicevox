@@ -26,11 +26,6 @@ export interface EngineInfoRecordFor3rdParty {
   uuid: EngineId;
   url: string;
   name: string;
-  path: string | undefined;
-  executionEnabled: boolean;
-  executionFilePath: string;
-  executionArgs: Array<string>;
-  type: string;
 }
 
 /**
@@ -38,10 +33,8 @@ export interface EngineInfoRecordFor3rdParty {
  * Note:変更時はOutputInfoDataFor3rdPartyのバージョン定義も変更すること
  */
 export interface EngineInfoFormatFor3rdParty {
-  versions: {
-    fileFormat: string;
-    VOICEVOX: string;
-  };
+  formatVersion: number;
+  appVersion: string;
   engineInfos: EngineInfoRecordFor3rdParty[];
 }
 
@@ -57,10 +50,9 @@ export class OutputInfoDataFor3rdParty {
 
   /**
    * サードパーティ向けランタイム情報のフォーマットバージョン
-   * Note: 破壊的変更（削除、型変更）があった場合にメジャーバージョンを上げる
-   *       互換性のある変更（追加）があった場合にマイナーバージョンを上げる
+   * Note: 破壊的変更があった場合に数字を上げること
    */
-  private fileFormatVersion = "1.0";
+  private fileFormatVersion = 1;
 
   /**
    * サードパーティ向けに提供するデータを取得
@@ -74,20 +66,13 @@ export class OutputInfoDataFor3rdParty {
           uuid: engineInfo.uuid,
           url: engineInfo.host,
           name: engineInfo.name,
-          path: engineInfo.path,
-          executionEnabled: engineInfo.executionEnabled,
-          executionFilePath: engineInfo.executionFilePath,
-          executionArgs: engineInfo.executionArgs,
-          type: engineInfo.type,
         };
       }
     );
 
     const engineInfoFormatFor3rdParty: EngineInfoFormatFor3rdParty = {
-      versions: {
-        fileFormat: this.fileFormatVersion,
-        VOICEVOX: this.VOICEVOXVersion,
-      },
+      formatVersion: this.fileFormatVersion,
+      appVersion: this.VOICEVOXVersion,
       engineInfos: engineInfoList,
     };
 
