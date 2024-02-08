@@ -289,18 +289,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   AUDIO_PLAY_START_POINT: {
     getter(state, getters) {
       const audioPlayStartPoint = state._audioPlayStartPoint;
-      if (
-        audioPlayStartPoint == undefined ||
-        getters.ACTIVE_AUDIO_KEY == undefined
-      ) {
+      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
+      if (audioPlayStartPoint == undefined || activeAudioKey == undefined) {
         return undefined;
       }
       const length =
-        state.audioItems[getters.ACTIVE_AUDIO_KEY].query?.accentPhrases.length;
-      if (length == undefined) {
-        return undefined;
-      }
-      return Math.max(0, Math.min(length - 1, audioPlayStartPoint));
+        state.audioItems[activeAudioKey].query?.accentPhrases.length;
+
+      return length
+        ? Math.max(0, Math.min(length - 1, audioPlayStartPoint))
+        : undefined;
     },
   },
 
