@@ -187,23 +187,22 @@ export async function writeTextFile(obj: {
 }
 
 function generateWriteErrorMessage(writeFileResult: ResultError) {
-  if (writeFileResult.code) {
-    const code = writeFileResult.code.toUpperCase();
+  if (!writeFileResult.code) {
+    return `何らかの理由で失敗しました。${writeFileResult.message}`;
+  }
+  const code = writeFileResult.code.toUpperCase();
 
-    if (code.startsWith("ENOSPC")) {
-      return "空き容量が足りません。";
-    }
-
-    if (code.startsWith("EACCES")) {
-      return "ファイルにアクセスする許可がありません。";
-    }
-
-    if (code.startsWith("EBUSY")) {
-      return "ファイルが開かれています。";
-    }
+  if (code.startsWith("ENOSPC")) {
+    return "空き容量が足りません。";
   }
 
-  return `何らかの理由で失敗しました。${writeFileResult.message}`;
+  if (code.startsWith("EACCES")) {
+    return "ファイルにアクセスする許可がありません。";
+  }
+
+  if (code.startsWith("EBUSY")) {
+    return "ファイルが開かれています。";
+  }
 }
 
 // TODO: GETTERに移動する。
