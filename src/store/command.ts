@@ -175,11 +175,25 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
 
   LAST_COMMAND_UNIX_MILLISEC: {
     getter(state) {
-      if (state.undoCommands.length === 0) {
-        return null;
-      } else {
-        return state.undoCommands[state.undoCommands.length - 1].unixMillisec;
+      let lastCommandTime: number | null = null;
+      let lastSongCommandTime: number | null = null;
+      if (state.undoCommands.length !== 0) {
+        lastCommandTime =
+          state.undoCommands[state.undoCommands.length - 1].unixMillisec;
       }
+      if (state.undoSongCommands.length !== 0) {
+        lastSongCommandTime =
+          state.undoSongCommands[state.undoSongCommands.length - 1]
+            .unixMillisec;
+      }
+      if (lastCommandTime != null && lastSongCommandTime != null) {
+        return Math.max(lastCommandTime, lastSongCommandTime);
+      } else if (lastCommandTime != null) {
+        return lastCommandTime;
+      } else if (lastSongCommandTime != null) {
+        return lastSongCommandTime;
+      }
+      return null;
     },
   },
 
