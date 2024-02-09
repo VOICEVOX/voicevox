@@ -28,39 +28,12 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import MenuButton from "./MenuButton.vue";
+import { MenuItemData, MenuItemRoot } from "../type";
+import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-
-export type MenuItemBase<T extends string> = {
-  type: T;
-  label?: string;
-};
-
-export type MenuItemSeparator = MenuItemBase<"separator">;
-
-export type MenuItemRoot = MenuItemBase<"root"> & {
-  onClick?: () => void;
-  subMenu: MenuItemData[];
-  icon?: string;
-  disabled?: boolean;
-  disableWhenUiLocked: boolean;
-  disablreloadingLocked?: boolean;
-};
-
-export type MenuItemButton = MenuItemBase<"button"> & {
-  onClick: () => void;
-  icon?: string;
-  disabled?: boolean;
-  disableWhenUiLocked: boolean;
-  disablreloadingLocked?: boolean;
-};
-
-export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
-
-export type MenuItemType = MenuItemData["type"];
 
 const props =
   defineProps<{
