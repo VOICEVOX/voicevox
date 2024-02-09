@@ -87,6 +87,9 @@
           <div></div>
         </template>
       </q-input>
+      <!-- undo/redo -->
+      <q-btn flat round icon="undo" :disable="!canSongUndo" @click="songUndo" />
+      <q-btn flat round icon="redo" :disable="!canSongRedo" @click="songRedo" />
     </div>
     <div class="sing-setting">
       <q-slider v-model.number="volume" class="sing-volume" />
@@ -120,6 +123,16 @@ import CharacterMenuButton from "@/components/Sing/CharacterMenuButton.vue";
 import { getStyleDescription } from "@/sing/viewHelper";
 
 const store = useStore();
+
+const canSongUndo = computed(() => store.getters.CAN_SONG_UNDO);
+const canSongRedo = computed(() => store.getters.CAN_SONG_REDO);
+
+const songUndo = () => {
+  store.dispatch("SONG_UNDO");
+};
+const songRedo = () => {
+  store.dispatch("SONG_REDO");
+};
 
 const userOrderedCharacterInfos = computed(() =>
   store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike")
