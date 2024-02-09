@@ -7,7 +7,7 @@ import {
   SettingStoreState,
 } from "./type";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
-import { generateUniqueId } from "./utility";
+import { generateTempUniqueId } from "./utility";
 
 const audioBlobCache: Record<string, Blob> = {};
 
@@ -126,7 +126,7 @@ async function generateUniqueIdAndQuery(
     audioQuery.outputStereo = state.savingSetting.outputStereo;
   }
 
-  const id = await generateUniqueId([
+  const id = await generateTempUniqueId([
     audioItem.text,
     audioQuery,
     audioItem.voice,
