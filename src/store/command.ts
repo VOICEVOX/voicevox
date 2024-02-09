@@ -201,6 +201,8 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
     mutation(state) {
       state.redoCommands.splice(0);
       state.undoCommands.splice(0);
+      state.redoSongCommands.splice(0);
+      state.undoSongCommands.splice(0);
     },
   },
 });
