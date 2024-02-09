@@ -37,12 +37,13 @@ export type PayloadRecipeTree<S, M> = {
  * @returns Mutationを持つオブジェクト(MutationTree)
  */
 export const createCommandMutationTree = <S, M extends MutationsBase>(
-  payloadRecipeTree: PayloadRecipeTree<S, M>
+  payloadRecipeTree: PayloadRecipeTree<S, M>,
+  isSongCommand: boolean
 ): MutationTree<S, M> =>
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
-      createCommandMutation(val),
+      createCommandMutation(val, isSongCommand),
     ])
   ) as MutationTree<S, M>;
 
@@ -53,13 +54,19 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
  */
 export const createCommandMutation =
   <S extends State, M extends MutationsBase, K extends keyof M>(
-    payloadRecipe: PayloadRecipe<S, M[K]>
+    payloadRecipe: PayloadRecipe<S, M[K]>,
+    isSongCommand: boolean
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
     const command = recordPatches(payloadRecipe)(state, payload);
     applyPatchesImpl(state, command.redoPatches);
-    state.undoCommands.push(command);
-    state.redoCommands.splice(0);
+    if (isSongCommand) {
+      state.undoSongCommands.push(command);
+      state.redoSongCommands.splice(0);
+    } else {
+      state.undoCommands.push(command);
+      state.redoCommands.splice(0);
+    }
   };
 
 /**
@@ -83,6 +90,8 @@ const recordPatches =
 export const commandStoreState: CommandStoreState = {
   undoCommands: [],
   redoCommands: [],
+  undoSongCommands: [],
+  redoSongCommands: [],
 };
 
 export const commandStore = createPartialStore<CommandStoreTypes>({
@@ -121,6 +130,46 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
     },
     action({ commit }) {
       commit("REDO");
+    },
+  },
+
+  CAN_SONG_UNDO: {
+    getter(state) {
+      return state.undoSongCommands.length > 0;
+    },
+  },
+
+  CAN_SONG_REDO: {
+    getter(state) {
+      return state.redoSongCommands.length > 0;
+    },
+  },
+
+  SONG_UNDO: {
+    mutation(state) {
+      const command = state.undoSongCommands.pop();
+      if (command != null) {
+        state.redoSongCommands.push(command);
+        applyPatchesImpl(state, command.undoPatches);
+      }
+    },
+    action({ commit, dispatch }) {
+      commit("SONG_UNDO");
+      dispatch("RENDER");
+    },
+  },
+
+  SONG_REDO: {
+    mutation(state) {
+      const command = state.redoSongCommands.pop();
+      if (command != null) {
+        state.undoSongCommands.push(command);
+        applyPatchesImpl(state, command.redoPatches);
+      }
+    },
+    action({ commit, dispatch }) {
+      commit("SONG_REDO");
+      dispatch("RENDER");
     },
   },
 

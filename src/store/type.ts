@@ -752,6 +752,12 @@ export type Track = {
   notes: Note[];
 };
 
+export type NoteInfo = {
+  startTicks: number;
+  endTicks: number;
+  overlappingNoteIds: Set<string>;
+};
+
 export type PhraseState =
   | "WAITING_TO_BE_RENDERED"
   | "NOW_RENDERING"
@@ -783,6 +789,7 @@ export type SingingStoreState = {
   sequencerSnapType: number;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
+  overlappingNoteInfos: Map<string, NoteInfo>;
   editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
@@ -1017,6 +1024,61 @@ export type SingingStoreTypes = {
   };
 };
 
+export type SingingCommandStoreState = {
+  //
+};
+
+export type SingingCommandStoreTypes = {
+  COMMAND_SET_SINGER: {
+    mutation: { singer?: Singer };
+    action(payload: { singer?: Singer }): void;
+  };
+
+  // COMMAND_SET_SCORE: {
+  //   mutation: { score: Score };
+  //   action(payload: { score: Score }): void;
+  // };
+
+  COMMAND_SET_TEMPO: {
+    mutation: { tempo: Tempo };
+    action(payload: { tempo: Tempo }): void;
+  };
+
+  COMMAND_REMOVE_TEMPO: {
+    mutation: { position: number };
+    action(payload: { position: number }): void;
+  };
+
+  COMMAND_SET_TIME_SIGNATURE: {
+    mutation: { timeSignature: TimeSignature };
+    action(payload: { timeSignature: TimeSignature }): void;
+  };
+
+  COMMAND_REMOVE_TIME_SIGNATURE: {
+    mutation: { measureNumber: number };
+    action(payload: { measureNumber: number }): void;
+  };
+
+  COMMAND_ADD_NOTES: {
+    mutation: { notes: Note[] };
+    action(payload: { notes: Note[] }): void;
+  };
+
+  COMMAND_UPDATE_NOTES: {
+    mutation: { notes: Note[] };
+    action(payload: { notes: Note[] }): void;
+  };
+
+  COMMAND_REMOVE_NOTES: {
+    mutation: { noteIds: string[] };
+    action(payload: { noteIds: string[] }): void;
+  };
+
+  COMMAND_REMOVE_SELECTED_NOTES: {
+    action(): void;
+  };
+};
+
 /*
  * Command Store Types
  */
@@ -1024,6 +1086,8 @@ export type SingingStoreTypes = {
 export type CommandStoreState = {
   undoCommands: Command[];
   redoCommands: Command[];
+  undoSongCommands: Command[];
+  redoSongCommands: Command[];
 };
 
 export type CommandStoreTypes = {
@@ -1041,6 +1105,24 @@ export type CommandStoreTypes = {
   };
 
   REDO: {
+    mutation: undefined;
+    action(): void;
+  };
+
+  CAN_SONG_UNDO: {
+    getter: boolean;
+  };
+
+  CAN_SONG_REDO: {
+    getter: boolean;
+  };
+
+  SONG_UNDO: {
+    mutation: undefined;
+    action(): void;
+  };
+
+  SONG_REDO: {
     mutation: undefined;
     action(): void;
   };
@@ -1796,7 +1878,8 @@ export type State = AudioStoreState &
   PresetStoreState &
   DictionaryStoreState &
   ProxyStoreState &
-  SingingStoreState;
+  SingingStoreState &
+  SingingCommandStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
   AudioPlayerStoreTypes &
@@ -1810,15 +1893,17 @@ type AllStoreTypes = AudioStoreTypes &
   PresetStoreTypes &
   DictionaryStoreTypes &
   ProxyStoreTypes &
-  SingingStoreTypes;
+  SingingStoreTypes &
+  SingingCommandStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;
 export type AllActions = StoreType<AllStoreTypes, "action">;
 
 export const commandMutationsCreator = <S, M extends MutationsBase>(
-  arg: PayloadRecipeTree<S, M>
-): MutationTree<S, M> => createCommandMutationTree<S, M>(arg);
+  arg: PayloadRecipeTree<S, M>,
+  isSongCommand: boolean
+): MutationTree<S, M> => createCommandMutationTree<S, M>(arg, isSongCommand);
 
 export const transformCommandStore = <
   S,
@@ -1826,11 +1911,14 @@ export const transformCommandStore = <
   A extends ActionsBase,
   M extends MutationsBase
 >(
-  options: StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations>
+  options: StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations>,
+  isSongCommand?: boolean
 ): StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations> => {
+  isSongCommand = isSongCommand ?? false;
   if (options.mutations)
     options.mutations = commandMutationsCreator<S, M>(
-      options.mutations as PayloadRecipeTree<S, M>
+      options.mutations as PayloadRecipeTree<S, M>,
+      isSongCommand
     );
   return options;
 };

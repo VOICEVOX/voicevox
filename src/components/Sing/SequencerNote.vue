@@ -110,7 +110,7 @@ const lyric = computed({
       return;
     }
     const note: Note = { ...props.note, lyric: value };
-    store.dispatch("UPDATE_NOTES", { notes: [note] });
+    store.dispatch("COMMAND_UPDATE_NOTES", { notes: [note] });
   },
 });
 const showLyricInput = computed(() => {
@@ -123,7 +123,7 @@ const contextMenuData = ref<[MenuItemButton]>([
     label: "削除",
     onClick: async () => {
       contextMenu.value?.hide();
-      store.dispatch("REMOVE_SELECTED_NOTES");
+      store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
     },
     disableWhenUiLocked: true,
   },

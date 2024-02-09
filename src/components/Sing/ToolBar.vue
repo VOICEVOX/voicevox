@@ -218,7 +218,7 @@ watch(
 const setTempo = async () => {
   const bpm = bpmInputBuffer.value;
   if (bpm === 0) return;
-  await store.dispatch("SET_TEMPO", {
+  await store.dispatch("COMMAND_SET_TEMPO", {
     tempo: {
       position: 0,
       bpm,
@@ -230,7 +230,7 @@ const setTimeSignature = async () => {
   const beats = beatsInputBuffer.value;
   const beatType = beatTypeInputBuffer.value;
   if (beats === 0 || beatType === 0) return;
-  await store.dispatch("SET_TIME_SIGNATURE", {
+  await store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
       measureNumber: 1,
       beats,

@@ -10,10 +10,13 @@ import {
   Note,
   SingingStoreState,
   SingingStoreTypes,
+  SingingCommandStoreState,
+  SingingCommandStoreTypes,
   SaveResultObject,
   Singer,
   Phrase,
   PhraseState,
+  transformCommandStore,
 } from "./type";
 import { EngineId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
@@ -147,6 +150,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerSnapType: 16,
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
+  overlappingNoteInfos: new Map(),
   nowPlaying: false,
   volume: 0,
   leftLocatorPosition: 0,
@@ -216,7 +220,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SCORE: {
     mutation(state, { score }: { score: Score }) {
-      overlappingNotesDetector.clear();
+      state.overlappingNoteInfos.clear();
       state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
       state.selectedNoteIds.clear();
@@ -224,9 +228,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
       state.tracks[selectedTrackIndex].notes = score.notes;
-      overlappingNotesDetector.addNotes(score.notes);
-      state.overlappingNoteIds =
-        overlappingNotesDetector.getOverlappingNoteIds();
+      state.overlappingNoteInfos = overlappingNotesDetector.addNotes(
+        state.overlappingNoteInfos,
+        score.notes
+      );
+      state.overlappingNoteIds = overlappingNotesDetector.getOverlappingNoteIds(
+        state.overlappingNoteInfos
+      );
     },
     async action(
       { state, getters, commit, dispatch },
@@ -402,9 +410,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      overlappingNotesDetector.addNotes(notes);
-      state.overlappingNoteIds =
-        overlappingNotesDetector.getOverlappingNoteIds();
+      state.overlappingNoteInfos = overlappingNotesDetector.addNotes(
+        state.overlappingNoteInfos,
+        notes
+      );
+      state.overlappingNoteIds = overlappingNotesDetector.getOverlappingNoteIds(
+        state.overlappingNoteInfos
+      );
     },
     async action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
       const existingNoteIds = getters.NOTE_IDS;
@@ -430,9 +442,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      overlappingNotesDetector.updateNotes(notes);
-      state.overlappingNoteIds =
-        overlappingNotesDetector.getOverlappingNoteIds();
+      state.overlappingNoteInfos = overlappingNotesDetector.updateNotes(
+        state.overlappingNoteInfos,
+        notes
+      );
+      state.overlappingNoteIds = overlappingNotesDetector.getOverlappingNoteIds(
+        state.overlappingNoteInfos
+      );
     },
     async action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
       const existingNoteIds = getters.NOTE_IDS;
@@ -455,9 +471,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
-      overlappingNotesDetector.removeNotes(notes);
-      state.overlappingNoteIds =
-        overlappingNotesDetector.getOverlappingNoteIds();
+      state.overlappingNoteInfos = overlappingNotesDetector.removeNotes(
+        state.overlappingNoteInfos,
+        notes
+      );
+      state.overlappingNoteIds = overlappingNotesDetector.getOverlappingNoteIds(
+        state.overlappingNoteInfos
+      );
       if (
         state.editingLyricNoteId != undefined &&
         noteIdsSet.has(state.editingLyricNoteId)
@@ -1982,3 +2002,198 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 });
+
+export const singingCommandStoreState: SingingCommandStoreState = {};
+
+export const singingCommandStore = transformCommandStore(
+  createPartialStore<SingingCommandStoreTypes>({
+    COMMAND_SET_SINGER: {
+      mutation(draft, { singer }) {
+        singingStore.mutations.SET_SINGER(draft, { singer });
+      },
+      async action(
+        { state, getters, dispatch, commit },
+        { singer }: { singer?: Singer }
+      ) {
+        if (state.defaultStyleIds == undefined)
+          throw new Error("state.defaultStyleIds == undefined");
+        const userOrderedCharacterInfos =
+          getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
+        if (userOrderedCharacterInfos == undefined)
+          throw new Error("userOrderedCharacterInfos == undefined");
+
+        const engineId = singer?.engineId ?? state.engineIds[0];
+
+        // 最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
+        // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
+        const defaultStyleId =
+          userOrderedCharacterInfos[0].metas.styles[0].styleId;
+
+        const styleId = singer?.styleId ?? defaultStyleId;
+
+        try {
+          // 指定されたstyleIdに対して、エンジン側の初期化を行う
+          const isInitialized = await dispatch(
+            "IS_INITIALIZED_ENGINE_SPEAKER",
+            {
+              engineId,
+              styleId,
+            }
+          );
+          if (!isInitialized) {
+            await dispatch("INITIALIZE_ENGINE_SPEAKER", {
+              engineId,
+              styleId,
+            });
+          }
+        } finally {
+          commit("COMMAND_SET_SINGER", { singer: { engineId, styleId } });
+
+          dispatch("RENDER");
+        }
+      },
+    },
+    // COMMAND_SET_SCORE: {
+    //   mutation(draft, { score }) {
+    //     singingStore.mutations.SET_SCORE(draft, { score });
+    //   },
+    //   action({ commit }, { score }) {
+    //     commit("COMMAND_SET_SCORE", { score });
+    //   },
+    // },
+    COMMAND_SET_TEMPO: {
+      mutation(draft, { tempo }) {
+        singingStore.mutations.SET_TEMPO(draft, { tempo });
+      },
+      action(
+        { state, getters, commit, dispatch },
+        { tempo }: { tempo: Tempo }
+      ) {
+        if (!transport) {
+          throw new Error("transport is undefined.");
+        }
+        if (!isValidTempo(tempo)) {
+          throw new Error("The tempo is invalid.");
+        }
+        if (state.nowPlaying) {
+          playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
+        }
+        tempo.bpm = round(tempo.bpm, 2);
+        commit("COMMAND_SET_TEMPO", { tempo });
+        transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_REMOVE_TEMPO: {
+      mutation(draft, { position }) {
+        singingStore.mutations.REMOVE_TEMPO(draft, { position });
+      },
+      action(
+        { state, getters, commit, dispatch },
+        { position }: { position: number }
+      ) {
+        const exists = state.tempos.some((value) => {
+          return value.position === position;
+        });
+        if (!exists) {
+          throw new Error("The tempo does not exist.");
+        }
+        if (!transport) {
+          throw new Error("transport is undefined.");
+        }
+        if (state.nowPlaying) {
+          playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
+        }
+        commit("COMMAND_REMOVE_TEMPO", { position });
+        transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_SET_TIME_SIGNATURE: {
+      mutation(draft, { timeSignature }) {
+        singingStore.mutations.SET_TIME_SIGNATURE(draft, { timeSignature });
+      },
+      action({ commit }, { timeSignature }: { timeSignature: TimeSignature }) {
+        if (!isValidTimeSignature(timeSignature)) {
+          throw new Error("The time signature is invalid.");
+        }
+        commit("COMMAND_SET_TIME_SIGNATURE", { timeSignature });
+      },
+    },
+    COMMAND_REMOVE_TIME_SIGNATURE: {
+      mutation(draft, { measureNumber }) {
+        singingStore.mutations.REMOVE_TIME_SIGNATURE(draft, { measureNumber });
+      },
+      action({ state, commit }, { measureNumber }: { measureNumber: number }) {
+        const exists = state.timeSignatures.some((value) => {
+          return value.measureNumber === measureNumber;
+        });
+        if (!exists) {
+          throw new Error("The time signature does not exist.");
+        }
+        commit("COMMAND_REMOVE_TIME_SIGNATURE", { measureNumber });
+      },
+    },
+    COMMAND_ADD_NOTES: {
+      mutation(draft, { notes }) {
+        singingStore.mutations.ADD_NOTES(draft, { notes });
+      },
+      action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
+        const existingNoteIds = getters.NOTE_IDS;
+        const isValidNotes = notes.every((value) => {
+          return !existingNoteIds.has(value.id) && isValidNote(value);
+        });
+        if (!isValidNotes) {
+          throw new Error("The notes are invalid.");
+        }
+        commit("COMMAND_ADD_NOTES", { notes });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_UPDATE_NOTES: {
+      mutation(draft, { notes }) {
+        singingStore.mutations.UPDATE_NOTES(draft, { notes });
+      },
+      action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
+        const existingNoteIds = getters.NOTE_IDS;
+        const isValidNotes = notes.every((value) => {
+          return existingNoteIds.has(value.id) && isValidNote(value);
+        });
+        if (!isValidNotes) {
+          throw new Error("The notes are invalid.");
+        }
+        commit("COMMAND_UPDATE_NOTES", { notes });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_REMOVE_NOTES: {
+      mutation(draft, { noteIds }) {
+        singingStore.mutations.REMOVE_NOTES(draft, { noteIds });
+      },
+      action({ getters, commit, dispatch }, { noteIds }) {
+        const existingNoteIds = getters.NOTE_IDS;
+        const isValidNoteIds = noteIds.every((value) => {
+          return existingNoteIds.has(value);
+        });
+        if (!isValidNoteIds) {
+          throw new Error("The note ids are invalid.");
+        }
+        commit("COMMAND_REMOVE_NOTES", { noteIds });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_REMOVE_SELECTED_NOTES: {
+      action({ state, commit, dispatch }) {
+        commit("COMMAND_REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
+
+        dispatch("RENDER");
+      },
+    },
+  }),
+  true // isSongCommand
+);
