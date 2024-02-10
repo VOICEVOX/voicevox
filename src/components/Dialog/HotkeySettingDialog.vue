@@ -216,7 +216,7 @@
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { HotkeyActionType, HotkeySettingType } from "@/type/preload";
-import { useHotkeyManager, parseCombo } from "@/plugins/hotkeyPlugin";
+import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
 
 const props =
   defineProps<{
@@ -271,7 +271,7 @@ const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
     return;
   } else {
-    const recordedCombo = parseCombo(event);
+    const recordedCombo = eventToCombination(event);
     lastRecord.value = recordedCombo;
     event.preventDefault();
   }

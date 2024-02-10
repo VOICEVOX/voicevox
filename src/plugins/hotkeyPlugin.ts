@@ -6,6 +6,14 @@
  * HotkeySetting: ユーザーが設定できるもの。ActionとCobinationのペア
  * HotkeyEntry: プログラムが管理するもの。関数や発動条件など
  */
+
+/*
+ * 用語メモ：
+ * action: 何をするか
+ * combination: 設定で使う、キーの文字列表記
+ * binding: hotkeys-js に登録したコールバック
+ * bindingKey: hotkeys-js で使う、キーの文字列表記
+ */
 import { Plugin, inject } from "vue";
 import hotkeys from "hotkeys-js";
 import { HotkeyActionType, HotkeySettingType } from "@/type/preload";
@@ -26,7 +34,7 @@ const log = (message: string, ...args: unknown[]) => {
 /**
  * ショートカットキーの処理を登録するための型。
  */
-type HotkeyEntry = {
+type HotkeyAction = {
   /** どちらのエディタで有効か */
   editor: "talk" | "song";
   /** テキストボックス内で有効か。デフォルトはfalse。 */
@@ -36,19 +44,19 @@ type HotkeyEntry = {
   /** ショートカットキーが押されたときの処理。 */
   callback: (e: KeyboardEvent) => void;
 };
-type HotkeyEntryKey = `${"talk" | "song"}:${HotkeyActionType}`;
+type HotkeyActionKey = `${"talk" | "song"}:${HotkeyActionType}`;
 
-const entryToKey = (entry: HotkeyEntry): HotkeyEntryKey =>
+const entryToKey = (entry: HotkeyAction): HotkeyActionKey =>
   `${entry.editor}:${entry.action}`;
 
 /**
  * ショートカットキーの管理を行うクラス。
  */
 export class HotkeyManager {
-  private entries: HotkeyEntry[] = [];
+  private actions: HotkeyAction[] = [];
   private settings: HotkeySettingType[] = [];
-  /// 登録されているショートカットキーの組み合わせ。キーは「エディタ:アクション」で、値はショートカットキーの文字列。
-  private registeredCombination: Partial<Record<HotkeyEntryKey, string>> = {};
+  /// 登録されているショートカットキーの組み合わせ。キーは「エディタ:アクション」で、値はcombination。
+  private registeredCombinations: Partial<Record<HotkeyActionKey, string>> = {};
 
   constructor() {
     // デフォルトだとテキスト欄でのショートカットキーが効かないので、テキスト欄でも効くようにする
@@ -67,21 +75,25 @@ export class HotkeyManager {
     if (this.settings.length === 0) {
       return;
     }
-    const changedActions = this.entries.filter(
+    const changedActions = this.actions.filter(
       (a) =>
-        this.registeredCombination[entryToKey(a)] !==
+        this.registeredCombinations[entryToKey(a)] !==
         this.settings.find((s) => s.action === a.action)?.combination
     );
     if (changedActions.length === 0) {
       return;
     }
     const bindingsToRemove = new Set(
-      ...changedActions
-        .map((key) =>
-          hotkeyToCombo(this.registeredCombination[entryToKey(key)] || "")
-        )
+      changedActions
+        .map((key) => {
+          const combination = this.registeredCombinations[entryToKey(key)];
+          if (combination == undefined) {
+            return undefined;
+          }
+          return combinationToBindingKey(combination);
+        })
         // 未割り当てはremoveしない
-        .filter((key) => key !== "")
+        .filter((key) => key != undefined)
     );
     for (const key of bindingsToRemove.values()) {
       log("Unbind:", key);
@@ -98,14 +110,14 @@ export class HotkeyManager {
       } else {
         log(
           "Bind:",
-          hotkeyToCombo(setting.combination),
+          combinationToBindingKey(setting.combination),
           "to",
           action.action,
           "in",
           action.editor
         );
         hotkeys(
-          hotkeyToCombo(setting.combination),
+          combinationToBindingKey(setting.combination),
           { scope: action.editor },
           (e) => {
             if (!action.enableInTextbox) {
@@ -127,7 +139,7 @@ export class HotkeyManager {
           }
         );
       }
-      this.registeredCombination[entryToKey(action)] = setting.combination;
+      this.registeredCombinations[entryToKey(action)] = setting.combination;
     }
   }
 
@@ -146,8 +158,8 @@ export class HotkeyManager {
   /**
    * ショートカットキーの処理を登録する。
    */
-  register(data: HotkeyEntry): void {
-    this.entries.push(data);
+  register(data: HotkeyAction): void {
+    this.actions.push(data);
     this.refreshBinding();
   }
 
@@ -160,8 +172,8 @@ export class HotkeyManager {
   }
 }
 
-const hotkeyToCombo = (hotkeyCombo: string) => {
-  return hotkeyCombo.toLowerCase().replaceAll(" ", "+");
+const combinationToBindingKey = (combination: string) => {
+  return combination.toLowerCase().replaceAll(" ", "+");
 };
 
 export const hotkeyPlugin: Plugin = {
@@ -172,30 +184,30 @@ export const hotkeyPlugin: Plugin = {
   },
 };
 
-export const parseCombo = (event: KeyboardEvent): string => {
-  let recordedCombo = "";
+export const eventToCombination = (event: KeyboardEvent): string => {
+  let recordedCombination = "";
   if (event.ctrlKey) {
-    recordedCombo += "Ctrl ";
+    recordedCombination += "Ctrl ";
   }
   if (event.altKey) {
-    recordedCombo += "Alt ";
+    recordedCombination += "Alt ";
   }
   if (event.shiftKey) {
-    recordedCombo += "Shift ";
+    recordedCombination += "Shift ";
   }
   // event.metaKey は Mac キーボードでは Cmd キー、Windows キーボードでは Windows キーの押下で true になる
   if (event.metaKey) {
-    recordedCombo += "Meta ";
+    recordedCombination += "Meta ";
   }
   if (event.key === " ") {
-    recordedCombo += "Space";
+    recordedCombination += "Space";
   } else {
     if (["Control", "Shift", "Alt", "Meta"].includes(event.key)) {
-      recordedCombo = recordedCombo.slice(0, -1);
+      recordedCombination = recordedCombination.slice(0, -1);
     } else {
-      recordedCombo +=
+      recordedCombination +=
         event.key.length > 1 ? event.key : event.key.toUpperCase();
     }
   }
-  return recordedCombo;
+  return recordedCombination;
 };

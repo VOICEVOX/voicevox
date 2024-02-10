@@ -5,7 +5,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useStore } from "@/store";
-import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
+import BaseMenuBar from "@/components/Menu/MenuBar/BaseMenuBar.vue";
+import { MenuItemData } from "@/components/Menu/type";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
