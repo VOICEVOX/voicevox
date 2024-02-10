@@ -191,6 +191,7 @@ const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
 
 const playheadTicks = ref(0);
 
+/// 再生時間の分と秒
 const playheadPositionMinSecStr = computed(() => {
   const ticks = playheadTicks.value;
   const time = store.getters.TICK_TO_SECOND(ticks);
