@@ -111,7 +111,7 @@ const hotkeyManager = useHotkeyManager();
 
 hotkeyManager.register({
   editor: "talk",
-  action: "再生/停止",
+  name: "再生/停止",
   callback: () => {
     if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
       play();
@@ -122,14 +122,14 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "ｱｸｾﾝﾄ欄を表示",
+  name: "ｱｸｾﾝﾄ欄を表示",
   callback: () => {
     selectedDetail.value = "accent";
   },
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+  name: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
   callback: () => {
     if (supportedFeatures.value?.adjustMoraPitch) {
       selectedDetail.value = "pitch";
@@ -138,7 +138,7 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "長さ欄を表示",
+  name: "長さ欄を表示",
   callback: () => {
     if (supportedFeatures.value?.adjustPhonemeLength) {
       selectedDetail.value = "length";
@@ -147,7 +147,7 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "全体のイントネーションをリセット",
+  name: "全体のイントネーションをリセット",
   callback: () => {
     if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
       const audioKeys = store.state.experimentalSetting.enableMultiSelect
@@ -161,7 +161,7 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "選択中のアクセント句のイントネーションをリセット",
+  name: "選択中のアクセント句のイントネーションをリセット",
   callback: () => {
     if (
       !uiLocked.value &&

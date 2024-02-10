@@ -53,7 +53,7 @@ const nowPlayingContinuously = computed(
 const hotkeyManager = useHotkeyManager();
 hotkeyManager.register({
   editor: "talk",
-  action: "元に戻す",
+  name: "元に戻す",
   callback: () => {
     if (!uiLocked.value && canUndo.value) {
       undo();
@@ -62,7 +62,7 @@ hotkeyManager.register({
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "やり直す",
+  name: "やり直す",
   callback: () => {
     if (!uiLocked.value && canRedo.value) {
       redo();
@@ -72,7 +72,7 @@ hotkeyManager.register({
 
 hotkeyManager.register({
   editor: "talk",
-  action: "連続再生/停止",
+  name: "連続再生/停止",
   callback: () => {
     if (!uiLocked.value) {
       if (nowPlayingContinuously.value) {

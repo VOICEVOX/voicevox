@@ -39,14 +39,14 @@ type HotkeyAction = {
   /** テキストボックス内で有効か。デフォルトはfalse。 */
   enableInTextbox?: boolean;
   /** 名前。 */
-  action: HotkeyActionNameType;
+  name: HotkeyActionNameType;
   /** ショートカットキーが押されたときの処理。 */
   callback: (e: KeyboardEvent) => void;
 };
 type HotkeyActionId = `${"talk" | "song"}:${HotkeyActionNameType}`;
 
 const actionToId = (entry: HotkeyAction): HotkeyActionId =>
-  `${entry.editor}:${entry.action}`;
+  `${entry.editor}:${entry.name}`;
 
 /**
  * ショートカットキーの管理を行うクラス。
@@ -77,7 +77,7 @@ export class HotkeyManager {
     const changedActions = this.actions.filter(
       (a) =>
         this.registeredCombinations[actionToId(a)] !==
-        this.settings.find((s) => s.action === a.action)?.combination
+        this.settings.find((s) => s.action === a.name)?.combination
     );
     if (changedActions.length === 0) {
       return;
@@ -99,19 +99,19 @@ export class HotkeyManager {
       hotkeys.unbind(key);
     }
     for (const action of changedActions) {
-      const setting = this.settings.find((s) => s.action === action.action);
+      const setting = this.settings.find((s) => s.action === action.name);
       if (!setting) {
         // unreachableのはず
         throw new Error("assert: setting == undefined");
       }
       if (setting.combination === "") {
-        log("Skip(empty combination):", action.action, "in", action.editor);
+        log("Skip(empty combination):", action.name, "in", action.editor);
       } else {
         log(
           "Bind:",
           combinationToBindingKey(setting.combination),
           "to",
-          action.action,
+          action.name,
           "in",
           action.editor
         );

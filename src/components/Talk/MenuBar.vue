@@ -229,56 +229,56 @@ const fileSubMenuData = computed<MenuItemData[]>(() => [
 
 hotkeyManager.register({
   editor: "talk",
-  action: "新規プロジェクト",
+  name: "新規プロジェクト",
   callback: () => {
     createNewProject();
   },
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "音声書き出し",
+  name: "音声書き出し",
   callback: () => {
     generateAndSaveAllAudio();
   },
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "選択音声を書き出し",
+  name: "選択音声を書き出し",
   callback: () => {
     generateAndSaveSelectedAudio();
   },
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "音声を繋げて書き出し",
+  name: "音声を繋げて書き出し",
   callback: () => {
     generateAndConnectAndSaveAllAudio();
   },
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "テキスト読み込む",
+  name: "テキスト読み込む",
   callback: () => {
     importTextFile();
   },
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "プロジェクトを上書き保存",
+  name: "プロジェクトを上書き保存",
   callback: () => {
     saveProject();
   },
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "プロジェクトを名前を付けて保存",
+  name: "プロジェクトを名前を付けて保存",
   callback: () => {
     saveProjectAs();
   },
 });
 hotkeyManager.register({
   editor: "talk",
-  action: "プロジェクト読み込み",
+  name: "プロジェクト読み込み",
   callback: () => {
     importProject();
   },

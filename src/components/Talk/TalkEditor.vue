@@ -236,7 +236,7 @@ const hotkeyManager = useHotkeyManager();
 
 hotkeyManager.register({
   editor: "talk",
-  action: "テキスト欄にフォーカスを戻す",
+  name: "テキスト欄にフォーカスを戻す",
   callback: () => {
     if (activeAudioKey.value != undefined) {
       focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
@@ -246,7 +246,7 @@ hotkeyManager.register({
 hotkeyManager.register({
   editor: "talk",
   enableInTextbox: true,
-  action: "テキスト欄を複製",
+  name: "テキスト欄を複製",
   callback: () => {
     if (activeAudioKey.value != undefined) {
       duplicateAudioItem();
@@ -256,7 +256,7 @@ hotkeyManager.register({
 hotkeyManager.register({
   editor: "talk",
   enableInTextbox: true,
-  action: "テキスト欄を追加",
+  name: "テキスト欄を追加",
   callback: () => {
     if (!uiLocked.value) {
       addAudioItem();
@@ -266,7 +266,7 @@ hotkeyManager.register({
 hotkeyManager.register({
   editor: "talk",
   enableInTextbox: true,
-  action: "テキスト欄を削除",
+  name: "テキスト欄を削除",
   callback: () => {
     if (!uiLocked.value) {
       removeAudioItem();
@@ -276,7 +276,7 @@ hotkeyManager.register({
 hotkeyManager.register({
   editor: "talk",
   enableInTextbox: true,
-  action: "テキスト欄からフォーカスを外す",
+  name: "テキスト欄からフォーカスを外す",
   callback: () => {
     if (!uiLocked.value) {
       if (document.activeElement instanceof HTMLInputElement) {

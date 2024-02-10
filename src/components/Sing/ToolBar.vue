@@ -125,7 +125,7 @@ const hotkeyManager = useHotkeyManager();
 
 hotkeyManager.register({
   editor: "song",
-  action: "再生/停止",
+  name: "再生/停止",
   callback: () => {
     if (nowPlaying.value) {
       stop();
