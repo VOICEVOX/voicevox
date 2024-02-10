@@ -274,3 +274,19 @@ export function getSnapTypes(tpqn: number) {
 export function isValidSnapType(snapType: number, tpqn: number) {
   return getSnapTypes(tpqn).some((value) => value === snapType);
 }
+
+export function isValidSingingRangeShift(singingRangeShift: number) {
+  return (
+    Number.isInteger(singingRangeShift) &&
+    singingRangeShift <= 18 &&
+    singingRangeShift >= -18
+  );
+}
+
+export function isValidVoiceKeyShift(singingRangeShift: number) {
+  return (
+    Number.isInteger(singingRangeShift) &&
+    singingRangeShift <= 18 &&
+    singingRangeShift >= -18
+  );
+}

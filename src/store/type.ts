@@ -749,6 +749,8 @@ export type Singer = {
 
 export type Track = {
   singer?: Singer;
+  notesKeyShift: number;
+  voiceKeyShift: number;
   notes: Note[];
 };
 
@@ -760,6 +762,8 @@ export type PhraseState =
 
 export type Phrase = {
   singer?: Singer;
+  notesKeyShift: number;
+  voiceKeyShift: number;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];
@@ -804,6 +808,11 @@ export type SingingStoreTypes = {
   SET_SINGER: {
     mutation: { singer?: Singer };
     action(payload: { singer?: Singer }): void;
+  };
+
+  SET_VOICE_KEY_SHIFT: {
+    mutation: { voiceKeyShift: number };
+    action(payload: { voiceKeyShift: number }): void;
   };
 
   SET_SCORE: {
