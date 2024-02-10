@@ -48,6 +48,18 @@ type HotkeyActionId = `${"talk" | "song"}:${HotkeyActionNameType}`;
 const actionToId = (action: HotkeyAction): HotkeyActionId =>
   `${action.editor}:${action.name}`;
 
+export type HotkeysJs = {
+  (
+    key: string,
+    options: {
+      scope: string;
+    },
+    callback: (e: KeyboardEvent) => void
+  ): void;
+  unbind: (key: string) => void;
+  setScope: (scope: string) => void;
+};
+
 /**
  * ショートカットキーの管理を行うクラス。
  */
@@ -56,10 +68,10 @@ export class HotkeyManager {
   private settings: HotkeySettingType[] | undefined;
   // 登録されているショートカットキーの組み合わせ。キーは「エディタ:アクション」で、値はcombination。
   private registeredCombinations: Partial<Record<HotkeyActionId, string>> = {};
+  private hotkeys: HotkeysJs;
 
-  constructor() {
-    // デフォルトだとテキスト欄でのショートカットキーが効かないので、テキスト欄でも効くようにする
-    hotkeys.filter = () => true;
+  constructor(hotkeys_: HotkeysJs = hotkeys) {
+    this.hotkeys = hotkeys_;
   }
 
   /**
@@ -78,7 +90,7 @@ export class HotkeyManager {
       if (!this.settings) throw new Error("assert: this.settings != undefined");
       const setting = this.settings.find((s) => s.action === a.name);
       if (!setting) throw new Error("assert: setting != undefined");
-      this.registeredCombinations[actionToId(a)] !== setting.combination;
+      return this.registeredCombinations[actionToId(a)] !== setting.combination;
     });
     if (changedActions.length === 0) {
       return;
@@ -94,10 +106,10 @@ export class HotkeyManager {
         })
         // 未割り当てはremoveしない
         .filter((key) => key != undefined)
-    );
+    ) as Set<string>;
     for (const bindingKey of bindingsToRemove.values()) {
       log("Unbind:", bindingKey);
-      hotkeys.unbind(bindingKey);
+      this.hotkeys.unbind(bindingKey);
     }
     for (const action of changedActions) {
       const setting = this.settings.find((s) => s.action === action.name);
@@ -107,38 +119,40 @@ export class HotkeyManager {
       }
       if (setting.combination === "") {
         log("Skip(empty combination):", action.name, "in", action.editor);
-      } else {
-        log(
-          "Bind:",
-          combinationToBindingKey(setting.combination),
-          "to",
-          action.name,
-          "in",
-          action.editor
-        );
-        hotkeys(
-          combinationToBindingKey(setting.combination),
-          { scope: action.editor },
-          (e) => {
-            if (!action.enableInTextbox) {
-              const element = e.target as HTMLElement;
-              if (
-                element.tagName === "INPUT" ||
-                element.tagName === "SELECT" ||
-                element.tagName === "TEXTAREA" ||
-                (element instanceof HTMLElement &&
-                  element.contentEditable === "true") ||
-                // メニュー項目ではショートカットキーを無効化
-                element.classList.contains("q-item")
-              ) {
-                return;
-              }
-            }
-            e.preventDefault();
-            action.callback(e);
-          }
-        );
+
+        this.registeredCombinations[actionToId(action)] = undefined;
+        continue;
       }
+      log(
+        "Bind:",
+        combinationToBindingKey(setting.combination),
+        "to",
+        action.name,
+        "in",
+        action.editor
+      );
+      this.hotkeys(
+        combinationToBindingKey(setting.combination),
+        { scope: action.editor },
+        (e) => {
+          if (!action.enableInTextbox) {
+            const element = e.target as HTMLElement;
+            if (
+              element.tagName === "INPUT" ||
+              element.tagName === "SELECT" ||
+              element.tagName === "TEXTAREA" ||
+              (element instanceof HTMLElement &&
+                element.contentEditable === "true") ||
+              // メニュー項目ではショートカットキーを無効化
+              element.classList.contains("q-item")
+            ) {
+              return;
+            }
+          }
+          e.preventDefault();
+          action.callback(e);
+        }
+      );
       this.registeredCombinations[actionToId(action)] = setting.combination;
     }
   }
@@ -170,7 +184,7 @@ export class HotkeyManager {
    * エディタが変更されたときに呼び出される。
    */
   onEditorChange(editor: "talk" | "song"): void {
-    hotkeys.setScope(editor);
+    this.hotkeys.setScope(editor);
     log("Editor changed to", editor);
   }
 }
