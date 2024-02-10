@@ -1,10 +1,9 @@
 /**
  * ショートカットキーを管理するプラグイン。
  *
- * HotkeyAction: 何をするか（再生するなど）の名称
+ * HotkeyAction: 実行する処理の名前とコールバックのペア
  * Combination: ショートカットキーを文字列で表したもの
  * HotkeySetting: ユーザーが設定できるもの。ActionとCobinationのペア
- * HotkeyEntry: プログラムが管理するもの。関数や発動条件など
  */
 
 /*
@@ -16,7 +15,7 @@
  */
 import { Plugin, inject } from "vue";
 import hotkeys from "hotkeys-js";
-import { HotkeyActionType, HotkeySettingType } from "@/type/preload";
+import { HotkeyActionNameType, HotkeySettingType } from "@/type/preload";
 
 const hotkeyManagerKey = "hotkeyManager";
 export const useHotkeyManager = () => {
@@ -40,11 +39,11 @@ type HotkeyAction = {
   /** テキストボックス内で有効か。デフォルトはfalse。 */
   enableInTextbox?: boolean;
   /** 名前。 */
-  action: HotkeyActionType;
+  action: HotkeyActionNameType;
   /** ショートカットキーが押されたときの処理。 */
   callback: (e: KeyboardEvent) => void;
 };
-type HotkeyActionKey = `${"talk" | "song"}:${HotkeyActionType}`;
+type HotkeyActionKey = `${"talk" | "song"}:${HotkeyActionNameType}`;
 
 const entryToKey = (entry: HotkeyAction): HotkeyActionKey =>
   `${entry.editor}:${entry.action}`;

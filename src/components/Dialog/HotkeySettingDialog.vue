@@ -215,7 +215,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
-import { HotkeyActionType, HotkeySettingType } from "@/type/preload";
+import { HotkeyActionNameType, HotkeySettingType } from "@/type/preload";
 import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
 
 const props =
@@ -280,12 +280,12 @@ const recordCombination = (event: KeyboardEvent) => {
 const hotkeyManager = useHotkeyManager();
 const changeHotkeySettings = (action: string, combo: string) => {
   hotkeyManager.replace({
-    action: action as HotkeyActionType,
+    action: action as HotkeyActionNameType,
     combination: combo,
   });
   return store.dispatch("SET_HOTKEY_SETTINGS", {
     data: {
-      action: action as HotkeyActionType,
+      action: action as HotkeyActionNameType,
       combination: combo,
     },
   });

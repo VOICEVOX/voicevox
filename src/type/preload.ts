@@ -403,7 +403,7 @@ export type MorphableTargetInfoTable = {
       };
 };
 
-export const hotkeyActionSchema = z.enum([
+export const hotkeyActionNameSchema = z.enum([
   "音声書き出し",
   "選択音声を書き出し",
   "音声を繋げて書き出し",
@@ -428,12 +428,12 @@ export const hotkeyActionSchema = z.enum([
   "選択中のアクセント句のイントネーションをリセット",
 ]);
 
-export type HotkeyActionType = z.infer<typeof hotkeyActionSchema>;
+export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
 
 export type HotkeyCombo = string;
 
 export const hotkeySettingSchema = z.object({
-  action: hotkeyActionSchema,
+  action: hotkeyActionNameSchema,
   combination: z.string(),
 });
 export type HotkeySettingType = z.infer<typeof hotkeySettingSchema>;
