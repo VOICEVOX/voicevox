@@ -122,7 +122,6 @@ const unwatchIsEnginesReady = watch(
 }
 .sing-main {
   display: flex;
-  flex-direction: column;
   overflow: hidden;
   position: relative;
 }
