@@ -27,7 +27,7 @@ export const useHotkeyManager = () => {
 };
 
 const log = (message: string, ...args: unknown[]) => {
-  console.log(`[HotkeyManager] ${message}`, ...args);
+  window.electron.logInfo(`[HotkeyManager] ${message}`, ...args);
 };
 
 /**
