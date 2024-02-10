@@ -33,7 +33,7 @@ const log = (message: string, ...args: unknown[]) => {
 /**
  * ショートカットキーの処理を登録するための型。
  */
-type HotkeyAction = {
+export type HotkeyAction = {
   /** どちらのエディタで有効か */
   editor: "talk" | "song";
   /** テキストボックス内で有効か。デフォルトはfalse。 */
@@ -56,7 +56,7 @@ export type HotkeysJs = {
     },
     callback: (e: KeyboardEvent) => void
   ): void;
-  unbind: (key: string) => void;
+  unbind: (key: string, scope: string) => void;
   setScope: (scope: string) => void;
 };
 
@@ -82,44 +82,58 @@ export class HotkeyManager {
     this.refreshBinding();
   }
 
+  private getSetting(action: HotkeyAction): HotkeySettingType | undefined {
+    if (!this.settings) {
+      return undefined;
+    }
+    return this.settings.find((s) => s.action === action.name);
+  }
+
   private refreshBinding(): void {
     if (!this.settings) {
       return;
     }
     const changedActions = this.actions.filter((a) => {
-      if (!this.settings) throw new Error("assert: this.settings != undefined");
-      const setting = this.settings.find((s) => s.action === a.name);
+      const setting = this.getSetting(a);
       if (!setting) throw new Error("assert: setting != undefined");
       return this.registeredCombinations[actionToId(a)] !== setting.combination;
     });
     if (changedActions.length === 0) {
       return;
     }
-    const bindingsToRemove = new Set(
-      changedActions
-        .map((key) => {
-          const combination = this.registeredCombinations[actionToId(key)];
-          if (combination == undefined) {
-            return undefined;
-          }
-          return combinationToBindingKey(combination);
-        })
-        // 未割り当てはremoveしない
-        .filter((key) => key != undefined)
-    ) as Set<string>;
-    for (const bindingKey of bindingsToRemove.values()) {
-      log("Unbind:", bindingKey);
-      this.hotkeys.unbind(bindingKey);
+    // 既に登録
+    const actionsToUnbind = changedActions.filter((a) => {
+      return this.registeredCombinations[actionToId(a)];
+    });
+    const actionsToBind = changedActions.filter((a) => {
+      const setting = this.getSetting(a);
+      if (!setting) throw new Error("assert: setting != undefined");
+      return !!setting.combination;
+    });
+
+    this.unbindActions(actionsToUnbind);
+    this.bindActions(actionsToBind);
+  }
+
+  private unbindActions(actions: HotkeyAction[]): void {
+    for (const action of actions) {
+      const bindingKey = this.registeredCombinations[actionToId(action)];
+      if (!bindingKey) {
+        throw new Error("assert: bindingKey != undefined");
+      }
+      log("Unbind:", bindingKey, "in", action.editor);
+      this.hotkeys.unbind(bindingKey, action.editor);
     }
-    for (const action of changedActions) {
-      const setting = this.settings.find((s) => s.action === action.name);
+  }
+
+  private bindActions(actions: HotkeyAction[]): void {
+    for (const action of actions) {
+      const setting = this.getSetting(action);
       if (!setting) {
-        // unreachableのはず
         throw new Error("assert: setting == undefined");
       }
       if (setting.combination === "") {
         log("Skip(empty combination):", action.name, "in", action.editor);
-
         this.registeredCombinations[actionToId(action)] = undefined;
         continue;
       }
