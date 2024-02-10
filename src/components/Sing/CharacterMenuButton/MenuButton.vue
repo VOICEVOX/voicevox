@@ -172,30 +172,6 @@ const reassignSubMenuOpen = debounce((idx: number) => {
   subMenuOpenFlags.value = arr;
 }, 100);
 const showSkeleton = computed(() => selectedCharacterInfo.value == undefined);
-const selectedSinger = computed(() => {
-  return store.state.tracks[0].singer;
-});
-
-const selectedCharacterInfo = computed(() => {
-  const singer = store.state.tracks[0].singer;
-  if (userOrderedCharacterInfos.value == undefined || !singer) {
-    return undefined;
-  }
-  return store.getters.CHARACTER_INFO(singer.engineId, singer.styleId);
-});
-
-const selectedSpeakerUuid = computed(() => {
-  return selectedCharacterInfo.value?.metas.speakerUuid;
-});
-
-const selectedStyleId = computed(
-  () =>
-    selectedCharacterInfo.value?.metas.styles.find(
-      (style) =>
-        style.styleId === store.state.tracks[0].singer?.styleId &&
-        style.engineId === store.state.tracks[0].singer?.engineId
-    )?.styleId
-);
 
 const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
   const engineId = store.state.engineIds.find((_engineId) =>
@@ -232,6 +208,31 @@ const getDefaultStyle = (speakerUuid: string) => {
 
   return defaultStyle;
 };
+
+const selectedCharacterInfo = computed(() => {
+  const singer = store.getters.SELECTED_TRACK.singer;
+  if (userOrderedCharacterInfos.value == undefined || !singer) {
+    return undefined;
+  }
+  return store.getters.CHARACTER_INFO(singer.engineId, singer.styleId);
+});
+
+const selectedSinger = computed(() => {
+  return store.getters.SELECTED_TRACK.singer;
+});
+
+const selectedSpeakerUuid = computed(() => {
+  return selectedCharacterInfo.value?.metas.speakerUuid;
+});
+
+const selectedStyleId = computed(
+  () =>
+    selectedCharacterInfo.value?.metas.styles.find(
+      (style) =>
+        style.styleId === store.getters.SELECTED_TRACK.singer?.styleId &&
+        style.engineId === store.getters.SELECTED_TRACK.singer?.engineId
+    )?.styleId
+);
 
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);

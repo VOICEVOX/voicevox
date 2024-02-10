@@ -26,7 +26,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, watch } from "vue";
-import { useStore } from "@/store";
+import MenuBar from "./MenuBar.vue";
+import ToolBar from "./ToolBar.vue";
+import ScoreSequencer from "./ScoreSequencer.vue";
 import {
   DEFAULT_BEATS,
   DEFAULT_BEAT_TYPE,
@@ -34,9 +36,7 @@ import {
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
-import MenuBar from "@/components/Sing/MenuBar.vue";
-import ToolBar from "@/components/Sing/ToolBar.vue";
-import ScoreSequencer from "@/components/Sing/ScoreSequencer.vue";
+import { useStore } from "@/store";
 
 const props = withDefaults(
   defineProps<{

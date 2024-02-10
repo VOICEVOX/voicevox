@@ -1,99 +1,96 @@
 <template>
-  <div class="sing-toolbar">
-    <character-menu-button />
+  <q-toolbar class="sing-toolbar">
+    <!-- configs for entire song -->
+    <div class="sing-configs">
+      <character-menu-button />
+      <q-input
+        type="number"
+        :model-value="bpmInputBuffer"
+        label="テンポ"
+        dense
+        hide-bottom-space
+        class="sing-tempo"
+        @update:model-value="setBpmInputBuffer"
+        @change="setTempo"
+      >
+        <template #prepend>
+          <q-icon name="music_note" size="xs" class="sing-tempo-icon" />
+        </template>
+      </q-input>
+      <div class="sing-beats">
+        <q-input
+          type="number"
+          :model-value="beatsInputBuffer"
+          label="拍子"
+          dense
+          hide-bottom-space
+          class="sing-time-signature"
+          @update:model-value="setBeatsInputBuffer"
+          @change="setTimeSignature"
+        />
+        <div class="sing-beats-separator">/</div>
+        <q-input
+          type="number"
+          :model-value="beatTypeInputBuffer"
+          label=""
+          dense
+          hide-bottom-space
+          class="sing-time-signature"
+          @update:model-value="setBeatTypeInputBuffer"
+          @change="setTimeSignature"
+        />
+      </div>
+    </div>
+    <!-- player -->
     <div class="sing-player">
       <q-btn
         flat
         round
         class="sing-transport-button"
         icon="skip_previous"
-        :disable="uiLocked"
         @click="goToZero"
-      ></q-btn>
+      />
       <q-btn
         v-if="!nowPlaying"
         round
         class="sing-playback-button"
         icon="play_arrow"
-        :disable="uiLocked"
         @click="play"
-      ></q-btn>
+      />
       <q-btn
         v-else
         round
         class="sing-playback-button"
         icon="stop"
-        :disable="uiLocked"
         @click="stop"
-      ></q-btn>
-      <div class="sing-playhead-position" :class="{ disabled: uiLocked }">
-        {{ playheadPositionStr }}
-      </div>
-      <q-input
-        type="number"
-        :model-value="bpmInputBuffer"
-        dense
-        hide-bottom-space
-        class="sing-tempo"
-        :disable="uiLocked"
-        @update:model-value="setBpmInputBuffer"
-        @change="setTempo"
-      >
-        <template #prepend>
-          <div></div>
-        </template>
-      </q-input>
-      <q-input
-        type="number"
-        :model-value="beatsInputBuffer"
-        dense
-        hide-bottom-space
-        class="sing-time-signature"
-        :disable="uiLocked"
-        @update:model-value="setBeatsInputBuffer"
-        @change="setTimeSignature"
-      >
-        <template #prepend>
-          <div></div>
-        </template>
-      </q-input>
-      /
-      <q-input
-        type="number"
-        :model-value="beatTypeInputBuffer"
-        dense
-        hide-bottom-space
-        class="sing-time-signature"
-        :disable="uiLocked"
-        @update:model-value="setBeatTypeInputBuffer"
-        @change="setTimeSignature"
-      >
-        <template #prepend>
-          <div></div>
-        </template>
-      </q-input>
-    </div>
-    <div class="sing-setting">
-      <q-slider
-        v-model.number="volume"
-        class="sing-volume"
-        :disable="uiLocked"
       />
+      <div class="sing-playhead-position">
+        <div>{{ playheadPositionMinSecStr }}</div>
+        <div class="sing-playhead-position-millisec">
+          .{{ playHeadPositionMilliSecStr }}
+        </div>
+      </div>
+    </div>
+    <!-- settings for edit controls -->
+    <div class="sing-controls">
+      <q-icon name="volume_up" size="xs" class="sing-volume-icon" />
+      <q-slider v-model.number="volume" class="sing-volume" />
       <q-select
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
-        color="primary"
-        text-color="display-on-primary"
         outlined
+        color="primary"
         dense
+        text-color="display-on-primary"
+        hide-bottom-space
         options-dense
+        label="スナップ"
         transition-show="none"
         transition-hide="none"
         class="sing-snap"
-        :disable="uiLocked"
       />
     </div>
-  </div>
+  </q-toolbar>
 </template>
 
 <script setup lang="ts">
@@ -109,7 +106,6 @@ import {
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 
 const store = useStore();
-const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const bpmInputBuffer = ref(0);
 const beatsInputBuffer = ref(0);
@@ -139,7 +135,8 @@ const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
 
 const playheadTicks = ref(0);
 
-const playheadPositionStr = computed(() => {
+/// 再生時間の分と秒
+const playheadPositionMinSecStr = computed(() => {
   const ticks = playheadTicks.value;
   const time = store.getters.TICK_TO_SECOND(ticks);
 
@@ -147,10 +144,17 @@ const playheadPositionStr = computed(() => {
   const min = Math.trunc(intTime / 60);
   const minStr = String(min).padStart(2, "0");
   const secStr = String(intTime - min * 60).padStart(2, "0");
+
+  return `${minStr}:${secStr}`;
+});
+
+const playHeadPositionMilliSecStr = computed(() => {
+  const ticks = playheadTicks.value;
+  const time = store.getters.TICK_TO_SECOND(ticks);
+  const intTime = Math.trunc(time);
   const milliSec = Math.trunc((time - intTime) * 1000);
   const milliSecStr = String(milliSec).padStart(3, "0");
-
-  return `${minStr}:${secStr}.${milliSecStr}`;
+  return milliSecStr;
 });
 
 const tempos = computed(() => store.state.tempos);
@@ -230,7 +234,7 @@ const snapTypeSelectOptions = computed(() => {
     })
     .map((snapType) => {
       if (isTriplet(snapType)) {
-        return { snapType, label: `1/${(snapType / 3) * 2}（三連符）` };
+        return { snapType, label: `1/${(snapType / 3) * 2} T` };
       } else {
         return { snapType, label: `1/${snapType}` };
       }
@@ -273,59 +277,148 @@ onUnmounted(() => {
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
+.q-input {
+  :deep(.q-field__control::before) {
+    border-color: rgba(colors.$display-rgb, 0.3);
+  }
+}
+
+.q-select {
+  :deep(.q-field__control::before) {
+    border-color: rgba(colors.$display-rgb, 0.3);
+  }
+}
+
+.character-menu-toggle {
+  align-items: center;
+  display: flex;
+  padding: 4px 8px 8px 8px;
+  position: relative;
+}
+.character-avatar-icon {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.character-info {
+  align-items: start;
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.5rem;
+  text-align: left;
+  justify-content: center;
+  white-space: nowrap;
+}
+.character-name {
+  font-size: 0.875rem;
+  font-weight: bold;
+  line-height: 1rem;
+  padding-top: 4px;
+}
+
+.character-style {
+  color: rgba(colors.$display-rgb, 0.73);
+  font-size: 11px;
+  line-height: 1rem;
+  vertical-align: text-bottom;
+}
+
+.character-menu-dropdown-icon {
+  color: rgba(colors.$display-rgb, 0.73);
+  margin-left: 0.25rem;
+}
 .sing-toolbar {
   background: colors.$sing-toolbar;
   align-items: center;
   display: flex;
   justify-content: space-between;
   min-height: 56px;
-  padding: 0 16px 0 0;
+  padding: 0 8px 0 0;
   width: 100%;
+}
+
+.sing-configs {
+  align-items: center;
+  display: flex;
+  flex: 1;
 }
 
 .sing-player {
   align-items: center;
+  justify-content: center;
   display: flex;
-}
-
-.sing-transport-button {
-  margin: 0 1px;
-}
-
-.sing-playback-button {
-  margin: 0 4px;
+  flex: 1;
 }
 
 .sing-tempo {
   margin-left: 16px;
   margin-right: 4px;
-  width: 64px;
+  width: 72px;
+}
+
+.sing-tempo-icon {
+  color: rgba(colors.$display-rgb, 0.6);
+  padding-right: 0px;
+  position: relative;
+  top: 4px;
+  left: 0;
+}
+
+.sing-beats {
+  align-items: center;
+  display: flex;
+  margin-left: 8px;
+  position: relative;
 }
 
 .sing-time-signature {
-  margin: 0 4px;
-  width: 36px;
+  margin: 0;
+  position: relative;
+  width: 32px;
+}
+.sing-beats-separator {
+  color: rgba(colors.$display-rgb, 0.6);
+  position: relative;
+  top: 5px;
+  margin-right: 8px;
+  pointer-events: none;
 }
 
 .sing-playhead-position {
-  font-size: 18px;
-  margin-left: 14px;
-  margin-right: 4px;
-  min-width: 82px;
-}
-
-.sing-setting {
   align-items: center;
   display: flex;
+  font-size: 28px;
+  font-weight: 700;
+  margin-left: 16px;
+  color: colors.$display;
 }
 
+.sing-playhead-position-millisec {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 10px 0 0 2px;
+  color: rgba(colors.$display-rgb, 0.73);
+}
+
+.sing-controls {
+  align-items: center;
+  justify-content: flex-end;
+  display: flex;
+  flex: 1;
+}
+
+.sing-volume-icon {
+  margin-right: 8px;
+  opacity: 0.6;
+}
 .sing-volume {
   margin-right: 16px;
   width: 72px;
 }
 
 .sing-snap {
-  margin-right: 2px;
-  min-width: 160px;
+  min-width: 104px;
 }
 </style>
