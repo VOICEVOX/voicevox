@@ -43,9 +43,9 @@ type HotkeyAction = {
   /** ショートカットキーが押されたときの処理。 */
   callback: (e: KeyboardEvent) => void;
 };
-type HotkeyActionKey = `${"talk" | "song"}:${HotkeyActionNameType}`;
+type HotkeyActionId = `${"talk" | "song"}:${HotkeyActionNameType}`;
 
-const entryToKey = (entry: HotkeyAction): HotkeyActionKey =>
+const actionToId = (entry: HotkeyAction): HotkeyActionId =>
   `${entry.editor}:${entry.action}`;
 
 /**
@@ -55,7 +55,7 @@ export class HotkeyManager {
   private actions: HotkeyAction[] = [];
   private settings: HotkeySettingType[] = [];
   /// 登録されているショートカットキーの組み合わせ。キーは「エディタ:アクション」で、値はcombination。
-  private registeredCombinations: Partial<Record<HotkeyActionKey, string>> = {};
+  private registeredCombinations: Partial<Record<HotkeyActionId, string>> = {};
 
   constructor() {
     // デフォルトだとテキスト欄でのショートカットキーが効かないので、テキスト欄でも効くようにする
@@ -76,7 +76,7 @@ export class HotkeyManager {
     }
     const changedActions = this.actions.filter(
       (a) =>
-        this.registeredCombinations[entryToKey(a)] !==
+        this.registeredCombinations[actionToId(a)] !==
         this.settings.find((s) => s.action === a.action)?.combination
     );
     if (changedActions.length === 0) {
@@ -85,7 +85,7 @@ export class HotkeyManager {
     const bindingsToRemove = new Set(
       changedActions
         .map((key) => {
-          const combination = this.registeredCombinations[entryToKey(key)];
+          const combination = this.registeredCombinations[actionToId(key)];
           if (combination == undefined) {
             return undefined;
           }
@@ -138,7 +138,7 @@ export class HotkeyManager {
           }
         );
       }
-      this.registeredCombinations[entryToKey(action)] = setting.combination;
+      this.registeredCombinations[actionToId(action)] = setting.combination;
     }
   }
 
