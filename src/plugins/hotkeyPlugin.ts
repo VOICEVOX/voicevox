@@ -53,8 +53,8 @@ const actionToId = (action: HotkeyAction): HotkeyActionId =>
  */
 export class HotkeyManager {
   private actions: HotkeyAction[] = [];
-  private settings: HotkeySettingType[] = [];
-  /// 登録されているショートカットキーの組み合わせ。キーは「エディタ:アクション」で、値はcombination。
+  private settings: HotkeySettingType[] | undefined;
+  // 登録されているショートカットキーの組み合わせ。キーは「エディタ:アクション」で、値はcombination。
   private registeredCombinations: Partial<Record<HotkeyActionId, string>> = {};
 
   constructor() {
@@ -71,14 +71,15 @@ export class HotkeyManager {
   }
 
   private refreshBinding(): void {
-    if (this.settings.length === 0) {
+    if (!this.settings) {
       return;
     }
-    const changedActions = this.actions.filter(
-      (a) =>
-        this.registeredCombinations[actionToId(a)] !==
-        this.settings.find((s) => s.action === a.name)?.combination
-    );
+    const changedActions = this.actions.filter((a) => {
+      if (!this.settings) throw new Error("assert: this.settings != undefined");
+      const setting = this.settings.find((s) => s.action === a.name);
+      if (!setting) throw new Error("assert: setting != undefined");
+      this.registeredCombinations[actionToId(a)] !== setting.combination;
+    });
     if (changedActions.length === 0) {
       return;
     }
@@ -94,9 +95,9 @@ export class HotkeyManager {
         // 未割り当てはremoveしない
         .filter((key) => key != undefined)
     );
-    for (const binding of bindingsToRemove.values()) {
-      log("Unbind:", binding);
-      hotkeys.unbind(binding);
+    for (const bindingKey of bindingsToRemove.values()) {
+      log("Unbind:", bindingKey);
+      hotkeys.unbind(bindingKey);
     }
     for (const action of changedActions) {
       const setting = this.settings.find((s) => s.action === action.name);
@@ -146,6 +147,9 @@ export class HotkeyManager {
    * ショートカットキーの設定を変更する。
    */
   replace(data: HotkeySettingType): void {
+    if (!this.settings) {
+      throw new Error("assert: this.settings != undefined");
+    }
     const index = this.settings.findIndex((s) => s.action === data.action);
     if (index === -1) {
       throw new Error("assert: index !== -1");
