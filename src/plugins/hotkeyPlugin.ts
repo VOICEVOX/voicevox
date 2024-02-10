@@ -75,14 +75,15 @@ export class HotkeyManager {
     if (changedActions.length === 0) {
       return;
     }
-    const keysToRemove = new Set(
+    const bindingsToRemove = new Set(
       ...changedActions
         .map((key) =>
           hotkeyToCombo(this.registeredCombination[entryToKey(key)] || "")
         )
+        // 未割り当てはremoveしない
         .filter((key) => key !== "")
     );
-    for (const key of keysToRemove.values()) {
+    for (const key of bindingsToRemove.values()) {
       log("Unbind:", key);
       hotkeys.unbind(key);
     }

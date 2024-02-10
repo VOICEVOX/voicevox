@@ -55,7 +55,9 @@ watch(
     if (["/talk", "/song"].includes(unknownPath)) {
       path = unknownPath.slice(1) as "talk" | "song";
     } else {
+      // 不明なパスの場合はトークエディタにする
       path = "talk";
+      window.electron.logWarn(`unknown path: ${unknownPath}`);
     }
 
     hotkeyManager.onEditorChange(path);
