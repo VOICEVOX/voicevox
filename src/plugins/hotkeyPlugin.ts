@@ -45,8 +45,8 @@ type HotkeyAction = {
 };
 type HotkeyActionId = `${"talk" | "song"}:${HotkeyActionNameType}`;
 
-const actionToId = (entry: HotkeyAction): HotkeyActionId =>
-  `${entry.editor}:${entry.name}`;
+const actionToId = (action: HotkeyAction): HotkeyActionId =>
+  `${action.editor}:${action.name}`;
 
 /**
  * ショートカットキーの管理を行うクラス。
@@ -94,9 +94,9 @@ export class HotkeyManager {
         // 未割り当てはremoveしない
         .filter((key) => key != undefined)
     );
-    for (const key of bindingsToRemove.values()) {
-      log("Unbind:", key);
-      hotkeys.unbind(key);
+    for (const binding of bindingsToRemove.values()) {
+      log("Unbind:", binding);
+      hotkeys.unbind(binding);
     }
     for (const action of changedActions) {
       const setting = this.settings.find((s) => s.action === action.name);
