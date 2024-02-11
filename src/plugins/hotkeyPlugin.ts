@@ -84,11 +84,15 @@ export class HotkeyManager {
     this.refreshBinding();
   }
 
-  private getSetting(action: HotkeyAction): HotkeySettingType | undefined {
+  private getSetting(action: HotkeyAction): HotkeySettingType {
     if (!this.settings) {
-      return undefined;
+      throw new Error("assert: this.settings != undefined");
     }
-    return this.settings.find((s) => s.action === action.name);
+    const setting = this.settings.find((s) => s.action === action.name);
+    if (!setting) {
+      throw new Error("assert: setting != undefined");
+    }
+    return setting;
   }
 
   private refreshBinding(): void {
@@ -97,7 +101,6 @@ export class HotkeyManager {
     }
     const changedActions = this.actions.filter((a) => {
       const setting = this.getSetting(a);
-      if (!setting) throw new Error("assert: setting != undefined");
       return this.registeredCombinations[actionToId(a)] !== setting.combination;
     });
     if (changedActions.length === 0) {
@@ -109,7 +112,6 @@ export class HotkeyManager {
     });
     const actionsToBind = changedActions.filter((a) => {
       const setting = this.getSetting(a);
-      if (!setting) throw new Error("assert: setting != undefined");
       return !!setting.combination;
     });
 
@@ -131,14 +133,6 @@ export class HotkeyManager {
   private bindActions(actions: HotkeyAction[]): void {
     for (const action of actions) {
       const setting = this.getSetting(action);
-      if (!setting) {
-        throw new Error("assert: setting == undefined");
-      }
-      if (setting.combination === "") {
-        log("Skip(empty combination):", action.name, "in", action.editor);
-        this.registeredCombinations[actionToId(action)] = undefined;
-        continue;
-      }
       log(
         "Bind:",
         combinationToBindingKey(setting.combination),
