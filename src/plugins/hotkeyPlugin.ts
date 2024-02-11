@@ -111,15 +111,16 @@ export class HotkeyManager {
     if (changedActions.length === 0) {
       return;
     }
-    // 既に登録
+
     const actionsToUnbind = changedActions.filter((a) => {
-      return this.registeredCombinations[actionToId(a)];
+      // 未登録のものを弾く
+      return this.registeredCombinations[actionToId(a)] != undefined;
     });
     this.unbindActions(actionsToUnbind);
 
     const actionsToBind = changedActions.filter((a) => {
       const setting = this.getSetting(a);
-      // setting.combination は空文字列の場合があるので、それも弾く
+      // 未割り当て（空文字列）のものを弾く
       return !!setting.combination;
     });
     this.bindActions(actionsToBind);
