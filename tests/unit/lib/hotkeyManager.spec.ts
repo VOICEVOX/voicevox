@@ -15,14 +15,9 @@ const createHotkeyManager = (): {
   dummyHotkeysJs: DummyHotkeysJs;
 } => {
   const registeredHotkeys: DummyHotkeysJs["registeredHotkeys"] = [];
-  const dummyHotkeysJs = ((
-    key: string,
-    { scope }: { scope: string },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    callback: (e: KeyboardEvent) => void
-  ) => {
+  const dummyHotkeysJs = ((key: string, { scope }: { scope: string }) => {
     registeredHotkeys.push({ key, scope });
-  }) as DummyHotkeysJs;
+  }) as unknown as DummyHotkeysJs;
   dummyHotkeysJs.unbind = (key: string) => {
     const index = dummyHotkeysJs.registeredHotkeys.findIndex(
       (h) => h.key === key
