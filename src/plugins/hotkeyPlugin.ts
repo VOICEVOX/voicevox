@@ -112,6 +112,7 @@ export class HotkeyManager {
     });
     const actionsToBind = changedActions.filter((a) => {
       const setting = this.getSetting(a);
+      // setting.combination は空文字列の場合があるので、それも弾く
       return !!setting.combination;
     });
 
