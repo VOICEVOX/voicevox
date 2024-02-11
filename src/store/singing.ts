@@ -1119,7 +1119,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             });
           }
 
-          // 推論（クエリのフェッチ）、ピッチシフト、フレーズの開始時刻の計算を行う
+          // 推論（クエリのフェッチ）、キーシフト、フレーズの開始時刻の計算を行う
 
           if (!phrase.query) {
             const engineId = phrase.singer.engineId;
