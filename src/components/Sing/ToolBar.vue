@@ -28,6 +28,16 @@
       </character-menu-button>
       <q-input
         type="number"
+        :model-value="keyShiftInputBuffer"
+        label="キーシフト"
+        dense
+        hide-bottom-space
+        class="key-shift"
+        @update:model-value="setKeyShiftInputBuffer"
+        @change="setKeyShift"
+      />
+      <q-input
+        type="number"
         :model-value="bpmInputBuffer"
         label="テンポ"
         dense
@@ -63,16 +73,6 @@
           @change="setTimeSignature"
         />
       </div>
-      <q-input
-        type="number"
-        :model-value="keyShiftInputBuffer"
-        label="キーシフト"
-        dense
-        hide-bottom-space
-        class="key-shift"
-        @update:model-value="setKeyShiftInputBuffer"
-        @change="setKeyShift"
-      />
     </div>
     <!-- player -->
     <div class="sing-player">
@@ -440,8 +440,14 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.sing-tempo {
+.key-shift {
   margin-left: 16px;
+  margin-right: 4px;
+  width: 55px;
+}
+
+.sing-tempo {
+  margin-left: 8px;
   margin-right: 4px;
   width: 72px;
 }
@@ -472,13 +478,6 @@ onUnmounted(() => {
   top: 5px;
   margin-right: 8px;
   pointer-events: none;
-}
-
-.key-shift {
-  align-items: center;
-  margin-left: 8px;
-  position: relative;
-  width: 55px;
 }
 
 .sing-playhead-position {
