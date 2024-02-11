@@ -404,6 +404,18 @@ export function buildAudioFileNameFromRawData(
   });
 }
 
+/**
+ * オブジェクトごとに一意なキーを作る。
+ * 一時的な利用のみを想定しているため、保存に利用すべきではない。
+ */
+export async function generateTempUniqueId(serializable: unknown) {
+  const data = new TextEncoder().encode(JSON.stringify(serializable));
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
   const tag2NameObj: Record<ToolbarButtonTagType, string> = {
     PLAY_CONTINUOUSLY: "連続再生",
