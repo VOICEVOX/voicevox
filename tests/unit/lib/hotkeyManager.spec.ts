@@ -19,15 +19,19 @@ const createHotkeyManager = (): {
     key: string,
     { scope }: { scope: string }
   ) => {
+    if (registeredHotkeys.some((h) => h.key === key && h.scope === scope)) {
+      throw new Error("assert: duplicate key");
+    }
     registeredHotkeys.push({ key, scope });
   };
   dummyHotkeysJs.unbind = (key: string) => {
     const index = dummyHotkeysJs.registeredHotkeys.findIndex(
       (h) => h.key === key
     );
-    if (index !== -1) {
-      registeredHotkeys.splice(index, 1);
+    if (index === -1) {
+      throw new Error("assert: unknown binding");
     }
+    registeredHotkeys.splice(index, 1);
   };
   dummyHotkeysJs.setScope = (scope: string) => {
     dummyHotkeysJs.currentScope = scope;
@@ -120,6 +124,22 @@ describe("設定変更", () => {
     expect(dummyHotkeysJs.registeredHotkeys).toEqual([
       { key: "1", scope: "talk" },
       { key: "2", scope: "talk" },
+    ]);
+  });
+
+  it("割り当て -> 未割り当て -> 割り当てでhotkeysが更新される", () => {
+    const name = "音声書き出し";
+
+    expect(dummyHotkeysJs.registeredHotkeys).toEqual([
+      { key: "1", scope: "talk" },
+    ]);
+
+    hotkeyManager.replace({ action: name, combination: "" });
+    expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
+
+    hotkeyManager.replace({ action: name, combination: "a" });
+    expect(dummyHotkeysJs.registeredHotkeys).toEqual([
+      { key: "a", scope: "talk" },
     ]);
   });
 });

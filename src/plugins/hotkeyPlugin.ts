@@ -110,13 +110,13 @@ export class HotkeyManager {
     const actionsToUnbind = changedActions.filter((a) => {
       return this.registeredCombinations[actionToId(a)];
     });
+    this.unbindActions(actionsToUnbind);
+
     const actionsToBind = changedActions.filter((a) => {
       const setting = this.getSetting(a);
       // setting.combination は空文字列の場合があるので、それも弾く
       return !!setting.combination;
     });
-
-    this.unbindActions(actionsToUnbind);
     this.bindActions(actionsToBind);
   }
 
@@ -128,6 +128,7 @@ export class HotkeyManager {
       }
       log("Unbind:", bindingKey, "in", action.editor);
       this.hotkeys.unbind(bindingKey, action.editor);
+      this.registeredCombinations[actionToId(action)] = undefined;
     }
   }
 
