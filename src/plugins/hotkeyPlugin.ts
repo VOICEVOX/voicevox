@@ -26,10 +26,6 @@ export const useHotkeyManager = () => {
   return hotkeyManager;
 };
 
-const log = (message: string, ...args: unknown[]) => {
-  window.electron.logInfo(`[HotkeyManager] ${message}`, ...args);
-};
-
 /**
  * ショートカットキーの処理を登録するための型。
  */
@@ -61,6 +57,7 @@ export type HotkeysJs = {
 };
 
 hotkeys.filter = () => true;
+type Log = (message: string, ...args: unknown[]) => void;
 
 /**
  * ショートカットキーの管理を行うクラス。
@@ -70,9 +67,17 @@ export class HotkeyManager {
   private settings: HotkeySettingType[] | undefined;
   // 登録されているショートカットキーの組み合わせ。キーは「エディタ:アクション」で、値はcombination。
   private registeredCombinations: Partial<Record<HotkeyActionId, string>> = {};
-  private hotkeys: HotkeysJs;
 
-  constructor(hotkeys_: HotkeysJs = hotkeys) {
+  private hotkeys: HotkeysJs;
+  private log: Log;
+
+  constructor(
+    hotkeys_: HotkeysJs = hotkeys,
+    log: Log = (message: string, ...args: unknown[]) => {
+      window.electron.logInfo(`[HotkeyManager] ${message}`, ...args);
+    }
+  ) {
+    this.log = log;
     this.hotkeys = hotkeys_;
   }
 
@@ -126,7 +131,7 @@ export class HotkeyManager {
       if (!bindingKey) {
         throw new Error("assert: bindingKey != undefined");
       }
-      log("Unbind:", bindingKey, "in", action.editor);
+      this.log("Unbind:", bindingKey, "in", action.editor);
       this.hotkeys.unbind(bindingKey, action.editor);
       this.registeredCombinations[actionToId(action)] = undefined;
     }
@@ -135,7 +140,7 @@ export class HotkeyManager {
   private bindActions(actions: HotkeyAction[]): void {
     for (const action of actions) {
       const setting = this.getSetting(action);
-      log(
+      this.log(
         "Bind:",
         combinationToBindingKey(setting.combination),
         "to",
@@ -197,7 +202,7 @@ export class HotkeyManager {
    */
   onEditorChange(editor: "talk" | "song"): void {
     this.hotkeys.setScope(editor);
-    log("Editor changed to", editor);
+    this.log("Editor changed to", editor);
   }
 }
 

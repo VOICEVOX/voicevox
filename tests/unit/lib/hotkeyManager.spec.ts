@@ -38,12 +38,12 @@ const createHotkeyManager = (): {
   };
   dummyHotkeysJs.registeredHotkeys = registeredHotkeys;
   dummyHotkeysJs.currentScope = "talk";
-  return { hotkeyManager: new HotkeyManager(dummyHotkeysJs), dummyHotkeysJs };
-};
-
-// @ts-expect-error これがないとログを吐けずにエラーを吐く
-window.electron = {
-  logInfo: console.log,
+  return {
+    hotkeyManager: new HotkeyManager(dummyHotkeysJs, () => {
+      /* noop */
+    }),
+    dummyHotkeysJs,
+  };
 };
 
 it("registerできる", () => {
