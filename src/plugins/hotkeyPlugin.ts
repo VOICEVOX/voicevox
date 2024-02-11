@@ -60,6 +60,8 @@ export type HotkeysJs = {
   setScope: (scope: string) => void;
 };
 
+hotkeys.filter = () => true;
+
 /**
  * ショートカットキーの管理を行うクラス。
  */
