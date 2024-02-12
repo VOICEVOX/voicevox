@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, toRaw, computed, onDeactivated, onActivated } from "vue";
+import { ref, watch, toRaw, computed, onUnmounted, onMounted } from "vue";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { frequencyToNoteNumber, secondToTick } from "@/sing/domain";
@@ -23,16 +23,8 @@ type PitchLine = {
   readonly lineStrip: LineStrip;
 };
 
-const props = withDefaults(
-  defineProps<{
-    offsetX: number;
-    offsetY: number;
-  }>(),
-  {
-    offsetX: 0,
-    offsetY: 0,
-  }
-);
+const props =
+  defineProps<{ isActivated: boolean; offsetX: number; offsetY: number }>();
 
 const store = useStore();
 const queries = computed(() => {
@@ -211,7 +203,9 @@ watch(
   }
 );
 
-onActivated(() => {
+let isInstantiated = false;
+
+const initialize = () => {
   const canvasContainerElement = canvasContainer.value;
   if (!canvasContainerElement) {
     throw new Error("canvasContainerElement is null.");
@@ -252,9 +246,11 @@ onActivated(() => {
     renderInNextFrame = true;
   });
   resizeObserver.observe(canvasContainerElement);
-});
 
-onDeactivated(() => {
+  isInstantiated = true;
+};
+
+const cleanUp = () => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
@@ -267,6 +263,38 @@ onDeactivated(() => {
   pitchLinesMap.clear();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
+
+  isInstantiated = false;
+};
+
+let isMounted = false;
+
+onMounted(() => {
+  isMounted = true;
+  if (props.isActivated) {
+    initialize();
+  }
+});
+
+watch(
+  () => props.isActivated,
+  (isActivated) => {
+    if (!isMounted) {
+      return;
+    }
+    if (isActivated && !isInstantiated) {
+      initialize();
+    }
+    if (!isActivated && isInstantiated) {
+      cleanUp();
+    }
+  }
+);
+
+onUnmounted(() => {
+  if (isInstantiated) {
+    cleanUp();
+  }
 });
 </script>
 

@@ -135,6 +135,7 @@
         marginRight: `${scrollBarWidth}px`,
         marginBottom: `${scrollBarWidth}px`,
       }"
+      :is-activated="isActivated"
       :offset-x="scrollX"
       :offset-y="scrollY"
     />
@@ -197,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onActivated, onDeactivated, nextTick } from "vue";
+import { computed, ref, nextTick, watch, onUnmounted, onMounted } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
@@ -230,6 +231,8 @@ import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
+
+const props = defineProps<{ isActivated: boolean }>();
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -324,7 +327,9 @@ const phraseInfos = computed(() => {
     return { key, x: startX, width: endX - startX };
   });
 });
-const showPitch = computed(() => state.showPitch);
+const showPitch = computed(() => {
+  return state.experimentalSetting.showPitchInSongEditor;
+});
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 // マウスカーソル位置
@@ -988,9 +993,10 @@ const playheadPositionChangeListener = (position: number) => {
   }
 };
 
-// 最初のonActivatedか判断するためのフラグ
-let firstActivation = true;
-onActivated(() => {
+let isInstantiated = false;
+let firstInitialization = true; // 最初の初期化か判断するためのフラグ
+
+const initialize = () => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
@@ -998,7 +1004,7 @@ onActivated(() => {
 
   let xToScroll = 0;
   let yToScroll = 0;
-  if (firstActivation) {
+  if (firstInitialization) {
     // スクロール位置を設定（C4が上から2/3の位置になるようにする）
     const clientHeight = sequencerBodyElement.clientHeight;
     const c4BaseY = noteNumberToBaseY(60);
@@ -1012,7 +1018,7 @@ onActivated(() => {
     const offsetWidth = sequencerBodyElement.offsetWidth;
     scrollBarWidth.value = offsetWidth - clientWidth;
 
-    firstActivation = false;
+    firstInitialization = false;
   } else {
     xToScroll = scrollX.value;
     yToScroll = scrollY.value;
@@ -1027,14 +1033,48 @@ onActivated(() => {
   });
 
   document.addEventListener("keydown", handleKeydown);
-});
 
-onDeactivated(() => {
+  isInstantiated = true;
+};
+
+const cleanUp = () => {
   store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 
   document.removeEventListener("keydown", handleKeydown);
+
+  isInstantiated = false;
+};
+
+let isMounted = false;
+
+onMounted(() => {
+  isMounted = true;
+  if (props.isActivated) {
+    initialize();
+  }
+});
+
+watch(
+  () => props.isActivated,
+  (isActivated) => {
+    if (!isMounted) {
+      return;
+    }
+    if (isActivated && !isInstantiated) {
+      initialize();
+    }
+    if (!isActivated && isInstantiated) {
+      cleanUp();
+    }
+  }
+);
+
+onUnmounted(() => {
+  if (isInstantiated) {
+    cleanUp();
+  }
 });
 </script>
 

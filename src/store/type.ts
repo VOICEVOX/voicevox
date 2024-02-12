@@ -784,7 +784,6 @@ export type SingingStoreState = {
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
   editingLyricNoteId?: string;
-  showPitch: boolean;
   nowPlaying: boolean;
   volume: number;
   leftLocatorPosition: number;

@@ -118,7 +118,9 @@ const lyric = computed({
 const showLyricInput = computed(() => {
   return state.editingLyricNoteId === props.note.id;
 });
-const showPitch = computed(() => state.showPitch);
+const showPitch = computed(() => {
+  return state.experimentalSetting.showPitchInSongEditor;
+});
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuData = ref<[MenuItemButton]>([
   {

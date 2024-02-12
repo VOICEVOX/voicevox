@@ -134,6 +134,7 @@ describe("store/vuex.js test", () => {
           enableMorphing: false,
           enableMultiSelect: false,
           shouldKeepTuningOnTextChange: false,
+          showPitchInSongEditor: false,
         },
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {
@@ -178,7 +179,6 @@ describe("store/vuex.js test", () => {
         sequencerSnapType: 16,
         selectedNoteIds: new Set(),
         overlappingNoteIds: new Set(),
-        showPitch: false,
         nowPlaying: false,
         volume: 0,
         leftLocatorPosition: 0,
