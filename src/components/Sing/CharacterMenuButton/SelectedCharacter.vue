@@ -89,12 +89,6 @@ const selectedStyleIconPath = computed(() => {
   padding: 0.25rem 0.5rem 0.25rem 0.25rem;
   position: relative;
 
-  .character-menu-toggle {
-    align-items: center;
-    display: flex;
-    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-    position: relative;
-  }
   .character-avatar-icon {
     display: block;
     height: 100%;
