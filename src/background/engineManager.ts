@@ -4,8 +4,6 @@ import fs from "fs";
 import treeKill from "tree-kill";
 import shlex from "shlex";
 
-import AsyncLock from "async-lock";
-
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
 import log from "electron-log/main";
@@ -27,10 +25,7 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/shared/ConfigManager";
-import {
-  OutputInfoDataFor3rdParty,
-  RuntimeInfoManager,
-} from "@/shared/RuntimeInfoManager";
+import { RuntimeInfoManager } from "@/shared/RuntimeInfoManager";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -66,7 +61,7 @@ export class EngineManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
-  runtimeInfoPath: RuntimeInfoManager;
+  runtimeInfoManager: RuntimeInfoManager;
 
   defaultEngineInfos: EngineInfo[] = [];
   additionalEngineInfos: EngineInfo[] = [];
@@ -79,19 +74,19 @@ export class EngineManager {
     defaultEngineDir,
     vvppEngineDir,
     onEngineProcessError,
-    runtimeInfoPath,
+    runtimeInfoManager,
   }: {
     configManager: BaseConfigManager;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
-    runtimeInfoPath: RuntimeInfoManager;
+    runtimeInfoManager: RuntimeInfoManager;
   }) {
     this.configManager = configManager;
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
-    this.runtimeInfoPath = runtimeInfoPath;
+    this.runtimeInfoManager = runtimeInfoManager;
     this.engineProcessContainers = {};
   }
 
@@ -219,8 +214,8 @@ export class EngineManager {
       log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
       await this.runEngine(engineInfo.uuid);
     }
-
-    await this.writeEngineInfosFor3rdParty();
+    this.runtimeInfoManager.setEngineInfos(engineInfos);
+    await this.runtimeInfoManager.exportFile();
   }
 
   /**
@@ -480,7 +475,8 @@ export class EngineManager {
         );
 
         this.runEngine(engineId);
-        this.writeEngineInfosFor3rdParty();
+        this.runtimeInfoManager.setEngineInfos(this.fetchEngineInfos());
+        this.runtimeInfoManager.exportFile();
         resolve();
         return;
       }
@@ -494,7 +490,8 @@ export class EngineManager {
         log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
         this.runEngine(engineId);
-        this.writeEngineInfosFor3rdParty();
+        this.runtimeInfoManager.setEngineInfos(this.fetchEngineInfos());
+        this.runtimeInfoManager.exportFile();
         resolve();
       };
 
@@ -556,35 +553,6 @@ export class EngineManager {
       return "alreadyExists";
     }
     return "ok";
-  }
-
-  private lock = new AsyncLock({
-    timeout: 1000,
-  });
-  private lockKey = "write";
-
-  /**
-   * サードパーティ向けの設定ファイルを書き出す
-   */
-  async writeEngineInfosFor3rdParty() {
-    await this.lock.acquire(this.lockKey, async () => {
-      log.info(`Engine information file (runtime-info.json) has been updated.`);
-
-      const engineInfos = this.fetchEngineInfos();
-      const outputInfoData = new OutputInfoDataFor3rdParty(app.getVersion());
-
-      // ファイルに書き出すデータをつくる
-      try {
-        await fs.promises.writeFile(
-          this.runtimeInfoPath.getRuntimeInfoPath(),
-          JSON.stringify(outputInfoData.getOutputInfoData(engineInfos))
-        );
-      } catch (e) {
-        // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。
-        // サードパーティ向けなのでVOICEVOX側には通知せず、エラー記録して継続
-        log.error(`Failed to write file : ${e}`);
-      }
-    });
   }
 }
 
