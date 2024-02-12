@@ -278,7 +278,7 @@ export function isValidSnapType(snapType: number, tpqn: number) {
 export function isValidVoiceKeyShift(voiceKeyShift: number) {
   return (
     Number.isInteger(voiceKeyShift) &&
-    voiceKeyShift <= 18 &&
-    voiceKeyShift >= -18
+    voiceKeyShift <= 24 &&
+    voiceKeyShift >= -24
   );
 }
