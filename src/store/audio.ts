@@ -298,7 +298,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       return length == 0 || length == undefined
         ? undefined
-        : Math.max(0, Math.min(length - 1, audioPlayStartPoint));
+        : Math.min(length - 1, audioPlayStartPoint);
     },
   },
 
