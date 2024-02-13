@@ -289,46 +289,6 @@ onUnmounted(() => {
   }
 }
 
-.character-menu-toggle {
-  align-items: center;
-  display: flex;
-  padding: 4px 8px 8px 8px;
-  position: relative;
-}
-.character-avatar-icon {
-  display: block;
-  height: 100%;
-  object-fit: cover;
-  width: 100%;
-}
-
-.character-info {
-  align-items: start;
-  display: flex;
-  flex-direction: column;
-  margin-left: 0.5rem;
-  text-align: left;
-  justify-content: center;
-  white-space: nowrap;
-}
-.character-name {
-  font-size: 0.875rem;
-  font-weight: bold;
-  line-height: 1rem;
-  padding-top: 4px;
-}
-
-.character-style {
-  color: rgba(colors.$display-rgb, 0.73);
-  font-size: 11px;
-  line-height: 1rem;
-  vertical-align: text-bottom;
-}
-
-.character-menu-dropdown-icon {
-  color: rgba(colors.$display-rgb, 0.73);
-  margin-left: 0.25rem;
-}
 .sing-toolbar {
   background: colors.$sing-toolbar;
   align-items: center;

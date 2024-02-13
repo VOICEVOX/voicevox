@@ -263,29 +263,12 @@ const engineIcons = computed(() =>
       background-color: rgba(colors.$primary-rgb, 0.1);
     }
   }
-  .selected-character-item,
-  .opened-character-item {
-    background-color: rgba(colors.$primary-rgb, 0.2);
-  }
   .engine-icon {
     position: absolute;
     width: 13px;
     height: 13px;
     bottom: -6px;
     right: -6px;
-  }
-  .character-name {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    padding: 1px 24px 1px 8px;
-    background-image: linear-gradient(
-      90deg,
-      rgba(colors.$background-rgb, 0.5) 0%,
-      rgba(colors.$background-rgb, 0.5) 75%,
-      transparent 100%
-    );
-    overflow-wrap: anywhere;
   }
 }
 </style>
