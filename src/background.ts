@@ -146,11 +146,6 @@ if (!fs.existsSync(vvppEngineDir)) {
   fs.mkdirSync(vvppEngineDir);
 }
 
-const runtimeInfoManager = new RuntimeInfoManager(
-  path.join(app.getPath("userData"), "runtime-info.json"),
-  app.getVersion()
-);
-
 const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   const engineId = engineInfo.uuid;
   log.error(`ENGINE ${engineId} ERROR: ${error}`);
@@ -165,6 +160,11 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
 
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
+
+const runtimeInfoManager = new RuntimeInfoManager(
+  path.join(app.getPath("userData"), "runtime-info.json"),
+  app.getVersion()
+);
 
 const configManager = getConfigManager();
 

@@ -1,25 +1,43 @@
+/**
+ * サードパーティ向けのランタイム情報を書き出す。
+ * ランタイム情報には起動しているエンジンのURLなどが含まれる。
+ */
+
 import fs from "fs";
 import AsyncLock from "async-lock";
 import log from "electron-log/main";
 import { EngineId, EngineInfo } from "@/type/preload";
 
 /**
- * サードパーティ向けランタイム情報のエクスポート情報クラス
+ * ランタイム情報内のエンジン情報
+ * Note:変更時はRuntimeInfoManager.fileFormatVersionも変更すること
+ */
+export interface EngineInfoForRuntimeInfo {
+  uuid: EngineId;
+  url: string;
+  name: string;
+}
+
+/**
+ * 保存されるランタイム情報
+ * Note:変更時はRuntimeInfoManager.fileFormatVersionも変更すること
+ */
+interface RuntimeInfo {
+  formatVersion: number;
+  appVersion: string;
+  engineInfos: EngineInfoForRuntimeInfo[];
+}
+
+/**
+ * サードパーティ向けのランタイム情報を書き出す
  */
 export class RuntimeInfoManager {
   private runtimeInfoPath: string;
   private appVersion: string;
 
-  constructor(userDataPath: string, appVersion: string) {
-    this.runtimeInfoPath = userDataPath;
+  constructor(runtimeInfoPath: string, appVersion: string) {
+    this.runtimeInfoPath = runtimeInfoPath;
     this.appVersion = appVersion;
-  }
-
-  /**
-   * サードパーティ向けランタイム情報のファイルパスを取得する
-   */
-  public getRuntimeInfoPath(): string {
-    return this.runtimeInfoPath;
   }
 
   /**
@@ -49,7 +67,7 @@ export class RuntimeInfoManager {
   }
 
   /**
-   * サードパーティ向けの設定ファイルを書き出す
+   * ランタイム情報ファイルを書き出す
    */
   public async exportFile() {
     await this.lock.acquire(this.lockKey, async () => {
@@ -57,16 +75,27 @@ export class RuntimeInfoManager {
         `Runtime information file has been updated. : ${this.runtimeInfoPath}`
       );
 
-      const outputInfoData = new OutputInfoDataFor3rdParty(
-        this.appVersion,
-        this.fileFormatVersion
+      // データ化
+      const engineInfos: EngineInfoForRuntimeInfo[] = this.engineInfos.map(
+        (engineInfo) => {
+          return {
+            uuid: engineInfo.uuid,
+            url: engineInfo.host,
+            name: engineInfo.name,
+          };
+        }
       );
+      const runtimeInfoFormatFor3rdParty: RuntimeInfo = {
+        formatVersion: this.fileFormatVersion,
+        appVersion: this.appVersion,
+        engineInfos,
+      };
 
-      // ファイルに書き出すデータをつくる
+      // ファイル書き出し
       try {
         await fs.promises.writeFile(
           this.runtimeInfoPath,
-          JSON.stringify(outputInfoData.getOutputInfoData(this.engineInfos))
+          JSON.stringify(runtimeInfoFormatFor3rdParty)
         );
       } catch (e) {
         // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。
@@ -74,63 +103,5 @@ export class RuntimeInfoManager {
         log.error(`Failed to write file : ${e}`);
       }
     });
-  }
-}
-
-/**
- * サードパーティ向けエンジン情報のレコード定義
- * Note:変更時はRuntimeInfoManager.fileFormatVersionも変更すること
- */
-export interface EngineInfoRecordFor3rdParty {
-  uuid: EngineId;
-  url: string;
-  name: string;
-}
-
-/**
- * サードパーティ向けランタイム情報のレコード定義
- * Note:変更時はRuntimeInfoManager.fileFormatVersionも変更すること
- */
-export interface RuntimeInfoFormatFor3rdParty {
-  formatVersion: number;
-  appVersion: string;
-  engineInfos: EngineInfoRecordFor3rdParty[];
-}
-
-/**
- * サードパーティ向けランタイム情報のエクスポートフォーマットクラス
- */
-export class OutputInfoDataFor3rdParty {
-  private appVersion: string;
-  private fileFormatVersion: number;
-
-  constructor(appVersion: string, fileFormatVersion: number) {
-    this.appVersion = appVersion;
-    this.fileFormatVersion = fileFormatVersion;
-  }
-
-  /**
-   * サードパーティ向けに提供するデータを取得
-   */
-  public getOutputInfoData(
-    engineInfos: EngineInfo[]
-  ): RuntimeInfoFormatFor3rdParty {
-    const engineInfoList: EngineInfoRecordFor3rdParty[] = engineInfos.map(
-      (engineInfo) => {
-        return {
-          uuid: engineInfo.uuid,
-          url: engineInfo.host,
-          name: engineInfo.name,
-        };
-      }
-    );
-
-    const engineInfoFormatFor3rdParty: RuntimeInfoFormatFor3rdParty = {
-      formatVersion: this.fileFormatVersion,
-      appVersion: this.appVersion,
-      engineInfos: engineInfoList,
-    };
-
-    return engineInfoFormatFor3rdParty;
   }
 }
