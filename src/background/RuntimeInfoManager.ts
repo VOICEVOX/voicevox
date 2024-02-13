@@ -50,8 +50,7 @@ export class RuntimeInfoManager {
   private lockKey = "write";
 
   /**
-   * サードパーティ向けランタイム情報のフォーマットバージョン
-   * Note: 破壊的変更があった場合に数字を上げること
+   * ファイルフォーマットバージョン
    */
   private fileFormatVersion = 1;
 
