@@ -164,23 +164,22 @@ export async function writeTextFile(obj: {
 }
 
 function generateWriteErrorMessage(writeFileResult: ResultError) {
-  if (writeFileResult.code) {
-    const code = writeFileResult.code.toUpperCase();
+  if (!writeFileResult.code) {
+    return `何らかの理由で失敗しました。${writeFileResult.message}`;
+  }
+  const code = writeFileResult.code.toUpperCase();
 
-    if (code.startsWith("ENOSPC")) {
-      return "空き容量が足りません。";
-    }
-
-    if (code.startsWith("EACCES")) {
-      return "ファイルにアクセスする許可がありません。";
-    }
-
-    if (code.startsWith("EBUSY")) {
-      return "ファイルが開かれています。";
-    }
+  if (code.startsWith("ENOSPC")) {
+    return "空き容量が足りません。";
   }
 
-  return `何らかの理由で失敗しました。${writeFileResult.message}`;
+  if (code.startsWith("EACCES")) {
+    return "ファイルにアクセスする許可がありません。";
+  }
+
+  if (code.startsWith("EBUSY")) {
+    return "ファイルが開かれています。";
+  }
 }
 
 // TODO: GETTERに移動する。
@@ -265,18 +264,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   AUDIO_PLAY_START_POINT: {
     getter(state, getters) {
       const audioPlayStartPoint = state._audioPlayStartPoint;
-      if (
-        audioPlayStartPoint == undefined ||
-        getters.ACTIVE_AUDIO_KEY == undefined
-      ) {
+      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
+      if (audioPlayStartPoint == undefined || activeAudioKey == undefined) {
         return undefined;
       }
       const length =
-        state.audioItems[getters.ACTIVE_AUDIO_KEY].query?.accentPhrases.length;
-      if (length == undefined) {
-        return undefined;
-      }
-      return Math.max(0, Math.min(length - 1, audioPlayStartPoint));
+        state.audioItems[activeAudioKey].query?.accentPhrases.length;
+
+      return length == 0 || length == undefined
+        ? undefined
+        : Math.min(length - 1, audioPlayStartPoint);
     },
   },
 
@@ -613,12 +610,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       //引数にbaseAudioItemが与えられた場合、baseAudioItemから話速等のパラメータを引き継いだAudioItemを返す
       //baseAudioItem.queryのうち、accentPhrasesとkanaは基本設定パラメータではないので引き継がない
       //baseAudioItemのうち、textとstyleIdは別途与えられるので引き継がない
-      if (state.defaultStyleIds == undefined)
+      if (state.defaultStyleIds == undefined) {
         throw new Error("state.defaultStyleIds == undefined");
+      }
       const userOrderedCharacterInfos =
         getters.USER_ORDERED_CHARACTER_INFOS("talk");
-      if (userOrderedCharacterInfos == undefined)
+
+      if (userOrderedCharacterInfos == undefined) {
         throw new Error("state.characterInfos == undefined");
+      }
 
       const text = payload.text ?? "";
 
@@ -637,12 +637,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const baseAudioItem = payload.baseAudioItem;
 
+      const fetchQueryParams = {
+        text,
+        engineId: voice.engineId,
+        styleId: voice.styleId,
+      };
+
       const query = getters.IS_ENGINE_READY(voice.engineId)
-        ? await dispatch("FETCH_AUDIO_QUERY", {
-            text,
-            engineId: voice.engineId,
-            styleId: voice.styleId,
-          }).catch(() => undefined)
+        ? await dispatch("FETCH_AUDIO_QUERY", fetchQueryParams).catch(
+            () => undefined
+          )
         : undefined;
 
       const newAudioItem: AudioItem = { text, voice };
@@ -661,11 +665,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       newAudioItem.presetKey = nextPresetKey;
 
       // audioItemに対してプリセットを適用する
-      if (shouldApplyPreset) {
-        if (nextPresetKey) {
-          const preset = state.presetItems[nextPresetKey];
-          return applyAudioPresetToAudioItem(newAudioItem, preset);
-        }
+      if (shouldApplyPreset && nextPresetKey) {
+        const preset = state.presetItems[nextPresetKey];
+        return applyAudioPresetToAudioItem(newAudioItem, preset);
       }
 
       // プリセットを適用しないならパラメータを引き継ぐ
