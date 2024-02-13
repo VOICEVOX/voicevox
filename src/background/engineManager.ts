@@ -25,7 +25,6 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/shared/ConfigManager";
-import { RuntimeInfoManager } from "@/shared/RuntimeInfoManager";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -61,7 +60,6 @@ export class EngineManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
-  runtimeInfoManager: RuntimeInfoManager;
 
   defaultEngineInfos: EngineInfo[] = [];
   additionalEngineInfos: EngineInfo[] = [];
@@ -74,19 +72,16 @@ export class EngineManager {
     defaultEngineDir,
     vvppEngineDir,
     onEngineProcessError,
-    runtimeInfoManager,
   }: {
     configManager: BaseConfigManager;
     defaultEngineDir: string;
     vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
-    runtimeInfoManager: RuntimeInfoManager;
   }) {
     this.configManager = configManager;
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
-    this.runtimeInfoManager = runtimeInfoManager;
     this.engineProcessContainers = {};
   }
 
@@ -214,8 +209,6 @@ export class EngineManager {
       log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
       await this.runEngine(engineInfo.uuid);
     }
-    this.runtimeInfoManager.setEngineInfos(engineInfos);
-    await this.runtimeInfoManager.exportFile();
   }
 
   /**
@@ -475,8 +468,6 @@ export class EngineManager {
         );
 
         this.runEngine(engineId);
-        this.runtimeInfoManager.setEngineInfos(this.fetchEngineInfos());
-        this.runtimeInfoManager.exportFile();
         resolve();
         return;
       }
@@ -490,8 +481,6 @@ export class EngineManager {
         log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
         this.runEngine(engineId);
-        this.runtimeInfoManager.setEngineInfos(this.fetchEngineInfos());
-        this.runtimeInfoManager.exportFile();
         resolve();
       };
 

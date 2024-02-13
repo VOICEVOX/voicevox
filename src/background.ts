@@ -173,7 +173,6 @@ const engineManager = new EngineManager({
   defaultEngineDir: appDirPath,
   vvppEngineDir,
   onEngineProcessError,
-  runtimeInfoManager,
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
 
@@ -501,6 +500,8 @@ async function launchEngines() {
   configManager.set("engineSettings", engineSettings);
 
   await engineManager.runEngineAll();
+  runtimeInfoManager.setEngineInfos(engineInfos);
+  await runtimeInfoManager.exportFile();
 }
 
 /**
@@ -773,6 +774,9 @@ ipcMainHandle("ENGINE_INFOS", () => {
  */
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
   await engineManager.restartEngine(engineId);
+  // TODO: setEngineInfosからexportFileはロックしたほうがより良い
+  runtimeInfoManager.setEngineInfos(engineManager.fetchEngineInfos());
+  await runtimeInfoManager.exportFile();
 });
 
 ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
