@@ -44,7 +44,7 @@ import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
-import { RuntimeInfoManager } from "./shared/RuntimeInfoManager";
+import { RuntimeInfoManager } from "./background/RuntimeInfoManager";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { getConfigManager } from "@/background/electronConfig";
 

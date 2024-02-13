@@ -9,24 +9,25 @@ import log from "electron-log/main";
 import { EngineId, EngineInfo } from "@/type/preload";
 
 /**
- * ランタイム情報内のエンジン情報
- * Note:変更時はRuntimeInfoManager.fileFormatVersionも変更すること
+ * ランタイム情報書き出しに必要なEngineInfo
  */
-export interface EngineInfoForRuntimeInfo {
-  uuid: EngineId;
-  url: string;
-  name: string;
-}
+export type EngineInfoForRuntimeInfo = Pick<
+  EngineInfo,
+  "uuid" | "host" | "name"
+>;
 
 /**
  * 保存されるランタイム情報
- * Note:変更時はRuntimeInfoManager.fileFormatVersionも変更すること
  */
-interface RuntimeInfo {
+type RuntimeInfo = {
   formatVersion: number;
   appVersion: string;
-  engineInfos: EngineInfoForRuntimeInfo[];
-}
+  engineInfos: {
+    uuid: EngineId;
+    url: string;
+    name: string;
+  }[];
+};
 
 /**
  * サードパーティ向けのランタイム情報を書き出す
@@ -57,12 +58,12 @@ export class RuntimeInfoManager {
   /**
    * エンジン情報（書き出し用に記憶）
    */
-  private engineInfos: EngineInfo[] = [];
+  private engineInfos: EngineInfoForRuntimeInfo[] = [];
 
   /**
    * エンジン情報を登録する
    */
-  public setEngineInfos(engineInfos: EngineInfo[]) {
+  public setEngineInfos(engineInfos: EngineInfoForRuntimeInfo[]) {
     this.engineInfos = engineInfos;
   }
 
@@ -76,26 +77,23 @@ export class RuntimeInfoManager {
       );
 
       // データ化
-      const engineInfos: EngineInfoForRuntimeInfo[] = this.engineInfos.map(
-        (engineInfo) => {
-          return {
-            uuid: engineInfo.uuid,
-            url: engineInfo.host,
-            name: engineInfo.name,
-          };
-        }
-      );
       const runtimeInfoFormatFor3rdParty: RuntimeInfo = {
         formatVersion: this.fileFormatVersion,
         appVersion: this.appVersion,
-        engineInfos,
+        engineInfos: this.engineInfos.map((engineInfo) => {
+          return {
+            uuid: engineInfo.uuid,
+            url: engineInfo.host, // NOTE: 元のEngineInfo.hostにURLが入っている
+            name: engineInfo.name,
+          };
+        }),
       };
 
       // ファイル書き出し
       try {
         await fs.promises.writeFile(
           this.runtimeInfoPath,
-          JSON.stringify(runtimeInfoFormatFor3rdParty)
+          JSON.stringify(runtimeInfoFormatFor3rdParty) // FIXME: zod化する
         );
       } catch (e) {
         // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。
