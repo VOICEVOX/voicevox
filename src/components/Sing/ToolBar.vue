@@ -29,7 +29,7 @@
       <q-input
         type="number"
         :model-value="keyShiftInputBuffer"
-        label="キーシフト"
+        label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
         dense
         hide-bottom-space
         class="key-shift"
@@ -443,7 +443,7 @@ onUnmounted(() => {
 .key-shift {
   margin-left: 16px;
   margin-right: 4px;
-  width: 55px;
+  width: 50px;
 }
 
 .sing-tempo {
