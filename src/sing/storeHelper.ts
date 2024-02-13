@@ -8,6 +8,8 @@ export const DEFAULT_BEAT_TYPE = 4;
 
 export const generatePhraseHash = async (obj: {
   singer: Singer | undefined;
+  notesKeyShift: number;
+  voiceKeyShift: number;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];

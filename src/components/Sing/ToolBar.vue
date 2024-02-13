@@ -5,6 +5,16 @@
       <character-menu-button />
       <q-input
         type="number"
+        :model-value="keyShiftInputBuffer"
+        label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
+        dense
+        hide-bottom-space
+        class="key-shift"
+        @update:model-value="setKeyShiftInputBuffer"
+        @change="setKeyShift"
+      />
+      <q-input
+        type="number"
         :model-value="bpmInputBuffer"
         label="テンポ"
         dense
@@ -102,35 +112,99 @@ import {
   isValidBeatType,
   isValidBeats,
   isValidBpm,
+  isValidVoiceKeyShift,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 
 const store = useStore();
 
-const bpmInputBuffer = ref(0);
-const beatsInputBuffer = ref(0);
-const beatTypeInputBuffer = ref(0);
+const tempos = computed(() => store.state.tempos);
+const timeSignatures = computed(() => store.state.timeSignatures);
+const keyShift = computed(() => store.getters.SELECTED_TRACK.voiceKeyShift);
+
+const bpmInputBuffer = ref(120);
+const beatsInputBuffer = ref(4);
+const beatTypeInputBuffer = ref(4);
+const keyShiftInputBuffer = ref(0);
+
+watch(
+  tempos,
+  () => {
+    bpmInputBuffer.value = tempos.value[0].bpm;
+  },
+  { deep: true }
+);
+
+watch(
+  timeSignatures,
+  () => {
+    beatsInputBuffer.value = timeSignatures.value[0].beats;
+    beatTypeInputBuffer.value = timeSignatures.value[0].beatType;
+  },
+  { deep: true }
+);
+
+watch(keyShift, () => {
+  keyShiftInputBuffer.value = keyShift.value;
+});
 
 const setBpmInputBuffer = (bpmStr: string | number | null) => {
-  const bpm = Number(bpmStr);
-  if (!isValidBpm(bpm)) {
+  const bpmValue = Number(bpmStr);
+  if (!isValidBpm(bpmValue)) {
     return;
   }
-  bpmInputBuffer.value = bpm;
+  bpmInputBuffer.value = bpmValue;
 };
+
 const setBeatsInputBuffer = (beatsStr: string | number | null) => {
-  const beats = Number(beatsStr);
-  if (!isValidBeats(beats)) {
+  const beatsValue = Number(beatsStr);
+  if (!isValidBeats(beatsValue)) {
     return;
   }
-  beatsInputBuffer.value = beats;
+  beatsInputBuffer.value = beatsValue;
 };
+
 const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
-  const beatType = Number(beatTypeStr);
-  if (!isValidBeatType(beatType)) {
+  const beatTypeValue = Number(beatTypeStr);
+  if (!isValidBeatType(beatTypeValue)) {
     return;
   }
-  beatTypeInputBuffer.value = beatType;
+  beatTypeInputBuffer.value = beatTypeValue;
+};
+
+const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
+  const keyShiftValue = Number(keyShiftStr);
+  if (!isValidVoiceKeyShift(keyShiftValue)) {
+    return;
+  }
+  keyShiftInputBuffer.value = keyShiftValue;
+};
+
+const setTempo = () => {
+  const bpm = bpmInputBuffer.value;
+  store.dispatch("SET_TEMPO", {
+    tempo: {
+      position: 0,
+      bpm,
+    },
+  });
+};
+
+const setTimeSignature = () => {
+  const beats = beatsInputBuffer.value;
+  const beatType = beatTypeInputBuffer.value;
+  store.dispatch("SET_TIME_SIGNATURE", {
+    timeSignature: {
+      measureNumber: 1,
+      beats,
+      beatType,
+    },
+  });
+};
+
+const setKeyShift = () => {
+  const voiceKeyShift = keyShiftInputBuffer.value;
+  store.dispatch("SET_VOICE_KEY_SHIFT", { voiceKeyShift });
 };
 
 const playheadTicks = ref(0);
@@ -157,49 +231,7 @@ const playHeadPositionMilliSecStr = computed(() => {
   return milliSecStr;
 });
 
-const tempos = computed(() => store.state.tempos);
-const timeSignatures = computed(() => store.state.timeSignatures);
 const nowPlaying = computed(() => store.state.nowPlaying);
-
-watch(
-  tempos,
-  () => {
-    bpmInputBuffer.value = tempos.value[0].bpm;
-  },
-  { deep: true }
-);
-watch(
-  timeSignatures,
-  () => {
-    beatsInputBuffer.value = timeSignatures.value[0].beats;
-    beatTypeInputBuffer.value = timeSignatures.value[0].beatType;
-  },
-  { deep: true }
-);
-
-const setTempo = async () => {
-  const bpm = bpmInputBuffer.value;
-  if (bpm === 0) return;
-  await store.dispatch("SET_TEMPO", {
-    tempo: {
-      position: 0,
-      bpm,
-    },
-  });
-};
-
-const setTimeSignature = async () => {
-  const beats = beatsInputBuffer.value;
-  const beatType = beatTypeInputBuffer.value;
-  if (beats === 0 || beatType === 0) return;
-  await store.dispatch("SET_TIME_SIGNATURE", {
-    timeSignature: {
-      measureNumber: 1,
-      beats,
-      beatType,
-    },
-  });
-};
 
 const play = () => {
   store.dispatch("SING_PLAY_AUDIO");
@@ -312,8 +344,14 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.sing-tempo {
+.key-shift {
   margin-left: 16px;
+  margin-right: 4px;
+  width: 50px;
+}
+
+.sing-tempo {
+  margin-left: 8px;
   margin-right: 4px;
   width: 72px;
 }
