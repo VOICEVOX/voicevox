@@ -89,6 +89,7 @@ npm run electron:build
 ```bash
 npm run test:unit
 npm run test-watch:unit # 監視モード
+npm run test:unit -- --update # スナップショットの更新
 ```
 
 ### ブラウザ End to End テスト
