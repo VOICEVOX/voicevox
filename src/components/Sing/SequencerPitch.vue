@@ -23,6 +23,9 @@ type PitchLine = {
   readonly lineStrip: LineStrip;
 };
 
+const pitchLineColor = [0.647, 0.831, 0.678, 1]; // RGBA
+const pitchLineWidth = 1.5;
+
 const props =
   defineProps<{ isActivated: boolean; offsetX: number; offsetY: number }>();
 
@@ -31,9 +34,6 @@ const queries = computed(() => {
   const phrases = [...store.state.phrases.values()];
   return phrases.map((value) => value.query);
 });
-
-const pitchLineColor = [0.647, 0.831, 0.678, 1]; // RGBA
-const pitchLineWidth = 1.5;
 
 const canvasContainer = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
