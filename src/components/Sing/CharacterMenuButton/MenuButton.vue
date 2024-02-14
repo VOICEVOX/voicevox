@@ -1,6 +1,10 @@
 <template>
-  <q-btn flat class="q-pa-none">
-    <slot></slot>
+  <q-btn flat class="q-pa-none" :disable="uiLocked">
+    <selected-character
+      :show-skeleton="showSkeleton"
+      :selected-character-info="selectedCharacterInfo"
+      :selected-singer="selectedSinger"
+    />
     <q-menu
       class="character-menu"
       transition-show="none"
@@ -134,15 +138,22 @@
   </q-btn>
 </template>
 
+<script lang="ts">
+export default {
+  name: "CharacterMenuButton",
+};
+</script>
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { debounce } from "quasar";
+import SelectedCharacter from "./SelectedCharacter.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { SpeakerId, StyleId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 
 const store = useStore();
+const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const userOrderedCharacterInfos = computed(() => {
   return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
@@ -160,6 +171,7 @@ const reassignSubMenuOpen = debounce((idx: number) => {
   arr[idx] = true;
   subMenuOpenFlags.value = arr;
 }, 100);
+const showSkeleton = computed(() => selectedCharacterInfo.value == undefined);
 
 const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
   const engineId = store.state.engineIds.find((_engineId) =>
@@ -205,6 +217,10 @@ const selectedCharacterInfo = computed(() => {
   return store.getters.CHARACTER_INFO(singer.engineId, singer.styleId);
 });
 
+const selectedSinger = computed(() => {
+  return store.getters.SELECTED_TRACK.singer;
+});
+
 const selectedSpeakerUuid = computed(() => {
   return selectedCharacterInfo.value?.metas.speakerUuid;
 });
@@ -235,20 +251,6 @@ const engineIcons = computed(() =>
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
-.character-name {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  padding: 1px 24px 1px 8px;
-  background-image: linear-gradient(
-    90deg,
-    rgba(colors.$background-rgb, 0.5) 0%,
-    rgba(colors.$background-rgb, 0.5) 75%,
-    transparent 100%
-  );
-  overflow-wrap: anywhere;
-}
-
 .character-menu {
   .q-item {
     color: colors.$display;
@@ -260,10 +262,6 @@ const engineIcons = computed(() =>
     > div:last-child:hover {
       background-color: rgba(colors.$primary-rgb, 0.1);
     }
-  }
-  .selected-character-item,
-  .opened-character-item {
-    background-color: rgba(colors.$primary-rgb, 0.2);
   }
   .engine-icon {
     position: absolute;
