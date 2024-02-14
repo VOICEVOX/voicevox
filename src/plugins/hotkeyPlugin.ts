@@ -130,10 +130,11 @@ export class HotkeyManager {
 
   private unbindActions(actions: HotkeyAction[]): void {
     for (const action of actions) {
-      const bindingKey = this.registeredCombinations[actionToId(action)];
-      if (!bindingKey) {
-        throw new Error("assert: bindingKey != undefined");
+      const combination = this.registeredCombinations[actionToId(action)];
+      if (!combination) {
+        throw new Error("assert: combination != undefined");
       }
+      const bindingKey = combinationToBindingKey(combination);
       this.log("Unbind:", bindingKey, "in", action.editor);
       this.hotkeys.unbind(bindingKey, action.editor);
       this.registeredCombinations[actionToId(action)] = undefined;
