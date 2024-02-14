@@ -56,14 +56,7 @@ export type HotkeysJs = {
   setScope: (scope: string) => void;
 };
 
-hotkeys.filter = (e) => {
-  // メニュー項目ではショートカットキーを無効化
-  if (
-    e.target instanceof HTMLElement &&
-    e.target.classList.contains("q-item")
-  ) {
-    return false;
-  }
+hotkeys.filter = () => {
   return true;
 };
 type Log = (message: string, ...args: unknown[]) => void;
@@ -162,8 +155,15 @@ export class HotkeyManager {
         combinationToBindingKey(setting.combination),
         { scope: action.editor },
         (e) => {
+          const element = e.target;
+          // メニュー項目ではショートカットキーを無効化
+          if (
+            element instanceof HTMLElement &&
+            element.classList.contains("q-item")
+          ) {
+            return;
+          }
           if (!action.enableInTextbox) {
-            const element = e.target;
             if (
               element instanceof HTMLElement &&
               (element.tagName === "INPUT" ||
