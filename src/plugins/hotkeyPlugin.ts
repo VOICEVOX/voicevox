@@ -56,7 +56,16 @@ export type HotkeysJs = {
   setScope: (scope: string) => void;
 };
 
-hotkeys.filter = () => true;
+hotkeys.filter = (e) => {
+  // メニュー項目ではショートカットキーを無効化
+  if (
+    e.target instanceof HTMLElement &&
+    e.target.classList.contains("q-item")
+  ) {
+    return false;
+  }
+  return true;
+};
 type Log = (message: string, ...args: unknown[]) => void;
 
 /**
@@ -154,15 +163,13 @@ export class HotkeyManager {
         { scope: action.editor },
         (e) => {
           if (!action.enableInTextbox) {
-            const element = e.target as HTMLElement;
+            const element = e.target;
             if (
-              element.tagName === "INPUT" ||
-              element.tagName === "SELECT" ||
-              element.tagName === "TEXTAREA" ||
-              (element instanceof HTMLElement &&
-                element.contentEditable === "true") ||
-              // メニュー項目ではショートカットキーを無効化
-              element.classList.contains("q-item")
+              element instanceof HTMLElement &&
+              (element.tagName === "INPUT" ||
+                element.tagName === "SELECT" ||
+                element.tagName === "TEXTAREA" ||
+                element.contentEditable === "true")
             ) {
               return;
             }
