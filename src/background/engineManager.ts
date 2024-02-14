@@ -82,7 +82,6 @@ export class EngineManager {
     this.defaultEngineDir = defaultEngineDir;
     this.vvppEngineDir = vvppEngineDir;
     this.onEngineProcessError = onEngineProcessError;
-
     this.engineProcessContainers = {};
   }
 

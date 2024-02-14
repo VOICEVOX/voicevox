@@ -88,8 +88,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import MinMaxCloseButtons from "./MinMaxCloseButtons.vue";
 import { useStore } from "@/store";
-import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 
 const store = useStore();
 
@@ -111,7 +111,6 @@ const isPinned = computed(() => store.state.isPinned);
 }
 
 .title-bar-buttons {
-  -webkit-app-region: no-drag;
   overflow: visible;
 }
 </style>

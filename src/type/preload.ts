@@ -199,7 +199,11 @@ export interface Sandbox {
     cancelId?: number;
     defaultId?: number;
   }): Promise<number>;
-  showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
+  showImportFileDialog(obj: {
+    title: string;
+    name?: string;
+    extensions?: string[];
+  }): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
@@ -249,9 +253,12 @@ export type AppInfos = {
   version: string;
 };
 
+export type StyleType = "talk" | "singing_teacher" | "frame_decode" | "sing";
+
 export type StyleInfo = {
   styleName?: string;
   styleId: StyleId;
+  styleType?: StyleType;
   iconPath: string;
   portraitPath: string | undefined;
   engineId: EngineId;

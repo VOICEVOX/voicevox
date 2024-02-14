@@ -188,8 +188,8 @@ export abstract class BaseConfigManager {
   }
 
   private _save() {
-    this.lock.acquire(lockKey, () => {
-      this.save({
+    this.lock.acquire(lockKey, async () => {
+      await this.save({
         ...configSchema.parse({
           ...this.config,
         }),

@@ -1,5 +1,13 @@
+import { v4 as uuidv4 } from "uuid";
 import { AccentPhrase, Mora } from "@/openapi";
-import { ToolbarButtonTagType, isMac } from "@/type/preload";
+import {
+  CharacterInfo,
+  EngineId,
+  SpeakerId,
+  StyleId,
+  ToolbarButtonTagType,
+  isMac,
+} from "@/type/preload";
 import {
   formatCharacterStyleName,
   sanitizeFileName,
@@ -16,6 +24,7 @@ import {
   convertLongVowel,
   getBaseName,
   isOnCommandOrCtrlKeyDown,
+  filterCharacterInfosByStyleType,
 } from "@/store/utility";
 
 function createDummyMora(text: string): Mora {
@@ -318,4 +327,72 @@ test("isOnCommandOrCtrlKeyDown", () => {
   expect(isOnCommandOrCtrlKeyDown({ metaKey: false, ctrlKey: false })).toBe(
     false
   );
+});
+
+describe("filterCharacterInfosByStyleType", () => {
+  const createCharacterInfo = (
+    styleTypes: (undefined | "talk" | "frame_decode" | "sing")[]
+  ): CharacterInfo => {
+    const engineId = EngineId(uuidv4());
+    return {
+      portraitPath: "path/to/portrait",
+      metas: {
+        policy: "policy",
+        speakerName: "speakerName",
+        speakerUuid: SpeakerId(uuidv4()),
+        styles: styleTypes.map((styleType) => ({
+          styleType,
+          styleName: "styleName",
+          engineId,
+          styleId: StyleId(Math.random()),
+          iconPath: "path/to/icon",
+          portraitPath: "path/to/portrait",
+          voiceSamplePaths: [],
+        })),
+      },
+    };
+  };
+  const characterInfos: CharacterInfo[] = [
+    createCharacterInfo(["talk"]),
+    createCharacterInfo(["frame_decode"]),
+    createCharacterInfo(["sing"]),
+    createCharacterInfo(["talk", "frame_decode", "sing"]),
+    createCharacterInfo([undefined]),
+  ];
+
+  for (const styleType of ["frame_decode", "sing"] as const) {
+    test(`${styleType}のキャラクターが取得できる`, () => {
+      const filtered = filterCharacterInfosByStyleType(
+        characterInfos,
+        styleType
+      );
+      // talkしかないキャラクターは除外される
+      expect(filtered.length).toBe(2);
+      filtered.forEach((c) => {
+        // styleTypeが指定したものになっている
+        expect(c.metas.styles[0].styleType).toBe(styleType);
+        // stylesの数が正しい
+        expect(c.metas.styles.length).toBe(1);
+      });
+    });
+  }
+
+  test(`singerLikeを指定するとsingとhummingのキャラクターが取得できる`, () => {
+    const filtered = filterCharacterInfosByStyleType(
+      characterInfos,
+      "singerLike"
+    );
+    expect(filtered.length).toBe(3);
+    expect(filtered[0].metas.styles.length).toBe(1);
+    expect(filtered[1].metas.styles.length).toBe(1);
+    expect(filtered[2].metas.styles.length).toBe(2);
+  });
+
+  test(`talkを指定するとsingerLike以外のキャラクターが取得できる`, () => {
+    const filtered = filterCharacterInfosByStyleType(characterInfos, "talk");
+    expect(filtered.length).toBe(3);
+    expect(filtered[0].metas.styles.length).toBe(1);
+    expect(filtered[1].metas.styles.length).toBe(1);
+    expect(filtered[2].metas.styles.length).toBe(1);
+  });
 });

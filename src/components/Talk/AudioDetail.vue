@@ -82,8 +82,8 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
-import ToolTip from "./ToolTip.vue";
 import AccentPhrase from "./AccentPhrase.vue";
+import ToolTip from "@/components/ToolTip.vue";
 import { useStore } from "@/store";
 import {
   AudioKey,
@@ -94,6 +94,7 @@ import {
 import { setHotkeyFunctions } from "@/store/setting";
 import { EngineManifest } from "@/openapi/models";
 import { useShiftKey, useAltKey } from "@/composables/useModifierKey";
+import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
 
 const props =
   defineProps<{
@@ -248,13 +249,7 @@ const play = async () => {
       audioKey: props.activeAudioKey,
     });
   } catch (e) {
-    let msg: string | undefined;
-    // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
-    if (e instanceof Error && e.message === "VALID_MORPHING_ERROR") {
-      msg = "モーフィングの設定が無効です。";
-    } else {
-      window.electron.logError(e);
-    }
+    const msg = handlePossiblyNotMorphableError(e);
     store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",

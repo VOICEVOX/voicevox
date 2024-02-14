@@ -301,8 +301,8 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
-import CharacterButton from "./CharacterButton.vue";
-import PresetManageDialog from "./PresetManageDialog.vue";
+import CharacterButton from "@/components/CharacterButton.vue";
+import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
 import { useStore } from "@/store";
 
 import {
@@ -518,7 +518,7 @@ watchEffect(() => {
 });
 
 const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
-  const allCharacterInfos = store.getters.USER_ORDERED_CHARACTER_INFOS;
+  const allCharacterInfos = store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
   if (allCharacterInfos == undefined)
     throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
@@ -598,10 +598,12 @@ const morphingTargetVoice = computed({
 });
 
 const morphingTargetCharacterInfo = computed(() =>
-  store.getters.USER_ORDERED_CHARACTER_INFOS?.find(
-    (character) =>
-      character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
-  )
+  store.getters
+    .USER_ORDERED_CHARACTER_INFOS("talk")
+    ?.find(
+      (character) =>
+        character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
+    )
 );
 
 const morphingTargetStyleInfo = computed(() => {

@@ -251,8 +251,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
-import AudioAccent from "./AudioAccent.vue";
+import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { useStore } from "@/store";
+import type { FetchAudioResult } from "@/store/type";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
@@ -345,11 +346,13 @@ const surface = ref("");
 const yomi = ref("");
 
 const voiceComputed = computed(() => {
-  if (store.getters.USER_ORDERED_CHARACTER_INFOS == undefined)
+  const userOrderedCharacterInfos =
+    store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
+  if (userOrderedCharacterInfos == undefined)
     throw new Error("assert USER_ORDERED_CHARACTER_INFOS");
   if (store.state.engineIds.length === 0)
     throw new Error("assert engineId.length > 0");
-  const characterInfo = store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas;
+  const characterInfo = userOrderedCharacterInfos[0].metas;
   const speakerId = characterInfo.speakerUuid;
   const { engineId, styleId } = characterInfo.styles[0];
   return { engineId, speakerId, styleId };
@@ -446,26 +449,22 @@ const play = async () => {
 
   audioItem.query.accentPhrases = [accentPhrase.value];
 
-  let blob = await store.dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", {
-    audioItem,
-  });
-  if (!blob) {
-    try {
-      blob = await createUILockAction(
-        store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
-          audioItem,
-        })
-      );
-    } catch (e) {
-      window.electron.logError(e);
-      nowGenerating.value = false;
-      store.dispatch("SHOW_ALERT_DIALOG", {
-        title: "生成に失敗しました",
-        message: "エンジンの再起動をお試しください。",
-      });
-      return;
-    }
+  let fetchAudioResult: FetchAudioResult;
+  try {
+    fetchAudioResult = await store.dispatch("FETCH_AUDIO_FROM_AUDIO_ITEM", {
+      audioItem,
+    });
+  } catch (e) {
+    window.electron.logError(e);
+    nowGenerating.value = false;
+    store.dispatch("SHOW_ALERT_DIALOG", {
+      title: "生成に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+    return;
   }
+
+  const { blob } = fetchAudioResult;
   nowGenerating.value = false;
   nowPlaying.value = true;
   await store.dispatch("PLAY_AUDIO_BLOB", { audioBlob: blob });

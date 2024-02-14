@@ -44,6 +44,7 @@ import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 import { failure, success } from "./type/result";
+import { RuntimeInfoManager } from "./background/RuntimeInfoManager";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { getConfigManager } from "@/background/electronConfig";
 
@@ -159,6 +160,11 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
 
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
+
+const runtimeInfoManager = new RuntimeInfoManager(
+  path.join(app.getPath("userData"), "runtime-info.json"),
+  app.getVersion()
+);
 
 const configManager = getConfigManager();
 
@@ -465,7 +471,7 @@ async function loadUrl(obj: {
   projectFilePath?: string;
 }) {
   const fragment =
-    "#/home" +
+    "#/talk" +
     `?isMultiEngineOffMode=${obj?.isMultiEngineOffMode ?? false}` +
     `&projectFilePath=${obj?.projectFilePath ?? ""}`;
   return win.loadURL(`${firstUrl}${fragment}`);
@@ -494,6 +500,8 @@ async function launchEngines() {
   configManager.set("engineSettings", engineSettings);
 
   await engineManager.runEngineAll();
+  runtimeInfoManager.setEngineInfos(engineInfos);
+  await runtimeInfoManager.exportFile();
 }
 
 /**
@@ -722,10 +730,10 @@ ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
   });
 });
 
-ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {
+ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title, name, extensions }) => {
   return dialog.showOpenDialogSync(win, {
     title,
-    filters: [{ name: "Text", extensions: ["txt"] }],
+    filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
     properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
   })?.[0];
 });
@@ -766,6 +774,9 @@ ipcMainHandle("ENGINE_INFOS", () => {
  */
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
   await engineManager.restartEngine(engineId);
+  // TODO: setEngineInfosからexportFileはロックしたほうがより良い
+  runtimeInfoManager.setEngineInfos(engineManager.fetchEngineInfos());
+  await runtimeInfoManager.exportFile();
 });
 
 ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {

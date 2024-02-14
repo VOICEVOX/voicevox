@@ -24,7 +24,7 @@ import {
   generateAndConnectAndSaveAudioWithDialog,
   multiGenerateAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
-} from "./Dialog";
+} from "@/components/Dialog/Dialog";
 import { useStore } from "@/store";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
@@ -33,6 +33,7 @@ import {
   ToolbarButtonTagType,
 } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
+import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
 
 type ButtonContent = {
   text: string;
@@ -106,13 +107,7 @@ const playContinuously = async () => {
   try {
     await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
   } catch (e) {
-    let msg: string | undefined;
-    // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
-    if (e instanceof Error && e.message === "VALID_MORPHING_ERROR") {
-      msg = "モーフィングの設定が無効です。";
-    } else {
-      window.electron.logError(e);
-    }
+    const msg = handlePossiblyNotMorphableError(e);
     store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",

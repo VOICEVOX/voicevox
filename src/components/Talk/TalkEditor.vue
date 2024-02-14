@@ -6,46 +6,11 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
-        <progress-dialog />
+        <progress-view />
+        <engine-startup-overlay
+          :is-completed-initial-startup="isCompletedInitialStartup"
+        />
 
-        <!-- TODO: 複数エンジン対応 -->
-        <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
-        <div v-if="allEngineState === 'FAILED_STARTING'" class="waiting-engine">
-          <div>
-            エンジンの起動に失敗しました。エンジンの再起動をお試しください。
-          </div>
-        </div>
-        <div
-          v-else-if="
-            !isCompletedInitialStartup || allEngineState === 'STARTING'
-          "
-          class="waiting-engine"
-        >
-          <div>
-            <q-spinner color="primary" size="2.5rem" />
-            <div class="q-mt-xs">
-              {{
-                allEngineState === "STARTING"
-                  ? "エンジン起動中・・・"
-                  : "データ準備中・・・"
-              }}
-            </div>
-
-            <template v-if="isEngineWaitingLong">
-              <q-separator spaced />
-              エンジン起動に時間がかかっています。<br />
-              <q-btn
-                v-if="isMultipleEngine"
-                outline
-                :disable="reloadingLocked"
-                @click="reloadAppWithMultiEngineOffMode"
-              >
-                マルチエンジンをオフにして再読み込みする</q-btn
-              >
-              <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
-            </template>
-          </div>
-        </div>
         <q-splitter
           horizontal
           reverse
@@ -167,9 +132,9 @@
     :character-infos="orderedAllCharacterInfos"
   />
   <default-style-list-dialog
-    v-if="orderedAllCharacterInfos.length > 0"
+    v-if="orderedTalkCharacterInfos.length > 0"
     v-model="isDefaultStyleSelectDialogOpenComputed"
-    :character-infos="orderedAllCharacterInfos"
+    :character-infos="orderedTalkCharacterInfos"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
@@ -188,51 +153,48 @@ import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
-import Mousetrap from "mousetrap";
+import AudioCell from "./AudioCell.vue";
+import AudioDetail from "./AudioDetail.vue";
+import AudioInfo from "./AudioInfo.vue";
+import CharacterPortrait from "./CharacterPortrait.vue";
 import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
-import AudioCell from "@/components/AudioCell.vue";
-import AudioDetail from "@/components/AudioDetail.vue";
-import AudioInfo from "@/components/AudioInfo.vue";
-import MenuBar from "@/components/MenuBar.vue";
-import HelpDialog from "@/components/help/HelpDialog.vue";
-import SettingDialog from "@/components/SettingDialog.vue";
-import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
-import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
-import CharacterPortrait from "@/components/CharacterPortrait.vue";
-import DefaultStyleListDialog from "@/components/DefaultStyleListDialog.vue";
-import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
-import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
-import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
-import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
-import EngineManageDialog from "@/components/EngineManageDialog.vue";
-import ProgressDialog from "@/components/ProgressDialog.vue";
-import UpdateNotificationDialogContainer from "@/components/UpdateNotificationDialog/Container.vue";
-import { AudioItem, EngineState } from "@/store/type";
+import MenuBar from "@/components/Talk/MenuBar.vue";
+import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
+import SettingDialog from "@/components/Dialog/SettingDialog.vue";
+import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
+import HeaderBarCustomDialog from "@/components/Dialog/HeaderBarCustomDialog.vue";
+import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
+import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
+import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptRetrieveTelemetryDialog.vue";
+import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
+import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
+import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
+import ProgressView from "@/components/ProgressView.vue";
+import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
+import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
+import { AudioItem } from "@/store/type";
 import {
   AudioKey,
-  EngineId,
   HotkeyActionType,
   HotkeyReturnType,
   PresetKey,
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { filterCharacterInfosByStyleType } from "@/store/utility";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 const props =
   defineProps<{
-    projectFilePath: string;
+    projectFilePath?: string;
+    isEnginesReady: boolean;
   }>();
 
 const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-const reloadingLocked = computed(() => store.state.reloadingLock);
-
-const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
 // hotkeys handled by Mousetrap
 const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
@@ -498,17 +460,6 @@ const focusCell = ({
   });
 };
 
-// Electronのデフォルトのundo/redoを無効化
-const disableDefaultUndoRedo = (event: KeyboardEvent) => {
-  // ctrl+z, ctrl+shift+z, ctrl+y
-  if (
-    isOnCommandOrCtrlKeyDown(event) &&
-    (event.key == "z" || (!event.shiftKey && event.key == "y"))
-  ) {
-    event.preventDefault();
-  }
-};
-
 const userOrderedCharacterInfos = computed(
   () => store.state.userCharacterOrder
 );
@@ -547,135 +498,64 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
   }
 });
 
-// ソフトウェアを初期化
-const isCompletedInitialStartup = ref(false);
 onMounted(async () => {
-  await store.dispatch("GET_ENGINE_INFOS");
-
-  let engineIds: EngineId[];
-  if (store.state.isMultiEngineOffMode) {
-    // デフォルトエンジンだけを含める
-    const main = Object.values(store.state.engineInfos).find(
-      (engine) => engine.type === "default"
-    );
-    if (!main) {
-      throw new Error("No main engine found");
-    }
-    engineIds = [main.uuid];
-  } else {
-    engineIds = store.state.engineIds;
-  }
-  await store.dispatch("LOAD_USER_CHARACTER_ORDER");
-  await store.dispatch("POST_ENGINE_START", {
-    engineIds,
-  });
-
-  // 辞書を同期
-  await store.dispatch("SYNC_ALL_USER_DICT");
-
-  // プロジェクトファイルが指定されていればロード
-  let projectFileLoaded = false;
-  if (props.projectFilePath != undefined && props.projectFilePath !== "") {
-    projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
-      filePath: props.projectFilePath,
-    });
-  }
-
-  if (!projectFileLoaded) {
-    // 最初のAudioCellを作成
-    const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
-    const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
-      audioItem,
-    });
-    focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
-
-    // 最初の話者を初期化
-    store.dispatch("SETUP_SPEAKER", {
-      audioKeys: [newAudioKey],
-      engineId: audioItem.voice.engineId,
-      styleId: audioItem.voice.styleId,
-    });
-  }
-
-  // ショートカットキー操作を止める条件の設定
-  // 止めるなら`true`を返す
-  Mousetrap.prototype.stopCallback = (
-    e: Mousetrap.ExtendedKeyboardEvent, // 未使用
-    element: Element,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    combo: string // 未使用
-  ) => {
-    return (
-      element.tagName === "INPUT" ||
-      element.tagName === "SELECT" ||
-      element.tagName === "TEXTAREA" ||
-      (element instanceof HTMLElement && element.contentEditable === "true") ||
-      // メニュー項目ではショートカットキーを無効化
-      element.classList.contains("q-item")
-    );
-  };
-
   // ショートカットキーの設定
-  document.addEventListener("keydown", disableDefaultUndoRedo);
-
   hotkeyActionsNative.forEach((item) => {
     document.addEventListener("keyup", item);
   });
-
-  // 設定の読み込みを待機する
-  // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
-  await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
-
-  isAcceptRetrieveTelemetryDialogOpenComputed.value =
-    store.state.acceptRetrieveTelemetry === "Unconfirmed";
-
-  isAcceptTermsDialogOpenComputed.value =
-    import.meta.env.MODE !== "development" &&
-    store.state.acceptTerms !== "Accepted";
-
-  isCompletedInitialStartup.value = true;
 });
 
-// エンジン待機
-// TODO: 個別のエンジンの状態をUIで確認できるようにする
-const allEngineState = computed(() => {
-  const engineStates = store.state.engineStates;
+// エンジン初期化後の処理
+const isCompletedInitialStartup = ref(false);
+const unwatchIsEnginesReady = watch(
+  // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
+  () => props.isEnginesReady,
+  async (isEnginesReady) => {
+    if (!isEnginesReady) return;
 
-  let lastEngineState: EngineState | undefined = undefined;
-
-  // 登録されているすべてのエンジンについて状態を確認する
-  for (const engineId of store.state.engineIds) {
-    const engineState: EngineState | undefined = engineStates[engineId];
-    if (engineState == undefined)
-      throw new Error(`No such engineState set: engineId == ${engineId}`);
-
-    // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
-    if (engineState === "STARTING") {
-      return engineState;
+    // プロジェクトファイルが指定されていればロード
+    let projectFileLoaded = false;
+    if (props.projectFilePath != undefined && props.projectFilePath !== "") {
+      projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
+        filePath: props.projectFilePath,
+      });
     }
 
-    lastEngineState = engineState;
-  }
+    if (!projectFileLoaded) {
+      // 最初のAudioCellを作成
+      const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
+      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+        audioItem,
+      });
+      focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
 
-  return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
-});
+      // 最初の話者を初期化
+      store.dispatch("SETUP_SPEAKER", {
+        audioKeys: [newAudioKey],
+        engineId: audioItem.voice.engineId,
+        styleId: audioItem.voice.styleId,
+      });
+    }
 
-const isEngineWaitingLong = ref<boolean>(false);
-let engineTimer: number | undefined = undefined;
-watch(allEngineState, (newEngineState) => {
-  if (engineTimer != undefined) {
-    clearTimeout(engineTimer);
-    engineTimer = undefined;
+    // 設定の読み込みを待機する
+    // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
+    await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
+
+    isAcceptRetrieveTelemetryDialogOpenComputed.value =
+      store.state.acceptRetrieveTelemetry === "Unconfirmed";
+
+    isAcceptTermsDialogOpenComputed.value =
+      import.meta.env.MODE !== "development" &&
+      store.state.acceptTerms !== "Accepted";
+
+    isCompletedInitialStartup.value = true;
+
+    unwatchIsEnginesReady();
+  },
+  {
+    immediate: true,
   }
-  if (newEngineState === "STARTING") {
-    isEngineWaitingLong.value = false;
-    engineTimer = window.setTimeout(() => {
-      isEngineWaitingLong.value = true;
-    }, 30000);
-  } else {
-    isEngineWaitingLong.value = false;
-  }
-});
+);
 
 // 代替ポート情報の変更を監視
 watch(
@@ -701,17 +581,6 @@ watch(
     }
   }
 );
-
-const reloadAppWithMultiEngineOffMode = () => {
-  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
-    closeOrReload: "reload",
-    isMultiEngineOffMode: true,
-  });
-};
-
-const openQa = () => {
-  window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
-};
 
 // ライセンス表示
 const isHelpDialogOpenComputed = computed({
@@ -766,7 +635,14 @@ const isCharacterOrderDialogOpenComputed = computed({
     }),
 });
 
-// デフォルトスタイル選択
+// TODO: デフォルトスタイル選択(ソング)の実装
+// デフォルトスタイル選択(トーク)
+const orderedTalkCharacterInfos = computed(() => {
+  return filterCharacterInfosByStyleType(
+    store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
+    "talk"
+  );
+});
 const isDefaultStyleSelectDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
@@ -866,6 +742,7 @@ const showAddAudioItemButton = computed(() => {
   return store.state.showAddAudioItemButton;
 });
 
+// 台本欄の空きスペースがクリックされたら選択解除
 const onAudioCellPaneClick = () => {
   if (
     store.state.experimentalSetting.enableMultiSelect &&
@@ -895,24 +772,6 @@ const onAudioCellPaneClick = () => {
   > .scroll {
     width: unset !important;
     overflow: hidden;
-  }
-}
-
-.waiting-engine {
-  background-color: rgba(colors.$display-rgb, 0.15);
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-
-  > div {
-    color: colors.$display;
-    background: colors.$surface;
-    border-radius: 6px;
-    padding: 14px;
   }
 }
 

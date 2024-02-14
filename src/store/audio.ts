@@ -8,10 +8,10 @@ import {
   State,
   AudioStoreState,
   AudioCommandStoreState,
-  EditorAudioQuery,
   AudioStoreTypes,
   AudioCommandStoreTypes,
   transformCommandStore,
+  FetchAudioResult,
 } from "./type";
 import {
   buildAudioFileNameFromRawData,
@@ -26,10 +26,16 @@ import {
   DEFAULT_STYLE_NAME,
   formatCharacterStyleName,
   TuningTranscription,
+  filterCharacterInfosByStyleType,
 } from "./utility";
-import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { determineNextPresetKey } from "./preset";
+import {
+  fetchAudioFromAudioItem,
+  generateLabFromAudioQuery,
+  handlePossiblyNotMorphableError,
+  isMorphable,
+} from "./audioGenerate";
 import {
   AudioKey,
   CharacterInfo,
@@ -51,34 +57,6 @@ import { getValueOrThrow, ResultError } from "@/type/result";
 
 function generateAudioKey() {
   return AudioKey(uuidv4());
-}
-
-async function generateUniqueIdAndQuery(
-  state: State,
-  audioItem: AudioItem
-): Promise<[string, EditorAudioQuery | undefined]> {
-  audioItem = JSON.parse(JSON.stringify(audioItem)) as AudioItem;
-  const audioQuery = audioItem.query;
-  if (audioQuery != undefined) {
-    audioQuery.outputSamplingRate =
-      state.engineSettings[audioItem.voice.engineId].outputSamplingRate;
-    audioQuery.outputStereo = state.savingSetting.outputStereo;
-  }
-
-  const data = new TextEncoder().encode(
-    JSON.stringify([
-      audioItem.text,
-      audioQuery,
-      audioItem.voice,
-      audioItem.morphingInfo,
-      state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
-    ])
-  );
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  const id = Array.from(new Uint8Array(digest))
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join("");
-  return [id, audioQuery];
 }
 
 function parseTextFile(
@@ -186,23 +164,22 @@ export async function writeTextFile(obj: {
 }
 
 function generateWriteErrorMessage(writeFileResult: ResultError) {
-  if (writeFileResult.code) {
-    const code = writeFileResult.code.toUpperCase();
+  if (!writeFileResult.code) {
+    return `何らかの理由で失敗しました。${writeFileResult.message}`;
+  }
+  const code = writeFileResult.code.toUpperCase();
 
-    if (code.startsWith("ENOSPC")) {
-      return "空き容量が足りません。";
-    }
-
-    if (code.startsWith("EACCES")) {
-      return "ファイルにアクセスする許可がありません。";
-    }
-
-    if (code.startsWith("EBUSY")) {
-      return "ファイルが開かれています。";
-    }
+  if (code.startsWith("ENOSPC")) {
+    return "空き容量が足りません。";
   }
 
-  return `何らかの理由で失敗しました。${writeFileResult.message}`;
+  if (code.startsWith("EACCES")) {
+    return "ファイルにアクセスする許可がありません。";
+  }
+
+  if (code.startsWith("EBUSY")) {
+    return "ファイルが開かれています。";
+  }
 }
 
 // TODO: GETTERに移動する。
@@ -248,8 +225,6 @@ export function applyAudioPresetToAudioItem(
   return newAudioItem;
 }
 
-const audioBlobCache: Record<string, Blob> = {};
-
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
   audioKeysWithInitializingSpeaker: [],
@@ -289,94 +264,128 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   AUDIO_PLAY_START_POINT: {
     getter(state, getters) {
       const audioPlayStartPoint = state._audioPlayStartPoint;
-      if (
-        audioPlayStartPoint == undefined ||
-        getters.ACTIVE_AUDIO_KEY == undefined
-      ) {
+      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
+      if (audioPlayStartPoint == undefined || activeAudioKey == undefined) {
         return undefined;
       }
       const length =
-        state.audioItems[getters.ACTIVE_AUDIO_KEY].query?.accentPhrases.length;
-      if (length == undefined) {
-        return undefined;
-      }
-      return Math.max(0, Math.min(length - 1, audioPlayStartPoint));
+        state.audioItems[activeAudioKey].query?.accentPhrases.length;
+
+      return length == 0 || length == undefined
+        ? undefined
+        : Math.min(length - 1, audioPlayStartPoint);
     },
   },
 
   LOAD_CHARACTER: {
-    action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
-      const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineId,
-      })
-        .then((instance) => instance.invoke("speakersSpeakersGet")({}))
-        .catch((error) => {
-          window.electron.logError(error, `Failed to get speakers.`);
-          throw error;
-        });
-      const base64ToUrl = function (base64: string, type: string) {
-        const buffer = Buffer.from(base64, "base64");
-        const iconBlob = new Blob([buffer.buffer], { type: type });
-        return URL.createObjectURL(iconBlob);
-      };
-      const getStyles = function (speaker: Speaker, speakerInfo: SpeakerInfo) {
-        const styles: StyleInfo[] = new Array(speaker.styles.length);
-        speaker.styles.forEach((style, i) => {
-          const styleInfo = speakerInfo.styleInfos.find(
-            (styleInfo) => style.id === styleInfo.id
-          );
-          if (!styleInfo)
-            throw new Error(
-              `Not found the style id "${style.id}" of "${speaker.name}". `
-            );
-          const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
-            return base64ToUrl(voiceSample, "audio/wav");
-          });
-          styles[i] = {
-            styleName: style.name,
-            styleId: StyleId(style.id),
+    action: createUILockAction(
+      async ({ commit, dispatch, state }, { engineId }) => {
+        const { speakers, singers } = await dispatch(
+          "INSTANTIATE_ENGINE_CONNECTOR",
+          {
             engineId,
-            iconPath: base64ImageToUri(styleInfo.icon),
-            portraitPath:
-              styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
-            voiceSamplePaths: voiceSamples,
-          };
-        });
-        return styles;
-      };
-      const getSpeakerInfo = async function (speaker: Speaker) {
-        const speakerInfo = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        })
-          .then((instance) =>
-            instance.invoke("speakerInfoSpeakerInfoGet")({
-              speakerUuid: speaker.speakerUuid,
-            })
-          )
+          }
+        )
+          .then(async (instance) => {
+            return {
+              speakers: await instance.invoke("speakersSpeakersGet")({}),
+              singers: state.engineManifests[engineId].supportedFeatures.sing
+                ? await instance.invoke("singersSingersGet")({})
+                : [],
+            };
+          })
           .catch((error) => {
             window.electron.logError(error, `Failed to get speakers.`);
             throw error;
           });
-        const styles = getStyles(speaker, speakerInfo);
-        const characterInfo: CharacterInfo = {
-          portraitPath: base64ImageToUri(speakerInfo.portrait),
-          metas: {
-            speakerUuid: SpeakerId(speaker.speakerUuid),
-            speakerName: speaker.name,
-            styles,
-            policy: speakerInfo.policy,
-          },
+        const base64ToUrl = function (base64: string, type: string) {
+          const buffer = Buffer.from(base64, "base64");
+          const iconBlob = new Blob([buffer.buffer], { type: type });
+          return URL.createObjectURL(iconBlob);
         };
-        return characterInfo;
-      };
-      const characterInfos: CharacterInfo[] = await Promise.all(
-        speakers.map(async (speaker) => {
-          return await getSpeakerInfo(speaker);
-        })
-      );
+        const getStyles = function (
+          speaker: Speaker,
+          speakerInfo: SpeakerInfo
+        ) {
+          const styles: StyleInfo[] = new Array(speaker.styles.length);
+          speaker.styles.forEach((style, i) => {
+            const styleInfo = speakerInfo.styleInfos.find(
+              (styleInfo) => style.id === styleInfo.id
+            );
+            if (!styleInfo)
+              throw new Error(
+                `Not found the style id "${style.id}" of "${speaker.name}". `
+              );
+            const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
+              return base64ToUrl(voiceSample, "audio/wav");
+            });
+            styles[i] = {
+              styleName: style.name,
+              styleId: StyleId(style.id),
+              styleType: style.type,
+              engineId,
+              iconPath: base64ImageToUri(styleInfo.icon),
+              portraitPath:
+                styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
+              voiceSamplePaths: voiceSamples,
+            };
+          });
+          return styles;
+        };
+        const getSpeakerInfo = async function (speaker: Speaker) {
+          // 同じIDの歌手がいる場合は歌手情報を取得し、スタイルをマージする
+          // FIXME: ソングのみのキャラも考慮する
+          const singer = singers.find(
+            (singer) => singer.speakerUuid === speaker.speakerUuid
+          );
+          const { speakerInfo, singerInfo } = await dispatch(
+            "INSTANTIATE_ENGINE_CONNECTOR",
+            {
+              engineId,
+            }
+          )
+            .then(async (instance) => {
+              const speakerInfo = await instance.invoke(
+                "speakerInfoSpeakerInfoGet"
+              )({
+                speakerUuid: speaker.speakerUuid,
+              });
+              let singerInfo: SpeakerInfo | undefined = undefined;
+              if (singer) {
+                singerInfo = await instance.invoke("singerInfoSingerInfoGet")({
+                  speakerUuid: singer.speakerUuid,
+                });
+              }
+              return { speakerInfo, singerInfo };
+            })
+            .catch((error) => {
+              window.electron.logError(error, `Failed to get speakers.`);
+              throw error;
+            });
+          const styles = getStyles(speaker, speakerInfo);
+          if (singer && singerInfo) {
+            styles.push(...getStyles(singer, singerInfo));
+          }
+          const characterInfo: CharacterInfo = {
+            portraitPath: base64ImageToUri(speakerInfo.portrait),
+            metas: {
+              speakerUuid: SpeakerId(speaker.speakerUuid),
+              speakerName: speaker.name,
+              styles,
+              policy: speakerInfo.policy,
+            },
+          };
+          return characterInfo;
+        };
+        const characterInfos: CharacterInfo[] = await Promise.all(
+          speakers.map(async (speaker) => {
+            return await getSpeakerInfo(speaker);
+          })
+        );
 
-      commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
-    }),
+        commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
+      }
+    ),
   },
 
   SET_CHARACTER_INFOS: {
@@ -470,15 +479,31 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   USER_ORDERED_CHARACTER_INFOS: {
-    getter: (state, getters) => {
+    /**
+     * ユーザーが並び替えたキャラクターの順番でキャラクター情報を返す。
+     * `singerLike`の場合はhummingかsingなスタイルのみを返す。
+     */
+    getter: (state, getters) => (styleType: "all" | "singerLike" | "talk") => {
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
-      return allCharacterInfos.size !== 0
-        ? [...allCharacterInfos.values()].sort(
+      if (allCharacterInfos.size === 0) return undefined;
+
+      let flattenCharacterInfos = [...allCharacterInfos.values()];
+      // "all"以外の場合は、スタイル・キャラクターをフィルタリングする
+      if (styleType !== "all") {
+        flattenCharacterInfos = filterCharacterInfosByStyleType(
+          flattenCharacterInfos,
+          styleType
+        );
+      }
+      return (
+        flattenCharacterInfos
+          // ユーザーが並び替えた順番に並び替え
+          .sort(
             (a, b) =>
               state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
               state.userCharacterOrder.indexOf(b.metas.speakerUuid)
           )
-        : undefined;
+      );
     },
   },
 
@@ -585,15 +610,19 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       //引数にbaseAudioItemが与えられた場合、baseAudioItemから話速等のパラメータを引き継いだAudioItemを返す
       //baseAudioItem.queryのうち、accentPhrasesとkanaは基本設定パラメータではないので引き継がない
       //baseAudioItemのうち、textとstyleIdは別途与えられるので引き継がない
-      if (state.defaultStyleIds == undefined)
+      if (state.defaultStyleIds == undefined) {
         throw new Error("state.defaultStyleIds == undefined");
-      if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
+      }
+      const userOrderedCharacterInfos =
+        getters.USER_ORDERED_CHARACTER_INFOS("talk");
+
+      if (userOrderedCharacterInfos == undefined) {
         throw new Error("state.characterInfos == undefined");
+      }
 
       const text = payload.text ?? "";
 
-      const defaultSpeakerId =
-        getters.USER_ORDERED_CHARACTER_INFOS[0].metas.speakerUuid;
+      const defaultSpeakerId = userOrderedCharacterInfos[0].metas.speakerUuid;
       const defaultStyleId = state.defaultStyleIds.find(
         (styleId) => styleId.speakerUuid === defaultSpeakerId
       );
@@ -608,12 +637,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const baseAudioItem = payload.baseAudioItem;
 
+      const fetchQueryParams = {
+        text,
+        engineId: voice.engineId,
+        styleId: voice.styleId,
+      };
+
       const query = getters.IS_ENGINE_READY(voice.engineId)
-        ? await dispatch("FETCH_AUDIO_QUERY", {
-            text,
-            engineId: voice.engineId,
-            styleId: voice.styleId,
-          }).catch(() => undefined)
+        ? await dispatch("FETCH_AUDIO_QUERY", fetchQueryParams).catch(
+            () => undefined
+          )
         : undefined;
 
       const newAudioItem: AudioItem = { text, voice };
@@ -632,11 +665,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       newAudioItem.presetKey = nextPresetKey;
 
       // audioItemに対してプリセットを適用する
-      if (shouldApplyPreset) {
-        if (nextPresetKey) {
-          const preset = state.presetItems[nextPresetKey];
-          return applyAudioPresetToAudioItem(newAudioItem, preset);
-        }
+      if (shouldApplyPreset && nextPresetKey) {
+        const preset = state.presetItems[nextPresetKey];
+        return applyAudioPresetToAudioItem(newAudioItem, preset);
       }
 
       // プリセットを適用しないならパラメータを引き継ぐ
@@ -756,25 +787,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  GET_AUDIO_CACHE: {
-    async action({ state, dispatch }, { audioKey }: { audioKey: AudioKey }) {
-      const audioItem = state.audioItems[audioKey];
-      return dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", { audioItem });
-    },
-  },
-
-  GET_AUDIO_CACHE_FROM_AUDIO_ITEM: {
-    async action({ state }, { audioItem }: { audioItem: AudioItem }) {
-      const [id] = await generateUniqueIdAndQuery(state, audioItem);
-
-      if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
-        return audioBlobCache[id];
-      } else {
-        return null;
-      }
-    },
-  },
-
   SET_AUDIO_TEXT: {
     mutation(state, { audioKey, text }: { audioKey: AudioKey; text: string }) {
       state.audioItems[audioKey].text = text;
@@ -879,14 +891,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   VALID_MORPHING_INFO: {
     getter: (state) => (audioItem: AudioItem) => {
-      if (audioItem.morphingInfo?.targetStyleId == undefined) return false;
-      const { engineId, styleId } = audioItem.voice;
-      const info =
-        state.morphableTargetsInfo[engineId]?.[styleId]?.[
-          audioItem.morphingInfo.targetStyleId
-        ];
-      if (info == undefined) return false;
-      return info.isMorphable;
+      return isMorphable(state, { audioItem });
     },
   },
 
@@ -1186,63 +1191,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  GENERATE_LAB: {
-    action: createUILockAction(
-      async (
-        { state },
-        { audioKey, offset }: { audioKey: AudioKey; offset?: number }
-      ) => {
-        const query = state.audioItems[audioKey].query;
-        if (query == undefined) return;
-        const speedScale = query.speedScale;
-
-        let labString = "";
-        let timestamp = offset != undefined ? offset : 0;
-
-        labString += timestamp.toFixed() + " ";
-        timestamp += (query.prePhonemeLength * 10000000) / speedScale;
-        labString += timestamp.toFixed() + " ";
-        labString += "pau" + "\n";
-
-        query.accentPhrases.forEach((accentPhrase) => {
-          accentPhrase.moras.forEach((mora) => {
-            if (
-              mora.consonantLength != undefined &&
-              mora.consonant != undefined
-            ) {
-              labString += timestamp.toFixed() + " ";
-              timestamp += (mora.consonantLength * 10000000) / speedScale;
-              labString += timestamp.toFixed() + " ";
-              labString += mora.consonant + "\n";
-            }
-            labString += timestamp.toFixed() + " ";
-            timestamp += (mora.vowelLength * 10000000) / speedScale;
-            labString += timestamp.toFixed() + " ";
-            if (mora.vowel != "N") {
-              labString += mora.vowel.toLowerCase() + "\n";
-            } else {
-              labString += mora.vowel + "\n";
-            }
-          });
-          if (accentPhrase.pauseMora != undefined) {
-            labString += timestamp.toFixed() + " ";
-            timestamp +=
-              (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
-            labString += timestamp.toFixed() + " ";
-            labString += accentPhrase.pauseMora.vowel + "\n";
-          }
-        });
-
-        labString += timestamp.toFixed() + " ";
-        timestamp += (query.postPhonemeLength * 10000000) / speedScale;
-        labString += timestamp.toFixed() + " ";
-        labString += "pau" + "\n";
-
-        return labString;
-      }
-    ),
-  },
-
   GET_AUDIO_PLAY_OFFSETS: {
     action({ state }, { audioKey }: { audioKey: AudioKey }) {
       const query = state.audioItems[audioKey].query;
@@ -1273,64 +1221,31 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  GENERATE_AUDIO: {
-    async action({ dispatch, state }, { audioKey }: { audioKey: AudioKey }) {
+  FETCH_AUDIO: {
+    async action(
+      { dispatch, state },
+      { audioKey, ...options }: { audioKey: AudioKey; cacheOnly?: boolean }
+    ) {
       const audioItem: AudioItem = JSON.parse(
         JSON.stringify(state.audioItems[audioKey])
       );
-      return dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", { audioItem });
+      return dispatch("FETCH_AUDIO_FROM_AUDIO_ITEM", {
+        audioItem,
+        ...options,
+      });
     },
   },
 
-  GENERATE_AUDIO_FROM_AUDIO_ITEM: {
+  FETCH_AUDIO_FROM_AUDIO_ITEM: {
     action: createUILockAction(
       async (
-        { dispatch, getters, state },
-        { audioItem }: { audioItem: AudioItem }
+        { dispatch, state },
+        options: { audioItem: AudioItem; cacheOnly?: boolean }
       ) => {
-        const engineId = audioItem.voice.engineId;
-
-        const [id, audioQuery] = await generateUniqueIdAndQuery(
-          state,
-          audioItem
-        );
-        if (audioQuery == undefined)
-          throw new Error("audioQuery is not defined for audioItem");
-
-        const speaker = audioItem.voice.styleId;
-
-        const engineAudioQuery = convertAudioQueryFromEditorToEngine(
-          audioQuery,
-          state.engineManifests[engineId].defaultSamplingRate
-        );
-
-        return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        }).then(async (instance) => {
-          let blob: Blob;
-          // FIXME: モーフィングが設定で無効化されていてもモーフィングが行われるので気づけるUIを作成する
-          if (audioItem.morphingInfo != undefined) {
-            if (!getters.VALID_MORPHING_INFO(audioItem))
-              throw new Error("VALID_MORPHING_ERROR"); //FIXME: エラーを変更した場合ハンドリング部分も修正する
-            blob = await instance.invoke(
-              "synthesisMorphingSynthesisMorphingPost"
-            )({
-              audioQuery: engineAudioQuery,
-              baseSpeaker: speaker,
-              targetSpeaker: audioItem.morphingInfo.targetStyleId,
-              morphRate: audioItem.morphingInfo.rate,
-            });
-          } else {
-            blob = await instance.invoke("synthesisSynthesisPost")({
-              audioQuery: engineAudioQuery,
-              speaker,
-              enableInterrogativeUpspeak:
-                state.experimentalSetting.enableInterrogativeUpspeak,
-            });
-          }
-          audioBlobCache[id] = blob;
-          return blob;
+        const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId: options.audioItem.voice.engineId,
         });
+        return fetchAudioFromAudioItem(state, instance, options);
       }
     ),
   },
@@ -1345,21 +1260,17 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (engineId == undefined)
           throw new Error(`No such engine registered: index == 0`);
 
-        return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+        const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
-        })
-          .then((instance) =>
-            instance.invoke("connectWavesConnectWavesPost")({
-              requestBody: encodedBlobs,
-            })
-          )
-          .then(async (blob) => {
-            return blob;
-          })
-          .catch((e) => {
-            window.electron.logError(e);
-            return null;
+        });
+        try {
+          return instance.invoke("connectWavesConnectWavesPost")({
+            requestBody: encodedBlobs,
           });
+        } catch (e) {
+          window.electron.logError(e);
+          return null;
+        }
       }
     ),
   },
@@ -1397,26 +1308,19 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           filePath = await changeFileTailToNonExistent(filePath, "wav");
         }
 
-        let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
-        if (!blob) {
-          try {
-            blob = await dispatch("GENERATE_AUDIO", { audioKey });
-          } catch (e) {
-            let errorMessage = undefined;
-            // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
-            if (e instanceof Error && e.message === "VALID_MORPHING_ERROR") {
-              errorMessage = "モーフィングの設定が無効です。";
-            } else {
-              window.electron.logError(e);
-            }
-            return {
-              result: "ENGINE_ERROR",
-              path: filePath,
-              errorMessage,
-            };
-          }
+        let fetchAudioResult: FetchAudioResult;
+        try {
+          fetchAudioResult = await dispatch("FETCH_AUDIO", { audioKey });
+        } catch (e) {
+          const errorMessage = handlePossiblyNotMorphableError(e);
+          return {
+            result: "ENGINE_ERROR",
+            path: filePath,
+            errorMessage,
+          };
         }
 
+        const { blob, audioQuery } = fetchAudioResult;
         try {
           await window.electron
             .writeFile({
@@ -1426,7 +1330,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             .then(getValueOrThrow);
 
           if (state.savingSetting.exportLab) {
-            const labString = await dispatch("GENERATE_LAB", { audioKey });
+            const labString = await generateLabFromAudioQuery(audioQuery);
             if (labString == undefined)
               return {
                 result: "WRITE_ERROR",
@@ -1576,37 +1480,28 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         let finishedCount = 0;
 
         for (const audioKey of state.audioKeys) {
-          let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
-          if (!blob) {
-            try {
-              blob = await dispatch("GENERATE_AUDIO", { audioKey });
-            } catch (e) {
-              let errorMessage = undefined;
-              // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
-              if (e instanceof Error && e.message === "VALID_MORPHING_ERROR") {
-                errorMessage = "モーフィングの設定が無効です。";
-              } else {
-                window.electron.logError(e);
-              }
-              return {
-                result: "ENGINE_ERROR",
-                path: filePath,
-                errorMessage,
-              };
-            } finally {
-              callback?.(++finishedCount, totalCount);
-            }
+          let fetchAudioResult: FetchAudioResult;
+          try {
+            fetchAudioResult = await dispatch("FETCH_AUDIO", { audioKey });
+          } catch (e) {
+            const errorMessage = handlePossiblyNotMorphableError(e);
+            return {
+              result: "ENGINE_ERROR",
+              path: filePath,
+              errorMessage,
+            };
+          } finally {
+            callback?.(++finishedCount, totalCount);
           }
+
+          const { blob, audioQuery } = fetchAudioResult;
           const encodedBlob = await base64Encoder(blob);
           if (encodedBlob == undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }
           encodedBlobs.push(encodedBlob);
           // 大して処理能力を要しないので、生成設定のon/offにかかわらず生成してしまう
-          const lab = await dispatch("GENERATE_LAB", {
-            audioKey,
-            offset: labOffset,
-          });
+          const lab = await generateLabFromAudioQuery(audioQuery, labOffset);
           if (lab == undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }
@@ -1640,7 +1535,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         if (state.savingSetting.exportLab) {
           const labResult = await writeTextFile({
-            // GENERATE_LABで生成される文字列はすべて改行で終わるので、追加で改行を挟む必要はない
+            // `generateLabFromAudioQuery`で生成される文字列はすべて改行で終わるので、追加で改行を挟む必要はない
             text: labs.join(""),
             filePath: filePath.replace(/\.wav$/, ".lab"),
           });
@@ -1696,10 +1591,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         const characters = new Map<string, string>();
 
-        if (!getters.USER_ORDERED_CHARACTER_INFOS)
+        const userOrderedCharacterInfos =
+          getters.USER_ORDERED_CHARACTER_INFOS("talk");
+        if (!userOrderedCharacterInfos)
           throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
-        for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
+        for (const characterInfo of userOrderedCharacterInfos) {
           const speakerName = characterInfo.metas.speakerName;
           for (const style of characterInfo.metas.styles) {
             characters.set(
@@ -1753,25 +1650,24 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         await dispatch("STOP_AUDIO");
 
         // 音声用意
-        let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
-        if (!blob) {
+        let fetchAudioResult: FetchAudioResult;
+        commit("SET_AUDIO_NOW_GENERATING", {
+          audioKey,
+          nowGenerating: true,
+        });
+        try {
+          fetchAudioResult = await withProgress(
+            dispatch("FETCH_AUDIO", { audioKey }),
+            dispatch
+          );
+        } finally {
           commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,
-            nowGenerating: true,
+            nowGenerating: false,
           });
-          try {
-            blob = await withProgress(
-              dispatch("GENERATE_AUDIO", { audioKey }),
-              dispatch
-            );
-          } finally {
-            commit("SET_AUDIO_NOW_GENERATING", {
-              audioKey,
-              nowGenerating: false,
-            });
-          }
         }
 
+        const { blob } = fetchAudioResult;
         return dispatch("PLAY_AUDIO_BLOB", {
           audioBlob: blob,
           audioKey,
@@ -2882,12 +2778,14 @@ export const audioCommandStore = transformCommandStore(
             baseAudioItem = state.audioItems[state._activeAudioKey];
           }
 
-          if (!getters.USER_ORDERED_CHARACTER_INFOS)
+          const userOrderedCharacterInfos =
+            getters.USER_ORDERED_CHARACTER_INFOS("talk");
+          if (!userOrderedCharacterInfos)
             throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
           for (const { text, voice } of parseTextFile(
             body,
             state.defaultStyleIds,
-            getters.USER_ORDERED_CHARACTER_INFOS,
+            userOrderedCharacterInfos,
             baseAudioItem?.voice
           )) {
             audioItems.push(

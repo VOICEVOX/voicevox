@@ -20,11 +20,13 @@ import type {
   CorsPolicyMode,
   DownloadableLibraryInfo,
   EngineManifest,
+  FrameAudioQuery,
   HTTPValidationError,
   InstalledLibraryInfo,
   MorphableTargetInfo,
   ParseKanaBadRequest,
   Preset,
+  Score,
   Speaker,
   SpeakerInfo,
   SupportedDevicesInfo,
@@ -42,6 +44,8 @@ import {
     DownloadableLibraryInfoToJSON,
     EngineManifestFromJSON,
     EngineManifestToJSON,
+    FrameAudioQueryFromJSON,
+    FrameAudioQueryToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     InstalledLibraryInfoFromJSON,
@@ -52,6 +56,8 @@ import {
     ParseKanaBadRequestToJSON,
     PresetFromJSON,
     PresetToJSON,
+    ScoreFromJSON,
+    ScoreToJSON,
     SpeakerFromJSON,
     SpeakerToJSON,
     SpeakerInfoFromJSON,
@@ -111,6 +117,12 @@ export interface DeletePresetDeletePresetPostRequest {
 
 export interface DeleteUserDictWordUserDictWordWordUuidDeleteRequest {
     wordUuid: string;
+}
+
+export interface FrameSynthesisFrameSynthesisPostRequest {
+    speaker: number;
+    frameAudioQuery: FrameAudioQuery;
+    coreVersion?: string;
 }
 
 export interface ImportUserDictWordsImportUserDictPostRequest {
@@ -174,6 +186,21 @@ export interface RewriteUserDictWordUserDictWordWordUuidPutRequest {
 export interface SettingPostSettingPostRequest {
     corsPolicyMode: CorsPolicyMode;
     allowOrigin?: string;
+}
+
+export interface SingFrameAudioQuerySingFrameAudioQueryPostRequest {
+    speaker: number;
+    score: Score;
+    coreVersion?: string;
+}
+
+export interface SingerInfoSingerInfoGetRequest {
+    speakerUuid: string;
+    coreVersion?: string;
+}
+
+export interface SingersSingersGetRequest {
+    coreVersion?: string;
 }
 
 export interface SpeakerInfoSpeakerInfoGetRequest {
@@ -421,6 +448,24 @@ export interface DefaultApiInterface {
      * Engine Manifest
      */
     engineManifestEngineManifestGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EngineManifest>;
+
+    /**
+     * 歌唱音声合成を行います。
+     * @summary Frame Synthesis
+     * @param {number} speaker 
+     * @param {FrameAudioQuery} frameAudioQuery 
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    frameSynthesisFrameSynthesisPostRaw(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
+
+    /**
+     * 歌唱音声合成を行います。
+     * Frame Synthesis
+     */
+    frameSynthesisFrameSynthesisPost(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
     /**
      * エンジンが保持しているプリセットの設定を返します  Returns ------- presets: list[Preset]     プリセットのリスト
@@ -674,7 +719,57 @@ export interface DefaultApiInterface {
     settingPostSettingPost(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: SpeakerInfo
+     * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
+     * @summary 歌唱音声合成用のクエリを作成する
+     * @param {number} speaker 
+     * @param {Score} score 
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FrameAudioQuery>>;
+
+    /**
+     * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
+     * 歌唱音声合成用のクエリを作成する
+     */
+    singFrameAudioQuerySingFrameAudioQueryPost(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FrameAudioQuery>;
+
+    /**
+     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * @summary Singer Info
+     * @param {string} speakerUuid 
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>>;
+
+    /**
+     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * Singer Info
+     */
+    singerInfoSingerInfoGet(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo>;
+
+    /**
+     * 
+     * @summary Singers
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    singersSingersGetRaw(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>>;
+
+    /**
+     * Singers
+     */
+    singersSingersGet(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>>;
+
+    /**
+     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * @summary Speaker Info
      * @param {string} speakerUuid 
      * @param {string} [coreVersion] 
@@ -685,7 +780,7 @@ export interface DefaultApiInterface {
     speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>>;
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: SpeakerInfo
+     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * Speaker Info
      */
     speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo>;
@@ -1305,6 +1400,53 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 歌唱音声合成を行います。
+     * Frame Synthesis
+     */
+    async frameSynthesisFrameSynthesisPostRaw(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling frameSynthesisFrameSynthesisPost.');
+        }
+
+        if (requestParameters.frameAudioQuery === null || requestParameters.frameAudioQuery === undefined) {
+            throw new runtime.RequiredError('frameAudioQuery','Required parameter requestParameters.frameAudioQuery was null or undefined when calling frameSynthesisFrameSynthesisPost.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.speaker !== undefined) {
+            queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/frame_synthesis`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: FrameAudioQueryToJSON(requestParameters.frameAudioQuery),
+        }, initOverrides);
+
+        return new runtime.BlobApiResponse(response);
+    }
+
+    /**
+     * 歌唱音声合成を行います。
+     * Frame Synthesis
+     */
+    async frameSynthesisFrameSynthesisPost(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+        const response = await this.frameSynthesisFrameSynthesisPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * エンジンが保持しているプリセットの設定を返します  Returns ------- presets: list[Preset]     プリセットのリスト
      * Get Presets
      */
@@ -1912,7 +2054,124 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: SpeakerInfo
+     * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
+     * 歌唱音声合成用のクエリを作成する
+     */
+    async singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FrameAudioQuery>> {
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
+        }
+
+        if (requestParameters.score === null || requestParameters.score === undefined) {
+            throw new runtime.RequiredError('score','Required parameter requestParameters.score was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.speaker !== undefined) {
+            queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/sing_frame_audio_query`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ScoreToJSON(requestParameters.score),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => FrameAudioQueryFromJSON(jsonValue));
+    }
+
+    /**
+     * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
+     * 歌唱音声合成用のクエリを作成する
+     */
+    async singFrameAudioQuerySingFrameAudioQueryPost(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FrameAudioQuery> {
+        const response = await this.singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * Singer Info
+     */
+    async singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
+        if (requestParameters.speakerUuid === null || requestParameters.speakerUuid === undefined) {
+            throw new runtime.RequiredError('speakerUuid','Required parameter requestParameters.speakerUuid was null or undefined when calling singerInfoSingerInfoGet.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.speakerUuid !== undefined) {
+            queryParameters['speaker_uuid'] = requestParameters.speakerUuid;
+        }
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/singer_info`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => SpeakerInfoFromJSON(jsonValue));
+    }
+
+    /**
+     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * Singer Info
+     */
+    async singerInfoSingerInfoGet(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
+        const response = await this.singerInfoSingerInfoGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Singers
+     */
+    async singersSingersGetRaw(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
+        const queryParameters: any = {};
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/singers`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SpeakerFromJSON));
+    }
+
+    /**
+     * Singers
+     */
+    async singersSingersGet(requestParameters: SingersSingersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
+        const response = await this.singersSingersGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * Speaker Info
      */
     async speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
@@ -1943,7 +2202,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: SpeakerInfo
+     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * Speaker Info
      */
     async speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
