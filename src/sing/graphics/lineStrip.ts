@@ -2,6 +2,9 @@ import * as PIXI from "pixi.js";
 import lineStripVertexShaderSource from "@/sing/graphics/shaders/lineStripVertexShader.glsl?raw";
 import fragmentShaderSource from "@/sing/graphics/shaders/fragmentShader.glsl?raw";
 
+/**
+ * 複数の点から折れ線を引きます。点の数は途中で変更できません。
+ */
 export class LineStrip {
   private readonly mesh: PIXI.Mesh<PIXI.Shader>;
   private readonly shader: PIXI.Shader;
@@ -20,6 +23,11 @@ export class LineStrip {
     this.mesh.renderable = value;
   }
 
+  /**
+   * @param numOfPoints 点の数
+   * @param color 線の色（RGBA）
+   * @param width 線の幅（px）
+   */
   constructor(numOfPoints: number, color: number[], width: number) {
     if (numOfPoints < 2) {
       throw new Error("The number of points must be at least 2.");
@@ -72,15 +80,24 @@ export class LineStrip {
     ];
   }
 
+  /**
+   * 点の位置を設定します。設定し終わったら`update()`を呼んでください。
+   */
   setPoint(index: number, x: number, y: number) {
     this.points[2 * index] = x;
     this.points[2 * index + 1] = y;
   }
 
+  /**
+   * 折れ線を更新します。（設定された点の位置を適用します）
+   */
   update() {
     this.buffer.update(this.points);
   }
 
+  /**
+   * 破棄します。
+   */
   destroy() {
     this.mesh.destroy();
     this.geometry.destroy();

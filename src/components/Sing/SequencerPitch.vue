@@ -32,6 +32,9 @@ const queries = computed(() => {
   return phrases.map((value) => value.query);
 });
 
+const pitchLineColor = [0.647, 0.831, 0.678, 1]; // RGBA
+const pitchLineWidth = 1.5;
+
 const canvasContainer = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
 let canvasWidth: number | undefined;
@@ -88,9 +91,6 @@ const render = () => {
   const zoomY = store.state.sequencerZoomY;
   const offsetX = props.offsetX;
   const offsetY = props.offsetY;
-
-  const pitchLineColor = [0.647, 0.831, 0.678, 1]; // RGBA
-  const pitchLineWidth = 1.5;
 
   // 無くなったフレーズを調べて、そのフレーズに対応するピッチラインを削除する
   const deletedPhraseKeys: string[] = [];
