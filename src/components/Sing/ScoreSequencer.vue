@@ -198,7 +198,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick, watch, onUnmounted, onMounted } from "vue";
+import {
+  computed,
+  ref,
+  nextTick,
+  onMounted,
+  onActivated,
+  onDeactivated,
+} from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
@@ -993,88 +1000,58 @@ const playheadPositionChangeListener = (position: number) => {
   }
 };
 
-let isInstantiated = false;
-let firstInitialization = true; // 最初の初期化か判断するためのフラグ
-
-const initialize = () => {
+// 初期スクロール位置を計算
+onMounted(() => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
 
-  let xToScroll = 0;
-  let yToScroll = 0;
-  if (firstInitialization) {
-    // スクロール位置を設定（C4が上から2/3の位置になるようにする）
-    const clientHeight = sequencerBodyElement.clientHeight;
-    const c4BaseY = noteNumberToBaseY(60);
-    const clientBaseHeight = clientHeight / zoomY.value;
-    const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
-    xToScroll = 0;
-    yToScroll = scrollBaseY * zoomY.value;
+  // スクロール位置を設定（C4が上から2/3の位置になるようにする）
+  const clientHeight = sequencerBodyElement.clientHeight;
+  const c4BaseY = noteNumberToBaseY(60);
+  const clientBaseHeight = clientHeight / zoomY.value;
+  const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
+  scrollX.value = 0;
+  scrollY.value = scrollBaseY * zoomY.value;
 
-    // スクロールバーの幅を取得する
-    const clientWidth = sequencerBodyElement.clientWidth;
-    const offsetWidth = sequencerBodyElement.offsetWidth;
-    scrollBarWidth.value = offsetWidth - clientWidth;
+  // スクロールバーの幅を取得する
+  const clientWidth = sequencerBodyElement.clientWidth;
+  const offsetWidth = sequencerBodyElement.offsetWidth;
+  scrollBarWidth.value = offsetWidth - clientWidth;
+});
 
-    firstInitialization = false;
-  } else {
-    xToScroll = scrollX.value;
-    yToScroll = scrollY.value;
+// スクロール位置を復帰
+onActivated(() => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
   }
+
+  const xToScroll = scrollX.value;
+  const yToScroll = scrollY.value;
   // 実際にスクロールする
   nextTick().then(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });
+});
 
+// リスナー登録
+onActivated(() => {
   store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 
   document.addEventListener("keydown", handleKeydown);
+});
 
-  isInstantiated = true;
-};
-
-const cleanUp = () => {
+// リスナー解除
+onDeactivated(() => {
   store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 
   document.removeEventListener("keydown", handleKeydown);
-
-  isInstantiated = false;
-};
-
-let isMounted = false;
-
-onMounted(() => {
-  isMounted = true;
-  if (props.isActivated) {
-    initialize();
-  }
-});
-
-watch(
-  () => props.isActivated,
-  (isActivated) => {
-    if (!isMounted) {
-      return;
-    }
-    if (isActivated && !isInstantiated) {
-      initialize();
-    }
-    if (!isActivated && isInstantiated) {
-      cleanUp();
-    }
-  }
-);
-
-onUnmounted(() => {
-  if (isInstantiated) {
-    cleanUp();
-  }
 });
 </script>
 
