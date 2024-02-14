@@ -621,10 +621,10 @@ const retryShowSaveDialogWhileSafeDir = async <
   showDialogFunction: () => Promise<T>
 ): Promise<T> => {
   const unsafeSaveDirs = [appDirPath, app.getPath("userData")];
-  let isUnsafeDir: boolean;
+  let retry: boolean;
   let result: T;
   do {
-    isUnsafeDir = false;
+    retry = false;
     result = await showDialogFunction();
     let filePath: string;
     if (result.canceled) {
@@ -647,15 +647,22 @@ const retryShowSaveDialogWhileSafeDir = async <
           relativePath.startsWith(`..${path.sep}`)
         )
       ) {
-        isUnsafeDir = true;
-        dialog.showErrorBox(
-          "このフォルダには保存できません",
-          `"${unsafeDir}"には保存できません`
-        );
+        const warningResult = await dialog.showMessageBox(win, {
+          message: "指定された保存先は自動的に削除される可能性があります。",
+          type: "warning",
+          buttons: ["保存場所を変更", "無視して保存"],
+          defaultId: 0,
+          title: "警告",
+          detail: "本当にこの場所に保存しますか？",
+          cancelId: 0,
+        });
+        if (warningResult.response == 0) {
+          retry = true;
+        }
         break;
       }
     }
-  } while (isUnsafeDir);
+  } while (retry);
   return result;
 };
 
