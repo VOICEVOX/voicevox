@@ -30,6 +30,8 @@
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
     "browser:build": "cross-env VITE_TARGET=browser vite build",
+    "vst:serve": "cross-env VITE_TARGET=vst vite",
+    "vst:build": "cross-env VITE_TARGET=vst vite build",
     "postinstall": "electron-builder install-app-deps && node build/download7z.js",
     "postuninstall": "electron-builder install-app-deps",
     "license:generate": "node build/generateLicenses.js",

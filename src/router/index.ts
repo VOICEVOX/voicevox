@@ -11,6 +11,7 @@ const routes: Array<RouteRecordRaw> = [
     path: "/song",
     component: SingEditor,
   },
+  { path: "/", redirect: "/talk" },
 ];
 
 const router = createRouter({

@@ -15,6 +15,7 @@ rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
+const isVst = process.env.VITE_TARGET === "vst";
 
 export default defineConfig((options) => {
   const packageName = process.env.npm_package_name;
@@ -110,20 +111,21 @@ export default defineConfig((options) => {
             },
           },
         }),
-      isBrowser && injectBrowserPreloadPlugin(),
+      isBrowser && injectPreloadPlugin("browser"),
+      isVst && injectPreloadPlugin("vst"),
     ],
   };
 });
 
-const injectBrowserPreloadPlugin = (): Plugin => {
+const injectPreloadPlugin = (name: string): Plugin => {
   return {
     name: "inject-browser-preload",
     transformIndexHtml: {
       enforce: "pre" as const,
       transform: (html: string) =>
         html.replace(
-          "<!-- %BROWSER_PRELOAD% -->",
-          `<script type="module" src="./browser/preload.ts"></script>`
+          `<!-- %${name.toUpperCase()}_PRELOAD% -->`,
+          `<script type="module" src="./${name}/preload.ts"></script>`
         ),
     },
   };
