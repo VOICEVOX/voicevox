@@ -471,21 +471,14 @@ jobs:
             dist_electron/*.dmg
           target_commitish: ${{ github.sha }}
 
-      - name: Create Windows NSIS Web artifact directory
-        if: endsWith(matrix.installer_artifact_name, '-nsis-web')
-        run: |
-          mkdir -p nsis-web-artifact
-          mv dist_electron/nsis-web/out/*.7z.* nsis-web-artifact/
-          mv dist_electron/nsis-web/*.exe nsis-web-artifact/
-
       - name: Upload Windows NSIS Web to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
-            nsis-web-artifact/*.7z.*
-            nsis-web-artifact/*.exe
+            dist_electron/nsis-web/out/*.7z.*
+            dist_electron/nsis-web/*.exe
 
       - name: Upload Windows NSIS Web to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
@@ -494,6 +487,6 @@ jobs:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           files: |-
-            nsis-web-artifact/*.7z.*
-            nsis-web-artifact/*.exe
+            dist_electron/nsis-web/out/*.7z.*
+            dist_electron/nsis-web/*.exe
           target_commitish: ${{ github.sha }}
