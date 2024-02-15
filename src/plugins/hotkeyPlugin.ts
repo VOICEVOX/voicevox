@@ -13,7 +13,7 @@
  * binding: hotkeys-js に登録したコールバック
  * bindingKey: hotkeys-js で使う、キーの文字列表記
  */
-import { Plugin, inject } from "vue";
+import { Plugin, inject, onMounted, onUnmounted } from "vue";
 import hotkeys from "hotkeys-js";
 import { HotkeyActionNameType, HotkeySettingType } from "@/type/preload";
 
@@ -202,8 +202,20 @@ export class HotkeyManager {
    * ショートカットキーの処理を登録する。
    */
   register(data: HotkeyAction): void {
-    this.actions.push(data);
-    this.refreshBinding();
+    if (
+      this.actions.some((a) => a.name === data.name && a.editor === data.editor)
+    ) {
+      throw new Error(`Action ${data.name} already exists`);
+    }
+    onMounted(() => {
+      this.actions.push(data);
+      this.refreshBinding();
+    });
+    onUnmounted(() => {
+      this.actions = this.actions.filter(
+        (a) => a.name !== data.name || a.editor !== data.editor
+      );
+    });
   }
 
   /**
