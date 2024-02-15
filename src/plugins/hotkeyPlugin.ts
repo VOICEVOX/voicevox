@@ -72,15 +72,21 @@ export class HotkeyManager {
 
   private hotkeys: HotkeysJs;
   private log: Log;
+  private onMounted: (fn: () => void) => void;
+  private onUnmounted: (fn: () => void) => void;
 
   constructor(
     hotkeys_: HotkeysJs = hotkeys,
     log: Log = (message: string, ...args: unknown[]) => {
       window.electron.logInfo(`[HotkeyManager] ${message}`, ...args);
-    }
+    },
+    onMounted_: (fn: () => void) => void = onMounted,
+    onUnmounted_: (fn: () => void) => void = onUnmounted
   ) {
     this.log = log;
     this.hotkeys = hotkeys_;
+    this.onMounted = onMounted_;
+    this.onUnmounted = onUnmounted_;
   }
 
   /**
@@ -207,14 +213,15 @@ export class HotkeyManager {
     ) {
       throw new Error(`Action ${data.name} already exists`);
     }
-    onMounted(() => {
+    this.onMounted(() => {
       this.actions.push(data);
       this.refreshBinding();
     });
-    onUnmounted(() => {
+    this.onUnmounted(() => {
       this.actions = this.actions.filter(
         (a) => a.name !== data.name || a.editor !== data.editor
       );
+      // TODO: Unmountした時に、登録したショートカットキーを解除する
     });
   }
 

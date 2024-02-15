@@ -39,9 +39,16 @@ const createHotkeyManager = (): {
   dummyHotkeysJs.registeredHotkeys = registeredHotkeys;
   dummyHotkeysJs.currentScope = "talk";
   return {
-    hotkeyManager: new HotkeyManager(dummyHotkeysJs, () => {
-      /* noop */
-    }),
+    hotkeyManager: new HotkeyManager(
+      dummyHotkeysJs,
+      () => {
+        /* noop */
+      },
+      (fn: () => void) => fn(),
+      () => {
+        /* noop */
+      }
+    ),
     dummyHotkeysJs,
   };
 };
