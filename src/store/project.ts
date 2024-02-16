@@ -439,6 +439,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await context.dispatch("SET_SINGER", {
             singer: tracks[0].singer,
           });
+          await context.dispatch("SET_VOICE_KEY_SHIFT", {
+            voiceKeyShift: tracks[0].voiceKeyShift,
+          });
           await context.dispatch("SET_SCORE", {
             score: {
               tpqn,
