@@ -318,8 +318,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             };
 
             projectData.sing = generateSingingStoreInitialScore();
-            // phrasesはmapではなくrecordにしないとパースに失敗する
-            projectData.sing.phrases = {};
 
             projectData.lastActiveEditor = false;
             delete projectData.audioKeys;
@@ -405,7 +403,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             });
           }
 
-          const { tpqn, tempos, timeSignatures, tracks, phrases } =
+          const { tpqn, tempos, timeSignatures, tracks } =
             parsedProjectData.sing;
           // TODO: マルチトラック対応
           // RENDERが無駄に走らないように、commitにしておく
@@ -420,11 +418,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               notes: tracks[0].notes,
             },
           });
-          for (const [key, value] of Object.entries(phrases)) {
-            // stateをレンダリング前にセットする
-            value.state = "WAITING_TO_BE_RENDERED";
-            context.commit("SET_PHRASE", { phraseKey: key, phrase: value });
-          }
           context.dispatch("RENDER");
 
           context.commit("SET_PROJECT_FILEPATH", { filePath });
@@ -505,7 +498,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             tempos,
             timeSignatures,
             tracks,
-            phrases,
           } = context.state;
           const projectData: LatestProjectType = {
             appVersion: appInfos.version,
@@ -520,7 +512,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               tempos,
               timeSignatures,
               tracks,
-              phrases: Object.fromEntries(phrases.entries()),
             },
           };
 
@@ -669,9 +660,6 @@ const projectSchema = z.object({
     tempos: z.array(tempoSchema),
     timeSignatures: z.array(timeSignatureSchema),
     tracks: z.array(trackSchema),
-    // storeではmapになっているが、mapをそのまま保存すると普通のオブジェクトに
-    // なってしまい、パースに失敗するのであえてrecordにしている
-    phrases: z.record(z.string(), phraseSchema),
   }),
 });
 
