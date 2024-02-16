@@ -24,6 +24,12 @@ import {
   styleIdSchema,
 } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
+import {
+  DEFAULT_BEAT_TYPE,
+  DEFAULT_BEATS,
+  DEFAULT_BPM,
+  DEFAULT_TPQN,
+} from "@/sing/storeHelper";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -317,7 +323,28 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               audioItems: projectData.audioItems,
             };
 
-            projectData.song = generateSingingStoreInitialScore();
+            projectData.song = {
+              tpqn: DEFAULT_TPQN,
+              tempos: [
+                {
+                  position: 0,
+                  bpm: DEFAULT_BPM,
+                },
+              ],
+              timeSignatures: [
+                {
+                  measureNumber: 1,
+                  beats: DEFAULT_BEATS,
+                  beatType: DEFAULT_BEAT_TYPE,
+                },
+              ],
+              tracks: [
+                {
+                  singer: undefined,
+                  notes: [],
+                },
+              ],
+            };
 
             projectData.lastActiveEditor = false;
             delete projectData.audioKeys;
