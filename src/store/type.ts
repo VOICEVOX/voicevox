@@ -709,8 +709,8 @@ export type AudioPlayerStoreTypes = {
  * Singing Store Types
  */
 
-// schemaはproject向けのものだが、そこから型定義を生成できるので一旦ここに置いておく
-// TODO: schemaをいい感じにおけるファイルを作る
+// schemaはプロジェクトファイル用
+// TODO: schemaをsrc/domain/projectSchema.tsに移動する
 export const tempoSchema = z.object({
   position: z.number(),
   bpm: z.number(),
