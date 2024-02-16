@@ -1056,7 +1056,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const phraseKey = hash;
           if (!state.phrases.has(phraseKey)) {
             commit("SET_PHRASE", { phraseKey, phrase });
+          }
 
+          // SET_PHRASEがRENDER外から呼ばれた場合にはphraseDataMapにデータが存在しないので、ここで追加する
+          if (!phraseDataMap.has(phraseKey)) {
             // フレーズ追加時の処理
             const noteEvents = generateNoteEvents(
               phrase.notes,
