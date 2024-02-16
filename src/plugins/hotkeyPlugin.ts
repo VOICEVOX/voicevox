@@ -238,7 +238,7 @@ export class HotkeyManager {
     if (
       this.actions.some((a) => a.name === data.name && a.editor === data.editor)
     ) {
-      throw new Error(`Action ${data.name} already exists`);
+      throw new Error(`Action ${data.name} in ${data.editor} already exists`);
     }
     this.actions.push(data);
     this.refreshBinding();
