@@ -23,7 +23,15 @@ export const useHotkeyManager = () => {
   if (!hotkeyManager) {
     throw new Error("hotkeyManager not found");
   }
-  return hotkeyManager;
+  const registerHotkeyWithCleanup = (action: HotkeyAction) => {
+    onMounted(() => {
+      hotkeyManager.register(action);
+    });
+    onUnmounted(() => {
+      hotkeyManager.unregister(action);
+    });
+  };
+  return { hotkeyManager, registerHotkeyWithCleanup };
 };
 
 /**
@@ -43,6 +51,10 @@ type HotkeyActionId = `${"talk" | "song"}:${HotkeyActionNameType}`;
 
 const actionToId = (action: HotkeyAction): HotkeyActionId =>
   `${action.editor}:${action.name}`;
+const idToEditorAndName = (
+  id: HotkeyActionId
+): [editor: "talk" | "song", name: HotkeyActionNameType] =>
+  id.split(":", 2) as [editor: "talk" | "song", name: HotkeyActionNameType];
 
 export type HotkeysJs = {
   (
@@ -72,21 +84,15 @@ export class HotkeyManager {
 
   private hotkeys: HotkeysJs;
   private log: Log;
-  private onMounted: (fn: () => void) => void;
-  private onUnmounted: (fn: () => void) => void;
 
   constructor(
     hotkeys_: HotkeysJs = hotkeys,
     log: Log = (message: string, ...args: unknown[]) => {
       window.electron.logInfo(`[HotkeyManager] ${message}`, ...args);
-    },
-    onMounted_: (fn: () => void) => void = onMounted,
-    onUnmounted_: (fn: () => void) => void = onUnmounted
+    }
   ) {
     this.log = log;
     this.hotkeys = hotkeys_;
-    this.onMounted = onMounted_;
-    this.onUnmounted = onUnmounted_;
   }
 
   /**
@@ -112,6 +118,9 @@ export class HotkeyManager {
     if (!this.settings) {
       return;
     }
+
+    this.unbindUnregisteredActions();
+
     const changedActions = this.actions.filter((a) => {
       const setting = this.getSetting(a);
       return this.registeredCombinations[actionToId(a)] !== setting.combination;
@@ -132,6 +141,24 @@ export class HotkeyManager {
       return !!setting.combination;
     });
     this.bindActions(actionsToBind);
+  }
+
+  private unbindUnregisteredActions(): void {
+    for (const [id, combination] of Object.entries(
+      this.registeredCombinations
+    )) {
+      if (!combination) {
+        continue;
+      }
+      if (this.actions.some((a) => actionToId(a) === id)) {
+        continue;
+      }
+      const [editor, name] = idToEditorAndName(id as HotkeyActionId);
+
+      this.log(`Unbind: ${name}(${combination}) in ${editor}`);
+      this.hotkeys.unbind(combinationToBindingKey(combination), editor);
+      this.registeredCombinations[id as HotkeyActionId] = undefined;
+    }
   }
 
   private unbindActions(actions: HotkeyAction[]): void {
@@ -213,16 +240,18 @@ export class HotkeyManager {
     ) {
       throw new Error(`Action ${data.name} already exists`);
     }
-    this.onMounted(() => {
-      this.actions.push(data);
-      this.refreshBinding();
-    });
-    this.onUnmounted(() => {
-      this.actions = this.actions.filter(
-        (a) => a.name !== data.name || a.editor !== data.editor
-      );
-      // TODO: Unmountした時に、登録したショートカットキーを解除する
-    });
+    this.actions.push(data);
+    this.refreshBinding();
+  }
+
+  /**
+   * ショートカットキーの処理の登録を解除する。
+   */
+  unregister(data: HotkeyAction): void {
+    this.actions = this.actions.filter(
+      (a) => a.name !== data.name || a.editor !== data.editor
+    );
+    this.refreshBinding();
   }
 
   /**

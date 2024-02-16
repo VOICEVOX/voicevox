@@ -65,7 +65,7 @@ watch(
 );
 
 // ソフトウェアを初期化
-const hotkeyManager = useHotkeyManager();
+const { hotkeyManager } = useHotkeyManager();
 const isEnginesReady = ref(false);
 onMounted(async () => {
   await store.dispatch("INIT_VUEX");

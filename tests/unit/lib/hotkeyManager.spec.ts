@@ -1,4 +1,4 @@
-import { it } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { HotkeyManager, HotkeysJs } from "@/plugins/hotkeyPlugin";
 
 type DummyHotkeysJs = HotkeysJs & {
@@ -39,16 +39,9 @@ const createHotkeyManager = (): {
   dummyHotkeysJs.registeredHotkeys = registeredHotkeys;
   dummyHotkeysJs.currentScope = "talk";
   return {
-    hotkeyManager: new HotkeyManager(
-      dummyHotkeysJs,
-      () => {
-        /* noop */
-      },
-      (fn: () => void) => fn(),
-      () => {
-        /* noop */
-      }
-    ),
+    hotkeyManager: new HotkeyManager(dummyHotkeysJs, () => {
+      /* noop */
+    }),
     dummyHotkeysJs,
   };
 };
@@ -62,6 +55,29 @@ it("registerできる", () => {
       /* noop */
     },
   });
+});
+
+it("unregisterできる", () => {
+  const { hotkeyManager, dummyHotkeysJs } = createHotkeyManager();
+  const action = {
+    editor: "talk",
+    name: "音声書き出し",
+    callback: () => {
+      /* noop */
+    },
+  } as const;
+  hotkeyManager.load([
+    {
+      action: "音声書き出し",
+      combination: "1",
+    },
+  ]);
+  hotkeyManager.register(action);
+  expect(dummyHotkeysJs.registeredHotkeys).toEqual([
+    { key: "1", scope: "talk" },
+  ]);
+  hotkeyManager.unregister(action);
+  expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
 });
 
 describe("設定変更", () => {

@@ -195,9 +195,9 @@ const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 // hotkeys handled by Mousetrap
-const hotkeyManager = useHotkeyManager();
+const { registerHotkeyWithCleanup } = useHotkeyManager();
 
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "テキスト欄にフォーカスを戻す",
   callback: () => {
@@ -206,7 +206,7 @@ hotkeyManager.register({
     }
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   enableInTextbox: true,
   name: "テキスト欄を複製",
@@ -216,7 +216,7 @@ hotkeyManager.register({
     }
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   enableInTextbox: true,
   name: "テキスト欄を追加",
@@ -226,7 +226,7 @@ hotkeyManager.register({
     }
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   enableInTextbox: true,
   name: "テキスト欄を削除",
@@ -236,7 +236,7 @@ hotkeyManager.register({
     }
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   enableInTextbox: true,
   name: "テキスト欄からフォーカスを外す",

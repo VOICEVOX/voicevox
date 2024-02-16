@@ -17,7 +17,7 @@ import { useStore } from "@/store";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
-const hotkeyManager = useHotkeyManager();
+const { registerHotkeyWithCleanup } = useHotkeyManager();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
@@ -227,56 +227,56 @@ const fileSubMenuData = computed<MenuItemData[]>(() => [
   },
 ]);
 
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "新規プロジェクト",
   callback: () => {
     createNewProject();
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "音声書き出し",
   callback: () => {
     generateAndSaveAllAudio();
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "選択音声を書き出し",
   callback: () => {
     generateAndSaveSelectedAudio();
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "音声を繋げて書き出し",
   callback: () => {
     generateAndConnectAndSaveAllAudio();
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "テキスト読み込む",
   callback: () => {
     importTextFile();
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "プロジェクトを上書き保存",
   callback: () => {
     saveProject();
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "プロジェクトを名前を付けて保存",
   callback: () => {
     saveProjectAs();
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "プロジェクト読み込み",
   callback: () => {

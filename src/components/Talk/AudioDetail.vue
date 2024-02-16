@@ -108,9 +108,9 @@ const supportedFeatures = computed(
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
 
-const hotkeyManager = useHotkeyManager();
+const { registerHotkeyWithCleanup } = useHotkeyManager();
 
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "再生/停止",
   callback: () => {
@@ -121,14 +121,14 @@ hotkeyManager.register({
     }
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "ｱｸｾﾝﾄ欄を表示",
   callback: () => {
     selectedDetail.value = "accent";
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
   callback: () => {
@@ -137,7 +137,7 @@ hotkeyManager.register({
     }
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "長さ欄を表示",
   callback: () => {
@@ -146,7 +146,7 @@ hotkeyManager.register({
     }
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "全体のイントネーションをリセット",
   callback: () => {
@@ -160,7 +160,7 @@ hotkeyManager.register({
     }
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "選択中のアクセント句のイントネーションをリセット",
   callback: () => {

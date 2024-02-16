@@ -51,8 +51,8 @@ const nowPlayingContinuously = computed(
   () => store.state.nowPlayingContinuously
 );
 
-const hotkeyManager = useHotkeyManager();
-hotkeyManager.register({
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "元に戻す",
   callback: () => {
@@ -61,7 +61,7 @@ hotkeyManager.register({
     }
   },
 });
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "やり直す",
   callback: () => {
@@ -71,7 +71,7 @@ hotkeyManager.register({
   },
 });
 
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "talk",
   name: "連続再生/停止",
   callback: () => {

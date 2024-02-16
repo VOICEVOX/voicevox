@@ -118,9 +118,9 @@ import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButto
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
-const hotkeyManager = useHotkeyManager();
+const { registerHotkeyWithCleanup } = useHotkeyManager();
 
-hotkeyManager.register({
+registerHotkeyWithCleanup({
   editor: "song",
   name: "再生/停止",
   callback: () => {

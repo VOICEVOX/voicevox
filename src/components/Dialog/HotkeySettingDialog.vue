@@ -277,7 +277,7 @@ const recordCombination = (event: KeyboardEvent) => {
   }
 };
 
-const hotkeyManager = useHotkeyManager();
+const { hotkeyManager } = useHotkeyManager();
 const changeHotkeySettings = (action: string, combo: string) => {
   hotkeyManager.replace({
     action: action as HotkeyActionNameType,
