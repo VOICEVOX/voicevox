@@ -310,8 +310,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               semverSatisfiesOptions
             )
           ) {
-            // 0.16.2 未満のプロジェクトファイルはトークモードの情報(audioKeys/audioItems)しか
-            // 保存されていなかったので、それをtalkに移動する
+            // 0.16.2 未満のプロジェクトファイルはトークの情報のみ
+            // なので全情報(audioKeys/audioItems)をtalkに移動する
             projectData.talk = {
               audioKeys: projectData.audioKeys,
               audioItems: projectData.audioItems,
