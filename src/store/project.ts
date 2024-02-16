@@ -461,8 +461,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
           }
 
-          applyTalkProjectToStore(context.dispatch, parsedProjectData.talk);
-          applySongProjectToStore(context.dispatch, parsedProjectData.song);
+          await applyTalkProjectToStore(
+            context.dispatch,
+            parsedProjectData.talk
+          );
+          await applySongProjectToStore(
+            context.dispatch,
+            parsedProjectData.song
+          );
 
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
