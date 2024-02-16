@@ -406,11 +406,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const { tpqn, tempos, timeSignatures, tracks } =
             parsedProjectData.song;
           // TODO: マルチトラック対応
-          // RENDERが無駄に走らないように、commitにしておく
-          context.commit("SET_SINGER", {
+          context.dispatch("SET_SINGER", {
             singer: tracks[0].singer,
           });
-          context.commit("SET_SCORE", {
+          context.dispatch("SET_SCORE", {
             score: {
               tpqn,
               tempos,
@@ -418,7 +417,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               notes: tracks[0].notes,
             },
           });
-          context.dispatch("RENDER");
 
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
