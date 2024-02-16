@@ -317,7 +317,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               audioItems: projectData.audioItems,
             };
 
-            projectData.sing = generateSingingStoreInitialScore();
+            projectData.song = generateSingingStoreInitialScore();
 
             projectData.lastActiveEditor = false;
             delete projectData.audioKeys;
@@ -404,7 +404,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           const { tpqn, tempos, timeSignatures, tracks } =
-            parsedProjectData.sing;
+            parsedProjectData.song;
           // TODO: マルチトラック対応
           // RENDERが無駄に走らないように、commitにしておく
           context.commit("SET_SINGER", {
@@ -507,7 +507,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               audioKeys,
               audioItems,
             },
-            sing: {
+            song: {
               tpqn,
               tempos,
               timeSignatures,
@@ -655,7 +655,7 @@ const projectSchema = z.object({
     // description: "VOICEVOX states per cell",
     audioItems: z.record(audioKeySchema, audioItemSchema),
   }),
-  sing: z.object({
+  song: z.object({
     tpqn: z.number(),
     tempos: z.array(tempoSchema),
     timeSignatures: z.array(timeSignatureSchema),
