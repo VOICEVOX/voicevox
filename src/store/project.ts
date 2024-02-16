@@ -1,10 +1,11 @@
 import semver from "semver";
 import { z } from "zod";
 import { getBaseName } from "./utility";
-import { createPartialStore } from "./vuex";
+import { createPartialStore, Dispatch } from "./vuex";
 import { generateSingingStoreInitialScore } from "./singing";
 import { createUILockAction } from "@/store/ui";
 import {
+  AllActions,
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
@@ -76,6 +77,28 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
     )
   ) {
     throw new Error('Every voice should have a "styleId" attribute.');
+  }
+};
+
+const applyTalkProjectToStore = async (
+  dispatch: Dispatch<AllActions>,
+  talkProject: LatestProjectType["talk"]
+) => {
+  await dispatch("REMOVE_ALL_AUDIO_ITEM");
+
+  const { audioItems, audioKeys } = talkProject;
+
+  let prevAudioKey = undefined;
+  for (const audioKey of audioKeys) {
+    const audioItem = audioItems[audioKey];
+    // z.recordではvalueの型がundefinedになるが、
+    // valueがundefinedにならないことを検証したあとであれば、
+    // このif文に引っかかることはないはずである
+    if (audioItem == undefined) throw new Error("audioItem == undefined");
+    prevAudioKey = await dispatch("REGISTER_AUDIO_ITEM", {
+      prevAudioKey,
+      audioItem,
+    });
   }
 };
 
@@ -415,23 +438,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               return false;
             }
           }
-          await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
-          const { audioItems, audioKeys } = parsedProjectData.talk;
-
-          let prevAudioKey = undefined;
-          for (const audioKey of audioKeys) {
-            const audioItem = audioItems[audioKey];
-            // z.recordではvalueの型がundefinedになるが、
-            // valueがundefinedにならないことを検証済みなので、
-            // このif文に引っかかることはないはずである
-            if (audioItem == undefined)
-              throw new Error("audioItem == undefined");
-            prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
-              prevAudioKey,
-              audioItem,
-            });
-          }
+          applyTalkProjectToStore(context.dispatch, parsedProjectData.talk);
 
           const { tpqn, tempos, timeSignatures, tracks } =
             parsedProjectData.song;
