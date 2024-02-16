@@ -321,7 +321,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             // phrasesはmapではなくrecordにしないとパースに失敗する
             projectData.sing.phrases = {};
 
-            projectData.isOpenSongEditor = false;
+            projectData.lastActiveEditor = false;
             delete projectData.audioKeys;
             delete projectData.audioItems;
           }
@@ -510,7 +510,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const projectData: LatestProjectType = {
             appVersion: appInfos.version,
             // TODO: 将来的にプロジェクトファイルによって開かれるエディタが決まるようにする
-            isOpenSongEditor: false,
+            lastActiveEditor: false,
             talk: {
               audioKeys,
               audioItems,
@@ -657,7 +657,7 @@ const audioItemSchema = z.object({
 
 const projectSchema = z.object({
   appVersion: z.string(),
-  isOpenSongEditor: z.boolean(),
+  lastActiveEditor: z.boolean(),
   talk: z.object({
     // description: "Attribute keys of audioItems.",
     audioKeys: z.array(audioKeySchema),
