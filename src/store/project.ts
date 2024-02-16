@@ -406,10 +406,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const { tpqn, tempos, timeSignatures, tracks } =
             parsedProjectData.song;
           // TODO: マルチトラック対応
-          context.dispatch("SET_SINGER", {
+          await context.dispatch("SET_SINGER", {
             singer: tracks[0].singer,
           });
-          context.dispatch("SET_SCORE", {
+          await context.dispatch("SET_SCORE", {
             score: {
               tpqn,
               tempos,
