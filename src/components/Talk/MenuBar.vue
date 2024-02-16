@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed } from "vue";
 import { MenuItemData } from "@/components/Menu/type";
 import {
   generateAndConnectAndSaveAudioWithDialog,

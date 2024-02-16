@@ -15,7 +15,6 @@ import {
 
 import { AccentPhrase } from "@/openapi";
 import {
-  AudioKey,
   audioKeySchema,
   EngineId,
   engineIdSchema,
