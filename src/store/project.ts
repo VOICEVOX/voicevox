@@ -6,7 +6,6 @@ import { generateSingingStoreInitialScore } from "./singing";
 import { createUILockAction } from "@/store/ui";
 import {
   AudioItem,
-  phraseSchema,
   ProjectStoreState,
   ProjectStoreTypes,
   tempoSchema,

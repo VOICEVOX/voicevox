@@ -755,39 +755,25 @@ export const trackSchema = z.object({
 });
 export type Track = z.infer<typeof trackSchema>;
 
-export const phraseStateSchema = z.union([
-  z.literal("WAITING_TO_BE_RENDERED"),
-  z.literal("NOW_RENDERING"),
-  z.literal("COULD_NOT_RENDER"),
-  z.literal("PLAYABLE"),
-]);
-export type PhraseState = z.infer<typeof phraseStateSchema>;
+export type PhraseState =
+  | "WAITING_TO_BE_RENDERED"
+  | "NOW_RENDERING"
+  | "COULD_NOT_RENDER"
+  | "PLAYABLE";
 
-export const phraseSchema = z.object({
-  singer: singerSchema.optional(),
-  notesKeyShift: z.number(),
-  voiceKeyShift: z.number(),
-  tpqn: z.number(),
-  tempos: z.array(tempoSchema),
-  notes: z.array(noteSchema),
-  startTicks: z.number(),
-  endTicks: z.number(),
-  state: phraseStateSchema,
-  query: z
-    .object({
-      f0: z.array(z.number()),
-      volume: z.array(z.number()),
-      phonemes: z.array(
-        z.object({ phoneme: z.string(), frameLength: z.number() })
-      ),
-      volumeScale: z.number(),
-      outputSamplingRate: z.number(),
-      outputStereo: z.boolean(),
-    })
-    .optional(),
-  startTime: z.number().optional(),
-});
-export type Phrase = z.infer<typeof phraseSchema>;
+export type Phrase = {
+  singer?: Singer;
+  notesKeyShift: number;
+  voiceKeyShift: number;
+  tpqn: number;
+  tempos: Tempo[];
+  notes: Note[];
+  startTicks: number;
+  endTicks: number;
+  state: PhraseState;
+  query?: FrameAudioQuery;
+  startTime?: number;
+};
 
 export type SingingStoreState = {
   tpqn: number;
