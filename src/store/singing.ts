@@ -143,12 +143,12 @@ export const generateSingingStoreInitialScore = () => {
         notes: [],
       },
     ],
-    phrases: new Map(),
   };
 };
 
 export const singingStoreState: SingingStoreState = {
   ...generateSingingStoreInitialScore(),
+  phrases: new Map(),
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,
