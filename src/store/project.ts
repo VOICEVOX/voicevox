@@ -36,6 +36,49 @@ export const projectStoreState: ProjectStoreState = {
   savedLastCommandUnixMillisec: null,
 };
 
+const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
+  if (
+    !talkProject.audioKeys.every(
+      (audioKey) => audioKey in talkProject.audioItems
+    )
+  ) {
+    throw new Error(
+      "Every audioKey in audioKeys should be a key of audioItems"
+    );
+  }
+  if (
+    !talkProject.audioKeys.every(
+      (audioKey) => talkProject.audioItems[audioKey]?.voice != undefined
+    )
+  ) {
+    throw new Error('Every audioItem should have a "voice" attribute.');
+  }
+  if (
+    !talkProject.audioKeys.every(
+      (audioKey) =>
+        talkProject.audioItems[audioKey]?.voice.engineId != undefined
+    )
+  ) {
+    throw new Error('Every voice should have a "engineId" attribute.');
+  }
+  // FIXME: assert engineId is registered
+  if (
+    !talkProject.audioKeys.every(
+      (audioKey) =>
+        talkProject.audioItems[audioKey]?.voice.speakerId != undefined
+    )
+  ) {
+    throw new Error('Every voice should have a "speakerId" attribute.');
+  }
+  if (
+    !talkProject.audioKeys.every(
+      (audioKey) => talkProject.audioItems[audioKey]?.voice.styleId != undefined
+    )
+  ) {
+    throw new Error('Every voice should have a "styleId" attribute.');
+  }
+};
+
 export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME: {
     getter(state) {
@@ -350,53 +393,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           // Validation check
+          // トークはvalidateTalkProjectで検証する
+          // ソングはSET_SCOREの中の`isValidScore`関数で検証される
           const parsedProjectData = projectSchema.parse(projectData);
-          if (
-            !parsedProjectData.talk.audioKeys.every(
-              (audioKey) => audioKey in parsedProjectData.talk.audioItems
-            )
-          ) {
-            throw new Error(
-              projectFileErrorMsg +
-                " Every audioKey in audioKeys should be a key of audioItems"
-            );
-          }
-          if (
-            !parsedProjectData.talk.audioKeys.every(
-              (audioKey) =>
-                parsedProjectData.talk.audioItems[audioKey]?.voice != undefined
-            )
-          ) {
-            throw new Error('Every audioItem should have a "voice" attribute.');
-          }
-          if (
-            !parsedProjectData.talk.audioKeys.every(
-              (audioKey) =>
-                parsedProjectData.talk.audioItems[audioKey]?.voice.engineId !=
-                undefined
-            )
-          ) {
-            throw new Error('Every voice should have a "engineId" attribute.');
-          }
-          // FIXME: assert engineId is registered
-          if (
-            !parsedProjectData.talk.audioKeys.every(
-              (audioKey) =>
-                parsedProjectData.talk.audioItems[audioKey]?.voice.speakerId !=
-                undefined
-            )
-          ) {
-            throw new Error('Every voice should have a "speakerId" attribute.');
-          }
-          if (
-            !parsedProjectData.talk.audioKeys.every(
-              (audioKey) =>
-                parsedProjectData.talk.audioItems[audioKey]?.voice.styleId !=
-                undefined
-            )
-          ) {
-            throw new Error('Every voice should have a "styleId" attribute.');
-          }
+          validateTalkProject(parsedProjectData.talk);
 
           if (confirm !== false && context.getters.IS_EDITED) {
             const result = await context.dispatch(
