@@ -119,30 +119,36 @@ const animationTimer = new AnimationTimer();
 // TODO: マルチトラックに対応する
 const selectedTrackIndex = 0;
 
+export const generateSingingStoreInitialScore = () => {
+  return {
+    tpqn: DEFAULT_TPQN,
+    tempos: [
+      {
+        position: 0,
+        bpm: DEFAULT_BPM,
+      },
+    ],
+    timeSignatures: [
+      {
+        measureNumber: 1,
+        beats: DEFAULT_BEATS,
+        beatType: DEFAULT_BEAT_TYPE,
+      },
+    ],
+    tracks: [
+      {
+        singer: undefined,
+        notesKeyShift: 0,
+        voiceKeyShift: 0,
+        notes: [],
+      },
+    ],
+    phrases: new Map(),
+  };
+};
+
 export const singingStoreState: SingingStoreState = {
-  tpqn: DEFAULT_TPQN,
-  tempos: [
-    {
-      position: 0,
-      bpm: DEFAULT_BPM,
-    },
-  ],
-  timeSignatures: [
-    {
-      measureNumber: 1,
-      beats: DEFAULT_BEATS,
-      beatType: DEFAULT_BEAT_TYPE,
-    },
-  ],
-  tracks: [
-    {
-      singer: undefined,
-      notesKeyShift: 0,
-      voiceKeyShift: 0,
-      notes: [],
-    },
-  ],
-  phrases: new Map(),
+  ...generateSingingStoreInitialScore(),
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,

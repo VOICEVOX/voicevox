@@ -2,6 +2,7 @@ import semver from "semver";
 import { z } from "zod";
 import { getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
+import { generateSingingStoreInitialScore } from "./singing";
 import { createUILockAction } from "@/store/ui";
 import {
   AudioItem,
@@ -302,14 +303,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               audioKeys: projectData.audioKeys,
               audioItems: projectData.audioItems,
             };
-            // singについてはストアの初期値を使う
-            projectData.sing = {
-              tpqn: context.state.tpqn,
-              tempos: context.state.tempos,
-              timeSignatures: context.state.timeSignatures,
-              tracks: context.state.tracks,
-              phrases: context.state.phrases,
-            };
+
+            projectData.sing = generateSingingStoreInitialScore();
+            // phrasesはmapではなくrecordにしないとパースに失敗する
+            projectData.sing.phrases = {};
+
             projectData.isOpenSongEditor = false;
             delete projectData.audioKeys;
             delete projectData.audioItems;
