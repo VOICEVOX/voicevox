@@ -386,6 +386,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               tracks: [
                 {
                   singer: undefined,
+                  notesKeyShift: 0,
+                  voiceKeyShift: 0,
                   notes: [],
                 },
               ],
