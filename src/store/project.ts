@@ -59,6 +59,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
         }
 
+        // トークプロジェクトの初期化
         await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
         const audioItem: AudioItem = await context.dispatch(
@@ -67,6 +68,18 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         );
         await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
+        });
+
+        // ソングプロジェクトの初期化
+        const { tpqn, tempos, timeSignatures, tracks } =
+          generateSingingStoreInitialScore();
+        await context.dispatch("SET_SCORE", {
+          score: {
+            tpqn,
+            tempos,
+            timeSignatures,
+            notes: tracks[0].notes,
+          },
         });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
