@@ -303,6 +303,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               audioKeys: projectData.audioKeys,
               audioItems: projectData.audioItems,
             };
+            projectData.isOpenSongEditor = false;
             delete projectData.audioKeys;
             delete projectData.audioItems;
           }
