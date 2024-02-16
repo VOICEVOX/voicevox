@@ -1,9 +1,9 @@
 import AsyncLock from "async-lock";
 import { defaultEngine } from "../browser/contract";
 
-import { getMemory, setMemory } from "./ipc";
+import { getConfig } from "./ipc";
 import { BaseConfigManager, Metadata } from "@/shared/ConfigManager";
-import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
+import { EngineId, engineSettingSchema } from "@/type/preload";
 
 let configManager: VstConfigManager | undefined;
 const configManagerLock = new AsyncLock();
@@ -29,18 +29,17 @@ class VstConfigManager extends BaseConfigManager {
     return import.meta.env.VITE_APP_VERSION;
   }
   protected async exists() {
-    const memory = await getMemory();
-    return memory.config != undefined;
+    // 本家（Electron版）が存在する前提で実装されているため、常にtrueを返す。
+    // TODO: 本家が存在しない場合の挙動を検討する
+    return true;
   }
   protected async load(): Promise<Record<string, unknown> & Metadata> {
-    const memory = await getMemory();
-    return memory.config;
+    const memory = await getConfig();
+    return memory;
   }
 
-  protected async save(data: ConfigType & Metadata) {
-    const memory = await getMemory();
-    memory.config = data;
-    setMemory(memory);
+  protected async save(/* data: ConfigType & Metadata */) {
+    // VST版には保存処理を実装しない
   }
 
   protected getDefaultConfig() {

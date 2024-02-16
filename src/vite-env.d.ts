@@ -8,7 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_OFFICIAL_WEBSITE_URL: string;
   readonly VITE_LATEST_UPDATE_INFOS_URL: string;
   readonly VITE_GTM_CONTAINER_ID: string;
-  readonly VITE_TARGET: "electron" | "browser";
+  readonly VITE_TARGET: "electron" | "browser" | "vst";
 }
 
 interface ImportMeta {

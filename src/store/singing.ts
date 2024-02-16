@@ -111,7 +111,7 @@ type PhraseData = {
 
 const playheadPosition = new FrequentlyUpdatedState(0);
 const overlappingNotesDetector = new OverlappingNotesDetector();
-const phraseDataMap = new Map<string, PhraseData>();
+export const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationTimer = new AnimationTimer();
 
