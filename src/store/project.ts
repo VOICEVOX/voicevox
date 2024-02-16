@@ -102,6 +102,28 @@ const applyTalkProjectToStore = async (
   }
 };
 
+const applySongProjectToStore = async (
+  dispatch: Dispatch<AllActions>,
+  songProject: LatestProjectType["song"]
+) => {
+  const { tpqn, tempos, timeSignatures, tracks } = songProject;
+  // TODO: マルチトラック対応
+  await dispatch("SET_SINGER", {
+    singer: tracks[0].singer,
+  });
+  await dispatch("SET_VOICE_KEY_SHIFT", {
+    voiceKeyShift: tracks[0].voiceKeyShift,
+  });
+  await dispatch("SET_SCORE", {
+    score: {
+      tpqn,
+      tempos,
+      timeSignatures,
+      notes: tracks[0].notes,
+    },
+  });
+};
+
 export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME: {
     getter(state) {
@@ -440,24 +462,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           applyTalkProjectToStore(context.dispatch, parsedProjectData.talk);
-
-          const { tpqn, tempos, timeSignatures, tracks } =
-            parsedProjectData.song;
-          // TODO: マルチトラック対応
-          await context.dispatch("SET_SINGER", {
-            singer: tracks[0].singer,
-          });
-          await context.dispatch("SET_VOICE_KEY_SHIFT", {
-            voiceKeyShift: tracks[0].voiceKeyShift,
-          });
-          await context.dispatch("SET_SCORE", {
-            score: {
-              tpqn,
-              tempos,
-              timeSignatures,
-              notes: tracks[0].notes,
-            },
-          });
+          applySongProjectToStore(context.dispatch, parsedProjectData.song);
 
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
