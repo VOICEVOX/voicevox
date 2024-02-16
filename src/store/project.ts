@@ -345,7 +345,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               ],
             };
 
-            projectData.lastActiveEditor = false;
             delete projectData.audioKeys;
             delete projectData.audioItems;
           }
@@ -525,8 +524,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           } = context.state;
           const projectData: LatestProjectType = {
             appVersion: appInfos.version,
-            // TODO: 将来的にプロジェクトファイルによって開かれるエディタが決まるようにする
-            lastActiveEditor: false,
             talk: {
               audioKeys,
               audioItems,
@@ -672,7 +669,6 @@ const audioItemSchema = z.object({
 
 const projectSchema = z.object({
   appVersion: z.string(),
-  lastActiveEditor: z.boolean(),
   talk: z.object({
     // description: "Attribute keys of audioItems.",
     audioKeys: z.array(audioKeySchema),
