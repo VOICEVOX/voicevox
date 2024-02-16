@@ -1,4 +1,5 @@
 import { Patch } from "immer";
+import { z } from "zod";
 import {
   MutationTree,
   MutationsBase,
@@ -47,6 +48,8 @@ import {
   AudioKey,
   PresetKey,
   RootMiscSettingType,
+  engineIdSchema,
+  styleIdSchema,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -706,24 +709,29 @@ export type AudioPlayerStoreTypes = {
  * Singing Store Types
  */
 
-export type Tempo = {
-  position: number;
-  bpm: number;
-};
+// schemaはproject向けのものだが、そこから型定義を生成できるので一旦ここに置いておく
+// TODO: schemaをいい感じにおけるファイルを作る
+export const tempoSchema = z.object({
+  position: z.number(),
+  bpm: z.number(),
+});
+export type Tempo = z.infer<typeof tempoSchema>;
 
-export type TimeSignature = {
-  measureNumber: number;
-  beats: number;
-  beatType: number;
-};
+export const timeSignatureSchema = z.object({
+  measureNumber: z.number(),
+  beats: z.number(),
+  beatType: z.number(),
+});
+export type TimeSignature = z.infer<typeof timeSignatureSchema>;
 
-export type Note = {
-  id: string;
-  position: number;
-  duration: number;
-  noteNumber: number;
-  lyric: string;
-};
+export const noteSchema = z.object({
+  id: z.string(),
+  position: z.number(),
+  duration: z.number(),
+  noteNumber: z.number(),
+  lyric: z.string(),
+});
+export type Note = z.infer<typeof noteSchema>;
 
 export type Score = {
   tpqn: number;
@@ -732,37 +740,54 @@ export type Score = {
   notes: Note[];
 };
 
-export type Singer = {
-  engineId: EngineId;
-  styleId: StyleId;
-};
+export const singerSchema = z.object({
+  engineId: engineIdSchema,
+  styleId: styleIdSchema,
+});
 
-export type Track = {
-  singer?: Singer;
-  notesKeyShift: number;
-  voiceKeyShift: number;
-  notes: Note[];
-};
+export type Singer = z.infer<typeof singerSchema>;
 
-export type PhraseState =
-  | "WAITING_TO_BE_RENDERED"
-  | "NOW_RENDERING"
-  | "COULD_NOT_RENDER"
-  | "PLAYABLE";
+export const trackSchema = z.object({
+  singer: singerSchema.optional(),
+  notesKeyShift: z.number(),
+  voiceKeyShift: z.number(),
+  notes: z.array(noteSchema),
+});
+export type Track = z.infer<typeof trackSchema>;
 
-export type Phrase = {
-  singer?: Singer;
-  notesKeyShift: number;
-  voiceKeyShift: number;
-  tpqn: number;
-  tempos: Tempo[];
-  notes: Note[];
-  startTicks: number;
-  endTicks: number;
-  state: PhraseState;
-  query?: FrameAudioQuery;
-  startTime?: number;
-};
+export const phraseStateSchema = z.union([
+  z.literal("WAITING_TO_BE_RENDERED"),
+  z.literal("NOW_RENDERING"),
+  z.literal("COULD_NOT_RENDER"),
+  z.literal("PLAYABLE"),
+]);
+export type PhraseState = z.infer<typeof phraseStateSchema>;
+
+export const phraseSchema = z.object({
+  singer: singerSchema.optional(),
+  notesKeyShift: z.number(),
+  voiceKeyShift: z.number(),
+  tpqn: z.number(),
+  tempos: z.array(tempoSchema),
+  notes: z.array(noteSchema),
+  startTicks: z.number(),
+  endTicks: z.number(),
+  state: phraseStateSchema,
+  query: z
+    .object({
+      f0: z.array(z.number()),
+      volume: z.array(z.number()),
+      phonemes: z.array(
+        z.object({ phoneme: z.string(), frameLength: z.number() })
+      ),
+      volumeScale: z.number(),
+      outputSamplingRate: z.number(),
+      outputStereo: z.boolean(),
+    })
+    .optional(),
+  startTime: z.number().optional(),
+});
+export type Phrase = z.infer<typeof phraseSchema>;
 
 export type SingingStoreState = {
   tpqn: number;
