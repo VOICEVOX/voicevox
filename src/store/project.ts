@@ -398,10 +398,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const { tpqn, tempos, timeSignatures, tracks, phrases } =
             parsedProjectData.sing;
           // TODO: マルチトラック対応
-          await context.dispatch("SET_SINGER", {
+          // RENDERが無駄に走らないように、commitにしておく
+          context.commit("SET_SINGER", {
             singer: tracks[0].singer,
           });
-          await context.dispatch("SET_SCORE", {
+          context.commit("SET_SCORE", {
             score: {
               tpqn,
               tempos,
@@ -414,7 +415,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             value.state = "WAITING_TO_BE_RENDERED";
             context.commit("SET_PHRASE", { phraseKey: key, phrase: value });
           }
-          await context.dispatch("RENDER");
+          context.dispatch("RENDER");
 
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
