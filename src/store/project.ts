@@ -365,6 +365,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               audioItems: projectData.audioItems,
             };
 
+            // ソングの情報を初期化
+            // generateSingingStoreInitialScoreが今後変わることがあるかもしれないので、
+            // 0.16.2時点のスコア情報を直接書く
             projectData.song = {
               tpqn: DEFAULT_TPQN,
               tempos: [
