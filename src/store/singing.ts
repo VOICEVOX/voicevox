@@ -862,7 +862,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           ) {
             const phraseFirstNote = phraseNotes[0];
             const phraseLastNote = phraseNotes[phraseNotes.length - 1];
-            const hashParams = {
+            const generateHashParams = {
               singer,
               notesKeyShift,
               voiceKeyShift,
@@ -870,9 +870,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               tempos,
               notes: phraseNotes,
             };
-            const hash = await generatePhraseHash(hashParams);
+            const hash = await generatePhraseHash(generateHashParams);
             foundPhrases.set(hash, {
-              ...hashParams,
+              ...generateHashParams,
               startTicks: phraseFirstNote.position,
               endTicks: phraseLastNote.position + phraseLastNote.duration,
               state: "WAITING_TO_BE_RENDERED",
