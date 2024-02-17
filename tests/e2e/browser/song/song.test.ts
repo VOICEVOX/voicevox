@@ -63,6 +63,7 @@ test("ダブルクリックでノートを編集できる", async ({ page }) => 
     .locator(".sequencer-body")
     .click({ position: { x: 107, y: 171 }, clickCount: 2 }); // ダブルクリック
 
+  await page.locator(".note-lyric-input").fill("あ");
   await page.keyboard.press("Enter");
   const afterLyric = await getCurrentNoteLyric();
   await expect(afterLyric).not.toEqual(beforeLyric);
