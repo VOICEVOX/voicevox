@@ -1,14 +1,20 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 
 import { gotoHome, navigateToMain } from "../../navigators";
 
 test.beforeEach(gotoHome);
 
+function navigateToSong(page: Page) {
+  return async () => {
+    await navigateToMain(page);
+    await expect(page.getByText("ソング")).toBeVisible();
+    await page.getByText("ソング").click();
+  };
+}
+
 test("再生ボタンを押して再生できる", async ({ page }) => {
+  await navigateToSong(page);
   // TODO: ページ内のオーディオを検出するテストを追加する
-  await navigateToMain(page);
-  await expect(page.getByText("ソング")).toBeVisible();
-  await page.getByText("ソング").click();
 
   // 再生ボタンを押して再生
   const getCurrentPlayhead = async () =>
@@ -25,9 +31,7 @@ test("再生ボタンを押して再生できる", async ({ page }) => {
 });
 
 test("ノートを追加・削除できる", async ({ page }) => {
-  await navigateToMain(page);
-  await expect(page.getByText("ソング")).toBeVisible();
-  await page.getByText("ソング").click();
+  await navigateToSong(page);
 
   const getCurrentNoteCount = async () => await page.locator(".note").count();
 
@@ -49,9 +53,7 @@ test("ノートを追加・削除できる", async ({ page }) => {
 });
 
 test("ダブルクリックでノートを編集できる", async ({ page }) => {
-  await navigateToMain(page);
-  await expect(page.getByText("ソング")).toBeVisible();
-  await page.getByText("ソング").click();
+  await navigateToSong(page);
 
   const getCurrentNoteLyric = async () =>
     await page.locator(".note-lyric").textContent();
