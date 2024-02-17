@@ -849,14 +849,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       ) => {
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
-        for (let i = 0; i < notes.length; i++) {
-          const note = notes[i];
+        for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
+          const note = notes[noteIndex];
 
           phraseNotes.push(note);
 
           if (
-            i === notes.length - 1 ||
-            note.position + note.duration !== notes[i + 1].position
+            noteIndex === notes.length - 1 ||
+            note.position + note.duration !== notes[noteIndex + 1].position
           ) {
             const phraseFirstNote = phraseNotes[0];
             const phraseLastNote = phraseNotes[phraseNotes.length - 1];
