@@ -4,12 +4,10 @@ import { gotoHome, navigateToMain } from "../../navigators";
 
 test.beforeEach(gotoHome);
 
-function navigateToSong(page: Page) {
-  return async () => {
-    await navigateToMain(page);
-    await expect(page.getByText("ソング")).toBeVisible();
-    await page.getByText("ソング").click();
-  };
+async function navigateToSong(page: Page) {
+  await navigateToMain(page);
+  await expect(page.getByText("ソング")).toBeVisible();
+  await page.getByText("ソング").click();
 }
 
 test("再生ボタンを押して再生できる", async ({ page }) => {
