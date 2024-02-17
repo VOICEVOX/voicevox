@@ -63,6 +63,5 @@ test("ダブルクリックでノートを編集できる", async ({ page }) => 
     .click({ position: { x: 107, y: 171 }, clickCount: 2 });
   await page.keyboard.press("Enter");
   const afterLyric = await getCurrentNoteLyric();
-  console.log(beforeLyric, afterLyric);
   await expect(afterLyric).not.toEqual(beforeLyric);
 });
