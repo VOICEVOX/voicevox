@@ -16,10 +16,10 @@ test("再生ボタンを押して再生できる", async ({ page }) => {
   await navigateToSong(page);
   // TODO: ページ内のオーディオを検出するテストを追加する
 
-  // 再生ボタンを押して再生
   const getCurrentPlayhead = async () =>
     await page.locator(".sequencer-playhead").boundingBox();
 
+  // 再生ボタンを押して再生
   await page.locator(".sequencer-body").click({ position: { x: 107, y: 171 } });
   const beforePosition = await getCurrentPlayhead(); // 再生ヘッドの初期位置
   await page.getByText("play_arrow").click(); // 再生ボタンを押す
@@ -60,9 +60,11 @@ test("ダブルクリックでノートを編集できる", async ({ page }) => 
 
   await page.locator(".sequencer-body").click({ position: { x: 107, y: 171 } });
   const beforeLyric = await getCurrentNoteLyric();
+
   await page
     .locator(".sequencer-body")
-    .click({ position: { x: 107, y: 171 }, clickCount: 2 });
+    .click({ position: { x: 107, y: 171 }, clickCount: 2 }); // ダブルクリック
+
   await page.keyboard.press("Enter");
   const afterLyric = await getCurrentNoteLyric();
   await expect(afterLyric).not.toEqual(beforeLyric);
