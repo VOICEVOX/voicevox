@@ -135,21 +135,25 @@ export class HotkeyManager {
       return;
     }
 
-    this.unbindUnregisteredActions();
-
+    const unregisteredCombinations = this.registeredCombinations.filter(
+      (c) => !this.actions.some(isSameHotkeyTarget(c))
+    );
     const changedActions = this.actions.filter((a) => {
       const setting = this.getSetting(a);
       return this.getRegisteredCombination(a) !== setting.combination;
     });
-    if (changedActions.length === 0) {
+    if (changedActions.length === 0 && unregisteredCombinations.length === 0) {
       return;
     }
 
-    const actionsToUnbind = changedActions.filter((a) => {
-      // 未登録のものを弾く
-      return this.getRegisteredCombination(a);
+    const unbindedCombinations = changedActions.flatMap((a) => {
+      const combination = this.registeredCombinations.find(
+        isSameHotkeyTarget(a)
+      );
+      // 空じゃないCombinationを探す
+      return combination?.combination ? [combination] : [];
     });
-    this.unbindActions(actionsToUnbind);
+    this.unbindActions([...unbindedCombinations, ...unregisteredCombinations]);
 
     const actionsToBind = changedActions.filter((a) => {
       const setting = this.getSetting(a);
@@ -159,36 +163,13 @@ export class HotkeyManager {
     this.bindActions(actionsToBind);
   }
 
-  private unbindUnregisteredActions(): void {
-    for (const combination of this.registeredCombinations) {
-      if (this.actions.some(isSameHotkeyTarget(combination))) {
-        continue;
-      }
-
-      this.log(
-        `Unbind: ${combination.name}(${combination.combination}) in ${combination.editor}`
-      );
-      this.hotkeys.unbind(
-        combinationToBindingKey(combination.combination),
-        combination.editor
-      );
+  private unbindActions(combinations: RegisteredCombination[]): void {
+    for (const combination of combinations) {
+      const bindingKey = combinationToBindingKey(combination.combination);
+      this.log("Unbind:", bindingKey, "in", combination.editor);
+      this.hotkeys.unbind(bindingKey, combination.editor);
       this.registeredCombinations = this.registeredCombinations.filter(
-        (c) => c !== combination
-      );
-    }
-  }
-
-  private unbindActions(actions: HotkeyAction[]): void {
-    for (const action of actions) {
-      const combination = this.getRegisteredCombination(action);
-      if (!combination) {
-        throw new Error("assert: combination != undefined");
-      }
-      const bindingKey = combinationToBindingKey(combination);
-      this.log("Unbind:", bindingKey, "in", action.editor);
-      this.hotkeys.unbind(bindingKey, action.editor);
-      this.registeredCombinations = this.registeredCombinations.filter(
-        isNotSameHotkeyTarget(action)
+        isNotSameHotkeyTarget(combination)
       );
     }
   }
