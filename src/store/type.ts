@@ -813,6 +813,10 @@ export type SingingStoreTypes = {
     action(payload: { isShowSinger: boolean }): void;
   };
 
+  SETUP_SINGER: {
+    action(payload: { singer: Singer }): void;
+  };
+
   SET_SINGER: {
     mutation: { singer?: Singer };
     action(payload: { singer?: Singer }): void;
@@ -1040,8 +1044,8 @@ export type SingingCommandStoreState = {
 
 export type SingingCommandStoreTypes = {
   COMMAND_SET_SINGER: {
-    mutation: { singer?: Singer };
-    action(payload: { singer?: Singer }): void;
+    mutation: { singer: Singer };
+    action(payload: { singer: Singer }): void;
   };
 
   // COMMAND_SET_SCORE: {

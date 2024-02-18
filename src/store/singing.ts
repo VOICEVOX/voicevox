@@ -183,6 +183,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SETUP_SINGER: {
+    async action({ dispatch }, { singer }: { singer: Singer }) {
+      // 指定されたstyleIdに対して、エンジン側の初期化を行う
+      const isInitialized = await dispatch(
+        "IS_INITIALIZED_ENGINE_SPEAKER",
+        singer
+      );
+      if (!isInitialized) {
+        await dispatch("INITIALIZE_ENGINE_SPEAKER", singer);
+      }
+    },
+  },
+
   SET_SINGER: {
     mutation(state, { singer }: { singer?: Singer }) {
       state.tracks[selectedTrackIndex].singer = singer;
@@ -207,23 +220,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const styleId = singer?.styleId ?? defaultStyleId;
 
-      try {
-        // 指定されたstyleIdに対して、エンジン側の初期化を行う
-        const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
-          engineId,
-          styleId,
-        });
-        if (!isInitialized) {
-          await dispatch("INITIALIZE_ENGINE_SPEAKER", {
-            engineId,
-            styleId,
-          });
-        }
-      } finally {
-        commit("SET_SINGER", { singer: { engineId, styleId } });
+      await dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
+      commit("SET_SINGER", { singer: { engineId, styleId } });
 
-        dispatch("RENDER");
-      }
+      dispatch("RENDER");
     },
   },
 
@@ -2065,46 +2065,11 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { singer }) {
         singingStore.mutations.SET_SINGER(draft, { singer });
       },
-      async action(
-        { state, getters, dispatch, commit },
-        { singer }: { singer?: Singer }
-      ) {
-        if (state.defaultStyleIds == undefined)
-          throw new Error("state.defaultStyleIds == undefined");
-        const userOrderedCharacterInfos =
-          getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
-        if (userOrderedCharacterInfos == undefined)
-          throw new Error("userOrderedCharacterInfos == undefined");
+      async action({ dispatch, commit }, { singer }) {
+        await dispatch("SETUP_SINGER", { singer });
+        commit("COMMAND_SET_SINGER", { singer });
 
-        const engineId = singer?.engineId ?? state.engineIds[0];
-
-        // 最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
-        // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
-        const defaultStyleId =
-          userOrderedCharacterInfos[0].metas.styles[0].styleId;
-
-        const styleId = singer?.styleId ?? defaultStyleId;
-
-        try {
-          // 指定されたstyleIdに対して、エンジン側の初期化を行う
-          const isInitialized = await dispatch(
-            "IS_INITIALIZED_ENGINE_SPEAKER",
-            {
-              engineId,
-              styleId,
-            }
-          );
-          if (!isInitialized) {
-            await dispatch("INITIALIZE_ENGINE_SPEAKER", {
-              engineId,
-              styleId,
-            });
-          }
-        } finally {
-          commit("COMMAND_SET_SINGER", { singer: { engineId, styleId } });
-
-          dispatch("RENDER");
-        }
+        dispatch("RENDER");
       },
     },
     // COMMAND_SET_SCORE: {
