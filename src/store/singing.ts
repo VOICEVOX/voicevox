@@ -1960,14 +1960,6 @@ export const singingCommandStore = transformCommandStore(
         dispatch("RENDER");
       },
     },
-    // COMMAND_SET_SCORE: {
-    //   mutation(draft, { score }) {
-    //     singingStore.mutations.SET_SCORE(draft, { score });
-    //   },
-    //   action({ commit }, { score }) {
-    //     commit("COMMAND_SET_SCORE", { score });
-    //   },
-    // },
     COMMAND_SET_TEMPO: {
       mutation(draft, { tempo }) {
         singingStore.mutations.SET_TEMPO(draft, { tempo });

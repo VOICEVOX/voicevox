@@ -1037,11 +1037,6 @@ export type SingingCommandStoreTypes = {
     action(payload: { singer: Singer }): void;
   };
 
-  // COMMAND_SET_SCORE: {
-  //   mutation: { score: Score };
-  //   action(payload: { score: Score }): void;
-  // };
-
   COMMAND_SET_TEMPO: {
     mutation: { tempo: Tempo };
     action(payload: { tempo: Tempo }): void;
