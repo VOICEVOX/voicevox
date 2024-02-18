@@ -27,11 +27,6 @@
           <q-icon name="music_note" size="xs" class="sing-tempo-icon" />
         </template>
       </q-input>
-<<<<<<< HEAD
-      <!-- undo/redo -->
-      <q-btn flat round icon="undo" :disable="!canSongUndo" @click="songUndo" />
-      <q-btn flat round icon="redo" :disable="!canSongRedo" @click="songRedo" />
-=======
       <div class="sing-beats">
         <q-input
           type="number"
@@ -55,7 +50,6 @@
           @change="setTimeSignature"
         />
       </div>
->>>>>>> main
     </div>
     <!-- player -->
     <div class="sing-player">
@@ -86,6 +80,9 @@
           .{{ playHeadPositionMilliSecStr }}
         </div>
       </div>
+      <!-- undo/redo -->
+      <q-btn flat round icon="undo" :disable="!canSongUndo" @click="songUndo" />
+      <q-btn flat round icon="redo" :disable="!canSongRedo" @click="songRedo" />
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
@@ -124,7 +121,6 @@ import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButto
 
 const store = useStore();
 
-<<<<<<< HEAD
 const canSongUndo = computed(() => store.getters.CAN_SONG_UNDO);
 const canSongRedo = computed(() => store.getters.CAN_SONG_REDO);
 
@@ -135,82 +131,6 @@ const songRedo = () => {
   store.dispatch("SONG_REDO");
 };
 
-const userOrderedCharacterInfos = computed(() =>
-  store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike")
-);
-const selectedCharacterInfo = computed(() => {
-  const singer = store.getters.SELECTED_TRACK.singer;
-  if (!userOrderedCharacterInfos.value || !singer) {
-    return undefined;
-  }
-  return store.getters.CHARACTER_INFO(singer.engineId, singer.styleId);
-});
-const selectedCharacterName = computed(() => {
-  return selectedCharacterInfo.value?.metas.speakerName;
-});
-const selectedCharacterStyleDescription = computed(() => {
-  const style = selectedCharacterInfo.value?.metas.styles.find((style) => {
-    const singer = store.getters.SELECTED_TRACK.singer;
-    return (
-      style.styleId === singer?.styleId && style.engineId === singer?.engineId
-    );
-  });
-  return style != undefined ? getStyleDescription(style) : "";
-});
-const selectedStyleIconPath = computed(() => {
-  const styles = selectedCharacterInfo.value?.metas.styles;
-  const singer = store.getters.SELECTED_TRACK.singer;
-  return styles?.find((style) => {
-    return (
-      style.styleId === singer?.styleId && style.engineId === singer?.engineId
-    );
-  })?.iconPath;
-});
-
-const bpmInputBuffer = ref(0);
-const beatsInputBuffer = ref(0);
-const beatTypeInputBuffer = ref(0);
-
-const setBpmInputBuffer = (bpmStr: string | number | null) => {
-  const bpm = Number(bpmStr);
-  if (!isValidBpm(bpm)) {
-    return;
-  }
-  bpmInputBuffer.value = bpm;
-};
-const setBeatsInputBuffer = (beatsStr: string | number | null) => {
-  const beats = Number(beatsStr);
-  if (!isValidBeats(beats)) {
-    return;
-  }
-  beatsInputBuffer.value = beats;
-};
-const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
-  const beatType = Number(beatTypeStr);
-  if (!isValidBeatType(beatType)) {
-    return;
-  }
-  beatTypeInputBuffer.value = beatType;
-};
-
-const playheadTicks = ref(0);
-
-const playheadPositionStr = computed(() => {
-  const ticks = playheadTicks.value;
-  const time = store.getters.TICK_TO_SECOND(ticks);
-
-  const intTime = Math.trunc(time);
-  const min = Math.trunc(intTime / 60);
-  const minStr = String(min).padStart(2, "0");
-  const secStr = String(intTime - min * 60).padStart(2, "0");
-  const milliSec = Math.trunc((time - intTime) * 1000);
-  const milliSecStr = String(milliSec).padStart(3, "0");
-
-  return `${minStr}:${secStr}.${milliSecStr}`;
-});
-
-=======
->>>>>>> main
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const keyShift = computed(() => store.getters.SELECTED_TRACK.voiceKeyShift);
@@ -275,12 +195,7 @@ const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
 
 const setTempo = () => {
   const bpm = bpmInputBuffer.value;
-<<<<<<< HEAD
-  if (bpm === 0) return;
-  await store.dispatch("COMMAND_SET_TEMPO", {
-=======
-  store.dispatch("SET_TEMPO", {
->>>>>>> main
+  store.dispatch("COMMAND_SET_TEMPO", {
     tempo: {
       position: 0,
       bpm,
@@ -291,12 +206,7 @@ const setTempo = () => {
 const setTimeSignature = () => {
   const beats = beatsInputBuffer.value;
   const beatType = beatTypeInputBuffer.value;
-<<<<<<< HEAD
-  if (beats === 0 || beatType === 0) return;
-  await store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
-=======
-  store.dispatch("SET_TIME_SIGNATURE", {
->>>>>>> main
+  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
       measureNumber: 1,
       beats,
