@@ -854,7 +854,6 @@ export type SingingStoreTypes = {
 
   ADD_NOTES: {
     mutation: { notes: Note[] };
-    action(payload: { notes: Note[] }): void;
   };
 
   UPDATE_NOTES: {

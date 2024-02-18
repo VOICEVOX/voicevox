@@ -379,18 +379,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.overlappingNoteInfos
       );
     },
-    async action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
-      const existingNoteIds = getters.NOTE_IDS;
-      const isValidNotes = notes.every((value) => {
-        return !existingNoteIds.has(value.id) && isValidNote(value);
-      });
-      if (!isValidNotes) {
-        throw new Error("The notes are invalid.");
-      }
-      commit("ADD_NOTES", { notes });
-
-      dispatch("RENDER");
-    },
   },
 
   UPDATE_NOTES: {
