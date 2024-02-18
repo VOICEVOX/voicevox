@@ -333,16 +333,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.timeSignatures = timeSignatures;
     },
-    // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
-    async action(
-      { commit },
-      { timeSignature }: { timeSignature: TimeSignature }
-    ) {
-      if (!isValidTimeSignature(timeSignature)) {
-        throw new Error("The time signature is invalid.");
-      }
-      commit("SET_TIME_SIGNATURE", { timeSignature });
-    },
   },
 
   REMOVE_TIME_SIGNATURE: {

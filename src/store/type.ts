@@ -842,7 +842,6 @@ export type SingingStoreTypes = {
 
   SET_TIME_SIGNATURE: {
     mutation: { timeSignature: TimeSignature };
-    action(payload: { timeSignature: TimeSignature }): void;
   };
 
   REMOVE_TIME_SIGNATURE: {
