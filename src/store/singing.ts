@@ -1960,6 +1960,22 @@ export const singingCommandStore = transformCommandStore(
         dispatch("RENDER");
       },
     },
+    COMMAND_SET_VOICE_KEY_SHIFT: {
+      mutation(draft, { voiceKeyShift }) {
+        singingStore.mutations.SET_VOICE_KEY_SHIFT(draft, { voiceKeyShift });
+      },
+      async action(
+        { dispatch, commit },
+        { voiceKeyShift }: { voiceKeyShift: number }
+      ) {
+        if (!isValidVoiceKeyShift(voiceKeyShift)) {
+          throw new Error("The voiceKeyShift is invalid.");
+        }
+        commit("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+
+        dispatch("RENDER");
+      },
+    },
     COMMAND_SET_TEMPO: {
       mutation(draft, { tempo }) {
         singingStore.mutations.SET_TEMPO(draft, { tempo });

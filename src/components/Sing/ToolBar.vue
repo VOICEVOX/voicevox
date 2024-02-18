@@ -217,7 +217,7 @@ const setTimeSignature = () => {
 
 const setKeyShift = () => {
   const voiceKeyShift = keyShiftInputBuffer.value;
-  store.dispatch("SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+  store.dispatch("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
 };
 
 const playheadTicks = ref(0);

@@ -1037,6 +1037,11 @@ export type SingingCommandStoreTypes = {
     action(payload: { singer: Singer }): void;
   };
 
+  COMMAND_SET_VOICE_KEY_SHIFT: {
+    mutation: { voiceKeyShift: number };
+    action(payload: { voiceKeyShift: number }): void;
+  };
+
   COMMAND_SET_TEMPO: {
     mutation: { tempo: Tempo };
     action(payload: { tempo: Tempo }): void;
