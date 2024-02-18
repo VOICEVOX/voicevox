@@ -34,12 +34,14 @@ export const useHotkeyManager = () => {
   return { hotkeyManager, registerHotkeyWithCleanup };
 };
 
+type Editor = "talk" | "song";
+
 /**
  * ショートカットキーの処理を登録するための型。
  */
 export type HotkeyAction = {
   /** どちらのエディタで有効か */
-  editor: "talk" | "song";
+  editor: Editor;
   /** テキストボックス内で有効か。デフォルトはfalse。 */
   enableInTextbox?: boolean;
   /** 名前。 */
@@ -47,14 +49,6 @@ export type HotkeyAction = {
   /** ショートカットキーが押されたときの処理。 */
   callback: (e: KeyboardEvent) => void;
 };
-type HotkeyActionId = `${"talk" | "song"}:${HotkeyActionNameType}`;
-
-const actionToId = (action: HotkeyAction): HotkeyActionId =>
-  `${action.editor}:${action.name}`;
-const idToEditorAndName = (
-  id: HotkeyActionId
-): [editor: "talk" | "song", name: HotkeyActionNameType] =>
-  id.split(":", 2) as [editor: "talk" | "song", name: HotkeyActionNameType];
 
 export type HotkeysJs = {
   (
@@ -73,14 +67,20 @@ hotkeys.filter = () => {
 };
 type Log = (message: string, ...args: unknown[]) => void;
 
+type RegisteredCombination = {
+  editor: Editor;
+  name: HotkeyActionNameType;
+  combination: string;
+};
+
 /**
  * ショートカットキーの管理を行うクラス。
  */
 export class HotkeyManager {
   private actions: HotkeyAction[] = [];
   private settings: HotkeySettingType[] | undefined;
-  // 登録されているショートカットキーの組み合わせ。キーは「エディタ:アクション」で、値はcombination。
-  private registeredCombinations: Partial<Record<HotkeyActionId, string>> = {};
+  // 登録されているショートカットキーの組み合わせ。
+  private registeredCombinations: RegisteredCombination[] = [];
 
   private hotkeys: HotkeysJs;
   private log: Log;
@@ -114,6 +114,12 @@ export class HotkeyManager {
     return setting;
   }
 
+  private getRegisteredCombination(action: HotkeyAction): string | undefined {
+    return this.registeredCombinations.find(
+      (c) => c.editor === action.editor && c.name === action.name
+    )?.combination;
+  }
+
   private refreshBinding(): void {
     if (!this.settings) {
       return;
@@ -123,7 +129,7 @@ export class HotkeyManager {
 
     const changedActions = this.actions.filter((a) => {
       const setting = this.getSetting(a);
-      return this.registeredCombinations[actionToId(a)] !== setting.combination;
+      return this.getRegisteredCombination(a) !== setting.combination;
     });
     if (changedActions.length === 0) {
       return;
@@ -131,7 +137,7 @@ export class HotkeyManager {
 
     const actionsToUnbind = changedActions.filter((a) => {
       // 未登録のものを弾く
-      return this.registeredCombinations[actionToId(a)] != undefined;
+      return this.getRegisteredCombination(a);
     });
     this.unbindActions(actionsToUnbind);
 
@@ -144,33 +150,40 @@ export class HotkeyManager {
   }
 
   private unbindUnregisteredActions(): void {
-    for (const [id, combination] of Object.entries(
-      this.registeredCombinations
-    )) {
-      if (!combination) {
+    for (const combination of this.registeredCombinations) {
+      if (
+        this.actions.some(
+          (a) => a.name === combination.name && a.editor === combination.editor
+        )
+      ) {
         continue;
       }
-      if (this.actions.some((a) => actionToId(a) === id)) {
-        continue;
-      }
-      const [editor, name] = idToEditorAndName(id as HotkeyActionId);
 
-      this.log(`Unbind: ${name}(${combination}) in ${editor}`);
-      this.hotkeys.unbind(combinationToBindingKey(combination), editor);
-      this.registeredCombinations[id as HotkeyActionId] = undefined;
+      this.log(
+        `Unbind: ${combination.name}(${combination.combination}) in ${combination.editor}`
+      );
+      this.hotkeys.unbind(
+        combinationToBindingKey(combination.combination),
+        combination.editor
+      );
+      this.registeredCombinations = this.registeredCombinations.filter(
+        (c) => c !== combination
+      );
     }
   }
 
   private unbindActions(actions: HotkeyAction[]): void {
     for (const action of actions) {
-      const combination = this.registeredCombinations[actionToId(action)];
+      const combination = this.getRegisteredCombination(action);
       if (!combination) {
         throw new Error("assert: combination != undefined");
       }
       const bindingKey = combinationToBindingKey(combination);
       this.log("Unbind:", bindingKey, "in", action.editor);
       this.hotkeys.unbind(bindingKey, action.editor);
-      this.registeredCombinations[actionToId(action)] = undefined;
+      this.registeredCombinations = this.registeredCombinations.filter(
+        (c) => c.editor !== action.editor || c.name !== action.name
+      );
     }
   }
 
@@ -212,7 +225,14 @@ export class HotkeyManager {
           action.callback(e);
         }
       );
-      this.registeredCombinations[actionToId(action)] = setting.combination;
+      this.registeredCombinations = this.registeredCombinations.filter(
+        (c) => c.editor !== action.editor || c.name !== action.name
+      );
+      this.registeredCombinations.push({
+        editor: action.editor,
+        name: action.name,
+        combination: setting.combination,
+      });
     }
   }
 
