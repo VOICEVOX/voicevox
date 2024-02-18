@@ -18,7 +18,7 @@ test("再生ボタンを押して再生できる", async ({ page }) => {
     await page.locator(".sequencer-playhead").boundingBox();
 
   // 再生ボタンを押して再生
-  await page.locator(".sequencer-body").click({ position: { x: 107, y: 171 } });
+  await page.locator(".sequencer-body").click({ position: { x: 107, y: 171 } }); // ノートを追加
   const beforePosition = await getCurrentPlayhead(); // 再生ヘッドの初期位置
   await page.getByText("play_arrow").click(); // 再生ボタンを押す
   await page.waitForTimeout(3000);
