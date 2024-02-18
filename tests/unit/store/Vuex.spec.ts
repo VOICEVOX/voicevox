@@ -13,7 +13,7 @@ import { presetStore } from "@/store/preset";
 import { proxyStore } from "@/store/proxy";
 import { dictionaryStore } from "@/store/dictionary";
 import { engineStore } from "@/store/engine";
-import { singingStore } from "@/store/singing";
+import { singingStore, singingCommandStore } from "@/store/singing";
 import { EngineId } from "@/type/preload";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
@@ -207,6 +207,7 @@ describe("store/vuex.js test", () => {
         ...proxyStore.getters,
         ...dictionaryStore.getters,
         ...singingStore.getters,
+        ...singingCommandStore.getters,
       },
       mutations: {
         ...uiStore.mutations,
@@ -222,6 +223,7 @@ describe("store/vuex.js test", () => {
         ...proxyStore.mutations,
         ...dictionaryStore.mutations,
         ...singingStore.mutations,
+        ...singingCommandStore.mutations,
       },
       actions: {
         ...uiStore.actions,
@@ -237,6 +239,7 @@ describe("store/vuex.js test", () => {
         ...proxyStore.actions,
         ...dictionaryStore.actions,
         ...singingStore.actions,
+        ...singingCommandStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
       strict: process.env.NODE_ENV !== "production",
