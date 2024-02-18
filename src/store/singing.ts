@@ -317,28 +317,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.tempos = tempos;
     },
-    // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
-    async action(
-      { state, getters, commit, dispatch },
-      { position }: { position: number }
-    ) {
-      const exists = state.tempos.some((value) => {
-        return value.position === position;
-      });
-      if (!exists) {
-        throw new Error("The tempo does not exist.");
-      }
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-      if (state.nowPlaying) {
-        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
-      }
-      commit("REMOVE_TEMPO", { position });
-      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
-
-      dispatch("RENDER");
-    },
   },
 
   SET_TIME_SIGNATURE: {
