@@ -296,26 +296,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.tempos = tempos;
     },
-    // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
-    async action(
-      { state, getters, commit, dispatch },
-      { tempo }: { tempo: Tempo }
-    ) {
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-      if (!isValidTempo(tempo)) {
-        throw new Error("The tempo is invalid.");
-      }
-      if (state.nowPlaying) {
-        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
-      }
-      tempo.bpm = round(tempo.bpm, 2);
-      commit("SET_TEMPO", { tempo });
-      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
-
-      dispatch("RENDER");
-    },
   },
 
   REMOVE_TEMPO: {

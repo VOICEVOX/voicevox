@@ -834,7 +834,6 @@ export type SingingStoreTypes = {
 
   SET_TEMPO: {
     mutation: { tempo: Tempo };
-    action(payload: { tempo: Tempo }): void;
   };
 
   REMOVE_TEMPO: {
