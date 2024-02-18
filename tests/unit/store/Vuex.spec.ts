@@ -170,6 +170,8 @@ describe("store/vuex.js test", () => {
         ],
         tracks: [
           {
+            notesKeyShift: 0,
+            voiceKeyShift: 0,
             notes: [],
           },
         ],

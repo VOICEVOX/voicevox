@@ -253,6 +253,7 @@ import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { useStore } from "@/store";
+import type { FetchAudioResult } from "@/store/type";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
@@ -448,26 +449,22 @@ const play = async () => {
 
   audioItem.query.accentPhrases = [accentPhrase.value];
 
-  let blob = await store.dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", {
-    audioItem,
-  });
-  if (!blob) {
-    try {
-      blob = await createUILockAction(
-        store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
-          audioItem,
-        })
-      );
-    } catch (e) {
-      window.electron.logError(e);
-      nowGenerating.value = false;
-      store.dispatch("SHOW_ALERT_DIALOG", {
-        title: "生成に失敗しました",
-        message: "エンジンの再起動をお試しください。",
-      });
-      return;
-    }
+  let fetchAudioResult: FetchAudioResult;
+  try {
+    fetchAudioResult = await store.dispatch("FETCH_AUDIO_FROM_AUDIO_ITEM", {
+      audioItem,
+    });
+  } catch (e) {
+    window.electron.logError(e);
+    nowGenerating.value = false;
+    store.dispatch("SHOW_ALERT_DIALOG", {
+      title: "生成に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+    return;
   }
+
+  const { blob } = fetchAudioResult;
   nowGenerating.value = false;
   nowPlaying.value = true;
   await store.dispatch("PLAY_AUDIO_BLOB", { audioBlob: blob });
@@ -680,10 +677,10 @@ const toDialogClosedState = () => {
 }
 
 .word-list {
-  // menubar-height + header-height + window-border-width +
+  // menubar-height + toolbar-height + window-border-width +
   // 82(title & buttons) + 30(margin 15x2)
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
+    100vh - #{vars.$menubar-height + vars.$toolbar-height +
       vars.$window-border-width + 82px + 30px}
   );
   width: 100%;
@@ -724,7 +721,7 @@ const toDialogClosedState = () => {
   display: flex;
   flex-flow: column;
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
+    100vh - #{vars.$menubar-height + vars.$toolbar-height +
       vars.$window-border-width}
   ) !important;
   overflow: auto;

@@ -43,6 +43,7 @@ import {
   isValidSnapType,
   isValidTempo,
   isValidTimeSignature,
+  isValidVoiceKeyShift,
   secondToTick,
   tickToSecond,
 } from "@/sing/domain";
@@ -139,6 +140,8 @@ export const singingStoreState: SingingStoreState = {
   tracks: [
     {
       singer: undefined,
+      notesKeyShift: 0,
+      voiceKeyShift: 0,
       notes: [],
     },
   ],
@@ -215,6 +218,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         dispatch("RENDER");
       }
+    },
+  },
+
+  SET_VOICE_KEY_SHIFT: {
+    mutation(state, { voiceKeyShift }: { voiceKeyShift: number }) {
+      state.tracks[selectedTrackIndex].voiceKeyShift = voiceKeyShift;
+    },
+    async action(
+      { dispatch, commit },
+      { voiceKeyShift }: { voiceKeyShift: number }
+    ) {
+      if (!isValidVoiceKeyShift(voiceKeyShift)) {
+        throw new Error("The voiceKeyShift is invalid.");
+      }
+      commit("SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+
+      dispatch("RENDER");
     },
   },
 
@@ -841,6 +861,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ state, getters, commit, dispatch }) {
       const searchPhrases = async (
         singer: Singer | undefined,
+        notesKeyShift: number,
+        voiceKeyShift: number,
         tpqn: number,
         tempos: Tempo[],
         notes: Note[]
@@ -860,12 +882,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const phraseLastNote = phraseNotes[phraseNotes.length - 1];
             const hash = await generatePhraseHash({
               singer,
+              notesKeyShift,
+              voiceKeyShift,
               tpqn,
               tempos,
               notes: phraseNotes,
             });
             foundPhrases.set(hash, {
               singer,
+              notesKeyShift,
+              voiceKeyShift,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -891,6 +917,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notes: Note[],
         tempos: Tempo[],
         tpqn: number,
+        notesKeyShift: number,
         frameRate: number,
         restDurationSeconds: number
       ) => {
@@ -923,7 +950,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             .replace("は", "ハ")
             .replace("へ", "ヘ");
           notesForRequestToEngine.push({
-            key: note.noteNumber,
+            key: note.noteNumber + notesKeyShift,
             frameLength: noteFrameLength,
             lyric,
           });
@@ -963,6 +990,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const getPhonemes = (frameAudioQuery: FrameAudioQuery) => {
         return frameAudioQuery.phonemes.map((value) => value.phoneme).join(" ");
+      };
+
+      const shiftVoiceKey = (
+        voiceKeyShift: number,
+        frameAudioQuery: FrameAudioQuery
+      ) => {
+        frameAudioQuery.f0 = frameAudioQuery.f0.map((value) => {
+          return value * Math.pow(2, voiceKeyShift / 12);
+        });
       };
 
       const calcStartTime = (
@@ -1020,13 +1056,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const tpqn = state.tpqn;
         const tempos = state.tempos.map((value) => ({ ...value }));
         const track = getters.SELECTED_TRACK;
+        const singer = track.singer ? { ...track.singer } : undefined;
+        const notesKeyShift = track.notesKeyShift;
+        const voiceKeyShift = track.voiceKeyShift;
         const notes = track.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
-        const singer = track.singer ? { ...track.singer } : undefined;
 
         // フレーズを更新する
-        const foundPhrases = await searchPhrases(singer, tpqn, tempos, notes);
+        const foundPhrases = await searchPhrases(
+          singer,
+          notesKeyShift,
+          voiceKeyShift,
+          tpqn,
+          tempos,
+          notes
+        );
         for (const [hash, phrase] of foundPhrases) {
           const phraseKey = hash;
           if (!state.phrases.has(phraseKey)) {
@@ -1094,7 +1139,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             });
           }
 
-          // 推論（クエリのフェッチ）とフレーズの開始時刻の算出を行う
+          // 推論（クエリのフェッチ）、キーシフト、フレーズの開始時刻の計算を行う
 
           if (!phrase.query) {
             const engineId = phrase.singer.engineId;
@@ -1106,6 +1151,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.notes,
               phrase.tempos,
               phrase.tpqn,
+              phrase.notesKeyShift,
               frameRate,
               restDurationSeconds
             ).catch((error) => {
@@ -1115,11 +1161,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               });
               throw error;
             });
-            const phonemes = getPhonemes(frameAudioQuery);
 
+            const phonemes = getPhonemes(frameAudioQuery);
             window.electron.logInfo(
               `Fetched frame audio query. Phonemes are "${phonemes}".`
             );
+
+            shiftVoiceKey(phrase.voiceKeyShift, frameAudioQuery);
 
             const startTime = calcStartTime(
               phrase.notes,

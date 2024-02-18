@@ -1,7 +1,7 @@
 <template>
   <q-header class="q-py-sm">
     <q-toolbar>
-      <template v-for="button in headerButtons" :key="button.text">
+      <template v-for="button in buttons" :key="button.text">
         <q-space v-if="button.text === null" />
         <q-btn
           v-else
@@ -33,6 +33,7 @@ import {
   ToolbarButtonTagType,
 } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
+import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
 
 type ButtonContent = {
   text: string;
@@ -106,13 +107,7 @@ const playContinuously = async () => {
   try {
     await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
   } catch (e) {
-    let msg: string | undefined;
-    // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
-    if (e instanceof Error && e.message === "VALID_MORPHING_ERROR") {
-      msg = "モーフィングの設定が無効です。";
-    } else {
-      window.electron.logError(e);
-    }
+    const msg = handlePossiblyNotMorphableError(e);
     store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
@@ -207,7 +202,7 @@ const usableButtons: Record<
   EMPTY: null,
 };
 
-const headerButtons = computed(() =>
+const buttons = computed(() =>
   store.state.toolbarSetting.map<ButtonContent | SpacerContent>((tag) => {
     const buttonContent = usableButtons[tag];
     if (buttonContent) {
