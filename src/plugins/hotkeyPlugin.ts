@@ -73,6 +73,17 @@ type RegisteredCombination = {
   combination: string;
 };
 
+interface HotkeyTarget {
+  name: HotkeyActionNameType;
+  editor: Editor;
+}
+const isSameHotkeyTarget = (a: HotkeyTarget) => (b: HotkeyTarget) => {
+  return a.name === b.name && a.editor === b.editor;
+};
+const isNotSameHotkeyTarget = (a: HotkeyTarget) => (b: HotkeyTarget) => {
+  return a.name !== b.name || a.editor !== b.editor;
+};
+
 /**
  * ショートカットキーの管理を行うクラス。
  */
@@ -115,9 +126,8 @@ export class HotkeyManager {
   }
 
   private getRegisteredCombination(action: HotkeyAction): string | undefined {
-    return this.registeredCombinations.find(
-      (c) => c.editor === action.editor && c.name === action.name
-    )?.combination;
+    return this.registeredCombinations.find(isSameHotkeyTarget(action))
+      ?.combination;
   }
 
   private refreshBinding(): void {
@@ -151,11 +161,7 @@ export class HotkeyManager {
 
   private unbindUnregisteredActions(): void {
     for (const combination of this.registeredCombinations) {
-      if (
-        this.actions.some(
-          (a) => a.name === combination.name && a.editor === combination.editor
-        )
-      ) {
+      if (this.actions.some(isSameHotkeyTarget(combination))) {
         continue;
       }
 
@@ -182,7 +188,7 @@ export class HotkeyManager {
       this.log("Unbind:", bindingKey, "in", action.editor);
       this.hotkeys.unbind(bindingKey, action.editor);
       this.registeredCombinations = this.registeredCombinations.filter(
-        (c) => c.editor !== action.editor || c.name !== action.name
+        isNotSameHotkeyTarget(action)
       );
     }
   }
@@ -226,7 +232,7 @@ export class HotkeyManager {
         }
       );
       this.registeredCombinations = this.registeredCombinations.filter(
-        (c) => c.editor !== action.editor || c.name !== action.name
+        isNotSameHotkeyTarget(action)
       );
       this.registeredCombinations.push({
         editor: action.editor,
@@ -268,9 +274,7 @@ export class HotkeyManager {
    * ショートカットキーの処理の登録を解除する。
    */
   unregister(data: HotkeyAction): void {
-    this.actions = this.actions.filter(
-      (a) => a.name !== data.name || a.editor !== data.editor
-    );
+    this.actions = this.actions.filter(isNotSameHotkeyTarget(data));
     this.refreshBinding();
   }
 
