@@ -874,10 +874,6 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
-  REMOVE_SELECTED_NOTES: {
-    action(): void;
-  };
-
   SET_EDITING_LYRIC_NOTE_ID: {
     mutation: { noteId?: string };
     action(payload: { noteId?: string }): void;

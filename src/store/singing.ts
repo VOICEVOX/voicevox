@@ -458,14 +458,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  REMOVE_SELECTED_NOTES: {
-    async action({ state, commit, dispatch }) {
-      commit("REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
-
-      dispatch("RENDER");
-    },
-  },
-
   SET_EDITING_LYRIC_NOTE_ID: {
     mutation(state, { noteId }: { noteId?: string }) {
       if (noteId != undefined && !state.selectedNoteIds.has(noteId)) {
