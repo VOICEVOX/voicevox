@@ -93,18 +93,14 @@ const render = () => {
   const offsetY = props.offsetY;
 
   // 無くなったフレーズを調べて、そのフレーズに対応するピッチラインを削除する
-  const deletedPhraseKeys: string[] = [];
   for (const [phraseKey, pitchLines] of pitchLinesMap) {
     if (!phrases.has(phraseKey)) {
-      deletedPhraseKeys.push(phraseKey);
       for (const pitchLine of pitchLines) {
         stage.removeChild(pitchLine.lineStrip.displayObject);
         pitchLine.lineStrip.destroy();
       }
+      pitchLinesMap.delete(phraseKey);
     }
-  }
-  for (const phraseKey of deletedPhraseKeys) {
-    pitchLinesMap.delete(phraseKey);
   }
   // ピッチラインの生成・更新を行う
   for (const [phraseKey, phrase] of phrases) {
