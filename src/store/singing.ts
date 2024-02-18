@@ -428,21 +428,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return !noteIdsSet.has(value.id);
       });
     },
-    async action(
-      { getters, commit, dispatch },
-      { noteIds }: { noteIds: string[] }
-    ) {
-      const existingNoteIds = getters.NOTE_IDS;
-      const isValidNoteIds = noteIds.every((value) => {
-        return existingNoteIds.has(value);
-      });
-      if (!isValidNoteIds) {
-        throw new Error("The note ids are invalid.");
-      }
-      commit("REMOVE_NOTES", { noteIds });
-
-      dispatch("RENDER");
-    },
   },
 
   SELECT_NOTES: {
