@@ -355,19 +355,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.timeSignatures = timeSignatures;
     },
-    // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
-    async action(
-      { state, commit },
-      { measureNumber }: { measureNumber: number }
-    ) {
-      const exists = state.timeSignatures.some((value) => {
-        return value.measureNumber === measureNumber;
-      });
-      if (!exists) {
-        throw new Error("The time signature does not exist.");
-      }
-      commit("REMOVE_TIME_SIGNATURE", { measureNumber });
-    },
   },
 
   NOTE_IDS: {

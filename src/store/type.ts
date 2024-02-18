@@ -846,7 +846,6 @@ export type SingingStoreTypes = {
 
   REMOVE_TIME_SIGNATURE: {
     mutation: { measureNumber: number };
-    action(payload: { measureNumber: number }): void;
   };
 
   NOTE_IDS: {
