@@ -40,8 +40,14 @@ describe("store/vuex.js test", () => {
         dialogLockCount: 0,
         reloadingLock: false,
         nowPlayingContinuously: false,
-        undoCommands: [],
-        redoCommands: [],
+        undoCommands: {
+          talk: [],
+          song: [],
+        },
+        redoCommands: {
+          talk: [],
+          song: [],
+        },
         undoSongCommands: [],
         redoSongCommands: [],
         inheritAudioInfo: true,
