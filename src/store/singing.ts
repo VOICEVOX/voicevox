@@ -1888,7 +1888,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const fileName = "test_export.wav"; // TODO: 設定できるようにする
+          var fileName = "song.wav"
+          const singer = getters.SELECTED_TRACK.singer;
+          const singerName = (getters.CHARACTER_INFO(singer!.engineId, (singer!.styleId))!.metas.speakerName);
+          if(singerName){
+          const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
+          const beginningPartLyrics = notes.map((elem) => elem.lyric).join("");
+           fileName = singerName + "_" + beginningPartLyrics + ".wav";
+          }
+          
+          const projectName = getters.PROJECT_NAME
+          if (projectName){
+            fileName = projectName.split(".")[0] + ".wav";
+          }
+
+           // TODO: 設定できるようにする
           const numberOfChannels = 2;
           const sampleRate = 48000; // TODO: 設定できるようにする
           const withLimiter = false; // TODO: 設定できるようにする
