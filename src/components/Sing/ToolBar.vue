@@ -81,8 +81,8 @@
         </div>
       </div>
       <!-- undo/redo -->
-      <q-btn flat round icon="undo" :disable="!canSongUndo" @click="songUndo" />
-      <q-btn flat round icon="redo" :disable="!canSongRedo" @click="songRedo" />
+      <q-btn flat round icon="undo" :disable="!canUndo" @click="undo" />
+      <q-btn flat round icon="redo" :disable="!canRedo" @click="redo" />
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
@@ -121,13 +121,13 @@ import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButto
 
 const store = useStore();
 
-const canSongUndo = computed(() => store.getters.CAN_SONG_UNDO);
-const canSongRedo = computed(() => store.getters.CAN_SONG_REDO);
+const canUndo = computed(() => store.getters.CAN_SONG_UNDO);
+const canRedo = computed(() => store.getters.CAN_SONG_REDO);
 
-const songUndo = () => {
+const undo = () => {
   store.dispatch("SONG_UNDO");
 };
-const songRedo = () => {
+const redo = () => {
   store.dispatch("SONG_REDO");
 };
 
