@@ -1,5 +1,19 @@
-import { FetchAudioResult } from "./type";
+import { AudioStoreTypes, FetchAudioResult, StoreType } from "./type";
+import { ActionContext } from "./vuex";
 import { AudioKey } from "@/type/preload";
+
+type Store = Pick<AudioStoreTypes, "FETCH_AUDIO" | "PLAY_AUDIO_BLOB">;
+
+type DI = Pick<
+  ActionContext<
+    Store,
+    Store,
+    StoreType<Store, "getter">,
+    StoreType<Store, "action">,
+    StoreType<Store, "mutation">
+  >,
+  "dispatch"
+>;
 
 export class ContinuousPlayer extends EventTarget {
   private playQueue: ({ audioKey: AudioKey } & FetchAudioResult)[] = [];
@@ -10,11 +24,15 @@ export class ContinuousPlayer extends EventTarget {
   private resolve!: () => void;
   private promise: Promise<void>;
 
-  constructor(private generateQueue: AudioKey[]) {
+  constructor(private generateQueue: AudioKey[], { dispatch }: DI) {
     super();
 
     this.addEventListener("generatestart", (e) => {
       this.generating = { audioKey: e.audioKey };
+    });
+    this.addEventListener("generatestart", async (e) => {
+      const result = await dispatch("FETCH_AUDIO", { audioKey: e.audioKey });
+      this.dispatchEvent(new GenerateEndEvent(e.audioKey, result));
     });
     this.addEventListener("generateend", (e) => {
       delete this.generating;
@@ -35,6 +53,13 @@ export class ContinuousPlayer extends EventTarget {
     });
     this.addEventListener("playstart", (e) => {
       this.playing = { audioKey: e.audioKey, ...e.result };
+    });
+    this.addEventListener("playstart", async (e) => {
+      const isEnded = await dispatch("PLAY_AUDIO_BLOB", {
+        audioBlob: e.result.blob,
+        audioKey: e.audioKey,
+      });
+      this.dispatchEvent(new PlayEndEvent(e.audioKey, !isEnded));
     });
     this.addEventListener("playend", (e) => {
       delete this.playing;

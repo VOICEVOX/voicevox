@@ -36,11 +36,7 @@ import {
   handlePossiblyNotMorphableError,
   isMorphable,
 } from "./audioGenerate";
-import {
-  ContinuousPlayer,
-  GenerateEndEvent,
-  PlayEndEvent,
-} from "./audioContinuousPlayer";
+import { ContinuousPlayer } from "./audioContinuousPlayer";
 import {
   AudioKey,
   CharacterInfo,
@@ -1733,20 +1729,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         index = state.audioKeys.findIndex((v) => v === currentAudioKey);
       }
 
-      const player = new ContinuousPlayer(state.audioKeys.slice(index));
-      player.addEventListener("generatestart", async (e) => {
-        const result = await dispatch("FETCH_AUDIO", {
-          audioKey: e.audioKey,
-        });
-        player.dispatchEvent(new GenerateEndEvent(e.audioKey, result));
+      const player = new ContinuousPlayer(state.audioKeys.slice(index), {
+        dispatch,
       });
       player.addEventListener("playstart", async (e) => {
         commit("SET_ACTIVE_AUDIO_KEY", { audioKey: e.audioKey });
-        const isEnded = await dispatch("PLAY_AUDIO_BLOB", {
-          audioBlob: e.result.blob,
-          audioKey: e.audioKey,
-        });
-        player.dispatchEvent(new PlayEndEvent(e.audioKey, !isEnded));
       });
       player.addEventListener("waitstart", async (e) => {
         dispatch("START_PROGRESS");
