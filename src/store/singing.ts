@@ -256,10 +256,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
       state.tracks[selectedTrackIndex].notes = score.notes;
-      state.overlappingNoteInfos = addNotesToOverlappingNoteInfos(
-        state.overlappingNoteInfos,
-        score.notes
-      );
+      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, score.notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -373,10 +370,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      state.overlappingNoteInfos = addNotesToOverlappingNoteInfos(
-        state.overlappingNoteInfos,
-        notes
-      );
+      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -393,10 +387,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      state.overlappingNoteInfos = updateNotesOfOverlappingNoteInfos(
-        state.overlappingNoteInfos,
-        notes
-      );
+      updateNotesOfOverlappingNoteInfos(state.overlappingNoteInfos, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -410,10 +401,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
-      state.overlappingNoteInfos = removeNotesFromOverlappingNoteInfos(
-        state.overlappingNoteInfos,
-        notes
-      );
+      removeNotesFromOverlappingNoteInfos(state.overlappingNoteInfos, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
