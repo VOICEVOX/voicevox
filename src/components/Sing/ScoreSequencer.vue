@@ -217,6 +217,7 @@ import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -606,7 +607,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         }
       }
       store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
-    } else if (event.ctrlKey) {
+    } else if (isOnCommandOrCtrlKeyDown(event)) {
       store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
     } else if (!state.selectedNoteIds.has(note.id)) {
       selectOnlyThis(note);
@@ -926,7 +927,7 @@ const onWheel = (event: WheelEvent) => {
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-  if (event.ctrlKey) {
+  if (isOnCommandOrCtrlKeyDown(event)) {
     cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
     // マウスカーソル位置を基準に水平方向のズームを行う
     const oldZoomX = zoomX.value;
