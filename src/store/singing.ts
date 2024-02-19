@@ -1980,6 +1980,7 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { tempo }) {
         singingStore.mutations.SET_TEMPO(draft, { tempo });
       },
+      // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
       action(
         { state, getters, commit, dispatch },
         { tempo }: { tempo: Tempo }
@@ -2004,6 +2005,7 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { position }) {
         singingStore.mutations.REMOVE_TEMPO(draft, { position });
       },
+      // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
       action(
         { state, getters, commit, dispatch },
         { position }: { position: number }
@@ -2030,6 +2032,7 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { timeSignature }) {
         singingStore.mutations.SET_TIME_SIGNATURE(draft, { timeSignature });
       },
+      // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
       action({ commit }, { timeSignature }: { timeSignature: TimeSignature }) {
         if (!isValidTimeSignature(timeSignature)) {
           throw new Error("The time signature is invalid.");
@@ -2041,6 +2044,7 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { measureNumber }) {
         singingStore.mutations.REMOVE_TIME_SIGNATURE(draft, { measureNumber });
       },
+      // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
       action({ state, commit }, { measureNumber }: { measureNumber: number }) {
         const exists = state.timeSignatures.some((value) => {
           return value.measureNumber === measureNumber;
