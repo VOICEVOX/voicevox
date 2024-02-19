@@ -398,7 +398,7 @@ const resetHotkey = async (action: string) => {
 .hotkey-table {
   width: calc(100vw - #{vars.$window-border-width * 2});
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
+    100vh - #{vars.$menubar-height + vars.$toolbar-height +
       vars.$window-border-width}
   );
 

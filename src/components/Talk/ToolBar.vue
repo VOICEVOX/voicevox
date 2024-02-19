@@ -1,7 +1,7 @@
 <template>
   <q-header class="q-py-sm">
     <q-toolbar>
-      <template v-for="button in headerButtons" :key="button.text">
+      <template v-for="button in buttons" :key="button.text">
         <q-space v-if="button.text === null" />
         <q-btn
           v-else
@@ -190,7 +190,7 @@ const usableButtons: Record<
   EMPTY: null,
 };
 
-const headerButtons = computed(() =>
+const buttons = computed(() =>
   store.state.toolbarSetting.map<ButtonContent | SpacerContent>((tag) => {
     const buttonContent = usableButtons[tag];
     if (buttonContent) {

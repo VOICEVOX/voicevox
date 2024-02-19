@@ -232,7 +232,7 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
 
 .main {
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
+    100vh - #{vars.$menubar-height + vars.$toolbar-height +
       vars.$window-border-width}
   );
 
