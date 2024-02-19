@@ -612,7 +612,8 @@ ipcMainHandle("GET_ALT_PORT_INFOS", () => {
 });
 
 /**
- * 保存に適したフォルダを選択するかキャンセルをするまでダイアログを繰り返し表示し続ける
+ * 保存に適した場所を選択するかキャンセルするまでダイアログを繰り返し表示する。
+ * アンインストール等で消えうる場所などを避ける。
  * @param showDialogFunction ダイアログを表示する関数
  */
 const retryShowSaveDialogWhileSafeDir = async <
