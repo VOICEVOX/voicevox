@@ -1,4 +1,4 @@
-import { Note, NoteInfo, Singer, Tempo } from "@/store/type";
+import { Note, Singer, Tempo } from "@/store/type";
 import { generateHash } from "@/sing/utility";
 
 export const DEFAULT_TPQN = 480;
@@ -54,14 +54,22 @@ export class FrequentlyUpdatedState<T> {
   }
 }
 
+export type NoteInfo = {
+  startTicks: number;
+  endTicks: number;
+  overlappingNoteIds: Set<string>;
+};
+
+export type OverlappingNoteInfos = Map<string, NoteInfo>;
+
 /**
  * 重なっているノートを検出します。
  */
 export class OverlappingNotesDetector {
   addNotes(
-    prevNoteInfos: Map<string, NoteInfo>,
+    prevNoteInfos: OverlappingNoteInfos,
     notes: Note[]
-  ): Map<string, NoteInfo> {
+  ): OverlappingNoteInfos {
     const currentNoteInfos = new Map(prevNoteInfos.entries());
     for (const note of notes) {
       currentNoteInfos.set(note.id, {
@@ -105,9 +113,9 @@ export class OverlappingNotesDetector {
   }
 
   removeNotes(
-    prevNoteInfos: Map<string, NoteInfo>,
+    prevNoteInfos: OverlappingNoteInfos,
     notes: Note[]
-  ): Map<string, NoteInfo> {
+  ): OverlappingNoteInfos {
     const currentNoteInfos = new Map(prevNoteInfos.entries());
 
     for (const note of notes) {
@@ -133,16 +141,16 @@ export class OverlappingNotesDetector {
   }
 
   updateNotes(
-    prevNoteInfos: Map<string, NoteInfo>,
+    prevNoteInfos: OverlappingNoteInfos,
     notes: Note[]
-  ): Map<string, NoteInfo> {
+  ): OverlappingNoteInfos {
     let currentNoteInfos = this.removeNotes(prevNoteInfos, notes);
     currentNoteInfos = this.addNotes(currentNoteInfos, notes);
 
     return currentNoteInfos;
   }
 
-  getOverlappingNoteIds(currentNoteInfos: Map<string, NoteInfo>) {
+  getOverlappingNoteIds(currentNoteInfos: OverlappingNoteInfos) {
     const overlappingNoteIds = new Set<string>();
     for (const [noteId, noteInfo] of currentNoteInfos) {
       if (noteInfo.overlappingNoteIds.size !== 0) {

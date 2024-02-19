@@ -58,6 +58,7 @@ import {
   NotifyAndNotShowAgainButtonOption,
   LoadingScreenOption,
 } from "@/components/Dialog/Dialog";
+import { OverlappingNoteInfos } from "@/sing/storeHelper";
 
 /**
  * エディタ用のAudioQuery
@@ -755,12 +756,6 @@ export const trackSchema = z.object({
 });
 export type Track = z.infer<typeof trackSchema>;
 
-export type NoteInfo = {
-  startTicks: number;
-  endTicks: number;
-  overlappingNoteIds: Set<string>;
-};
-
 export type PhraseState =
   | "WAITING_TO_BE_RENDERED"
   | "NOW_RENDERING"
@@ -794,7 +789,7 @@ export type SingingStoreState = {
   sequencerSnapType: number;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
-  overlappingNoteInfos: Map<string, NoteInfo>;
+  overlappingNoteInfos: OverlappingNoteInfos;
   editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
