@@ -62,9 +62,6 @@ export type NoteInfo = {
 
 export type OverlappingNoteInfos = Map<string, NoteInfo>;
 
-/**
- * 重なっているノートを検出します。
- */
 export function addNotesToOverlappingNoteInfos(
   prevNoteInfos: OverlappingNoteInfos,
   notes: Note[]
