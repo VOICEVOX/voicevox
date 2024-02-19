@@ -83,6 +83,12 @@ const recordPatches =
     };
   };
 
+const getLastCommandUnixMillisec = (commands: Command[]): number | null => {
+  const lastCommand = commands[commands.length - 1];
+  // 型的にはundefinedにはならないが、lengthが0の場合はundefinedになる
+  return lastCommand ? lastCommand.unixMillisec : null;
+};
+
 export const commandStoreState: CommandStoreState = {
   undoCommands: {
     talk: [],
@@ -141,26 +147,20 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
 
   LAST_COMMAND_UNIX_MILLISEC: {
     getter(state) {
-      let lastCommandTime: number | null = null;
-      let lastSongCommandTime: number | null = null;
-      if (state.undoCommands["talk"].length !== 0) {
-        lastCommandTime =
-          state.undoCommands["talk"][state.undoCommands["talk"].length - 1]
-            .unixMillisec;
-      }
-      if (state.undoCommands["song"].length !== 0) {
-        lastSongCommandTime =
-          state.undoCommands["song"][state.undoCommands["song"].length - 1]
-            .unixMillisec;
-      }
-      if (lastCommandTime != null && lastSongCommandTime != null) {
-        return Math.max(lastCommandTime, lastSongCommandTime);
-      } else if (lastCommandTime != null) {
-        return lastCommandTime;
-      } else if (lastSongCommandTime != null) {
+      const lastTalkCommandTime = getLastCommandUnixMillisec(
+        state.undoCommands["talk"]
+      );
+      const lastSongCommandTime = getLastCommandUnixMillisec(
+        state.undoCommands["song"]
+      );
+
+      if (lastTalkCommandTime != null && lastSongCommandTime != null) {
+        return Math.max(lastTalkCommandTime, lastSongCommandTime);
+      } else if (lastTalkCommandTime != null) {
+        return lastTalkCommandTime;
+      } else {
         return lastSongCommandTime;
       }
-      return null;
     },
   },
 
