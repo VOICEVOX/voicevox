@@ -641,12 +641,12 @@ const retryShowSaveDialogWhileSafeDir = async <
    */
   const showWarningDialog = async () => {
     const warningResult = await dialog.showMessageBox(win, {
-      message: "指定された保存先は自動的に削除される可能性があります。",
+      message:
+        "指定された保存先はVOICEVOXにより自動的に削除される可能性があります。\n他の場所に保存することをおすすめします。",
       type: "warning",
       buttons: ["保存場所を変更", "無視して保存"],
       defaultId: 0,
       title: "警告",
-      detail: "本当にこの場所に保存しますか？",
       cancelId: 0,
     });
     return warningResult.response === 0; // 0: 保存場所を変更, 1: 無視して保存
