@@ -1730,12 +1730,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       }
 
       const player = new ContinuousPlayer(state.audioKeys.slice(index), {
-        dispatch,
+        generateAudio: ({ audioKey }) =>
+          dispatch("FETCH_AUDIO", { audioKey }).then((result) => result.blob),
+        playAudioBlob: ({ audioBlob, audioKey }) =>
+          dispatch("PLAY_AUDIO_BLOB", { audioBlob, audioKey }),
       });
-      player.addEventListener("playstart", async (e) => {
+      player.addEventListener("playstart", (e) => {
         commit("SET_ACTIVE_AUDIO_KEY", { audioKey: e.audioKey });
       });
-      player.addEventListener("waitstart", async (e) => {
+      player.addEventListener("waitstart", (e) => {
         dispatch("START_PROGRESS");
         commit("SET_ACTIVE_AUDIO_KEY", { audioKey: e.audioKey });
         commit("SET_AUDIO_NOW_GENERATING", {
@@ -1743,7 +1746,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           nowGenerating: true,
         });
       });
-      player.addEventListener("waitend", async (e) => {
+      player.addEventListener("waitend", (e) => {
         dispatch("RESET_PROGRESS");
         commit("SET_AUDIO_NOW_GENERATING", {
           audioKey: e.audioKey,
@@ -1753,7 +1756,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
 
-      await player.play();
+      await player.start();
 
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
       commit("SET_AUDIO_PLAY_START_POINT", {

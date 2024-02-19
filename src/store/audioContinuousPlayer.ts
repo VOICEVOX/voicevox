@@ -1,66 +1,73 @@
-import { AudioStoreTypes, FetchAudioResult, StoreType } from "./type";
-import { ActionContext } from "./vuex";
 import { AudioKey } from "@/type/preload";
 
-type Store = Pick<AudioStoreTypes, "FETCH_AUDIO" | "PLAY_AUDIO_BLOB">;
+interface DI {
+  /**
+   * 音声を生成する
+   */
+  generateAudio({ audioKey }: { audioKey: AudioKey }): Promise<Blob>;
 
-type DI = Pick<
-  ActionContext<
-    Store,
-    Store,
-    StoreType<Store, "getter">,
-    StoreType<Store, "action">,
-    StoreType<Store, "mutation">
-  >,
-  "dispatch"
->;
-
-interface Generated extends FetchAudioResult {
-  audioKey: AudioKey;
+  /**
+   * 音声を再生する。
+   * 再生が完了した場合trueを、途中で停止した場合falseを返す。
+   */
+  playAudioBlob({
+    audioBlob,
+    audioKey,
+  }: {
+    audioBlob: Blob;
+    audioKey: AudioKey;
+  }): Promise<boolean>;
 }
 
+/**
+ * 音声を生成しながら連続再生する。
+ * 生成の開始・完了、再生の開始・完了、生成待機の開始・完了のイベントを発行する。
+ */
 export class ContinuousPlayer extends EventTarget {
   private generating?: AudioKey;
-  private playQueue: Generated[] = [];
-  private playing?: Generated;
+  private playQueue: { audioKey: AudioKey; audioBlob: Blob }[] = [];
+  private playing?: { audioKey: AudioKey; audioBlob: Blob };
 
   private finished = false;
   private resolve!: () => void;
   private promise: Promise<void>;
 
-  constructor(private generateQueue: AudioKey[], { dispatch }: DI) {
+  constructor(
+    private generatingQueue: AudioKey[],
+    { generateAudio, playAudioBlob }: DI
+  ) {
     super();
 
     this.addEventListener("generatestart", (e) => {
       this.generating = e.audioKey;
     });
     this.addEventListener("generatestart", async (e) => {
-      const result = await dispatch("FETCH_AUDIO", { audioKey: e.audioKey });
-      this.dispatchEvent(new GenerateEndEvent(e.audioKey, result));
+      const audioBlob = await generateAudio({ audioKey: e.audioKey });
+      this.dispatchEvent(new GenerateEndEvent(e.audioKey, audioBlob));
     });
     this.addEventListener("generateend", (e) => {
       delete this.generating;
 
-      const { audioKey, result } = e;
+      const { audioKey, audioBlob } = e;
       if (this.playing) {
-        this.playQueue.push({ audioKey, ...result });
+        this.playQueue.push({ audioKey, audioBlob });
       } else {
         this.dispatchEvent(new WaitEndEvent(e.audioKey));
         if (this.finished) return;
-        this.dispatchEvent(new PlayStartEvent(audioKey, result));
+        this.dispatchEvent(new PlayStartEvent(audioKey, audioBlob));
       }
 
-      const next = this.generateQueue.shift();
+      const next = this.generatingQueue.shift();
       if (next) {
         this.dispatchEvent(new GenerateStartEvent(next));
       }
     });
     this.addEventListener("playstart", (e) => {
-      this.playing = { audioKey: e.audioKey, ...e.result };
+      this.playing = { audioKey: e.audioKey, audioBlob: e.audioBlob };
     });
     this.addEventListener("playstart", async (e) => {
-      const isEnded = await dispatch("PLAY_AUDIO_BLOB", {
-        audioBlob: e.result.blob,
+      const isEnded = await playAudioBlob({
+        audioBlob: e.audioBlob,
         audioKey: e.audioKey,
       });
       this.dispatchEvent(new PlayEndEvent(e.audioKey, !isEnded));
@@ -74,7 +81,7 @@ export class ContinuousPlayer extends EventTarget {
 
       const next = this.playQueue.shift();
       if (next) {
-        this.dispatchEvent(new PlayStartEvent(next.audioKey, next));
+        this.dispatchEvent(new PlayStartEvent(next.audioKey, next.audioBlob));
       } else if (this.generating) {
         this.dispatchEvent(new WaitStartEvent(this.generating));
       } else {
@@ -92,8 +99,8 @@ export class ContinuousPlayer extends EventTarget {
     this.resolve();
   }
 
-  async play() {
-    const next = this.generateQueue.shift();
+  async start() {
+    const next = this.generatingQueue.shift();
     if (!next) return;
     this.dispatchEvent(new WaitStartEvent(next));
     this.dispatchEvent(new GenerateStartEvent(next));
@@ -131,13 +138,13 @@ export class GenerateStartEvent extends Event {
 }
 
 export class GenerateEndEvent extends Event {
-  constructor(public audioKey: AudioKey, public result: FetchAudioResult) {
+  constructor(public audioKey: AudioKey, public audioBlob: Blob) {
     super("generateend");
   }
 }
 
 export class PlayStartEvent extends Event {
-  constructor(public audioKey: AudioKey, public result: FetchAudioResult) {
+  constructor(public audioKey: AudioKey, public audioBlob: Blob) {
     super("playstart");
   }
 }
