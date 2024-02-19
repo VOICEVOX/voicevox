@@ -83,12 +83,6 @@ const recordPatches =
     };
   };
 
-const getLastCommandUnixMillisec = (commands: Command[]): number | null => {
-  const lastCommand = commands[commands.length - 1];
-  // 型的にはundefinedにはならないが、lengthが0の場合はundefinedになる
-  return lastCommand ? lastCommand.unixMillisec : null;
-};
-
 export const commandStoreState: CommandStoreState = {
   undoCommands: {
     talk: [],
@@ -147,6 +141,14 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
 
   LAST_COMMAND_UNIX_MILLISEC: {
     getter(state) {
+      const getLastCommandUnixMillisec = (
+        commands: Command[]
+      ): number | null => {
+        const lastCommand = commands[commands.length - 1];
+        // 型的にはundefinedにはならないが、lengthが0の場合はundefinedになる
+        return lastCommand ? lastCommand.unixMillisec : null;
+      };
+
       const lastTalkCommandTime = getLastCommandUnixMillisec(
         state.undoCommands["talk"]
       );
