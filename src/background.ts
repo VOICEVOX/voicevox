@@ -652,7 +652,8 @@ const retryShowSaveDialogWhileSafeDir = async <
     return warningResult.response === 0; // 0: 保存場所を変更, 1: 無視して保存
   };
 
-  for (;;) {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
     const result = await showDialogFunction();
     // キャンセルされた場合、結果を直ちに返す
     if (result.canceled) return result;
