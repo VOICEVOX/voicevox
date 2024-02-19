@@ -622,49 +622,61 @@ const retryShowSaveDialogWhileSafeDir = async <
   showDialogFunction: () => Promise<T>
 ): Promise<T> => {
   const unsafeSaveDirs = [appDirPath, app.getPath("userData")]; // アンインストールで消えうるフォルダ
-  let retry: boolean;
-  let result: T;
-  do {
-    retry = false;
-    result = await showDialogFunction();
-    let filePath: string;
-    if (result.canceled) {
-      return result;
-    }
+  /**
+   * 指定されたパスが安全でないかどうかを判断する
+   */
+  const isPathUnsafe = (filePath: string) => {
+    return unsafeSaveDirs.some((unsafeDir) => {
+      const relativePath = path.relative(unsafeDir, filePath);
+      return !(
+        path.isAbsolute(relativePath) ||
+        relativePath.startsWith(`..${path.sep}`) ||
+        relativePath === ".."
+      );
+    });
+  };
+
+  /**
+   * 警告ダイアログを表示し、ユーザーが再試行を選択したかどうかを返す
+   */
+  const showWarningDialog = async () => {
+    const warningResult = await dialog.showMessageBox(win, {
+      message: "指定された保存先は自動的に削除される可能性があります。",
+      type: "warning",
+      buttons: ["保存場所を変更", "無視して保存"],
+      defaultId: 0,
+      title: "警告",
+      detail: "本当にこの場所に保存しますか？",
+      cancelId: 0,
+    });
+    return warningResult.response === 0; // 0: 保存場所を変更, 1: 無視して保存
+  };
+
+  for (;;) {
+    const result = await showDialogFunction();
+    // キャンセルされた場合、結果を直ちに返す
+    if (result.canceled) return result;
+
+    // 選択されたファイルパスを取得
+    let filePath: string | undefined;
     if ("filePaths" in result) {
       filePath = result.filePaths[0];
     } else {
-      if (result.filePath == undefined) {
-        return result;
-      }
       filePath = result.filePath;
     }
-    for (const unsafeDir of unsafeSaveDirs) {
-      const relativePath = path.relative(unsafeDir, filePath);
-      if (
-        !(
-          path.isAbsolute(relativePath) ||
-          relativePath === ".." ||
-          relativePath.startsWith(`..${path.sep}`)
-        )
-      ) {
-        const warningResult = await dialog.showMessageBox(win, {
-          message: "指定された保存先は自動的に削除される可能性があります。",
-          type: "warning",
-          buttons: ["保存場所を変更", "無視して保存"],
-          defaultId: 0,
-          title: "警告",
-          detail: "本当にこの場所に保存しますか？",
-          cancelId: 0,
-        });
-        if (warningResult.response == 0) {
-          retry = true;
-        }
-        break;
-      }
+    // filePathが未定義の場合、結果を返す
+    if (filePath == undefined) {
+      return result;
     }
-  } while (retry);
-  return result;
+
+    // 選択されたパスが安全かどうかを確認
+    if (isPathUnsafe(filePath)) {
+      const shouldRetry = await showWarningDialog();
+      if (!shouldRetry) return result; // ユーザーが警告を無視して保存を選択した場合
+    } else {
+      return result; // 安全なパスが選択された場合
+    }
+  }
 };
 
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
