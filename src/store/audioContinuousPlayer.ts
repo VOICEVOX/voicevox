@@ -15,10 +15,14 @@ type DI = Pick<
   "dispatch"
 >;
 
+interface Generated extends FetchAudioResult {
+  audioKey: AudioKey;
+}
+
 export class ContinuousPlayer extends EventTarget {
-  private playQueue: ({ audioKey: AudioKey } & FetchAudioResult)[] = [];
-  private generating?: { audioKey: AudioKey };
-  private playing?: { audioKey: AudioKey } & FetchAudioResult;
+  private generating?: AudioKey;
+  private playQueue: Generated[] = [];
+  private playing?: Generated;
 
   private finished = false;
   private resolve!: () => void;
@@ -28,7 +32,7 @@ export class ContinuousPlayer extends EventTarget {
     super();
 
     this.addEventListener("generatestart", (e) => {
-      this.generating = { audioKey: e.audioKey };
+      this.generating = e.audioKey;
     });
     this.addEventListener("generatestart", async (e) => {
       const result = await dispatch("FETCH_AUDIO", { audioKey: e.audioKey });
@@ -72,7 +76,7 @@ export class ContinuousPlayer extends EventTarget {
       if (next) {
         this.dispatchEvent(new PlayStartEvent(next.audioKey, next));
       } else if (this.generating) {
-        this.dispatchEvent(new WaitStartEvent(this.generating.audioKey));
+        this.dispatchEvent(new WaitStartEvent(this.generating));
       } else {
         this.finish();
       }
