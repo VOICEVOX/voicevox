@@ -2867,5 +2867,6 @@ export const audioCommandStore = transformCommandStore(
         }
       ),
     },
-  })
+  }),
+  "talk"
 );

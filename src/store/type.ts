@@ -1891,9 +1891,8 @@ export const transformCommandStore = <
   M extends MutationsBase
 >(
   options: StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations>,
-  editor?: EditorType
+  editor: EditorType
 ): StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations> => {
-  editor = editor ?? "talk";
   if (options.mutations)
     options.mutations = commandMutationsCreator<S, M>(
       options.mutations as PayloadRecipeTree<S, M>,
