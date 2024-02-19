@@ -658,12 +658,9 @@ const retryShowSaveDialogWhileSafeDir = async <
     if (result.canceled) return result;
 
     // 選択されたファイルパスを取得
-    let filePath: string | undefined;
-    if ("filePaths" in result) {
-      filePath = result.filePaths[0];
-    } else {
-      filePath = result.filePath;
-    }
+    const filePath =
+      "filePaths" in result ? result.filePaths[0] : result.filePath;
+
     // filePathが未定義の場合、結果を返す
     if (filePath == undefined) {
       return result;
