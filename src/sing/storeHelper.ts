@@ -152,7 +152,9 @@ export function updateNotesOfOverlappingNoteInfos(
   return currentNoteInfos;
 }
 
-export function getOverlappingNoteIds(currentNoteInfos: OverlappingNoteInfos) {
+export function getOverlappingNoteIds(
+  currentNoteInfos: OverlappingNoteInfos
+): Set<string> {
   const overlappingNoteIds = new Set<string>();
   for (const [noteId, noteInfo] of currentNoteInfos) {
     if (noteInfo.overlappingNoteIds.size !== 0) {
