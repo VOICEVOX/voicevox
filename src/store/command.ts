@@ -13,6 +13,7 @@ import {
   MutationsBase,
   MutationTree,
 } from "@/store/vuex";
+import { EditorType } from "@/type/preload";
 
 // ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
 // enable * も両方叩く必要がある。
@@ -38,12 +39,12 @@ export type PayloadRecipeTree<S, M> = {
  */
 export const createCommandMutationTree = <S, M extends MutationsBase>(
   payloadRecipeTree: PayloadRecipeTree<S, M>,
-  isSongCommand: boolean
+  editor: EditorType
 ): MutationTree<S, M> =>
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
-      createCommandMutation(val, isSongCommand),
+      createCommandMutation(val, editor),
     ])
   ) as MutationTree<S, M>;
 
@@ -55,18 +56,13 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
 export const createCommandMutation =
   <S extends State, M extends MutationsBase, K extends keyof M>(
     payloadRecipe: PayloadRecipe<S, M[K]>,
-    isSongCommand: boolean
+    editor: EditorType
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
     const command = recordPatches(payloadRecipe)(state, payload);
     applyPatchesImpl(state, command.redoPatches);
-    if (isSongCommand) {
-      state.undoSongCommands.push(command);
-      state.redoSongCommands.splice(0);
-    } else {
-      state.undoCommands.push(command);
-      state.redoCommands.splice(0);
-    }
+    state.undoCommands[editor].push(command);
+    state.redoCommands[editor].splice(0);
   };
 
 /**
@@ -88,88 +84,58 @@ const recordPatches =
   };
 
 export const commandStoreState: CommandStoreState = {
-  undoCommands: [],
-  redoCommands: [],
-  undoSongCommands: [],
-  redoSongCommands: [],
+  undoCommands: {
+    talk: [],
+    song: [],
+  },
+  redoCommands: {
+    talk: [],
+    song: [],
+  },
 };
 
 export const commandStore = createPartialStore<CommandStoreTypes>({
   CAN_UNDO: {
-    getter(state) {
-      return state.undoCommands.length > 0;
+    getter: (state) => (editor: EditorType) => {
+      return state.undoCommands[editor].length > 0;
     },
   },
 
   CAN_REDO: {
-    getter(state) {
-      return state.redoCommands.length > 0;
+    getter: (state) => (editor: EditorType) => {
+      return state.redoCommands[editor].length > 0;
     },
   },
 
   UNDO: {
-    mutation(state) {
-      const command = state.undoCommands.pop();
+    mutation(state, { editor }) {
+      const command = state.undoCommands[editor].pop();
       if (command != null) {
-        state.redoCommands.push(command);
+        state.redoCommands[editor].push(command);
         applyPatchesImpl(state, command.undoPatches);
       }
     },
-    action({ commit }) {
-      commit("UNDO");
+    action({ commit, dispatch }, { editor }: { editor: EditorType }) {
+      commit("UNDO", { editor });
+      if (editor === "song") {
+        dispatch("RENDER");
+      }
     },
   },
 
   REDO: {
-    mutation(state) {
-      const command = state.redoCommands.pop();
+    mutation(state, { editor }) {
+      const command = state.redoCommands[editor].pop();
       if (command != null) {
-        state.undoCommands.push(command);
+        state.undoCommands[editor].push(command);
         applyPatchesImpl(state, command.redoPatches);
       }
     },
-    action({ commit }) {
-      commit("REDO");
-    },
-  },
-
-  CAN_SONG_UNDO: {
-    getter(state) {
-      return state.undoSongCommands.length > 0;
-    },
-  },
-
-  CAN_SONG_REDO: {
-    getter(state) {
-      return state.redoSongCommands.length > 0;
-    },
-  },
-
-  SONG_UNDO: {
-    mutation(state) {
-      const command = state.undoSongCommands.pop();
-      if (command != null) {
-        state.redoSongCommands.push(command);
-        applyPatchesImpl(state, command.undoPatches);
+    action({ commit, dispatch }, { editor }: { editor: EditorType }) {
+      commit("REDO", { editor });
+      if (editor === "song") {
+        dispatch("RENDER");
       }
-    },
-    action({ commit, dispatch }) {
-      commit("SONG_UNDO");
-      dispatch("RENDER");
-    },
-  },
-
-  SONG_REDO: {
-    mutation(state) {
-      const command = state.redoSongCommands.pop();
-      if (command != null) {
-        state.undoSongCommands.push(command);
-        applyPatchesImpl(state, command.redoPatches);
-      }
-    },
-    action({ commit, dispatch }) {
-      commit("SONG_REDO");
-      dispatch("RENDER");
     },
   },
 
@@ -177,13 +143,14 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
     getter(state) {
       let lastCommandTime: number | null = null;
       let lastSongCommandTime: number | null = null;
-      if (state.undoCommands.length !== 0) {
+      if (state.undoCommands["talk"].length !== 0) {
         lastCommandTime =
-          state.undoCommands[state.undoCommands.length - 1].unixMillisec;
+          state.undoCommands["talk"][state.undoCommands["talk"].length - 1]
+            .unixMillisec;
       }
-      if (state.undoSongCommands.length !== 0) {
+      if (state.undoCommands["song"].length !== 0) {
         lastSongCommandTime =
-          state.undoSongCommands[state.undoSongCommands.length - 1]
+          state.undoCommands["song"][state.undoCommands["song"].length - 1]
             .unixMillisec;
       }
       if (lastCommandTime != null && lastSongCommandTime != null) {
@@ -199,10 +166,10 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
 
   CLEAR_COMMANDS: {
     mutation(state) {
-      state.redoCommands.splice(0);
-      state.undoCommands.splice(0);
-      state.redoSongCommands.splice(0);
-      state.undoSongCommands.splice(0);
+      for (const editor of ["talk", "song"] as const) {
+        state.undoCommands[editor].splice(0);
+        state.redoCommands[editor].splice(0);
+      }
     },
   },
 });

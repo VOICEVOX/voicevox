@@ -2104,5 +2104,5 @@ export const singingCommandStore = transformCommandStore(
       },
     },
   }),
-  true // isSongCommand
+  "song"
 );

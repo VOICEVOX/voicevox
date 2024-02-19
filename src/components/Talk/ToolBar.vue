@@ -48,8 +48,9 @@ type SpacerContent = {
 const store = useStore();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-const canUndo = computed(() => store.getters.CAN_UNDO);
-const canRedo = computed(() => store.getters.CAN_REDO);
+const editor = "talk";
+const canUndo = computed(() => store.getters.CAN_UNDO(editor));
+const canRedo = computed(() => store.getters.CAN_REDO(editor));
 const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
 const nowPlayingContinuously = computed(
   () => store.state.nowPlayingContinuously
@@ -98,10 +99,10 @@ const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
 setHotkeyFunctions(hotkeyMap);
 
 const undo = () => {
-  store.dispatch("UNDO");
+  store.dispatch("UNDO", { editor });
 };
 const redo = () => {
-  store.dispatch("REDO");
+  store.dispatch("REDO", { editor });
 };
 const playContinuously = async () => {
   try {

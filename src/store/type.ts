@@ -50,6 +50,7 @@ import {
   RootMiscSettingType,
   engineIdSchema,
   styleIdSchema,
+  EditorType,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -1082,47 +1083,27 @@ export type SingingCommandStoreTypes = {
  */
 
 export type CommandStoreState = {
-  undoCommands: Command[];
-  redoCommands: Command[];
-  undoSongCommands: Command[];
-  redoSongCommands: Command[];
+  undoCommands: Record<EditorType, Command[]>;
+  redoCommands: Record<EditorType, Command[]>;
 };
 
 export type CommandStoreTypes = {
   CAN_UNDO: {
-    getter: boolean;
+    getter(editor: EditorType): boolean;
   };
 
   CAN_REDO: {
-    getter: boolean;
+    getter(editor: EditorType): boolean;
   };
 
   UNDO: {
-    mutation: undefined;
-    action(): void;
+    mutation: { editor: EditorType };
+    action(payload: { editor: EditorType }): void;
   };
 
   REDO: {
-    mutation: undefined;
-    action(): void;
-  };
-
-  CAN_SONG_UNDO: {
-    getter: boolean;
-  };
-
-  CAN_SONG_REDO: {
-    getter: boolean;
-  };
-
-  SONG_UNDO: {
-    mutation: undefined;
-    action(): void;
-  };
-
-  SONG_REDO: {
-    mutation: undefined;
-    action(): void;
+    mutation: { editor: EditorType };
+    action(payload: { editor: EditorType }): void;
   };
 
   LAST_COMMAND_UNIX_MILLISEC: {
@@ -1900,8 +1881,8 @@ export type AllActions = StoreType<AllStoreTypes, "action">;
 
 export const commandMutationsCreator = <S, M extends MutationsBase>(
   arg: PayloadRecipeTree<S, M>,
-  isSongCommand: boolean
-): MutationTree<S, M> => createCommandMutationTree<S, M>(arg, isSongCommand);
+  editor: EditorType
+): MutationTree<S, M> => createCommandMutationTree<S, M>(arg, editor);
 
 export const transformCommandStore = <
   S,
@@ -1910,13 +1891,13 @@ export const transformCommandStore = <
   M extends MutationsBase
 >(
   options: StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations>,
-  isSongCommand?: boolean
+  editor?: EditorType
 ): StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations> => {
-  isSongCommand = isSongCommand ?? false;
+  editor = editor ?? "talk";
   if (options.mutations)
     options.mutations = commandMutationsCreator<S, M>(
       options.mutations as PayloadRecipeTree<S, M>,
-      isSongCommand
+      editor
     );
   return options;
 };

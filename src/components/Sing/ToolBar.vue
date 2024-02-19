@@ -121,14 +121,15 @@ import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButto
 
 const store = useStore();
 
-const canUndo = computed(() => store.getters.CAN_SONG_UNDO);
-const canRedo = computed(() => store.getters.CAN_SONG_REDO);
+const editor = "song";
+const canUndo = computed(() => store.getters.CAN_UNDO(editor));
+const canRedo = computed(() => store.getters.CAN_REDO(editor));
 
 const undo = () => {
-  store.dispatch("SONG_UNDO");
+  store.dispatch("UNDO", { editor });
 };
 const redo = () => {
-  store.dispatch("SONG_REDO");
+  store.dispatch("REDO", { editor });
 };
 
 const tempos = computed(() => store.state.tempos);
