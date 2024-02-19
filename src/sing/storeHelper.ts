@@ -54,7 +54,7 @@ export class FrequentlyUpdatedState<T> {
   }
 }
 
-export type NoteInfo = {
+type NoteInfo = {
   startTicks: number;
   endTicks: number;
   overlappingNoteIds: Set<string>;
