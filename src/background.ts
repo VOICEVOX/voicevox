@@ -621,7 +621,7 @@ const retryShowSaveDialogWhileSafeDir = async <
 >(
   showDialogFunction: () => Promise<T>
 ): Promise<T> => {
-  const unsafeSaveDirs = [appDirPath, app.getPath("userData")];
+  const unsafeSaveDirs = [appDirPath, app.getPath("userData")]; // アンインストールで消えうるフォルダ
   let retry: boolean;
   let result: T;
   do {
