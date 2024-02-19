@@ -53,8 +53,11 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
   FrequentlyUpdatedState,
-  OverlappingNotesDetector,
+  addNotesToOverlappingNoteInfos,
   generatePhraseHash,
+  getOverlappingNoteIds,
+  removeNotesFromOverlappingNoteInfos,
+  updateNotesOfOverlappingNoteInfos,
 } from "@/sing/storeHelper";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import {
@@ -114,7 +117,6 @@ type PhraseData = {
 };
 
 const playheadPosition = new FrequentlyUpdatedState(0);
-const overlappingNotesDetector = new OverlappingNotesDetector();
 const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationTimer = new AnimationTimer();
@@ -254,11 +256,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
       state.tracks[selectedTrackIndex].notes = score.notes;
-      state.overlappingNoteInfos = overlappingNotesDetector.addNotes(
+      state.overlappingNoteInfos = addNotesToOverlappingNoteInfos(
         state.overlappingNoteInfos,
         score.notes
       );
-      state.overlappingNoteIds = overlappingNotesDetector.getOverlappingNoteIds(
+      state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
     },
@@ -371,11 +373,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      state.overlappingNoteInfos = overlappingNotesDetector.addNotes(
+      state.overlappingNoteInfos = addNotesToOverlappingNoteInfos(
         state.overlappingNoteInfos,
         notes
       );
-      state.overlappingNoteIds = overlappingNotesDetector.getOverlappingNoteIds(
+      state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
     },
@@ -391,11 +393,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      state.overlappingNoteInfos = overlappingNotesDetector.updateNotes(
+      state.overlappingNoteInfos = updateNotesOfOverlappingNoteInfos(
         state.overlappingNoteInfos,
         notes
       );
-      state.overlappingNoteIds = overlappingNotesDetector.getOverlappingNoteIds(
+      state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
     },
@@ -408,11 +410,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
-      state.overlappingNoteInfos = overlappingNotesDetector.removeNotes(
+      state.overlappingNoteInfos = removeNotesFromOverlappingNoteInfos(
         state.overlappingNoteInfos,
         notes
       );
-      state.overlappingNoteIds = overlappingNotesDetector.getOverlappingNoteIds(
+      state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
       if (

@@ -65,98 +65,99 @@ export type OverlappingNoteInfos = Map<string, NoteInfo>;
 /**
  * 重なっているノートを検出します。
  */
-export class OverlappingNotesDetector {
-  addNotes(
-    prevNoteInfos: OverlappingNoteInfos,
-    notes: Note[]
-  ): OverlappingNoteInfos {
-    const currentNoteInfos = new Map(prevNoteInfos.entries());
-    for (const note of notes) {
-      currentNoteInfos.set(note.id, {
-        startTicks: note.position,
-        endTicks: note.position + note.duration,
-        overlappingNoteIds: new Set(),
-      });
-    }
-    // TODO: 計算量がO(n^2)になっているので、区間木などを使用してO(nlogn)にする
-    for (const note of notes) {
-      const overlappingNoteIds = new Set<string>();
-      for (const [noteId, noteInfo] of currentNoteInfos) {
-        if (noteId === note.id) {
-          continue;
-        }
-        if (noteInfo.startTicks >= note.position + note.duration) {
-          continue;
-        }
-        if (noteInfo.endTicks <= note.position) {
-          continue;
-        }
-        overlappingNoteIds.add(noteId);
-      }
-
-      const noteId1 = note.id;
-      const noteInfo1 = currentNoteInfos.get(noteId1);
-      if (!noteInfo1) {
-        throw new Error("noteInfo1 is undefined.");
-      }
-      for (const noteId2 of overlappingNoteIds) {
-        const noteInfo2 = currentNoteInfos.get(noteId2);
-        if (!noteInfo2) {
-          throw new Error("noteInfo2 is undefined.");
-        }
-        noteInfo2.overlappingNoteIds.add(noteId1);
-        noteInfo1.overlappingNoteIds.add(noteId2);
-      }
-    }
-
-    return currentNoteInfos;
+export function addNotesToOverlappingNoteInfos(
+  prevNoteInfos: OverlappingNoteInfos,
+  notes: Note[]
+): OverlappingNoteInfos {
+  const currentNoteInfos = new Map(prevNoteInfos.entries());
+  for (const note of notes) {
+    currentNoteInfos.set(note.id, {
+      startTicks: note.position,
+      endTicks: note.position + note.duration,
+      overlappingNoteIds: new Set(),
+    });
   }
-
-  removeNotes(
-    prevNoteInfos: OverlappingNoteInfos,
-    notes: Note[]
-  ): OverlappingNoteInfos {
-    const currentNoteInfos = new Map(prevNoteInfos.entries());
-
-    for (const note of notes) {
-      const noteId1 = note.id;
-      const noteInfo1 = currentNoteInfos.get(noteId1);
-      if (!noteInfo1) {
-        throw new Error("noteInfo1 is undefined.");
-      }
-      for (const noteId2 of noteInfo1.overlappingNoteIds) {
-        const noteInfo2 = currentNoteInfos.get(noteId2);
-        if (!noteInfo2) {
-          throw new Error("noteInfo2 is undefined.");
-        }
-        noteInfo2.overlappingNoteIds.delete(noteId1);
-        noteInfo1.overlappingNoteIds.delete(noteId2);
-      }
-    }
-    for (const note of notes) {
-      currentNoteInfos.delete(note.id);
-    }
-
-    return currentNoteInfos;
-  }
-
-  updateNotes(
-    prevNoteInfos: OverlappingNoteInfos,
-    notes: Note[]
-  ): OverlappingNoteInfos {
-    let currentNoteInfos = this.removeNotes(prevNoteInfos, notes);
-    currentNoteInfos = this.addNotes(currentNoteInfos, notes);
-
-    return currentNoteInfos;
-  }
-
-  getOverlappingNoteIds(currentNoteInfos: OverlappingNoteInfos) {
+  // TODO: 計算量がO(n^2)になっているので、区間木などを使用してO(nlogn)にする
+  for (const note of notes) {
     const overlappingNoteIds = new Set<string>();
     for (const [noteId, noteInfo] of currentNoteInfos) {
-      if (noteInfo.overlappingNoteIds.size !== 0) {
-        overlappingNoteIds.add(noteId);
+      if (noteId === note.id) {
+        continue;
       }
+      if (noteInfo.startTicks >= note.position + note.duration) {
+        continue;
+      }
+      if (noteInfo.endTicks <= note.position) {
+        continue;
+      }
+      overlappingNoteIds.add(noteId);
     }
-    return overlappingNoteIds;
+
+    const noteId1 = note.id;
+    const noteInfo1 = currentNoteInfos.get(noteId1);
+    if (!noteInfo1) {
+      throw new Error("noteInfo1 is undefined.");
+    }
+    for (const noteId2 of overlappingNoteIds) {
+      const noteInfo2 = currentNoteInfos.get(noteId2);
+      if (!noteInfo2) {
+        throw new Error("noteInfo2 is undefined.");
+      }
+      noteInfo2.overlappingNoteIds.add(noteId1);
+      noteInfo1.overlappingNoteIds.add(noteId2);
+    }
   }
+
+  return currentNoteInfos;
+}
+
+export function removeNotesFromOverlappingNoteInfos(
+  prevNoteInfos: OverlappingNoteInfos,
+  notes: Note[]
+): OverlappingNoteInfos {
+  const currentNoteInfos = new Map(prevNoteInfos.entries());
+
+  for (const note of notes) {
+    const noteId1 = note.id;
+    const noteInfo1 = currentNoteInfos.get(noteId1);
+    if (!noteInfo1) {
+      throw new Error("noteInfo1 is undefined.");
+    }
+    for (const noteId2 of noteInfo1.overlappingNoteIds) {
+      const noteInfo2 = currentNoteInfos.get(noteId2);
+      if (!noteInfo2) {
+        throw new Error("noteInfo2 is undefined.");
+      }
+      noteInfo2.overlappingNoteIds.delete(noteId1);
+      noteInfo1.overlappingNoteIds.delete(noteId2);
+    }
+  }
+  for (const note of notes) {
+    currentNoteInfos.delete(note.id);
+  }
+
+  return currentNoteInfos;
+}
+
+export function updateNotesOfOverlappingNoteInfos(
+  prevNoteInfos: OverlappingNoteInfos,
+  notes: Note[]
+): OverlappingNoteInfos {
+  let currentNoteInfos = removeNotesFromOverlappingNoteInfos(
+    prevNoteInfos,
+    notes
+  );
+  currentNoteInfos = addNotesToOverlappingNoteInfos(currentNoteInfos, notes);
+
+  return currentNoteInfos;
+}
+
+export function getOverlappingNoteIds(currentNoteInfos: OverlappingNoteInfos) {
+  const overlappingNoteIds = new Set<string>();
+  for (const [noteId, noteInfo] of currentNoteInfos) {
+    if (noteInfo.overlappingNoteIds.size !== 0) {
+      overlappingNoteIds.add(noteId);
+    }
+  }
+  return overlappingNoteIds;
 }
