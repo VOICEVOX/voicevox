@@ -135,17 +135,12 @@ export class HotkeyManager {
       return;
     }
 
-    const unregisteredCombinations = this.registeredCombinations.filter(
-      (c) => !this.actions.some(isSameHotkeyTarget(c))
-    );
     const changedActions = this.actions.filter((a) => {
       const setting = this.getSetting(a);
       return this.getRegisteredCombination(a) !== setting.combination;
     });
-    if (changedActions.length === 0 && unregisteredCombinations.length === 0) {
-      return;
-    }
 
+    // 不要なBindingを削除
     const unbindedCombinations = changedActions.flatMap((a) => {
       const combination = this.registeredCombinations.find(
         isSameHotkeyTarget(a)
@@ -153,8 +148,12 @@ export class HotkeyManager {
       // 空じゃないCombinationを探す
       return combination?.combination ? [combination] : [];
     });
+    const unregisteredCombinations = this.registeredCombinations.filter(
+      (c) => !this.actions.some(isSameHotkeyTarget(c))
+    );
     this.unbindActions([...unbindedCombinations, ...unregisteredCombinations]);
 
+    // 新しいBindingを登録
     const actionsToBind = changedActions.filter((a) => {
       const setting = this.getSetting(a);
       // 未割り当て（空文字列）のものを弾く
