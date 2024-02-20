@@ -671,10 +671,9 @@ const retryShowSaveDialogWhileSafeDir = async <
     // 選択されたパスが安全かどうかを確認
     if (isUnsafePath(filePath)) {
       const shouldRetry = await showWarningDialog();
-      if (!shouldRetry) return result; // ユーザーが警告を無視して保存を選択した場合
-    } else {
-      return result; // 安全なパスが選択された場合
+      if (shouldRetry) continue; // ユーザーが警告を無視して保存を選択した場合
     }
+    return result; // 安全なパスが選択された場合
   }
 };
 
