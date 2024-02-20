@@ -666,3 +666,5 @@ export interface MessageBoxReturnValue {
 }
 
 export const SandboxKey = "electron" as const;
+
+export type EditorType = "talk" | "song";

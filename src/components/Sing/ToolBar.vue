@@ -83,6 +83,24 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
+      <q-btn
+        flat
+        dense
+        round
+        icon="undo"
+        class="sing-undo-button"
+        :disable="!canUndo"
+        @click="undo"
+      />
+      <q-btn
+        flat
+        dense
+        round
+        icon="redo"
+        class="sing-redo-button"
+        :disable="!canRedo"
+        @click="redo"
+      />
       <q-icon name="volume_up" size="xs" class="sing-volume-icon" />
       <q-slider v-model.number="volume" class="sing-volume" />
       <q-select
@@ -117,6 +135,17 @@ import {
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 
 const store = useStore();
+
+const editor = "song";
+const canUndo = computed(() => store.getters.CAN_UNDO(editor));
+const canRedo = computed(() => store.getters.CAN_REDO(editor));
+
+const undo = () => {
+  store.dispatch("UNDO", { editor });
+};
+const redo = () => {
+  store.dispatch("REDO", { editor });
+};
 
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
@@ -182,7 +211,7 @@ const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
 
 const setTempo = () => {
   const bpm = bpmInputBuffer.value;
-  store.dispatch("SET_TEMPO", {
+  store.dispatch("COMMAND_SET_TEMPO", {
     tempo: {
       position: 0,
       bpm,
@@ -193,7 +222,7 @@ const setTempo = () => {
 const setTimeSignature = () => {
   const beats = beatsInputBuffer.value;
   const beatType = beatTypeInputBuffer.value;
-  store.dispatch("SET_TIME_SIGNATURE", {
+  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
       measureNumber: 1,
       beats,
@@ -204,7 +233,7 @@ const setTimeSignature = () => {
 
 const setKeyShift = () => {
   const voiceKeyShift = keyShiftInputBuffer.value;
-  store.dispatch("SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+  store.dispatch("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
 };
 
 const playheadTicks = ref(0);
@@ -405,6 +434,16 @@ onUnmounted(() => {
   justify-content: flex-end;
   display: flex;
   flex: 1;
+}
+
+.sing-undo-button,
+.sing-redo-button {
+  &.disabled {
+    opacity: 0.4 !important;
+  }
+}
+.sing-redo-button {
+  margin-right: 16px;
 }
 
 .sing-volume-icon {

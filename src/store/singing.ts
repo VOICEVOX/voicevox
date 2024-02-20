@@ -10,10 +10,13 @@ import {
   Note,
   SingingStoreState,
   SingingStoreTypes,
+  SingingCommandStoreState,
+  SingingCommandStoreTypes,
   SaveResultObject,
   Singer,
   Phrase,
   PhraseState,
+  transformCommandStore,
 } from "./type";
 import { EngineId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
@@ -50,8 +53,11 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
   FrequentlyUpdatedState,
-  OverlappingNotesDetector,
+  addNotesToOverlappingNoteInfos,
   generatePhraseHash,
+  getOverlappingNoteIds,
+  removeNotesFromOverlappingNoteInfos,
+  updateNotesOfOverlappingNoteInfos,
 } from "@/sing/storeHelper";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import {
@@ -111,7 +117,6 @@ type PhraseData = {
 };
 
 const playheadPosition = new FrequentlyUpdatedState(0);
-const overlappingNotesDetector = new OverlappingNotesDetector();
 const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationTimer = new AnimationTimer();
@@ -156,6 +161,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerSnapType: 16,
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
+  overlappingNoteInfos: new Map(),
   nowPlaying: false,
   volume: 0,
   leftLocatorPosition: 0,
@@ -176,6 +182,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_SHOW_SINGER", {
         isShowSinger,
       });
+    },
+  },
+
+  SETUP_SINGER: {
+    async action({ dispatch }, { singer }: { singer: Singer }) {
+      // 指定されたstyleIdに対して、エンジン側の初期化を行う
+      const isInitialized = await dispatch(
+        "IS_INITIALIZED_ENGINE_SPEAKER",
+        singer
+      );
+      if (!isInitialized) {
+        await dispatch("INITIALIZE_ENGINE_SPEAKER", singer);
+      }
     },
   },
 
@@ -203,23 +222,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const styleId = singer?.styleId ?? defaultStyleId;
 
-      try {
-        // 指定されたstyleIdに対して、エンジン側の初期化を行う
-        const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
-          engineId,
-          styleId,
-        });
-        if (!isInitialized) {
-          await dispatch("INITIALIZE_ENGINE_SPEAKER", {
-            engineId,
-            styleId,
-          });
-        }
-      } finally {
-        commit("SET_SINGER", { singer: { engineId, styleId } });
+      await dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
+      commit("SET_SINGER", { singer: { engineId, styleId } });
 
-        dispatch("RENDER");
-      }
+      dispatch("RENDER");
     },
   },
 
@@ -242,7 +248,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SCORE: {
     mutation(state, { score }: { score: Score }) {
-      overlappingNotesDetector.clear();
+      state.overlappingNoteInfos.clear();
       state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
       state.selectedNoteIds.clear();
@@ -250,9 +256,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
       state.tracks[selectedTrackIndex].notes = score.notes;
-      overlappingNotesDetector.addNotes(score.notes);
-      state.overlappingNoteIds =
-        overlappingNotesDetector.getOverlappingNoteIds();
+      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, score.notes);
+      state.overlappingNoteIds = getOverlappingNoteIds(
+        state.overlappingNoteInfos
+      );
     },
     async action(
       { state, getters, commit, dispatch },
@@ -288,26 +295,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.tempos = tempos;
     },
-    // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
-    async action(
-      { state, getters, commit, dispatch },
-      { tempo }: { tempo: Tempo }
-    ) {
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-      if (!isValidTempo(tempo)) {
-        throw new Error("The tempo is invalid.");
-      }
-      if (state.nowPlaying) {
-        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
-      }
-      tempo.bpm = round(tempo.bpm, 2);
-      commit("SET_TEMPO", { tempo });
-      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
-
-      dispatch("RENDER");
-    },
   },
 
   REMOVE_TEMPO: {
@@ -329,28 +316,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.tempos = tempos;
     },
-    // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
-    async action(
-      { state, getters, commit, dispatch },
-      { position }: { position: number }
-    ) {
-      const exists = state.tempos.some((value) => {
-        return value.position === position;
-      });
-      if (!exists) {
-        throw new Error("The tempo does not exist.");
-      }
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-      if (state.nowPlaying) {
-        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
-      }
-      commit("REMOVE_TEMPO", { position });
-      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
-
-      dispatch("RENDER");
-    },
   },
 
   SET_TIME_SIGNATURE: {
@@ -366,16 +331,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         timeSignatures.sort((a, b) => a.measureNumber - b.measureNumber);
       }
       state.timeSignatures = timeSignatures;
-    },
-    // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
-    async action(
-      { commit },
-      { timeSignature }: { timeSignature: TimeSignature }
-    ) {
-      if (!isValidTimeSignature(timeSignature)) {
-        throw new Error("The time signature is invalid.");
-      }
-      commit("SET_TIME_SIGNATURE", { timeSignature });
     },
   },
 
@@ -399,19 +354,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.timeSignatures = timeSignatures;
     },
-    // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
-    async action(
-      { state, commit },
-      { measureNumber }: { measureNumber: number }
-    ) {
-      const exists = state.timeSignatures.some((value) => {
-        return value.measureNumber === measureNumber;
-      });
-      if (!exists) {
-        throw new Error("The time signature does not exist.");
-      }
-      commit("REMOVE_TIME_SIGNATURE", { measureNumber });
-    },
   },
 
   NOTE_IDS: {
@@ -428,21 +370,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      overlappingNotesDetector.addNotes(notes);
-      state.overlappingNoteIds =
-        overlappingNotesDetector.getOverlappingNoteIds();
-    },
-    async action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
-      const existingNoteIds = getters.NOTE_IDS;
-      const isValidNotes = notes.every((value) => {
-        return !existingNoteIds.has(value.id) && isValidNote(value);
-      });
-      if (!isValidNotes) {
-        throw new Error("The notes are invalid.");
-      }
-      commit("ADD_NOTES", { notes });
-
-      dispatch("RENDER");
+      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      state.overlappingNoteIds = getOverlappingNoteIds(
+        state.overlappingNoteInfos
+      );
     },
   },
 
@@ -456,21 +387,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      overlappingNotesDetector.updateNotes(notes);
-      state.overlappingNoteIds =
-        overlappingNotesDetector.getOverlappingNoteIds();
-    },
-    async action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
-      const existingNoteIds = getters.NOTE_IDS;
-      const isValidNotes = notes.every((value) => {
-        return existingNoteIds.has(value.id) && isValidNote(value);
-      });
-      if (!isValidNotes) {
-        throw new Error("The notes are invalid.");
-      }
-      commit("UPDATE_NOTES", { notes });
-
-      dispatch("RENDER");
+      updateNotesOfOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      state.overlappingNoteIds = getOverlappingNoteIds(
+        state.overlappingNoteInfos
+      );
     },
   },
 
@@ -481,9 +401,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
-      overlappingNotesDetector.removeNotes(notes);
-      state.overlappingNoteIds =
-        overlappingNotesDetector.getOverlappingNoteIds();
+      removeNotesFromOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      state.overlappingNoteIds = getOverlappingNoteIds(
+        state.overlappingNoteInfos
+      );
       if (
         state.editingLyricNoteId != undefined &&
         noteIdsSet.has(state.editingLyricNoteId)
@@ -496,21 +417,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
-    },
-    async action(
-      { getters, commit, dispatch },
-      { noteIds }: { noteIds: string[] }
-    ) {
-      const existingNoteIds = getters.NOTE_IDS;
-      const isValidNoteIds = noteIds.every((value) => {
-        return existingNoteIds.has(value);
-      });
-      if (!isValidNoteIds) {
-        throw new Error("The note ids are invalid.");
-      }
-      commit("REMOVE_NOTES", { noteIds });
-
-      dispatch("RENDER");
     },
   },
 
@@ -539,14 +445,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     async action({ commit }) {
       commit("DESELECT_ALL_NOTES");
-    },
-  },
-
-  REMOVE_SELECTED_NOTES: {
-    async action({ state, commit, dispatch }) {
-      commit("REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
-
-      dispatch("RENDER");
     },
   },
 
@@ -2036,3 +1934,175 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 });
+
+export const singingCommandStoreState: SingingCommandStoreState = {};
+
+export const singingCommandStore = transformCommandStore(
+  createPartialStore<SingingCommandStoreTypes>({
+    COMMAND_SET_SINGER: {
+      mutation(draft, { singer }) {
+        singingStore.mutations.SET_SINGER(draft, { singer });
+      },
+      async action({ dispatch, commit }, { singer }) {
+        await dispatch("SETUP_SINGER", { singer });
+        commit("COMMAND_SET_SINGER", { singer });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_SET_VOICE_KEY_SHIFT: {
+      mutation(draft, { voiceKeyShift }) {
+        singingStore.mutations.SET_VOICE_KEY_SHIFT(draft, { voiceKeyShift });
+      },
+      async action(
+        { dispatch, commit },
+        { voiceKeyShift }: { voiceKeyShift: number }
+      ) {
+        if (!isValidVoiceKeyShift(voiceKeyShift)) {
+          throw new Error("The voiceKeyShift is invalid.");
+        }
+        commit("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_SET_TEMPO: {
+      mutation(draft, { tempo }) {
+        singingStore.mutations.SET_TEMPO(draft, { tempo });
+      },
+      // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
+      action(
+        { state, getters, commit, dispatch },
+        { tempo }: { tempo: Tempo }
+      ) {
+        if (!transport) {
+          throw new Error("transport is undefined.");
+        }
+        if (!isValidTempo(tempo)) {
+          throw new Error("The tempo is invalid.");
+        }
+        if (state.nowPlaying) {
+          playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
+        }
+        tempo.bpm = round(tempo.bpm, 2);
+        commit("COMMAND_SET_TEMPO", { tempo });
+        transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_REMOVE_TEMPO: {
+      mutation(draft, { position }) {
+        singingStore.mutations.REMOVE_TEMPO(draft, { position });
+      },
+      // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
+      action(
+        { state, getters, commit, dispatch },
+        { position }: { position: number }
+      ) {
+        const exists = state.tempos.some((value) => {
+          return value.position === position;
+        });
+        if (!exists) {
+          throw new Error("The tempo does not exist.");
+        }
+        if (!transport) {
+          throw new Error("transport is undefined.");
+        }
+        if (state.nowPlaying) {
+          playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
+        }
+        commit("COMMAND_REMOVE_TEMPO", { position });
+        transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_SET_TIME_SIGNATURE: {
+      mutation(draft, { timeSignature }) {
+        singingStore.mutations.SET_TIME_SIGNATURE(draft, { timeSignature });
+      },
+      // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
+      action({ commit }, { timeSignature }: { timeSignature: TimeSignature }) {
+        if (!isValidTimeSignature(timeSignature)) {
+          throw new Error("The time signature is invalid.");
+        }
+        commit("COMMAND_SET_TIME_SIGNATURE", { timeSignature });
+      },
+    },
+    COMMAND_REMOVE_TIME_SIGNATURE: {
+      mutation(draft, { measureNumber }) {
+        singingStore.mutations.REMOVE_TIME_SIGNATURE(draft, { measureNumber });
+      },
+      // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
+      action({ state, commit }, { measureNumber }: { measureNumber: number }) {
+        const exists = state.timeSignatures.some((value) => {
+          return value.measureNumber === measureNumber;
+        });
+        if (!exists) {
+          throw new Error("The time signature does not exist.");
+        }
+        commit("COMMAND_REMOVE_TIME_SIGNATURE", { measureNumber });
+      },
+    },
+    COMMAND_ADD_NOTES: {
+      mutation(draft, { notes }) {
+        singingStore.mutations.ADD_NOTES(draft, { notes });
+      },
+      action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
+        const existingNoteIds = getters.NOTE_IDS;
+        const isValidNotes = notes.every((value) => {
+          return !existingNoteIds.has(value.id) && isValidNote(value);
+        });
+        if (!isValidNotes) {
+          throw new Error("The notes are invalid.");
+        }
+        commit("COMMAND_ADD_NOTES", { notes });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_UPDATE_NOTES: {
+      mutation(draft, { notes }) {
+        singingStore.mutations.UPDATE_NOTES(draft, { notes });
+      },
+      action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
+        const existingNoteIds = getters.NOTE_IDS;
+        const isValidNotes = notes.every((value) => {
+          return existingNoteIds.has(value.id) && isValidNote(value);
+        });
+        if (!isValidNotes) {
+          throw new Error("The notes are invalid.");
+        }
+        commit("COMMAND_UPDATE_NOTES", { notes });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_REMOVE_NOTES: {
+      mutation(draft, { noteIds }) {
+        singingStore.mutations.REMOVE_NOTES(draft, { noteIds });
+      },
+      action({ getters, commit, dispatch }, { noteIds }) {
+        const existingNoteIds = getters.NOTE_IDS;
+        const isValidNoteIds = noteIds.every((value) => {
+          return existingNoteIds.has(value);
+        });
+        if (!isValidNoteIds) {
+          throw new Error("The note ids are invalid.");
+        }
+        commit("COMMAND_REMOVE_NOTES", { noteIds });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_REMOVE_SELECTED_NOTES: {
+      action({ state, commit, dispatch }) {
+        commit("COMMAND_REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
+
+        dispatch("RENDER");
+      },
+    },
+  }),
+  "song"
+);
