@@ -15,6 +15,7 @@ import {
   Phrase,
   PhraseState,
 } from "./type";
+import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
@@ -1886,6 +1887,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
           return Math.max(1, lastNoteEndTime + 1);
         };
+
         const generateDefaultSongFileName = () => {
           const projectName = getters.PROJECT_NAME;
           if (projectName) {
@@ -1903,11 +1905,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               const beginningPartLyrics = notes
                 .map((note) => note.lyric)
                 .join("");
-              return `${singerName}_${beginningPartLyrics}.wav`;
+              return sanitizeFileName(
+                `${singerName}_${beginningPartLyrics}.wav`
+              );
             }
           }
-          return "song.wav";
+
+          return "Untitled.wav";
         };
+
         const exportWaveFile = async (): Promise<SaveResultObject> => {
           const fileName = generateDefaultSongFileName();
           const numberOfChannels = 2;
