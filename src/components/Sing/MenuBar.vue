@@ -31,6 +31,15 @@ const exportWaveFile = async () => {
 const fileSubMenuData: MenuItemData[] = [
   {
     type: "button",
+    label: "音声を出力",
+    onClick: () => {
+      exportWaveFile();
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
     label: "MIDI読み込み",
     onClick: () => {
       importMidiFile();
@@ -42,15 +51,6 @@ const fileSubMenuData: MenuItemData[] = [
     label: "MusicXML読み込み",
     onClick: () => {
       importMusicXMLFile();
-    },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "音声を出力",
-    onClick: () => {
-      exportWaveFile();
     },
     disableWhenUiLocked: true,
   },

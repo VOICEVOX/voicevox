@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed } from "vue";
 import { MenuItemData } from "@/components/Menu/type";
 import {
   generateAndConnectAndSaveAudioWithDialog,
@@ -19,12 +19,6 @@ import { setHotkeyFunctions } from "@/store/setting";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-const createNewProject = async () => {
-  if (!uiLocked.value) {
-    await store.dispatch("CREATE_NEW_PROJECT", {});
-  }
-};
 
 const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
@@ -91,59 +85,6 @@ const importTextFile = () => {
   }
 };
 
-const saveProject = async () => {
-  if (!uiLocked.value) {
-    await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
-  }
-};
-
-const saveProjectAs = async () => {
-  if (!uiLocked.value) {
-    await store.dispatch("SAVE_PROJECT_FILE", {});
-  }
-};
-
-const importProject = () => {
-  if (!uiLocked.value) {
-    store.dispatch("LOAD_PROJECT_FILE", {});
-  }
-};
-
-// 「最近使ったプロジェクト」のメニュー
-const recentProjectsSubMenuData = ref<MenuItemData[]>([]);
-const updateRecentProjects = async () => {
-  const recentlyUsedProjects = await store.dispatch(
-    "GET_RECENTLY_USED_PROJECTS"
-  );
-  recentProjectsSubMenuData.value =
-    recentlyUsedProjects.length === 0
-      ? [
-          {
-            type: "button",
-            label: "最近使ったプロジェクトはありません",
-            onClick: () => {
-              // 何もしない
-            },
-            disabled: true,
-            disableWhenUiLocked: false,
-          },
-        ]
-      : recentlyUsedProjects.map((projectFilePath) => ({
-          type: "button",
-          label: projectFilePath,
-          onClick: () => {
-            store.dispatch("LOAD_PROJECT_FILE", {
-              filePath: projectFilePath,
-            });
-          },
-          disableWhenUiLocked: false,
-        }));
-};
-const projectFilePath = computed(() => store.state.projectFilePath);
-watch(projectFilePath, updateRecentProjects, {
-  immediate: true,
-});
-
 // 「ファイル」メニュー
 const fileSubMenuData = computed<MenuItemData[]>(() => [
   {
@@ -187,54 +128,13 @@ const fileSubMenuData = computed<MenuItemData[]>(() => [
     },
     disableWhenUiLocked: true,
   },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "新規プロジェクト",
-    onClick: createNewProject,
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "プロジェクトを上書き保存",
-    onClick: async () => {
-      await saveProject();
-    },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "プロジェクトを名前を付けて保存",
-    onClick: async () => {
-      await saveProjectAs();
-    },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "プロジェクト読み込み",
-    onClick: () => {
-      importProject();
-    },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "root",
-    label: "最近使ったプロジェクト",
-    disableWhenUiLocked: true,
-    subMenu: recentProjectsSubMenuData.value,
-  },
 ]);
 
 const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  ["新規プロジェクト", createNewProject],
   ["音声書き出し", generateAndSaveAllAudio],
   ["選択音声を書き出し", generateAndSaveSelectedAudio],
   ["音声を繋げて書き出し", generateAndConnectAndSaveAllAudio],
   ["テキスト読み込む", importTextFile],
-  ["プロジェクトを上書き保存", saveProject],
-  ["プロジェクトを名前を付けて保存", saveProjectAs],
-  ["プロジェクト読み込み", importProject],
 ]);
 
 setHotkeyFunctions(hotkeyMap);
