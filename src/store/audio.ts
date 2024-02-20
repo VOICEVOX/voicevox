@@ -1756,7 +1756,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
 
-      await player.start();
+      await player.playUntilComplete();
 
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
       commit("SET_AUDIO_PLAY_START_POINT", {

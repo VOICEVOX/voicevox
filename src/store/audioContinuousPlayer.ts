@@ -33,7 +33,7 @@ export class ContinuousPlayer extends EventTarget {
   private promise: Promise<void>;
 
   constructor(
-    private generatingQueue: AudioKey[],
+    private generationQueue: AudioKey[],
     { generateAudio, playAudioBlob }: DI
   ) {
     super();
@@ -57,7 +57,7 @@ export class ContinuousPlayer extends EventTarget {
         this.dispatchEvent(new PlayStartEvent(audioKey, audioBlob));
       }
 
-      const next = this.generatingQueue.shift();
+      const next = this.generationQueue.shift();
       if (next) {
         this.dispatchEvent(new GenerateStartEvent(next));
       }
@@ -99,8 +99,12 @@ export class ContinuousPlayer extends EventTarget {
     this.resolve();
   }
 
-  async start() {
-    const next = this.generatingQueue.shift();
+  /**
+   * 音声の生成・再生を開始する。
+   * すべての音声の再生が完了するか、途中で停止されるとresolveする。
+   */
+  async playUntilComplete() {
+    const next = this.generationQueue.shift();
     if (!next) return;
     this.dispatchEvent(new WaitStartEvent(next));
     this.dispatchEvent(new GenerateStartEvent(next));
