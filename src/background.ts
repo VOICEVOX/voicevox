@@ -625,7 +625,7 @@ const retryShowSaveDialogWhileSafeDir = async <
   /**
    * 指定されたパスが安全でないかどうかを判断する
    */
-  const isPathUnsafe = (filePath: string) => {
+  const isUnsafePath = (filePath: string) => {
     return unsafeSaveDirs.some((unsafeDir) => {
       const relativePath = path.relative(unsafeDir, filePath);
       return !(
@@ -667,7 +667,7 @@ const retryShowSaveDialogWhileSafeDir = async <
     }
 
     // 選択されたパスが安全かどうかを確認
-    if (isPathUnsafe(filePath)) {
+    if (isUnsafePath(filePath)) {
       const shouldRetry = await showWarningDialog();
       if (!shouldRetry) return result; // ユーザーが警告を無視して保存を選択した場合
     } else {
