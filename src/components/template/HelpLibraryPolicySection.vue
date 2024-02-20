@@ -57,7 +57,6 @@
             )
           }}
         </h1>
-        <!-- eslint-disable-next-line vue/no-v-html -->
         <BaseDocumentView>
           <div v-if="policy" class="markdown" v-html="policy"></div>
         </BaseDocumentView>
