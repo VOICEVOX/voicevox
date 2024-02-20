@@ -2,14 +2,8 @@
  * ショートカットキーを管理するプラグイン。
  *
  * HotkeyAction: 実行する処理の名前とコールバックのペア
- * Combination: ショートカットキーを文字列で表したもの
  * HotkeySetting: ユーザーが設定できるもの。ActionとCobinationのペア
- */
-
-/*
- * 用語メモ：
- * action: 何をするか
- * combination: 設定で使う、キーの文字列表記
+ * Combination: ショートカットキーを文字列で表したもの
  * binding: hotkeys-js に登録したコールバック
  * bindingKey: hotkeys-js で使う、キーの文字列表記
  */
