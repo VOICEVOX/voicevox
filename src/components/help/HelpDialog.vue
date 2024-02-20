@@ -93,7 +93,7 @@ import UpdateInfo from "../template/HelpUpdateInfoSection.vue";
 import OssCommunityInfo from "../template/HelpOssCommunityInfoSection.vue";
 import QAndA from "../template/HelpQAndASection.vue";
 import ContactInfo from "../template/HelpContactInfoSection.vue";
-import LibraryPolicy from "./LibraryPolicy.vue";
+import LibraryPolicy from "../template/HelpLibraryPolicySection.vue";
 import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
