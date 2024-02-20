@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { HotkeyManager, HotkeysJs } from "@/plugins/hotkeyPlugin";
+import { HotkeyManager, HotkeysJs, HotkeyAction } from "@/plugins/hotkeyPlugin";
+import { HotkeySettingType } from "@/type/preload";
 
 type DummyHotkeysJs = HotkeysJs & {
   registeredHotkeys: {
@@ -80,6 +81,19 @@ it("unregisterできる", () => {
   expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
 });
 
+const callback = () => {
+  /* noop */
+};
+const dummyAction: HotkeyAction = {
+  editor: "talk",
+  name: "音声書き出し",
+  callback,
+};
+const createDummySetting = (combination: string): HotkeySettingType => ({
+  action: "音声書き出し",
+  combination,
+});
+
 describe("設定変更", () => {
   let hotkeyManager: HotkeyManager;
   let dummyHotkeysJs: DummyHotkeysJs;
@@ -88,43 +102,20 @@ describe("設定変更", () => {
       createHotkeyManager();
     hotkeyManager = hotkeyManager_;
     dummyHotkeysJs = dummyHotkeysJs_;
-    const callback = () => {
-      /* noop */
-    };
-    hotkeyManager.register({
-      editor: "talk",
-      name: "音声書き出し",
-      callback,
-    });
-    hotkeyManager.register({
-      editor: "talk",
-      name: "選択音声を書き出し",
-      callback,
-    });
-    hotkeyManager.load([
-      {
-        action: "音声書き出し",
-        combination: "1",
-      },
-      {
-        action: "選択音声を書き出し",
-        combination: "",
-      },
-    ]);
   });
 
   it("設定を登録するとhotkeysが更新される", () => {
-    // 設定登録はbeforeEachの部分で行っている
+    hotkeyManager.register(dummyAction);
+    hotkeyManager.load([createDummySetting("1")]);
     expect(dummyHotkeysJs.registeredHotkeys).toEqual([
       { key: "1", scope: "talk" },
     ]);
   });
 
   it("設定を更新するとhotkeysが更新される", () => {
-    hotkeyManager.replace({
-      action: "音声書き出し",
-      combination: "a",
-    });
+    hotkeyManager.register(dummyAction);
+    hotkeyManager.load([createDummySetting("1")]);
+    hotkeyManager.replace(createDummySetting("a"));
 
     expect(dummyHotkeysJs.registeredHotkeys).toEqual([
       { key: "a", scope: "talk" },
@@ -132,35 +123,34 @@ describe("設定変更", () => {
   });
 
   it("未割り当てにするとhotkeysから削除される", () => {
-    hotkeyManager.replace({
-      action: "音声書き出し",
-      combination: "",
-    });
+    hotkeyManager.register(dummyAction);
+    hotkeyManager.load([createDummySetting("1")]);
+    hotkeyManager.replace(createDummySetting(""));
     expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
   });
 
   it("未割り当てから割り当てるとhotkeysが更新される", () => {
-    hotkeyManager.replace({
-      action: "選択音声を書き出し",
-      combination: "2",
-    });
+    hotkeyManager.register(dummyAction);
+    hotkeyManager.load([createDummySetting("")]);
+    expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
+    hotkeyManager.replace(createDummySetting("1"));
     expect(dummyHotkeysJs.registeredHotkeys).toEqual([
       { key: "1", scope: "talk" },
-      { key: "2", scope: "talk" },
     ]);
   });
 
   it("割り当て -> 未割り当て -> 割り当てでhotkeysが更新される", () => {
-    const name = "音声書き出し";
+    hotkeyManager.register(dummyAction);
+    hotkeyManager.load([createDummySetting("1")]);
 
     expect(dummyHotkeysJs.registeredHotkeys).toEqual([
       { key: "1", scope: "talk" },
     ]);
 
-    hotkeyManager.replace({ action: name, combination: "" });
+    hotkeyManager.replace(createDummySetting(""));
     expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
 
-    hotkeyManager.replace({ action: name, combination: "a" });
+    hotkeyManager.replace(createDummySetting("a"));
     expect(dummyHotkeysJs.registeredHotkeys).toEqual([
       { key: "a", scope: "talk" },
     ]);
