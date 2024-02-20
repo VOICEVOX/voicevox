@@ -80,12 +80,27 @@
           .{{ playHeadPositionMilliSecStr }}
         </div>
       </div>
-      <!-- undo/redo -->
-      <q-btn flat round icon="undo" :disable="!canUndo" @click="undo" />
-      <q-btn flat round icon="redo" :disable="!canRedo" @click="redo" />
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
+      <q-btn
+        flat
+        dense
+        round
+        icon="undo"
+        class="sing-undo-button"
+        :disable="!canUndo"
+        @click="undo"
+      />
+      <q-btn
+        flat
+        dense
+        round
+        icon="redo"
+        class="sing-redo-button"
+        :disable="!canRedo"
+        @click="redo"
+      />
       <q-icon name="volume_up" size="xs" class="sing-volume-icon" />
       <q-slider v-model.number="volume" class="sing-volume" />
       <q-select
@@ -419,6 +434,16 @@ onUnmounted(() => {
   justify-content: flex-end;
   display: flex;
   flex: 1;
+}
+
+.sing-undo-button,
+.sing-redo-button {
+  &.disabled {
+    opacity: 0.4 !important;
+  }
+}
+.sing-redo-button {
+  margin-right: 16px;
 }
 
 .sing-volume-icon {
