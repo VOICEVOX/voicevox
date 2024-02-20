@@ -82,9 +82,12 @@ const isNotSameHotkeyTarget = (a: HotkeyTarget) => (b: HotkeyTarget) => {
  * ショートカットキーの管理を行うクラス。
  */
 export class HotkeyManager {
-  private actions: HotkeyAction[] = []; // 登録されたHotkeyAction
+  /** 登録されたHotkeyAction */
+  private actions: HotkeyAction[] = [];
+  /** ユーザーのショートカットキー設定 */
   private settings: HotkeySettingType[] | undefined; // ユーザーのショートカットキー設定
-  private registeredCombinations: RegisteredCombination[] = []; // 登録されているショートカットキーの組み合わせ
+  /** hotkeys-jsに登録されたショートカットキーの組み合わせ */
+  private registeredCombinations: RegisteredCombination[] = [];
 
   private hotkeys: HotkeysJs;
   private log: Log;
