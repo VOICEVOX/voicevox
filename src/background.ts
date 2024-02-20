@@ -621,11 +621,11 @@ const retryShowSaveDialogWhileSafeDir = async <
 >(
   showDialogFunction: () => Promise<T>
 ): Promise<T> => {
-  const unsafeSaveDirs = [appDirPath, app.getPath("userData")]; // アンインストールで消えうるフォルダ
   /**
    * 指定されたパスが安全でないかどうかを判断する
    */
   const isUnsafePath = (filePath: string) => {
+    const unsafeSaveDirs = [appDirPath, app.getPath("userData")]; // アンインストールで消えうるフォルダ
     return unsafeSaveDirs.some((unsafeDir) => {
       const relativePath = path.relative(unsafeDir, filePath);
       return !(
