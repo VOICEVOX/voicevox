@@ -1886,23 +1886,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
           return Math.max(1, lastNoteEndTime + 1);
         };
+        const generateDefaultSongFileName = () => {
+          const projectName = getters.PROJECT_NAME;
+          if (projectName) {
+            return projectName.split(".")[0] + ".wav";
+          }
 
-        const exportWaveFile = async (): Promise<SaveResultObject> => {
-          var fileName = "song.wav"
           const singer = getters.SELECTED_TRACK.singer;
-          const singerName = (getters.CHARACTER_INFO(singer!.engineId, (singer!.styleId))!.metas.speakerName);
-          if(singerName){
-          const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
-          const beginningPartLyrics = notes.map((elem) => elem.lyric).join("");
-           fileName = singerName + "_" + beginningPartLyrics + ".wav";
+          if (singer) {
+            const singerName = getters.CHARACTER_INFO(
+              singer.engineId,
+              singer.styleId
+            )?.metas.speakerName;
+            if (singerName) {
+              const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
+              const beginningPartLyrics = notes
+                .map((note) => note.lyric)
+                .join("");
+              return `${singerName}_${beginningPartLyrics}.wav`;
+            }
           }
-          
-          const projectName = getters.PROJECT_NAME
-          if (projectName){
-            fileName = projectName.split(".")[0] + ".wav";
-          }
-
-           // TODO: 設定できるようにする
+          return "song.wav";
+        };
+        const exportWaveFile = async (): Promise<SaveResultObject> => {
+          const fileName = generateDefaultSongFileName();
           const numberOfChannels = 2;
           const sampleRate = 48000; // TODO: 設定できるようにする
           const withLimiter = false; // TODO: 設定できるようにする
