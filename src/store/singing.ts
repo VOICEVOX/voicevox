@@ -18,6 +18,7 @@ import {
   PhraseState,
   transformCommandStore,
 } from "./type";
+import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
@@ -1785,8 +1786,34 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return Math.max(1, lastNoteEndTime + 1);
         };
 
+        const generateDefaultSongFileName = () => {
+          const projectName = getters.PROJECT_NAME;
+          if (projectName) {
+            return projectName.split(".")[0] + ".wav";
+          }
+
+          const singer = getters.SELECTED_TRACK.singer;
+          if (singer) {
+            const singerName = getters.CHARACTER_INFO(
+              singer.engineId,
+              singer.styleId
+            )?.metas.speakerName;
+            if (singerName) {
+              const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
+              const beginningPartLyrics = notes
+                .map((note) => note.lyric)
+                .join("");
+              return sanitizeFileName(
+                `${singerName}_${beginningPartLyrics}.wav`
+              );
+            }
+          }
+
+          return "Untitled.wav";
+        };
+
         const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const fileName = "test_export.wav"; // TODO: 設定できるようにする
+          const fileName = generateDefaultSongFileName();
           const numberOfChannels = 2;
           const sampleRate = 48000; // TODO: 設定できるようにする
           const withLimiter = false; // TODO: 設定できるようにする
