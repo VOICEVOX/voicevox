@@ -661,9 +661,11 @@ const retryShowSaveDialogWhileSafeDir = async <
     const filePath =
       "filePaths" in result ? result.filePaths[0] : result.filePath;
 
-    // filePathが未定義の場合、結果を返す
+    // filePathが未定義の場合、エラーを返す
     if (filePath == undefined) {
-      return result;
+      throw new Error(
+        `canseld == ${result.canceled} but filePath == ${filePath}`
+      );
     }
 
     // 選択されたパスが安全かどうかを確認
