@@ -8,9 +8,9 @@ import fragmentShaderSource from "@/sing/graphics/shaders/fragmentShader.glsl?ra
 export class LineStrip {
   private readonly mesh: PIXI.Mesh<PIXI.Shader>;
   private readonly shader: PIXI.Shader;
-  private readonly buffer: PIXI.Buffer;
   private readonly geometry: PIXI.Geometry;
   private readonly points: Float32Array;
+  private readonly pointsBuffer: PIXI.Buffer;
 
   get displayObject() {
     return this.mesh as PIXI.DisplayObject;
@@ -38,16 +38,16 @@ export class LineStrip {
       { color }
     );
     this.points = new Float32Array(numOfPoints * 2);
-    this.buffer = new PIXI.Buffer(this.points, false);
-    const vertices = this.generateSegmentVertices(width);
+    this.pointsBuffer = new PIXI.Buffer(this.points, false);
+    const vertices = this.generateLineSegmentVertices(width);
     const sizeOfFloat = 4;
     this.geometry = new PIXI.Geometry();
     this.geometry.instanced = true;
     this.geometry.instanceCount = numOfPoints - 1;
     this.geometry.addAttribute("pos", vertices.flat(), 3);
     this.geometry.addAttribute(
-      "p1",
-      this.buffer,
+      "pointA",
+      this.pointsBuffer,
       2,
       false,
       PIXI.TYPES.FLOAT,
@@ -56,8 +56,8 @@ export class LineStrip {
       true
     );
     this.geometry.addAttribute(
-      "p2",
-      this.buffer,
+      "pointB",
+      this.pointsBuffer,
       2,
       false,
       PIXI.TYPES.FLOAT,
@@ -68,7 +68,7 @@ export class LineStrip {
     this.mesh = new PIXI.Mesh(this.geometry, this.shader);
   }
 
-  private generateSegmentVertices(width: number) {
+  private generateLineSegmentVertices(width: number) {
     const halfWidth = width / 2;
     return [
       [-halfWidth, -halfWidth, 0],
@@ -92,7 +92,7 @@ export class LineStrip {
    * 折れ線を更新します。（設定された点の位置を適用します）
    */
   update() {
-    this.buffer.update(this.points);
+    this.pointsBuffer.update(this.points);
   }
 
   /**
@@ -102,6 +102,6 @@ export class LineStrip {
     this.mesh.destroy();
     this.geometry.destroy();
     this.shader.destroy();
-    this.buffer.destroy();
+    this.pointsBuffer.destroy();
   }
 }

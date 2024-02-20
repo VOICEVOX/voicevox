@@ -121,9 +121,10 @@ const render = () => {
       // 有声区間を調べる
       const voicedSections = searchVoicedSections(phonemes);
       // 有声区間のピッチラインを生成
-      pitchLines = voicedSections.map((value): PitchLine => {
-        const startFrame = value.startFrame;
-        const frameLength = value.frameLength;
+      pitchLines = [];
+      for (const voicedSection of voicedSections) {
+        const startFrame = voicedSection.startFrame;
+        const frameLength = voicedSection.frameLength;
         // 各フレームのticksは前もって計算しておく
         const frameTicksArray: number[] = [];
         for (let j = 0; j < frameLength; j++) {
@@ -139,8 +140,13 @@ const render = () => {
           pitchLineColor,
           pitchLineWidth
         );
-        return { startFrame, frameLength, frameTicksArray, lineStrip };
-      });
+        pitchLines.push({
+          startFrame,
+          frameLength,
+          frameTicksArray,
+          lineStrip,
+        });
+      }
       // lineStripをステージに追加
       for (const pitchLine of pitchLines) {
         stage.addChild(pitchLine.lineStrip.displayObject);
