@@ -1,6 +1,9 @@
 import { Plugin, watch } from "vue";
 import AsyncLock from "async-lock";
-import { clearPhrases, updatePhrases } from "./ipc";
+import { debounce } from "quasar";
+import { Router } from "vue-router";
+import { clearPhrases, getProject, updatePhrases } from "./ipc";
+import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
 import { secondToTick, tickToSecond } from "@/sing/domain";
@@ -24,10 +27,20 @@ type PhraseWithAudio = {
   wav: string;
 };
 
+const log = (message: string, ...args: unknown[]) => {
+  window.electron.logInfo(`[vstMessageReceiver] ${message}`, ...args);
+};
+
 export const vstMessageReceiver: Plugin = {
   install: (
     _,
-    options: { store: Store<State, AllGetters, AllActions, AllMutations> }
+    {
+      store,
+      router,
+    }: {
+      store: Store<State, AllGetters, AllActions, AllMutations>;
+      router: Router;
+    }
   ) => {
     if (import.meta.env.VITE_TARGET !== "vst") {
       return;
@@ -38,7 +51,7 @@ export const vstMessageReceiver: Plugin = {
       switch (message.type) {
         case "update:isPlaying":
           if (message.isPlaying && !uiLockPromiseResolve) {
-            options.store.dispatch("ASYNC_UI_LOCK", {
+            store.dispatch("ASYNC_UI_LOCK", {
               callback: () =>
                 new Promise((resolve) => {
                   uiLockPromiseResolve = resolve;
@@ -55,11 +68,11 @@ export const vstMessageReceiver: Plugin = {
 
           break;
         case "update:time":
-          options.store.dispatch("SET_PLAYHEAD_POSITION", {
+          store.dispatch("SET_PLAYHEAD_POSITION", {
             position: secondToTick(
               message.time,
-              options.store.state.tempos,
-              options.store.state.tpqn
+              store.state.tempos,
+              store.state.tpqn
             ),
           });
           break;
@@ -73,8 +86,39 @@ export const vstMessageReceiver: Plugin = {
 
     clearPhrases();
 
+    const songProjectState = {
+      tempos: store.state.tempos,
+      tpqn: store.state.tpqn,
+      timeSignature: store.state.timeSignature,
+      tracks: store.state.tracks,
+    };
+
+    let isFirstChange = true;
     watch(
-      () => options.store.state.phrases,
+      () => songProjectState,
+      debounce(() => {
+        if (isFirstChange) {
+          isFirstChange = false;
+          return;
+        }
+        log("Saving project file");
+        store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+      }, 5000),
+      { deep: true }
+    );
+
+    getProject().then((project) => {
+      store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
+      if (!project) {
+        log("project not found");
+        return;
+      }
+      log("project found");
+      router.push(`/talk?projectFilePath=${projectFilePath}`);
+    });
+
+    watch(
+      () => store.state.phrases,
       (phrases) => {
         phrasesLock.acquire("phrases", async () => {
           const playablePhrases = [...phrases.entries()].filter(
@@ -116,8 +160,8 @@ export const vstMessageReceiver: Plugin = {
                 start: startTime,
                 end: tickToSecond(
                   phrase.endTicks,
-                  options.store.state.tempos,
-                  options.store.state.tpqn
+                  store.state.tempos,
+                  store.state.tpqn
                 ),
                 wav: await blobToBase64(wav),
               };

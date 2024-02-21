@@ -1,4 +1,5 @@
 import { getConfigManager } from "./config";
+import { getProject, setProject } from "./ipc";
 import { defaultEngine } from "@/browser/contract";
 
 import { IpcSOData } from "@/type/ipc";
@@ -23,9 +24,12 @@ import {
   QAndATextFileName,
   UpdateInfosJsonFileName,
 } from "@/type/staticResources";
+import { success } from "@/type/result";
 
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
+
+export const projectFilePath = "/meta/vst-project.vvproj";
 
 /**
  * VST版のSandBox実装
@@ -113,10 +117,19 @@ export const api: Sandbox = {
   showImportFileDialog() {
     throw new Error("Not implemented");
   },
-  writeFile() {
+  async writeFile(options) {
+    if (options.filePath === projectFilePath) {
+      await setProject(new TextDecoder().decode(options.buffer));
+      return success(undefined);
+    }
     throw new Error("Not implemented");
   },
-  readFile() {
+  async readFile(options) {
+    if (options.filePath === projectFilePath) {
+      const project = await getProject();
+      const buffer = new TextEncoder().encode(project);
+      return success(buffer);
+    }
     throw new Error("Not implemented");
   },
   isAvailableGPUMode() {
