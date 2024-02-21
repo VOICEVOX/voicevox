@@ -6,6 +6,7 @@ import router from "./router";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { vstMessageReceiver } from "./vst/messageReceiverPlugin";
+import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
 import App from "@/components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
@@ -43,6 +44,7 @@ createApp(App)
       Notify,
     },
   })
+  .use(hotkeyPlugin)
   .use(ipcMessageReceiver, { store })
   .use(markdownItPlugin)
   .use(vstMessageReceiver, { store })

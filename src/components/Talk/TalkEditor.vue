@@ -2,50 +2,15 @@
   <menu-bar />
 
   <q-layout reveal elevated container class="layout-container">
-    <header-bar />
+    <tool-bar />
 
     <q-page-container>
       <q-page class="main-row-panes">
         <progress-view />
+        <engine-startup-overlay
+          :is-completed-initial-startup="isCompletedInitialStartup"
+        />
 
-        <!-- TODO: 複数エンジン対応 -->
-        <!-- TODO: allEngineStateが "ERROR" のときエラーになったエンジンを探してトーストで案内 -->
-        <div v-if="allEngineState === 'FAILED_STARTING'" class="waiting-engine">
-          <div>
-            エンジンの起動に失敗しました。エンジンの再起動をお試しください。
-          </div>
-        </div>
-        <div
-          v-else-if="
-            !isCompletedInitialStartup || allEngineState === 'STARTING'
-          "
-          class="waiting-engine"
-        >
-          <div>
-            <q-spinner color="primary" size="2.5rem" />
-            <div class="q-mt-xs">
-              {{
-                allEngineState === "STARTING"
-                  ? "エンジン起動中・・・"
-                  : "データ準備中・・・"
-              }}
-            </div>
-
-            <template v-if="isEngineWaitingLong">
-              <q-separator spaced />
-              エンジン起動に時間がかかっています。<br />
-              <q-btn
-                v-if="isMultipleEngine"
-                outline
-                :disable="reloadingLocked"
-                @click="reloadAppWithMultiEngineOffMode"
-              >
-                マルチエンジンをオフにして再読み込みする</q-btn
-              >
-              <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
-            </template>
-          </div>
-        </div>
         <q-splitter
           horizontal
           reverse
@@ -160,7 +125,7 @@
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
-  <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
+  <tool-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
     v-if="orderedAllCharacterInfos.length > 0"
     v-model="isCharacterOrderDialogOpenComputed"
@@ -184,7 +149,7 @@
 
 <script setup lang="ts">
 import path from "path";
-import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
+import { computed, onBeforeUpdate, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
@@ -192,13 +157,13 @@ import AudioCell from "./AudioCell.vue";
 import AudioDetail from "./AudioDetail.vue";
 import AudioInfo from "./AudioInfo.vue";
 import CharacterPortrait from "./CharacterPortrait.vue";
+import ToolBar from "./ToolBar.vue";
 import { useStore } from "@/store";
-import HeaderBar from "@/components/HeaderBar.vue";
 import MenuBar from "@/components/Talk/MenuBar.vue";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 import SettingDialog from "@/components/Dialog/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
-import HeaderBarCustomDialog from "@/components/Dialog/HeaderBarCustomDialog.vue";
+import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
 import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
 import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptRetrieveTelemetryDialog.vue";
@@ -207,17 +172,16 @@ import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.v
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import ProgressView from "@/components/ProgressView.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
-import { AudioItem, EngineState } from "@/store/type";
+import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
+import { AudioItem } from "@/store/type";
 import {
   AudioKey,
-  HotkeyActionType,
-  HotkeyReturnType,
   PresetKey,
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
-import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props =
   defineProps<{
@@ -229,86 +193,66 @@ const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-const reloadingLocked = computed(() => store.state.reloadingLock);
-
-const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
 // hotkeys handled by Mousetrap
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  [
-    "テキスト欄にフォーカスを戻す",
-    () => {
-      if (activeAudioKey.value != undefined) {
-        focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
-      }
-      return false; // this is the same with event.preventDefault()
-    },
-  ],
-  [
-    // FIXME: テキスト欄にフォーカスがある状態でも実行できるようにする
-    // https://github.com/VOICEVOX/voicevox/pull/1096#issuecomment-1378651920
-    "テキスト欄を複製",
-    () => {
-      if (activeAudioKey.value != undefined) {
-        duplicateAudioItem();
-      }
-      return false;
-    },
-  ],
-]);
+const { registerHotkeyWithCleanup } = useHotkeyManager();
 
-setHotkeyFunctions(hotkeyMap);
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "テキスト欄にフォーカスを戻す",
+  callback: () => {
+    if (activeAudioKey.value != undefined) {
+      focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: true,
+  name: "テキスト欄を複製",
+  callback: () => {
+    if (activeAudioKey.value != undefined) {
+      duplicateAudioItem();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: true,
+  name: "テキスト欄を追加",
+  callback: () => {
+    if (!uiLocked.value) {
+      addAudioItem();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: true,
+  name: "テキスト欄を削除",
+  callback: () => {
+    if (!uiLocked.value) {
+      removeAudioItem();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: true,
+  name: "テキスト欄からフォーカスを外す",
+  callback: () => {
+    if (!uiLocked.value) {
+      if (document.activeElement instanceof HTMLInputElement) {
+        document.activeElement.blur();
+      }
+    }
+  },
+});
 
 const removeAudioItem = async () => {
   if (activeAudioKey.value == undefined) throw new Error();
   audioCellRefs[activeAudioKey.value].removeCell();
 };
-
-// convert the hotkey array to Map to get value with keys easier
-// this only happens here where we deal with native methods
-const hotkeySettingsMap = computed(
-  () =>
-    new Map(
-      store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
-    )
-);
-
-// hotkeys handled by native, for they are made to be working while focusing input elements
-const hotkeyActionsNative = [
-  (event: KeyboardEvent) => {
-    if (
-      !event.isComposing &&
-      !uiLocked.value &&
-      parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を追加")
-    ) {
-      addAudioItem();
-      event.preventDefault();
-    }
-  },
-  (event: KeyboardEvent) => {
-    if (
-      !event.isComposing &&
-      !uiLocked.value &&
-      parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を削除")
-    ) {
-      removeAudioItem();
-      event.preventDefault();
-    }
-  },
-  (event: KeyboardEvent) => {
-    if (
-      !event.isComposing &&
-      !uiLocked.value &&
-      parseCombo(event) ==
-        hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
-    ) {
-      if (document.activeElement instanceof HTMLInputElement) {
-        document.activeElement.blur();
-      }
-      event.preventDefault();
-    }
-  },
-];
 
 // view
 const DEFAULT_PORTRAIT_PANE_WIDTH = 25; // %
@@ -535,13 +479,6 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
   }
 });
 
-onMounted(async () => {
-  // ショートカットキーの設定
-  hotkeyActionsNative.forEach((item) => {
-    document.addEventListener("keyup", item);
-  });
-});
-
 // エンジン初期化後の処理
 const isCompletedInitialStartup = ref(false);
 const unwatchIsEnginesReady = watch(
@@ -594,47 +531,6 @@ const unwatchIsEnginesReady = watch(
   }
 );
 
-// エンジン待機
-// TODO: 個別のエンジンの状態をUIで確認できるようにする
-const allEngineState = computed(() => {
-  const engineStates = store.state.engineStates;
-
-  let lastEngineState: EngineState | undefined = undefined;
-
-  // 登録されているすべてのエンジンについて状態を確認する
-  for (const engineId of store.state.engineIds) {
-    const engineState: EngineState | undefined = engineStates[engineId];
-    if (engineState == undefined)
-      throw new Error(`No such engineState set: engineId == ${engineId}`);
-
-    // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
-    if (engineState === "STARTING") {
-      return engineState;
-    }
-
-    lastEngineState = engineState;
-  }
-
-  return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
-});
-
-const isEngineWaitingLong = ref<boolean>(false);
-let engineTimer: number | undefined = undefined;
-watch(allEngineState, (newEngineState) => {
-  if (engineTimer != undefined) {
-    clearTimeout(engineTimer);
-    engineTimer = undefined;
-  }
-  if (newEngineState === "STARTING") {
-    isEngineWaitingLong.value = false;
-    engineTimer = window.setTimeout(() => {
-      isEngineWaitingLong.value = true;
-    }, 30000);
-  } else {
-    isEngineWaitingLong.value = false;
-  }
-});
-
 // 代替ポート情報の変更を監視
 watch(
   () => [store.state.altPortInfos, store.state.isVuexReady],
@@ -659,17 +555,6 @@ watch(
     }
   }
 );
-
-const reloadAppWithMultiEngineOffMode = () => {
-  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
-    closeOrReload: "reload",
-    isMultiEngineOffMode: true,
-  });
-};
-
-const openQa = () => {
-  window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
-};
 
 // ライセンス表示
 const isHelpDialogOpenComputed = computed({
@@ -849,7 +734,7 @@ const onAudioCellPaneClick = () => {
 @use '@/styles/colors' as colors;
 
 .q-header {
-  height: vars.$header-height;
+  height: vars.$toolbar-height;
 }
 
 .layout-container {
@@ -864,24 +749,6 @@ const onAudioCellPaneClick = () => {
   }
 }
 
-.waiting-engine {
-  background-color: rgba(colors.$display-rgb, 0.15);
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-
-  > div {
-    color: colors.$display;
-    background: colors.$surface;
-    border-radius: 6px;
-    padding: 14px;
-  }
-}
-
 .main-row-panes {
   flex-grow: 1;
   flex-shrink: 1;
@@ -891,7 +758,7 @@ const onAudioCellPaneClick = () => {
 
   .q-splitter--horizontal {
     height: calc(
-      100vh - #{vars.$menubar-height + vars.$header-height +
+      100vh - #{vars.$menubar-height + vars.$toolbar-height +
         vars.$window-border-width}
     );
   }

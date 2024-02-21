@@ -14,14 +14,13 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, ref, computed } from "vue";
+import { watch, onMounted, ref, computed, toRaw } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
 import { useRoute } from "vue-router";
-import Mousetrap from "mousetrap";
 import { EngineId } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
 const route = useRoute();
@@ -48,40 +47,32 @@ watch(
   { immediate: true }
 );
 
+// エディタの切り替えを監視する
+watch(
+  () => route.path,
+  async (unknownPath) => {
+    let path: "talk" | "song";
+    if (["/talk", "/song"].includes(unknownPath)) {
+      path = unknownPath.slice(1) as "talk" | "song";
+    } else {
+      // 不明なパスの場合はトークエディタにする
+      path = "talk";
+      window.electron.logWarn(`unknown path: ${unknownPath}`);
+    }
+
+    hotkeyManager.onEditorChange(path);
+  }
+);
+
 // ソフトウェアを初期化
+const { hotkeyManager } = useHotkeyManager();
 const isEnginesReady = ref(false);
 onMounted(async () => {
   await store.dispatch("INIT_VUEX");
 
-  // Electronのデフォルトのundo/redoを無効化
-  const disableDefaultUndoRedo = (event: KeyboardEvent) => {
-    // ctrl+z, ctrl+shift+z, ctrl+y
-    if (
-      isOnCommandOrCtrlKeyDown(event) &&
-      (event.key == "z" || (!event.shiftKey && event.key == "y"))
-    ) {
-      event.preventDefault();
-    }
-  };
-  document.addEventListener("keydown", disableDefaultUndoRedo);
+  const hotkeySettings = store.state.hotkeySettings;
 
-  // ショートカットキー操作を止める条件の設定
-  // 止めるなら`true`を返す
-  Mousetrap.prototype.stopCallback = (
-    e: Mousetrap.ExtendedKeyboardEvent, // 未使用
-    element: Element,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    combo: string // 未使用
-  ) => {
-    return (
-      element.tagName === "INPUT" ||
-      element.tagName === "SELECT" ||
-      element.tagName === "TEXTAREA" ||
-      (element instanceof HTMLElement && element.contentEditable === "true") ||
-      // メニュー項目ではショートカットキーを無効化
-      element.classList.contains("q-item")
-    );
-  };
+  hotkeyManager.load(structuredClone(toRaw(hotkeySettings)));
 
   // エンジンの初期化開始
 
