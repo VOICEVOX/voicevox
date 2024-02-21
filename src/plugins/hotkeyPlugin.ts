@@ -34,6 +34,8 @@ export const useHotkeyManager = () => {
 
 type Editor = "talk" | "song";
 
+type BindingKey = string & { __brand: "BindingKey" };
+
 /**
  * ショートカットキーの処理を登録するための型。
  */
@@ -50,16 +52,17 @@ export type HotkeyAction = {
 
 export type HotkeysJs = {
   (
-    key: string,
+    key: BindingKey,
     options: {
       scope: string;
     },
     callback: (e: KeyboardEvent) => void
   ): void;
-  unbind: (key: string, scope: string) => void;
+  unbind: (key: BindingKey, scope: string) => void;
   setScope: (scope: string) => void;
 };
 
+// デフォルトはテキストボックス内でショートカットキー無効なので有効にする
 hotkeys.filter = () => {
   return true;
 };
@@ -269,8 +272,16 @@ export class HotkeyManager {
   }
 }
 
-const combinationToBindingKey = (combination: HotkeyCombo) => {
-  return combination.toLowerCase().replaceAll(" ", "+");
+/** hotkeys-js用のキーに変換する */
+const combinationToBindingKey = (combination: HotkeyCombo): BindingKey => {
+  // MetaキーはCommandキーとして扱う
+  //TODO: Windowsの場合はWindowsキーとして扱う
+  const bindingKey = combination
+    .toLowerCase()
+    .split(" ")
+    .map((key) => (key === "meta" ? "command" : key))
+    .join("+");
+  return bindingKey as BindingKey;
 };
 
 export const hotkeyPlugin: Plugin = {
