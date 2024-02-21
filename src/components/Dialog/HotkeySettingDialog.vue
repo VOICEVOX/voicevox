@@ -215,8 +215,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
-import { parseCombo } from "@/store/setting";
-import { HotkeyActionType, HotkeySettingType } from "@/type/preload";
+import { HotkeyActionNameType, HotkeySettingType } from "@/type/preload";
+import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
 
 const props =
   defineProps<{
@@ -271,16 +271,21 @@ const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
     return;
   } else {
-    const recordedCombo = parseCombo(event);
+    const recordedCombo = eventToCombination(event);
     lastRecord.value = recordedCombo;
     event.preventDefault();
   }
 };
 
+const { hotkeyManager } = useHotkeyManager();
 const changeHotkeySettings = (action: string, combo: string) => {
+  hotkeyManager.replace({
+    action: action as HotkeyActionNameType,
+    combination: combo,
+  });
   return store.dispatch("SET_HOTKEY_SETTINGS", {
     data: {
-      action: action as HotkeyActionType,
+      action: action as HotkeyActionNameType,
       combination: combo,
     },
   });

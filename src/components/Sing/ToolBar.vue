@@ -133,8 +133,22 @@ import {
   isValidVoiceKeyShift,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+
+registerHotkeyWithCleanup({
+  editor: "song",
+  name: "再生/停止",
+  callback: () => {
+    if (nowPlaying.value) {
+      stop();
+    } else {
+      play();
+    }
+  },
+});
 
 const editor = "song";
 const canUndo = computed(() => store.getters.CAN_UNDO(editor));

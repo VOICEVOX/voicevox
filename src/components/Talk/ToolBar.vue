@@ -26,13 +26,9 @@ import {
   generateAndSaveOneAudioWithDialog,
 } from "@/components/Dialog/Dialog";
 import { useStore } from "@/store";
-import { setHotkeyFunctions } from "@/store/setting";
-import {
-  HotkeyActionType,
-  HotkeyReturnType,
-  ToolbarButtonTagType,
-} from "@/type/preload";
+import { ToolbarButtonTagType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
 
 type ButtonContent = {
@@ -56,47 +52,39 @@ const nowPlayingContinuously = computed(
   () => store.state.nowPlayingContinuously
 );
 
-const undoRedoHotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  // undo
-  [
-    "元に戻す",
-    () => {
-      if (!uiLocked.value && canUndo.value) {
-        undo();
-      }
-      return false;
-    },
-  ],
-  // redo
-  [
-    "やり直す",
-    () => {
-      if (!uiLocked.value && canRedo.value) {
-        redo();
-      }
-      return false;
-    },
-  ],
-]);
-setHotkeyFunctions(undoRedoHotkeyMap);
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "元に戻す",
+  callback: () => {
+    if (!uiLocked.value && canUndo.value) {
+      undo();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "やり直す",
+  callback: () => {
+    if (!uiLocked.value && canRedo.value) {
+      redo();
+    }
+  },
+});
 
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  // play/stop continuously
-  [
-    "連続再生/停止",
-    () => {
-      if (!uiLocked.value) {
-        if (nowPlayingContinuously.value) {
-          stop();
-        } else {
-          playContinuously();
-        }
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "連続再生/停止",
+  callback: () => {
+    if (!uiLocked.value) {
+      if (nowPlayingContinuously.value) {
+        stop();
+      } else {
+        playContinuously();
       }
-    },
-  ],
-]);
-
-setHotkeyFunctions(hotkeyMap);
+    }
+  },
+});
 
 const undo = () => {
   store.dispatch("UNDO", { editor });

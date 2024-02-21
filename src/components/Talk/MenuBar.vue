@@ -1,5 +1,5 @@
 <template>
-  <base-menu-bar :file-sub-menu-data="fileSubMenuData" />
+  <base-menu-bar editor="talk" :file-sub-menu-data="fileSubMenuData" />
 </template>
 
 <script setup lang="ts">
@@ -14,10 +14,11 @@ import {
 import BaseMenuBar from "@/components/Menu/MenuBar/BaseMenuBar.vue";
 
 import { useStore } from "@/store";
-import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const generateAndSaveAllAudio = async () => {
@@ -130,12 +131,32 @@ const fileSubMenuData = computed<MenuItemData[]>(() => [
   },
 ]);
 
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  ["音声書き出し", generateAndSaveAllAudio],
-  ["選択音声を書き出し", generateAndSaveSelectedAudio],
-  ["音声を繋げて書き出し", generateAndConnectAndSaveAllAudio],
-  ["テキスト読み込む", importTextFile],
-]);
-
-setHotkeyFunctions(hotkeyMap);
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "音声書き出し",
+  callback: () => {
+    generateAndSaveAllAudio();
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "選択音声を書き出し",
+  callback: () => {
+    generateAndSaveSelectedAudio();
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "音声を繋げて書き出し",
+  callback: () => {
+    generateAndConnectAndSaveAllAudio();
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "テキスト読み込む",
+  callback: () => {
+    importTextFile();
+  },
+});
 </script>
