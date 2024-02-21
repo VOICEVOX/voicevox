@@ -54,7 +54,7 @@ const nowPlayingContinuously = computed(
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 registerHotkeyWithCleanup({
-  editor: "talk",
+  editor,
   name: "元に戻す",
   callback: () => {
     if (!uiLocked.value && canUndo.value) {
@@ -63,7 +63,7 @@ registerHotkeyWithCleanup({
   },
 });
 registerHotkeyWithCleanup({
-  editor: "talk",
+  editor,
   name: "やり直す",
   callback: () => {
     if (!uiLocked.value && canRedo.value) {
@@ -73,7 +73,7 @@ registerHotkeyWithCleanup({
 });
 
 registerHotkeyWithCleanup({
-  editor: "talk",
+  editor,
   name: "連続再生/停止",
   callback: () => {
     if (!uiLocked.value) {

@@ -136,10 +136,34 @@ import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButto
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
+
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+const editor = "song";
+const canUndo = computed(() => store.getters.CAN_UNDO(editor));
+const canRedo = computed(() => store.getters.CAN_REDO(editor));
+
 const { registerHotkeyWithCleanup } = useHotkeyManager();
+registerHotkeyWithCleanup({
+  editor,
+  name: "元に戻す",
+  callback: () => {
+    if (!uiLocked.value && canUndo.value) {
+      undo();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor,
+  name: "やり直す",
+  callback: () => {
+    if (!uiLocked.value && canRedo.value) {
+      redo();
+    }
+  },
+});
 
 registerHotkeyWithCleanup({
-  editor: "song",
+  editor,
   name: "再生/停止",
   callback: () => {
     if (nowPlaying.value) {
@@ -149,10 +173,6 @@ registerHotkeyWithCleanup({
     }
   },
 });
-
-const editor = "song";
-const canUndo = computed(() => store.getters.CAN_UNDO(editor));
-const canRedo = computed(() => store.getters.CAN_REDO(editor));
 
 const undo = () => {
   store.dispatch("UNDO", { editor });
