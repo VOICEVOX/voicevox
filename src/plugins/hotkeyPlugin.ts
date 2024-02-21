@@ -269,7 +269,7 @@ export class HotkeyManager {
   }
 }
 
-const combinationToBindingKey = (combination: string) => {
+const combinationToBindingKey = (combination: HotkeyCombo) => {
   return combination.toLowerCase().replaceAll(" ", "+");
 };
 
