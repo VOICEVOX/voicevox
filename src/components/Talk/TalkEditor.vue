@@ -122,29 +122,6 @@
       </q-page>
     </q-page-container>
   </q-layout>
-  <help-dialog v-model="isHelpDialogOpenComputed" />
-  <setting-dialog v-model="isSettingDialogOpenComputed" />
-  <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
-  <tool-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
-  <character-order-dialog
-    v-if="orderedAllCharacterInfos.length > 0"
-    v-model="isCharacterOrderDialogOpenComputed"
-    :character-infos="orderedAllCharacterInfos"
-  />
-  <default-style-list-dialog
-    v-if="orderedTalkCharacterInfos.length > 0"
-    v-model="isDefaultStyleSelectDialogOpenComputed"
-    :character-infos="orderedTalkCharacterInfos"
-  />
-  <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
-  <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
-  <accept-retrieve-telemetry-dialog
-    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
-  />
-  <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
-  <update-notification-dialog-container
-    :can-open-dialog="canOpenNotificationDialog"
-  />
 </template>
 
 <script setup lang="ts">
@@ -160,18 +137,7 @@ import CharacterPortrait from "./CharacterPortrait.vue";
 import ToolBar from "./ToolBar.vue";
 import { useStore } from "@/store";
 import MenuBar from "@/components/Talk/MenuBar.vue";
-import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
-import SettingDialog from "@/components/Dialog/SettingDialog.vue";
-import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
-import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
-import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
-import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
-import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptRetrieveTelemetryDialog.vue";
-import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
-import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
-import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import ProgressView from "@/components/ProgressView.vue";
-import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { AudioItem } from "@/store/type";
 import {
@@ -180,7 +146,6 @@ import {
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
-import { filterCharacterInfosByStyleType } from "@/store/utility";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props =
@@ -515,12 +480,15 @@ const unwatchIsEnginesReady = watch(
     // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
     await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
 
-    isAcceptRetrieveTelemetryDialogOpenComputed.value =
-      store.state.acceptRetrieveTelemetry === "Unconfirmed";
-
-    isAcceptTermsDialogOpenComputed.value =
-      import.meta.env.MODE !== "development" &&
-      store.state.acceptTerms !== "Accepted";
+    store.dispatch("SET_DIALOG_OPEN", {
+      isAcceptRetrieveTelemetryDialogOpen:
+        store.state.acceptRetrieveTelemetry === "Unconfirmed",
+    });
+    store.dispatch("SET_DIALOG_OPEN", {
+      isAcceptTermsDialogOpen:
+        import.meta.env.MODE !== "development" &&
+        store.state.acceptTerms !== "Accepted",
+    });
 
     isCompletedInitialStartup.value = true;
 
@@ -555,119 +523,6 @@ watch(
     }
   }
 );
-
-// ライセンス表示
-const isHelpDialogOpenComputed = computed({
-  get: () => store.state.isHelpDialogOpen,
-  set: (val) => store.dispatch("SET_DIALOG_OPEN", { isHelpDialogOpen: val }),
-});
-
-// 設定
-const isSettingDialogOpenComputed = computed({
-  get: () => store.state.isSettingDialogOpen,
-  set: (val) => store.dispatch("SET_DIALOG_OPEN", { isSettingDialogOpen: val }),
-});
-
-// ショートカットキー設定
-const isHotkeySettingDialogOpenComputed = computed({
-  get: () => store.state.isHotkeySettingDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isHotkeySettingDialogOpen: val,
-    }),
-});
-
-// ツールバーのカスタム設定
-const isToolbarSettingDialogOpenComputed = computed({
-  get: () => store.state.isToolbarSettingDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isToolbarSettingDialogOpen: val,
-    }),
-});
-
-// 利用規約表示
-const isAcceptTermsDialogOpenComputed = computed({
-  get: () => store.state.isAcceptTermsDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isAcceptTermsDialogOpen: val,
-    }),
-});
-
-// キャラクター並び替え
-const orderedAllCharacterInfos = computed(
-  () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
-);
-const isCharacterOrderDialogOpenComputed = computed({
-  get: () =>
-    !store.state.isAcceptTermsDialogOpen &&
-    store.state.isCharacterOrderDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isCharacterOrderDialogOpen: val,
-    }),
-});
-
-// TODO: デフォルトスタイル選択(ソング)の実装
-// デフォルトスタイル選択(トーク)
-const orderedTalkCharacterInfos = computed(() => {
-  return filterCharacterInfosByStyleType(
-    store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
-    "talk"
-  );
-});
-const isDefaultStyleSelectDialogOpenComputed = computed({
-  get: () =>
-    !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    store.state.isDefaultStyleSelectDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isDefaultStyleSelectDialogOpen: val,
-    }),
-});
-
-// エンジン管理
-const isEngineManageDialogOpenComputed = computed({
-  get: () => store.state.isEngineManageDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isEngineManageDialogOpen: val,
-    }),
-});
-
-// 読み方＆アクセント辞書
-const isDictionaryManageDialogOpenComputed = computed({
-  get: () => store.state.isDictionaryManageDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isDictionaryManageDialogOpen: val,
-    }),
-});
-
-const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
-  get: () =>
-    !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    !store.state.isDefaultStyleSelectDialogOpen &&
-    store.state.isAcceptRetrieveTelemetryDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isAcceptRetrieveTelemetryDialogOpen: val,
-    }),
-});
-
-// エディタのアップデート確認ダイアログ
-const canOpenNotificationDialog = computed(() => {
-  return (
-    !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    !store.state.isDefaultStyleSelectDialogOpen &&
-    !store.state.isAcceptRetrieveTelemetryDialogOpen &&
-    isCompletedInitialStartup.value
-  );
-});
 
 // ドラッグ＆ドロップ
 const dragEventCounter = ref(0);
