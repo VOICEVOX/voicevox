@@ -18,6 +18,7 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
+      aria-label="シーケンサ"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
@@ -147,6 +148,7 @@
       />
       <div
         class="sequencer-playhead"
+        data-testid="sequencer-playhead"
         :style="{
           transform: `translateX(${playheadX - scrollX}px)`,
         }"

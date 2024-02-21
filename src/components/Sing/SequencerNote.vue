@@ -16,7 +16,11 @@
       <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
       <context-menu ref="contextMenu" :menudata="contextMenuData" />
     </div>
-    <div class="note-lyric" @mousedown="onLyricMouseDown">
+    <div
+      class="note-lyric"
+      data-testid="note-lyric"
+      @mousedown="onLyricMouseDown"
+    >
       {{ lyric }}
     </div>
     <input
