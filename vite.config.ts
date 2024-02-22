@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 /* eslint-disable no-console */
 import path from "path";
-import { createWriteStream, createReadStream, rmSync } from "fs";
+import { createWriteStream, rmSync } from "fs";
 import { rm, mkdir } from "fs/promises";
 import { pipeline } from "stream/promises";
 import treeKill from "tree-kill";
