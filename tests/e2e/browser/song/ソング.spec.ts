@@ -10,26 +10,26 @@ async function navigateToSong(page: Page) {
   await page.getByText("ソング").click();
 }
 
+async function getCurrentPlayhead(page: Page) {
+  const boundingBox = await page
+    .getByTestId("sequencer-playhead")
+    .boundingBox();
+  if (boundingBox == null) throw new Error("再生バーが見つかりません");
+  return boundingBox;
+}
+
 test("再生ボタンを押して再生できる", async ({ page }) => {
   await navigateToSong(page);
   // TODO: ページ内のオーディオを検出するテストを追加する
 
-  const getCurrentPlayhead = async () => {
-    const boundingBox = await page
-      .getByTestId("sequencer-playhead")
-      .boundingBox();
-    if (boundingBox == null) throw new Error("再生バーが見つかりません");
-    return boundingBox;
-  };
-
   const sequencer = page.getByLabel("シーケンサ");
 
   await sequencer.click({ position: { x: 107, y: 171 } }); // ノートを追加
-  const beforePosition = await getCurrentPlayhead(); // 再生ヘッドの初期位置
+  const beforePosition = await getCurrentPlayhead(page); // 再生ヘッドの初期位置
   await page.getByText("play_arrow").click(); // 再生ボタンを押す
   await page.waitForTimeout(3000);
   await page.getByText("stop").click(); // 停止ボタンを押す
-  const afterPosition = await getCurrentPlayhead(); // 再生ヘッドの再生後の位置
+  const afterPosition = await getCurrentPlayhead(page); // 再生ヘッドの再生後の位置
   expect(afterPosition.x).not.toEqual(beforePosition.x);
   expect(afterPosition.y).toEqual(beforePosition.y);
 });
