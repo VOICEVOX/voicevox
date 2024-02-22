@@ -31,10 +31,11 @@ const urlStringSchema = z.string().url().brand("URL");
 export type UrlString = z.infer<typeof urlStringSchema>;
 export const UrlString = (url: string): UrlString => urlStringSchema.parse(url);
 
-const hotkeyComboSchema = z.string().brand("HotkeyCombo");
-export type HotkeyCombo = z.infer<typeof hotkeyComboSchema>;
-export const HotkeyCombo = (hotkeyCombo: string): HotkeyCombo =>
-  hotkeyComboSchema.parse(hotkeyCombo);
+const hotkeyCombinationSchema = z.string().brand("HotkeyCombination");
+export type HotkeyCombination = z.infer<typeof hotkeyCombinationSchema>;
+export const HotkeyCombination = (
+  hotkeyCombination: string
+): HotkeyCombination => hotkeyCombinationSchema.parse(hotkeyCombination);
 
 export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
@@ -65,91 +66,91 @@ export const VoiceId = (voice: Voice): VoiceId =>
 export const defaultHotkeySettings: HotkeySettingType[] = [
   {
     action: "音声書き出し",
-    combination: HotkeyCombo(!isMac ? "Ctrl E" : "Meta E"),
+    combination: HotkeyCombination(!isMac ? "Ctrl E" : "Meta E"),
   },
   {
     action: "選択音声を書き出し",
-    combination: HotkeyCombo("E"),
+    combination: HotkeyCombination("E"),
   },
   {
     action: "音声を繋げて書き出し",
-    combination: HotkeyCombo(""),
+    combination: HotkeyCombination(""),
   },
   {
     action: "再生/停止",
-    combination: HotkeyCombo("Space"),
+    combination: HotkeyCombination("Space"),
   },
   {
     action: "連続再生/停止",
-    combination: HotkeyCombo("Shift Space"),
+    combination: HotkeyCombination("Shift Space"),
   },
   {
     action: "ｱｸｾﾝﾄ欄を表示",
-    combination: HotkeyCombo("1"),
+    combination: HotkeyCombination("1"),
   },
   {
     action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-    combination: HotkeyCombo("2"),
+    combination: HotkeyCombination("2"),
   },
   {
     action: "長さ欄を表示",
-    combination: HotkeyCombo("3"),
+    combination: HotkeyCombination("3"),
   },
   {
     action: "テキスト欄を追加",
-    combination: HotkeyCombo("Shift Enter"),
+    combination: HotkeyCombination("Shift Enter"),
   },
   {
     action: "テキスト欄を複製",
-    combination: HotkeyCombo(!isMac ? "Ctrl D" : "Meta D"),
+    combination: HotkeyCombination(!isMac ? "Ctrl D" : "Meta D"),
   },
   {
     action: "テキスト欄を削除",
-    combination: HotkeyCombo("Shift Delete"),
+    combination: HotkeyCombination("Shift Delete"),
   },
   {
     action: "テキスト欄からフォーカスを外す",
-    combination: HotkeyCombo("Escape"),
+    combination: HotkeyCombination("Escape"),
   },
   {
     action: "テキスト欄にフォーカスを戻す",
-    combination: HotkeyCombo("Enter"),
+    combination: HotkeyCombination("Enter"),
   },
   {
     action: "元に戻す",
-    combination: HotkeyCombo(!isMac ? "Ctrl Z" : "Meta Z"),
+    combination: HotkeyCombination(!isMac ? "Ctrl Z" : "Meta Z"),
   },
   {
     action: "やり直す",
-    combination: HotkeyCombo(!isMac ? "Ctrl Y" : "Shift Meta Z"),
+    combination: HotkeyCombination(!isMac ? "Ctrl Y" : "Shift Meta Z"),
   },
   {
     action: "新規プロジェクト",
-    combination: HotkeyCombo(!isMac ? "Ctrl N" : "Meta N"),
+    combination: HotkeyCombination(!isMac ? "Ctrl N" : "Meta N"),
   },
   {
     action: "プロジェクトを名前を付けて保存",
-    combination: HotkeyCombo(!isMac ? "Ctrl Shift S" : "Shift Meta S"),
+    combination: HotkeyCombination(!isMac ? "Ctrl Shift S" : "Shift Meta S"),
   },
   {
     action: "プロジェクトを上書き保存",
-    combination: HotkeyCombo(!isMac ? "Ctrl S" : "Meta S"),
+    combination: HotkeyCombination(!isMac ? "Ctrl S" : "Meta S"),
   },
   {
     action: "プロジェクト読み込み",
-    combination: HotkeyCombo(!isMac ? "Ctrl O" : "Meta O"),
+    combination: HotkeyCombination(!isMac ? "Ctrl O" : "Meta O"),
   },
   {
     action: "テキスト読み込む",
-    combination: HotkeyCombo(""),
+    combination: HotkeyCombination(""),
   },
   {
     action: "全体のイントネーションをリセット",
-    combination: HotkeyCombo(!isMac ? "Ctrl G" : "Meta G"),
+    combination: HotkeyCombination(!isMac ? "Ctrl G" : "Meta G"),
   },
   {
     action: "選択中のアクセント句のイントネーションをリセット",
-    combination: HotkeyCombo("R"),
+    combination: HotkeyCombination("R"),
   },
 ];
 
@@ -437,7 +438,7 @@ export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
 
 export const hotkeySettingSchema = z.object({
   action: hotkeyActionNameSchema,
-  combination: hotkeyComboSchema,
+  combination: hotkeyCombinationSchema,
 });
 export type HotkeySettingType = z.infer<typeof hotkeySettingSchema>;
 

@@ -11,7 +11,7 @@ import { Plugin, inject, onMounted, onUnmounted } from "vue";
 import hotkeys from "hotkeys-js";
 import {
   HotkeyActionNameType,
-  HotkeyCombo,
+  HotkeyCombination,
   HotkeySettingType,
 } from "@/type/preload";
 
@@ -68,7 +68,7 @@ type Log = (message: string, ...args: unknown[]) => void;
 type RegisteredCombination = {
   editor: Editor;
   name: HotkeyActionNameType;
-  combination: HotkeyCombo;
+  combination: HotkeyCombination;
 };
 
 interface HotkeyTarget {
@@ -127,7 +127,7 @@ export class HotkeyManager {
 
   private getRegisteredCombination(
     action: HotkeyAction
-  ): HotkeyCombo | undefined {
+  ): HotkeyCombination | undefined {
     return this.registeredCombinations.find(isSameHotkeyTarget(action))
       ?.combination;
   }
@@ -269,7 +269,7 @@ export class HotkeyManager {
   }
 }
 
-const combinationToBindingKey = (combination: HotkeyCombo) => {
+const combinationToBindingKey = (combination: HotkeyCombination) => {
   return combination.toLowerCase().replaceAll(" ", "+");
 };
 
@@ -282,7 +282,7 @@ export const hotkeyPlugin: Plugin = {
 };
 
 /** キーボードイベントをショートカットキーの文字列に変換する */
-export const eventToCombination = (event: KeyboardEvent): HotkeyCombo => {
+export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
   let recordedCombination = "";
   if (event.ctrlKey) {
     recordedCombination += "Ctrl ";
@@ -307,5 +307,5 @@ export const eventToCombination = (event: KeyboardEvent): HotkeyCombo => {
         event.key.length > 1 ? event.key : event.key.toUpperCase();
     }
   }
-  return HotkeyCombo(recordedCombination);
+  return HotkeyCombination(recordedCombination);
 };

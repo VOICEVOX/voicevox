@@ -217,7 +217,7 @@ import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import {
   HotkeyActionNameType,
-  HotkeyCombo,
+  HotkeyCombination,
   HotkeySettingType,
 } from "@/type/preload";
 import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
@@ -269,7 +269,7 @@ const hotkeyColumns = ref<
 ]);
 
 const lastAction = ref("");
-const lastRecord = ref(HotkeyCombo(""));
+const lastRecord = ref(HotkeyCombination(""));
 
 const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
@@ -282,15 +282,18 @@ const recordCombination = (event: KeyboardEvent) => {
 };
 
 const { hotkeyManager } = useHotkeyManager();
-const changeHotkeySettings = (action: string, combo: HotkeyCombo) => {
+const changeHotkeySettings = (
+  action: string,
+  combination: HotkeyCombination
+) => {
   hotkeyManager.replace({
     action: action as HotkeyActionNameType,
-    combination: combo,
+    combination,
   });
   return store.dispatch("SET_HOTKEY_SETTINGS", {
     data: {
       action: action as HotkeyActionNameType,
-      combination: combo,
+      combination,
     },
   });
 };
@@ -305,7 +308,7 @@ const duplicatedHotkey = computed(() => {
 
 // FIXME: actionはHotkeyAction型にすべき
 const deleteHotkey = (action: string) => {
-  changeHotkeySettings(action, HotkeyCombo(""));
+  changeHotkeySettings(action, HotkeyCombination(""));
 };
 
 const getHotkeyText = (action: string, combo: string) => {
@@ -329,14 +332,14 @@ const checkHotkeyReadonly = (action: string) => {
 
 const openHotkeyDialog = (action: string) => {
   lastAction.value = action;
-  lastRecord.value = HotkeyCombo("");
+  lastRecord.value = HotkeyCombination("");
   isHotkeyDialogOpened.value = true;
   document.addEventListener("keydown", recordCombination);
 };
 
 const closeHotkeyDialog = () => {
   lastAction.value = "";
-  lastRecord.value = HotkeyCombo("");
+  lastRecord.value = HotkeyCombination("");
   isHotkeyDialogOpened.value = false;
   document.removeEventListener("keydown", recordCombination);
 };
