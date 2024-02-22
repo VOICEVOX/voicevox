@@ -855,9 +855,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           phraseNotes.push(note);
 
           const currentNoteEnd = note.position + note.duration;
-          const nextNoteStart = notes[noteIndex + 1].position;
+          const nextNoteStart =
+            noteIndex + 1 < notes.length ? notes[noteIndex + 1].position : null;
           if (
             noteIndex === notes.length - 1 ||
+            nextNoteStart == null ||
             currentNoteEnd !== nextNoteStart
           ) {
             const phraseFirstNote = phraseNotes[0];
