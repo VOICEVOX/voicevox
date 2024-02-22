@@ -153,7 +153,7 @@ const createHeaderPlugin = (): Plugin => {
       const archive = archiver("zip", {
         zlib: { level: 9 },
       });
-      const zipName = `${packageName}-${process.env.VITE_APP_VERSION}.zip`;
+      const zipName = `${packageName}.zip`;
       const zipPath = path.join(vstOutput, zipName);
       await rm(zipPath, { force: true });
       archive.directory(webOutput, false);
@@ -162,38 +162,6 @@ const createHeaderPlugin = (): Plugin => {
       await pipeline(archive, outputZip);
       console.log(`Zip file created: ${zipPath}`);
       outputZip.close();
-
-      const headerPath = path.join(vstOutput, "header.h");
-      const headerStream = createWriteStream(headerPath);
-      console.log(`Creating header file: ${headerPath}`);
-      headerStream.write(`#pragma once\n`);
-      headerStream.write(`#ifndef ${packageName.toUpperCase()}_HEADER_H\n`);
-      headerStream.write(`#define ${packageName.toUpperCase()}_HEADER_H\n`);
-
-      await new Promise<void>((resolve) => {
-        const zipReaderStream = createReadStream(zipPath);
-
-        headerStream.write(`const unsigned char ${packageName}_zip[] = {\n`);
-        zipReaderStream.on("data", (chunk) => {
-          const hex = chunk.toString("hex");
-          headerStream.write(
-            hex
-              .match(/.{1,2}/g)
-              ?.map((c) => `0x${c}, `)
-              .join("") ?? ""
-          );
-        });
-        zipReaderStream.on("end", () => {
-          headerStream.write("};\n");
-          headerStream.write(
-            `const size_t ${packageName}_zip_len = sizeof(${packageName}_zip);\n`
-          );
-          headerStream.write("#endif\n");
-          headerStream.close();
-          resolve();
-          console.log(`Header file created: ${headerPath}`);
-        });
-      });
     },
   };
 };
