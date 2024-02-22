@@ -36,6 +36,7 @@ import {
   handlePossiblyNotMorphableError,
   isMorphable,
 } from "./audioGenerate";
+import { ContinuousPlayer } from "./audioContinuousPlayer";
 import {
   AudioKey,
   CharacterInfo,
@@ -1730,23 +1731,40 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         index = state.audioKeys.findIndex((v) => v === currentAudioKey);
       }
 
-      commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
-      try {
-        for (let i = index; i < state.audioKeys.length; ++i) {
-          const audioKey = state.audioKeys[i];
-          commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
-          const isEnded = await dispatch("PLAY_AUDIO", { audioKey });
-          if (!isEnded) {
-            break;
-          }
-        }
-      } finally {
-        commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
-        commit("SET_AUDIO_PLAY_START_POINT", {
-          startPoint: currentAudioPlayStartPoint,
+      const player = new ContinuousPlayer(state.audioKeys.slice(index), {
+        generateAudio: ({ audioKey }) =>
+          dispatch("FETCH_AUDIO", { audioKey }).then((result) => result.blob),
+        playAudioBlob: ({ audioBlob, audioKey }) =>
+          dispatch("PLAY_AUDIO_BLOB", { audioBlob, audioKey }),
+      });
+      player.addEventListener("playstart", (e) => {
+        commit("SET_ACTIVE_AUDIO_KEY", { audioKey: e.audioKey });
+      });
+      player.addEventListener("waitstart", (e) => {
+        dispatch("START_PROGRESS");
+        commit("SET_ACTIVE_AUDIO_KEY", { audioKey: e.audioKey });
+        commit("SET_AUDIO_NOW_GENERATING", {
+          audioKey: e.audioKey,
+          nowGenerating: true,
         });
-        commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
-      }
+      });
+      player.addEventListener("waitend", (e) => {
+        dispatch("RESET_PROGRESS");
+        commit("SET_AUDIO_NOW_GENERATING", {
+          audioKey: e.audioKey,
+          nowGenerating: false,
+        });
+      });
+
+      commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
+
+      await player.playUntilComplete();
+
+      commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
+      commit("SET_AUDIO_PLAY_START_POINT", {
+        startPoint: currentAudioPlayStartPoint,
+      });
+      commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
     }),
   },
 });
@@ -2867,5 +2885,6 @@ export const audioCommandStore = transformCommandStore(
         }
       ),
     },
-  })
+  }),
+  "talk"
 );

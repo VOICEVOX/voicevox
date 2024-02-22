@@ -24,7 +24,7 @@
       - エンジンの管理 ･･･ [EngineManageDialog](../src/components/Dialog/EngineManageDialog.vue)
     - 設定
       - キー割り当て ･･･ [HotkeySettingDialog](../src/components/Dialog/HotkeySettingDialog.vue)
-      - ツールバーのカスタマイズ ･･･ [HeaderBarCustomDialog](../src/components/Dialog/HeaderBarCustomDialog.vue)
+      - ツールバーのカスタマイズ ･･･ [ToolBarCustomDialog](../src/components/Dialog/ToolBarCustomDialog.vue)
       - キャラクター並び替え・試聴 ･･･ [CharacterOrderDialog](../src/components/Dialog/CharacterOrderDialog.vue)
         - サンプルボイス一覧の各キャラクター ･･･ [CharacterTryListenCard](../src/components/Dialog/CharacterTryListenCard.vue)
       - デフォルトスタイル ･･･ [DefaultStyleListDialog](../src/components/Dialog/DefaultStyleListDialog.vue)
@@ -36,7 +36,7 @@
       - [HelpDialog](../src/components/Dialog/HelpDialog/HelpDialog.vue) の`pagedata`の`components`をご参照ください。
   - ウィンドウ右上のボタン群（ピンボタン含む） ･･･ [TitleBarButtons](../src/components/TitleBarButtons.vue)
     - ピンボタン以外のボタン ･･･ [MinMaxCloseButtons](../src/components/MinMaxCloseButtons.vue)
-- ツールバー ･･･ [HeaderBar](../src/components/HeaderBar.vue)
+- ツールバー ･･･ [ToolBar](../src/components/ToolBar.vue)
 - キャラクター表示欄 ･･･ [CharacterPortrait](../src/components/Talk/CharacterPortrait.vue)
 - 台本欄（テキスト欄追加ボタンを含む） ･･･ [views/EditorHome](../src/views/EditorHome.vue) に含まれる
   - レーン（行番号・テキスト欄含む） ･･･ [AudioCell](../src/components/Talk/AudioCell.vue)

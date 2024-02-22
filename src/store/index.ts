@@ -18,7 +18,12 @@ import {
   getCharacterInfo,
 } from "./audio";
 import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
-import { singingStoreState, singingStore } from "./singing";
+import {
+  singingStoreState,
+  singingStore,
+  singingCommandStoreState,
+  singingCommandStore,
+} from "./singing";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
@@ -363,6 +368,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...dictionaryStoreState,
     ...proxyStoreState,
     ...singingStoreState,
+    ...singingCommandStoreState,
   },
 
   getters: {
@@ -379,6 +385,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...indexStore.getters,
     ...proxyStore.getters,
     ...singingStore.getters,
+    ...singingCommandStore.getters,
   },
 
   mutations: {
@@ -395,6 +402,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...indexStore.mutations,
     ...proxyStore.mutations,
     ...singingStore.mutations,
+    ...singingCommandStore.mutations,
   },
 
   actions: {
@@ -411,6 +419,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...indexStore.actions,
     ...proxyStore.actions,
     ...singingStore.actions,
+    ...singingCommandStore.actions,
   },
   strict: process.env.NODE_ENV !== "production",
 });

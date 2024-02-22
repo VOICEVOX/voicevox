@@ -18,6 +18,7 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
+      aria-label="シーケンサ"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
@@ -147,6 +148,7 @@
       />
       <div
         class="sequencer-playhead"
+        data-testid="sequencer-playhead"
         :style="{
           transform: `translateX(${playheadX - scrollX}px)`,
         }"
@@ -217,6 +219,7 @@ import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -606,7 +609,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         }
       }
       store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
-    } else if (event.ctrlKey) {
+    } else if (isOnCommandOrCtrlKeyDown(event)) {
       store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
     } else if (!state.selectedNoteIds.has(note.id)) {
       selectOnlyThis(note);
@@ -732,12 +735,12 @@ const onMouseUp = (event: MouseEvent) => {
   cancelAnimationFrame(previewRequestId);
   if (edited) {
     if (previewMode === "ADD") {
-      store.dispatch("ADD_NOTES", { notes: previewNotes.value });
+      store.dispatch("COMMAND_ADD_NOTES", { notes: previewNotes.value });
       store.dispatch("SELECT_NOTES", {
         noteIds: previewNotes.value.map((value) => value.id),
       });
     } else {
-      store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
+      store.dispatch("COMMAND_UPDATE_NOTES", { notes: previewNotes.value });
     }
     if (previewNotes.value.length === 1) {
       store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -782,7 +785,7 @@ const handleNotesArrowUp = () => {
   if (editedNotes.some((note) => note.noteNumber > 127)) {
     return;
   }
-  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
 
   if (editedNotes.length === 1) {
     store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -801,7 +804,7 @@ const handleNotesArrowDown = () => {
   if (editedNotes.some((note) => note.noteNumber < 0)) {
     return;
   }
-  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
 
   if (editedNotes.length === 1) {
     store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -821,7 +824,7 @@ const handleNotesArrowRight = () => {
     // TODO: 例外処理は`UPDATE_NOTES`内に移す？
     return;
   }
-  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
 };
 
 const handleNotesArrowLeft = () => {
@@ -836,15 +839,15 @@ const handleNotesArrowLeft = () => {
   ) {
     return;
   }
-  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
 };
 
 const handleNotesBackspaceOrDelete = () => {
   if (state.selectedNoteIds.size === 0) {
-    // TODO: 例外処理は`REMOVE_SELECTED_NOTES`内に移す？
+    // TODO: 例外処理は`COMMAND_REMOVE_SELECTED_NOTES`内に移す？
     return;
   }
-  store.dispatch("REMOVE_SELECTED_NOTES");
+  store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
 };
 
 const handleKeydown = (event: KeyboardEvent) => {
@@ -926,7 +929,7 @@ const onWheel = (event: WheelEvent) => {
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-  if (event.ctrlKey) {
+  if (isOnCommandOrCtrlKeyDown(event)) {
     cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
     // マウスカーソル位置を基準に水平方向のズームを行う
     const oldZoomX = zoomX.value;

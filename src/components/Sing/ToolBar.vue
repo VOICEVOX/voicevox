@@ -83,6 +83,24 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
+      <q-btn
+        flat
+        dense
+        round
+        icon="undo"
+        class="sing-undo-button"
+        :disable="!canUndo"
+        @click="undo"
+      />
+      <q-btn
+        flat
+        dense
+        round
+        icon="redo"
+        class="sing-redo-button"
+        :disable="!canRedo"
+        @click="redo"
+      />
       <q-icon name="volume_up" size="xs" class="sing-volume-icon" />
       <q-slider v-model.number="volume" class="sing-volume" />
       <q-select
@@ -115,8 +133,53 @@ import {
   isValidVoiceKeyShift,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
+
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+const editor = "song";
+const canUndo = computed(() => store.getters.CAN_UNDO(editor));
+const canRedo = computed(() => store.getters.CAN_REDO(editor));
+
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+registerHotkeyWithCleanup({
+  editor,
+  name: "元に戻す",
+  callback: () => {
+    if (!uiLocked.value && canUndo.value) {
+      undo();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor,
+  name: "やり直す",
+  callback: () => {
+    if (!uiLocked.value && canRedo.value) {
+      redo();
+    }
+  },
+});
+
+registerHotkeyWithCleanup({
+  editor,
+  name: "再生/停止",
+  callback: () => {
+    if (nowPlaying.value) {
+      stop();
+    } else {
+      play();
+    }
+  },
+});
+
+const undo = () => {
+  store.dispatch("UNDO", { editor });
+};
+const redo = () => {
+  store.dispatch("REDO", { editor });
+};
 
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
@@ -182,7 +245,7 @@ const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
 
 const setTempo = () => {
   const bpm = bpmInputBuffer.value;
-  store.dispatch("SET_TEMPO", {
+  store.dispatch("COMMAND_SET_TEMPO", {
     tempo: {
       position: 0,
       bpm,
@@ -193,7 +256,7 @@ const setTempo = () => {
 const setTimeSignature = () => {
   const beats = beatsInputBuffer.value;
   const beatType = beatTypeInputBuffer.value;
-  store.dispatch("SET_TIME_SIGNATURE", {
+  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
       measureNumber: 1,
       beats,
@@ -204,7 +267,7 @@ const setTimeSignature = () => {
 
 const setKeyShift = () => {
   const voiceKeyShift = keyShiftInputBuffer.value;
-  store.dispatch("SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+  store.dispatch("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
 };
 
 const playheadTicks = ref(0);
@@ -405,6 +468,16 @@ onUnmounted(() => {
   justify-content: flex-end;
   display: flex;
   flex: 1;
+}
+
+.sing-undo-button,
+.sing-redo-button {
+  &.disabled {
+    opacity: 0.4 !important;
+  }
+}
+.sing-redo-button {
+  margin-right: 16px;
 }
 
 .sing-volume-icon {

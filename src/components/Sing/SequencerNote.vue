@@ -16,7 +16,11 @@
       <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
       <context-menu ref="contextMenu" :menudata="contextMenuData" />
     </div>
-    <div class="note-lyric" @mousedown="onLyricMouseDown">
+    <div
+      class="note-lyric"
+      data-testid="note-lyric"
+      @mousedown="onLyricMouseDown"
+    >
       {{ lyric }}
     </div>
     <input
@@ -110,7 +114,7 @@ const lyric = computed({
       return;
     }
     const note: Note = { ...props.note, lyric: value };
-    store.dispatch("UPDATE_NOTES", { notes: [note] });
+    store.dispatch("COMMAND_UPDATE_NOTES", { notes: [note] });
   },
 });
 const showLyricInput = computed(() => {
@@ -123,7 +127,7 @@ const contextMenuData = ref<[MenuItemButton]>([
     label: "削除",
     onClick: async () => {
       contextMenu.value?.hide();
-      store.dispatch("REMOVE_SELECTED_NOTES");
+      store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
     },
     disableWhenUiLocked: true,
   },
@@ -194,18 +198,12 @@ const onLyricInputBlur = () => {
     // 色は仮
     .note-bar {
       background-color: hsl(33, 100%, 50%);
-      border-color: hsl(33, 100%, 78%);
-    }
-
-    .note-lyric {
-      border-color: hsl(33, 0%, 90%);
     }
   }
 
   &.overlapping {
     .note-bar {
       background-color: hsl(130, 35%, 85%);
-      border-color: hsl(130, 35%, 90%);
     }
   }
 }
@@ -231,7 +229,7 @@ const onLyricInputBlur = () => {
   width: calc(100% + 1px);
   height: 100%;
   background-color: colors.$primary;
-  border: 1px solid hsl(130, 35%, 86%);
+  border: 1px solid rgba(colors.$background-rgb, 0.5);
   border-radius: 2px;
   cursor: move;
 }
