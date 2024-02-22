@@ -152,6 +152,7 @@ const props =
   defineProps<{
     projectFilePath?: string;
     isEnginesReady: boolean;
+    isProjectFileLoaded: boolean | undefined;
   }>();
 
 const store = useStore();
@@ -446,21 +447,13 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
 
 // エンジン初期化後の処理
 const isCompletedInitialStartup = ref(false);
-const unwatchIsEnginesReady = watch(
-  // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
-  () => props.isEnginesReady,
-  async (isEnginesReady) => {
-    if (!isEnginesReady) return;
-
-    // プロジェクトファイルが指定されていればロード
-    let projectFileLoaded = false;
-    if (props.projectFilePath != undefined && props.projectFilePath !== "") {
-      projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
-        filePath: props.projectFilePath,
-      });
-    }
-
-    if (!projectFileLoaded) {
+// 一度だけ実行している
+// TODO: Vueっぽくないので解体する
+const unwatchIsProjectFileLoaded = watch(
+  () => props.isProjectFileLoaded,
+  async (isProjectFileLoaded) => {
+    if (isProjectFileLoaded == undefined) return;
+    if (!isProjectFileLoaded) {
       // 最初のAudioCellを作成
       const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
       const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
@@ -478,7 +471,7 @@ const unwatchIsEnginesReady = watch(
 
     isCompletedInitialStartup.value = true;
 
-    unwatchIsEnginesReady();
+    unwatchIsProjectFileLoaded();
   },
   {
     immediate: true,

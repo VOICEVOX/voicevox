@@ -7,6 +7,7 @@
           :is="Component"
           :is-engines-ready="isEnginesReady"
           :project-file-path="projectFilePath"
+          :is-project-file-loaded="isProjectFileLoaded"
         />
       </keep-alive>
     </router-view>
@@ -75,6 +76,7 @@ watch(
 // ソフトウェアを初期化
 const { hotkeyManager } = useHotkeyManager();
 const isEnginesReady = ref(false);
+const isProjectFileLoaded = ref<undefined | boolean>(undefined);
 onMounted(async () => {
   await store.dispatch("INIT_VUEX");
 
@@ -121,6 +123,18 @@ onMounted(async () => {
   await store.dispatch("SYNC_ALL_USER_DICT");
 
   isEnginesReady.value = true;
+
+  // プロジェクトファイルが指定されていればロード
+  if (
+    typeof projectFilePath.value === "string" &&
+    projectFilePath.value !== ""
+  ) {
+    isProjectFileLoaded.value = await store.dispatch("LOAD_PROJECT_FILE", {
+      filePath: projectFilePath.value,
+    });
+  } else {
+    isProjectFileLoaded.value = false;
+  }
 });
 
 onMounted(async () => {
