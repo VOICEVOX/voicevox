@@ -1,6 +1,9 @@
 /// <reference types="vitest" />
+/* eslint-disable no-console */
 import path from "path";
-import { rmSync } from "fs";
+import { createWriteStream, createReadStream, rmSync } from "fs";
+import { rm, mkdir } from "fs/promises";
+import { pipeline } from "stream/promises";
 import treeKill from "tree-kill";
 
 import electron from "vite-plugin-electron";
@@ -10,6 +13,7 @@ import checker from "vite-plugin-checker";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
+import archiver from "archiver";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
@@ -17,8 +21,9 @@ const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 const isVst = process.env.VITE_TARGET === "vst";
 
+const packageName = process.env.npm_package_name;
+
 export default defineConfig((options) => {
-  const packageName = process.env.npm_package_name;
   const env = loadEnv(options.mode, __dirname);
   if (!packageName?.startsWith(env.VITE_APP_NAME)) {
     throw new Error(
@@ -112,7 +117,7 @@ export default defineConfig((options) => {
           },
         }),
       isBrowser && injectPreloadPlugin("browser"),
-      isVst && injectPreloadPlugin("vst"),
+      isVst && [injectPreloadPlugin("vst"), createHeaderPlugin()],
     ],
   };
 });
@@ -127,6 +132,68 @@ const injectPreloadPlugin = (name: string): Plugin => {
           `<!-- %${name.toUpperCase()}_PRELOAD% -->`,
           `<script type="module" src="./${name}/preload.ts"></script>`
         ),
+    },
+  };
+};
+
+const createHeaderPlugin = (): Plugin => {
+  return {
+    name: "create-header",
+    apply: "build",
+    enforce: "post",
+    closeBundle: async () => {
+      if (!packageName) {
+        return;
+      }
+
+      console.log("Creating zip file...");
+      const webOutput = path.join(__dirname, "dist");
+      const vstOutput = path.join(__dirname, "dist_vst");
+      await mkdir(vstOutput, { recursive: true });
+      const archive = archiver("zip", {
+        zlib: { level: 9 },
+      });
+      const zipName = `${packageName}-${process.env.VITE_APP_VERSION}.zip`;
+      const zipPath = path.join(vstOutput, zipName);
+      await rm(zipPath, { force: true });
+      archive.directory(webOutput, false);
+      archive.finalize();
+      const outputZip = createWriteStream(zipPath);
+      await pipeline(archive, outputZip);
+      console.log(`Zip file created: ${zipPath}`);
+      outputZip.close();
+
+      const headerPath = path.join(vstOutput, "header.h");
+      const headerStream = createWriteStream(headerPath);
+      console.log(`Creating header file: ${headerPath}`);
+      headerStream.write(`#pragma once\n`);
+      headerStream.write(`#ifndef ${packageName.toUpperCase()}_HEADER_H\n`);
+      headerStream.write(`#define ${packageName.toUpperCase()}_HEADER_H\n`);
+
+      await new Promise<void>((resolve) => {
+        const zipReaderStream = createReadStream(zipPath);
+
+        headerStream.write(`const unsigned char ${packageName}_zip[] = {\n`);
+        zipReaderStream.on("data", (chunk) => {
+          const hex = chunk.toString("hex");
+          headerStream.write(
+            hex
+              .match(/.{1,2}/g)
+              ?.map((c) => `0x${c}, `)
+              .join("") ?? ""
+          );
+        });
+        zipReaderStream.on("end", () => {
+          headerStream.write("};\n");
+          headerStream.write(
+            `const size_t ${packageName}_zip_len = sizeof(${packageName}_zip);\n`
+          );
+          headerStream.write("#endif\n");
+          headerStream.close();
+          resolve();
+          console.log(`Header file created: ${headerPath}`);
+        });
+      });
     },
   };
 };
