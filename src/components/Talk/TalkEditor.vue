@@ -476,20 +476,6 @@ const unwatchIsEnginesReady = watch(
       });
     }
 
-    // 設定の読み込みを待機する
-    // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
-    await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
-
-    store.dispatch("SET_DIALOG_OPEN", {
-      isAcceptRetrieveTelemetryDialogOpen:
-        store.state.acceptRetrieveTelemetry === "Unconfirmed",
-    });
-    store.dispatch("SET_DIALOG_OPEN", {
-      isAcceptTermsDialogOpen:
-        import.meta.env.MODE !== "development" &&
-        store.state.acceptTerms !== "Accepted",
-    });
-
     isCompletedInitialStartup.value = true;
 
     unwatchIsEnginesReady();

@@ -78,6 +78,14 @@ const isEnginesReady = ref(false);
 onMounted(async () => {
   await store.dispatch("INIT_VUEX");
 
+  store.dispatch("SET_DIALOG_OPEN", {
+    isAcceptRetrieveTelemetryDialogOpen:
+      store.state.acceptRetrieveTelemetry === "Unconfirmed",
+    isAcceptTermsDialogOpen:
+      import.meta.env.MODE !== "development" &&
+      store.state.acceptTerms !== "Accepted",
+  });
+
   const hotkeySettings = store.state.hotkeySettings;
 
   hotkeyManager.load(structuredClone(toRaw(hotkeySettings)));
