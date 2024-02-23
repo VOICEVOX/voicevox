@@ -9,6 +9,7 @@ import {
   defaultHotkeySettings,
   HotkeySettingType,
   ExperimentalSettingType,
+  HotkeyCombination,
 } from "@/type/preload";
 
 const lockKey = "save";
@@ -223,7 +224,7 @@ export abstract class BaseConfigManager {
   }
 
   private migrateHotkeySettings(data: ConfigType): ConfigType {
-    const COMBINATION_IS_NONE = "####";
+    const COMBINATION_IS_NONE = HotkeyCombination("####");
     const loadedHotkeys = structuredClone(data.hotkeySettings);
     const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
       (defaultHotkey) => {
@@ -249,7 +250,7 @@ export abstract class BaseConfigManager {
         if (combinationExists) {
           const emptyHotkey: HotkeySettingType = {
             action: newHotkey.action,
-            combination: "",
+            combination: HotkeyCombination(""),
           };
           return emptyHotkey;
         } else {

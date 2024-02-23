@@ -16,7 +16,11 @@
       <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
       <context-menu ref="contextMenu" :menudata="contextMenuData" />
     </div>
-    <div class="note-lyric" @mousedown="onLyricMouseDown">
+    <div
+      class="note-lyric"
+      data-testid="note-lyric"
+      @mousedown="onLyricMouseDown"
+    >
       {{ lyric }}
     </div>
     <input
@@ -110,7 +114,7 @@ const lyric = computed({
       return;
     }
     const note: Note = { ...props.note, lyric: value };
-    store.dispatch("UPDATE_NOTES", { notes: [note] });
+    store.dispatch("COMMAND_UPDATE_NOTES", { notes: [note] });
   },
 });
 const showLyricInput = computed(() => {
@@ -123,7 +127,7 @@ const contextMenuData = ref<[MenuItemButton]>([
     label: "削除",
     onClick: async () => {
       contextMenu.value?.hide();
-      store.dispatch("REMOVE_SELECTED_NOTES");
+      store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
     },
     disableWhenUiLocked: true,
   },

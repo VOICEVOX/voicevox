@@ -149,7 +149,7 @@
 
 <script setup lang="ts">
 import path from "path";
-import { computed, onBeforeUpdate, onMounted, ref, VNodeRef, watch } from "vue";
+import { computed, onBeforeUpdate, ref, VNodeRef, watch } from "vue";
 import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
@@ -176,14 +176,12 @@ import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { AudioItem } from "@/store/type";
 import {
   AudioKey,
-  HotkeyActionType,
-  HotkeyReturnType,
   PresetKey,
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
-import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props =
   defineProps<{
@@ -197,81 +195,64 @@ const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 // hotkeys handled by Mousetrap
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  [
-    "テキスト欄にフォーカスを戻す",
-    () => {
-      if (activeAudioKey.value != undefined) {
-        focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
-      }
-      return false; // this is the same with event.preventDefault()
-    },
-  ],
-  [
-    // FIXME: テキスト欄にフォーカスがある状態でも実行できるようにする
-    // https://github.com/VOICEVOX/voicevox/pull/1096#issuecomment-1378651920
-    "テキスト欄を複製",
-    () => {
-      if (activeAudioKey.value != undefined) {
-        duplicateAudioItem();
-      }
-      return false;
-    },
-  ],
-]);
+const { registerHotkeyWithCleanup } = useHotkeyManager();
 
-setHotkeyFunctions(hotkeyMap);
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "テキスト欄にフォーカスを戻す",
+  callback: () => {
+    if (activeAudioKey.value != undefined) {
+      focusCell({ audioKey: activeAudioKey.value, focusTarget: "textField" });
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: true,
+  name: "テキスト欄を複製",
+  callback: () => {
+    if (activeAudioKey.value != undefined) {
+      duplicateAudioItem();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: true,
+  name: "テキスト欄を追加",
+  callback: () => {
+    if (!uiLocked.value) {
+      addAudioItem();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: true,
+  name: "テキスト欄を削除",
+  callback: () => {
+    if (!uiLocked.value) {
+      removeAudioItem();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: true,
+  name: "テキスト欄からフォーカスを外す",
+  callback: () => {
+    if (!uiLocked.value) {
+      if (document.activeElement instanceof HTMLInputElement) {
+        document.activeElement.blur();
+      }
+    }
+  },
+});
 
 const removeAudioItem = async () => {
   if (activeAudioKey.value == undefined) throw new Error();
   audioCellRefs[activeAudioKey.value].removeCell();
 };
-
-// convert the hotkey array to Map to get value with keys easier
-// this only happens here where we deal with native methods
-const hotkeySettingsMap = computed(
-  () =>
-    new Map(
-      store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
-    )
-);
-
-// hotkeys handled by native, for they are made to be working while focusing input elements
-const hotkeyActionsNative = [
-  (event: KeyboardEvent) => {
-    if (
-      !event.isComposing &&
-      !uiLocked.value &&
-      parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を追加")
-    ) {
-      addAudioItem();
-      event.preventDefault();
-    }
-  },
-  (event: KeyboardEvent) => {
-    if (
-      !event.isComposing &&
-      !uiLocked.value &&
-      parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を削除")
-    ) {
-      removeAudioItem();
-      event.preventDefault();
-    }
-  },
-  (event: KeyboardEvent) => {
-    if (
-      !event.isComposing &&
-      !uiLocked.value &&
-      parseCombo(event) ==
-        hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
-    ) {
-      if (document.activeElement instanceof HTMLInputElement) {
-        document.activeElement.blur();
-      }
-      event.preventDefault();
-    }
-  },
-];
 
 // view
 const DEFAULT_PORTRAIT_PANE_WIDTH = 25; // %
@@ -496,13 +477,6 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
       voice: voice,
     });
   }
-});
-
-onMounted(async () => {
-  // ショートカットキーの設定
-  hotkeyActionsNative.forEach((item) => {
-    document.addEventListener("keyup", item);
-  });
 });
 
 // エンジン初期化後の処理

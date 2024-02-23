@@ -1,12 +1,8 @@
-import Mousetrap from "mousetrap";
 import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
-import { useStore } from "@/store";
 import {
-  HotkeyActionType,
-  HotkeyReturnType,
   HotkeySettingType,
   SavingSetting,
   ExperimentalSettingType,
@@ -18,8 +14,6 @@ import {
   RootMiscSettingType,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
-
-const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
 export const settingStoreState: SettingStoreState = {
   savingSetting: {
@@ -189,25 +183,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       });
       if (flag) state.hotkeySettings.push(newHotkey);
     },
-    action({ state, commit }, { data }: { data: HotkeySettingType }) {
+    action({ commit }, { data }: { data: HotkeySettingType }) {
       window.electron.hotkeySettings(data);
-      const oldHotkey = state.hotkeySettings.find((value) => {
-        return value.action == data.action;
-      });
-      if (oldHotkey != undefined) {
-        if (oldHotkey.combination != "") {
-          Mousetrap.unbind(hotkey2Combo(oldHotkey.combination));
-        }
-      }
-      if (
-        data.combination != "" &&
-        hotkeyFunctionCache[data.action] != undefined
-      ) {
-        Mousetrap.bind(
-          hotkey2Combo(data.combination),
-          hotkeyFunctionCache[data.action]
-        );
-      }
       commit("SET_HOTKEY_SETTINGS", {
         newHotkey: data,
       });
@@ -466,55 +443,3 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 });
-
-export const setHotkeyFunctions = (
-  hotkeyMap: Map<HotkeyActionType, () => HotkeyReturnType>,
-  reassign?: boolean
-): void => {
-  hotkeyMap.forEach((value, key) => {
-    hotkeyFunctionCache[key] = value;
-  });
-  if (reassign) {
-    const store = useStore();
-    hotkeyMap.forEach((hotkeyFunction, hotkeyAction) => {
-      const hotkey = store.state.hotkeySettings.find((value) => {
-        return value.action == hotkeyAction;
-      });
-      if (hotkey) {
-        store.dispatch("SET_HOTKEY_SETTINGS", { data: { ...hotkey } });
-      }
-    });
-  }
-};
-
-const hotkey2Combo = (hotkeyCombo: string) => {
-  return hotkeyCombo.toLowerCase().replaceAll(" ", "+");
-};
-
-export const parseCombo = (event: KeyboardEvent): string => {
-  let recordedCombo = "";
-  if (event.ctrlKey) {
-    recordedCombo += "Ctrl ";
-  }
-  if (event.altKey) {
-    recordedCombo += "Alt ";
-  }
-  if (event.shiftKey) {
-    recordedCombo += "Shift ";
-  }
-  // event.metaKey は Mac キーボードでは Cmd キー、Windows キーボードでは Windows キーの押下で true になる
-  if (event.metaKey) {
-    recordedCombo += "Meta ";
-  }
-  if (event.key === " ") {
-    recordedCombo += "Space";
-  } else {
-    if (["Control", "Shift", "Alt", "Meta"].includes(event.key)) {
-      recordedCombo = recordedCombo.slice(0, -1);
-    } else {
-      recordedCombo +=
-        event.key.length > 1 ? event.key : event.key.toUpperCase();
-    }
-  }
-  return recordedCombo;
-};
