@@ -65,7 +65,7 @@ export default defineConfig((options) => {
       environmentMatchGlobs: [
         [
           path
-            .resolve(__dirname, "tests/unit/background/**/*.spec.ts")
+            .resolve(__dirname, "tests/unit/backend/electron/**/*.spec.ts")
             .replace(/\\/g, "/"),
           "node",
         ],
