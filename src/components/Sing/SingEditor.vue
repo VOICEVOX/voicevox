@@ -25,23 +25,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from "vue";
+import { computed } from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
+import onetimeWatch from "@/helpers/onetimeWatch";
+import {
+  DEFAULT_BEATS,
+  DEFAULT_BEAT_TYPE,
+  DEFAULT_BPM,
+  DEFAULT_TPQN,
+} from "@/sing/storeHelper";
 
-const props = withDefaults(
+const props =
   defineProps<{
-    projectFilePath?: string;
     isEnginesReady: boolean;
-  }>(),
-  {
-    projectFilePath: undefined,
-    isEnginesReady: false,
-  }
-);
+    isProjectFileLoaded: boolean | "waiting";
+  }>();
 
 const store = useStore();
 //const $q = useQuasar();
@@ -57,16 +59,46 @@ const cancelExport = () => {
   store.dispatch("CANCEL_AUDIO_EXPORT");
 };
 
-// エンジン初期化後の処理
-const unwatchIsEnginesReady = watch(
-  // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
-  () => props.isEnginesReady,
-  async (isEnginesReady) => {
-    if (!isEnginesReady) return;
+// TODO: Vueっぽくないので解体する
+onetimeWatch(
+  () => props.isProjectFileLoaded,
+  async (isProjectFileLoaded) => {
+    if (isProjectFileLoaded == "waiting" || !props.isEnginesReady) return false;
+
+    if (!isProjectFileLoaded) {
+      await store.dispatch("SET_SCORE", {
+        score: {
+          tpqn: DEFAULT_TPQN,
+          tempos: [
+            {
+              position: 0,
+              bpm: DEFAULT_BPM,
+            },
+          ],
+          timeSignatures: [
+            {
+              measureNumber: 1,
+              beats: DEFAULT_BEATS,
+              beatType: DEFAULT_BEAT_TYPE,
+            },
+          ],
+          notes: [],
+        },
+      });
+
+      await store.dispatch("SET_VOLUME", { volume: 0.6 });
+      await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+      await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
+        position: 0,
+      });
+      await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
+        position: 480 * 4 * 16,
+      });
+    }
 
     await store.dispatch("SET_SINGER", {});
 
-    unwatchIsEnginesReady();
+    return true;
   },
   {
     immediate: true,

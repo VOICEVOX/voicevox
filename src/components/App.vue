@@ -6,7 +6,6 @@
         <component
           :is="Component"
           :is-engines-ready="isEnginesReady"
-          :project-file-path="projectFilePath"
           :is-project-file-loaded="isProjectFileLoaded"
         />
       </keep-alive>
@@ -23,12 +22,6 @@ import { EngineId } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import {
-  DEFAULT_BEATS,
-  DEFAULT_BEAT_TYPE,
-  DEFAULT_BPM,
-  DEFAULT_TPQN,
-} from "@/sing/storeHelper";
 import AllDialog from "@/components/Dialog/AllDialog.vue";
 
 const store = useStore();
@@ -136,37 +129,4 @@ onMounted(async () => {
     isProjectFileLoaded.value = false;
   }
 });
-
-onMounted(async () => {
-  await store.dispatch("SET_SCORE", {
-    score: {
-      tpqn: DEFAULT_TPQN,
-      tempos: [
-        {
-          position: 0,
-          bpm: DEFAULT_BPM,
-        },
-      ],
-      timeSignatures: [
-        {
-          measureNumber: 1,
-          beats: DEFAULT_BEATS,
-          beatType: DEFAULT_BEAT_TYPE,
-        },
-      ],
-      notes: [],
-    },
-  });
-
-  await store.dispatch("SET_VOLUME", { volume: 0.6 });
-  await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
-  await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
-    position: 0,
-  });
-  await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
-    position: 480 * 4 * 16,
-  });
-});
-
-// TODO: エンジン起動状態周りの処理と表示をEditorHomeから移動する
 </script>

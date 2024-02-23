@@ -147,12 +147,12 @@ import {
   Voice,
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import onetimeWatch from "@/helpers/onetimeWatch";
 
 const props =
   defineProps<{
-    projectFilePath?: string;
     isEnginesReady: boolean;
-    isProjectFileLoaded: boolean | undefined;
+    isProjectFileLoaded: boolean | "waiting";
   }>();
 
 const store = useStore();
@@ -447,12 +447,11 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
 
 // エンジン初期化後の処理
 const isCompletedInitialStartup = ref(false);
-// 一度だけ実行している
 // TODO: Vueっぽくないので解体する
-const unwatchIsProjectFileLoaded = watch(
+onetimeWatch(
   () => props.isProjectFileLoaded,
   async (isProjectFileLoaded) => {
-    if (isProjectFileLoaded == undefined) return;
+    if (isProjectFileLoaded == "waiting" || !props.isEnginesReady) return false;
     if (!isProjectFileLoaded) {
       // 最初のAudioCellを作成
       const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
@@ -471,7 +470,7 @@ const unwatchIsProjectFileLoaded = watch(
 
     isCompletedInitialStartup.value = true;
 
-    unwatchIsProjectFileLoaded();
+    return true;
   },
   {
     immediate: true,
