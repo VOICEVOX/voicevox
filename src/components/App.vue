@@ -109,6 +109,7 @@ onMounted(async () => {
 
   isEnginesReady.value = true;
 
+  // エンジン起動後にダイアログを開く
   store.dispatch("SET_DIALOG_OPEN", {
     isAcceptRetrieveTelemetryDialogOpen:
       store.state.acceptRetrieveTelemetry === "Unconfirmed",
