@@ -89,7 +89,10 @@ export default defineConfig((options) => {
         }),
       isElectron &&
         electron({
-          entry: ["./src/background.ts", "./src/electron/preload.ts"],
+          entry: [
+            "./src/backend/electron/main.ts",
+            "./src/backend/electron/ipc/preload.ts",
+          ],
           // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
           onstart: ({ startup }) => {
             // @ts-expect-error vite-electron-pluginはprocess.electronAppにelectronのプロセスを格納している。
