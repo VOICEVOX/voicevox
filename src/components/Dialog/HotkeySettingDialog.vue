@@ -217,7 +217,11 @@ import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import {
   HotkeyActionNameType,
+<<<<<<< HEAD
   HotkeyCombo,
+=======
+  HotkeyCombination,
+>>>>>>> upstream/main
   HotkeySettingType,
 } from "@/type/preload";
 import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
@@ -269,7 +273,11 @@ const hotkeyColumns = ref<
 ]);
 
 const lastAction = ref("");
+<<<<<<< HEAD
 const lastRecord = ref(HotkeyCombo(""));
+=======
+const lastRecord = ref(HotkeyCombination(""));
+>>>>>>> upstream/main
 
 const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
@@ -282,15 +290,22 @@ const recordCombination = (event: KeyboardEvent) => {
 };
 
 const { hotkeyManager } = useHotkeyManager();
+<<<<<<< HEAD
 const changeHotkeySettings = (action: string, combo: HotkeyCombo) => {
+=======
+const changeHotkeySettings = (
+  action: string,
+  combination: HotkeyCombination
+) => {
+>>>>>>> upstream/main
   hotkeyManager.replace({
     action: action as HotkeyActionNameType,
-    combination: combo,
+    combination,
   });
   return store.dispatch("SET_HOTKEY_SETTINGS", {
     data: {
       action: action as HotkeyActionNameType,
-      combination: combo,
+      combination,
     },
   });
 };
@@ -305,7 +320,11 @@ const duplicatedHotkey = computed(() => {
 
 // FIXME: actionはHotkeyAction型にすべき
 const deleteHotkey = (action: string) => {
+<<<<<<< HEAD
   changeHotkeySettings(action, HotkeyCombo(""));
+=======
+  changeHotkeySettings(action, HotkeyCombination(""));
+>>>>>>> upstream/main
 };
 
 const getHotkeyText = (action: string, combo: string) => {
@@ -329,14 +348,22 @@ const checkHotkeyReadonly = (action: string) => {
 
 const openHotkeyDialog = (action: string) => {
   lastAction.value = action;
+<<<<<<< HEAD
   lastRecord.value = HotkeyCombo("");
+=======
+  lastRecord.value = HotkeyCombination("");
+>>>>>>> upstream/main
   isHotkeyDialogOpened.value = true;
   document.addEventListener("keydown", recordCombination);
 };
 
 const closeHotkeyDialog = () => {
   lastAction.value = "";
+<<<<<<< HEAD
   lastRecord.value = HotkeyCombo("");
+=======
+  lastRecord.value = HotkeyCombination("");
+>>>>>>> upstream/main
   isHotkeyDialogOpened.value = false;
   document.removeEventListener("keydown", recordCombination);
 };

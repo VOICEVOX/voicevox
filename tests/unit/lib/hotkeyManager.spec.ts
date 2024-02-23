@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { HotkeyManager, HotkeysJs, HotkeyAction } from "@/plugins/hotkeyPlugin";
+<<<<<<< HEAD
 import { HotkeyCombo, HotkeySettingType } from "@/type/preload";
+=======
+import { HotkeyCombination, HotkeySettingType } from "@/type/preload";
+>>>>>>> upstream/main
 
 type DummyHotkeysJs = HotkeysJs & {
   registeredHotkeys: {
@@ -70,7 +74,11 @@ it("unregisterできる", () => {
   hotkeyManager.load([
     {
       action: "音声書き出し",
+<<<<<<< HEAD
       combination: HotkeyCombo("1"),
+=======
+      combination: HotkeyCombination("1"),
+>>>>>>> upstream/main
     },
   ]);
   hotkeyManager.register(action);
@@ -91,7 +99,11 @@ const dummyAction: HotkeyAction = {
 };
 const createDummySetting = (combination: string): HotkeySettingType => ({
   action: "音声書き出し",
+<<<<<<< HEAD
   combination: HotkeyCombo(combination),
+=======
+  combination: HotkeyCombination(combination),
+>>>>>>> upstream/main
 });
 
 describe("設定変更", () => {
