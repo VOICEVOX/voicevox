@@ -239,7 +239,7 @@ import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
-const props = defineProps<{ isActivated: boolean }>();
+defineProps<{ isActivated: boolean }>();
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -1000,36 +1000,43 @@ const playheadPositionChangeListener = (position: number) => {
   }
 };
 
-// 初期スクロール位置を計算
+// スクロールバーの幅を取得する
 onMounted(() => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-
-  // スクロール位置を設定（C4が上から2/3の位置になるようにする）
-  const clientHeight = sequencerBodyElement.clientHeight;
-  const c4BaseY = noteNumberToBaseY(60);
-  const clientBaseHeight = clientHeight / zoomY.value;
-  const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
-  scrollX.value = 0;
-  scrollY.value = scrollBaseY * zoomY.value;
-
-  // スクロールバーの幅を取得する
   const clientWidth = sequencerBodyElement.clientWidth;
   const offsetWidth = sequencerBodyElement.offsetWidth;
   scrollBarWidth.value = offsetWidth - clientWidth;
 });
 
-// スクロール位置を復帰
+// 最初のonActivatedか判断するためのフラグ
+let firstActivation = true;
+
+// スクロール位置を設定する
 onActivated(() => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
+  let xToScroll = 0;
+  let yToScroll = 0;
+  if (firstActivation) {
+    // 初期スクロール位置を設定（C4が上から2/3の位置になるようにする）
+    const clientHeight = sequencerBodyElement.clientHeight;
+    const c4BaseY = noteNumberToBaseY(60);
+    const clientBaseHeight = clientHeight / zoomY.value;
+    const scrollBaseY = c4BaseY - clientBaseHeight * (2 / 3);
+    xToScroll = 0;
+    yToScroll = scrollBaseY * zoomY.value;
 
-  const xToScroll = scrollX.value;
-  const yToScroll = scrollY.value;
+    firstActivation = false;
+  } else {
+    // スクロール位置を復帰
+    xToScroll = scrollX.value;
+    yToScroll = scrollY.value;
+  }
   // 実際にスクロールする
   nextTick().then(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
