@@ -69,7 +69,7 @@ watch(
 // ソフトウェアを初期化
 const { hotkeyManager } = useHotkeyManager();
 const isEnginesReady = ref(false);
-const isProjectFileLoaded = ref<undefined | boolean>(undefined);
+const isProjectFileLoaded = ref<boolean | "waiting">("waiting");
 onMounted(async () => {
   await store.dispatch("INIT_VUEX");
 
