@@ -34,7 +34,7 @@ export const useHotkeyManager = () => {
 
 type Editor = "talk" | "song";
 
-type BindingKey = string & { __brand: "BindingKey" };
+type BindingKey = string & { __brand: "BindingKey" }; // BindingKey専用のブランド型
 
 /**
  * ショートカットキーの処理を登録するための型。
