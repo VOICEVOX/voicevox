@@ -140,55 +140,55 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_HOW_TO_USE_TEXT: {
     async action() {
-      return await window.electron.getHowToUseText();
+      return await window.backend.getHowToUseText();
     },
   },
 
   GET_CONTACT_TEXT: {
     async action() {
-      return await window.electron.getContactText();
+      return await window.backend.getContactText();
     },
   },
 
   GET_Q_AND_A_TEXT: {
     async action() {
-      return await window.electron.getQAndAText();
+      return await window.backend.getQAndAText();
     },
   },
 
   GET_POLICY_TEXT: {
     async action() {
-      return await window.electron.getPolicyText();
+      return await window.backend.getPolicyText();
     },
   },
 
   GET_OSS_LICENSES: {
     async action() {
-      return await window.electron.getOssLicenses();
+      return await window.backend.getOssLicenses();
     },
   },
 
   GET_UPDATE_INFOS: {
     async action() {
-      return await window.electron.getUpdateInfos();
+      return await window.backend.getUpdateInfos();
     },
   },
 
   GET_OSS_COMMUNITY_INFOS: {
     async action() {
-      return await window.electron.getOssCommunityInfos();
+      return await window.backend.getOssCommunityInfos();
     },
   },
 
   GET_PRIVACY_POLICY_TEXT: {
     async action() {
-      return await window.electron.getPrivacyPolicyText();
+      return await window.backend.getPrivacyPolicyText();
     },
   },
 
   LOAD_DEFAULT_STYLE_IDS: {
     async action({ commit, getters }) {
-      let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
+      let defaultStyleIds = await window.backend.getSetting("defaultStyleIds");
 
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
 
@@ -270,13 +270,13 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
     async action({ commit }, defaultStyleIds) {
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
-      await window.electron.setSetting("defaultStyleIds", defaultStyleIds);
+      await window.backend.setSetting("defaultStyleIds", defaultStyleIds);
     },
   },
 
   LOAD_USER_CHARACTER_ORDER: {
     async action({ commit }) {
-      const userCharacterOrder = await window.electron.getSetting(
+      const userCharacterOrder = await window.backend.getSetting(
         "userCharacterOrder"
       );
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
@@ -289,7 +289,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
     async action({ commit }, userCharacterOrder) {
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
-      await window.electron.setSetting(
+      await window.backend.setSetting(
         "userCharacterOrder",
         userCharacterOrder
       );
@@ -311,19 +311,19 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   LOG_ERROR: {
     action(_, ...params: unknown[]) {
-      window.electron.logError(...params);
+      window.backend.logError(...params);
     },
   },
 
   LOG_WARN: {
     action(_, ...params: unknown[]) {
-      window.electron.logWarn(...params);
+      window.backend.logWarn(...params);
     },
   },
 
   LOG_INFO: {
     action(_, ...params: unknown[]) {
-      window.electron.logInfo(...params);
+      window.backend.logInfo(...params);
     },
   },
 

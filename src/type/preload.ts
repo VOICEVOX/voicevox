@@ -669,6 +669,6 @@ export interface MessageBoxReturnValue {
   checkboxChecked: boolean;
 }
 
-export const SandboxKey = "electron" as const;
+export const SandboxKey = "backend" as const;
 
 export type EditorType = "talk" | "song";

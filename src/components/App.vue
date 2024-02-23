@@ -57,7 +57,7 @@ watch(
     } else {
       // 不明なパスの場合はトークエディタにする
       path = "talk";
-      window.electron.logWarn(`unknown path: ${unknownPath}`);
+      window.backend.logWarn(`unknown path: ${unknownPath}`);
     }
 
     hotkeyManager.onEditorChange(path);
