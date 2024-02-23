@@ -2,7 +2,9 @@
   <menu-bar />
   <tool-bar />
   <div class="sing-main">
-    <engine-startup-overlay :is-completed-initial-startup="isEnginesReady" />
+    <engine-startup-overlay
+      :is-completed-initial-startup="isCompletedInitialStartup"
+    />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <q-spinner color="primary" size="2.5rem" />
@@ -25,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
@@ -59,6 +61,7 @@ const cancelExport = () => {
   store.dispatch("CANCEL_AUDIO_EXPORT");
 };
 
+const isCompletedInitialStartup = ref(false);
 // TODO: Vueっぽくないので解体する
 onetimeWatch(
   () => props.isProjectFileLoaded,
@@ -97,6 +100,8 @@ onetimeWatch(
     }
 
     await store.dispatch("SET_SINGER", {});
+
+    isCompletedInitialStartup.value = true;
 
     return true;
   },
