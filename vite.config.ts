@@ -139,7 +139,7 @@ const injectBrowserPreloadPlugin = (): Plugin => {
       transform: (html: string) =>
         html.replace(
           "<!-- %BROWSER_PRELOAD% -->",
-          `<script type="module" src="./browser/preload.ts"></script>`
+          `<script type="module" src="./backend/browser/preload.ts"></script>`
         ),
     },
   };
