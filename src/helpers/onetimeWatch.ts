@@ -5,13 +5,16 @@ import { WatchOptions, WatchSource, watch } from "vue";
  */
 const onetimeWatch = <T>(
   source: WatchSource<T>,
-  fn: (before: T, after: T | undefined) => Promise<boolean> | boolean,
+  fn: (
+    before: T,
+    after: T | undefined
+  ) => Promise<"unwatch" | "continue"> | "unwatch" | "continue",
   options: WatchOptions = {}
 ) => {
   const unwatch = watch(
     source,
     async (after, before) => {
-      if (await fn(after, before)) {
+      if ((await fn(after, before)) === "unwatch") {
         unwatch();
       }
     },

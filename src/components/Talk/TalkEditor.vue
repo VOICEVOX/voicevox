@@ -451,7 +451,8 @@ const isCompletedInitialStartup = ref(false);
 onetimeWatch(
   () => props.isProjectFileLoaded,
   async (isProjectFileLoaded) => {
-    if (isProjectFileLoaded == "waiting" || !props.isEnginesReady) return false;
+    if (isProjectFileLoaded == "waiting" || !props.isEnginesReady)
+      return "continue";
     if (!isProjectFileLoaded) {
       // 最初のAudioCellを作成
       const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
@@ -470,7 +471,7 @@ onetimeWatch(
 
     isCompletedInitialStartup.value = true;
 
-    return true;
+    return "unwatch";
   },
   {
     immediate: true,

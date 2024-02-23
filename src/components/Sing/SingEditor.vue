@@ -66,7 +66,8 @@ const isCompletedInitialStartup = ref(false);
 onetimeWatch(
   () => props.isProjectFileLoaded,
   async (isProjectFileLoaded) => {
-    if (isProjectFileLoaded == "waiting" || !props.isEnginesReady) return false;
+    if (isProjectFileLoaded == "waiting" || !props.isEnginesReady)
+      return "continue";
 
     if (!isProjectFileLoaded) {
       await store.dispatch("SET_SCORE", {
@@ -103,7 +104,7 @@ onetimeWatch(
 
     isCompletedInitialStartup.value = true;
 
-    return true;
+    return "unwatch";
   },
   {
     immediate: true,
