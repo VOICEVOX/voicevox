@@ -91,7 +91,7 @@ export default defineConfig((options) => {
         electron({
           entry: [
             "./src/backend/electron/main.ts",
-            "./src/backend/electron/ipc/preload.ts",
+            "./src/backend/electron/preload.ts",
           ],
           // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
           onstart: ({ startup }) => {

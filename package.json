@@ -3,7 +3,7 @@
   "version": "999.999.999",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
-  "main": "./dist/background.js",
+  "main": "./dist/main.js",
   "engines": {
     "node": ">=18.13.0 <19",
     "npm": ">=8.19.3 <9"
