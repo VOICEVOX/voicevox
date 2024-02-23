@@ -289,10 +289,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
     async action({ commit }, userCharacterOrder) {
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
-      await window.backend.setSetting(
-        "userCharacterOrder",
-        userCharacterOrder
-      );
+      await window.backend.setSetting("userCharacterOrder", userCharacterOrder);
     },
   },
 
