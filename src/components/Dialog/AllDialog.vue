@@ -1,4 +1,8 @@
 <template>
+  <accept-retrieve-telemetry-dialog
+    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
+  />
+  <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
@@ -15,10 +19,6 @@
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
-  <accept-retrieve-telemetry-dialog
-    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
-  />
-  <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
   <update-notification-dialog-container
     :can-open-dialog="canOpenNotificationDialog"
   />

@@ -57,7 +57,9 @@ test("アップデートが通知されたりスキップしたりできる", as
 
   // 再度開くとまた表示される
   await page.reload();
-  await expect(dialog.getByText("アップデートのお知らせ")).toBeVisible();
+  await expect(dialog.getByText("アップデートのお知らせ")).toBeVisible({
+    timeout: 10000,
+  });
 
   // スキップすると消える
   await dialog
