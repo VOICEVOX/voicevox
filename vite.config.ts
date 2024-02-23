@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 import path from "path";
-import { rmSync } from "fs";
+import { rm } from "fs/promises";
 import treeKill from "tree-kill";
 
 import electron from "vite-plugin-electron";
@@ -10,8 +10,6 @@ import checker from "vite-plugin-checker";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
-
-rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
@@ -87,7 +85,8 @@ export default defineConfig((options) => {
           },
           vueTsc: true,
         }),
-      isElectron &&
+      isElectron && [
+        cleanDistPlugin(),
         electron({
           entry: [
             "./src/backend/electron/main.ts",
@@ -113,10 +112,24 @@ export default defineConfig((options) => {
             },
           },
         }),
+      ],
       isBrowser && injectBrowserPreloadPlugin(),
     ],
   };
 });
+const cleanDistPlugin = (): Plugin => {
+  return {
+    name: "clean-dist",
+    apply: "build",
+    enforce: "pre",
+    async buildStart() {
+      await rm(path.resolve(__dirname, "dist"), {
+        recursive: true,
+        force: true,
+      });
+    },
+  };
+};
 
 const injectBrowserPreloadPlugin = (): Plugin => {
   return {
