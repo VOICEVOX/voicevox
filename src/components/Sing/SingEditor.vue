@@ -99,10 +99,9 @@ onetimeWatch(
         position: 480 * 4 * 16,
       });
     }
+    isCompletedInitialStartup.value = true;
 
     await store.dispatch("SET_SINGER", {});
-
-    isCompletedInitialStartup.value = true;
 
     return "unwatch";
   },
