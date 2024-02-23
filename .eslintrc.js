@@ -67,9 +67,7 @@ module.exports = {
   overrides: [
     {
       files: [
-        "./src/background.ts",
-        "./src/background/*.ts",
-        "./src/electron/*.ts",
+        "./src/backend/electron/**/*.ts",
         "./tests/**/*.ts",
         "./build/*.js",
         "./build/*.mts",
