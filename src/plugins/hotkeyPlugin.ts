@@ -11,11 +11,7 @@ import { Plugin, inject, onMounted, onUnmounted } from "vue";
 import hotkeys from "hotkeys-js";
 import {
   HotkeyActionNameType,
-<<<<<<< HEAD
-  HotkeyCombo,
-=======
   HotkeyCombination,
->>>>>>> upstream/main
   HotkeySettingType,
 } from "@/type/preload";
 
@@ -75,11 +71,7 @@ type Log = (message: string, ...args: unknown[]) => void;
 type RegisteredCombination = {
   editor: Editor;
   name: HotkeyActionNameType;
-<<<<<<< HEAD
-  combination: HotkeyCombo;
-=======
   combination: HotkeyCombination;
->>>>>>> upstream/main
 };
 
 interface HotkeyTarget {
@@ -138,11 +130,7 @@ export class HotkeyManager {
 
   private getRegisteredCombination(
     action: HotkeyAction
-<<<<<<< HEAD
-  ): HotkeyCombo | undefined {
-=======
   ): HotkeyCombination | undefined {
->>>>>>> upstream/main
     return this.registeredCombinations.find(isSameHotkeyTarget(action))
       ?.combination;
   }
@@ -284,9 +272,10 @@ export class HotkeyManager {
   }
 }
 
-<<<<<<< HEAD
 /** hotkeys-js用のキーに変換する */
-const combinationToBindingKey = (combination: HotkeyCombo): BindingKey => {
+const combinationToBindingKey = (
+  combination: HotkeyCombination
+): BindingKey => {
   // MetaキーはCommandキーとして扱う
   //TODO: Windowsの場合はWindowsキーとして扱う
   const bindingKey = combination
@@ -295,10 +284,6 @@ const combinationToBindingKey = (combination: HotkeyCombo): BindingKey => {
     .map((key) => (key === "meta" ? "command" : key))
     .join("+");
   return bindingKey as BindingKey;
-=======
-const combinationToBindingKey = (combination: HotkeyCombination) => {
-  return combination.toLowerCase().replaceAll(" ", "+");
->>>>>>> upstream/main
 };
 
 export const hotkeyPlugin: Plugin = {
@@ -310,11 +295,7 @@ export const hotkeyPlugin: Plugin = {
 };
 
 /** キーボードイベントをショートカットキーの文字列に変換する */
-<<<<<<< HEAD
-export const eventToCombination = (event: KeyboardEvent): HotkeyCombo => {
-=======
 export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
->>>>>>> upstream/main
   let recordedCombination = "";
   if (event.ctrlKey) {
     recordedCombination += "Ctrl ";
@@ -339,9 +320,5 @@ export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
         event.key.length > 1 ? event.key : event.key.toUpperCase();
     }
   }
-<<<<<<< HEAD
-  return HotkeyCombo(recordedCombination);
-=======
   return HotkeyCombination(recordedCombination);
->>>>>>> upstream/main
 };
