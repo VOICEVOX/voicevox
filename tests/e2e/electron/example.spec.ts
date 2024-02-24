@@ -14,7 +14,6 @@ test.beforeAll(async () => {
       await fs.access("./dist/main.js");
       break;
     } catch (e) {
-      
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
