@@ -242,10 +242,15 @@ const initialize = () => {
     if (renderer == undefined) {
       throw new Error("renderer is undefined.");
     }
-    canvasWidth = canvasContainerElement.clientWidth;
-    canvasHeight = canvasContainerElement.clientHeight;
-    renderer.resize(canvasWidth, canvasHeight);
-    renderInNextFrame = true;
+    const canvasContainerWidth = canvasContainerElement.clientWidth;
+    const canvasContainerHeight = canvasContainerElement.clientHeight;
+
+    if (canvasContainerWidth > 0 && canvasContainerHeight > 0) {
+      canvasWidth = canvasContainerWidth;
+      canvasHeight = canvasContainerHeight;
+      renderer.resize(canvasWidth, canvasHeight);
+      renderInNextFrame = true;
+    }
   });
   resizeObserver.observe(canvasContainerElement);
 
