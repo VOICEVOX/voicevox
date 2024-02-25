@@ -1,25 +1,25 @@
 <template>
-  <q-page
+  <QPage
     ref="scroller"
     class="relative-absolute-wrapper scroller bg-background"
   >
     <div class="q-pa-md markdown-body">
-      <q-list v-if="detailIndex === undefined">
-        <q-item
+      <QList v-if="detailIndex === undefined">
+        <QItem
           v-for="(license, index) in props.licenses"
           :key="index"
           clickable
           dense
           @click="selectLicenseIndex(index)"
         >
-          <q-item-section>{{
+          <QItemSection>{{
             license.name + (license.version ? " | " + license.version : "")
-          }}</q-item-section>
-        </q-item>
-      </q-list>
+          }}</QItemSection>
+        </QItem>
+      </QList>
       <div v-else>
         <div class="q-mb-md">
-          <q-btn
+          <QBtn
             outline
             color="primary"
             icon="keyboard_arrow_left"
@@ -31,7 +31,7 @@
         <pre>{{ licenses[detailIndex].text }}</pre>
       </div>
     </div>
-  </q-page>
+  </QPage>
 </template>
 
 <script setup lang="ts">

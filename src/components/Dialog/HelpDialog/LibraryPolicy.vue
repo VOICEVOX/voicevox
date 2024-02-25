@@ -1,10 +1,10 @@
 <template>
-  <q-page
+  <QPage
     ref="scroller"
     class="relative-absolute-wrapper scroller bg-background"
   >
     <div class="q-pa-md markdown-body">
-      <q-list v-if="selectedInfo === undefined">
+      <QList v-if="selectedInfo === undefined">
         <template
           v-for="(engineId, engineIndex) in sortedEngineInfos.map(
             (engineInfo) => engineInfo.uuid
@@ -13,10 +13,10 @@
         >
           <!-- エンジンが一つだけの場合は名前を表示しない -->
           <template v-if="engineInfos.size > 1">
-            <q-separator v-if="engineIndex > 0" spaced />
-            <q-item-label header>{{
+            <QSeparator v-if="engineIndex > 0" spaced />
+            <QItemLabel header>{{
               mapNullablePipe(engineInfos.get(engineId), (v) => v.name)
-            }}</q-item-label>
+            }}</QItemLabel>
           </template>
           <template
             v-for="([, characterInfo], characterIndex) in mapNullablePipe(
@@ -25,7 +25,7 @@
             )"
             :key="characterIndex"
           >
-            <q-item
+            <QItem
               clickable
               @click="
                 selectCharacterInfo({
@@ -34,16 +34,14 @@
                 })
               "
             >
-              <q-item-section>{{
-                characterInfo.metas.speakerName
-              }}</q-item-section>
-            </q-item>
+              <QItemSection>{{ characterInfo.metas.speakerName }}</QItemSection>
+            </QItem>
           </template>
         </template>
-      </q-list>
+      </QList>
       <div v-else>
         <div class="q-mb-md">
-          <q-btn
+          <QBtn
             outline
             color="primary"
             icon="keyboard_arrow_left"
@@ -65,7 +63,7 @@
         <div v-if="policy" class="markdown" v-html="policy"></div>
       </div>
     </div>
-  </q-page>
+  </QPage>
 </template>
 
 <script setup lang="ts">

@@ -3,13 +3,13 @@
     <!-- 左上の角 -->
     <div class="sequencer-corner"></div>
     <!-- ルーラー -->
-    <sequencer-ruler
+    <SequencerRuler
       class="sequencer-ruler"
       :offset="scrollX"
       :num-of-measures="numOfMeasures"
     />
     <!-- 鍵盤 -->
-    <sequencer-keys
+    <SequencerKeys
       class="sequencer-keys"
       :offset="scrollY"
       :black-key-width="28"
@@ -29,7 +29,7 @@
       @scroll="onScroll"
     >
       <!-- キャラクター全身 -->
-      <character-portrait />
+      <CharacterPortrait />
       <!-- グリッド -->
       <!-- NOTE: 現状オクターブごとの罫線なし -->
       <svg
@@ -108,7 +108,7 @@
         }"
       ></div>
       <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
-      <sequencer-note
+      <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
@@ -118,7 +118,7 @@
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
-      <sequencer-note
+      <SequencerNote
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
@@ -136,7 +136,7 @@
         marginBottom: `${scrollBarWidth}px`,
       }"
     >
-      <sequencer-phrase-indicator
+      <SequencerPhraseIndicator
         v-for="phraseInfo in phraseInfos"
         :key="phraseInfo.key"
         :phrase-key="phraseInfo.key"

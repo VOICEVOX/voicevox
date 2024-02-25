@@ -1,5 +1,5 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="isOpenComputed"
     maximized
     transition-show="none"
@@ -7,20 +7,20 @@
     transition-duration="100"
     class="default-style-select-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm">
-        <q-toolbar>
+    <QLayout container view="hHh Lpr lff" class="bg-background">
+      <QHeader class="q-py-sm">
+        <QToolbar>
           <div class="column">
-            <q-toolbar-title class="text-display"
+            <QToolbarTitle class="text-display"
               >設定 / デフォルトスタイル・試聴 /
-              {{ characterInfo.metas.speakerName }}</q-toolbar-title
+              {{ characterInfo.metas.speakerName }}</QToolbarTitle
             >
           </div>
 
-          <q-space />
+          <QSpace />
 
           <div class="row items-center no-wrap">
-            <q-btn
+            <QBtn
               unelevated
               :label="isModified ? '保存' : '戻る'"
               color="toolbar-button"
@@ -29,10 +29,10 @@
               @click="closeDialog"
             />
           </div>
-        </q-toolbar>
-      </q-header>
+        </QToolbar>
+      </QHeader>
 
-      <q-drawer
+      <QDrawer
         bordered
         show-if-above
         :model-value="true"
@@ -42,13 +42,13 @@
         <div class="character-portrait-wrapper">
           <img :src="characterInfo.portraitPath" class="character-portrait" />
         </div>
-      </q-drawer>
+      </QDrawer>
 
-      <q-page-container>
-        <q-page>
+      <QPageContainer>
+        <QPage>
           <div class="style-items-container">
             <div class="q-py-md">
-              <q-item
+              <QItem
                 v-for="(style, styleIndex) of characterInfo.metas.styles"
                 :key="styleIndex"
                 v-ripple="isHoverableStyleItem"
@@ -67,7 +67,7 @@
                     style.styleName || DEFAULT_STYLE_NAME
                   }}</span>
                   <div class="voice-samples">
-                    <q-btn
+                    <QBtn
                       v-for="voiceSampleIndex of [...Array(3).keys()]"
                       :key="voiceSampleIndex"
                       round
@@ -99,7 +99,7 @@
                             )
                       "
                     />
-                    <q-radio
+                    <QRadio
                       class="absolute-top-right no-pointer-events text-primary"
                       :model-value="selectedStyleIndexComputed"
                       :val="styleIndex"
@@ -107,13 +107,13 @@
                     />
                   </div>
                 </div>
-              </q-item>
+              </QItem>
             </div>
           </div>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">

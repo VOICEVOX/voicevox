@@ -30,7 +30,7 @@
       tabindex="-1"
       @click="onClickWithModifierKey"
     />
-    <q-icon
+    <QIcon
       v-if="isActiveAudioCell"
       name="arrow_right"
       color="primary"
@@ -44,7 +44,7 @@
     >
       {{ textLineNumberIndex }}
     </div>
-    <character-button
+    <CharacterButton
       v-model:selected-voice="selectedVoice"
       :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
@@ -60,7 +60,7 @@
       input.valueをスクリプトから変更した場合は@changeが発火しないため、
       @blurと@keydown.prevent.enter.exactに分けている
     -->
-    <q-input
+    <QInput
       ref="textField"
       filled
       dense
@@ -85,7 +85,7 @@
         句読点の位置で文章を分割してください。
       </template>
       <template v-if="enableDeleteButton" #after>
-        <q-btn
+        <QBtn
           round
           flat
           icon="delete_outline"
@@ -95,7 +95,7 @@
           @click="removeCell"
         />
       </template>
-      <context-menu
+      <ContextMenu
         ref="contextMenu"
         :header="contextMenuHeader"
         :menudata="contextMenudata"
@@ -105,7 +105,7 @@
         "
         @before-hide="endContextMenuOperation()"
       />
-    </q-input>
+    </QInput>
   </div>
 </template>
 

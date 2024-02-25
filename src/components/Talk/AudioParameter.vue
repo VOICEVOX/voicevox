@@ -3,7 +3,7 @@
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
-    <q-badge
+    <QBadge
       v-if="
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "
@@ -16,8 +16,8 @@
           ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
           : undefined
       }}
-    </q-badge>
-    <q-slider
+    </QBadge>
+    <QSlider
       vertical
       reverse
       snap

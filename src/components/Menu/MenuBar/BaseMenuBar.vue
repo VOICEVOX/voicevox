@@ -1,11 +1,11 @@
 <template>
-  <q-bar class="bg-background q-pa-none relative-position">
+  <QBar class="bg-background q-pa-none relative-position">
     <div
       v-if="$q.platform.is.mac && !isFullscreen"
       class="mac-traffic-light-space"
     ></div>
     <img v-else src="/icon.png" class="window-logo" alt="application logo" />
-    <menu-button
+    <MenuButton
       v-for="(root, index) of menudata"
       :key="index"
       v-model:selected="subMenuOpenFlags[index]"
@@ -16,14 +16,14 @@
         root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
       "
     />
-    <q-space />
+    <QSpace />
     <div class="window-title" :class="{ 'text-warning': isMultiEngineOffMode }">
       {{ titleText }}
     </div>
-    <q-space />
-    <title-bar-editor-switcher />
-    <title-bar-buttons />
-  </q-bar>
+    <QSpace />
+    <TitleBarEditorSwitcher />
+    <TitleBarButtons />
+  </QBar>
 </template>
 
 <script setup lang="ts">
