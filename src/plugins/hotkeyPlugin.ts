@@ -277,7 +277,8 @@ const combinationToBindingKey = (
   combination: HotkeyCombination
 ): BindingKey => {
   // MetaキーはCommandキーとして扱う
-  //TODO: Windowsの場合はWindowsキーとして扱う
+  // NOTE: hotkeys-jsにはWinキーが無く、Commandキーとして扱われている
+  // NOTE: Metaキーは以前採用していたmousetrapがそうだった名残り
   const bindingKey = combination
     .toLowerCase()
     .split(" ")
