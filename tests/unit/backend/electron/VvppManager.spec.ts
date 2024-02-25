@@ -3,7 +3,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { beforeEach, expect, test } from "vitest";
 import { EngineId, MinimumEngineManifestType } from "@/type/preload";
-import VvppManager from "@/background/vvppManager";
+import VvppManager from "@/backend/electron/manager/vvppManager";
 
 const dummyMinimumManifest: MinimumEngineManifestType = {
   name: "Test Engine",

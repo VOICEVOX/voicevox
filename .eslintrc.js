@@ -67,9 +67,7 @@ module.exports = {
   overrides: [
     {
       files: [
-        "./src/background.ts",
-        "./src/background/*.ts",
-        "./src/electron/*.ts",
+        "./src/backend/electron/**/*.ts",
         "./tests/**/*.ts",
         "./build/*.js",
         "./build/*.mts",
@@ -81,11 +79,7 @@ module.exports = {
     // Electronのメインプロセス以外でelectronのimportを禁止する
     {
       files: ["./src/**/*.ts", "./src/**/*.vue"],
-      excludedFiles: [
-        "./src/background.ts",
-        "./src/background/*.ts",
-        "./src/electron/*.ts",
-      ],
+      excludedFiles: ["./src/backend/electron/**/*.ts"],
       rules: {
         "no-restricted-imports": [
           "error",
