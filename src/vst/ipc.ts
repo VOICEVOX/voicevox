@@ -9,6 +9,7 @@ declare function vstGetConfig(): Promise<string>;
 declare function vstGetProject(): Promise<string>;
 declare function vstSetProject(value: string): Promise<void>;
 declare function vstUpdatePhrases(remove: string[], add: string): Promise<void>;
+declare function vstGetPhrases(): Promise<string>;
 declare function vstClearPhrases(): Promise<void>;
 declare function vstShowImportFileDialog(
   title: string,
@@ -36,6 +37,32 @@ export async function getProject(): Promise<string> {
 export async function setProject(memory: string) {
   log("setProject");
   await vstSetProject(memory);
+}
+
+export async function getPhrases(): Promise<
+  Map<
+    string,
+    {
+      startTime: number;
+      endTime: number;
+    }
+  >
+> {
+  log("getPhrases");
+  const rawPhrases = await vstGetPhrases();
+  const splitPhrases = rawPhrases.trim().split("\n");
+  return new Map(
+    splitPhrases.map((phrase) => {
+      const [id, startTime, endTime] = phrase.split(":");
+      return [
+        id,
+        {
+          startTime: parseFloat(startTime),
+          endTime: parseFloat(endTime),
+        },
+      ];
+    })
+  );
 }
 
 export async function updatePhrases(remove: string[], add: unknown[]) {

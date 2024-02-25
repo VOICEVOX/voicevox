@@ -2,7 +2,7 @@ import { Plugin, watch } from "vue";
 import AsyncLock from "async-lock";
 import { debounce } from "quasar";
 import { Router } from "vue-router";
-import { clearPhrases, getProject, updatePhrases } from "./ipc";
+import { clearPhrases, getPhrases, getProject, updatePhrases } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
@@ -79,9 +79,6 @@ export const vstMessageReceiver: Plugin = {
       }
     };
 
-    const vstPhrases: Map<string, { blob: Blob; startTime: number }> =
-      new Map();
-
     const phrasesLock = new AsyncLock();
 
     clearPhrases();
@@ -125,10 +122,10 @@ export const vstMessageReceiver: Plugin = {
             ([, phrase]) => phrase.state === "PLAYABLE"
           );
           const removedPhrases: string[] = [];
-          for (const [id] of vstPhrases) {
+          const vstPhrases = await getPhrases();
+          for (const id of vstPhrases.keys()) {
             if (!playablePhrases.some(([phraseId]) => phraseId === id)) {
               removedPhrases.push(id);
-              vstPhrases.delete(id);
             }
           }
 
@@ -143,10 +140,7 @@ export const vstMessageReceiver: Plugin = {
                 throw new Error("wav is not found");
               }
 
-              if (
-                vstPhrases.get(id)?.blob === wav &&
-                vstPhrases.get(id)?.startTime === phrase.startTime
-              ) {
+              if (vstPhrases.get(id)?.startTime === phrase.startTime) {
                 return undefined;
               }
 
@@ -154,7 +148,6 @@ export const vstMessageReceiver: Plugin = {
               if (startTime == undefined) {
                 throw new Error("startTime is not found");
               }
-              vstPhrases.set(id, { blob: wav, startTime });
               return {
                 id,
                 start: startTime,
