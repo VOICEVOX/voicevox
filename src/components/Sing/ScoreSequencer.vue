@@ -129,7 +129,7 @@
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
     </div>
-    <sequencer-pitch
+    <SequencerPitch
       v-if="showPitch"
       class="sequencer-pitch"
       :style="{
