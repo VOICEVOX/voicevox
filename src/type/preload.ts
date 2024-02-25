@@ -157,6 +157,12 @@ export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "REDO",
 ];
 
+export type ShowImportFileDialogOptions = {
+  title: string;
+  name?: string;
+  extensions?: string[];
+};
+
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
   getHowToUseText(): Promise<string>;
@@ -199,11 +205,9 @@ export interface Sandbox {
     cancelId?: number;
     defaultId?: number;
   }): Promise<number>;
-  showImportFileDialog(obj: {
-    title: string;
-    name?: string;
-    extensions?: string[];
-  }): Promise<string | undefined>;
+  showImportFileDialog(
+    obj: ShowImportFileDialogOptions
+  ): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;

@@ -1,7 +1,6 @@
 import { getConfigManager } from "./config";
-import { getProject, setProject } from "./ipc";
+import { getProject, readFile, setProject, showImportFileDialog } from "./ipc";
 import { defaultEngine } from "@/browser/contract";
-
 import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
@@ -24,13 +23,12 @@ import {
   QAndATextFileName,
   UpdateInfosJsonFileName,
 } from "@/type/staticResources";
-import { success } from "@/type/result";
+import { failure, success } from "@/type/result";
 
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
 
 export const projectFilePath = "/meta/vst-project.vvproj";
-
 /**
  * VST版のSandBox実装
  * src/type/preload.tsのSandboxを変更した場合は、interfaceに追従した変更が必要
@@ -44,29 +42,37 @@ export const api: Sandbox = {
     };
     return Promise.resolve(appInfo);
   },
-  getHowToUseText() {
-    return fetch(toStaticPath(HowToUseTextFileName)).then((v) => v.text());
+  async getHowToUseText() {
+    const v = await fetch(toStaticPath(HowToUseTextFileName));
+    return await v.text();
   },
-  getPolicyText() {
-    return fetch(toStaticPath(PolicyTextFileName)).then((v) => v.text());
+  async getPolicyText() {
+    const v = await fetch(toStaticPath(PolicyTextFileName));
+    return await v.text();
   },
-  getOssLicenses() {
-    return fetch(toStaticPath(OssLicensesJsonFileName)).then((v) => v.json());
+  async getOssLicenses() {
+    const v = await fetch(toStaticPath(OssLicensesJsonFileName));
+    return await v.json();
   },
-  getUpdateInfos() {
-    return fetch(toStaticPath(UpdateInfosJsonFileName)).then((v) => v.json());
+  async getUpdateInfos() {
+    const v = await fetch(toStaticPath(UpdateInfosJsonFileName));
+    return await v.json();
   },
-  getOssCommunityInfos() {
-    return fetch(toStaticPath(OssCommunityInfosFileName)).then((v) => v.text());
+  async getOssCommunityInfos() {
+    const v = await fetch(toStaticPath(OssCommunityInfosFileName));
+    return await v.text();
   },
-  getQAndAText() {
-    return fetch(toStaticPath(QAndATextFileName)).then((v) => v.text());
+  async getQAndAText() {
+    const v = await fetch(toStaticPath(QAndATextFileName));
+    return await v.text();
   },
-  getContactText() {
-    return fetch(toStaticPath(ContactTextFileName)).then((v) => v.text());
+  async getContactText() {
+    const v = await fetch(toStaticPath(ContactTextFileName));
+    return await v.text();
   },
-  getPrivacyPolicyText() {
-    return fetch(toStaticPath(PrivacyPolicyTextFileName)).then((v) => v.text());
+  async getPrivacyPolicyText() {
+    const v = await fetch(toStaticPath(PrivacyPolicyTextFileName));
+    return await v.text();
   },
   getAltPortInfos() {
     // NOTE: ブラウザ版ではサポートされていません
@@ -114,8 +120,8 @@ export const api: Sandbox = {
       `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`
     );
   },
-  showImportFileDialog() {
-    throw new Error("Not implemented");
+  showImportFileDialog(options) {
+    return showImportFileDialog(options);
   },
   async writeFile(options) {
     if (options.filePath === projectFilePath) {
@@ -129,8 +135,13 @@ export const api: Sandbox = {
       const project = await getProject();
       const buffer = new TextEncoder().encode(project);
       return success(buffer);
+    } else {
+      try {
+        return success(await readFile(options.filePath));
+      } catch (e) {
+        return failure(e as Error);
+      }
     }
-    throw new Error("Not implemented");
   },
   isAvailableGPUMode() {
     // TODO: WebAssembly版をサポートする時に実装する
