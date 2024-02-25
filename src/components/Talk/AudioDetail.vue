@@ -85,15 +85,11 @@ import { computed, nextTick, ref, watch } from "vue";
 import AccentPhrase from "./AccentPhrase.vue";
 import ToolTip from "@/components/ToolTip.vue";
 import { useStore } from "@/store";
-import {
-  AudioKey,
-  HotkeyActionType,
-  HotkeyReturnType,
-  isMac,
-} from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
+import { AudioKey, isMac } from "@/type/preload";
 import { EngineManifest } from "@/openapi/models";
 import { useShiftKey, useAltKey } from "@/composables/useModifierKey";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
 
 const props =
   defineProps<{
@@ -112,70 +108,74 @@ const supportedFeatures = computed(
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
 
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  [
-    "再生/停止",
-    () => {
-      if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
-        play();
-      } else {
-        stop();
-      }
-    },
-  ],
-  [
-    "ｱｸｾﾝﾄ欄を表示",
-    () => {
-      selectedDetail.value = "accent";
-    },
-  ],
-  [
-    "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-    () => {
-      if (supportedFeatures.value?.adjustMoraPitch) {
-        selectedDetail.value = "pitch";
-      }
-    },
-  ],
-  [
-    "長さ欄を表示",
-    () => {
-      if (supportedFeatures.value?.adjustPhonemeLength) {
-        selectedDetail.value = "length";
-      }
-    },
-  ],
-  [
-    "全体のイントネーションをリセット",
-    () => {
-      if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
-        const audioKeys = store.state.experimentalSetting.enableMultiSelect
-          ? store.getters.SELECTED_AUDIO_KEYS
-          : [store.getters.ACTIVE_AUDIO_KEY];
-        store.dispatch("COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH", {
-          audioKeys,
-        });
-      }
-    },
-  ],
-  [
-    "選択中のアクセント句のイントネーションをリセット",
-    () => {
-      if (
-        !uiLocked.value &&
-        store.getters.ACTIVE_AUDIO_KEY &&
-        store.getters.AUDIO_PLAY_START_POINT != undefined
-      ) {
-        store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
-          audioKey: store.getters.ACTIVE_AUDIO_KEY,
-          accentPhraseIndex: store.getters.AUDIO_PLAY_START_POINT,
-        });
-      }
-    },
-  ],
-]);
-// このコンポーネントは遅延評価なので手動でバインディングを行う
-setHotkeyFunctions(hotkeyMap, true);
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "再生/停止",
+  callback: () => {
+    if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+      play();
+    } else {
+      stop();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "ｱｸｾﾝﾄ欄を表示",
+  callback: () => {
+    selectedDetail.value = "accent";
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+  callback: () => {
+    if (supportedFeatures.value?.adjustMoraPitch) {
+      selectedDetail.value = "pitch";
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "長さ欄を表示",
+  callback: () => {
+    if (supportedFeatures.value?.adjustPhonemeLength) {
+      selectedDetail.value = "length";
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "全体のイントネーションをリセット",
+  callback: () => {
+    if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
+      const audioKeys = store.state.experimentalSetting.enableMultiSelect
+        ? store.getters.SELECTED_AUDIO_KEYS
+        : [store.getters.ACTIVE_AUDIO_KEY];
+      store.dispatch("COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH", {
+        audioKeys,
+      });
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "選択中のアクセント句のイントネーションをリセット",
+  callback: () => {
+    if (
+      !uiLocked.value &&
+      store.getters.ACTIVE_AUDIO_KEY &&
+      store.getters.AUDIO_PLAY_START_POINT != undefined
+    ) {
+      store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
+        audioKey: store.getters.ACTIVE_AUDIO_KEY,
+        accentPhraseIndex: store.getters.AUDIO_PLAY_START_POINT,
+      });
+    }
+  },
+});
 
 // detail selector
 type DetailTypes = "accent" | "pitch" | "length";
@@ -248,13 +248,7 @@ const play = async () => {
       audioKey: props.activeAudioKey,
     });
   } catch (e) {
-    let msg: string | undefined;
-    // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
-    if (e instanceof Error && e.message === "VALID_MORPHING_ERROR") {
-      msg = "モーフィングの設定が無効です。";
-    } else {
-      window.electron.logError(e);
-    }
+    const msg = handlePossiblyNotMorphableError(e);
     store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",

@@ -72,9 +72,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import type { MenuItemData } from "@/components/BaseMenuBar.vue";
+import { MenuItemData } from "./type";
 import { useStore } from "@/store";
-import { hotkeyActionSchema } from "@/type/preload";
+import { hotkeyActionNameSchema } from "@/type/preload";
 const props = withDefaults(
   defineProps<{
     selected?: boolean;
@@ -96,7 +96,7 @@ const hotkeySettingsMap = computed(
     )
 );
 const getMenuBarHotkey = (rawLabel: string) => {
-  const label = hotkeyActionSchema.safeParse(rawLabel);
+  const label = hotkeyActionNameSchema.safeParse(rawLabel);
   if (!label.success) {
     return "";
   }

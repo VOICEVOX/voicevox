@@ -278,3 +278,11 @@ export function getSnapTypes(tpqn: number) {
 export function isValidSnapType(snapType: number, tpqn: number) {
   return getSnapTypes(tpqn).some((value) => value === snapType);
 }
+
+export function isValidVoiceKeyShift(voiceKeyShift: number) {
+  return (
+    Number.isInteger(voiceKeyShift) &&
+    voiceKeyShift <= 24 &&
+    voiceKeyShift >= -24
+  );
+}

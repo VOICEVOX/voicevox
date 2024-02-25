@@ -28,47 +28,24 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import MenuButton from "./MenuButton.vue";
+import { MenuItemData, MenuItemRoot } from "../type";
+import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-
-export type MenuItemBase<T extends string> = {
-  type: T;
-  label?: string;
-};
-
-export type MenuItemSeparator = MenuItemBase<"separator">;
-
-export type MenuItemRoot = MenuItemBase<"root"> & {
-  onClick?: () => void;
-  subMenu: MenuItemData[];
-  icon?: string;
-  disabled?: boolean;
-  disableWhenUiLocked: boolean;
-  disablreloadingLocked?: boolean;
-};
-
-export type MenuItemButton = MenuItemBase<"button"> & {
-  onClick: () => void;
-  icon?: string;
-  disabled?: boolean;
-  disableWhenUiLocked: boolean;
-  disablreloadingLocked?: boolean;
-};
-
-export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;
-
-export type MenuItemType = MenuItemData["type"];
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props =
   defineProps<{
     /** 「ファイル」メニューのサブメニュー */
     fileSubMenuData: MenuItemData[];
+    /** エディタの種類 */
+    editor: "talk" | "song";
   }>();
 
 const store = useStore();
+const { registerHotkeyWithCleanup } = useHotkeyManager();
 const currentVersion = ref("");
 
 // デフォルトエンジンの代替先ポート
@@ -145,6 +122,65 @@ const openHelpDialog = () => {
     isHelpDialogOpen: true,
   });
 };
+
+const createNewProject = async () => {
+  if (!uiLocked.value) {
+    await store.dispatch("CREATE_NEW_PROJECT", {});
+  }
+};
+
+const saveProject = async () => {
+  if (!uiLocked.value) {
+    await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+  }
+};
+
+const saveProjectAs = async () => {
+  if (!uiLocked.value) {
+    await store.dispatch("SAVE_PROJECT_FILE", {});
+  }
+};
+
+const importProject = () => {
+  if (!uiLocked.value) {
+    store.dispatch("LOAD_PROJECT_FILE", {});
+  }
+};
+
+// 「最近使ったプロジェクト」のメニュー
+const recentProjectsSubMenuData = ref<MenuItemData[]>([]);
+const updateRecentProjects = async () => {
+  const recentlyUsedProjects = await store.dispatch(
+    "GET_RECENTLY_USED_PROJECTS"
+  );
+  recentProjectsSubMenuData.value =
+    recentlyUsedProjects.length === 0
+      ? [
+          {
+            type: "button",
+            label: "最近使ったプロジェクトはありません",
+            onClick: () => {
+              // 何もしない
+            },
+            disabled: true,
+            disableWhenUiLocked: false,
+          },
+        ]
+      : recentlyUsedProjects.map((projectFilePath) => ({
+          type: "button",
+          label: projectFilePath,
+          onClick: () => {
+            store.dispatch("LOAD_PROJECT_FILE", {
+              filePath: projectFilePath,
+            });
+          },
+          disableWhenUiLocked: false,
+        }));
+};
+const projectFilePath = computed(() => store.state.projectFilePath);
+watch(projectFilePath, updateRecentProjects, {
+  immediate: true,
+});
 
 // 「エンジン」メニューのエンジン毎の項目
 const engineSubMenuData = computed<MenuItemData[]>(() => {
@@ -250,7 +286,46 @@ const menudata = computed<MenuItemData[]>(() => [
       closeAllDialog();
     },
     disableWhenUiLocked: false,
-    subMenu: props.fileSubMenuData,
+    subMenu: [
+      ...props.fileSubMenuData,
+      { type: "separator" },
+      {
+        type: "button",
+        label: "新規プロジェクト",
+        onClick: createNewProject,
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "プロジェクトを上書き保存",
+        onClick: async () => {
+          await saveProject();
+        },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "プロジェクトを名前を付けて保存",
+        onClick: async () => {
+          await saveProjectAs();
+        },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "プロジェクト読み込み",
+        onClick: () => {
+          importProject();
+        },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "root",
+        label: "最近使ったプロジェクト",
+        disableWhenUiLocked: true,
+        subMenu: recentProjectsSubMenuData.value,
+      },
+    ],
   },
   {
     type: "root",
@@ -364,6 +439,27 @@ watch(uiLocked, () => {
   if (uiLocked.value) {
     subMenuOpenFlags.value = [...Array(menudata.value.length)].map(() => false);
   }
+});
+
+registerHotkeyWithCleanup({
+  editor: props.editor,
+  callback: createNewProject,
+  name: "新規プロジェクト",
+});
+registerHotkeyWithCleanup({
+  editor: props.editor,
+  callback: saveProject,
+  name: "プロジェクトを上書き保存",
+});
+registerHotkeyWithCleanup({
+  editor: props.editor,
+  callback: saveProjectAs,
+  name: "プロジェクトを名前を付けて保存",
+});
+registerHotkeyWithCleanup({
+  editor: props.editor,
+  callback: importProject,
+  name: "プロジェクト読み込み",
 });
 </script>
 

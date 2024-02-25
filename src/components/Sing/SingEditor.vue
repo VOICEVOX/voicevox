@@ -2,6 +2,7 @@
   <menu-bar />
   <tool-bar />
   <div class="sing-main">
+    <engine-startup-overlay :is-completed-initial-startup="isEnginesReady" />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <q-spinner color="primary" size="2.5rem" />
@@ -41,6 +42,7 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
+import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 
 const props = withDefaults(
@@ -138,6 +140,7 @@ onDeactivated(() => {
 .sing-main {
   display: flex;
   overflow: hidden;
+  position: relative;
 }
 
 .exporting-dialog {

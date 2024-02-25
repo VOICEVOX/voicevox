@@ -1,13 +1,12 @@
 <template>
-  <base-menu-bar :file-sub-menu-data="fileSubMenuData" />
+  <base-menu-bar editor="song" :file-sub-menu-data="fileSubMenuData" />
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import { useStore } from "@/store";
-import { HotkeyActionType, HotkeyReturnType } from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
-import BaseMenuBar, { MenuItemData } from "@/components/BaseMenuBar.vue";
+import BaseMenuBar from "@/components/Menu/MenuBar/BaseMenuBar.vue";
+import { MenuItemData } from "@/components/Menu/type";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -30,6 +29,15 @@ const exportWaveFile = async () => {
 const fileSubMenuData: MenuItemData[] = [
   {
     type: "button",
+    label: "音声を出力",
+    onClick: () => {
+      exportWaveFile();
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
     label: "MIDI読み込み",
     onClick: () => {
       importMidiFile();
@@ -44,21 +52,5 @@ const fileSubMenuData: MenuItemData[] = [
     },
     disableWhenUiLocked: true,
   },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "音声を出力",
-    onClick: () => {
-      exportWaveFile();
-    },
-    disableWhenUiLocked: true,
-  },
 ];
-
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  // NOTE: 初期設定なし
-  // ["新規", createNewSingProject],
-]);
-
-setHotkeyFunctions(hotkeyMap);
 </script>

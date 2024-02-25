@@ -1,7 +1,7 @@
 <template>
   <q-header class="q-py-sm">
     <q-toolbar>
-      <template v-for="button in headerButtons" :key="button.text">
+      <template v-for="button in buttons" :key="button.text">
         <q-space v-if="button.text === null" />
         <q-btn
           v-else
@@ -26,13 +26,10 @@ import {
   generateAndSaveOneAudioWithDialog,
 } from "@/components/Dialog/Dialog";
 import { useStore } from "@/store";
-import { setHotkeyFunctions } from "@/store/setting";
-import {
-  HotkeyActionType,
-  HotkeyReturnType,
-  ToolbarButtonTagType,
-} from "@/type/preload";
+import { ToolbarButtonTagType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
 
 type ButtonContent = {
   text: string;
@@ -47,72 +44,59 @@ type SpacerContent = {
 const store = useStore();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-const canUndo = computed(() => store.getters.CAN_UNDO);
-const canRedo = computed(() => store.getters.CAN_REDO);
+const editor = "talk";
+const canUndo = computed(() => store.getters.CAN_UNDO(editor));
+const canRedo = computed(() => store.getters.CAN_REDO(editor));
 const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
 const nowPlayingContinuously = computed(
   () => store.state.nowPlayingContinuously
 );
 
-const undoRedoHotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  // undo
-  [
-    "元に戻す",
-    () => {
-      if (!uiLocked.value && canUndo.value) {
-        undo();
-      }
-      return false;
-    },
-  ],
-  // redo
-  [
-    "やり直す",
-    () => {
-      if (!uiLocked.value && canRedo.value) {
-        redo();
-      }
-      return false;
-    },
-  ],
-]);
-setHotkeyFunctions(undoRedoHotkeyMap);
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+registerHotkeyWithCleanup({
+  editor,
+  name: "元に戻す",
+  callback: () => {
+    if (!uiLocked.value && canUndo.value) {
+      undo();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor,
+  name: "やり直す",
+  callback: () => {
+    if (!uiLocked.value && canRedo.value) {
+      redo();
+    }
+  },
+});
 
-const hotkeyMap = new Map<HotkeyActionType, () => HotkeyReturnType>([
-  // play/stop continuously
-  [
-    "連続再生/停止",
-    () => {
-      if (!uiLocked.value) {
-        if (nowPlayingContinuously.value) {
-          stop();
-        } else {
-          playContinuously();
-        }
+registerHotkeyWithCleanup({
+  editor,
+  name: "連続再生/停止",
+  callback: () => {
+    if (!uiLocked.value) {
+      if (nowPlayingContinuously.value) {
+        stop();
+      } else {
+        playContinuously();
       }
-    },
-  ],
-]);
-
-setHotkeyFunctions(hotkeyMap);
+    }
+  },
+});
 
 const undo = () => {
-  store.dispatch("UNDO");
+  store.dispatch("UNDO", { editor });
 };
 const redo = () => {
-  store.dispatch("REDO");
+  store.dispatch("REDO", { editor });
 };
 const playContinuously = async () => {
   try {
     await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
   } catch (e) {
-    let msg: string | undefined;
-    // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
-    if (e instanceof Error && e.message === "VALID_MORPHING_ERROR") {
-      msg = "モーフィングの設定が無効です。";
-    } else {
-      window.electron.logError(e);
-    }
+    const msg = handlePossiblyNotMorphableError(e);
     store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
@@ -207,7 +191,7 @@ const usableButtons: Record<
   EMPTY: null,
 };
 
-const headerButtons = computed(() =>
+const buttons = computed(() =>
   store.state.toolbarSetting.map<ButtonContent | SpacerContent>((tag) => {
     const buttonContent = usableButtons[tag];
     if (buttonContent) {

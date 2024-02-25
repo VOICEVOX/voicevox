@@ -18,7 +18,11 @@
       <context-menu ref="contextMenu" :menudata="contextMenuData" />
     </div>
     <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
-    <div class="note-lyric" @mousedown="onLyricMouseDown">
+    <div
+      class="note-lyric"
+      data-testid="note-lyric"
+      @mousedown="onLyricMouseDown"
+    >
       {{ lyric }}
     </div>
     <input
@@ -43,8 +47,8 @@ import {
   tickToBaseX,
   noteNumberToBaseY,
 } from "@/sing/viewHelper";
-import ContextMenu from "@/components/ContextMenu.vue";
-import { MenuItemButton } from "@/components/BaseMenuBar.vue";
+import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import { MenuItemButton } from "@/components/Menu/type";
 
 type NoteState = "NORMAL" | "SELECTED" | "OVERLAPPING";
 
@@ -112,7 +116,7 @@ const lyric = computed({
       return;
     }
     const note: Note = { ...props.note, lyric: value };
-    store.dispatch("UPDATE_NOTES", { notes: [note] });
+    store.dispatch("COMMAND_UPDATE_NOTES", { notes: [note] });
   },
 });
 const showLyricInput = computed(() => {
@@ -128,7 +132,7 @@ const contextMenuData = ref<[MenuItemButton]>([
     label: "削除",
     onClick: async () => {
       contextMenu.value?.hide();
-      store.dispatch("REMOVE_SELECTED_NOTES");
+      store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
     },
     disableWhenUiLocked: true,
   },
@@ -206,7 +210,6 @@ const onLyricInputBlur = () => {
     // 色は仮
     .note-bar {
       background-color: hsl(33, 100%, 50%);
-      border-color: hsl(33, 100%, 78%);
     }
 
     &.below-pitch {
@@ -219,7 +222,6 @@ const onLyricInputBlur = () => {
   &.overlapping {
     .note-bar {
       background-color: hsl(130, 35%, 85%);
-      border-color: hsl(130, 35%, 90%);
     }
   }
 }
@@ -245,7 +247,7 @@ const onLyricInputBlur = () => {
   width: calc(100% + 1px);
   height: 100%;
   background-color: colors.$primary;
-  border: 1px solid hsl(130, 35%, 86%);
+  border: 1px solid rgba(colors.$background-rgb, 0.5);
   border-radius: 2px;
   cursor: move;
 }
