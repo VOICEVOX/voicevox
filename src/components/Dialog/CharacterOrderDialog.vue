@@ -106,7 +106,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import Draggable from "vuedraggable";
+import * as Draggable from "vuedraggable";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";

@@ -77,7 +77,7 @@ export default defineConfig((options) => {
 
     plugins: [
       vue(),
-      quasar(),
+      quasar({ autoImportComponentCase: "pascal" }),
       nodePolyfills(),
       options.mode !== "test" &&
         checker({

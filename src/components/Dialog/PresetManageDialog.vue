@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import Draggable from "vuedraggable";
+import * as Draggable from "vuedraggable";
 import { useStore } from "@/store";
 
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
