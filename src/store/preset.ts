@@ -109,7 +109,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       { commit },
       { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> }
     ) {
-      window.electron.setSetting("defaultPresetKeys", defaultPresetKeys);
+      window.backend.setSetting("defaultPresetKeys", defaultPresetKeys);
       commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeys });
     },
     mutation(
@@ -122,7 +122,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   HYDRATE_PRESET_STORE: {
     async action({ commit }) {
-      const defaultPresetKeys = (await window.electron.getSetting(
+      const defaultPresetKeys = (await window.backend.getSetting(
         "defaultPresetKeys"
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
         // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
@@ -132,7 +132,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         defaultPresetKeys,
       });
 
-      const presetConfig = await window.electron.getSetting("presets");
+      const presetConfig = await window.backend.getSetting("presets");
       if (
         presetConfig == undefined ||
         presetConfig.items == undefined ||
@@ -167,7 +167,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         presetKeys,
       }: { presetItems: Record<PresetKey, Preset>; presetKeys: PresetKey[] }
     ) {
-      const result = await window.electron.setSetting("presets", {
+      const result = await window.backend.setSetting("presets", {
         items: JSON.parse(JSON.stringify(presetItems)),
         keys: JSON.parse(JSON.stringify(presetKeys)),
       });
