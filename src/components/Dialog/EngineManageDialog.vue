@@ -600,7 +600,7 @@ const requireReload = async (message: string) => {
 const newEngineDir = ref("");
 const newEngineDirValidationState = ref<EngineDirValidationResult | null>(null);
 const selectEngineDir = async () => {
-  const path = await window.electron.showOpenDirectoryDialog({
+  const path = await window.backend.showOpenDirectoryDialog({
     title: "エンジンのフォルダを選択",
   });
   if (path) {
@@ -620,7 +620,7 @@ const selectEngineDir = async () => {
 
 const vvppFilePath = ref("");
 const selectVvppFile = async () => {
-  const path = await window.electron.showVvppOpenDialog({
+  const path = await window.backend.showVvppOpenDialog({
     title: "vvppファイルを選択",
     defaultPath: vvppFilePath.value,
   });

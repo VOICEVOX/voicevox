@@ -66,7 +66,7 @@ const defaultEngineAltPortTo = computed<number | undefined>(() => {
   }
 });
 
-window.electron.getAppInfos().then((obj) => {
+window.backend.getAppInfos().then((obj) => {
   currentVersion.value = obj.version;
 });
 const isMultiEngineOffMode = computed(() => store.state.isMultiEngineOffMode);

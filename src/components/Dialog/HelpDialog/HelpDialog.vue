@@ -138,7 +138,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
   );
 }
 const newUpdateResult = useFetchNewUpdateInfos(
-  () => window.electron.getAppInfos().then((obj) => obj.version), // アプリのバージョン
+  () => window.backend.getAppInfos().then((obj) => obj.version), // アプリのバージョン
   UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL)
 );
 
@@ -263,7 +263,7 @@ const pagedata = computed(() => {
 
 const selectedPageIndex = ref(0);
 
-const openLogDirectory = window.electron.openLogDirectory;
+const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
