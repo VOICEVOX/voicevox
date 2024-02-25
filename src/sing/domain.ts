@@ -251,6 +251,10 @@ export function noteNumberToFrequency(noteNumber: number) {
   return 440 * Math.pow(2, (noteNumber - 69) / 12);
 }
 
+export function frequencyToNoteNumber(frequency: number) {
+  return 69 + Math.log2(frequency / 440) * 12;
+}
+
 export function linearToDecibel(linearValue: number) {
   if (linearValue === 0) {
     return -1000;
