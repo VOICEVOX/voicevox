@@ -8,10 +8,7 @@ import { ShowImportFileDialogOptions } from "@/type/preload";
 declare function vstGetConfig(): Promise<string>;
 declare function vstGetProject(): Promise<string>;
 declare function vstSetProject(value: string): Promise<void>;
-declare function vstUpdatePhrases(
-  remove: string[],
-  add: unknown[]
-): Promise<void>;
+declare function vstUpdatePhrases(remove: string[], add: string): Promise<void>;
 declare function vstClearPhrases(): Promise<void>;
 declare function vstShowImportFileDialog(
   title: string,
@@ -43,7 +40,21 @@ export async function setProject(memory: string) {
 
 export async function updatePhrases(remove: string[], add: unknown[]) {
   log(`updatePhrases, remove: ${remove.length}, add: ${add.length}`);
-  await vstUpdatePhrases(remove, add);
+  const addJson = JSON.stringify(add);
+  // addのデータはとんでもなく大きくなる（300KB程度）ので、gzip圧縮->base64エンコードして渡す
+  const readableStream = new Blob([addJson], {
+    type: "application/json",
+  }).stream();
+  const compressedStream = readableStream.pipeThrough(
+    // vue-tscだとエラーが出るのにVolarだと出ないので、ts-expect-errorを使うとエディタ側でエラーが出てしまう
+    // そのため、ts-ignoreを使う
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    new CompressionStream("gzip")
+  );
+  const arrayBuffer = await new Response(compressedStream).arrayBuffer();
+  log(`Compressed: ${addJson.length} -> ${arrayBuffer.byteLength}`);
+  await vstUpdatePhrases(remove, arrayBufferToBase64(arrayBuffer));
 }
 
 export async function clearPhrases() {

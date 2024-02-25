@@ -173,6 +173,9 @@ export const vstMessageReceiver: Plugin = {
               ) as PhraseWithAudio[]
           );
 
+          if (removedPhrases.length === 0 && newPhrasesWithAudio.length === 0) {
+            return;
+          }
           updatePhrases(removedPhrases, newPhrasesWithAudio);
         });
       },

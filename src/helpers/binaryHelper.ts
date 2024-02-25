@@ -20,6 +20,10 @@ export function base64ToArrayBuffer(base64: string): ArrayBuffer {
 }
 
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bin = String.fromCharCode(...new Uint8Array(buffer));
-  return btoa(bin);
+  return btoa(
+    new Uint8Array(buffer).reduce(
+      (data, byte) => data + String.fromCharCode(byte),
+      ""
+    )
+  );
 }
