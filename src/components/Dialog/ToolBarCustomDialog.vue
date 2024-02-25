@@ -149,7 +149,7 @@ watch(
 );
 
 const defaultSetting: ToolbarSettingType = [];
-window.electron.getDefaultToolbarSetting().then((setting) => {
+window.backend.getDefaultToolbarSetting().then((setting) => {
   defaultSetting.push(...setting);
 });
 

@@ -20,12 +20,19 @@
         />
       </div>
     </div>
-    <ScoreSequencer />
+    <ScoreSequencer :is-activated="isActivated" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from "vue";
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
@@ -111,6 +118,16 @@ const unwatchIsEnginesReady = watch(
     immediate: true,
   }
 );
+
+const isActivated = ref(false);
+
+onActivated(() => {
+  isActivated.value = true;
+});
+
+onDeactivated(() => {
+  isActivated.value = false;
+});
 </script>
 
 <style scoped lang="scss">

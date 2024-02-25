@@ -94,7 +94,7 @@ import { useStore } from "@/store";
 const store = useStore();
 
 const changePinWindow = () => {
-  window.electron.changePinWindow();
+  window.backend.changePinWindow();
 };
 
 const isPinned = computed(() => store.state.isPinned);

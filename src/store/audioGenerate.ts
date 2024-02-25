@@ -164,7 +164,7 @@ export function handlePossiblyNotMorphableError(e: unknown) {
   if (e instanceof NotMorphableError) {
     return e.message;
   } else {
-    window.electron.logError(e);
+    window.backend.logError(e);
     return;
   }
 }

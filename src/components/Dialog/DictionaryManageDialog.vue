@@ -455,7 +455,7 @@ const play = async () => {
       audioItem,
     });
   } catch (e) {
-    window.electron.logError(e);
+    window.backend.logError(e);
     nowGenerating.value = false;
     store.dispatch("SHOW_ALERT_DIALOG", {
       title: "生成に失敗しました",

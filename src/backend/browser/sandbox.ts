@@ -4,7 +4,7 @@ import {
   showOpenDirectoryDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
-import { getConfigManager } from "./storeImpl";
+import { getConfigManager } from "./browserConfig";
 
 import { IpcSOData } from "@/type/ipc";
 import {

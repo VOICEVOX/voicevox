@@ -34,7 +34,7 @@ const nowEditor = computed<EditorType>(() => {
   const path = router.currentRoute.value.path;
   if (path === "/talk") return "talk";
   if (path === "/song") return "song";
-  window.electron.logWarn(`unknown path: ${path}`);
+  window.backend.logWarn(`unknown path: ${path}`);
   return "talk";
 });
 

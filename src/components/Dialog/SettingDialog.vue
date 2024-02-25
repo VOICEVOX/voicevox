@@ -954,6 +954,29 @@
                 >
                 </QToggle>
               </QCardActions>
+              <QCardActions v-if="!isProduction" class="q-px-md bg-surface">
+                <div>[開発時のみ機能] ピッチの表示</div>
+                <div aria-label="ソングエディターで、ピッチを表示します。">
+                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
+                    <QTooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                      >ONの場合、ソングエディターで、レンダリング後にピッチが表示されます。</QTooltip
+                    >
+                  </QIcon>
+                </div>
+                <QSpace />
+                <QToggle
+                  :model-value="experimentalSetting.showPitchInSongEditor"
+                  @update:model-value="
+                    changeExperimentalSetting('showPitchInSongEditor', $event)
+                  "
+                >
+                </QToggle>
+              </QCardActions>
             </QCard>
             <QCard flat class="setting-card">
               <QCardActions>
@@ -1267,7 +1290,7 @@ const outputSamplingRate = computed({
 });
 
 const openFileExplore = async () => {
-  const path = await window.electron.showOpenDirectoryDialog({
+  const path = await window.backend.showOpenDirectoryDialog({
     title: "書き出し先のフォルダを選択",
   });
   if (path) {
