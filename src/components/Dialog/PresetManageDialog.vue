@@ -44,11 +44,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import * as Draggable from "vuedraggable";
+import draggable from "vuedraggable";
 import { useStore } from "@/store";
 
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { Preset, PresetKey } from "@/type/preload";
+
+const Draggable = draggable;
 
 const props =
   defineProps<{

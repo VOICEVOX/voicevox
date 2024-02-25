@@ -150,7 +150,7 @@
 <script setup lang="ts">
 import path from "path";
 import { computed, onBeforeUpdate, ref, VNodeRef, watch } from "vue";
-import * as Draggable from "vuedraggable";
+import draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
 import AudioCell from "./AudioCell.vue";
@@ -182,6 +182,8 @@ import {
 } from "@/type/preload";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+
+const Draggable = draggable;
 
 const props =
   defineProps<{

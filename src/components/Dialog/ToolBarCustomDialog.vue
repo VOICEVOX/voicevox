@@ -113,10 +113,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, Ref } from "vue";
-import * as Draggable from "vuedraggable";
+import draggable from "vuedraggable";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
+
+const Draggable = draggable;
 
 const props =
   defineProps<{
