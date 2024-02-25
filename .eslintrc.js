@@ -50,6 +50,14 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
+    "vue/component-name-in-template-casing": [
+      "error",
+      "PascalCase",
+      {
+        registeredComponentsOnly: false,
+        ignores: [],
+      },
+    ],
     "vue/component-tags-order": [
       "error",
       {
