@@ -649,7 +649,7 @@ const retryShowSaveDialogWhileSafeDir = async <
       title: "警告",
       cancelId: 0,
     });
-    return warningResult.response === 0; // 0: 保存場所を変更, 1: 無視して保存
+    return warningResult.response === 0 ? "retry" : "forceSave";
   };
 
   while (true) {
@@ -670,8 +670,8 @@ const retryShowSaveDialogWhileSafeDir = async <
 
     // 選択されたパスが安全かどうかを確認
     if (isUnsafePath(filePath)) {
-      const shouldRetry = await showWarningDialog();
-      if (shouldRetry) continue; // ユーザーが警告を無視して保存を選択した場合
+      const result = await showWarningDialog();
+      if (result === "retry") continue; // ユーザーが保存場所を変更を選択した場合
     }
     return result; // 安全なパスが選択された場合
   }
