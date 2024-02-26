@@ -111,23 +111,27 @@ export async function showImportFileDialog(
 ): Promise<string | undefined> {
   log("showImportFileDialog", options);
   if (!window.vstOnFileChosen) {
-    window.vstOnFileChosen = (uuid: string, path: string | undefined) => {
-      log("vstOnFileChosen", uuid, path);
-      const callback = fileChosenCallbacks.get(uuid);
+    window.vstOnFileChosen = (nonce: string, path: string | undefined) => {
+      log("vstOnFileChosen", nonce, path);
+      const callback = fileChosenCallbacks.get(nonce);
       if (!callback) {
-        log("callback not found", uuid);
+        log("callback not found", nonce);
         return;
       }
       callback(path);
     };
   }
-  const uuid = await vstShowImportFileDialog(options.title, options.extensions);
+  const nonce = await vstShowImportFileDialog(
+    options.title,
+    options.extensions
+  );
 
-  log("Callback registered", uuid);
-
-  return new Promise((resolve) => {
-    fileChosenCallbacks.set(uuid, resolve);
+  const promise = new Promise<string | undefined>((resolve) => {
+    fileChosenCallbacks.set(nonce, resolve);
   });
+  log("Callback registered", nonce);
+
+  return promise;
 }
 
 export async function readFile(filePath: string): Promise<ArrayBuffer> {
