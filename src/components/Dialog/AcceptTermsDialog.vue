@@ -1,24 +1,24 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="accept-terms-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm">
-        <q-toolbar>
+    <QLayout container view="hHh Lpr lff" class="bg-background">
+      <QHeader class="q-py-sm">
+        <QToolbar>
           <div class="column">
-            <q-toolbar-title class="text-display"
-              >利用規約に関するお知らせ</q-toolbar-title
+            <QToolbarTitle class="text-display"
+              >利用規約に関するお知らせ</QToolbarTitle
             >
           </div>
 
-          <q-space />
+          <QSpace />
 
           <div class="row items-center no-wrap">
-            <q-btn
+            <QBtn
               unelevated
               label="同意せずに終了"
               color="toolbar-button"
@@ -27,7 +27,7 @@
               @click="handler(false)"
             />
 
-            <q-btn
+            <QBtn
               unelevated
               label="同意して使用開始"
               color="toolbar-button"
@@ -36,29 +36,29 @@
               @click="handler(true)"
             />
           </div>
-        </q-toolbar>
-      </q-header>
+        </QToolbar>
+      </QHeader>
 
-      <q-page-container>
-        <q-page>
+      <QPageContainer>
+        <QPage>
           <p class="text-body1 q-mb-lg">
             多くの人が安心して VOICEVOX
             を使えるよう、利用規約への同意をお願いします。
           </p>
-          <q-card flat bordered>
-            <q-card-section>
+          <QCard flat bordered>
+            <QCardSection>
               <div class="text-h5">利用規約</div>
-            </q-card-section>
+            </QCardSection>
 
-            <q-card-section>
+            <QCardSection>
               <!-- eslint-disable-next-line vue/no-v-html -->
               <div class="q-pa-md markdown markdown-body" v-html="terms" />
-            </q-card-section>
-          </q-card>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+            </QCardSection>
+          </QCard>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">

@@ -3,34 +3,34 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs v-model="selectedDetail" dense vertical class="text-display">
-            <q-tab name="accent" label="ｱｸｾﾝﾄ" />
-            <q-tab
+          <QTabs v-model="selectedDetail" dense vertical class="text-display">
+            <QTab name="accent" label="ｱｸｾﾝﾄ" />
+            <QTab
               name="pitch"
               label="ｲﾝﾄﾈｰｼｮﾝ"
               :disable="
                 !(supportedFeatures && supportedFeatures.adjustMoraPitch)
               "
             />
-            <q-tab
+            <QTab
               name="length"
               label="長さ"
               :disable="
                 !(supportedFeatures && supportedFeatures.adjustPhonemeLength)
               "
             />
-          </q-tabs>
+          </QTabs>
         </div>
         <div class="play-button-wrapper">
-          <q-btn
+          <QBtn
             v-if="!nowPlaying && !nowGenerating"
             fab
             color="primary"
             text-color="display-on-primary"
             icon="play_arrow"
             @click="play"
-          ></q-btn>
-          <q-btn
+          ></QBtn>
+          <QBtn
             v-else
             fab
             color="primary"
@@ -38,12 +38,12 @@
             icon="stop"
             :disable="nowGenerating"
             @click="stop"
-          ></q-btn>
+          ></QBtn>
         </div>
       </div>
 
       <div ref="audioDetail" class="overflow-hidden-y accent-phrase-table">
-        <tool-tip
+        <ToolTip
           v-if="selectedDetail === 'pitch'"
           tip-key="tweakableSliderByScroll"
           class="tip-tweakable-slider-by-scroll"
@@ -57,8 +57,8 @@
           ±0.01<br />
           <span v-if="isMac">Option</span><span v-else>Alt</span> + ホイール:
           一括調整
-        </tool-tip>
-        <accent-phrase
+        </ToolTip>
+        <AccentPhrase
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           ref="accentPhraseComponents"

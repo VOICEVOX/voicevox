@@ -1,17 +1,17 @@
 <template>
-  <menu-bar />
+  <MenuBar />
 
-  <q-layout reveal elevated container class="layout-container">
-    <tool-bar />
+  <QLayout reveal elevated container class="layout-container">
+    <ToolBar />
 
-    <q-page-container>
-      <q-page class="main-row-panes">
-        <progress-view />
-        <engine-startup-overlay
+    <QPageContainer>
+      <QPage class="main-row-panes">
+        <ProgressView />
+        <EngineStartupOverlay
           :is-completed-initial-startup="isCompletedInitialStartup"
         />
 
-        <q-splitter
+        <QSplitter
           horizontal
           reverse
           unit="px"
@@ -25,7 +25,7 @@
           @update:model-value="updateAudioDetailPane"
         >
           <template #before>
-            <q-splitter
+            <QSplitter
               :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
               separator-class="home-splitter"
               :separator-style="{ width: shouldShowPanes ? '3px' : '0' }"
@@ -35,10 +35,10 @@
               @update:model-value="updatePortraitPane"
             >
               <template #before>
-                <character-portrait />
+                <CharacterPortrait />
               </template>
               <template #after>
-                <q-splitter
+                <QSplitter
                   reverse
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
@@ -62,7 +62,7 @@
                       "
                       @click="onAudioCellPaneClick"
                     >
-                      <draggable
+                      <Draggable
                         ref="cellsRef"
                         class="audio-cells"
                         :model-value="audioKeys"
@@ -73,19 +73,19 @@
                         @update:model-value="updateAudioKeys"
                       >
                         <template #item="{ element }">
-                          <audio-cell
+                          <AudioCell
                             :ref="addAudioCellRef"
                             class="draggable-cursor"
                             :audio-key="element"
                             @focus-cell="focusCell"
                           />
                         </template>
-                      </draggable>
+                      </Draggable>
                       <div
                         v-if="showAddAudioItemButton"
                         class="add-button-wrapper"
                       >
-                        <q-btn
+                        <QBtn
                           fab
                           icon="add"
                           color="primary"
@@ -93,56 +93,56 @@
                           :disable="uiLocked"
                           aria-label="テキストを追加"
                           @click="addAudioItem"
-                        ></q-btn>
+                        ></QBtn>
                       </div>
                     </div>
                   </template>
                   <template #after>
-                    <audio-info
+                    <AudioInfo
                       v-if="activeAudioKey != undefined"
                       :active-audio-key="activeAudioKey"
                     />
                   </template>
-                </q-splitter>
+                </QSplitter>
               </template>
-            </q-splitter>
+            </QSplitter>
           </template>
           <template #after>
-            <audio-detail
+            <AudioDetail
               v-if="activeAudioKey != undefined"
               :active-audio-key="activeAudioKey"
             />
           </template>
-        </q-splitter>
+        </QSplitter>
 
-        <q-resize-observer
+        <QResizeObserver
           ref="resizeObserverRef"
           @resize="({ height }) => changeAudioDetailPaneMaxHeight(height)"
         />
-      </q-page>
-    </q-page-container>
-  </q-layout>
-  <help-dialog v-model="isHelpDialogOpenComputed" />
-  <setting-dialog v-model="isSettingDialogOpenComputed" />
-  <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
-  <tool-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
-  <character-order-dialog
+      </QPage>
+    </QPageContainer>
+  </QLayout>
+  <HelpDialog v-model="isHelpDialogOpenComputed" />
+  <SettingDialog v-model="isSettingDialogOpenComputed" />
+  <HotkeySettingDialog v-model="isHotkeySettingDialogOpenComputed" />
+  <ToolBarCustomDialog v-model="isToolbarSettingDialogOpenComputed" />
+  <CharacterOrderDialog
     v-if="orderedAllCharacterInfos.length > 0"
     v-model="isCharacterOrderDialogOpenComputed"
     :character-infos="orderedAllCharacterInfos"
   />
-  <default-style-list-dialog
+  <DefaultStyleListDialog
     v-if="orderedTalkCharacterInfos.length > 0"
     v-model="isDefaultStyleSelectDialogOpenComputed"
     :character-infos="orderedTalkCharacterInfos"
   />
-  <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
-  <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
-  <accept-retrieve-telemetry-dialog
+  <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
+  <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
+  <AcceptRetrieveTelemetryDialog
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
-  <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
-  <update-notification-dialog-container
+  <AcceptTermsDialog v-model="isAcceptTermsDialogOpenComputed" />
+  <UpdateNotificationDialogContainer
     :can-open-dialog="canOpenNotificationDialog"
   />
 </template>
@@ -182,6 +182,8 @@ import {
 } from "@/type/preload";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+
+const Draggable = draggable;
 
 const props =
   defineProps<{
