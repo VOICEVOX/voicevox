@@ -82,6 +82,12 @@ export interface EngineManifest {
     defaultSamplingRate: number;
     /**
      * 
+     * @type {number}
+     * @memberof EngineManifest
+     */
+    frameRate: number;
+    /**
+     * 
      * @type {string}
      * @memberof EngineManifest
      */
@@ -124,6 +130,7 @@ export function instanceOfEngineManifest(value: object): boolean {
     isInstance = isInstance && "url" in value;
     isInstance = isInstance && "icon" in value;
     isInstance = isInstance && "defaultSamplingRate" in value;
+    isInstance = isInstance && "frameRate" in value;
     isInstance = isInstance && "termsOfService" in value;
     isInstance = isInstance && "updateInfos" in value;
     isInstance = isInstance && "dependencyLicenses" in value;
@@ -149,6 +156,7 @@ export function EngineManifestFromJSONTyped(json: any, ignoreDiscriminator: bool
         'url': json['url'],
         'icon': json['icon'],
         'defaultSamplingRate': json['default_sampling_rate'],
+        'frameRate': json['frame_rate'],
         'termsOfService': json['terms_of_service'],
         'updateInfos': ((json['update_infos'] as Array<any>).map(UpdateInfoFromJSON)),
         'dependencyLicenses': ((json['dependency_licenses'] as Array<any>).map(LicenseInfoFromJSON)),
@@ -173,6 +181,7 @@ export function EngineManifestToJSON(value?: EngineManifest | null): any {
         'url': value.url,
         'icon': value.icon,
         'default_sampling_rate': value.defaultSamplingRate,
+        'frame_rate': value.frameRate,
         'terms_of_service': value.termsOfService,
         'update_infos': ((value.updateInfos as Array<any>).map(UpdateInfoToJSON)),
         'dependency_licenses': ((value.dependencyLicenses as Array<any>).map(LicenseInfoToJSON)),

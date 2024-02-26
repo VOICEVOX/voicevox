@@ -8,47 +8,47 @@ export const ipcMessageReceiver: Plugin = {
     _,
     options: { store: Store<State, AllGetters, AllActions, AllMutations> }
   ) => {
-    window.electron.onReceivedIPCMsg(
+    window.backend.onReceivedIPCMsg(
       "LOAD_PROJECT_FILE",
       (_, { filePath, confirm } = {}) =>
         options.store.dispatch("LOAD_PROJECT_FILE", { filePath, confirm })
     );
 
-    window.electron.onReceivedIPCMsg("DETECT_MAXIMIZED", () =>
+    window.backend.onReceivedIPCMsg("DETECT_MAXIMIZED", () =>
       options.store.dispatch("DETECT_MAXIMIZED")
     );
 
-    window.electron.onReceivedIPCMsg("DETECT_UNMAXIMIZED", () =>
+    window.backend.onReceivedIPCMsg("DETECT_UNMAXIMIZED", () =>
       options.store.dispatch("DETECT_UNMAXIMIZED")
     );
 
-    window.electron.onReceivedIPCMsg(
+    window.backend.onReceivedIPCMsg(
       "DETECTED_ENGINE_ERROR",
       (_, { engineId }) =>
         options.store.dispatch("DETECTED_ENGINE_ERROR", { engineId })
     );
 
-    window.electron.onReceivedIPCMsg("DETECT_PINNED", () => {
+    window.backend.onReceivedIPCMsg("DETECT_PINNED", () => {
       options.store.dispatch("DETECT_PINNED");
     });
 
-    window.electron.onReceivedIPCMsg("DETECT_UNPINNED", () => {
+    window.backend.onReceivedIPCMsg("DETECT_UNPINNED", () => {
       options.store.dispatch("DETECT_UNPINNED");
     });
 
-    window.electron.onReceivedIPCMsg("DETECT_ENTER_FULLSCREEN", () =>
+    window.backend.onReceivedIPCMsg("DETECT_ENTER_FULLSCREEN", () =>
       options.store.dispatch("DETECT_ENTER_FULLSCREEN")
     );
 
-    window.electron.onReceivedIPCMsg("DETECT_LEAVE_FULLSCREEN", () =>
+    window.backend.onReceivedIPCMsg("DETECT_LEAVE_FULLSCREEN", () =>
       options.store.dispatch("DETECT_LEAVE_FULLSCREEN")
     );
 
-    window.electron.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", (_, obj) => {
+    window.backend.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", (_, obj) => {
       options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE", obj);
     });
 
-    window.electron.onReceivedIPCMsg(
+    window.backend.onReceivedIPCMsg(
       "DETECT_RESIZED",
       debounce(
         (_, { width, height }) =>

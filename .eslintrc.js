@@ -11,6 +11,7 @@ module.exports = {
     "@vue/prettier",
     "@vue/eslint-config-typescript/recommended",
     "@vue/eslint-config-prettier",
+    "plugin:@voicevox/all",
   ],
   plugins: ["import"],
   parser: "vue-eslint-parser",
@@ -55,41 +56,18 @@ module.exports = {
         order: ["template", "script", "style"],
       },
     ],
-    "import/order": "error",
-    "no-restricted-syntax": [
-      "warn",
+    "vue/multi-word-component-names": [
+      "error",
       {
-        selector:
-          "BinaryExpression[operator='==='][right.type='Literal'][right.value=null]",
-        message:
-          "'=== null'ではなく'== null'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
-      },
-      {
-        selector:
-          "BinaryExpression[operator='!=='][right.type='Literal'][right.value=null]",
-        message:
-          "'!== null'ではなく'!= null'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
-      },
-      {
-        selector:
-          "BinaryExpression[operator='==='][right.type='Identifier'][right.name=undefined]",
-        message:
-          "'=== undefined'ではなく'== undefined'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
-      },
-      {
-        selector:
-          "BinaryExpression[operator='!=='][right.type='Identifier'][right.name=undefined]",
-        message:
-          "'!== undefined'ではなく'!= undefined'を使用してください。詳細: https://github.com/VOICEVOX/voicevox/issues/1513",
+        ignores: ["Container", "Presentation"],
       },
     ],
+    "import/order": "error",
   },
   overrides: [
     {
       files: [
-        "./src/background.ts",
-        "./src/background/*.ts",
-        "./src/electron/*.ts",
+        "./src/backend/electron/**/*.ts",
         "./tests/**/*.ts",
         "./build/*.js",
         "./build/*.mts",
@@ -101,11 +79,7 @@ module.exports = {
     // Electronのメインプロセス以外でelectronのimportを禁止する
     {
       files: ["./src/**/*.ts", "./src/**/*.vue"],
-      excludedFiles: [
-        "./src/background.ts",
-        "./src/background/*.ts",
-        "./src/electron/*.ts",
-      ],
+      excludedFiles: ["./src/backend/electron/**/*.ts"],
       rules: {
         "no-restricted-imports": [
           "error",

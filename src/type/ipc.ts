@@ -3,12 +3,12 @@ import {
   ConfigType,
   EngineInfo,
   EngineDirValidationResult,
-  HotkeySetting,
+  HotkeySettingType,
   ThemeSetting,
-  ToolbarSetting,
+  ToolbarSettingType,
   UpdateInfo,
   NativeThemeType,
-  EngineSetting,
+  EngineSettingType,
   EngineId,
   MessageBoxReturnValue,
 } from "@/type/preload";
@@ -90,7 +90,7 @@ export type IpcIHData = {
   };
 
   SHOW_IMPORT_FILE_DIALOG: {
-    args: [obj: { title: string }];
+    args: [obj: { title: string; name?: string; extensions?: string[] }];
     return?: string;
   };
 
@@ -225,18 +225,18 @@ export type IpcIHData = {
   };
 
   HOTKEY_SETTINGS: {
-    args: [obj: { newData?: HotkeySetting }];
-    return: HotkeySetting[];
+    args: [obj: { newData?: HotkeySettingType }];
+    return: HotkeySettingType[];
   };
 
   GET_DEFAULT_HOTKEY_SETTINGS: {
     args: [];
-    return: HotkeySetting[];
+    return: HotkeySettingType[];
   };
 
   GET_DEFAULT_TOOLBAR_SETTING: {
     args: [];
-    return: ToolbarSetting;
+    return: ToolbarSettingType;
   };
 
   THEME: {
@@ -260,7 +260,7 @@ export type IpcIHData = {
   };
 
   SET_ENGINE_SETTING: {
-    args: [engineId: EngineId, engineSetting: EngineSetting];
+    args: [engineId: EngineId, engineSetting: EngineSettingType];
     return: void;
   };
 
