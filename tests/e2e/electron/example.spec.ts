@@ -8,7 +8,6 @@ test.beforeAll(async () => {
   dotenv.config(); // FIXME: エンジンの設定直読み
 
   console.log("Waiting for main.js to be built...");
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
       await fs.access("./dist/main.js");

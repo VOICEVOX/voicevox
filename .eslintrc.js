@@ -26,6 +26,7 @@ module.exports = {
         ? ["error", "unix"]
         : "off",
     "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
+    "no-constant-condition": ["error", { checkLoops: false }], // while(true) などを許可
     "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
     "prettier/prettier": [
       "error",

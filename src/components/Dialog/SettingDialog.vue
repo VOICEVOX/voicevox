@@ -1290,7 +1290,7 @@ const outputSamplingRate = computed({
 });
 
 const openFileExplore = async () => {
-  const path = await window.backend.showOpenDirectoryDialog({
+  const path = await window.backend.showSaveDirectoryDialog({
     title: "書き出し先のフォルダを選択",
   });
   if (path) {
