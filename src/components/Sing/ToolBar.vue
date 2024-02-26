@@ -2,30 +2,17 @@
   <q-toolbar class="sing-toolbar">
     <!-- configs for entire song -->
     <div class="sing-configs">
-      <character-menu-button class="q-mr-sm">
-        <div class="character-menu-toggle">
-          <q-avatar
-            v-if="selectedStyleIconPath"
-            class="character-avatar"
-            size="48px"
-          >
-            <img :src="selectedStyleIconPath" class="character-avatar-icon" />
-          </q-avatar>
-          <div class="character-info">
-            <div class="character-name">
-              {{ selectedCharacterName }}
-            </div>
-            <div class="character-style">
-              {{ selectedCharacterStyleDescription }}
-            </div>
-          </div>
-          <q-icon
-            name="arrow_drop_down"
-            size="sm"
-            class="character-menu-dropdown-icon"
-          />
-        </div>
-      </character-menu-button>
+      <character-menu-button />
+      <q-input
+        type="number"
+        :model-value="keyShiftInputBuffer"
+        label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
+        dense
+        hide-bottom-space
+        class="key-shift"
+        @update:model-value="setKeyShiftInputBuffer"
+        @change="setKeyShift"
+      />
       <q-input
         type="number"
         :model-value="bpmInputBuffer"
@@ -96,6 +83,24 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
+      <q-btn
+        flat
+        dense
+        round
+        icon="undo"
+        class="sing-undo-button"
+        :disable="!canUndo"
+        @click="undo"
+      />
+      <q-btn
+        flat
+        dense
+        round
+        icon="redo"
+        class="sing-redo-button"
+        :disable="!canRedo"
+        @click="redo"
+      />
       <q-icon name="volume_up" size="xs" class="sing-volume-icon" />
       <q-slider v-model.number="volume" class="sing-volume" />
       <q-select
@@ -125,68 +130,144 @@ import {
   isValidBeatType,
   isValidBeats,
   isValidBpm,
+  isValidVoiceKeyShift,
 } from "@/sing/domain";
-import CharacterMenuButton from "@/components/Sing/CharacterMenuButton.vue";
-import { getStyleDescription } from "@/sing/viewHelper";
+import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const store = useStore();
 
-const userOrderedCharacterInfos = computed(() =>
-  store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike")
-);
-const selectedCharacterInfo = computed(() => {
-  const singer = store.getters.SELECTED_TRACK.singer;
-  if (!userOrderedCharacterInfos.value || !singer) {
-    return undefined;
-  }
-  return store.getters.CHARACTER_INFO(singer.engineId, singer.styleId);
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+const editor = "song";
+const canUndo = computed(() => store.getters.CAN_UNDO(editor));
+const canRedo = computed(() => store.getters.CAN_REDO(editor));
+
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+registerHotkeyWithCleanup({
+  editor,
+  name: "元に戻す",
+  callback: () => {
+    if (!uiLocked.value && canUndo.value) {
+      undo();
+    }
+  },
 });
-const selectedCharacterName = computed(() => {
-  return selectedCharacterInfo.value?.metas.speakerName;
-});
-const selectedCharacterStyleDescription = computed(() => {
-  const style = selectedCharacterInfo.value?.metas.styles.find((style) => {
-    const singer = store.getters.SELECTED_TRACK.singer;
-    return (
-      style.styleId === singer?.styleId && style.engineId === singer?.engineId
-    );
-  });
-  return style != undefined ? getStyleDescription(style) : "";
-});
-const selectedStyleIconPath = computed(() => {
-  const styles = selectedCharacterInfo.value?.metas.styles;
-  const singer = store.getters.SELECTED_TRACK.singer;
-  return styles?.find((style) => {
-    return (
-      style.styleId === singer?.styleId && style.engineId === singer?.engineId
-    );
-  })?.iconPath;
+registerHotkeyWithCleanup({
+  editor,
+  name: "やり直す",
+  callback: () => {
+    if (!uiLocked.value && canRedo.value) {
+      redo();
+    }
+  },
 });
 
-const bpmInputBuffer = ref(0);
-const beatsInputBuffer = ref(0);
-const beatTypeInputBuffer = ref(0);
+registerHotkeyWithCleanup({
+  editor,
+  name: "再生/停止",
+  callback: () => {
+    if (nowPlaying.value) {
+      stop();
+    } else {
+      play();
+    }
+  },
+});
+
+const undo = () => {
+  store.dispatch("UNDO", { editor });
+};
+const redo = () => {
+  store.dispatch("REDO", { editor });
+};
+
+const tempos = computed(() => store.state.tempos);
+const timeSignatures = computed(() => store.state.timeSignatures);
+const keyShift = computed(() => store.getters.SELECTED_TRACK.voiceKeyShift);
+
+const bpmInputBuffer = ref(120);
+const beatsInputBuffer = ref(4);
+const beatTypeInputBuffer = ref(4);
+const keyShiftInputBuffer = ref(0);
+
+watch(
+  tempos,
+  () => {
+    bpmInputBuffer.value = tempos.value[0].bpm;
+  },
+  { deep: true }
+);
+
+watch(
+  timeSignatures,
+  () => {
+    beatsInputBuffer.value = timeSignatures.value[0].beats;
+    beatTypeInputBuffer.value = timeSignatures.value[0].beatType;
+  },
+  { deep: true }
+);
+
+watch(keyShift, () => {
+  keyShiftInputBuffer.value = keyShift.value;
+});
 
 const setBpmInputBuffer = (bpmStr: string | number | null) => {
-  const bpm = Number(bpmStr);
-  if (!isValidBpm(bpm)) {
+  const bpmValue = Number(bpmStr);
+  if (!isValidBpm(bpmValue)) {
     return;
   }
-  bpmInputBuffer.value = bpm;
+  bpmInputBuffer.value = bpmValue;
 };
+
 const setBeatsInputBuffer = (beatsStr: string | number | null) => {
-  const beats = Number(beatsStr);
-  if (!isValidBeats(beats)) {
+  const beatsValue = Number(beatsStr);
+  if (!isValidBeats(beatsValue)) {
     return;
   }
-  beatsInputBuffer.value = beats;
+  beatsInputBuffer.value = beatsValue;
 };
+
 const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
-  const beatType = Number(beatTypeStr);
-  if (!isValidBeatType(beatType)) {
+  const beatTypeValue = Number(beatTypeStr);
+  if (!isValidBeatType(beatTypeValue)) {
     return;
   }
-  beatTypeInputBuffer.value = beatType;
+  beatTypeInputBuffer.value = beatTypeValue;
+};
+
+const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
+  const keyShiftValue = Number(keyShiftStr);
+  if (!isValidVoiceKeyShift(keyShiftValue)) {
+    return;
+  }
+  keyShiftInputBuffer.value = keyShiftValue;
+};
+
+const setTempo = () => {
+  const bpm = bpmInputBuffer.value;
+  store.dispatch("COMMAND_SET_TEMPO", {
+    tempo: {
+      position: 0,
+      bpm,
+    },
+  });
+};
+
+const setTimeSignature = () => {
+  const beats = beatsInputBuffer.value;
+  const beatType = beatTypeInputBuffer.value;
+  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+    timeSignature: {
+      measureNumber: 1,
+      beats,
+      beatType,
+    },
+  });
+};
+
+const setKeyShift = () => {
+  const voiceKeyShift = keyShiftInputBuffer.value;
+  store.dispatch("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
 };
 
 const playheadTicks = ref(0);
@@ -213,49 +294,7 @@ const playHeadPositionMilliSecStr = computed(() => {
   return milliSecStr;
 });
 
-const tempos = computed(() => store.state.tempos);
-const timeSignatures = computed(() => store.state.timeSignatures);
 const nowPlaying = computed(() => store.state.nowPlaying);
-
-watch(
-  tempos,
-  () => {
-    bpmInputBuffer.value = tempos.value[0].bpm;
-  },
-  { deep: true }
-);
-watch(
-  timeSignatures,
-  () => {
-    beatsInputBuffer.value = timeSignatures.value[0].beats;
-    beatTypeInputBuffer.value = timeSignatures.value[0].beatType;
-  },
-  { deep: true }
-);
-
-const setTempo = async () => {
-  const bpm = bpmInputBuffer.value;
-  if (bpm === 0) return;
-  await store.dispatch("SET_TEMPO", {
-    tempo: {
-      position: 0,
-      bpm,
-    },
-  });
-};
-
-const setTimeSignature = async () => {
-  const beats = beatsInputBuffer.value;
-  const beatType = beatTypeInputBuffer.value;
-  if (beats === 0 || beatType === 0) return;
-  await store.dispatch("SET_TIME_SIGNATURE", {
-    timeSignature: {
-      measureNumber: 1,
-      beats,
-      beatType,
-    },
-  });
-};
 
 const play = () => {
   store.dispatch("SING_PLAY_AUDIO");
@@ -345,46 +384,6 @@ onUnmounted(() => {
   }
 }
 
-.character-menu-toggle {
-  align-items: center;
-  display: flex;
-  padding: 4px 8px 8px 8px;
-  position: relative;
-}
-.character-avatar-icon {
-  display: block;
-  height: 100%;
-  object-fit: cover;
-  width: 100%;
-}
-
-.character-info {
-  align-items: start;
-  display: flex;
-  flex-direction: column;
-  margin-left: 0.5rem;
-  text-align: left;
-  justify-content: center;
-  white-space: nowrap;
-}
-.character-name {
-  font-size: 0.875rem;
-  font-weight: bold;
-  line-height: 1rem;
-  padding-top: 4px;
-}
-
-.character-style {
-  color: rgba(colors.$display-rgb, 0.73);
-  font-size: 11px;
-  line-height: 1rem;
-  vertical-align: text-bottom;
-}
-
-.character-menu-dropdown-icon {
-  color: rgba(colors.$display-rgb, 0.73);
-  margin-left: 0.25rem;
-}
 .sing-toolbar {
   background: colors.$sing-toolbar;
   align-items: center;
@@ -408,8 +407,14 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.sing-tempo {
+.key-shift {
   margin-left: 16px;
+  margin-right: 4px;
+  width: 50px;
+}
+
+.sing-tempo {
+  margin-left: 8px;
   margin-right: 4px;
   width: 72px;
 }
@@ -463,6 +468,16 @@ onUnmounted(() => {
   justify-content: flex-end;
   display: flex;
   flex: 1;
+}
+
+.sing-undo-button,
+.sing-redo-button {
+  &.disabled {
+    opacity: 0.4 !important;
+  }
+}
+.sing-redo-button {
+  margin-right: 16px;
 }
 
 .sing-volume-icon {

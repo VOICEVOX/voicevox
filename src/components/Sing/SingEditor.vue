@@ -2,6 +2,7 @@
   <menu-bar />
   <tool-bar />
   <div class="sing-main">
+    <engine-startup-overlay :is-completed-initial-startup="isEnginesReady" />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <q-spinner color="primary" size="2.5rem" />
@@ -19,12 +20,19 @@
         />
       </div>
     </div>
-    <score-sequencer />
+    <score-sequencer :is-activated="isActivated" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from "vue";
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
@@ -34,6 +42,7 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
+import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 
 const props = withDefaults(
@@ -109,6 +118,16 @@ const unwatchIsEnginesReady = watch(
     immediate: true,
   }
 );
+
+const isActivated = ref(false);
+
+onActivated(() => {
+  isActivated.value = true;
+});
+
+onDeactivated(() => {
+  isActivated.value = false;
+});
 </script>
 
 <style scoped lang="scss">
@@ -121,6 +140,7 @@ const unwatchIsEnginesReady = watch(
 .sing-main {
   display: flex;
   overflow: hidden;
+  position: relative;
 }
 
 .exporting-dialog {

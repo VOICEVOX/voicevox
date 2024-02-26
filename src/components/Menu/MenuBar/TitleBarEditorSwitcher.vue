@@ -23,21 +23,22 @@
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
+import { EditorType } from "@/type/preload";
 
 const store = useStore();
 const router = useRouter();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const nowEditor = computed<"talk" | "song">(() => {
+const nowEditor = computed<EditorType>(() => {
   const path = router.currentRoute.value.path;
   if (path === "/talk") return "talk";
   if (path === "/song") return "song";
-  window.electron.logWarn(`unknown path: ${path}`);
+  window.backend.logWarn(`unknown path: ${path}`);
   return "talk";
 });
 
-const gotoLink = (editor: "talk" | "song") => {
+const gotoLink = (editor: EditorType) => {
   router.push("/" + editor);
 };
 </script>

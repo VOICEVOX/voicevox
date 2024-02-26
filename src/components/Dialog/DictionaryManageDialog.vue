@@ -455,7 +455,7 @@ const play = async () => {
       audioItem,
     });
   } catch (e) {
-    window.electron.logError(e);
+    window.backend.logError(e);
     nowGenerating.value = false;
     store.dispatch("SHOW_ALERT_DIALOG", {
       title: "生成に失敗しました",
@@ -677,10 +677,10 @@ const toDialogClosedState = () => {
 }
 
 .word-list {
-  // menubar-height + header-height + window-border-width +
+  // menubar-height + toolbar-height + window-border-width +
   // 82(title & buttons) + 30(margin 15x2)
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
+    100vh - #{vars.$menubar-height + vars.$toolbar-height +
       vars.$window-border-width + 82px + 30px}
   );
   width: 100%;
@@ -721,7 +721,7 @@ const toDialogClosedState = () => {
   display: flex;
   flex-flow: column;
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
+    100vh - #{vars.$menubar-height + vars.$toolbar-height +
       vars.$window-border-width}
   ) !important;
   overflow: auto;

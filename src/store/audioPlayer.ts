@@ -75,7 +75,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               audioElement.removeEventListener("canplay", stop);
             };
             audioElement.addEventListener("canplay", stop);
-            window.electron.showMessageDialog({
+            window.backend.showMessageDialog({
               type: "error",
               title: "エラー",
               message: "再生デバイスが見つかりません",

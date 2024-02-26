@@ -18,6 +18,7 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
+      aria-label="シーケンサ"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
@@ -128,6 +129,17 @@
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
     </div>
+    <sequencer-pitch
+      v-if="showPitch"
+      class="sequencer-pitch"
+      :style="{
+        marginRight: `${scrollBarWidth}px`,
+        marginBottom: `${scrollBarWidth}px`,
+      }"
+      :is-activated="isActivated"
+      :offset-x="scrollX"
+      :offset-y="scrollY"
+    />
     <div
       class="sequencer-overlay"
       :style="{
@@ -147,6 +159,7 @@
       />
       <div
         class="sequencer-playhead"
+        data-testid="sequencer-playhead"
         :style="{
           transform: `translateX(${playheadX - scrollX}px)`,
         }"
@@ -187,7 +200,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onActivated, onDeactivated, nextTick } from "vue";
+import {
+  computed,
+  ref,
+  nextTick,
+  onMounted,
+  onActivated,
+  onDeactivated,
+} from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
@@ -217,8 +237,12 @@ import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
+import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
+
+defineProps<{ isActivated: boolean }>();
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -312,6 +336,9 @@ const phraseInfos = computed(() => {
     const endX = endBaseX * zoomX.value;
     return { key, x: startX, width: endX - startX };
   });
+});
+const showPitch = computed(() => {
+  return state.experimentalSetting.showPitchInSongEditor;
 });
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
@@ -606,7 +633,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         }
       }
       store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
-    } else if (event.ctrlKey) {
+    } else if (isOnCommandOrCtrlKeyDown(event)) {
       store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
     } else if (!state.selectedNoteIds.has(note.id)) {
       selectOnlyThis(note);
@@ -732,12 +759,12 @@ const onMouseUp = (event: MouseEvent) => {
   cancelAnimationFrame(previewRequestId);
   if (edited) {
     if (previewMode === "ADD") {
-      store.dispatch("ADD_NOTES", { notes: previewNotes.value });
+      store.dispatch("COMMAND_ADD_NOTES", { notes: previewNotes.value });
       store.dispatch("SELECT_NOTES", {
         noteIds: previewNotes.value.map((value) => value.id),
       });
     } else {
-      store.dispatch("UPDATE_NOTES", { notes: previewNotes.value });
+      store.dispatch("COMMAND_UPDATE_NOTES", { notes: previewNotes.value });
     }
     if (previewNotes.value.length === 1) {
       store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -782,7 +809,7 @@ const handleNotesArrowUp = () => {
   if (editedNotes.some((note) => note.noteNumber > 127)) {
     return;
   }
-  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
 
   if (editedNotes.length === 1) {
     store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -801,7 +828,7 @@ const handleNotesArrowDown = () => {
   if (editedNotes.some((note) => note.noteNumber < 0)) {
     return;
   }
-  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
 
   if (editedNotes.length === 1) {
     store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -821,7 +848,7 @@ const handleNotesArrowRight = () => {
     // TODO: 例外処理は`UPDATE_NOTES`内に移す？
     return;
   }
-  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
 };
 
 const handleNotesArrowLeft = () => {
@@ -836,15 +863,15 @@ const handleNotesArrowLeft = () => {
   ) {
     return;
   }
-  store.dispatch("UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
 };
 
 const handleNotesBackspaceOrDelete = () => {
   if (state.selectedNoteIds.size === 0) {
-    // TODO: 例外処理は`REMOVE_SELECTED_NOTES`内に移す？
+    // TODO: 例外処理は`COMMAND_REMOVE_SELECTED_NOTES`内に移す？
     return;
   }
-  store.dispatch("REMOVE_SELECTED_NOTES");
+  store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
 };
 
 const handleKeydown = (event: KeyboardEvent) => {
@@ -926,7 +953,7 @@ const onWheel = (event: WheelEvent) => {
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-  if (event.ctrlKey) {
+  if (isOnCommandOrCtrlKeyDown(event)) {
     cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
     // マウスカーソル位置を基準に水平方向のズームを行う
     const oldZoomX = zoomX.value;
@@ -976,18 +1003,30 @@ const playheadPositionChangeListener = (position: number) => {
   }
 };
 
+// スクロールバーの幅を取得する
+onMounted(() => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
+  }
+  const clientWidth = sequencerBodyElement.clientWidth;
+  const offsetWidth = sequencerBodyElement.offsetWidth;
+  scrollBarWidth.value = offsetWidth - clientWidth;
+});
+
 // 最初のonActivatedか判断するためのフラグ
 let firstActivation = true;
+
+// スクロール位置を設定する
 onActivated(() => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-
   let xToScroll = 0;
   let yToScroll = 0;
   if (firstActivation) {
-    // スクロール位置を設定（C4が上から2/3の位置になるようにする）
+    // 初期スクロール位置を設定（C4が上から2/3の位置になるようにする）
     const clientHeight = sequencerBodyElement.clientHeight;
     const c4BaseY = noteNumberToBaseY(60);
     const clientBaseHeight = clientHeight / zoomY.value;
@@ -995,13 +1034,9 @@ onActivated(() => {
     xToScroll = 0;
     yToScroll = scrollBaseY * zoomY.value;
 
-    // スクロールバーの幅を取得する
-    const clientWidth = sequencerBodyElement.clientWidth;
-    const offsetWidth = sequencerBodyElement.offsetWidth;
-    scrollBarWidth.value = offsetWidth - clientWidth;
-
     firstActivation = false;
   } else {
+    // スクロール位置を復帰
     xToScroll = scrollX.value;
     yToScroll = scrollY.value;
   }
@@ -1009,7 +1044,10 @@ onActivated(() => {
   nextTick().then(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });
+});
 
+// リスナー登録
+onActivated(() => {
   store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
@@ -1017,6 +1055,7 @@ onActivated(() => {
   document.addEventListener("keydown", handleKeydown);
 });
 
+// リスナー解除
 onDeactivated(() => {
   store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
@@ -1108,6 +1147,11 @@ onDeactivated(() => {
   width: 2px;
   background: hsl(130, 35%, 82%);
   pointer-events: none;
+}
+
+.sequencer-pitch {
+  grid-row: 2;
+  grid-column: 2;
 }
 
 .sequencer-overlay {

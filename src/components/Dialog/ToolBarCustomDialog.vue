@@ -1,10 +1,10 @@
 <template>
   <q-dialog
-    v-model="headerBarCustomDialogOpenComputed"
+    v-model="ToolBarCustomDialogOpenComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
-    class="header-bar-custom-dialog transparent-backdrop"
+    class="tool-bar-custom-dialog transparent-backdrop"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container class="root">
@@ -149,7 +149,7 @@ watch(
 );
 
 const defaultSetting: ToolbarSettingType = [];
-window.electron.getDefaultToolbarSetting().then((setting) => {
+window.backend.getDefaultToolbarSetting().then((setting) => {
   defaultSetting.push(...setting);
 });
 
@@ -171,7 +171,7 @@ const usableButtonsDesc: Record<ToolbarButtonTagType, string> = {
     "これはボタンではありません。レイアウトの調整に使います。また、実際には表示されません。",
 };
 
-const headerBarCustomDialogOpenComputed = computed({
+const ToolBarCustomDialogOpenComputed = computed({
   get: () => props.modelValue || isChanged.value,
   set: (val) => emit("update:modelValue", val),
 });
@@ -236,11 +236,11 @@ const finishOrNotDialog = async () => {
     if (result === "OK") {
       toolbarButtons.value = [...store.state.toolbarSetting];
       selectedButton.value = toolbarButtons.value[0];
-      headerBarCustomDialogOpenComputed.value = false;
+      ToolBarCustomDialogOpenComputed.value = false;
     }
   } else {
     selectedButton.value = toolbarButtons.value[0];
-    headerBarCustomDialogOpenComputed.value = false;
+    ToolBarCustomDialogOpenComputed.value = false;
   }
 };
 </script>
@@ -249,7 +249,7 @@ const finishOrNotDialog = async () => {
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
-.header-bar-custom-dialog .q-layout-container :deep(.absolute-full) {
+.tool-bar-custom-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
   overflow-x: hidden;
 
@@ -260,7 +260,7 @@ const finishOrNotDialog = async () => {
 }
 
 .preview-toolbar {
-  height: calc(#{vars.$header-height} + 8px);
+  height: calc(#{vars.$toolbar-height} + 8px);
   display: block;
 }
 
@@ -282,10 +282,10 @@ const finishOrNotDialog = async () => {
 }
 
 .usable-button-list {
-  // menubar-height + header-height * 2(main+preview) + window-border-width
+  // menubar-height + toolbar-height * 2(main+preview) + window-border-width
   // 52(preview part buttons) * 2 + 46(select part title) + 22(preview part hint)
   height: calc(
-    100vh - #{vars.$menubar-height + (vars.$header-height) +
+    100vh - #{vars.$menubar-height + (vars.$toolbar-height) +
       vars.$window-border-width + 52px + 46px + 22px}
   );
   width: 100%;

@@ -1,12 +1,8 @@
-import Mousetrap from "mousetrap";
 import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
-import { useStore } from "@/store";
 import {
-  HotkeyActionType,
-  HotkeyReturnType,
   HotkeySettingType,
   SavingSetting,
   ExperimentalSettingType,
@@ -18,8 +14,6 @@ import {
   RootMiscSettingType,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
-
-const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
 export const settingStoreState: SettingStoreState = {
   savingSetting: {
@@ -54,6 +48,7 @@ export const settingStoreState: SettingStoreState = {
     enableMorphing: false,
     enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
+    showPitchInSongEditor: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -75,7 +70,7 @@ export const settingStoreState: SettingStoreState = {
 export const settingStore = createPartialStore<SettingStoreTypes>({
   HYDRATE_SETTING_STORE: {
     async action({ commit, dispatch }) {
-      window.electron.hotkeySettings().then((hotkeys) => {
+      window.backend.hotkeySettings().then((hotkeys) => {
         hotkeys.forEach((hotkey) => {
           dispatch("SET_HOTKEY_SETTINGS", {
             data: hotkey,
@@ -83,7 +78,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       });
 
-      const theme = await window.electron.theme();
+      const theme = await window.backend.theme();
       if (theme) {
         commit("SET_THEME_SETTING", {
           currentTheme: theme.currentTheme,
@@ -95,36 +90,36 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
 
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-        acceptRetrieveTelemetry: await window.electron.getSetting(
+        acceptRetrieveTelemetry: await window.backend.getSetting(
           "acceptRetrieveTelemetry"
         ),
       });
 
       dispatch("SET_ACCEPT_TERMS", {
-        acceptTerms: await window.electron.getSetting("acceptTerms"),
+        acceptTerms: await window.backend.getSetting("acceptTerms"),
       });
 
       commit("SET_SAVING_SETTING", {
-        savingSetting: await window.electron.getSetting("savingSetting"),
+        savingSetting: await window.backend.getSetting("savingSetting"),
       });
 
       commit("SET_TOOLBAR_SETTING", {
-        toolbarSetting: await window.electron.getSetting("toolbarSetting"),
+        toolbarSetting: await window.backend.getSetting("toolbarSetting"),
       });
 
       commit("SET_EXPERIMENTAL_SETTING", {
-        experimentalSetting: await window.electron.getSetting(
+        experimentalSetting: await window.backend.getSetting(
           "experimentalSetting"
         ),
       });
 
       commit("SET_CONFIRMED_TIPS", {
-        confirmedTips: await window.electron.getSetting("confirmedTips"),
+        confirmedTips: await window.backend.getSetting("confirmedTips"),
       });
 
       // FIXME: engineSettingsをMapにする
       for (const [engineIdStr, engineSetting] of Object.entries(
-        await window.electron.getSetting("engineSettings")
+        await window.backend.getSetting("engineSettings")
       )) {
         if (engineSetting == undefined)
           throw new Error(
@@ -160,7 +155,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           // Vuexの型処理でUnionが解かれてしまうのを迂回している
           // FIXME: このワークアラウンドをなくす
           key: key as never,
-          value: await window.electron.getSetting(key),
+          value: await window.backend.getSetting(key),
         });
       }
     },
@@ -171,7 +166,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.savingSetting = savingSetting;
     },
     action({ commit }, { data }: { data: SavingSetting }) {
-      const newData = window.electron.setSetting("savingSetting", data);
+      const newData = window.backend.setSetting("savingSetting", data);
       newData.then((savingSetting) => {
         commit("SET_SAVING_SETTING", { savingSetting });
       });
@@ -189,25 +184,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       });
       if (flag) state.hotkeySettings.push(newHotkey);
     },
-    action({ state, commit }, { data }: { data: HotkeySettingType }) {
-      window.electron.hotkeySettings(data);
-      const oldHotkey = state.hotkeySettings.find((value) => {
-        return value.action == data.action;
-      });
-      if (oldHotkey != undefined) {
-        if (oldHotkey.combination != "") {
-          Mousetrap.unbind(hotkey2Combo(oldHotkey.combination));
-        }
-      }
-      if (
-        data.combination != "" &&
-        hotkeyFunctionCache[data.action] != undefined
-      ) {
-        Mousetrap.bind(
-          hotkey2Combo(data.combination),
-          hotkeyFunctionCache[data.action]
-        );
-      }
+    action({ commit }, { data }: { data: HotkeySettingType }) {
+      window.backend.hotkeySettings(data);
       commit("SET_HOTKEY_SETTINGS", {
         newHotkey: data,
       });
@@ -222,7 +200,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.toolbarSetting = toolbarSetting;
     },
     action({ commit }, { data }: { data: ToolbarSettingType }) {
-      const newData = window.electron.setSetting("toolbarSetting", data);
+      const newData = window.backend.setSetting("toolbarSetting", data);
       newData.then((toolbarSetting) => {
         commit("SET_TOOLBAR_SETTING", { toolbarSetting });
       });
@@ -236,7 +214,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state[key as never] = value;
     },
     action({ commit }, { key, value }) {
-      window.electron.setSetting(key, value);
+      window.backend.setSetting(key, value);
       // Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
       commit("SET_ROOT_MISC_SETTING", { key: key as never, value });
@@ -254,7 +232,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.themeSetting.currentTheme = currentTheme;
     },
     action({ state, commit }, { currentTheme }: { currentTheme: string }) {
-      window.electron.theme(currentTheme);
+      window.backend.theme(currentTheme);
       const theme = state.themeSetting.availableThemes.find((value) => {
         return value.name == currentTheme;
       });
@@ -295,7 +273,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         theme.isDark ? "true" : "false"
       );
 
-      window.electron.setNativeTheme(theme.isDark ? "dark" : "light");
+      window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
@@ -312,7 +290,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         event: "updateAcceptRetrieveTelemetry",
         acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
       });
-      window.electron.setSetting(
+      window.backend.setSetting(
         "acceptRetrieveTelemetry",
         acceptRetrieveTelemetry
       );
@@ -329,7 +307,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         event: "updateAcceptTerms",
         acceptTerms: acceptTerms == "Accepted",
       });
-      window.electron.setSetting("acceptTerms", acceptTerms);
+      window.backend.setSetting("acceptTerms", acceptTerms);
       commit("SET_ACCEPT_TERMS", { acceptTerms });
     },
   },
@@ -342,7 +320,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.experimentalSetting = experimentalSetting;
     },
     action({ commit }, { experimentalSetting }) {
-      window.electron.setSetting("experimentalSetting", experimentalSetting);
+      window.backend.setSetting("experimentalSetting", experimentalSetting);
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
     },
   },
@@ -352,7 +330,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.confirmedTips = confirmedTips;
     },
     action({ commit }, { confirmedTips }) {
-      window.electron.setSetting("confirmedTips", confirmedTips);
+      window.backend.setSetting("confirmedTips", confirmedTips);
       commit("SET_CONFIRMED_TIPS", { confirmedTips });
     },
   },
@@ -392,7 +370,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.engineSettings[engineId] = engineSetting;
     },
     async action({ commit }, { engineSetting, engineId }) {
-      await window.electron.setEngineSetting(engineId, engineSetting);
+      await window.backend.setEngineSetting(engineId, engineSetting);
       commit("SET_ENGINE_SETTING", { engineSetting, engineId });
     },
   },
@@ -404,11 +382,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
      */
     action: createUILockAction(
       async ({ state, dispatch }, { useGpu, engineId }) => {
-        const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
+        const isAvailableGPUMode = await window.backend.isAvailableGPUMode();
 
         // 対応するGPUがない場合に変更を続行するか問う
         if (useGpu && !isAvailableGPUMode) {
-          const result = await window.electron.showQuestionDialog({
+          const result = await window.backend.showQuestionDialog({
             type: "warning",
             title: "対応するGPUデバイスが見つかりません",
             message:
@@ -433,7 +411,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         // GPUモードに変更できなかった場合はCPUモードに戻す
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
         if (!result.success && useGpu) {
-          await window.electron.showMessageDialog({
+          await window.backend.showMessageDialog({
             type: "error",
             title: "GPUモードに変更できませんでした",
             message:
@@ -448,7 +426,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
   GET_RECENTLY_USED_PROJECTS: {
     async action() {
-      return await window.electron.getSetting("recentlyUsedProjects");
+      return await window.backend.getSetting("recentlyUsedProjects");
     },
   },
 
@@ -459,62 +437,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         filePath,
         ...recentlyUsedProjects.filter((value) => value != filePath),
       ].slice(0, 10);
-      await window.electron.setSetting(
+      await window.backend.setSetting(
         "recentlyUsedProjects",
         newRecentlyUsedProjects
       );
     },
   },
 });
-
-export const setHotkeyFunctions = (
-  hotkeyMap: Map<HotkeyActionType, () => HotkeyReturnType>,
-  reassign?: boolean
-): void => {
-  hotkeyMap.forEach((value, key) => {
-    hotkeyFunctionCache[key] = value;
-  });
-  if (reassign) {
-    const store = useStore();
-    hotkeyMap.forEach((hotkeyFunction, hotkeyAction) => {
-      const hotkey = store.state.hotkeySettings.find((value) => {
-        return value.action == hotkeyAction;
-      });
-      if (hotkey) {
-        store.dispatch("SET_HOTKEY_SETTINGS", { data: { ...hotkey } });
-      }
-    });
-  }
-};
-
-const hotkey2Combo = (hotkeyCombo: string) => {
-  return hotkeyCombo.toLowerCase().replaceAll(" ", "+");
-};
-
-export const parseCombo = (event: KeyboardEvent): string => {
-  let recordedCombo = "";
-  if (event.ctrlKey) {
-    recordedCombo += "Ctrl ";
-  }
-  if (event.altKey) {
-    recordedCombo += "Alt ";
-  }
-  if (event.shiftKey) {
-    recordedCombo += "Shift ";
-  }
-  // event.metaKey は Mac キーボードでは Cmd キー、Windows キーボードでは Windows キーの押下で true になる
-  if (event.metaKey) {
-    recordedCombo += "Meta ";
-  }
-  if (event.key === " ") {
-    recordedCombo += "Space";
-  } else {
-    if (["Control", "Shift", "Alt", "Meta"].includes(event.key)) {
-      recordedCombo = recordedCombo.slice(0, -1);
-    } else {
-      recordedCombo +=
-        event.key.length > 1 ? event.key : event.key.toUpperCase();
-    }
-  }
-  return recordedCombo;
-};

@@ -600,7 +600,7 @@ const requireReload = async (message: string) => {
 const newEngineDir = ref("");
 const newEngineDirValidationState = ref<EngineDirValidationResult | null>(null);
 const selectEngineDir = async () => {
-  const path = await window.electron.showOpenDirectoryDialog({
+  const path = await window.backend.showOpenDirectoryDialog({
     title: "エンジンのフォルダを選択",
   });
   if (path) {
@@ -620,7 +620,7 @@ const selectEngineDir = async () => {
 
 const vvppFilePath = ref("");
 const selectVvppFile = async () => {
-  const path = await window.electron.showVvppOpenDialog({
+  const path = await window.backend.showVvppOpenDialog({
     title: "vvppファイルを選択",
     defaultPath: vvppFilePath.value,
   });
@@ -685,10 +685,10 @@ const toDialogClosedState = () => {
 }
 
 .engine-list {
-  // menubar-height + header-height + window-border-width +
+  // menubar-height + toolbar-height + window-border-width +
   // 82(title & buttons) + 30(margin 15x2)
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
+    100vh - #{vars.$menubar-height + vars.$toolbar-height +
       vars.$window-border-width + 82px + 30px}
   );
   width: 100%;
@@ -715,7 +715,7 @@ const toDialogClosedState = () => {
   display: flex;
   flex-flow: column;
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
+    100vh - #{vars.$menubar-height + vars.$toolbar-height +
       vars.$window-border-width}
   ) !important;
   overflow: auto;

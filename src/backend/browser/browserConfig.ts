@@ -1,7 +1,7 @@
 import AsyncLock from "async-lock";
 import { defaultEngine, directoryHandleStoreKey } from "./contract";
 
-import { BaseConfigManager, Metadata } from "@/shared/ConfigManager";
+import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
 
 const dbName = `${import.meta.env.VITE_APP_NAME}-web`;

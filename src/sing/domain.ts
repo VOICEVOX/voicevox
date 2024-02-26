@@ -251,6 +251,10 @@ export function noteNumberToFrequency(noteNumber: number) {
   return 440 * Math.pow(2, (noteNumber - 69) / 12);
 }
 
+export function frequencyToNoteNumber(frequency: number) {
+  return 69 + Math.log2(frequency / 440) * 12;
+}
+
 export function linearToDecibel(linearValue: number) {
   if (linearValue === 0) {
     return -1000;
@@ -273,4 +277,12 @@ export function getSnapTypes(tpqn: number) {
 
 export function isValidSnapType(snapType: number, tpqn: number) {
   return getSnapTypes(tpqn).some((value) => value === snapType);
+}
+
+export function isValidVoiceKeyShift(voiceKeyShift: number) {
+  return (
+    Number.isInteger(voiceKeyShift) &&
+    voiceKeyShift <= 24 &&
+    voiceKeyShift >= -24
+  );
 }
