@@ -708,6 +708,9 @@ ipcMainHandle("SHOW_TEXT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   return result.filePath;
 });
 
+/**
+ * 保存先になるディレクトリを選ぶダイアログを表示する。
+ */
 ipcMainHandle("SHOW_SAVE_DIRECTORY_DIALOG", async (_, { title }) => {
   const result = await retryShowSaveDialogWhileSafeDir(() =>
     dialog.showOpenDialog(win, {
@@ -737,6 +740,10 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
   return result.filePaths[0];
 });
 
+/**
+ * ディレクトリ選択ダイアログを表示する。
+ * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
+ */
 ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
