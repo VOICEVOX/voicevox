@@ -640,9 +640,9 @@ const retryShowSaveDialogWhileSafeDir = async <
    * 警告ダイアログを表示し、ユーザーが再試行を選択したかどうかを返す
    */
   const showWarningDialog = async () => {
+    const productName = app.getName().toUpperCase();
     const warningResult = await dialog.showMessageBox(win, {
-      message:
-        "指定された保存先はVOICEVOXにより自動的に削除される可能性があります。\n他の場所に保存することをおすすめします。",
+      message: `指定された保存先は${productName}により自動的に削除される可能性があります。\n他の場所に保存することをおすすめします。`,
       type: "warning",
       buttons: ["保存場所を変更", "無視して保存"],
       defaultId: 0,
