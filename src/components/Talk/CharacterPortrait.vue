@@ -6,7 +6,7 @@
     }}</span>
     <img :src="portraitPath" class="character-portrait" :alt="characterName" />
     <div v-if="isInitializingSpeaker" class="loading">
-      <q-spinner color="primary" size="5rem" :thickness="4" />
+      <QSpinner color="primary" size="5rem" :thickness="4" />
     </div>
   </div>
 </template>

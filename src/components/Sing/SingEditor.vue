@@ -1,17 +1,17 @@
 <template>
-  <menu-bar />
-  <tool-bar />
+  <MenuBar />
+  <ToolBar />
   <div class="sing-main">
-    <engine-startup-overlay
+    <EngineStartupOverlay
       :is-completed-initial-startup="isCompletedInitialStartup"
     />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
-        <q-spinner color="primary" size="2.5rem" />
+        <QSpinner color="primary" size="2.5rem" />
         <div class="q-mt-xs">
           {{ nowRendering ? "レンダリング中・・・" : "音声を書き出し中・・・" }}
         </div>
-        <q-btn
+        <QBtn
           v-if="nowRendering"
           padding="xs md"
           label="音声の書き出しをキャンセル"
@@ -22,7 +22,7 @@
         />
       </div>
     </div>
-    <score-sequencer :is-activated="isActivated" />
+    <ScoreSequencer :is-activated="isActivated" />
   </div>
 </template>
 

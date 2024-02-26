@@ -1,26 +1,26 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm">
-        <q-toolbar>
+    <QLayout container view="hHh Lpr lff" class="bg-background">
+      <QHeader class="q-py-sm">
+        <QToolbar>
           <div class="column">
-            <q-toolbar-title class="text-display">{{
+            <QToolbarTitle class="text-display">{{
               hasNewCharacter
                 ? "追加キャラクターの紹介"
                 : "設定 / キャラクター並び替え・試聴"
-            }}</q-toolbar-title>
+            }}</QToolbarTitle>
           </div>
 
-          <q-space />
+          <QSpace />
 
           <div class="row items-center no-wrap">
-            <q-btn
+            <QBtn
               unelevated
               label="完了"
               color="toolbar-button"
@@ -29,10 +29,10 @@
               @click="closeDialog"
             />
           </div>
-        </q-toolbar>
-      </q-header>
+        </QToolbar>
+      </QHeader>
 
-      <q-drawer
+      <QDrawer
         bordered
         show-if-above
         :model-value="true"
@@ -42,10 +42,10 @@
         <div class="character-portrait-wrapper">
           <img :src="portrait" class="character-portrait" />
         </div>
-      </q-drawer>
+      </QDrawer>
 
-      <q-page-container>
-        <q-page class="main">
+      <QPageContainer>
+        <QPage class="main">
           <div class="character-items-container">
             <span class="text-h6 q-py-md">サンプルボイス一覧</span>
             <div>
@@ -71,7 +71,7 @@
             <div class="text-subtitle1 text-weight-bold text-center q-py-md">
               キャラクター並び替え
             </div>
-            <draggable
+            <Draggable
               v-model="characterOrder"
               class="character-order q-px-sm"
               :item-key="keyOfCharacterOrderItem"
@@ -96,12 +96,12 @@
                   {{ element.metas.speakerName }}
                 </div>
               </template>
-            </draggable>
+            </Draggable>
           </div>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
@@ -110,6 +110,8 @@ import draggable from "vuedraggable";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
+
+const Draggable = draggable;
 
 const props =
   defineProps<{

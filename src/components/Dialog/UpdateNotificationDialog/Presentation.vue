@@ -1,16 +1,16 @@
 <template>
-  <q-dialog v-model="modelValueComputed">
-    <q-card class="q-py-sm q-px-md dialog-card">
-      <q-card-section>
+  <QDialog v-model="modelValueComputed">
+    <QCard class="q-py-sm q-px-md dialog-card">
+      <QCardSection>
         <div class="text-h5">アップデートのお知らせ</div>
         <div class="text-body2 text-grey-8">
           公式サイトから最新バージョンをダウンロードできます。
         </div>
-      </q-card-section>
+      </QCardSection>
 
-      <q-separator />
+      <QSeparator />
 
-      <q-card-section class="q-py-none scroll scrollable-area">
+      <QCardSection class="q-py-none scroll scrollable-area">
         <template
           v-for="(info, infoIndex) of props.newUpdateInfos"
           :key="infoIndex"
@@ -25,13 +25,13 @@
             </template>
           </ul>
         </template>
-      </q-card-section>
+      </QCardSection>
 
-      <q-separator />
+      <QSeparator />
 
-      <q-card-actions>
-        <q-space />
-        <q-btn
+      <QCardActions>
+        <QSpace />
+        <QBtn
           padding="xs md"
           label="閉じる"
           unelevated
@@ -40,7 +40,7 @@
           class="q-mt-sm"
           @click="closeUpdateNotificationDialog()"
         />
-        <q-btn
+        <QBtn
           padding="xs md"
           label="このバージョンをスキップ"
           unelevated
@@ -52,7 +52,7 @@
             closeUpdateNotificationDialog();
           "
         />
-        <q-btn
+        <QBtn
           padding="xs md"
           label="公式サイトを開く"
           unelevated
@@ -64,9 +64,9 @@
             closeUpdateNotificationDialog();
           "
         />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+      </QCardActions>
+    </QCard>
+  </QDialog>
 </template>
 
 <script setup lang="ts">

@@ -1,51 +1,51 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="ToolBarCustomDialogOpenComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="tool-bar-custom-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr fFf" class="bg-background">
-      <q-page-container class="root">
-        <q-header class="q-py-sm">
-          <q-toolbar>
-            <q-toolbar-title class="text-display"
-              >ツールバーのカスタマイズ</q-toolbar-title
+    <QLayout container view="hHh Lpr fFf" class="bg-background">
+      <QPageContainer class="root">
+        <QHeader class="q-py-sm">
+          <QToolbar>
+            <QToolbarTitle class="text-display"
+              >ツールバーのカスタマイズ</QToolbarTitle
             >
-            <q-space />
-            <q-btn
+            <QSpace />
+            <QBtn
               unelevated
               color="toolbar-button"
               text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
               :disable="isDefault"
               @click="applyDefaultSetting"
-              >デフォルトに戻す</q-btn
+              >デフォルトに戻す</QBtn
             >
-            <q-btn
+            <QBtn
               unelevated
               color="toolbar-button"
               text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
               :disable="!isChanged"
               @click="saveCustomToolbar"
-              >保存</q-btn
+              >保存</QBtn
             >
             <!-- close button -->
-            <q-btn
+            <QBtn
               round
               flat
               icon="close"
               color="display"
               @click="finishOrNotDialog"
             />
-          </q-toolbar>
-        </q-header>
-        <q-page>
-          <q-card flat square class="preview-card">
-            <q-toolbar class="bg-toolbar preview-toolbar">
-              <draggable
+          </QToolbar>
+        </QHeader>
+        <QPage>
+          <QCard flat square class="preview-card">
+            <QToolbar class="bg-toolbar preview-toolbar">
+              <Draggable
                 v-model="toolbarButtons"
                 :item-key="toolbarButtonKey"
                 @start="toolbarButtonDragging = true"
@@ -54,7 +54,7 @@
                 <template
                   #item="{ element: button }: { element: ToolbarButtonTagType }"
                 >
-                  <q-btn
+                  <QBtn
                     unelevated
                     color="toolbar-button"
                     text-color="toolbar-button-display"
@@ -64,7 +64,7 @@
                     "
                   >
                     {{ getToolbarButtonName(button) }}
-                    <q-tooltip
+                    <QTooltip
                       :delay="800"
                       anchor="center right"
                       self="center left"
@@ -73,42 +73,42 @@
                       :style="{
                         display: toolbarButtonDragging ? 'none' : 'block',
                       }"
-                      >{{ usableButtonsDesc[button] }}</q-tooltip
+                      >{{ usableButtonsDesc[button] }}</QTooltip
                     >
-                  </q-btn>
+                  </QBtn>
                 </template>
-              </draggable>
+              </Draggable>
               <div class="preview-toolbar-drag-hint">
                 ドラッグでボタンの並びを変更できます。
               </div>
-            </q-toolbar>
+            </QToolbar>
 
-            <q-card-actions>
+            <QCardActions>
               <div class="text-h5">表示するボタンの選択</div>
-            </q-card-actions>
-            <q-card-actions class="no-padding">
-              <q-list class="usable-button-list bg-surface">
-                <q-item
+            </QCardActions>
+            <QCardActions class="no-padding">
+              <QList class="usable-button-list bg-surface">
+                <QItem
                   v-for="(desc, key) in usableButtonsDesc"
                   :key="key"
                   v-ripple
                   tag="label"
                 >
-                  <q-item-section>
-                    <q-item-label>{{ getToolbarButtonName(key) }}</q-item-label>
-                    <q-item-label caption>{{ desc }}</q-item-label>
-                  </q-item-section>
-                  <q-item-section avatar>
-                    <q-toggle v-model="toolbarButtons" :val="key" />
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-card-actions>
-          </q-card>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+                  <QItemSection>
+                    <QItemLabel>{{ getToolbarButtonName(key) }}</QItemLabel>
+                    <QItemLabel caption>{{ desc }}</QItemLabel>
+                  </QItemSection>
+                  <QItemSection avatar>
+                    <QToggle v-model="toolbarButtons" :val="key" />
+                  </QItemSection>
+                </QItem>
+              </QList>
+            </QCardActions>
+          </QCard>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
@@ -117,6 +117,8 @@ import draggable from "vuedraggable";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
+
+const Draggable = draggable;
 
 const props =
   defineProps<{

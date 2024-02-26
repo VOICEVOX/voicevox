@@ -1,25 +1,25 @@
 <template>
-  <accept-retrieve-telemetry-dialog
+  <AcceptRetrieveTelemetryDialog
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
-  <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
-  <help-dialog v-model="isHelpDialogOpenComputed" />
-  <setting-dialog v-model="isSettingDialogOpenComputed" />
-  <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
-  <tool-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
-  <character-order-dialog
+  <AcceptTermsDialog v-model="isAcceptTermsDialogOpenComputed" />
+  <HelpDialog v-model="isHelpDialogOpenComputed" />
+  <SettingDialog v-model="isSettingDialogOpenComputed" />
+  <HotkeySettingDialog v-model="isHotkeySettingDialogOpenComputed" />
+  <ToolBarCustomDialog v-model="isToolbarSettingDialogOpenComputed" />
+  <CharacterOrderDialog
     v-if="orderedAllCharacterInfos.length > 0"
     v-model="isCharacterOrderDialogOpenComputed"
     :character-infos="orderedAllCharacterInfos"
   />
-  <default-style-list-dialog
+  <DefaultStyleListDialog
     v-if="orderedTalkCharacterInfos.length > 0"
     v-model="isDefaultStyleSelectDialogOpenComputed"
     :character-infos="orderedTalkCharacterInfos"
   />
-  <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
-  <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
-  <update-notification-dialog-container
+  <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
+  <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
+  <UpdateNotificationDialogContainer
     :can-open-dialog="canOpenNotificationDialog"
   />
 </template>

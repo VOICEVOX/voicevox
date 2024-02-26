@@ -1,19 +1,19 @@
 <template>
   <div v-if="!tipConfirmed" style="z-index: 10">
-    <q-banner class="bg-surface text-display" dense rounded inline-actions>
+    <QBanner class="bg-surface text-display" dense rounded inline-actions>
       <template #avatar>
-        <q-icon name="info" color="primary" />
+        <QIcon name="info" color="primary" />
       </template>
       <slot></slot>
       <template #action>
-        <q-btn
+        <QBtn
           color="primary"
           text-color="display-on-primary"
           label="OK"
           @click="tipConfirmed = true"
         />
       </template>
-    </q-banner>
+    </QBanner>
   </div>
 </template>
 

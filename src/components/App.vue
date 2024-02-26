@@ -1,17 +1,17 @@
 <template>
-  <error-boundary>
+  <ErrorBoundary>
     <!-- TODO: メニューバーをEditorHomeから移動する -->
-    <router-view v-slot="{ Component }">
-      <keep-alive>
-        <component
+    <RouterView v-slot="{ Component }">
+      <KeepAlive>
+        <Component
           :is="Component"
           :is-engines-ready="isEnginesReady"
           :is-project-file-loaded="isProjectFileLoaded"
         />
-      </keep-alive>
-    </router-view>
-    <all-dialog :is-engines-ready="isEnginesReady" />
-  </error-boundary>
+      </KeepAlive>
+    </RouterView>
+    <AllDialog :is-engines-ready="isEnginesReady" />
+  </ErrorBoundary>
 </template>
 
 <script setup lang="ts">

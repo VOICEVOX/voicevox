@@ -1,5 +1,5 @@
 <template>
-  <q-menu
+  <QMenu
     ref="contextMenu"
     touch-position
     context-menu
@@ -7,11 +7,11 @@
     transition-show="none"
     transition-hide="none"
   >
-    <q-list dense>
-      <q-item v-if="header" dense class="bg-background">
-        <q-item-section class="text-weight-bold">{{ header }}</q-item-section>
-      </q-item>
-      <menu-item
+    <QList dense>
+      <QItem v-if="header" dense class="bg-background">
+        <QItemSection class="text-weight-bold">{{ header }}</QItemSection>
+      </QItem>
+      <MenuItem
         v-for="(menu, index) of menudata"
         :key="index + 1"
         :menudata="menu"
@@ -20,9 +20,9 @@
           (uiLocked && menu.type !== 'separator' && menu.disableWhenUiLocked)
         "
       >
-      </menu-item>
-    </q-list>
-  </q-menu>
+      </MenuItem>
+    </QList>
+  </QMenu>
 </template>
 
 <script setup lang="ts">
