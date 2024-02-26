@@ -102,8 +102,8 @@ const store = useStore();
 const closeWindow = async () => {
   store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
 };
-const minimizeWindow = () => window.electron.minimizeWindow();
-const maximizeWindow = () => window.electron.maximizeWindow();
+const minimizeWindow = () => window.backend.minimizeWindow();
+const maximizeWindow = () => window.backend.maximizeWindow();
 
 const isMaximized = computed(() => store.state.isMaximized);
 </script>

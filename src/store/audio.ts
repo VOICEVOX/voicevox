@@ -126,7 +126,7 @@ async function changeFileTailToNonExistent(
 ) {
   let tail = 1;
   const name = filePath.slice(0, filePath.length - 1 - extension.length);
-  while (await window.electron.checkFileExists(filePath)) {
+  while (await window.backend.checkFileExists(filePath)) {
     filePath = `${name}[${tail}].${extension}`;
     tail += 1;
   }
@@ -158,7 +158,7 @@ export async function writeTextFile(obj: {
     },
   }[obj.encoding](obj.text);
 
-  return window.electron.writeFile({
+  return window.backend.writeFile({
     filePath: obj.filePath,
     buffer: await textBlob.arrayBuffer(),
   });
@@ -296,7 +296,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             };
           })
           .catch((error) => {
-            window.electron.logError(error, `Failed to get speakers.`);
+            window.backend.logError(error, `Failed to get speakers.`);
             throw error;
           });
         const base64ToUrl = function (base64: string, type: string) {
@@ -360,7 +360,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               return { speakerInfo, singerInfo };
             })
             .catch((error) => {
-              window.electron.logError(error, `Failed to get speakers.`);
+              window.backend.logError(error, `Failed to get speakers.`);
               throw error;
             });
           const styles = getStyles(speaker, speakerInfo);
@@ -930,7 +930,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           })
         )
         .catch((error) => {
-          window.electron.logError(
+          window.backend.logError(
             error,
             `Failed to fetch AudioQuery for the text "${text}".`
           );
@@ -985,7 +985,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           })
         )
         .catch((error) => {
-          window.electron.logError(
+          window.backend.logError(
             error,
             `Failed to fetch AccentPhrases for the text "${text}".`
           );
@@ -1102,7 +1102,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           })
         )
         .catch((error) => {
-          window.electron.logError(
+          window.backend.logError(
             error,
             `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(
               accentPhrases
@@ -1269,7 +1269,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             requestBody: encodedBlobs,
           });
         } catch (e) {
-          window.electron.logError(e);
+          window.backend.logError(e);
           return null;
         }
       }
@@ -1295,7 +1295,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultAudioFileName
           );
         } else {
-          filePath ??= await window.electron.showAudioSaveDialog({
+          filePath ??= await window.backend.showAudioSaveDialog({
             title: "音声を保存",
             defaultPath: defaultAudioFileName,
           });
@@ -1323,7 +1323,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         const { blob, audioQuery } = fetchAudioResult;
         try {
-          await window.electron
+          await window.backend
             .writeFile({
               filePath,
               buffer: await blob.arrayBuffer(),
@@ -1358,7 +1358,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
           return { result: "SUCCESS", path: filePath };
         } catch (e) {
-          window.electron.logError(e);
+          window.backend.logError(e);
           if (e instanceof ResultError) {
             return {
               result: "WRITE_ERROR",
@@ -1395,7 +1395,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (state.savingSetting.fixedExportEnabled) {
           dirPath = state.savingSetting.fixedExportDir;
         } else {
-          dirPath ??= await window.electron.showOpenDirectoryDialog({
+          dirPath ??= await window.backend.showOpenDirectoryDialog({
             title: "音声を保存",
           });
         }
@@ -1440,7 +1440,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName
           );
         } else {
-          filePath ??= await window.electron.showAudioSaveDialog({
+          filePath ??= await window.backend.showAudioSaveDialog({
             title: "音声を全て繋げて保存",
             defaultPath: defaultFileName,
           });
@@ -1525,12 +1525,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           return { result: "ENGINE_ERROR", path: filePath };
         }
 
-        const writeFileResult = await window.electron.writeFile({
+        const writeFileResult = await window.backend.writeFile({
           filePath,
           buffer: await connectedWav.arrayBuffer(),
         });
         if (!writeFileResult.ok) {
-          window.electron.logError(writeFileResult.error);
+          window.backend.logError(writeFileResult.error);
           return { result: "WRITE_ERROR", path: filePath };
         }
 
@@ -1541,7 +1541,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             filePath: filePath.replace(/\.wav$/, ".lab"),
           });
           if (!labResult.ok) {
-            window.electron.logError(labResult.error);
+            window.backend.logError(labResult.error);
             return { result: "WRITE_ERROR", path: filePath };
           }
         }
@@ -1553,7 +1553,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             encoding: state.savingSetting.fileEncoding,
           });
           if (!textResult.ok) {
-            window.electron.logError(textResult.error);
+            window.backend.logError(textResult.error);
             return { result: "WRITE_ERROR", path: filePath };
           }
         }
@@ -1576,7 +1576,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName
           );
         } else {
-          filePath ??= await window.electron.showTextSaveDialog({
+          filePath ??= await window.backend.showTextSaveDialog({
             title: "文章を全て繋げてテキストファイルに保存",
             defaultPath: defaultFileName,
           });
@@ -1636,7 +1636,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           filePath,
         });
         if (!result.ok) {
-          window.electron.logError(result.error);
+          window.backend.logError(result.error);
           return { result: "WRITE_ERROR", path: filePath };
         }
 
@@ -2777,17 +2777,17 @@ export const audioCommandStore = transformCommandStore(
           { filePath }: { filePath?: string }
         ) => {
           if (!filePath) {
-            filePath = await window.electron.showImportFileDialog({
+            filePath = await window.backend.showImportFileDialog({
               title: "セリフ読み込み",
             });
             if (!filePath) return;
           }
           let body = new TextDecoder("utf-8").decode(
-            await window.electron.readFile({ filePath }).then(getValueOrThrow)
+            await window.backend.readFile({ filePath }).then(getValueOrThrow)
           );
           if (body.includes("\ufffd")) {
             body = new TextDecoder("shift-jis").decode(
-              await window.electron.readFile({ filePath }).then(getValueOrThrow)
+              await window.backend.readFile({ filePath }).then(getValueOrThrow)
             );
           }
           const audioItems: AudioItem[] = [];

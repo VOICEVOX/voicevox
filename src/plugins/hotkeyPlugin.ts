@@ -9,7 +9,11 @@
  */
 import { Plugin, inject, onMounted, onUnmounted } from "vue";
 import hotkeys from "hotkeys-js";
-import { HotkeyActionNameType, HotkeySettingType } from "@/type/preload";
+import {
+  HotkeyActionNameType,
+  HotkeyCombination,
+  HotkeySettingType,
+} from "@/type/preload";
 
 const hotkeyManagerKey = "hotkeyManager";
 export const useHotkeyManager = () => {
@@ -64,7 +68,7 @@ type Log = (message: string, ...args: unknown[]) => void;
 type RegisteredCombination = {
   editor: Editor;
   name: HotkeyActionNameType;
-  combination: string;
+  combination: HotkeyCombination;
 };
 
 interface HotkeyTarget {
@@ -95,7 +99,7 @@ export class HotkeyManager {
   constructor(
     hotkeys_: HotkeysJs = hotkeys,
     log: Log = (message: string, ...args: unknown[]) => {
-      window.electron.logInfo(`[HotkeyManager] ${message}`, ...args);
+      window.backend.logInfo(`[HotkeyManager] ${message}`, ...args);
     }
   ) {
     this.log = log;
@@ -121,7 +125,9 @@ export class HotkeyManager {
     return setting;
   }
 
-  private getRegisteredCombination(action: HotkeyAction): string | undefined {
+  private getRegisteredCombination(
+    action: HotkeyAction
+  ): HotkeyCombination | undefined {
     return this.registeredCombinations.find(isSameHotkeyTarget(action))
       ?.combination;
   }
@@ -263,7 +269,7 @@ export class HotkeyManager {
   }
 }
 
-const combinationToBindingKey = (combination: string) => {
+const combinationToBindingKey = (combination: HotkeyCombination) => {
   return combination.toLowerCase().replaceAll(" ", "+");
 };
 
@@ -275,7 +281,8 @@ export const hotkeyPlugin: Plugin = {
   },
 };
 
-export const eventToCombination = (event: KeyboardEvent): string => {
+/** キーボードイベントをショートカットキーの文字列に変換する */
+export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
   let recordedCombination = "";
   if (event.ctrlKey) {
     recordedCombination += "Ctrl ";
@@ -300,5 +307,5 @@ export const eventToCombination = (event: KeyboardEvent): string => {
         event.key.length > 1 ? event.key : event.key.toUpperCase();
     }
   }
-  return recordedCombination;
+  return HotkeyCombination(recordedCombination);
 };

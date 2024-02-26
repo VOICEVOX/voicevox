@@ -31,6 +31,12 @@ const urlStringSchema = z.string().url().brand("URL");
 export type UrlString = z.infer<typeof urlStringSchema>;
 export const UrlString = (url: string): UrlString => urlStringSchema.parse(url);
 
+const hotkeyCombinationSchema = z.string().brand("HotkeyCombination");
+export type HotkeyCombination = z.infer<typeof hotkeyCombinationSchema>;
+export const HotkeyCombination = (
+  hotkeyCombination: string
+): HotkeyCombination => hotkeyCombinationSchema.parse(hotkeyCombination);
+
 export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
 export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
@@ -60,91 +66,91 @@ export const VoiceId = (voice: Voice): VoiceId =>
 export const defaultHotkeySettings: HotkeySettingType[] = [
   {
     action: "音声書き出し",
-    combination: !isMac ? "Ctrl E" : "Meta E",
+    combination: HotkeyCombination(!isMac ? "Ctrl E" : "Meta E"),
   },
   {
     action: "選択音声を書き出し",
-    combination: "E",
+    combination: HotkeyCombination("E"),
   },
   {
     action: "音声を繋げて書き出し",
-    combination: "",
+    combination: HotkeyCombination(""),
   },
   {
     action: "再生/停止",
-    combination: "Space",
+    combination: HotkeyCombination("Space"),
   },
   {
     action: "連続再生/停止",
-    combination: "Shift Space",
+    combination: HotkeyCombination("Shift Space"),
   },
   {
     action: "ｱｸｾﾝﾄ欄を表示",
-    combination: "1",
+    combination: HotkeyCombination("1"),
   },
   {
     action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-    combination: "2",
+    combination: HotkeyCombination("2"),
   },
   {
     action: "長さ欄を表示",
-    combination: "3",
+    combination: HotkeyCombination("3"),
   },
   {
     action: "テキスト欄を追加",
-    combination: "Shift Enter",
+    combination: HotkeyCombination("Shift Enter"),
   },
   {
     action: "テキスト欄を複製",
-    combination: !isMac ? "Ctrl D" : "Meta D",
+    combination: HotkeyCombination(!isMac ? "Ctrl D" : "Meta D"),
   },
   {
     action: "テキスト欄を削除",
-    combination: "Shift Delete",
+    combination: HotkeyCombination("Shift Delete"),
   },
   {
     action: "テキスト欄からフォーカスを外す",
-    combination: "Escape",
+    combination: HotkeyCombination("Escape"),
   },
   {
     action: "テキスト欄にフォーカスを戻す",
-    combination: "Enter",
+    combination: HotkeyCombination("Enter"),
   },
   {
     action: "元に戻す",
-    combination: !isMac ? "Ctrl Z" : "Meta Z",
+    combination: HotkeyCombination(!isMac ? "Ctrl Z" : "Meta Z"),
   },
   {
     action: "やり直す",
-    combination: !isMac ? "Ctrl Y" : "Shift Meta Z",
+    combination: HotkeyCombination(!isMac ? "Ctrl Y" : "Shift Meta Z"),
   },
   {
     action: "新規プロジェクト",
-    combination: !isMac ? "Ctrl N" : "Meta N",
+    combination: HotkeyCombination(!isMac ? "Ctrl N" : "Meta N"),
   },
   {
     action: "プロジェクトを名前を付けて保存",
-    combination: !isMac ? "Ctrl Shift S" : "Shift Meta S",
+    combination: HotkeyCombination(!isMac ? "Ctrl Shift S" : "Shift Meta S"),
   },
   {
     action: "プロジェクトを上書き保存",
-    combination: !isMac ? "Ctrl S" : "Meta S",
+    combination: HotkeyCombination(!isMac ? "Ctrl S" : "Meta S"),
   },
   {
     action: "プロジェクト読み込み",
-    combination: !isMac ? "Ctrl O" : "Meta O",
+    combination: HotkeyCombination(!isMac ? "Ctrl O" : "Meta O"),
   },
   {
     action: "テキスト読み込む",
-    combination: "",
+    combination: HotkeyCombination(""),
   },
   {
     action: "全体のイントネーションをリセット",
-    combination: !isMac ? "Ctrl G" : "Meta G",
+    combination: HotkeyCombination(!isMac ? "Ctrl G" : "Meta G"),
   },
   {
     action: "選択中のアクセント句のイントネーションをリセット",
-    combination: "R",
+    combination: HotkeyCombination("R"),
   },
 ];
 
@@ -434,11 +440,9 @@ export const hotkeyActionNameSchema = z.enum([
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
 
-export type HotkeyCombo = string;
-
 export const hotkeySettingSchema = z.object({
   action: hotkeyActionNameSchema,
-  combination: z.string(),
+  combination: hotkeyCombinationSchema,
 });
 export type HotkeySettingType = z.infer<typeof hotkeySettingSchema>;
 
@@ -509,6 +513,7 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
+  showPitchInSongEditor: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
@@ -669,6 +674,6 @@ export interface MessageBoxReturnValue {
   checkboxChecked: boolean;
 }
 
-export const SandboxKey = "electron" as const;
+export const SandboxKey = "backend" as const;
 
 export type EditorType = "talk" | "song";

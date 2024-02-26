@@ -18,17 +18,14 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
-import { hasSupportedGpu } from "./electron/device";
-import {
-  ThemeConf,
-  EngineInfo,
-  SystemError,
-  defaultHotkeySettings,
-  isMac,
-  defaultToolbarButtonSetting,
-  engineSettingSchema,
-  EngineId,
-} from "./type/preload";
+import { hasSupportedGpu } from "./device";
+import EngineManager from "./manager/engineManager";
+import VvppManager, { isVvppFile } from "./manager/vvppManager";
+import configMigration014 from "./configMigration014";
+import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
+import { ipcMainHandle, ipcMainSend } from "./ipc";
+import { getConfigManager } from "./electronConfig";
+import { failure, success } from "@/type/result";
 import {
   ContactTextFileName,
   HowToUseTextFileName,
@@ -38,15 +35,17 @@ import {
   PrivacyPolicyTextFileName,
   QAndATextFileName,
   UpdateInfosJsonFileName,
-} from "./type/staticResources";
-
-import EngineManager from "./background/engineManager";
-import VvppManager, { isVvppFile } from "./background/vvppManager";
-import configMigration014 from "./background/configMigration014";
-import { failure, success } from "./type/result";
-import { RuntimeInfoManager } from "./background/RuntimeInfoManager";
-import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-import { getConfigManager } from "@/background/electronConfig";
+} from "@/type/staticResources";
+import {
+  ThemeConf,
+  EngineInfo,
+  SystemError,
+  defaultHotkeySettings,
+  isMac,
+  defaultToolbarButtonSetting,
+  engineSettingSchema,
+  EngineId,
+} from "@/type/preload";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;

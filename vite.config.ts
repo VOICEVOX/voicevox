@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 /* eslint-disable no-console */
 import path from "path";
-import { createWriteStream, rmSync } from "fs";
+import { createWriteStream } from "fs";
 import { rm, mkdir } from "fs/promises";
 import { pipeline } from "stream/promises";
 import treeKill from "tree-kill";
@@ -14,8 +14,6 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 import archiver from "archiver";
-
-rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
@@ -73,7 +71,7 @@ export default defineConfig((options) => {
       environmentMatchGlobs: [
         [
           path
-            .resolve(__dirname, "tests/unit/background/**/*.spec.ts")
+            .resolve(__dirname, "tests/unit/backend/electron/**/*.spec.ts")
             .replace(/\\/g, "/"),
           "node",
         ],
@@ -93,9 +91,13 @@ export default defineConfig((options) => {
           },
           vueTsc: true,
         }),
-      isElectron &&
+      isElectron && [
+        cleanDistPlugin(),
         electron({
-          entry: ["./src/background.ts", "./src/electron/preload.ts"],
+          entry: [
+            "./src/backend/electron/main.ts",
+            "./src/backend/electron/preload.ts",
+          ],
           // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
           onstart: ({ startup }) => {
             // @ts-expect-error vite-electron-pluginはprocess.electronAppにelectronのプロセスを格納している。
@@ -116,11 +118,25 @@ export default defineConfig((options) => {
             },
           },
         }),
+      ],
       isBrowser && injectPreloadPlugin("browser"),
       isVst && [injectPreloadPlugin("vst"), createHeaderPlugin()],
     ],
   };
 });
+const cleanDistPlugin = (): Plugin => {
+  return {
+    name: "clean-dist",
+    apply: "build",
+    enforce: "pre",
+    async buildStart() {
+      await rm(path.resolve(__dirname, "dist"), {
+        recursive: true,
+        force: true,
+      });
+    },
+  };
+};
 
 const injectPreloadPlugin = (name: string): Plugin => {
   return {
@@ -130,7 +146,7 @@ const injectPreloadPlugin = (name: string): Plugin => {
       transform: (html: string) =>
         html.replace(
           `<!-- %${name.toUpperCase()}_PRELOAD% -->`,
-          `<script type="module" src="./${name}/preload.ts"></script>`
+          `<script type="module" src="./backend/${name}/preload.ts"></script>`
         ),
     },
   };

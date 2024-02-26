@@ -865,7 +865,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const lyrics = notesForRequestToEngine
             .map((value) => value.lyric)
             .join("");
-          window.electron.logError(
+          window.backend.logError(
             error,
             `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`
           );
@@ -914,7 +914,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const phonemes = query.phonemes
             .map((value) => value.phoneme)
             .join(" ");
-          window.electron.logError(
+          window.backend.logError(
             error,
             `Failed to synthesis. Phonemes are "${phonemes}".`
           );
@@ -1001,7 +1001,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        window.electron.logInfo("Phrases updated.");
+        window.backend.logInfo("Phrases updated.");
 
         if (startRenderingRequested() || stopRenderingRequested()) {
           return;
@@ -1048,7 +1048,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             });
 
             const phonemes = getPhonemes(frameAudioQuery);
-            window.electron.logInfo(
+            window.backend.logInfo(
               `Fetched frame audio query. Phonemes are "${phonemes}".`
             );
 
@@ -1093,7 +1093,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!phraseData.blob) {
             phraseData.blob = phraseAudioBlobCache.get(phraseKey);
             if (phraseData.blob) {
-              window.electron.logInfo(`Loaded audio buffer from cache.`);
+              window.backend.logInfo(`Loaded audio buffer from cache.`);
             } else {
               const blob = await synthesize(phrase.singer, phrase.query).catch(
                 (error) => {
@@ -1108,7 +1108,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseData.blob = blob;
               phraseAudioBlobCache.set(phraseKey, phraseData.blob);
 
-              window.electron.logInfo(`Synthesized.`);
+              window.backend.logInfo(`Synthesized.`);
             }
 
             // 音源とシーケンスを作成し直して、再接続する
@@ -1167,7 +1167,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
       } catch (e) {
-        window.electron.logError(e);
+        window.backend.logError(e);
         throw e;
       } finally {
         commit("SET_STOP_RENDERING_REQUESTED", {
@@ -1184,12 +1184,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   STOP_RENDERING: {
     action: createUILockAction(async ({ state, commit }) => {
       if (state.nowRendering) {
-        window.electron.logInfo("Waiting for rendering to stop...");
+        window.backend.logInfo("Waiting for rendering to stop...");
         commit("SET_STOP_RENDERING_REQUESTED", {
           stopRenderingRequested: true,
         });
         await createPromiseThatResolvesWhen(() => !state.nowRendering);
-        window.electron.logInfo("Rendering stopped.");
+        window.backend.logInfo("Rendering stopped.");
       }
     }),
   },
@@ -1266,7 +1266,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         if (!filePath) {
-          filePath = await window.electron.showImportFileDialog({
+          filePath = await window.backend.showImportFileDialog({
             title: "MIDI読み込み",
             name: "MIDI",
             extensions: ["mid", "midi"],
@@ -1275,7 +1275,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         const midiData = getValueOrThrow(
-          await window.electron.readFile({ filePath })
+          await window.backend.readFile({ filePath })
         );
         const midi = new Midi(midiData);
 
@@ -1363,7 +1363,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action: createUILockAction(
       async ({ dispatch }, { filePath }: { filePath?: string }) => {
         if (!filePath) {
-          filePath = await window.electron.showImportFileDialog({
+          filePath = await window.backend.showImportFileDialog({
             title: "MusicXML読み込み",
             name: "MusicXML",
             extensions: ["musicxml", "xml"],
@@ -1372,11 +1372,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         let xmlStr = new TextDecoder("utf-8").decode(
-          getValueOrThrow(await window.electron.readFile({ filePath }))
+          getValueOrThrow(await window.backend.readFile({ filePath }))
         );
         if (xmlStr.indexOf("\ufffd") > -1) {
           xmlStr = new TextDecoder("shift-jis").decode(
-            getValueOrThrow(await window.electron.readFile({ filePath }))
+            getValueOrThrow(await window.backend.readFile({ filePath }))
           );
         }
 
@@ -1827,7 +1827,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (state.savingSetting.fixedExportEnabled) {
             filePath = path.join(state.savingSetting.fixedExportDir, fileName);
           } else {
-            filePath ??= await window.electron.showAudioSaveDialog({
+            filePath ??= await window.backend.showAudioSaveDialog({
               title: "音声を保存",
               defaultPath: fileName,
             });
@@ -1839,7 +1839,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (state.savingSetting.avoidOverwrite) {
             let tail = 1;
             const name = filePath.slice(0, filePath.length - 4);
-            while (await window.electron.checkFileExists(filePath)) {
+            while (await window.backend.checkFileExists(filePath)) {
               filePath = name + "[" + tail.toString() + "]" + ".wav";
               tail += 1;
             }
@@ -1911,14 +1911,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const waveFileData = convertToWavFileData(audioBuffer);
 
           try {
-            await window.electron
+            await window.backend
               .writeFile({
                 filePath,
                 buffer: waveFileData,
               })
               .then(getValueOrThrow);
           } catch (e) {
-            window.electron.logError(e);
+            window.backend.logError(e);
             if (e instanceof ResultError) {
               return {
                 result: "WRITE_ERROR",
