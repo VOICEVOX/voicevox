@@ -28,7 +28,7 @@ type PhraseWithAudio = {
 };
 
 const log = (message: string, ...args: unknown[]) => {
-  window.electron.logInfo(`[vstMessageReceiver] ${message}`, ...args);
+  window.backend.logInfo(`[vstMessageReceiver] ${message}`, ...args);
 };
 
 export const vstMessageReceiver: Plugin = {
@@ -61,7 +61,7 @@ export const vstMessageReceiver: Plugin = {
             uiLockPromiseResolve();
             uiLockPromiseResolve = undefined;
           } else {
-            window.electron.logWarn(
+            window.backend.logWarn(
               `[vstOnMessage] unexpected isPlaying state: isPlaying=${message.isPlaying}, uiLockPromiseResolve=${uiLockPromiseResolve}`
             );
           }

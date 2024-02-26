@@ -2,7 +2,7 @@ import AsyncLock from "async-lock";
 import { defaultEngine } from "../browser/contract";
 
 import { getConfig } from "./ipc";
-import { BaseConfigManager, Metadata } from "@/shared/ConfigManager";
+import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { EngineId, engineSettingSchema } from "@/type/preload";
 
 let configManager: VstConfigManager | undefined;

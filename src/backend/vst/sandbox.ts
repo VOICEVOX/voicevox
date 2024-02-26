@@ -1,6 +1,6 @@
-import { getConfigManager } from "./config";
+import { getConfigManager } from "./vstConfig";
 import { getProject, readFile, setProject, showImportFileDialog } from "./ipc";
-import { defaultEngine } from "@/browser/contract";
+import { defaultEngine } from "@/backend/browser/contract";
 import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,

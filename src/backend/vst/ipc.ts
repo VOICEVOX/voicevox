@@ -2,7 +2,7 @@ import {
   arrayBufferToBase64,
   base64ToArrayBuffer,
 } from "@/helpers/binaryHelper";
-import { Metadata } from "@/shared/ConfigManager";
+import { Metadata } from "@/backend/common/ConfigManager";
 import { ShowImportFileDialogOptions } from "@/type/preload";
 
 declare function vstGetConfig(): Promise<string>;
@@ -19,7 +19,7 @@ declare function vstReadFile(filePath: string): Promise<string | -1>;
 
 type Config = Record<string, unknown> & Metadata;
 const log = (message: string, ...args: unknown[]) => {
-  window.electron.logInfo(`[vst/ipc] ${message}`, ...args);
+  window.backend.logInfo(`[vst/ipc] ${message}`, ...args);
 };
 
 export async function getConfig(): Promise<Config> {
