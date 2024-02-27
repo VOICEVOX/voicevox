@@ -1012,6 +1012,26 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       query.accentPhrases.splice(accentPhraseIndex, 1, ...accentPhrases);
     },
   },
+  SET_ACCENT_PHRASES_EDITORID: {
+    mutation(
+      state,
+      {
+        audioKey,
+      }: {
+        audioKey: AudioKey;
+      }
+    ) {
+      const accentPhrases = state.audioItems[audioKey].query?.accentPhrases;
+      if (accentPhrases)
+        accentPhrases.map((elem) => {
+          if (!elem.editorID)
+            elem.editorID = uuidv4();
+        });
+    },
+    action({ commit }, { audioKey }: { audioKey: AudioKey }) {
+      commit("SET_ACCENT_PHRASES_EDITORID", { audioKey });
+    },
+  },
 
   SET_AUDIO_MORA_DATA: {
     mutation(

@@ -64,8 +64,12 @@ import { OverlappingNoteInfos } from "@/sing/storeHelper";
 /**
  * エディタ用のAudioQuery
  */
-export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
+export type EditorAudioQuery = Omit<
+  AudioQuery,
+  "outputSamplingRate" | "accentPhrases"
+> & {
   outputSamplingRate: number | "engineDefault";
+  accentPhrases: Array<EditorAccentPhrase>;
 };
 
 export type AudioItem = {
@@ -125,6 +129,9 @@ export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
       : R
     : never;
 };
+export interface EditorAccentPhrase extends AccentPhrase {
+  editorID?: string;
+}
 
 /*
  * Audio Store Types
@@ -349,7 +356,12 @@ export type AudioStoreTypes = {
       accentPhrases: AccentPhrase[];
     };
   };
-
+  SET_ACCENT_PHRASES_EDITORID: {
+    mutation: {
+      audioKey: AudioKey;
+    };
+    action(payload: { audioKey: AudioKey }): void;
+  };
   SET_AUDIO_MORA_DATA: {
     mutation: {
       audioKey: AudioKey;
