@@ -16,6 +16,7 @@ import {
 
 import { AccentPhrase } from "@/openapi";
 import {
+  accentPhraseKeySchema,
   audioKeySchema,
   EngineId,
   engineIdSchema,
@@ -656,6 +657,7 @@ const moraSchema = z.object({
 });
 
 const accentPhraseSchema = z.object({
+  key: accentPhraseKeySchema,
   moras: z.array(moraSchema),
   accent: z.number(),
   pauseMora: moraSchema.optional(),

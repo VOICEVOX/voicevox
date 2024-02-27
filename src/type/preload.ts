@@ -53,6 +53,11 @@ export const audioKeySchema = z.string().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
+export const accentPhraseKeySchema = z.string().brand<"AccentPhraseKey">();
+export type AccentPhraseKey = z.infer<typeof accentPhraseKeySchema>;
+export const AccentPhraseKey = (id: string): AccentPhraseKey =>
+  accentPhraseKeySchema.parse(id);
+
 export const presetKeySchema = z.string().brand<"PresetKey">();
 export type PresetKey = z.infer<typeof presetKeySchema>;
 export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);

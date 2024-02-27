@@ -1,11 +1,17 @@
-import { ProxyStoreState, ProxyStoreTypes, EditorAudioQuery } from "./type";
+import { v4 as uuidv4 } from "uuid";
+import {
+  ProxyStoreState,
+  ProxyStoreTypes,
+  EditorAudioQuery,
+  EditorAccentPhrase,
+} from "./type";
 import { createPartialStore } from "./vuex";
 import {
   IEngineConnectorFactory,
   OpenAPIEngineConnectorFactory,
 } from "@/infrastructures/EngineConnector";
-import { AudioQuery } from "@/openapi";
-import { EngineInfo } from "@/type/preload";
+import { AccentPhrase, AudioQuery } from "@/openapi";
+import { AccentPhraseKey, EngineInfo } from "@/type/preload";
 
 export const proxyStoreState: ProxyStoreState = {};
 
@@ -35,6 +41,7 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
   return proxyStore;
 };
 
+/** EditorAudioQueryをAudioQueryに変換する */
 export const convertAudioQueryFromEditorToEngine = (
   editorAudioQuery: EditorAudioQuery,
   defaultOutputSamplingRate: number
@@ -47,5 +54,34 @@ export const convertAudioQueryFromEditorToEngine = (
         : editorAudioQuery.outputSamplingRate,
   };
 };
+
+/** AudioQueryをEditorAudioQueryに変換する */
+export const convertAudioQueryFromEngineToEditor = (
+  audioQuery: AudioQuery
+): EditorAudioQuery => {
+  return {
+    ...audioQuery,
+    accentPhrases: audioQuery.accentPhrases.map((accentPhrase) =>
+      convertAccentPhraseFromEngineToEditor(accentPhrase)
+    ),
+    outputSamplingRate:
+      audioQuery.outputSamplingRate == undefined
+        ? "engineDefault"
+        : audioQuery.outputSamplingRate,
+  };
+};
+
+/** AccentPhraseをEditorAccentPhraseに変換する */
+export const convertAccentPhraseFromEngineToEditor = (
+  accentPhrase: AccentPhrase
+): EditorAccentPhrase => {
+  return {
+    key: generateAccentPhraseKey(),
+    ...accentPhrase,
+  };
+};
+function generateAccentPhraseKey() {
+  return AccentPhraseKey(uuidv4());
+}
 
 export const proxyStore = proxyStoreCreator(OpenAPIEngineConnectorFactory);
