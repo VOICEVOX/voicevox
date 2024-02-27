@@ -525,7 +525,7 @@ const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
 };
 
 // AudioCellの自動スクロール
-const cellsRef = ref<InstanceType<typeof draggable> | undefined>();
+const cellsRef = ref<InstanceType<typeof Draggable> | undefined>();
 watch(activeAudioKey, (audioKey) => {
   if (audioKey == undefined) return;
   const activeCellElement = audioCellRefs[audioKey].$el;
