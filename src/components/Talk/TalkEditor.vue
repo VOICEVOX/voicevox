@@ -127,7 +127,7 @@
 <script setup lang="ts">
 import path from "path";
 import { computed, onBeforeUpdate, ref, VNodeRef, watch } from "vue";
-import draggable from "vuedraggable";
+import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
 import AudioCell from "./AudioCell.vue";
