@@ -96,6 +96,9 @@ export const api: Sandbox = {
   showProjectLoadDialog() {
     throw new Error("Not implemented");
   },
+  showSaveDirectoryDialog() {
+    throw new Error("Not implemented");
+  },
   showMessageDialog(obj: {
     type: "none" | "info" | "error" | "question" | "warning";
     title: string;
