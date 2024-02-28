@@ -16,6 +16,8 @@ declare function vstShowImportFileDialog(
   extensions: string[] | undefined
 ): Promise<string>;
 declare function vstReadFile(filePath: string): Promise<string | -1>;
+declare function vstGetProjectName(): Promise<string>;
+declare function vstGetVersion(): Promise<string>;
 
 type Config = Record<string, unknown> & Metadata;
 const log = (message: string, ...args: unknown[]) => {
@@ -144,4 +146,14 @@ export async function readFile(filePath: string): Promise<ArrayBuffer> {
     throw new Error("Failed to read file");
   }
   return base64ToArrayBuffer(base64);
+}
+
+export async function getProjectName(): Promise<string> {
+  log("getProjectName");
+  return vstGetProjectName();
+}
+
+export async function getVersion(): Promise<string> {
+  log("getVersion");
+  return vstGetVersion();
 }

@@ -1,5 +1,12 @@
 import { getConfigManager } from "./vstConfig";
-import { getProject, readFile, setProject, showImportFileDialog } from "./ipc";
+import {
+  getProject,
+  getProjectName,
+  getVersion,
+  readFile,
+  setProject,
+  showImportFileDialog,
+} from "./ipc";
 import { defaultEngine } from "@/backend/browser/contract";
 import { IpcSOData } from "@/type/ipc";
 import {
@@ -35,12 +42,12 @@ export const projectFilePath = "/meta/vst-project.vvproj";
  * まだ開発中のため、VST版の実装も同時に行えない場合は、メソッドを追加して throw new Error() する
  */
 export const api: Sandbox = {
-  getAppInfos() {
+  async getAppInfos() {
     const appInfo = {
-      name: import.meta.env.VITE_APP_NAME,
-      version: import.meta.env.VITE_APP_VERSION,
+      name: await getProjectName(),
+      version: await getVersion(),
     };
-    return Promise.resolve(appInfo);
+    return appInfo;
   },
   async getHowToUseText() {
     const v = await fetch(toStaticPath(HowToUseTextFileName));

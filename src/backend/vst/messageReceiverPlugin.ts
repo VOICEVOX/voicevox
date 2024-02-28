@@ -108,10 +108,11 @@ export const vstMessageReceiver: Plugin = {
       store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
       if (!project) {
         log("project not found");
+        router.push("/song");
         return;
       }
       log("project found");
-      router.push(`/talk?projectFilePath=${projectFilePath}`);
+      router.push(`/song?projectFilePath=${projectFilePath}`);
     });
 
     watch(

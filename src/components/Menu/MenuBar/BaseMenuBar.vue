@@ -79,17 +79,24 @@ const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
 const enableMultiEngine = computed(() => store.state.enableMultiEngine);
-const titleText = computed(
-  () =>
-    (isEdited.value ? "*" : "") +
-    (projectName.value != undefined ? projectName.value + " - " : "") +
-    "VOICEVOX" +
-    (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
-    (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
-    (defaultEngineAltPortTo.value != null
-      ? ` - Port: ${defaultEngineAltPortTo.value}`
-      : "")
-);
+const titleText =
+  import.meta.env.VITE_TARGET === "vst"
+    ? computed(
+        () =>
+          "VVVST" +
+          (currentVersion.value ? " - Ver. " + currentVersion.value : "")
+      )
+    : computed(
+        () =>
+          (isEdited.value ? "*" : "") +
+          (projectName.value != undefined ? projectName.value + " - " : "") +
+          "VOICEVOX" +
+          (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
+          (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
+          (defaultEngineAltPortTo.value != null
+            ? ` - Port: ${defaultEngineAltPortTo.value}`
+            : "")
+      );
 
 // FIXME: App.vue内に移動する
 watch(titleText, (newTitle) => {
