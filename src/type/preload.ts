@@ -6,6 +6,7 @@ import { Result } from "@/type/result";
 export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
+export const isVst = import.meta.env.VITE_TARGET === "vst";
 
 // electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なmacOS判定
 function checkIsMac(): boolean {

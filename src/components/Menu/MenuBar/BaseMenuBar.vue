@@ -21,8 +21,8 @@
       {{ titleText }}
     </div>
     <QSpace />
-    <TitleBarEditorSwitcher />
-    <TitleBarButtons />
+    <TitleBarEditorSwitcher v-if="!isVst" />
+    <TitleBarButtons v-if="isElectron" />
   </QBar>
 </template>
 
@@ -35,6 +35,7 @@ import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { isElectron, isVst } from "@/type/preload";
 
 const props =
   defineProps<{
@@ -79,24 +80,23 @@ const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
 const enableMultiEngine = computed(() => store.state.enableMultiEngine);
-const titleText =
-  import.meta.env.VITE_TARGET === "vst"
-    ? computed(
-        () =>
-          "VVVST" +
-          (currentVersion.value ? " - Ver. " + currentVersion.value : "")
-      )
-    : computed(
-        () =>
-          (isEdited.value ? "*" : "") +
-          (projectName.value != undefined ? projectName.value + " - " : "") +
-          "VOICEVOX" +
-          (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
-          (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
-          (defaultEngineAltPortTo.value != null
-            ? ` - Port: ${defaultEngineAltPortTo.value}`
-            : "")
-      );
+const titleText = isVst
+  ? computed(
+      () =>
+        "VVVST" +
+        (currentVersion.value ? " - Ver. " + currentVersion.value : "")
+    )
+  : computed(
+      () =>
+        (isEdited.value ? "*" : "") +
+        (projectName.value != undefined ? projectName.value + " - " : "") +
+        "VOICEVOX" +
+        (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
+        (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
+        (defaultEngineAltPortTo.value != null
+          ? ` - Port: ${defaultEngineAltPortTo.value}`
+          : "")
+    );
 
 // FIXME: App.vue内に移動する
 watch(titleText, (newTitle) => {
