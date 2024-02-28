@@ -89,16 +89,16 @@ onetimeWatch(
           notes: [],
         },
       });
-
-      await store.dispatch("SET_VOLUME", { volume: 0.6 });
-      await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
-      await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
-        position: 0,
-      });
-      await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
-        position: 480 * 4 * 16,
-      });
     }
+
+    await store.dispatch("SET_VOLUME", { volume: 0.6 });
+    await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+    await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
+      position: 0,
+    });
+    await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
+      position: 480 * 4 * 16,
+    });
     isCompletedInitialStartup.value = true;
 
     await store.dispatch("SET_SINGER", {});
