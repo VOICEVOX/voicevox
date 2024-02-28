@@ -125,7 +125,6 @@ test("メイン画面の表示", async ({ page }) => {
   test.skip(process.platform !== "win32", "Windows以外のためスキップします");
   await navigateToMain(page);
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     await page.locator(".audio-cell:nth-child(1) .q-field").click();
     await page.waitForTimeout(100);

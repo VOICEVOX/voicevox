@@ -8,7 +8,7 @@
     <!-- div for input width -->
     <div>
       <div>
-        <q-slider
+        <QSlider
           v-if="accentPhrase.moras.length > 1"
           snap
           dense

@@ -1,5 +1,5 @@
 <template>
-  <q-item
+  <QItem
     v-ripple="isHoverableItem"
     clickable
     class="q-pa-none character-item"
@@ -25,7 +25,7 @@
         v-if="characterInfo.metas.styles.length > 1"
         class="style-select-container"
       >
-        <q-btn
+        <QBtn
           flat
           dense
           icon="chevron_left"
@@ -42,7 +42,7 @@
         <span aria-live="polite">{{
           selectedStyle.styleName || DEFAULT_STYLE_NAME
         }}</span>
-        <q-btn
+        <QBtn
           flat
           dense
           icon="chevron_right"
@@ -58,7 +58,7 @@
         />
       </div>
       <div class="voice-samples">
-        <q-btn
+        <QBtn
           v-for="voiceSampleIndex of [...Array(3).keys()]"
           :key="voiceSampleIndex"
           round
@@ -89,7 +89,7 @@
         NEW!
       </div>
     </div>
-  </q-item>
+  </QItem>
 </template>
 
 <script setup lang="ts">

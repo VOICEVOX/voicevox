@@ -1,5 +1,5 @@
 <template>
-  <base-menu-bar editor="song" :file-sub-menu-data="fileSubMenuData" />
+  <BaseMenuBar editor="song" :file-sub-menu-data="fileSubMenuData" />
 </template>
 
 <script setup lang="ts">

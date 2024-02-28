@@ -1,5 +1,5 @@
 <template>
-  <default-style-select-dialog
+  <DefaultStyleSelectDialog
     v-if="
       selectedCharacterInfo &&
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid] !==
@@ -11,26 +11,26 @@
     "
     :character-info="selectedCharacterInfo"
   />
-  <q-dialog
+  <QDialog
     v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm">
-        <q-toolbar>
+    <QLayout container view="hHh Lpr lff" class="bg-background">
+      <QHeader class="q-py-sm">
+        <QToolbar>
           <div class="column">
-            <q-toolbar-title class="text-display"
-              >設定 / デフォルトスタイル・試聴</q-toolbar-title
+            <QToolbarTitle class="text-display"
+              >設定 / デフォルトスタイル・試聴</QToolbarTitle
             >
           </div>
 
-          <q-space />
+          <QSpace />
 
           <div class="row items-center no-wrap">
-            <q-btn
+            <QBtn
               unelevated
               label="完了"
               color="toolbar-button"
@@ -39,14 +39,14 @@
               @click="closeDialog"
             />
           </div>
-        </q-toolbar>
-      </q-header>
+        </QToolbar>
+      </QHeader>
 
-      <q-page-container>
-        <q-page class="main">
+      <QPageContainer>
+        <QPage class="main">
           <div class="character-items-container">
             <div>
-              <q-item
+              <QItem
                 v-for="speaker of speakerWithMultipleStyles"
                 :key="speaker.metas.speakerUuid"
                 v-ripple="isHoverableItem"
@@ -91,13 +91,13 @@
                     >
                   </div>
                 </div>
-              </q-item>
+              </QItem>
             </div>
           </div>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">

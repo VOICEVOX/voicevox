@@ -1,69 +1,62 @@
 <template>
-  <q-dialog ref="dialogRef" persistent>
-    <q-layout
-      container
-      view="hhh lpr fFf"
-      class="q-dialog-plugin bg-background"
-    >
-      <q-page-container class="q-px-md">
+  <QDialog ref="dialogRef" persistent>
+    <QLayout container view="hhh lpr fFf" class="q-dialog-plugin bg-background">
+      <QPageContainer class="q-px-md">
         <h5 class="text-h5 q-my-md">音声書き出し結果</h5>
-        <q-list separator bordered class="rounded-borders">
-          <q-expansion-item
+        <QList separator bordered class="rounded-borders">
+          <QExpansionItem
             v-if="props.writeErrorArray.length > 0"
             :label="`${props.writeErrorArray.length}件の書き込みエラーによる失敗`"
             bordered
             header-class="text-warning text-bold"
             icon="warning"
           >
-            <q-item
-              v-for="(value, index) in props.writeErrorArray"
-              :key="index"
-            >
-              <q-item-section>
-                <q-item-label>{{ value.path }}</q-item-label>
-                <q-item-label>詳細：{{ value.message }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-expansion-item>
-          <q-expansion-item
+            <QItem v-for="(value, index) in props.writeErrorArray" :key="index">
+              <QItemSection>
+                <QItemLabel>{{ value.path }}</QItemLabel>
+                <QItemLabel>詳細：{{ value.message }}</QItemLabel>
+              </QItemSection>
+            </QItem>
+          </QExpansionItem>
+          <QExpansionItem
             v-if="props.engineErrorArray.length > 0"
             :label="`${props.engineErrorArray.length}件のエンジンエラーによる失敗`"
             bordered
             header-class="text-warning text-bold"
             icon="warning"
           >
-            <q-item
+            <QItem
               v-for="(value, index) in props.engineErrorArray"
               :key="index"
             >
-              <q-item-section>
-                <q-item-label>{{ value.path }}</q-item-label>
-                <q-item-label v-if="value.message"
-                  >詳細：{{ value.message }}</q-item-label
+              <QItemSection>
+                <QItemLabel>{{ value.path }}</QItemLabel>
+                <QItemLabel v-if="value.message"
+                  >詳細：{{ value.message }}</QItemLabel
                 >
-              </q-item-section>
-            </q-item>
-          </q-expansion-item>
-          <q-expansion-item
+              </QItemSection>
+            </QItem>
+          </QExpansionItem>
+          <QExpansionItem
             :label="`${props.successArray.length}件の成功`"
             bordered
             icon="check"
             header-class="text-bold"
           >
-            <q-list v-if="props.successArray.length > 0" separator>
-              <q-item v-for="(value, index) in props.successArray" :key="index">
-                <q-item-section>
-                  <q-item-label>{{ value }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-expansion-item>
-        </q-list>
-      </q-page-container>
-      <q-footer>
-        <q-toolbar>
-          <q-space />
-          <q-btn
+            <QList v-if="props.successArray.length > 0" separator>
+              <QItem v-for="(value, index) in props.successArray" :key="index">
+                <QItemSection>
+                  <QItemLabel>{{ value }}</QItemLabel>
+                </QItemSection>
+              </QItem>
+            </QList>
+          </QExpansionItem>
+        </QList>
+      </QPageContainer>
+      <QFooter>
+        <QToolbar>
+          <QSpace />
+          <QBtn
             unelevated
             align="right"
             label="閉じる"
@@ -72,10 +65,10 @@
             class="text-no-wrap text-bold q-mr-sm"
             @click="close"
           />
-        </q-toolbar>
-      </q-footer>
-    </q-layout>
-  </q-dialog>
+        </QToolbar>
+      </QFooter>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
