@@ -4,7 +4,7 @@
 -->
 
 <template>
-  <update-notification-dialog
+  <UpdateNotificationDialog
     v-if="newUpdateResult.status == 'updateAvailable'"
     v-model="isDialogOpenComputed"
     :latest-version="newUpdateResult.latestVersion"

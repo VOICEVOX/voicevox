@@ -15,7 +15,7 @@
     <div class="note-bar" @mousedown="onBarMouseDown">
       <div class="note-left-edge" @mousedown="onLeftEdgeMouseDown"></div>
       <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
-      <context-menu ref="contextMenu" :menudata="contextMenuData" />
+      <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
     </div>
     <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
     <div

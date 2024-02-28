@@ -1,9 +1,9 @@
 <template>
-  <q-header class="q-py-sm">
-    <q-toolbar>
+  <QHeader class="q-py-sm">
+    <QToolbar>
       <template v-for="button in buttons" :key="button.text">
-        <q-space v-if="button.text === null" />
-        <q-btn
+        <QSpace v-if="button.text === null" />
+        <QBtn
           v-else
           unelevated
           color="toolbar-button"
@@ -11,11 +11,11 @@
           class="text-no-wrap text-bold q-mr-sm"
           :disable="button.disable.value"
           @click="button.click"
-          >{{ button.text }}</q-btn
+          >{{ button.text }}</QBtn
         >
       </template>
-    </q-toolbar>
-  </q-header>
+    </QToolbar>
+  </QHeader>
 </template>
 
 <script setup lang="ts">

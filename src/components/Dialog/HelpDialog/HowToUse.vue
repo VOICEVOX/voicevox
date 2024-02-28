@@ -1,8 +1,8 @@
 <template>
-  <q-page class="relative-absolute-wrapper scroller markdown-body">
+  <QPage class="relative-absolute-wrapper scroller markdown-body">
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div class="q-pa-md markdown" v-html="howToUse"></div>
-  </q-page>
+  </QPage>
 </template>
 
 <script setup lang="ts">

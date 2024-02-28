@@ -188,6 +188,7 @@ export interface Sandbox {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
+  showSaveDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showVvppOpenDialog(obj: {
     title: string;
     defaultPath?: string;

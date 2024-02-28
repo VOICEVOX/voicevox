@@ -3,49 +3,49 @@
     <div v-if="enablePreset" class="q-px-md">
       <div class="row items-center no-wrap q-mb-xs">
         <div class="text-body1">プリセット</div>
-        <q-btn dense flat icon="more_vert" :disable="uiLocked">
-          <q-menu transition-duration="100">
-            <q-list>
-              <q-item
+        <QBtn dense flat icon="more_vert" :disable="uiLocked">
+          <QMenu transition-duration="100">
+            <QList>
+              <QItem
                 v-close-popup
                 clickable
                 @click="registerPreset({ overwrite: false })"
               >
-                <q-item-section avatar>
-                  <q-avatar
+                <QItemSection avatar>
+                  <QAvatar
                     icon="add_circle_outline"
                     color="primary"
                     text-color="display-on-primary"
-                  ></q-avatar>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>プリセット新規登録</q-item-label>
-                </q-item-section>
-              </q-item>
-              <q-item
+                  ></QAvatar>
+                </QItemSection>
+                <QItemSection>
+                  <QItemLabel>プリセット新規登録</QItemLabel>
+                </QItemSection>
+              </QItem>
+              <QItem
                 v-close-popup
                 clickable
                 @click="showsPresetEditDialog = true"
               >
-                <q-item-section avatar>
-                  <q-avatar
+                <QItemSection avatar>
+                  <QAvatar
                     icon="edit_note"
                     color="primary"
                     text-color="display-on-primary"
-                  ></q-avatar>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>プリセット管理</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
+                  ></QAvatar>
+                </QItemSection>
+                <QItemSection>
+                  <QItemLabel>プリセット管理</QItemLabel>
+                </QItemSection>
+              </QItem>
+            </QList>
+          </QMenu>
+        </QBtn>
       </div>
 
       <div class="full-width row" @wheel="setPresetByScroll($event)">
         <!-- TODO: 同じプリセットを選択したときにも複数選択中の他のAudioItemのプリセットを変更するようにする -->
-        <q-select
+        <QSelect
           v-model="presetSelectModel"
           :options="selectablePresetList"
           class="col overflow-hidden"
@@ -63,15 +63,15 @@
             </div>
           </template>
           <template #no-option>
-            <q-item>
-              <q-item-section class="text-grey">
+            <QItem>
+              <QItemSection class="text-grey">
                 プリセットはありません
-              </q-item-section>
-            </q-item>
+              </QItemSection>
+            </QItem>
           </template>
-        </q-select>
+        </QSelect>
 
-        <q-btn
+        <QBtn
           v-show="!isRegisteredPreset || isChangedPreset"
           dense
           outline
@@ -83,18 +83,18 @@
         />
       </div>
       <!-- プリセット管理ダイアログ -->
-      <preset-manage-dialog v-model:open-dialog="showsPresetEditDialog" />
+      <PresetManageDialog v-model:open-dialog="showsPresetEditDialog" />
 
       <!-- プリセット登録ダイアログ -->
-      <q-dialog v-model="showsPresetNameDialog" @before-hide="closeAllDialog">
-        <q-card style="min-width: 350px">
-          <q-card-section>
+      <QDialog v-model="showsPresetNameDialog" @before-hide="closeAllDialog">
+        <QCard style="min-width: 350px">
+          <QCardSection>
             <div class="text-h6">プリセット登録</div>
-          </q-card-section>
+          </QCardSection>
 
-          <q-form @submit.prevent="checkRewritePreset">
-            <q-card-section class="q-pt-none">
-              <q-select
+          <QForm @submit.prevent="checkRewritePreset">
+            <QCardSection class="q-pt-none">
+              <QSelect
                 fill-input
                 autofocus
                 hide-selected
@@ -107,68 +107,65 @@
                 @input-value="setPresetName"
                 @filter="filterPresetOptionsList"
               />
-            </q-card-section>
+            </QCardSection>
 
-            <q-card-actions align="right">
-              <q-btn
+            <QCardActions align="right">
+              <QBtn
                 v-close-popup
                 flat
                 label="キャンセル"
                 @click="closeAllDialog"
               />
-              <q-btn flat type="submit" label="確定" />
-            </q-card-actions>
-          </q-form>
-        </q-card>
-      </q-dialog>
+              <QBtn flat type="submit" label="確定" />
+            </QCardActions>
+          </QForm>
+        </QCard>
+      </QDialog>
 
       <!-- プリセット再登録ダイアログ -->
-      <q-dialog
-        v-model="showsPresetRewriteDialog"
-        @before-hide="closeAllDialog"
-      >
-        <q-card>
-          <q-card-section>
+      <QDialog v-model="showsPresetRewriteDialog" @before-hide="closeAllDialog">
+        <QCard>
+          <QCardSection>
             <div class="text-h6">プリセットの再登録</div>
-          </q-card-section>
-          <q-card-section>
-            <q-list>
-              <q-item clickable class="no-margin" @click="updatePreset(true)">
-                <q-item-section avatar>
-                  <q-avatar icon="arrow_forward" text-color="blue" />
-                </q-item-section>
-                <q-item-section>
+          </QCardSection>
+          <QCardSection>
+            <QList>
+              <QItem clickable class="no-margin" @click="updatePreset(true)">
+                <QItemSection avatar>
+                  <QAvatar icon="arrow_forward" text-color="blue" />
+                </QItemSection>
+                <QItemSection>
                   プリセットを再登録し、このプリセットが設定されたテキスト欄全てに再適用する
-                </q-item-section>
-              </q-item>
-              <q-item clickable class="no-margin" @click="updatePreset(false)">
-                <q-item-section avatar>
-                  <q-avatar icon="arrow_forward" text-color="blue" />
-                </q-item-section>
-                <q-item-section> プリセットの再登録のみ行う </q-item-section>
-              </q-item>
-              <q-item
+                </QItemSection>
+              </QItem>
+              <QItem clickable class="no-margin" @click="updatePreset(false)">
+                <QItemSection avatar>
+                  <QAvatar icon="arrow_forward" text-color="blue" />
+                </QItemSection>
+                <QItemSection> プリセットの再登録のみ行う </QItemSection>
+              </QItem>
+              <QItem
                 v-close-popup
                 clickable
                 class="no-margin"
                 @click="closeAllDialog"
               >
-                <q-item-section avatar>
-                  <q-avatar icon="arrow_forward" text-color="blue" />
-                </q-item-section>
-                <q-item-section>キャンセル</q-item-section>
-              </q-item>
-            </q-list>
-          </q-card-section>
-        </q-card>
-      </q-dialog>
+                <QItemSection avatar>
+                  <QAvatar icon="arrow_forward" text-color="blue" />
+                </QItemSection>
+                <QItemSection>キャンセル</QItemSection>
+              </QItem>
+            </QList>
+          </QCardSection>
+        </QCard>
+      </QDialog>
 
-      <q-separator class="q-mt-md" />
+      <QSeparator class="q-mt-md" />
     </div>
 
     <div class="parameters q-px-md">
       <div v-for="parameter in parameters" :key="parameter.label">
-        <q-input
+        <QInput
           dense
           borderless
           maxlength="5"
@@ -188,8 +185,8 @@
               parameter.label
             }}</span></template
           >
-        </q-input>
-        <q-slider
+        </QInput>
+        <QSlider
           dense
           snap
           color="primary"
@@ -215,10 +212,10 @@
         disabled: uiLocked,
       }"
     >
-      <q-separator class="q-my-md" />
+      <QSeparator class="q-my-md" />
       <span class="text-body1 q-mb-xs">モーフィング</span>
       <div class="row no-wrap items-center">
-        <character-button
+        <CharacterButton
           v-model:selected-voice="morphingTargetVoice"
           class="q-my-xs"
           :character-infos="morphingTargetCharacters"
@@ -273,7 +270,7 @@
               : undefined
           }}</span
         >
-        <q-slider
+        <QSlider
           dense
           snap
           color="primary"
@@ -920,7 +917,8 @@ const adjustSliderValue = (
   minimalVal: number,
   maximamVal: number
 ) => {
-  const inputNum = Number(inputStr);
+  const convertedInputStr = convertFullWidthNumbers(inputStr);
+  const inputNum = Number(convertedInputStr);
 
   store.dispatch("LOG_INFO", `${inputItemName}:${inputStr}`);
 
@@ -935,6 +933,31 @@ const adjustSliderValue = (
   }
 
   return inputNum;
+};
+
+const convertFullWidthNumbers = (inputStr: string) => {
+  const numberConversionMap = [
+    ["０", "0"],
+    ["１", "1"],
+    ["２", "2"],
+    ["３", "3"],
+    ["４", "4"],
+    ["５", "5"],
+    ["６", "6"],
+    ["７", "7"],
+    ["８", "8"],
+    ["９", "9"],
+    ["。", "."],
+    ["．", "."],
+    ["ー", "-"],
+  ];
+
+  let convertedInputStr = inputStr;
+  for (const [pattern, replacement] of numberConversionMap) {
+    const regex = new RegExp(pattern, "g");
+    convertedInputStr = convertedInputStr.replace(regex, replacement);
+  }
+  return convertedInputStr;
 };
 </script>
 

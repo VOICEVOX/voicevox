@@ -1,5 +1,5 @@
 <template>
-  <q-btn
+  <QBtn
     flat
     text-color="display"
     class="
@@ -18,15 +18,15 @@
     "
   >
     {{ menudata.label }}
-    <q-menu
+    <QMenu
       v-if="'subMenu' in menudata"
       v-model="selectedComputed"
       transition-show="none"
       transition-hide="none"
       :fit="true"
     >
-      <q-list dense>
-        <menu-item
+      <QList dense>
+        <MenuItem
           v-for="(menu, index) of menudata.subMenu"
           :key="index"
           v-model:selected="subMenuOpenFlags[index]"
@@ -35,9 +35,9 @@
           @mouseenter="reassignSubMenuOpen(index)"
           @mouseleave="reassignSubMenuOpen.cancel()"
         />
-      </q-list>
-    </q-menu>
-  </q-btn>
+      </QList>
+    </QMenu>
+  </QBtn>
 </template>
 
 <script setup lang="ts">

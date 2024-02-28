@@ -1,9 +1,9 @@
 <template>
-  <q-toolbar class="sing-toolbar">
+  <QToolbar class="sing-toolbar">
     <!-- configs for entire song -->
     <div class="sing-configs">
-      <character-menu-button />
-      <q-input
+      <CharacterMenuButton />
+      <QInput
         type="number"
         :model-value="keyShiftInputBuffer"
         label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
@@ -13,7 +13,7 @@
         @update:model-value="setKeyShiftInputBuffer"
         @change="setKeyShift"
       />
-      <q-input
+      <QInput
         type="number"
         :model-value="bpmInputBuffer"
         label="テンポ"
@@ -24,11 +24,11 @@
         @change="setTempo"
       >
         <template #prepend>
-          <q-icon name="music_note" size="xs" class="sing-tempo-icon" />
+          <QIcon name="music_note" size="xs" class="sing-tempo-icon" />
         </template>
-      </q-input>
+      </QInput>
       <div class="sing-beats">
-        <q-input
+        <QInput
           type="number"
           :model-value="beatsInputBuffer"
           label="拍子"
@@ -39,7 +39,7 @@
           @change="setTimeSignature"
         />
         <div class="sing-beats-separator">/</div>
-        <q-input
+        <QInput
           type="number"
           :model-value="beatTypeInputBuffer"
           label=""
@@ -53,21 +53,21 @@
     </div>
     <!-- player -->
     <div class="sing-player">
-      <q-btn
+      <QBtn
         flat
         round
         class="sing-transport-button"
         icon="skip_previous"
         @click="goToZero"
       />
-      <q-btn
+      <QBtn
         v-if="!nowPlaying"
         round
         class="sing-playback-button"
         icon="play_arrow"
         @click="play"
       />
-      <q-btn
+      <QBtn
         v-else
         round
         class="sing-playback-button"
@@ -83,7 +83,7 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
-      <q-btn
+      <QBtn
         flat
         dense
         round
@@ -92,7 +92,7 @@
         :disable="!canUndo"
         @click="undo"
       />
-      <q-btn
+      <QBtn
         flat
         dense
         round
@@ -101,9 +101,9 @@
         :disable="!canRedo"
         @click="redo"
       />
-      <q-icon name="volume_up" size="xs" class="sing-volume-icon" />
-      <q-slider v-model.number="volume" class="sing-volume" />
-      <q-select
+      <QIcon name="volume_up" size="xs" class="sing-volume-icon" />
+      <QSlider v-model.number="volume" class="sing-volume" />
+      <QSelect
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
         outlined
@@ -118,7 +118,7 @@
         class="sing-snap"
       />
     </div>
-  </q-toolbar>
+  </QToolbar>
 </template>
 
 <script setup lang="ts">
