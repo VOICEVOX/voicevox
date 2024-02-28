@@ -4,7 +4,7 @@
       <div class="inner">
         <BaseDocumentView>
           <!-- eslint-disable-next-line vue/no-v-html -->
-          <div v-html="ossCommunityInfos"></div>
+          <div v-html="documentHtml"></div>
         </BaseDocumentView>
       </div>
     </BaseScrollArea>
@@ -15,18 +15,19 @@
 import { onMounted, ref } from "vue";
 import BaseDocumentView from "../base/BaseDocumentView.vue";
 import BaseScrollArea from "../base/BaseScrollArea.vue";
-import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
-const store = useStore();
-const ossCommunityInfos = ref("");
+const props =
+  defineProps<{
+    markdown: string;
+  }>();
+
+const documentHtml = ref("");
 
 const md = useMarkdownIt();
 
 onMounted(async () => {
-  ossCommunityInfos.value = md.render(
-    await store.dispatch("GET_OSS_COMMUNITY_INFOS")
-  );
+  documentHtml.value = md.render(props.markdown);
 });
 </script>
 
