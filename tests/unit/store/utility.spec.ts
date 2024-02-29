@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { AccentPhrase, Mora } from "@/openapi";
 import {
+  AccentPhraseKey,
   CharacterInfo,
   EngineId,
   SpeakerId,
@@ -26,6 +27,7 @@ import {
   isOnCommandOrCtrlKeyDown,
   filterCharacterInfosByStyleType,
 } from "@/store/utility";
+import { EditorAccentPhrase } from "@/store/type";
 
 function createDummyMora(text: string): Mora {
   return {
@@ -36,8 +38,9 @@ function createDummyMora(text: string): Mora {
   };
 }
 
-function createDummyAccentPhrase(moraTexts: string[]): AccentPhrase {
+function createDummyAccentPhrase(moraTexts: string[]): EditorAccentPhrase {
   return {
+    key: AccentPhraseKey(Math.random().toString()),
     moras: moraTexts.map(createDummyMora),
     accent: Math.random(),
   };
@@ -163,12 +166,12 @@ describe.each([
 
 describe("TuningTranscription", () => {
   it("２つ以上のアクセント句でも正しくデータを転写できる", async () => {
-    const before: AccentPhrase[] = [
+    const before: EditorAccentPhrase[] = [
       createDummyAccentPhrase(["い", "え"]),
       createDummyAccentPhrase(["か", "き", "く", "け", "こ"]),
       createDummyAccentPhrase(["さ", "し", "す", "せ", "そ"]),
     ];
-    const after: AccentPhrase[] = [
+    const after: EditorAccentPhrase[] = [
       createDummyAccentPhrase(["あ", "い", "う", "え", "お"]), // 最初・真ん中・最後に追加
       createDummyAccentPhrase(["き", "け"]), // 最初・真ん中・最後を消去
       createDummyAccentPhrase(["た", "ち", "つ", "て", "と"]), // すべて置き換え

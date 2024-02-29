@@ -1,6 +1,7 @@
 import path from "path";
 import { Platform } from "quasar";
 import { diffArrays } from "diff";
+import { EditorAccentPhrase } from "./type";
 import {
   CharacterInfo,
   StyleInfo,
@@ -224,9 +225,12 @@ function skipMemoText(targettext: string): string {
  * 「 [こん]ばん[は] 」
  */
 export class TuningTranscription {
-  beforeAccent: AccentPhrase[];
-  afterAccent: AccentPhrase[];
-  constructor(beforeAccent: AccentPhrase[], afterAccent: AccentPhrase[]) {
+  beforeAccent: EditorAccentPhrase[];
+  afterAccent: EditorAccentPhrase[];
+  constructor(
+    beforeAccent: EditorAccentPhrase[],
+    afterAccent: EditorAccentPhrase[]
+  ) {
     this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
@@ -305,8 +309,10 @@ export class TuningTranscription {
    * あとは一致したモーラを転写するだけ。
    *
    */
-  private mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
-    const after: AccentPhrase[] = structuredClone(this.afterAccent);
+  private mergeAccentPhrases(
+    moraPatch: (Mora | undefined)[]
+  ): EditorAccentPhrase[] {
+    const after: EditorAccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
     // AccentPhrasesから[ accentIndex ]["moras"][ moraIndex ]でモーラが得られる。
