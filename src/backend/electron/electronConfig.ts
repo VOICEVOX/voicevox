@@ -1,7 +1,7 @@
 import { join } from "path";
 import fs from "fs";
 import { app } from "electron";
-import { BaseConfigManager, Metadata } from "@/shared/ConfigManager";
+import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType } from "@/type/preload";
 
 export class ElectronConfigManager extends BaseConfigManager {

@@ -34,6 +34,8 @@ export const useHotkeyManager = () => {
 
 type Editor = "talk" | "song";
 
+type BindingKey = string & { __brand: "BindingKey" }; // BindingKey専用のブランド型
+
 /**
  * ショートカットキーの処理を登録するための型。
  */
@@ -50,16 +52,17 @@ export type HotkeyAction = {
 
 export type HotkeysJs = {
   (
-    key: string,
+    key: BindingKey,
     options: {
       scope: string;
     },
     callback: (e: KeyboardEvent) => void
   ): void;
-  unbind: (key: string, scope: string) => void;
+  unbind: (key: BindingKey, scope: string) => void;
   setScope: (scope: string) => void;
 };
 
+// デフォルトはテキストボックス内でショートカットキー無効なので有効にする
 hotkeys.filter = () => {
   return true;
 };
@@ -99,7 +102,7 @@ export class HotkeyManager {
   constructor(
     hotkeys_: HotkeysJs = hotkeys,
     log: Log = (message: string, ...args: unknown[]) => {
-      window.electron.logInfo(`[HotkeyManager] ${message}`, ...args);
+      window.backend.logInfo(`[HotkeyManager] ${message}`, ...args);
     }
   ) {
     this.log = log;
@@ -269,8 +272,19 @@ export class HotkeyManager {
   }
 }
 
-const combinationToBindingKey = (combination: HotkeyCombination) => {
-  return combination.toLowerCase().replaceAll(" ", "+");
+/** hotkeys-js用のキーに変換する */
+const combinationToBindingKey = (
+  combination: HotkeyCombination
+): BindingKey => {
+  // MetaキーはCommandキーとして扱う
+  // NOTE: hotkeys-jsにはWinキーが無く、Commandキーとして扱われている
+  // NOTE: Metaキーは以前採用していたmousetrapがそうだった名残り
+  const bindingKey = combination
+    .toLowerCase()
+    .split(" ")
+    .map((key) => (key === "meta" ? "command" : key))
+    .join("+");
+  return bindingKey as BindingKey;
 };
 
 export const hotkeyPlugin: Plugin = {

@@ -1,50 +1,50 @@
 <template>
-  <q-dialog
+  <QDialog
     :model-value="props.openDialog"
     @update:model-value="updateOpenDialog"
   >
-    <q-card class="setting-card q-pa-md dialog-card">
-      <q-card-section>
+    <QCard class="setting-card q-pa-md dialog-card">
+      <QCardSection>
         <div class="text-h5">プリセット管理</div>
-      </q-card-section>
-      <q-card-actions class="q-px-md q-py-sm">
+      </QCardSection>
+      <QCardActions class="q-px-md q-py-sm">
         <div class="full-width row wrap justify-between">
-          <q-list bordered separator class="col-sm-grow">
-            <draggable
+          <QList bordered separator class="col-sm-grow">
+            <Draggable
               :model-value="previewPresetList"
               item-key="key"
               @update:model-value="reorderPreset"
             >
               <template #item="{ element: item }">
-                <q-item>
-                  <q-item-section>{{ item.name }}</q-item-section>
-                  <q-space />
-                  <q-item-section avatar>
-                    <q-btn
+                <QItem>
+                  <QItemSection>{{ item.name }}</QItemSection>
+                  <QSpace />
+                  <QItemSection avatar>
+                    <QBtn
                       icon="delete"
                       flat
                       color="display"
                       @click="deletePreset(item.key)"
-                    ></q-btn>
-                  </q-item-section>
-                </q-item>
+                    ></QBtn>
+                  </QItemSection>
+                </QItem>
               </template>
-            </draggable>
-            <q-item v-if="presetList.length === 0">
-              <q-item-section class="display">
+            </Draggable>
+            <QItem v-if="presetList.length === 0">
+              <QItemSection class="display">
                 プリセットがありません
-              </q-item-section>
-            </q-item>
-          </q-list>
+              </QItemSection>
+            </QItem>
+          </QList>
         </div>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+      </QCardActions>
+    </QCard>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import draggable from "vuedraggable";
+import Draggable from "vuedraggable";
 import { useStore } from "@/store";
 
 import { useDefaultPreset } from "@/composables/useDefaultPreset";

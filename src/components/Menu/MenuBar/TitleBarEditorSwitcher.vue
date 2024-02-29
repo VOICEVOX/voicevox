@@ -5,7 +5,7 @@
 <template>
   <!-- FIXME: 画面サイズが小さくなると表示が崩れるのを直す -->
   <!-- NOTE: デザインしづらいからQBtnかdivの方が良い -->
-  <q-btn-toggle
+  <QBtnToggle
     :model-value="openedEditor"
     unelevated
     :disable="uiLocked"

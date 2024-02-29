@@ -1,7 +1,7 @@
 <template>
   <div v-if="isShowProgress" class="progress">
     <div>
-      <q-circular-progress
+      <QCircularProgress
         v-if="isDeterminate"
         show-value
         :value="progress"
@@ -14,8 +14,8 @@
         :thickness="0.3"
       >
         {{ formattedProgress }}%
-      </q-circular-progress>
-      <q-circular-progress
+      </QCircularProgress>
+      <QCircularProgress
         v-if="!isDeterminate"
         indeterminate
         color="primary"

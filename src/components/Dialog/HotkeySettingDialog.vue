@@ -1,18 +1,18 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="hotkeySettingDialogOpenComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="hotkey-setting-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm">
-        <q-toolbar>
-          <q-toolbar-title class="text-display"
-            >設定 / キー割り当て</q-toolbar-title
+    <QLayout container view="hHh Lpr lff" class="bg-background">
+      <QHeader class="q-py-sm">
+        <QToolbar>
+          <QToolbarTitle class="text-display"
+            >設定 / キー割り当て</QToolbarTitle
           >
-          <q-input
+          <QInput
             v-model="hotkeyFilter"
             hide-bottom-space
             dense
@@ -21,31 +21,31 @@
             class="q-mr-sm search-box"
           >
             <template #prepend>
-              <q-icon name="search" />
+              <QIcon name="search" />
             </template>
             <template #append>
-              <q-icon
+              <QIcon
                 v-if="hotkeyFilter !== ''"
                 name="close"
                 class="cursor-pointer"
                 @click="hotkeyFilter = ''"
               />
-              <q-icon v-else />
+              <QIcon v-else />
             </template>
-          </q-input>
-          <q-btn
+          </QInput>
+          <QBtn
             round
             flat
             icon="close"
             color="display"
             @click="hotkeySettingDialogOpenComputed = false"
           />
-        </q-toolbar>
-      </q-header>
+        </QToolbar>
+      </QHeader>
 
-      <q-page-container>
-        <q-page>
-          <q-table
+      <QPageContainer>
+        <QPage>
+          <QTable
             v-model:pagination="hotkeyPagination"
             flat
             dense
@@ -59,32 +59,32 @@
             class="hotkey-table"
           >
             <template #header="tableProps">
-              <q-tr :props="tableProps">
-                <q-th
+              <QTr :props="tableProps">
+                <QTh
                   v-for="col of tableProps.cols"
                   :key="col.name"
                   :props="tableProps"
                 >
                   {{ col.label }}
-                </q-th>
-              </q-tr>
+                </QTh>
+              </QTr>
             </template>
 
             <template #body="tableProps">
-              <q-tr :props="tableProps">
-                <q-td
+              <QTr :props="tableProps">
+                <QTd
                   :key="tableProps.cols[0].name"
                   no-hover
                   :props="tableProps"
                 >
                   {{ tableProps.row.action }}
-                </q-td>
-                <q-td
+                </QTd>
+                <QTd
                   :key="tableProps.cols[1].name"
                   no-hover
                   :props="tableProps"
                 >
-                  <q-btn
+                  <QBtn
                     dense
                     text-color="display"
                     padding="none sm"
@@ -106,7 +106,7 @@
                     "
                     @click="openHotkeyDialog(tableProps.row.action)"
                   />
-                  <q-btn
+                  <QBtn
                     rounded
                     flat
                     icon="settings_backup_restore"
@@ -115,18 +115,18 @@
                     :disable="checkHotkeyReadonly(tableProps.row.action)"
                     @click="resetHotkey(tableProps.row.action)"
                   >
-                    <q-tooltip :delay="500">デフォルトに戻す</q-tooltip>
-                  </q-btn>
-                </q-td>
-              </q-tr>
+                    <QTooltip :delay="500">デフォルトに戻す</QTooltip>
+                  </QBtn>
+                </QTd>
+              </QTr>
             </template>
-          </q-table>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+          </QTable>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 
-  <q-dialog
+  <QDialog
     no-esc-dismiss
     no-shake
     transition-show="none"
@@ -134,20 +134,20 @@
     :model-value="isHotkeyDialogOpened"
     @update:model-value="closeHotkeyDialog"
   >
-    <q-card class="q-py-sm q-px-md">
-      <q-card-section align="center">
+    <QCard class="q-py-sm q-px-md">
+      <QCardSection align="center">
         <div class="text-h6">ショートカットキーを入力してください</div>
-      </q-card-section>
-      <q-card-section align="center">
+      </QCardSection>
+      <QCardSection align="center">
         <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
           <span v-if="index !== 0"> + </span>
           <!--
           Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
           Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
           -->
-          <q-chip :ripple="false" color="surface">
+          <QChip :ripple="false" color="surface">
             {{ hotkey === "Meta" ? "Cmd" : hotkey }}
-          </q-chip>
+          </QChip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
         <div v-if="duplicatedHotkey != undefined" class="text-warning q-mt-lg">
@@ -158,9 +158,9 @@
             「{{ duplicatedHotkey.action }}」
           </div>
         </div>
-      </q-card-section>
-      <q-card-actions align="center">
-        <q-btn
+      </QCardSection>
+      <QCardActions align="center">
+        <QBtn
           padding="xs md"
           label="キャンセル"
           unelevated
@@ -169,7 +169,7 @@
           class="q-mt-sm"
           @click="closeHotkeyDialog"
         />
-        <q-btn
+        <QBtn
           padding="xs md"
           label="ショートカットキーを未設定にする"
           unelevated
@@ -181,7 +181,7 @@
             closeHotkeyDialog();
           "
         />
-        <q-btn
+        <QBtn
           v-if="duplicatedHotkey == undefined"
           padding="xs md"
           label="OK"
@@ -196,7 +196,7 @@
             )
           "
         />
-        <q-btn
+        <QBtn
           v-else
           padding="xs md"
           label="上書きする"
@@ -207,9 +207,9 @@
           :disabled="confirmBtnEnabled"
           @click="solveDuplicated().then(() => closeHotkeyDialog())"
         />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+      </QCardActions>
+    </QCard>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
@@ -369,7 +369,7 @@ const resetHotkey = async (action: string) => {
     cancel: "初期値に戻さない",
   });
   if (result === "OK") {
-    window.electron
+    window.backend
       .getDefaultHotkeySettings()
       .then((defaultSettings: HotkeySettingType[]) => {
         const setting = defaultSettings.find((value) => value.action == action);

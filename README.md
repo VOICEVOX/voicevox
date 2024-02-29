@@ -82,6 +82,11 @@ npm run browser:serve
 npm run electron:build
 ```
 
+### Github Actions でビルド
+
+fork したリポジトリで Actions を ON にし、workflow_dispatch で`build.yml`を起動すればビルドできます。
+成果物は Release にアップロードされます。
+
 ## テスト
 
 ### 単体テスト

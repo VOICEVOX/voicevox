@@ -1,12 +1,12 @@
 <template>
-  <q-badge
+  <QBadge
     v-if="$q.platform.is.mac"
     transparent
     color="transparent"
     text-color="display"
     class="full-height cursor-not-allowed no-border-radius"
   >
-    <q-btn
+    <QBtn
       dense
       flat
       round
@@ -16,8 +16,8 @@
       class="title-bar-buttons"
       aria-label="閉じる"
       @click="closeWindow()"
-    ></q-btn>
-    <q-btn
+    ></QBtn>
+    <QBtn
       dense
       flat
       round
@@ -27,8 +27,8 @@
       class="title-bar-buttons"
       aria-label="最小化"
       @click="minimizeWindow()"
-    ></q-btn>
-    <q-btn
+    ></QBtn>
+    <QBtn
       dense
       flat
       round
@@ -38,9 +38,9 @@
       class="title-bar-buttons"
       aria-label="最大化"
       @click="maximizeWindow()"
-    ></q-btn>
-  </q-badge>
-  <q-badge
+    ></QBtn>
+  </QBadge>
+  <QBadge
     v-else
     transparent
     color="transparent"
@@ -52,16 +52,16 @@
       title-bar-buttons-root
     "
   >
-    <q-btn
+    <QBtn
       dense
       flat
       icon="minimize"
       class="title-bar-buttons"
       aria-label="最小化"
       @click="minimizeWindow()"
-    ></q-btn>
+    ></QBtn>
 
-    <q-btn
+    <QBtn
       v-if="!isMaximized"
       dense
       flat
@@ -69,8 +69,8 @@
       class="title-bar-buttons"
       aria-label="最大化"
       @click="maximizeWindow()"
-    ></q-btn>
-    <q-btn
+    ></QBtn>
+    <QBtn
       v-else
       dense
       flat
@@ -79,17 +79,17 @@
       aria-label="最大化"
       @click="maximizeWindow()"
     >
-    </q-btn>
+    </QBtn>
 
-    <q-btn
+    <QBtn
       dense
       flat
       icon="close"
       class="title-bar-buttons close"
       aria-label="閉じる"
       @click="closeWindow()"
-    ></q-btn>
-  </q-badge>
+    ></QBtn>
+  </QBadge>
 </template>
 
 <script setup lang="ts">
@@ -102,8 +102,8 @@ const store = useStore();
 const closeWindow = async () => {
   store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
 };
-const minimizeWindow = () => window.electron.minimizeWindow();
-const maximizeWindow = () => window.electron.maximizeWindow();
+const minimizeWindow = () => window.backend.minimizeWindow();
+const maximizeWindow = () => window.backend.maximizeWindow();
 
 const isMaximized = computed(() => store.state.isMaximized);
 </script>

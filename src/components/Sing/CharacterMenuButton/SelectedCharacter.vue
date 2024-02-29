@@ -1,14 +1,14 @@
 <template>
   <div v-if="props.showSkeleton" class="selected-character">
-    <q-skeleton class="character-avatar" type="QAvatar" size="52px" />
+    <QSkeleton class="character-avatar" type="QAvatar" size="52px" />
     <div class="character-info">
-      <q-skeleton
+      <QSkeleton
         class="character-name skeleton"
         type="rect"
         width="65px"
         height="15px"
       />
-      <q-skeleton
+      <QSkeleton
         class="character-style"
         type="rect"
         width="110px"
@@ -17,13 +17,13 @@
     </div>
   </div>
   <div v-else class="selected-character">
-    <q-avatar
+    <QAvatar
       v-if="selectedStyleIconPath"
       class="character-avatar"
       size="3.5rem"
     >
       <img :src="selectedStyleIconPath" class="character-avatar-icon" />
-    </q-avatar>
+    </QAvatar>
     <div class="character-info">
       <div class="character-name">
         {{ selectedCharacterName }}
@@ -32,7 +32,7 @@
         {{ selectedCharacterStyleDescription }}
       </div>
     </div>
-    <q-icon
+    <QIcon
       name="arrow_drop_down"
       size="sm"
       class="character-menu-dropdown-icon"

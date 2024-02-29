@@ -4,7 +4,7 @@
 -->
 
 <template>
-  <update-notification-dialog
+  <UpdateNotificationDialog
     v-if="newUpdateResult.status == 'updateAvailable'"
     v-model="isDialogOpenComputed"
     :latest-version="newUpdateResult.latestVersion"
@@ -45,7 +45,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
 
 // アプリのバージョンとスキップしたバージョンのうち、新しい方を返す
 const currentVersionGetter = async () => {
-  const appVersion = await window.electron
+  const appVersion = await window.backend
     .getAppInfos()
     .then((obj) => obj.version);
 

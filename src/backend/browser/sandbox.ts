@@ -4,7 +4,7 @@ import {
   showOpenDirectoryDialogImpl,
   writeFileImpl,
 } from "./fileImpl";
-import { getConfigManager } from "./storeImpl";
+import { getConfigManager } from "./browserConfig";
 
 import { IpcSOData } from "@/type/ipc";
 import {
@@ -100,6 +100,9 @@ export const api: Sandbox = {
         resolve(obj.defaultPath);
       }
     });
+  },
+  showSaveDirectoryDialog(obj: { title: string }) {
+    return showOpenDirectoryDialogImpl(obj);
   },
   showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
     // NOTE: 今後接続先を変える手段としてVvppが使われるかもしれないので、そのタイミングで実装する

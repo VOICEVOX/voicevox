@@ -1,16 +1,17 @@
 <template>
-  <error-boundary>
+  <ErrorBoundary>
     <!-- TODO: メニューバーをEditorHomeから移動する -->
-    <keep-alive>
-      <component
+    <KeepAlive>
+      <Component
         :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
         v-if="openedEditor != undefined"
         :key="openedEditor"
         :is-engines-ready="isEnginesReady"
-        :project-file-path="projectFilePath"
+        :is-project-file-loaded="isProjectFileLoaded"
       />
-    </keep-alive>
-  </error-boundary>
+    </KeepAlive>
+    <AllDialog :is-engines-ready="isEnginesReady" />
+  </ErrorBoundary>
 </template>
 
 <script setup lang="ts">
@@ -22,6 +23,7 @@ import { EngineId } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import AllDialog from "@/components/Dialog/AllDialog.vue";
 
 const store = useStore();
 
@@ -65,6 +67,7 @@ watch(
 // ソフトウェアを初期化
 const { hotkeyManager } = useHotkeyManager();
 const isEnginesReady = ref(false);
+const isProjectFileLoaded = ref<boolean | "waiting">("waiting");
 onMounted(async () => {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
@@ -115,9 +118,26 @@ onMounted(async () => {
   await store.dispatch("SYNC_ALL_USER_DICT");
 
   isEnginesReady.value = true;
+
+  // エンジン起動後にダイアログを開く
+  store.dispatch("SET_DIALOG_OPEN", {
+    isAcceptRetrieveTelemetryDialogOpen:
+      store.state.acceptRetrieveTelemetry === "Unconfirmed",
+    isAcceptTermsDialogOpen:
+      import.meta.env.MODE !== "development" &&
+      store.state.acceptTerms !== "Accepted",
+  });
+
+  // プロジェクトファイルが指定されていればロード
+  if (
+    typeof projectFilePath.value === "string" &&
+    projectFilePath.value !== ""
+  ) {
+    isProjectFileLoaded.value = await store.dispatch("LOAD_PROJECT_FILE", {
+      filePath: projectFilePath.value,
+    });
+  } else {
+    isProjectFileLoaded.value = false;
+  }
 });
-
-// TODO: ダイアログ周りをEditorHomeから移動する
-
-// TODO: エンジン起動状態周りの処理と表示をEditorHomeから移動する
 </script>

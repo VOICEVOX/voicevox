@@ -13,7 +13,7 @@ export const engineStoreState: EngineStoreState = {
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
     async action({ state, commit }) {
-      const engineInfos = await window.electron.engineInfos();
+      const engineInfos = await window.backend.engineInfos();
 
       // マルチエンジンオフモード時はengineIdsをデフォルトエンジンのIDだけにする。
       let engineIds: EngineId[];
@@ -40,7 +40,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   GET_ONLY_ENGINE_INFOS: {
     async action({ commit }, { engineIds }) {
-      const engineInfos = await window.electron.engineInfos();
+      const engineInfos = await window.backend.engineInfos();
       for (const engineInfo of engineInfos) {
         if (engineIds.includes(engineInfo.uuid)) {
           commit("SET_ENGINE_INFO", {
@@ -68,7 +68,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   GET_ALT_PORT_INFOS: {
     async action({ commit }) {
-      const altPortInfos = await window.electron.getAltPortInfos();
+      const altPortInfos = await window.backend.getAltPortInfos();
       commit("SET_ALT_PORT_INFOS", { altPortInfos });
       return altPortInfos;
     },
@@ -178,7 +178,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            window.electron.logInfo(`Waiting engine ${engineId}`);
+            window.backend.logInfo(`Waiting engine ${engineId}`);
             continue;
           }
           engineState = "READY";
@@ -202,7 +202,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         engineIds.map(async (engineId) => {
           commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
           try {
-            return window.electron.restartEngine(engineId);
+            return window.backend.restartEngine(engineId);
           } catch (e) {
             dispatch("LOG_ERROR", {
               error: e,
@@ -289,7 +289,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   OPEN_ENGINE_DIRECTORY: {
     action(_, { engineId }) {
-      return window.electron.openEngineDirectory(engineId);
+      return window.backend.openEngineDirectory(engineId);
     },
   },
 
@@ -341,15 +341,15 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
   VALIDATE_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
-      return window.electron.validateEngineDir(engineDir);
+      return window.backend.validateEngineDir(engineDir);
     },
   },
   ADD_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
-      const registeredEngineDirs = await window.electron.getSetting(
+      const registeredEngineDirs = await window.backend.getSetting(
         "registeredEngineDirs"
       );
-      await window.electron.setSetting("registeredEngineDirs", [
+      await window.backend.setSetting("registeredEngineDirs", [
         ...registeredEngineDirs,
         engineDir,
       ]);
@@ -357,10 +357,10 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
   REMOVE_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
-      const registeredEngineDirs = await window.electron.getSetting(
+      const registeredEngineDirs = await window.backend.getSetting(
         "registeredEngineDirs"
       );
-      await window.electron.setSetting(
+      await window.backend.setSetting(
         "registeredEngineDirs",
         registeredEngineDirs.filter((path) => path !== engineDir)
       );
@@ -368,12 +368,12 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
   INSTALL_VVPP_ENGINE: {
     action: async (_, path) => {
-      return window.electron.installVvppEngine(path);
+      return window.backend.installVvppEngine(path);
     },
   },
   UNINSTALL_VVPP_ENGINE: {
     action: async (_, engineId) => {
-      return window.electron.uninstallVvppEngine(engineId);
+      return window.backend.uninstallVvppEngine(engineId);
     },
   },
   SET_ENGINE_MANIFEST: {
