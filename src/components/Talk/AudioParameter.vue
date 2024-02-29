@@ -17,6 +17,15 @@
           : undefined
       }}
     </QBadge>
+    <QTooltip
+      v-if="previewSlider.qSliderProps.disable.value"
+      :delay="500"
+      transition-show="jump-up"
+      transition-hide="jump-down"
+      anchor="top middle"
+      self="center middle"
+      >無声化（母音の発音が弱化）した音にイントネーションは存在しません<br />テキストをクリックすることで無声化を解くことができます</QTooltip
+    >
     <QSlider
       vertical
       reverse
