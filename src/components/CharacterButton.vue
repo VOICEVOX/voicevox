@@ -194,7 +194,7 @@
 
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
-import { computed, Ref, ref } from "vue";
+import { computed, Ref, ref, watch } from "vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
@@ -208,13 +208,58 @@ const props = withDefaults(
     showEngineInfo?: boolean;
     emptiable?: boolean;
     uiLocked: boolean;
+    isActiveAudioCell?: boolean;
   }>(),
   {
     loading: false,
     showEngineInfo: false,
     emptiable: false,
+    isActiveAudioCell: false,
   }
 );
+
+//キャラクターを選択するショートカットキー
+watch(
+  () => props.isActiveAudioCell,
+  (newValue) => {
+    if (newValue) {
+      document.addEventListener("keydown", onCharacterSelectShortCutKey, true);
+    } else {
+      document.removeEventListener(
+        "keydown",
+        onCharacterSelectShortCutKey,
+        true
+      );
+    }
+  }
+);
+
+const onCharacterSelectShortCutKey = (e: KeyboardEvent) => {
+  const element = e.target;
+  // メニュー項目ではショートカットキーを無効化
+  if (element instanceof HTMLElement && element.classList.contains("q-item")) {
+    return;
+  }
+  if (props.uiLocked) {
+    return;
+  }
+  if (e.ctrlKey) {
+    const convertedKey = convertToNumber(e.key);
+    if (convertedKey != null) {
+      e.preventDefault();
+      const selectedCharacterIndex = convertedKey != 0 ? convertedKey - 1 : 9;
+      onCharacterSelectShortCut(selectedCharacterIndex);
+    }
+  }
+};
+
+const convertToNumber = (str: string) => {
+  if (/^[0-9]$/.test(str)) {
+    return parseInt(str, 10);
+  } else {
+    return null;
+  }
+};
 
 const emit = defineEmits({
   "update:selectedVoice": (selectedVoice: Voice | undefined) => {
@@ -308,6 +353,12 @@ const onSelectSpeaker = (speakerUuid: SpeakerId) => {
     speakerId: speakerUuid,
     styleId: style.styleId,
   });
+};
+
+const onCharacterSelectShortCut = (index: number) => {
+  if (props.characterInfos.length >= index + 1) {
+    onSelectSpeaker(props.characterInfos[index].metas.speakerUuid);
+  }
 };
 
 const subMenuOpenFlags = ref(

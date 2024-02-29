@@ -50,6 +50,7 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
+      :is-active-audio-cell="isActiveAudioCell"
       @focus="
         if (!isSelectedAudioCell) {
           selectAndSetActiveAudioKey();
