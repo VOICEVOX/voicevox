@@ -470,7 +470,6 @@ async function loadUrl(obj: {
   projectFilePath?: string;
 }) {
   const fragment =
-    "#/talk" +
     `?isMultiEngineOffMode=${obj?.isMultiEngineOffMode ?? false}` +
     `&projectFilePath=${obj?.projectFilePath ?? ""}`;
   return win.loadURL(`${firstUrl}${fragment}`);
