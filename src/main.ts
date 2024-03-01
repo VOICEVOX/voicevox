@@ -2,7 +2,6 @@ import { createApp } from "vue";
 import { createGtm } from "@gtm-support/vue-gtm";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
-import router from "./router";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
@@ -20,11 +19,9 @@ window.dataLayer = [];
 
 createApp(App)
   .use(store, storeKey)
-  .use(router)
   .use(
     createGtm({
       id: import.meta.env.VITE_GTM_CONTAINER_ID ?? "GTM-DUMMY",
-      vueRouter: router,
       // NOTE: 最初はgtm.jsを読まず、プライバシーポリシーに同意後に読み込む
       enabled: false,
     })
