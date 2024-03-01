@@ -127,8 +127,12 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     ">=0.16",
     (config) => {
       // 書き出し先のディレクトリが空文字の場合書き出し先固定を無効化する
-      if (config.fixedExportEnabled && config.fixedExportDir === "") {
-        config.fixedExportEnabled = false;
+      const savingSetting = config.savingSetting as ConfigType["savingSetting"];
+      if (
+        savingSetting.fixedExportEnabled &&
+        savingSetting.fixedExportDir === ""
+      ) {
+        savingSetting.fixedExportEnabled = false;
       }
     },
   ],
