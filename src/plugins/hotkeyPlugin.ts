@@ -102,7 +102,7 @@ export class HotkeyManager {
   constructor(
     hotkeys_: HotkeysJs = hotkeys,
     log: Log = (message: string, ...args: unknown[]) => {
-      // window.backend.logInfo(`[HotkeyManager] ${message}`, ...args);
+      window.backend.logInfo(`[HotkeyManager] ${message}`, ...args);
     }
   ) {
     this.log = log;
