@@ -54,7 +54,7 @@
                       }}{{ page.name }}
                     </q-toolbar-title>
                     <q-btn
-                      v-if="page.isShowOpenLogDirectoryButton"
+                      v-if="page.shouldShowOpenLogDirectoryButton"
                       unelevated
                       color="toolbar-button"
                       text-color="toolbar-button-display"
@@ -100,7 +100,7 @@ type PageItem = {
   parent?: string;
   component: Component;
   props?: Record<string, unknown>;
-  isShowOpenLogDirectoryButton?: boolean;
+  shouldShowOpenLogDirectoryButton?: boolean;
 };
 type PageSeparator = {
   type: "separator";
@@ -218,7 +218,7 @@ const pagedata = computed(() => {
       props: {
         markdown: contact.value,
       },
-      isShowOpenLogDirectoryButton: true,
+      shouldShowOpenLogDirectoryButton: true,
     },
   ];
   // エンジンが一つだけの場合は従来の表示のみ
