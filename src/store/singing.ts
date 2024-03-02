@@ -223,7 +223,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const styleId = singer?.styleId ?? defaultStyleId;
 
-      await dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
+      void dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
       commit("SET_SINGER", { singer: { engineId, styleId } });
 
       dispatch("RENDER");
