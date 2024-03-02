@@ -11,7 +11,7 @@ export class SelectionHelperForQInput {
 
   // this.start が number | null なので null も受け付ける
   setCursorPosition(index: number | null) {
-    if (index === null) return;
+    if (index == undefined) return;
 
     this.nativeEl.selectionStart = this.nativeEl.selectionEnd = index;
   }
@@ -50,7 +50,7 @@ export class SelectionHelperForQInput {
   get isEmpty() {
     const start = this.nativeEl.selectionStart;
     const end = this.nativeEl.selectionEnd;
-    return start === null || end === null || start === end;
+    return start == undefined || end == undefined || start === end;
   }
 
   private get nativeEl() {

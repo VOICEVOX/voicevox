@@ -16,6 +16,29 @@ defaults:
     shell: bash
 
 jobs:
+  config: # 全 jobs で利用する定数の定義. `env` が利用できないコンテキストでも利用できる.
+    runs-on: ubuntu-latest
+    outputs:
+      shouldUpdateSnapshots: ${{ steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots }}
+    steps:
+      - name: Check if commit message includes [update snapshots]
+        id: check-whether-to-update-snapshots
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commits = ${{ toJson(github.event.commits) }};
+            if (!commits) {
+              // pull_request などでコミットがない場合はスキップ
+              core.setOutput("shouldUpdateSnapshots", false);
+              process.exit(0);
+            }
+            const shouldUpdateSnapshots = commits.some((commit) =>
+              commit.message.toLowerCase().includes("[update snapshots]")
+            );
+            core.setOutput("shouldUpdateSnapshots", shouldUpdateSnapshots);
+            console.log(`shouldUpdateSnapshots: ${shouldUpdateSnapshots}`);
+
   # ビルドのテスト
   build-test:
     runs-on: windows-latest
@@ -38,6 +61,7 @@ jobs:
   # e2e テスト
   e2e-test:
     runs-on: ${{ matrix.os }}
+    needs: [config]
     strategy:
       fail-fast: false
       matrix:
@@ -81,7 +105,10 @@ jobs:
           # .env
           sed -i -e 's|"074fc39e-678b-4c13-8916-ffca8d505d1d"|"208cf94d-43d2-4cf5-abc0-9783cac36d29"|' .env.test
           sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env.test
-          sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port=50021"],|' .env.test
+          # GitHub Actions 環境だとたまに50021が封じられていることがあるので、ランダムなポートを使うようにする
+          PORT=$(node -r net -e "server=net.createServer();server.listen(0,()=>{console.log(server.address().port);server.close()})")
+          sed -i -e 's|"host": "http://127.0.0.1:50021"|"host": "http://127.0.0.1:'$PORT'"|' .env.test
+          sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port='$PORT'"],|' .env.test
           cp .env.test .env
 
       - name: Run npm run test:browser-e2e
@@ -89,11 +116,11 @@ jobs:
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
           fi
-          if [[ ${{ matrix.os }} == ubuntu-* ]]; then
-            xvfb-run --auto-servernum npm run test:browser-e2e
-          else
-            npm run test:browser-e2e
+          ARGS=""
+          if [[ ${{ needs.config.outputs.shouldUpdateSnapshots }} == 'true' ]]; then
+            ARGS="--update-snapshots"
           fi
+          npm run test:browser-e2e -- $ARGS
 
       - name: Run npm run test:electron-e2e
         run: |
@@ -110,8 +137,57 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.os }}
           path: playwright-report
+
+      - name: Collect patch for snapshots
+        if: needs.config.outputs.shouldUpdateSnapshots == 'true'
+        run: |
+          git add --intent-to-add tests/  # git diff に表示されるようにする
+          git diff tests/  # ロギング用
+          git diff --binary tests/ > patch-${{ matrix.os }}.diff
+
+      - name: Upload patch to artifact
+        if: needs.config.outputs.shouldUpdateSnapshots == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-snapshots-${{ matrix.os }}
+          path: patch-${{ matrix.os }}.diff
+
+  commit-snapshots:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [config, e2e-test]
+    if: needs.config.outputs.shouldUpdateSnapshots == 'true'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: updated-snapshots-*
+          path: patches
+          merge-multiple: true
+
+      - name: Commit updated snapshots
+        run: |
+          # パッチを適用
+          for patch in patches/*.diff; do
+            git apply --allow-empty $patch
+            rm $patch
+          done
+
+          # 変更があるかチェック
+          if [ -n "$(git status --porcelain)" ]; then
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git add tests/
+            git commit -m "（スナップショットを更新）"
+            git push
+          else
+            echo "No changes to commit"
+          fi
 
   lint:
     runs-on: ubuntu-latest

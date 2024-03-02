@@ -27,6 +27,16 @@ function checkIsMac(): boolean {
 }
 export const isMac = checkIsMac();
 
+const urlStringSchema = z.string().url().brand("URL");
+export type UrlString = z.infer<typeof urlStringSchema>;
+export const UrlString = (url: string): UrlString => urlStringSchema.parse(url);
+
+const hotkeyCombinationSchema = z.string().brand("HotkeyCombination");
+export type HotkeyCombination = z.infer<typeof hotkeyCombinationSchema>;
+export const HotkeyCombination = (
+  hotkeyCombination: string
+): HotkeyCombination => hotkeyCombinationSchema.parse(hotkeyCombination);
+
 export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
 export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
@@ -53,98 +63,98 @@ export const VoiceId = (voice: Voice): VoiceId =>
   voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
 
 // ホットキーを追加したときは設定のマイグレーションが必要
-export const defaultHotkeySettings: HotkeySetting[] = [
+export const defaultHotkeySettings: HotkeySettingType[] = [
   {
     action: "音声書き出し",
-    combination: !isMac ? "Ctrl E" : "Meta E",
+    combination: HotkeyCombination(!isMac ? "Ctrl E" : "Meta E"),
   },
   {
     action: "選択音声を書き出し",
-    combination: "E",
+    combination: HotkeyCombination("E"),
   },
   {
     action: "音声を繋げて書き出し",
-    combination: "",
+    combination: HotkeyCombination(""),
   },
   {
     action: "再生/停止",
-    combination: "Space",
+    combination: HotkeyCombination("Space"),
   },
   {
     action: "連続再生/停止",
-    combination: "Shift Space",
+    combination: HotkeyCombination("Shift Space"),
   },
   {
     action: "ｱｸｾﾝﾄ欄を表示",
-    combination: "1",
+    combination: HotkeyCombination("1"),
   },
   {
     action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-    combination: "2",
+    combination: HotkeyCombination("2"),
   },
   {
     action: "長さ欄を表示",
-    combination: "3",
+    combination: HotkeyCombination("3"),
   },
   {
     action: "テキスト欄を追加",
-    combination: "Shift Enter",
+    combination: HotkeyCombination("Shift Enter"),
   },
   {
     action: "テキスト欄を複製",
-    combination: !isMac ? "Ctrl D" : "Meta D",
+    combination: HotkeyCombination(!isMac ? "Ctrl D" : "Meta D"),
   },
   {
     action: "テキスト欄を削除",
-    combination: "Shift Delete",
+    combination: HotkeyCombination("Shift Delete"),
   },
   {
     action: "テキスト欄からフォーカスを外す",
-    combination: "Escape",
+    combination: HotkeyCombination("Escape"),
   },
   {
     action: "テキスト欄にフォーカスを戻す",
-    combination: "Enter",
+    combination: HotkeyCombination("Enter"),
   },
   {
     action: "元に戻す",
-    combination: !isMac ? "Ctrl Z" : "Meta Z",
+    combination: HotkeyCombination(!isMac ? "Ctrl Z" : "Meta Z"),
   },
   {
     action: "やり直す",
-    combination: !isMac ? "Ctrl Y" : "Shift Meta Z",
+    combination: HotkeyCombination(!isMac ? "Ctrl Y" : "Shift Meta Z"),
   },
   {
     action: "新規プロジェクト",
-    combination: !isMac ? "Ctrl N" : "Meta N",
+    combination: HotkeyCombination(!isMac ? "Ctrl N" : "Meta N"),
   },
   {
     action: "プロジェクトを名前を付けて保存",
-    combination: !isMac ? "Ctrl Shift S" : "Shift Meta S",
+    combination: HotkeyCombination(!isMac ? "Ctrl Shift S" : "Shift Meta S"),
   },
   {
     action: "プロジェクトを上書き保存",
-    combination: !isMac ? "Ctrl S" : "Meta S",
+    combination: HotkeyCombination(!isMac ? "Ctrl S" : "Meta S"),
   },
   {
     action: "プロジェクト読み込み",
-    combination: !isMac ? "Ctrl O" : "Meta O",
+    combination: HotkeyCombination(!isMac ? "Ctrl O" : "Meta O"),
   },
   {
     action: "テキスト読み込む",
-    combination: "",
+    combination: HotkeyCombination(""),
   },
   {
     action: "全体のイントネーションをリセット",
-    combination: !isMac ? "Ctrl G" : "Meta G",
+    combination: HotkeyCombination(!isMac ? "Ctrl G" : "Meta G"),
   },
   {
     action: "選択中のアクセント句のイントネーションをリセット",
-    combination: "R",
+    combination: HotkeyCombination("R"),
   },
 ];
 
-export const defaultToolbarButtonSetting: ToolbarSetting = [
+export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "PLAY_CONTINUOUSLY",
   "STOP",
   "EXPORT_AUDIO_SELECTED",
@@ -172,6 +182,7 @@ export interface Sandbox {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
+  showSaveDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showVvppOpenDialog(obj: {
     title: string;
     defaultPath?: string;
@@ -195,7 +206,11 @@ export interface Sandbox {
     cancelId?: number;
     defaultId?: number;
   }): Promise<number>;
-  showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
+  showImportFileDialog(obj: {
+    title: string;
+    name?: string;
+    extensions?: string[];
+  }): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
@@ -217,11 +232,11 @@ export interface Sandbox {
   engineInfos(): Promise<EngineInfo[]>;
   restartEngine(engineId: EngineId): Promise<void>;
   openEngineDirectory(engineId: EngineId): void;
-  hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
+  hotkeySettings(newData?: HotkeySettingType): Promise<HotkeySettingType[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
-  getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
-  getDefaultToolbarSetting(): Promise<ToolbarSetting>;
+  getDefaultHotkeySettings(): Promise<HotkeySettingType[]>;
+  getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
   setNativeTheme(source: NativeThemeType): void;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
@@ -232,7 +247,7 @@ export interface Sandbox {
   ): Promise<ConfigType[Key]>;
   setEngineSetting(
     engineId: EngineId,
-    engineSetting: EngineSetting
+    engineSetting: EngineSettingType
   ): Promise<void>;
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
@@ -245,9 +260,12 @@ export type AppInfos = {
   version: string;
 };
 
+export type StyleType = "talk" | "singing_teacher" | "frame_decode" | "sing";
+
 export type StyleInfo = {
   styleName?: string;
   styleId: StyleId;
+  styleType?: StyleType;
   iconPath: string;
   portraitPath: string | undefined;
   engineId: EngineId;
@@ -270,11 +288,12 @@ export type CharacterInfo = {
   };
 };
 
-export type UpdateInfo = {
-  version: string;
-  descriptions: string[];
-  contributors: string[];
-};
+export const updateInfoSchema = z.object({
+  version: z.string(),
+  descriptions: z.array(z.string()),
+  contributors: z.array(z.string()),
+});
+export type UpdateInfo = z.infer<typeof updateInfoSchema>;
 
 export type Voice = {
   engineId: EngineId;
@@ -309,7 +328,7 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
-export type EngineSettings = Record<EngineId, EngineSetting>;
+export type EngineSettings = Record<EngineId, EngineSettingType>;
 
 export const engineSettingSchema = z.object({
   useGpu: z.boolean().default(false),
@@ -317,7 +336,7 @@ export const engineSettingSchema = z.object({
     .union([z.number(), z.literal("engineDefault")])
     .default("engineDefault"),
 });
-export type EngineSetting = z.infer<typeof engineSettingSchema>;
+export type EngineSettingType = z.infer<typeof engineSettingSchema>;
 
 export type DefaultStyleId = {
   engineId: EngineId;
@@ -339,7 +358,9 @@ export const minimumEngineManifestSchema = z.object({
   supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
 });
 
-export type MinimumEngineManifest = z.infer<typeof minimumEngineManifestSchema>;
+export type MinimumEngineManifestType = z.infer<
+  typeof minimumEngineManifestSchema
+>;
 
 export type EngineInfo = {
   uuid: EngineId;
@@ -389,7 +410,7 @@ export type MorphableTargetInfoTable = {
       };
 };
 
-export const hotkeyActionSchema = z.enum([
+export const hotkeyActionNameSchema = z.enum([
   "音声書き出し",
   "選択音声を書き出し",
   "音声を繋げて書き出し",
@@ -414,15 +435,13 @@ export const hotkeyActionSchema = z.enum([
   "選択中のアクセント句のイントネーションをリセット",
 ]);
 
-export type HotkeyAction = z.infer<typeof hotkeyActionSchema>;
-
-export type HotkeyCombo = string;
+export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
 
 export const hotkeySettingSchema = z.object({
-  action: hotkeyActionSchema,
-  combination: z.string(),
+  action: hotkeyActionNameSchema,
+  combination: hotkeyCombinationSchema,
 });
-export type HotkeySetting = z.infer<typeof hotkeySettingSchema>;
+export type HotkeySettingType = z.infer<typeof hotkeySettingSchema>;
 
 export type HotkeyReturnType =
   | void
@@ -445,7 +464,7 @@ export const toolbarButtonTagSchema = z.enum([
 export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
 
 export const toolbarSettingSchema = toolbarButtonTagSchema;
-export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>[];
+export type ToolbarSettingType = z.infer<typeof toolbarSettingSchema>[];
 
 // base: typeof electron.nativeTheme["themeSource"];
 export type NativeThemeType = "system" | "light" | "dark";
@@ -491,16 +510,17 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
+  showPitchInSongEditor: z.boolean().default(false),
 });
 
-export type ExperimentalSetting = z.infer<typeof experimentalSettingSchema>;
+export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
 
 export const splitterPositionSchema = z.object({
   portraitPaneWidth: z.number().optional(),
   audioInfoPaneWidth: z.number().optional(),
   audioDetailPaneHeight: z.number().optional(),
 });
-export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
+export type SplitterPositionType = z.infer<typeof splitterPositionSchema>;
 
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
@@ -508,92 +528,104 @@ export type ConfirmedTips = {
   notifyOnGenerate: boolean; // 音声書き出し時の通知
 };
 
-export const configSchema = z.object({
-  inheritAudioInfo: z.boolean().default(true),
-  activePointScrollMode: z.enum(["CONTINUOUSLY", "PAGE", "OFF"]).default("OFF"),
-  savingSetting: z
-    .object({
-      fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
-      fileNamePattern: z.string().default(""),
-      fixedExportEnabled: z.boolean().default(false),
-      avoidOverwrite: z.boolean().default(false),
-      fixedExportDir: z.string().default(""),
-      exportLab: z.boolean().default(false),
-      exportText: z.boolean().default(false),
-      outputStereo: z.boolean().default(false),
-      audioOutputDevice: z.string().default(""),
-    })
-    .default({}),
-  hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
-  toolbarSetting: toolbarSettingSchema
-    .array()
-    .default(defaultToolbarButtonSetting),
-  engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
-  userCharacterOrder: speakerIdSchema.array().default([]),
-  defaultStyleIds: z
-    .object({
-      engineId: engineIdSchema
-        .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
-        .default(EngineId("00000000-0000-0000-0000-000000000000")),
-      speakerUuid: speakerIdSchema,
-      defaultStyleId: styleIdSchema,
-    })
-    .array()
-    .default([]),
-  presets: z
-    .object({
-      items: z
-        .record(
-          presetKeySchema,
-          z.object({
-            name: z.string(),
-            speedScale: z.number(),
-            pitchScale: z.number(),
-            intonationScale: z.number(),
-            volumeScale: z.number(),
-            prePhonemeLength: z.number(),
-            postPhonemeLength: z.number(),
-            morphingInfo: z
-              .object({
-                rate: z.number(),
-                targetEngineId: engineIdSchema,
-                targetSpeakerId: speakerIdSchema,
-                targetStyleId: styleIdSchema,
-              })
-              .optional(),
-          })
-        )
-        .default({}),
-      keys: presetKeySchema.array().default([]),
-    })
-    .default({}),
-  defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
-  currentTheme: z.string().default("Default"),
+// ルート直下にある雑多な設定値
+export const rootMiscSettingSchema = z.object({
   editorFont: z.enum(["default", "os"]).default("default"),
   showTextLineNumber: z.boolean().default(false),
   showAddAudioItemButton: z.boolean().default(true),
-  experimentalSetting: experimentalSettingSchema.default({}),
-  acceptRetrieveTelemetry: z
-    .enum(["Unconfirmed", "Accepted", "Refused"])
-    .default("Unconfirmed"),
-  acceptTerms: z
-    .enum(["Unconfirmed", "Accepted", "Rejected"])
-    .default("Unconfirmed"),
   splitTextWhenPaste: z
     .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
     .default("PERIOD_AND_NEW_LINE"),
   splitterPosition: splitterPositionSchema.default({}),
-  confirmedTips: z
-    .object({
-      tweakableSliderByScroll: z.boolean().default(false),
-      engineStartedOnAltPort: z.boolean().default(false),
-      notifyOnGenerate: z.boolean().default(false),
-    })
-    .default({}),
-  registeredEngineDirs: z.string().array().default([]),
-  recentlyUsedProjects: z.string().array().default([]),
   enableMultiEngine: z.boolean().default(false),
+  enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
+  enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
+  skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
 });
+export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
+
+export const configSchema = z
+  .object({
+    inheritAudioInfo: z.boolean().default(true),
+    activePointScrollMode: z
+      .enum(["CONTINUOUSLY", "PAGE", "OFF"])
+      .default("OFF"),
+    savingSetting: z
+      .object({
+        fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
+        fileNamePattern: z.string().default(""),
+        fixedExportEnabled: z.boolean().default(false),
+        avoidOverwrite: z.boolean().default(false),
+        fixedExportDir: z.string().default(""),
+        exportLab: z.boolean().default(false),
+        exportText: z.boolean().default(false),
+        outputStereo: z.boolean().default(false),
+        audioOutputDevice: z.string().default(""),
+      })
+      .default({}),
+    hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
+    toolbarSetting: toolbarSettingSchema
+      .array()
+      .default(defaultToolbarButtonSetting),
+    engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
+    userCharacterOrder: speakerIdSchema.array().default([]),
+    defaultStyleIds: z
+      .object({
+        engineId: engineIdSchema
+          .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
+          .default(EngineId("00000000-0000-0000-0000-000000000000")),
+        speakerUuid: speakerIdSchema,
+        defaultStyleId: styleIdSchema,
+      })
+      .array()
+      .default([]),
+    presets: z
+      .object({
+        items: z
+          .record(
+            presetKeySchema,
+            z.object({
+              name: z.string(),
+              speedScale: z.number(),
+              pitchScale: z.number(),
+              intonationScale: z.number(),
+              volumeScale: z.number(),
+              prePhonemeLength: z.number(),
+              postPhonemeLength: z.number(),
+              morphingInfo: z
+                .object({
+                  rate: z.number(),
+                  targetEngineId: engineIdSchema,
+                  targetSpeakerId: speakerIdSchema,
+                  targetStyleId: styleIdSchema,
+                })
+                .optional(),
+            })
+          )
+          .default({}),
+        keys: presetKeySchema.array().default([]),
+      })
+      .default({}),
+    defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
+    currentTheme: z.string().default("Default"),
+    experimentalSetting: experimentalSettingSchema.default({}),
+    acceptRetrieveTelemetry: z
+      .enum(["Unconfirmed", "Accepted", "Refused"])
+      .default("Unconfirmed"),
+    acceptTerms: z
+      .enum(["Unconfirmed", "Accepted", "Rejected"])
+      .default("Unconfirmed"),
+    confirmedTips: z
+      .object({
+        tweakableSliderByScroll: z.boolean().default(false),
+        engineStartedOnAltPort: z.boolean().default(false),
+        notifyOnGenerate: z.boolean().default(false),
+      })
+      .default({}),
+    registeredEngineDirs: z.string().array().default([]),
+    recentlyUsedProjects: z.string().array().default([]),
+  })
+  .merge(rootMiscSettingSchema);
 export type ConfigType = z.infer<typeof configSchema>;
 
 export const envEngineInfoSchema = z.object({
@@ -605,7 +637,7 @@ export const envEngineInfoSchema = z.object({
   executionArgs: z.array(z.string()),
   path: z.string().optional(),
 });
-export type EnvEngineInfo = z.infer<typeof envEngineInfoSchema>;
+export type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {
@@ -639,4 +671,6 @@ export interface MessageBoxReturnValue {
   checkboxChecked: boolean;
 }
 
-export const SandboxKey = "electron" as const;
+export const SandboxKey = "backend" as const;
+
+export type EditorType = "talk" | "song";

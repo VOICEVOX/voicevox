@@ -28,10 +28,20 @@ $active-point-focus-rgb: var(--color-active-point-focus-rgb);
 $active-point-hover: var(--color-active-point-hover);
 $active-point-hover-rgb: var(--color-active-point-hover-rgb);
 
+$sequencer-whitekey-cell: var(--color-sequencer-whitekey-cell);
+$sequencer-blackkey-cell: var(--color-sequencer-blackkey-cell);
+$sequencer-main-divider: var(--color-sequencer-main-divider);
+$sequencer-main-divider-rgb: var(--color-sequencer-main-divider-rgb);
+$sequencer-sub-divider: var(--color-sequencer-sub-divider);
+$sequencer-sub-divider-rgb: var(--color-sequencer-sub-divider-rgb);
+$sequencer-white-key: var(--color-sequencer-white-key);
+$sequencer-black-key: var(--color-sequencer-black-key);
+
 // ダークテーマと通常テーマで変わる色
 :root {
   --color-toolbar: var(--color-primary);
   --color-toolbar-rgb: var(--color-primary-rgb);
+  --color-sing-toolbar: var(--color-background);
 
   --color-toolbar-button: var(--color-background);
   --color-toolbar-button-rgb: var(--color-background-rgb);
@@ -54,6 +64,7 @@ $active-point-hover-rgb: var(--color-active-point-hover-rgb);
 :root[is-dark-theme="true"] {
   --color-toolbar: var(--color-surface);
   --color-toolbar-rgb: var(--color-surface-rgb);
+  --color-sing-toolbar: var(--color-surface);
 
   --color-toolbar-button: var(--color-primary);
   --color-toolbar-button-rgb: var(--color-primary-rgb);
@@ -75,6 +86,8 @@ $active-point-hover-rgb: var(--color-active-point-hover-rgb);
 
 $toolbar: var(--color-toolbar);
 $toolbar-rgb: var(--color-toolbar-rgb);
+
+$sing-toolbar: var(--color-sing-toolbar);
 
 $toolbar-button: var(--color-toolbar-button);
 $toolbar-button-rgb: var(--color-toolbar-button-rgb);

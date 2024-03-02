@@ -2,10 +2,10 @@ import { expect, Page } from "@playwright/test";
 import { getNewestQuasarDialog, getQuasarMenu } from "./locators";
 
 /**
- * /#/homeに移動
+ * 最初の画面に移動
  */
 export async function gotoHome({ page }: { page: Page }) {
-  const BASE_URL = "http://localhost:7357/#/home";
+  const BASE_URL = "http://localhost:7357/";
   await page.setViewportSize({ width: 800, height: 600 });
   await page.goto(BASE_URL);
 }

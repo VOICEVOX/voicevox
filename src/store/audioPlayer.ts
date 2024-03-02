@@ -23,7 +23,7 @@ export const audioPlayerStoreState: AudioPlayerStoreState = {
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: (state) => {
-      return state._activeAudioKey !== undefined
+      return state._activeAudioKey != undefined
         ? getAudioElement().currentTime
         : undefined;
     },
@@ -61,7 +61,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     ) {
       const audioElement = getAudioElement();
 
-      if (offset !== undefined) {
+      if (offset != undefined) {
         audioElement.currentTime = offset;
       }
 
@@ -75,7 +75,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               audioElement.removeEventListener("canplay", stop);
             };
             audioElement.addEventListener("canplay", stop);
-            window.electron.showMessageDialog({
+            window.backend.showMessageDialog({
               type: "error",
               title: "エラー",
               message: "再生デバイスが見つかりません",
