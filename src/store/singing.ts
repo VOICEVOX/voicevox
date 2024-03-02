@@ -223,7 +223,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const styleId = singer?.styleId ?? defaultStyleId;
 
-      void dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
+      dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
       commit("SET_SINGER", { singer: { engineId, styleId } });
 
       dispatch("RENDER");
@@ -1971,7 +1971,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_SINGER(draft, { singer });
       },
       async action({ dispatch, commit }, { singer }) {
-        void dispatch("SETUP_SINGER", { singer });
+        dispatch("SETUP_SINGER", { singer });
         commit("COMMAND_SET_SINGER", { singer });
 
         dispatch("RENDER");
