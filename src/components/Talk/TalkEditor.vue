@@ -362,53 +362,49 @@ const duplicateAudioItem = async () => {
 const shouldShowPanes = computed<boolean>(
   () => store.getters.SHOULD_SHOW_PANES
 );
-watch(
-  [isMounted, shouldShowPanes],
-  ([isMounted, val]) => {
-    if (!isMounted) return;
+watch([isMounted, shouldShowPanes], ([isMounted, val]) => {
+  if (!isMounted) return;
 
-    if (val) {
-      const clamp = (value: number, min: number, max: number) =>
-        Math.max(Math.min(value, max), min);
+  if (val) {
+    const clamp = (value: number, min: number, max: number) =>
+      Math.max(Math.min(value, max), min);
 
-      // 設定ファイルを書き換えれば異常な値が入り得るのですべてclampしておく
-      portraitPaneWidth.value = clamp(
-        splitterPosition.value.portraitPaneWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH,
-        MIN_PORTRAIT_PANE_WIDTH,
-        MAX_PORTRAIT_PANE_WIDTH
-      );
+    // 設定ファイルを書き換えれば異常な値が入り得るのですべてclampしておく
+    portraitPaneWidth.value = clamp(
+      splitterPosition.value.portraitPaneWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH,
+      MIN_PORTRAIT_PANE_WIDTH,
+      MAX_PORTRAIT_PANE_WIDTH
+    );
 
-      audioInfoPaneWidth.value = clamp(
-        splitterPosition.value.audioInfoPaneWidth ?? MIN_AUDIO_INFO_PANE_WIDTH,
-        MIN_AUDIO_INFO_PANE_WIDTH,
-        MAX_AUDIO_INFO_PANE_WIDTH
-      );
-      audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
-      audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
+    audioInfoPaneWidth.value = clamp(
+      splitterPosition.value.audioInfoPaneWidth ?? MIN_AUDIO_INFO_PANE_WIDTH,
+      MIN_AUDIO_INFO_PANE_WIDTH,
+      MAX_AUDIO_INFO_PANE_WIDTH
+    );
+    audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
+    audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
 
-      audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
-      changeAudioDetailPaneMaxHeight(
-        resizeObserverRef.value?.$el.parentElement.clientHeight
-      );
+    audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
+    changeAudioDetailPaneMaxHeight(
+      resizeObserverRef.value?.$el.parentElement.clientHeight
+    );
 
-      audioDetailPaneHeight.value = clamp(
-        splitterPosition.value.audioDetailPaneHeight ??
-          MIN_AUDIO_DETAIL_PANE_HEIGHT,
-        audioDetailPaneMinHeight.value,
-        audioDetailPaneMaxHeight.value
-      );
-    } else {
-      portraitPaneWidth.value = 0;
-      audioInfoPaneWidth.value = 0;
-      audioInfoPaneMinWidth.value = 0;
-      audioInfoPaneMaxWidth.value = 0;
-      audioDetailPaneHeight.value = 0;
-      audioDetailPaneMinHeight.value = 0;
-      audioDetailPaneMaxHeight.value = 0;
-    }
-  },
-  { flush: "sync" }
-);
+    audioDetailPaneHeight.value = clamp(
+      splitterPosition.value.audioDetailPaneHeight ??
+        MIN_AUDIO_DETAIL_PANE_HEIGHT,
+      audioDetailPaneMinHeight.value,
+      audioDetailPaneMaxHeight.value
+    );
+  } else {
+    portraitPaneWidth.value = 0;
+    audioInfoPaneWidth.value = 0;
+    audioInfoPaneMinWidth.value = 0;
+    audioInfoPaneMaxWidth.value = 0;
+    audioDetailPaneHeight.value = 0;
+    audioDetailPaneMinHeight.value = 0;
+    audioDetailPaneMaxHeight.value = 0;
+  }
+});
 
 // セルをフォーカス
 const focusCell = ({
@@ -575,8 +571,7 @@ watch(
     if (overflowTop || overflowBottom) {
       activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
     }
-  },
-  { flush: "sync" }
+  }
 );
 
 const showAddAudioItemButton = computed(() => {
