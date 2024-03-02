@@ -54,7 +54,7 @@
                       }}{{ page.name }}
                     </q-toolbar-title>
                     <q-btn
-                      v-if="page.component === ContactInfo"
+                      v-if="page.shouldShowOpenLogDirectoryButton"
                       unelevated
                       color="toolbar-button"
                       text-color="toolbar-button-display"
@@ -86,13 +86,9 @@
 
 <script setup lang="ts">
 import { computed, ref, type Component } from "vue";
+import MarkdownView from "../template/HelpMarkdownViewSection.vue";
 import OssLicense from "../template/HelpOssLicenseSection.vue";
-import HelpPolicy from "../template/HelpPolicySection.vue";
-import HowToUse from "../template/HelpHowToUseSection.vue";
 import UpdateInfo from "../template/HelpUpdateInfoSection.vue";
-import OssCommunityInfo from "../template/HelpOssCommunityInfoSection.vue";
-import QAndA from "../template/HelpQAndASection.vue";
-import ContactInfo from "../template/HelpContactInfoSection.vue";
 import LibraryPolicy from "../template/HelpLibraryPolicySection.vue";
 import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
 import { useStore } from "@/store";
@@ -104,6 +100,7 @@ type PageItem = {
   parent?: string;
   component: Component;
   props?: Record<string, unknown>;
+  shouldShowOpenLogDirectoryButton?: boolean;
 };
 type PageSeparator = {
   type: "separator";
@@ -144,14 +141,26 @@ store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
 const policy = ref<string>();
 store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
 
+const howToUse = ref<string>();
+store.dispatch("GET_HOW_TO_USE_TEXT").then((obj) => (howToUse.value = obj));
+
+const ossCommunityInfos = ref<string>();
+store.dispatch("GET_OSS_COMMUNITY_INFOS").then((obj) => (ossCommunityInfos.value = obj));
+
+const qAndA = ref<string>();
+store.dispatch("GET_Q_AND_A_TEXT").then((obj) => (qAndA.value = obj));
+
+const contact = ref<string>();
+store.dispatch("GET_CONTACT_TEXT").then((obj) => (contact.value = obj));
+
 const pagedata = computed(() => {
   const data: PageData[] = [
     {
       type: "item",
       name: "ソフトウェアの利用規約",
-      component: HelpPolicy,
+      component: MarkdownView,
       props: {
-        policy: policy.value,
+        markdown: policy.value,
       },
     },
     {
@@ -162,12 +171,18 @@ const pagedata = computed(() => {
     {
       type: "item",
       name: "使い方",
-      component: HowToUse,
+      component: MarkdownView,
+      props: {
+        markdown: howToUse.value,
+      },
     },
     {
       type: "item",
       name: "開発コミュニティ",
-      component: OssCommunityInfo,
+      component: MarkdownView,
+      props: {
+        markdown: ossCommunityInfos.value,
+      },
     },
     {
       type: "item",
@@ -191,12 +206,19 @@ const pagedata = computed(() => {
     {
       type: "item",
       name: "よくあるご質問",
-      component: QAndA,
+      component: MarkdownView,
+      props: {
+        markdown: qAndA.value,
+      },
     },
     {
       type: "item",
       name: "お問い合わせ",
-      component: ContactInfo,
+      component: MarkdownView,
+      props: {
+        markdown: contact.value,
+      },
+      shouldShowOpenLogDirectoryButton: true,
     },
   ];
   // エンジンが一つだけの場合は従来の表示のみ
@@ -217,9 +239,9 @@ const pagedata = computed(() => {
           type: "item",
           name: "利用規約",
           parent: manifest.name,
-          component: HelpPolicy,
+          component: MarkdownView,
           props: {
-            policy: manifest.termsOfService,
+            markdown: manifest.termsOfService,
           },
         },
         {
