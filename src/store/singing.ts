@@ -222,6 +222,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks[selectedTrackIndex].singer = singer;
     },
     async action({ dispatch, commit }, { singer }: { singer?: Singer }) {
+      if (singer != undefined) {
+        void dispatch("SETUP_SINGER", { singer });
+      }
       commit("SET_SINGER", { singer });
 
       dispatch("RENDER");
@@ -1969,7 +1972,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_SINGER(draft, { singer });
       },
       async action({ dispatch, commit }, { singer }) {
-        await dispatch("SETUP_SINGER", { singer });
+        void dispatch("SETUP_SINGER", { singer });
         commit("COMMAND_SET_SINGER", { singer });
 
         dispatch("RENDER");
