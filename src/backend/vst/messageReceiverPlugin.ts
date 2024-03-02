@@ -1,7 +1,6 @@
 import { Plugin, watch } from "vue";
 import AsyncLock from "async-lock";
 import { debounce } from "quasar";
-import { Router } from "vue-router";
 import { clearPhrases, getPhrases, getProject, updatePhrases } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
@@ -9,6 +8,7 @@ import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
 import { secondToTick, tickToSecond } from "@/sing/domain";
 import { phraseDataMap } from "@/store/singing";
 import { blobToBase64 } from "@/helpers/binaryHelper";
+import onetimeWatch from "@/helpers/onetimeWatch";
 
 export type Message =
   | {
@@ -36,10 +36,8 @@ export const vstMessageReceiver: Plugin = {
     _,
     {
       store,
-      router,
     }: {
       store: Store<State, AllGetters, AllActions, AllMutations>;
-      router: Router;
     }
   ) => {
     if (import.meta.env.VITE_TARGET !== "vst") {
@@ -104,15 +102,37 @@ export const vstMessageReceiver: Plugin = {
       { deep: true }
     );
 
+    watch(
+      () => store.state.openedEditor,
+      (openedEditor) => {
+        if (openedEditor !== "song") {
+          store.dispatch("SET_OPENED_EDITOR", { editor: "song" });
+        }
+      }
+    );
+
     getProject().then((project) => {
       store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
       if (!project) {
         log("project not found");
-        router.push("/song");
         return;
       }
       log("project found");
-      router.push(`/song?projectFilePath=${projectFilePath}`);
+      onetimeWatch(
+        () => store.state.isEditorReady,
+        async (isEditorReady) => {
+          if (!isEditorReady) {
+            return "continue";
+          }
+
+          log("Engine is ready, loading project");
+          await store.dispatch("LOAD_PROJECT_FILE", {
+            filePath: projectFilePath,
+          });
+          return "unwatch";
+        },
+        { deep: true }
+      );
     });
 
     watch(

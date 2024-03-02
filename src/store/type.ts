@@ -1507,6 +1507,7 @@ export type SettingStoreTypes = {
 
 export type UiStoreState = {
   openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
+  isEditorReady: boolean;
   uiLockCount: number;
   dialogLockCount: number;
   reloadingLock: boolean;
@@ -1534,6 +1535,11 @@ export type UiStoreTypes = {
   SET_OPENED_EDITOR: {
     mutation: { editor: EditorType };
     action(palyoad: { editor: EditorType }): void;
+  };
+
+  SET_EDITOR_READY: {
+    mutation: { isEditorReady: boolean };
+    action(palyoad: { isEditorReady: boolean }): void;
   };
 
   UI_LOCKED: {

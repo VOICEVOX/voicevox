@@ -44,5 +44,5 @@ createApp(App)
   .use(hotkeyPlugin)
   .use(ipcMessageReceiver, { store })
   .use(markdownItPlugin)
-  .use(vstMessageReceiver, { store, router })
+  .use(vstMessageReceiver, { store })
   .mount("#app");
