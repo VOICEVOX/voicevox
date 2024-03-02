@@ -26,8 +26,15 @@
   </div>
 </template>
 
+<script lang="ts">
+import { ref } from "vue";
+
+/** 初回の初期化が完了済みか */
+const isCompletedInitialStartup = ref(false);
+</script>
+
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted } from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
@@ -48,7 +55,11 @@ const props =
   }>();
 
 const store = useStore();
-//const $q = useQuasar();
+
+const isMounted = ref(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 
 const nowRendering = computed(() => {
   return store.state.nowRendering;
@@ -61,47 +72,56 @@ const cancelExport = () => {
   store.dispatch("CANCEL_AUDIO_EXPORT");
 };
 
-const isCompletedInitialStartup = ref(false);
-// TODO: Vueっぽくないので解体する
+// エンジン初期化後の処理
 onetimeWatch(
-  () => props.isProjectFileLoaded,
-  async (isProjectFileLoaded) => {
+  () => [isMounted, props.isProjectFileLoaded],
+  async ([isMounted, isProjectFileLoaded]) => {
+    if (!isMounted) return "continue";
+
     if (isProjectFileLoaded == "waiting" || !props.isEnginesReady)
       return "continue";
 
-    if (!isProjectFileLoaded) {
-      await store.dispatch("SET_SCORE", {
-        score: {
-          tpqn: DEFAULT_TPQN,
-          tempos: [
-            {
-              position: 0,
-              bpm: DEFAULT_BPM,
-            },
-          ],
-          timeSignatures: [
-            {
-              measureNumber: 1,
-              beats: DEFAULT_BEATS,
-              beatType: DEFAULT_BEAT_TYPE,
-            },
-          ],
-          notes: [],
-        },
+    // 初回の場合は初期化
+    if (!isCompletedInitialStartup.value) {
+      if (!isProjectFileLoaded) {
+        await store.dispatch("SET_SCORE", {
+          score: {
+            tpqn: DEFAULT_TPQN,
+            tempos: [
+              {
+                position: 0,
+                bpm: DEFAULT_BPM,
+              },
+            ],
+            timeSignatures: [
+              {
+                measureNumber: 1,
+                beats: DEFAULT_BEATS,
+                beatType: DEFAULT_BEAT_TYPE,
+              },
+            ],
+            notes: [],
+          },
+        });
+      }
+
+      await store.dispatch("SET_VOLUME", { volume: 0.6 });
+      await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+      await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
+        position: 0,
       });
+      await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
+        position: 480 * 4 * 16,
+      });
+
+      const singer = await store.dispatch("GET_DEFAULT_SINGER");
+      await store.dispatch("SET_SINGER", { singer });
+
+      // 最初の歌手を初期化
+      store.dispatch("SETUP_SINGER", { singer });
     }
 
-    await store.dispatch("SET_VOLUME", { volume: 0.6 });
-    await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
-    await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
-      position: 0,
-    });
-    await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
-      position: 480 * 4 * 16,
-    });
     isCompletedInitialStartup.value = true;
-
-    await store.dispatch("SET_SINGER", {});
 
     return "unwatch";
   },

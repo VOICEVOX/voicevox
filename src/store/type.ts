@@ -813,6 +813,10 @@ export type SingingStoreTypes = {
     action(payload: { singer: Singer }): void;
   };
 
+  GET_DEFAULT_SINGER: {
+    action(): Singer;
+  };
+
   SET_SINGER: {
     mutation: { singer?: Singer };
     action(payload: { singer?: Singer }): void;

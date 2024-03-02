@@ -124,9 +124,16 @@
   </QLayout>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
 import path from "path";
-import { computed, onBeforeUpdate, ref, VNodeRef, watch } from "vue";
+import { ref } from "vue";
+
+/** 初回の初期化が完了済みか */
+const isCompletedInitialStartup = ref(false);
+</script>
+
+<script setup lang="ts">
+import { computed, onBeforeUpdate, onMounted, VNodeRef, watch } from "vue";
 import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
@@ -159,6 +166,11 @@ const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const isMounted = ref(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 
 // hotkeys handled by Mousetrap
 const { registerHotkeyWithCleanup } = useHotkeyManager();
@@ -350,49 +362,53 @@ const duplicateAudioItem = async () => {
 const shouldShowPanes = computed<boolean>(
   () => store.getters.SHOULD_SHOW_PANES
 );
-watch(shouldShowPanes, (val, old) => {
-  if (val === old) return;
+watch(
+  [isMounted, shouldShowPanes],
+  ([isMounted, val]) => {
+    if (!isMounted) return;
 
-  if (val) {
-    const clamp = (value: number, min: number, max: number) =>
-      Math.max(Math.min(value, max), min);
+    if (val) {
+      const clamp = (value: number, min: number, max: number) =>
+        Math.max(Math.min(value, max), min);
 
-    // 設定ファイルを書き換えれば異常な値が入り得るのですべてclampしておく
-    portraitPaneWidth.value = clamp(
-      splitterPosition.value.portraitPaneWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH,
-      MIN_PORTRAIT_PANE_WIDTH,
-      MAX_PORTRAIT_PANE_WIDTH
-    );
+      // 設定ファイルを書き換えれば異常な値が入り得るのですべてclampしておく
+      portraitPaneWidth.value = clamp(
+        splitterPosition.value.portraitPaneWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH,
+        MIN_PORTRAIT_PANE_WIDTH,
+        MAX_PORTRAIT_PANE_WIDTH
+      );
 
-    audioInfoPaneWidth.value = clamp(
-      splitterPosition.value.audioInfoPaneWidth ?? MIN_AUDIO_INFO_PANE_WIDTH,
-      MIN_AUDIO_INFO_PANE_WIDTH,
-      MAX_AUDIO_INFO_PANE_WIDTH
-    );
-    audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
-    audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
+      audioInfoPaneWidth.value = clamp(
+        splitterPosition.value.audioInfoPaneWidth ?? MIN_AUDIO_INFO_PANE_WIDTH,
+        MIN_AUDIO_INFO_PANE_WIDTH,
+        MAX_AUDIO_INFO_PANE_WIDTH
+      );
+      audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
+      audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
 
-    audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
-    changeAudioDetailPaneMaxHeight(
-      resizeObserverRef.value?.$el.parentElement.clientHeight
-    );
+      audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
+      changeAudioDetailPaneMaxHeight(
+        resizeObserverRef.value?.$el.parentElement.clientHeight
+      );
 
-    audioDetailPaneHeight.value = clamp(
-      splitterPosition.value.audioDetailPaneHeight ??
-        MIN_AUDIO_DETAIL_PANE_HEIGHT,
-      audioDetailPaneMinHeight.value,
-      audioDetailPaneMaxHeight.value
-    );
-  } else {
-    portraitPaneWidth.value = 0;
-    audioInfoPaneWidth.value = 0;
-    audioInfoPaneMinWidth.value = 0;
-    audioInfoPaneMaxWidth.value = 0;
-    audioDetailPaneHeight.value = 0;
-    audioDetailPaneMinHeight.value = 0;
-    audioDetailPaneMaxHeight.value = 0;
-  }
-});
+      audioDetailPaneHeight.value = clamp(
+        splitterPosition.value.audioDetailPaneHeight ??
+          MIN_AUDIO_DETAIL_PANE_HEIGHT,
+        audioDetailPaneMinHeight.value,
+        audioDetailPaneMaxHeight.value
+      );
+    } else {
+      portraitPaneWidth.value = 0;
+      audioInfoPaneWidth.value = 0;
+      audioInfoPaneMinWidth.value = 0;
+      audioInfoPaneMaxWidth.value = 0;
+      audioDetailPaneHeight.value = 0;
+      audioDetailPaneMinHeight.value = 0;
+      audioDetailPaneMaxHeight.value = 0;
+    }
+  },
+  { flush: "sync" }
+);
 
 // セルをフォーカス
 const focusCell = ({
@@ -413,60 +429,67 @@ const userOrderedCharacterInfos = computed(
 const audioItems = computed(() => store.state.audioItems);
 // 並び替え後、テキスト欄が１つで空欄なら話者を更新
 // 経緯 https://github.com/VOICEVOX/voicevox/issues/1229
-watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
-  if (userOrderedCharacterInfos.length < 1) {
-    return;
-  }
-
-  if (audioKeys.value.length === 1) {
-    const first = audioKeys.value[0] as AudioKey;
-    const audioItem = audioItems.value[first];
-    if (audioItem.text.length > 0) {
+watch(
+  userOrderedCharacterInfos,
+  (userOrderedCharacterInfos) => {
+    if (userOrderedCharacterInfos.length < 1) {
       return;
     }
 
-    const speakerId = userOrderedCharacterInfos[0];
-    const defaultStyleId = store.state.defaultStyleIds.find(
-      (styleId) => styleId.speakerUuid === speakerId
-    );
-    if (!defaultStyleId || audioItem.voice.speakerId === speakerId) return;
+    if (audioKeys.value.length === 1) {
+      const first = audioKeys.value[0] as AudioKey;
+      const audioItem = audioItems.value[first];
+      if (audioItem.text.length > 0) {
+        return;
+      }
 
-    const voice: Voice = {
-      engineId: defaultStyleId.engineId,
-      speakerId: defaultStyleId.speakerUuid,
-      styleId: defaultStyleId.defaultStyleId,
-    };
+      const speakerId = userOrderedCharacterInfos[0];
+      const defaultStyleId = store.state.defaultStyleIds.find(
+        (styleId) => styleId.speakerUuid === speakerId
+      );
+      if (!defaultStyleId || audioItem.voice.speakerId === speakerId) return;
 
-    // FIXME: UNDOができてしまうのでできれば直したい
-    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
-      audioKeys: [first],
-      voice: voice,
-    });
-  }
-});
+      const voice: Voice = {
+        engineId: defaultStyleId.engineId,
+        speakerId: defaultStyleId.speakerUuid,
+        styleId: defaultStyleId.defaultStyleId,
+      };
+
+      // FIXME: UNDOができてしまうのでできれば直したい
+      store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+        audioKeys: [first],
+        voice: voice,
+      });
+    }
+  },
+  { immediate: true }
+);
 
 // エンジン初期化後の処理
-const isCompletedInitialStartup = ref(false);
-// TODO: Vueっぽくないので解体する
 onetimeWatch(
-  () => props.isProjectFileLoaded,
-  async (isProjectFileLoaded) => {
+  () => [isMounted, props.isProjectFileLoaded],
+  async ([isMounted, isProjectFileLoaded]) => {
+    if (!isMounted) return "continue";
+
     if (isProjectFileLoaded == "waiting" || !props.isEnginesReady)
       return "continue";
-    if (!isProjectFileLoaded) {
-      // 最初のAudioCellを作成
-      const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
-      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
-        audioItem,
-      });
-      focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
 
-      // 最初の話者を初期化
-      store.dispatch("SETUP_SPEAKER", {
-        audioKeys: [newAudioKey],
-        engineId: audioItem.voice.engineId,
-        styleId: audioItem.voice.styleId,
-      });
+    // 初回の場合は初期化
+    if (!isCompletedInitialStartup.value) {
+      if (!isProjectFileLoaded) {
+        // 最初のAudioCellを作成
+        const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
+        const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+          audioItem,
+        });
+
+        // 最初の話者を初期化
+        store.dispatch("SETUP_SPEAKER", {
+          audioKeys: [newAudioKey],
+          engineId: audioItem.voice.engineId,
+          styleId: audioItem.voice.styleId,
+        });
+      }
     }
 
     isCompletedInitialStartup.value = true;
@@ -479,6 +502,7 @@ onetimeWatch(
 );
 
 // 代替ポート情報の変更を監視
+// FIXME: App.vueに移動する
 watch(
   () => [store.state.altPortInfos, store.state.isVuexReady],
   async () => {
@@ -526,25 +550,34 @@ const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
 
 // AudioCellの自動スクロール
 const cellsRef = ref<InstanceType<typeof Draggable> | undefined>();
-watch(activeAudioKey, (audioKey) => {
-  if (audioKey == undefined) return;
-  const activeCellElement = audioCellRefs[audioKey].$el;
-  const cellsElement = cellsRef.value?.$el;
-  if (
-    !(activeCellElement instanceof Element) ||
-    !(cellsElement instanceof Element)
-  )
-    throw new Error(
-      `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`
-    );
-  const activeCellRect = activeCellElement.getBoundingClientRect();
-  const cellsRect = cellsElement.getBoundingClientRect();
-  const overflowTop = activeCellRect.top <= cellsRect.top;
-  const overflowBottom = activeCellRect.bottom >= cellsRect.bottom;
-  if (overflowTop || overflowBottom) {
-    activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
-  }
-});
+watch(
+  // TODO: マウント後にwatchを稼働させないといけないワークアラウンドコンポーザブルを作る
+  [isMounted, activeAudioKey],
+  ([isMounted, audioKey]) => {
+    if (!isMounted) return;
+
+    // TODO: スクロール位置を保存したい
+
+    if (audioKey == undefined) return;
+    const activeCellElement = audioCellRefs[audioKey]?.$el;
+    const cellsElement = cellsRef.value?.$el;
+    if (
+      !(activeCellElement instanceof Element) ||
+      !(cellsElement instanceof Element)
+    )
+      throw new Error(
+        `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`
+      );
+    const activeCellRect = activeCellElement.getBoundingClientRect();
+    const cellsRect = cellsElement.getBoundingClientRect();
+    const overflowTop = activeCellRect.top <= cellsRect.top;
+    const overflowBottom = activeCellRect.bottom >= cellsRect.bottom;
+    if (overflowTop || overflowBottom) {
+      activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
+    }
+  },
+  { flush: "sync" }
+);
 
 const showAddAudioItemButton = computed(() => {
   return store.state.showAddAudioItemButton;

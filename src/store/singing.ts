@@ -199,32 +199,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_SINGER: {
-    mutation(state, { singer }: { singer?: Singer }) {
-      state.tracks[selectedTrackIndex].singer = singer;
-    },
-    async action(
-      { state, getters, dispatch, commit },
-      { singer }: { singer?: Singer }
-    ) {
-      if (state.defaultStyleIds == undefined)
-        throw new Error("state.defaultStyleIds == undefined");
+  GET_DEFAULT_SINGER: {
+    action({ state, getters }) {
       const userOrderedCharacterInfos =
         getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
       if (userOrderedCharacterInfos == undefined)
         throw new Error("userOrderedCharacterInfos == undefined");
 
-      const engineId = singer?.engineId ?? state.engineIds[0];
+      const engineId = state.engineIds[0];
 
       // 最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
       // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
       const defaultStyleId =
         userOrderedCharacterInfos[0].metas.styles[0].styleId;
 
-      const styleId = singer?.styleId ?? defaultStyleId;
+      return { engineId, styleId: defaultStyleId };
+    },
+  },
 
-      await dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
-      commit("SET_SINGER", { singer: { engineId, styleId } });
+  SET_SINGER: {
+    mutation(state, { singer }: { singer?: Singer }) {
+      state.tracks[selectedTrackIndex].singer = singer;
+    },
+    async action({ dispatch, commit }, { singer }: { singer?: Singer }) {
+      commit("SET_SINGER", { singer });
 
       dispatch("RENDER");
     },
@@ -1971,7 +1969,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_SINGER(draft, { singer });
       },
       async action({ dispatch, commit }, { singer }) {
-        await dispatch("SETUP_SINGER", { singer });
+        dispatch("SETUP_SINGER", { singer });
         commit("COMMAND_SET_SINGER", { singer });
 
         dispatch("RENDER");
