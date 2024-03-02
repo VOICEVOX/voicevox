@@ -17,6 +17,7 @@
           : undefined
       }}
     </QBadge>
+    <!-- NOTE: QTooltipをQSlider内にしたいがquasarが未対応っぽいので兄弟に -->
     <QTooltip
       v-if="previewSlider.qSliderProps.disable.value"
       :delay="500"
@@ -24,7 +25,7 @@
       transition-hide="jump-down"
       anchor="top middle"
       self="center middle"
-      >無声化（母音の発音が弱化）した音にイントネーションは存在しません<br />テキストをクリックすることで無声化を解くことができます</QTooltip
+      >無声化した音にイントネーションは存在しません。<br />テキストをクリックすることで無声化を解けます。</QTooltip
     >
     <QSlider
       vertical
