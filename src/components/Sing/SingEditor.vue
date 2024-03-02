@@ -104,9 +104,6 @@ onetimeWatch(
     const singer = await store.dispatch("GET_DEFAULT_SINGER");
     await store.dispatch("SET_SINGER", { singer });
 
-    // 最初の歌手を初期化
-    store.dispatch("SETUP_SINGER", { singer });
-
     return "unwatch";
   },
   {
