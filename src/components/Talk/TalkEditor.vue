@@ -142,6 +142,7 @@ import AudioDetail from "./AudioDetail.vue";
 import AudioInfo from "./AudioInfo.vue";
 import CharacterPortrait from "./CharacterPortrait.vue";
 import ToolBar from "./ToolBar.vue";
+import watchImmediateOnMount from "@/composables/watchImmediateOnMount";
 import { useStore } from "@/store";
 import MenuBar from "@/components/Talk/MenuBar.vue";
 import ProgressView from "@/components/ProgressView.vue";
@@ -166,11 +167,6 @@ const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-const isMounted = ref(false);
-onMounted(() => {
-  isMounted.value = true;
-});
 
 // hotkeys handled by Mousetrap
 const { registerHotkeyWithCleanup } = useHotkeyManager();
@@ -362,9 +358,7 @@ const duplicateAudioItem = async () => {
 const shouldShowPanes = computed<boolean>(
   () => store.getters.SHOULD_SHOW_PANES
 );
-watch([isMounted, shouldShowPanes], ([isMounted, val]) => {
-  if (!isMounted) return;
-
+watchImmediateOnMount(shouldShowPanes, (val) => {
   if (val) {
     const clamp = (value: number, min: number, max: number) =>
       Math.max(Math.min(value, max), min);
@@ -463,10 +457,8 @@ watch(
 
 // エンジン初期化後の処理
 onetimeWatch(
-  () => [isMounted, props.isProjectFileLoaded],
-  async ([isMounted, isProjectFileLoaded]) => {
-    if (!isMounted) return "continue";
-
+  () => props.isProjectFileLoaded,
+  async (isProjectFileLoaded) => {
     if (isProjectFileLoaded == "waiting" || !props.isEnginesReady)
       return "continue";
 
@@ -546,33 +538,25 @@ const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
 
 // AudioCellの自動スクロール
 const cellsRef = ref<InstanceType<typeof Draggable> | undefined>();
-watch(
-  // TODO: マウント後にwatchを稼働させないといけないワークアラウンドコンポーザブルを作る
-  [isMounted, activeAudioKey],
-  ([isMounted, audioKey]) => {
-    if (!isMounted) return;
-
-    // TODO: スクロール位置を保存したい
-
-    if (audioKey == undefined) return;
-    const activeCellElement = audioCellRefs[audioKey]?.$el;
-    const cellsElement = cellsRef.value?.$el;
-    if (
-      !(activeCellElement instanceof Element) ||
-      !(cellsElement instanceof Element)
-    )
-      throw new Error(
-        `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`
-      );
-    const activeCellRect = activeCellElement.getBoundingClientRect();
-    const cellsRect = cellsElement.getBoundingClientRect();
-    const overflowTop = activeCellRect.top <= cellsRect.top;
-    const overflowBottom = activeCellRect.bottom >= cellsRect.bottom;
-    if (overflowTop || overflowBottom) {
-      activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
-    }
+watchImmediateOnMount(activeAudioKey, (audioKey) => {
+  if (audioKey == undefined) return;
+  const activeCellElement = audioCellRefs[audioKey]?.$el;
+  const cellsElement = cellsRef.value?.$el;
+  if (
+    !(activeCellElement instanceof Element) ||
+    !(cellsElement instanceof Element)
+  )
+    throw new Error(
+      `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`
+    );
+  const activeCellRect = activeCellElement.getBoundingClientRect();
+  const cellsRect = cellsElement.getBoundingClientRect();
+  const overflowTop = activeCellRect.top <= cellsRect.top;
+  const overflowBottom = activeCellRect.bottom >= cellsRect.bottom;
+  if (overflowTop || overflowBottom) {
+    activeCellElement.scrollIntoView(overflowTop || !overflowBottom);
   }
-);
+});
 
 const showAddAudioItemButton = computed(() => {
   return store.state.showAddAudioItemButton;

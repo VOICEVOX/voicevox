@@ -56,11 +56,6 @@ const props =
 
 const store = useStore();
 
-const isMounted = ref(false);
-onMounted(() => {
-  isMounted.value = true;
-});
-
 const nowRendering = computed(() => {
   return store.state.nowRendering;
 });
@@ -74,10 +69,8 @@ const cancelExport = () => {
 
 // エンジン初期化後の処理
 onetimeWatch(
-  () => [isMounted, props.isProjectFileLoaded],
-  async ([isMounted, isProjectFileLoaded]) => {
-    if (!isMounted) return "continue";
-
+  () => props.isProjectFileLoaded,
+  async (isProjectFileLoaded) => {
     if (isProjectFileLoaded == "waiting" || !props.isEnginesReady)
       return "continue";
 
