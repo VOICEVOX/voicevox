@@ -26,8 +26,7 @@ type PitchLine = {
 const pitchLineColor = [0.647, 0.831, 0.678, 1]; // RGBA
 const pitchLineWidth = 1.5;
 
-const props =
-  defineProps<{ isActivated: boolean; offsetX: number; offsetY: number }>();
+const props = defineProps<{ offsetX: number; offsetY: number }>();
 
 const store = useStore();
 const queries = computed(() => {
@@ -205,9 +204,7 @@ watch(
   }
 );
 
-let isInstantiated = false;
-
-const initialize = () => {
+onMounted(() => {
   const canvasContainerElement = canvasContainer.value;
   if (!canvasContainerElement) {
     throw new Error("canvasContainerElement is null.");
@@ -253,11 +250,9 @@ const initialize = () => {
     }
   });
   resizeObserver.observe(canvasContainerElement);
+});
 
-  isInstantiated = true;
-};
-
-const cleanUp = () => {
+onUnmounted(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
@@ -270,38 +265,6 @@ const cleanUp = () => {
   pitchLinesMap.clear();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
-
-  isInstantiated = false;
-};
-
-let isMounted = false;
-
-onMounted(() => {
-  isMounted = true;
-  if (props.isActivated) {
-    initialize();
-  }
-});
-
-watch(
-  () => props.isActivated,
-  (isActivated) => {
-    if (!isMounted) {
-      return;
-    }
-    if (isActivated && !isInstantiated) {
-      initialize();
-    }
-    if (!isActivated && isInstantiated) {
-      cleanUp();
-    }
-  }
-);
-
-onUnmounted(() => {
-  if (isInstantiated) {
-    cleanUp();
-  }
 });
 </script>
 

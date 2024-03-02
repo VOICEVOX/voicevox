@@ -136,7 +136,6 @@
         marginRight: `${scrollBarWidth}px`,
         marginBottom: `${scrollBarWidth}px`,
       }"
-      :is-activated="isActivated"
       :offset-x="scrollX"
       :offset-y="scrollY"
     />
@@ -199,15 +198,17 @@
   </div>
 </template>
 
+<script lang="ts">
+// スクロール位置
+const scrollX = ref(0);
+const scrollY = ref(0);
+
+// スクロール位置を初期化すべきかのフラグ
+let shouldInitializeScroll = true;
+</script>
+
 <script setup lang="ts">
-import {
-  computed,
-  ref,
-  nextTick,
-  onMounted,
-  onActivated,
-  onDeactivated,
-} from "vue";
+import { computed, ref, nextTick, onMounted, onUnmounted } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
@@ -241,8 +242,6 @@ import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
-
-defineProps<{ isActivated: boolean }>();
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -318,9 +317,6 @@ const gridWidth = computed(() => {
 const gridHeight = computed(() => {
   return gridCellHeight.value * keyInfos.length;
 });
-// スクロール位置
-const scrollX = ref(0);
-const scrollY = ref(0);
 // 再生ヘッドの位置
 const playheadTicks = ref(0);
 const playheadX = computed(() => {
@@ -1014,18 +1010,15 @@ onMounted(() => {
   scrollBarWidth.value = offsetWidth - clientWidth;
 });
 
-// 最初のonActivatedか判断するためのフラグ
-let firstActivation = true;
-
 // スクロール位置を設定する
-onActivated(() => {
+onMounted(() => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
   let xToScroll = 0;
   let yToScroll = 0;
-  if (firstActivation) {
+  if (shouldInitializeScroll) {
     // 初期スクロール位置を設定（C4が上から2/3の位置になるようにする）
     const clientHeight = sequencerBodyElement.clientHeight;
     const c4BaseY = noteNumberToBaseY(60);
@@ -1034,7 +1027,7 @@ onActivated(() => {
     xToScroll = 0;
     yToScroll = scrollBaseY * zoomY.value;
 
-    firstActivation = false;
+    shouldInitializeScroll = false;
   } else {
     // スクロール位置を復帰
     xToScroll = scrollX.value;
@@ -1047,7 +1040,7 @@ onActivated(() => {
 });
 
 // リスナー登録
-onActivated(() => {
+onMounted(() => {
   store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
@@ -1056,7 +1049,7 @@ onActivated(() => {
 });
 
 // リスナー解除
-onDeactivated(() => {
+onUnmounted(() => {
   store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });

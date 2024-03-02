@@ -1,15 +1,13 @@
 <template>
   <ErrorBoundary>
     <!-- TODO: メニューバーをEditorHomeから移動する -->
-    <KeepAlive>
-      <Component
-        :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
-        v-if="openedEditor != undefined"
-        :key="openedEditor"
-        :is-engines-ready="isEnginesReady"
-        :is-project-file-loaded="isProjectFileLoaded"
-      />
-    </KeepAlive>
+    <Component
+      :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
+      v-if="openedEditor != undefined"
+      :key="openedEditor"
+      :is-engines-ready="isEnginesReady"
+      :is-project-file-loaded="isProjectFileLoaded"
+    />
     <AllDialog :is-engines-ready="isEnginesReady" />
   </ErrorBoundary>
 </template>
