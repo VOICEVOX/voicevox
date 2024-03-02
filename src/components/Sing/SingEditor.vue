@@ -101,8 +101,7 @@ onetimeWatch(
     });
     isCompletedInitialStartup.value = true;
 
-    const singer = await store.dispatch("GET_DEFAULT_SINGER");
-    await store.dispatch("SET_SINGER", { singer });
+    await store.dispatch("SET_SINGER", {});
 
     return "unwatch";
   },
