@@ -1,5 +1,5 @@
 <template>
-  <QDialog ref="dialogRef" persistent>
+  <QDialog ref="dialogRef" auto-scroll @before-show="initializeValues">
     <QLayout container view="hHh lpr fFf" class="q-dialog-plugin bg-background">
       <QHeader>
         <QToolbar>
@@ -14,14 +14,15 @@
           <QToolbarTitle>MIDIファイルのインポート</QToolbarTitle>
         </QToolbar>
       </QHeader>
-      <QPageContainer class="q-px-lg">
+      <QPageContainer class="q-px-lg q-py-md">
         <QFile
           v-model="midiFile"
-          label="MIDIファイルを指定"
+          label="MIDIファイル"
           class="q-my-sm"
           accept=".mid,.midi"
-          :error-message="fileError"
-          :error="!!fileError"
+          :error-message="midiFileError"
+          :error="!!midiFileError"
+          placeholder="MIDIファイルを選択してください"
           @input="handleMidiFileChange"
         />
         <QSelect
@@ -30,7 +31,7 @@
           :options="tracks"
           emit-value
           map-options
-          label="トラックを選択"
+          label="インポートするトラック"
         />
       </QPageContainer>
       <QFooter>
@@ -71,9 +72,10 @@ const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const store = useStore();
 
+// MIDIファイル
 const midiFile = ref<File | null>(null);
-const midi = ref<Midi | null>(null);
-const fileError = computed(() => {
+// MIDIファイルエラー
+const midiFileError = computed(() => {
   if (midiFile.value && !midi.value) {
     return "MIDIファイルの読み込みに失敗しました";
   } else if (midiFile.value && midi.value && !midi.value.tracks.length) {
@@ -81,7 +83,9 @@ const fileError = computed(() => {
   }
   return undefined;
 });
-const selectedTrack = ref<string | number | null>(null);
+// MIDIデータ(tone.jsでパースしたもの)
+const midi = ref<Midi | null>(null);
+// トラック
 const tracks = computed(() =>
   midi.value
     ? midi.value.tracks.map((track, index) => ({
@@ -90,29 +94,29 @@ const tracks = computed(() =>
       }))
     : []
 );
+// 選択中のトラック
+const selectedTrack = ref<string | number | null>(null);
 
-const resetMidiFile = () => {
+// データ初期化
+const initializeValues = () => {
   midiFile.value = null;
-};
-
-const resetValues = () => {
   midi.value = null;
   selectedTrack.value = null;
 };
 
+// MIDIファイル変更時
 const handleMidiFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (!input.files) return;
+  midi.value = null;
+  selectedTrack.value = null;
   const file = input.files[0];
   const reader = new FileReader();
   reader.onload = (e) => {
-    resetValues();
     midi.value = new Midi(e.target?.result as ArrayBuffer);
     selectedTrack.value = 0;
   };
   reader.onerror = () => {
-    resetMidiFile();
-    resetValues();
     throw new Error("Failed to read MIDI file");
   };
   reader.readAsArrayBuffer(file);
@@ -124,12 +128,8 @@ const handleImportTrack = () => {
     trackIndex: selectedTrack.value as number,
   });
   onDialogOK();
-  resetMidiFile();
-  resetValues();
 };
 const handleCancel = () => {
   onDialogCancel();
-  resetMidiFile();
-  resetValues();
 };
 </script>
