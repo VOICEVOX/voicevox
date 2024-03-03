@@ -94,7 +94,8 @@
                     :label="
                       getHotkeyText(
                         tableProps.row.action,
-                        tableProps.row.combination
+                        tableProps.row.combination,
+                        tableProps.row.argumentKey
                       )
                         .split(' ')
                         .map((hotkeyText) => {
@@ -217,10 +218,16 @@ import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import {
   HotkeyActionNameType,
+  HotkeyArgumentKeyType,
   HotkeyCombination,
   HotkeySettingType,
 } from "@/type/preload";
-import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
+import {
+  useHotkeyManager,
+  eventToCombination,
+  getArgumentKeyCombination,
+  getArgumentKeyCombinationText,
+} from "@/plugins/hotkeyPlugin";
 
 const props =
   defineProps<{
@@ -302,7 +309,14 @@ const duplicatedHotkey = computed(() => {
   if (lastRecord.value == "") return undefined;
   return hotkeySettings.value.find(
     (item) =>
-      item.combination == lastRecord.value && item.action != lastAction.value
+      (item.argumentKey == undefined
+        ? item.combination == lastRecord.value
+        : (
+            getArgumentKeyCombination(item.argumentKey) as HotkeyCombination[]
+          ).find(
+            (key: HotkeyCombination) =>
+              item.combination + " " + key == lastRecord.value
+          )) && item.action != lastAction.value
   );
 });
 
@@ -311,9 +325,20 @@ const deleteHotkey = (action: string) => {
   changeHotkeySettings(action, HotkeyCombination(""));
 };
 
-const getHotkeyText = (action: string, combo: string) => {
+const getHotkeyText = (
+  action: string,
+  combo: string,
+  argumentKey: string | undefined
+) => {
   if (checkHotkeyReadonly(action)) combo = "（読み取り専用）" + combo;
   if (combo == "") return "未設定";
+  if (argumentKey != undefined)
+    return (
+      combo +
+      " [" +
+      getArgumentKeyCombinationText(argumentKey as HotkeyArgumentKeyType) +
+      "]"
+    );
   else return combo;
 };
 

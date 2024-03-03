@@ -443,9 +443,17 @@ export const hotkeyActionNameSchema = z.enum([
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
 
+// ctrl + [数字]等の[数字]の部分。現在はNumberのみ使用
+const hotkeyArgumentKeySchema = z
+  .enum(["Numbers", "VerticalArrows", "HorizontalArrows"])
+  .optional();
+
+export type HotkeyArgumentKeyType = z.infer<typeof hotkeyArgumentKeySchema>;
+
 export const hotkeySettingSchema = z.object({
   action: hotkeyActionNameSchema,
   combination: hotkeyCombinationSchema,
+  argumentKey: hotkeyArgumentKeySchema, // !=undefinedの時、HotkeySettingDialogでreadonlyHotkeyKeysに追加してください
 });
 export type HotkeySettingType = z.infer<typeof hotkeySettingSchema>;
 

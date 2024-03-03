@@ -12,6 +12,7 @@ import hotkeys from "hotkeys-js";
 import {
   HotkeyActionNameType,
   HotkeyCombination,
+  HotkeyArgumentKeyType,
   HotkeySettingType,
 } from "@/type/preload";
 
@@ -72,6 +73,7 @@ type RegisteredCombination = {
   editor: Editor;
   name: HotkeyActionNameType;
   combination: HotkeyCombination;
+  argumetKey: HotkeyArgumentKeyType;
 };
 
 interface HotkeyTarget {
@@ -169,30 +171,35 @@ export class HotkeyManager {
 
   private unbindActions(combinations: RegisteredCombination[]): void {
     for (const combination of combinations) {
-      const bindingKey = combinationToBindingKey(combination.combination);
-      this.log("Unbind:", bindingKey, "in", combination.editor);
-      this.hotkeys.unbind(bindingKey, combination.editor);
-      this.registeredCombinations = this.registeredCombinations.filter(
-        isNotSameHotkeyTarget(combination)
-      );
+      for (const argumentKeyCombination of getArgumentKeyCombination(
+        combination.argumetKey
+      )) {
+        const bindingKey = combinationAndArgumentKeyToBindingKey(
+          combination.combination,
+          argumentKeyCombination
+        );
+        this.log("Unbind:", bindingKey, "in", combination.editor);
+        this.hotkeys.unbind(bindingKey, combination.editor);
+        this.registeredCombinations = this.registeredCombinations.filter(
+          isNotSameHotkeyTarget(combination)
+        );
+      }
     }
   }
 
   private bindActions(actions: HotkeyAction[]): void {
     for (const action of actions) {
       const setting = this.getSetting(action);
-      this.log(
-        "Bind:",
-        combinationToBindingKey(setting.combination),
-        "to",
-        action.name,
-        "in",
-        action.editor
+      const argumentKeyCombinations = getArgumentKeyCombination(
+        setting.argumentKey
       );
-      this.hotkeys(
-        combinationToBindingKey(setting.combination),
-        { scope: action.editor },
-        (e) => {
+      for (const argumentKeyCombination of argumentKeyCombinations) {
+        const BindignKey = combinationAndArgumentKeyToBindingKey(
+          setting.combination,
+          argumentKeyCombination
+        );
+        this.log("Bind:", BindignKey, "to", action.name, "in", action.editor);
+        this.hotkeys(BindignKey, { scope: action.editor }, (e) => {
           const element = e.target;
           // メニュー項目ではショートカットキーを無効化
           if (
@@ -214,16 +221,17 @@ export class HotkeyManager {
           }
           e.preventDefault();
           action.callback(e);
-        }
-      );
-      this.registeredCombinations = this.registeredCombinations.filter(
-        isNotSameHotkeyTarget(action)
-      );
-      this.registeredCombinations.push({
-        editor: action.editor,
-        name: action.name,
-        combination: setting.combination,
-      });
+        });
+        this.registeredCombinations = this.registeredCombinations.filter(
+          isNotSameHotkeyTarget(action)
+        );
+        this.registeredCombinations.push({
+          editor: action.editor,
+          name: action.name,
+          combination: setting.combination,
+          argumetKey: setting.argumentKey,
+        });
+      }
     }
   }
 
@@ -273,8 +281,9 @@ export class HotkeyManager {
 }
 
 /** hotkeys-js用のキーに変換する */
-const combinationToBindingKey = (
-  combination: HotkeyCombination
+const combinationAndArgumentKeyToBindingKey = (
+  combination: HotkeyCombination,
+  argumentKeyCombination: HotkeyCombination | undefined
 ): BindingKey => {
   // MetaキーはCommandキーとして扱う
   // NOTE: hotkeys-jsにはWinキーが無く、Commandキーとして扱われている
@@ -284,7 +293,46 @@ const combinationToBindingKey = (
     .split(" ")
     .map((key) => (key === "meta" ? "command" : key))
     .join("+");
-  return bindingKey as BindingKey;
+  const argumentKeyBindingKey =
+    argumentKeyCombination != undefined ? "+" + argumentKeyCombination : "";
+  return (bindingKey + argumentKeyBindingKey) as BindingKey;
+};
+
+/** argumentKeyから実際のキー配列で取得する */
+export const getArgumentKeyCombination = (
+  argumentKey: HotkeyArgumentKeyType
+): HotkeyCombination[] | undefined[] => {
+  if (argumentKey == undefined) {
+    return [undefined];
+  } else if (argumentKey == "Numbers") {
+    return Array.from(
+      { length: 10 },
+      (_, index) => String(index) as HotkeyCombination
+    );
+  } else if (argumentKey == "VerticalArrows") {
+    return ["ArrowUp" as HotkeyCombination, "ArrowDown" as HotkeyCombination];
+  } else if (argumentKey == "HorizontalArrows") {
+    return [
+      "ArrowLeft" as HotkeyCombination,
+      "ArrowRight" as HotkeyCombination,
+    ];
+  }
+  throw new Error(`Received unexpected HotkeyArgumentKeyType`);
+};
+
+export const getArgumentKeyCombinationText = (
+  argumentKey: HotkeyArgumentKeyType
+): string | undefined => {
+  if (argumentKey == undefined) {
+    return undefined;
+  } else if (argumentKey == "Numbers") {
+    return "数字";
+  } else if (argumentKey == "VerticalArrows") {
+    return "上下キー";
+  } else if (argumentKey == "HorizontalArrows") {
+    return "左右キー";
+  }
+  throw new Error(`Received unexpected HotkeyArgumentKeyType`);
 };
 
 export const hotkeyPlugin: Plugin = {
