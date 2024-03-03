@@ -73,16 +73,16 @@ const searchVoicedSections = (phonemes: FramePhoneme[]) => {
 };
 
 const render = () => {
-  if (!canvasWidth) {
+  if (canvasWidth == undefined) {
     throw new Error("canvasWidth is undefined.");
   }
-  if (!canvasHeight) {
+  if (canvasHeight == undefined) {
     throw new Error("canvasHeight is undefined.");
   }
-  if (!renderer) {
+  if (renderer == undefined) {
     throw new Error("renderer is undefined.");
   }
-  if (!stage) {
+  if (stage == undefined) {
     throw new Error("stage is undefined.");
   }
 
@@ -210,12 +210,6 @@ useOnRendering(
   () => {
     const canvasContainerElement = canvasContainer.value;
     if (!canvasContainerElement) {
-      return "notNow";
-    }
-    if (
-      canvasContainerElement.clientWidth === 0 ||
-      canvasContainerElement.clientHeight === 0
-    ) {
       return "notNow";
     }
 
