@@ -211,7 +211,7 @@ watch(
 onMountedOrActivated(() => {
   const canvasContainerElement = canvasContainer.value;
   if (!canvasContainerElement) {
-    return "notNow";
+    throw new Error("canvasContainerElement is null.");
   }
 
   canvasWidth = canvasContainerElement.clientWidth;

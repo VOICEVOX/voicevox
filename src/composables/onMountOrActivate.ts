@@ -2,7 +2,6 @@ import { onMounted, onActivated, onDeactivated, onUnmounted } from "vue";
 
 /**
  * onMountedかonActivatedのどちらかが呼ばれた時に実行される関数を登録する。
- * "notNow"を返した場合は次のタイミングまで実行を遅延する。
  *
  * NOTE:
  * 大抵の場合はonMountedのあとにonActivatedが必ず呼ばれるが、
@@ -10,15 +9,13 @@ import { onMounted, onActivated, onDeactivated, onUnmounted } from "vue";
  * v-ifなどで切り替わるとonMountedのみが呼ばれる場合がある。
  * このケースに対応している。
  */
-export const onMountedOrActivated = (hook: () => void | "notNow") => {
+export const onMountedOrActivated = (hook: () => void) => {
   let shouldCall = true;
 
   const start = () => {
     if (shouldCall) {
-      const val = hook();
-      if (val !== "notNow") {
-        shouldCall = false;
-      }
+      hook();
+      shouldCall = false;
     }
   };
   onMounted(start);
