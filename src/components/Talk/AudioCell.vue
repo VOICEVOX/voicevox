@@ -45,6 +45,7 @@
       {{ textLineNumberIndex }}
     </div>
     <CharacterButton
+      ref="characterButton"
       v-model:selected-voice="selectedVoice"
       :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
@@ -157,7 +158,12 @@ defineExpose({
   removeCell: () => {
     removeCell();
   },
+  characterSelectShortcut: (e: KeyboardEvent) => {
+    characterButton.value.characterSelectShortcut(e);
+  },
 });
+
+const characterButton = ref();
 
 const store = useStore();
 const userOrderedCharacterInfos = computed(() => {

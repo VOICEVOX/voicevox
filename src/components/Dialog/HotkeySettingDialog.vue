@@ -318,7 +318,7 @@ const getHotkeyText = (action: string, combo: string) => {
 };
 
 // for later developers, in case anyone wants to add a readonly hotkey
-const readonlyHotkeyKeys: string[] = [];
+const readonlyHotkeyKeys: string[] = ["N番目のキャラクターを選択"];
 
 const checkHotkeyReadonly = (action: string) => {
   let flag = false;

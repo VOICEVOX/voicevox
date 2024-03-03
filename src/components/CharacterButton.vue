@@ -207,14 +207,36 @@ const props = withDefaults(
     selectedVoice: Voice | undefined;
     showEngineInfo?: boolean;
     emptiable?: boolean;
+    isActiveAudioCell?: boolean;
     uiLocked: boolean;
   }>(),
   {
     loading: false,
     showEngineInfo: false,
     emptiable: false,
+    isActiveAudioCell: false,
   }
 );
+
+defineExpose({
+  characterSelectShortcut: (e: KeyboardEvent) => {
+    characterSelectShortcut(e);
+  },
+});
+
+const characterSelectShortcut = (e: KeyboardEvent) => {
+  const convertedKey = convertToNumber(e.key);
+  const selectedCharacterIndex = convertedKey != 0 ? convertedKey - 1 : 9;
+  onCharacterSelectShortCut(selectedCharacterIndex);
+};
+
+const convertToNumber = (str: string) => {
+  if (/^[0-9]$/.test(str)) {
+    return parseInt(str, 10);
+  } else {
+    throw new Error(``);
+  }
+};
 
 const emit = defineEmits({
   "update:selectedVoice": (selectedVoice: Voice | undefined) => {
@@ -308,6 +330,12 @@ const onSelectSpeaker = (speakerUuid: SpeakerId) => {
     speakerId: speakerUuid,
     styleId: style.styleId,
   });
+};
+
+const onCharacterSelectShortCut = (index: number) => {
+  if (props.characterInfos.length >= index + 1) {
+    onSelectSpeaker(props.characterInfos[index].metas.speakerUuid);
+  }
 };
 
 const subMenuOpenFlags = ref(

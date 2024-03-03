@@ -214,10 +214,22 @@ registerHotkeyWithCleanup({
     }
   },
 });
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: true,
+  name: "N番目のキャラクターを選択",
+  callback: (e) => {
+    characterSelectShortcut(e);
+  },
+});
 
 const removeAudioItem = async () => {
   if (activeAudioKey.value == undefined) throw new Error();
   audioCellRefs[activeAudioKey.value].removeCell();
+};
+const characterSelectShortcut = async (e: KeyboardEvent) => {
+  if (activeAudioKey.value == undefined) throw new Error();
+  audioCellRefs[activeAudioKey.value].characterSelectShortcut(e);
 };
 
 // view

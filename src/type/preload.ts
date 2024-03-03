@@ -97,6 +97,11 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     combination: HotkeyCombination("3"),
   },
   {
+    action: "N番目のキャラクターを選択",
+    combination: HotkeyCombination(!isMac ? "Ctrl" : "Meta"),
+    argumentKey: "Numbers",
+  },
+  {
     action: "テキスト欄を追加",
     combination: HotkeyCombination("Shift Enter"),
   },
@@ -419,6 +424,7 @@ export const hotkeyActionNameSchema = z.enum([
   "ｱｸｾﾝﾄ欄を表示",
   "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
   "長さ欄を表示",
+  "N番目のキャラクターを選択",
   "テキスト欄を追加",
   "テキスト欄を複製",
   "テキスト欄を削除",
