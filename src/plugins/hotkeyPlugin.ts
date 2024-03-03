@@ -73,7 +73,7 @@ type RegisteredCombination = {
   editor: Editor;
   name: HotkeyActionNameType;
   combination: HotkeyCombination;
-  argumetKey: HotkeyArgumentKeyType;
+  argumentKey: HotkeyArgumentKeyType;
 };
 
 interface HotkeyTarget {
@@ -172,7 +172,7 @@ export class HotkeyManager {
   private unbindActions(combinations: RegisteredCombination[]): void {
     for (const combination of combinations) {
       for (const argumentKeyCombination of getArgumentKeyCombination(
-        combination.argumetKey
+        combination.argumentKey
       )) {
         const bindingKey = combinationAndArgumentKeyToBindingKey(
           combination.combination,
@@ -229,7 +229,7 @@ export class HotkeyManager {
           editor: action.editor,
           name: action.name,
           combination: setting.combination,
-          argumetKey: setting.argumentKey,
+          argumentKey: setting.argumentKey,
         });
       }
     }
