@@ -86,14 +86,18 @@ const midiFileError = computed(() => {
 // MIDIデータ(tone.jsでパースしたもの)
 const midi = ref<Midi | null>(null);
 // トラック
-const tracks = computed(() =>
-  midi.value
-    ? midi.value.tracks.map((track, index) => ({
-        label: `${index + 1}: ${track.name}`,
-        value: index,
-      }))
-    : []
-);
+const tracks = computed(() => {
+  if (!midi.value) {
+    return [];
+  }
+
+  // トラックリストを生成
+  // トラックNo: トラック名 形式
+  return midi.value.tracks.map((track, index) => ({
+    label: `${index + 1}: ${track.name}`,
+    value: index,
+  }));
+});
 // 選択中のトラック
 const selectedTrack = ref<string | number | null>(null);
 
@@ -106,22 +110,46 @@ const initializeValues = () => {
 
 // MIDIファイル変更時
 const handleMidiFileChange = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (!input.files) return;
+  if (!(event.target instanceof HTMLInputElement)) {
+    throw new Error("Event target is not an HTMLInputElement");
+  }
+
+  const input = event.target;
+
+  // 入力ファイルが存在しない場合は何もしない
+  if (!input.files || input.files.length === 0) {
+    return;
+  }
+
+  // 既存のMIDIデータおよび選択中のトラックをクリア
   midi.value = null;
   selectedTrack.value = null;
+
   const file = input.files[0];
   const reader = new FileReader();
   reader.onload = (e) => {
-    midi.value = new Midi(e.target?.result as ArrayBuffer);
-    selectedTrack.value = 0;
+    try {
+      if (e.target && e.target.result) {
+        // MIDIファイルをパース
+        midi.value = new Midi(e.target.result as ArrayBuffer);
+        const DEFAULT_TRACK = 0;
+        selectedTrack.value = DEFAULT_TRACK;
+      } else {
+        throw new Error("Could not find MIDI file data");
+      }
+    } catch (error) {
+      throw new Error("Failed to parse MIDI file");
+    }
   };
   reader.onerror = () => {
     throw new Error("Failed to read MIDI file");
   };
+
+  // MIDIファイルをバイナリデータとして読み込む
   reader.readAsArrayBuffer(file);
 };
 
+// トラックインポート実行時
 const handleImportTrack = () => {
   store.dispatch("IMPORT_MIDI_FILE", {
     filePath: midiFile.value?.path,
@@ -129,6 +157,8 @@ const handleImportTrack = () => {
   });
   onDialogOK();
 };
+
+// キャンセルボタンクリック時
 const handleCancel = () => {
   onDialogCancel();
 };

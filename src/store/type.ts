@@ -1,6 +1,5 @@
 import { Patch } from "immer";
 import { z } from "zod";
-import { Midi } from "@tonejs/midi";
 import {
   MutationTree,
   MutationsBase,
@@ -802,7 +801,6 @@ export type SingingStoreState = {
   nowRendering: boolean;
   nowAudioExporting: boolean;
   cancellationOfAudioExportRequested: boolean;
-  importingMidi: Midi | null;
 };
 
 export type SingingStoreTypes = {
