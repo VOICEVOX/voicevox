@@ -206,7 +206,7 @@ watch(
 );
 
 useOnRendering(
-  // startup
+  // start
   () => {
     const canvasContainerElement = canvasContainer.value;
     if (!canvasContainerElement) {
@@ -260,7 +260,7 @@ useOnRendering(
     });
     resizeObserver.observe(canvasContainerElement);
   },
-  // cleanup
+  // clean
   () => {
     if (requestId != undefined) {
       window.cancelAnimationFrame(requestId);
