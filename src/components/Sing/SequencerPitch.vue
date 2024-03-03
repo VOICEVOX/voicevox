@@ -10,7 +10,10 @@ import { frequencyToNoteNumber, secondToTick } from "@/sing/domain";
 import { noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
 import { LineStrip } from "@/sing/graphics/lineStrip";
 import { FramePhoneme } from "@/openapi";
-import { useOnRendering } from "@/composables/useOnRendering";
+import {
+  onMountedOrActivated,
+  onUnmountedOrDeactivated,
+} from "@/composables/onMountOrActivate";
 
 type VoicedSection = {
   readonly startFrame: number;
@@ -205,86 +208,68 @@ watch(
   }
 );
 
-useOnRendering(
-  // start
-  () => {
-    const canvasContainerElement = canvasContainer.value;
-    if (!canvasContainerElement) {
-      return "notNow";
-    }
-
-    canvasWidth = canvasContainerElement.clientWidth;
-    canvasHeight = canvasContainerElement.clientHeight;
-
-    const canvasElement = document.createElement("canvas");
-    canvasElement.width = canvasWidth;
-    canvasElement.height = canvasHeight;
-    canvasContainerElement.appendChild(canvasElement);
-
-    renderer = new PIXI.Renderer({
-      view: canvasElement,
-      backgroundAlpha: 0,
-      antialias: true,
-    });
-    stage = new PIXI.Container();
-
-    const callback = () => {
-      if (renderInNextFrame) {
-        render();
-        renderInNextFrame = false;
-      }
-      requestId = window.requestAnimationFrame(callback);
-    };
-    renderInNextFrame = true;
-    requestId = window.requestAnimationFrame(callback);
-
-    resizeObserver = new ResizeObserver(() => {
-      if (renderer == undefined) {
-        throw new Error("renderer is undefined.");
-      }
-      const canvasContainerWidth = canvasContainerElement.clientWidth;
-      const canvasContainerHeight = canvasContainerElement.clientHeight;
-
-      if (canvasContainerWidth > 0 && canvasContainerHeight > 0) {
-        canvasWidth = canvasContainerWidth;
-        canvasHeight = canvasContainerHeight;
-        renderer.resize(canvasWidth, canvasHeight);
-        renderInNextFrame = true;
-      }
-    });
-    resizeObserver.observe(canvasContainerElement);
-  },
-  // clean
-  () => {
-    if (requestId != undefined) {
-      window.cancelAnimationFrame(requestId);
-    }
-    stage?.destroy();
-    pitchLinesMap.forEach((pitchLines) => {
-      pitchLines.forEach((pitchLine) => {
-        pitchLine.lineStrip.destroy();
-      });
-    });
-    pitchLinesMap.clear();
-    renderer?.destroy(true);
-    resizeObserver?.disconnect();
-  }
-);
-
-// もしくは↓
-/*
-import {
-  onMountedOrActivated,
-  onUnmountedOrDeactivated,
-} from "@/composables/onMountOrActivate";
-
 onMountedOrActivated(() => {
-  // start
+  const canvasContainerElement = canvasContainer.value;
+  if (!canvasContainerElement) {
+    return "notNow";
+  }
+
+  canvasWidth = canvasContainerElement.clientWidth;
+  canvasHeight = canvasContainerElement.clientHeight;
+
+  const canvasElement = document.createElement("canvas");
+  canvasElement.width = canvasWidth;
+  canvasElement.height = canvasHeight;
+  canvasContainerElement.appendChild(canvasElement);
+
+  renderer = new PIXI.Renderer({
+    view: canvasElement,
+    backgroundAlpha: 0,
+    antialias: true,
+  });
+  stage = new PIXI.Container();
+
+  const callback = () => {
+    if (renderInNextFrame) {
+      render();
+      renderInNextFrame = false;
+    }
+    requestId = window.requestAnimationFrame(callback);
+  };
+  renderInNextFrame = true;
+  requestId = window.requestAnimationFrame(callback);
+
+  resizeObserver = new ResizeObserver(() => {
+    if (renderer == undefined) {
+      throw new Error("renderer is undefined.");
+    }
+    const canvasContainerWidth = canvasContainerElement.clientWidth;
+    const canvasContainerHeight = canvasContainerElement.clientHeight;
+
+    if (canvasContainerWidth > 0 && canvasContainerHeight > 0) {
+      canvasWidth = canvasContainerWidth;
+      canvasHeight = canvasContainerHeight;
+      renderer.resize(canvasWidth, canvasHeight);
+      renderInNextFrame = true;
+    }
+  });
+  resizeObserver.observe(canvasContainerElement);
 });
+
 onUnmountedOrDeactivated(() => {
-  // clean
+  if (requestId != undefined) {
+    window.cancelAnimationFrame(requestId);
+  }
+  stage?.destroy();
+  pitchLinesMap.forEach((pitchLines) => {
+    pitchLines.forEach((pitchLine) => {
+      pitchLine.lineStrip.destroy();
+    });
+  });
+  pitchLinesMap.clear();
+  renderer?.destroy(true);
+  resizeObserver?.disconnect();
 });
-*/
 </script>
 
 <style scoped lang="scss">
