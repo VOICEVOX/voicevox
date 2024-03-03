@@ -270,6 +270,21 @@ useOnRendering(
     resizeObserver?.disconnect();
   }
 );
+
+// もしくは↓
+/*
+import {
+  onMountedOrActivated,
+  onUnmountedOrDeactivated,
+} from "@/composables/onMountOrActivate";
+
+onMountedOrActivated(() => {
+  // start
+});
+onUnmountedOrDeactivated(() => {
+  // clean
+});
+*/
 </script>
 
 <style scoped lang="scss">
