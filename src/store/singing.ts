@@ -44,7 +44,7 @@ import {
   isValidSnapType,
   isValidTempo,
   isValidTimeSignature,
-  isValidVoiceKeyShift,
+  isValidGuidePitchShift,
   secondToTick,
   tickToSecond,
 } from "@/sing/domain";
@@ -145,7 +145,7 @@ export const generateSingingStoreInitialScore = () => {
       {
         singer: undefined,
         notesKeyShift: 0,
-        voiceKeyShift: 0,
+        guidePitchShift: 0,
         notes: [],
       },
     ],
@@ -230,18 +230,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_VOICE_KEY_SHIFT: {
-    mutation(state, { voiceKeyShift }: { voiceKeyShift: number }) {
-      state.tracks[selectedTrackIndex].voiceKeyShift = voiceKeyShift;
+  SET_GUIDE_PITCH_SHIFT: {
+    mutation(state, { guidePitchShift }: { guidePitchShift: number }) {
+      state.tracks[selectedTrackIndex].guidePitchShift = guidePitchShift;
     },
     async action(
       { dispatch, commit },
-      { voiceKeyShift }: { voiceKeyShift: number }
+      { guidePitchShift }: { guidePitchShift: number }
     ) {
-      if (!isValidVoiceKeyShift(voiceKeyShift)) {
-        throw new Error("The voiceKeyShift is invalid.");
+      if (!isValidGuidePitchShift(guidePitchShift)) {
+        throw new Error("The guidePitchShift is invalid.");
       }
-      commit("SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+      commit("SET_GUIDE_PITCH_SHIFT", { guidePitchShift });
 
       dispatch("RENDER");
     },
@@ -747,7 +747,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const searchPhrases = async (
         singer: Singer | undefined,
         notesKeyShift: number,
-        voiceKeyShift: number,
+        guidePitchShift: number,
         tpqn: number,
         tempos: Tempo[],
         notes: Note[]
@@ -768,7 +768,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const hash = await generatePhraseHash({
               singer,
               notesKeyShift,
-              voiceKeyShift,
+              guidePitchShift,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -776,7 +776,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             foundPhrases.set(hash, {
               singer,
               notesKeyShift,
-              voiceKeyShift,
+              guidePitchShift,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -877,12 +877,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return frameAudioQuery.phonemes.map((value) => value.phoneme).join(" ");
       };
 
-      const shiftVoiceKey = (
-        voiceKeyShift: number,
+      const shiftGuidePitch = (
+        guidePitchShift: number,
         frameAudioQuery: FrameAudioQuery
       ) => {
         frameAudioQuery.f0 = frameAudioQuery.f0.map((value) => {
-          return value * Math.pow(2, voiceKeyShift / 12);
+          return value * Math.pow(2, guidePitchShift / 12);
         });
       };
 
@@ -943,7 +943,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const track = getters.SELECTED_TRACK;
         const singer = track.singer ? { ...track.singer } : undefined;
         const notesKeyShift = track.notesKeyShift;
-        const voiceKeyShift = track.voiceKeyShift;
+        const guidePitchShift = track.guidePitchShift;
         const notes = track.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
@@ -952,7 +952,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const foundPhrases = await searchPhrases(
           singer,
           notesKeyShift,
-          voiceKeyShift,
+          guidePitchShift,
           tpqn,
           tempos,
           notes
@@ -1052,7 +1052,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               `Fetched frame audio query. Phonemes are "${phonemes}".`
             );
 
-            shiftVoiceKey(phrase.voiceKeyShift, frameAudioQuery);
+            shiftGuidePitch(phrase.guidePitchShift, frameAudioQuery);
 
             const startTime = calcStartTime(
               phrase.notes,
@@ -1977,18 +1977,20 @@ export const singingCommandStore = transformCommandStore(
         dispatch("RENDER");
       },
     },
-    COMMAND_SET_VOICE_KEY_SHIFT: {
-      mutation(draft, { voiceKeyShift }) {
-        singingStore.mutations.SET_VOICE_KEY_SHIFT(draft, { voiceKeyShift });
+    COMMAND_SET_GUIDE_PITCH_SHIFT: {
+      mutation(draft, { guidePitchShift }) {
+        singingStore.mutations.SET_GUIDE_PITCH_SHIFT(draft, {
+          guidePitchShift,
+        });
       },
       async action(
         { dispatch, commit },
-        { voiceKeyShift }: { voiceKeyShift: number }
+        { guidePitchShift }: { guidePitchShift: number }
       ) {
-        if (!isValidVoiceKeyShift(voiceKeyShift)) {
-          throw new Error("The voiceKeyShift is invalid.");
+        if (!isValidGuidePitchShift(guidePitchShift)) {
+          throw new Error("The guidePitchShift is invalid.");
         }
-        commit("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+        commit("COMMAND_SET_GUIDE_PITCH_SHIFT", { guidePitchShift });
 
         dispatch("RENDER");
       },

@@ -111,8 +111,8 @@ const applySongProjectToStore = async (
   await dispatch("SET_SINGER", {
     singer: tracks[0].singer,
   });
-  await dispatch("SET_VOICE_KEY_SHIFT", {
-    voiceKeyShift: tracks[0].voiceKeyShift,
+  await dispatch("SET_GUIDE_PITCH_SHIFT", {
+    guidePitchShift: tracks[0].guidePitchShift,
   });
   await dispatch("SET_SCORE", {
     score: {
@@ -432,7 +432,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                 {
                   singer: undefined,
                   notesKeyShift: 0,
-                  voiceKeyShift: 0,
+                  guidePitchShift: 0,
                   notes: [],
                 },
               ],

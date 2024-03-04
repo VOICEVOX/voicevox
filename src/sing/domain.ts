@@ -279,10 +279,10 @@ export function isValidSnapType(snapType: number, tpqn: number) {
   return getSnapTypes(tpqn).some((value) => value === snapType);
 }
 
-export function isValidVoiceKeyShift(voiceKeyShift: number) {
+export function isValidGuidePitchShift(guidePitchShift: number) {
   return (
-    Number.isInteger(voiceKeyShift) &&
-    voiceKeyShift <= 24 &&
-    voiceKeyShift >= -24
+    Number.isInteger(guidePitchShift) &&
+    guidePitchShift <= 24 &&
+    guidePitchShift >= -24
   );
 }
