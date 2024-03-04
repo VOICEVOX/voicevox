@@ -286,3 +286,11 @@ export function isValidVoiceKeyShift(voiceKeyShift: number) {
     voiceKeyShift >= -24
   );
 }
+
+export function isValidGuideVolumeScale(guideVolumeScale: number) {
+  return (
+    Number.isInteger(guideVolumeScale) &&
+    guideVolumeScale <= 20 &&
+    guideVolumeScale >= -20
+  );
+}

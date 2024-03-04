@@ -6,12 +6,22 @@
       <QInput
         type="number"
         :model-value="keyShiftInputBuffer"
-        label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
+        label="音域補正"
         dense
         hide-bottom-space
         class="key-shift"
         @update:model-value="setKeyShiftInputBuffer"
         @change="setKeyShift"
+      />
+      <QInput
+        type="number"
+        :model-value="volumeScaleInputBuffer"
+        label="音量補正"
+        dense
+        hide-bottom-space
+        class="key-shift"
+        @update:model-value="setVolumeScaleInputBuffer"
+        @change="setVolumeScale"
       />
       <QInput
         type="number"
@@ -131,6 +141,7 @@ import {
   isValidBeats,
   isValidBpm,
   isValidVoiceKeyShift,
+  isValidGuideVolumeScale,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -189,6 +200,7 @@ const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
 const beatTypeInputBuffer = ref(4);
 const keyShiftInputBuffer = ref(0);
+const volumeScaleInputBuffer = ref(0);
 
 watch(
   tempos,
@@ -243,6 +255,14 @@ const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
   keyShiftInputBuffer.value = keyShiftValue;
 };
 
+const setVolumeScaleInputBuffer = (volumeScaleStr: string | number | null) => {
+  const volumeScaleValue = Number(volumeScaleStr);
+  if (!isValidGuideVolumeScale(volumeScaleValue)) {
+    return;
+  }
+  volumeScaleInputBuffer.value = volumeScaleValue;
+};
+
 const setTempo = () => {
   const bpm = bpmInputBuffer.value;
   store.dispatch("COMMAND_SET_TEMPO", {
@@ -268,6 +288,11 @@ const setTimeSignature = () => {
 const setKeyShift = () => {
   const voiceKeyShift = keyShiftInputBuffer.value;
   store.dispatch("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+};
+
+const setVolumeScale = () => {
+  const guideVolumeScale = volumeScaleInputBuffer.value;
+  store.dispatch("COMMAND_SET_GUIDE_VOLUME_SCALE", { guideVolumeScale });
 };
 
 const playheadTicks = ref(0);

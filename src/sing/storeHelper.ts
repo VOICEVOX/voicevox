@@ -10,6 +10,7 @@ export const generatePhraseHash = async (obj: {
   singer: Singer | undefined;
   notesKeyShift: number;
   voiceKeyShift: number;
+  guideVolumeScale: number;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];

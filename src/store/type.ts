@@ -753,6 +753,7 @@ export const trackSchema = z.object({
   singer: singerSchema.optional(),
   notesKeyShift: z.number(),
   voiceKeyShift: z.number(),
+  guideVolumeScale: z.number(),
   notes: z.array(noteSchema),
 });
 export type Track = z.infer<typeof trackSchema>;
@@ -767,6 +768,7 @@ export type Phrase = {
   singer?: Singer;
   notesKeyShift: number;
   voiceKeyShift: number;
+  guideVolumeScale: number;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];
@@ -821,6 +823,11 @@ export type SingingStoreTypes = {
   SET_VOICE_KEY_SHIFT: {
     mutation: { voiceKeyShift: number };
     action(payload: { voiceKeyShift: number }): void;
+  };
+
+  SET_VOICE_VOLUME_SCALE: {
+    mutation: { guideVolumeScale: number };
+    action(payload: { guideVolumeScale: number }): void;
   };
 
   SET_SCORE: {
@@ -1036,6 +1043,11 @@ export type SingingCommandStoreTypes = {
   COMMAND_SET_VOICE_KEY_SHIFT: {
     mutation: { voiceKeyShift: number };
     action(payload: { voiceKeyShift: number }): void;
+  };
+
+  COMMAND_SET_GUIDE_VOLUME_SCALE: {
+    mutation: { guideVolumeScale: number };
+    action(payload: { guideVolumeScale: number }): void;
   };
 
   COMMAND_SET_TEMPO: {

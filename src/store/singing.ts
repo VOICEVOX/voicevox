@@ -45,6 +45,7 @@ import {
   isValidTempo,
   isValidTimeSignature,
   isValidVoiceKeyShift,
+  isValidGuideVolumeScale,
   secondToTick,
   tickToSecond,
 } from "@/sing/domain";
@@ -146,6 +147,7 @@ export const generateSingingStoreInitialScore = () => {
         singer: undefined,
         notesKeyShift: 0,
         voiceKeyShift: 0,
+        guideVolumeScale: 0,
         notes: [],
       },
     ],
@@ -242,6 +244,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The voiceKeyShift is invalid.");
       }
       commit("SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+
+      dispatch("RENDER");
+    },
+  },
+
+  SET_VOICE_VOLUME_SCALE: {
+    mutation(state, { guideVolumeScale }: { guideVolumeScale: number }) {
+      state.tracks[selectedTrackIndex].guideVolumeScale = guideVolumeScale;
+    },
+    async action(
+      { dispatch, commit },
+      { guideVolumeScale }: { guideVolumeScale: number }
+    ) {
+      if (!isValidGuideVolumeScale(guideVolumeScale)) {
+        throw new Error("The guideVolumeScale is invalid.");
+      }
+      commit("SET_VOICE_VOLUME_SCALE", { guideVolumeScale });
 
       dispatch("RENDER");
     },
@@ -748,6 +767,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         singer: Singer | undefined,
         notesKeyShift: number,
         voiceKeyShift: number,
+        guideVolumeScale: number,
         tpqn: number,
         tempos: Tempo[],
         notes: Note[]
@@ -769,6 +789,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singer,
               notesKeyShift,
               voiceKeyShift,
+              guideVolumeScale,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -777,6 +798,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singer,
               notesKeyShift,
               voiceKeyShift,
+              guideVolumeScale,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -886,6 +908,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       };
 
+      const scaleGuideVolume = (
+        guideVolumeScale: number,
+        frameAudioQuery: FrameAudioQuery
+      ) => {
+        frameAudioQuery.volume = frameAudioQuery.volume.map((value) => {
+          return value * Math.pow(10, guideVolumeScale / 20);
+        });
+      };
+
       const calcStartTime = (
         notes: Note[],
         tempos: Tempo[],
@@ -944,6 +975,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const singer = track.singer ? { ...track.singer } : undefined;
         const notesKeyShift = track.notesKeyShift;
         const voiceKeyShift = track.voiceKeyShift;
+        const guideVolumeScale = track.guideVolumeScale;
         const notes = track.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
@@ -953,6 +985,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           singer,
           notesKeyShift,
           voiceKeyShift,
+          guideVolumeScale,
           tpqn,
           tempos,
           notes
@@ -1053,6 +1086,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
 
             shiftVoiceKey(phrase.voiceKeyShift, frameAudioQuery);
+            scaleGuideVolume(phrase.guideVolumeScale, frameAudioQuery);
 
             const startTime = calcStartTime(
               phrase.notes,
@@ -1989,6 +2023,24 @@ export const singingCommandStore = transformCommandStore(
           throw new Error("The voiceKeyShift is invalid.");
         }
         commit("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_SET_GUIDE_VOLUME_SCALE: {
+      mutation(draft, { guideVolumeScale }) {
+        singingStore.mutations.SET_VOICE_VOLUME_SCALE(draft, {
+          guideVolumeScale,
+        });
+      },
+      async action(
+        { dispatch, commit },
+        { guideVolumeScale }: { guideVolumeScale: number }
+      ) {
+        if (!isValidGuideVolumeScale(guideVolumeScale)) {
+          throw new Error("The guideVolumeScale is invalid.");
+        }
+        commit("COMMAND_SET_GUIDE_VOLUME_SCALE", { guideVolumeScale });
 
         dispatch("RENDER");
       },
