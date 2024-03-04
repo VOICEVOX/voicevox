@@ -136,7 +136,6 @@ const contextMenuData = ref<MenuItemButton[]>([
     },
     disableWhenUiLocked: true,
   },
-  { type: "separator" },
   {
     type: "button",
     label: "コピー",
