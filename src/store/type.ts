@@ -825,7 +825,7 @@ export type SingingStoreTypes = {
     action(payload: { voiceKeyShift: number }): void;
   };
 
-  SET_VOICE_VOLUME_SCALE: {
+  SET_GUIDE_VOLUME_SCALE: {
     mutation: { guideVolumeScale: number };
     action(payload: { guideVolumeScale: number }): void;
   };

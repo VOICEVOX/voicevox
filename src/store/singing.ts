@@ -249,7 +249,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_VOICE_VOLUME_SCALE: {
+  SET_GUIDE_VOLUME_SCALE: {
     mutation(state, { guideVolumeScale }: { guideVolumeScale: number }) {
       state.tracks[selectedTrackIndex].guideVolumeScale = guideVolumeScale;
     },
@@ -260,7 +260,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!isValidGuideVolumeScale(guideVolumeScale)) {
         throw new Error("The guideVolumeScale is invalid.");
       }
-      commit("SET_VOICE_VOLUME_SCALE", { guideVolumeScale });
+      commit("SET_GUIDE_VOLUME_SCALE", { guideVolumeScale });
 
       dispatch("RENDER");
     },
@@ -2029,7 +2029,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_SET_GUIDE_VOLUME_SCALE: {
       mutation(draft, { guideVolumeScale }) {
-        singingStore.mutations.SET_VOICE_VOLUME_SCALE(draft, {
+        singingStore.mutations.SET_GUIDE_VOLUME_SCALE(draft, {
           guideVolumeScale,
         });
       },
