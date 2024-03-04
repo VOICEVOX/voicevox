@@ -188,7 +188,9 @@ const redo = () => {
 
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const keyShift = computed(() => store.getters.SELECTED_TRACK.guideKeyShift);
+const keyShift = computed(
+  () => store.getters.SELECTED_TRACK.keyRangeAdjustment
+);
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
@@ -271,8 +273,8 @@ const setTimeSignature = () => {
 };
 
 const setKeyShift = () => {
-  const guideKeyShift = keyShiftInputBuffer.value;
-  store.dispatch("COMMAND_SET_GUIDE_KEY_SHIFT", { guideKeyShift });
+  const keyRangeAdjustment = keyShiftInputBuffer.value;
+  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
 };
 
 const playheadTicks = ref(0);

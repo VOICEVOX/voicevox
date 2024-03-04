@@ -146,6 +146,7 @@ export const generateSingingStoreInitialScore = () => {
         singer: undefined,
         notesKeyShift: 0,
         guideKeyShift: 0,
+        keyRangeAdjustment: 0,
         notes: [],
       },
     ],
@@ -230,18 +231,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_GUIDE_KEY_SHIFT: {
-    mutation(state, { guideKeyShift }: { guideKeyShift: number }) {
-      state.tracks[selectedTrackIndex].guideKeyShift = guideKeyShift;
+  SET_KEY_RANGE_ADJUSTMENT: {
+    mutation(state, { keyRangeAdjustment }: { keyRangeAdjustment: number }) {
+      state.tracks[selectedTrackIndex].keyRangeAdjustment = keyRangeAdjustment;
     },
     async action(
       { dispatch, commit },
-      { guideKeyShift }: { guideKeyShift: number }
+      { keyRangeAdjustment }: { keyRangeAdjustment: number }
     ) {
-      if (!isValidKeyShift(guideKeyShift)) {
-        throw new Error("The guideKeyShift is invalid.");
+      if (!isValidKeyShift(keyRangeAdjustment)) {
+        throw new Error("The keyRangeAdjustment is invalid.");
       }
-      commit("SET_GUIDE_KEY_SHIFT", { guideKeyShift });
+      commit("SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
 
       dispatch("RENDER");
     },
@@ -747,7 +748,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const searchPhrases = async (
         singer: Singer | undefined,
         notesKeyShift: number,
-        guideKeyShift: number,
+        keyRangeAdjustment: number,
         tpqn: number,
         tempos: Tempo[],
         notes: Note[]
@@ -768,7 +769,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const hash = await generatePhraseHash({
               singer,
               notesKeyShift,
-              guideKeyShift,
+              keyRangeAdjustment,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -776,7 +777,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             foundPhrases.set(hash, {
               singer,
               notesKeyShift,
-              guideKeyShift,
+              keyRangeAdjustment,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -803,7 +804,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tempos: Tempo[],
         tpqn: number,
         notesKeyShift: number,
-        guideKeyShift: number,
+        keyRangeAdjustment: number,
         frameRate: number,
         restDurationSeconds: number
       ) => {
@@ -836,7 +837,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             .replace("は", "ハ")
             .replace("へ", "ヘ");
           // トランスポーズする
-          const key = note.noteNumber + notesKeyShift - guideKeyShift;
+          const key = note.noteNumber + notesKeyShift - keyRangeAdjustment;
           notesForRequestToEngine.push({
             key,
             frameLength: noteFrameLength,
@@ -881,11 +882,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       };
 
       const shiftGuidePitch = (
-        guideKeyShift: number,
+        keyShift: number,
         frameAudioQuery: FrameAudioQuery
       ) => {
         frameAudioQuery.f0 = frameAudioQuery.f0.map((value) => {
-          return value * Math.pow(2, guideKeyShift / 12);
+          return value * Math.pow(2, keyShift / 12);
         });
       };
 
@@ -946,7 +947,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const track = getters.SELECTED_TRACK;
         const singer = track.singer ? { ...track.singer } : undefined;
         const notesKeyShift = track.notesKeyShift;
-        const guideKeyShift = track.guideKeyShift;
+        const keyRangeAdjustment = track.keyRangeAdjustment;
         const notes = track.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
@@ -955,7 +956,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const foundPhrases = await searchPhrases(
           singer,
           notesKeyShift,
-          guideKeyShift,
+          keyRangeAdjustment,
           tpqn,
           tempos,
           notes
@@ -1040,7 +1041,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.tempos,
               phrase.tpqn,
               phrase.notesKeyShift,
-              phrase.guideKeyShift,
+              phrase.keyRangeAdjustment,
               frameRate,
               restDurationSeconds
             ).catch((error) => {
@@ -1056,7 +1057,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               `Fetched frame audio query. Phonemes are "${phonemes}".`
             );
 
-            shiftGuidePitch(phrase.guideKeyShift, frameAudioQuery);
+            shiftGuidePitch(phrase.keyRangeAdjustment, frameAudioQuery);
 
             const startTime = calcStartTime(
               phrase.notes,
@@ -1981,20 +1982,20 @@ export const singingCommandStore = transformCommandStore(
         dispatch("RENDER");
       },
     },
-    COMMAND_SET_GUIDE_KEY_SHIFT: {
-      mutation(draft, { guideKeyShift }) {
-        singingStore.mutations.SET_GUIDE_KEY_SHIFT(draft, {
-          guideKeyShift,
+    COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
+      mutation(draft, { keyRangeAdjustment }) {
+        singingStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
+          keyRangeAdjustment,
         });
       },
       async action(
         { dispatch, commit },
-        { guideKeyShift }: { guideKeyShift: number }
+        { keyRangeAdjustment }: { keyRangeAdjustment: number }
       ) {
-        if (!isValidKeyShift(guideKeyShift)) {
-          throw new Error("The guideKeyShift is invalid.");
+        if (!isValidKeyShift(keyRangeAdjustment)) {
+          throw new Error("The keyRangeAdjustment is invalid.");
         }
-        commit("COMMAND_SET_GUIDE_KEY_SHIFT", { guideKeyShift });
+        commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
 
         dispatch("RENDER");
       },
