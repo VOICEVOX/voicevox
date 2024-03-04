@@ -3,16 +3,19 @@
     <!-- configs for entire song -->
     <div class="sing-configs">
       <CharacterMenuButton />
-      <QInput
-        type="number"
-        :model-value="keyShiftInputBuffer"
-        label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
-        dense
-        hide-bottom-space
-        class="key-shift"
-        @update:model-value="setKeyShiftInputBuffer"
-        @change="setKeyShift"
-      />
+      <!-- 開発時のみ機能 -->
+      <template v-if="!isProduction">
+        <QInput
+          type="number"
+          :model-value="keyShiftInputBuffer"
+          label="音高補正"
+          dense
+          hide-bottom-space
+          class="key-shift"
+          @update:model-value="setKeyShiftInputBuffer"
+          @change="setKeyShift"
+        />
+      </template>
       <QInput
         type="number"
         :model-value="bpmInputBuffer"
@@ -124,6 +127,8 @@
 <script setup lang="ts">
 import { computed, watch, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
+import { isProduction } from "@/type/preload";
+
 import {
   getSnapTypes,
   isTriplet,
