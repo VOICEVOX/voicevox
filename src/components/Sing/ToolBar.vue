@@ -9,7 +9,7 @@
         label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
         dense
         hide-bottom-space
-        class="key-shift"
+        class="guide-value-control"
         @update:model-value="setKeyShiftInputBuffer"
         @change="setKeyShift"
       />
@@ -19,7 +19,7 @@
         label="音量補正"
         dense
         hide-bottom-space
-        class="key-shift"
+        class="guide-value-control"
         @update:model-value="setVolumeScaleInputBuffer"
         @change="setVolumeScale"
       />
@@ -432,7 +432,7 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.key-shift {
+.guide-value-control {
   margin-left: 16px;
   margin-right: 4px;
   width: 50px;
