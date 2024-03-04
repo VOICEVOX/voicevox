@@ -6,7 +6,7 @@
       <QInput
         type="number"
         :model-value="keyShiftInputBuffer"
-        label="音域補正"
+        label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
         dense
         hide-bottom-space
         class="key-shift"
