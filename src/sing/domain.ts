@@ -279,10 +279,6 @@ export function isValidSnapType(snapType: number, tpqn: number) {
   return getSnapTypes(tpqn).some((value) => value === snapType);
 }
 
-export function isValidGuidePitchShift(guidePitchShift: number) {
-  return (
-    Number.isInteger(guidePitchShift) &&
-    guidePitchShift <= 24 &&
-    guidePitchShift >= -24
-  );
+export function isValidKeyShift(keyShift: number) {
+  return Number.isInteger(keyShift) && keyShift <= 24 && keyShift >= -24;
 }

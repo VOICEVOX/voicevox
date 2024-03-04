@@ -44,7 +44,7 @@ import {
   isValidSnapType,
   isValidTempo,
   isValidTimeSignature,
-  isValidGuidePitchShift,
+  isValidKeyShift,
   secondToTick,
   tickToSecond,
 } from "@/sing/domain";
@@ -145,7 +145,7 @@ export const generateSingingStoreInitialScore = () => {
       {
         singer: undefined,
         notesKeyShift: 0,
-        guidePitchShift: 0,
+        guideKeyShift: 0,
         notes: [],
       },
     ],
@@ -230,18 +230,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_GUIDE_PITCH_SHIFT: {
-    mutation(state, { guidePitchShift }: { guidePitchShift: number }) {
-      state.tracks[selectedTrackIndex].guidePitchShift = guidePitchShift;
+  SET_GUIDE_KEY_SHIFT: {
+    mutation(state, { guideKeyShift }: { guideKeyShift: number }) {
+      state.tracks[selectedTrackIndex].guideKeyShift = guideKeyShift;
     },
     async action(
       { dispatch, commit },
-      { guidePitchShift }: { guidePitchShift: number }
+      { guideKeyShift }: { guideKeyShift: number }
     ) {
-      if (!isValidGuidePitchShift(guidePitchShift)) {
-        throw new Error("The guidePitchShift is invalid.");
+      if (!isValidKeyShift(guideKeyShift)) {
+        throw new Error("The guideKeyShift is invalid.");
       }
-      commit("SET_GUIDE_PITCH_SHIFT", { guidePitchShift });
+      commit("SET_GUIDE_KEY_SHIFT", { guideKeyShift });
 
       dispatch("RENDER");
     },
@@ -747,7 +747,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const searchPhrases = async (
         singer: Singer | undefined,
         notesKeyShift: number,
-        guidePitchShift: number,
+        guideKeyShift: number,
         tpqn: number,
         tempos: Tempo[],
         notes: Note[]
@@ -768,7 +768,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const hash = await generatePhraseHash({
               singer,
               notesKeyShift,
-              guidePitchShift,
+              guideKeyShift,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -776,7 +776,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             foundPhrases.set(hash, {
               singer,
               notesKeyShift,
-              guidePitchShift,
+              guideKeyShift,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -803,6 +803,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tempos: Tempo[],
         tpqn: number,
         notesKeyShift: number,
+        guideKeyShift: number,
         frameRate: number,
         restDurationSeconds: number
       ) => {
@@ -834,8 +835,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             .replace("うぉ", "ウォ")
             .replace("は", "ハ")
             .replace("へ", "ヘ");
+          // トランスポーズする
+          const key = note.noteNumber + notesKeyShift - guideKeyShift;
           notesForRequestToEngine.push({
-            key: note.noteNumber + notesKeyShift,
+            key,
             frameLength: noteFrameLength,
             lyric,
           });
@@ -878,11 +881,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       };
 
       const shiftGuidePitch = (
-        guidePitchShift: number,
+        guideKeyShift: number,
         frameAudioQuery: FrameAudioQuery
       ) => {
         frameAudioQuery.f0 = frameAudioQuery.f0.map((value) => {
-          return value * Math.pow(2, guidePitchShift / 12);
+          return value * Math.pow(2, guideKeyShift / 12);
         });
       };
 
@@ -943,7 +946,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const track = getters.SELECTED_TRACK;
         const singer = track.singer ? { ...track.singer } : undefined;
         const notesKeyShift = track.notesKeyShift;
-        const guidePitchShift = track.guidePitchShift;
+        const guideKeyShift = track.guideKeyShift;
         const notes = track.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
@@ -952,7 +955,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const foundPhrases = await searchPhrases(
           singer,
           notesKeyShift,
-          guidePitchShift,
+          guideKeyShift,
           tpqn,
           tempos,
           notes
@@ -1037,6 +1040,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.tempos,
               phrase.tpqn,
               phrase.notesKeyShift,
+              phrase.guideKeyShift,
               frameRate,
               restDurationSeconds
             ).catch((error) => {
@@ -1052,7 +1056,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               `Fetched frame audio query. Phonemes are "${phonemes}".`
             );
 
-            shiftGuidePitch(phrase.guidePitchShift, frameAudioQuery);
+            shiftGuidePitch(phrase.guideKeyShift, frameAudioQuery);
 
             const startTime = calcStartTime(
               phrase.notes,
@@ -1977,20 +1981,20 @@ export const singingCommandStore = transformCommandStore(
         dispatch("RENDER");
       },
     },
-    COMMAND_SET_GUIDE_PITCH_SHIFT: {
-      mutation(draft, { guidePitchShift }) {
-        singingStore.mutations.SET_GUIDE_PITCH_SHIFT(draft, {
-          guidePitchShift,
+    COMMAND_SET_GUIDE_KEY_SHIFT: {
+      mutation(draft, { guideKeyShift }) {
+        singingStore.mutations.SET_GUIDE_KEY_SHIFT(draft, {
+          guideKeyShift,
         });
       },
       async action(
         { dispatch, commit },
-        { guidePitchShift }: { guidePitchShift: number }
+        { guideKeyShift }: { guideKeyShift: number }
       ) {
-        if (!isValidGuidePitchShift(guidePitchShift)) {
-          throw new Error("The guidePitchShift is invalid.");
+        if (!isValidKeyShift(guideKeyShift)) {
+          throw new Error("The guideKeyShift is invalid.");
         }
-        commit("COMMAND_SET_GUIDE_PITCH_SHIFT", { guidePitchShift });
+        commit("COMMAND_SET_GUIDE_KEY_SHIFT", { guideKeyShift });
 
         dispatch("RENDER");
       },

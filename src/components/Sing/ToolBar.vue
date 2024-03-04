@@ -8,7 +8,7 @@
         <QInput
           type="number"
           :model-value="keyShiftInputBuffer"
-          label="音高補正"
+          label="音域補正"
           dense
           hide-bottom-space
           class="key-shift"
@@ -135,7 +135,7 @@ import {
   isValidBeatType,
   isValidBeats,
   isValidBpm,
-  isValidGuidePitchShift,
+  isValidKeyShift,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -188,7 +188,7 @@ const redo = () => {
 
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const keyShift = computed(() => store.getters.SELECTED_TRACK.guidePitchShift);
+const keyShift = computed(() => store.getters.SELECTED_TRACK.guideKeyShift);
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
@@ -242,7 +242,7 @@ const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
 
 const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
   const keyShiftValue = Number(keyShiftStr);
-  if (!isValidGuidePitchShift(keyShiftValue)) {
+  if (!isValidKeyShift(keyShiftValue)) {
     return;
   }
   keyShiftInputBuffer.value = keyShiftValue;
@@ -271,8 +271,8 @@ const setTimeSignature = () => {
 };
 
 const setKeyShift = () => {
-  const guidePitchShift = keyShiftInputBuffer.value;
-  store.dispatch("COMMAND_SET_GUIDE_PITCH_SHIFT", { guidePitchShift });
+  const guideKeyShift = keyShiftInputBuffer.value;
+  store.dispatch("COMMAND_SET_GUIDE_KEY_SHIFT", { guideKeyShift });
 };
 
 const playheadTicks = ref(0);
