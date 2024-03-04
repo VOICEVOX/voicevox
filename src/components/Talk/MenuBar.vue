@@ -1,5 +1,9 @@
 <template>
-  <BaseMenuBar editor="talk" :file-sub-menu-data="fileSubMenuData" />
+  <BaseMenuBar
+    editor="talk"
+    :file-sub-menu-data="fileSubMenuData"
+    :edit-sub-menu-data="editSubMenuData"
+  />
 </template>
 
 <script setup lang="ts">
@@ -20,6 +24,9 @@ const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+const editor = "talk";
+const canUndo = computed(() => store.getters.CAN_UNDO(editor));
+const canRedo = computed(() => store.getters.CAN_REDO(editor));
 
 const generateAndSaveAllAudio = async () => {
   if (!uiLocked.value) {
@@ -159,4 +166,28 @@ registerHotkeyWithCleanup({
     importTextFile();
   },
 });
+
+// 「編集」メニュー
+const editSubMenuData = computed<MenuItemData[]>(() => [
+  {
+    type: "button",
+    label: "元に戻す",
+    onClick: () => {
+      if (uiLocked.value) return;
+      store.dispatch("UNDO", { editor });
+    },
+    disableWhenUiLocked: true,
+    disabled: !canUndo.value,
+  },
+  {
+    type: "button",
+    label: "やり直す",
+    onClick: () => {
+      if (uiLocked.value) return;
+      store.dispatch("REDO", { editor });
+    },
+    disableWhenUiLocked: true,
+    disabled: !canRedo.value,
+  },
+]);
 </script>

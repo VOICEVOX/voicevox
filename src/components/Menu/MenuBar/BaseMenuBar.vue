@@ -40,6 +40,7 @@ const props =
   defineProps<{
     /** 「ファイル」メニューのサブメニュー */
     fileSubMenuData: MenuItemData[];
+    editSubMenuData: MenuItemData[];
     /** エディタの種類 */
     editor: "talk" | "song";
   }>();
@@ -326,6 +327,15 @@ const menudata = computed<MenuItemData[]>(() => [
         subMenu: recentProjectsSubMenuData.value,
       },
     ],
+  },
+  {
+    type: "root",
+    label: "編集",
+    onClick: () => {
+      closeAllDialog();
+    },
+    disableWhenUiLocked: false,
+    subMenu: props.editSubMenuData,
   },
   {
     type: "root",

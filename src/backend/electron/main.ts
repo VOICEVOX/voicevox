@@ -551,6 +551,7 @@ const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
     label: "VOICEVOX",
     submenu: [{ role: "quit" }],
   },
+  /*
   {
     label: "Edit",
     submenu: [
@@ -559,7 +560,7 @@ const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
       { role: "paste" },
       { role: "selectAll" },
     ],
-  },
+  }, */
 ];
 
 // For macOS, set the native menu to enable shortcut keys such as 'Cmd + V'.

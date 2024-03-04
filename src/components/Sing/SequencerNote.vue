@@ -126,13 +126,32 @@ const showPitch = computed(() => {
   return state.experimentalSetting.showPitchInSongEditor;
 });
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
-const contextMenuData = ref<[MenuItemButton]>([
+const contextMenuData = ref<MenuItemButton[]>([
   {
     type: "button",
     label: "削除",
     onClick: async () => {
       contextMenu.value?.hide();
-      store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+      await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "コピー",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "カット",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("CUT_NOTES_TO_CLIPBOARD");
     },
     disableWhenUiLocked: true,
   },

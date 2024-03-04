@@ -27,6 +27,7 @@
       @mouseleave="onMouseLeave"
       @wheel="onWheel"
       @scroll="onScroll"
+      @contextmenu.prevent
     >
       <!-- キャラクター全身 -->
       <CharacterPortrait />
@@ -196,6 +197,7 @@
       }"
       @input="setZoomY"
     />
+    <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
   </div>
 </template>
 
@@ -209,6 +211,8 @@ import {
   onDeactivated,
 } from "vue";
 import { v4 as uuidv4 } from "uuid";
+import ContextMenu from "../Menu/ContextMenu.vue";
+import { MenuItemButton } from "../Menu/type";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
@@ -239,6 +243,117 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+
+registerHotkeyWithCleanup({
+  editor: "song",
+  name: "コピー",
+  callback: () => {
+    if (nowPreviewing.value) {
+      return;
+    }
+    if (state.selectedNoteIds.size === 0) {
+      return;
+    }
+    store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+  },
+});
+
+registerHotkeyWithCleanup({
+  editor: "song",
+  name: "切り取り",
+  callback: () => {
+    if (nowPreviewing.value) {
+      return;
+    }
+    if (state.selectedNoteIds.size === 0) {
+      return;
+    }
+    store.dispatch("CUT_NOTES_TO_CLIPBOARD");
+  },
+});
+
+registerHotkeyWithCleanup({
+  editor: "song",
+  name: "貼り付け",
+  callback: () => {
+    if (nowPreviewing.value) {
+      return;
+    }
+    store.dispatch("PASTE_NOTES_FROM_CLIPBOARD");
+  },
+});
+
+registerHotkeyWithCleanup({
+  editor: "song",
+  name: "すべて選択",
+  callback: () => {
+    if (nowPreviewing.value) {
+      return;
+    }
+    store.dispatch("SELECT_ALL_NOTES");
+  },
+});
+
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+const contextMenuData = ref<MenuItemButton[]>([
+  {
+    type: "button",
+    label: "選択中を削除",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "コピー",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "切り取り",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("CUT_NOTES_TO_CLIPBOARD");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "貼り付け",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("PASTE_NOTES_FROM_CLIPBOARD");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "すべて選択",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("SELECT_ALL_NOTES");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "選択解除",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("DESELECT_ALL_NOTES");
+    },
+    disableWhenUiLocked: true,
+  },
+]);
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -710,11 +825,14 @@ const onMouseDown = (event: MouseEvent) => {
   if (!isSelfEventTarget(event)) {
     return;
   }
+
+  if (event.button === 0 && event.ctrlKey) {
+    return;
+  }
+
   if (event.button === 0) {
     startPreview(event, "ADD");
     mouseDownNoteId = undefined;
-  } else {
-    store.dispatch("DESELECT_ALL_NOTES");
   }
 };
 

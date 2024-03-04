@@ -439,6 +439,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SELECT_ALL_NOTES: {
+    mutation(state) {
+      const currentTrack = state.tracks[selectedTrackIndex];
+      const allNoteIds = currentTrack.notes.map((note) => note.id);
+      state.selectedNoteIds = new Set(allNoteIds);
+    },
+    async action({ commit }) {
+      commit("SELECT_ALL_NOTES");
+    },
+  },
+
   DESELECT_ALL_NOTES: {
     mutation(state) {
       state.editingLyricNoteId = undefined;
@@ -1958,6 +1969,82 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
         cancellationOfAudioExportRequested: true,
       });
+    },
+  },
+
+  COPY_NOTES_TO_CLIPBOARD: {
+    async action({ state, getters }) {
+      const currentTrack = getters.SELECTED_TRACK;
+      const noteIds = state.selectedNoteIds;
+      // ノートが選択されていない場合は何もしない
+      if (noteIds.size === 0) {
+        return;
+      }
+      // 選択されたノートのみをコピーする
+      const selectedNotes = currentTrack.notes.filter((note) =>
+        noteIds.has(note.id)
+      );
+      // ノートをJSONにシリアライズしてクリップボードにコピーする
+      const serializedNotes = JSON.stringify(selectedNotes);
+      // クリップボードにテキストとしてコピーする
+      try {
+        await navigator.clipboard.writeText(serializedNotes);
+        window.backend.logInfo("Copied to clipboard.", serializedNotes);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "An unknown error occurred";
+        throw new Error(message);
+      }
+    },
+  },
+
+  CUT_NOTES_TO_CLIPBOARD: {
+    action({ dispatch }) {
+      dispatch("COPY_NOTES_TO_CLIPBOARD");
+      dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    },
+  },
+
+  PASTE_NOTES_FROM_CLIPBOARD: {
+    async action({ commit, dispatch, getters }) {
+      try {
+        const text = await navigator.clipboard.readText();
+        // クリップボードのテキストをJSONとしてパースする(失敗した場合は何もしない)
+        const notesJson = JSON.parse(text);
+        // パースしたJSONがノートの配列でない、またはノートが1つもない場合は何もしない
+        if (!Array.isArray(notesJson) || notesJson.length === 0) {
+          return;
+        }
+        // パースしたJSONのノートが全て有効なノートでない場合は何もしない
+        if (!notesJson.every((note: Note) => isValidNote(note))) {
+          return;
+        }
+        // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
+        const currentPlayheadPosition = getters.GET_PLAYHEAD_POSITION();
+        const firstNotePosition = notesJson[0].position;
+        const notesToPaste: Note[] = notesJson.map((note) => {
+          // 新しい位置を現在の再生位置に合わせて計算する
+          const pastePosition =
+            Number(note.position) - firstNotePosition + currentPlayheadPosition;
+          return {
+            id: uuidv4(),
+            position: Number(pastePosition),
+            duration: Number(note.duration),
+            noteNumber: Number(note.noteNumber),
+            lyric: String(note.lyric),
+          };
+        });
+        const pastedNoteIds = notesToPaste.map((note) => note.id);
+        commit("COMMAND_ADD_NOTES", { notes: notesToPaste });
+        // 貼り付けたノートを選択する
+        commit("DESELECT_ALL_NOTES");
+        commit("SELECT_NOTES", { noteIds: pastedNoteIds });
+        dispatch("RENDER");
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "An unknown error occurred";
+        throw new Error(message);
+      }
     },
   },
 });
