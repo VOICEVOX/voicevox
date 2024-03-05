@@ -88,14 +88,17 @@ export const vstMessageReceiver: Plugin = {
       tracks: store.state.tracks,
     };
 
-    let isFirstChange = true;
+    let haveSentNonEmptyProject = false;
     watch(
       () => songProjectState,
       debounce(() => {
-        if (isFirstChange) {
-          isFirstChange = false;
+        const isEmptyProject = songProjectState.tracks.every(
+          (track) => track.notes.length === 0
+        );
+        if (isEmptyProject && !haveSentNonEmptyProject) {
           return;
         }
+        haveSentNonEmptyProject = true;
         log("Saving project file");
         store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
       }, 5000),
