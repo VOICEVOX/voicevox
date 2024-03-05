@@ -194,12 +194,12 @@ export class HotkeyManager {
         setting.argumentKey
       );
       for (const argumentKeyCombination of argumentKeyCombinations) {
-        const BindignKey = combinationAndArgumentKeyToBindingKey(
+        const BindingKey = combinationAndArgumentKeyToBindingKey(
           setting.combination,
           argumentKeyCombination
         );
-        this.log("Bind:", BindignKey, "to", action.name, "in", action.editor);
-        this.hotkeys(BindignKey, { scope: action.editor }, (e) => {
+        this.log("Bind:", BindingKey, "to", action.name, "in", action.editor);
+        this.hotkeys(BindingKey, { scope: action.editor }, (e) => {
           const element = e.target;
           // メニュー項目ではショートカットキーを無効化
           if (
