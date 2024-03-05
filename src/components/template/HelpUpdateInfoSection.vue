@@ -65,12 +65,11 @@ const props =
   // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
   // height: 100%;
   height: calc(100vh - 90px);
-  background-color: colors.$background;
+  background-color: colors.$surface;
 }
 
 .inner {
   padding: vars.$padding-2;
-  background-color: colors.$surface;
 }
 
 .info {
