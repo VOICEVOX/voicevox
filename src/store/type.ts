@@ -751,9 +751,7 @@ export type Singer = z.infer<typeof singerSchema>;
 
 export const trackSchema = z.object({
   singer: singerSchema.optional(),
-  notesKeyShift: z.number(), // ノートのトランスポーズ量
-  guideKeyShift: z.number(), // 歌い方のトランスポーズ量
-  keyRangeAdjustment: z.number(), // 音域補正量
+  keyRangeAdjustment: z.number(), // 音域調整量
   notes: z.array(noteSchema),
 });
 export type Track = z.infer<typeof trackSchema>;
@@ -766,7 +764,6 @@ export type PhraseState =
 
 export type Phrase = {
   singer?: Singer;
-  notesKeyShift: number;
   keyRangeAdjustment: number;
   tpqn: number;
   tempos: Tempo[];

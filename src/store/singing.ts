@@ -144,8 +144,6 @@ export const generateSingingStoreInitialScore = () => {
     tracks: [
       {
         singer: undefined,
-        notesKeyShift: 0,
-        guideKeyShift: 0,
         keyRangeAdjustment: 0,
         notes: [],
       },
@@ -747,7 +745,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ state, getters, commit, dispatch }) {
       const searchPhrases = async (
         singer: Singer | undefined,
-        notesKeyShift: number,
         keyRangeAdjustment: number,
         tpqn: number,
         tempos: Tempo[],
@@ -768,7 +765,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const phraseLastNote = phraseNotes[phraseNotes.length - 1];
             const hash = await generatePhraseHash({
               singer,
-              notesKeyShift,
               keyRangeAdjustment,
               tpqn,
               tempos,
@@ -776,7 +772,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             });
             foundPhrases.set(hash, {
               singer,
-              notesKeyShift,
               keyRangeAdjustment,
               tpqn,
               tempos,
@@ -803,7 +798,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notes: Note[],
         tempos: Tempo[],
         tpqn: number,
-        notesKeyShift: number,
         keyRangeAdjustment: number,
         frameRate: number,
         restDurationSeconds: number
@@ -837,7 +831,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             .replace("は", "ハ")
             .replace("へ", "ヘ");
           // トランスポーズする
-          const key = note.noteNumber + notesKeyShift - keyRangeAdjustment;
+          const key = note.noteNumber - keyRangeAdjustment;
           notesForRequestToEngine.push({
             key,
             frameLength: noteFrameLength,
@@ -946,7 +940,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const tempos = state.tempos.map((value) => ({ ...value }));
         const track = getters.SELECTED_TRACK;
         const singer = track.singer ? { ...track.singer } : undefined;
-        const notesKeyShift = track.notesKeyShift;
         const keyRangeAdjustment = track.keyRangeAdjustment;
         const notes = track.notes
           .map((value) => ({ ...value }))
@@ -955,7 +948,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // フレーズを更新する
         const foundPhrases = await searchPhrases(
           singer,
-          notesKeyShift,
           keyRangeAdjustment,
           tpqn,
           tempos,
@@ -1040,7 +1032,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.notes,
               phrase.tempos,
               phrase.tpqn,
-              phrase.notesKeyShift,
               phrase.keyRangeAdjustment,
               frameRate,
               restDurationSeconds

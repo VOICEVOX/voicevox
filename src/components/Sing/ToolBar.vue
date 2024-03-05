@@ -8,7 +8,7 @@
         <QInput
           type="number"
           :model-value="keyShiftInputBuffer"
-          label="音域補正"
+          label="音域調整"
           dense
           hide-bottom-space
           class="key-shift"
