@@ -44,5 +44,7 @@ onMounted(async () => {
 
 .inner {
   padding: vars.$padding-2;
+  max-width: 960px;
+  margin: auto;
 }
 </style>

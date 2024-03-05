@@ -146,6 +146,8 @@ const selectCharacterInfo = (index: DetailKey | undefined) => {
   flex-direction: column;
   padding: vars.$padding-2;
   gap: vars.$gap-1;
+  max-width: 960px;
+  margin: auto;
 }
 
 .title {
