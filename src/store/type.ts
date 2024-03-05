@@ -357,12 +357,12 @@ export type AudioStoreTypes = {
   //     accentPhrases: AccentPhrase[];
   //   };
   // };
-  // SET_ACCENT_PHRASES_EDITORID: {
-  //   mutation: {
-  //     audioKey: AudioKey;
-  //   };
-  //   action(payload: { audioKey: AudioKey }): void;
-  // };
+  SET_ACCENT_PHRASES_EDITOR_KEY: {
+    mutation: {
+      audioKey: AudioKey;
+    };
+    action(payload: { audioKey: AudioKey }): void;
+  };
   SET_AUDIO_MORA_DATA: {
     mutation: {
       audioKey: AudioKey;

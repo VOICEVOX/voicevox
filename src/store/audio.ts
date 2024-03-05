@@ -44,6 +44,7 @@ import {
   convertAudioQueryFromEngineToEditor,
 } from "./proxy";
 import {
+  AccentPhraseKey,
   AudioKey,
   CharacterInfo,
   DefaultStyleId,
@@ -1031,25 +1032,25 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   //     query.accentPhrases.splice(accentPhraseIndex, 1, ...accentPhrases);
   //   },
   // },
-  // SET_ACCENT_PHRASES_EDITORID: {
-  //   mutation(
-  //     state,
-  //     {
-  //       audioKey,
-  //     }: {
-  //       audioKey: AudioKey;
-  //     }
-  //   ) {
-  //     const accentPhrases = state.audioItems[audioKey].query?.accentPhrases;
-  //     if (accentPhrases)
-  //       accentPhrases.map((elem) => {
-  //         if (!elem.key) elem.key = uuidv4();
-  //       });
-  //   },
-  //   action({ commit }, { audioKey }: { audioKey: AudioKey }) {
-  //     commit("SET_ACCENT_PHRASES_EDITORID", { audioKey });
-  //   },
-  // },
+  SET_ACCENT_PHRASES_EDITOR_KEY: {
+    mutation(
+      state,
+      {
+        audioKey,
+      }: {
+        audioKey: AudioKey;
+      }
+    ) {
+      const accentPhrases = state.audioItems[audioKey].query?.accentPhrases;
+      if (accentPhrases)
+        accentPhrases.map((elem) => {
+          if (!elem.key) elem.key = AccentPhraseKey(uuidv4());
+        });
+    },
+    action({ commit }, { audioKey }: { audioKey: AudioKey }) {
+      commit("SET_ACCENT_PHRASES_EDITOR_KEY", { audioKey });
+    },
+  },
 
   SET_AUDIO_MORA_DATA: {
     mutation(
