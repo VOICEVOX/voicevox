@@ -151,12 +151,22 @@
           </QChip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
-        <div v-if="duplicatedHotkey != undefined" class="text-warning q-mt-lg">
+        <span v-if="lastArgumentKeyText !== ''"> + </span>
+        <QChip
+          v-if="lastArgumentKeyText !== ''"
+          :ripple="false"
+          color="surface"
+        >
+          {{ lastArgumentKeyText }}
+        </QChip>
+        <div v-if="duplicatedHotkeys.length > 0" class="text-warning q-mt-lg">
           <div class="text-warning">
             ショートカットキーが次の操作と重複しています
           </div>
           <div class="q-mt-sm text-weight-bold text-warning">
-            「{{ duplicatedHotkey.action }}」
+            <template v-for="duplicatedHotkey in duplicatedHotkeys">
+              「{{ duplicatedHotkey.action }}」
+            </template>
           </div>
         </div>
       </QCardSection>
@@ -183,7 +193,7 @@
           "
         />
         <QBtn
-          v-if="duplicatedHotkey == undefined"
+          v-if="duplicatedHotkeys.length == 0"
           padding="xs md"
           label="OK"
           unelevated
@@ -277,13 +287,31 @@ const hotkeyColumns = ref<
 
 const lastAction = ref("");
 const lastRecord = ref(HotkeyCombination(""));
+const lastArgumentKeyText = ref(""); // これはstring
 
 const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
     return;
   } else {
     const recordedCombo = eventToCombination(event);
-    lastRecord.value = recordedCombo;
+    let editedCombo: HotkeyCombination = recordedCombo;
+    const editingHotkey = getEditingHotkey(
+      lastAction.value as HotkeyActionNameType
+    );
+    // 最後がCtrlなどではない時に最後を削る
+    if (getArgumentKeyCombinationText(editingHotkey.argumentKey) != "") {
+      if (
+        !["Ctrl", "Shift", "Alt", "Meta"].includes(
+          recordedCombo.split(" ")[recordedCombo.split(" ").length - 1]
+        )
+      ) {
+        editedCombo = recordedCombo
+          .split(" ")
+          .slice(0, -1)
+          .join(" ") as HotkeyCombination;
+      }
+    }
+    lastRecord.value = editedCombo;
     event.preventDefault();
   }
 };
@@ -293,9 +321,11 @@ const changeHotkeySettings = (
   action: string,
   combination: HotkeyCombination
 ) => {
+  const editingHotkey = getEditingHotkey(action as HotkeyActionNameType);
   hotkeyManager.replace({
     action: action as HotkeyActionNameType,
     combination,
+    argumentKey: editingHotkey.argumentKey,
   });
   return store.dispatch("SET_HOTKEY_SETTINGS", {
     data: {
@@ -305,20 +335,73 @@ const changeHotkeySettings = (
   });
 };
 
-const duplicatedHotkey = computed(() => {
-  if (lastRecord.value == "") return undefined;
-  return hotkeySettings.value.find(
+const duplicatedHotkeys = computed(() => {
+  return filterDuplicatedHotkeysWithSetKeyAndName(
+    lastRecord.value,
+    lastAction.value as HotkeyActionNameType
+  );
+});
+
+const filterDuplicatedHotkeysWithSetKeyAndName = (
+  key: HotkeyCombination,
+  action: HotkeyActionNameType
+): HotkeySettingType[] => {
+  if (key == "") return [];
+  if (lastArgumentKeyText.value == "") {
+    const result = findDuplicatedHotkeyWithKey(key, action);
+    if (result == undefined) {
+      return [];
+    } else {
+      return [result];
+    }
+  } else {
+    const editingHotkey = getEditingHotkey(action);
+    const argumentKeys = getArgumentKeyCombination(editingHotkey.argumentKey);
+    const results: HotkeySettingType[] = [];
+    for (const argumentKey of argumentKeys) {
+      lastRecord.value + " " + argumentKey;
+      const result: HotkeySettingType | undefined = findDuplicatedHotkeyWithKey(
+        (lastRecord.value + " " + argumentKey) as HotkeyCombination,
+        lastAction.value as HotkeyActionNameType
+      );
+      if (result != undefined) {
+        results.push(result);
+      }
+    }
+    return results;
+  }
+};
+
+const findDuplicatedHotkeyWithKey = (
+  key: HotkeyCombination,
+  action: HotkeyActionNameType
+): HotkeySettingType | undefined => {
+  const result = hotkeySettings.value.find(
     (item) =>
       (item.argumentKey == undefined
-        ? item.combination == lastRecord.value
+        ? item.combination == key
         : (
             getArgumentKeyCombination(item.argumentKey) as HotkeyCombination[]
           ).find(
-            (key: HotkeyCombination) =>
-              item.combination + " " + key == lastRecord.value
-          )) && item.action != lastAction.value
+            (argumentKey: HotkeyCombination) =>
+              item.combination + " " + argumentKey == key
+          )) && item.action != action
   );
-});
+  if (result == undefined) {
+    return undefined;
+  } else {
+    return result as HotkeySettingType;
+  }
+};
+
+const getEditingHotkey = (action: HotkeyActionNameType): HotkeySettingType => {
+  const editingHotkey = hotkeySettings.value.find(
+    (item) => action == item.action
+  );
+  if (editingHotkey == undefined)
+    throw new Error(`現在設定を行っている最中のホットキーが存在しません`);
+  return editingHotkey;
+};
 
 // FIXME: actionはHotkeyAction型にすべき
 const deleteHotkey = (action: string) => {
@@ -343,7 +426,8 @@ const getHotkeyText = (
 };
 
 // for later developers, in case anyone wants to add a readonly hotkey
-const readonlyHotkeyKeys: string[] = ["N番目のキャラクターを選択"];
+// 読み取り専用だとすると以前のキーと被らないようにする処理に困る
+const readonlyHotkeyKeys: string[] = [];
 
 const checkHotkeyReadonly = (action: string) => {
   let flag = false;
@@ -358,6 +442,10 @@ const checkHotkeyReadonly = (action: string) => {
 const openHotkeyDialog = (action: string) => {
   lastAction.value = action;
   lastRecord.value = HotkeyCombination("");
+  const editingHotkey = getEditingHotkey(action as HotkeyActionNameType);
+  lastArgumentKeyText.value = getArgumentKeyCombinationText(
+    editingHotkey.argumentKey
+  );
   isHotkeyDialogOpened.value = true;
   document.addEventListener("keydown", recordCombination);
 };
@@ -365,23 +453,28 @@ const openHotkeyDialog = (action: string) => {
 const closeHotkeyDialog = () => {
   lastAction.value = "";
   lastRecord.value = HotkeyCombination("");
+  lastArgumentKeyText.value = "";
   isHotkeyDialogOpened.value = false;
   document.removeEventListener("keydown", recordCombination);
 };
 
 const solveDuplicated = () => {
-  if (duplicatedHotkey.value == undefined)
-    throw new Error("duplicatedHotkey.value == undefined");
-  deleteHotkey(duplicatedHotkey.value.action);
+  if (duplicatedHotkeys.value.length == 0)
+    throw new Error("duplicatedHotkeys.value.length == 0");
+  for (const duplicatedHotkey of duplicatedHotkeys.value) {
+    deleteHotkey(duplicatedHotkey.action);
+  }
   return changeHotkeySettings(lastAction.value, lastRecord.value);
 };
 
+// disabledのときtrue
 const confirmBtnEnabled = computed(() => {
   return (
     lastRecord.value == "" ||
-    ["Ctrl", "Shift", "Alt", "Meta"].includes(
-      lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
-    )
+    (lastArgumentKeyText.value == "" &&
+      ["Ctrl", "Shift", "Alt", "Meta"].includes(
+        lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
+      ))
   );
 });
 
@@ -403,13 +496,14 @@ const resetHotkey = async (action: string) => {
         }
         // デフォルトが未設定でない場合は、衝突チェックを行う
         if (setting.combination) {
-          const duplicated = hotkeySettings.value.find(
-            (item) =>
-              item.combination == setting.combination && item.action != action
-          );
-          if (duplicated != undefined) {
+          const duplicated: HotkeySettingType[] =
+            filterDuplicatedHotkeysWithSetKeyAndName(
+              setting.combination,
+              action as HotkeyActionNameType
+            );
+          if (duplicated.length > 0) {
             openHotkeyDialog(action);
-            lastRecord.value = duplicated.combination;
+            lastRecord.value = setting.combination;
             return;
           }
         }

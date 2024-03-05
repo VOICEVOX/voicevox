@@ -322,9 +322,9 @@ export const getArgumentKeyCombination = (
 
 export const getArgumentKeyCombinationText = (
   argumentKey: HotkeyArgumentKeyType
-): string | undefined => {
+): string => {
   if (argumentKey == undefined) {
-    return undefined;
+    return "";
   } else if (argumentKey == "Numbers") {
     return "数字";
   } else if (argumentKey == "VerticalArrows") {

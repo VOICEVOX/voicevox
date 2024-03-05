@@ -98,7 +98,7 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
   },
   {
     action: "N番目のキャラクターを選択",
-    combination: HotkeyCombination(!isMac ? "Ctrl" : "Meta"),
+    combination: HotkeyCombination(""),
     argumentKey: "Numbers",
   },
   {
