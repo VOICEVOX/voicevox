@@ -60,6 +60,10 @@
 
   :deep(a) {
     color: colors.$display-link;
+
+    &:focus-visible {
+      @include mixin.on-focus;
+    }
   }
 
   :deep(img) {
