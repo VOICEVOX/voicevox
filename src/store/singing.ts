@@ -2005,7 +2005,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  PASTE_NOTES_FROM_CLIPBOARD: {
+  COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
     async action({ commit, dispatch, getters }) {
       try {
         const text = await navigator.clipboard.readText();
