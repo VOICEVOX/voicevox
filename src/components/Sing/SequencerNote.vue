@@ -36,26 +36,29 @@
       @keydown.stop="onLyricInputKeyDown"
       @blur="onLyricInputBlur"
     />
-    <QTooltip
-      v-if="hasOverlappingError && !showLyricInput"
-      anchor="bottom left"
-      self="top left"
-      :offset="[0, 8]"
-      transition-show=""
-      transition-hide=""
-    >
-      ノートが重なっています
-    </QTooltip>
-    <QTooltip
-      v-if="hasPhraseError && !showLyricInput"
-      anchor="bottom left"
-      self="top left"
-      :offset="[0, 8]"
-      transition-show=""
-      transition-hide=""
-    >
-      フレーズが生成できません。歌詞は日本語1文字までです。
-    </QTooltip>
+    <template v-else>
+      <!-- エラー内容を表示 -->
+      <QTooltip
+        v-if="hasOverlappingError"
+        anchor="bottom left"
+        self="top left"
+        :offset="[0, 8]"
+        transition-show=""
+        transition-hide=""
+      >
+        ノートが重なっています
+      </QTooltip>
+      <QTooltip
+        v-if="hasPhraseError"
+        anchor="bottom left"
+        self="top left"
+        :offset="[0, 8]"
+        transition-show=""
+        transition-hide=""
+      >
+        フレーズが生成できません。歌詞は日本語1文字までです。
+      </QTooltip>
+    </template>
   </div>
 </template>
 
