@@ -19,11 +19,10 @@ const createPhrase = (
     notes: [],
     startTicks: start * DEFAULT_TPQN,
     endTicks: end * DEFAULT_TPQN,
-    notesKeyShift: 0,
+    keyRangeAdjustment: 0,
     state,
     tempos,
     tpqn: DEFAULT_TPQN,
-    voiceKeyShift: 0,
     singer: {
       engineId: EngineId("00000000-0000-0000-0000-000000000000"),
       styleId: StyleId(0),
