@@ -147,7 +147,7 @@ const contextMenuData = ref<MenuItemButton[]>([
   },
   {
     type: "button",
-    label: "カット",
+    label: "切り取り",
     onClick: async () => {
       contextMenu.value?.hide();
       await store.dispatch("CUT_NOTES_TO_CLIPBOARD");
