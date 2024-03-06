@@ -1998,7 +1998,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  CUT_NOTES_TO_CLIPBOARD: {
+  COMMAND_CUT_NOTES_TO_CLIPBOARD: {
     action({ dispatch }) {
       dispatch("COPY_NOTES_TO_CLIPBOARD");
       dispatch("COMMAND_REMOVE_SELECTED_NOTES");
