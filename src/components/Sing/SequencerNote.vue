@@ -133,15 +133,12 @@ const hasOverlappingError = computed(() => {
 
 // フレーズ生成エラー
 const hasPhraseError = computed(() => {
-  const phrases = state.phrases;
-  return Array.from(phrases.values()).some((phrase) => {
-    if (phrase.state !== "COULD_NOT_RENDER") {
-      return false;
-    }
-    if (phrase.notes.some((note) => note.id === props.note.id)) {
-      return true;
-    }
-  });
+  // エラーがあるフレーズに自身が含まれているか
+  return Array.from(state.phrases.values()).some(
+    (phrase) =>
+      phrase.state === "COULD_NOT_RENDER" &&
+      phrase.notes.some((note) => note.id === props.note.id)
+  );
 });
 
 const lyric = computed({
