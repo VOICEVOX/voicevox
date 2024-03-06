@@ -1,6 +1,7 @@
 import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import { createLog } from "@/helpers/log";
 import type { EngineManifest } from "@/openapi";
 import type { EngineId, EngineInfo } from "@/type/preload";
 
@@ -158,6 +159,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   START_WAITING_ENGINE: {
     action: createUILockAction(
       async ({ state, commit, dispatch }, { engineId }) => {
+        const { info } = createLog("START_WAITING_ENGINE");
         let engineState: EngineState | undefined = state.engineStates[engineId];
         if (engineState == undefined)
           throw new Error(`No such engineState set: engineId == ${engineId}`);
@@ -178,7 +180,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            window.backend.logInfo(`Waiting engine ${engineId}`);
+            info(`Waiting engine ${engineId}`);
             continue;
           }
           engineState = "READY";
@@ -204,10 +206,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           try {
             return window.backend.restartEngine(engineId);
           } catch (e) {
-            dispatch("LOG_ERROR", {
-              error: e,
-              message: `Failed to restart engine: ${engineId}`,
-            });
+            const { error } = createLog("RESTART_ENGINES");
+            error(`Failed to restart engine: ${engineId}`);
             await dispatch("DETECTED_ENGINE_ERROR", { engineId });
             return {
               success: false,
