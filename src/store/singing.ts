@@ -1198,7 +1198,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action: createUILockAction(
       async (
         { dispatch },
-        { filePath, trackIndex = 0 }: { filePath?: string; trackIndex?: number }
+        { filePath, trackIndex = 0 }: { filePath: string; trackIndex: number }
       ) => {
         const convertPosition = (
           position: number,
@@ -1268,15 +1268,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
         };
 
-        if (!filePath) {
-          filePath = await window.backend.showImportFileDialog({
-            title: "MIDI読み込み",
-            name: "MIDI",
-            extensions: ["mid", "midi"],
-          });
-          if (!filePath) return;
-        }
-
+        // NOTE: トラック選択のために一度ファイルを読み込んでいるので、Midiを渡すなどでもよさそう
+        // 現状このまま
         const midiData = getValueOrThrow(
           await window.backend.readFile({ filePath })
         );

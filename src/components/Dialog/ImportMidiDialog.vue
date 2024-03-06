@@ -3,21 +3,13 @@
     <QLayout container view="hHh lpr fFf" class="q-dialog-plugin bg-background">
       <QHeader>
         <QToolbar>
-          <QBtn
-            flat
-            round
-            dense
-            icon="close"
-            aria-label="Close"
-            @click="handleCancel"
-          />
           <QToolbarTitle>MIDIファイルのインポート</QToolbarTitle>
         </QToolbar>
       </QHeader>
       <QPageContainer class="q-px-lg q-py-md">
         <QFile
           v-model="midiFile"
-          label="MIDIファイル"
+          label="インポートするMIDIファイル"
           class="q-my-sm"
           accept=".mid,.midi"
           :error-message="midiFileError"
@@ -53,7 +45,7 @@
             color="toolbar-button"
             text-color="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
-            :disable="selectedTrack === null"
+            :disabled="selectedTrack === null"
             @click="handleImportTrack"
           />
         </QToolbar>
@@ -74,6 +66,7 @@ const store = useStore();
 
 // MIDIファイル
 const midiFile = ref<File | null>(null);
+
 // MIDIファイルエラー
 const midiFileError = computed(() => {
   if (midiFile.value && !midi.value) {
@@ -90,7 +83,6 @@ const tracks = computed(() => {
   if (!midi.value) {
     return [];
   }
-
   // トラックリストを生成
   // トラックNo: トラック名 形式
   return midi.value.tracks.map((track, index) => ({
@@ -116,9 +108,9 @@ const handleMidiFileChange = (event: Event) => {
 
   const input = event.target;
 
-  // 入力ファイルが存在しない場合は何もしない
+  // 入力ファイルが存在しない場合はエラー
   if (!input.files || input.files.length === 0) {
-    return;
+    throw new Error("No file selected");
   }
 
   // 既存のMIDIデータおよび選択中のトラックをクリア
@@ -129,16 +121,20 @@ const handleMidiFileChange = (event: Event) => {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      if (e.target && e.target.result) {
+      if (
+        e.target &&
+        e.target.result &&
+        e.target.result instanceof ArrayBuffer
+      ) {
         // MIDIファイルをパース
-        midi.value = new Midi(e.target.result as ArrayBuffer);
+        midi.value = new Midi(e.target.result);
         const DEFAULT_TRACK = 0;
         selectedTrack.value = DEFAULT_TRACK;
       } else {
         throw new Error("Could not find MIDI file data");
       }
     } catch (error) {
-      throw new Error("Failed to parse MIDI file");
+      throw new Error("Failed to parse MIDI file", { cause: error });
     }
   };
   reader.onerror = () => {
@@ -151,9 +147,14 @@ const handleMidiFileChange = (event: Event) => {
 
 // トラックインポート実行時
 const handleImportTrack = () => {
+  // MIDIファイルまたは選択中のトラックが未設定の場合はエラー
+  if (midiFile.value == null || typeof selectedTrack.value !== "number") {
+    throw new Error("MIDI file or selected track is not set");
+  }
+  // トラックをインポート
   store.dispatch("IMPORT_MIDI_FILE", {
-    filePath: midiFile.value?.path,
-    trackIndex: selectedTrack.value as number,
+    filePath: midiFile.value.name,
+    trackIndex: selectedTrack.value,
   });
   onDialogOK();
 };
