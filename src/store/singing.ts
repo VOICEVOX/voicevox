@@ -38,6 +38,7 @@ import {
   Transport,
 } from "@/sing/audioRendering";
 import {
+  findPriorPhrase,
   getMeasureDuration,
   isValidNote,
   isValidScore,
@@ -791,12 +792,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return foundPhrases;
       };
 
-      const getSortedPhrasesEntries = (phrases: Map<string, Phrase>) => {
-        return [...phrases.entries()].sort((a, b) => {
-          return a[1].startTicks - b[1].startTicks;
-        });
-      };
-
       const fetchQuery = async (
         engineId: EngineId,
         notes: Note[],
@@ -1008,8 +1003,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         // 各フレーズのレンダリングを行う
-        const sortedPhrasesEntries = getSortedPhrasesEntries(state.phrases);
-        for (const [phraseKey, phrase] of sortedPhrasesEntries) {
+        while (!(startRenderingRequested() || stopRenderingRequested())) {
+          const [phraseKey, phrase] = findPriorPhrase(
+            state.phrases,
+            playheadPosition.value
+          );
+          if (!phrase) {
+            break;
+          }
           if (!phrase.singer) {
             continue;
           }
@@ -1140,10 +1141,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseKey,
               phraseState: "PLAYABLE",
             });
-          }
-
-          if (startRenderingRequested() || stopRenderingRequested()) {
-            return;
           }
         }
       };

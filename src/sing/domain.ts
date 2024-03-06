@@ -1,4 +1,4 @@
-import { Note, Score, Tempo, TimeSignature } from "@/store/type";
+import { Note, Phrase, Score, Tempo, TimeSignature } from "@/store/type";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -285,4 +285,52 @@ export function isValidVoiceKeyShift(voiceKeyShift: number) {
     voiceKeyShift <= 24 &&
     voiceKeyShift >= -24
   );
+}
+
+export function sortPhrases(phrases: Map<string, Phrase>) {
+  return [...phrases.entries()].sort((a, b) => {
+    return a[1].startTicks - b[1].startTicks;
+  });
+}
+
+/**
+ * 次にレンダリングするべきPhraseを探す。
+ * 存在しない場合は[undefined, undefined]を返す。
+ * 優先順：
+ * - 再生位置が含まれるPhrase
+ * - 再生位置より後のPhrase
+ * - 再生位置より前のPhrase
+ *
+ */
+export function findPriorPhrase(
+  phrases: Map<string, Phrase>,
+  position: number
+): [string, Phrase] | [undefined, undefined] {
+  const renderablePhrases = new Map(
+    [...phrases.entries()].filter(([, phrase]) => {
+      return phrase.state !== "PLAYABLE" && phrase.singer;
+    })
+  );
+
+  if (renderablePhrases.size === 0) {
+    return [undefined, undefined];
+  }
+
+  // 再生位置が含まれるPhrase
+  for (const [phraseKey, phrase] of renderablePhrases) {
+    if (phrase.startTicks <= position && position <= phrase.endTicks) {
+      return [phraseKey, phrase];
+    }
+  }
+
+  const sortedPhrases = sortPhrases(renderablePhrases);
+  // 再生位置より後のPhrase
+  for (const [phraseKey, phrase] of sortedPhrases) {
+    if (phrase.startTicks > position) {
+      return [phraseKey, phrase];
+    }
+  }
+
+  // 再生位置より前のPhrase
+  return sortedPhrases[0];
 }
