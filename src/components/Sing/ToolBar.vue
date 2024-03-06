@@ -174,30 +174,6 @@ registerHotkeyWithCleanup({
   },
 });
 
-registerHotkeyWithCleanup({
-  editor,
-  name: "コピー",
-  callback: () => {
-    return;
-  },
-});
-
-registerHotkeyWithCleanup({
-  editor,
-  name: "切り取り",
-  callback: () => {
-    setTempo();
-  },
-});
-
-registerHotkeyWithCleanup({
-  editor,
-  name: "貼り付け",
-  callback: () => {
-    setTimeSignature();
-  },
-});
-
 const undo = () => {
   store.dispatch("UNDO", { editor });
 };
