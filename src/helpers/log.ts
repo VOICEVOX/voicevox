@@ -1,4 +1,5 @@
-export function createLog(scope: string) {
+/** ログ出力用の関数を生成する。ブラウザ専用。 */
+export function createLogger(scope: string) {
   const createInner =
     (method: "logInfo" | "logError" | "logWarn") =>
     (message: string, ...args: unknown[]) => {

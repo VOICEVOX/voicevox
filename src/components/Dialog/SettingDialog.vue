@@ -1023,7 +1023,7 @@ import {
   RootMiscSettingType,
   EngineId,
 } from "@/type/preload";
-import { createLog } from "@/helpers/log";
+import { createLogger } from "@/helpers/log";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
@@ -1048,7 +1048,7 @@ const emit =
   }>();
 
 const store = useStore();
-const { warn } = createLog("SettingDialog");
+const { warn } = createLogger("SettingDialog");
 
 const settingDialogOpenedComputed = computed({
   get: () => props.modelValue,

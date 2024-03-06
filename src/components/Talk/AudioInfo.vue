@@ -317,7 +317,7 @@ import {
 import { EngineManifest } from "@/openapi";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { SLIDER_PARAMETERS } from "@/store/utility";
-import { createLog } from "@/helpers/log";
+import { createLogger } from "@/helpers/log";
 
 const props =
   defineProps<{
@@ -325,7 +325,7 @@ const props =
   }>();
 
 const store = useStore();
-const { info } = createLog("AudioInfo");
+const { info } = createLogger("AudioInfo");
 
 // accent phrase
 const uiLocked = computed(() => store.getters.UI_LOCKED);

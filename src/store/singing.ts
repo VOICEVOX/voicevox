@@ -66,7 +66,7 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
-import { createLog } from "@/helpers/log";
+import { createLogger } from "@/helpers/log";
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -745,7 +745,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, commit, dispatch }) {
-      const { info } = createLog("RENDER");
+      const { info } = createLogger("RENDER");
       const searchPhrases = async (
         singer: Singer | undefined,
         notesKeyShift: number,
@@ -1184,7 +1184,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   STOP_RENDERING: {
     action: createUILockAction(async ({ state, commit }) => {
       if (state.nowRendering) {
-        const { info } = createLog("STOP_RENDERING");
+        const { info } = createLogger("STOP_RENDERING");
         info("Waiting for rendering to stop...");
         commit("SET_STOP_RENDERING_REQUESTED", {
           stopRenderingRequested: true,
@@ -1953,7 +1953,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   CANCEL_AUDIO_EXPORT: {
     async action({ state, commit }) {
       if (!state.nowAudioExporting) {
-        const { warn } = createLog("CANCEL_AUDIO_EXPORT");
+        const { warn } = createLogger("CANCEL_AUDIO_EXPORT");
         warn("CANCEL_AUDIO_EXPORT on !nowAudioExporting");
         return;
       }

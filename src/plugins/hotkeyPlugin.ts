@@ -14,7 +14,7 @@ import {
   HotkeyCombination,
   HotkeySettingType,
 } from "@/type/preload";
-import { createLog } from "@/helpers/log";
+import { createLogger } from "@/helpers/log";
 
 const hotkeyManagerKey = "hotkeyManager";
 export const useHotkeyManager = () => {
@@ -102,7 +102,7 @@ export class HotkeyManager {
 
   constructor(
     hotkeys_: HotkeysJs = hotkeys,
-    log: Log = createLog("HotkeyManager").info
+    log: Log = createLogger("HotkeyManager").info
   ) {
     this.log = log;
     this.hotkeys = hotkeys_;

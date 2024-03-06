@@ -98,7 +98,7 @@ import ContactInfo from "./ContactInfo.vue";
 import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
-import { createLog } from "@/helpers/log";
+import { createLogger } from "@/helpers/log";
 
 type PageItem = {
   type: "item";
@@ -129,7 +129,7 @@ const modelValueComputed = computed({
 
 // エディタのアップデート確認
 const store = useStore();
-const { warn } = createLog("HelpDialog");
+const { warn } = createLogger("HelpDialog");
 
 const updateInfos = ref<UpdateInfoObject[]>();
 store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));

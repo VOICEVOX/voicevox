@@ -239,7 +239,7 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { createLog } from "@/helpers/log";
+import { createLogger } from "@/helpers/log";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -251,7 +251,7 @@ const isSelfEventTarget = (event: UIEvent) => {
 };
 
 const store = useStore();
-const { warn } = createLog("ScoreSequencer");
+const { warn } = createLogger("ScoreSequencer");
 const state = store.state;
 // 分解能（Ticks Per Quarter Note）
 const tpqn = computed(() => state.tpqn);
