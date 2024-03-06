@@ -1,5 +1,30 @@
 [
   {
+    "version": "0.17.0",
+    "descriptions": [
+      "サードパーティアプリ向けのランタイム情報ファイルを出力",
+      "ソング：プロジェクトファイルに保存",
+      "トーク：連続再生中に裏で音声合成",
+      "ソング：元に戻す・やり直す機能",
+      "ソング：ショートカットキー機能",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "cm-ayf",
+      "Hiroshiba",
+      "nmori",
+      "P0ngCh4ng",
+      "romot-co",
+      "sabonerune",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "tsym77yoshi",
+      "weweweok",
+      "y-chan"
+    ]
+  },
+  {
     "version": "0.16.1",
     "descriptions": ["マルチエンジン稼働時に起動しないバグを修正"],
     "contributors": ["sevenc-nanashi"]
