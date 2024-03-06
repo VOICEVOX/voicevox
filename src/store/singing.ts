@@ -44,7 +44,7 @@ import {
   isValidSnapType,
   isValidTempo,
   isValidTimeSignature,
-  isValidKeyShift,
+  isValidKeyRangeAdjustment,
   secondToTick,
   tickToSecond,
 } from "@/sing/domain";
@@ -237,7 +237,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { dispatch, commit },
       { keyRangeAdjustment }: { keyRangeAdjustment: number }
     ) {
-      if (!isValidKeyShift(keyRangeAdjustment)) {
+      if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
         throw new Error("The keyRangeAdjustment is invalid.");
       }
       commit("SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
@@ -876,11 +876,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       };
 
       const shiftGuidePitch = (
-        keyShift: number,
+        pitchShift: number,
         frameAudioQuery: FrameAudioQuery
       ) => {
         frameAudioQuery.f0 = frameAudioQuery.f0.map((value) => {
-          return value * Math.pow(2, keyShift / 12);
+          return value * Math.pow(2, pitchShift / 12);
         });
       };
 
@@ -1983,7 +1983,7 @@ export const singingCommandStore = transformCommandStore(
         { dispatch, commit },
         { keyRangeAdjustment }: { keyRangeAdjustment: number }
       ) {
-        if (!isValidKeyShift(keyRangeAdjustment)) {
+        if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
           throw new Error("The keyRangeAdjustment is invalid.");
         }
         commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });

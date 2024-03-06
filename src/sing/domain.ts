@@ -279,6 +279,10 @@ export function isValidSnapType(snapType: number, tpqn: number) {
   return getSnapTypes(tpqn).some((value) => value === snapType);
 }
 
-export function isValidKeyShift(keyShift: number) {
-  return Number.isInteger(keyShift) && keyShift <= 24 && keyShift >= -24;
+export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
+  return (
+    Number.isInteger(keyRangeAdjustment) &&
+    keyRangeAdjustment <= 24 &&
+    keyRangeAdjustment >= -24
+  );
 }

@@ -7,13 +7,13 @@
       <template v-if="!isProduction">
         <QInput
           type="number"
-          :model-value="keyShiftInputBuffer"
+          :model-value="keyRangeAdjustmentInputBuffer"
           label="音域調整"
           dense
           hide-bottom-space
           class="key-shift"
-          @update:model-value="setKeyShiftInputBuffer"
-          @change="setKeyShift"
+          @update:model-value="setKeyRangeAdjustmentInputBuffer"
+          @change="setKeyRangeAdjustment"
         />
       </template>
       <QInput
@@ -135,7 +135,7 @@ import {
   isValidBeatType,
   isValidBeats,
   isValidBpm,
-  isValidKeyShift,
+  isValidKeyRangeAdjustment,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -188,14 +188,14 @@ const redo = () => {
 
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const keyShift = computed(
+const keyRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.keyRangeAdjustment
 );
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
 const beatTypeInputBuffer = ref(4);
-const keyShiftInputBuffer = ref(0);
+const keyRangeAdjustmentInputBuffer = ref(0);
 
 watch(
   tempos,
@@ -214,8 +214,8 @@ watch(
   { deep: true }
 );
 
-watch(keyShift, () => {
-  keyShiftInputBuffer.value = keyShift.value;
+watch(keyRangeAdjustment, () => {
+  keyRangeAdjustmentInputBuffer.value = keyRangeAdjustment.value;
 });
 
 const setBpmInputBuffer = (bpmStr: string | number | null) => {
@@ -242,12 +242,14 @@ const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
   beatTypeInputBuffer.value = beatTypeValue;
 };
 
-const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
-  const keyShiftValue = Number(keyShiftStr);
-  if (!isValidKeyShift(keyShiftValue)) {
+const setKeyRangeAdjustmentInputBuffer = (
+  KeyRangeAdjustmentStr: string | number | null
+) => {
+  const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
+  if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
     return;
   }
-  keyShiftInputBuffer.value = keyShiftValue;
+  keyRangeAdjustmentInputBuffer.value = KeyRangeAdjustmentValue;
 };
 
 const setTempo = () => {
@@ -272,8 +274,8 @@ const setTimeSignature = () => {
   });
 };
 
-const setKeyShift = () => {
-  const keyRangeAdjustment = keyShiftInputBuffer.value;
+const setKeyRangeAdjustment = () => {
+  const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
   store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
 };
 
