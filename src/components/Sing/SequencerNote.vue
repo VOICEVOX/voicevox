@@ -71,12 +71,7 @@ import {
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { MenuItemButton } from "@/components/Menu/type";
 
-type NoteState =
-  | "NORMAL"
-  | "SELECTED"
-  | "RESIZING_LEFT"
-  | "RESIZING_RIGHT"
-  | "MOVING";
+type NoteState = "NORMAL" | "SELECTED";
 
 const vFocus = {
   mounted(el: HTMLInputElement) {
