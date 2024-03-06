@@ -6,7 +6,7 @@ import semver from "semver";
 
 import { LatestProjectType, projectSchema } from "./schema";
 import { AccentPhrase } from "@/openapi";
-import { CharacterInfo, EngineId, StyleId } from "@/type/preload";
+import { EngineId, StyleId } from "@/type/preload";
 import {
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
@@ -60,6 +60,20 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
 };
 
 /**
+ * CharacterInfoのうち、マイグレーションに必要な各ID情報だけを抽出した型
+ * FIXME: データ構造をCharacterInfoに合わせる必要はないので、もっと扱いやすい型にする
+ */
+type PartOfCharacterInfo = {
+  metas: {
+    speakerUuid: string;
+    styles: {
+      engineId: EngineId;
+      styleId: StyleId;
+    }[];
+  };
+};
+
+/**
  * プロジェクトファイルのマイグレーション
  */
 export const migrateProjectFileObject = async (
@@ -72,7 +86,7 @@ export const migrateProjectFileObject = async (
       engineId: EngineId;
       styleId: StyleId;
     }) => Promise<AccentPhrase[]>;
-    characterInfos: CharacterInfo[];
+    characterInfos: PartOfCharacterInfo[];
   }
 ) => {
   const { fetchMoraData, characterInfos } = DI;
