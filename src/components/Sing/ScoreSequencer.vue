@@ -18,6 +18,7 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
+      :class="{ 'rect-selecting': shiftKey }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
@@ -147,6 +148,17 @@
         marginBottom: `${scrollBarWidth}px`,
       }"
     >
+      <div
+        ref="quadSelectHitbox"
+        class="quad-select-preview"
+        :style="{
+          display: isQuadSelecting ? 'block' : 'none',
+          left: `${Math.min(quadSelectStartX, cursorX)}px`,
+          top: `${Math.min(quadSelectStartY, cursorY)}px`,
+          width: `${Math.abs(cursorX - quadSelectStartX)}px`,
+          height: `${Math.abs(cursorY - quadSelectStartY)}px`,
+        }"
+      />
       <SequencerPhraseIndicator
         v-for="phraseInfo in phraseInfos"
         :key="phraseInfo.key"
@@ -239,6 +251,7 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { useShiftKey } from "@/composables/useModifierKey";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -251,12 +264,16 @@ const isSelfEventTarget = (event: UIEvent) => {
 
 const store = useStore();
 const state = store.state;
+
 // 分解能（Ticks Per Quarter Note）
 const tpqn = computed(() => state.tpqn);
+
 // テンポ
 const tempos = computed(() => state.tempos);
+
 // 拍子
 const timeSignatures = computed(() => state.timeSignatures);
+
 // ノート
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 const unselectedNotes = computed(() => {
@@ -267,13 +284,23 @@ const selectedNotes = computed(() => {
   const selectedNoteIds = state.selectedNoteIds;
   return notes.value.filter((value) => selectedNoteIds.has(value.id));
 });
+
+// 矩形選択
+const shiftKey = useShiftKey();
+const isQuadSelecting = ref(false);
+const quadSelectStartX = ref(0);
+const quadSelectStartY = ref(0);
+const quadSelectHitbox = ref<HTMLElement | undefined>(undefined);
+
 // ズーム状態
 const zoomX = computed(() => state.sequencerZoomX);
 const zoomY = computed(() => state.sequencerZoomY);
+
 // スナップ
 const snapTicks = computed(() => {
   return getNoteDuration(state.sequencerSnapType, tpqn.value);
 });
+
 // シーケンサグリッド
 const gridCellTicks = snapTicks; // ひとまずスナップ幅＝グリッドセル幅
 const gridCellWidth = computed(() => {
@@ -318,15 +345,18 @@ const gridWidth = computed(() => {
 const gridHeight = computed(() => {
   return gridCellHeight.value * keyInfos.length;
 });
+
 // スクロール位置
 const scrollX = ref(0);
 const scrollY = ref(0);
+
 // 再生ヘッドの位置
 const playheadTicks = ref(0);
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
   return Math.floor(baseX * zoomX.value);
 });
+
 // フレーズ
 const phraseInfos = computed(() => {
   return [...state.phrases.entries()].map(([key, phrase]) => {
@@ -342,9 +372,11 @@ const showPitch = computed(() => {
 });
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
+
 // マウスカーソル位置
 let cursorX = 0;
 let cursorY = 0;
+
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
 const nowPreviewing = ref(false);
@@ -358,6 +390,7 @@ let dragStartGuideLineTicks = 0;
 let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
 let executePreviewProcess = false;
 let edited = false; // プレビュー終了時にstore.stateの更新を行うかどうかを表す変数
+
 // ダブルクリック
 let mouseDownNoteId: string | undefined;
 const clickedNoteIds: [string | undefined, string | undefined] = [
@@ -365,6 +398,7 @@ const clickedNoteIds: [string | undefined, string | undefined] = [
   undefined,
 ];
 let ignoreDoubleClick = false;
+
 // 入力を補助する線
 const showGuideLine = ref(true);
 const guideLineX = ref(0);
@@ -710,6 +744,12 @@ const onMouseDown = (event: MouseEvent) => {
   if (!isSelfEventTarget(event)) {
     return;
   }
+  if (event.shiftKey) {
+    isQuadSelecting.value = true;
+    quadSelectStartX.value = cursorX;
+    quadSelectStartY.value = cursorY;
+    return;
+  }
   if (event.button === 0) {
     startPreview(event, "ADD");
     mouseDownNoteId = undefined;
@@ -744,6 +784,10 @@ const onMouseUp = (event: MouseEvent) => {
   if (event.button !== 0) {
     return;
   }
+  if (isQuadSelecting.value) {
+    quadSelect();
+    return;
+  }
   clickedNoteIds[0] = clickedNoteIds[1];
   clickedNoteIds[1] = mouseDownNoteId;
   if (event.detail === 1) {
@@ -774,6 +818,14 @@ const onMouseUp = (event: MouseEvent) => {
     }
   }
   nowPreviewing.value = false;
+};
+
+const quadSelect = () => {
+  const quadSelectHitboxElement = quadSelectHitbox.value;
+  if (!quadSelectHitboxElement) {
+    throw new Error("quadSelectHitboxElement is null.");
+  }
+  isQuadSelecting.value = false;
 };
 
 const onDoubleClick = () => {
@@ -1100,6 +1152,10 @@ onDeactivated(() => {
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
+
+  &.rect-selecting {
+    cursor: crosshair;
+  }
 }
 
 .sequencer-grid {
@@ -1179,5 +1235,12 @@ onDeactivated(() => {
   background: colors.$primary;
   border-left: 1px solid rgba(colors.$background-rgb, 0.83);
   border-right: 1px solid rgba(colors.$background-rgb, 0.83);
+}
+
+.quad-select-preview {
+  pointer-events: none;
+  position: absolute;
+  border: 2px solid rgba(colors.$primary-rgb, 0.5);
+  background: rgba(colors.$primary-rgb, 0.1);
 }
 </style>
