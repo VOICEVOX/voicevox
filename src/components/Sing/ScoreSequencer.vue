@@ -1273,6 +1273,6 @@ onDeactivated(() => {
   pointer-events: none;
   position: absolute;
   border: 2px solid rgba(colors.$primary-rgb, 0.5);
-  background: rgba(colors.$primary-rgb, 0.1);
+  background: rgba(colors.$primary-rgb, 0.25);
 }
 </style>
