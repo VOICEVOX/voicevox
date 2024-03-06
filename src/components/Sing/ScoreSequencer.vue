@@ -820,12 +820,44 @@ const onMouseUp = (event: MouseEvent) => {
   nowPreviewing.value = false;
 };
 
-const quadSelect = () => {
+const quadSelect = async () => {
   const quadSelectHitboxElement = quadSelectHitbox.value;
   if (!quadSelectHitboxElement) {
     throw new Error("quadSelectHitboxElement is null.");
   }
   isQuadSelecting.value = false;
+  const left = Math.min(quadSelectStartX.value, cursorX);
+  const top = Math.min(quadSelectStartY.value, cursorY);
+  const width = Math.abs(cursorX - quadSelectStartX.value);
+  const height = Math.abs(cursorY - quadSelectStartY.value);
+  const startTicks = baseXToTick(
+    (scrollX.value + left) / zoomX.value,
+    tpqn.value
+  );
+  const endTicks = baseXToTick(
+    (scrollX.value + left + width) / zoomX.value,
+    tpqn.value
+  );
+  const startNoteNumber = baseYToNoteNumber(
+    (scrollY.value + top) / zoomY.value
+  );
+  const endNoteNumber = baseYToNoteNumber(
+    (scrollY.value + top + height) / zoomY.value
+  );
+
+  const noteIdsToSelect: string[] = [];
+  for (const note of notes.value) {
+    if (
+      note.position + note.duration >= startTicks &&
+      note.position <= endTicks &&
+      endNoteNumber <= note.noteNumber &&
+      note.noteNumber <= startNoteNumber
+    ) {
+      noteIdsToSelect.push(note.id);
+    }
+  }
+  await store.dispatch("DESELECT_ALL_NOTES");
+  await store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
 };
 
 const onDoubleClick = () => {
