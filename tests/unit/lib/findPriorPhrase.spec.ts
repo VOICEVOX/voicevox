@@ -52,7 +52,7 @@ it("しっかり優先順位に従って探している", () => {
     "2", // 遅い方
   ]) {
     const [key, phrase] = findPriorPhrase(phrases, position);
-    expect(key).toBe(expectation);
+    expect(key).toEqual(expectation);
     if (key == undefined) {
       // 型アサーションのためにthrowを使う
       throw new Error("key is undefined");
@@ -61,5 +61,5 @@ it("しっかり優先順位に従って探している", () => {
   }
 
   // もう再生可能なPhraseがないのでundefined
-  expect(findPriorPhrase(phrases, position)).toBe([undefined, undefined]);
+  expect(findPriorPhrase(phrases, position)).toEqual([undefined, undefined]);
 });
