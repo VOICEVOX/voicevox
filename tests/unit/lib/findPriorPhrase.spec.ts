@@ -61,5 +61,5 @@ it("しっかり優先順位に従って探している", () => {
   }
 
   // もう再生可能なPhraseがないのでundefined
-  expect(findPriorPhrase(phrases, position)).toBe(undefined);
+  expect(findPriorPhrase(phrases, position)).toBe([undefined, undefined]);
 });
