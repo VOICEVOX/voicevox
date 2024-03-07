@@ -855,8 +855,8 @@ const rectSelect = async () => {
       noteIdsToSelect.push(note.id);
     }
   }
-  await store.dispatch("DESELECT_ALL_NOTES");
-  await store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+  store.dispatch("DESELECT_ALL_NOTES");
+  store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
 };
 
 const onDoubleClick = () => {
