@@ -3,29 +3,26 @@
     <!-- configs for entire song -->
     <div class="sing-configs">
       <CharacterMenuButton />
-      <!-- 開発時のみ機能 -->
-      <template v-if="!isProduction">
-        <QInput
-          type="number"
-          :model-value="keyRangeAdjustmentInputBuffer"
-          label="音域調整"
-          dense
-          hide-bottom-space
-          class="key-range-adjustment"
-          @update:model-value="setKeyRangeAdjustmentInputBuffer"
-          @change="setKeyRangeAdjustment"
-        />
-        <QInput
-          type="number"
-          :model-value="volumeRangeAdjustmentInputBuffer"
-          label="音量域調整"
-          dense
-          hide-bottom-space
-          class="volume-range-adjustment"
-          @update:model-value="setVolumeRangeAdjustmentInputBuffer"
-          @change="setVolumeRangeAdjustment"
-        />
-      </template>
+      <QInput
+        type="number"
+        :model-value="keyRangeAdjustmentInputBuffer"
+        label="音域調整"
+        dense
+        hide-bottom-space
+        class="key-range-adjustment"
+        @update:model-value="setKeyRangeAdjustmentInputBuffer"
+        @change="setKeyRangeAdjustment"
+      />
+      <QInput
+        type="number"
+        :model-value="volumeRangeAdjustmentInputBuffer"
+        label="音量域調整"
+        dense
+        hide-bottom-space
+        class="volume-range-adjustment"
+        @update:model-value="setVolumeRangeAdjustmentInputBuffer"
+        @change="setVolumeRangeAdjustment"
+      />
       <QInput
         type="number"
         :model-value="bpmInputBuffer"
