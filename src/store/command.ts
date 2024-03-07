@@ -118,6 +118,8 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
     action({ commit, dispatch }, { editor }: { editor: EditorType }) {
       commit("UNDO", { editor });
       if (editor === "song") {
+        // TODO: 存在しないノートが選択されていた場合にのみ選択を解除するようにしても良いかも
+        commit("DESELECT_ALL_NOTES");
         dispatch("RENDER");
       }
     },
@@ -134,6 +136,8 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
     action({ commit, dispatch }, { editor }: { editor: EditorType }) {
       commit("REDO", { editor });
       if (editor === "song") {
+        // TODO: 存在しないノートが選択されていた場合にのみ選択を解除するようにしても良いかも
+        commit("DESELECT_ALL_NOTES");
         dispatch("RENDER");
       }
     },
