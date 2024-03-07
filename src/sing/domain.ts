@@ -287,10 +287,10 @@ export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
   );
 }
 
-export function isValidGuideVolumeScale(guideVolumeScale: number) {
+export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
   return (
-    Number.isInteger(guideVolumeScale) &&
-    guideVolumeScale <= 20 &&
-    guideVolumeScale >= -20
+    Number.isInteger(volumeRangeAdjustment) &&
+    volumeRangeAdjustment <= 20 &&
+    volumeRangeAdjustment >= -20
   );
 }

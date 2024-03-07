@@ -432,7 +432,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                 {
                   singer: undefined,
                   keyRangeAdjustment: 0,
-                  guideVolumeScale: 0,
+                  volumeRangeAdjustment: 0,
                   notes: [],
                 },
               ],

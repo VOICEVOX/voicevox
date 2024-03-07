@@ -11,19 +11,19 @@
           label="音域調整"
           dense
           hide-bottom-space
-          class="guide-value-control"
+          class="key-range-adjustment"
           @update:model-value="setKeyRangeAdjustmentInputBuffer"
           @change="setKeyRangeAdjustment"
         />
         <QInput
           type="number"
-          :model-value="volumeScaleInputBuffer"
-          label="音量補正"
+          :model-value="volumeRangeAdjustmentInputBuffer"
+          label="音量域調整"
           dense
           hide-bottom-space
-          class="guide-value-control"
-          @update:model-value="setVolumeScaleInputBuffer"
-          @change="setVolumeScale"
+          class="volume-range-adjustment"
+          @update:model-value="setVolumeRangeAdjustmentInputBuffer"
+          @change="setVolumeRangeAdjustment"
         />
       </template>
       <QInput
@@ -146,7 +146,7 @@ import {
   isValidBeats,
   isValidBpm,
   isValidKeyRangeAdjustment,
-  isValidGuideVolumeScale,
+  isValidvolumeRangeAdjustment,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -202,12 +202,15 @@ const timeSignatures = computed(() => store.state.timeSignatures);
 const keyRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.keyRangeAdjustment
 );
+const volumeRangeAdjustment = computed(
+  () => store.getters.SELECTED_TRACK.volumeRangeAdjustment
+);
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
 const beatTypeInputBuffer = ref(4);
 const keyRangeAdjustmentInputBuffer = ref(0);
-const volumeScaleInputBuffer = ref(0);
+const volumeRangeAdjustmentInputBuffer = ref(0);
 
 watch(
   tempos,
@@ -228,6 +231,10 @@ watch(
 
 watch(keyRangeAdjustment, () => {
   keyRangeAdjustmentInputBuffer.value = keyRangeAdjustment.value;
+});
+
+watch(volumeRangeAdjustment, () => {
+  volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustment.value;
 });
 
 const setBpmInputBuffer = (bpmStr: string | number | null) => {
@@ -264,12 +271,14 @@ const setKeyRangeAdjustmentInputBuffer = (
   keyRangeAdjustmentInputBuffer.value = KeyRangeAdjustmentValue;
 };
 
-const setVolumeScaleInputBuffer = (volumeScaleStr: string | number | null) => {
-  const volumeScaleValue = Number(volumeScaleStr);
-  if (!isValidGuideVolumeScale(volumeScaleValue)) {
+const setVolumeRangeAdjustmentInputBuffer = (
+  volumeRangeAdjustmentStr: string | number | null
+) => {
+  const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
+  if (!isValidvolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
     return;
   }
-  volumeScaleInputBuffer.value = volumeScaleValue;
+  volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;
 };
 
 const setTempo = () => {
@@ -299,9 +308,11 @@ const setKeyRangeAdjustment = () => {
   store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
 };
 
-const setVolumeScale = () => {
-  const guideVolumeScale = volumeScaleInputBuffer.value;
-  store.dispatch("COMMAND_SET_GUIDE_VOLUME_SCALE", { guideVolumeScale });
+const setVolumeRangeAdjustment = () => {
+  const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
+  store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
+    volumeRangeAdjustment,
+  });
 };
 
 const playheadTicks = ref(0);
@@ -441,10 +452,15 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.guide-value-control {
+.key-range-adjustment {
   margin-left: 16px;
   margin-right: 4px;
-  width: 50px;
+  width: 55px;
+}
+.volume-range-adjustment {
+  margin-left: 4px;
+  margin-right: 4px;
+  width: 55px;
 }
 
 .sing-tempo {
