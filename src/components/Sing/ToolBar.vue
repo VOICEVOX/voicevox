@@ -3,26 +3,29 @@
     <!-- configs for entire song -->
     <div class="sing-configs">
       <CharacterMenuButton />
-      <QInput
-        type="number"
-        :model-value="keyShiftInputBuffer"
-        label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
-        dense
-        hide-bottom-space
-        class="guide-value-control"
-        @update:model-value="setKeyShiftInputBuffer"
-        @change="setKeyShift"
-      />
-      <QInput
-        type="number"
-        :model-value="volumeScaleInputBuffer"
-        label="音量補正"
-        dense
-        hide-bottom-space
-        class="guide-value-control"
-        @update:model-value="setVolumeScaleInputBuffer"
-        @change="setVolumeScale"
-      />
+      <!-- 開発時のみ機能 -->
+      <template v-if="!isProduction">
+        <QInput
+          type="number"
+          :model-value="keyRangeAdjustmentInputBuffer"
+          label="音域調整"
+          dense
+          hide-bottom-space
+          class="guide-value-control"
+          @update:model-value="setKeyRangeAdjustmentInputBuffer"
+          @change="setKeyRangeAdjustment"
+        />
+        <QInput
+          type="number"
+          :model-value="volumeScaleInputBuffer"
+          label="音量補正"
+          dense
+          hide-bottom-space
+          class="guide-value-control"
+          @update:model-value="setVolumeScaleInputBuffer"
+          @change="setVolumeScale"
+        />
+      </template>
       <QInput
         type="number"
         :model-value="bpmInputBuffer"
@@ -134,13 +137,15 @@
 <script setup lang="ts">
 import { computed, watch, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
+import { isProduction } from "@/type/preload";
+
 import {
   getSnapTypes,
   isTriplet,
   isValidBeatType,
   isValidBeats,
   isValidBpm,
-  isValidVoiceKeyShift,
+  isValidKeyRangeAdjustment,
   isValidGuideVolumeScale,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
@@ -194,12 +199,14 @@ const redo = () => {
 
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const keyShift = computed(() => store.getters.SELECTED_TRACK.voiceKeyShift);
+const keyRangeAdjustment = computed(
+  () => store.getters.SELECTED_TRACK.keyRangeAdjustment
+);
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
 const beatTypeInputBuffer = ref(4);
-const keyShiftInputBuffer = ref(0);
+const keyRangeAdjustmentInputBuffer = ref(0);
 const volumeScaleInputBuffer = ref(0);
 
 watch(
@@ -219,8 +226,8 @@ watch(
   { deep: true }
 );
 
-watch(keyShift, () => {
-  keyShiftInputBuffer.value = keyShift.value;
+watch(keyRangeAdjustment, () => {
+  keyRangeAdjustmentInputBuffer.value = keyRangeAdjustment.value;
 });
 
 const setBpmInputBuffer = (bpmStr: string | number | null) => {
@@ -247,12 +254,14 @@ const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
   beatTypeInputBuffer.value = beatTypeValue;
 };
 
-const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
-  const keyShiftValue = Number(keyShiftStr);
-  if (!isValidVoiceKeyShift(keyShiftValue)) {
+const setKeyRangeAdjustmentInputBuffer = (
+  KeyRangeAdjustmentStr: string | number | null
+) => {
+  const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
+  if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
     return;
   }
-  keyShiftInputBuffer.value = keyShiftValue;
+  keyRangeAdjustmentInputBuffer.value = KeyRangeAdjustmentValue;
 };
 
 const setVolumeScaleInputBuffer = (volumeScaleStr: string | number | null) => {
@@ -285,9 +294,9 @@ const setTimeSignature = () => {
   });
 };
 
-const setKeyShift = () => {
-  const voiceKeyShift = keyShiftInputBuffer.value;
-  store.dispatch("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+const setKeyRangeAdjustment = () => {
+  const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
+  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
 };
 
 const setVolumeScale = () => {
