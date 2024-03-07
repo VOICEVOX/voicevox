@@ -149,14 +149,14 @@
       }"
     >
       <div
-        ref="quadSelectHitbox"
-        class="quad-select-preview"
+        ref="rectSelectHitbox"
+        class="rect-select-preview"
         :style="{
           display: isQuadSelecting ? 'block' : 'none',
-          left: `${Math.min(quadSelectStartX, cursorX)}px`,
-          top: `${Math.min(quadSelectStartY, cursorY)}px`,
-          width: `${Math.abs(cursorX - quadSelectStartX)}px`,
-          height: `${Math.abs(cursorY - quadSelectStartY)}px`,
+          left: `${Math.min(rectSelectStartX, cursorX)}px`,
+          top: `${Math.min(rectSelectStartY, cursorY)}px`,
+          width: `${Math.abs(cursorX - rectSelectStartX)}px`,
+          height: `${Math.abs(cursorY - rectSelectStartY)}px`,
         }"
       />
       <SequencerPhraseIndicator
@@ -288,9 +288,9 @@ const selectedNotes = computed(() => {
 // 矩形選択
 const shiftKey = useShiftKey();
 const isQuadSelecting = ref(false);
-const quadSelectStartX = ref(0);
-const quadSelectStartY = ref(0);
-const quadSelectHitbox = ref<HTMLElement | undefined>(undefined);
+const rectSelectStartX = ref(0);
+const rectSelectStartY = ref(0);
+const rectSelectHitbox = ref<HTMLElement | undefined>(undefined);
 
 // ズーム状態
 const zoomX = computed(() => state.sequencerZoomX);
@@ -746,8 +746,8 @@ const onMouseDown = (event: MouseEvent) => {
   }
   if (event.shiftKey) {
     isQuadSelecting.value = true;
-    quadSelectStartX.value = cursorX;
-    quadSelectStartY.value = cursorY;
+    rectSelectStartX.value = cursorX;
+    rectSelectStartY.value = cursorY;
     return;
   }
   if (event.button === 0) {
@@ -785,7 +785,7 @@ const onMouseUp = (event: MouseEvent) => {
     return;
   }
   if (isQuadSelecting.value) {
-    quadSelect();
+    rectSelect();
     return;
   }
   clickedNoteIds[0] = clickedNoteIds[1];
@@ -820,16 +820,16 @@ const onMouseUp = (event: MouseEvent) => {
   nowPreviewing.value = false;
 };
 
-const quadSelect = async () => {
-  const quadSelectHitboxElement = quadSelectHitbox.value;
-  if (!quadSelectHitboxElement) {
-    throw new Error("quadSelectHitboxElement is null.");
+const rectSelect = async () => {
+  const rectSelectHitboxElement = rectSelectHitbox.value;
+  if (!rectSelectHitboxElement) {
+    throw new Error("rectSelectHitboxElement is null.");
   }
   isQuadSelecting.value = false;
-  const left = Math.min(quadSelectStartX.value, cursorX);
-  const top = Math.min(quadSelectStartY.value, cursorY);
-  const width = Math.abs(cursorX - quadSelectStartX.value);
-  const height = Math.abs(cursorY - quadSelectStartY.value);
+  const left = Math.min(rectSelectStartX.value, cursorX);
+  const top = Math.min(rectSelectStartY.value, cursorY);
+  const width = Math.abs(cursorX - rectSelectStartX.value);
+  const height = Math.abs(cursorY - rectSelectStartY.value);
   const startTicks = baseXToTick(
     (scrollX.value + left) / zoomX.value,
     tpqn.value
@@ -1269,7 +1269,7 @@ onDeactivated(() => {
   border-right: 1px solid rgba(colors.$background-rgb, 0.83);
 }
 
-.quad-select-preview {
+.rect-select-preview {
   pointer-events: none;
   position: absolute;
   border: 2px solid rgba(colors.$primary-rgb, 0.5);
