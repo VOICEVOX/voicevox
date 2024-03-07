@@ -457,6 +457,7 @@ onUnmounted(() => {
   margin-right: 4px;
   width: 55px;
 }
+
 .volume-range-adjustment {
   margin-left: 4px;
   margin-right: 4px;
