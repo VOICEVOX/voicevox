@@ -73,10 +73,10 @@ const searchVoicedSections = (phonemes: FramePhoneme[]) => {
 };
 
 const render = () => {
-  if (!canvasWidth) {
+  if (canvasWidth == undefined) {
     throw new Error("canvasWidth is undefined.");
   }
-  if (!canvasHeight) {
+  if (canvasHeight == undefined) {
     throw new Error("canvasHeight is undefined.");
   }
   if (!renderer) {
@@ -104,7 +104,7 @@ const render = () => {
   }
   // ピッチラインの生成・更新を行う
   for (const [phraseKey, phrase] of phrases) {
-    if (!phrase.singer || !phrase.query || !phrase.startTime) {
+    if (!phrase.singer || !phrase.query || phrase.startTime == undefined) {
       continue;
     }
     const tempos = [toRaw(phrase.tempos[0])];

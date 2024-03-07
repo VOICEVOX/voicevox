@@ -751,8 +751,7 @@ export type Singer = z.infer<typeof singerSchema>;
 
 export const trackSchema = z.object({
   singer: singerSchema.optional(),
-  notesKeyShift: z.number(),
-  voiceKeyShift: z.number(),
+  keyRangeAdjustment: z.number(), // 音域調整量
   notes: z.array(noteSchema),
 });
 export type Track = z.infer<typeof trackSchema>;
@@ -765,8 +764,7 @@ export type PhraseState =
 
 export type Phrase = {
   singer?: Singer;
-  notesKeyShift: number;
-  voiceKeyShift: number;
+  keyRangeAdjustment: number;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];
@@ -818,9 +816,9 @@ export type SingingStoreTypes = {
     action(payload: { singer?: Singer }): void;
   };
 
-  SET_VOICE_KEY_SHIFT: {
-    mutation: { voiceKeyShift: number };
-    action(payload: { voiceKeyShift: number }): void;
+  SET_KEY_RANGE_ADJUSTMENT: {
+    mutation: { keyRangeAdjustment: number };
+    action(payload: { keyRangeAdjustment: number }): void;
   };
 
   SET_SCORE: {
@@ -1033,9 +1031,9 @@ export type SingingCommandStoreTypes = {
     action(payload: { singer: Singer }): void;
   };
 
-  COMMAND_SET_VOICE_KEY_SHIFT: {
-    mutation: { voiceKeyShift: number };
-    action(payload: { voiceKeyShift: number }): void;
+  COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
+    mutation: { keyRangeAdjustment: number };
+    action(payload: { keyRangeAdjustment: number }): void;
   };
 
   COMMAND_SET_TEMPO: {
