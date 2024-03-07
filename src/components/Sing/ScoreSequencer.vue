@@ -152,7 +152,7 @@
         ref="rectSelectHitbox"
         class="rect-select-preview"
         :style="{
-          display: isQuadSelecting ? 'block' : 'none',
+          display: isRectSelecting ? 'block' : 'none',
           left: `${Math.min(rectSelectStartX, cursorX)}px`,
           top: `${Math.min(rectSelectStartY, cursorY)}px`,
           width: `${Math.abs(cursorX - rectSelectStartX)}px`,
@@ -287,7 +287,7 @@ const selectedNotes = computed(() => {
 
 // 矩形選択
 const shiftKey = useShiftKey();
-const isQuadSelecting = ref(false);
+const isRectSelecting = ref(false);
 const rectSelectStartX = ref(0);
 const rectSelectStartY = ref(0);
 const rectSelectHitbox = ref<HTMLElement | undefined>(undefined);
@@ -745,7 +745,7 @@ const onMouseDown = (event: MouseEvent) => {
     return;
   }
   if (event.shiftKey) {
-    isQuadSelecting.value = true;
+    isRectSelecting.value = true;
     rectSelectStartX.value = cursorX;
     rectSelectStartY.value = cursorY;
     return;
@@ -784,10 +784,6 @@ const onMouseUp = (event: MouseEvent) => {
   if (event.button !== 0) {
     return;
   }
-  if (isQuadSelecting.value) {
-    rectSelect();
-    return;
-  }
   clickedNoteIds[0] = clickedNoteIds[1];
   clickedNoteIds[1] = mouseDownNoteId;
   if (event.detail === 1) {
@@ -795,6 +791,11 @@ const onMouseUp = (event: MouseEvent) => {
   }
   if (nowPreviewing.value && edited) {
     ignoreDoubleClick = true;
+  }
+
+  if (isRectSelecting.value) {
+    rectSelect();
+    return;
   }
 
   if (!nowPreviewing.value) {
@@ -825,7 +826,7 @@ const rectSelect = async () => {
   if (!rectSelectHitboxElement) {
     throw new Error("rectSelectHitboxElement is null.");
   }
-  isQuadSelecting.value = false;
+  isRectSelecting.value = false;
   const left = Math.min(rectSelectStartX.value, cursorX);
   const top = Math.min(rectSelectStartY.value, cursorY);
   const width = Math.abs(cursorX - rectSelectStartX.value);
