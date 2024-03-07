@@ -1,6 +1,7 @@
 import { Plugin, watch } from "vue";
 import AsyncLock from "async-lock";
 import { debounce } from "quasar";
+import SparkMD5 from "spark-md5";
 import { clearPhrases, getPhrases, getProject, updatePhrases } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
@@ -25,6 +26,7 @@ type PhraseWithAudio = {
   start: number;
   end: number;
   wav: string;
+  hash: string;
 };
 
 const log = (message: string, ...args: unknown[]) => {
@@ -145,26 +147,47 @@ export const vstMessageReceiver: Plugin = {
           const playablePhrases = [...phrases.entries()].filter(
             ([, phrase]) => phrase.state === "PLAYABLE"
           );
+          const idToWav = Object.fromEntries(
+            await Promise.all(
+              playablePhrases.map(async ([id]) => {
+                const data = phraseDataMap.get(id);
+                if (!data) {
+                  throw new Error("phraseDataMap is not found");
+                }
+                const wav = data.blob;
+                if (!wav) {
+                  throw new Error("wav is not found");
+                }
+
+                const hash = SparkMD5.ArrayBuffer.hash(await wav.arrayBuffer());
+                return [id, { wav, hash }] as const;
+              })
+            )
+          );
+
           const removedPhrases: string[] = [];
           const vstPhrases = await getPhrases();
-          for (const id of vstPhrases.keys()) {
-            if (!playablePhrases.some(([phraseId]) => phraseId === id)) {
+          for (const [id, vstPhrase] of vstPhrases) {
+            if (
+              !playablePhrases.some(
+                ([phraseId]) =>
+                  phraseId === id && vstPhrase.hash === idToWav[id].hash
+              )
+            ) {
               removedPhrases.push(id);
             }
           }
 
           const newPhrasesWithAudio = await Promise.all(
             playablePhrases.map(async ([id, phrase]) => {
-              const data = phraseDataMap.get(id);
-              if (!data) {
-                throw new Error("phraseDataMap is not found");
-              }
-              const wav = data.blob;
-              if (!wav) {
-                throw new Error("wav is not found");
-              }
+              const { wav, hash } = idToWav[id];
 
-              if (vstPhrases.get(id)?.startTime === phrase.startTime) {
+              const vstPhrase = vstPhrases.get(id);
+              if (
+                vstPhrase &&
+                vstPhrase.start === phrase.startTime &&
+                vstPhrase.hash === hash
+              ) {
                 return undefined;
               }
 
@@ -181,6 +204,7 @@ export const vstMessageReceiver: Plugin = {
                   store.state.tpqn
                 ),
                 wav: await blobToBase64(wav),
+                hash,
               };
             })
           ).then(

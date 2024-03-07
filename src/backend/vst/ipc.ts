@@ -9,7 +9,7 @@ declare function vstGetConfig(): Promise<string>;
 declare function vstGetProject(): Promise<string>;
 declare function vstSetProject(value: string): Promise<void>;
 declare function vstUpdatePhrases(remove: string[], add: string): Promise<void>;
-declare function vstGetPhrases(): Promise<string>;
+declare function vstGetPhrases(): Promise<Record<string, VstPhrase>>;
 declare function vstClearPhrases(): Promise<void>;
 declare function vstShowImportFileDialog(
   title: string,
@@ -20,6 +20,11 @@ declare function vstGetProjectName(): Promise<string>;
 declare function vstGetVersion(): Promise<string>;
 
 type Config = Record<string, unknown> & Metadata;
+type VstPhrase = {
+  start: number;
+  end: number;
+  hash: string;
+};
 const log = (message: string, ...args: unknown[]) => {
   window.backend.logInfo(`[vst/ipc] ${message}`, ...args);
 };
@@ -41,30 +46,10 @@ export async function setProject(memory: string) {
   await vstSetProject(memory);
 }
 
-export async function getPhrases(): Promise<
-  Map<
-    string,
-    {
-      startTime: number;
-      endTime: number;
-    }
-  >
-> {
+export async function getPhrases(): Promise<Map<string, VstPhrase>> {
   log("getPhrases");
   const rawPhrases = await vstGetPhrases();
-  const splitPhrases = rawPhrases.trim().split("\n");
-  return new Map(
-    splitPhrases.map((phrase) => {
-      const [id, startTime, endTime] = phrase.split(":");
-      return [
-        id,
-        {
-          startTime: parseFloat(startTime),
-          endTime: parseFloat(endTime),
-        },
-      ];
-    })
-  );
+  return new Map(Object.entries(rawPhrases));
 }
 
 export async function updatePhrases(remove: string[], add: unknown[]) {
