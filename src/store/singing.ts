@@ -1016,9 +1016,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrasesToBeRendered,
             playheadPosition.value
           );
-          if (!phrase) {
-            break;
-          }
           phrasesToBeRendered.delete(phraseKey);
 
           if (
