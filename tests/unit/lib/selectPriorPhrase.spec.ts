@@ -1,7 +1,7 @@
 import { it, expect } from "vitest";
 import { Phrase, PhraseState } from "@/store/type";
 import { DEFAULT_TPQN } from "@/sing/storeHelper";
-import { findPriorPhrase } from "@/sing/domain";
+import { selectPriorPhrase } from "@/sing/domain";
 import { EngineId, StyleId } from "@/type/preload";
 
 const tempos = [
@@ -50,15 +50,17 @@ it("しっかり優先順位に従って探している", () => {
     "1", // 早い方
     "2", // 遅い方
   ]) {
-    const [key, phrase] = findPriorPhrase(phrases, position);
+    const [key] = selectPriorPhrase(phrases, position);
     expect(key).toEqual(expectation);
     if (key == undefined) {
       // 型アサーションのためにthrowを使う
       throw new Error("key is undefined");
     }
-    phrases.set(key, { ...phrase, state: "PLAYABLE" });
+    phrases.delete(key);
   }
 
-  // もう再生可能なPhraseがないのでundefined
-  expect(findPriorPhrase(phrases, position)).toEqual([undefined, undefined]);
+  // もう再生可能なPhraseがないのでthrow
+  expect(() => {
+    selectPriorPhrase(phrases, position);
+  }).toThrow("Received empty phrases");
 });

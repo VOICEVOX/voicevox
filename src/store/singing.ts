@@ -38,7 +38,7 @@ import {
   Transport,
 } from "@/sing/audioRendering";
 import {
-  findPriorPhrase,
+  selectPriorPhrase,
   getMeasureDuration,
   isValidNote,
   isValidScore,
@@ -1012,7 +1012,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           !(startRenderingRequested() || stopRenderingRequested()) &&
           phrasesToBeRendered.size > 0
         ) {
-          const [phraseKey, phrase] = findPriorPhrase(
+          const [phraseKey, phrase] = selectPriorPhrase(
             phrasesToBeRendered,
             playheadPosition.value
           );

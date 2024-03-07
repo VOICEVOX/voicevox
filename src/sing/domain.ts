@@ -302,12 +302,12 @@ export function toSortedPhrases(phrases: Map<string, Phrase>) {
  * - 再生位置より前のPhrase
  *
  */
-export function findPriorPhrase(
+export function selectPriorPhrase(
   phrases: Map<string, Phrase>,
   position: number
 ): [string, Phrase] {
   if (phrases.size === 0) {
-    throw new Error("phrases is empty");
+    throw new Error("Received empty phrases");
   }
   // 再生位置が含まれるPhrase
   for (const [phraseKey, phrase] of phrases) {
