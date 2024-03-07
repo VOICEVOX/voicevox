@@ -766,7 +766,6 @@ export type PhraseState =
 export type Phrase = {
   singer?: Singer;
   keyRangeAdjustment: number;
-  volumeRangeAdjustment: number;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];

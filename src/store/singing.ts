@@ -771,7 +771,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const searchPhrases = async (
         singer: Singer | undefined,
         keyRangeAdjustment: number,
-        volumeRangeAdjustment: number,
         tpqn: number,
         tempos: Tempo[],
         notes: Note[]
@@ -792,7 +791,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const hash = await generatePhraseHash({
               singer,
               keyRangeAdjustment,
-              volumeRangeAdjustment,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -800,7 +798,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             foundPhrases.set(hash, {
               singer,
               keyRangeAdjustment,
-              volumeRangeAdjustment,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -987,7 +984,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const foundPhrases = await searchPhrases(
           singer,
           keyRangeAdjustment,
-          volumeRangeAdjustment,
           tpqn,
           tempos,
           notes
@@ -1088,7 +1084,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
 
             shiftGuidePitch(phrase.keyRangeAdjustment, frameAudioQuery);
-            scaleGuideVolume(phrase.volumeRangeAdjustment, frameAudioQuery);
+            scaleGuideVolume(volumeRangeAdjustment, frameAudioQuery);
 
             const startTime = calcStartTime(
               phrase.notes,
