@@ -1016,6 +1016,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrasesToBeRendered,
             playheadPosition.value
           );
+          if (!phrase.singer) {
+            throw new Error("assert: phrase.singer != undefined");
+          }
           phrasesToBeRendered.delete(phraseKey);
 
           if (
