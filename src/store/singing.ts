@@ -998,18 +998,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
+        const phrasesToBeRendered = new Map(
+          [...state.phrases.entries()].filter(([, phrase]) => {
+            return (
+              (phrase.state === "WAITING_TO_BE_RENDERED" ||
+                phrase.state === "COULD_NOT_RENDER") &&
+              phrase.singer
+            );
+          })
+        );
         // 各フレーズのレンダリングを行う
-        while (!(startRenderingRequested() || stopRenderingRequested())) {
+        while (
+          !(startRenderingRequested() || stopRenderingRequested()) &&
+          phrasesToBeRendered.size > 0
+        ) {
           const [phraseKey, phrase] = findPriorPhrase(
-            state.phrases,
+            phrasesToBeRendered,
             playheadPosition.value
           );
           if (!phrase) {
             break;
           }
-          if (!phrase.singer) {
-            continue;
-          }
+          phrasesToBeRendered.delete(phraseKey);
 
           if (
             phrase.state === "WAITING_TO_BE_RENDERED" ||

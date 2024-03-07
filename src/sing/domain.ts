@@ -287,7 +287,7 @@ export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
   );
 }
 
-export function sortPhrases(phrases: Map<string, Phrase>) {
+export function toSortedPhrases(phrases: Map<string, Phrase>) {
   return [...phrases.entries()].sort((a, b) => {
     return a[1].startTicks - b[1].startTicks;
   });
@@ -295,7 +295,7 @@ export function sortPhrases(phrases: Map<string, Phrase>) {
 
 /**
  * 次にレンダリングするべきPhraseを探す。
- * 存在しない場合は[undefined, undefined]を返す。
+ * phrasesが空の場合はエ
  * 優先順：
  * - 再生位置が含まれるPhrase
  * - 再生位置より後のPhrase
@@ -305,25 +305,18 @@ export function sortPhrases(phrases: Map<string, Phrase>) {
 export function findPriorPhrase(
   phrases: Map<string, Phrase>,
   position: number
-): [string, Phrase] | [undefined, undefined] {
-  const renderablePhrases = new Map(
-    [...phrases.entries()].filter(([, phrase]) => {
-      return phrase.state !== "PLAYABLE" && phrase.singer;
-    })
-  );
-
-  if (renderablePhrases.size === 0) {
-    return [undefined, undefined];
+): [string, Phrase] {
+  if (phrases.size === 0) {
+    throw new Error("phrases is empty");
   }
-
   // 再生位置が含まれるPhrase
-  for (const [phraseKey, phrase] of renderablePhrases) {
+  for (const [phraseKey, phrase] of phrases) {
     if (phrase.startTicks <= position && position <= phrase.endTicks) {
       return [phraseKey, phrase];
     }
   }
 
-  const sortedPhrases = sortPhrases(renderablePhrases);
+  const sortedPhrases = toSortedPhrases(phrases);
   // 再生位置より後のPhrase
   for (const [phraseKey, phrase] of sortedPhrases) {
     if (phrase.startTicks > position) {
