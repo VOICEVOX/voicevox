@@ -744,13 +744,13 @@ const onMouseDown = (event: MouseEvent) => {
   if (!isSelfEventTarget(event)) {
     return;
   }
-  if (event.shiftKey) {
-    isRectSelecting.value = true;
-    rectSelectStartX.value = cursorX;
-    rectSelectStartY.value = cursorY;
-    return;
-  }
   if (event.button === 0) {
+    if (event.shiftKey) {
+      isRectSelecting.value = true;
+      rectSelectStartX.value = cursorX;
+      rectSelectStartY.value = cursorY;
+      return;
+    }
     startPreview(event, "ADD");
     mouseDownNoteId = undefined;
   } else {
