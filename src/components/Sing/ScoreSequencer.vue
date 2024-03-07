@@ -839,10 +839,8 @@ const rectSelect = async () => {
     (scrollX.value + left + width) / zoomX.value,
     tpqn.value
   );
+  const endNoteNumber = baseYToNoteNumber((scrollY.value + top) / zoomY.value);
   const startNoteNumber = baseYToNoteNumber(
-    (scrollY.value + top) / zoomY.value
-  );
-  const endNoteNumber = baseYToNoteNumber(
     (scrollY.value + top + height) / zoomY.value
   );
 
@@ -851,8 +849,8 @@ const rectSelect = async () => {
     if (
       note.position + note.duration >= startTicks &&
       note.position <= endTicks &&
-      endNoteNumber <= note.noteNumber &&
-      note.noteNumber <= startNoteNumber
+      startNoteNumber <= note.noteNumber &&
+      note.noteNumber <= endNoteNumber
     ) {
       noteIdsToSelect.push(note.id);
     }
