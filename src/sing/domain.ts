@@ -286,3 +286,11 @@ export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
     keyRangeAdjustment >= -24
   );
 }
+
+export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
+  return (
+    Number.isInteger(volumeRangeAdjustment) &&
+    volumeRangeAdjustment <= 20 &&
+    volumeRangeAdjustment >= -20
+  );
+}
