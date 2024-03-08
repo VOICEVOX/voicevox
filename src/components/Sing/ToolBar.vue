@@ -134,7 +134,6 @@
 <script setup lang="ts">
 import { computed, watch, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
-import { isProduction } from "@/type/preload";
 
 import {
   getSnapTypes,

@@ -67,6 +67,7 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
+import { workaroundKeyRangeAdjustmentValues } from "@/sing/workaround0171";
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -2005,6 +2006,53 @@ export const singingCommandStore = transformCommandStore(
     COMMAND_SET_SINGER: {
       mutation(draft, { singer }) {
         singingStore.mutations.SET_SINGER(draft, { singer });
+
+        // 音域調整量マジックナンバーを設定するワークアラウンド
+        // FIXME: マジックナンバーではなくスタイルごとの音域から計算するようにする
+        // FIXME: コマンドではないSET_SINGER関数でも音域調整量を設定する
+        if (singer != undefined) {
+          const characterInfos = draft.characterInfos[singer.engineId];
+          if (characterInfos == undefined) {
+            window.backend.logWarn("characterInfos not found.", singer);
+            return;
+          }
+          const characterInfo = characterInfos.find((c) =>
+            c.metas.styles.find((s) => s.styleId === singer.styleId)
+          );
+          if (characterInfo == undefined) {
+            window.backend.logWarn("characterInfo not found.", singer);
+            return;
+          }
+          const styleInfo = characterInfo.metas.styles.find(
+            (s) => s.styleId === singer.styleId
+          );
+          if (styleInfo == undefined) {
+            window.backend.logWarn("styleInfo not found.", singer);
+            return;
+          }
+
+          let keyRangeAdjustment: number | undefined = undefined;
+
+          if (styleInfo.styleType == "frame_decode") {
+            // ハミングの場合はマジックナンバーを使う
+            const singerName = characterInfo.metas.speakerName;
+            const styleName = styleInfo.styleName || "ノーマル";
+            keyRangeAdjustment =
+              workaroundKeyRangeAdjustmentValues[singerName]?.[styleName];
+            if (keyRangeAdjustment == undefined) {
+              // 新しいキャラなどの場合はここに来る
+              window.backend.logWarn("keyRangeAdjustment not found.", singer);
+              keyRangeAdjustment = 0;
+            }
+          } else {
+            // 歌手の場合はそのまま
+            keyRangeAdjustment = 0;
+          }
+
+          singingStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
+            keyRangeAdjustment,
+          });
+        }
       },
       async action({ dispatch, commit }, { singer }) {
         dispatch("SETUP_SINGER", { singer });
