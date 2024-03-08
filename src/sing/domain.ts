@@ -282,7 +282,15 @@ export function isValidSnapType(snapType: number, tpqn: number) {
 export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
   return (
     Number.isInteger(keyRangeAdjustment) &&
-    keyRangeAdjustment <= 24 &&
-    keyRangeAdjustment >= -24
+    keyRangeAdjustment <= 28 &&
+    keyRangeAdjustment >= -28
+  );
+}
+
+export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
+  return (
+    Number.isInteger(volumeRangeAdjustment) &&
+    volumeRangeAdjustment <= 20 &&
+    volumeRangeAdjustment >= -20
   );
 }
