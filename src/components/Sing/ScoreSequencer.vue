@@ -749,9 +749,9 @@ const onMouseDown = (event: MouseEvent) => {
       isRectSelecting.value = true;
       rectSelectStartX.value = cursorX;
       rectSelectStartY.value = cursorY;
-      return;
+    } else {
+      startPreview(event, "ADD");
     }
-    startPreview(event, "ADD");
     mouseDownNoteId = undefined;
   } else {
     store.dispatch("DESELECT_ALL_NOTES");
