@@ -364,8 +364,8 @@ let filePathOnMac: string | undefined = undefined;
 // create window
 async function createWindow() {
   const mainWindowState = windowStateKeeper({
-    defaultWidth: 800,
-    defaultHeight: 600,
+    defaultWidth: 1024,
+    defaultHeight: 630,
   });
 
   const currentTheme = configManager.get("currentTheme");
