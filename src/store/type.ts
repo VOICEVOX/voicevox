@@ -752,7 +752,7 @@ export type Singer = z.infer<typeof singerSchema>;
 export const trackSchema = z.object({
   singer: singerSchema.optional(),
   keyRangeAdjustment: z.number(), // 音域調整量
-  volumeRangeAdjustment: z.number(), // 音量域調整量
+  volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
 });
 export type Track = z.infer<typeof trackSchema>;
