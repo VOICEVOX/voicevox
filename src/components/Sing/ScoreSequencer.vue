@@ -821,7 +821,7 @@ const onMouseUp = (event: MouseEvent) => {
   nowPreviewing.value = false;
 };
 
-const rectSelect = async () => {
+const rectSelect = () => {
   const rectSelectHitboxElement = rectSelectHitbox.value;
   if (!rectSelectHitboxElement) {
     throw new Error("rectSelectHitboxElement is null.");
