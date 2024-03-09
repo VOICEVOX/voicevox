@@ -111,8 +111,8 @@ const applySongProjectToStore = async (
   await dispatch("SET_SINGER", {
     singer: tracks[0].singer,
   });
-  await dispatch("SET_VOICE_KEY_SHIFT", {
-    voiceKeyShift: tracks[0].voiceKeyShift,
+  await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
+    keyRangeAdjustment: tracks[0].keyRangeAdjustment,
   });
   await dispatch("SET_SCORE", {
     score: {
@@ -397,13 +397,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           if (
-            semver.satisfies(
-              projectAppVersion,
-              "<0.16.2",
-              semverSatisfiesOptions
-            )
+            semver.satisfies(projectAppVersion, "<0.17", semverSatisfiesOptions)
           ) {
-            // 0.16.2 未満のプロジェクトファイルはトークの情報のみ
+            // 0.17 未満のプロジェクトファイルはトークの情報のみ
             // なので全情報(audioKeys/audioItems)をtalkに移動する
             projectData.talk = {
               audioKeys: projectData.audioKeys,
@@ -412,7 +408,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
             // ソングの情報を初期化
             // generateSingingStoreInitialScoreが今後変わることがあるかもしれないので、
-            // 0.16.2時点のスコア情報を直接書く
+            // 0.17時点のスコア情報を直接書く
             projectData.song = {
               tpqn: DEFAULT_TPQN,
               tempos: [
@@ -431,8 +427,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               tracks: [
                 {
                   singer: undefined,
-                  notesKeyShift: 0,
-                  voiceKeyShift: 0,
+                  keyRangeAdjustment: 0,
                   notes: [],
                 },
               ],
@@ -440,6 +435,19 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
             delete projectData.audioKeys;
             delete projectData.audioItems;
+          }
+
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.17.1",
+              semverSatisfiesOptions
+            )
+          ) {
+            // volumeRangeAdjustmentの追加
+            for (const track of projectData.song.tracks) {
+              track.volumeRangeAdjustment = 0;
+            }
           }
 
           // Validation check

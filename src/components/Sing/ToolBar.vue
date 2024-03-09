@@ -5,13 +5,23 @@
       <CharacterMenuButton />
       <QInput
         type="number"
-        :model-value="keyShiftInputBuffer"
-        label="ﾄﾗﾝｽﾎﾟｰｽﾞ"
+        :model-value="keyRangeAdjustmentInputBuffer"
+        label="音域調整"
         dense
         hide-bottom-space
-        class="key-shift"
-        @update:model-value="setKeyShiftInputBuffer"
-        @change="setKeyShift"
+        class="key-range-adjustment"
+        @update:model-value="setKeyRangeAdjustmentInputBuffer"
+        @change="setKeyRangeAdjustment"
+      />
+      <QInput
+        type="number"
+        :model-value="volumeRangeAdjustmentInputBuffer"
+        label="声量調整"
+        dense
+        hide-bottom-space
+        class="volume-range-adjustment"
+        @update:model-value="setVolumeRangeAdjustmentInputBuffer"
+        @change="setVolumeRangeAdjustment"
       />
       <QInput
         type="number"
@@ -124,13 +134,16 @@
 <script setup lang="ts">
 import { computed, watch, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
+import { isProduction } from "@/type/preload";
+
 import {
   getSnapTypes,
   isTriplet,
   isValidBeatType,
   isValidBeats,
   isValidBpm,
-  isValidVoiceKeyShift,
+  isValidKeyRangeAdjustment,
+  isValidvolumeRangeAdjustment,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -183,12 +196,18 @@ const redo = () => {
 
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const keyShift = computed(() => store.getters.SELECTED_TRACK.voiceKeyShift);
+const keyRangeAdjustment = computed(
+  () => store.getters.SELECTED_TRACK.keyRangeAdjustment
+);
+const volumeRangeAdjustment = computed(
+  () => store.getters.SELECTED_TRACK.volumeRangeAdjustment
+);
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
 const beatTypeInputBuffer = ref(4);
-const keyShiftInputBuffer = ref(0);
+const keyRangeAdjustmentInputBuffer = ref(0);
+const volumeRangeAdjustmentInputBuffer = ref(0);
 
 watch(
   tempos,
@@ -207,8 +226,12 @@ watch(
   { deep: true }
 );
 
-watch(keyShift, () => {
-  keyShiftInputBuffer.value = keyShift.value;
+watch(keyRangeAdjustment, () => {
+  keyRangeAdjustmentInputBuffer.value = keyRangeAdjustment.value;
+});
+
+watch(volumeRangeAdjustment, () => {
+  volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustment.value;
 });
 
 const setBpmInputBuffer = (bpmStr: string | number | null) => {
@@ -235,12 +258,24 @@ const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
   beatTypeInputBuffer.value = beatTypeValue;
 };
 
-const setKeyShiftInputBuffer = (keyShiftStr: string | number | null) => {
-  const keyShiftValue = Number(keyShiftStr);
-  if (!isValidVoiceKeyShift(keyShiftValue)) {
+const setKeyRangeAdjustmentInputBuffer = (
+  KeyRangeAdjustmentStr: string | number | null
+) => {
+  const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
+  if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
     return;
   }
-  keyShiftInputBuffer.value = keyShiftValue;
+  keyRangeAdjustmentInputBuffer.value = KeyRangeAdjustmentValue;
+};
+
+const setVolumeRangeAdjustmentInputBuffer = (
+  volumeRangeAdjustmentStr: string | number | null
+) => {
+  const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
+  if (!isValidvolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
+    return;
+  }
+  volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;
 };
 
 const setTempo = () => {
@@ -265,9 +300,16 @@ const setTimeSignature = () => {
   });
 };
 
-const setKeyShift = () => {
-  const voiceKeyShift = keyShiftInputBuffer.value;
-  store.dispatch("COMMAND_SET_VOICE_KEY_SHIFT", { voiceKeyShift });
+const setKeyRangeAdjustment = () => {
+  const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
+  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+};
+
+const setVolumeRangeAdjustment = () => {
+  const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
+  store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
+    volumeRangeAdjustment,
+  });
 };
 
 const playheadTicks = ref(0);
@@ -407,8 +449,14 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.key-shift {
+.key-range-adjustment {
   margin-left: 16px;
+  margin-right: 4px;
+  width: 50px;
+}
+
+.volume-range-adjustment {
+  margin-left: 4px;
   margin-right: 4px;
   width: 50px;
 }

@@ -279,10 +279,18 @@ export function isValidSnapType(snapType: number, tpqn: number) {
   return getSnapTypes(tpqn).some((value) => value === snapType);
 }
 
-export function isValidVoiceKeyShift(voiceKeyShift: number) {
+export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
   return (
-    Number.isInteger(voiceKeyShift) &&
-    voiceKeyShift <= 24 &&
-    voiceKeyShift >= -24
+    Number.isInteger(keyRangeAdjustment) &&
+    keyRangeAdjustment <= 28 &&
+    keyRangeAdjustment >= -28
+  );
+}
+
+export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
+  return (
+    Number.isInteger(volumeRangeAdjustment) &&
+    volumeRangeAdjustment <= 20 &&
+    volumeRangeAdjustment >= -20
   );
 }
