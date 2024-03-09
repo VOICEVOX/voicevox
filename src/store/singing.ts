@@ -2023,6 +2023,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
         const currentPlayheadPosition = getters.GET_PLAYHEAD_POSITION();
         const firstNotePosition = notes[0].position;
+        // TODO: クオンタイズの処理を共通化する
         const snapType = state.sequencerSnapType;
         const tpqn = state.tpqn;
         const snapTicks = getNoteDuration(snapType, tpqn);
@@ -2072,7 +2073,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("COMMAND_UPDATE_NOTES", { notes: quantizedNotes });
     },
   },
-
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};
