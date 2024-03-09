@@ -374,8 +374,8 @@ const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 
 // マウスカーソル位置
-let cursorX = 0;
-let cursorY = 0;
+const cursorX = ref(0);
+const cursorY = ref(0);
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
@@ -404,7 +404,7 @@ const showGuideLine = ref(true);
 const guideLineX = ref(0);
 
 const previewAdd = () => {
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
   if (!draggingNote) {
@@ -437,8 +437,8 @@ const previewAdd = () => {
 };
 
 const previewMove = () => {
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
-  const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
+  const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
@@ -485,7 +485,7 @@ const previewMove = () => {
 };
 
 const previewResizeRight = () => {
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
   if (!draggingNote) {
@@ -525,7 +525,7 @@ const previewResizeRight = () => {
 };
 
 const previewResizeLeft = () => {
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
   if (!draggingNote) {
@@ -616,16 +616,16 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-  cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-  cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
-  if (cursorX >= sequencerBodyElement.clientWidth) {
+  cursorX.value = getXInBorderBox(event.clientX, sequencerBodyElement);
+  cursorY.value = getYInBorderBox(event.clientY, sequencerBodyElement);
+  if (cursorX.value >= sequencerBodyElement.clientWidth) {
     return;
   }
-  if (cursorY >= sequencerBodyElement.clientHeight) {
+  if (cursorY.value >= sequencerBodyElement.clientHeight) {
     return;
   }
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
-  const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
+  const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
   // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
@@ -747,8 +747,8 @@ const onMouseDown = (event: MouseEvent) => {
   if (event.button === 0) {
     if (event.shiftKey) {
       isRectSelecting.value = true;
-      rectSelectStartX.value = cursorX;
-      rectSelectStartY.value = cursorY;
+      rectSelectStartX.value = cursorX.value;
+      rectSelectStartY.value = cursorY.value;
     } else {
       startPreview(event, "ADD");
     }
@@ -763,14 +763,14 @@ const onMouseMove = (event: MouseEvent) => {
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-  cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-  cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
+  cursorX.value = getXInBorderBox(event.clientX, sequencerBodyElement);
+  cursorY.value = getYInBorderBox(event.clientY, sequencerBodyElement);
 
   if (nowPreviewing.value) {
     executePreviewProcess = true;
   } else {
     const scrollLeft = sequencerBodyElement.scrollLeft;
-    const cursorBaseX = (scrollLeft + cursorX) / zoomX.value;
+    const cursorBaseX = (scrollLeft + cursorX.value) / zoomX.value;
     const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
     // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
     const guideLineTicks =
@@ -827,10 +827,10 @@ const rectSelect = () => {
     throw new Error("rectSelectHitboxElement is null.");
   }
   isRectSelecting.value = false;
-  const left = Math.min(rectSelectStartX.value, cursorX);
-  const top = Math.min(rectSelectStartY.value, cursorY);
-  const width = Math.abs(cursorX - rectSelectStartX.value);
-  const height = Math.abs(cursorY - rectSelectStartY.value);
+  const left = Math.min(rectSelectStartX.value, cursorX.value);
+  const top = Math.min(rectSelectStartY.value, cursorY.value);
+  const width = Math.abs(cursorX.value - rectSelectStartX.value);
+  const height = Math.abs(cursorY.value - rectSelectStartY.value);
   const startTicks = baseXToTick(
     (scrollX.value + left) / zoomX.value,
     tpqn.value
@@ -1037,7 +1037,7 @@ const onWheel = (event: WheelEvent) => {
     throw new Error("sequencerBodyElement is null.");
   }
   if (isOnCommandOrCtrlKeyDown(event)) {
-    cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
+    cursorX.value = getXInBorderBox(event.clientX, sequencerBodyElement);
     // マウスカーソル位置を基準に水平方向のズームを行う
     const oldZoomX = zoomX.value;
     let newZoomX = zoomX.value;
@@ -1048,8 +1048,8 @@ const onWheel = (event: WheelEvent) => {
     const scrollTop = sequencerBodyElement.scrollTop;
 
     store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
-      const cursorBaseX = (scrollLeft + cursorX) / oldZoomX;
-      const newScrollLeft = cursorBaseX * newZoomX - cursorX;
+      const cursorBaseX = (scrollLeft + cursorX.value) / oldZoomX;
+      const newScrollLeft = cursorBaseX * newZoomX - cursorX.value;
       sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
     });
   }
