@@ -282,8 +282,8 @@ export function isValidSnapType(snapType: number, tpqn: number) {
 export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
   return (
     Number.isInteger(keyRangeAdjustment) &&
-    keyRangeAdjustment <= 24 &&
-    keyRangeAdjustment >= -24
+    keyRangeAdjustment <= 28 &&
+    keyRangeAdjustment >= -28
   );
 }
 
