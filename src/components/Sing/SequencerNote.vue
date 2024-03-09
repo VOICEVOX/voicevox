@@ -150,7 +150,7 @@ const contextMenuData = ref<MenuItemButton[]>([
     label: "切り取り",
     onClick: async () => {
       contextMenu.value?.hide();
-      await store.dispatch("CUT_NOTES_TO_CLIPBOARD");
+      await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
     },
     disableWhenUiLocked: true,
   },

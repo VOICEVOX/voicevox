@@ -99,7 +99,7 @@ const editSubMenuData: MenuItemData[] = [
     label: "切り取り",
     onClick: () => {
       if (uiLocked.value) return;
-      store.dispatch("CUT_NOTES_TO_CLIPBOARD");
+      store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
     },
     disableWhenUiLocked: true,
     disabled: !isNotesSelected.value,
@@ -109,7 +109,7 @@ const editSubMenuData: MenuItemData[] = [
     label: "貼り付け",
     onClick: () => {
       if (uiLocked.value) return;
-      store.dispatch("PASTE_NOTES_FROM_CLIPBOARD");
+      store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
     },
     disableWhenUiLocked: true,
   },
@@ -129,6 +129,15 @@ const editSubMenuData: MenuItemData[] = [
     onClick: () => {
       if (uiLocked.value) return;
       store.dispatch("DESELECT_ALL_NOTES");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "クオンタイズ",
+    onClick: () => {
+      if (uiLocked.value) return;
+      store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
     },
     disableWhenUiLocked: true,
   },

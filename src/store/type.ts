@@ -1031,11 +1031,15 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
-  CUT_NOTES_TO_CLIPBOARD: {
+  COMMAND_CUT_NOTES_TO_CLIPBOARD: {
     action(): void;
   };
 
-  PASTE_NOTES_FROM_CLIPBOARD: {
+  COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_QUANTIZE_SELECTED_NOTES: {
     action(): void;
   };
 };

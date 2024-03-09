@@ -17,6 +17,7 @@ import {
   Phrase,
   PhraseState,
   transformCommandStore,
+  noteSchema,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
@@ -39,6 +40,7 @@ import {
 } from "@/sing/audioRendering";
 import {
   getMeasureDuration,
+  getNoteDuration,
   isValidNote,
   isValidScore,
   isValidSnapType,
@@ -1981,9 +1983,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return;
       }
       // 選択されたノートのみをコピーする
-      const selectedNotes = currentTrack.notes.filter((note) =>
-        noteIds.has(note.id)
-      );
+      const selectedNotes = currentTrack.notes
+        .filter((note: Note) => noteIds.has(note.id))
+        .map((note: Note) => {
+          // idのみコピーしない
+          const { id, ...noteWithoutId } = note;
+          return noteWithoutId;
+        });
       // ノートをJSONにシリアライズしてクリップボードにコピーする
       const serializedNotes = JSON.stringify(selectedNotes);
       // クリップボードにテキストとしてコピーする
@@ -2006,29 +2012,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
-    async action({ commit, dispatch, getters }) {
+    async action({ commit, state, getters }) {
       try {
         const text = await navigator.clipboard.readText();
         // クリップボードのテキストをJSONとしてパースする(失敗した場合は何もしない)
-        const notesJson = JSON.parse(text);
-        // パースしたJSONがノートの配列でない、またはノートが1つもない場合は何もしない
-        if (!Array.isArray(notesJson) || notesJson.length === 0) {
-          return;
-        }
-        // パースしたJSONのノートが全て有効なノートでない場合は何もしない
-        if (!notesJson.every((note: Note) => isValidNote(note))) {
-          return;
-        }
-        // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
+        const notes = noteSchema
+          .omit({ id: true })
+          .array()
+          .parse(JSON.parse(text));
+        // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
         const currentPlayheadPosition = getters.GET_PLAYHEAD_POSITION();
-        const firstNotePosition = notesJson[0].position;
-        const notesToPaste: Note[] = notesJson.map((note) => {
+        const firstNotePosition = notes[0].position;
+        const snapType = state.sequencerSnapType;
+        const tpqn = state.tpqn;
+        const snapTicks = getNoteDuration(snapType, tpqn);
+        const notesToPaste: Note[] = notes.map((note) => {
           // 新しい位置を現在の再生位置に合わせて計算する
-          const pastePosition =
+          const pasteOriginPos =
             Number(note.position) - firstNotePosition + currentPlayheadPosition;
+          // クオンタイズ
+          const quantizedPastePos =
+            Math.round(pasteOriginPos / snapTicks) * snapTicks;
           return {
             id: uuidv4(),
-            position: Number(pastePosition),
+            position: quantizedPastePos,
             duration: Number(note.duration),
             noteNumber: Number(note.noteNumber),
             lyric: String(note.lyric),
@@ -2039,14 +2046,33 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // 貼り付けたノートを選択する
         commit("DESELECT_ALL_NOTES");
         commit("SELECT_NOTES", { noteIds: pastedNoteIds });
-        dispatch("RENDER");
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "An unknown error occurred";
-        throw new Error(message);
+        throw new Error("Failed to paste notes from clipboard.", {
+          cause: error,
+        });
       }
     },
   },
+
+  COMMAND_QUANTIZE_SELECTED_NOTES: {
+    action({ state, commit, getters }) {
+      const currentTrack = getters.SELECTED_TRACK;
+      const selectedNotes = currentTrack.notes.filter((note: Note) => {
+        return state.selectedNoteIds.has(note.id);
+      });
+      // TODO: クオンタイズの処理を共通化する
+      const snapType = state.sequencerSnapType;
+      const tpqn = state.tpqn;
+      const snapTicks = getNoteDuration(snapType, tpqn);
+      const quantizedNotes = selectedNotes.map((note: Note) => {
+        const quantizedPosition =
+          Math.round(note.position / snapTicks) * snapTicks;
+        return { ...note, position: quantizedPosition };
+      });
+      commit("COMMAND_UPDATE_NOTES", { notes: quantizedNotes });
+    },
+  },
+
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};

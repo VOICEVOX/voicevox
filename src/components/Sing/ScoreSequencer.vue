@@ -271,7 +271,7 @@ registerHotkeyWithCleanup({
     if (state.selectedNoteIds.size === 0) {
       return;
     }
-    store.dispatch("CUT_NOTES_TO_CLIPBOARD");
+    store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
   },
 });
 
@@ -282,7 +282,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("PASTE_NOTES_FROM_CLIPBOARD");
+    store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
   },
 });
 
@@ -322,7 +322,7 @@ const contextMenuData = ref<MenuItemButton[]>([
     label: "切り取り",
     onClick: async () => {
       contextMenu.value?.hide();
-      await store.dispatch("CUT_NOTES_TO_CLIPBOARD");
+      await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
     },
     disableWhenUiLocked: true,
   },
@@ -331,7 +331,7 @@ const contextMenuData = ref<MenuItemButton[]>([
     label: "貼り付け",
     onClick: async () => {
       contextMenu.value?.hide();
-      await store.dispatch("PASTE_NOTES_FROM_CLIPBOARD");
+      await store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
     },
     disableWhenUiLocked: true,
   },
@@ -826,13 +826,19 @@ const onMouseDown = (event: MouseEvent) => {
     return;
   }
 
-  if (event.button === 0 && event.ctrlKey) {
+  // OSXの場合、Ctrl+クリックが右クリックのため、その場合はノートを追加しない
+  if (event.ctrlKey && event.button === 0) {
     return;
   }
 
+  // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
+
+  // 選択中のノートが無い場合、プレビューを開始しノートIDをリセット
   if (event.button === 0) {
     startPreview(event, "ADD");
     mouseDownNoteId = undefined;
+  } else {
+    store.dispatch("DESELECT_ALL_NOTES");
   }
 };
 
