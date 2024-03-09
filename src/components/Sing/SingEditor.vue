@@ -89,6 +89,8 @@ onetimeWatch(
           notes: [],
         },
       });
+
+      await store.dispatch("SET_SINGER", {});
     }
 
     await store.dispatch("SET_VOLUME", { volume: 0.6 });
@@ -100,8 +102,6 @@ onetimeWatch(
       position: 480 * 4 * 16,
     });
     isCompletedInitialStartup.value = true;
-
-    await store.dispatch("SET_SINGER", {});
 
     return "unwatch";
   },
