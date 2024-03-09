@@ -166,8 +166,6 @@ export const singingStoreState: SingingStoreState = {
   overlappingNoteInfos: new Map(),
   nowPlaying: false,
   volume: 0,
-  leftLocatorPosition: 0,
-  rightLocatorPosition: 0,
   startRenderingRequested: false,
   stopRenderingRequested: false,
   nowRendering: false,
@@ -633,24 +631,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
     async action(_, { listener }: { listener: (position: number) => void }) {
       playheadPosition.removeValueChangeListener(listener);
-    },
-  },
-
-  SET_LEFT_LOCATOR_POSITION: {
-    mutation(state, { position }) {
-      state.leftLocatorPosition = position;
-    },
-    async action({ commit }, { position }) {
-      commit("SET_LEFT_LOCATOR_POSITION", { position });
-    },
-  },
-
-  SET_RIGHT_LOCATOR_POSITION: {
-    mutation(state, { position }) {
-      state.rightLocatorPosition = position;
-    },
-    async action({ commit }, { position }) {
-      commit("SET_RIGHT_LOCATOR_POSITION", { position });
     },
   },
 
