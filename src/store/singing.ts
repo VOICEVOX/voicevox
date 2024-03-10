@@ -19,7 +19,6 @@ import {
   transformCommandStore,
   noteSchema,
 } from "./type";
-import { clipboard } from "electron";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
