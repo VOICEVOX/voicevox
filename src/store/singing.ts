@@ -754,6 +754,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       ) => {
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
+
+        // ノートが途切れていたら別フレーズ扱い (例: ラララなら3つ、ラーーなら1つ)
         for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
           const note = notes[noteIndex];
 
@@ -762,6 +764,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const currentNoteEnd = note.position + note.duration;
           const nextNoteStart =
             noteIndex + 1 < notes.length ? notes[noteIndex + 1].position : null;
+
+          // ノートが途切れている場合の条件
           if (
             noteIndex === notes.length - 1 ||
             nextNoteStart == null ||
