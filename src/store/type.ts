@@ -932,6 +932,10 @@ export type SingingStoreTypes = {
     action(payload: { filePath?: string }): void;
   };
 
+  IMPORT_UST_FILE: {
+    action(payload: { filePath?: string }): void;
+  };
+
   EXPORT_WAVE_FILE: {
     action(payload: { filePath?: string }): SaveResultObject;
   };

@@ -21,6 +21,11 @@ const importMusicXMLFile = async () => {
   await store.dispatch("IMPORT_MUSICXML_FILE", {});
 };
 
+const importUstFile = async () => {
+  if (uiLocked.value) return;
+  await store.dispatch("IMPORT_UST_FILE", {});
+};
+
 const exportWaveFile = async () => {
   if (uiLocked.value) return;
   await store.dispatch("EXPORT_WAVE_FILE", {});
@@ -49,6 +54,14 @@ const fileSubMenuData: MenuItemData[] = [
     label: "MusicXML読み込み",
     onClick: () => {
       importMusicXMLFile();
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "UST読み込み",
+    onClick: () => {
+      importUstFile();
     },
     disableWhenUiLocked: true,
   },

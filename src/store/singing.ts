@@ -1717,6 +1717,117 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
+  IMPORT_UST_FILE: {
+    action: createUILockAction(
+      async ({ dispatch }, { filePath }: { filePath?: string }) => {
+        // USTファイルの読み込み
+        if (!filePath) {
+          filePath = await window.backend.showImportFileDialog({
+            title: "UST読み込み",
+            name: "UST",
+            extensions: ["ust"],
+          });
+          if (!filePath) return;
+        }
+        // ファイルの読み込み
+        const fileData = getValueOrThrow(
+          await window.backend.readFile({ filePath })
+        );
+
+        // ファイルフォーマットに応じてエンコーディングを変える
+        // UTF-8とShiftJISの2種類に対応
+        let ustData;
+        try {
+          ustData = new TextDecoder("utf-8").decode(fileData);
+          // ShiftJISの場合はShiftJISでデコードし直す
+          if (ustData.includes("\ufffd")) {
+            ustData = new TextDecoder("shift-jis").decode(fileData);
+          }
+        } catch (error) {
+          throw new Error("Failed to decode UST file.");
+        }
+        if (!ustData || typeof ustData !== "string") {
+          throw new Error("Failed to decode UST file.");
+        }
+
+        const tpqn = DEFAULT_TPQN;
+        const tempos: Tempo[] = [
+          {
+            position: 0,
+            bpm: DEFAULT_BPM,
+          },
+        ];
+        const timeSignatures: TimeSignature[] = [
+          {
+            measureNumber: 1,
+            beats: DEFAULT_BEATS,
+            beatType: DEFAULT_BEAT_TYPE,
+          },
+        ];
+        const notes: Note[] = [];
+
+        // CRLF改行/LF改行を区切り文字として分割
+        const sections = ustData.split(/\r?\n(?=\[)/);
+        // [#SETTING]セクションからテンポ情報を取得
+        const settingSection = sections[sections.indexOf("[#SETTING]") + 1];
+        const tempoMatch = settingSection.match(/Tempo=([0-9.]+)/);
+        if (tempoMatch) {
+          tempos[0].bpm = parseFloat(tempoMatch[1]);
+        }
+
+        let position = 0;
+        sections.forEach((section) => {
+          // CRLF改行/LF改行の両方に対応
+          //[#0000]という形式のセクションであればノート情報として扱う
+          if (section.match(/^\[#\d{4}/)) {
+            // TODO: ひどい実装なのでリファクタリングする...
+            const lyricMatch = section.match(/Lyric=(.+)/);
+            if (!lyricMatch) {
+              return;
+            }
+            const lyric = lyricMatch[1];
+            const durationMatch = section.match(/Length=([0-9]+)/);
+            const duration = durationMatch ? parseInt(durationMatch[1]) : 0;
+            const noteNum = section.match(/NoteNum=([0-9]+)/);
+            if (!noteNum) {
+              return;
+            }
+            const noteNumber = parseInt(noteNum[1]);
+            const tempoMatch = section.match(/Tempo=([0-9.]+)/);
+            if (tempoMatch) {
+              tempos.push({
+                position,
+                bpm: parseFloat(tempoMatch[1]),
+              });
+            }
+            if (lyric === "R") {
+              position += duration;
+              return;
+            } else {
+              notes.push({
+                id: uuidv4(),
+                position,
+                duration,
+                noteNumber,
+                lyric,
+              });
+              position += duration;
+            }
+          }
+        });
+
+        await dispatch("SET_SCORE", {
+          score: {
+            tpqn,
+            tempos,
+            timeSignatures,
+            notes,
+          },
+        });
+      }
+    ),
+  },
+
   SET_NOW_AUDIO_EXPORTING: {
     mutation(state, { nowAudioExporting }) {
       state.nowAudioExporting = nowAudioExporting;
