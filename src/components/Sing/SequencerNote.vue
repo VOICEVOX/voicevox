@@ -107,6 +107,15 @@ const noteState = computed((): NoteState => {
   }
   return "NORMAL";
 });
+const moraRegex = new RegExp(
+  "(?:" +
+    "[イ][ェ]|[ヴ][ャュョ]|[トド][ゥ]|[テデ][ィャュョ]|[デ][ェ]|[クグ][ヮ]|" + // rule_others
+    "[キシチニヒミリギジビピ][ェャュョ]|" + // rule_line_i
+    "[ツフヴ][ァ]|[ウスツフヴズ][ィ]|[ウツフヴ][ェォ]|" + // rule_line_u
+    "[ァ-ヴー]" + // rule_one_mora
+    ")",
+  "g"
+);
 const lyric = computed({
   get() {
     return props.note.lyric;
@@ -115,6 +124,7 @@ const lyric = computed({
     if (!value) {
       return;
     }
+    console.log("lyric", value);
     const note: Note = { ...props.note, lyric: value };
     store.dispatch("COMMAND_UPDATE_NOTES", { notes: [note] });
   },
