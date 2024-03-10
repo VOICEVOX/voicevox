@@ -1,7 +1,7 @@
 <template>
   <QBar class="bg-background q-pa-none relative-position">
     <div
-      v-if="$q.platform.is.mac && !isFullscreen"
+      v-if="!isVst && $q.platform.is.mac && !isFullscreen"
       class="mac-traffic-light-space"
     ></div>
     <img v-else src="/icon.png" class="window-logo" alt="application logo" />
@@ -139,6 +139,16 @@ const createNewProject = async () => {
 const saveProject = async () => {
   if (!uiLocked.value) {
     await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+  }
+};
+
+const vstExportProject = async () => {
+  if (!uiLocked.value) {
+    if (!isVst) {
+      throw new Error("VST以外でのエクスポートはサポートされていません");
+    }
+
+    await store.dispatch("VST_EXPORT_PROJECT");
   }
 };
 
@@ -296,53 +306,74 @@ const menudata = computed<MenuItemData[]>(() => [
     subMenu: [
       ...props.fileSubMenuData,
       { type: "separator" },
-      {
-        type: "button",
-        label: "新規プロジェクト",
-        onClick: createNewProject,
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトを上書き保存",
-        onClick: async () => {
-          await saveProject();
-        },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトを名前を付けて保存",
-        onClick: async () => {
-          await saveProjectAs();
-        },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクト読み込み",
-        onClick: () => {
-          importProject();
-        },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "root",
-        label: "最近使ったプロジェクト",
-        disableWhenUiLocked: true,
-        subMenu: recentProjectsSubMenuData.value,
-      },
+      ...((isVst
+        ? [
+            {
+              type: "button",
+              label: "新規プロジェクト",
+              onClick: createNewProject,
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "プロジェクトを外部に保存",
+              onClick: vstExportProject,
+              disableWhenUiLocked: true,
+            },
+          ]
+        : [
+            {
+              type: "button",
+              label: "新規プロジェクト",
+              onClick: createNewProject,
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "プロジェクトを上書き保存",
+              onClick: async () => {
+                await saveProject();
+              },
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "プロジェクトを名前を付けて保存",
+              onClick: async () => {
+                await saveProjectAs();
+              },
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "プロジェクト読み込み",
+              onClick: () => {
+                importProject();
+              },
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "root",
+              label: "最近使ったプロジェクト",
+              disableWhenUiLocked: true,
+              subMenu: recentProjectsSubMenuData.value,
+            },
+          ]) as MenuItemData[]),
     ],
   },
-  {
-    type: "root",
-    label: "エンジン",
-    onClick: () => {
-      closeAllDialog();
-    },
-    disableWhenUiLocked: false,
-    subMenu: engineSubMenuData.value,
-  },
+  ...(isVst
+    ? []
+    : [
+        {
+          type: "root",
+          label: "エンジン",
+          onClick: () => {
+            closeAllDialog();
+          },
+          disableWhenUiLocked: false,
+          subMenu: engineSubMenuData.value,
+        } as MenuItemRoot,
+      ]),
   {
     type: "root",
     label: "設定",

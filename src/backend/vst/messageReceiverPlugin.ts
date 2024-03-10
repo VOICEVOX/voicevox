@@ -102,6 +102,7 @@ export const vstMessageReceiver: Plugin = {
         }
         haveSentNonEmptyProject = true;
         log("Saving project file");
+        store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
         store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
       }, 5000),
       { deep: true }
@@ -117,7 +118,6 @@ export const vstMessageReceiver: Plugin = {
     );
 
     getProject().then((project) => {
-      store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
       if (!project) {
         log("project not found");
         return;

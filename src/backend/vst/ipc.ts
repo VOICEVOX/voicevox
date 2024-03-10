@@ -18,6 +18,7 @@ declare function vstShowImportFileDialog(
 declare function vstReadFile(filePath: string): Promise<string | -1>;
 declare function vstGetProjectName(): Promise<string>;
 declare function vstGetVersion(): Promise<string>;
+declare function vstExportProject(): Promise<string>;
 
 type Config = Record<string, unknown> & Metadata;
 type VstPhrase = {
@@ -85,12 +86,21 @@ export async function clearPhrases() {
 declare global {
   interface Window {
     vstOnFileChosen?: (uuid: string, path: string) => void;
+    vstOnExportProjectFinished?: (
+      uuid: string,
+      result: "cancelled" | "error" | "success"
+    ) => void;
   }
 }
 
 const fileChosenCallbacks = new Map<
   string,
   (path: string | undefined) => void
+>();
+
+const exportProjectCallbacks = new Map<
+  string,
+  (result: "cancelled" | "error" | "success") => void
 >();
 
 export async function showImportFileDialog(
@@ -118,7 +128,7 @@ export async function showImportFileDialog(
   });
   log("Callback registered", nonce);
 
-  return promise;
+  return await promise;
 }
 
 export async function readFile(filePath: string): Promise<ArrayBuffer> {
@@ -141,4 +151,30 @@ export async function getProjectName(): Promise<string> {
 export async function getVersion(): Promise<string> {
   log("getVersion");
   return vstGetVersion();
+}
+
+export async function exportProject() {
+  log("exportProject");
+  if (!window.vstOnExportProjectFinished) {
+    window.vstOnExportProjectFinished = (
+      nonce: string,
+      result: "cancelled" | "error" | "success"
+    ) => {
+      log("vstOnExportProjectFinished", nonce, result);
+      const callback = exportProjectCallbacks.get(nonce);
+      if (!callback) {
+        log("callback not found", nonce);
+        return;
+      }
+      callback(result);
+    };
+  }
+  const nonce = await vstExportProject();
+
+  const promise = new Promise<"cancelled" | "error" | "success">((resolve) => {
+    exportProjectCallbacks.set(nonce, resolve);
+  });
+  log("Callback registered", nonce);
+
+  return await promise;
 }

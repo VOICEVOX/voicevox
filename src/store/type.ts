@@ -1830,6 +1830,17 @@ export type DictionaryStoreTypes = {
 
 export type ProxyStoreState = Record<string, unknown>;
 
+/*
+ * VST Store Types
+ */
+export type VstStoreState = Record<string, unknown>;
+
+export type VstStoreTypes = {
+  VST_EXPORT_PROJECT: {
+    action(): Promise<void>;
+  };
+};
+
 export type IEngineConnectorFactoryActions = ReturnType<
   IEngineConnectorFactory["instance"]
 >;
@@ -1868,7 +1879,8 @@ export type State = AudioStoreState &
   DictionaryStoreState &
   ProxyStoreState &
   SingingStoreState &
-  SingingCommandStoreState;
+  SingingCommandStoreState &
+  VstStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
   AudioPlayerStoreTypes &
@@ -1883,7 +1895,8 @@ type AllStoreTypes = AudioStoreTypes &
   DictionaryStoreTypes &
   ProxyStoreTypes &
   SingingStoreTypes &
-  SingingCommandStoreTypes;
+  SingingCommandStoreTypes &
+  VstStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;
