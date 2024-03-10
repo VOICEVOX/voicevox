@@ -19,6 +19,7 @@ import {
   transformCommandStore,
   noteSchema,
 } from "./type";
+import { clipboard } from "electron";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
@@ -2029,6 +2030,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       // ノートをJSONにシリアライズしてクリップボードにコピーする
       const serializedNotes = JSON.stringify(selectedNotes);
       // クリップボードにテキストとしてコピーする
+      // NOTE: Electronのclipboardも使用する必要ある？
       try {
         await navigator.clipboard.writeText(serializedNotes);
         window.backend.logInfo("Copied to clipboard.", serializedNotes);
@@ -2049,50 +2051,61 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
     async action({ commit, state, getters }) {
+      // クリップボードからテキストを読み込む
+      let clipboardText;
       try {
-        const text = await navigator.clipboard.readText();
-        // クリップボードのテキストをJSONとしてパースする(失敗した場合は何もしない)
-        const notes = noteSchema
-          .omit({ id: true })
-          .array()
-          .parse(JSON.parse(text));
-        // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
-        const currentPlayheadPosition = getters.GET_PLAYHEAD_POSITION();
-        const firstNotePosition = notes[0].position;
-        // TODO: クオンタイズの処理を共通化する
-        const snapType = state.sequencerSnapType;
-        const tpqn = state.tpqn;
-        const snapTicks = getNoteDuration(snapType, tpqn);
-        const notesToPaste: Note[] = notes.map((note) => {
-          // 新しい位置を現在の再生位置に合わせて計算する
-          const pasteOriginPos =
-            Number(note.position) - firstNotePosition + currentPlayheadPosition;
-          // クオンタイズ
-          const quantizedPastePos =
-            Math.round(pasteOriginPos / snapTicks) * snapTicks;
-          return {
-            id: uuidv4(),
-            position: quantizedPastePos,
-            duration: Number(note.duration),
-            noteNumber: Number(note.noteNumber),
-            lyric: String(note.lyric),
-          };
-        });
-        const pastedNoteIds = notesToPaste.map((note) => note.id);
-        commit("COMMAND_ADD_NOTES", { notes: notesToPaste });
-        // 貼り付けたノートを選択する
-        commit("DESELECT_ALL_NOTES");
-        commit("SELECT_NOTES", { noteIds: pastedNoteIds });
+        clipboardText = await navigator.clipboard.readText();
       } catch (error) {
-        throw new Error("Failed to paste notes from clipboard.", {
+        throw new Error("Failed to read the clipboard text.", {
           cause: error,
         });
       }
+
+      // クリップボードのテキストをJSONとしてパースする(失敗した場合は何もしない)
+      let notes;
+      try {
+        notes = noteSchema
+          .omit({ id: true })
+          .array()
+          .parse(JSON.parse(clipboardText));
+      } catch (error) {
+        throw new Error("Failed to parse the clipboard text as JSON.", {
+          cause: error,
+        });
+      }
+
+      // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
+      const currentPlayheadPosition = getters.GET_PLAYHEAD_POSITION();
+      const firstNotePosition = notes[0].position;
+      // TODO: クオンタイズの処理を共通化する
+      const snapType = state.sequencerSnapType;
+      const tpqn = state.tpqn;
+      const snapTicks = getNoteDuration(snapType, tpqn);
+      const notesToPaste: Note[] = notes.map((note) => {
+        // 新しい位置を現在の再生位置に合わせて計算する
+        const pasteOriginPos =
+          Number(note.position) - firstNotePosition + currentPlayheadPosition;
+        // クオンタイズ
+        const quantizedPastePos =
+          Math.round(pasteOriginPos / snapTicks) * snapTicks;
+        return {
+          id: uuidv4(),
+          position: quantizedPastePos,
+          duration: Number(note.duration),
+          noteNumber: Number(note.noteNumber),
+          lyric: String(note.lyric),
+        };
+      });
+      const pastedNoteIds = notesToPaste.map((note) => note.id);
+      commit("COMMAND_ADD_NOTES", { notes: notesToPaste });
+      // 貼り付けたノートを選択する
+      commit("DESELECT_ALL_NOTES");
+      commit("SELECT_NOTES", { noteIds: pastedNoteIds });
     },
   },
 
   COMMAND_QUANTIZE_SELECTED_NOTES: {
-    action({ state, commit, getters }) {
+    action({ state, commit, getters, dispatch }) {
       const currentTrack = getters.SELECTED_TRACK;
       const selectedNotes = currentTrack.notes.filter((note: Note) => {
         return state.selectedNoteIds.has(note.id);
@@ -2107,6 +2120,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return { ...note, position: quantizedPosition };
       });
       commit("COMMAND_UPDATE_NOTES", { notes: quantizedNotes });
+      dispatch("RENDER");
     },
   },
 });
