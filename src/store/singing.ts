@@ -1750,6 +1750,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("Failed to decode UST file.");
         }
 
+        // 初期化
         const tpqn = DEFAULT_TPQN;
         const tempos: Tempo[] = [
           {
@@ -1766,44 +1767,56 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         ];
         const notes: Note[] = [];
 
-        // CRLF改行/LF改行を区切り文字として分割
-        const sections = ustData.split(/\r?\n(?=\[)/);
-        // [#SETTING]セクションからテンポ情報を取得
-        const settingSection = sections[sections.indexOf("[#SETTING]") + 1];
-        const tempoMatch = settingSection.match(/Tempo=([0-9.]+)/);
-        if (tempoMatch) {
-          tempos[0].bpm = parseFloat(tempoMatch[1]);
-        }
+        // USTセクション
+        type UstSection = {
+          sectionName: string;
+          [key: string]: string;
+        };
 
+        // USTファイルのセクションをパース
+        const parseSection = (section: string): UstSection => {
+          const sectionNameMatch = section.match(/\[(.+)\]/);
+          if (!sectionNameMatch) {
+            throw new Error("Failed to parse UST file.");
+          }
+          const params = section.split(/[\r\n]+/).reduce((acc, line) => {
+            const [key, value] = line.split("=");
+            if (key && value) {
+              acc[key] = value;
+            }
+            return acc;
+          }, {} as UstSection);
+          return {
+            ...params,
+            sectionName: sectionNameMatch[1],
+          };
+        };
+
+        // セクションを分割
+        const sections = ustData.split(/^(?=\[)/m);
+        // ポジション
         let position = 0;
+        // セクションごとに処理
         sections.forEach((section) => {
-          // CRLF改行/LF改行の両方に対応
-          //[#0000]という形式のセクションであればノート情報として扱う
-          if (section.match(/^\[#\d{4}/)) {
-            // TODO: ひどい実装なのでリファクタリングする...
-            const lyricMatch = section.match(/Lyric=(.+)/);
-            if (!lyricMatch) {
-              return;
-            }
-            const lyric = lyricMatch[1];
-            const durationMatch = section.match(/Length=([0-9]+)/);
-            const duration = durationMatch ? parseInt(durationMatch[1]) : 0;
-            const noteNum = section.match(/NoteNum=([0-9]+)/);
-            if (!noteNum) {
-              return;
-            }
-            const noteNumber = parseInt(noteNum[1]);
-            const tempoMatch = section.match(/Tempo=([0-9.]+)/);
-            if (tempoMatch) {
-              tempos.push({
-                position,
-                bpm: parseFloat(tempoMatch[1]),
-              });
-            }
+          const params = parseSection(section);
+          // SETTINGセクション
+          if (params.sectionName === "#SETTING") {
+            const tempo = Number(params["Tempo"]);
+            if (tempo) tempos[0].bpm = tempo;
+          }
+          // ノートセクション
+          if (params.sectionName.match(/^#\d{4}/)) {
+            // テンポ変更があれば追加
+            const tempo = Number(params["Tempo"]);
+            if (tempo) tempos.push({ position, bpm: tempo });
+            const noteNumber = Number(params["NoteNum"]);
+            const duration = Number(params["Length"]);
+            const lyric = params["Lyric"];
+            // 休符であればポジションを進めるのみ
             if (lyric === "R") {
               position += duration;
-              return;
             } else {
+              // それ以外の場合はノートを追加
               notes.push({
                 id: uuidv4(),
                 position,
