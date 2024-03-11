@@ -1767,14 +1767,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         ];
         const notes: Note[] = [];
 
-        // USTセクション
-        type UstSection = {
-          sectionName: string;
-          [key: string]: string;
-        };
-
         // USTファイルのセクションをパース
-        const parseSection = (section: string): UstSection => {
+        const parseSection = (section: string): { [key: string]: string } => {
           const sectionNameMatch = section.match(/\[(.+)\]/);
           if (!sectionNameMatch) {
             throw new Error("Failed to parse UST file.");
@@ -1785,49 +1779,53 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               acc[key] = value;
             }
             return acc;
-          }, {} as UstSection);
+          }, {} as { [key: string]: string });
           return {
             ...params,
             sectionName: sectionNameMatch[1],
           };
         };
 
-        // セクションを分割
-        const sections = ustData.split(/^(?=\[)/m);
-        // ポジション
-        let position = 0;
-        // セクションごとに処理
-        sections.forEach((section) => {
-          const params = parseSection(section);
-          // SETTINGセクション
-          if (params.sectionName === "#SETTING") {
-            const tempo = Number(params["Tempo"]);
-            if (tempo) tempos[0].bpm = tempo;
-          }
-          // ノートセクション
-          if (params.sectionName.match(/^#\d{4}/)) {
-            // テンポ変更があれば追加
-            const tempo = Number(params["Tempo"]);
-            if (tempo) tempos.push({ position, bpm: tempo });
-            const noteNumber = Number(params["NoteNum"]);
-            const duration = Number(params["Length"]);
-            const lyric = params["Lyric"];
-            // 休符であればポジションを進めるのみ
-            if (lyric === "R") {
-              position += duration;
-            } else {
-              // それ以外の場合はノートを追加
-              notes.push({
-                id: uuidv4(),
-                position,
-                duration,
-                noteNumber,
-                lyric,
-              });
-              position += duration;
+        try {
+          // セクションを分割
+          const sections = ustData.split(/^(?=\[)/m);
+          // ポジション
+          let position = 0;
+          // セクションごとに処理
+          sections.forEach((section) => {
+            const params = parseSection(section);
+            // SETTINGセクション
+            if (params.sectionName === "#SETTING") {
+              const tempo = Number(params["Tempo"]);
+              if (tempo) tempos[0].bpm = tempo;
             }
-          }
-        });
+            // ノートセクション
+            if (params.sectionName.match(/^#\d{4}/)) {
+              // テンポ変更があれば追加
+              const tempo = Number(params["Tempo"]);
+              if (tempo) tempos.push({ position, bpm: tempo });
+              const noteNumber = Number(params["NoteNum"]);
+              const duration = Number(params["Length"]);
+              const lyric = params["Lyric"];
+              // 休符であればポジションを進めるのみ
+              if (lyric === "R") {
+                position += duration;
+              } else {
+                // それ以外の場合はノートを追加
+                notes.push({
+                  id: uuidv4(),
+                  position,
+                  duration,
+                  noteNumber,
+                  lyric,
+                });
+                position += duration;
+              }
+            }
+          });
+        } catch (error) {
+          throw new Error("Failed to parse UST file.", { cause: error });
+        }
 
         await dispatch("SET_SCORE", {
           score: {
