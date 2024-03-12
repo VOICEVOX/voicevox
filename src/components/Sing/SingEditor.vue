@@ -89,6 +89,14 @@ onetimeWatch(
           notes: [],
         },
       });
+
+      // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
+      // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
+      try {
+        await store.dispatch("SET_SINGER", {});
+      } catch (e) {
+        window.backend.logError(e);
+      }
     }
 
     await store.dispatch("SET_VOLUME", { volume: 0.6 });
@@ -100,8 +108,6 @@ onetimeWatch(
       position: 480 * 4 * 16,
     });
     isCompletedInitialStartup.value = true;
-
-    await store.dispatch("SET_SINGER", {});
 
     return "unwatch";
   },
