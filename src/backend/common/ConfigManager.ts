@@ -127,7 +127,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     ">=0.16",
     (config) => {
       // 書き出し先のディレクトリが空文字の場合書き出し先固定を無効化する
-      // FIXME: ダイアログで案内する
+      // FIXME: 勝手に書き換えるのは少し不親切なので、ダイアログで書き換えたことを案内する
       const savingSetting = config.savingSetting as ConfigType["savingSetting"];
       if (
         savingSetting.fixedExportEnabled &&
