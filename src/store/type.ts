@@ -1851,6 +1851,9 @@ export type VstStoreTypes = {
   VST_EXPORT_PROJECT: {
     action(): Promise<void>;
   };
+  VST_IMPORT_PROJECT: {
+    action(): Promise<void>;
+  };
 };
 
 export type IEngineConnectorFactoryActions = ReturnType<

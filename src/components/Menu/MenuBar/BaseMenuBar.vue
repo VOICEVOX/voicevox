@@ -152,6 +152,16 @@ const vstExportProject = async () => {
   }
 };
 
+const vstImportProject = async () => {
+  if (!uiLocked.value) {
+    if (!isVst) {
+      throw new Error("VST以外でのインポートはサポートされていません");
+    }
+
+    await store.dispatch("VST_IMPORT_PROJECT");
+  }
+};
+
 const saveProjectAs = async () => {
   if (!uiLocked.value) {
     await store.dispatch("SAVE_PROJECT_FILE", {});
@@ -316,8 +326,14 @@ const menudata = computed<MenuItemData[]>(() => [
             },
             {
               type: "button",
-              label: "プロジェクトを外部に保存",
+              label: "プロジェクトをエクスポート",
               onClick: vstExportProject,
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "プロジェクトをインポート",
+              onClick: vstImportProject,
               disableWhenUiLocked: true,
             },
           ]
