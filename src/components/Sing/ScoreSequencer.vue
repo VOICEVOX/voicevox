@@ -794,7 +794,7 @@ const onMouseUp = (event: MouseEvent) => {
   }
 
   if (isRectSelecting.value) {
-    rectSelect();
+    rectSelect(event.ctrlKey);
     return;
   }
 
@@ -821,7 +821,7 @@ const onMouseUp = (event: MouseEvent) => {
   nowPreviewing.value = false;
 };
 
-const rectSelect = () => {
+const rectSelect = (isAdd: boolean) => {
   const rectSelectHitboxElement = rectSelectHitbox.value;
   if (!rectSelectHitboxElement) {
     throw new Error("rectSelectHitboxElement is null.");
@@ -855,7 +855,9 @@ const rectSelect = () => {
       noteIdsToSelect.push(note.id);
     }
   }
-  store.dispatch("DESELECT_ALL_NOTES");
+  if (!isAdd) {
+    store.dispatch("DESELECT_ALL_NOTES");
+  }
   store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
 };
 
