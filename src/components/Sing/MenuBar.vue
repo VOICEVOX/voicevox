@@ -7,6 +7,7 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 import BaseMenuBar from "@/components/Menu/MenuBar/BaseMenuBar.vue";
 import { MenuItemData } from "@/components/Menu/type";
+import { isVst } from "@/type/preload";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -27,15 +28,19 @@ const exportWaveFile = async () => {
 };
 
 const fileSubMenuData: MenuItemData[] = [
-  {
-    type: "button",
-    label: "音声を出力",
-    onClick: () => {
-      exportWaveFile();
-    },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
+  ...(isVst
+    ? []
+    : ([
+        {
+          type: "button",
+          label: "音声を出力",
+          onClick: () => {
+            exportWaveFile();
+          },
+          disableWhenUiLocked: true,
+        },
+        { type: "separator" },
+      ] as MenuItemData[])),
   {
     type: "button",
     label: "MIDI読み込み",
