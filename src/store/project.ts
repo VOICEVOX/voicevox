@@ -51,6 +51,9 @@ const applySongProjectToStore = async (
   await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
     keyRangeAdjustment: tracks[0].keyRangeAdjustment,
   });
+  await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
+    volumeRangeAdjustment: tracks[0].volumeRangeAdjustment,
+  });
   await dispatch("SET_SCORE", {
     score: {
       tpqn,

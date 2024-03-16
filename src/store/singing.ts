@@ -45,6 +45,7 @@ import {
   isValidTempo,
   isValidTimeSignature,
   isValidKeyRangeAdjustment,
+  isValidvolumeRangeAdjustment,
   secondToTick,
   tickToSecond,
 } from "@/sing/domain";
@@ -145,6 +146,7 @@ export const generateSingingStoreInitialScore = () => {
       {
         singer: undefined,
         keyRangeAdjustment: 0,
+        volumeRangeAdjustment: 0,
         notes: [],
       },
     ],
@@ -164,8 +166,6 @@ export const singingStoreState: SingingStoreState = {
   overlappingNoteInfos: new Map(),
   nowPlaying: false,
   volume: 0,
-  leftLocatorPosition: 0,
-  rightLocatorPosition: 0,
   startRenderingRequested: false,
   stopRenderingRequested: false,
   nowRendering: false,
@@ -241,6 +241,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The keyRangeAdjustment is invalid.");
       }
       commit("SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+
+      dispatch("RENDER");
+    },
+  },
+
+  SET_VOLUME_RANGE_ADJUSTMENT: {
+    mutation(
+      state,
+      { volumeRangeAdjustment }: { volumeRangeAdjustment: number }
+    ) {
+      state.tracks[selectedTrackIndex].volumeRangeAdjustment =
+        volumeRangeAdjustment;
+    },
+    async action(
+      { dispatch, commit },
+      { volumeRangeAdjustment }: { volumeRangeAdjustment: number }
+    ) {
+      if (!isValidvolumeRangeAdjustment(volumeRangeAdjustment)) {
+        throw new Error("The volumeRangeAdjustment is invalid.");
+      }
+      commit("SET_VOLUME_RANGE_ADJUSTMENT", {
+        volumeRangeAdjustment,
+      });
 
       dispatch("RENDER");
     },
@@ -611,24 +634,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_LEFT_LOCATOR_POSITION: {
-    mutation(state, { position }) {
-      state.leftLocatorPosition = position;
-    },
-    async action({ commit }, { position }) {
-      commit("SET_LEFT_LOCATOR_POSITION", { position });
-    },
-  },
-
-  SET_RIGHT_LOCATOR_POSITION: {
-    mutation(state, { position }) {
-      state.rightLocatorPosition = position;
-    },
-    async action({ commit }, { position }) {
-      commit("SET_RIGHT_LOCATOR_POSITION", { position });
-    },
-  },
-
   SET_PLAYBACK_STATE: {
     mutation(state, { nowPlaying }) {
       state.nowPlaying = nowPlaying;
@@ -746,6 +751,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const searchPhrases = async (
         singer: Singer | undefined,
         keyRangeAdjustment: number,
+        volumeRangeAdjustment: number,
         tpqn: number,
         tempos: Tempo[],
         notes: Note[]
@@ -766,6 +772,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const hash = await generatePhraseHash({
               singer,
               keyRangeAdjustment,
+              volumeRangeAdjustment,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -773,6 +780,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             foundPhrases.set(hash, {
               singer,
               keyRangeAdjustment,
+              volumeRangeAdjustment,
               tpqn,
               tempos,
               notes: phraseNotes,
@@ -884,6 +892,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       };
 
+      const scaleGuideVolume = (
+        volumeRangeAdjustment: number,
+        frameAudioQuery: FrameAudioQuery
+      ) => {
+        frameAudioQuery.volume = frameAudioQuery.volume.map((value) => {
+          return value * Math.pow(10, volumeRangeAdjustment / 20);
+        });
+      };
+
       const calcStartTime = (
         notes: Note[],
         tempos: Tempo[],
@@ -941,6 +958,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const track = getters.SELECTED_TRACK;
         const singer = track.singer ? { ...track.singer } : undefined;
         const keyRangeAdjustment = track.keyRangeAdjustment;
+        const volumeRangeAdjustment = track.volumeRangeAdjustment;
         const notes = track.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
@@ -949,6 +967,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const foundPhrases = await searchPhrases(
           singer,
           keyRangeAdjustment,
+          volumeRangeAdjustment,
           tpqn,
           tempos,
           notes
@@ -1049,6 +1068,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
 
             shiftGuidePitch(phrase.keyRangeAdjustment, frameAudioQuery);
+            scaleGuideVolume(volumeRangeAdjustment, frameAudioQuery);
 
             const startTime = calcStartTime(
               phrase.notes,
@@ -1987,6 +2007,26 @@ export const singingCommandStore = transformCommandStore(
           throw new Error("The keyRangeAdjustment is invalid.");
         }
         commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
+      mutation(draft, { volumeRangeAdjustment }) {
+        singingStore.mutations.SET_VOLUME_RANGE_ADJUSTMENT(draft, {
+          volumeRangeAdjustment,
+        });
+      },
+      async action(
+        { dispatch, commit },
+        { volumeRangeAdjustment }: { volumeRangeAdjustment: number }
+      ) {
+        if (!isValidvolumeRangeAdjustment(volumeRangeAdjustment)) {
+          throw new Error("The volumeRangeAdjustment is invalid.");
+        }
+        commit("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
+          volumeRangeAdjustment,
+        });
 
         dispatch("RENDER");
       },

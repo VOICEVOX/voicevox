@@ -754,6 +754,7 @@ export type PhraseState =
 export type Phrase = {
   singer?: Singer;
   keyRangeAdjustment: number;
+  volumeRangeAdjustment: number;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];
@@ -781,8 +782,6 @@ export type SingingStoreState = {
   editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
-  leftLocatorPosition: number;
-  rightLocatorPosition: number;
   startRenderingRequested: boolean;
   stopRenderingRequested: boolean;
   nowRendering: boolean;
@@ -808,6 +807,11 @@ export type SingingStoreTypes = {
   SET_KEY_RANGE_ADJUSTMENT: {
     mutation: { keyRangeAdjustment: number };
     action(payload: { keyRangeAdjustment: number }): void;
+  };
+
+  SET_VOLUME_RANGE_ADJUSTMENT: {
+    mutation: { volumeRangeAdjustment: number };
+    action(payload: { volumeRangeAdjustment: number }): void;
   };
 
   SET_SCORE: {
@@ -946,16 +950,6 @@ export type SingingStoreTypes = {
     action(payload: { listener: (position: number) => void }): void;
   };
 
-  SET_LEFT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
-  };
-
-  SET_RIGHT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
-  };
-
   SET_PLAYBACK_STATE: {
     mutation: { nowPlaying: boolean };
   };
@@ -1023,6 +1017,11 @@ export type SingingCommandStoreTypes = {
   COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
     mutation: { keyRangeAdjustment: number };
     action(payload: { keyRangeAdjustment: number }): void;
+  };
+
+  COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
+    mutation: { volumeRangeAdjustment: number };
+    action(payload: { volumeRangeAdjustment: number }): void;
   };
 
   COMMAND_SET_TEMPO: {
