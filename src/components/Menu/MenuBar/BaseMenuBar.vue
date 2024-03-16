@@ -340,7 +340,7 @@ const menudata = computed<MenuItemData[]>(() => [
         : [
             {
               type: "button",
-              label: "新規プロジェクト",
+              label: "プロジェクトをリセット",
               onClick: createNewProject,
               disableWhenUiLocked: true,
             },

@@ -100,8 +100,13 @@ export const api: Sandbox = {
   showProjectSaveDialog() {
     throw new Error("Not implemented");
   },
-  showProjectLoadDialog() {
-    throw new Error("Not implemented");
+  async showProjectLoadDialog({ title }) {
+    const filePath = await window.backend.showImportFileDialog({
+      title,
+      name: "VOICEVOX Project file",
+      extensions: ["vvproj"],
+    });
+    return filePath ? [filePath] : undefined;
   },
   showSaveDirectoryDialog() {
     throw new Error("Not implemented");
