@@ -702,7 +702,7 @@ class SynthVoice {
   isActiveAt(contextTime: number) {
     return (
       this.noteOffContextTime == undefined ||
-      this.noteOffContextTime > contextTime
+      contextTime < this.noteOffContextTime
     );
   }
 
