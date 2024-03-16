@@ -33,7 +33,7 @@ import {
   NoteEvent,
   NoteSequence,
   OfflineTransport,
-  PolySynth,
+  Synth,
   Sequence,
   Transport,
 } from "@/sing/audioRendering";
@@ -92,7 +92,7 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
 
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
-let previewSynth: PolySynth | undefined;
+let previewSynth: Synth | undefined;
 let channelStrip: ChannelStrip | undefined;
 let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
@@ -101,7 +101,7 @@ let clipper: Clipper | undefined;
 if (window.AudioContext) {
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
-  previewSynth = new PolySynth(audioContext);
+  previewSynth = new Synth(audioContext);
   channelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
@@ -1003,16 +1003,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.tempos,
               phrase.tpqn
             );
-            const polySynth = new PolySynth(audioContextRef);
-            polySynth.output.connect(channelStripRef.input);
+            const synth = new Synth(audioContextRef);
+            synth.output.connect(channelStripRef.input);
             const noteSequence: NoteSequence = {
               type: "note",
-              instrument: polySynth,
+              instrument: synth,
               noteEvents,
             };
             transportRef.addSequence(noteSequence);
             phraseDataMap.set(phraseKey, {
-              source: polySynth,
+              source: synth,
               sequence: noteSequence,
             });
           }
