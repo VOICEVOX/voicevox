@@ -116,3 +116,43 @@ export const getStyleDescription = (style: StyleInfo) => {
   }
   return description.join("・");
 };
+
+type ClickInfo<T> = {
+  readonly detail: number;
+  readonly targetId: T;
+};
+
+type DetectedDoubleClickInfo<T> = {
+  readonly targetId: T;
+};
+
+export class DoubleClickDetector<T> {
+  private clickInfos: ClickInfo<T>[] = [];
+
+  recordClick(detail: number, targetId: T) {
+    if (detail === 1) {
+      this.clickInfos = [];
+    }
+    this.clickInfos.push({ detail, targetId });
+  }
+
+  detect(): DetectedDoubleClickInfo<T> | undefined {
+    if (this.clickInfos.length < 2) {
+      return undefined;
+    }
+    const clickInfo1 = this.clickInfos[this.clickInfos.length - 2];
+    const clickInfo2 = this.clickInfos[this.clickInfos.length - 1];
+    if (
+      clickInfo1.detail === 1 &&
+      clickInfo2.detail === 2 &&
+      clickInfo1.targetId === clickInfo2.targetId
+    ) {
+      return { targetId: clickInfo1.targetId };
+    }
+    return undefined;
+  }
+
+  clear() {
+    this.clickInfos = [];
+  }
+}

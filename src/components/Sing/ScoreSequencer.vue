@@ -243,6 +243,7 @@ import {
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
+  DoubleClickDetector,
 } from "@/sing/viewHelper";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -367,6 +368,7 @@ const phraseInfos = computed(() => {
     return { key, x: startX, width: endX - startX };
   });
 });
+
 const showPitch = computed(() => {
   return state.experimentalSetting.showPitchInSongEditor;
 });
@@ -393,10 +395,7 @@ let edited = false; // プレビュー終了時にstore.stateの更新を行う�
 
 // ダブルクリック
 let mouseDownNoteId: string | undefined;
-const clickedNoteIds: [string | undefined, string | undefined] = [
-  undefined,
-  undefined,
-];
+const doubleClickDetector = new DoubleClickDetector<string | undefined>();
 let ignoreDoubleClick = false;
 
 // 入力を補助する線
@@ -697,8 +696,8 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
-    startPreview(event, "MOVE", note);
     mouseDownNoteId = note.id;
+    startPreview(event, "MOVE", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -709,8 +708,8 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
-    startPreview(event, "RESIZE_LEFT", note);
     mouseDownNoteId = note.id;
+    startPreview(event, "RESIZE_LEFT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -721,8 +720,8 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
-    startPreview(event, "RESIZE_RIGHT", note);
     mouseDownNoteId = note.id;
+    startPreview(event, "RESIZE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -732,11 +731,11 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
   if (!isSelfEventTarget(event)) {
     return;
   }
-  if (!state.selectedNoteIds.has(note.id)) {
-    selectOnlyThis(note);
-  }
   if (event.button === 0) {
     mouseDownNoteId = note.id;
+  }
+  if (!state.selectedNoteIds.has(note.id)) {
+    selectOnlyThis(note);
   }
 };
 
@@ -745,6 +744,7 @@ const onMouseDown = (event: MouseEvent) => {
     return;
   }
   if (event.button === 0) {
+    mouseDownNoteId = undefined;
     if (event.shiftKey) {
       isRectSelecting.value = true;
       rectSelectStartX.value = cursorX.value;
@@ -752,7 +752,6 @@ const onMouseDown = (event: MouseEvent) => {
     } else {
       startPreview(event, "ADD");
     }
-    mouseDownNoteId = undefined;
   } else {
     store.dispatch("DESELECT_ALL_NOTES");
   }
@@ -784,20 +783,13 @@ const onMouseUp = (event: MouseEvent) => {
   if (event.button !== 0) {
     return;
   }
-  clickedNoteIds[0] = clickedNoteIds[1];
-  clickedNoteIds[1] = mouseDownNoteId;
-  if (event.detail === 1) {
-    ignoreDoubleClick = false;
-  }
-  if (nowPreviewing.value && edited) {
-    ignoreDoubleClick = true;
-  }
+  doubleClickDetector.recordClick(event.detail, mouseDownNoteId);
+  ignoreDoubleClick = nowPreviewing.value && edited;
 
   if (isRectSelecting.value) {
     rectSelect();
     return;
   }
-
   if (!nowPreviewing.value) {
     return;
   }
@@ -860,17 +852,17 @@ const rectSelect = () => {
 };
 
 const onDoubleClick = () => {
-  if (
-    ignoreDoubleClick ||
-    clickedNoteIds[0] !== clickedNoteIds[1] ||
-    clickedNoteIds[1] == undefined
-  ) {
+  if (ignoreDoubleClick) {
     return;
   }
-
-  const noteId = clickedNoteIds[1];
-  if (state.editingLyricNoteId !== noteId) {
-    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId });
+  const doubleClickedNoteId = doubleClickDetector.detect()?.targetId;
+  if (
+    doubleClickedNoteId != undefined &&
+    doubleClickedNoteId !== state.editingLyricNoteId
+  ) {
+    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", {
+      noteId: doubleClickedNoteId,
+    });
   }
 };
 
