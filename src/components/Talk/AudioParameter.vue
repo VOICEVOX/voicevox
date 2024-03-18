@@ -3,7 +3,7 @@
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
-    <q-badge
+    <QBadge
       v-if="
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "
@@ -16,8 +16,18 @@
           ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
           : undefined
       }}
-    </q-badge>
-    <q-slider
+    </QBadge>
+    <!-- NOTE: QTooltipをQSlider内にしたいがquasarが未対応っぽいので兄弟に -->
+    <QTooltip
+      v-if="previewSlider.qSliderProps.disable.value"
+      :delay="500"
+      transition-show="jump-up"
+      transition-hide="jump-down"
+      anchor="top middle"
+      self="center middle"
+      >無声化した音にイントネーションは存在しません。<br />テキストをクリックすることで無声化を解けます。</QTooltip
+    >
+    <QSlider
       vertical
       reverse
       snap

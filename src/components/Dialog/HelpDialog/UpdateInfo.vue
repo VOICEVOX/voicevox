@@ -1,5 +1,5 @@
 <template>
-  <q-page
+  <QPage
     ref="scroller"
     class="relative-absolute-wrapper scroller markdown-body"
   >
@@ -34,7 +34,7 @@
         </p>
       </template>
     </div>
-  </q-page>
+  </QPage>
 </template>
 
 <script setup lang="ts">

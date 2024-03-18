@@ -11,7 +11,7 @@
     class="waiting-engine"
   >
     <div>
-      <q-spinner color="primary" size="2.5rem" />
+      <QSpinner color="primary" size="2.5rem" />
       <div class="q-mt-xs">
         {{
           allEngineState === "STARTING"
@@ -21,17 +21,17 @@
       </div>
 
       <template v-if="isEngineWaitingLong">
-        <q-separator spaced />
+        <QSeparator spaced />
         エンジン起動に時間がかかっています。<br />
-        <q-btn
+        <QBtn
           v-if="isMultipleEngine"
           outline
           :disable="reloadingLocked"
           @click="reloadAppWithMultiEngineOffMode"
         >
-          マルチエンジンをオフにして再読み込みする</q-btn
+          マルチエンジンをオフにして再読み込みする</QBtn
         >
-        <q-btn v-else outline @click="openQa">Q&Aを見る</q-btn>
+        <QBtn v-else outline @click="openQa">Q&Aを見る</QBtn>
       </template>
     </div>
   </div>

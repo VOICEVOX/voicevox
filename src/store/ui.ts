@@ -45,6 +45,7 @@ export function withProgress<T>(
 }
 
 export const uiStoreState: UiStoreState = {
+  openedEditor: undefined,
   uiLockCount: 0,
   dialogLockCount: 0,
   reloadingLock: false,
@@ -69,6 +70,15 @@ export const uiStoreState: UiStoreState = {
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
+  SET_OPENED_EDITOR: {
+    mutation(state, { editor }) {
+      state.openedEditor = editor;
+    },
+    action({ commit }, { editor }) {
+      commit("SET_OPENED_EDITOR", { editor });
+    },
+  },
+
   UI_LOCKED: {
     getter(state) {
       return state.uiLockCount > 0;
@@ -110,7 +120,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         state.uiLockCount--;
       } else {
         // eslint-disable-next-line no-console
-        window.electron.logWarn(
+        window.backend.logWarn(
           "UNLOCK_UI is called when state.uiLockCount == 0"
         );
       }
@@ -242,18 +252,18 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   HYDRATE_UI_STORE: {
     async action({ commit }) {
       commit("SET_INHERIT_AUDIOINFO", {
-        inheritAudioInfo: await window.electron.getSetting("inheritAudioInfo"),
+        inheritAudioInfo: await window.backend.getSetting("inheritAudioInfo"),
       });
 
       commit("SET_ACTIVE_POINT_SCROLL_MODE", {
-        activePointScrollMode: await window.electron.getSetting(
+        activePointScrollMode: await window.backend.getSetting(
           "activePointScrollMode"
         ),
       });
 
       // electron-window-stateがvuex初期化前に働くので
       // ここで改めてelectron windowの最大化状態をVuex storeに同期
-      if (await window.electron.isMaximizedWindow()) {
+      if (await window.backend.isMaximizedWindow()) {
         commit("DETECT_MAXIMIZED");
       }
     },
@@ -264,7 +274,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       state.isVuexReady = true;
     },
     action({ commit }) {
-      window.electron.vuexReady();
+      window.backend.vuexReady();
       commit("ON_VUEX_READY");
     },
   },
@@ -294,7 +304,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       { inheritAudioInfo }: { inheritAudioInfo: boolean }
     ) {
       commit("SET_INHERIT_AUDIOINFO", {
-        inheritAudioInfo: await window.electron.setSetting(
+        inheritAudioInfo: await window.backend.setSetting(
           "inheritAudioInfo",
           inheritAudioInfo
         ),
@@ -318,7 +328,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       }: { activePointScrollMode: ActivePointScrollMode }
     ) {
       commit("SET_ACTIVE_POINT_SCROLL_MODE", {
-        activePointScrollMode: await window.electron.setSetting(
+        activePointScrollMode: await window.backend.setSetting(
           "activePointScrollMode",
           activePointScrollMode
         ),
@@ -405,7 +415,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       await dispatch("STOP_RENDERING"); // FIXME: FINISH_VUEXなどを作成して移動すべき
 
       if (obj.closeOrReload == "close") {
-        window.electron.closeWindow();
+        window.backend.closeWindow();
       } else if (obj.closeOrReload == "reload") {
         await dispatch("RELOAD_APP", {
           isMultiEngineOffMode: obj.isMultiEngineOffMode,
@@ -421,7 +431,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }
       ) => {
         await dispatch("LOCK_RELOADING");
-        await window.electron.reloadApp({
+        await window.backend.reloadApp({
           isMultiEngineOffMode: !!isMultiEngineOffMode,
         });
       }

@@ -24,7 +24,7 @@ import {
   envEngineInfoSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
-import { BaseConfigManager } from "@/shared/ConfigManager";
+import { BaseConfigManager } from "@/backend/common/ConfigManager";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;

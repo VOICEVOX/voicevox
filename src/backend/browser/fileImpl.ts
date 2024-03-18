@@ -1,6 +1,6 @@
 import { sep } from "path";
 import { directoryHandleStoreKey } from "./contract";
-import { openDB } from "./storeImpl";
+import { openDB } from "./browserConfig";
 import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 

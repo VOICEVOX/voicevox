@@ -1,24 +1,24 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="accept-retrieve-telemetry-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm">
-        <q-toolbar>
+    <QLayout container view="hHh Lpr lff" class="bg-background">
+      <QHeader class="q-py-sm">
+        <QToolbar>
           <div class="column">
-            <q-toolbar-title class="text-display"
-              >使いやすさ向上のためのお願い</q-toolbar-title
+            <QToolbarTitle class="text-display"
+              >使いやすさ向上のためのお願い</QToolbarTitle
             >
           </div>
 
-          <q-space />
+          <QSpace />
 
           <div class="row items-center no-wrap">
-            <q-btn
+            <QBtn
               unelevated
               label="拒否"
               color="toolbar-button"
@@ -27,7 +27,7 @@
               @click="handler(false)"
             />
 
-            <q-btn
+            <QBtn
               unelevated
               label="許可"
               color="toolbar-button"
@@ -36,11 +36,11 @@
               @click="handler(true)"
             />
           </div>
-        </q-toolbar>
-      </q-header>
+        </QToolbar>
+      </QHeader>
 
-      <q-page-container>
-        <q-page>
+      <QPageContainer>
+        <QPage>
           <p class="text-body1 q-mb-lg">
             VOICEVOXはより使いやすいソフトウェアを目指して開発されています。<br /><br />
             ボタンの配置換えなどの方針を決める際は、各UIの利用率などの情報が重要になります。<br />
@@ -48,20 +48,20 @@
             <br />
             （入力されたテキストデータや音声データの情報は収集しておりませんのでご安心ください。）
           </p>
-          <q-card flat bordered>
-            <q-card-section>
+          <QCard flat bordered>
+            <QCardSection>
               <div class="text-h5">プライバシーポリシー</div>
-            </q-card-section>
+            </QCardSection>
 
-            <q-card-section class="text-body1">
+            <QCardSection class="text-body1">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <div v-html="privacyPolicy"></div>
-            </q-card-section>
-          </q-card>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+            </QCardSection>
+          </QCard>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">

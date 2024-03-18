@@ -5,8 +5,8 @@
 <template>
   <!-- FIXME: 画面サイズが小さくなると表示が崩れるのを直す -->
   <!-- NOTE: デザインしづらいからQBtnかdivの方が良い -->
-  <q-btn-toggle
-    :model-value="nowEditor"
+  <QBtnToggle
+    :model-value="openedEditor"
     unelevated
     :disable="uiLocked"
     dense
@@ -15,31 +15,22 @@
       { label: 'トーク', value: 'talk' },
       { label: 'ソング', value: 'song' },
     ]"
-    @update:model-value="gotoLink"
+    @update:model-value="switchEditor"
   />
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRouter } from "vue-router";
 import { useStore } from "@/store";
 import { EditorType } from "@/type/preload";
 
 const store = useStore();
-const router = useRouter();
 
+const openedEditor = computed(() => store.state.openedEditor);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const nowEditor = computed<EditorType>(() => {
-  const path = router.currentRoute.value.path;
-  if (path === "/talk") return "talk";
-  if (path === "/song") return "song";
-  window.electron.logWarn(`unknown path: ${path}`);
-  return "talk";
-});
-
-const gotoLink = (editor: EditorType) => {
-  router.push("/" + editor);
+const switchEditor = async (editor: EditorType) => {
+  await store.dispatch("SET_OPENED_EDITOR", { editor });
 };
 </script>
 

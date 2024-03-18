@@ -1,21 +1,21 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="dictionaryManageDialogOpenedComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="setting-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr fFf" class="bg-background">
-      <q-page-container>
-        <q-header class="q-pa-sm">
-          <q-toolbar>
-            <q-toolbar-title class="text-display"
-              >読み方＆アクセント辞書</q-toolbar-title
+    <QLayout container view="hHh Lpr fFf" class="bg-background">
+      <QPageContainer>
+        <QHeader class="q-pa-sm">
+          <QToolbar>
+            <QToolbarTitle class="text-display"
+              >読み方＆アクセント辞書</QToolbarTitle
             >
-            <q-space />
+            <QSpace />
             <!-- close button -->
-            <q-btn
+            <QBtn
               round
               flat
               icon="close"
@@ -23,12 +23,12 @@
               :disable="wordEditing"
               @click="discardOrNotDialog(closeDialog)"
             />
-          </q-toolbar>
-        </q-header>
-        <q-page class="row">
+          </QToolbar>
+        </QHeader>
+        <QPage class="row">
           <div v-if="loadingDictState" class="loading-dict">
             <div>
-              <q-spinner color="primary" size="2.5rem" />
+              <QSpinner color="primary" size="2.5rem" />
               <div class="q-mt-xs">
                 <template v-if="loadingDictState === 'loading'"
                   >読み込み中・・・</template
@@ -48,34 +48,34 @@
             <div class="word-list-header text-no-wrap">
               <div class="row word-list-title text-h5">単語一覧</div>
               <div class="row no-wrap">
-                <q-btn
+                <QBtn
                   outline
                   text-color="warning"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   :disable="uiLocked || !isDeletable"
                   @click="deleteWord"
-                  >削除</q-btn
+                  >削除</QBtn
                 >
-                <q-btn
+                <QBtn
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   :disable="uiLocked || !selectedId"
                   @click="editWord"
-                  >編集</q-btn
+                  >編集</QBtn
                 >
-                <q-btn
+                <QBtn
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   :disable="uiLocked"
                   @click="newWord"
-                  >追加</q-btn
+                  >追加</QBtn
                 >
               </div>
             </div>
-            <q-list class="word-list">
-              <q-item
+            <QList class="word-list">
+              <QItem
                 v-for="(value, key) in userDict"
                 :key="key"
                 v-ripple
@@ -86,14 +86,14 @@
                 @click="selectWord(key)"
                 @dblclick="editWord"
               >
-                <q-item-section>
-                  <q-item-label class="text-display">{{
+                <QItemSection>
+                  <QItemLabel class="text-display">{{
                     value.surface
-                  }}</q-item-label>
-                  <q-item-label caption>{{ value.yomi }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
+                  }}</QItemLabel>
+                  <QItemLabel caption>{{ value.yomi }}</QItemLabel>
+                </QItemSection>
+              </QItem>
+            </QList>
           </div>
 
           <!-- 右側のpane -->
@@ -103,7 +103,7 @@
           >
             <div class="row q-pl-md q-mt-md">
               <div class="text-h6">単語</div>
-              <q-input
+              <QInput
                 ref="surfaceInput"
                 v-model="surface"
                 class="word-input"
@@ -115,7 +115,7 @@
             </div>
             <div class="row q-pl-md q-pt-sm">
               <div class="text-h6">読み</div>
-              <q-input
+              <QInput
                 ref="yomiInput"
                 v-model="yomi"
                 class="word-input q-pb-none"
@@ -128,7 +128,7 @@
                 <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
                 </template>
-              </q-input>
+              </QInput>
             </div>
             <div class="row q-pl-md q-mt-lg text-h6">アクセント調整</div>
             <div class="row q-pl-md desc-row">
@@ -136,7 +136,7 @@
             </div>
             <div class="row q-px-md" style="height: 130px">
               <div class="play-button">
-                <q-btn
+                <QBtn
                   v-if="!nowPlaying && !nowGenerating"
                   fab
                   color="primary"
@@ -144,7 +144,7 @@
                   icon="play_arrow"
                   @click="play"
                 />
-                <q-btn
+                <QBtn
                   v-else
                   fab
                   color="primary"
@@ -159,7 +159,7 @@
                 class="accent-phrase-table overflow-hidden-y"
               >
                 <div v-if="accentPhrase" class="mora-table">
-                  <audio-accent
+                  <AudioAccent
                     :accent-phrase="accentPhrase"
                     :accent-phrase-index="0"
                     :ui-locked="uiLocked"
@@ -198,7 +198,7 @@
                 justifyContent: 'center',
               }"
             >
-              <q-slider
+              <QSlider
                 v-model="wordPriority"
                 snap
                 dense
@@ -214,38 +214,38 @@
               />
             </div>
             <div class="row q-px-md save-delete-reset-buttons">
-              <q-space />
-              <q-btn
+              <QSpace />
+              <QBtn
                 v-show="!!selectedId"
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
                 @click="resetWord"
-                >リセット</q-btn
+                >リセット</QBtn
               >
-              <q-btn
+              <QBtn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked"
                 @click="discardOrNotDialog(cancel)"
-                >キャンセル</q-btn
+                >キャンセル</QBtn
               >
-              <q-btn
+              <QBtn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
                 @click="saveWord"
-                >保存</q-btn
+                >保存</QBtn
               >
             </div>
           </div>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
@@ -455,7 +455,7 @@ const play = async () => {
       audioItem,
     });
   } catch (e) {
-    window.electron.logError(e);
+    window.backend.logError(e);
     nowGenerating.value = false;
     store.dispatch("SHOW_ALERT_DIALOG", {
       title: "生成に失敗しました",

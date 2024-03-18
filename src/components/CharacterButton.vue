@@ -1,5 +1,5 @@
 <template>
-  <q-btn
+  <QBtn
     ref="buttonRef"
     flat
     class="q-pa-none character-button"
@@ -15,39 +15,39 @@
         :src="selectedStyleInfo.iconPath"
         :alt="selectedVoiceInfoText"
       />
-      <q-avatar v-else-if="!emptiable" rounded size="2rem" color="primary"
-        ><span color="text-display-on-primary">?</span></q-avatar
+      <QAvatar v-else-if="!emptiable" rounded size="2rem" color="primary"
+        ><span color="text-display-on-primary">?</span></QAvatar
       >
     </div>
     <div v-if="loading" class="loading">
-      <q-spinner color="primary" size="1.6rem" :thickness="7" />
+      <QSpinner color="primary" size="1.6rem" :thickness="7" />
     </div>
-    <q-menu
+    <QMenu
       class="character-menu"
       transition-show="none"
       transition-hide="none"
       :max-height="maxMenuHeight"
       @before-show="updateMenuHeight"
     >
-      <q-list style="min-width: max-content" class="character-item-container">
-        <q-item
+      <QList style="min-width: max-content" class="character-item-container">
+        <QItem
           v-if="selectedStyleInfo == undefined && !emptiable"
           class="warning-item row no-wrap items-center"
         >
           <span class="text-warning vertical-middle"
             >有効なスタイルが選択されていません</span
           >
-        </q-item>
-        <q-item
+        </QItem>
+        <QItem
           v-if="characterInfos.length === 0"
           class="warning-item row no-wrap items-center"
         >
           <span class="text-warning vertical-middle"
             >選択可能なスタイルがありません</span
           >
-        </q-item>
-        <q-item v-if="emptiable" class="to-unselect-item q-pa-none">
-          <q-btn
+        </QItem>
+        <QItem v-if="emptiable" class="to-unselect-item q-pa-none">
+          <QBtn
             v-close-popup
             flat
             no-caps
@@ -56,16 +56,16 @@
             @click="$emit('update:selectedVoice', undefined)"
           >
             <span>選択解除</span>
-          </q-btn>
-        </q-item>
-        <q-item
+          </QBtn>
+        </QItem>
+        <QItem
           v-for="(characterInfo, characterIndex) in characterInfos"
           :key="characterIndex"
           class="q-pa-none"
           :class="isSelectedItem(characterInfo) && 'selected-character-item'"
         >
-          <q-btn-group flat class="col full-width">
-            <q-btn
+          <QBtnGroup flat class="col full-width">
+            <QBtn
               v-close-popup
               flat
               no-caps
@@ -74,8 +74,8 @@
               @mouseover="reassignSubMenuOpen(-1)"
               @mouseleave="reassignSubMenuOpen.cancel()"
             >
-              <q-avatar rounded size="2rem" class="q-mr-md">
-                <q-img
+              <QAvatar rounded size="2rem" class="q-mr-md">
+                <QImg
                   v-if="characterInfo"
                   no-spinner
                   no-transition
@@ -84,7 +84,7 @@
                     getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
                   "
                 />
-                <q-avatar
+                <QAvatar
                   v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
                   class="engine-icon"
                   rounded
@@ -97,13 +97,13 @@
                       ]
                     "
                   />
-                </q-avatar>
-              </q-avatar>
+                </QAvatar>
+              </QAvatar>
               <div>{{ characterInfo.metas.speakerName }}</div>
-            </q-btn>
+            </QBtn>
             <!-- スタイルが2つ以上あるものだけ、スタイル選択ボタンを表示する-->
             <template v-if="characterInfo.metas.styles.length >= 2">
-              <q-separator vertical />
+              <QSeparator vertical />
 
               <div
                 class="flex items-center q-px-sm q-py-none cursor-pointer"
@@ -117,8 +117,8 @@
                 @mouseleave="reassignSubMenuOpen.cancel()"
                 @keyup.right="reassignSubMenuOpen(characterIndex)"
               >
-                <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
-                <q-menu
+                <QIcon name="keyboard_arrow_right" color="grey-6" size="sm" />
+                <QMenu
                   v-model="subMenuOpenFlags[characterIndex]"
                   no-parent-event
                   anchor="top end"
@@ -127,8 +127,8 @@
                   transition-hide="none"
                   class="character-menu"
                 >
-                  <q-list style="min-width: max-content">
-                    <q-item
+                  <QList style="min-width: max-content">
+                    <QItem
                       v-for="(style, styleIndex) in characterInfo.metas.styles"
                       :key="styleIndex"
                       v-close-popup
@@ -151,14 +151,14 @@
                         })
                       "
                     >
-                      <q-avatar rounded size="2rem" class="q-mr-md">
-                        <q-img
+                      <QAvatar rounded size="2rem" class="q-mr-md">
+                        <QImg
                           no-spinner
                           no-transition
                           :ratio="1"
                           :src="characterInfo.metas.styles[styleIndex].iconPath"
                         />
-                        <q-avatar
+                        <QAvatar
                           v-if="showEngineInfo"
                           rounded
                           class="engine-icon"
@@ -170,26 +170,26 @@
                               ]
                             "
                           />
-                        </q-avatar>
-                      </q-avatar>
-                      <q-item-section v-if="style.styleName"
+                        </QAvatar>
+                      </QAvatar>
+                      <QItemSection v-if="style.styleName"
                         >{{ characterInfo.metas.speakerName }}（{{
                           style.styleName
-                        }}）</q-item-section
+                        }}）</QItemSection
                       >
-                      <q-item-section v-else>{{
+                      <QItemSection v-else>{{
                         characterInfo.metas.speakerName
-                      }}</q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-menu>
+                      }}</QItemSection>
+                    </QItem>
+                  </QList>
+                </QMenu>
               </div>
             </template>
-          </q-btn-group>
-        </q-item>
-      </q-list>
-    </q-menu>
-  </q-btn>
+          </QBtnGroup>
+        </QItem>
+      </QList>
+    </QMenu>
+  </QBtn>
 </template>
 
 <script setup lang="ts">

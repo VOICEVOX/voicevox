@@ -26,6 +26,7 @@ module.exports = {
         ? ["error", "unix"]
         : "off",
     "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
+    "no-constant-condition": ["error", { checkLoops: false }], // while(true) などを許可
     "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
     "prettier/prettier": [
       "error",
@@ -50,6 +51,14 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
+    "vue/component-name-in-template-casing": [
+      "error",
+      "PascalCase",
+      {
+        registeredComponentsOnly: false,
+        ignores: [],
+      },
+    ],
     "vue/component-tags-order": [
       "error",
       {
@@ -67,9 +76,7 @@ module.exports = {
   overrides: [
     {
       files: [
-        "./src/background.ts",
-        "./src/background/*.ts",
-        "./src/electron/*.ts",
+        "./src/backend/electron/**/*.ts",
         "./tests/**/*.ts",
         "./build/*.js",
         "./build/*.mts",
@@ -81,11 +88,7 @@ module.exports = {
     // Electronのメインプロセス以外でelectronのimportを禁止する
     {
       files: ["./src/**/*.ts", "./src/**/*.vue"],
-      excludedFiles: [
-        "./src/background.ts",
-        "./src/background/*.ts",
-        "./src/electron/*.ts",
-      ],
+      excludedFiles: ["./src/backend/electron/**/*.ts"],
       rules: {
         "no-restricted-imports": [
           "error",

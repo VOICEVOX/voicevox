@@ -1,17 +1,17 @@
 <template>
-  <menu-bar />
+  <MenuBar />
 
-  <q-layout reveal elevated container class="layout-container">
-    <tool-bar />
+  <QLayout reveal elevated container class="layout-container">
+    <ToolBar />
 
-    <q-page-container>
-      <q-page class="main-row-panes">
-        <progress-view />
-        <engine-startup-overlay
+    <QPageContainer>
+      <QPage class="main-row-panes">
+        <ProgressView />
+        <EngineStartupOverlay
           :is-completed-initial-startup="isCompletedInitialStartup"
         />
 
-        <q-splitter
+        <QSplitter
           horizontal
           reverse
           unit="px"
@@ -25,7 +25,7 @@
           @update:model-value="updateAudioDetailPane"
         >
           <template #before>
-            <q-splitter
+            <QSplitter
               :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
               separator-class="home-splitter"
               :separator-style="{ width: shouldShowPanes ? '3px' : '0' }"
@@ -35,10 +35,10 @@
               @update:model-value="updatePortraitPane"
             >
               <template #before>
-                <character-portrait />
+                <CharacterPortrait />
               </template>
               <template #after>
-                <q-splitter
+                <QSplitter
                   reverse
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
@@ -62,7 +62,7 @@
                       "
                       @click="onAudioCellPaneClick"
                     >
-                      <draggable
+                      <Draggable
                         ref="cellsRef"
                         class="audio-cells"
                         :model-value="audioKeys"
@@ -73,19 +73,19 @@
                         @update:model-value="updateAudioKeys"
                       >
                         <template #item="{ element }">
-                          <audio-cell
+                          <AudioCell
                             :ref="addAudioCellRef"
                             class="draggable-cursor"
                             :audio-key="element"
                             @focus-cell="focusCell"
                           />
                         </template>
-                      </draggable>
+                      </Draggable>
                       <div
                         v-if="showAddAudioItemButton"
                         class="add-button-wrapper"
                       >
-                        <q-btn
+                        <QBtn
                           fab
                           icon="add"
                           color="primary"
@@ -93,64 +93,41 @@
                           :disable="uiLocked"
                           aria-label="テキストを追加"
                           @click="addAudioItem"
-                        ></q-btn>
+                        ></QBtn>
                       </div>
                     </div>
                   </template>
                   <template #after>
-                    <audio-info
+                    <AudioInfo
                       v-if="activeAudioKey != undefined"
                       :active-audio-key="activeAudioKey"
                     />
                   </template>
-                </q-splitter>
+                </QSplitter>
               </template>
-            </q-splitter>
+            </QSplitter>
           </template>
           <template #after>
-            <audio-detail
+            <AudioDetail
               v-if="activeAudioKey != undefined"
               :active-audio-key="activeAudioKey"
             />
           </template>
-        </q-splitter>
+        </QSplitter>
 
-        <q-resize-observer
+        <QResizeObserver
           ref="resizeObserverRef"
           @resize="({ height }) => changeAudioDetailPaneMaxHeight(height)"
         />
-      </q-page>
-    </q-page-container>
-  </q-layout>
-  <help-dialog v-model="isHelpDialogOpenComputed" />
-  <setting-dialog v-model="isSettingDialogOpenComputed" />
-  <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
-  <tool-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
-  <character-order-dialog
-    v-if="orderedAllCharacterInfos.length > 0"
-    v-model="isCharacterOrderDialogOpenComputed"
-    :character-infos="orderedAllCharacterInfos"
-  />
-  <default-style-list-dialog
-    v-if="orderedTalkCharacterInfos.length > 0"
-    v-model="isDefaultStyleSelectDialogOpenComputed"
-    :character-infos="orderedTalkCharacterInfos"
-  />
-  <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
-  <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
-  <accept-retrieve-telemetry-dialog
-    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
-  />
-  <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
-  <update-notification-dialog-container
-    :can-open-dialog="canOpenNotificationDialog"
-  />
+      </QPage>
+    </QPageContainer>
+  </QLayout>
 </template>
 
 <script setup lang="ts">
 import path from "path";
 import { computed, onBeforeUpdate, ref, VNodeRef, watch } from "vue";
-import draggable from "vuedraggable";
+import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import cloneDeep from "clone-deep";
 import AudioCell from "./AudioCell.vue";
@@ -160,18 +137,7 @@ import CharacterPortrait from "./CharacterPortrait.vue";
 import ToolBar from "./ToolBar.vue";
 import { useStore } from "@/store";
 import MenuBar from "@/components/Talk/MenuBar.vue";
-import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
-import SettingDialog from "@/components/Dialog/SettingDialog.vue";
-import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
-import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
-import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
-import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
-import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptRetrieveTelemetryDialog.vue";
-import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
-import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
-import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import ProgressView from "@/components/ProgressView.vue";
-import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { AudioItem } from "@/store/type";
 import {
@@ -180,13 +146,13 @@ import {
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
-import { filterCharacterInfosByStyleType } from "@/store/utility";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import onetimeWatch from "@/helpers/onetimeWatch";
 
 const props =
   defineProps<{
-    projectFilePath?: string;
     isEnginesReady: boolean;
+    isProjectFileLoaded: boolean | "waiting";
   }>();
 
 const store = useStore();
@@ -255,10 +221,11 @@ const removeAudioItem = async () => {
 };
 
 // view
-const DEFAULT_PORTRAIT_PANE_WIDTH = 25; // %
+const DEFAULT_PORTRAIT_PANE_WIDTH = 22; // %
 const MIN_PORTRAIT_PANE_WIDTH = 0;
 const MAX_PORTRAIT_PANE_WIDTH = 40;
-const MIN_AUDIO_INFO_PANE_WIDTH = 160; // px
+const DEFAULT_AUDIO_INFO_PANE_WIDTH = 200; // px
+const MIN_AUDIO_INFO_PANE_WIDTH = 160;
 const MAX_AUDIO_INFO_PANE_WIDTH = 250;
 const MIN_AUDIO_DETAIL_PANE_HEIGHT = 185; // px
 const MAX_AUDIO_DETAIL_PANE_HEIGHT = 500;
@@ -399,7 +366,8 @@ watch(shouldShowPanes, (val, old) => {
     );
 
     audioInfoPaneWidth.value = clamp(
-      splitterPosition.value.audioInfoPaneWidth ?? MIN_AUDIO_INFO_PANE_WIDTH,
+      splitterPosition.value.audioInfoPaneWidth ??
+        DEFAULT_AUDIO_INFO_PANE_WIDTH,
       MIN_AUDIO_INFO_PANE_WIDTH,
       MAX_AUDIO_INFO_PANE_WIDTH
     );
@@ -481,21 +449,13 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
 
 // エンジン初期化後の処理
 const isCompletedInitialStartup = ref(false);
-const unwatchIsEnginesReady = watch(
-  // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
-  () => props.isEnginesReady,
-  async (isEnginesReady) => {
-    if (!isEnginesReady) return;
-
-    // プロジェクトファイルが指定されていればロード
-    let projectFileLoaded = false;
-    if (props.projectFilePath != undefined && props.projectFilePath !== "") {
-      projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
-        filePath: props.projectFilePath,
-      });
-    }
-
-    if (!projectFileLoaded) {
+// TODO: Vueっぽくないので解体する
+onetimeWatch(
+  () => props.isProjectFileLoaded,
+  async (isProjectFileLoaded) => {
+    if (isProjectFileLoaded == "waiting" || !props.isEnginesReady)
+      return "continue";
+    if (!isProjectFileLoaded) {
       // 最初のAudioCellを作成
       const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
       const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
@@ -511,20 +471,9 @@ const unwatchIsEnginesReady = watch(
       });
     }
 
-    // 設定の読み込みを待機する
-    // FIXME: 設定が必要な処理はINIT_VUEXを実行しているApp.vueで行うべき
-    await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
-
-    isAcceptRetrieveTelemetryDialogOpenComputed.value =
-      store.state.acceptRetrieveTelemetry === "Unconfirmed";
-
-    isAcceptTermsDialogOpenComputed.value =
-      import.meta.env.MODE !== "development" &&
-      store.state.acceptTerms !== "Accepted";
-
     isCompletedInitialStartup.value = true;
 
-    unwatchIsEnginesReady();
+    return "unwatch";
   },
   {
     immediate: true,
@@ -556,119 +505,6 @@ watch(
   }
 );
 
-// ライセンス表示
-const isHelpDialogOpenComputed = computed({
-  get: () => store.state.isHelpDialogOpen,
-  set: (val) => store.dispatch("SET_DIALOG_OPEN", { isHelpDialogOpen: val }),
-});
-
-// 設定
-const isSettingDialogOpenComputed = computed({
-  get: () => store.state.isSettingDialogOpen,
-  set: (val) => store.dispatch("SET_DIALOG_OPEN", { isSettingDialogOpen: val }),
-});
-
-// ショートカットキー設定
-const isHotkeySettingDialogOpenComputed = computed({
-  get: () => store.state.isHotkeySettingDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isHotkeySettingDialogOpen: val,
-    }),
-});
-
-// ツールバーのカスタム設定
-const isToolbarSettingDialogOpenComputed = computed({
-  get: () => store.state.isToolbarSettingDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isToolbarSettingDialogOpen: val,
-    }),
-});
-
-// 利用規約表示
-const isAcceptTermsDialogOpenComputed = computed({
-  get: () => store.state.isAcceptTermsDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isAcceptTermsDialogOpen: val,
-    }),
-});
-
-// キャラクター並び替え
-const orderedAllCharacterInfos = computed(
-  () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
-);
-const isCharacterOrderDialogOpenComputed = computed({
-  get: () =>
-    !store.state.isAcceptTermsDialogOpen &&
-    store.state.isCharacterOrderDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isCharacterOrderDialogOpen: val,
-    }),
-});
-
-// TODO: デフォルトスタイル選択(ソング)の実装
-// デフォルトスタイル選択(トーク)
-const orderedTalkCharacterInfos = computed(() => {
-  return filterCharacterInfosByStyleType(
-    store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
-    "talk"
-  );
-});
-const isDefaultStyleSelectDialogOpenComputed = computed({
-  get: () =>
-    !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    store.state.isDefaultStyleSelectDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isDefaultStyleSelectDialogOpen: val,
-    }),
-});
-
-// エンジン管理
-const isEngineManageDialogOpenComputed = computed({
-  get: () => store.state.isEngineManageDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isEngineManageDialogOpen: val,
-    }),
-});
-
-// 読み方＆アクセント辞書
-const isDictionaryManageDialogOpenComputed = computed({
-  get: () => store.state.isDictionaryManageDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isDictionaryManageDialogOpen: val,
-    }),
-});
-
-const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
-  get: () =>
-    !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    !store.state.isDefaultStyleSelectDialogOpen &&
-    store.state.isAcceptRetrieveTelemetryDialogOpen,
-  set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
-      isAcceptRetrieveTelemetryDialogOpen: val,
-    }),
-});
-
-// エディタのアップデート確認ダイアログ
-const canOpenNotificationDialog = computed(() => {
-  return (
-    !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    !store.state.isDefaultStyleSelectDialogOpen &&
-    !store.state.isAcceptRetrieveTelemetryDialogOpen &&
-    isCompletedInitialStartup.value
-  );
-});
-
 // ドラッグ＆ドロップ
 const dragEventCounter = ref(0);
 const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
@@ -691,7 +527,7 @@ const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
 };
 
 // AudioCellの自動スクロール
-const cellsRef = ref<InstanceType<typeof draggable> | undefined>();
+const cellsRef = ref<InstanceType<typeof Draggable> | undefined>();
 watch(activeAudioKey, (audioKey) => {
   if (audioKey == undefined) return;
   const activeCellElement = audioCellRefs[audioKey].$el;

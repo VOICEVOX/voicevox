@@ -1,21 +1,19 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="engineManageDialogOpenedComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="setting-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr fFf" class="bg-background">
-      <q-page-container>
-        <q-header class="q-pa-sm">
-          <q-toolbar>
-            <q-toolbar-title class="text-display"
-              >エンジンの管理</q-toolbar-title
-            >
-            <q-space />
+    <QLayout container view="hHh Lpr fFf" class="bg-background">
+      <QPageContainer>
+        <QHeader class="q-pa-sm">
+          <QToolbar>
+            <QToolbarTitle class="text-display">エンジンの管理</QToolbarTitle>
+            <QSpace />
             <!-- close button -->
-            <q-btn
+            <QBtn
               round
               flat
               icon="close"
@@ -23,12 +21,12 @@
               :disabled="isAddingEngine || uiLocked"
               @click="toDialogClosedState"
             />
-          </q-toolbar>
-        </q-header>
-        <q-page class="row">
+          </QToolbar>
+        </QHeader>
+        <QPage class="row">
           <div v-if="uiLockedState" class="ui-lock-popup">
             <div class="q-pa-md">
-              <q-spinner color="primary" size="2.5rem" />
+              <QSpinner color="primary" size="2.5rem" />
               <div class="q-mt-xs">
                 <template v-if="uiLockedState === 'addingEngine'"
                   >追加中・・・</template
@@ -44,28 +42,26 @@
             <div class="engine-list-header text-no-wrap">
               <div class="row engine-list-title text-h5">エンジン一覧</div>
               <div class="row no-wrap">
-                <q-btn
+                <QBtn
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   :disable="uiLocked"
                   @click="toAddEngineState"
-                  >追加</q-btn
+                  >追加</QBtn
                 >
               </div>
             </div>
-            <q-list class="engine-list">
+            <QList class="engine-list">
               <template
                 v-for="([type, engineIds], i) in Object.entries(
                   categorizedEngineIds
                 )"
                 :key="`engine-list-${i}`"
               >
-                <q-separator v-if="i > 0" spaced />
-                <q-item-label header>
-                  {{ getEngineTypeName(type) }}</q-item-label
-                >
-                <q-item
+                <QSeparator v-if="i > 0" spaced />
+                <QItemLabel header> {{ getEngineTypeName(type) }}</QItemLabel>
+                <QItem
                   v-for="id in engineIds"
                   :key="id"
                   v-ripple
@@ -75,29 +71,29 @@
                   active-class="active-engine"
                   @click="selectEngine(id)"
                 >
-                  <q-item-section avatar>
-                    <q-avatar rounded color="primary">
+                  <QItemSection avatar>
+                    <QAvatar rounded color="primary">
                       <img
                         v-if="engineIcons[id]"
                         :src="engineIcons[id]"
                         :alt="engineInfos[id].name"
                       />
                       <span v-else class="text-display-on-primary"> ? </span>
-                    </q-avatar>
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label class="text-display">{{
+                    </QAvatar>
+                  </QItemSection>
+                  <QItemSection>
+                    <QItemLabel class="text-display">{{
                       engineInfos[id].name
-                    }}</q-item-label>
-                    <q-item-label caption class="engine-path">{{
+                    }}</QItemLabel>
+                    <QItemLabel caption class="engine-path">{{
                       engineManifests[id] != undefined
                         ? engineManifests[id].brandName
                         : engineInfos[id].uuid
-                    }}</q-item-label>
-                  </q-item-section>
-                </q-item>
+                    }}</QItemLabel>
+                  </QItemSection>
+                </QItem>
               </template>
-            </q-list>
+            </QList>
           </div>
 
           <!-- 右側のpane -->
@@ -109,7 +105,7 @@
               <div class="text-h5 q-ma-sm">エンジンの追加</div>
 
               <div class="q-ma-sm">
-                <q-btn-toggle
+                <QBtnToggle
                   v-model="engineLoaderType"
                   :options="[
                     { value: 'vvpp', label: 'VVPPファイル' },
@@ -129,7 +125,7 @@
                 VVPPファイルでエンジンをインストールします。
               </div>
               <div class="q-ma-sm">
-                <q-input
+                <QInput
                   ref="vvppFilePathInput"
                   v-model="vvppFilePath"
                   dense
@@ -138,7 +134,7 @@
                   @click="selectVvppFile"
                 >
                   <template #append>
-                    <q-btn
+                    <QBtn
                       square
                       dense
                       flat
@@ -146,10 +142,10 @@
                       icon="folder_open"
                       @click="selectVvppFile"
                     >
-                      <q-tooltip :delay="500" anchor="bottom left">
+                      <QTooltip :delay="500" anchor="bottom left">
                         ファイル選択
-                      </q-tooltip>
-                    </q-btn>
+                      </QTooltip>
+                    </QBtn>
                   </template>
                   <template #error>
                     {{
@@ -160,13 +156,13 @@
                         : undefined
                     }}
                   </template>
-                </q-input>
+                </QInput>
               </div>
             </div>
             <div v-if="engineLoaderType === 'dir'" class="no-wrap q-pl-md">
               <div class="q-ma-sm">PC内にあるエンジンを追加します。</div>
               <div class="q-ma-sm">
-                <q-input
+                <QInput
                   ref="newEngineDirInput"
                   v-model="newEngineDir"
                   dense
@@ -179,7 +175,7 @@
                   @click="selectEngineDir"
                 >
                   <template #append>
-                    <q-btn
+                    <QBtn
                       square
                       dense
                       flat
@@ -187,10 +183,10 @@
                       icon="folder_open"
                       @click="selectEngineDir"
                     >
-                      <q-tooltip :delay="500" anchor="bottom left">
+                      <QTooltip :delay="500" anchor="bottom left">
                         フォルダ選択
-                      </q-tooltip>
-                    </q-btn>
+                      </QTooltip>
+                    </QBtn>
                   </template>
                   <template #error>
                     {{
@@ -201,26 +197,26 @@
                         : undefined
                     }}
                   </template>
-                </q-input>
+                </QInput>
               </div>
             </div>
             <div class="row q-px-md right-pane-buttons">
-              <q-space />
+              <QSpace />
 
-              <q-btn
+              <QBtn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="toInitialState"
-                >キャンセル</q-btn
+                >キャンセル</QBtn
               >
-              <q-btn
+              <QBtn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disabled="!canAddEngine"
                 @click="addEngine"
-                >追加</q-btn
+                >追加</QBtn
               >
             </div>
           </div>
@@ -236,9 +232,9 @@
                 class="engine-icon"
               />
               <div v-else class="q-mt-sm inline-block">
-                <q-avatar rounded color="primary" size="2rem">
+                <QAvatar rounded color="primary" size="2rem">
                   <span class="text-display-on-primary"> ? </span>
-                </q-avatar>
+                </QAvatar>
               </div>
               <div class="text-h5 q-ma-sm">
                 {{ engineInfos[selectedId].name }}
@@ -302,7 +298,7 @@
                   'q-ma-sm' + (engineInfos[selectedId].path ? '' : ' disabled')
                 "
               >
-                <q-input
+                <QInput
                   ref="pathInput"
                   v-model="engineDir"
                   disabled
@@ -312,9 +308,9 @@
               </div>
             </div>
             <div class="row q-px-md right-pane-buttons">
-              <q-space />
+              <QSpace />
 
-              <q-btn
+              <QBtn
                 outline
                 text-color="warning"
                 class="text-no-wrap text-bold q-mr-sm"
@@ -323,30 +319,30 @@
                   !['path', 'vvpp'].includes(engineInfos[selectedId].type)
                 "
                 @click="deleteEngine"
-                >削除</q-btn
+                >削除</QBtn
               >
-              <q-btn
+              <QBtn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !engineInfos[selectedId].path"
                 @click="openSelectedEngineDirectory"
-                >フォルダを開く</q-btn
+                >フォルダを開く</QBtn
               >
-              <q-btn
+              <QBtn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || engineStates[selectedId] === 'STARTING'"
                 @click="restartSelectedEngine"
-                >再起動</q-btn
+                >再起動</QBtn
               >
             </div>
           </div>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
@@ -600,7 +596,7 @@ const requireReload = async (message: string) => {
 const newEngineDir = ref("");
 const newEngineDirValidationState = ref<EngineDirValidationResult | null>(null);
 const selectEngineDir = async () => {
-  const path = await window.electron.showOpenDirectoryDialog({
+  const path = await window.backend.showOpenDirectoryDialog({
     title: "エンジンのフォルダを選択",
   });
   if (path) {
@@ -620,7 +616,7 @@ const selectEngineDir = async () => {
 
 const vvppFilePath = ref("");
 const selectVvppFile = async () => {
-  const path = await window.electron.showVvppOpenDialog({
+  const path = await window.backend.showVvppOpenDialog({
     title: "vvppファイルを選択",
     defaultPath: vvppFilePath.value,
   });

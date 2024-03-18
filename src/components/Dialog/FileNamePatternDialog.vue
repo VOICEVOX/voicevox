@@ -1,20 +1,20 @@
 <template>
-  <q-dialog
+  <QDialog
     :model-value="props.openDialog"
     @update:model-value="updateOpenDialog"
     @before-show="initializeInput"
   >
-    <q-card class="q-pa-md dialog-card">
-      <q-card-section>
+    <QCard class="q-pa-md dialog-card">
+      <QCardSection>
         <div class="text-h5">書き出しファイル名パターン</div>
         <div class="text-body2 text-grey-8">
           「$キャラ$」のようなタグを使って書き出すファイル名をカスタマイズできます
         </div>
-      </q-card-section>
-      <q-card-actions class="setting-card q-px-md q-py-sm">
+      </QCardSection>
+      <QCardActions class="setting-card q-px-md q-py-sm">
         <div class="row full-width justify-between">
           <div class="col">
-            <q-input
+            <QInput
               ref="patternInput"
               v-model="currentBaseNamePattern"
               dense
@@ -27,7 +27,7 @@
               :error-message="errorMessage"
             >
               <template #after>
-                <q-btn
+                <QBtn
                   label="デフォルトにリセット"
                   outline
                   text-color="display"
@@ -35,14 +35,14 @@
                   @click="resetToDefault"
                 />
               </template>
-            </q-input>
+            </QInput>
           </div>
         </div>
         <div class="text-body2 text-ellipsis">
           出力例）{{ previewFileName }}
         </div>
         <div class="row full-width q-my-md">
-          <q-btn
+          <QBtn
             v-for="tagString in tagStrings"
             :key="tagString"
             :label="`$${tagString}$`"
@@ -53,14 +53,14 @@
           />
         </div>
         <div class="row full-width justify-end">
-          <q-btn
+          <QBtn
             label="キャンセル"
             outline
             text-color="display"
             class="text-no-wrap text-bold q-mr-sm col-2"
             @click="updateOpenDialog(false)"
           />
-          <q-btn
+          <QBtn
             label="確定"
             unelevated
             color="primary"
@@ -70,9 +70,9 @@
             @click="submit"
           />
         </div>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+      </QCardActions>
+    </QCard>
+  </QDialog>
 </template>
 
 <script setup lang="ts">

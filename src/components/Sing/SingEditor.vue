@@ -1,15 +1,17 @@
 <template>
-  <menu-bar />
-  <tool-bar />
+  <MenuBar />
+  <ToolBar />
   <div class="sing-main">
-    <engine-startup-overlay :is-completed-initial-startup="isEnginesReady" />
+    <EngineStartupOverlay
+      :is-completed-initial-startup="isCompletedInitialStartup"
+    />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
-        <q-spinner color="primary" size="2.5rem" />
+        <QSpinner color="primary" size="2.5rem" />
         <div class="q-mt-xs">
           {{ nowRendering ? "レンダリング中・・・" : "音声を書き出し中・・・" }}
         </div>
-        <q-btn
+        <QBtn
           v-if="nowRendering"
           padding="xs md"
           label="音声の書き出しをキャンセル"
@@ -20,34 +22,30 @@
         />
       </div>
     </div>
-    <score-sequencer />
+    <ScoreSequencer :is-activated="isActivated" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from "vue";
+import { computed, onActivated, onDeactivated, ref } from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
+import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
+import { useStore } from "@/store";
+import onetimeWatch from "@/helpers/onetimeWatch";
 import {
   DEFAULT_BEATS,
   DEFAULT_BEAT_TYPE,
   DEFAULT_BPM,
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
-import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
-import { useStore } from "@/store";
 
-const props = withDefaults(
+const props =
   defineProps<{
-    projectFilePath?: string;
     isEnginesReady: boolean;
-  }>(),
-  {
-    projectFilePath: undefined,
-    isEnginesReady: false,
-  }
-);
+    isProjectFileLoaded: boolean | "waiting";
+  }>();
 
 const store = useStore();
 //const $q = useQuasar();
@@ -63,54 +61,64 @@ const cancelExport = () => {
   store.dispatch("CANCEL_AUDIO_EXPORT");
 };
 
-// 歌声合成エディターの初期化
-onMounted(async () => {
-  await store.dispatch("SET_SCORE", {
-    score: {
-      tpqn: DEFAULT_TPQN,
-      tempos: [
-        {
-          position: 0,
-          bpm: DEFAULT_BPM,
+const isCompletedInitialStartup = ref(false);
+// TODO: Vueっぽくないので解体する
+onetimeWatch(
+  () => props.isProjectFileLoaded,
+  async (isProjectFileLoaded) => {
+    if (isProjectFileLoaded == "waiting" || !props.isEnginesReady)
+      return "continue";
+
+    if (!isProjectFileLoaded) {
+      await store.dispatch("SET_SCORE", {
+        score: {
+          tpqn: DEFAULT_TPQN,
+          tempos: [
+            {
+              position: 0,
+              bpm: DEFAULT_BPM,
+            },
+          ],
+          timeSignatures: [
+            {
+              measureNumber: 1,
+              beats: DEFAULT_BEATS,
+              beatType: DEFAULT_BEAT_TYPE,
+            },
+          ],
+          notes: [],
         },
-      ],
-      timeSignatures: [
-        {
-          measureNumber: 1,
-          beats: DEFAULT_BEATS,
-          beatType: DEFAULT_BEAT_TYPE,
-        },
-      ],
-      notes: [],
-    },
-  });
+      });
 
-  await store.dispatch("SET_VOLUME", { volume: 0.6 });
-  await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
-  await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
-    position: 0,
-  });
-  await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
-    position: 480 * 4 * 16,
-  });
-  return {};
-});
+      // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
+      // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
+      try {
+        await store.dispatch("SET_SINGER", {});
+      } catch (e) {
+        window.backend.logError(e);
+      }
+    }
 
-// エンジン初期化後の処理
-const unwatchIsEnginesReady = watch(
-  // TODO: 最初に１度だけ実行している。Vueっぽくないので解体する
-  () => props.isEnginesReady,
-  async (isEnginesReady) => {
-    if (!isEnginesReady) return;
+    await store.dispatch("SET_VOLUME", { volume: 0.6 });
+    await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+    isCompletedInitialStartup.value = true;
 
-    await store.dispatch("SET_SINGER", {});
-
-    unwatchIsEnginesReady();
+    return "unwatch";
   },
   {
     immediate: true,
   }
 );
+
+const isActivated = ref(false);
+
+onActivated(() => {
+  isActivated.value = true;
+});
+
+onDeactivated(() => {
+  isActivated.value = false;
+});
 </script>
 
 <style scoped lang="scss">

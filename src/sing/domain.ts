@@ -1,4 +1,4 @@
-import { Note, Score, Tempo, TimeSignature } from "@/store/type";
+import { Note, Phrase, Score, Tempo, TimeSignature } from "@/store/type";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -251,6 +251,10 @@ export function noteNumberToFrequency(noteNumber: number) {
   return 440 * Math.pow(2, (noteNumber - 69) / 12);
 }
 
+export function frequencyToNoteNumber(frequency: number) {
+  return 69 + Math.log2(frequency / 440) * 12;
+}
+
 export function linearToDecibel(linearValue: number) {
   if (linearValue === 0) {
     return -1000;
@@ -275,10 +279,58 @@ export function isValidSnapType(snapType: number, tpqn: number) {
   return getSnapTypes(tpqn).some((value) => value === snapType);
 }
 
-export function isValidVoiceKeyShift(voiceKeyShift: number) {
+export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
   return (
-    Number.isInteger(voiceKeyShift) &&
-    voiceKeyShift <= 24 &&
-    voiceKeyShift >= -24
+    Number.isInteger(keyRangeAdjustment) &&
+    keyRangeAdjustment <= 28 &&
+    keyRangeAdjustment >= -28
   );
+}
+
+export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
+  return (
+    Number.isInteger(volumeRangeAdjustment) &&
+    volumeRangeAdjustment <= 20 &&
+    volumeRangeAdjustment >= -20
+  );
+}
+
+export function toSortedPhrases(phrases: Map<string, Phrase>) {
+  return [...phrases.entries()].sort((a, b) => {
+    return a[1].startTicks - b[1].startTicks;
+  });
+}
+
+/**
+ * 次にレンダリングするべきPhraseを探す。
+ * phrasesが空の場合はエラー
+ * 優先順：
+ * - 再生位置が含まれるPhrase
+ * - 再生位置より後のPhrase
+ * - 再生位置より前のPhrase
+ */
+export function selectPriorPhrase(
+  phrases: Map<string, Phrase>,
+  position: number
+): [string, Phrase] {
+  if (phrases.size === 0) {
+    throw new Error("Received empty phrases");
+  }
+  // 再生位置が含まれるPhrase
+  for (const [phraseKey, phrase] of phrases) {
+    if (phrase.startTicks <= position && position <= phrase.endTicks) {
+      return [phraseKey, phrase];
+    }
+  }
+
+  const sortedPhrases = toSortedPhrases(phrases);
+  // 再生位置より後のPhrase
+  for (const [phraseKey, phrase] of sortedPhrases) {
+    if (phrase.startTicks > position) {
+      return [phraseKey, phrase];
+    }
+  }
+
+  // 再生位置より前のPhrase
+  return sortedPhrases[0];
 }

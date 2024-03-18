@@ -76,6 +76,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_TEXT_SAVE_DIALOG", { title, defaultPath });
   },
 
+  showSaveDirectoryDialog: ({ title }) => {
+    return ipcRendererInvoke("SHOW_SAVE_DIRECTORY_DIALOG", { title });
+  },
+
   showVvppOpenDialog: ({ title, defaultPath }) => {
     return ipcRendererInvoke("SHOW_VVPP_OPEN_DIALOG", { title, defaultPath });
   },

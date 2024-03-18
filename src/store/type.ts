@@ -751,8 +751,8 @@ export type Singer = z.infer<typeof singerSchema>;
 
 export const trackSchema = z.object({
   singer: singerSchema.optional(),
-  notesKeyShift: z.number(),
-  voiceKeyShift: z.number(),
+  keyRangeAdjustment: z.number(), // 音域調整量
+  volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
 });
 export type Track = z.infer<typeof trackSchema>;
@@ -765,8 +765,8 @@ export type PhraseState =
 
 export type Phrase = {
   singer?: Singer;
-  notesKeyShift: number;
-  voiceKeyShift: number;
+  keyRangeAdjustment: number;
+  volumeRangeAdjustment: number;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];
@@ -794,8 +794,6 @@ export type SingingStoreState = {
   editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
-  leftLocatorPosition: number;
-  rightLocatorPosition: number;
   startRenderingRequested: boolean;
   stopRenderingRequested: boolean;
   nowRendering: boolean;
@@ -818,9 +816,14 @@ export type SingingStoreTypes = {
     action(payload: { singer?: Singer }): void;
   };
 
-  SET_VOICE_KEY_SHIFT: {
-    mutation: { voiceKeyShift: number };
-    action(payload: { voiceKeyShift: number }): void;
+  SET_KEY_RANGE_ADJUSTMENT: {
+    mutation: { keyRangeAdjustment: number };
+    action(payload: { keyRangeAdjustment: number }): void;
+  };
+
+  SET_VOLUME_RANGE_ADJUSTMENT: {
+    mutation: { volumeRangeAdjustment: number };
+    action(payload: { volumeRangeAdjustment: number }): void;
   };
 
   SET_SCORE: {
@@ -959,16 +962,6 @@ export type SingingStoreTypes = {
     action(payload: { listener: (position: number) => void }): void;
   };
 
-  SET_LEFT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
-  };
-
-  SET_RIGHT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
-  };
-
   SET_PLAYBACK_STATE: {
     mutation: { nowPlaying: boolean };
   };
@@ -1033,9 +1026,14 @@ export type SingingCommandStoreTypes = {
     action(payload: { singer: Singer }): void;
   };
 
-  COMMAND_SET_VOICE_KEY_SHIFT: {
-    mutation: { voiceKeyShift: number };
-    action(payload: { voiceKeyShift: number }): void;
+  COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
+    mutation: { keyRangeAdjustment: number };
+    action(payload: { keyRangeAdjustment: number }): void;
+  };
+
+  COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
+    mutation: { volumeRangeAdjustment: number };
+    action(payload: { volumeRangeAdjustment: number }): void;
   };
 
   COMMAND_SET_TEMPO: {
@@ -1506,6 +1504,7 @@ export type SettingStoreTypes = {
  */
 
 export type UiStoreState = {
+  openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
   uiLockCount: number;
   dialogLockCount: number;
   reloadingLock: boolean;
@@ -1530,6 +1529,11 @@ export type UiStoreState = {
 };
 
 export type UiStoreTypes = {
+  SET_OPENED_EDITOR: {
+    mutation: { editor: EditorType };
+    action(palyoad: { editor: EditorType }): void;
+  };
+
   UI_LOCKED: {
     getter: boolean;
   };

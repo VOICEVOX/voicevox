@@ -3,7 +3,7 @@
   "version": "999.999.999",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
-  "main": "./dist/background.js",
+  "main": "./dist/main.js",
   "engines": {
     "node": ">=18.13.0 <19",
     "npm": ">=8.19.3 <9"
@@ -54,6 +54,7 @@
     "markdown-it": "13.0.2",
     "move-file": "3.0.0",
     "multistream": "4.1.0",
+    "pixi.js": "7.4.0",
     "quasar": "2.11.6",
     "semver": "7.5.4",
     "shlex": "2.1.2",
@@ -62,7 +63,6 @@
     "tree-kill": "1.2.2",
     "uuid": "9.0.0",
     "vue": "3.2.45",
-    "vue-router": "4.0.8",
     "vuedraggable": "4.1.0",
     "vuex": "4.0.2",
     "zod": "3.22.4"

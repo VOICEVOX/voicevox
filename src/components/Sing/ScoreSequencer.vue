@@ -3,13 +3,13 @@
     <!-- 左上の角 -->
     <div class="sequencer-corner"></div>
     <!-- ルーラー -->
-    <sequencer-ruler
+    <SequencerRuler
       class="sequencer-ruler"
       :offset="scrollX"
       :num-of-measures="numOfMeasures"
     />
     <!-- 鍵盤 -->
-    <sequencer-keys
+    <SequencerKeys
       class="sequencer-keys"
       :offset="scrollY"
       :black-key-width="28"
@@ -18,6 +18,7 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
+      :class="{ 'rect-selecting': shiftKey }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
@@ -29,7 +30,7 @@
       @scroll="onScroll"
     >
       <!-- キャラクター全身 -->
-      <character-portrait />
+      <CharacterPortrait />
       <!-- グリッド -->
       <!-- NOTE: 現状オクターブごとの罫線なし -->
       <svg
@@ -108,7 +109,7 @@
         }"
       ></div>
       <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
-      <sequencer-note
+      <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
@@ -118,7 +119,7 @@
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
-      <sequencer-note
+      <SequencerNote
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
@@ -129,6 +130,17 @@
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
     </div>
+    <SequencerPitch
+      v-if="showPitch"
+      class="sequencer-pitch"
+      :style="{
+        marginRight: `${scrollBarWidth}px`,
+        marginBottom: `${scrollBarWidth}px`,
+      }"
+      :is-activated="isActivated"
+      :offset-x="scrollX"
+      :offset-y="scrollY"
+    />
     <div
       class="sequencer-overlay"
       :style="{
@@ -136,7 +148,18 @@
         marginBottom: `${scrollBarWidth}px`,
       }"
     >
-      <sequencer-phrase-indicator
+      <div
+        ref="rectSelectHitbox"
+        class="rect-select-preview"
+        :style="{
+          display: isRectSelecting ? 'block' : 'none',
+          left: `${Math.min(rectSelectStartX, cursorX)}px`,
+          top: `${Math.min(rectSelectStartY, cursorY)}px`,
+          width: `${Math.abs(cursorX - rectSelectStartX)}px`,
+          height: `${Math.abs(cursorY - rectSelectStartY)}px`,
+        }"
+      />
+      <SequencerPhraseIndicator
         v-for="phraseInfo in phraseInfos"
         :key="phraseInfo.key"
         :phrase-key="phraseInfo.key"
@@ -189,7 +212,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onActivated, onDeactivated, nextTick } from "vue";
+import {
+  computed,
+  ref,
+  nextTick,
+  onMounted,
+  onActivated,
+  onDeactivated,
+} from "vue";
 import { v4 as uuidv4 } from "uuid";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
@@ -219,9 +249,13 @@ import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
+import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { useShiftKey } from "@/composables/useModifierKey";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
+
+defineProps<{ isActivated: boolean }>();
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -230,12 +264,16 @@ const isSelfEventTarget = (event: UIEvent) => {
 
 const store = useStore();
 const state = store.state;
+
 // 分解能（Ticks Per Quarter Note）
 const tpqn = computed(() => state.tpqn);
+
 // テンポ
 const tempos = computed(() => state.tempos);
+
 // 拍子
 const timeSignatures = computed(() => state.timeSignatures);
+
 // ノート
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 const unselectedNotes = computed(() => {
@@ -246,13 +284,23 @@ const selectedNotes = computed(() => {
   const selectedNoteIds = state.selectedNoteIds;
   return notes.value.filter((value) => selectedNoteIds.has(value.id));
 });
+
+// 矩形選択
+const shiftKey = useShiftKey();
+const isRectSelecting = ref(false);
+const rectSelectStartX = ref(0);
+const rectSelectStartY = ref(0);
+const rectSelectHitbox = ref<HTMLElement | undefined>(undefined);
+
 // ズーム状態
 const zoomX = computed(() => state.sequencerZoomX);
 const zoomY = computed(() => state.sequencerZoomY);
+
 // スナップ
 const snapTicks = computed(() => {
   return getNoteDuration(state.sequencerSnapType, tpqn.value);
 });
+
 // シーケンサグリッド
 const gridCellTicks = snapTicks; // ひとまずスナップ幅＝グリッドセル幅
 const gridCellWidth = computed(() => {
@@ -297,15 +345,18 @@ const gridWidth = computed(() => {
 const gridHeight = computed(() => {
   return gridCellHeight.value * keyInfos.length;
 });
+
 // スクロール位置
 const scrollX = ref(0);
 const scrollY = ref(0);
+
 // 再生ヘッドの位置
 const playheadTicks = ref(0);
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
   return Math.floor(baseX * zoomX.value);
 });
+
 // フレーズ
 const phraseInfos = computed(() => {
   return [...state.phrases.entries()].map(([key, phrase]) => {
@@ -316,11 +367,16 @@ const phraseInfos = computed(() => {
     return { key, x: startX, width: endX - startX };
   });
 });
+const showPitch = computed(() => {
+  return state.experimentalSetting.showPitchInSongEditor;
+});
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
+
 // マウスカーソル位置
-let cursorX = 0;
-let cursorY = 0;
+const cursorX = ref(0);
+const cursorY = ref(0);
+
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
 const nowPreviewing = ref(false);
@@ -334,6 +390,7 @@ let dragStartGuideLineTicks = 0;
 let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
 let executePreviewProcess = false;
 let edited = false; // プレビュー終了時にstore.stateの更新を行うかどうかを表す変数
+
 // ダブルクリック
 let mouseDownNoteId: string | undefined;
 const clickedNoteIds: [string | undefined, string | undefined] = [
@@ -341,12 +398,13 @@ const clickedNoteIds: [string | undefined, string | undefined] = [
   undefined,
 ];
 let ignoreDoubleClick = false;
+
 // 入力を補助する線
 const showGuideLine = ref(true);
 const guideLineX = ref(0);
 
 const previewAdd = () => {
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
   if (!draggingNote) {
@@ -379,8 +437,8 @@ const previewAdd = () => {
 };
 
 const previewMove = () => {
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
-  const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
+  const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
@@ -427,7 +485,7 @@ const previewMove = () => {
 };
 
 const previewResizeRight = () => {
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
   if (!draggingNote) {
@@ -467,7 +525,7 @@ const previewResizeRight = () => {
 };
 
 const previewResizeLeft = () => {
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
   if (!draggingNote) {
@@ -558,16 +616,16 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-  cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-  cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
-  if (cursorX >= sequencerBodyElement.clientWidth) {
+  cursorX.value = getXInBorderBox(event.clientX, sequencerBodyElement);
+  cursorY.value = getYInBorderBox(event.clientY, sequencerBodyElement);
+  if (cursorX.value >= sequencerBodyElement.clientWidth) {
     return;
   }
-  if (cursorY >= sequencerBodyElement.clientHeight) {
+  if (cursorY.value >= sequencerBodyElement.clientHeight) {
     return;
   }
-  const cursorBaseX = (scrollX.value + cursorX) / zoomX.value;
-  const cursorBaseY = (scrollY.value + cursorY) / zoomY.value;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
+  const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
   // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
@@ -687,7 +745,13 @@ const onMouseDown = (event: MouseEvent) => {
     return;
   }
   if (event.button === 0) {
-    startPreview(event, "ADD");
+    if (event.shiftKey) {
+      isRectSelecting.value = true;
+      rectSelectStartX.value = cursorX.value;
+      rectSelectStartY.value = cursorY.value;
+    } else {
+      startPreview(event, "ADD");
+    }
     mouseDownNoteId = undefined;
   } else {
     store.dispatch("DESELECT_ALL_NOTES");
@@ -699,14 +763,14 @@ const onMouseMove = (event: MouseEvent) => {
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-  cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-  cursorY = getYInBorderBox(event.clientY, sequencerBodyElement);
+  cursorX.value = getXInBorderBox(event.clientX, sequencerBodyElement);
+  cursorY.value = getYInBorderBox(event.clientY, sequencerBodyElement);
 
   if (nowPreviewing.value) {
     executePreviewProcess = true;
   } else {
     const scrollLeft = sequencerBodyElement.scrollLeft;
-    const cursorBaseX = (scrollLeft + cursorX) / zoomX.value;
+    const cursorBaseX = (scrollLeft + cursorX.value) / zoomX.value;
     const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
     // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
     const guideLineTicks =
@@ -727,6 +791,11 @@ const onMouseUp = (event: MouseEvent) => {
   }
   if (nowPreviewing.value && edited) {
     ignoreDoubleClick = true;
+  }
+
+  if (isRectSelecting.value) {
+    rectSelect();
+    return;
   }
 
   if (!nowPreviewing.value) {
@@ -750,6 +819,44 @@ const onMouseUp = (event: MouseEvent) => {
     }
   }
   nowPreviewing.value = false;
+};
+
+const rectSelect = () => {
+  const rectSelectHitboxElement = rectSelectHitbox.value;
+  if (!rectSelectHitboxElement) {
+    throw new Error("rectSelectHitboxElement is null.");
+  }
+  isRectSelecting.value = false;
+  const left = Math.min(rectSelectStartX.value, cursorX.value);
+  const top = Math.min(rectSelectStartY.value, cursorY.value);
+  const width = Math.abs(cursorX.value - rectSelectStartX.value);
+  const height = Math.abs(cursorY.value - rectSelectStartY.value);
+  const startTicks = baseXToTick(
+    (scrollX.value + left) / zoomX.value,
+    tpqn.value
+  );
+  const endTicks = baseXToTick(
+    (scrollX.value + left + width) / zoomX.value,
+    tpqn.value
+  );
+  const endNoteNumber = baseYToNoteNumber((scrollY.value + top) / zoomY.value);
+  const startNoteNumber = baseYToNoteNumber(
+    (scrollY.value + top + height) / zoomY.value
+  );
+
+  const noteIdsToSelect: string[] = [];
+  for (const note of notes.value) {
+    if (
+      note.position + note.duration >= startTicks &&
+      note.position <= endTicks &&
+      startNoteNumber <= note.noteNumber &&
+      note.noteNumber <= endNoteNumber
+    ) {
+      noteIdsToSelect.push(note.id);
+    }
+  }
+  store.dispatch("DESELECT_ALL_NOTES");
+  store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
 };
 
 const onDoubleClick = () => {
@@ -930,7 +1037,7 @@ const onWheel = (event: WheelEvent) => {
     throw new Error("sequencerBodyElement is null.");
   }
   if (isOnCommandOrCtrlKeyDown(event)) {
-    cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
+    cursorX.value = getXInBorderBox(event.clientX, sequencerBodyElement);
     // マウスカーソル位置を基準に水平方向のズームを行う
     const oldZoomX = zoomX.value;
     let newZoomX = zoomX.value;
@@ -941,8 +1048,8 @@ const onWheel = (event: WheelEvent) => {
     const scrollTop = sequencerBodyElement.scrollTop;
 
     store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
-      const cursorBaseX = (scrollLeft + cursorX) / oldZoomX;
-      const newScrollLeft = cursorBaseX * newZoomX - cursorX;
+      const cursorBaseX = (scrollLeft + cursorX.value) / oldZoomX;
+      const newScrollLeft = cursorBaseX * newZoomX - cursorX.value;
       sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
     });
   }
@@ -979,18 +1086,30 @@ const playheadPositionChangeListener = (position: number) => {
   }
 };
 
+// スクロールバーの幅を取得する
+onMounted(() => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (!sequencerBodyElement) {
+    throw new Error("sequencerBodyElement is null.");
+  }
+  const clientWidth = sequencerBodyElement.clientWidth;
+  const offsetWidth = sequencerBodyElement.offsetWidth;
+  scrollBarWidth.value = offsetWidth - clientWidth;
+});
+
 // 最初のonActivatedか判断するためのフラグ
 let firstActivation = true;
+
+// スクロール位置を設定する
 onActivated(() => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-
   let xToScroll = 0;
   let yToScroll = 0;
   if (firstActivation) {
-    // スクロール位置を設定（C4が上から2/3の位置になるようにする）
+    // 初期スクロール位置を設定（C4が上から2/3の位置になるようにする）
     const clientHeight = sequencerBodyElement.clientHeight;
     const c4BaseY = noteNumberToBaseY(60);
     const clientBaseHeight = clientHeight / zoomY.value;
@@ -998,13 +1117,9 @@ onActivated(() => {
     xToScroll = 0;
     yToScroll = scrollBaseY * zoomY.value;
 
-    // スクロールバーの幅を取得する
-    const clientWidth = sequencerBodyElement.clientWidth;
-    const offsetWidth = sequencerBodyElement.offsetWidth;
-    scrollBarWidth.value = offsetWidth - clientWidth;
-
     firstActivation = false;
   } else {
+    // スクロール位置を復帰
     xToScroll = scrollX.value;
     yToScroll = scrollY.value;
   }
@@ -1012,7 +1127,10 @@ onActivated(() => {
   nextTick().then(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });
+});
 
+// リスナー登録
+onActivated(() => {
   store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
@@ -1020,6 +1138,7 @@ onActivated(() => {
   document.addEventListener("keydown", handleKeydown);
 });
 
+// リスナー解除
 onDeactivated(() => {
   store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
@@ -1064,6 +1183,10 @@ onDeactivated(() => {
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
+
+  &.rect-selecting {
+    cursor: crosshair;
+  }
 }
 
 .sequencer-grid {
@@ -1113,6 +1236,11 @@ onDeactivated(() => {
   pointer-events: none;
 }
 
+.sequencer-pitch {
+  grid-row: 2;
+  grid-column: 2;
+}
+
 .sequencer-overlay {
   grid-row: 2;
   grid-column: 2;
@@ -1138,5 +1266,12 @@ onDeactivated(() => {
   background: colors.$primary;
   border-left: 1px solid rgba(colors.$background-rgb, 0.83);
   border-right: 1px solid rgba(colors.$background-rgb, 0.83);
+}
+
+.rect-select-preview {
+  pointer-events: none;
+  position: absolute;
+  border: 2px solid rgba(colors.$primary-rgb, 0.5);
+  background: rgba(colors.$primary-rgb, 0.25);
 }
 </style>

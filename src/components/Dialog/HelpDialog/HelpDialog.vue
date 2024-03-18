@@ -1,13 +1,13 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="modelValueComputed"
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="help-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr lff">
-      <q-drawer
+    <QLayout container view="hHh Lpr lff">
+      <QDrawer
         bordered
         show-if-above
         class="bg-background"
@@ -16,9 +16,9 @@
         :breakpoint="0"
       >
         <div class="column full-height">
-          <q-list>
+          <QList>
             <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
-              <q-item
+              <QItem
                 v-if="page.type === 'item'"
                 v-ripple
                 clickable
@@ -26,34 +26,34 @@
                 :active="selectedPageIndex === pageIndex"
                 @click="selectedPageIndex = pageIndex"
               >
-                <q-item-section> {{ page.name }} </q-item-section>
-              </q-item>
+                <QItemSection> {{ page.name }} </QItemSection>
+              </QItem>
               <template v-else-if="page.type === 'separator'">
-                <q-separator />
-                <q-item-label header>{{ page.name }}</q-item-label>
+                <QSeparator />
+                <QItemLabel header>{{ page.name }}</QItemLabel>
               </template>
             </template>
-          </q-list>
+          </QList>
         </div>
-      </q-drawer>
+      </QDrawer>
 
-      <q-page-container>
-        <q-page>
-          <q-tab-panels v-model="selectedPageIndex">
-            <q-tab-panel
+      <QPageContainer>
+        <QPage>
+          <QTabPanels v-model="selectedPageIndex">
+            <QTabPanel
               v-for="(page, pageIndex) of pagedata"
               :key="pageIndex"
               :name="pageIndex"
               class="q-pa-none"
             >
               <div v-if="page.type === 'item'" class="root">
-                <q-header class="q-pa-sm">
-                  <q-toolbar>
-                    <q-toolbar-title class="text-display">
+                <QHeader class="q-pa-sm">
+                  <QToolbar>
+                    <QToolbarTitle class="text-display">
                       ヘルプ / {{ page.parent ? page.parent + " / " : ""
                       }}{{ page.name }}
-                    </q-toolbar-title>
-                    <q-btn
+                    </QToolbarTitle>
+                    <QBtn
                       v-if="page.component === ContactInfo"
                       unelevated
                       color="toolbar-button"
@@ -62,9 +62,9 @@
                       @click="openLogDirectory"
                     >
                       ログフォルダを開く
-                    </q-btn>
+                    </QBtn>
                     <!-- close button -->
-                    <q-btn
+                    <QBtn
                       round
                       flat
                       icon="close"
@@ -72,16 +72,16 @@
                       aria-label="ヘルプを閉じる"
                       @click="modelValueComputed = false"
                     />
-                  </q-toolbar>
-                </q-header>
-                <component :is="page.component" v-bind="page.props" />
+                  </QToolbar>
+                </QHeader>
+                <Component :is="page.component" v-bind="page.props" />
               </div>
-            </q-tab-panel>
-          </q-tab-panels>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+            </QTabPanel>
+          </QTabPanels>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
@@ -138,7 +138,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
   );
 }
 const newUpdateResult = useFetchNewUpdateInfos(
-  () => window.electron.getAppInfos().then((obj) => obj.version), // アプリのバージョン
+  () => window.backend.getAppInfos().then((obj) => obj.version), // アプリのバージョン
   UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL)
 );
 
@@ -263,7 +263,7 @@ const pagedata = computed(() => {
 
 const selectedPageIndex = ref(0);
 
-const openLogDirectory = window.electron.openLogDirectory;
+const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">

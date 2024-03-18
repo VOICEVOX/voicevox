@@ -111,8 +111,11 @@ const applySongProjectToStore = async (
   await dispatch("SET_SINGER", {
     singer: tracks[0].singer,
   });
-  await dispatch("SET_VOICE_KEY_SHIFT", {
-    voiceKeyShift: tracks[0].voiceKeyShift,
+  await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
+    keyRangeAdjustment: tracks[0].keyRangeAdjustment,
+  });
+  await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
+    volumeRangeAdjustment: tracks[0].volumeRangeAdjustment,
   });
   await dispatch("SET_SCORE", {
     score: {
@@ -194,7 +197,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       ) => {
         if (!filePath) {
           // Select and load a project File.
-          const ret = await window.electron.showProjectLoadDialog({
+          const ret = await window.backend.showProjectLoadDialog({
             title: "プロジェクトファイルの選択",
           });
           if (ret == undefined || ret?.length == 0) {
@@ -207,7 +210,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         let buf: ArrayBuffer;
         try {
-          buf = await window.electron
+          buf = await window.backend
             .readFile({ filePath })
             .then(getValueOrThrow);
 
@@ -397,13 +400,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           if (
-            semver.satisfies(
-              projectAppVersion,
-              "<0.16.2",
-              semverSatisfiesOptions
-            )
+            semver.satisfies(projectAppVersion, "<0.17", semverSatisfiesOptions)
           ) {
-            // 0.16.2 未満のプロジェクトファイルはトークの情報のみ
+            // 0.17 未満のプロジェクトファイルはトークの情報のみ
             // なので全情報(audioKeys/audioItems)をtalkに移動する
             projectData.talk = {
               audioKeys: projectData.audioKeys,
@@ -412,7 +411,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
             // ソングの情報を初期化
             // generateSingingStoreInitialScoreが今後変わることがあるかもしれないので、
-            // 0.16.2時点のスコア情報を直接書く
+            // 0.17時点のスコア情報を直接書く
             projectData.song = {
               tpqn: DEFAULT_TPQN,
               tempos: [
@@ -431,8 +430,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               tracks: [
                 {
                   singer: undefined,
-                  notesKeyShift: 0,
-                  voiceKeyShift: 0,
+                  keyRangeAdjustment: 0,
                   notes: [],
                 },
               ],
@@ -440,6 +438,19 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
             delete projectData.audioKeys;
             delete projectData.audioItems;
+          }
+
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.17.1",
+              semverSatisfiesOptions
+            )
+          ) {
+            // volumeRangeAdjustmentの追加
+            for (const track of projectData.song.tracks) {
+              track.volumeRangeAdjustment = 0;
+            }
           }
 
           // Validation check
@@ -475,7 +486,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("CLEAR_COMMANDS");
           return true;
         } catch (err) {
-          window.electron.logError(err);
+          window.backend.logError(err);
           const message = (() => {
             if (typeof err === "string") return err;
             if (!(err instanceof Error)) return "エラーが発生しました。";
@@ -485,7 +496,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               return "ファイルフォーマットが正しくありません。";
             return err.message;
           })();
-          await window.electron.showMessageDialog({
+          await window.backend.showMessageDialog({
             type: "error",
             title: "エラー",
             message: `プロジェクトファイルの読み込みに失敗しました。\n${message}`,
@@ -517,7 +528,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
 
             // Write the current status to a project file.
-            const ret = await window.electron.showProjectSaveDialog({
+            const ret = await window.backend.showProjectSaveDialog({
               title: "プロジェクトファイルの保存",
               defaultPath,
             });
@@ -530,7 +541,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             context.state.projectFilePath &&
             context.state.projectFilePath != filePath
           ) {
-            await window.electron.showMessageDialog({
+            await window.backend.showMessageDialog({
               type: "info",
               title: "保存",
               message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
@@ -540,7 +551,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
             filePath,
           });
-          const appInfos = await window.electron.getAppInfos();
+          const appInfos = await window.backend.getAppInfos();
           const {
             audioItems,
             audioKeys,
@@ -566,7 +577,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const buf = new TextEncoder().encode(
             JSON.stringify(projectData)
           ).buffer;
-          await window.electron
+          await window.backend
             .writeFile({
               filePath,
               buffer: buf,
@@ -579,13 +590,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           );
           return true;
         } catch (err) {
-          window.electron.logError(err);
+          window.backend.logError(err);
           const message = (() => {
             if (typeof err === "string") return err;
             if (!(err instanceof Error)) return "エラーが発生しました。";
             return err.message;
           })();
-          await window.electron.showMessageDialog({
+          await window.backend.showMessageDialog({
             type: "error",
             title: "エラー",
             message: `プロジェクトファイルの保存に失敗しました。\n${message}`,
@@ -609,7 +620,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       }
       message += "\n変更を保存しますか？";
 
-      const result: number = await window.electron.showQuestionDialog({
+      const result: number = await window.backend.showQuestionDialog({
         type: "info",
         title: "警告",
         message,
