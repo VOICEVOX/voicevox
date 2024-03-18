@@ -221,10 +221,11 @@ const removeAudioItem = async () => {
 };
 
 // view
-const DEFAULT_PORTRAIT_PANE_WIDTH = 25; // %
+const DEFAULT_PORTRAIT_PANE_WIDTH = 22; // %
 const MIN_PORTRAIT_PANE_WIDTH = 0;
 const MAX_PORTRAIT_PANE_WIDTH = 40;
-const MIN_AUDIO_INFO_PANE_WIDTH = 160; // px
+const DEFAULT_AUDIO_INFO_PANE_WIDTH = 200; // px
+const MIN_AUDIO_INFO_PANE_WIDTH = 160;
 const MAX_AUDIO_INFO_PANE_WIDTH = 250;
 const MIN_AUDIO_DETAIL_PANE_HEIGHT = 185; // px
 const MAX_AUDIO_DETAIL_PANE_HEIGHT = 500;
@@ -365,7 +366,8 @@ watch(shouldShowPanes, (val, old) => {
     );
 
     audioInfoPaneWidth.value = clamp(
-      splitterPosition.value.audioInfoPaneWidth ?? MIN_AUDIO_INFO_PANE_WIDTH,
+      splitterPosition.value.audioInfoPaneWidth ??
+        DEFAULT_AUDIO_INFO_PANE_WIDTH,
       MIN_AUDIO_INFO_PANE_WIDTH,
       MAX_AUDIO_INFO_PANE_WIDTH
     );
