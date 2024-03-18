@@ -295,7 +295,7 @@ export function toSortedPhrases(phrases: Map<string, Phrase>) {
 
 /**
  * 次にレンダリングするべきPhraseを探す。
- * phrasesが空の場合はエ
+ * phrasesが空の場合はエラー
  * 優先順：
  * - 再生位置が含まれるPhrase
  * - 再生位置より後のPhrase
