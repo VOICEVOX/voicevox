@@ -754,7 +754,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       ) => {
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
-
         for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
           const note = notes[noteIndex];
 
