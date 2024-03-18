@@ -22,7 +22,6 @@
   <UpdateNotificationDialogContainer
     :can-open-dialog="canOpenNotificationDialog"
   />
-  <!-- TODO: ファイルドロップ -->
   <ImportMidiDialog v-model="isImportMidiDialogOpenComputed" />
 </template>
 

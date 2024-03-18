@@ -153,7 +153,7 @@ const handleImportTrack = () => {
   }
   // トラックをインポート
   store.dispatch("IMPORT_MIDI_FILE", {
-    filePath: midiFile.value.name,
+    filePath: midiFile.value.path,
     trackIndex: selectedTrack.value,
   });
   onDialogOK();
