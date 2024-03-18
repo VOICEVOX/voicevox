@@ -311,10 +311,12 @@ export const getArgumentKeyCombination = (
     );
   } else if (argumentKey == "VerticalArrows") {
     return ["ArrowUp" as HotkeyCombination, "ArrowDown" as HotkeyCombination];
-  } else if (argumentKey == "HorizontalArrows") {
+  } else if (argumentKey == "Arrows") {
     return [
       "ArrowLeft" as HotkeyCombination,
       "ArrowRight" as HotkeyCombination,
+      "ArrowUp" as HotkeyCombination,
+      "ArrowDown" as HotkeyCombination,
     ];
   }
   throw new Error(`Received unexpected HotkeyArgumentKeyType`);
@@ -329,8 +331,8 @@ export const getArgumentKeyCombinationText = (
     return "数字";
   } else if (argumentKey == "VerticalArrows") {
     return "上下キー";
-  } else if (argumentKey == "HorizontalArrows") {
-    return "左右キー";
+  } else if (argumentKey == "Arrows") {
+    return "全方向キー";
   }
   throw new Error(`Received unexpected HotkeyArgumentKeyType`);
 };
