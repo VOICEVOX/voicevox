@@ -755,17 +755,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
 
-        // ノートが途切れていたら別フレーズ扱い (例: ラララなら3つ、ラーーなら1つ)
         for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
           const note = notes[noteIndex];
 
           phraseNotes.push(note);
 
+          // ノートが途切れていたら別のフレーズにする
           const currentNoteEnd = note.position + note.duration;
           const nextNoteStart =
             noteIndex + 1 < notes.length ? notes[noteIndex + 1].position : null;
-
-          // ノートが途切れている場合の条件
           if (
             noteIndex === notes.length - 1 ||
             nextNoteStart == null ||
@@ -773,7 +771,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           ) {
             const phraseFirstNote = phraseNotes[0];
             const phraseLastNote = phraseNotes[phraseNotes.length - 1];
-            const generateHashParams = {
+            const params = {
               singer,
               notesKeyShift,
               voiceKeyShift,
@@ -781,9 +779,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               tempos,
               notes: phraseNotes,
             };
-            const hash = await generatePhraseHash(generateHashParams);
+            const hash = await generatePhraseHash(params);
             foundPhrases.set(hash, {
-              ...generateHashParams,
+              ...params,
               startTicks: phraseFirstNote.position,
               endTicks: phraseLastNote.position + phraseLastNote.duration,
               state: "WAITING_TO_BE_RENDERED",
