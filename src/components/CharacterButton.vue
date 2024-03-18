@@ -207,7 +207,6 @@ const props = withDefaults(
     selectedVoice: Voice | undefined;
     showEngineInfo?: boolean;
     emptiable?: boolean;
-    isActiveAudioCell?: boolean;
     uiLocked: boolean;
   }>(),
   {

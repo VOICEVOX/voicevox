@@ -305,16 +305,17 @@ export const getArgumentKeyCombination = (
   if (argumentKey == undefined) {
     return [undefined];
   } else if (argumentKey == "Numbers") {
-    return Array.from(
-      { length: 10 },
-      (_, index) => String(index) as HotkeyCombination
+    return Array.from({ length: 10 }, (_, index) =>
+      HotkeyCombination(String(index))
     );
   } else if (argumentKey == "VerticalArrows") {
-    return ["ArrowUp" as HotkeyCombination, "ArrowDown" as HotkeyCombination];
-  } else if (argumentKey == "HorizontalArrows") {
+    return [HotkeyCombination("ArrowUp"), HotkeyCombination("ArrowDown")];
+  } else if (argumentKey == "Arrows") {
     return [
-      "ArrowLeft" as HotkeyCombination,
-      "ArrowRight" as HotkeyCombination,
+      HotkeyCombination("ArrowLeft"),
+      HotkeyCombination("ArrowRight"),
+      HotkeyCombination("ArrowUp"),
+      HotkeyCombination("ArrowDown"),
     ];
   }
   throw new Error(`Received unexpected HotkeyArgumentKeyType`);
@@ -329,8 +330,8 @@ export const getArgumentKeyCombinationText = (
     return "数字";
   } else if (argumentKey == "VerticalArrows") {
     return "上下キー";
-  } else if (argumentKey == "HorizontalArrows") {
-    return "左右キー";
+  } else if (argumentKey == "Arrows") {
+    return "全方向キー";
   }
   throw new Error(`Received unexpected HotkeyArgumentKeyType`);
 };

@@ -219,7 +219,9 @@ registerHotkeyWithCleanup({
   enableInTextbox: true,
   name: "N番目のキャラクターを選択",
   callback: (e) => {
-    characterSelectShortcut(e);
+    if (!uiLocked.value) {
+      characterSelectShortcut(e);
+    }
   },
 });
 

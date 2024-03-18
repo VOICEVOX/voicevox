@@ -151,13 +151,13 @@
           </QChip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
-        <span v-if="lastArgumentKeyText !== ''"> + </span>
+        <span v-if="lastArgumentKey !== undefined"> + </span>
         <QChip
-          v-if="lastArgumentKeyText !== ''"
+          v-if="lastArgumentKey !== undefined"
           :ripple="false"
           color="surface"
         >
-          {{ lastArgumentKeyText }}
+          {{ getArgumentKeyCombinationText(lastArgumentKey) }}
         </QChip>
         <div v-if="duplicatedHotkeys.length > 0" class="text-warning q-mt-lg">
           <div class="text-warning">
@@ -287,7 +287,11 @@ const hotkeyColumns = ref<
 
 const lastAction = ref("");
 const lastRecord = ref(HotkeyCombination(""));
-const lastArgumentKeyText = ref(""); // これはstring
+const lastArgumentKey = computed<HotkeyArgumentKeyType>(() =>
+  lastAction.value == ""
+    ? undefined
+    : getEditingHotkey(lastAction.value as HotkeyActionNameType).argumentKey
+);
 
 const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
@@ -295,11 +299,8 @@ const recordCombination = (event: KeyboardEvent) => {
   } else {
     const recordedCombo = eventToCombination(event);
     let editedCombo: HotkeyCombination = recordedCombo;
-    const editingHotkey = getEditingHotkey(
-      lastAction.value as HotkeyActionNameType
-    );
     // 最後がCtrlなどではない時に最後を削る
-    if (getArgumentKeyCombinationText(editingHotkey.argumentKey) != "") {
+    if (lastArgumentKey.value != undefined) {
       if (
         !["Ctrl", "Shift", "Alt", "Meta"].includes(
           recordedCombo.split(" ")[recordedCombo.split(" ").length - 1]
@@ -346,37 +347,35 @@ const filterDuplicatedHotkeysWithSetKeyAndName = (
   key: HotkeyCombination,
   action: HotkeyActionNameType
 ): HotkeySettingType[] => {
+  // ホットキー設定ダイアログで何も設定していない時
   if (key == "") return [];
-  if (lastArgumentKeyText.value == "") {
-    const result = findDuplicatedHotkeyWithKey(key, action);
-    if (result == undefined) {
-      return [];
-    } else {
-      return [result];
+  const results: HotkeySettingType[] = [];
+  const editingHotkey = getEditingHotkey(action);
+  // argumentKeyの配列を取得。undefinedを代入したら[ undefined ]が返ってくる
+  const argumentKeys = getArgumentKeyCombination(editingHotkey.argumentKey);
+  for (const argumentKey of argumentKeys) {
+    // 探すキー名
+    const searchKeyCombination = HotkeyCombination(
+      key + (argumentKey == undefined ? "" : " " + argumentKey)
+    );
+    // 重複するキーを探す
+    const result: HotkeySettingType | undefined = findDuplicatedHotkeyWithKey(
+      searchKeyCombination,
+      action
+    );
+    // 重複するキーがあれば追加する
+    if (result != undefined) {
+      results.push(result);
     }
-  } else {
-    const editingHotkey = getEditingHotkey(action);
-    const argumentKeys = getArgumentKeyCombination(editingHotkey.argumentKey);
-    const results: HotkeySettingType[] = [];
-    for (const argumentKey of argumentKeys) {
-      lastRecord.value + " " + argumentKey;
-      const result: HotkeySettingType | undefined = findDuplicatedHotkeyWithKey(
-        (lastRecord.value + " " + argumentKey) as HotkeyCombination,
-        lastAction.value as HotkeyActionNameType
-      );
-      if (result != undefined) {
-        results.push(result);
-      }
-    }
-    return results;
   }
+  return results;
 };
 
 const findDuplicatedHotkeyWithKey = (
   key: HotkeyCombination,
   action: HotkeyActionNameType
 ): HotkeySettingType | undefined => {
-  const result = hotkeySettings.value.find(
+  return hotkeySettings.value.find(
     (item) =>
       (item.argumentKey == undefined
         ? item.combination == key
@@ -387,19 +386,15 @@ const findDuplicatedHotkeyWithKey = (
               item.combination + " " + argumentKey == key
           )) && item.action != action
   );
-  if (result == undefined) {
-    return undefined;
-  } else {
-    return result as HotkeySettingType;
-  }
 };
 
 const getEditingHotkey = (action: HotkeyActionNameType): HotkeySettingType => {
   const editingHotkey = hotkeySettings.value.find(
     (item) => action == item.action
   );
-  if (editingHotkey == undefined)
+  if (editingHotkey == undefined) {
     throw new Error(`現在設定を行っている最中のホットキーが存在しません`);
+  }
   return editingHotkey;
 };
 
@@ -442,10 +437,6 @@ const checkHotkeyReadonly = (action: string) => {
 const openHotkeyDialog = (action: string) => {
   lastAction.value = action;
   lastRecord.value = HotkeyCombination("");
-  const editingHotkey = getEditingHotkey(action as HotkeyActionNameType);
-  lastArgumentKeyText.value = getArgumentKeyCombinationText(
-    editingHotkey.argumentKey
-  );
   isHotkeyDialogOpened.value = true;
   document.addEventListener("keydown", recordCombination);
 };
@@ -453,7 +444,6 @@ const openHotkeyDialog = (action: string) => {
 const closeHotkeyDialog = () => {
   lastAction.value = "";
   lastRecord.value = HotkeyCombination("");
-  lastArgumentKeyText.value = "";
   isHotkeyDialogOpened.value = false;
   document.removeEventListener("keydown", recordCombination);
 };
@@ -471,7 +461,7 @@ const solveDuplicated = () => {
 const confirmBtnEnabled = computed(() => {
   return (
     lastRecord.value == "" ||
-    (lastArgumentKeyText.value == "" &&
+    (lastArgumentKey.value == undefined &&
       ["Ctrl", "Shift", "Alt", "Meta"].includes(
         lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
       ))
