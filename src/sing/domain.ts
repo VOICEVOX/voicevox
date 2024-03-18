@@ -300,7 +300,6 @@ export function toSortedPhrases(phrases: Map<string, Phrase>) {
  * - 再生位置が含まれるPhrase
  * - 再生位置より後のPhrase
  * - 再生位置より前のPhrase
- *
  */
 export function selectPriorPhrase(
   phrases: Map<string, Phrase>,
