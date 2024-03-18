@@ -1269,7 +1269,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         // NOTE: トラック選択のために一度ファイルを読み込んでいるので、Midiを渡すなどでもよさそう
-        // 現状このまま
         const midiData = getValueOrThrow(
           await window.backend.readFile({ filePath })
         );
