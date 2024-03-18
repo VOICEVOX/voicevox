@@ -20,6 +20,7 @@ const createPhrase = (
     startTicks: start * DEFAULT_TPQN,
     endTicks: end * DEFAULT_TPQN,
     keyRangeAdjustment: 0,
+    volumeRangeAdjustment: 0,
     state,
     tempos,
     tpqn: DEFAULT_TPQN,

@@ -759,32 +759,33 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       ) => {
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
-        for (let i = 0; i < notes.length; i++) {
-          const note = notes[i];
+        for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
+          const note = notes[noteIndex];
 
           phraseNotes.push(note);
 
+          // ノートが途切れていたら別のフレーズにする
+          const currentNoteEnd = note.position + note.duration;
+          const nextNoteStart =
+            noteIndex + 1 < notes.length ? notes[noteIndex + 1].position : null;
           if (
-            i === notes.length - 1 ||
-            note.position + note.duration !== notes[i + 1].position
+            noteIndex === notes.length - 1 ||
+            nextNoteStart == null ||
+            currentNoteEnd !== nextNoteStart
           ) {
             const phraseFirstNote = phraseNotes[0];
             const phraseLastNote = phraseNotes[phraseNotes.length - 1];
-            const hash = await generatePhraseHash({
+            const params = {
               singer,
               keyRangeAdjustment,
               volumeRangeAdjustment,
               tpqn,
               tempos,
               notes: phraseNotes,
-            });
+            };
+            const hash = await generatePhraseHash(params);
             foundPhrases.set(hash, {
-              singer,
-              keyRangeAdjustment,
-              volumeRangeAdjustment,
-              tpqn,
-              tempos,
-              notes: phraseNotes,
+              ...params,
               startTicks: phraseFirstNote.position,
               endTicks: phraseLastNote.position + phraseLastNote.duration,
               state: "WAITING_TO_BE_RENDERED",
