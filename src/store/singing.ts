@@ -38,6 +38,7 @@ import {
   Transport,
 } from "@/sing/audioRendering";
 import {
+  selectPriorPhrase,
   getMeasureDuration,
   isValidNote,
   isValidScore,
@@ -795,12 +796,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return foundPhrases;
       };
 
-      const getSortedPhrasesEntries = (phrases: Map<string, Phrase>) => {
-        return [...phrases.entries()].sort((a, b) => {
-          return a[1].startTicks - b[1].startTicks;
-        });
-      };
-
       const fetchQuery = async (
         engineId: EngineId,
         notes: Note[],
@@ -1022,12 +1017,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
+        const phrasesToBeRendered = new Map(
+          [...state.phrases.entries()].filter(([, phrase]) => {
+            return (
+              (phrase.state === "WAITING_TO_BE_RENDERED" ||
+                phrase.state === "COULD_NOT_RENDER") &&
+              phrase.singer
+            );
+          })
+        );
         // 各フレーズのレンダリングを行う
-        const sortedPhrasesEntries = getSortedPhrasesEntries(state.phrases);
-        for (const [phraseKey, phrase] of sortedPhrasesEntries) {
+        while (
+          !(startRenderingRequested() || stopRenderingRequested()) &&
+          phrasesToBeRendered.size > 0
+        ) {
+          const [phraseKey, phrase] = selectPriorPhrase(
+            phrasesToBeRendered,
+            playheadPosition.value
+          );
           if (!phrase.singer) {
-            continue;
+            throw new Error("assert: phrase.singer != undefined");
           }
+          phrasesToBeRendered.delete(phraseKey);
 
           if (
             phrase.state === "WAITING_TO_BE_RENDERED" ||
@@ -1156,10 +1167,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseKey,
               phraseState: "PLAYABLE",
             });
-          }
-
-          if (startRenderingRequested() || stopRenderingRequested()) {
-            return;
           }
         }
       };
