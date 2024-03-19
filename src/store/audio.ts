@@ -234,6 +234,7 @@ export const audioStoreState: AudioStoreState = {
   audioKeys: [],
   audioStates: {},
   nowPlayingContinuously: false,
+  optimalPitchRange: {},
 };
 
 export const audioStore = createPartialStore<AudioStoreTypes>({
@@ -450,6 +451,54 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         state.morphableTargetsInfo[engineId] = {};
       }
       state.morphableTargetsInfo[engineId][baseStyleId] = morphableTargets;
+    },
+  },
+
+  LOAD_OPTIMAL_PITCH_RANGE: {
+    async action({ state, dispatch, commit }, { engineId, styleId }) {
+      if (!state.engineManifests[engineId].supportedFeatures?.optimalPitch)
+        return;
+
+      // if exists, return it. this usually doesn't happen but just in case
+      const optimalPitchRange = state.optimalPitchRange[engineId]?.[styleId];
+      if (optimalPitchRange) return optimalPitchRange;
+
+      // if not, fetch it from the engine and insert into the store
+      const newOptimalPitchRange = await dispatch(
+        "INSTANTIATE_ENGINE_CONNECTOR",
+        {
+          engineId,
+        }
+      )
+        .then(async (instance) => {
+          return instance.invoke("optimalPitchOptimalPitchPost")({
+            styleId,
+          });
+        })
+        .catch((error) => {
+          window.backend.logError(
+            error,
+            `Failed to get the optimal pitch range at engineId: ${engineId}, styleId: ${styleId}`
+          );
+          throw error;
+        });
+
+      commit("SET_OPTIMAL_PITCH_RANGE", {
+        engineId,
+        styleId,
+        low: newOptimalPitchRange.low,
+        high: newOptimalPitchRange.high,
+      });
+      return { low: newOptimalPitchRange.low, high: newOptimalPitchRange.high };
+    },
+  },
+
+  SET_OPTIMAL_PITCH_RANGE: {
+    mutation(state, { engineId, styleId, low, high }) {
+      if (!state.optimalPitchRange[engineId]) {
+        state.optimalPitchRange[engineId] = {};
+      }
+      state.optimalPitchRange[engineId][styleId] = { low: low, high: high };
     },
   },
 

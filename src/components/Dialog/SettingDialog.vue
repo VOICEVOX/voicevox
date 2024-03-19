@@ -977,6 +977,34 @@
                 >
                 </QToggle>
               </QCardActions>
+              <!-- Optimal Pitch Setting -->
+              <QCardActions class="q-px-md bg-surface">
+                <div>最適ピッチ</div>
+                <div
+                  aria-label="ONの場合、イントネーションの調整可能の範囲を
+                  スタイルごとの最適なピッチ範囲に限定します。"
+                >
+                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
+                    <QTooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      ONの場合、イントネーションの調整可能の範囲をスタイルごとの最適なピッチ範囲に限定します。
+                    </QTooltip>
+                  </QIcon>
+                </div>
+                <QSpace />
+                <QToggle
+                  :model-value="experimentalSetting.enableOptimalPitchRange"
+                  @update:model-value="
+                    changeExperimentalSetting('enableOptimalPitchRange', $event)
+                  "
+                >
+                </QToggle>
+              </QCardActions>
             </QCard>
             <QCard flat class="setting-card">
               <QCardActions>

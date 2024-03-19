@@ -206,13 +206,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onUpdated, ref, watchEffect } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { MenuItemButton } from "@/components/Menu/type";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { useStore } from "@/store";
-import { AudioKey, MoraDataType } from "@/type/preload";
+import {
+  AudioKey,
+  EngineId,
+  MoraDataType,
+  StyleId,
+  optimalPitchRangeItem,
+} from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
 import { AccentPhrase } from "@/openapi";
 
@@ -365,8 +371,10 @@ const lastPitches = computed(() =>
   props.accentPhrase.moras.map((mora) => mora.pitch)
 );
 
-const maxPitch = 6.5;
-const minPitch = 3;
+const defaultMaxPitch = 6.5;
+const defaultMinPitch = 3;
+const maxPitch = ref(defaultMaxPitch);
+const minPitch = ref(defaultMinPitch);
 const maxMoraLength = 0.3;
 const minMoraLength = 0;
 const changeMoraData = (
@@ -414,6 +422,44 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
     changeMoraData(moraIndex, data, "voicing");
   }
 };
+
+const fetchPitchRange = async (engineId: EngineId, styleId: StyleId) => {
+  store
+    .dispatch("LOAD_OPTIMAL_PITCH_RANGE", {
+      engineId,
+      styleId,
+    })
+    .then((optimalPitchRange) => {
+      if (!optimalPitchRange) return;
+      setMinMaxPitch(optimalPitchRange);
+    });
+};
+
+const setMinMaxPitch = (pitchRange: optimalPitchRangeItem) => {
+  maxPitch.value = pitchRange.high;
+  minPitch.value = pitchRange.low;
+};
+
+onUpdated(() => {
+  // This code runs everytime the line is switched, there should be a more optimal way
+  // but I'm too lazy to find it
+  if (store.state.experimentalSetting.enableOptimalPitchRange) {
+    const audioItem = store.state.audioItems[props.audioKey];
+    const engineId = audioItem.voice.engineId;
+    const styleId = audioItem.voice.styleId;
+    try {
+      const pitchRange = store.state.optimalPitchRange[engineId][styleId];
+      setMinMaxPitch(pitchRange);
+    } catch (error) {
+      fetchPitchRange(engineId, styleId);
+    }
+  } else {
+    setMinMaxPitch({
+      low: defaultMinPitch,
+      high: defaultMaxPitch,
+    });
+  }
+});
 </script>
 
 <style scoped lang="scss">

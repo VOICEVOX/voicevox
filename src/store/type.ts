@@ -51,6 +51,8 @@ import {
   engineIdSchema,
   styleIdSchema,
   EditorType,
+  optimalPitchRangeRecord,
+  optimalPitchRangeItem,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -133,6 +135,7 @@ export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
 export type AudioStoreState = {
   characterInfos: Record<EngineId, CharacterInfo[]>;
   morphableTargetsInfo: Record<EngineId, MorphableTargetInfoTable>;
+  optimalPitchRange: Record<EngineId, optimalPitchRangeRecord>;
   audioKeysWithInitializingSpeaker: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;
   audioKeys: AudioKey[];
@@ -294,6 +297,22 @@ export type AudioStoreTypes = {
         { [key: number]: MorphableTargetInfo },
         undefined
       >;
+    };
+  };
+
+  LOAD_OPTIMAL_PITCH_RANGE: {
+    action(payload: {
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<optimalPitchRangeItem | undefined>;
+  };
+
+  SET_OPTIMAL_PITCH_RANGE: {
+    mutation: {
+      engineId: EngineId;
+      styleId: StyleId;
+      low: number;
+      high: number;
     };
   };
 
