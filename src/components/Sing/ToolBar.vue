@@ -134,7 +134,6 @@
 <script setup lang="ts">
 import { computed, watch, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
-import { isProduction } from "@/type/preload";
 
 import {
   getSnapTypes,
@@ -214,7 +213,7 @@ watch(
   () => {
     bpmInputBuffer.value = tempos.value[0].bpm;
   },
-  { deep: true }
+  { deep: true, immediate: true }
 );
 
 watch(
@@ -223,16 +222,24 @@ watch(
     beatsInputBuffer.value = timeSignatures.value[0].beats;
     beatTypeInputBuffer.value = timeSignatures.value[0].beatType;
   },
-  { deep: true }
+  { deep: true, immediate: true }
 );
 
-watch(keyRangeAdjustment, () => {
-  keyRangeAdjustmentInputBuffer.value = keyRangeAdjustment.value;
-});
+watch(
+  keyRangeAdjustment,
+  () => {
+    keyRangeAdjustmentInputBuffer.value = keyRangeAdjustment.value;
+  },
+  { immediate: true }
+);
 
-watch(volumeRangeAdjustment, () => {
-  volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustment.value;
-});
+watch(
+  volumeRangeAdjustment,
+  () => {
+    volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustment.value;
+  },
+  { immediate: true }
+);
 
 const setBpmInputBuffer = (bpmStr: string | number | null) => {
   const bpmValue = Number(bpmStr);
