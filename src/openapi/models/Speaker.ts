@@ -13,6 +13,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { SpeakerOptimalPitchRangeItem } from './SpeakerOptimalPitchRangeItem';
+import {
+    SpeakerOptimalPitchRangeItemFromJSON,
+    SpeakerOptimalPitchRangeItemFromJSONTyped,
+    SpeakerOptimalPitchRangeItemToJSON,
+} from './SpeakerOptimalPitchRangeItem';
 import type { SpeakerStyle } from './SpeakerStyle';
 import {
     SpeakerStyleFromJSON,
@@ -38,6 +44,12 @@ export interface Speaker {
      * @memberof Speaker
      */
     supportedFeatures?: SpeakerSupportedFeatures;
+    /**
+     * 
+     * @type {Array<SpeakerOptimalPitchRangeItem>}
+     * @memberof Speaker
+     */
+    range?: Array<SpeakerOptimalPitchRangeItem>;
     /**
      * 
      * @type {string}
@@ -87,6 +99,7 @@ export function SpeakerFromJSONTyped(json: any, ignoreDiscriminator: boolean): S
     return {
         
         'supportedFeatures': !exists(json, 'supported_features') ? undefined : SpeakerSupportedFeaturesFromJSON(json['supported_features']),
+        'range': !exists(json, 'range') ? undefined : ((json['range'] as Array<any>).map(SpeakerOptimalPitchRangeItemFromJSON)),
         'name': json['name'],
         'speakerUuid': json['speaker_uuid'],
         'styles': ((json['styles'] as Array<any>).map(SpeakerStyleFromJSON)),
@@ -104,6 +117,7 @@ export function SpeakerToJSON(value?: Speaker | null): any {
     return {
         
         'supported_features': SpeakerSupportedFeaturesToJSON(value.supportedFeatures),
+        'range': value.range === undefined ? undefined : ((value.range as Array<any>).map(SpeakerOptimalPitchRangeItemToJSON)),
         'name': value.name,
         'speaker_uuid': value.speakerUuid,
         'styles': ((value.styles as Array<any>).map(SpeakerStyleToJSON)),

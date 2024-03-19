@@ -21,10 +21,12 @@ models/Preset.ts
 models/Score.ts
 models/Speaker.ts
 models/SpeakerInfo.ts
+models/SpeakerOptimalPitchRangeItem.ts
 models/SpeakerStyle.ts
 models/SpeakerSupportPermittedSynthesisMorphing.ts
 models/SpeakerSupportedFeatures.ts
 models/StyleInfo.ts
+models/StylePitchRange.ts
 models/SupportedDevicesInfo.ts
 models/SupportedFeatures.ts
 models/UpdateInfo.ts

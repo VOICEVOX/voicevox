@@ -29,6 +29,7 @@ import type {
   Score,
   Speaker,
   SpeakerInfo,
+  StylePitchRange,
   SupportedDevicesInfo,
   UserDictWord,
   WordTypes,
@@ -62,6 +63,8 @@ import {
     SpeakerToJSON,
     SpeakerInfoFromJSON,
     SpeakerInfoToJSON,
+    StylePitchRangeFromJSON,
+    StylePitchRangeToJSON,
     SupportedDevicesInfoFromJSON,
     SupportedDevicesInfoToJSON,
     UserDictWordFromJSON,
@@ -172,6 +175,10 @@ export interface MultiSynthesisMultiSynthesisPostRequest {
     speaker: number;
     audioQuery: Array<AudioQuery>;
     coreVersion?: string;
+}
+
+export interface OptimalPitchOptimalPitchPostRequest {
+    styleId: number;
 }
 
 export interface RewriteUserDictWordUserDictWordWordUuidPutRequest {
@@ -632,7 +639,7 @@ export interface DefaultApiInterface {
     moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
     /**
-     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値の話者はstring型なので注意。
+     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
      * @summary 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
      * @param {Array<number>} requestBody 
      * @param {string} [coreVersion] 
@@ -643,7 +650,7 @@ export interface DefaultApiInterface {
     morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>>;
 
     /**
-     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値の話者はstring型なので注意。
+     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
      * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
      */
     morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>>;
@@ -664,6 +671,21 @@ export interface DefaultApiInterface {
      * 複数まとめて音声合成する
      */
     multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
+
+    /**
+     * 
+     * @summary 指定したスタイルに対して最適なピッチ範囲を得る
+     * @param {number} styleId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    optimalPitchOptimalPitchPostRaw(requestParameters: OptimalPitchOptimalPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<StylePitchRange>>;
+
+    /**
+     * 指定したスタイルに対して最適なピッチ範囲を得る
+     */
+    optimalPitchOptimalPitchPost(requestParameters: OptimalPitchOptimalPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<StylePitchRange>;
 
     /**
      * ユーザー辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID word_type: WordTypes, optional     PROPER_NOUN（固有名詞）、COMMON_NOUN（普通名詞）、VERB（動詞）、ADJECTIVE（形容詞）、SUFFIX（語尾）のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
@@ -1826,7 +1848,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値の話者はstring型なので注意。
+     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
      * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
      */
     async morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>> {
@@ -1856,7 +1878,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値の話者はstring型なので注意。
+     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
      * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
      */
     async morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>> {
@@ -1906,6 +1928,40 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      */
     async multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
         const response = await this.multiSynthesisMultiSynthesisPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * 指定したスタイルに対して最適なピッチ範囲を得る
+     */
+    async optimalPitchOptimalPitchPostRaw(requestParameters: OptimalPitchOptimalPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<StylePitchRange>> {
+        if (requestParameters.styleId === null || requestParameters.styleId === undefined) {
+            throw new runtime.RequiredError('styleId','Required parameter requestParameters.styleId was null or undefined when calling optimalPitchOptimalPitchPost.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.styleId !== undefined) {
+            queryParameters['style_id'] = requestParameters.styleId;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/optimal_pitch`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => StylePitchRangeFromJSON(jsonValue));
+    }
+
+    /**
+     * 指定したスタイルに対して最適なピッチ範囲を得る
+     */
+    async optimalPitchOptimalPitchPost(requestParameters: OptimalPitchOptimalPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<StylePitchRange> {
+        const response = await this.optimalPitchOptimalPitchPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

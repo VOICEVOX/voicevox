@@ -79,6 +79,12 @@ export interface SupportedFeatures {
      * @memberof SupportedFeatures
      */
     manageLibrary?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof SupportedFeatures
+     */
+    optimalPitch?: boolean;
 }
 
 /**
@@ -118,6 +124,7 @@ export function SupportedFeaturesFromJSONTyped(json: any, ignoreDiscriminator: b
         'synthesisMorphing': json['synthesis_morphing'],
         'sing': !exists(json, 'sing') ? undefined : json['sing'],
         'manageLibrary': !exists(json, 'manage_library') ? undefined : json['manage_library'],
+        'optimalPitch': !exists(json, 'optimal_pitch') ? undefined : json['optimal_pitch'],
     };
 }
 
@@ -140,6 +147,7 @@ export function SupportedFeaturesToJSON(value?: SupportedFeatures | null): any {
         'synthesis_morphing': value.synthesisMorphing,
         'sing': value.sing,
         'manage_library': value.manageLibrary,
+        'optimal_pitch': value.optimalPitch,
     };
 }
 
