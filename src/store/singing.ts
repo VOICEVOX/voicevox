@@ -38,6 +38,7 @@ import {
   Transport,
 } from "@/sing/audioRendering";
 import {
+  selectPriorPhrase,
   getMeasureDuration,
   isValidNote,
   isValidScore,
@@ -758,32 +759,33 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       ) => {
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
-        for (let i = 0; i < notes.length; i++) {
-          const note = notes[i];
+        for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
+          const note = notes[noteIndex];
 
           phraseNotes.push(note);
 
+          // ノートが途切れていたら別のフレーズにする
+          const currentNoteEnd = note.position + note.duration;
+          const nextNoteStart =
+            noteIndex + 1 < notes.length ? notes[noteIndex + 1].position : null;
           if (
-            i === notes.length - 1 ||
-            note.position + note.duration !== notes[i + 1].position
+            noteIndex === notes.length - 1 ||
+            nextNoteStart == null ||
+            currentNoteEnd !== nextNoteStart
           ) {
             const phraseFirstNote = phraseNotes[0];
             const phraseLastNote = phraseNotes[phraseNotes.length - 1];
-            const hash = await generatePhraseHash({
+            const params = {
               singer,
               keyRangeAdjustment,
               volumeRangeAdjustment,
               tpqn,
               tempos,
               notes: phraseNotes,
-            });
+            };
+            const hash = await generatePhraseHash(params);
             foundPhrases.set(hash, {
-              singer,
-              keyRangeAdjustment,
-              volumeRangeAdjustment,
-              tpqn,
-              tempos,
-              notes: phraseNotes,
+              ...params,
               startTicks: phraseFirstNote.position,
               endTicks: phraseLastNote.position + phraseLastNote.duration,
               state: "WAITING_TO_BE_RENDERED",
@@ -793,12 +795,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
         return foundPhrases;
-      };
-
-      const getSortedPhrasesEntries = (phrases: Map<string, Phrase>) => {
-        return [...phrases.entries()].sort((a, b) => {
-          return a[1].startTicks - b[1].startTicks;
-        });
       };
 
       const fetchQuery = async (
@@ -1022,12 +1018,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
+        const phrasesToBeRendered = new Map(
+          [...state.phrases.entries()].filter(([, phrase]) => {
+            return (
+              (phrase.state === "WAITING_TO_BE_RENDERED" ||
+                phrase.state === "COULD_NOT_RENDER") &&
+              phrase.singer
+            );
+          })
+        );
         // 各フレーズのレンダリングを行う
-        const sortedPhrasesEntries = getSortedPhrasesEntries(state.phrases);
-        for (const [phraseKey, phrase] of sortedPhrasesEntries) {
+        while (
+          !(startRenderingRequested() || stopRenderingRequested()) &&
+          phrasesToBeRendered.size > 0
+        ) {
+          const [phraseKey, phrase] = selectPriorPhrase(
+            phrasesToBeRendered,
+            playheadPosition.value
+          );
           if (!phrase.singer) {
-            continue;
+            throw new Error("assert: phrase.singer != undefined");
           }
+          phrasesToBeRendered.delete(phraseKey);
 
           if (
             phrase.state === "WAITING_TO_BE_RENDERED" ||
@@ -1156,10 +1168,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseKey,
               phraseState: "PLAYABLE",
             });
-          }
-
-          if (startRenderingRequested() || stopRenderingRequested()) {
-            return;
           }
         }
       };
