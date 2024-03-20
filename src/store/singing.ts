@@ -1744,7 +1744,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             ustData = new TextDecoder("shift-jis").decode(fileData);
           }
         } catch (error) {
-          throw new Error("Failed to decode UST file.");
+          throw new Error("Failed to decode UST file.", { cause: error });
         }
         if (!ustData || typeof ustData !== "string") {
           throw new Error("Failed to decode UST file.");
