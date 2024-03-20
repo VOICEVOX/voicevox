@@ -794,7 +794,7 @@ const onMouseUp = (event: MouseEvent) => {
   }
 
   if (isRectSelecting.value) {
-    rectSelect();
+    rectSelect(isOnCommandOrCtrlKeyDown(event));
     return;
   }
 
@@ -821,7 +821,11 @@ const onMouseUp = (event: MouseEvent) => {
   nowPreviewing.value = false;
 };
 
-const rectSelect = () => {
+/**
+ * 矩形選択。
+ * @param additive 追加選択とするかどうか。
+ */
+const rectSelect = (additive: boolean) => {
   const rectSelectHitboxElement = rectSelectHitbox.value;
   if (!rectSelectHitboxElement) {
     throw new Error("rectSelectHitboxElement is null.");
@@ -855,7 +859,9 @@ const rectSelect = () => {
       noteIdsToSelect.push(note.id);
     }
   }
-  store.dispatch("DESELECT_ALL_NOTES");
+  if (!additive) {
+    store.dispatch("DESELECT_ALL_NOTES");
+  }
   store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
 };
 
