@@ -923,7 +923,7 @@ export type SingingStoreTypes = {
   };
 
   IMPORT_MIDI_FILE: {
-    action(payload: { filePath?: string }): void;
+    action(payload: { filePath: string; trackIndex: number }): void;
   };
 
   IMPORT_MUSICXML_FILE: {
@@ -1521,6 +1521,7 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
+  isImportMidiDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1592,6 +1593,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
+      isImportMidiDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1605,6 +1607,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
+      isImportMidiDialogOpen?: boolean;
     }): void;
   };
 

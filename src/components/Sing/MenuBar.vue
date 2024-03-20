@@ -13,7 +13,9 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const importMidiFile = async () => {
   if (uiLocked.value) return;
-  await store.dispatch("IMPORT_MIDI_FILE", {});
+  await store.dispatch("SET_DIALOG_OPEN", {
+    isImportMidiDialogOpen: true,
+  });
 };
 
 const importMusicXMLFile = async () => {

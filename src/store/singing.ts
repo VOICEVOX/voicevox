@@ -1220,7 +1220,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   IMPORT_MIDI_FILE: {
     action: createUILockAction(
-      async ({ dispatch }, { filePath }: { filePath?: string }) => {
+      async (
+        { dispatch },
+        { filePath, trackIndex = 0 }: { filePath: string; trackIndex: number }
+      ) => {
         const convertPosition = (
           position: number,
           sourceTpqn: number,
@@ -1289,25 +1292,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
         };
 
-        if (!filePath) {
-          filePath = await window.backend.showImportFileDialog({
-            title: "MIDI読み込み",
-            name: "MIDI",
-            extensions: ["mid", "midi"],
-          });
-          if (!filePath) return;
-        }
-
+        // NOTE: トラック選択のために一度ファイルを読み込んでいるので、Midiを渡すなどでもよさそう
         const midiData = getValueOrThrow(
           await window.backend.readFile({ filePath })
         );
         const midi = new Midi(midiData);
-
         const midiTpqn = midi.header.ppq;
         const midiTempos = [...midi.header.tempos];
         const midiTimeSignatures = [...midi.header.timeSignatures];
-        // TODO: UIで読み込むトラックを選択できるようにする
-        const midiNotes = [...midi.tracks[0].notes]; // ひとまず1トラック目のみを読み込む
+
+        const midiNotes = [...midi.tracks[trackIndex].notes];
 
         midiTempos.sort((a, b) => a.ticks - b.ticks);
         midiTimeSignatures.sort((a, b) => a.ticks - b.ticks);
