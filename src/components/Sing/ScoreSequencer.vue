@@ -823,7 +823,7 @@ const onMouseUp = (event: MouseEvent) => {
 
 /**
  * 矩形選択。
- * @param {boolean} additive - 追加選択するかどうか。
+ * @param additive 追加選択とするかどうか。
  */
 const rectSelect = (additive: boolean) => {
   const rectSelectHitboxElement = rectSelectHitbox.value;
