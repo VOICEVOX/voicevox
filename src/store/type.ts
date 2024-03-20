@@ -794,8 +794,6 @@ export type SingingStoreState = {
   editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
-  leftLocatorPosition: number;
-  rightLocatorPosition: number;
   startRenderingRequested: boolean;
   stopRenderingRequested: boolean;
   nowRendering: boolean;
@@ -967,16 +965,6 @@ export type SingingStoreTypes = {
 
   REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
     action(payload: { listener: (position: number) => void }): void;
-  };
-
-  SET_LEFT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
-  };
-
-  SET_RIGHT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
   };
 
   SET_PLAYBACK_STATE: {

@@ -14,9 +14,6 @@ import { MenuItemData } from "@/components/Menu/type";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-const editor = "song";
-const canUndo = computed(() => store.getters.CAN_UNDO(editor));
-const canRedo = computed(() => store.getters.CAN_REDO(editor));
 const isNotesSelected = computed(() => store.state.selectedNoteIds.size > 0);
 
 const importMidiFile = async () => {
@@ -63,26 +60,6 @@ const fileSubMenuData: MenuItemData[] = [
 ];
 
 const editSubMenuData: MenuItemData[] = [
-  {
-    type: "button",
-    label: "元に戻す",
-    onClick: () => {
-      if (uiLocked.value) return;
-      store.dispatch("UNDO", { editor });
-    },
-    disableWhenUiLocked: true,
-    disabled: !canUndo.value,
-  },
-  {
-    type: "button",
-    label: "やり直す",
-    onClick: () => {
-      if (uiLocked.value) return;
-      store.dispatch("REDO", { editor });
-    },
-    disableWhenUiLocked: true,
-    disabled: !canRedo.value,
-  },
   { type: "separator" },
   {
     type: "button",
@@ -132,6 +109,7 @@ const editSubMenuData: MenuItemData[] = [
     },
     disableWhenUiLocked: true,
   },
+  { type: "separator" },
   {
     type: "button",
     label: "クオンタイズ",
