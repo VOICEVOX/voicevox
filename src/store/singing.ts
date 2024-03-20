@@ -1806,7 +1806,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               if (tempo) tempos.push({ position, bpm: tempo });
               const noteNumber = Number(params["NoteNum"]);
               const duration = Number(params["Length"]);
-              const lyric = params["Lyric"];
+              // 歌詞の前に連続音が含まれている場合は除去
+              const lyric = params["Lyric"].includes(" ")
+                ? params["Lyric"].split(" ")[1]
+                : params["Lyric"];
               // 休符であればポジションを進めるのみ
               if (lyric === "R") {
                 position += duration;
