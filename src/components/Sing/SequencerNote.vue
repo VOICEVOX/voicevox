@@ -3,7 +3,8 @@
     class="note"
     :class="{
       selected: noteState === 'SELECTED',
-      overlapping: noteState === 'OVERLAPPING',
+      overlapping: hasOverlappingError,
+      'invalid-phrase': hasPhraseError,
       'below-pitch': showPitch,
     }"
     :style="{
@@ -35,6 +36,29 @@
       @keydown.stop="onLyricInputKeyDown"
       @blur="onLyricInputBlur"
     />
+    <template v-else>
+      <!-- エラー内容を表示 -->
+      <QTooltip
+        v-if="hasOverlappingError"
+        anchor="bottom left"
+        self="top left"
+        :offset="[0, 8]"
+        transition-show=""
+        transition-hide=""
+      >
+        ノートが重なっています
+      </QTooltip>
+      <QTooltip
+        v-if="hasPhraseError"
+        anchor="bottom left"
+        self="top left"
+        :offset="[0, 8]"
+        transition-show=""
+        transition-hide=""
+      >
+        フレーズが生成できません。歌詞は日本語1文字までです。
+      </QTooltip>
+    </template>
   </div>
 </template>
 
@@ -50,7 +74,7 @@ import {
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { MenuItemButton } from "@/components/Menu/type";
 
-type NoteState = "NORMAL" | "SELECTED" | "OVERLAPPING";
+type NoteState = "NORMAL" | "SELECTED";
 
 const vFocus = {
   mounted(el: HTMLInputElement) {
@@ -102,11 +126,24 @@ const noteState = computed((): NoteState => {
   if (props.isSelected) {
     return "SELECTED";
   }
-  if (state.overlappingNoteIds.has(props.note.id)) {
-    return "OVERLAPPING";
-  }
   return "NORMAL";
 });
+
+// ノートの重なりエラー
+const hasOverlappingError = computed(() => {
+  return state.overlappingNoteIds.has(props.note.id);
+});
+
+// フレーズ生成エラー
+const hasPhraseError = computed(() => {
+  // エラーがあるフレーズに自身が含まれているか
+  return Array.from(state.phrases.values()).some(
+    (phrase) =>
+      phrase.state === "COULD_NOT_RENDER" &&
+      phrase.notes.some((note) => note.id === props.note.id)
+  );
+});
+
 const lyric = computed({
   get() {
     return props.note.lyric;
@@ -209,19 +246,32 @@ const onLyricInputBlur = () => {
   &.selected {
     // 色は仮
     .note-bar {
-      background-color: hsl(33, 100%, 50%);
+      background-color: hsl(130, 35%, 90%);
+      border: 2px solid colors.$primary;
     }
 
     &.below-pitch {
       .note-bar {
-        background-color: rgba(hsl(33, 100%, 50%), 0.18);
+        background-color: rgba(hsl(130, 100%, 50%), 0.18);
       }
     }
   }
 
-  &.overlapping {
+  &.overlapping,
+  &.invalid-phrase {
     .note-bar {
-      background-color: hsl(130, 35%, 85%);
+      background-color: rgba(colors.$warning-rgb, 0.5);
+    }
+
+    .note-lyric {
+      opacity: 0.6;
+    }
+
+    &.selected {
+      .note-bar {
+        background-color: rgba(colors.$warning-rgb, 0.5);
+        border-color: colors.$warning;
+      }
     }
   }
 }
@@ -274,8 +324,10 @@ const onLyricInputBlur = () => {
   position: absolute;
   bottom: 0;
   font-weight: 700;
-  width: 2rem;
-  border: 1px solid hsl(33, 100%, 73%);
+  min-width: 3rem;
+  max-width: 6rem;
+  border: 0;
+  outline: 2px solid colors.$primary;
   border-radius: 0.25rem;
 }
 </style>

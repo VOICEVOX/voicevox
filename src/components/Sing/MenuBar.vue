@@ -13,12 +13,19 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const importMidiFile = async () => {
   if (uiLocked.value) return;
-  await store.dispatch("IMPORT_MIDI_FILE", {});
+  await store.dispatch("SET_DIALOG_OPEN", {
+    isImportMidiDialogOpen: true,
+  });
 };
 
 const importMusicXMLFile = async () => {
   if (uiLocked.value) return;
   await store.dispatch("IMPORT_MUSICXML_FILE", {});
+};
+
+const importUstFile = async () => {
+  if (uiLocked.value) return;
+  await store.dispatch("IMPORT_UST_FILE", {});
 };
 
 const exportWaveFile = async () => {
@@ -49,6 +56,14 @@ const fileSubMenuData: MenuItemData[] = [
     label: "MusicXML読み込み",
     onClick: () => {
       importMusicXMLFile();
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "UST読み込み",
+    onClick: () => {
+      importUstFile();
     },
     disableWhenUiLocked: true,
   },

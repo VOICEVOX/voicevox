@@ -38,6 +38,7 @@ import {
   Transport,
 } from "@/sing/audioRendering";
 import {
+  selectPriorPhrase,
   getMeasureDuration,
   isValidNote,
   isValidScore,
@@ -758,32 +759,33 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       ) => {
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
-        for (let i = 0; i < notes.length; i++) {
-          const note = notes[i];
+        for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
+          const note = notes[noteIndex];
 
           phraseNotes.push(note);
 
+          // ノートが途切れていたら別のフレーズにする
+          const currentNoteEnd = note.position + note.duration;
+          const nextNoteStart =
+            noteIndex + 1 < notes.length ? notes[noteIndex + 1].position : null;
           if (
-            i === notes.length - 1 ||
-            note.position + note.duration !== notes[i + 1].position
+            noteIndex === notes.length - 1 ||
+            nextNoteStart == null ||
+            currentNoteEnd !== nextNoteStart
           ) {
             const phraseFirstNote = phraseNotes[0];
             const phraseLastNote = phraseNotes[phraseNotes.length - 1];
-            const hash = await generatePhraseHash({
+            const params = {
               singer,
               keyRangeAdjustment,
               volumeRangeAdjustment,
               tpqn,
               tempos,
               notes: phraseNotes,
-            });
+            };
+            const hash = await generatePhraseHash(params);
             foundPhrases.set(hash, {
-              singer,
-              keyRangeAdjustment,
-              volumeRangeAdjustment,
-              tpqn,
-              tempos,
-              notes: phraseNotes,
+              ...params,
               startTicks: phraseFirstNote.position,
               endTicks: phraseLastNote.position + phraseLastNote.duration,
               state: "WAITING_TO_BE_RENDERED",
@@ -793,12 +795,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
         return foundPhrases;
-      };
-
-      const getSortedPhrasesEntries = (phrases: Map<string, Phrase>) => {
-        return [...phrases.entries()].sort((a, b) => {
-          return a[1].startTicks - b[1].startTicks;
-        });
       };
 
       const fetchQuery = async (
@@ -1022,12 +1018,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
+        const phrasesToBeRendered = new Map(
+          [...state.phrases.entries()].filter(([, phrase]) => {
+            return (
+              (phrase.state === "WAITING_TO_BE_RENDERED" ||
+                phrase.state === "COULD_NOT_RENDER") &&
+              phrase.singer
+            );
+          })
+        );
         // 各フレーズのレンダリングを行う
-        const sortedPhrasesEntries = getSortedPhrasesEntries(state.phrases);
-        for (const [phraseKey, phrase] of sortedPhrasesEntries) {
+        while (
+          !(startRenderingRequested() || stopRenderingRequested()) &&
+          phrasesToBeRendered.size > 0
+        ) {
+          const [phraseKey, phrase] = selectPriorPhrase(
+            phrasesToBeRendered,
+            playheadPosition.value
+          );
           if (!phrase.singer) {
-            continue;
+            throw new Error("assert: phrase.singer != undefined");
           }
+          phrasesToBeRendered.delete(phraseKey);
 
           if (
             phrase.state === "WAITING_TO_BE_RENDERED" ||
@@ -1157,10 +1169,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseState: "PLAYABLE",
             });
           }
-
-          if (startRenderingRequested() || stopRenderingRequested()) {
-            return;
-          }
         }
       };
 
@@ -1212,7 +1220,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   IMPORT_MIDI_FILE: {
     action: createUILockAction(
-      async ({ dispatch }, { filePath }: { filePath?: string }) => {
+      async (
+        { dispatch },
+        { filePath, trackIndex = 0 }: { filePath: string; trackIndex: number }
+      ) => {
         const convertPosition = (
           position: number,
           sourceTpqn: number,
@@ -1281,25 +1292,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
         };
 
-        if (!filePath) {
-          filePath = await window.backend.showImportFileDialog({
-            title: "MIDI読み込み",
-            name: "MIDI",
-            extensions: ["mid", "midi"],
-          });
-          if (!filePath) return;
-        }
-
+        // NOTE: トラック選択のために一度ファイルを読み込んでいるので、Midiを渡すなどでもよさそう
         const midiData = getValueOrThrow(
           await window.backend.readFile({ filePath })
         );
         const midi = new Midi(midiData);
-
         const midiTpqn = midi.header.ppq;
         const midiTempos = [...midi.header.tempos];
         const midiTimeSignatures = [...midi.header.timeSignatures];
-        // TODO: UIで読み込むトラックを選択できるようにする
-        const midiNotes = [...midi.tracks[0].notes]; // ひとまず1トラック目のみを読み込む
+
+        const midiNotes = [...midi.tracks[trackIndex].notes];
 
         midiTempos.sort((a, b) => a.ticks - b.ticks);
         midiTimeSignatures.sort((a, b) => a.ticks - b.ticks);
@@ -1684,6 +1686,127 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
         timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
+
+        await dispatch("SET_SCORE", {
+          score: {
+            tpqn,
+            tempos,
+            timeSignatures,
+            notes,
+          },
+        });
+      }
+    ),
+  },
+
+  IMPORT_UST_FILE: {
+    action: createUILockAction(
+      async ({ dispatch }, { filePath }: { filePath?: string }) => {
+        // USTファイルの読み込み
+        if (!filePath) {
+          filePath = await window.backend.showImportFileDialog({
+            title: "UST読み込み",
+            name: "UST",
+            extensions: ["ust"],
+          });
+          if (!filePath) return;
+        }
+        // ファイルの読み込み
+        const fileData = getValueOrThrow(
+          await window.backend.readFile({ filePath })
+        );
+
+        // ファイルフォーマットに応じてエンコーディングを変える
+        // UTF-8とShiftJISの2種類に対応
+        let ustData;
+        try {
+          ustData = new TextDecoder("utf-8").decode(fileData);
+          // ShiftJISの場合はShiftJISでデコードし直す
+          if (ustData.includes("\ufffd")) {
+            ustData = new TextDecoder("shift-jis").decode(fileData);
+          }
+        } catch (error) {
+          throw new Error("Failed to decode UST file.", { cause: error });
+        }
+        if (!ustData || typeof ustData !== "string") {
+          throw new Error("Failed to decode UST file.");
+        }
+
+        // 初期化
+        const tpqn = DEFAULT_TPQN;
+        const tempos: Tempo[] = [
+          {
+            position: 0,
+            bpm: DEFAULT_BPM,
+          },
+        ];
+        const timeSignatures: TimeSignature[] = [
+          {
+            measureNumber: 1,
+            beats: DEFAULT_BEATS,
+            beatType: DEFAULT_BEAT_TYPE,
+          },
+        ];
+        const notes: Note[] = [];
+
+        // USTファイルのセクションをパース
+        const parseSection = (section: string): { [key: string]: string } => {
+          const sectionNameMatch = section.match(/\[(.+)\]/);
+          if (!sectionNameMatch) {
+            throw new Error("UST section name not found");
+          }
+          const params = section.split(/[\r\n]+/).reduce((acc, line) => {
+            const [key, value] = line.split("=");
+            if (key && value) {
+              acc[key] = value;
+            }
+            return acc;
+          }, {} as { [key: string]: string });
+          return {
+            ...params,
+            sectionName: sectionNameMatch[1],
+          };
+        };
+
+        // セクションを分割
+        const sections = ustData.split(/^(?=\[)/m);
+        // ポジション
+        let position = 0;
+        // セクションごとに処理
+        sections.forEach((section) => {
+          const params = parseSection(section);
+          // SETTINGセクション
+          if (params.sectionName === "#SETTING") {
+            const tempo = Number(params["Tempo"]);
+            if (tempo) tempos[0].bpm = tempo;
+          }
+          // ノートセクション
+          if (params.sectionName.match(/^#\d{4}/)) {
+            // テンポ変更があれば追加
+            const tempo = Number(params["Tempo"]);
+            if (tempo) tempos.push({ position, bpm: tempo });
+            const noteNumber = Number(params["NoteNum"]);
+            const duration = Number(params["Length"]);
+            // 歌詞の前に連続音が含まれている場合は除去
+            const lyric = params["Lyric"].includes(" ")
+              ? params["Lyric"].split(" ")[1]
+              : params["Lyric"];
+            // 休符であればポジションを進めるのみ
+            if (lyric === "R") {
+              position += duration;
+            } else {
+              // それ以外の場合はノートを追加
+              notes.push({
+                id: uuidv4(),
+                position,
+                duration,
+                noteNumber,
+                lyric,
+              });
+              position += duration;
+            }
+          }
+        });
 
         await dispatch("SET_SCORE", {
           score: {
