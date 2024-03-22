@@ -2024,9 +2024,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_CUT_NOTES_TO_CLIPBOARD: {
-    action({ dispatch }) {
-      dispatch("COPY_NOTES_TO_CLIPBOARD");
-      dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    async action({ dispatch }) {
+      await dispatch("COPY_NOTES_TO_CLIPBOARD");
+      await dispatch("COMMAND_REMOVE_SELECTED_NOTES");
     },
   },
 

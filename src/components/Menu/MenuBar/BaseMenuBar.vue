@@ -342,9 +342,10 @@ const menudata = computed<MenuItemData[]>(() => [
       {
         type: "button",
         label: "元に戻す",
-        onClick: () => {
-          if (uiLocked.value) return;
-          store.dispatch("UNDO", { editor: props.editor });
+        onClick: async () => {
+          if (!uiLocked.value) {
+            await store.dispatch("UNDO", { editor: props.editor });
+          }
         },
         disabled: !canUndo.value,
         disableWhenUiLocked: true,
@@ -352,9 +353,10 @@ const menudata = computed<MenuItemData[]>(() => [
       {
         type: "button",
         label: "やり直す",
-        onClick: () => {
-          if (uiLocked.value) return;
-          store.dispatch("REDO", { editor: props.editor });
+        onClick: async () => {
+          if (!uiLocked.value) {
+            await store.dispatch("REDO", { editor: props.editor });
+          }
         },
         disabled: !canRedo.value,
         disableWhenUiLocked: true,
