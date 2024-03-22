@@ -277,13 +277,12 @@ const onLyricInputBlur = () => {
   &.selected {
     // 色は仮
     .note-bar {
-      background-color: hsl(130, 35%, 90%);
-      border: 2px solid colors.$primary;
+      background-color: hsl(33, 100%, 50%);
     }
 
     &.below-pitch {
       .note-bar {
-        background-color: rgba(hsl(130, 100%, 50%), 0.18);
+        background-color: rgba(hsl(33, 100%, 50%), 0.18);
       }
     }
   }
