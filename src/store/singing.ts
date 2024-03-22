@@ -2042,7 +2042,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       }
 
-      // クリップボードのテキストをJSONとしてパースする(失敗した場合は何もしない)
+      // クリップボードのテキストをJSONとしてパースする(失敗した場合はエラーを返す)
       let notes;
       try {
         notes = noteSchema

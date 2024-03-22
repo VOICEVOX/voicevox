@@ -40,6 +40,7 @@ const props =
   defineProps<{
     /** 「ファイル」メニューのサブメニュー */
     fileSubMenuData: MenuItemData[];
+    /** 「編集」メニューのサブメニュー */
     editSubMenuData: MenuItemData[];
     /** エディタの種類 */
     editor: "talk" | "song";
