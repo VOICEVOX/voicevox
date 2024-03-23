@@ -28,6 +28,7 @@
       @mouseleave="onMouseLeave"
       @wheel="onWheel"
       @scroll="onScroll"
+      @contextmenu.prevent
     >
       <!-- キャラクター全身 -->
       <CharacterPortrait />
@@ -208,6 +209,7 @@
       }"
       @input="setZoomY"
     />
+    <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
   </div>
 </template>
 
@@ -221,6 +223,10 @@ import {
   onDeactivated,
 } from "vue";
 import { v4 as uuidv4 } from "uuid";
+import ContextMenu, {
+  ContextMenuItemData,
+} from "@/components/Menu/ContextMenu.vue";
+import { isMac } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
@@ -251,6 +257,7 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useShiftKey } from "@/composables/useModifierKey";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
@@ -276,6 +283,9 @@ const timeSignatures = computed(() => state.timeSignatures);
 
 // ノート
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
+const isNoteSelected = computed(() => {
+  return state.selectedNoteIds.size > 0;
+});
 const unselectedNotes = computed(() => {
   const selectedNoteIds = state.selectedNoteIds;
   return notes.value.filter((value) => !selectedNoteIds.has(value.id));
@@ -744,6 +754,15 @@ const onMouseDown = (event: MouseEvent) => {
   if (!isSelfEventTarget(event)) {
     return;
   }
+
+  // macOSの場合、Ctrl+クリックが右クリックのため、その場合はノートを追加しない
+  if (isMac && event.ctrlKey && event.button === 0) {
+    return;
+  }
+
+  // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
+
+  // 選択中のノートが無い場合、プレビューを開始しノートIDをリセット
   if (event.button === 0) {
     if (event.shiftKey) {
       isRectSelecting.value = true;
@@ -794,7 +813,7 @@ const onMouseUp = (event: MouseEvent) => {
   }
 
   if (isRectSelecting.value) {
-    rectSelect();
+    rectSelect(isOnCommandOrCtrlKeyDown(event));
     return;
   }
 
@@ -821,7 +840,11 @@ const onMouseUp = (event: MouseEvent) => {
   nowPreviewing.value = false;
 };
 
-const rectSelect = () => {
+/**
+ * 矩形選択。
+ * @param additive 追加選択とするかどうか。
+ */
+const rectSelect = (additive: boolean) => {
   const rectSelectHitboxElement = rectSelectHitbox.value;
   if (!rectSelectHitboxElement) {
     throw new Error("rectSelectHitboxElement is null.");
@@ -855,7 +878,9 @@ const rectSelect = () => {
       noteIdsToSelect.push(note.id);
     }
   }
-  store.dispatch("DESELECT_ALL_NOTES");
+  if (!additive) {
+    store.dispatch("DESELECT_ALL_NOTES");
+  }
   store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
 };
 
@@ -1146,6 +1171,136 @@ onDeactivated(() => {
 
   document.removeEventListener("keydown", handleKeydown);
 });
+
+// コンテキストメニュー
+// TODO: 分割する
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+
+registerHotkeyWithCleanup({
+  editor: "song",
+  name: "コピー",
+  callback: () => {
+    if (nowPreviewing.value) {
+      return;
+    }
+    if (state.selectedNoteIds.size === 0) {
+      return;
+    }
+    store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+  },
+});
+
+registerHotkeyWithCleanup({
+  editor: "song",
+  name: "切り取り",
+  callback: () => {
+    if (nowPreviewing.value) {
+      return;
+    }
+    if (state.selectedNoteIds.size === 0) {
+      return;
+    }
+    store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+  },
+});
+
+registerHotkeyWithCleanup({
+  editor: "song",
+  name: "貼り付け",
+  callback: () => {
+    if (nowPreviewing.value) {
+      return;
+    }
+    store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+  },
+});
+
+registerHotkeyWithCleanup({
+  editor: "song",
+  name: "すべて選択",
+  callback: () => {
+    if (nowPreviewing.value) {
+      return;
+    }
+    store.dispatch("SELECT_ALL_NOTES");
+  },
+});
+
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+
+const contextMenuData = ref<ContextMenuItemData[]>([
+  {
+    type: "button",
+    label: "コピー",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+    },
+    disabled: !isNoteSelected.value,
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "切り取り",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    },
+    disabled: !isNoteSelected.value,
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "貼り付け",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "すべて選択",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("SELECT_ALL_NOTES");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "選択解除",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("DESELECT_ALL_NOTES");
+    },
+    disabled: !isNoteSelected.value,
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "クオンタイズ",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+    },
+    disabled: !isNoteSelected.value,
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "削除",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    },
+    disabled: !isNoteSelected.value,
+    disableWhenUiLocked: true,
+  },
+]);
 </script>
 
 <style scoped lang="scss">

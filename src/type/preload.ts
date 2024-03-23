@@ -152,6 +152,26 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     action: "選択中のアクセント句のイントネーションをリセット",
     combination: HotkeyCombination("R"),
   },
+  {
+    action: "コピー",
+    combination: HotkeyCombination(!isMac ? "Ctrl C" : "Meta C"),
+  },
+  {
+    action: "切り取り",
+    combination: HotkeyCombination(!isMac ? "Ctrl X" : "Meta X"),
+  },
+  {
+    action: "貼り付け",
+    combination: HotkeyCombination(!isMac ? "Ctrl V" : "Meta V"),
+  },
+  {
+    action: "すべて選択",
+    combination: HotkeyCombination(!isMac ? "Ctrl A" : "Meta A"),
+  },
+  {
+    action: "選択解除",
+    combination: HotkeyCombination("Escape"),
+  },
 ];
 
 export const defaultToolbarButtonSetting: ToolbarSettingType = [
@@ -433,6 +453,11 @@ export const hotkeyActionNameSchema = z.enum([
   "テキスト読み込む",
   "全体のイントネーションをリセット",
   "選択中のアクセント句のイントネーションをリセット",
+  "コピー",
+  "切り取り",
+  "貼り付け",
+  "すべて選択",
+  "選択解除",
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
