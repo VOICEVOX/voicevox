@@ -71,8 +71,9 @@ import {
   tickToBaseX,
   noteNumberToBaseY,
 } from "@/sing/viewHelper";
-import ContextMenu from "@/components/Menu/ContextMenu.vue";
-import { MenuItemButton } from "@/components/Menu/type";
+import ContextMenu, {
+  ContextMenuItemData,
+} from "@/components/Menu/ContextMenu.vue";
 
 type NoteState = "NORMAL" | "SELECTED";
 
@@ -163,13 +164,43 @@ const showPitch = computed(() => {
   return state.experimentalSetting.showPitchInSongEditor;
 });
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
-const contextMenuData = ref<[MenuItemButton]>([
+const contextMenuData = ref<ContextMenuItemData[]>([
+  {
+    type: "button",
+    label: "コピー",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "切り取り",
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "クオンタイズ",
+    disabled: !props.isSelected,
+    onClick: async () => {
+      contextMenu.value?.hide();
+      await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+    },
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
   {
     type: "button",
     label: "削除",
     onClick: async () => {
       contextMenu.value?.hide();
-      store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+      await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
     },
     disableWhenUiLocked: true,
   },
@@ -246,13 +277,12 @@ const onLyricInputBlur = () => {
   &.selected {
     // 色は仮
     .note-bar {
-      background-color: hsl(130, 35%, 90%);
-      border: 2px solid colors.$primary;
+      background-color: hsl(33, 100%, 50%);
     }
 
     &.below-pitch {
       .note-bar {
-        background-color: rgba(hsl(130, 100%, 50%), 0.18);
+        background-color: rgba(hsl(33, 100%, 50%), 0.18);
       }
     }
   }

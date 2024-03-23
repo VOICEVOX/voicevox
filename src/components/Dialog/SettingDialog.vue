@@ -954,9 +954,11 @@
                 >
                 </QToggle>
               </QCardActions>
-              <QCardActions v-if="!isProduction" class="q-px-md bg-surface">
-                <div>[開発時のみ機能] ピッチの表示</div>
-                <div aria-label="ソングエディターで、ピッチを表示します。">
+              <QCardActions class="q-px-md bg-surface">
+                <div>ソング：ピッチを表示</div>
+                <div
+                  aria-label="ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。"
+                >
                   <QIcon name="help_outline" size="sm" class="help-hover-icon">
                     <QTooltip
                       :delay="500"
@@ -964,7 +966,7 @@
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
-                      >ONの場合、ソングエディターで、レンダリング後にピッチが表示されます。</QTooltip
+                      >ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。</QTooltip
                     >
                   </QIcon>
                 </div>
