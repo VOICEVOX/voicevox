@@ -15,12 +15,19 @@
       <div class="q-mt-xs">
         {{
           allEngineState === "STARTING"
-            ? "エンジン起動中・・・"
+            ? isVst
+              ? "エンジン待機中・・・"
+              : "エンジン起動中・・・"
             : "データ準備中・・・"
         }}
       </div>
 
-      <template v-if="isEngineWaitingLong">
+      <template v-if="isVst && allEngineState === 'STARTING'">
+        <QSeparator spaced />
+        このプラグインを使用するには、<br />
+        VOICEVOX 本体の起動が必要です。
+      </template>
+      <template v-else-if="isEngineWaitingLong">
         <QSeparator spaced />
         エンジン起動に時間がかかっています。<br />
         <QBtn
@@ -40,6 +47,7 @@
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { EngineState } from "@/store/type";
+import { isVst } from "@/type/preload";
 
 const store = useStore();
 const props =
