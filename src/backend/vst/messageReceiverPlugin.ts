@@ -51,6 +51,7 @@ export const vstMessageReceiver: Plugin = {
       switch (message.type) {
         case "update:isPlaying":
           if (message.isPlaying && !uiLockPromiseResolve) {
+            store.dispatch("SING_STOP_AUDIO");
             store.dispatch("ASYNC_UI_LOCK", {
               callback: () =>
                 new Promise((resolve) => {
