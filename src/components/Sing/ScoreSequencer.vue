@@ -110,25 +110,32 @@
         }"
       ></div>
       <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
+      <!-- undefinedだと警告が出るのでnullを渡す -->
       <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
+        :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="false"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-updated="onNoteLyricUpdated($event, note)"
+        @lyric-blur="onNoteLyricBlur()"
       />
       <SequencerNote
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
+        :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="true"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-updated="onNoteLyricUpdated($event, note)"
+        @lyric-blur="onNoteLyricBlur()"
       />
     </div>
     <SequencerPitch
@@ -233,6 +240,7 @@ import {
   getMeasureDuration,
   getNoteDuration,
   getNumOfMeasures,
+  splitMorasAndNonMoras,
 } from "@/sing/domain";
 import {
   getKeyBaseHeight,
@@ -748,6 +756,47 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
   if (event.button === 0) {
     mouseDownNoteId = note.id;
   }
+};
+
+const previewLyrics = ref<Map<string, string>>(new Map());
+const onNoteLyricUpdated = (lyric: string, note: Note) => {
+  // TODO: マルチトラック対応
+  const inputNoteIndex = store.state.tracks[0].notes.findIndex(
+    (value) => value.id === note.id
+  );
+  if (inputNoteIndex === -1) {
+    throw new Error("inputNoteIndex is -1.");
+  }
+  const newPreviewLyrics = new Map();
+
+  const moraAndNonMoras = splitMorasAndNonMoras(
+    lyric,
+    store.state.tracks[0].notes.length - inputNoteIndex
+  );
+  for (const [index, mora] of moraAndNonMoras.entries()) {
+    const noteIndex = inputNoteIndex + index;
+    if (noteIndex >= notes.value.length) {
+      break;
+    }
+    const note = notes.value[noteIndex];
+    newPreviewLyrics.set(note.id, mora);
+  }
+  previewLyrics.value = newPreviewLyrics;
+};
+const onNoteLyricBlur = () => {
+  const newNotes: Note[] = [];
+  if (previewLyrics.value.size === 0) {
+    return;
+  }
+  for (const [noteId, lyric] of previewLyrics.value) {
+    const note = notes.value.find((value) => value.id === noteId);
+    if (!note) {
+      continue;
+    }
+    newNotes.push({ ...note, lyric });
+  }
+  previewLyrics.value = new Map();
+  store.dispatch("COMMAND_UPDATE_NOTES", { notes: newNotes });
 };
 
 const onMouseDown = (event: MouseEvent) => {

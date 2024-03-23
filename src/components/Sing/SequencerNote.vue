@@ -3,6 +3,7 @@
     class="note"
     :class="{
       selected: noteState === 'SELECTED',
+      'with-preview-lyric': !!props.previewLyric,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
       'below-pitch': showPitch,
@@ -20,6 +21,14 @@
     </div>
     <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
     <div
+      v-if="props.previewLyric"
+      class="note-lyric preview-lyric"
+      data-testid="note-lyric"
+    >
+      {{ props.previewLyric }}
+    </div>
+    <div
+      v-else
       class="note-lyric"
       data-testid="note-lyric"
       @mousedown="onLyricMouseDown"
@@ -28,9 +37,10 @@
     </div>
     <input
       v-if="showLyricInput"
-      v-model.lazy.trim="lyric"
       v-focus
+      :value="lyric"
       class="note-lyric-input"
+      @input="onLyricInput"
       @mousedown.stop
       @dblclick.stop
       @keydown.stop="onLyricInputKeyDown"
@@ -88,6 +98,7 @@ const props = withDefaults(
   defineProps<{
     note: Note;
     isSelected: boolean;
+    previewLyric: string | null;
   }>(),
   {
     isSelected: false,
@@ -100,6 +111,8 @@ const emit =
     (name: "rightEdgeMousedown", event: MouseEvent): void;
     (name: "leftEdgeMousedown", event: MouseEvent): void;
     (name: "lyricMouseDown", event: MouseEvent): void;
+    (name: "lyricUpdated", text: string): void;
+    (name: "lyricBlur"): void;
   }>();
 
 const store = useStore();
@@ -129,15 +142,6 @@ const noteState = computed((): NoteState => {
   }
   return "NORMAL";
 });
-const moraRegex = new RegExp(
-  "(?:" +
-    "[イ][ェ]|[ヴ][ャュョ]|[トド][ゥ]|[テデ][ィャュョ]|[デ][ェ]|[クグ][ヮ]|" + // rule_others
-    "[キシチニヒミリギジビピ][ェャュョ]|" + // rule_line_i
-    "[ツフヴ][ァ]|[ウスツフヴズ][ィ]|[ウツフヴ][ェォ]|" + // rule_line_u
-    "[ァ-ヴー]" + // rule_one_mora
-    ")",
-  "g"
-);
 
 // ノートの重なりエラー
 const hasOverlappingError = computed(() => {
@@ -154,19 +158,8 @@ const hasPhraseError = computed(() => {
   );
 });
 
-const lyric = computed({
-  get() {
-    return props.note.lyric;
-  },
-  set(value) {
-    if (!value) {
-      return;
-    }
-    console.log("lyric", value);
-    const note: Note = { ...props.note, lyric: value };
-    store.dispatch("COMMAND_UPDATE_NOTES", { notes: [note] });
-  },
-});
+const lyric = computed(() => temporaryLyric.value ?? props.note.lyric);
+const temporaryLyric = ref<string | undefined>(undefined);
 const showLyricInput = computed(() => {
   return state.editingLyricNoteId === props.note.id;
 });
@@ -265,6 +258,12 @@ const onLyricInputBlur = () => {
   if (state.editingLyricNoteId === props.note.id) {
     store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
   }
+  temporaryLyric.value = undefined;
+  emit("lyricBlur");
+};
+const onLyricInput = (event: Event) => {
+  temporaryLyric.value = (event.target as HTMLInputElement).value;
+  emit("lyricUpdated", temporaryLyric.value);
 };
 </script>
 
@@ -284,7 +283,8 @@ const onLyricInputBlur = () => {
     }
   }
 
-  &.selected {
+  &.selected,
+  &.with-preview-lyric {
     // 色は仮
     .note-bar {
       background-color: hsl(130, 35%, 90%);

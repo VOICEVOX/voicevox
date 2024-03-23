@@ -1,4 +1,5 @@
 import { Note, Phrase, Score, Tempo, TimeSignature } from "@/store/type";
+import { convertHiraToKana, convertLongVowel } from "@/store/utility";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -334,3 +335,50 @@ export function selectPriorPhrase(
   // 再生位置より前のPhrase
   return sortedPhrases[0];
 }
+
+export const moraPattern = new RegExp(
+  "(?:" +
+    "[イ][ェ]|[ヴ][ャュョ]|[トド][ゥ]|[テデ][ィャュョ]|[デ][ェ]|[クグ][ヮ]|" + // rule_others
+    "[キシチニヒミリギジビピ][ェャュョ]|" + // rule_line_i
+    "[ツフヴ][ァ]|[ウスツフヴズ][ィ]|[ウツフヴ][ェォ]|" + // rule_line_u
+    "[ァ-ヴー]" + // rule_one_mora
+    ")",
+  "g"
+);
+
+/**
+ * 文字列をモーラと非モーラに分割する。
+ * 例："カナ漢字" -> ["カ", "ナ", "漢字"]
+ *
+ * @param text 分割する文字列
+ * @param maxLength 最大分割数（0：無制限）
+ * @returns 分割された文字列
+ */
+export const splitMorasAndNonMoras = (
+  text: string,
+  maxLength = 0
+): string[] => {
+  const baseMoraAndNonMoras: string[] = [];
+  const matches = convertLongVowel(convertHiraToKana(text)).matchAll(
+    moraPattern
+  );
+  let lastMatchEnd = 0;
+  for (const match of matches) {
+    baseMoraAndNonMoras.push(text.substring(lastMatchEnd, match.index));
+    baseMoraAndNonMoras.push(match[0]);
+    if (match.index == undefined) {
+      throw new Error("match.index is undefined.");
+    }
+    lastMatchEnd = match.index + match[0].length;
+  }
+  baseMoraAndNonMoras.push(text.substring(lastMatchEnd));
+  const moraAndNonMoras = baseMoraAndNonMoras.filter((value) => value !== "");
+  if (maxLength !== 0 && moraAndNonMoras.length > maxLength) {
+    moraAndNonMoras.splice(
+      maxLength - 1,
+      moraAndNonMoras.length,
+      moraAndNonMoras.slice(maxLength - 1).join("")
+    );
+  }
+  return moraAndNonMoras;
+};
