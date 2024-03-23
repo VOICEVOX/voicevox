@@ -351,7 +351,7 @@ export const moraPattern = new RegExp(
  * 例："カナ漢字" -> ["カ", "ナ", "漢字"]
  *
  * @param text 分割する文字列
- * @param maxLength 最大分割数（0：無制限）
+ * @param maxLength 最大の要素数（0の場合は制限なし）
  * @returns 分割された文字列
  */
 export const splitMorasAndNonMoras = (
