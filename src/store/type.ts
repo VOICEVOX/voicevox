@@ -794,8 +794,6 @@ export type SingingStoreState = {
   editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
-  leftLocatorPosition: number;
-  rightLocatorPosition: number;
   startRenderingRequested: boolean;
   stopRenderingRequested: boolean;
   nowRendering: boolean;
@@ -870,6 +868,11 @@ export type SingingStoreTypes = {
     action(payload: { noteIds: string[] }): void;
   };
 
+  SELECT_ALL_NOTES: {
+    mutation: undefined;
+    action(): void;
+  };
+
   DESELECT_ALL_NOTES: {
     mutation: undefined;
     action(): void;
@@ -925,10 +928,14 @@ export type SingingStoreTypes = {
   };
 
   IMPORT_MIDI_FILE: {
-    action(payload: { filePath?: string }): void;
+    action(payload: { filePath: string; trackIndex: number }): void;
   };
 
   IMPORT_MUSICXML_FILE: {
+    action(payload: { filePath?: string }): void;
+  };
+
+  IMPORT_UST_FILE: {
     action(payload: { filePath?: string }): void;
   };
 
@@ -962,16 +969,6 @@ export type SingingStoreTypes = {
 
   REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
     action(payload: { listener: (position: number) => void }): void;
-  };
-
-  SET_LEFT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
-  };
-
-  SET_RIGHT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
   };
 
   SET_PLAYBACK_STATE: {
@@ -1024,6 +1021,22 @@ export type SingingStoreTypes = {
   };
 
   STOP_RENDERING: {
+    action(): void;
+  };
+
+  COPY_NOTES_TO_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_CUT_NOTES_TO_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_QUANTIZE_SELECTED_NOTES: {
     action(): void;
   };
 };
@@ -1534,6 +1547,7 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
+  isImportMidiDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1610,6 +1624,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
+      isImportMidiDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1623,6 +1638,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
+      isImportMidiDialogOpen?: boolean;
     }): void;
   };
 
