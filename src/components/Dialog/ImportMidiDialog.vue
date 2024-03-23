@@ -3,7 +3,9 @@
     <QLayout container view="hHh lpr fFf" class="q-dialog-plugin bg-background">
       <QHeader>
         <QToolbar>
-          <QToolbarTitle>MIDIファイルのインポート</QToolbarTitle>
+          <QToolbarTitle class="text-display"
+            >MIDIファイルのインポート</QToolbarTitle
+          >
         </QToolbar>
       </QHeader>
       <QPageContainer class="q-px-lg q-py-md">
