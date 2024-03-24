@@ -50,8 +50,7 @@
 		},
     {
       "action": "N番目のキャラクターを選択",
-      "combination": "",
-      "argumentKey": "Numbers"
+      "combination": ""
     },
 		{
 			"action": "テキスト欄を追加",

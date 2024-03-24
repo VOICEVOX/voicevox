@@ -94,8 +94,7 @@
                     :label="
                       getHotkeyText(
                         tableProps.row.action,
-                        tableProps.row.combination,
-                        tableProps.row.argumentKey
+                        tableProps.row.combination
                       )
                         .split(' ')
                         .map((hotkeyText) => {
@@ -235,6 +234,7 @@ import {
 import {
   useHotkeyManager,
   eventToCombination,
+  getArgumentKey,
   getArgumentKeyCombination,
   getArgumentKeyCombinationText,
 } from "@/plugins/hotkeyPlugin";
@@ -290,7 +290,7 @@ const lastRecord = ref(HotkeyCombination(""));
 const lastArgumentKey = computed<HotkeyArgumentKeyType>(() =>
   lastAction.value == ""
     ? undefined
-    : getEditingHotkey(lastAction.value as HotkeyActionNameType).argumentKey
+    : getArgumentKey(lastAction.value as HotkeyActionNameType)
 );
 
 const recordCombination = (event: KeyboardEvent) => {
@@ -322,11 +322,9 @@ const changeHotkeySettings = (
   action: string,
   combination: HotkeyCombination
 ) => {
-  const editingHotkey = getEditingHotkey(action as HotkeyActionNameType);
   hotkeyManager.replace({
     action: action as HotkeyActionNameType,
     combination,
-    argumentKey: editingHotkey.argumentKey,
   });
   return store.dispatch("SET_HOTKEY_SETTINGS", {
     data: {
@@ -350,9 +348,8 @@ const filterDuplicatedHotkeysWithSetKeyAndName = (
   // ホットキー設定ダイアログで何も設定していない時
   if (key == "") return [];
   const results: HotkeySettingType[] = [];
-  const editingHotkey = getEditingHotkey(action);
   // argumentKeyの配列を取得。undefinedを代入したら[ undefined ]が返ってくる
-  const argumentKeys = getArgumentKeyCombination(editingHotkey.argumentKey);
+  const argumentKeys = getArgumentKeyCombination(getArgumentKey(action));
   for (const argumentKey of argumentKeys) {
     // 探すキー名
     const searchKeyCombination = HotkeyCombination(
@@ -377,10 +374,12 @@ const findDuplicatedHotkeyWithKey = (
 ): HotkeySettingType | undefined => {
   return hotkeySettings.value.find(
     (item) =>
-      (item.argumentKey == undefined
+      (getArgumentKey(item.action) == undefined
         ? item.combination == key
         : (
-            getArgumentKeyCombination(item.argumentKey) as HotkeyCombination[]
+            getArgumentKeyCombination(
+              getArgumentKey(item.action)
+            ) as HotkeyCombination[]
           ).find(
             (argumentKey: HotkeyCombination) =>
               item.combination + " " + argumentKey == key
@@ -388,36 +387,21 @@ const findDuplicatedHotkeyWithKey = (
   );
 };
 
-const getEditingHotkey = (action: HotkeyActionNameType): HotkeySettingType => {
-  const editingHotkey = hotkeySettings.value.find(
-    (item) => action == item.action
-  );
-  if (editingHotkey == undefined) {
-    throw new Error(`現在設定を行っている最中のホットキーが存在しません`);
-  }
-  return editingHotkey;
-};
-
 // FIXME: actionはHotkeyAction型にすべき
 const deleteHotkey = (action: string) => {
   changeHotkeySettings(action, HotkeyCombination(""));
 };
 
-const getHotkeyText = (
-  action: string,
-  combo: string,
-  argumentKey: string | undefined
-) => {
+const getHotkeyText = (action: string, combo: string) => {
   if (checkHotkeyReadonly(action)) combo = "（読み取り専用）" + combo;
   if (combo == "") return "未設定";
-  if (argumentKey != undefined)
-    return (
-      combo +
-      " [" +
-      getArgumentKeyCombinationText(argumentKey as HotkeyArgumentKeyType) +
-      "]"
-    );
-  else return combo;
+  const argumentKey = getArgumentKey(action as HotkeyActionNameType);
+  return (
+    combo +
+    (argumentKey == undefined
+      ? ""
+      : " [" + getArgumentKeyCombinationText(argumentKey) + "]")
+  );
 };
 
 // for later developers, in case anyone wants to add a readonly hotkey

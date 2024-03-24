@@ -12,8 +12,9 @@ import hotkeys from "hotkeys-js";
 import {
   HotkeyActionNameType,
   HotkeyCombination,
-  HotkeyArgumentKeyType,
   HotkeySettingType,
+  HotkeyArgumentKeyType,
+  HotkeyArgumentKeySettings,
 } from "@/type/preload";
 
 const hotkeyManagerKey = "hotkeyManager";
@@ -73,7 +74,6 @@ type RegisteredCombination = {
   editor: Editor;
   name: HotkeyActionNameType;
   combination: HotkeyCombination;
-  argumentKey: HotkeyArgumentKeyType;
 };
 
 interface HotkeyTarget {
@@ -172,7 +172,7 @@ export class HotkeyManager {
   private unbindActions(combinations: RegisteredCombination[]): void {
     for (const combination of combinations) {
       for (const argumentKeyCombination of getArgumentKeyCombination(
-        combination.argumentKey
+        getArgumentKey(combination.name)
       )) {
         const bindingKey = combinationAndArgumentKeyToBindingKey(
           combination.combination,
@@ -191,7 +191,7 @@ export class HotkeyManager {
     for (const action of actions) {
       const setting = this.getSetting(action);
       const argumentKeyCombinations = getArgumentKeyCombination(
-        setting.argumentKey
+        getArgumentKey(setting.action)
       );
       for (const argumentKeyCombination of argumentKeyCombinations) {
         const BindingKey = combinationAndArgumentKeyToBindingKey(
@@ -229,7 +229,6 @@ export class HotkeyManager {
           editor: action.editor,
           name: action.name,
           combination: setting.combination,
-          argumentKey: setting.argumentKey,
         });
       }
     }
@@ -296,6 +295,15 @@ const combinationAndArgumentKeyToBindingKey = (
   const argumentKeyBindingKey =
     argumentKeyCombination != undefined ? "+" + argumentKeyCombination : "";
   return (bindingKey + argumentKeyBindingKey) as BindingKey;
+};
+
+export const getArgumentKey = (
+  action: HotkeyActionNameType
+): HotkeyArgumentKeyType => {
+  const result = HotkeyArgumentKeySettings.find(
+    (element) => element.action == action
+  );
+  return result == undefined ? undefined : result.argumentKey;
 };
 
 /** argumentKeyから実際のキー配列で取得する */
