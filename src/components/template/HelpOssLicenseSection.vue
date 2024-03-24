@@ -64,11 +64,11 @@ const selectLicenseIndex = (index: number | undefined) => {
   // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
   // height: 100%;
   height: calc(100vh - 90px);
-  background-color: colors.$background;
 }
 
 .container-detail {
   background-color: colors.$surface;
+  border-left: 1px solid colors.$border;
 }
 
 .inner {
