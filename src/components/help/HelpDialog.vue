@@ -7,85 +7,76 @@
     class="help-dialog transparent-backdrop"
   >
     <q-layout container view="hHh Lpr lff">
-      <q-drawer
-        bordered
-        show-if-above
-        class="bg-background"
-        :model-value="true"
-        :width="250"
-        :breakpoint="0"
-      >
-        <div class="column full-height">
-          <q-list>
+      <div class="grid">
+        <div class="list-wrapper">
+          <BaseListView>
             <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
-              <q-item
+              <BaseListItem
                 v-if="page.type === 'item'"
-                v-ripple
-                clickable
-                active-class="selected-item"
-                :active="selectedPageIndex === pageIndex"
+                :selected="selectedPageIndex === pageIndex"
                 @click="selectedPageIndex = pageIndex"
               >
-                <q-item-section> {{ page.name }} </q-item-section>
-              </q-item>
-              <template v-else-if="page.type === 'separator'">
-                <q-separator />
-                <q-item-label header>{{ page.name }}</q-item-label>
-              </template>
-            </template>
-          </q-list>
-        </div>
-      </q-drawer>
-
-      <q-page-container>
-        <q-page>
-          <q-tab-panels v-model="selectedPageIndex">
-            <q-tab-panel
-              v-for="(page, pageIndex) of pagedata"
-              :key="pageIndex"
-              :name="pageIndex"
-              class="q-pa-none"
-            >
-              <div v-if="page.type === 'item'" class="root">
-                <q-header class="q-pa-sm">
-                  <q-toolbar>
-                    <q-toolbar-title class="text-display">
-                      ヘルプ / {{ page.parent ? page.parent + " / " : ""
-                      }}{{ page.name }}
-                    </q-toolbar-title>
-                    <q-btn
-                      v-if="page.shouldShowOpenLogDirectoryButton"
-                      unelevated
-                      color="toolbar-button"
-                      text-color="toolbar-button-display"
-                      class="text-no-wrap text-bold q-mr-sm"
-                      @click="openLogDirectory"
-                    >
-                      ログフォルダを開く
-                    </q-btn>
-                    <!-- close button -->
-                    <q-btn
-                      round
-                      flat
-                      icon="close"
-                      color="display"
-                      aria-label="ヘルプを閉じる"
-                      @click="modelValueComputed = false"
-                    />
-                  </q-toolbar>
-                </q-header>
-                <component :is="page.component" v-bind="page.props" />
+                {{ page.name }}
+              </BaseListItem>
+              <div v-else-if="page.type === 'separator'" class="list-label">
+                {{ page.name }}
               </div>
-            </q-tab-panel>
-          </q-tab-panels>
-        </q-page>
-      </q-page-container>
+            </template>
+          </BaseListView>
+        </div>
+
+        <q-page-container>
+          <q-page>
+            <q-tab-panels v-model="selectedPageIndex">
+              <q-tab-panel
+                v-for="(page, pageIndex) of pagedata"
+                :key="pageIndex"
+                :name="pageIndex"
+                class="q-pa-none"
+              >
+                <div v-if="page.type === 'item'" class="root">
+                  <q-header class="q-pa-sm">
+                    <q-toolbar>
+                      <q-toolbar-title class="text-display">
+                        ヘルプ / {{ page.parent ? page.parent + " / " : ""
+                        }}{{ page.name }}
+                      </q-toolbar-title>
+                      <q-btn
+                        v-if="page.shouldShowOpenLogDirectoryButton"
+                        unelevated
+                        color="toolbar-button"
+                        text-color="toolbar-button-display"
+                        class="text-no-wrap text-bold q-mr-sm"
+                        @click="openLogDirectory"
+                      >
+                        ログフォルダを開く
+                      </q-btn>
+                      <!-- close button -->
+                      <q-btn
+                        round
+                        flat
+                        icon="close"
+                        color="display"
+                        aria-label="ヘルプを閉じる"
+                        @click="modelValueComputed = false"
+                      />
+                    </q-toolbar>
+                  </q-header>
+                  <component :is="page.component" v-bind="page.props" />
+                </div>
+              </q-tab-panel>
+            </q-tab-panels>
+          </q-page>
+        </q-page-container>
+      </div>
     </q-layout>
   </q-dialog>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, type Component } from "vue";
+import BaseListView from "../base/BaseListView.vue";
+import BaseListItem from "../base/BaseListItem.vue";
 import MarkdownView from "../template/HelpMarkdownViewSection.vue";
 import OssLicense from "../template/HelpOssLicenseSection.vue";
 import UpdateInfo from "../template/HelpUpdateInfoSection.vue";
@@ -277,7 +268,33 @@ const openLogDirectory = window.electron.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use '@/styles/new-colors' as colors;
+
+.grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  backdrop-filter: blur(32px);
+
+  &::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-color: colors.$background;
+    opacity: 0.75;
+    z-index: -1;
+  }
+}
+
+// TODO: MenuBar+Header分のマージン。Dialogコンポーネント置き換え後削除
+.list-wrapper {
+  margin-top: 66px;
+}
+
+.list-label {
+  padding: 8px 16px;
+  padding-top: 16px;
+  color: colors.$display-sub;
+}
 
 .help-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
@@ -289,12 +306,7 @@ const openLogDirectory = window.electron.openLogDirectory;
   }
 }
 
-.selected-item {
-  background-color: rgba(colors.$primary-rgb, 0.4);
-  color: colors.$display;
-}
-
-.q-item__label {
-  padding: 8px 16px;
+.q-tab-panels {
+  background: none;
 }
 </style>
