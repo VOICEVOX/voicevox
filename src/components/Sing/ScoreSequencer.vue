@@ -229,9 +229,11 @@ import { isMac } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
+  getEndTicksOfPhrase,
   getMeasureDuration,
   getNoteDuration,
   getNumOfMeasures,
+  getStartTicksOfPhrase,
 } from "@/sing/domain";
 import {
   getKeyBaseHeight,
@@ -367,8 +369,10 @@ const playheadX = computed(() => {
 // フレーズ
 const phraseInfos = computed(() => {
   return [...state.phrases.entries()].map(([key, phrase]) => {
-    const startBaseX = tickToBaseX(phrase.startTicks, tpqn.value);
-    const endBaseX = tickToBaseX(phrase.endTicks, tpqn.value);
+    const startTicks = getStartTicksOfPhrase(phrase);
+    const endTicks = getEndTicksOfPhrase(phrase);
+    const startBaseX = tickToBaseX(startTicks, tpqn.value);
+    const endBaseX = tickToBaseX(endTicks, tpqn.value);
     const startX = startBaseX * zoomX.value;
     const endX = endBaseX * zoomX.value;
     return { key, x: startX, width: endX - startX };

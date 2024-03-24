@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, toRaw, computed } from "vue";
+import { ref, watch, computed } from "vue";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { frequencyToNoteNumber, secondToTick } from "@/sing/domain";
@@ -34,8 +34,8 @@ const props = defineProps<{ offsetX: number; offsetY: number }>();
 
 const store = useStore();
 const queries = computed(() => {
-  const phrases = [...store.state.phrases.values()];
-  return phrases.map((value) => value.query);
+  const singingStyles = [...store.state.singingStyles.values()];
+  return singingStyles.map((value) => value.query);
 });
 
 const canvasContainer = ref<HTMLElement | null>(null);
@@ -89,35 +89,43 @@ const render = () => {
     throw new Error("stage is undefined.");
   }
 
-  const phrases = toRaw(store.state.phrases);
+  const tpqn = store.state.tpqn;
+  const tempos = [store.state.tempos[0]];
+  const singer = store.getters.SELECTED_TRACK.singer;
+  const singingStyles = store.state.singingStyles;
   const zoomX = store.state.sequencerZoomX;
   const zoomY = store.state.sequencerZoomY;
   const offsetX = props.offsetX;
   const offsetY = props.offsetY;
 
   // 無くなったフレーズを調べて、そのフレーズに対応するピッチラインを削除する
-  for (const [phraseKey, pitchLines] of pitchLinesMap) {
-    if (!phrases.has(phraseKey)) {
+  for (const [singingStyleKey, pitchLines] of pitchLinesMap) {
+    if (!singingStyles.has(singingStyleKey)) {
       for (const pitchLine of pitchLines) {
         stage.removeChild(pitchLine.lineStrip.displayObject);
         pitchLine.lineStrip.destroy();
       }
-      pitchLinesMap.delete(phraseKey);
+      pitchLinesMap.delete(singingStyleKey);
     }
   }
-  // ピッチラインの生成・更新を行う
-  for (const [phraseKey, phrase] of phrases) {
-    if (!phrase.singer || !phrase.query || phrase.startTime == undefined) {
-      continue;
+  // シンガーが未設定の場合はピッチラインをすべて非表示にして終了
+  if (!singer) {
+    for (const pitchLines of pitchLinesMap.values()) {
+      for (const pitchLine of pitchLines) {
+        pitchLine.lineStrip.renderable = false;
+      }
     }
-    const tempos = [toRaw(phrase.tempos[0])];
-    const tpqn = phrase.tpqn;
-    const startTime = phrase.startTime;
-    const f0 = phrase.query.f0;
-    const phonemes = phrase.query.phonemes;
-    const engineId = phrase.singer.engineId;
-    const frameRate = store.state.engineManifests[engineId].frameRate;
-    let pitchLines = pitchLinesMap.get(phraseKey);
+    renderer.render(stage);
+    return;
+  }
+  // ピッチラインの生成・更新を行う
+  for (const [singingStyleKey, singingStyle] of singingStyles) {
+    const f0 = singingStyle.query.f0;
+    const frameRate = singingStyle.frameRate;
+    const startTime = singingStyle.startTime;
+    const phonemes = singingStyle.query.phonemes;
+
+    let pitchLines = pitchLinesMap.get(singingStyleKey);
 
     // フレーズに対応するピッチラインが無かったら生成する
     if (!pitchLines) {
@@ -154,7 +162,7 @@ const render = () => {
       for (const pitchLine of pitchLines) {
         stage.addChild(pitchLine.lineStrip.displayObject);
       }
-      pitchLinesMap.set(phraseKey, pitchLines);
+      pitchLinesMap.set(singingStyleKey, pitchLines);
     }
 
     // ピッチラインを更新

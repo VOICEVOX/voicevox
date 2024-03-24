@@ -1,4 +1,14 @@
-import { Note, Phrase, Score, Tempo, TimeSignature } from "@/store/type";
+import { calculateHash } from "./utility";
+import {
+  Note,
+  Phrase,
+  Score,
+  Singer,
+  Tempo,
+  TimeSignature,
+} from "@/store/type";
+import { EngineId } from "@/type/preload";
+import { FrameAudioQuery } from "@/openapi";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -295,9 +305,50 @@ export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
   );
 }
 
+export const calculateNotesHash = async (notes: Note[]) => {
+  return calculateHash({ notes });
+};
+
+export const calculateSingingStyleSourceHash = async (obj: {
+  engineId: EngineId;
+  tpqn: number;
+  tempos: Tempo[];
+  notes: Note[];
+  keyRangeAdjustment: number;
+  volumeRangeAdjustment: number;
+  frameRate: number;
+  restDurationSeconds: number;
+}) => {
+  return calculateHash(obj);
+};
+
+export const calculateSingingVoiceSourceHash = async (obj: {
+  singer: Singer;
+  frameAudioQuery: FrameAudioQuery;
+}) => {
+  return calculateHash(obj);
+};
+
+export function getStartTicksOfPhrase(phrase: Phrase) {
+  if (phrase.notes.length === 0) {
+    throw new Error("phrase.notes.length is 0.");
+  }
+  return phrase.notes[0].position;
+}
+
+export function getEndTicksOfPhrase(phrase: Phrase) {
+  if (phrase.notes.length === 0) {
+    throw new Error("phrase.notes.length is 0.");
+  }
+  const lastNote = phrase.notes[phrase.notes.length - 1];
+  return lastNote.position + lastNote.duration;
+}
+
 export function toSortedPhrases(phrases: Map<string, Phrase>) {
   return [...phrases.entries()].sort((a, b) => {
-    return a[1].startTicks - b[1].startTicks;
+    const startTicksOfPhraseA = getStartTicksOfPhrase(a[1]);
+    const startTicksOfPhraseB = getStartTicksOfPhrase(b[1]);
+    return startTicksOfPhraseA - startTicksOfPhraseB;
   });
 }
 
@@ -318,7 +369,10 @@ export function selectPriorPhrase(
   }
   // 再生位置が含まれるPhrase
   for (const [phraseKey, phrase] of phrases) {
-    if (phrase.startTicks <= position && position <= phrase.endTicks) {
+    if (
+      getStartTicksOfPhrase(phrase) <= position &&
+      position <= getEndTicksOfPhrase(phrase)
+    ) {
       return [phraseKey, phrase];
     }
   }
@@ -326,7 +380,7 @@ export function selectPriorPhrase(
   const sortedPhrases = toSortedPhrases(phrases);
   // 再生位置より後のPhrase
   for (const [phraseKey, phrase] of sortedPhrases) {
-    if (phrase.startTicks > position) {
+    if (getStartTicksOfPhrase(phrase) > position) {
       return [phraseKey, phrase];
     }
   }

@@ -763,18 +763,21 @@ export type PhraseState =
   | "COULD_NOT_RENDER"
   | "PLAYABLE";
 
+export type SingingStyle = {
+  query: FrameAudioQuery;
+  frameRate: number;
+  startTime: number;
+};
+
+export type SingingVoice = {
+  blob: Blob;
+};
+
 export type Phrase = {
-  singer?: Singer;
-  keyRangeAdjustment: number;
-  volumeRangeAdjustment: number;
-  tpqn: number;
-  tempos: Tempo[];
   notes: Note[];
-  startTicks: number;
-  endTicks: number;
   state: PhraseState;
-  query?: FrameAudioQuery;
-  startTime?: number;
+  singingStyleKey?: string;
+  singingVoiceKey?: string;
 };
 
 export type SingingStoreState = {
@@ -783,6 +786,7 @@ export type SingingStoreState = {
   timeSignatures: TimeSignature[];
   tracks: Track[];
   phrases: Map<string, Phrase>;
+  singingStyles: Map<string, SingingStyle>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
   sequencerZoomX: number;
@@ -883,24 +887,28 @@ export type SingingStoreTypes = {
     action(payload: { noteId?: string }): void;
   };
 
-  SET_PHRASE: {
-    mutation: { phraseKey: string; phrase: Phrase };
-  };
-
-  DELETE_PHRASE: {
-    mutation: { phraseKey: string };
+  SET_PHRASES: {
+    mutation: { phrases: Map<string, Phrase> };
   };
 
   SET_STATE_TO_PHRASE: {
     mutation: { phraseKey: string; phraseState: PhraseState };
   };
 
-  SET_FRAME_AUDIO_QUERY_TO_PHRASE: {
-    mutation: { phraseKey: string; frameAudioQuery: FrameAudioQuery };
+  SET_SINGING_STYLE_KEY_TO_PHRASE: {
+    mutation: { phraseKey: string; singingStyleKey: string | undefined };
   };
 
-  SET_START_TIME_TO_PHRASE: {
-    mutation: { phraseKey: string; startTime: number };
+  SET_SINGING_VOICE_KEY_TO_PHRASE: {
+    mutation: { phraseKey: string; singingVoiceKey: string | undefined };
+  };
+
+  SET_SINGING_STYLE: {
+    mutation: { singingStyleKey: string; singingStyle: SingingStyle };
+  };
+
+  DELETE_SINGING_STYLE: {
+    mutation: { singingStyleKey: string };
   };
 
   SELECTED_TRACK: {
