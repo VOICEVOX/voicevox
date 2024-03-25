@@ -375,8 +375,18 @@ export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
       recordedCombination = recordedCombination.slice(0, -1);
     } else {
       recordedCombination +=
-        event.key.length > 1 ? event.key : event.key.toUpperCase();
+        event.key.length > 1
+          ? event.key
+          : parseUnshiftedDigit(event.key.toUpperCase());
     }
   }
   return HotkeyCombination(recordedCombination);
+};
+
+/** shift+1などを押したときにevent.keyが!などになるのでそれを変換する */
+export const parseUnshiftedDigit = (str: string): string => {
+  if (/^[!-)]$/.test(str)) {
+    return String.fromCharCode(str.charCodeAt(0) + 16);
+  }
+  return str;
 };

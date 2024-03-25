@@ -199,6 +199,7 @@ import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
+import { parseUnshiftedDigit } from "@/plugins/hotkeyPlugin";
 
 const props = withDefaults(
   defineProps<{
@@ -230,6 +231,7 @@ const characterSelectShortcut = (e: KeyboardEvent) => {
 };
 
 const convertToNumber = (str: string) => {
+  str = parseUnshiftedDigit(str);
   if (/^[0-9]$/.test(str)) {
     return parseInt(str, 10);
   } else {
