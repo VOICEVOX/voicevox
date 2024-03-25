@@ -53,7 +53,7 @@ import {
   Voice,
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
-import { base64ImageToUri } from "@/helpers/imageHelper";
+import { base64ImageToUri, base64ToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 
 function generateAudioKey() {
@@ -288,11 +288,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
         });
-        const base64ToUrl = function (base64: string, type: string) {
-          const buffer = Buffer.from(base64, "base64");
-          const iconBlob = new Blob([buffer.buffer], { type: type });
-          return URL.createObjectURL(iconBlob);
-        };
         const getStyles = function (
           speaker: Speaker,
           speakerInfo: SpeakerInfo,
@@ -307,7 +302,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
                 `Not found the style id "${style.id}" of "${speaker.name}". `,
               );
             const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
-              return base64ToUrl(voiceSample, "audio/wav");
+              return base64ToUri(voiceSample, "audio/wav");
             });
             styles[i] = {
               styleName: style.name,
