@@ -244,6 +244,8 @@ import {
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
   DoubleClickDetector,
+  NoteAreaInfo,
+  GridAreaInfo,
 } from "@/sing/viewHelper";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -394,8 +396,10 @@ let executePreviewProcess = false;
 let edited = false; // プレビュー終了時にstore.stateの更新を行うかどうかを表す変数
 
 // ダブルクリック
-let mouseDownNoteId: string | undefined;
-const doubleClickDetector = new DoubleClickDetector<string | undefined>();
+let mouseDownAreaInfo: NoteAreaInfo | GridAreaInfo | undefined;
+const doubleClickDetector = new DoubleClickDetector<
+  NoteAreaInfo | GridAreaInfo
+>();
 let ignoreDoubleClick = false;
 
 // 入力を補助する線
@@ -696,7 +700,7 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
-    mouseDownNoteId = note.id;
+    mouseDownAreaInfo = new NoteAreaInfo(note.id);
     startPreview(event, "MOVE", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -708,7 +712,7 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
-    mouseDownNoteId = note.id;
+    mouseDownAreaInfo = new NoteAreaInfo(note.id);
     startPreview(event, "RESIZE_LEFT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -720,7 +724,7 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
-    mouseDownNoteId = note.id;
+    mouseDownAreaInfo = new NoteAreaInfo(note.id);
     startPreview(event, "RESIZE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -732,7 +736,7 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
-    mouseDownNoteId = note.id;
+    mouseDownAreaInfo = new NoteAreaInfo(note.id);
   }
   if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -744,7 +748,7 @@ const onMouseDown = (event: MouseEvent) => {
     return;
   }
   if (event.button === 0) {
-    mouseDownNoteId = undefined;
+    mouseDownAreaInfo = new GridAreaInfo();
     if (event.shiftKey) {
       isRectSelecting.value = true;
       rectSelectStartX.value = cursorX.value;
@@ -783,7 +787,9 @@ const onMouseUp = (event: MouseEvent) => {
   if (event.button !== 0) {
     return;
   }
-  doubleClickDetector.recordClick(event.detail, mouseDownNoteId);
+  if (mouseDownAreaInfo) {
+    doubleClickDetector.recordClick(event.detail, mouseDownAreaInfo);
+  }
   ignoreDoubleClick = nowPreviewing.value && edited;
 
   if (isRectSelecting.value) {
@@ -855,14 +861,15 @@ const onDoubleClick = () => {
   if (ignoreDoubleClick) {
     return;
   }
-  const doubleClickedNoteId = doubleClickDetector.detect()?.targetId;
-  if (
-    doubleClickedNoteId != undefined &&
-    doubleClickedNoteId !== state.editingLyricNoteId
-  ) {
-    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", {
-      noteId: doubleClickedNoteId,
-    });
+  const doubleClickInfo = doubleClickDetector.detect();
+  if (doubleClickInfo) {
+    const areaInfo = doubleClickInfo.clickInfos[0].areaInfo;
+    if (
+      areaInfo.type === "note" &&
+      areaInfo.noteId !== state.editingLyricNoteId
+    ) {
+      store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: areaInfo.noteId });
+    }
   }
 };
 
