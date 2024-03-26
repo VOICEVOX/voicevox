@@ -9,20 +9,22 @@
     <q-layout container view="hHh Lpr lff">
       <div class="grid">
         <div class="list-wrapper">
-          <BaseListView>
-            <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
-              <BaseListItem
-                v-if="page.type === 'item'"
-                :selected="selectedPageIndex === pageIndex"
-                @click="selectedPageIndex = pageIndex"
-              >
-                {{ page.name }}
-              </BaseListItem>
-              <div v-else-if="page.type === 'separator'" class="list-label">
-                {{ page.name }}
-              </div>
-            </template>
-          </BaseListView>
+          <BaseScrollArea>
+            <div class="list-inner">
+              <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
+                <BaseListItem
+                  v-if="page.type === 'item'"
+                  :selected="selectedPageIndex === pageIndex"
+                  @click="selectedPageIndex = pageIndex"
+                >
+                  {{ page.name }}
+                </BaseListItem>
+                <div v-else-if="page.type === 'separator'" class="list-label">
+                  {{ page.name }}
+                </div>
+              </template>
+            </div>
+          </BaseScrollArea>
         </div>
 
         <q-page-container>
@@ -75,7 +77,7 @@
 
 <script setup lang="ts">
 import { computed, ref, type Component } from "vue";
-import BaseListView from "../base/BaseListView.vue";
+import BaseScrollArea from "../base/BaseScrollArea.vue";
 import BaseListItem from "../base/BaseListItem.vue";
 import MarkdownView from "../template/HelpMarkdownViewSection.vue";
 import OssLicense from "../template/HelpOssLicenseSection.vue";
@@ -269,6 +271,7 @@ const openLogDirectory = window.electron.openLogDirectory;
 
 <style scoped lang="scss">
 @use '@/styles/new-colors' as colors;
+@use '@/styles/variables' as vars;
 
 .grid {
   display: grid;
@@ -288,6 +291,13 @@ const openLogDirectory = window.electron.openLogDirectory;
 // TODO: MenuBar+Header分のマージン。Dialogコンポーネント置き換え後削除
 .list-wrapper {
   margin-top: 66px;
+  height: calc(100vh - 90px);
+}
+
+.list-inner {
+  display: flex;
+  flex-direction: column;
+  padding: vars.$padding-2;
 }
 
 .list-label {
