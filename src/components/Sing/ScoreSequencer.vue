@@ -1077,6 +1077,7 @@ const onWheel = (event: WheelEvent) => {
       const newScrollLeft = cursorBaseX * newZoomX - cursorX.value;
       sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
     });
+    event.preventDefault();
   }
 };
 
