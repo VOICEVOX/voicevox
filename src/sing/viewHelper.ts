@@ -122,7 +122,7 @@ interface AreaInfo {
 }
 
 type ClickInfo<T extends AreaInfo> = {
-  readonly count: number;
+  readonly clickCount: number;
   readonly areaInfo: T;
 };
 
@@ -133,11 +133,11 @@ type DoubleClickInfo<T extends AreaInfo> = {
 export class DoubleClickDetector<T extends AreaInfo> {
   private clickInfos: ClickInfo<T>[] = [];
 
-  recordClick(count: number, areaInfo: T) {
-    if (count === 1) {
+  recordClick(clickCount: number, areaInfo: T) {
+    if (clickCount === 1) {
       this.clickInfos = [];
     }
-    this.clickInfos.push({ count, areaInfo });
+    this.clickInfos.push({ clickCount, areaInfo });
   }
 
   detect(): DoubleClickInfo<T> | undefined {
@@ -147,8 +147,8 @@ export class DoubleClickDetector<T extends AreaInfo> {
     const clickInfo1 = this.clickInfos[this.clickInfos.length - 2];
     const clickInfo2 = this.clickInfos[this.clickInfos.length - 1];
     if (
-      clickInfo1.count === 1 &&
-      clickInfo2.count === 2 &&
+      clickInfo1.clickCount === 1 &&
+      clickInfo2.clickCount === 2 &&
       clickInfo1.areaInfo.id === clickInfo2.areaInfo.id
     ) {
       return { clickInfos: [clickInfo1, clickInfo2] };
