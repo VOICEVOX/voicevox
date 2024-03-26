@@ -59,7 +59,7 @@ import {
   StyleInfo,
   Voice,
 } from "@/type/preload";
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
+import { AccentPhrase, AudioQuery, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 
@@ -2225,13 +2225,14 @@ export const audioCommandStore = transformCommandStore(
             accentPhrases: AccentPhrase[],
             accentPhraseIndex: number
           ) => {
-            const newAccentPhrase: AccentPhrase = {
+            const newAccentPhrase: EditorAccentPhrase = {
               moras: [
                 ...accentPhrases[accentPhraseIndex].moras,
                 ...accentPhrases[accentPhraseIndex + 1].moras,
               ],
               accent: accentPhrases[accentPhraseIndex].accent,
               pauseMora: accentPhrases[accentPhraseIndex + 1].pauseMora,
+              key: AccentPhraseKey(uuidv4()),
             };
             accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
           };
@@ -2240,7 +2241,7 @@ export const audioCommandStore = transformCommandStore(
             accentPhraseIndex: number,
             moraIndex: number
           ) => {
-            const newAccentPhrase1: AccentPhrase = {
+            const newAccentPhrase1: EditorAccentPhrase = {
               moras: accentPhrases[accentPhraseIndex].moras.slice(
                 0,
                 moraIndex + 1
@@ -2250,8 +2251,9 @@ export const audioCommandStore = transformCommandStore(
                   ? moraIndex + 1
                   : accentPhrases[accentPhraseIndex].accent,
               pauseMora: undefined,
+              key: AccentPhraseKey(uuidv4()),
             };
-            const newAccentPhrase2: AccentPhrase = {
+            const newAccentPhrase2: EditorAccentPhrase = {
               moras: accentPhrases[accentPhraseIndex].moras.slice(
                 moraIndex + 1
               ),
@@ -2260,6 +2262,7 @@ export const audioCommandStore = transformCommandStore(
                   ? accentPhrases[accentPhraseIndex].accent - moraIndex - 1
                   : 1,
               pauseMora: accentPhrases[accentPhraseIndex].pauseMora,
+              key: AccentPhraseKey(uuidv4()),
             };
             accentPhrases.splice(
               accentPhraseIndex,

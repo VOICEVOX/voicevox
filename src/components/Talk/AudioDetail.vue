@@ -234,9 +234,6 @@ const setPlayAndStartPoint = (accentPhraseIndex: number) => {
 };
 
 watch(accentPhrases, async () => {
-  await store.dispatch("SET_ACCENT_PHRASES_EDITOR_KEY", {
-    audioKey: props.activeAudioKey,
-  });
   activePoint.value = startPoint.value;
   // 連続再生時に、最初に選択されていた場所に戻るためにscrollToActivePointを呼ぶ必要があるが、
   // DOMの描画が少し遅いので、nextTickをはさむ
