@@ -21,24 +21,16 @@
     </div>
     <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
     <div
-      v-if="props.previewLyric"
-      class="note-lyric preview-lyric"
-      data-testid="note-lyric"
-    >
-      {{ props.previewLyric }}
-    </div>
-    <div
-      v-else
       class="note-lyric"
       data-testid="note-lyric"
       @mousedown="onLyricMouseDown"
     >
-      {{ lyric }}
+      {{ displayedLyric }}
     </div>
     <input
       v-if="showLyricInput"
       v-focus
-      :value="lyric"
+      :value="displayedLyric"
       class="note-lyric-input"
       @input="onLyricInput"
       @mousedown.stop
@@ -158,7 +150,12 @@ const hasPhraseError = computed(() => {
   );
 });
 
-const lyric = computed(() => temporaryLyric.value ?? props.note.lyric);
+// 表示する歌詞。
+// 優先度：他ノートの入力中の歌詞 > 入力中の歌詞 > 渡された（=Storeの）歌詞
+const displayedLyric = computed(
+  () => props.previewLyric ?? temporaryLyric.value ?? props.note.lyric
+);
+// 歌詞入力中の一時的な歌詞
 const temporaryLyric = ref<string | undefined>(undefined);
 const showLyricInput = computed(() => {
   return state.editingLyricNoteId === props.note.id;
