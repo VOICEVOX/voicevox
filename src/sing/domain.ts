@@ -336,6 +336,7 @@ export function selectPriorPhrase(
   return sortedPhrases[0];
 }
 
+// 参考：https://github.com/VOICEVOX/voicevox_core/blob/0848630d81ae3e917c6ff2038f0b15bbd4270702/crates/voicevox_core/src/user_dict/word.rs#L83-L90
 export const moraPattern = new RegExp(
   "(?:" +
     "[イ][ェ]|[ヴ][ャュョ]|[トド][ゥ]|[テデ][ィャュョ]|[デ][ェ]|[クグ][ヮ]|" + // rule_others
