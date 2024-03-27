@@ -758,7 +758,9 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
   }
 };
 
+// プレビュー中の歌詞。NoteID -> 歌詞のMap。
 const previewLyrics = ref<Map<string, string>>(new Map());
+// 入力中の歌詞を分割してプレビューに反映する。
 const onNoteLyricUpdate = (lyric: string, note: Note) => {
   // TODO: マルチトラック対応
   const inputNoteIndex = store.state.tracks[0].notes.findIndex(
@@ -783,6 +785,7 @@ const onNoteLyricUpdate = (lyric: string, note: Note) => {
   }
   previewLyrics.value = newPreviewLyrics;
 };
+// プレビューの歌詞を確定する。
 const onNoteLyricBlur = () => {
   const newNotes: Note[] = [];
   if (previewLyrics.value.size === 0) {
@@ -791,7 +794,7 @@ const onNoteLyricBlur = () => {
   for (const [noteId, lyric] of previewLyrics.value) {
     const note = notes.value.find((value) => value.id === noteId);
     if (!note) {
-      continue;
+      throw new Error("note is undefined.");
     }
     newNotes.push({ ...note, lyric });
   }
