@@ -3,7 +3,7 @@
     class="note"
     :class="{
       selected: noteState === 'SELECTED',
-      'with-preview-lyric': !!props.previewLyric,
+      'preview-lyric': !!props.previewLyric,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
       'below-pitch': showPitch,
@@ -283,8 +283,7 @@ const onLyricInput = (event: Event) => {
     }
   }
 
-  &.selected,
-  &.with-preview-lyric {
+  &.selected {
     // 色は仮
     .note-bar {
       background-color: hsl(130, 35%, 90%);
@@ -295,6 +294,12 @@ const onLyricInput = (event: Event) => {
       .note-bar {
         background-color: rgba(hsl(130, 100%, 50%), 0.18);
       }
+    }
+  }
+  &.preview-lyric {
+    .note-bar {
+      background-color: hsl(130, 35%, 90%);
+      border: 2px solid colors.$primary;
     }
   }
 
