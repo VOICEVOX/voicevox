@@ -293,10 +293,17 @@ const onLyricInput = (event: Event) => {
       }
     }
   }
+  // TODO：もっといい見た目を考える
   &.preview-lyric {
     .note-bar {
       background-color: hsl(130, 35%, 90%);
       border: 2px solid colors.$primary;
+    }
+
+    &.below-pitch {
+      .note-bar {
+        background-color: rgba(hsl(130, 100%, 50%), 0.18);
+      }
     }
   }
 
