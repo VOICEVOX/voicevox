@@ -352,26 +352,34 @@ export const moraPattern = new RegExp(
  * 例："カナ漢字" -> ["カ", "ナ", "漢字"]
  *
  * @param text 分割する文字列
- * @param maxLength 最大の要素数（0の場合は制限なし）
+ * @param maxLength 最大の要素数
  * @returns 分割された文字列
  */
-export const splitLyricsByMoras = (text: string, maxLength = 0): string[] => {
+export const splitLyricsByMoras = (
+  text: string,
+  maxLength = Infinity
+): string[] => {
   const baseMoraAndNonMoras: string[] = [];
   const matches = convertLongVowel(convertHiraToKana(text)).matchAll(
     moraPattern
   );
   let lastMatchEnd = 0;
+  // aアbイウc で説明：
   for (const match of matches) {
+    // 直前のモーラとの間 = a、b、空文字列
     baseMoraAndNonMoras.push(text.substring(lastMatchEnd, match.index));
+    // モーラ = ア、イ、ウ
     baseMoraAndNonMoras.push(match[0]);
     if (match.index == undefined) {
       throw new Error("match.index is undefined.");
     }
     lastMatchEnd = match.index + match[0].length;
   }
+  // 最後のモーラとの間 = cの部分
   baseMoraAndNonMoras.push(text.substring(lastMatchEnd));
+  // 空文字列を削除（モーラが連続する場合に発生）
   const moraAndNonMoras = baseMoraAndNonMoras.filter((value) => value !== "");
-  if (maxLength !== 0 && moraAndNonMoras.length > maxLength) {
+  if (moraAndNonMoras.length > maxLength) {
     moraAndNonMoras.splice(
       maxLength - 1,
       moraAndNonMoras.length,
