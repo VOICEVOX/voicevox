@@ -377,7 +377,7 @@ export const splitLyricsByMoras = (
   }
   // 最後のモーラとの間 = cの部分
   baseMoraAndNonMoras.push(text.substring(lastMatchEnd));
-  // 空文字列を削除（モーラが連続する場合に発生）
+  // 空文字列を削除（モーラが連続する時やモーラで始まったり終わったりする時に発生）
   const moraAndNonMoras = baseMoraAndNonMoras.filter((value) => value !== "");
   if (moraAndNonMoras.length > maxLength) {
     moraAndNonMoras.splice(
