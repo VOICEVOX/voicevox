@@ -354,10 +354,7 @@ export const moraPattern = new RegExp(
  * @param maxLength 最大の要素数（0の場合は制限なし）
  * @returns 分割された文字列
  */
-export const splitMorasAndNonMoras = (
-  text: string,
-  maxLength = 0
-): string[] => {
+export const splitLyricsByMoras = (text: string, maxLength = 0): string[] => {
   const baseMoraAndNonMoras: string[] = [];
   const matches = convertLongVowel(convertHiraToKana(text)).matchAll(
     moraPattern

@@ -240,7 +240,7 @@ import {
   getMeasureDuration,
   getNoteDuration,
   getNumOfMeasures,
-  splitMorasAndNonMoras,
+  splitLyricsByMoras,
 } from "@/sing/domain";
 import {
   getKeyBaseHeight,
@@ -769,7 +769,7 @@ const onNoteLyricUpdated = (lyric: string, note: Note) => {
   }
   const newPreviewLyrics = new Map();
 
-  const moraAndNonMoras = splitMorasAndNonMoras(
+  const moraAndNonMoras = splitLyricsByMoras(
     lyric,
     store.state.tracks[0].notes.length - inputNoteIndex
   );
