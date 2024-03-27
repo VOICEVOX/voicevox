@@ -138,7 +138,6 @@
         marginRight: `${scrollBarWidth}px`,
         marginBottom: `${scrollBarWidth}px`,
       }"
-      :is-activated="isActivated"
       :offset-x="scrollX"
       :offset-y="scrollY"
     />
@@ -261,8 +260,6 @@ import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useShiftKey } from "@/composables/useModifierKey";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
-
-defineProps<{ isActivated: boolean }>();
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
