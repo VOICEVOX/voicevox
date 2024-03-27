@@ -121,7 +121,7 @@
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-updated="onNoteLyricUpdated($event, note)"
+        @lyric-update="onNoteLyricUpdate($event, note)"
         @lyric-blur="onNoteLyricBlur()"
       />
       <SequencerNote
@@ -134,7 +134,7 @@
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-updated="onNoteLyricUpdated($event, note)"
+        @lyric-update="onNoteLyricUpdate($event, note)"
         @lyric-blur="onNoteLyricBlur()"
       />
     </div>
@@ -759,7 +759,7 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const previewLyrics = ref<Map<string, string>>(new Map());
-const onNoteLyricUpdated = (lyric: string, note: Note) => {
+const onNoteLyricUpdate = (lyric: string, note: Note) => {
   // TODO: マルチトラック対応
   const inputNoteIndex = store.state.tracks[0].notes.findIndex(
     (value) => value.id === note.id

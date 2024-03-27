@@ -111,7 +111,7 @@ const emit =
     (name: "rightEdgeMousedown", event: MouseEvent): void;
     (name: "leftEdgeMousedown", event: MouseEvent): void;
     (name: "lyricMouseDown", event: MouseEvent): void;
-    (name: "lyricUpdated", text: string): void;
+    (name: "lyricUpdate", text: string): void;
     (name: "lyricBlur"): void;
   }>();
 
@@ -263,7 +263,7 @@ const onLyricInputBlur = () => {
 };
 const onLyricInput = (event: Event) => {
   temporaryLyric.value = (event.target as HTMLInputElement).value;
-  emit("lyricUpdated", temporaryLyric.value);
+  emit("lyricUpdate", temporaryLyric.value);
 };
 </script>
 
