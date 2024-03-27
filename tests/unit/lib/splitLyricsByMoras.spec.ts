@@ -26,6 +26,8 @@ it("長音対応", () => {
 
 it("モーラ以外が混ざっても残す", () => {
   expect(splitLyricsByMoras("アaイ")).toEqual(["ア", "a", "イ"]);
+  expect(splitLyricsByMoras("bウc")).toEqual(["b", "ウ", "c"]);
+  expect(splitLyricsByMoras("愛")).toEqual(["愛"]);
 });
 it("最大の要素数を指定できる", () => {
   expect(splitLyricsByMoras("アイウエオ", 3)).toEqual(["ア", "イ", "ウエオ"]);
