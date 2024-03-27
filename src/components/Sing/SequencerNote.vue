@@ -151,9 +151,9 @@ const hasPhraseError = computed(() => {
 });
 
 // 表示する歌詞。
-// 優先度：他ノートの入力中の歌詞 > 入力中の歌詞 > 渡された（=Storeの）歌詞
+// 優先度：入力中の歌詞 > 他ノートの入力中の歌詞 > 渡された（=Storeの）歌詞
 const displayedLyric = computed(
-  () => props.previewLyric ?? temporaryLyric.value ?? props.note.lyric
+  () => temporaryLyric.value ?? props.previewLyric ?? props.note.lyric
 );
 // 歌詞入力中の一時的な歌詞
 const temporaryLyric = ref<string | undefined>(undefined);
