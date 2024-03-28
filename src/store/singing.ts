@@ -1794,7 +1794,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (tempo) tempos[0].bpm = tempo;
           }
           // ノートセクション
-          if (params.sectionName.match(/^#\d{4}/)) {
+          // #以降に数字の場合はノートセクション ex: #0, #0000
+          if (params.sectionName.match(/^#\d+$/)) {
             // テンポ変更があれば追加
             const tempo = Number(params["Tempo"]);
             if (tempo) tempos.push({ position, bpm: tempo });
