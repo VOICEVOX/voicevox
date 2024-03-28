@@ -1,6 +1,7 @@
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import Encoding from "encoding-japanese";
+import { diffArrays } from "diff";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -281,24 +282,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   LOAD_CHARACTER: {
     action: createUILockAction(
       async ({ commit, dispatch, state }, { engineId }) => {
-        const { speakers, singers } = await dispatch(
-          "INSTANTIATE_ENGINE_CONNECTOR",
-          {
-            engineId,
-          }
-        )
-          .then(async (instance) => {
-            return {
-              speakers: await instance.invoke("speakersSpeakersGet")({}),
-              singers: state.engineManifests[engineId].supportedFeatures.sing
-                ? await instance.invoke("singersSingersGet")({})
-                : [],
-            };
-          })
-          .catch((error) => {
-            window.backend.logError(error, `Failed to get speakers.`);
-            throw error;
-          });
+        const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        });
         const base64ToUrl = function (base64: string, type: string) {
           const buffer = Buffer.from(base64, "base64");
           const iconBlob = new Blob([buffer.buffer], { type: type });
@@ -333,56 +319,98 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
           return styles;
         };
-        const getSpeakerInfo = async function (speaker: Speaker) {
+        const getCharacterInfo = async (
+          speaker: Speaker | undefined,
+          singer: Speaker | undefined
+        ) => {
           // 同じIDの歌手がいる場合は歌手情報を取得し、スタイルをマージする
-          // FIXME: ソングのみのキャラも考慮する
-          const singer = singers.find(
-            (singer) => singer.speakerUuid === speaker.speakerUuid
-          );
-          const { speakerInfo, singerInfo } = await dispatch(
-            "INSTANTIATE_ENGINE_CONNECTOR",
-            {
-              engineId,
-            }
-          )
-            .then(async (instance) => {
-              const speakerInfo = await instance.invoke(
-                "speakerInfoSpeakerInfoGet"
-              )({
+          let speakerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
+          let speakerStylePromise: Promise<StyleInfo[]> | never[] = [];
+          if (speaker != undefined) {
+            speakerInfoPromise = instance
+              .invoke("speakerInfoSpeakerInfoGet")({
                 speakerUuid: speaker.speakerUuid,
+              })
+              .catch((error) => {
+                window.backend.logError(error, `Failed to get speakerInfo.`);
+                throw error;
               });
-              let singerInfo: SpeakerInfo | undefined = undefined;
-              if (singer) {
-                singerInfo = await instance.invoke("singerInfoSingerInfoGet")({
-                  speakerUuid: singer.speakerUuid,
-                });
-              }
-              return { speakerInfo, singerInfo };
-            })
-            .catch((error) => {
-              window.backend.logError(error, `Failed to get speakers.`);
-              throw error;
-            });
-          const styles = getStyles(speaker, speakerInfo);
-          if (singer && singerInfo) {
-            styles.push(...getStyles(singer, singerInfo));
+            speakerStylePromise = speakerInfoPromise.then((speakerInfo) =>
+              getStyles(speaker, speakerInfo)
+            );
           }
+
+          let singerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
+          let singerStylePromise: Promise<StyleInfo[]> | never[] = [];
+          if (singer != undefined) {
+            singerInfoPromise = instance
+              .invoke("singerInfoSingerInfoGet")({
+                speakerUuid: singer.speakerUuid,
+              })
+              .catch((error) => {
+                window.backend.logError(error, `Failed to get singerInfo.`);
+                throw error;
+              });
+            singerStylePromise = singerInfoPromise.then((singerInfo) =>
+              getStyles(singer, singerInfo)
+            );
+          }
+
+          const baseSpeaker = speaker ?? singer;
+          if (baseSpeaker == undefined) {
+            throw new Error("assert baseSpeaker == undefined");
+          }
+          const baseSpeakerInfo = await (speakerInfoPromise ??
+            speakerInfoPromise);
+          if (baseSpeakerInfo == undefined) {
+            throw new Error("assert baseSpeakerInfo == undefined");
+          }
+
+          const stylesPromise = Promise.all([
+            speakerStylePromise,
+            singerStylePromise,
+          ]).then((styles) => styles.flat());
+
           const characterInfo: CharacterInfo = {
-            portraitPath: base64ImageToUri(speakerInfo.portrait),
+            portraitPath: base64ImageToUri(baseSpeakerInfo.portrait),
             metas: {
-              speakerUuid: SpeakerId(speaker.speakerUuid),
-              speakerName: speaker.name,
-              styles,
-              policy: speakerInfo.policy,
+              speakerUuid: SpeakerId(baseSpeaker.speakerUuid),
+              speakerName: baseSpeaker.name,
+              styles: await stylesPromise,
+              policy: baseSpeakerInfo.policy,
             },
           };
           return characterInfo;
         };
-        const characterInfos: CharacterInfo[] = await Promise.all(
-          speakers.map(async (speaker) => {
-            return await getSpeakerInfo(speaker);
-          })
-        );
+
+        const [speakers, singers] = await Promise.all([
+          instance.invoke("speakersSpeakersGet")({}),
+          state.engineManifests[engineId].supportedFeatures.sing
+            ? await instance.invoke("singersSingersGet")({})
+            : [],
+        ]).catch((error) => {
+          window.backend.logError(error, `Failed to get Speakers.`);
+          throw error;
+        });
+
+        const characterInfosPromise = diffArrays(
+          speakers.map((speaker) => speaker.speakerUuid),
+          singers.map((singer) => singer.speakerUuid)
+        ).flatMap((diff) => {
+          const isSpeaker = diff.removed || !diff.added;
+          const isSinger = diff.added || !diff.removed;
+          return diff.value.map((speakerUuid) => {
+            const speaker = isSpeaker
+              ? speakers.find((speaker) => speaker.speakerUuid === speakerUuid)
+              : undefined;
+            const singer = isSinger
+              ? singers.find((singer) => singer.speakerUuid === speakerUuid)
+              : undefined;
+            return getCharacterInfo(speaker, singer);
+          });
+        });
+
+        const characterInfos = await Promise.all(characterInfosPromise);
 
         commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
       }
