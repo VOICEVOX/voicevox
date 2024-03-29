@@ -146,7 +146,7 @@ import {
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
-import { parseUnshiftedDigit, useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
 
 const props =
@@ -232,7 +232,6 @@ const removeAudioItem = async () => {
 const onCharacterSelectHotkey = async (e: KeyboardEvent) => {
   if (activeAudioKey.value == undefined) throw new Error();
   const convertToNumber = (str: string) => {
-    str = parseUnshiftedDigit(str);
     if (/^[0-9]$/.test(str)) {
       return parseInt(str, 10);
     } else {
