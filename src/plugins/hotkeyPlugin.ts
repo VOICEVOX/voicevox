@@ -311,15 +311,18 @@ export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
   if (event.metaKey) {
     recordedCombination += "Meta ";
   }
-  if (event.key === " ") {
-    recordedCombination += "Space";
-  } else {
-    if (["Control", "Shift", "Alt", "Meta"].includes(event.key)) {
-      recordedCombination = recordedCombination.slice(0, -1);
-    } else {
-      recordedCombination +=
-        event.key.length > 1 ? event.key : event.key.toUpperCase();
-    }
+  // event.codeから保存する形へと変換
+  let eventKey = event.code.replace(/Key|Digit|Numpad|Arrow/, "");
+  eventKey = eventKey.length > 1 ? eventKey : eventKey.toUpperCase();
+  // 英字 数字 上下左右 Enter Space Backspace Delete Escape F1~のみ認める
+  if (
+    /^([A-Z]|\d|Up|Down|Left|Right|Enter|Space|Backspace|Delete|Escape|F\d+)$/.test(
+      eventKey
+    )
+  ) {
+    recordedCombination += eventKey;
   }
+  // 末尾がスペースならそれを削除
+  recordedCombination = recordedCombination.replace(/\s$/, "");
   return HotkeyCombination(recordedCombination);
 };
