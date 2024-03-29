@@ -217,7 +217,7 @@ registerHotkeyWithCleanup({
 registerHotkeyWithCleanup({
   editor: "talk",
   enableInTextbox: false,
-  name: "セル全選択",
+  name: "全セル選択",
   callback: () => {
     if (!uiLocked.value) {
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
