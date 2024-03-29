@@ -81,7 +81,8 @@
                   no-transition
                   :ratio="1"
                   :src="
-                    getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
+                    getDefaultStyleWrapper(characterInfo.metas.speakerUuid)
+                      .iconPath
                   "
                 />
                 <QAvatar
@@ -92,7 +93,7 @@
                   <img
                     :src="
                       engineIcons[
-                        getDefaultStyle(characterInfo.metas.speakerUuid)
+                        getDefaultStyleWrapper(characterInfo.metas.speakerUuid)
                           .engineId
                       ]
                     "
@@ -199,7 +200,7 @@ import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
-import { parseUnshiftedDigit } from "@/plugins/hotkeyPlugin";
+import { getDefaultStyle } from "@/domain/talk";
 
 const props = withDefaults(
   defineProps<{
@@ -217,27 +218,6 @@ const props = withDefaults(
     isActiveAudioCell: false,
   }
 );
-
-defineExpose({
-  characterSelectShortcut: (e: KeyboardEvent) => {
-    characterSelectShortcut(e);
-  },
-});
-
-const characterSelectShortcut = (e: KeyboardEvent) => {
-  const convertedKey = convertToNumber(e.key);
-  const selectedCharacterIndex = convertedKey != 0 ? convertedKey - 1 : 9;
-  onCharacterSelectShortCut(selectedCharacterIndex);
-};
-
-const convertToNumber = (str: string) => {
-  str = parseUnshiftedDigit(str);
-  if (/^[0-9]$/.test(str)) {
-    return parseInt(str, 10);
-  } else {
-    throw new Error(``);
-  }
-};
 
 const emit = defineEmits({
   "update:selectedVoice": (selectedVoice: Voice | undefined) => {
@@ -305,38 +285,20 @@ const engineIcons = computed(() =>
   )
 );
 
-const getDefaultStyle = (speakerUuid: SpeakerId) => {
-  // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
-  const characterInfo = props.characterInfos.find(
-    (info) => info.metas.speakerUuid === speakerUuid
+const getDefaultStyleWrapper = (speakerUuid: SpeakerId) =>
+  getDefaultStyle(
+    speakerUuid,
+    props.characterInfos,
+    store.state.defaultStyleIds
   );
-  const defaultStyleId = store.state.defaultStyleIds.find(
-    (x) => x.speakerUuid === speakerUuid
-  )?.defaultStyleId;
-
-  const defaultStyle =
-    characterInfo?.metas.styles.find(
-      (style) => style.styleId === defaultStyleId
-    ) ?? characterInfo?.metas.styles[0]; // デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
-
-  if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
-
-  return defaultStyle;
-};
 
 const onSelectSpeaker = (speakerUuid: SpeakerId) => {
-  const style = getDefaultStyle(speakerUuid);
+  const style = getDefaultStyleWrapper(speakerUuid);
   emit("update:selectedVoice", {
     engineId: style.engineId,
     speakerId: speakerUuid,
     styleId: style.styleId,
   });
-};
-
-const onCharacterSelectShortCut = (index: number) => {
-  if (props.characterInfos.length >= index + 1) {
-    onSelectSpeaker(props.characterInfos[index].metas.speakerUuid);
-  }
 };
 
 const subMenuOpenFlags = ref(
