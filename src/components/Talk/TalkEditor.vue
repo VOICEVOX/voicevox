@@ -214,6 +214,18 @@ registerHotkeyWithCleanup({
     }
   },
 });
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: false,
+  name: "セル全選択",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+        audioKeys: audioKeys.value,
+      });
+    }
+  },
+});
 
 const removeAudioItem = async () => {
   if (activeAudioKey.value == undefined) throw new Error();
