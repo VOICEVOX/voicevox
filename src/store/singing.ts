@@ -17,6 +17,7 @@ import {
   Phrase,
   PhraseState,
   transformCommandStore,
+  noteSchema,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
@@ -69,7 +70,6 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
-import { noteSchema } from "@/domain/project/schema";
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
