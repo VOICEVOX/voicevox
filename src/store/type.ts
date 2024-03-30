@@ -48,8 +48,6 @@ import {
   AudioKey,
   PresetKey,
   RootMiscSettingType,
-  engineIdSchema,
-  styleIdSchema,
   EditorType,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -60,6 +58,7 @@ import {
   LoadingScreenOption,
 } from "@/components/Dialog/Dialog";
 import { OverlappingNoteInfos } from "@/sing/storeHelper";
+import { singerSchema, trackSchema } from "@/domain/project/schema";
 
 /**
  * エディタ用のAudioQuery
@@ -742,19 +741,8 @@ export type Score = {
   notes: Note[];
 };
 
-export const singerSchema = z.object({
-  engineId: engineIdSchema,
-  styleId: styleIdSchema,
-});
-
 export type Singer = z.infer<typeof singerSchema>;
 
-export const trackSchema = z.object({
-  singer: singerSchema.optional(),
-  keyRangeAdjustment: z.number(), // 音域調整量
-  volumeRangeAdjustment: z.number(), // 声量調整量
-  notes: z.array(noteSchema),
-});
 export type Track = z.infer<typeof trackSchema>;
 
 export type PhraseState =
