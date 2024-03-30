@@ -63,7 +63,6 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
  * プロジェクトファイルのマイグレーション
  */
 export const migrateProjectFileObject = async (
-  // FIXME: 下のeslint-disableを使わない方法で書き直す
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   projectData: any,
   DI: {
