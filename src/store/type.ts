@@ -51,6 +51,8 @@ import {
   engineIdSchema,
   styleIdSchema,
   EditorType,
+  noteIdSchema,
+  NoteId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -727,7 +729,7 @@ export const timeSignatureSchema = z.object({
 export type TimeSignature = z.infer<typeof timeSignatureSchema>;
 
 export const noteSchema = z.object({
-  id: z.string(),
+  id: noteIdSchema,
   position: z.number(),
   duration: z.number(),
   noteNumber: z.number(),
@@ -788,10 +790,10 @@ export type SingingStoreState = {
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
-  selectedNoteIds: Set<string>;
-  overlappingNoteIds: Set<string>;
+  selectedNoteIds: Set<NoteId>;
+  overlappingNoteIds: Set<NoteId>;
   overlappingNoteInfos: OverlappingNoteInfos;
-  editingLyricNoteId?: string;
+  editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
   volume: number;
   startRenderingRequested: boolean;
@@ -848,7 +850,7 @@ export type SingingStoreTypes = {
   };
 
   NOTE_IDS: {
-    getter: Set<string>;
+    getter: Set<NoteId>;
   };
 
   ADD_NOTES: {
@@ -860,12 +862,12 @@ export type SingingStoreTypes = {
   };
 
   REMOVE_NOTES: {
-    mutation: { noteIds: string[] };
+    mutation: { noteIds: NoteId[] };
   };
 
   SELECT_NOTES: {
-    mutation: { noteIds: string[] };
-    action(payload: { noteIds: string[] }): void;
+    mutation: { noteIds: NoteId[] };
+    action(payload: { noteIds: NoteId[] }): void;
   };
 
   SELECT_ALL_NOTES: {
@@ -879,8 +881,8 @@ export type SingingStoreTypes = {
   };
 
   SET_EDITING_LYRIC_NOTE_ID: {
-    mutation: { noteId?: string };
-    action(payload: { noteId?: string }): void;
+    mutation: { noteId?: NoteId };
+    action(payload: { noteId?: NoteId }): void;
   };
 
   SET_PHRASE: {
@@ -1092,8 +1094,8 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_REMOVE_NOTES: {
-    mutation: { noteIds: string[] };
-    action(payload: { noteIds: string[] }): void;
+    mutation: { noteIds: NoteId[] };
+    action(payload: { noteIds: NoteId[] }): void;
   };
 
   COMMAND_REMOVE_SELECTED_NOTES: {

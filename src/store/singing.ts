@@ -20,7 +20,7 @@ import {
   noteSchema,
 } from "./type";
 import { sanitizeFileName } from "./utility";
-import { EngineId } from "@/type/preload";
+import { EngineId, NoteId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
@@ -405,7 +405,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   UPDATE_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
-      const notesMap = new Map<string, Note>();
+      const notesMap = new Map<NoteId, Note>();
       for (const note of notes) {
         notesMap.set(note.id, note);
       }
@@ -421,7 +421,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   REMOVE_NOTES: {
-    mutation(state, { noteIds }: { noteIds: string[] }) {
+    mutation(state, { noteIds }: { noteIds: NoteId[] }) {
       const noteIdsSet = new Set(noteIds);
       const selectedTrack = state.tracks[selectedTrackIndex];
       const notes = selectedTrack.notes.filter((value) => {
@@ -447,12 +447,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SELECT_NOTES: {
-    mutation(state, { noteIds }: { noteIds: string[] }) {
+    mutation(state, { noteIds }: { noteIds: NoteId[] }) {
       for (const noteId of noteIds) {
         state.selectedNoteIds.add(noteId);
       }
     },
-    async action({ getters, commit }, { noteIds }: { noteIds: string[] }) {
+    async action({ getters, commit }, { noteIds }: { noteIds: NoteId[] }) {
       const existingNoteIds = getters.NOTE_IDS;
       const isValidNoteIds = noteIds.every((value) => {
         return existingNoteIds.has(value);
@@ -486,14 +486,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_EDITING_LYRIC_NOTE_ID: {
-    mutation(state, { noteId }: { noteId?: string }) {
+    mutation(state, { noteId }: { noteId?: NoteId }) {
       if (noteId != undefined && !state.selectedNoteIds.has(noteId)) {
         state.selectedNoteIds.clear();
         state.selectedNoteIds.add(noteId);
       }
       state.editingLyricNoteId = noteId;
     },
-    async action({ getters, commit }, { noteId }: { noteId?: string }) {
+    async action({ getters, commit }, { noteId }: { noteId?: NoteId }) {
       if (noteId != undefined && !getters.NOTE_IDS.has(noteId)) {
         throw new Error("The note id is invalid.");
       }
@@ -1324,7 +1324,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         let notes = midiNotes.map((value): Note => {
           return {
-            id: uuidv4(),
+            id: NoteId(uuidv4()),
             position: convertPosition(value.ticks, midiTpqn, tpqn),
             duration: convertDuration(
               value.ticks,
@@ -1630,7 +1630,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           const note: Note = {
-            id: uuidv4(),
+            id: NoteId(uuidv4()),
             position,
             duration,
             noteNumber,
@@ -1811,7 +1811,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             } else {
               // それ以外の場合はノートを追加
               notes.push({
-                id: uuidv4(),
+                id: NoteId(uuidv4()),
                 position,
                 duration,
                 noteNumber,
@@ -2186,7 +2186,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const quantizedPastePos =
           Math.round(pasteOriginPos / snapTicks) * snapTicks;
         return {
-          id: uuidv4(),
+          id: NoteId(uuidv4()),
           position: quantizedPastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),
