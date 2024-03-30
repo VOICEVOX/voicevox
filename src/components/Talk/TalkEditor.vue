@@ -157,8 +157,36 @@ const store = useStore();
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-// hotkeys handled by Mousetrap
 const { registerHotkeyWithCleanup } = useHotkeyManager();
+
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "音声書き出し",
+  callback: () => {
+    store.dispatch("SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG");
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "選択音声を書き出し",
+  callback: () => {
+    store.dispatch("SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG");
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "音声を繋げて書き出し",
+  callback: () => {
+    store.dispatch("SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG");
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "テキスト読み込む",
+  callback: () => {
+    store.dispatch("SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG");
+  },
+});
 
 registerHotkeyWithCleanup({
   editor: "talk",

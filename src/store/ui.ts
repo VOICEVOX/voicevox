@@ -12,13 +12,18 @@ import {
   CommonDialogOptions,
   LoadingScreenOption,
   NotifyAndNotShowAgainButtonOption,
+  connectAndExportTextWithDialog,
+  generateAndConnectAndSaveAudioWithDialog,
+  generateAndSaveOneAudioWithDialog,
   hideAllLoadingScreen,
+  multiGenerateAndSaveAudioWithDialog,
   showAlertDialog,
   showConfirmDialog,
   showLoadingScreen,
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
 } from "@/components/Dialog/Dialog";
+import { store } from ".";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -466,6 +471,64 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action({ dispatch }) {
       // -1で非表示
       dispatch("SET_PROGRESS", { progress: -1 });
+    },
+  },
+  SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
+    async action({ state, dispatch }) {
+      await multiGenerateAndSaveAudioWithDialog({
+        audioKeys: state.audioKeys,
+        disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
+        dispatch,
+      });
+    },
+  },
+
+  SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
+    async action({ dispatch, state }) {
+      await generateAndConnectAndSaveAudioWithDialog({
+        dispatch,
+        disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
+      });
+    },
+  },
+
+  SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG: {
+    async action({ getters, dispatch, state }) {
+      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
+      if (activeAudioKey == undefined) {
+        dispatch("SHOW_ALERT_DIALOG", {
+          title: "テキスト欄が選択されていません",
+          message: "音声を書き出したいテキスト欄を選択してください。",
+        });
+        return;
+      }
+
+      const selectedAudioKeys = getters.SELECTED_AUDIO_KEYS;
+      if (
+        state.experimentalSetting.enableMultiSelect &&
+        selectedAudioKeys.length > 1
+      ) {
+        await multiGenerateAndSaveAudioWithDialog({
+          audioKeys: selectedAudioKeys,
+          dispatch: dispatch,
+          disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+        });
+      } else {
+        await generateAndSaveOneAudioWithDialog({
+          audioKey: activeAudioKey,
+          disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+          dispatch: dispatch,
+        });
+      }
+    },
+  },
+
+  SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG: {
+    async action({ dispatch, state }) {
+      await connectAndExportTextWithDialog({
+        dispatch,
+        disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
+      });
     },
   },
 });
