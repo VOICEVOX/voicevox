@@ -1,6 +1,4 @@
 <template>
-  <MenuBar />
-
   <QLayout reveal elevated container class="layout-container">
     <ToolBar />
 
@@ -136,7 +134,6 @@ import AudioInfo from "./AudioInfo.vue";
 import CharacterPortrait from "./CharacterPortrait.vue";
 import ToolBar from "./ToolBar.vue";
 import { useStore } from "@/store";
-import MenuBar from "@/components/Talk/MenuBar.vue";
 import ProgressView from "@/components/ProgressView.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { AudioItem } from "@/store/type";
