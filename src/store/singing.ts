@@ -1034,9 +1034,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           // すでに存在するフレーズの場合
           // 再レンダリングする必要があるかどうかをチェックする
-          // 音声合成を行う必要がある場合、現在フレーズに設定されている音声を削除する
-          // 歌い方の推論も行う必要がある場合、現在フレーズに設定されている歌い方も削除する
           // シンガーが未設定の場合、とりあえず常に再レンダリングする
+          // 音声合成を行う必要がある場合、現在フレーズに設定されている音声を削除する
+          // 歌い方の推論も行う必要がある場合、現在フレーズに設定されている歌い方を削除する
           // TODO: リファクタリングする
           const phrase = { ...existingPhrase };
           if (!singer || phrase.state === "COULD_NOT_RENDER") {
@@ -1045,13 +1045,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 singingStyleKey: phrase.singingStyleKey,
               });
               phrase.singingStyleKey = undefined;
-              if (phrase.singingVoiceKey != undefined) {
-                singingVoices.delete(phrase.singingVoiceKey);
-                phrase.singingVoiceKey = undefined;
-              }
             }
-          }
-          if (singer && phrase.singingStyleKey != undefined) {
+          } else if (phrase.singingStyleKey != undefined) {
             const calculatedSingingStyleSourceHash =
               await calculateSingingStyleSourceHash({
                 engineId: singer.engineId,
@@ -1078,17 +1073,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   singingStyle: cachedSingingStyle,
                 });
                 phrase.singingStyleKey = calculatedSingingStyleSourceHash;
-              } else if (phrase.singingVoiceKey != undefined) {
-                singingVoices.delete(phrase.singingVoiceKey);
-                phrase.singingVoiceKey = undefined;
               }
             }
           }
-          if (
-            singer &&
-            phrase.singingStyleKey != undefined &&
-            phrase.singingVoiceKey != undefined
-          ) {
+          if (!singer || phrase.singingStyleKey == undefined) {
+            if (phrase.singingVoiceKey != undefined) {
+              singingVoices.delete(phrase.singingVoiceKey);
+              phrase.singingVoiceKey = undefined;
+            }
+          } else if (phrase.singingVoiceKey != undefined) {
             const singingStyle = state.singingStyles.get(
               phrase.singingStyleKey
             );
@@ -1117,6 +1110,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
           if (
+            !singer ||
             phrase.singingStyleKey == undefined ||
             phrase.singingVoiceKey == undefined
           ) {
