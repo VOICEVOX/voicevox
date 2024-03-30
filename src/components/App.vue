@@ -29,8 +29,8 @@ import { useStore } from "@/store";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
-import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/MenuBar";
-import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/MenuBar";
+import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
+import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
 
 const store = useStore();
 
