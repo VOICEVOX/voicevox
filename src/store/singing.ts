@@ -128,6 +128,9 @@ const singingVoices = new Map<string, SingingVoice>();
 const sequences = new Map<string, Sequence>();
 const animationTimer = new AnimationTimer();
 
+const singingStyleCache = new Map<string, SingingStyle>();
+const singingVoiceCache = new Map<string, SingingVoice>();
+
 // TODO: マルチトラックに対応する
 const selectedTrackIndex = 0;
 
@@ -1034,21 +1037,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // 音声合成を行う必要がある場合、現在フレーズに設定されている音声を削除する
           // 歌い方の推論も行う必要がある場合、現在フレーズに設定されている歌い方も削除する
           // シンガーが未設定の場合、とりあえず常に再レンダリングする
+          // TODO: リファクタリングする
           const phrase = { ...existingPhrase };
-          const phraseState = phrase.state;
-          const singingStyleKey = phrase.singingStyleKey;
-          const singingVoiceKey = phrase.singingVoiceKey;
-          if (phraseState === "COULD_NOT_RENDER" || !singer) {
-            if (singingStyleKey != undefined) {
-              commit("DELETE_SINGING_STYLE", { singingStyleKey });
+          if (!singer || phrase.state === "COULD_NOT_RENDER") {
+            if (phrase.singingStyleKey != undefined) {
+              commit("DELETE_SINGING_STYLE", {
+                singingStyleKey: phrase.singingStyleKey,
+              });
               phrase.singingStyleKey = undefined;
-              if (singingVoiceKey != undefined) {
-                singingVoices.delete(singingVoiceKey);
+              if (phrase.singingVoiceKey != undefined) {
+                singingVoices.delete(phrase.singingVoiceKey);
                 phrase.singingVoiceKey = undefined;
               }
             }
-            phrase.state = "WAITING_TO_BE_RENDERED";
-          } else if (singingStyleKey != undefined) {
+          }
+          if (singer && phrase.singingStyleKey != undefined) {
             const calculatedSingingStyleSourceHash =
               await calculateSingingStyleSourceHash({
                 engineId: singer.engineId,
@@ -1060,36 +1063,66 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 frameRate: frameRates[singer.engineId],
                 restDurationSeconds,
               });
-
-            const singingStyleSourceHash = singingStyleKey;
+            const singingStyleSourceHash = phrase.singingStyleKey;
             if (singingStyleSourceHash !== calculatedSingingStyleSourceHash) {
-              commit("DELETE_SINGING_STYLE", { singingStyleKey });
+              commit("DELETE_SINGING_STYLE", {
+                singingStyleKey: phrase.singingStyleKey,
+              });
               phrase.singingStyleKey = undefined;
-              if (singingVoiceKey != undefined) {
-                singingVoices.delete(singingVoiceKey);
-                phrase.singingVoiceKey = undefined;
-              }
-              phrase.state = "WAITING_TO_BE_RENDERED";
-            } else if (singingVoiceKey != undefined) {
-              const singingStyle = state.singingStyles.get(singingStyleKey);
-              if (singingStyle == undefined) {
-                throw new Error("singingStyle is undefined.");
-              }
-
-              const calculatedSingingVoiceSourceHash =
-                await calculateSingingVoiceSourceHash({
-                  singer,
-                  frameAudioQuery: singingStyle.query,
+              const cachedSingingStyle = singingStyleCache.get(
+                calculatedSingingStyleSourceHash
+              );
+              if (cachedSingingStyle) {
+                commit("SET_SINGING_STYLE", {
+                  singingStyleKey: calculatedSingingStyleSourceHash,
+                  singingStyle: cachedSingingStyle,
                 });
-
-              const singingVoiceSourceHash = singingVoiceKey;
-              if (singingVoiceSourceHash !== calculatedSingingVoiceSourceHash) {
-                singingVoices.delete(singingVoiceKey);
+                phrase.singingStyleKey = calculatedSingingStyleSourceHash;
+              } else if (phrase.singingVoiceKey != undefined) {
+                singingVoices.delete(phrase.singingVoiceKey);
                 phrase.singingVoiceKey = undefined;
-                phrase.state = "WAITING_TO_BE_RENDERED";
               }
             }
           }
+          if (
+            singer &&
+            phrase.singingStyleKey != undefined &&
+            phrase.singingVoiceKey != undefined
+          ) {
+            const singingStyle = state.singingStyles.get(
+              phrase.singingStyleKey
+            );
+            if (singingStyle == undefined) {
+              throw new Error("singingStyle is undefined.");
+            }
+            const calculatedSingingVoiceSourceHash =
+              await calculateSingingVoiceSourceHash({
+                singer,
+                frameAudioQuery: singingStyle.query,
+              });
+            const singingVoiceSourceHash = phrase.singingVoiceKey;
+            if (singingVoiceSourceHash !== calculatedSingingVoiceSourceHash) {
+              singingVoices.delete(phrase.singingVoiceKey);
+              phrase.singingVoiceKey = undefined;
+              const cachedSingingVoice = singingVoiceCache.get(
+                calculatedSingingVoiceSourceHash
+              );
+              if (cachedSingingVoice) {
+                singingVoices.set(
+                  calculatedSingingVoiceSourceHash,
+                  cachedSingingVoice
+                );
+                phrase.singingVoiceKey = calculatedSingingVoiceSourceHash;
+              }
+            }
+          }
+          if (
+            phrase.singingStyleKey == undefined ||
+            phrase.singingVoiceKey == undefined
+          ) {
+            phrase.state = "WAITING_TO_BE_RENDERED";
+          }
+
           phrases.set(phraseKey, phrase);
         }
 
