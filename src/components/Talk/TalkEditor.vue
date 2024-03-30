@@ -232,13 +232,14 @@ const removeAudioItem = async () => {
 const onCharacterSelectHotkey = async (e: KeyboardEvent) => {
   if (activeAudioKey.value == undefined) throw new Error();
   const convertToNumber = (str: string) => {
-    if (/^[0-9]$/.test(str)) {
-      return parseInt(str, 10);
+    const eventKey = str.replace(/Digit|Numpad/, "");
+    if (/^[0-9]$/.test(eventKey)) {
+      return parseInt(eventKey, 10);
     } else {
-      throw new Error(`onCharacterSelectHotkey Invalid key: ${str}`);
+      throw new Error(`onCharacterSelectHotkey Invalid key: ${eventKey}`);
     }
   };
-  const convertedKey = convertToNumber(e.key);
+  const convertedKey = convertToNumber(e.code);
   const selectedCharacterIndex = convertedKey != 0 ? convertedKey - 1 : 9;
   audioCellRefs[activeAudioKey.value].selectCharacterAt(selectedCharacterIndex);
 };

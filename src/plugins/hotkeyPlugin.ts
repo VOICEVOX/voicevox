@@ -317,13 +317,13 @@ export const getArgumentKeyCombination = (
       HotkeyCombination(String(index))
     );
   } else if (argumentKey == "VerticalArrows") {
-    return [HotkeyCombination("ArrowUp"), HotkeyCombination("ArrowDown")];
+    return [HotkeyCombination("Up"), HotkeyCombination("Down")];
   } else if (argumentKey == "Arrows") {
     return [
-      HotkeyCombination("ArrowLeft"),
-      HotkeyCombination("ArrowRight"),
-      HotkeyCombination("ArrowUp"),
-      HotkeyCombination("ArrowDown"),
+      HotkeyCombination("Left"),
+      HotkeyCombination("Right"),
+      HotkeyCombination("Up"),
+      HotkeyCombination("Down"),
     ];
   }
   throw new Error(`Received unexpected HotkeyArgumentKeyType`);
