@@ -40,6 +40,8 @@ const props =
   defineProps<{
     /** 「ファイル」メニューのサブメニュー */
     fileSubMenuData: MenuItemData[];
+    /** 「編集」メニューのサブメニュー */
+    editSubMenuData: MenuItemData[];
     /** エディタの種類 */
     editor: "talk" | "song";
   }>();
@@ -90,6 +92,8 @@ const titleText = computed(
       ? ` - Port: ${defaultEngineAltPortTo.value}`
       : "")
 );
+const canUndo = computed(() => store.getters.CAN_UNDO(props.editor));
+const canRedo = computed(() => store.getters.CAN_REDO(props.editor));
 
 // FIXME: App.vue内に移動する
 watch(titleText, (newTitle) => {
@@ -325,6 +329,39 @@ const menudata = computed<MenuItemData[]>(() => [
         disableWhenUiLocked: true,
         subMenu: recentProjectsSubMenuData.value,
       },
+    ],
+  },
+  {
+    type: "root",
+    label: "編集",
+    onClick: () => {
+      closeAllDialog();
+    },
+    disableWhenUiLocked: false,
+    subMenu: [
+      {
+        type: "button",
+        label: "元に戻す",
+        onClick: async () => {
+          if (!uiLocked.value) {
+            await store.dispatch("UNDO", { editor: props.editor });
+          }
+        },
+        disabled: !canUndo.value,
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "やり直す",
+        onClick: async () => {
+          if (!uiLocked.value) {
+            await store.dispatch("REDO", { editor: props.editor });
+          }
+        },
+        disabled: !canRedo.value,
+        disableWhenUiLocked: true,
+      },
+      ...props.editSubMenuData,
     ],
   },
   {

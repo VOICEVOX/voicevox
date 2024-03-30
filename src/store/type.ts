@@ -856,6 +856,11 @@ export type SingingStoreTypes = {
     action(payload: { noteIds: string[] }): void;
   };
 
+  SELECT_ALL_NOTES: {
+    mutation: undefined;
+    action(): void;
+  };
+
   DESELECT_ALL_NOTES: {
     mutation: undefined;
     action(): void;
@@ -911,10 +916,14 @@ export type SingingStoreTypes = {
   };
 
   IMPORT_MIDI_FILE: {
-    action(payload: { filePath?: string }): void;
+    action(payload: { filePath: string; trackIndex: number }): void;
   };
 
   IMPORT_MUSICXML_FILE: {
+    action(payload: { filePath?: string }): void;
+  };
+
+  IMPORT_UST_FILE: {
     action(payload: { filePath?: string }): void;
   };
 
@@ -1000,6 +1009,22 @@ export type SingingStoreTypes = {
   };
 
   STOP_RENDERING: {
+    action(): void;
+  };
+
+  COPY_NOTES_TO_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_CUT_NOTES_TO_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_QUANTIZE_SELECTED_NOTES: {
     action(): void;
   };
 };
@@ -1509,6 +1534,7 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
+  isImportMidiDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1580,6 +1606,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
+      isImportMidiDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1593,6 +1620,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
+      isImportMidiDialogOpen?: boolean;
     }): void;
   };
 

@@ -3,13 +3,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, toRaw, computed, onUnmounted, onMounted } from "vue";
+import { ref, watch, toRaw, computed } from "vue";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { frequencyToNoteNumber, secondToTick } from "@/sing/domain";
 import { noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
 import { LineStrip } from "@/sing/graphics/lineStrip";
 import { FramePhoneme } from "@/openapi";
+import {
+  onMountedOrActivated,
+  onUnmountedOrDeactivated,
+} from "@/composables/onMountOrActivate";
 
 type VoicedSection = {
   readonly startFrame: number;
@@ -26,8 +30,7 @@ type PitchLine = {
 const pitchLineColor = [0.647, 0.831, 0.678, 1]; // RGBA
 const pitchLineWidth = 1.5;
 
-const props =
-  defineProps<{ isActivated: boolean; offsetX: number; offsetY: number }>();
+const props = defineProps<{ offsetX: number; offsetY: number }>();
 
 const store = useStore();
 const queries = computed(() => {
@@ -79,10 +82,10 @@ const render = () => {
   if (canvasHeight == undefined) {
     throw new Error("canvasHeight is undefined.");
   }
-  if (!renderer) {
+  if (renderer == undefined) {
     throw new Error("renderer is undefined.");
   }
-  if (!stage) {
+  if (stage == undefined) {
     throw new Error("stage is undefined.");
   }
 
@@ -205,9 +208,7 @@ watch(
   }
 );
 
-let isInstantiated = false;
-
-const initialize = () => {
+onMountedOrActivated(() => {
   const canvasContainerElement = canvasContainer.value;
   if (!canvasContainerElement) {
     throw new Error("canvasContainerElement is null.");
@@ -253,11 +254,9 @@ const initialize = () => {
     }
   });
   resizeObserver.observe(canvasContainerElement);
+});
 
-  isInstantiated = true;
-};
-
-const cleanUp = () => {
+onUnmountedOrDeactivated(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
@@ -270,38 +269,6 @@ const cleanUp = () => {
   pitchLinesMap.clear();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
-
-  isInstantiated = false;
-};
-
-let isMounted = false;
-
-onMounted(() => {
-  isMounted = true;
-  if (props.isActivated) {
-    initialize();
-  }
-});
-
-watch(
-  () => props.isActivated,
-  (isActivated) => {
-    if (!isMounted) {
-      return;
-    }
-    if (isActivated && !isInstantiated) {
-      initialize();
-    }
-    if (!isActivated && isInstantiated) {
-      cleanUp();
-    }
-  }
-);
-
-onUnmounted(() => {
-  if (isInstantiated) {
-    cleanUp();
-  }
 });
 </script>
 
