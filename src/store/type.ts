@@ -58,7 +58,13 @@ import {
   LoadingScreenOption,
 } from "@/components/Dialog/Dialog";
 import { OverlappingNoteInfos } from "@/sing/storeHelper";
-import { singerSchema, trackSchema } from "@/domain/project/schema";
+import {
+  noteSchema,
+  singerSchema,
+  tempoSchema,
+  timeSignatureSchema,
+  trackSchema,
+} from "@/domain/project/schema";
 
 /**
  * エディタ用のAudioQuery
@@ -711,27 +717,10 @@ export type AudioPlayerStoreTypes = {
  */
 
 // schemaはプロジェクトファイル用
-// TODO: schemaをsrc/domain/projectSchema.tsに移動する
-export const tempoSchema = z.object({
-  position: z.number(),
-  bpm: z.number(),
-});
 export type Tempo = z.infer<typeof tempoSchema>;
 
-export const timeSignatureSchema = z.object({
-  measureNumber: z.number(),
-  beats: z.number(),
-  beatType: z.number(),
-});
 export type TimeSignature = z.infer<typeof timeSignatureSchema>;
 
-export const noteSchema = z.object({
-  id: z.string(),
-  position: z.number(),
-  duration: z.number(),
-  noteNumber: z.number(),
-  lyric: z.string(),
-});
 export type Note = z.infer<typeof noteSchema>;
 
 export type Score = {
