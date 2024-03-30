@@ -1,6 +1,10 @@
 <template>
   <ErrorBoundary>
-    <!-- TODO: メニューバーをEditorHomeから移動する -->
+    <MenuBar
+      :file-sub-menu-data="subMenuData.fileSubMenuData.value"
+      :edit-sub-menu-data="subMenuData.editSubMenuData.value"
+      :editor="openedEditor || 'talk'"
+    />
     <KeepAlive>
       <Component
         :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
@@ -24,8 +28,24 @@ import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import AllDialog from "@/components/Dialog/AllDialog.vue";
+import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
+import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/MenuBar";
+import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/MenuBar";
 
 const store = useStore();
+
+const talkMenuBarData = useTalkMenuBarData();
+const singMenuBarData = useSingMenuBarData();
+
+const subMenuData = computed(() => {
+  if (openedEditor.value === "talk" || openedEditor.value == undefined) {
+    return talkMenuBarData;
+  } else if (openedEditor.value === "song") {
+    return singMenuBarData;
+  }
+
+  throw new Error("Invalid openedEditor");
+});
 
 const openedEditor = computed(() => store.state.openedEditor);
 

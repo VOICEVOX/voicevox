@@ -29,7 +29,7 @@ export const useMenuBarData = () => {
     await store.dispatch("EXPORT_WAVE_FILE", {});
   };
 
-  const fileSubMenuData: MenuItemData[] = [
+  const fileSubMenuData = computed<MenuItemData[]>(() => [
     {
       type: "button",
       label: "音声を出力",
@@ -63,9 +63,9 @@ export const useMenuBarData = () => {
       },
       disableWhenUiLocked: true,
     },
-  ];
+  ]);
 
-  const editSubMenuData: MenuItemData[] = [
+  const editSubMenuData = computed<MenuItemData[]>(() => [
     { type: "separator" },
     {
       type: "button",
@@ -125,7 +125,7 @@ export const useMenuBarData = () => {
       },
       disableWhenUiLocked: true,
     },
-  ];
+  ]);
 
   return { fileSubMenuData, editSubMenuData };
 };
