@@ -7,6 +7,7 @@ import {
   UiStoreTypes,
 } from "./type";
 import { createPartialStore } from "./vuex";
+import { store } from ".";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
   CommonDialogOptions,
@@ -23,7 +24,6 @@ import {
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
 } from "@/components/Dialog/Dialog";
-import { store } from ".";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
