@@ -2,6 +2,13 @@
   <QToolbar class="sing-toolbar">
     <!-- configs for entire song -->
     <div class="sing-configs">
+      <QBtn
+        class="q-mx-xs"
+        :icon="isSidebarOpen ? 'menu_open' : 'menu'"
+        round
+        flat
+        @click="toggleSidebar"
+      />
       <CharacterMenuButton />
       <QInput
         type="number"
@@ -153,6 +160,11 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 const editor = "song";
 const canUndo = computed(() => store.getters.CAN_UNDO(editor));
 const canRedo = computed(() => store.getters.CAN_REDO(editor));
+
+const isSidebarOpen = computed(() => store.state.isSidebarOpen);
+const toggleSidebar = () => {
+  store.dispatch("SET_SIDEBAR_OPEN", { isSidebarOpen: !isSidebarOpen.value });
+};
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 registerHotkeyWithCleanup({

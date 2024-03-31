@@ -1,7 +1,7 @@
 <template>
   <MenuBar />
   <ToolBar />
-  <div class="sing-main">
+  <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
     <EngineStartupOverlay
       :is-completed-initial-startup="isCompletedInitialStartup"
     />
@@ -22,6 +22,7 @@
         />
       </div>
     </div>
+    <TrackList v-if="isSidebarOpen" />
     <ScoreSequencer />
   </div>
 </template>
@@ -31,6 +32,7 @@ import { computed, ref } from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
+import TrackList from "./TrackList.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
@@ -48,6 +50,8 @@ const props =
   }>();
 
 const store = useStore();
+
+const isSidebarOpen = computed(() => store.state.isSidebarOpen);
 //const $q = useQuasar();
 
 const nowRendering = computed(() => {

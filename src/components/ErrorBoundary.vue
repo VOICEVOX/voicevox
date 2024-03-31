@@ -23,7 +23,7 @@ onMounted(() => {
     }
   };
   window.addEventListener("error", (event: ErrorEvent) => {
-    logError(event.error);
+    if (event.error) logError(event.error);
   });
   window.addEventListener("unhandledrejection", handlePromiseRejectionEvent);
   window.addEventListener("rejectionhandled", handlePromiseRejectionEvent);

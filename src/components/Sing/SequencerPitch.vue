@@ -246,7 +246,12 @@ onMountedOrActivated(() => {
     const canvasContainerWidth = canvasContainerElement.clientWidth;
     const canvasContainerHeight = canvasContainerElement.clientHeight;
 
-    if (canvasContainerWidth > 0 && canvasContainerHeight > 0) {
+    if (
+      canvasContainerWidth > 0 &&
+      canvasContainerHeight > 0 &&
+      (canvasWidth !== canvasContainerWidth ||
+        canvasHeight !== canvasContainerHeight)
+    ) {
       canvasWidth = canvasContainerWidth;
       canvasHeight = canvasContainerHeight;
       renderer.resize(canvasWidth, canvasHeight);

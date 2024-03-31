@@ -1309,6 +1309,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   display: grid;
   grid-template-rows: 30px 1fr;
   grid-template-columns: 48px 1fr;
+  flex: 1;
 }
 
 .sequencer-corner {
