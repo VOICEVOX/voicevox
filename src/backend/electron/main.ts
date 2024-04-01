@@ -396,7 +396,7 @@ async function createWindow() {
   if (isMac) {
     if (filePathOnMac) {
       if (filePathOnMac.endsWith(".vvproj")) {
-        projectFilePath = encodeURI(filePathOnMac);
+        projectFilePath = encodeURIComponent(filePathOnMac);
       }
       filePathOnMac = undefined;
     }
@@ -408,7 +408,7 @@ async function createWindow() {
         fs.statSync(filePath).isFile() &&
         filePath.endsWith(".vvproj")
       ) {
-        projectFilePath = encodeURI(filePath);
+        projectFilePath = encodeURIComponent(filePath);
       }
     }
   }
