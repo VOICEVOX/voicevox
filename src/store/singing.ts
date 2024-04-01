@@ -1064,16 +1064,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 singingStyleKey: phrase.singingStyleKey,
               });
               phrase.singingStyleKey = undefined;
-              const cachedSingingStyle = singingStyleCache.get(
-                calculatedSingingStyleSourceHash
-              );
-              if (cachedSingingStyle) {
-                commit("SET_SINGING_STYLE", {
-                  singingStyleKey: calculatedSingingStyleSourceHash,
-                  singingStyle: cachedSingingStyle,
-                });
-                phrase.singingStyleKey = calculatedSingingStyleSourceHash;
-              }
             }
           }
           if (!singer || phrase.singingStyleKey == undefined) {
@@ -1097,16 +1087,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (singingVoiceSourceHash !== calculatedSingingVoiceSourceHash) {
               singingVoices.delete(phrase.singingVoiceKey);
               phrase.singingVoiceKey = undefined;
-              const cachedSingingVoice = singingVoiceCache.get(
-                calculatedSingingVoiceSourceHash
-              );
-              if (cachedSingingVoice) {
-                singingVoices.set(
-                  calculatedSingingVoiceSourceHash,
-                  cachedSingingVoice
-                );
-                phrase.singingVoiceKey = calculatedSingingVoiceSourceHash;
-              }
             }
           }
           if (
@@ -1210,47 +1190,56 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   restDurationSeconds,
                 });
 
-              const frameAudioQuery = await fetchQuery(
-                singer.engineId,
-                phrase.notes,
-                tempos,
-                tpqn,
-                keyRangeAdjustment,
-                frameRates[singer.engineId],
-                restDurationSeconds
-              );
+              const singingStyleKey = singingStyleSourceHash;
+              const cachedSingingStyle = singingStyleCache.get(singingStyleKey);
+              if (cachedSingingStyle) {
+                singingStyle = cachedSingingStyle;
 
-              const phonemes = getPhonemes(frameAudioQuery);
-              window.backend.logInfo(
-                `Fetched frame audio query. Phonemes are "${phonemes}".`
-              );
+                window.backend.logInfo(`Loaded singing style from cache.`);
+              } else {
+                const frameAudioQuery = await fetchQuery(
+                  singer.engineId,
+                  phrase.notes,
+                  tempos,
+                  tpqn,
+                  keyRangeAdjustment,
+                  frameRates[singer.engineId],
+                  restDurationSeconds
+                );
 
-              shiftGuidePitch(keyRangeAdjustment, frameAudioQuery);
-              scaleGuideVolume(volumeRangeAdjustment, frameAudioQuery);
+                const phonemes = getPhonemes(frameAudioQuery);
+                window.backend.logInfo(
+                  `Fetched frame audio query. Phonemes are "${phonemes}".`
+                );
 
-              const startTime = calcStartTime(
-                phrase.notes,
-                tempos,
-                tpqn,
-                restDurationSeconds
-              );
+                shiftGuidePitch(keyRangeAdjustment, frameAudioQuery);
+                scaleGuideVolume(volumeRangeAdjustment, frameAudioQuery);
 
-              singingStyle = {
-                query: frameAudioQuery,
-                frameRate: frameRates[singer.engineId],
-                startTime,
-              };
-              commit("SET_SINGING_STYLE", {
-                singingStyleKey: singingStyleSourceHash,
-                singingStyle,
-              });
+                const startTime = calcStartTime(
+                  phrase.notes,
+                  tempos,
+                  tpqn,
+                  restDurationSeconds
+                );
+
+                singingStyle = {
+                  query: frameAudioQuery,
+                  frameRate: frameRates[singer.engineId],
+                  startTime,
+                };
+
+                singingStyleCache.set(singingStyleKey, singingStyle);
+              }
+              commit("SET_SINGING_STYLE", { singingStyleKey, singingStyle });
               commit("SET_SINGING_STYLE_KEY_TO_PHRASE", {
                 phraseKey,
-                singingStyleKey: singingStyleSourceHash,
+                singingStyleKey,
               });
             }
 
             // 音声合成を行う
+
+            let singingVoice: SingingVoice | undefined;
 
             const singingVoiceSourceHash =
               await calculateSingingVoiceSourceHash({
@@ -1258,15 +1247,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 frameAudioQuery: singingStyle.query,
               });
 
-            const blob = await synthesize(singer, singingStyle.query);
+            const singingVoiceKey = singingVoiceSourceHash;
+            const cachedSingingVoice = singingVoiceCache.get(singingVoiceKey);
+            if (cachedSingingVoice) {
+              singingVoice = cachedSingingVoice;
 
-            window.backend.logInfo(`Synthesized.`);
+              window.backend.logInfo(`Loaded singing voice from cache.`);
+            } else {
+              const blob = await synthesize(singer, singingStyle.query);
 
-            const singingVoice: SingingVoice = { blob };
-            singingVoices.set(singingVoiceSourceHash, singingVoice);
+              window.backend.logInfo(`Synthesized.`);
+
+              singingVoice = { blob };
+              singingVoiceCache.set(singingVoiceKey, singingVoice);
+            }
+            singingVoices.set(singingVoiceKey, singingVoice);
             commit("SET_SINGING_VOICE_KEY_TO_PHRASE", {
               phraseKey,
-              singingVoiceKey: singingVoiceSourceHash,
+              singingVoiceKey,
             });
 
             // シンセとノートシーケンスの接続を解除する
