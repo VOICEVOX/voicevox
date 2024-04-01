@@ -9,6 +9,7 @@
         clickable
         :active="selectedTrackIndex === i"
         active-class="selected-item"
+        @click="selectTrack(i)"
       >
         <QItemSection avatar>
           <SingerIcon
@@ -19,7 +20,7 @@
             :is-multiple-engine="isMultipleEngine"
             :engine-icons="engineIcons"
           />
-          <QAvatar v-else round size="2rem" color="primary"
+          <QAvatar v-else round size="3rem" color="primary"
             ><span color="text-display-on-primary">?</span></QAvatar
           >
         </QItemSection>
@@ -37,6 +38,14 @@
           </QItemLabel>
         </QItemSection>
       </QItem>
+      <QItem v-ripple clickable @click="createTrack">
+        <QItemSection avatar>
+          <QIcon color="display" name="add" />
+        </QItemSection>
+        <QItemSection>
+          <QItemLabel>トラックを追加</QItemLabel>
+        </QItemSection>
+      </QItem>
     </QList>
   </div>
 </template>
@@ -51,6 +60,7 @@ const store = useStore();
 
 const tracks = computed(() => store.state.tracks);
 const selectedTrackIndex = computed(() => store.state.selectedTrackIndex);
+const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 const trackCharacters = computed(() =>
   tracks.value.map((track) => {
     if (!track.singer) return undefined;
@@ -63,6 +73,16 @@ const trackCharacters = computed(() =>
     }
   })
 );
+const selectTrack = (index: number) => {
+  store.dispatch("SET_SELECTED_TRACK_INDEX", { trackIndex: index });
+};
+const createTrack = () => {
+  const singer = selectedTrack.value.singer;
+  if (!singer) return;
+  store.dispatch("COMMAND_CREATE_TRACK", {
+    singer,
+  });
+};
 const trackStyles = computed(() =>
   tracks.value.map((track, i) => {
     if (!track.singer) return undefined;

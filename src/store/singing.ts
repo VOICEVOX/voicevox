@@ -164,7 +164,7 @@ export const singingStoreState: SingingStoreState = {
   selectedTrackIndex: 0,
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
-  overlappingNoteInfos: new Map(),
+  overlappingNoteInfos: [new Map()],
   nowPlaying: false,
   volume: 0,
   startRenderingRequested: false,
@@ -273,15 +273,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SCORE: {
     mutation(state, { score }: { score: Score }) {
-      state.overlappingNoteInfos.clear();
       state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
       state.selectedNoteIds.clear();
       state.tpqn = score.tpqn;
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
-      state.tracks[state.selectedTrackIndex].notes = score.notes;
-      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, score.notes);
+      state.overlappingNoteInfos = [];
+      for (const [i, notes] of score.notes.entries()) {
+        state.tracks[i].notes = notes;
+        state.overlappingNoteInfos.push(new Map());
+        addNotesToOverlappingNoteInfos(
+          state.overlappingNoteInfos[i],
+          score.notes[i]
+        );
+      }
+      if (state.overlappingNoteInfos.length === 0) {
+        state.overlappingNoteInfos.push(new Map());
+      }
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -395,7 +404,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      addNotesToOverlappingNoteInfos(
+        state.overlappingNoteInfos[state.selectedTrackIndex],
+        notes
+      );
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -412,7 +424,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      updateNotesOfOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      updateNotesOfOverlappingNoteInfos(
+        state.overlappingNoteInfos[state.selectedTrackIndex],
+        notes
+      );
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -426,7 +441,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
-      removeNotesFromOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      removeNotesFromOverlappingNoteInfos(
+        state.overlappingNoteInfos[state.selectedTrackIndex],
+        notes
+      );
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -564,14 +582,27 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackIndex }: { trackIndex: number }) {
       state.selectedTrackIndex = trackIndex;
     },
-    async action({ commit }, { trackIndex }) {
+    async action({ commit, dispatch }, { trackIndex }) {
       commit("SET_SELECTED_TRACK_INDEX", { trackIndex });
+      dispatch("RENDER");
     },
   },
 
   SELECTED_TRACK: {
     getter(state) {
       return state.tracks[state.selectedTrackIndex];
+    },
+  },
+
+  CREATE_TRACK: {
+    mutation(state, { singer }: { singer: Singer }) {
+      state.tracks.push({
+        singer,
+        keyRangeAdjustment: 0,
+        volumeRangeAdjustment: 0,
+        notes: [],
+      });
+      state.overlappingNoteInfos.push(new Map());
     },
   },
 
@@ -776,7 +807,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         volumeRangeAdjustment: number,
         tpqn: number,
         tempos: Tempo[],
-        notes: Note[]
+        notes: Note[],
+        trackIndex: number
       ) => {
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
@@ -803,6 +835,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               tpqn,
               tempos,
               notes: phraseNotes,
+              trackIndex,
             };
             const hash = await generatePhraseHash(params);
             foundPhrases.set(hash, {
@@ -968,54 +1001,58 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const transportRef = transport;
         const channelStripRef = channelStrip;
 
-        // レンダリング中に変更される可能性のあるデータをコピーする
-        // 重なっているノートの削除も行う
-        const tpqn = state.tpqn;
-        const tempos = state.tempos.map((value) => ({ ...value }));
-        const track = getters.SELECTED_TRACK;
-        const singer = track.singer ? { ...track.singer } : undefined;
-        const keyRangeAdjustment = track.keyRangeAdjustment;
-        const volumeRangeAdjustment = track.volumeRangeAdjustment;
-        const notes = track.notes
-          .map((value) => ({ ...value }))
-          .filter((value) => !state.overlappingNoteIds.has(value.id));
+        const allFoundPhrases = new Map<string, Phrase>();
+        for (const [i, track] of state.tracks.entries()) {
+          // レンダリング中に変更される可能性のあるデータをコピーする
+          // 重なっているノートの削除も行う
+          const tpqn = state.tpqn;
+          const tempos = state.tempos.map((value) => ({ ...value }));
+          const singer = track.singer ? { ...track.singer } : undefined;
+          const keyRangeAdjustment = track.keyRangeAdjustment;
+          const volumeRangeAdjustment = track.volumeRangeAdjustment;
+          const notes = track.notes
+            .map((value) => ({ ...value }))
+            .filter((value) => !state.overlappingNoteIds.has(value.id));
 
-        // フレーズを更新する
-        const foundPhrases = await searchPhrases(
-          singer,
-          keyRangeAdjustment,
-          volumeRangeAdjustment,
-          tpqn,
-          tempos,
-          notes
-        );
-        for (const [hash, phrase] of foundPhrases) {
-          const phraseKey = hash;
-          if (!state.phrases.has(phraseKey)) {
-            commit("SET_PHRASE", { phraseKey, phrase });
+          // フレーズを更新する
+          const foundPhrases = await searchPhrases(
+            singer,
+            keyRangeAdjustment,
+            volumeRangeAdjustment,
+            tpqn,
+            tempos,
+            notes,
+            i
+          );
+          for (const [hash, phrase] of foundPhrases) {
+            const phraseKey = hash;
+            allFoundPhrases.set(phraseKey, phrase);
+            if (!state.phrases.has(phraseKey)) {
+              commit("SET_PHRASE", { phraseKey, phrase });
 
-            // フレーズ追加時の処理
-            const noteEvents = generateNoteEvents(
-              phrase.notes,
-              phrase.tempos,
-              phrase.tpqn
-            );
-            const polySynth = new PolySynth(audioContextRef);
-            polySynth.output.connect(channelStripRef.input);
-            const noteSequence: NoteSequence = {
-              type: "note",
-              instrument: polySynth,
-              noteEvents,
-            };
-            transportRef.addSequence(noteSequence);
-            phraseDataMap.set(phraseKey, {
-              source: polySynth,
-              sequence: noteSequence,
-            });
+              // フレーズ追加時の処理
+              const noteEvents = generateNoteEvents(
+                phrase.notes,
+                phrase.tempos,
+                phrase.tpqn
+              );
+              const polySynth = new PolySynth(audioContextRef);
+              polySynth.output.connect(channelStripRef.input);
+              const noteSequence: NoteSequence = {
+                type: "note",
+                instrument: polySynth,
+                noteEvents,
+              };
+              transportRef.addSequence(noteSequence);
+              phraseDataMap.set(phraseKey, {
+                source: polySynth,
+                sequence: noteSequence,
+              });
+            }
           }
         }
         for (const key of state.phrases.keys()) {
-          if (!foundPhrases.has(key)) {
+          if (!allFoundPhrases.has(key)) {
             commit("DELETE_PHRASE", { phraseKey: key });
 
             // フレーズ削除時の処理
@@ -1101,7 +1138,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
 
             shiftGuidePitch(phrase.keyRangeAdjustment, frameAudioQuery);
-            scaleGuideVolume(volumeRangeAdjustment, frameAudioQuery);
+            scaleGuideVolume(phrase.volumeRangeAdjustment, frameAudioQuery);
 
             const startTime = calcStartTime(
               phrase.notes,
@@ -1391,7 +1428,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             tpqn,
             tempos,
             timeSignatures,
-            notes,
+            notes: [notes],
           },
         });
       }
@@ -1713,7 +1750,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             tpqn,
             tempos,
             timeSignatures,
-            notes,
+            notes: [notes],
           },
         });
       }
@@ -1835,7 +1872,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             tpqn,
             tempos,
             timeSignatures,
-            notes,
+            notes: [notes],
           },
         });
       }
@@ -2418,6 +2455,13 @@ export const singingCommandStore = transformCommandStore(
     COMMAND_REMOVE_SELECTED_NOTES: {
       action({ state, commit, dispatch }) {
         commit("COMMAND_REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_CREATE_TRACK: {
+      action({ commit, dispatch }, { singer }) {
+        commit("CREATE_TRACK", { singer });
 
         dispatch("RENDER");
       },

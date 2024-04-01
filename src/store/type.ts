@@ -739,7 +739,7 @@ export type Score = {
   tpqn: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
-  notes: Note[];
+  notes: Note[][];
 };
 
 export const singerSchema = z.object({
@@ -775,6 +775,7 @@ export type Phrase = {
   state: PhraseState;
   query?: FrameAudioQuery;
   startTime?: number;
+  trackIndex: number;
 };
 
 export type SingingStoreState = {
@@ -791,7 +792,7 @@ export type SingingStoreState = {
   selectedTrackIndex: number;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
-  overlappingNoteInfos: OverlappingNoteInfos;
+  overlappingNoteInfos: OverlappingNoteInfos[];
   editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
@@ -911,6 +912,10 @@ export type SingingStoreTypes = {
 
   SELECTED_TRACK: {
     getter: Track;
+  };
+
+  CREATE_TRACK: {
+    mutation: { singer: Singer };
   };
 
   SET_SNAP_TYPE: {
@@ -1104,6 +1109,10 @@ export type SingingCommandStoreTypes = {
 
   COMMAND_REMOVE_SELECTED_NOTES: {
     action(): void;
+  };
+
+  COMMAND_CREATE_TRACK: {
+    action(payload: { singer: Singer }): void;
   };
 };
 

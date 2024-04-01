@@ -138,12 +138,14 @@ export function updateNotesOfOverlappingNoteInfos(
 }
 
 export function getOverlappingNoteIds(
-  currentNoteInfos: OverlappingNoteInfos
+  currentNoteInfos: OverlappingNoteInfos[]
 ): Set<string> {
   const overlappingNoteIds = new Set<string>();
-  for (const [noteId, noteInfo] of currentNoteInfos) {
-    if (noteInfo.overlappingNoteIds.size !== 0) {
-      overlappingNoteIds.add(noteId);
+  for (const noteInfos of currentNoteInfos) {
+    for (const [noteId, noteInfo] of noteInfos) {
+      if (noteInfo.overlappingNoteIds.size !== 0) {
+        overlappingNoteIds.add(noteId);
+      }
     }
   }
   return overlappingNoteIds;

@@ -78,7 +78,7 @@ export const isValidScore = (score: Score) => {
     isValidTpqn(score.tpqn) &&
     isValidTempos(score.tempos) &&
     isValidTimeSignatures(score.timeSignatures) &&
-    isValidNotes(score.notes)
+    score.notes.every((notes) => isValidNotes(notes))
   );
 };
 
