@@ -17,7 +17,7 @@ import {
   Phrase,
   PhraseState,
   transformCommandStore,
-  SingingStyle,
+  SingingGuide,
   SingingVoice,
   noteSchema,
 } from "./type";
@@ -57,7 +57,7 @@ import {
   secondToTick,
   tickToSecond,
   calculateNotesHash,
-  calculateSingingStyleSourceHash,
+  calculateSingingGuideSourceHash,
   calculateSingingVoiceSourceHash,
   decibelToLinear,
 } from "@/sing/domain";
@@ -128,7 +128,7 @@ const singingVoices = new Map<string, SingingVoice>();
 const sequences = new Map<string, Sequence>();
 const animationTimer = new AnimationTimer();
 
-const singingStyleCache = new Map<string, SingingStyle>();
+const singingGuideCache = new Map<string, SingingGuide>();
 const singingVoiceCache = new Map<string, SingingVoice>();
 
 // TODO: マルチトラックに対応する
@@ -164,7 +164,7 @@ export const generateSingingStoreInitialScore = () => {
 export const singingStoreState: SingingStoreState = {
   ...generateSingingStoreInitialScore(),
   phrases: new Map(),
-  singingStyles: new Map(),
+  singingGuides: new Map(),
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,
@@ -529,19 +529,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_SINGING_STYLE_KEY_TO_PHRASE: {
+  SET_SINGING_GUIDE_KEY_TO_PHRASE: {
     mutation(
       state,
       {
         phraseKey,
-        singingStyleKey,
-      }: { phraseKey: string; singingStyleKey: string | undefined }
+        singingGuideKey,
+      }: { phraseKey: string; singingGuideKey: string | undefined }
     ) {
       const phrase = state.phrases.get(phraseKey);
       if (phrase == undefined) {
         throw new Error("phrase is undefined.");
       }
-      phrase.singingStyleKey = singingStyleKey;
+      phrase.singingGuideKey = singingGuideKey;
     },
   },
 
@@ -561,21 +561,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_SINGING_STYLE: {
+  SET_SINGING_GUIDE: {
     mutation(
       state,
       {
-        singingStyleKey,
-        singingStyle,
-      }: { singingStyleKey: string; singingStyle: SingingStyle }
+        singingGuideKey,
+        singingGuide,
+      }: { singingGuideKey: string; singingGuide: SingingGuide }
     ) {
-      state.singingStyles.set(singingStyleKey, singingStyle);
+      state.singingGuides.set(singingGuideKey, singingGuide);
     },
   },
 
-  DELETE_SINGING_STYLE: {
-    mutation(state, { singingStyleKey }: { singingStyleKey: string }) {
-      state.singingStyles.delete(singingStyleKey);
+  DELETE_SINGING_GUIDE: {
+    mutation(state, { singingGuideKey }: { singingGuideKey: string }) {
+      state.singingGuides.delete(singingGuideKey);
     },
   },
 
@@ -995,10 +995,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         for (const [phraseKey, phrase] of state.phrases) {
           const notesHash = phraseKey;
           if (!foundPhrases.has(notesHash)) {
-            // 歌い方と音声を削除する
-            if (phrase.singingStyleKey != undefined) {
-              commit("DELETE_SINGING_STYLE", {
-                singingStyleKey: phrase.singingStyleKey,
+            // 歌い方と歌声を削除する
+            if (phrase.singingGuideKey != undefined) {
+              commit("DELETE_SINGING_GUIDE", {
+                singingGuideKey: phrase.singingGuideKey,
               });
             }
             if (phrase.singingVoiceKey != undefined) {
@@ -1035,20 +1035,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // すでに存在するフレーズの場合
           // 再レンダリングする必要があるかどうかをチェックする
           // シンガーが未設定の場合、とりあえず常に再レンダリングする
-          // 音声合成を行う必要がある場合、現在フレーズに設定されている音声を削除する
+          // 音声合成を行う必要がある場合、現在フレーズに設定されている歌声を削除する
           // 歌い方の推論も行う必要がある場合、現在フレーズに設定されている歌い方を削除する
           // TODO: リファクタリングする
           const phrase = { ...existingPhrase };
           if (!singer || phrase.state === "COULD_NOT_RENDER") {
-            if (phrase.singingStyleKey != undefined) {
-              commit("DELETE_SINGING_STYLE", {
-                singingStyleKey: phrase.singingStyleKey,
+            if (phrase.singingGuideKey != undefined) {
+              commit("DELETE_SINGING_GUIDE", {
+                singingGuideKey: phrase.singingGuideKey,
               });
-              phrase.singingStyleKey = undefined;
+              phrase.singingGuideKey = undefined;
             }
-          } else if (phrase.singingStyleKey != undefined) {
-            const calculatedSingingStyleSourceHash =
-              await calculateSingingStyleSourceHash({
+          } else if (phrase.singingGuideKey != undefined) {
+            const calculatedSingingGuideSourceHash =
+              await calculateSingingGuideSourceHash({
                 engineId: singer.engineId,
                 tpqn,
                 tempos,
@@ -1058,30 +1058,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 frameRate: frameRates[singer.engineId],
                 restDurationSeconds,
               });
-            const singingStyleSourceHash = phrase.singingStyleKey;
-            if (singingStyleSourceHash !== calculatedSingingStyleSourceHash) {
-              commit("DELETE_SINGING_STYLE", {
-                singingStyleKey: phrase.singingStyleKey,
+            const singingGuideSourceHash = phrase.singingGuideKey;
+            if (singingGuideSourceHash !== calculatedSingingGuideSourceHash) {
+              commit("DELETE_SINGING_GUIDE", {
+                singingGuideKey: phrase.singingGuideKey,
               });
-              phrase.singingStyleKey = undefined;
+              phrase.singingGuideKey = undefined;
             }
           }
-          if (!singer || phrase.singingStyleKey == undefined) {
+          if (!singer || phrase.singingGuideKey == undefined) {
             if (phrase.singingVoiceKey != undefined) {
               singingVoices.delete(phrase.singingVoiceKey);
               phrase.singingVoiceKey = undefined;
             }
           } else if (phrase.singingVoiceKey != undefined) {
-            const singingStyle = state.singingStyles.get(
-              phrase.singingStyleKey
+            const singingGuide = state.singingGuides.get(
+              phrase.singingGuideKey
             );
-            if (singingStyle == undefined) {
-              throw new Error("singingStyle is undefined.");
+            if (singingGuide == undefined) {
+              throw new Error("singingGuide is undefined.");
             }
             const calculatedSingingVoiceSourceHash =
               await calculateSingingVoiceSourceHash({
                 singer,
-                frameAudioQuery: singingStyle.query,
+                frameAudioQuery: singingGuide.query,
               });
             const singingVoiceSourceHash = phrase.singingVoiceKey;
             if (singingVoiceSourceHash !== calculatedSingingVoiceSourceHash) {
@@ -1091,7 +1091,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
           if (
             !singer ||
-            phrase.singingStyleKey == undefined ||
+            phrase.singingGuideKey == undefined ||
             phrase.singingVoiceKey == undefined
           ) {
             phrase.state = "WAITING_TO_BE_RENDERED";
@@ -1171,15 +1171,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
             // 歌い方の推論を行う
 
-            let singingStyle: SingingStyle | undefined;
-            if (phrase.singingStyleKey != undefined) {
-              singingStyle = state.singingStyles.get(phrase.singingStyleKey);
-              if (!singingStyle) {
-                throw new Error("singingStyle is undefined.");
+            let singingGuide: SingingGuide | undefined;
+            if (phrase.singingGuideKey != undefined) {
+              singingGuide = state.singingGuides.get(phrase.singingGuideKey);
+              if (!singingGuide) {
+                throw new Error("singingGuide is undefined.");
               }
             } else {
-              const singingStyleSourceHash =
-                await calculateSingingStyleSourceHash({
+              const singingGuideSourceHash =
+                await calculateSingingGuideSourceHash({
                   engineId: singer.engineId,
                   tpqn,
                   tempos,
@@ -1190,12 +1190,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   restDurationSeconds,
                 });
 
-              const singingStyleKey = singingStyleSourceHash;
-              const cachedSingingStyle = singingStyleCache.get(singingStyleKey);
-              if (cachedSingingStyle) {
-                singingStyle = cachedSingingStyle;
+              const singingGuideKey = singingGuideSourceHash;
+              const cachedSingingGuide = singingGuideCache.get(singingGuideKey);
+              if (cachedSingingGuide) {
+                singingGuide = cachedSingingGuide;
 
-                window.backend.logInfo(`Loaded singing style from cache.`);
+                window.backend.logInfo(`Loaded singing guide from cache.`);
               } else {
                 const frameAudioQuery = await fetchQuery(
                   singer.engineId,
@@ -1222,18 +1222,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   restDurationSeconds
                 );
 
-                singingStyle = {
+                singingGuide = {
                   query: frameAudioQuery,
                   frameRate: frameRates[singer.engineId],
                   startTime,
                 };
 
-                singingStyleCache.set(singingStyleKey, singingStyle);
+                singingGuideCache.set(singingGuideKey, singingGuide);
               }
-              commit("SET_SINGING_STYLE", { singingStyleKey, singingStyle });
-              commit("SET_SINGING_STYLE_KEY_TO_PHRASE", {
+              commit("SET_SINGING_GUIDE", { singingGuideKey, singingGuide });
+              commit("SET_SINGING_GUIDE_KEY_TO_PHRASE", {
                 phraseKey,
-                singingStyleKey,
+                singingGuideKey,
               });
             }
 
@@ -1244,7 +1244,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const singingVoiceSourceHash =
               await calculateSingingVoiceSourceHash({
                 singer,
-                frameAudioQuery: singingStyle.query,
+                frameAudioQuery: singingGuide.query,
               });
 
             const singingVoiceKey = singingVoiceSourceHash;
@@ -1254,7 +1254,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
               window.backend.logInfo(`Loaded singing voice from cache.`);
             } else {
-              const blob = await synthesize(singer, singingStyle.query);
+              const blob = await synthesize(singer, singingGuide.query);
 
               window.backend.logInfo(`Synthesized.`);
 
@@ -1286,7 +1286,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
             const audioEvents = await generateAudioEvents(
               audioContextRef,
-              singingStyle.startTime,
+              singingGuide.startTime,
               singingVoice.blob
             );
             const audioPlayer = new AudioPlayer(audioContextRef);
@@ -2150,18 +2150,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           for (const phrase of state.phrases.values()) {
             if (
-              phrase.singingStyleKey == undefined ||
+              phrase.singingGuideKey == undefined ||
               phrase.singingVoiceKey == undefined ||
               phrase.state !== "PLAYABLE"
             ) {
               continue;
             }
-            const singingStyle = state.singingStyles.get(
-              phrase.singingStyleKey
+            const singingGuide = state.singingGuides.get(
+              phrase.singingGuideKey
             );
             const singingVoice = singingVoices.get(phrase.singingVoiceKey);
-            if (!singingStyle) {
-              throw new Error("singingStyle is undefined");
+            if (!singingGuide) {
+              throw new Error("singingGuide is undefined");
             }
             if (!singingVoice) {
               throw new Error("singingVoice is undefined");
@@ -2169,7 +2169,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             // TODO: この辺りの処理を共通化する
             const audioEvents = await generateAudioEvents(
               offlineAudioContext,
-              singingStyle.startTime,
+              singingGuide.startTime,
               singingVoice.blob
             );
             const audioPlayer = new AudioPlayer(offlineAudioContext);

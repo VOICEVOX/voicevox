@@ -34,8 +34,8 @@ const props = defineProps<{ offsetX: number; offsetY: number }>();
 
 const store = useStore();
 const queries = computed(() => {
-  const singingStyles = [...store.state.singingStyles.values()];
-  return singingStyles.map((value) => value.query);
+  const singingGuides = [...store.state.singingGuides.values()];
+  return singingGuides.map((value) => value.query);
 });
 
 const canvasContainer = ref<HTMLElement | null>(null);
@@ -92,20 +92,20 @@ const render = () => {
   const tpqn = store.state.tpqn;
   const tempos = [store.state.tempos[0]];
   const singer = store.getters.SELECTED_TRACK.singer;
-  const singingStyles = store.state.singingStyles;
+  const singingGuides = store.state.singingGuides;
   const zoomX = store.state.sequencerZoomX;
   const zoomY = store.state.sequencerZoomY;
   const offsetX = props.offsetX;
   const offsetY = props.offsetY;
 
   // 無くなったフレーズを調べて、そのフレーズに対応するピッチラインを削除する
-  for (const [singingStyleKey, pitchLines] of pitchLinesMap) {
-    if (!singingStyles.has(singingStyleKey)) {
+  for (const [singingGuideKey, pitchLines] of pitchLinesMap) {
+    if (!singingGuides.has(singingGuideKey)) {
       for (const pitchLine of pitchLines) {
         stage.removeChild(pitchLine.lineStrip.displayObject);
         pitchLine.lineStrip.destroy();
       }
-      pitchLinesMap.delete(singingStyleKey);
+      pitchLinesMap.delete(singingGuideKey);
     }
   }
   // シンガーが未設定の場合はピッチラインをすべて非表示にして終了
@@ -119,13 +119,13 @@ const render = () => {
     return;
   }
   // ピッチラインの生成・更新を行う
-  for (const [singingStyleKey, singingStyle] of singingStyles) {
-    const f0 = singingStyle.query.f0;
-    const frameRate = singingStyle.frameRate;
-    const startTime = singingStyle.startTime;
-    const phonemes = singingStyle.query.phonemes;
+  for (const [singingGuideKey, singingGuide] of singingGuides) {
+    const f0 = singingGuide.query.f0;
+    const frameRate = singingGuide.frameRate;
+    const startTime = singingGuide.startTime;
+    const phonemes = singingGuide.query.phonemes;
 
-    let pitchLines = pitchLinesMap.get(singingStyleKey);
+    let pitchLines = pitchLinesMap.get(singingGuideKey);
 
     // フレーズに対応するピッチラインが無かったら生成する
     if (!pitchLines) {
@@ -162,7 +162,7 @@ const render = () => {
       for (const pitchLine of pitchLines) {
         stage.addChild(pitchLine.lineStrip.displayObject);
       }
-      pitchLinesMap.set(singingStyleKey, pitchLines);
+      pitchLinesMap.set(singingGuideKey, pitchLines);
     }
 
     // ピッチラインを更新

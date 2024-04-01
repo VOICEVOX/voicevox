@@ -309,7 +309,7 @@ export const calculateNotesHash = async (notes: Note[]) => {
   return calculateHash({ notes });
 };
 
-export const calculateSingingStyleSourceHash = async (obj: {
+export const calculateSingingGuideSourceHash = async (obj: {
   engineId: EngineId;
   tpqn: number;
   tempos: Tempo[];

@@ -763,12 +763,18 @@ export type PhraseState =
   | "COULD_NOT_RENDER"
   | "PLAYABLE";
 
-export type SingingStyle = {
+/**
+ * 歌い方
+ */
+export type SingingGuide = {
   query: FrameAudioQuery;
   frameRate: number;
   startTime: number;
 };
 
+/**
+ * 歌声
+ */
 export type SingingVoice = {
   blob: Blob;
 };
@@ -776,7 +782,7 @@ export type SingingVoice = {
 export type Phrase = {
   notes: Note[];
   state: PhraseState;
-  singingStyleKey?: string;
+  singingGuideKey?: string;
   singingVoiceKey?: string;
 };
 
@@ -786,7 +792,7 @@ export type SingingStoreState = {
   timeSignatures: TimeSignature[];
   tracks: Track[];
   phrases: Map<string, Phrase>;
-  singingStyles: Map<string, SingingStyle>;
+  singingGuides: Map<string, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
   sequencerZoomX: number;
@@ -895,20 +901,20 @@ export type SingingStoreTypes = {
     mutation: { phraseKey: string; phraseState: PhraseState };
   };
 
-  SET_SINGING_STYLE_KEY_TO_PHRASE: {
-    mutation: { phraseKey: string; singingStyleKey: string | undefined };
+  SET_SINGING_GUIDE_KEY_TO_PHRASE: {
+    mutation: { phraseKey: string; singingGuideKey: string | undefined };
   };
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
     mutation: { phraseKey: string; singingVoiceKey: string | undefined };
   };
 
-  SET_SINGING_STYLE: {
-    mutation: { singingStyleKey: string; singingStyle: SingingStyle };
+  SET_SINGING_GUIDE: {
+    mutation: { singingGuideKey: string; singingGuide: SingingGuide };
   };
 
-  DELETE_SINGING_STYLE: {
-    mutation: { singingStyleKey: string };
+  DELETE_SINGING_GUIDE: {
+    mutation: { singingGuideKey: string };
   };
 
   SELECTED_TRACK: {
