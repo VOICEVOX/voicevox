@@ -22,7 +22,7 @@
         />
       </div>
     </div>
-    <TrackList v-if="isSidebarOpen" />
+    <SideBar v-if="isSidebarOpen" />
     <ScoreSequencer />
   </div>
 </template>
@@ -32,7 +32,7 @@ import { computed, ref } from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
-import TrackList from "./TrackList.vue";
+import SideBar from "./SideBar.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
