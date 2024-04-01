@@ -126,9 +126,6 @@ const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationTimer = new AnimationTimer();
 
-// TODO: マルチトラックに対応する
-const selectedTrackIndex = 0;
-
 export const generateSingingStoreInitialScore = () => {
   return {
     tpqn: DEFAULT_TPQN,
@@ -164,6 +161,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
+  selectedTrackIndex: 0,
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
   overlappingNoteInfos: new Map(),
@@ -203,7 +201,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SINGER: {
     mutation(state, { singer }: { singer?: Singer }) {
-      state.tracks[selectedTrackIndex].singer = singer;
+      state.tracks[state.selectedTrackIndex].singer = singer;
     },
     async action(
       { state, getters, dispatch, commit },
@@ -234,7 +232,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_KEY_RANGE_ADJUSTMENT: {
     mutation(state, { keyRangeAdjustment }: { keyRangeAdjustment: number }) {
-      state.tracks[selectedTrackIndex].keyRangeAdjustment = keyRangeAdjustment;
+      state.tracks[state.selectedTrackIndex].keyRangeAdjustment =
+        keyRangeAdjustment;
     },
     async action(
       { dispatch, commit },
@@ -254,7 +253,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state,
       { volumeRangeAdjustment }: { volumeRangeAdjustment: number }
     ) {
-      state.tracks[selectedTrackIndex].volumeRangeAdjustment =
+      state.tracks[state.selectedTrackIndex].volumeRangeAdjustment =
         volumeRangeAdjustment;
     },
     async action(
@@ -281,7 +280,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tpqn = score.tpqn;
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
-      state.tracks[selectedTrackIndex].notes = score.notes;
+      state.tracks[state.selectedTrackIndex].notes = score.notes;
       addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, score.notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
@@ -384,7 +383,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   NOTE_IDS: {
     getter(state) {
-      const selectedTrack = state.tracks[selectedTrackIndex];
+      const selectedTrack = state.tracks[state.selectedTrackIndex];
       const noteIds = selectedTrack.notes.map((value) => value.id);
       return new Set(noteIds);
     },
@@ -392,7 +391,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   ADD_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
-      const selectedTrack = state.tracks[selectedTrackIndex];
+      const selectedTrack = state.tracks[state.selectedTrackIndex];
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
@@ -409,7 +408,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       for (const note of notes) {
         notesMap.set(note.id, note);
       }
-      const selectedTrack = state.tracks[selectedTrackIndex];
+      const selectedTrack = state.tracks[state.selectedTrackIndex];
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
@@ -423,7 +422,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REMOVE_NOTES: {
     mutation(state, { noteIds }: { noteIds: string[] }) {
       const noteIdsSet = new Set(noteIds);
-      const selectedTrack = state.tracks[selectedTrackIndex];
+      const selectedTrack = state.tracks[state.selectedTrackIndex];
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
@@ -466,7 +465,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECT_ALL_NOTES: {
     mutation(state) {
-      const currentTrack = state.tracks[selectedTrackIndex];
+      const currentTrack = state.tracks[state.selectedTrackIndex];
       const allNoteIds = currentTrack.notes.map((note) => note.id);
       state.selectedNoteIds = new Set(allNoteIds);
     },
@@ -561,9 +560,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_SELECTED_TRACK_INDEX: {
+    mutation(state, { trackIndex }: { trackIndex: number }) {
+      state.selectedTrackIndex = trackIndex;
+    },
+    async action({ commit }, { trackIndex }) {
+      commit("SET_SELECTED_TRACK_INDEX", { trackIndex });
+    },
+  },
+
   SELECTED_TRACK: {
     getter(state) {
-      return state.tracks[selectedTrackIndex];
+      return state.tracks[state.selectedTrackIndex];
     },
   },
 

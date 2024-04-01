@@ -36,32 +36,13 @@
               @mouseover="reassignSubMenuOpen(-1)"
               @mouseleave="reassignSubMenuOpen.cancel()"
             >
-              <QAvatar rounded size="2rem" class="q-mr-md">
-                <QImg
-                  no-spinner
-                  no-transition
-                  :ratio="1"
-                  :src="
-                    getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
-                  "
-                />
-                <QAvatar
-                  v-if="
-                    isMultipleEngine && characterInfo.metas.styles.length < 2
-                  "
-                  class="engine-icon"
-                  rounded
-                >
-                  <img
-                    :src="
-                      engineIcons[
-                        getDefaultStyle(characterInfo.metas.speakerUuid)
-                          .engineId
-                      ]
-                    "
-                  />
-                </QAvatar>
-              </QAvatar>
+              <SingerIcon
+                class="q-mr-md"
+                rounded
+                :style="getDefaultStyle(characterInfo.metas.speakerUuid)"
+                :is-multiple-engine="isMultipleEngine"
+                :engine-icons="engineIcons"
+              />
               <div>{{ characterInfo.metas.speakerName }}</div>
             </QBtn>
 
@@ -103,21 +84,13 @@
                         )
                       "
                     >
-                      <QAvatar rounded size="2rem" class="q-mr-md">
-                        <QImg
-                          no-spinner
-                          no-transition
-                          :ratio="1"
-                          :src="style.iconPath"
-                        />
-                        <QAvatar
-                          v-if="isMultipleEngine"
-                          rounded
-                          class="engine-icon"
-                        >
-                          <img :src="engineIcons[style.engineId]" />
-                        </QAvatar>
-                      </QAvatar>
+                      <SingerIcon
+                        class="q-mr-md"
+                        rounded
+                        :style="style"
+                        :is-multiple-engine="isMultipleEngine"
+                        :engine-icons="engineIcons"
+                      />
                       <QItemSection v-if="style.styleName">
                         {{ characterInfo.metas.speakerName }} ({{
                           getStyleDescription(style)
@@ -151,6 +124,7 @@ import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { SpeakerId, StyleId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
+import SingerIcon from "@/components/Sing/SingerIcon.vue";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);

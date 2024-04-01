@@ -788,6 +788,7 @@ export type SingingStoreState = {
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
+  selectedTrackIndex: number;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
   overlappingNoteInfos: OverlappingNoteInfos;
@@ -901,6 +902,11 @@ export type SingingStoreTypes = {
 
   SET_START_TIME_TO_PHRASE: {
     mutation: { phraseKey: string; startTime: number };
+  };
+
+  SET_SELECTED_TRACK_INDEX: {
+    mutation: { trackIndex: number };
+    action(payload: { trackIndex: number }): void;
   };
 
   SELECTED_TRACK: {
