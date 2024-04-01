@@ -148,6 +148,8 @@ export const generateSingingStoreInitialScore = () => {
         keyRangeAdjustment: 0,
         volumeRangeAdjustment: 0,
         notes: [],
+        pan: 0,
+        volume: 1,
       },
     ],
   };
@@ -590,18 +592,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SELECTED_TRACK: {
     getter(state) {
       return state.tracks[state.selectedTrackIndex];
-    },
-  },
-
-  CREATE_TRACK: {
-    mutation(state, { singer }: { singer: Singer }) {
-      state.tracks.push({
-        singer,
-        keyRangeAdjustment: 0,
-        volumeRangeAdjustment: 0,
-        notes: [],
-      });
-      state.overlappingNoteInfos.push(new Map());
     },
   },
 
@@ -2266,6 +2256,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       dispatch("RENDER");
     },
   },
+
+  CREATE_TRACK: {
+    mutation(state, { singer }) {
+      state.tracks.push({
+        singer,
+        keyRangeAdjustment: 0,
+        volumeRangeAdjustment: 0,
+        notes: [],
+        pan: 0,
+        volume: 1,
+      });
+    },
+  },
+
+  SET_TRACK_PAN: {
+    mutation(state, { trackIndex, pan }) {
+      state.tracks[trackIndex].pan = pan;
+    },
+  },
+
+  SET_TRACK_VOLUME: {
+    mutation(state, { trackIndex, volume }) {
+      state.tracks[trackIndex].volume = volume;
+    },
+  },
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};
@@ -2461,6 +2476,17 @@ export const singingCommandStore = transformCommandStore(
     COMMAND_CREATE_TRACK: {
       action({ commit }, { singer }) {
         commit("CREATE_TRACK", { singer });
+      },
+    },
+    COMMAND_SET_TRACK_PAN: {
+      action({ commit }, { trackIndex, pan }) {
+        commit("SET_TRACK_PAN", { trackIndex, pan });
+      },
+    },
+
+    COMMAND_SET_TRACK_VOLUME: {
+      action({ commit }, { trackIndex, volume }) {
+        commit("SET_TRACK_VOLUME", { trackIndex, volume });
       },
     },
   }),

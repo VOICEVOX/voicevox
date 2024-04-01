@@ -754,6 +754,8 @@ export const trackSchema = z.object({
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
+  pan: z.number(),
+  volume: z.number(),
 });
 export type Track = z.infer<typeof trackSchema>;
 
@@ -1050,6 +1052,14 @@ export type SingingStoreTypes = {
   COMMAND_QUANTIZE_SELECTED_NOTES: {
     action(): void;
   };
+
+  SET_TRACK_PAN: {
+    mutation: { trackIndex: number; pan: number };
+  };
+
+  SET_TRACK_VOLUME: {
+    mutation: { trackIndex: number; volume: number };
+  };
 };
 
 export type SingingCommandStoreState = {
@@ -1113,6 +1123,14 @@ export type SingingCommandStoreTypes = {
 
   COMMAND_CREATE_TRACK: {
     action(payload: { singer: Singer }): void;
+  };
+
+  COMMAND_SET_TRACK_PAN: {
+    action(payload: { trackIndex: number; pan: number }): void;
+  };
+
+  COMMAND_SET_TRACK_VOLUME: {
+    action(payload: { trackIndex: number; volume: number }): void;
   };
 };
 

@@ -2,43 +2,79 @@
   <div class="sidebar">
     <QList class="tracks">
       <QItemLabel header>トラック一覧</QItemLabel>
-      <QItem
-        v-for="(track, i) in tracks"
-        :key="i"
-        v-ripple
-        clickable
-        :active="selectedTrackIndex === i"
-        active-class="selected-item"
-        @click="selectTrack(i)"
-      >
-        <QItemSection avatar>
-          <SingerIcon
-            v-if="trackStyles[i]"
-            round
-            size="3rem"
-            :style="trackStyles[i]!"
-            :is-multiple-engine="isMultipleEngine"
-            :engine-icons="engineIcons"
-          />
-          <QAvatar v-else round size="3rem" color="primary"
-            ><span color="text-display-on-primary">?</span></QAvatar
-          >
-        </QItemSection>
+      <template v-for="[track, i] in trackListItems">
+        <QItem
+          v-if="track === 'trackDetail'"
+          :key="`detail-${i}`"
+          class="track-detail"
+        >
+          <div class="pan">
+            <div class="l">L</div>
+            <QSlider
+              :model-value="trackPan"
+              :min="-1"
+              :max="1"
+              :step="0.1"
+              :markers="1"
+              selection-color="transparent"
+              @change="setTrackPan(i, $event)"
+              @dblclick="setTrackPan(i, 0)"
+            />
+            <div class="r">R</div>
+          </div>
+          <div class="volume">
+            <QIcon name="volume_down" class="l" size="1rem" />
+            <QSlider
+              :model-value="trackVolume"
+              :min="0"
+              :max="1.5"
+              :step="0.1"
+              :markers="1"
+              @change="setTrackVolume(i, $event)"
+              @dblclick="setTrackVolume(i, 1)"
+            />
+            <QIcon name="volume_up" class="r" size="1rem" />
+          </div>
+        </QItem>
+        <QItem
+          v-else
+          :key="i"
+          v-ripple
+          class="track-item"
+          clickable
+          :active="selectedTrackIndex === i"
+          active-class="selected-item"
+          @click="selectTrack(i)"
+        >
+          <QItemSection avatar>
+            <SingerIcon
+              v-if="trackStyles[i]"
+              round
+              size="3rem"
+              :style="trackStyles[i]!"
+              :is-multiple-engine="isMultipleEngine"
+              :engine-icons="engineIcons"
+            />
+            <QAvatar v-else round size="3rem" color="primary"
+              ><span color="text-display-on-primary">?</span></QAvatar
+            >
+          </QItemSection>
 
-        <QItemSection>
-          <QItemLabel>
-            {{
+          <QItemSection>
+            <QItemLabel>
+              {{
               trackCharacters[i]
                 ? trackCharacters[i]!.metas.speakerName
                 : "（不明なキャラクター）"
-            }}
-          </QItemLabel>
-          <QItemLabel caption>
-            {{ trackStyles[i] ? getStyleDescription(trackStyles[i]!) : "" }}
-          </QItemLabel>
-        </QItemSection>
-      </QItem>
-      <QItem v-ripple clickable @click="createTrack">
+              }}
+            </QItemLabel>
+            <QItemLabel caption>
+              {{ trackStyles[i] ? getStyleDescription(trackStyles[i]!) : "" }}
+            </QItemLabel>
+          </QItemSection>
+        </QItem>
+      </template>
+      <QItem v-ripple class="create-track-item" clickable @click="createTrack">
         <QItemSection avatar>
           <QIcon color="display" name="add" />
         </QItemSection>
@@ -53,12 +89,34 @@
 import { computed } from "vue";
 import SingerIcon from "./SingerIcon.vue";
 import { useStore } from "@/store";
+import { Track } from "@/store/type";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getStyleDescription } from "@/sing/viewHelper";
 
 const store = useStore();
 
 const tracks = computed(() => store.state.tracks);
+const trackListItems = computed<["trackDetail" | Track, number][]>(() => {
+  const items: ["trackDetail" | Track, number][] = tracks.value.map(
+    (track, i) => [track, i]
+  );
+  items.splice(selectedTrackIndex.value + 1, 0, [
+    "trackDetail",
+    selectedTrackIndex.value,
+  ]);
+
+  return items;
+});
+const trackPan = computed(() => selectedTrack.value.pan);
+const setTrackPan = (index: number, pan: number) => {
+  store.dispatch("COMMAND_SET_TRACK_PAN", { trackIndex: index, pan });
+};
+const setTrackVolume = (index: number, volume: number) => {
+  store.dispatch("COMMAND_SET_TRACK_VOLUME", { trackIndex: index, volume });
+};
+
+const trackVolume = computed(() => selectedTrack.value.volume);
+
 const selectedTrackIndex = computed(() => store.state.selectedTrackIndex);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 const trackCharacters = computed(() =>
@@ -118,6 +176,33 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 }
 .tracks {
   width: 100%;
+}
+.track-detail {
+  margin-left: 0.5rem;
+  border-left: 1px solid colors.$sequencer-sub-divider;
+  display: flex;
+  flex-direction: column;
+
+  .pan,
+  .volume {
+    display: grid;
+    align-items: center;
+    gap: 1rem;
+    grid-template-columns: 1.5rem 1fr 1.5rem;
+
+    .l,
+    .r {
+      justify-self: center;
+    }
+  }
+}
+.track-item {
+  &:not(*:nth-of-type(2)) {
+    border-top: 1px solid rgba(colors.$sequencer-sub-divider-rgb, 0.5);
+  }
+}
+.create-track-item {
+  border-top: 1px solid rgba(colors.$sequencer-sub-divider-rgb, 0.5);
 }
 
 .selected-item {

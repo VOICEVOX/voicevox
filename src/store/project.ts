@@ -452,6 +452,19 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               track.volumeRangeAdjustment = 0;
             }
           }
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.19.0",
+              semverSatisfiesOptions
+            )
+          ) {
+            // pan、volumeの追加
+            for (const track of projectData.song.tracks) {
+              track.pan = 0;
+              track.volume = 1;
+            }
+          }
 
           // Validation check
           // トークはvalidateTalkProjectで検証する
