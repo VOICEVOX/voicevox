@@ -582,9 +582,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackIndex }: { trackIndex: number }) {
       state.selectedTrackIndex = trackIndex;
     },
-    async action({ commit, dispatch }, { trackIndex }) {
+    async action({ commit }, { trackIndex }) {
       commit("SET_SELECTED_TRACK_INDEX", { trackIndex });
-      dispatch("RENDER");
     },
   },
 
@@ -2460,10 +2459,8 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_CREATE_TRACK: {
-      action({ commit, dispatch }, { singer }) {
+      action({ commit }, { singer }) {
         commit("CREATE_TRACK", { singer });
-
-        dispatch("RENDER");
       },
     },
   }),

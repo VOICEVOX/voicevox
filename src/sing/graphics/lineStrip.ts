@@ -7,6 +7,7 @@ import fragmentShaderSource from "@/sing/graphics/shaders/fragmentShader.glsl?ra
  */
 export class LineStrip {
   private readonly mesh: PIXI.Mesh<PIXI.Shader>;
+  private readonly color: number[];
   private readonly shader: PIXI.Shader;
   private readonly geometry: PIXI.Geometry;
   private readonly points: Float32Array;
@@ -37,6 +38,7 @@ export class LineStrip {
       fragmentShaderSource,
       { color }
     );
+    this.color = color;
     this.points = new Float32Array(numOfPoints * 2);
     this.pointsBuffer = new PIXI.Buffer(this.points, false);
     const vertices = this.generateLineSegmentVertices(width);
@@ -78,6 +80,13 @@ export class LineStrip {
       [halfWidth, halfWidth, 1],
       [-halfWidth, halfWidth, 0],
     ];
+  }
+
+  /**
+   * 線の色を設定します。
+   */
+  setColor(color: number[]) {
+    this.shader.uniforms.color = color;
   }
 
   /**

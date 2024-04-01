@@ -130,6 +130,11 @@
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
+      <SequencerInactiveNote
+        v-for="note in inactiveNotes"
+        :key="note.id"
+        :note="note"
+      />
     </div>
     <SequencerPitch
       v-if="showPitch"
@@ -252,6 +257,7 @@ import {
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
+import SequencerInactiveNote from "@/components/Sing/SequencerInactiveNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
@@ -279,6 +285,7 @@ const tempos = computed(() => state.tempos);
 const timeSignatures = computed(() => state.timeSignatures);
 
 // ノート
+const selectedTrackIndex = computed(() => state.selectedTrackIndex);
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 const isNoteSelected = computed(() => {
   return state.selectedNoteIds.size > 0;
@@ -290,6 +297,11 @@ const unselectedNotes = computed(() => {
 const selectedNotes = computed(() => {
   const selectedNoteIds = state.selectedNoteIds;
   return notes.value.filter((value) => selectedNoteIds.has(value.id));
+});
+const inactiveNotes = computed(() => {
+  return store.state.tracks.flatMap((track, i) =>
+    i === selectedTrackIndex.value ? [] : track.notes
+  );
 });
 
 // 矩形選択

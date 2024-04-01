@@ -25,6 +25,7 @@ type PitchLine = {
   readonly frameLength: number;
   readonly frameTicksArray: number[];
   readonly lineStrip: LineStrip;
+  readonly trackIndex: number;
 };
 
 const pitchLineColor = [0.647, 0.831, 0.678, 1]; // RGBA
@@ -37,6 +38,8 @@ const queries = computed(() => {
   const phrases = [...store.state.phrases.values()];
   return phrases.map((value) => value.query);
 });
+
+const selectedTrackIndex = computed(() => store.state.selectedTrackIndex);
 
 const canvasContainer = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
@@ -148,6 +151,7 @@ const render = () => {
           frameLength,
           frameTicksArray,
           lineStrip,
+          trackIndex: phrase.trackIndex,
         });
       }
       // lineStripをステージに追加
@@ -186,13 +190,20 @@ const render = () => {
         const y = baseY * zoomY - offsetY;
         pitchLine.lineStrip.setPoint(j, x, y);
       }
+
+      // 選択されているトラック以外は[0, 0, 0, 0]にする
+      pitchLine.lineStrip.setColor(
+        pitchLine.trackIndex === selectedTrackIndex.value
+          ? pitchLineColor
+          : [0, 0, 0, 0]
+      );
       pitchLine.lineStrip.update();
     }
   }
   renderer.render(stage);
 };
 
-watch(queries, () => {
+watch([queries, selectedTrackIndex], () => {
   renderInNextFrame = true;
 });
 

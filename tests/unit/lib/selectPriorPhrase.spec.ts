@@ -24,6 +24,7 @@ const createPhrase = (
     state,
     tempos,
     tpqn: DEFAULT_TPQN,
+    trackIndex: 0,
     singer: {
       engineId: EngineId("00000000-0000-0000-0000-000000000000"),
       styleId: StyleId(0),
