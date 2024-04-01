@@ -3,12 +3,13 @@ import {
   Note,
   Phrase,
   Score,
-  Singer,
+  SingingGuideSource,
+  SingingVoiceSource,
   Tempo,
   TimeSignature,
+  singingGuideSourceHashSchema,
+  singingVoiceSourceHashSchema,
 } from "@/store/type";
-import { EngineId } from "@/type/preload";
-import { FrameAudioQuery } from "@/openapi";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -306,27 +307,21 @@ export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
 }
 
 export const calculateNotesHash = async (notes: Note[]) => {
-  return calculateHash({ notes });
+  return await calculateHash({ notes });
 };
 
-export const calculateSingingGuideSourceHash = async (obj: {
-  engineId: EngineId;
-  tpqn: number;
-  tempos: Tempo[];
-  notes: Note[];
-  keyRangeAdjustment: number;
-  volumeRangeAdjustment: number;
-  frameRate: number;
-  restDurationSeconds: number;
-}) => {
-  return calculateHash(obj);
+export const calculateSingingGuideSourceHash = async (
+  singingGuideSource: SingingGuideSource
+) => {
+  const hash = await calculateHash(singingGuideSource);
+  return singingGuideSourceHashSchema.parse(hash);
 };
 
-export const calculateSingingVoiceSourceHash = async (obj: {
-  singer: Singer;
-  frameAudioQuery: FrameAudioQuery;
-}) => {
-  return calculateHash(obj);
+export const calculateSingingVoiceSourceHash = async (
+  singingVoiceSource: SingingVoiceSource
+) => {
+  const hash = await calculateHash(singingVoiceSource);
+  return singingVoiceSourceHashSchema.parse(hash);
 };
 
 export function getStartTicksOfPhrase(phrase: Phrase) {

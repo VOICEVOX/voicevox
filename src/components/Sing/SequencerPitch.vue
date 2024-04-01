@@ -14,6 +14,7 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
+import { SingingGuideSourceHash } from "@/store/type";
 
 type VoicedSection = {
   readonly startFrame: number;
@@ -48,7 +49,7 @@ let stage: PIXI.Container | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
 
-const pitchLinesMap = new Map<string, PitchLine[]>();
+const pitchLinesMap = new Map<SingingGuideSourceHash, PitchLine[]>();
 
 const searchVoicedSections = (phonemes: FramePhoneme[]) => {
   const voicedSections: VoicedSection[] = [];

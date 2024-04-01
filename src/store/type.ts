@@ -772,6 +772,17 @@ export type SingingGuide = {
   startTime: number;
 };
 
+export type SingingGuideSource = {
+  engineId: EngineId;
+  tpqn: number;
+  tempos: Tempo[];
+  notes: Note[];
+  keyRangeAdjustment: number;
+  volumeRangeAdjustment: number;
+  frameRate: number;
+  restDurationSeconds: number;
+};
+
 /**
  * 歌声
  */
@@ -779,11 +790,30 @@ export type SingingVoice = {
   blob: Blob;
 };
 
+export type SingingVoiceSource = {
+  singer: Singer;
+  frameAudioQuery: FrameAudioQuery;
+};
+
+export const singingGuideSourceHashSchema = z
+  .string()
+  .brand<"SingingGuideSourceHash">();
+export type SingingGuideSourceHash = z.infer<
+  typeof singingGuideSourceHashSchema
+>;
+
+export const singingVoiceSourceHashSchema = z
+  .string()
+  .brand<"SingingVoiceSourceHash">();
+export type SingingVoiceSourceHash = z.infer<
+  typeof singingVoiceSourceHashSchema
+>;
+
 export type Phrase = {
   notes: Note[];
   state: PhraseState;
-  singingGuideKey?: string;
-  singingVoiceKey?: string;
+  singingGuideKey?: SingingGuideSourceHash;
+  singingVoiceKey?: SingingVoiceSourceHash;
 };
 
 export type SingingStoreState = {
@@ -792,7 +822,7 @@ export type SingingStoreState = {
   timeSignatures: TimeSignature[];
   tracks: Track[];
   phrases: Map<string, Phrase>;
-  singingGuides: Map<string, SingingGuide>;
+  singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
   sequencerZoomX: number;
@@ -902,19 +932,28 @@ export type SingingStoreTypes = {
   };
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
-    mutation: { phraseKey: string; singingGuideKey: string | undefined };
+    mutation: {
+      phraseKey: string;
+      singingGuideKey: SingingGuideSourceHash | undefined;
+    };
   };
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
-    mutation: { phraseKey: string; singingVoiceKey: string | undefined };
+    mutation: {
+      phraseKey: string;
+      singingVoiceKey: SingingVoiceSourceHash | undefined;
+    };
   };
 
   SET_SINGING_GUIDE: {
-    mutation: { singingGuideKey: string; singingGuide: SingingGuide };
+    mutation: {
+      singingGuideKey: SingingGuideSourceHash;
+      singingGuide: SingingGuide;
+    };
   };
 
   DELETE_SINGING_GUIDE: {
-    mutation: { singingGuideKey: string };
+    mutation: { singingGuideKey: SingingGuideSourceHash };
   };
 
   SELECTED_TRACK: {

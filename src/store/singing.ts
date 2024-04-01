@@ -20,6 +20,8 @@ import {
   SingingGuide,
   SingingVoice,
   noteSchema,
+  SingingGuideSourceHash,
+  SingingVoiceSourceHash,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
@@ -124,12 +126,12 @@ if (window.AudioContext) {
 }
 
 const playheadPosition = new FrequentlyUpdatedState(0);
-const singingVoices = new Map<string, SingingVoice>(); // キーはSingingVoiceSourceHash
+const singingVoices = new Map<SingingVoiceSourceHash, SingingVoice>();
 const sequences = new Map<string, Sequence>(); // キーはPhraseKey
 const animationTimer = new AnimationTimer();
 
-const singingGuideCache = new Map<string, SingingGuide>(); // キーはSingingGuideSourceHash
-const singingVoiceCache = new Map<string, SingingVoice>(); // キーはSingingVoiceSourceHash
+const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
+const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
 // TODO: マルチトラックに対応する
 const selectedTrackIndex = 0;
@@ -535,7 +537,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       {
         phraseKey,
         singingGuideKey,
-      }: { phraseKey: string; singingGuideKey: string | undefined }
+      }: {
+        phraseKey: string;
+        singingGuideKey: SingingGuideSourceHash | undefined;
+      }
     ) {
       const phrase = state.phrases.get(phraseKey);
       if (phrase == undefined) {
@@ -551,7 +556,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       {
         phraseKey,
         singingVoiceKey,
-      }: { phraseKey: string; singingVoiceKey: string | undefined }
+      }: {
+        phraseKey: string;
+        singingVoiceKey: SingingVoiceSourceHash | undefined;
+      }
     ) {
       const phrase = state.phrases.get(phraseKey);
       if (phrase == undefined) {
@@ -567,14 +575,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       {
         singingGuideKey,
         singingGuide,
-      }: { singingGuideKey: string; singingGuide: SingingGuide }
+      }: { singingGuideKey: SingingGuideSourceHash; singingGuide: SingingGuide }
     ) {
       state.singingGuides.set(singingGuideKey, singingGuide);
     },
   },
 
   DELETE_SINGING_GUIDE: {
-    mutation(state, { singingGuideKey }: { singingGuideKey: string }) {
+    mutation(
+      state,
+      { singingGuideKey }: { singingGuideKey: SingingGuideSourceHash }
+    ) {
       state.singingGuides.delete(singingGuideKey);
     },
   },
