@@ -583,6 +583,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_SELECTED_TRACK_INDEX: {
     mutation(state, { trackIndex }: { trackIndex: number }) {
       state.selectedTrackIndex = trackIndex;
+      state.selectedNoteIds.clear();
     },
     async action({ commit }, { trackIndex }) {
       commit("SET_SELECTED_TRACK_INDEX", { trackIndex });
@@ -2267,6 +2268,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         pan: 0,
         volume: 1,
       });
+      state.overlappingNoteInfos.push(new Map());
     },
   },
 
