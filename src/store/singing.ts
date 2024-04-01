@@ -124,12 +124,12 @@ if (window.AudioContext) {
 }
 
 const playheadPosition = new FrequentlyUpdatedState(0);
-const singingVoices = new Map<string, SingingVoice>();
-const sequences = new Map<string, Sequence>();
+const singingVoices = new Map<string, SingingVoice>(); // キーはSingingVoiceSourceHash
+const sequences = new Map<string, Sequence>(); // キーはPhraseKey
 const animationTimer = new AnimationTimer();
 
-const singingGuideCache = new Map<string, SingingGuide>();
-const singingVoiceCache = new Map<string, SingingVoice>();
+const singingGuideCache = new Map<string, SingingGuide>(); // キーはSingingGuideSourceHash
+const singingVoiceCache = new Map<string, SingingVoice>(); // キーはSingingVoiceSourceHash
 
 // TODO: マルチトラックに対応する
 const selectedTrackIndex = 0;
@@ -1169,7 +1169,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               continue;
             }
 
-            // 歌い方の推論を行う
+            // 歌い方のキャッシュがあれば取得、なければ歌い方を生成
 
             let singingGuide: SingingGuide | undefined;
             if (phrase.singingGuideKey != undefined) {
@@ -1237,7 +1237,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               });
             }
 
-            // 音声合成を行う
+            // 歌声のキャッシュがあれば取得、なければ音声合成を行う
 
             let singingVoice: SingingVoice | undefined;
 
