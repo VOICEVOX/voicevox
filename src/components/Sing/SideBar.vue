@@ -6,34 +6,50 @@
         <QItem
           v-if="track === 'trackDetail'"
           :key="`detail-${i}`"
-          class="track-detail"
+          class="track-detail-container"
         >
-          <div class="pan">
-            <div class="l">L</div>
-            <QSlider
-              :model-value="trackPan"
-              :min="-1"
-              :max="1"
-              :step="0.1"
-              :markers="1"
-              selection-color="transparent"
-              @change="setTrackPan(i, $event)"
-              @dblclick="setTrackPan(i, 0)"
-            />
-            <div class="r">R</div>
-          </div>
-          <div class="volume">
-            <QIcon name="volume_down" class="l" size="1rem" />
-            <QSlider
-              :model-value="trackVolume"
-              :min="0"
-              :max="1.5"
-              :step="0.1"
-              :markers="1"
-              @change="setTrackVolume(i, $event)"
-              @dblclick="setTrackVolume(i, 1)"
-            />
-            <QIcon name="volume_up" class="r" size="1rem" />
+          <div class="track-detail">
+            <div class="pan">
+              <div class="l">L</div>
+              <QSlider
+                :model-value="trackPan"
+                :min="-1"
+                :max="1"
+                :step="0.1"
+                :markers="1"
+                selection-color="transparent"
+                @change="setTrackPan(i, $event)"
+                @dblclick="setTrackPan(i, 0)"
+              />
+              <div class="r">R</div>
+            </div>
+            <div class="volume">
+              <QIcon name="volume_down" class="l" size="1rem" />
+              <QSlider
+                :model-value="trackVolume"
+                :min="0"
+                :max="1.5"
+                :step="0.1"
+                :markers="1"
+                @change="setTrackVolume(i, $event)"
+                @dblclick="setTrackVolume(i, 1)"
+              />
+              <QIcon name="volume_up" class="r" size="1rem" />
+            </div>
+            <div class="buttons">
+              <QBtn
+                color="display"
+                icon="delete"
+                round
+                flat
+                dense
+                size="sm"
+                :disable="tracks.length === 1"
+                @click="
+                  store.dispatch('COMMAND_DELETE_TRACK', { trackIndex: i })
+                "
+              />
+            </div>
           </div>
         </QItem>
         <QItem
@@ -177,8 +193,16 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 .tracks {
   width: 100%;
 }
+.track-detail-container {
+  padding: 0;
+
+  border-bottom: 1px solid colors.$sequencer-sub-divider;
+}
 .track-detail {
   margin-left: 0.5rem;
+  padding: 0.5rem;
+  padding-top: 0;
+  width: 100%;
   border-left: 1px solid colors.$sequencer-sub-divider;
   display: flex;
   flex-direction: column;
@@ -195,14 +219,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
       justify-self: center;
     }
   }
-}
-.track-item {
-  &:not(*:nth-of-type(2)) {
-    border-top: 1px solid rgba(colors.$sequencer-sub-divider-rgb, 0.5);
-  }
-}
-.create-track-item {
-  border-top: 1px solid rgba(colors.$sequencer-sub-divider-rgb, 0.5);
 }
 
 .selected-item {

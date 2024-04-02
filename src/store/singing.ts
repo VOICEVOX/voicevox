@@ -2283,6 +2283,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks[trackIndex].volume = volume;
     },
   },
+
+  DELETE_TRACK: {
+    mutation(state, { trackIndex }) {
+      state.tracks.splice(trackIndex, 1);
+      state.overlappingNoteInfos.splice(trackIndex, 1);
+      if (state.selectedTrackIndex === trackIndex) {
+        state.selectedTrackIndex = Math.min(
+          state.selectedTrackIndex,
+          state.tracks.length - 1
+        );
+      }
+    },
+  },
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};
@@ -2476,19 +2489,37 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_CREATE_TRACK: {
+      mutation(draft, { singer }) {
+        singingStore.mutations.CREATE_TRACK(draft, { singer });
+      },
       action({ commit }, { singer }) {
-        commit("CREATE_TRACK", { singer });
+        commit("COMMAND_CREATE_TRACK", { singer });
       },
     },
     COMMAND_SET_TRACK_PAN: {
+      mutation(draft, { trackIndex, pan }) {
+        singingStore.mutations.SET_TRACK_PAN(draft, { trackIndex, pan });
+      },
       action({ commit }, { trackIndex, pan }) {
-        commit("SET_TRACK_PAN", { trackIndex, pan });
+        commit("COMMAND_SET_TRACK_PAN", { trackIndex, pan });
       },
     },
 
     COMMAND_SET_TRACK_VOLUME: {
+      mutation(draft, { trackIndex, volume }) {
+        singingStore.mutations.SET_TRACK_VOLUME(draft, { trackIndex, volume });
+      },
       action({ commit }, { trackIndex, volume }) {
-        commit("SET_TRACK_VOLUME", { trackIndex, volume });
+        commit("COMMAND_SET_TRACK_VOLUME", { trackIndex, volume });
+      },
+    },
+
+    COMMAND_DELETE_TRACK: {
+      mutation(draft, { trackIndex }) {
+        singingStore.mutations.DELETE_TRACK(draft, { trackIndex });
+      },
+      action({ commit }, { trackIndex }) {
+        commit("COMMAND_DELETE_TRACK", { trackIndex });
       },
     },
   }),

@@ -1060,6 +1060,10 @@ export type SingingStoreTypes = {
   SET_TRACK_VOLUME: {
     mutation: { trackIndex: number; volume: number };
   };
+
+  DELETE_TRACK: {
+    mutation: { trackIndex: number };
+  };
 };
 
 export type SingingCommandStoreState = {
@@ -1122,15 +1126,23 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_CREATE_TRACK: {
+    mutation: { singer: Singer };
     action(payload: { singer: Singer }): void;
   };
 
   COMMAND_SET_TRACK_PAN: {
+    mutation: { trackIndex: number; pan: number };
     action(payload: { trackIndex: number; pan: number }): void;
   };
 
   COMMAND_SET_TRACK_VOLUME: {
+    mutation: { trackIndex: number; volume: number };
     action(payload: { trackIndex: number; volume: number }): void;
+  };
+
+  COMMAND_DELETE_TRACK: {
+    mutation: { trackIndex: number };
+    action(payload: { trackIndex: number }): void;
   };
 };
 
