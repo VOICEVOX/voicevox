@@ -174,7 +174,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             tpqn,
             tempos,
             timeSignatures,
-            notes: tracks[0].notes,
+            notes: tracks.map((track) => track.notes),
           },
         });
 

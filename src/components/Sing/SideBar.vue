@@ -28,7 +28,7 @@
               <QSlider
                 :model-value="tracks[i].volume"
                 :min="0"
-                :max="1.5"
+                :max="2"
                 :step="0.1"
                 :markers="1"
                 @change="setTrackVolume(i, $event)"
@@ -98,7 +98,7 @@
           <div side class="track-control">
             <QBtn
               color="default"
-              icon="volume_off"
+              :icon="tracks[i].mute ? 'volume_off' : 'volume_up'"
               round
               flat
               dense

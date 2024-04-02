@@ -869,8 +869,31 @@ export class PolySynth implements Instrument {
   }
 }
 
+export class TrackNode {
+  public previewSynth: PolySynth;
+  public channelStrip: ChannelStrip;
+  public muteGain: GainNode;
+  constructor(audioContext: AudioContext) {
+    this.previewSynth = new PolySynth(audioContext);
+    this.channelStrip = new ChannelStrip(audioContext);
+    this.muteGain = new GainNode(audioContext);
+    this.previewSynth.output.connect(this.channelStrip.input);
+    this.channelStrip.output.connect(this.muteGain);
+    this.muteGain.gain.value = 1;
+  }
+
+  setMute(value: boolean) {
+    this.muteGain.gain.value = value ? 0 : 1;
+  }
+
+  get output(): AudioNode {
+    return this.muteGain;
+  }
+}
+
 export type ChannelStripOptions = {
   readonly volume?: number;
+  readonly pan?: number;
 };
 
 /**
@@ -878,13 +901,14 @@ export type ChannelStripOptions = {
  */
 export class ChannelStrip {
   private readonly gainNode: GainNode;
+  private readonly panNode: StereoPannerNode;
 
   get input(): AudioNode {
     return this.gainNode;
   }
 
   get output(): AudioNode {
-    return this.gainNode;
+    return this.panNode;
   }
 
   get volume() {
@@ -894,9 +918,20 @@ export class ChannelStrip {
     this.gainNode.gain.value = value;
   }
 
+  get pan() {
+    return this.panNode.pan.value;
+  }
+  set pan(value: number) {
+    this.panNode.pan.value = value;
+  }
+
   constructor(audioContext: BaseAudioContext, options?: ChannelStripOptions) {
     this.gainNode = new GainNode(audioContext);
-    this.gainNode.gain.value = options?.volume ?? 0.1;
+    this.gainNode.gain.value = options?.volume ?? 1;
+    this.panNode = new StereoPannerNode(audioContext);
+    this.panNode.pan.value = options?.pan ?? 0;
+
+    this.gainNode.connect(this.panNode);
   }
 }
 
