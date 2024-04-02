@@ -281,8 +281,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.timeSignatures = score.timeSignatures;
       state.overlappingNoteInfos = [];
       trackNodes.length = 0;
-      state.tracks = score.notes.map(() => createInitialTrack());
+      // state.tracks = score.notes.map(() => createInitialTrack());
+      // にしたいが、これをやるとシンガーの設定が全部吹っ飛ぶので
+      // tracks.length = score.notes.length; にする。
+      // そもそもSET_SCOREがシンガーの設定を残すように作られているのがおかしい？
+      state.tracks.length = score.notes.length;
       for (const [i, notes] of score.notes.entries()) {
+        if (state.tracks[i] == undefined) {
+          state.tracks[i] = createInitialTrack();
+        }
         state.tracks[i].notes = notes;
         state.overlappingNoteInfos.push(new Map());
         addNotesToOverlappingNoteInfos(
