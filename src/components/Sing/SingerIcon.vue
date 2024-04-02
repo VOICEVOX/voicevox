@@ -14,7 +14,7 @@ const attr = useAttrs();
 const props =
   defineProps<{
     style: StyleInfo;
-    showEngineIcon: boolean;
+    showEngineIcon?: boolean;
     engineIcons: Record<string, string>;
   }>();
 </script>
