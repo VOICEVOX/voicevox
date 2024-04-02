@@ -82,13 +82,18 @@
           <QItemSection>
             <QItemLabel>
               {{
-              trackCharacters[i]
-                ? trackCharacters[i]!.metas.speakerName
-                : "（不明なキャラクター）"
+                nullableToDefault(
+                  "（不明なキャラクター）",
+
+                  mapNullablePipe(
+                    trackCharacters[i],
+                    (trackCharacter) => trackCharacter.metas.speakerName
+                  )
+                )
               }}
             </QItemLabel>
-            <QItemLabel caption>
-              {{ trackStyles[i] ? getStyleDescription(trackStyles[i]!) : "" }}
+            <QItemLabel v-if="trackStyles[i]" caption>
+              {{ mapNullablePipe(trackStyles[i], getStyleDescription) }}
             </QItemLabel>
           </QItemSection>
           <div side class="track-control">
@@ -136,7 +141,9 @@ import SingerIcon from "./SingerIcon.vue";
 import { useStore } from "@/store";
 import { Track } from "@/store/type";
 import { getStyleDescription } from "@/sing/viewHelper";
+import { mapNullablePipe } from "@/helpers/map";
 import { shouldPlay } from "@/sing/domain";
+import { nullableToDefault } from "@/helpers/map";
 
 const store = useStore();
 

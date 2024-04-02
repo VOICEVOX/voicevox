@@ -8,7 +8,7 @@ type DummyType = {
   };
 };
 
-describe("mapUndefinedPipe", () => {
+describe("mapNullablePipe", () => {
   it("値をunwrap出来る", () => {
     const key = "test";
     const innerValue = "value";
@@ -45,7 +45,7 @@ describe("mapUndefinedPipe", () => {
   });
 });
 
-describe("undefinedToDefault", () => {
+describe("nullableToDefault", () => {
   it("値がある時はそのまま返す", () => {
     const actualValue = "value";
     expect(nullableToDefault("test", actualValue)).toEqual(actualValue);
