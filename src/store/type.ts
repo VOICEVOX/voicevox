@@ -756,6 +756,8 @@ export const trackSchema = z.object({
   notes: z.array(noteSchema),
   pan: z.number(),
   volume: z.number(),
+  mute: z.boolean(),
+  solo: z.boolean(),
 });
 export type Track = z.infer<typeof trackSchema>;
 
@@ -1055,10 +1057,23 @@ export type SingingStoreTypes = {
 
   SET_TRACK_PAN: {
     mutation: { trackIndex: number; pan: number };
+
+    action(payload: { trackIndex: number; pan: number }): void;
   };
 
   SET_TRACK_VOLUME: {
     mutation: { trackIndex: number; volume: number };
+    action(payload: { trackIndex: number; volume: number }): void;
+  };
+
+  SET_TRACK_MUTE: {
+    mutation: { trackIndex: number; mute: boolean };
+    action(payload: { trackIndex: number; mute: boolean }): void;
+  };
+
+  SET_TRACK_SOLO: {
+    mutation: { trackIndex: number; solo: boolean };
+    action(payload: { trackIndex: number; solo: boolean }): void;
   };
 
   DELETE_TRACK: {
@@ -1128,16 +1143,6 @@ export type SingingCommandStoreTypes = {
   COMMAND_CREATE_TRACK: {
     mutation: { singer: Singer };
     action(payload: { singer: Singer }): void;
-  };
-
-  COMMAND_SET_TRACK_PAN: {
-    mutation: { trackIndex: number; pan: number };
-    action(payload: { trackIndex: number; pan: number }): void;
-  };
-
-  COMMAND_SET_TRACK_VOLUME: {
-    mutation: { trackIndex: number; volume: number };
-    action(payload: { trackIndex: number; volume: number }): void;
   };
 
   COMMAND_DELETE_TRACK: {

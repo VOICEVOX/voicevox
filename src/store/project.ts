@@ -459,10 +459,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               semverSatisfiesOptions
             )
           ) {
-            // pan、volumeの追加
+            // トラック設定の追加
             for (const track of projectData.song.tracks) {
               track.pan = 0;
               track.volume = 1;
+              track.mute = false;
+              track.solo = false;
             }
           }
 

@@ -12,7 +12,7 @@
             <div class="pan">
               <div class="l">L</div>
               <QSlider
-                :model-value="trackPan"
+                :model-value="tracks[i].pan"
                 :min="-1"
                 :max="1"
                 :step="0.1"
@@ -26,7 +26,7 @@
             <div class="volume">
               <QIcon name="volume_down" class="l" size="1rem" />
               <QSlider
-                :model-value="trackVolume"
+                :model-value="tracks[i].volume"
                 :min="0"
                 :max="1.5"
                 :step="0.1"
@@ -36,19 +36,21 @@
               />
               <QIcon name="volume_up" class="r" size="1rem" />
             </div>
-            <div class="buttons">
+            <div>
               <QBtn
-                color="display"
-                icon="delete"
-                round
-                flat
+                label="削除"
+                rounded
                 dense
+                flat
                 size="sm"
+                padding="xs sm"
                 :disable="tracks.length === 1"
                 @click="
                   store.dispatch('COMMAND_DELETE_TRACK', { trackIndex: i })
                 "
-              />
+              >
+                <QTooltip>トラックを削除</QTooltip>
+              </QBtn>
             </div>
           </div>
         </QItem>
@@ -62,7 +64,12 @@
           active-class="selected-item"
           @click="selectTrack(i)"
         >
-          <QItemSection avatar>
+          <QItemSection
+            avatar
+            :style="{
+              opacity: tracksShouldPlay[i] ? 1 : 0.5,
+            }"
+          >
             <SingerIcon
               v-if="trackStyles[i]"
               round
@@ -88,6 +95,32 @@
               {{ trackStyles[i] ? getStyleDescription(trackStyles[i]!) : "" }}
             </QItemLabel>
           </QItemSection>
+          <div side class="track-control">
+            <QBtn
+              color="default"
+              icon="volume_off"
+              round
+              flat
+              dense
+              size="sm"
+              :class="{ 'track-button-active': tracks[i].mute }"
+              @click.stop="setTrackMute(i, !tracks[i].mute)"
+            >
+              <QTooltip>ミュート</QTooltip>
+            </QBtn>
+            <QBtn
+              color="default"
+              icon="headset"
+              rounded
+              flat
+              dense
+              size="sm"
+              :class="{ 'track-button-active': tracks[i].solo }"
+              @click.stop="setTrackSolo(i, !tracks[i].solo)"
+            >
+              <QTooltip>ソロ</QTooltip>
+            </QBtn>
+          </div>
         </QItem>
       </template>
       <QItem v-ripple class="create-track-item" clickable @click="createTrack">
@@ -108,10 +141,12 @@ import { useStore } from "@/store";
 import { Track } from "@/store/type";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getStyleDescription } from "@/sing/viewHelper";
+import { shouldPlay } from "@/sing/domain";
 
 const store = useStore();
 
 const tracks = computed(() => store.state.tracks);
+const tracksShouldPlay = computed(() => shouldPlay(tracks.value));
 const trackListItems = computed<["trackDetail" | Track, number][]>(() => {
   const items: ["trackDetail" | Track, number][] = tracks.value.map(
     (track, i) => [track, i]
@@ -123,15 +158,18 @@ const trackListItems = computed<["trackDetail" | Track, number][]>(() => {
 
   return items;
 });
-const trackPan = computed(() => selectedTrack.value.pan);
 const setTrackPan = (index: number, pan: number) => {
-  store.dispatch("COMMAND_SET_TRACK_PAN", { trackIndex: index, pan });
+  store.dispatch("SET_TRACK_PAN", { trackIndex: index, pan });
 };
 const setTrackVolume = (index: number, volume: number) => {
-  store.dispatch("COMMAND_SET_TRACK_VOLUME", { trackIndex: index, volume });
+  store.dispatch("SET_TRACK_VOLUME", { trackIndex: index, volume });
 };
-
-const trackVolume = computed(() => selectedTrack.value.volume);
+const setTrackMute = (index: number, mute: boolean) => {
+  store.dispatch("SET_TRACK_MUTE", { trackIndex: index, mute });
+};
+const setTrackSolo = (index: number, solo: boolean) => {
+  store.dispatch("SET_TRACK_SOLO", { trackIndex: index, solo });
+};
 
 const selectedTrackIndex = computed(() => store.state.selectedTrackIndex);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
@@ -218,6 +256,20 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     .r {
       justify-self: center;
     }
+  }
+}
+
+.track-control {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+
+  .track-button-active {
+    background-color: rgba(colors.$primary-rgb, 0.8);
   }
 }
 

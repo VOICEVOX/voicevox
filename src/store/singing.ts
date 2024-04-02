@@ -18,6 +18,7 @@ import {
   PhraseState,
   transformCommandStore,
   noteSchema,
+  Track,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
@@ -126,6 +127,16 @@ const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationTimer = new AnimationTimer();
 
+const createInitialTrack = (): Track => ({
+  singer: undefined,
+  keyRangeAdjustment: 0,
+  volumeRangeAdjustment: 0,
+  notes: [],
+  pan: 0,
+  volume: 1,
+  mute: false,
+  solo: false,
+});
 export const generateSingingStoreInitialScore = () => {
   return {
     tpqn: DEFAULT_TPQN,
@@ -142,16 +153,7 @@ export const generateSingingStoreInitialScore = () => {
         beatType: DEFAULT_BEAT_TYPE,
       },
     ],
-    tracks: [
-      {
-        singer: undefined,
-        keyRangeAdjustment: 0,
-        volumeRangeAdjustment: 0,
-        notes: [],
-        pan: 0,
-        volume: 1,
-      },
-    ],
+    tracks: [createInitialTrack()],
   };
 };
 
@@ -2260,14 +2262,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   CREATE_TRACK: {
     mutation(state, { singer }) {
-      state.tracks.push({
+      const track: Track = {
+        ...createInitialTrack(),
         singer,
-        keyRangeAdjustment: 0,
-        volumeRangeAdjustment: 0,
-        notes: [],
-        pan: 0,
-        volume: 1,
-      });
+      };
+      state.tracks.push(track);
       state.overlappingNoteInfos.push(new Map());
     },
   },
@@ -2276,11 +2275,39 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackIndex, pan }) {
       state.tracks[trackIndex].pan = pan;
     },
+    action({ commit, dispatch }, { trackIndex, pan }) {
+      commit("SET_TRACK_PAN", { trackIndex, pan });
+      dispatch("RENDER");
+    },
   },
 
   SET_TRACK_VOLUME: {
     mutation(state, { trackIndex, volume }) {
       state.tracks[trackIndex].volume = volume;
+    },
+    action({ commit, dispatch }, { trackIndex, volume }) {
+      commit("SET_TRACK_VOLUME", { trackIndex, volume });
+      dispatch("RENDER");
+    },
+  },
+
+  SET_TRACK_MUTE: {
+    mutation(state, { trackIndex, mute }) {
+      state.tracks[trackIndex].mute = mute;
+    },
+    action({ commit, dispatch }, { trackIndex, mute }) {
+      commit("SET_TRACK_MUTE", { trackIndex, mute });
+      dispatch("RENDER");
+    },
+  },
+
+  SET_TRACK_SOLO: {
+    mutation(state, { trackIndex, solo }) {
+      state.tracks[trackIndex].solo = solo;
+    },
+    action({ commit, dispatch }, { trackIndex, solo }) {
+      commit("SET_TRACK_SOLO", { trackIndex, solo });
+      dispatch("RENDER");
     },
   },
 
@@ -2496,24 +2523,6 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_CREATE_TRACK", { singer });
       },
     },
-    COMMAND_SET_TRACK_PAN: {
-      mutation(draft, { trackIndex, pan }) {
-        singingStore.mutations.SET_TRACK_PAN(draft, { trackIndex, pan });
-      },
-      action({ commit }, { trackIndex, pan }) {
-        commit("COMMAND_SET_TRACK_PAN", { trackIndex, pan });
-      },
-    },
-
-    COMMAND_SET_TRACK_VOLUME: {
-      mutation(draft, { trackIndex, volume }) {
-        singingStore.mutations.SET_TRACK_VOLUME(draft, { trackIndex, volume });
-      },
-      action({ commit }, { trackIndex, volume }) {
-        commit("COMMAND_SET_TRACK_VOLUME", { trackIndex, volume });
-      },
-    },
-
     COMMAND_DELETE_TRACK: {
       mutation(draft, { trackIndex }) {
         singingStore.mutations.DELETE_TRACK(draft, { trackIndex });

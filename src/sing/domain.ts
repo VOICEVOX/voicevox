@@ -1,4 +1,4 @@
-import { Note, Phrase, Score, Tempo, TimeSignature } from "@/store/type";
+import { Note, Phrase, Score, Tempo, TimeSignature, Track } from "@/store/type";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -333,4 +333,17 @@ export function selectPriorPhrase(
 
   // 再生位置より前のPhrase
   return sortedPhrases[0];
+}
+
+/**
+ * トラックを再生するべきかどうかの配列を返す
+ * - ソロのトラックがある場合、ソロのトラックのみ再生する
+ * - ソロのトラックがない場合、ミュートされていないトラックを再生する
+ */
+export function shouldPlay(tracks: Track[]): boolean[] {
+  const isThereSoloTrack = tracks.some((track) => track.solo);
+  const baseState = isThereSoloTrack
+    ? tracks.map((track) => track.solo)
+    : tracks.map(() => true);
+  return baseState.map((value, index) => value && !tracks[index].mute);
 }
