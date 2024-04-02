@@ -2276,13 +2276,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       };
       state.tracks.push(track);
       state.overlappingNoteInfos.push(new Map());
-      if (!audioContext || !globalChannelStrip) {
-        throw new Error("audioContext or globalChannelStrip is undefined.");
-      }
-      const node = new TrackNode(audioContext);
-      node.output.connect(globalChannelStrip.input);
+      if (trackNodes.length < state.tracks.length) {
+        if (!audioContext || !globalChannelStrip) {
+          throw new Error("audioContext or globalChannelStrip is undefined.");
+        }
+        const node = new TrackNode(audioContext);
+        node.output.connect(globalChannelStrip.input);
 
-      trackNodes.push(node);
+        trackNodes.push(node);
+      }
+      trackNodes[state.tracks.length - 1].channelStrip.volume = track.volume;
+      trackNodes[state.tracks.length - 1].channelStrip.pan = track.pan;
     },
   },
 
@@ -2291,9 +2295,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks[trackIndex].pan = pan;
       trackNodes[trackIndex].channelStrip.pan = pan;
     },
-    action({ commit, dispatch }, { trackIndex, pan }) {
+    action({ commit }, { trackIndex, pan }) {
       commit("SET_TRACK_PAN", { trackIndex, pan });
-      dispatch("RENDER");
     },
   },
 
@@ -2302,9 +2305,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks[trackIndex].volume = volume;
       trackNodes[trackIndex].channelStrip.volume = volume;
     },
-    action({ commit, dispatch }, { trackIndex, volume }) {
+    action({ commit }, { trackIndex, volume }) {
       commit("SET_TRACK_VOLUME", { trackIndex, volume });
-      dispatch("RENDER");
     },
   },
 
@@ -2313,9 +2315,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks[trackIndex].mute = mute;
       updateTrackMute(shouldPlay(state.tracks));
     },
-    action({ commit, dispatch }, { trackIndex, mute }) {
+    action({ commit }, { trackIndex, mute }) {
       commit("SET_TRACK_MUTE", { trackIndex, mute });
-      dispatch("RENDER");
     },
   },
 
@@ -2324,9 +2325,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks[trackIndex].solo = solo;
       updateTrackMute(shouldPlay(state.tracks));
     },
-    action({ commit, dispatch }, { trackIndex, solo }) {
+    action({ commit }, { trackIndex, solo }) {
       commit("SET_TRACK_SOLO", { trackIndex, solo });
-      dispatch("RENDER");
     },
   },
 
@@ -2340,8 +2340,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           state.tracks.length - 1
         );
       }
-      trackNodes[trackIndex].output.disconnect();
-      trackNodes.splice(trackIndex, 1);
+      // Undoした時に壊れるので、TrackNodeはあえて消さない。
+      // TODO: もっとスマートな方法を考える
     },
   },
 });
