@@ -1042,19 +1042,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.singingGuideKey = undefined;
             }
           } else if (phrase.singingGuideKey != undefined) {
-            const calculatedSingingGuideSourceHash =
-              await calculateSingingGuideSourceHash({
-                engineId: singerAndFrameRate.singer.engineId,
-                tpqn,
-                tempos,
-                notes: phrase.notes,
-                keyRangeAdjustment,
-                volumeRangeAdjustment,
-                frameRate: singerAndFrameRate.frameRate,
-                restDurationSeconds,
-              });
-            const singingGuideSourceHash = phrase.singingGuideKey;
-            if (singingGuideSourceHash !== calculatedSingingGuideSourceHash) {
+            const calculatedHash = await calculateSingingGuideSourceHash({
+              engineId: singerAndFrameRate.singer.engineId,
+              tpqn,
+              tempos,
+              notes: phrase.notes,
+              keyRangeAdjustment,
+              volumeRangeAdjustment,
+              frameRate: singerAndFrameRate.frameRate,
+              restDurationSeconds,
+            });
+            const hash = phrase.singingGuideKey;
+            if (hash !== calculatedHash) {
               commit("DELETE_SINGING_GUIDE", {
                 singingGuideKey: phrase.singingGuideKey,
               });
@@ -1073,13 +1072,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (singingGuide == undefined) {
               throw new Error("singingGuide is undefined.");
             }
-            const calculatedSingingVoiceSourceHash =
-              await calculateSingingVoiceSourceHash({
-                singer: singerAndFrameRate.singer,
-                frameAudioQuery: singingGuide.query,
-              });
-            const singingVoiceSourceHash = phrase.singingVoiceKey;
-            if (singingVoiceSourceHash !== calculatedSingingVoiceSourceHash) {
+            const calculatedHash = await calculateSingingVoiceSourceHash({
+              singer: singerAndFrameRate.singer,
+              frameAudioQuery: singingGuide.query,
+            });
+            const hash = phrase.singingVoiceKey;
+            if (hash !== calculatedHash) {
               singingVoices.delete(phrase.singingVoiceKey);
               phrase.singingVoiceKey = undefined;
             }
