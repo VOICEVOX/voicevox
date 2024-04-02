@@ -566,6 +566,7 @@ export const rootMiscSettingSchema = z.object({
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
+  songUndoableTrackControl: z.enum(["none", "panVolume", "all"]).default("all"), // トラックの状態をUNDO/REDOで管理するか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 

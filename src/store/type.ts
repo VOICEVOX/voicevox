@@ -1149,6 +1149,26 @@ export type SingingCommandStoreTypes = {
     mutation: { trackIndex: number };
     action(payload: { trackIndex: number }): void;
   };
+
+  COMMAND_SET_TRACK_PAN: {
+    mutation: { trackIndex: number; pan: number };
+    action(payload: { trackIndex: number; pan: number }): void;
+  };
+
+  COMMAND_SET_TRACK_VOLUME: {
+    mutation: { trackIndex: number; volume: number };
+    action(payload: { trackIndex: number; volume: number }): void;
+  };
+
+  COMMAND_SET_TRACK_MUTE: {
+    mutation: { trackIndex: number; mute: boolean };
+    action(payload: { trackIndex: number; mute: boolean }): void;
+  };
+
+  COMMAND_SET_TRACK_SOLO: {
+    mutation: { trackIndex: number; solo: boolean };
+    action(payload: { trackIndex: number; solo: boolean }): void;
+  };
 };
 
 /*

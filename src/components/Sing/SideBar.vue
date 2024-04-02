@@ -159,16 +159,32 @@ const trackListItems = computed<["trackDetail" | Track, number][]>(() => {
   return items;
 });
 const setTrackPan = (index: number, pan: number) => {
-  store.dispatch("SET_TRACK_PAN", { trackIndex: index, pan });
+  if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
+    store.dispatch("COMMAND_SET_TRACK_PAN", { trackIndex: index, pan });
+  } else {
+    store.dispatch("SET_TRACK_PAN", { trackIndex: index, pan });
+  }
 };
 const setTrackVolume = (index: number, volume: number) => {
-  store.dispatch("SET_TRACK_VOLUME", { trackIndex: index, volume });
+  if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
+    store.dispatch("COMMAND_SET_TRACK_VOLUME", { trackIndex: index, volume });
+  } else {
+    store.dispatch("SET_TRACK_VOLUME", { trackIndex: index, volume });
+  }
 };
 const setTrackMute = (index: number, mute: boolean) => {
-  store.dispatch("SET_TRACK_MUTE", { trackIndex: index, mute });
+  if (store.state.songUndoableTrackControl === "all") {
+    store.dispatch("COMMAND_SET_TRACK_MUTE", { trackIndex: index, mute });
+  } else {
+    store.dispatch("SET_TRACK_MUTE", { trackIndex: index, mute });
+  }
 };
 const setTrackSolo = (index: number, solo: boolean) => {
-  store.dispatch("SET_TRACK_SOLO", { trackIndex: index, solo });
+  if (store.state.songUndoableTrackControl === "all") {
+    store.dispatch("COMMAND_SET_TRACK_SOLO", { trackIndex: index, solo });
+  } else {
+    store.dispatch("SET_TRACK_SOLO", { trackIndex: index, solo });
+  }
 };
 
 const selectedTrackIndex = computed(() => store.state.selectedTrackIndex);

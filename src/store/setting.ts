@@ -65,6 +65,7 @@ export const settingStoreState: SettingStoreState = {
   enableMultiEngine: false,
   enableMemoNotation: false,
   enableRubyNotation: false,
+  songUndoableTrackControl: "all",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -141,6 +142,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "enableRubyNotation",
         "enableMemoNotation",
         "skipUpdateVersion",
+        "songUndoableTrackControl",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード

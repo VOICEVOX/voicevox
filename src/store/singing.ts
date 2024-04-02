@@ -2531,6 +2531,42 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_DELETE_TRACK", { trackIndex });
       },
     },
+
+    COMMAND_SET_TRACK_PAN: {
+      mutation(draft, { trackIndex, pan }) {
+        singingStore.mutations.SET_TRACK_PAN(draft, { trackIndex, pan });
+      },
+      action({ commit }, { trackIndex, pan }) {
+        commit("COMMAND_SET_TRACK_PAN", { trackIndex, pan });
+      },
+    },
+
+    COMMAND_SET_TRACK_VOLUME: {
+      mutation(draft, { trackIndex, volume }) {
+        singingStore.mutations.SET_TRACK_VOLUME(draft, { trackIndex, volume });
+      },
+      action({ commit }, { trackIndex, volume }) {
+        commit("COMMAND_SET_TRACK_VOLUME", { trackIndex, volume });
+      },
+    },
+
+    COMMAND_SET_TRACK_MUTE: {
+      mutation(draft, { trackIndex, mute }) {
+        singingStore.mutations.SET_TRACK_MUTE(draft, { trackIndex, mute });
+      },
+      action({ commit }, { trackIndex, mute }) {
+        commit("COMMAND_SET_TRACK_MUTE", { trackIndex, mute });
+      },
+    },
+
+    COMMAND_SET_TRACK_SOLO: {
+      mutation(draft, { trackIndex, solo }) {
+        singingStore.mutations.SET_TRACK_SOLO(draft, { trackIndex, solo });
+      },
+      action({ commit }, { trackIndex, solo }) {
+        commit("COMMAND_SET_TRACK_SOLO", { trackIndex, solo });
+      },
+    },
   }),
   "song"
 );

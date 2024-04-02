@@ -419,6 +419,68 @@
                 >
                 </QBtn>
               </QCardActions>
+
+              <QCardActions class="q-px-md bg-surface">
+                <div>ソング：「元に戻す」機能の対象にするトラック操作</div>
+                <div
+                  aria-label="「元に戻す」機能の対象にするトラック操作を選べます。"
+                >
+                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
+                    <QTooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      「元に戻す」機能の対象にするトラック操作を選べます。
+                    </QTooltip>
+                  </QIcon>
+                </div>
+                <QSpace />
+                <QBtnToggle
+                  v-model="songUndoableTrackControl"
+                  padding="xs md"
+                  unelevated
+                  color="background"
+                  text-color="display"
+                  toggle-color="primary"
+                  toggle-text-color="display-on-primary"
+                  :options="[
+                    {
+                      label: '全て',
+                      value: 'all',
+                      slot: 'ALL',
+                    },
+                    {
+                      label: 'パン、音量',
+                      value: 'panVolume',
+                      slot: 'PAN_VOLUME',
+                    },
+                    {
+                      label: 'なし',
+                      value: 'none',
+                      slot: 'NONE',
+                    },
+                  ]"
+                >
+                  <template #ALL>
+                    <QTooltip :delay="500">
+                      全てのトラック操作を元に戻せるようにします。
+                    </QTooltip>
+                  </template>
+                  <template #PAN_VOLUME>
+                    <QTooltip :delay="500">
+                      パン、音量の変更のみを元に戻せるようにします。
+                    </QTooltip>
+                  </template>
+                  <template #NONE>
+                    <QTooltip :delay="500">
+                      トラック操作を元に戻す対象にしません。
+                    </QTooltip>
+                  </template>
+                </QBtnToggle>
+              </QCardActions>
             </QCard>
             <!-- Saving Card -->
             <QCard flat class="setting-card">
@@ -1082,6 +1144,17 @@ const isDefaultConfirmedTips = computed(() => {
   const confirmedTips = store.state.confirmedTips;
   // すべて false (= 初期値) かどうか確認
   return Object.values(confirmedTips).every((v) => !v);
+});
+
+// トラック操作のUndo対象
+const songUndoableTrackControl = computed({
+  get: () => store.state.songUndoableTrackControl,
+  set: (songUndoableTrackControl: "all" | "panVolume" | "none") => {
+    store.dispatch("SET_ROOT_MISC_SETTING", {
+      key: "songUndoableTrackControl",
+      value: songUndoableTrackControl,
+    });
+  },
 });
 
 // 外観
