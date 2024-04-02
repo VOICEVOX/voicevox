@@ -873,7 +873,7 @@ export class TrackNode {
   public previewSynth: PolySynth;
   public channelStrip: ChannelStrip;
   public muteGain: GainNode;
-  constructor(audioContext: AudioContext) {
+  constructor(audioContext: BaseAudioContext) {
     this.previewSynth = new PolySynth(audioContext);
     this.channelStrip = new ChannelStrip(audioContext);
     this.muteGain = new GainNode(audioContext);

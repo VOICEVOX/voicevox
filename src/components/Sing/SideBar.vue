@@ -48,9 +48,7 @@
                 @click="
                   store.dispatch('COMMAND_DELETE_TRACK', { trackIndex: i })
                 "
-              >
-                <QTooltip>トラックを削除</QTooltip>
-              </QBtn>
+              />
             </div>
           </div>
         </QItem>
@@ -246,6 +244,8 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 }
 .tracks {
   width: 100%;
+  height: 100%;
+  overflow-y: auto;
 }
 .track-detail-container {
   padding: 0;
@@ -254,8 +254,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 }
 .track-detail {
   margin-left: 0.5rem;
-  padding: 0.5rem;
-  padding-top: 0;
+  padding: 0 0.5rem;
   width: 100%;
   border-left: 1px solid colors.$sequencer-sub-divider;
   display: flex;

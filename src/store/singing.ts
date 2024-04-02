@@ -759,7 +759,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!audioContext) {
         throw new Error("audioContext is undefined.");
       }
-      console.log(trackNodes);
       const previewSynth = trackNodes[state.selectedTrackIndex].previewSynth;
       previewSynth.noteOn("immediately", noteNumber, duration);
     },
@@ -2060,11 +2059,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             sampleRate
           );
           const offlineTransport = new OfflineTransport();
-          const channelStrip = new ChannelStrip(offlineAudioContext);
+          const globalChannelStrip = new ChannelStrip(offlineAudioContext);
           const limiter = withLimiter
             ? new Limiter(offlineAudioContext)
             : undefined;
           const clipper = new Clipper(offlineAudioContext);
+          const tracksShouldPlay = shouldPlay(state.tracks);
+          const trackNodes = state.tracks.map((track, i) => {
+            const trackNode = new TrackNode(offlineAudioContext);
+            trackNode.channelStrip.volume = track.volume;
+            trackNode.channelStrip.pan = track.pan;
+            trackNode.setMute(!tracksShouldPlay[i]);
+            trackNode.output.connect(globalChannelStrip.input);
+
+            return trackNode;
+          });
 
           for (const [phraseKey, phrase] of state.phrases) {
             const phraseData = phraseDataMap.get(phraseKey);
@@ -2085,7 +2094,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseData.blob
             );
             const audioPlayer = new AudioPlayer(offlineAudioContext);
-            audioPlayer.output.connect(channelStrip.input);
+            audioPlayer.output.connect(
+              trackNodes[phrase.trackIndex].channelStrip.input
+            );
             const audioSequence: AudioSequence = {
               type: "audio",
               audioPlayer,
@@ -2093,12 +2104,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             };
             offlineTransport.addSequence(audioSequence);
           }
-          channelStrip.volume = 1;
+          globalChannelStrip.volume = 1;
           if (limiter) {
-            channelStrip.output.connect(limiter.input);
+            globalChannelStrip.output.connect(limiter.input);
             limiter.output.connect(clipper.input);
           } else {
-            channelStrip.output.connect(clipper.input);
+            globalChannelStrip.output.connect(clipper.input);
           }
           clipper.output.connect(offlineAudioContext.destination);
 
