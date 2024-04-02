@@ -81,6 +81,13 @@ export class LineStrip {
   }
 
   /**
+   * 線の色を設定します。
+   */
+  setColor(color: number[]) {
+    this.shader.uniforms.color = color;
+  }
+
+  /**
    * 点の位置を設定します。設定し終わったら`update()`を呼んでください。
    */
   setPoint(index: number, x: number, y: number) {
