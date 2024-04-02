@@ -73,7 +73,6 @@
               round
               size="3rem"
               :style="trackStyles[i]!"
-              :engine-icons="engineIcons"
             />
             <QAvatar v-else round size="3rem" color="primary"
               ><span color="text-display-on-primary">?</span></QAvatar
@@ -136,7 +135,6 @@ import { computed } from "vue";
 import SingerIcon from "./SingerIcon.vue";
 import { useStore } from "@/store";
 import { Track } from "@/store/type";
-import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getStyleDescription } from "@/sing/viewHelper";
 import { shouldPlay } from "@/sing/domain";
 
@@ -220,14 +218,6 @@ const trackStyles = computed(() =>
     }
   })
 );
-const engineIcons = computed(() =>
-  Object.fromEntries(
-    store.state.engineIds.map((engineId) => [
-      engineId,
-      base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ])
-  )
-);
 </script>
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;
@@ -251,10 +241,10 @@ const engineIcons = computed(() =>
   border-bottom: 1px solid colors.$sequencer-sub-divider;
 }
 .track-detail {
-  margin-left: 0.5rem;
+  // margin-left: 0.5rem;
   padding: 0 0.5rem;
   width: 100%;
-  border-left: 1px solid colors.$sequencer-sub-divider;
+  // border-left: 1px solid colors.$sequencer-sub-divider;
   display: flex;
   flex-direction: column;
 
