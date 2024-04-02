@@ -73,7 +73,6 @@
               round
               size="3rem"
               :style="trackStyles[i]!"
-              :is-multiple-engine="isMultipleEngine"
               :engine-icons="engineIcons"
             />
             <QAvatar v-else round size="3rem" color="primary"
@@ -229,7 +228,6 @@ const engineIcons = computed(() =>
     ])
   )
 );
-const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

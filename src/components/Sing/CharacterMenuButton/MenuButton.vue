@@ -40,7 +40,7 @@
                 class="q-mr-md"
                 rounded
                 :style="getDefaultStyle(characterInfo.metas.speakerUuid)"
-                :is-multiple-engine="isMultipleEngine"
+                :show-engine-icon="isMultipleEngine"
                 :engine-icons="engineIcons"
               />
               <div>{{ characterInfo.metas.speakerName }}</div>
@@ -88,7 +88,7 @@
                         class="q-mr-md"
                         rounded
                         :style="style"
-                        :is-multiple-engine="isMultipleEngine"
+                        :show-engine-icon="isMultipleEngine"
                         :engine-icons="engineIcons"
                       />
                       <QItemSection v-if="style.styleName">

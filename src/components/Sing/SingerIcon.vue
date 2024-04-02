@@ -1,7 +1,7 @@
 <template>
   <QAvatar size="2rem" v-bind="attr">
     <QImg no-spinner no-transition :ratio="1" :src="props.style.iconPath" />
-    <QAvatar v-if="props.isMultipleEngine" rounded class="engine-icon">
+    <QAvatar v-if="props.showEngineIcon" rounded class="engine-icon">
       <img :src="props.engineIcons[props.style.engineId]" />
     </QAvatar>
   </QAvatar>
@@ -14,7 +14,7 @@ const attr = useAttrs();
 const props =
   defineProps<{
     style: StyleInfo;
-    isMultipleEngine: boolean;
+    showEngineIcon: boolean;
     engineIcons: Record<string, string>;
   }>();
 </script>
