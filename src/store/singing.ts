@@ -25,11 +25,7 @@ import {
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
-import {
-  EngineManifest,
-  FrameAudioQuery,
-  Note as NoteForRequestToEngine,
-} from "@/openapi";
+import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
   AudioEvent,
@@ -950,17 +946,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       };
 
-      const getFrameRates = (
-        engineManifests: Record<EngineId, EngineManifest>
-      ): Record<EngineId, number> => {
-        return Object.fromEntries(
-          [...Object.entries(engineManifests)].map(([key, value]) => [
-            key,
-            value.frameRate,
-          ])
-        );
-      };
-
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
       const startRenderingRequested = () => state.startRenderingRequested;
       const stopRenderingRequested = () => state.stopRenderingRequested;
@@ -984,20 +969,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // 重なっているノートの削除も行う
         const tpqn = state.tpqn;
         const tempos = state.tempos.map((value) => ({ ...value }));
-        const singer = trackRef.singer ? { ...trackRef.singer } : undefined;
+        const singerAndFrameRate = trackRef.singer
+          ? {
+              singer: { ...trackRef.singer },
+              frameRate:
+                state.engineManifests[trackRef.singer.engineId].frameRate,
+            }
+          : undefined;
         const keyRangeAdjustment = trackRef.keyRangeAdjustment;
         const volumeRangeAdjustment = trackRef.volumeRangeAdjustment;
         const notes = trackRef.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
-        const frameRates = getFrameRates(state.engineManifests);
         const restDurationSeconds = 1; // 前後の休符の長さはとりあえず1秒に設定
-
-        if (singer && !Object.hasOwn(frameRates, singer.engineId)) {
-          throw new Error(
-            "The engine manifest corresponding to the singer's engine ID does not exist."
-          );
-        }
 
         // フレーズを更新する
 
@@ -1050,7 +1034,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // 歌い方の推論も行う必要がある場合、現在フレーズに設定されている歌い方を削除する
           // TODO: リファクタリングする
           const phrase = { ...existingPhrase };
-          if (!singer || phrase.state === "COULD_NOT_RENDER") {
+          if (!singerAndFrameRate || phrase.state === "COULD_NOT_RENDER") {
             if (phrase.singingGuideKey != undefined) {
               commit("DELETE_SINGING_GUIDE", {
                 singingGuideKey: phrase.singingGuideKey,
@@ -1060,13 +1044,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           } else if (phrase.singingGuideKey != undefined) {
             const calculatedSingingGuideSourceHash =
               await calculateSingingGuideSourceHash({
-                engineId: singer.engineId,
+                engineId: singerAndFrameRate.singer.engineId,
                 tpqn,
                 tempos,
                 notes: phrase.notes,
                 keyRangeAdjustment,
                 volumeRangeAdjustment,
-                frameRate: frameRates[singer.engineId],
+                frameRate: singerAndFrameRate.frameRate,
                 restDurationSeconds,
               });
             const singingGuideSourceHash = phrase.singingGuideKey;
@@ -1077,7 +1061,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.singingGuideKey = undefined;
             }
           }
-          if (!singer || phrase.singingGuideKey == undefined) {
+          if (!singerAndFrameRate || phrase.singingGuideKey == undefined) {
             if (phrase.singingVoiceKey != undefined) {
               singingVoices.delete(phrase.singingVoiceKey);
               phrase.singingVoiceKey = undefined;
@@ -1091,7 +1075,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
             const calculatedSingingVoiceSourceHash =
               await calculateSingingVoiceSourceHash({
-                singer,
+                singer: singerAndFrameRate.singer,
                 frameAudioQuery: singingGuide.query,
               });
             const singingVoiceSourceHash = phrase.singingVoiceKey;
@@ -1101,7 +1085,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
           if (
-            !singer ||
+            !singerAndFrameRate ||
             phrase.singingGuideKey == undefined ||
             phrase.singingVoiceKey == undefined
           ) {
@@ -1140,7 +1124,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           try {
             // シンガーが未設定でシーケンスが存在する場合、音源とシーケンスの接続を解除して削除する
 
-            if (!singer) {
+            if (!singerAndFrameRate) {
               const sequence = sequences.get(phraseKey);
               if (sequence) {
                 if (sequence.type === "note") {
@@ -1170,9 +1154,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               sequences.set(phraseKey, noteSequence);
             }
 
-            // シンガーが未設定の場合はフレーズのレンダリングを終了
+            // シンガーが未設定の場合は、このフレーズのレンダリングを終了
 
-            if (!singer) {
+            if (!singerAndFrameRate) {
               commit("SET_STATE_TO_PHRASE", {
                 phraseKey,
                 phraseState: "PLAYABLE",
@@ -1191,13 +1175,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             } else {
               const singingGuideSourceHash =
                 await calculateSingingGuideSourceHash({
-                  engineId: singer.engineId,
+                  engineId: singerAndFrameRate.singer.engineId,
                   tpqn,
                   tempos,
                   notes: phrase.notes,
                   keyRangeAdjustment,
                   volumeRangeAdjustment,
-                  frameRate: frameRates[singer.engineId],
+                  frameRate: singerAndFrameRate.frameRate,
                   restDurationSeconds,
                 });
 
@@ -1209,12 +1193,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 window.backend.logInfo(`Loaded singing guide from cache.`);
               } else {
                 const frameAudioQuery = await fetchQuery(
-                  singer.engineId,
+                  singerAndFrameRate.singer.engineId,
                   phrase.notes,
                   tempos,
                   tpqn,
                   keyRangeAdjustment,
-                  frameRates[singer.engineId],
+                  singerAndFrameRate.frameRate,
                   restDurationSeconds
                 );
 
@@ -1235,7 +1219,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
                 singingGuide = {
                   query: frameAudioQuery,
-                  frameRate: frameRates[singer.engineId],
+                  frameRate: singerAndFrameRate.frameRate,
                   startTime,
                 };
 
@@ -1254,7 +1238,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
             const singingVoiceSourceHash =
               await calculateSingingVoiceSourceHash({
-                singer,
+                singer: singerAndFrameRate.singer,
                 frameAudioQuery: singingGuide.query,
               });
 
@@ -1265,7 +1249,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
               window.backend.logInfo(`Loaded singing voice from cache.`);
             } else {
-              const blob = await synthesize(singer, singingGuide.query);
+              const blob = await synthesize(
+                singerAndFrameRate.singer,
+                singingGuide.query
+              );
 
               window.backend.logInfo(`Synthesized.`);
 
