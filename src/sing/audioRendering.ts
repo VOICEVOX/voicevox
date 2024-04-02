@@ -4,6 +4,7 @@ import {
   linearToDecibel,
 } from "@/sing/domain";
 import { Timer } from "@/sing/utility";
+import { Phrase } from "@/store/type";
 
 const getEarliestSchedulableContextTime = (audioContext: BaseAudioContext) => {
   const renderQuantumSize = 128;
@@ -1047,3 +1048,39 @@ export class Clipper {
     this.waveShaperNode.curve = new Float32Array([-1, 0, 1]);
   }
 }
+
+export const generateAudioEvents = async (
+  audioContext: BaseAudioContext,
+  time: number,
+  blob: Blob
+): Promise<AudioEvent[]> => {
+  const arrayBuffer = await blob.arrayBuffer();
+  const buffer = await audioContext.decodeAudioData(arrayBuffer);
+  return [{ time, buffer }];
+};
+export const setupAudioEvents = async (
+  audioContext: BaseAudioContext,
+  trackNode: TrackNode,
+  transport: Transport | OfflineTransport,
+  phrases: { phrase: Phrase; blob: Blob }[]
+) => {
+  for (const { phrase, blob } of phrases) {
+    if (phrase.startTime == undefined || phrase.state !== "PLAYABLE") {
+      continue;
+    }
+    // TODO: この辺りの処理を共通化する
+    const audioEvents = await generateAudioEvents(
+      audioContext,
+      phrase.startTime,
+      blob
+    );
+    const audioPlayer = new AudioPlayer(audioContext);
+    audioPlayer.output.connect(trackNode.channelStrip.input);
+    const audioSequence: AudioSequence = {
+      type: "audio",
+      audioPlayer,
+      audioEvents,
+    };
+    transport.addSequence(audioSequence);
+  }
+};

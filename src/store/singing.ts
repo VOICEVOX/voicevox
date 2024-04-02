@@ -25,7 +25,6 @@ import { EngineId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
-  AudioEvent,
   AudioPlayer,
   AudioSequence,
   ChannelStrip,
@@ -38,6 +37,8 @@ import {
   Sequence,
   TrackNode,
   Transport,
+  generateAudioEvents,
+  setupAudioEvents,
 } from "@/sing/audioRendering";
 import {
   selectPriorPhrase,
@@ -53,6 +54,8 @@ import {
   secondToTick,
   tickToSecond,
   shouldPlay,
+  convertToWavFileData,
+  calcRenderDuration,
 } from "@/sing/domain";
 import {
   DEFAULT_BEATS,
@@ -72,16 +75,7 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
-
-const generateAudioEvents = async (
-  audioContext: BaseAudioContext,
-  time: number,
-  blob: Blob
-): Promise<AudioEvent[]> => {
-  const arrayBuffer = await blob.arrayBuffer();
-  const buffer = await audioContext.decodeAudioData(arrayBuffer);
-  return [{ time, buffer }];
-};
+import { generateWriteErrorMessage } from "@/helpers/generateWriteErrorMessage";
 
 const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   return notes.map((value): NoteEvent => {
@@ -1891,98 +1885,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   EXPORT_WAVE_FILE: {
     action: createUILockAction(
       async ({ state, getters, commit, dispatch }, { filePath }) => {
-        const convertToWavFileData = (audioBuffer: AudioBuffer) => {
-          const bytesPerSample = 4; // Float32
-          const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
-
-          const numberOfChannels = audioBuffer.numberOfChannels;
-          const numberOfSamples = audioBuffer.length;
-          const sampleRate = audioBuffer.sampleRate;
-          const byteRate = sampleRate * numberOfChannels * bytesPerSample;
-          const blockSize = numberOfChannels * bytesPerSample;
-          const dataSize = numberOfSamples * numberOfChannels * bytesPerSample;
-
-          const buffer = new ArrayBuffer(44 + dataSize);
-          const dataView = new DataView(buffer);
-
-          let pos = 0;
-          const writeString = (value: string) => {
-            for (let i = 0; i < value.length; i++) {
-              dataView.setUint8(pos, value.charCodeAt(i));
-              pos += 1;
-            }
-          };
-          const writeUint32 = (value: number) => {
-            dataView.setUint32(pos, value, true);
-            pos += 4;
-          };
-          const writeUint16 = (value: number) => {
-            dataView.setUint16(pos, value, true);
-            pos += 2;
-          };
-          const writeSample = (offset: number, value: number) => {
-            dataView.setFloat32(pos + offset * 4, value, true);
-          };
-
-          writeString("RIFF");
-          writeUint32(36 + dataSize); // RIFFチャンクサイズ
-          writeString("WAVE");
-          writeString("fmt ");
-          writeUint32(16); // fmtチャンクサイズ
-          writeUint16(formatCode);
-          writeUint16(numberOfChannels);
-          writeUint32(sampleRate);
-          writeUint32(byteRate);
-          writeUint16(blockSize);
-          writeUint16(bytesPerSample * 8); // 1サンプルあたりのビット数
-          writeString("data");
-          writeUint32(dataSize);
-
-          for (let i = 0; i < numberOfChannels; i++) {
-            const channelData = audioBuffer.getChannelData(i);
-            for (let j = 0; j < numberOfSamples; j++) {
-              writeSample(j * numberOfChannels + i, channelData[j]);
-            }
-          }
-
-          return buffer;
-        };
-
-        const generateWriteErrorMessage = (writeFileResult: ResultError) => {
-          if (writeFileResult.code) {
-            const code = writeFileResult.code.toUpperCase();
-
-            if (code.startsWith("ENOSPC")) {
-              return "空き容量が足りません。";
-            }
-
-            if (code.startsWith("EACCES")) {
-              return "ファイルにアクセスする許可がありません。";
-            }
-
-            if (code.startsWith("EBUSY")) {
-              return "ファイルが開かれています。";
-            }
-          }
-
-          return `何らかの理由で失敗しました。${writeFileResult.message}`;
-        };
-
-        const calcRenderDuration = () => {
-          const lastNoteEndTimes = state.tracks.map((track) => {
-            const notes = track.notes;
-            if (notes.length === 0) {
-              return 1;
-            }
-            const lastNote = notes[notes.length - 1];
-            const lastNoteEndPosition = lastNote.position + lastNote.duration;
-            const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
-
-            return lastNoteEndTime;
-          });
-          return Math.max(1, Math.max(...lastNoteEndTimes) + 1);
-        };
-
         const generateDefaultSongFileName = () => {
           const projectName = getters.PROJECT_NAME;
           if (projectName) {
@@ -2015,7 +1917,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const sampleRate = 48000; // TODO: 設定できるようにする
           const withLimiter = false; // TODO: 設定できるようにする
 
-          const renderDuration = calcRenderDuration();
+          const renderDuration = calcRenderDuration(
+            state.tracks,
+            getters.TICK_TO_SECOND
+          );
 
           if (state.nowPlaying) {
             await dispatch("SING_STOP_AUDIO");
@@ -2065,44 +1970,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             : undefined;
           const clipper = new Clipper(offlineAudioContext);
           const tracksShouldPlay = shouldPlay(state.tracks);
-          const trackNodes = state.tracks.map((track, i) => {
+
+          for (const [i, track] of state.tracks.entries()) {
             const trackNode = new TrackNode(offlineAudioContext);
             trackNode.channelStrip.volume = track.volume;
             trackNode.channelStrip.pan = track.pan;
             trackNode.setMute(!tracksShouldPlay[i]);
             trackNode.output.connect(globalChannelStrip.input);
 
-            return trackNode;
-          });
-
-          for (const [phraseKey, phrase] of state.phrases) {
-            const phraseData = phraseDataMap.get(phraseKey);
-            if (!phraseData) {
-              throw new Error("phraseData is undefined");
-            }
-            if (
-              !phraseData.blob ||
-              phrase.startTime == undefined ||
-              phrase.state !== "PLAYABLE"
-            ) {
-              continue;
-            }
-            // TODO: この辺りの処理を共通化する
-            const audioEvents = await generateAudioEvents(
+            await setupAudioEvents(
               offlineAudioContext,
-              phrase.startTime,
-              phraseData.blob
+              trackNode,
+              offlineTransport,
+              [...state.phrases].flatMap(([phraseKey, phrase]) => {
+                if (phrase.trackIndex !== i) {
+                  return [];
+                }
+                const phraseData = phraseDataMap.get(phraseKey);
+                if (!phraseData) {
+                  throw new Error("phraseData is undefined");
+                }
+                if (!phraseData.blob) {
+                  return [];
+                }
+                return [
+                  {
+                    phrase,
+                    blob: phraseData.blob,
+                  },
+                ];
+              })
             );
-            const audioPlayer = new AudioPlayer(offlineAudioContext);
-            audioPlayer.output.connect(
-              trackNodes[phrase.trackIndex].channelStrip.input
-            );
-            const audioSequence: AudioSequence = {
-              type: "audio",
-              audioPlayer,
-              audioEvents,
-            };
-            offlineTransport.addSequence(audioSequence);
           }
           globalChannelStrip.volume = 1;
           if (limiter) {
@@ -2148,12 +2046,171 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: true });
-        return exportWaveFile().finally(() => {
+        try {
+          const result = await exportWaveFile();
+          dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
+            message: `音声を書き出しました`,
+            tipName: "notifyOnGenerate",
+          });
+
+          return result;
+        } finally {
           commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
             cancellationOfAudioExportRequested: false,
           });
           commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: false });
-        });
+        }
+      }
+    ),
+  },
+
+  EXPORT_WAVE_FILE_PARAOUT: {
+    action: createUILockAction(
+      async ({ state, getters, dispatch, commit }, { dirPath }) => {
+        // TODO: EXPORT_WAVE_FILEと共通化できるはずなので共通化する
+        const exportWaveFile = async (): Promise<SaveResultObject> => {
+          const numberOfChannels = 2;
+          const sampleRate = 48000; // TODO: 設定できるようにする
+          const withLimiter = false; // TODO: 設定できるようにする
+
+          const renderDuration = calcRenderDuration(
+            state.tracks,
+            getters.TICK_TO_SECOND
+          );
+
+          if (state.nowPlaying) {
+            await dispatch("SING_STOP_AUDIO");
+          }
+
+          if (state.savingSetting.fixedExportEnabled) {
+            dirPath = state.savingSetting.fixedExportDir;
+          } else {
+            dirPath ??= await window.backend.showSaveDirectoryDialog({
+              title: "音声を保存",
+            });
+          }
+          if (!dirPath) {
+            return { result: "CANCELED", path: "" };
+          }
+
+          if (state.nowRendering) {
+            await createPromiseThatResolvesWhen(() => {
+              return (
+                !state.nowRendering || state.cancellationOfAudioExportRequested
+              );
+            });
+            if (state.cancellationOfAudioExportRequested) {
+              return { result: "CANCELED", path: "" };
+            }
+          }
+
+          for (const [i, track] of state.tracks.entries()) {
+            const offlineAudioContext = new OfflineAudioContext(
+              numberOfChannels,
+              sampleRate * renderDuration,
+              sampleRate
+            );
+            const offlineTransport = new OfflineTransport();
+            const globalChannelStrip = new ChannelStrip(offlineAudioContext);
+            const limiter = withLimiter
+              ? new Limiter(offlineAudioContext)
+              : undefined;
+            const clipper = new Clipper(offlineAudioContext);
+            const tracksShouldPlay = shouldPlay(state.tracks);
+
+            const trackNode = new TrackNode(offlineAudioContext);
+            trackNode.channelStrip.volume = track.volume;
+            trackNode.channelStrip.pan = track.pan;
+            trackNode.setMute(!tracksShouldPlay[i]);
+            trackNode.output.connect(globalChannelStrip.input);
+
+            await setupAudioEvents(
+              offlineAudioContext,
+              trackNode,
+              offlineTransport,
+              [...state.phrases].flatMap(([phraseKey, phrase]) => {
+                if (phrase.trackIndex !== i) {
+                  return [];
+                }
+                const phraseData = phraseDataMap.get(phraseKey);
+                if (!phraseData) {
+                  throw new Error("phraseData is undefined");
+                }
+                if (!phraseData.blob) {
+                  return [];
+                }
+                return [
+                  {
+                    phrase,
+                    blob: phraseData.blob,
+                  },
+                ];
+              })
+            );
+            globalChannelStrip.volume = 1;
+            if (limiter) {
+              globalChannelStrip.output.connect(limiter.input);
+              limiter.output.connect(clipper.input);
+            } else {
+              globalChannelStrip.output.connect(clipper.input);
+            }
+            clipper.output.connect(offlineAudioContext.destination);
+
+            // スケジューリングを行い、オフラインレンダリングを実行
+            // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
+            offlineTransport.schedule(0, renderDuration);
+            const audioBuffer = await offlineAudioContext.startRendering();
+            const waveFileData = convertToWavFileData(audioBuffer);
+
+            const filePath = path.join(
+              dirPath,
+              // TODO: 設定可能にする
+              (i + 1).toString().padStart(3, "0") + ".wav"
+            );
+
+            try {
+              await window.backend
+                .writeFile({
+                  filePath,
+                  buffer: waveFileData,
+                })
+                .then(getValueOrThrow);
+            } catch (e) {
+              window.backend.logError(e);
+              if (e instanceof ResultError) {
+                return {
+                  result: "WRITE_ERROR",
+                  path: filePath,
+                  errorMessage: generateWriteErrorMessage(e),
+                };
+              }
+              return {
+                result: "UNKNOWN_ERROR",
+                path: filePath,
+                errorMessage:
+                  (e instanceof Error ? e.message : String(e)) ||
+                  "不明なエラーが発生しました。",
+              };
+            }
+          }
+          return { result: "SUCCESS", path: dirPath };
+        };
+
+        commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: true });
+        try {
+          const result = await exportWaveFile();
+          dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
+            message: `音声を書き出しました`,
+            tipName: "notifyOnGenerate",
+          });
+
+          return result;
+        } finally {
+          commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
+            cancellationOfAudioExportRequested: false,
+          });
+          commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: false });
+        }
       }
     ),
   },

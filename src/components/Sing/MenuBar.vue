@@ -38,12 +38,25 @@ const exportWaveFile = async () => {
   await store.dispatch("EXPORT_WAVE_FILE", {});
 };
 
+const exportWaveFileParaout = async () => {
+  if (uiLocked.value) return;
+  await store.dispatch("EXPORT_WAVE_FILE_PARAOUT", {});
+};
+
 const fileSubMenuData: MenuItemData[] = [
   {
     type: "button",
     label: "音声を出力",
     onClick: () => {
       exportWaveFile();
+    },
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "トラック毎に音声を出力",
+    onClick: () => {
+      exportWaveFileParaout();
     },
     disableWhenUiLocked: true,
   },

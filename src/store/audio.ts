@@ -55,6 +55,7 @@ import {
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
+import { generateWriteErrorMessage } from "@/helpers/generateWriteErrorMessage";
 
 function generateAudioKey() {
   return AudioKey(uuidv4());
@@ -162,25 +163,6 @@ export async function writeTextFile(obj: {
     filePath: obj.filePath,
     buffer: await textBlob.arrayBuffer(),
   });
-}
-
-function generateWriteErrorMessage(writeFileResult: ResultError) {
-  if (!writeFileResult.code) {
-    return `何らかの理由で失敗しました。${writeFileResult.message}`;
-  }
-  const code = writeFileResult.code.toUpperCase();
-
-  if (code.startsWith("ENOSPC")) {
-    return "空き容量が足りません。";
-  }
-
-  if (code.startsWith("EACCES")) {
-    return "ファイルにアクセスする許可がありません。";
-  }
-
-  if (code.startsWith("EBUSY")) {
-    return "ファイルが開かれています。";
-  }
 }
 
 // TODO: GETTERに移動する。
