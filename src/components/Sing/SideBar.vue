@@ -18,6 +18,7 @@
                 :step="0.1"
                 :markers="1"
                 selection-color="transparent"
+                :disable="uiLocked"
                 @change="setTrackPan(i, $event)"
                 @dblclick="setTrackPan(i, 0)"
               />
@@ -31,6 +32,7 @@
                 :max="2"
                 :step="0.1"
                 :markers="1"
+                :disable="uiLocked"
                 @change="setTrackVolume(i, $event)"
                 @dblclick="setTrackVolume(i, 1)"
               />
@@ -44,7 +46,7 @@
                 flat
                 size="sm"
                 padding="xs sm"
-                :disable="tracks.length === 1"
+                :disable="tracks.length === 1 || uiLocked"
                 @click="
                   store.dispatch('COMMAND_DELETE_TRACK', { trackIndex: i })
                 "
@@ -59,6 +61,7 @@
           class="track-item"
           clickable
           :active="selectedTrackIndex === i"
+          :disable="uiLocked"
           active-class="selected-item"
           @click="selectTrack(i)"
         >
@@ -105,6 +108,7 @@
               dense
               size="sm"
               :class="{ 'track-button-active': tracks[i].mute }"
+              :disable="uiLocked"
               @click.stop="setTrackMute(i, !tracks[i].mute)"
             >
               <QTooltip>ミュート</QTooltip>
@@ -117,6 +121,7 @@
               dense
               size="sm"
               :class="{ 'track-button-active': tracks[i].solo }"
+              :disable="uiLocked"
               @click.stop="setTrackSolo(i, !tracks[i].solo)"
             >
               <QTooltip>ソロ</QTooltip>
@@ -124,7 +129,13 @@
           </div>
         </QItem>
       </template>
-      <QItem v-ripple class="create-track-item" clickable @click="createTrack">
+      <QItem
+        v-ripple
+        class="create-track-item"
+        clickable
+        :disable="uiLocked"
+        @click="createTrack"
+      >
         <QItemSection avatar>
           <QIcon color="display" name="add" />
         </QItemSection>
@@ -146,6 +157,7 @@ import { shouldPlay } from "@/sing/domain";
 import { nullableToDefault } from "@/helpers/map";
 
 const store = useStore();
+const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const tracks = computed(() => store.state.tracks);
 const tracksShouldPlay = computed(() => shouldPlay(tracks.value));
