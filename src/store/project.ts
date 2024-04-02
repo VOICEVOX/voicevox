@@ -107,16 +107,6 @@ const applySongProjectToStore = async (
   songProject: LatestProjectType["song"]
 ) => {
   const { tpqn, tempos, timeSignatures, tracks } = songProject;
-  // TODO: マルチトラック対応
-  await dispatch("SET_SINGER", {
-    singer: tracks[0].singer,
-  });
-  await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-    keyRangeAdjustment: tracks[0].keyRangeAdjustment,
-  });
-  await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-    volumeRangeAdjustment: tracks[0].volumeRangeAdjustment,
-  });
   await dispatch("SET_SCORE", {
     score: {
       tpqn,
@@ -125,6 +115,20 @@ const applySongProjectToStore = async (
       notes: tracks.map((track) => track.notes),
     },
   });
+  for (const [trackIndex, track] of tracks.entries()) {
+    await dispatch("SET_SINGER", {
+      singer: track.singer,
+      trackIndex,
+    });
+    await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
+      keyRangeAdjustment: track.keyRangeAdjustment,
+      trackIndex,
+    });
+    await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
+      volumeRangeAdjustment: track.volumeRangeAdjustment,
+      trackIndex,
+    });
+  }
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -177,6 +181,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             notes: tracks.map((track) => track.notes),
           },
         });
+        await context.dispatch("SET_SINGER", {
+          trackIndex: 0,
+        });
+        context.commit("SET_SELECTED_TRACK_INDEX", { trackIndex: 0 });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);

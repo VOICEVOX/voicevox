@@ -213,13 +213,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGER: {
-    mutation(state, { singer }: { singer?: Singer }) {
-      state.tracks[state.selectedTrackIndex].singer = singer;
+    mutation(state, { singer, trackIndex }) {
+      state.tracks[trackIndex].singer = singer;
     },
-    async action(
-      { state, getters, dispatch, commit },
-      { singer }: { singer?: Singer }
-    ) {
+    async action({ state, getters, dispatch, commit }, { singer, trackIndex }) {
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
       const userOrderedCharacterInfos =
@@ -237,47 +234,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const styleId = singer?.styleId ?? defaultStyleId;
 
       dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
-      commit("SET_SINGER", { singer: { engineId, styleId } });
+      commit("SET_SINGER", { trackIndex, singer: { engineId, styleId } });
 
       dispatch("RENDER");
     },
   },
 
   SET_KEY_RANGE_ADJUSTMENT: {
-    mutation(state, { keyRangeAdjustment }: { keyRangeAdjustment: number }) {
-      state.tracks[state.selectedTrackIndex].keyRangeAdjustment =
-        keyRangeAdjustment;
+    mutation(state, { keyRangeAdjustment, trackIndex }) {
+      state.tracks[trackIndex].keyRangeAdjustment = keyRangeAdjustment;
     },
-    async action(
-      { dispatch, commit },
-      { keyRangeAdjustment }: { keyRangeAdjustment: number }
-    ) {
+    async action({ dispatch, commit }, { keyRangeAdjustment, trackIndex }) {
       if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
         throw new Error("The keyRangeAdjustment is invalid.");
       }
-      commit("SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+      commit("SET_KEY_RANGE_ADJUSTMENT", { trackIndex, keyRangeAdjustment });
 
       dispatch("RENDER");
     },
   },
 
   SET_VOLUME_RANGE_ADJUSTMENT: {
-    mutation(
-      state,
-      { volumeRangeAdjustment }: { volumeRangeAdjustment: number }
-    ) {
-      state.tracks[state.selectedTrackIndex].volumeRangeAdjustment =
-        volumeRangeAdjustment;
+    mutation(state, { volumeRangeAdjustment, trackIndex }) {
+      state.tracks[trackIndex].volumeRangeAdjustment = volumeRangeAdjustment;
     },
-    async action(
-      { dispatch, commit },
-      { volumeRangeAdjustment }: { volumeRangeAdjustment: number }
-    ) {
+    async action({ dispatch, commit }, { volumeRangeAdjustment, trackIndex }) {
       if (!isValidvolumeRangeAdjustment(volumeRangeAdjustment)) {
         throw new Error("The volumeRangeAdjustment is invalid.");
       }
       commit("SET_VOLUME_RANGE_ADJUSTMENT", {
         volumeRangeAdjustment,
+        trackIndex,
       });
 
       dispatch("RENDER");
@@ -294,6 +281,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.timeSignatures = score.timeSignatures;
       state.overlappingNoteInfos = [];
       trackNodes.length = 0;
+      state.tracks = score.notes.map(() => createInitialTrack());
       for (const [i, notes] of score.notes.entries()) {
         state.tracks[i].notes = notes;
         state.overlappingNoteInfos.push(new Map());
@@ -307,7 +295,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           trackNodes.push(node);
         }
       }
-      if (state.overlappingNoteInfos.length === 0) {
+      if (state.tracks.length === 0) {
+        state.tracks.push(createInitialTrack());
         state.overlappingNoteInfos.push(new Map());
         if (audioContext && globalChannelStrip) {
           const node = new TrackNode(audioContext);
@@ -315,6 +304,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           trackNodes.push(node);
         }
       }
+      state.selectedTrackIndex = 0;
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -1972,15 +1962,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         const calcRenderDuration = () => {
-          // TODO: マルチトラックに対応する
-          const notes = getters.SELECTED_TRACK.notes;
-          if (notes.length === 0) {
-            return 1;
-          }
-          const lastNote = notes[notes.length - 1];
-          const lastNoteEndPosition = lastNote.position + lastNote.duration;
-          const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
-          return Math.max(1, lastNoteEndTime + 1);
+          const lastNoteEndTimes = state.tracks.map((track) => {
+            const notes = track.notes;
+            if (notes.length === 0) {
+              return 1;
+            }
+            const lastNote = notes[notes.length - 1];
+            const lastNoteEndPosition = lastNote.position + lastNote.duration;
+            const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
+
+            return lastNoteEndTime;
+          });
+          return Math.max(1, Math.max(...lastNoteEndTimes) + 1);
         };
 
         const generateDefaultSongFileName = () => {
@@ -2362,49 +2355,52 @@ export const singingCommandStoreState: SingingCommandStoreState = {};
 export const singingCommandStore = transformCommandStore(
   createPartialStore<SingingCommandStoreTypes>({
     COMMAND_SET_SINGER: {
-      mutation(draft, { singer }) {
-        singingStore.mutations.SET_SINGER(draft, { singer });
+      mutation(draft, { singer, trackIndex }) {
+        singingStore.mutations.SET_SINGER(draft, { singer, trackIndex });
       },
-      async action({ dispatch, commit }, { singer }) {
+      async action({ dispatch, commit }, { singer, trackIndex }) {
         dispatch("SETUP_SINGER", { singer });
-        commit("COMMAND_SET_SINGER", { singer });
+        commit("COMMAND_SET_SINGER", { singer, trackIndex });
 
         dispatch("RENDER");
       },
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
-      mutation(draft, { keyRangeAdjustment }) {
+      mutation(draft, { keyRangeAdjustment, trackIndex }) {
         singingStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
           keyRangeAdjustment,
+          trackIndex,
         });
       },
-      async action(
-        { dispatch, commit },
-        { keyRangeAdjustment }: { keyRangeAdjustment: number }
-      ) {
+      async action({ dispatch, commit }, { keyRangeAdjustment, trackIndex }) {
         if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
           throw new Error("The keyRangeAdjustment is invalid.");
         }
-        commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+        commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+          trackIndex,
+          keyRangeAdjustment,
+        });
 
         dispatch("RENDER");
       },
     },
     COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
-      mutation(draft, { volumeRangeAdjustment }) {
+      mutation(draft, { trackIndex, volumeRangeAdjustment }) {
         singingStore.mutations.SET_VOLUME_RANGE_ADJUSTMENT(draft, {
           volumeRangeAdjustment,
+          trackIndex,
         });
       },
       async action(
         { dispatch, commit },
-        { volumeRangeAdjustment }: { volumeRangeAdjustment: number }
+        { volumeRangeAdjustment, trackIndex }
       ) {
         if (!isValidvolumeRangeAdjustment(volumeRangeAdjustment)) {
           throw new Error("The volumeRangeAdjustment is invalid.");
         }
         commit("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
           volumeRangeAdjustment,
+          trackIndex,
         });
 
         dispatch("RENDER");

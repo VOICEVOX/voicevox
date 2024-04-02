@@ -818,18 +818,21 @@ export type SingingStoreTypes = {
   };
 
   SET_SINGER: {
-    mutation: { singer?: Singer };
-    action(payload: { singer?: Singer }): void;
+    mutation: { trackIndex: number; singer?: Singer };
+    action(payload: { trackIndex: number; singer?: Singer }): void;
   };
 
   SET_KEY_RANGE_ADJUSTMENT: {
-    mutation: { keyRangeAdjustment: number };
-    action(payload: { keyRangeAdjustment: number }): void;
+    mutation: { trackIndex: number; keyRangeAdjustment: number };
+    action(payload: { trackIndex: number; keyRangeAdjustment: number }): void;
   };
 
   SET_VOLUME_RANGE_ADJUSTMENT: {
-    mutation: { volumeRangeAdjustment: number };
-    action(payload: { volumeRangeAdjustment: number }): void;
+    mutation: { trackIndex: number; volumeRangeAdjustment: number };
+    action(payload: {
+      trackIndex: number;
+      volumeRangeAdjustment: number;
+    }): void;
   };
 
   SET_SCORE: {
@@ -1087,18 +1090,21 @@ export type SingingCommandStoreState = {
 
 export type SingingCommandStoreTypes = {
   COMMAND_SET_SINGER: {
-    mutation: { singer: Singer };
-    action(payload: { singer: Singer }): void;
+    mutation: { trackIndex: number; singer: Singer };
+    action(payload: { trackIndex: number; singer: Singer }): void;
   };
 
   COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
-    mutation: { keyRangeAdjustment: number };
-    action(payload: { keyRangeAdjustment: number }): void;
+    mutation: { trackIndex: number; keyRangeAdjustment: number };
+    action(payload: { trackIndex: number; keyRangeAdjustment: number }): void;
   };
 
   COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
-    mutation: { volumeRangeAdjustment: number };
-    action(payload: { volumeRangeAdjustment: number }): void;
+    mutation: { trackIndex: number; volumeRangeAdjustment: number };
+    action(payload: {
+      trackIndex: number;
+      volumeRangeAdjustment: number;
+    }): void;
   };
 
   COMMAND_SET_TEMPO: {
