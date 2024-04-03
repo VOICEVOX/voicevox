@@ -451,6 +451,10 @@ const previewMove = () => {
   const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
+  if (cursorNoteNumber < 0 || cursorNoteNumber > 127) {
+    return;
+  }
+
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
   if (!draggingNote) {
     throw new Error("draggingNote is undefined.");
