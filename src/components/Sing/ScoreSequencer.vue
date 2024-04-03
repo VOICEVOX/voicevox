@@ -454,7 +454,6 @@ const previewMove = () => {
   if (cursorNoteNumber < 0 || cursorNoteNumber > 127) {
     return;
   }
-
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
   if (!draggingNote) {
     throw new Error("draggingNote is undefined.");
