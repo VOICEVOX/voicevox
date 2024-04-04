@@ -451,9 +451,6 @@ const previewMove = () => {
   const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
-  if (cursorNoteNumber < 0 || cursorNoteNumber >= keyInfos.length) {
-    return;
-  }
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
   if (!draggingNote) {
     throw new Error("draggingNote is undefined.");
@@ -478,6 +475,10 @@ const previewMove = () => {
     }
   }
   for (const note of editedNotes.values()) {
+    if (note.noteNumber < 0 || note.noteNumber >= keyInfos.length) {
+      return;
+    }
+
     if (note.position < 0) {
       // 左端より前はドラッグしない
       return;
