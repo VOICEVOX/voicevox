@@ -1,5 +1,73 @@
 [
   {
+    "version": "0.18.0",
+    "descriptions": [
+      "キャラクター「WhiteCUL」「後鬼」「No.7」のハミングを追加",
+      "キャラクター「ちび式じい」「櫻歌ミコ」「小夜/SAYO」「ナースロボ＿タイプＴ」のハミングを追加",
+      "キャラクター「四国めたん」「ずんだもん」「波音リツ」のハミングスタイルを追加",
+      "ソング：ピッチ表示機能",
+      "ソング：矩形選択を追加",
+      "ソング：ノートのエラー時にツールチップ表示",
+      "デフォルトで全てのCPUを使うことがあるバグを修正",
+      "ソング：MIDIインポート時にトラックを選択可能に",
+      "ソング：USTファイルのインポート機能",
+      "ソング：コピー＆ペースト"
+    ],
+    "contributors": [
+      "Hiroshiba",
+      "romot-co",
+      "sabonerune",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "siketyan",
+      "tarepan",
+      "tomoish",
+      "weweweok"
+    ]
+  },
+  {
+    "version": "0.17.2",
+    "descriptions": [
+      "プロジェクト読み込み時に声量調整などが反映されない問題を解決"
+    ],
+    "contributors": ["Hiroshiba"]
+  },
+  {
+    "version": "0.17.1",
+    "descriptions": [
+      "キャラクター「玄野武宏」「白上虎太郎」「青山龍星」「冥鳴ひまり」「九州そら」のハミングを追加",
+      "キャラクター「もち子さん」「剣崎雌雄」のハミングを追加",
+      "音域調整・声量調整機能",
+      "バグ修正"
+    ],
+    "contributors": ["Hiroshiba", "sigprogramming"]
+  },
+  {
+    "version": "0.17.0",
+    "descriptions": [
+      "サードパーティアプリ向けのランタイム情報ファイルを出力",
+      "ソング：プロジェクトファイルに保存",
+      "トーク：連続再生中に裏で音声合成",
+      "ソング：元に戻す・やり直す機能",
+      "ソング：ショートカットキー機能",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "cm-ayf",
+      "Hiroshiba",
+      "nmori",
+      "P0ngCh4ng",
+      "romot-co",
+      "sabonerune",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "tsym77yoshi",
+      "weweweok",
+      "y-chan"
+    ]
+  },
+  {
     "version": "0.16.1",
     "descriptions": ["マルチエンジン稼働時に起動しないバグを修正"],
     "contributors": ["sevenc-nanashi"]

@@ -22,12 +22,12 @@
         />
       </div>
     </div>
-    <ScoreSequencer :is-activated="isActivated" />
+    <ScoreSequencer />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, ref } from "vue";
+import { computed, ref } from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
@@ -89,19 +89,19 @@ onetimeWatch(
           notes: [],
         },
       });
+
+      // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
+      // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
+      try {
+        await store.dispatch("SET_SINGER", {});
+      } catch (e) {
+        window.backend.logError(e);
+      }
     }
 
     await store.dispatch("SET_VOLUME", { volume: 0.6 });
     await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
-    await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
-      position: 0,
-    });
-    await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
-      position: 480 * 4 * 16,
-    });
     isCompletedInitialStartup.value = true;
-
-    await store.dispatch("SET_SINGER", {});
 
     return "unwatch";
   },
@@ -109,16 +109,6 @@ onetimeWatch(
     immediate: true,
   }
 );
-
-const isActivated = ref(false);
-
-onActivated(() => {
-  isActivated.value = true;
-});
-
-onDeactivated(() => {
-  isActivated.value = false;
-});
 </script>
 
 <style scoped lang="scss">

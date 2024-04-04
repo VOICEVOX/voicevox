@@ -1,5 +1,9 @@
 <template>
-  <BaseMenuBar editor="talk" :file-sub-menu-data="fileSubMenuData" />
+  <BaseMenuBar
+    editor="talk"
+    :file-sub-menu-data="fileSubMenuData"
+    :edit-sub-menu-data="editSubMenuData"
+  />
 </template>
 
 <script setup lang="ts">
@@ -159,4 +163,7 @@ registerHotkeyWithCleanup({
     importTextFile();
   },
 });
+
+// 「編集」メニュー
+const editSubMenuData = computed<MenuItemData[]>(() => []);
 </script>

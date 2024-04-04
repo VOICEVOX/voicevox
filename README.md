@@ -114,7 +114,7 @@ Playwright を使用しているためテストパターンを生成すること
 **ブラウザ版を起動している状態で**以下のコマンドを実行してください。
 
 ```bash
-npx playwright codegen http://localhost:5173/  --viewport-size=800,600
+npx playwright codegen http://localhost:5173/  --viewport-size=1024,630
 ```
 
 詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。

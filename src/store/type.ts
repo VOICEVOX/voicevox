@@ -751,8 +751,8 @@ export type Singer = z.infer<typeof singerSchema>;
 
 export const trackSchema = z.object({
   singer: singerSchema.optional(),
-  notesKeyShift: z.number(),
-  voiceKeyShift: z.number(),
+  keyRangeAdjustment: z.number(), // 音域調整量
+  volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
 });
 export type Track = z.infer<typeof trackSchema>;
@@ -765,8 +765,8 @@ export type PhraseState =
 
 export type Phrase = {
   singer?: Singer;
-  notesKeyShift: number;
-  voiceKeyShift: number;
+  keyRangeAdjustment: number;
+  volumeRangeAdjustment: number;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];
@@ -794,8 +794,6 @@ export type SingingStoreState = {
   editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
-  leftLocatorPosition: number;
-  rightLocatorPosition: number;
   startRenderingRequested: boolean;
   stopRenderingRequested: boolean;
   nowRendering: boolean;
@@ -818,9 +816,14 @@ export type SingingStoreTypes = {
     action(payload: { singer?: Singer }): void;
   };
 
-  SET_VOICE_KEY_SHIFT: {
-    mutation: { voiceKeyShift: number };
-    action(payload: { voiceKeyShift: number }): void;
+  SET_KEY_RANGE_ADJUSTMENT: {
+    mutation: { keyRangeAdjustment: number };
+    action(payload: { keyRangeAdjustment: number }): void;
+  };
+
+  SET_VOLUME_RANGE_ADJUSTMENT: {
+    mutation: { volumeRangeAdjustment: number };
+    action(payload: { volumeRangeAdjustment: number }): void;
   };
 
   SET_SCORE: {
@@ -863,6 +866,11 @@ export type SingingStoreTypes = {
   SELECT_NOTES: {
     mutation: { noteIds: string[] };
     action(payload: { noteIds: string[] }): void;
+  };
+
+  SELECT_ALL_NOTES: {
+    mutation: undefined;
+    action(): void;
   };
 
   DESELECT_ALL_NOTES: {
@@ -920,10 +928,14 @@ export type SingingStoreTypes = {
   };
 
   IMPORT_MIDI_FILE: {
-    action(payload: { filePath?: string }): void;
+    action(payload: { filePath: string; trackIndex: number }): void;
   };
 
   IMPORT_MUSICXML_FILE: {
+    action(payload: { filePath?: string }): void;
+  };
+
+  IMPORT_UST_FILE: {
     action(payload: { filePath?: string }): void;
   };
 
@@ -957,16 +969,6 @@ export type SingingStoreTypes = {
 
   REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
     action(payload: { listener: (position: number) => void }): void;
-  };
-
-  SET_LEFT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
-  };
-
-  SET_RIGHT_LOCATOR_POSITION: {
-    mutation: { position: number };
-    action(payload: { position: number }): void;
   };
 
   SET_PLAYBACK_STATE: {
@@ -1021,6 +1023,22 @@ export type SingingStoreTypes = {
   STOP_RENDERING: {
     action(): void;
   };
+
+  COPY_NOTES_TO_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_CUT_NOTES_TO_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
+    action(): void;
+  };
+
+  COMMAND_QUANTIZE_SELECTED_NOTES: {
+    action(): void;
+  };
 };
 
 export type SingingCommandStoreState = {
@@ -1033,9 +1051,14 @@ export type SingingCommandStoreTypes = {
     action(payload: { singer: Singer }): void;
   };
 
-  COMMAND_SET_VOICE_KEY_SHIFT: {
-    mutation: { voiceKeyShift: number };
-    action(payload: { voiceKeyShift: number }): void;
+  COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
+    mutation: { keyRangeAdjustment: number };
+    action(payload: { keyRangeAdjustment: number }): void;
+  };
+
+  COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
+    mutation: { volumeRangeAdjustment: number };
+    action(payload: { volumeRangeAdjustment: number }): void;
   };
 
   COMMAND_SET_TEMPO: {
@@ -1511,6 +1534,7 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
+  isImportMidiDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1582,6 +1606,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
+      isImportMidiDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1595,6 +1620,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
+      isImportMidiDialogOpen?: boolean;
     }): void;
   };
 

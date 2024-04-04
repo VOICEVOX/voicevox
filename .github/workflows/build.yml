@@ -27,8 +27,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.16.0
-  VOICEVOX_RESOURCE_VERSION: 0.16.0
+  VOICEVOX_ENGINE_VERSION: 0.18.0
+  VOICEVOX_RESOURCE_VERSION: 0.18.0
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -316,7 +316,7 @@ jobs:
           rm $name.tar
 
       - name: Upload Linux tar.gz (without nvidia) to Artifacts
-        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-targz
@@ -346,7 +346,7 @@ jobs:
           7z rn $name.zip prepackage/ VOICEVOX/
 
       - name: Upload Windows & Mac zip (without nvidia) to Artifacts
-        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-zip
@@ -435,7 +435,7 @@ jobs:
           done
 
       - name: Upload Linux AppImage split to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact
+        if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.installer_artifact_name }}-release
@@ -453,7 +453,7 @@ jobs:
           target_commitish: ${{ github.sha }}
 
       - name: Upload macOS dmg to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact
+        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.installer_artifact_name }}-release
@@ -471,7 +471,7 @@ jobs:
           target_commitish: ${{ github.sha }}
 
       - name: Upload Windows NSIS Web to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.installer_artifact_name }}-release

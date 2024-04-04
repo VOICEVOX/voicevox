@@ -470,7 +470,7 @@
                       flat
                       color="primary"
                       icon="folder_open"
-                      @click="openFileExplore"
+                      @click="selectFixedExportDir()"
                     >
                       <QTooltip :delay="500" anchor="bottom left">
                         フォルダ選択
@@ -954,9 +954,11 @@
                 >
                 </QToggle>
               </QCardActions>
-              <QCardActions v-if="!isProduction" class="q-px-md bg-surface">
-                <div>[開発時のみ機能] ピッチの表示</div>
-                <div aria-label="ソングエディターで、ピッチを表示します。">
+              <QCardActions class="q-px-md bg-surface">
+                <div>ソング：ピッチを表示</div>
+                <div
+                  aria-label="ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。"
+                >
                   <QIcon name="help_outline" size="sm" class="help-hover-icon">
                     <QTooltip
                       :delay="500"
@@ -964,7 +966,7 @@
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
-                      >ONの場合、ソングエディターで、レンダリング後にピッチが表示されます。</QTooltip
+                      >ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。</QTooltip
                     >
                   </QIcon>
                 </div>
@@ -1011,7 +1013,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
@@ -1291,16 +1293,34 @@ const outputSamplingRate = computed({
   },
 });
 
-const openFileExplore = async () => {
-  const path = await window.backend.showSaveDirectoryDialog({
+const openFileExplore = () => {
+  return window.backend.showSaveDirectoryDialog({
     title: "書き出し先のフォルダを選択",
   });
-  if (path) {
-    store.dispatch("SET_SAVING_SETTING", {
-      data: { ...savingSetting.value, fixedExportDir: path },
-    });
+};
+
+const selectFixedExportDir = async () => {
+  const path = await openFileExplore();
+  if (path != undefined) {
+    handleSavingSettingChange("fixedExportDir", path);
   }
 };
+
+// 書き出し先を固定を有効にしたときに書き出し先が未選択の場合は自動的にダイアログを表示する
+watchEffect(async () => {
+  if (
+    savingSetting.value.fixedExportEnabled &&
+    savingSetting.value.fixedExportDir === ""
+  ) {
+    const path = await openFileExplore();
+    if (path != undefined) {
+      handleSavingSettingChange("fixedExportDir", path);
+    } else {
+      // キャンセルした場合書き出し先の固定を無効化する
+      handleSavingSettingChange("fixedExportEnabled", false);
+    }
+  }
+});
 
 const [splitTextWhenPaste, changeSplitTextWhenPaste] =
   useRootMiscSetting("splitTextWhenPaste");
