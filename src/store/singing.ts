@@ -70,7 +70,7 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
-import { createLogger } from "@/helpers/log";
+import { createLogger } from "@/domain/frontend/log";
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,

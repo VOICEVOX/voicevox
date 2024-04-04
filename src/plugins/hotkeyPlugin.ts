@@ -14,7 +14,7 @@ import {
   HotkeyCombination,
   HotkeySettingType,
 } from "@/type/preload";
-import { createLogger } from "@/helpers/log";
+import { createLogger } from "@/domain/frontend/log";
 
 const hotkeyManagerKey = "hotkeyManager";
 export const useHotkeyManager = () => {

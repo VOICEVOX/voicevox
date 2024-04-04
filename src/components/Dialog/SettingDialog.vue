@@ -1025,7 +1025,7 @@ import {
   RootMiscSettingType,
   EngineId,
 } from "@/type/preload";
-import { createLogger } from "@/helpers/log";
+import { createLogger } from "@/domain/frontend/log";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 

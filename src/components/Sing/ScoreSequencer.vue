@@ -259,7 +259,7 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { createLogger } from "@/helpers/log";
+import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useShiftKey } from "@/composables/useModifierKey";
 

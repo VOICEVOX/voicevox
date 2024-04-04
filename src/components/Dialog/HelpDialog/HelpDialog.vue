@@ -98,7 +98,7 @@ import ContactInfo from "./ContactInfo.vue";
 import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
-import { createLogger } from "@/helpers/log";
+import { createLogger } from "@/domain/frontend/log";
 
 type PageItem = {
   type: "item";
