@@ -3,7 +3,7 @@
     class="note"
     :class="{
       selected: noteState === 'SELECTED',
-      'preview-lyric': !!props.previewLyric,
+      'preview-lyric': props.previewLyric != undefined,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
       'below-pitch': showPitch,
