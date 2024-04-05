@@ -25,12 +25,12 @@
       data-testid="note-lyric"
       @mousedown="onLyricMouseDown"
     >
-      {{ displayedLyric }}
+      {{ lyricToDisplay }}
     </div>
     <input
       v-if="showLyricInput"
       v-focus
-      :value="displayedLyric"
+      :value="lyricToDisplay"
       class="note-lyric-input"
       @input="onLyricInput"
       @mousedown.stop
@@ -152,7 +152,7 @@ const hasPhraseError = computed(() => {
 
 // 表示する歌詞。
 // 優先度：入力中の歌詞 > 他ノートの入力中の歌詞 > 渡された（=Storeの）歌詞
-const displayedLyric = computed(
+const lyricToDisplay = computed(
   () => temporaryLyric.value ?? props.previewLyric ?? props.note.lyric
 );
 // 歌詞入力中の一時的な歌詞
