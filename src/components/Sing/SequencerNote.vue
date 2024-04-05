@@ -21,6 +21,7 @@
     </div>
     <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
     <div
+      v-if="!showLyricInput"
       class="note-lyric"
       data-testid="note-lyric"
       @mousedown="onLyricMouseDown"
