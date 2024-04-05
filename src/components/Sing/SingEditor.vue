@@ -22,12 +22,12 @@
         />
       </div>
     </div>
-    <ScoreSequencer :is-activated="isActivated" />
+    <ScoreSequencer />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, ref } from "vue";
+import { computed, ref } from "vue";
 import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
@@ -109,16 +109,6 @@ onetimeWatch(
     immediate: true,
   }
 );
-
-const isActivated = ref(false);
-
-onActivated(() => {
-  isActivated.value = true;
-});
-
-onDeactivated(() => {
-  isActivated.value = false;
-});
 </script>
 
 <style scoped lang="scss">
