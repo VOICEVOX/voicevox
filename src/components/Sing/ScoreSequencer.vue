@@ -396,7 +396,16 @@ const cursorX = ref(0);
 const cursorY = ref(0);
 
 // 歌詞入力
-const { previewLyrics, onNoteLyricUpdate: onNoteLyricInput, onNoteLyricBlur } = useLyricInput();
+const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
+  useLyricInput();
+
+const onNoteLyricInput = (text: string, note: Note) => {
+  splitAndUpdatePreview(text, note);
+};
+
+const onNoteLyricBlur = () => {
+  commitPreviewLyrics();
+};
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
