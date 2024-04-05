@@ -21,14 +21,15 @@ export const useLyricInput = () => {
     }
     const newPreviewLyrics = new Map();
 
-    const moraAndNonMoras = splitLyricsByMoras(
+    const lyricPerNote = splitLyricsByMoras(
       lyric,
       store.state.tracks[0].notes.length - inputNoteIndex
     );
-    for (const [index, mora] of moraAndNonMoras.entries()) {
+    for (const [index, mora] of lyricPerNote.entries()) {
       const noteIndex = inputNoteIndex + index;
       if (noteIndex >= notes.value.length) {
-        break;
+        // splitLyricsByMorasで制限してるのでUnreachableのはず。
+        throw new Error("noteIndex is out of range.");
       }
       const note = notes.value[noteIndex];
       newPreviewLyrics.set(note.id, mora);
