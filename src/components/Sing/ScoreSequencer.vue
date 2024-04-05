@@ -121,7 +121,7 @@
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-update="onNoteLyricUpdate($event, note)"
+        @lyric-input="onNoteLyricInput($event, note)"
         @lyric-blur="onNoteLyricBlur()"
       />
       <SequencerNote
@@ -134,7 +134,7 @@
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-update="onNoteLyricUpdate($event, note)"
+        @lyric-input="onNoteLyricInput($event, note)"
         @lyric-blur="onNoteLyricBlur()"
       />
     </div>
@@ -396,7 +396,7 @@ const cursorX = ref(0);
 const cursorY = ref(0);
 
 // 歌詞入力
-const { previewLyrics, onNoteLyricUpdate, onNoteLyricBlur } = useLyricInput();
+const { previewLyrics, onNoteLyricUpdate: onNoteLyricInput, onNoteLyricBlur } = useLyricInput();
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
