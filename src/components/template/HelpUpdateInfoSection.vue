@@ -66,6 +66,7 @@ const props =
   // height: 100%;
   height: calc(100vh - 90px);
   background-color: colors.$surface;
+  border-left: 1px solid colors.$border;
 }
 
 .inner {

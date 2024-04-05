@@ -14,7 +14,7 @@ $primitive-red: #d04756;
 
   --newcolor-display: #{$primitive-black, 10%};
   --newcolor-display-oncolor: #{$primitive-black, 10%};
-  --newcolor-display-placeholder: #{rgba($primitive-black, 0.5)};
+  --newcolor-display-sub: #{rgba($primitive-black, 0.5)};
   --newcolor-display-link: #{$primitive-blue};
   --newcolor-display-warning: #{$primitive-red};
 
@@ -48,7 +48,7 @@ $primitive-red: #d04756;
 
   --newcolor-display: #{$primitive-white};
   --newcolor-display-oncolor: #{$primitive-black};
-  --newcolor-display-placeholder: #{rgba($primitive-white, 0.5)};
+  --newcolor-display-sub: #{rgba($primitive-white, 0.5)};
   --newcolor-display-link: #{lighten($primitive-blue, 25%)};
   --newcolor-display-warning: #{lighten($primitive-red, 25%)};
 
@@ -80,7 +80,7 @@ $selected: var(--newcolor-selected);
 
 $display: var(--newcolor-display);
 $display-oncolor: var(--newcolor-display-oncolor);
-$display-placeholder: var(--newcolor-display-placeholder);
+$display-sub: var(--newcolor-display-sub);
 $display-link: var(--newcolor-display-link);
 $display-warning: var(--newcolor-display-warning);
 
