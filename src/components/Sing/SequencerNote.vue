@@ -20,14 +20,6 @@
       <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
     </div>
     <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
-    <div
-      v-if="!showLyricInput"
-      class="note-lyric"
-      data-testid="note-lyric"
-      @mousedown="onLyricMouseDown"
-    >
-      {{ lyricToDisplay }}
-    </div>
     <input
       v-if="showLyricInput"
       v-focus
@@ -40,6 +32,13 @@
       @blur="onLyricInputBlur"
     />
     <template v-else>
+      <div
+        class="note-lyric"
+        data-testid="note-lyric"
+        @mousedown="onLyricMouseDown"
+      >
+        {{ lyricToDisplay }}
+      </div>
       <!-- エラー内容を表示 -->
       <QTooltip
         v-if="hasOverlappingError"
