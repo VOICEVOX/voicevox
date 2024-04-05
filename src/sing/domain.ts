@@ -1,5 +1,9 @@
 import { Note, Phrase, Score, Tempo, TimeSignature } from "@/store/type";
-import { convertHiraToKana, convertLongVowel } from "@/store/utility";
+import {
+  convertHiraToKana,
+  convertKanaToHira,
+  convertLongVowel,
+} from "@/store/utility";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -364,14 +368,31 @@ export const splitLyricsByMoras = (
     moraPattern
   );
   let lastMatchEnd = 0;
+  let lastMoraType: "hiragana" | "katakana" = "hiragana";
   // aアbイウc で説明：
   for (const match of matches) {
     // 直前のモーラとの間 = a、b、空文字列
     baseMoraAndNonMoras.push(text.substring(lastMatchEnd, match.index));
     // モーラ = ア、イ、ウ
-    baseMoraAndNonMoras.push(match[0]);
     if (match.index == undefined) {
       throw new Error("match.index is undefined.");
+    }
+    const maybeMora = text.substring(
+      match.index,
+      match.index + match[0].length
+    );
+    // 長音なら置き換えたものを使う
+    if (maybeMora === "ー") {
+      if (lastMoraType === "hiragana") {
+        baseMoraAndNonMoras.push(convertKanaToHira(match[0]));
+      } else {
+        baseMoraAndNonMoras.push(match[0]);
+      }
+    } else {
+      baseMoraAndNonMoras.push(maybeMora);
+      lastMoraType = maybeMora.match(/[\u30A1-\u30F4]/)
+        ? "katakana"
+        : "hiragana";
     }
     lastMatchEnd = match.index + match[0].length;
   }
