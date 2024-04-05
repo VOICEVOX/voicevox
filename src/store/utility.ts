@@ -463,7 +463,14 @@ export const convertLongVowel = (text: string): string => {
     .replace(/(?<=[エケセテネヘメレェゲゼデベペ]ー*)ー/g, "エ")
     .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ")
     .replace(/(?<=[ン]ー*)ー/g, "ン")
-    .replace(/(?<=[ッ]ー*)ー/g, "ッ");
+    .replace(/(?<=[ッ]ー*)ー/g, "ッ")
+    .replace(/(?<=[あかさたなはまやらわゃぁがざだばぱ]ー*)ー/g, "あ")
+    .replace(/(?<=[いきしちにひみりぃぎじぢびぴ]ー*)ー/g, "い")
+    .replace(/(?<=[うくすつぬふむゆるゅぅぐずづぶぷ]ー*)ー/g, "う")
+    .replace(/(?<=[えけせてねへめれぇげぜでべぺ]ー*)ー/g, "え")
+    .replace(/(?<=[おこそとのほもよろをょぉごぞどぼぽ]ー*)ー/g, "お")
+    .replace(/(?<=[ん]ー*)ー/g, "ん")
+    .replace(/(?<=[っ]ー*)ー/g, "っ");
 };
 
 // based on https://github.com/BBWeb/path-browserify/blob/win-version/index.js

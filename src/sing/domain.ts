@@ -1,9 +1,5 @@
 import { Note, Phrase, Score, Tempo, TimeSignature } from "@/store/type";
-import {
-  convertHiraToKana,
-  convertKanaToHira,
-  convertLongVowel,
-} from "@/store/utility";
+import { convertLongVowel } from "@/store/utility";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -346,7 +342,11 @@ export const moraPattern = new RegExp(
     "[イ][ェ]|[ヴ][ャュョ]|[トド][ゥ]|[テデ][ィャュョ]|[デ][ェ]|[クグ][ヮ]|" + // rule_others
     "[キシチニヒミリギジビピ][ェャュョ]|" + // rule_line_i
     "[ツフヴ][ァ]|[ウスツフヴズ][ィ]|[ウツフヴ][ェォ]|" + // rule_line_u
-    "[ァ-ヴー]" + // rule_one_mora
+    "[ァ-ヴー]|" + // rule_one_mora
+    "[い][ぇ]|[ゃゅょ]|[とど][ぅ]|[てで][ぃゃゅょ]|[で][ぇ]|[くぐ][ゎ]|" + // rule_others
+    "[きしちにひみりぎじびぴ][ぇゃゅょ]|" + // rule_line_i
+    "[つふゔ][ぁ]|[うすつふゔず][ぃ]|[うつふゔ][ぇぉ]|" + // rule_line_u
+    "[ぁ-ゔー]" + // rule_one_mora
     ")",
   "g"
 );
@@ -363,43 +363,26 @@ export const splitLyricsByMoras = (
   text: string,
   maxLength = Infinity
 ): string[] => {
-  const baseMoraAndNonMoras: string[] = [];
-  const matches = convertLongVowel(convertHiraToKana(text)).matchAll(
-    moraPattern
-  );
+  const moraAndNonMoras: string[] = [];
+  const matches = convertLongVowel(text).matchAll(moraPattern);
   let lastMatchEnd = 0;
-  let lastMoraType: "hiragana" | "katakana" = "hiragana";
   // aアbイウc で説明：
   for (const match of matches) {
-    // 直前のモーラとの間 = a、b、空文字列
-    baseMoraAndNonMoras.push(text.substring(lastMatchEnd, match.index));
-    // モーラ = ア、イ、ウ
     if (match.index == undefined) {
       throw new Error("match.index is undefined.");
     }
-    const maybeMora = text.substring(
-      match.index,
-      match.index + match[0].length
-    );
-    // 長音なら置き換えたものを使う
-    if (maybeMora === "ー") {
-      if (lastMoraType === "hiragana") {
-        baseMoraAndNonMoras.push(convertKanaToHira(match[0]));
-      } else {
-        baseMoraAndNonMoras.push(match[0]);
-      }
-    } else {
-      baseMoraAndNonMoras.push(maybeMora);
-      lastMoraType = maybeMora.match(/[\u30A1-\u30F4]/)
-        ? "katakana"
-        : "hiragana";
+    // 直前のモーラとの間 = a、b、空文字列
+    if (lastMatchEnd < match.index) {
+      moraAndNonMoras.push(text.substring(lastMatchEnd, match.index));
     }
+    // モーラ = ア、イ、ウ
+    moraAndNonMoras.push(match[0]);
     lastMatchEnd = match.index + match[0].length;
   }
   // 最後のモーラから後 = cの部分
-  baseMoraAndNonMoras.push(text.substring(lastMatchEnd));
-  // 空文字列を削除（モーラが連続する時やモーラで始まったり終わったりする時に発生）
-  const moraAndNonMoras = baseMoraAndNonMoras.filter((value) => value !== "");
+  if (lastMatchEnd < text.length) {
+    moraAndNonMoras.push(text.substring(lastMatchEnd));
+  }
   if (moraAndNonMoras.length > maxLength) {
     moraAndNonMoras.splice(
       maxLength - 1,
