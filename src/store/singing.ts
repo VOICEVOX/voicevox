@@ -336,6 +336,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await dispatch("SING_STOP_AUDIO");
       }
       commit("SET_SCORE", { score });
+      for (const track of state.tracks) {
+        await dispatch("SET_SINGER", {
+          trackId: track.id,
+        });
+      }
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
       dispatch("RENDER");
