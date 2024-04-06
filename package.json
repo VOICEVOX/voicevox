@@ -38,7 +38,6 @@
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
     "@quasar/extras": "1.10.10",
-    "@tonejs/midi": "2.0.28",
     "async-lock": "1.4.0",
     "buffer": "6.0.3",
     "clone-deep": "4.0.1",
@@ -52,6 +51,7 @@
     "hotkeys-js": "3.13.6",
     "immer": "9.0.21",
     "markdown-it": "13.0.2",
+    "midi-file": "1.2.4",
     "move-file": "3.0.0",
     "multistream": "4.1.0",
     "pixi.js": "7.4.0",
