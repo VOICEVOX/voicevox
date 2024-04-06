@@ -4,8 +4,7 @@
       tag="QList"
       :model-value="tracks"
       item-key="id"
-      handle=".track-item"
-      filter=".track-control"
+      handle=".track-handle"
       class="tracks"
       drag-class="dragging"
       @update:model-value="reorderTracks"
@@ -26,6 +25,7 @@
             active-class="selected-item"
             @click="selectTrack(track.id)"
           >
+            <div class="track-handle" />
             <QItemSection
               avatar
               :style="{
@@ -35,6 +35,7 @@
               <SingerIcon
                 v-if="trackStyles[track.id]"
                 round
+                class="singer-icon"
                 size="3rem"
                 :style="trackStyles[track.id]!"
               />
@@ -42,9 +43,8 @@
                 ><span color="text-display-on-primary">?</span></QAvatar
               >
             </QItemSection>
-
             <QItemSection>
-              <QItemLabel>
+              <QItemLabel class="singer-name">
                 {{
                   mapNullablePipe(
                     trackCharacters[track.id],
@@ -52,7 +52,11 @@
                   ) || "（不明なキャラクター）"
                 }}
               </QItemLabel>
-              <QItemLabel v-if="trackStyles[track.id]" caption>
+              <QItemLabel
+                v-if="trackStyles[track.id]"
+                caption
+                class="singer-style"
+              >
                 {{ getStyleDescription(trackStyles[track.id]!) }}
               </QItemLabel>
             </QItemSection>
@@ -303,17 +307,28 @@ const trackStyles = computed(() =>
   }
 }
 
-.track-control {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.1rem;
+.track-item {
+  .track-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4.5rem;
+    height: 100%;
+    cursor: grab;
+    z-index: 1;
+  }
+  .track-control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
 
-  .track-button-active {
-    background-color: rgba(colors.$primary-rgb, 0.8);
+    .track-button-active {
+      background-color: rgba(colors.$primary-rgb, 0.8);
+    }
   }
 }
 
