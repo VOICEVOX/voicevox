@@ -69,7 +69,7 @@ onMounted(async () => {
   await store.dispatch("INIT_VUEX");
 
   // プロジェクトファイルのパスを取得
-  const _projectFilePath = urlParams.get("projectFilePath");
+  const projectFilePath = urlParams.get("projectFilePath");
 
   // どちらのエディタを開くか設定
   await store.dispatch("SET_OPENED_EDITOR", { editor: "talk" });
@@ -120,9 +120,9 @@ onMounted(async () => {
   });
 
   // プロジェクトファイルが指定されていればロード
-  if (typeof _projectFilePath === "string" && _projectFilePath !== "") {
+  if (typeof projectFilePath === "string" && projectFilePath !== "") {
     isProjectFileLoaded.value = await store.dispatch("LOAD_PROJECT_FILE", {
-      filePath: _projectFilePath,
+      filePath: projectFilePath,
     });
   } else {
     isProjectFileLoaded.value = false;
