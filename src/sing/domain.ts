@@ -1,4 +1,12 @@
-import { Note, Phrase, Score, Tempo, TimeSignature, Track } from "@/store/type";
+import {
+  Note,
+  Phrase,
+  Score,
+  Tempo,
+  TimeSignature,
+  Track,
+  TrackId,
+} from "@/store/type";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -340,12 +348,17 @@ export function selectPriorPhrase(
  * - ソロのトラックがある場合、ソロのトラックのみ再生する
  * - ソロのトラックがない場合、ミュートされていないトラックを再生する
  */
-export function shouldPlay(tracks: Track[]): boolean[] {
+export function shouldPlay(tracks: Track[]): Record<TrackId, boolean> {
   const isThereSoloTrack = tracks.some((track) => track.solo);
   const baseState = isThereSoloTrack
     ? tracks.map((track) => track.solo)
     : tracks.map(() => true);
-  return baseState.map((value, index) => value && !tracks[index].mute);
+  return Object.fromEntries(
+    baseState.map((value, index) => [
+      tracks[index].id,
+      value && !tracks[index].mute,
+    ])
+  );
 }
 export const convertToWavFileData = (audioBuffer: AudioBuffer) => {
   const bytesPerSample = 4; // Float32

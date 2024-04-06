@@ -749,7 +749,12 @@ export const singerSchema = z.object({
 
 export type Singer = z.infer<typeof singerSchema>;
 
+export const trackIdSchema = z.string().brand("TrackId");
+export type TrackId = z.infer<typeof trackIdSchema>;
+export const TrackId = (trackId: string) => trackIdSchema.parse(trackId);
+
 export const trackSchema = z.object({
+  id: trackIdSchema,
   singer: singerSchema.optional(),
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
@@ -779,7 +784,7 @@ export type Phrase = {
   state: PhraseState;
   query?: FrameAudioQuery;
   startTime?: number;
-  trackIndex: number;
+  trackId: TrackId;
 };
 
 export type SingingStoreState = {
@@ -793,10 +798,10 @@ export type SingingStoreState = {
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
-  selectedTrackIndex: number;
+  selectedTrackId?: TrackId;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
-  overlappingNoteInfos: OverlappingNoteInfos[];
+  overlappingNoteInfos: Map<TrackId, OverlappingNoteInfos>;
   editingLyricNoteId?: string;
   nowPlaying: boolean;
   volume: number;
@@ -818,21 +823,18 @@ export type SingingStoreTypes = {
   };
 
   SET_SINGER: {
-    mutation: { trackIndex: number; singer?: Singer };
-    action(payload: { trackIndex: number; singer?: Singer }): void;
+    mutation: { trackId: TrackId; singer?: Singer };
+    action(payload: { trackId: TrackId; singer?: Singer }): void;
   };
 
   SET_KEY_RANGE_ADJUSTMENT: {
-    mutation: { trackIndex: number; keyRangeAdjustment: number };
-    action(payload: { trackIndex: number; keyRangeAdjustment: number }): void;
+    mutation: { trackId: TrackId; keyRangeAdjustment: number };
+    action(payload: { trackId: TrackId; keyRangeAdjustment: number }): void;
   };
 
   SET_VOLUME_RANGE_ADJUSTMENT: {
-    mutation: { trackIndex: number; volumeRangeAdjustment: number };
-    action(payload: {
-      trackIndex: number;
-      volumeRangeAdjustment: number;
-    }): void;
+    mutation: { trackId: TrackId; volumeRangeAdjustment: number };
+    action(payload: { trackId: TrackId; volumeRangeAdjustment: number }): void;
   };
 
   SET_SCORE: {
@@ -912,9 +914,9 @@ export type SingingStoreTypes = {
     mutation: { phraseKey: string; startTime: number };
   };
 
-  SET_SELECTED_TRACK_INDEX: {
-    mutation: { trackIndex: number };
-    action(payload: { trackIndex: number }): void;
+  SET_SELECTED_TRACK: {
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
   };
 
   SELECTED_TRACK: {
@@ -1063,28 +1065,28 @@ export type SingingStoreTypes = {
   };
 
   SET_TRACK_PAN: {
-    mutation: { trackIndex: number; pan: number };
+    mutation: { trackId: TrackId; pan: number };
 
-    action(payload: { trackIndex: number; pan: number }): void;
+    action(payload: { trackId: TrackId; pan: number }): void;
   };
 
   SET_TRACK_VOLUME: {
-    mutation: { trackIndex: number; volume: number };
-    action(payload: { trackIndex: number; volume: number }): void;
+    mutation: { trackId: TrackId; volume: number };
+    action(payload: { trackId: TrackId; volume: number }): void;
   };
 
   SET_TRACK_MUTE: {
-    mutation: { trackIndex: number; mute: boolean };
-    action(payload: { trackIndex: number; mute: boolean }): void;
+    mutation: { trackId: TrackId; mute: boolean };
+    action(payload: { trackId: TrackId; mute: boolean }): void;
   };
 
   SET_TRACK_SOLO: {
-    mutation: { trackIndex: number; solo: boolean };
-    action(payload: { trackIndex: number; solo: boolean }): void;
+    mutation: { trackId: TrackId; solo: boolean };
+    action(payload: { trackId: TrackId; solo: boolean }): void;
   };
 
   DELETE_TRACK: {
-    mutation: { trackIndex: number };
+    mutation: { trackId: TrackId };
   };
 };
 
@@ -1094,21 +1096,18 @@ export type SingingCommandStoreState = {
 
 export type SingingCommandStoreTypes = {
   COMMAND_SET_SINGER: {
-    mutation: { trackIndex: number; singer: Singer };
-    action(payload: { trackIndex: number; singer: Singer }): void;
+    mutation: { trackId: TrackId; singer: Singer };
+    action(payload: { trackId: TrackId; singer: Singer }): void;
   };
 
   COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
-    mutation: { trackIndex: number; keyRangeAdjustment: number };
-    action(payload: { trackIndex: number; keyRangeAdjustment: number }): void;
+    mutation: { trackId: TrackId; keyRangeAdjustment: number };
+    action(payload: { trackId: TrackId; keyRangeAdjustment: number }): void;
   };
 
   COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
-    mutation: { trackIndex: number; volumeRangeAdjustment: number };
-    action(payload: {
-      trackIndex: number;
-      volumeRangeAdjustment: number;
-    }): void;
+    mutation: { trackId: TrackId; volumeRangeAdjustment: number };
+    action(payload: { trackId: TrackId; volumeRangeAdjustment: number }): void;
   };
 
   COMMAND_SET_TEMPO: {
@@ -1156,28 +1155,28 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_DELETE_TRACK: {
-    mutation: { trackIndex: number };
-    action(payload: { trackIndex: number }): void;
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
   };
 
   COMMAND_SET_TRACK_PAN: {
-    mutation: { trackIndex: number; pan: number };
-    action(payload: { trackIndex: number; pan: number }): void;
+    mutation: { trackId: TrackId; pan: number };
+    action(payload: { trackId: TrackId; pan: number }): void;
   };
 
   COMMAND_SET_TRACK_VOLUME: {
-    mutation: { trackIndex: number; volume: number };
-    action(payload: { trackIndex: number; volume: number }): void;
+    mutation: { trackId: TrackId; volume: number };
+    action(payload: { trackId: TrackId; volume: number }): void;
   };
 
   COMMAND_SET_TRACK_MUTE: {
-    mutation: { trackIndex: number; mute: boolean };
-    action(payload: { trackIndex: number; mute: boolean }): void;
+    mutation: { trackId: TrackId; mute: boolean };
+    action(payload: { trackId: TrackId; mute: boolean }): void;
   };
 
   COMMAND_SET_TRACK_SOLO: {
-    mutation: { trackIndex: number; solo: boolean };
-    action(payload: { trackIndex: number; solo: boolean }): void;
+    mutation: { trackId: TrackId; solo: boolean };
+    action(payload: { trackId: TrackId; solo: boolean }): void;
   };
 };
 

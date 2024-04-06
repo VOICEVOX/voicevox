@@ -19,6 +19,7 @@ import {
   transformCommandStore,
   noteSchema,
   Track,
+  TrackId,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
@@ -113,11 +114,7 @@ if (window.AudioContext) {
   clipper.output.connect(audioContext.destination);
 }
 
-const updateTrackMute = (shouldPlay: boolean[]) => {
-  for (let i = 0; i < trackNodes.length; i++) {
-    trackNodes[i].setMute(!shouldPlay[i]);
-  }
-};
+const updateTrackMute = (shouldPlay: Record<TrackId, boolean>) => {};
 
 type PhraseData = {
   blob?: Blob;
@@ -130,7 +127,8 @@ const phraseDataMap = new Map<string, PhraseData>();
 const phraseAudioBlobCache = new Map<string, Blob>();
 const animationTimer = new AnimationTimer();
 
-const createInitialTrack = (): Track => ({
+export const createInitialTrack = (): Track => ({
+  id: TrackId(uuidv4()),
   singer: undefined,
   keyRangeAdjustment: 0,
   volumeRangeAdjustment: 0,
@@ -141,6 +139,7 @@ const createInitialTrack = (): Track => ({
   solo: false,
 });
 export const generateSingingStoreInitialScore = () => {
+  const track = createInitialTrack();
   return {
     tpqn: DEFAULT_TPQN,
     tempos: [
@@ -156,7 +155,9 @@ export const generateSingingStoreInitialScore = () => {
         beatType: DEFAULT_BEAT_TYPE,
       },
     ],
-    tracks: [createInitialTrack()],
+    tracks: [track],
+    overlappingNoteInfos: new Map([[track.id, new Map()]]),
+    selectedTrackId: track.id,
   };
 };
 
@@ -168,10 +169,8 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
-  selectedTrackIndex: 0,
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
-  overlappingNoteInfos: [new Map()],
   nowPlaying: false,
   volume: 0,
   startRenderingRequested: false,
@@ -207,10 +206,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGER: {
-    mutation(state, { singer, trackIndex }) {
-      state.tracks[trackIndex].singer = singer;
+    mutation(state, { singer, trackId }) {
+      const track = state.tracks.find((value) => value.id === trackId);
+      if (track == undefined) {
+        throw new Error("track is undefined.");
+      }
+      track.singer = singer;
     },
-    async action({ state, getters, dispatch, commit }, { singer, trackIndex }) {
+    async action({ state, getters, dispatch, commit }, { singer, trackId }) {
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
       const userOrderedCharacterInfos =
@@ -228,37 +231,45 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const styleId = singer?.styleId ?? defaultStyleId;
 
       dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
-      commit("SET_SINGER", { trackIndex, singer: { engineId, styleId } });
+      commit("SET_SINGER", { trackId, singer: { engineId, styleId } });
 
       dispatch("RENDER");
     },
   },
 
   SET_KEY_RANGE_ADJUSTMENT: {
-    mutation(state, { keyRangeAdjustment, trackIndex }) {
-      state.tracks[trackIndex].keyRangeAdjustment = keyRangeAdjustment;
+    mutation(state, { keyRangeAdjustment, trackId }) {
+      const track = state.tracks.find((value) => value.id === trackId);
+      if (track == undefined) {
+        throw new Error("track is undefined.");
+      }
+      track.keyRangeAdjustment = keyRangeAdjustment;
     },
-    async action({ dispatch, commit }, { keyRangeAdjustment, trackIndex }) {
+    async action({ dispatch, commit }, { keyRangeAdjustment, trackId }) {
       if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
         throw new Error("The keyRangeAdjustment is invalid.");
       }
-      commit("SET_KEY_RANGE_ADJUSTMENT", { trackIndex, keyRangeAdjustment });
+      commit("SET_KEY_RANGE_ADJUSTMENT", { trackId, keyRangeAdjustment });
 
       dispatch("RENDER");
     },
   },
 
   SET_VOLUME_RANGE_ADJUSTMENT: {
-    mutation(state, { volumeRangeAdjustment, trackIndex }) {
-      state.tracks[trackIndex].volumeRangeAdjustment = volumeRangeAdjustment;
+    mutation(state, { volumeRangeAdjustment, trackId }) {
+      const track = state.tracks.find((value) => value.id === trackId);
+      if (track == undefined) {
+        throw new Error("track is undefined.");
+      }
+      track.volumeRangeAdjustment = volumeRangeAdjustment;
     },
-    async action({ dispatch, commit }, { volumeRangeAdjustment, trackIndex }) {
+    async action({ dispatch, commit }, { volumeRangeAdjustment, trackId }) {
       if (!isValidvolumeRangeAdjustment(volumeRangeAdjustment)) {
         throw new Error("The volumeRangeAdjustment is invalid.");
       }
       commit("SET_VOLUME_RANGE_ADJUSTMENT", {
         volumeRangeAdjustment,
-        trackIndex,
+        trackId,
       });
 
       dispatch("RENDER");
@@ -273,39 +284,27 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tpqn = score.tpqn;
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
-      state.overlappingNoteInfos = [];
+      state.overlappingNoteInfos = new Map();
       trackNodes.length = 0;
-      // state.tracks = score.notes.map(() => createInitialTrack());
-      // にしたいが、これをやるとシンガーの設定が全部吹っ飛ぶので
-      // tracks.length = score.notes.length; にする。
-      // そもそもSET_SCOREがシンガーの設定を残すように作られているのがおかしい？
-      state.tracks.length = score.notes.length;
-      for (const [i, notes] of score.notes.entries()) {
-        if (state.tracks[i] == undefined) {
-          state.tracks[i] = createInitialTrack();
-        }
-        state.tracks[i].notes = notes;
-        state.overlappingNoteInfos.push(new Map());
-        addNotesToOverlappingNoteInfos(
-          state.overlappingNoteInfos[i],
-          score.notes[i]
-        );
+      state.tracks = [];
+      const scoreNotes = score.notes;
+      if (scoreNotes.length === 0) {
+        scoreNotes.push([]);
+      }
+      for (const notes of scoreNotes) {
+        const track = createInitialTrack();
+        state.tracks.push(track);
+        track.notes = notes;
+        const overlappingNoteInfo = new Map();
+        state.overlappingNoteInfos.set(track.id, overlappingNoteInfo);
+        addNotesToOverlappingNoteInfos(overlappingNoteInfo, notes);
         if (audioContext && globalChannelStrip) {
           const node = new TrackNode(audioContext);
           node.output.connect(globalChannelStrip.input);
           trackNodes.push(node);
         }
       }
-      if (state.tracks.length === 0) {
-        state.tracks.push(createInitialTrack());
-        state.overlappingNoteInfos.push(new Map());
-        if (audioContext && globalChannelStrip) {
-          const node = new TrackNode(audioContext);
-          node.output.connect(globalChannelStrip.input);
-          trackNodes.push(node);
-        }
-      }
-      state.selectedTrackIndex = 0;
+      state.selectedTrackId = state.tracks[0].id;
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -407,7 +406,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   NOTE_IDS: {
     getter(state) {
-      const selectedTrack = state.tracks[state.selectedTrackIndex];
+      const selectedTrack = state.tracks.find(
+        (value) => value.id === state.selectedTrackId
+      );
+      if (selectedTrack == undefined) {
+        throw new Error("selectedTrack is undefined.");
+      }
       const noteIds = selectedTrack.notes.map((value) => value.id);
       return new Set(noteIds);
     },
@@ -415,14 +419,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   ADD_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
-      const selectedTrack = state.tracks[state.selectedTrackIndex];
+      const selectedTrack = state.tracks.find(
+        (value) => value.id === state.selectedTrackId
+      );
+      if (selectedTrack == undefined) {
+        throw new Error("selectedTrack is undefined.");
+      }
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      addNotesToOverlappingNoteInfos(
-        state.overlappingNoteInfos[state.selectedTrackIndex],
-        notes
+      const overlappingNoteInfo = state.overlappingNoteInfos.get(
+        selectedTrack.id
       );
+      if (overlappingNoteInfo == undefined) {
+        throw new Error("overlappingNoteInfo is undefined.");
+      }
+      addNotesToOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -435,14 +447,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       for (const note of notes) {
         notesMap.set(note.id, note);
       }
-      const selectedTrack = state.tracks[state.selectedTrackIndex];
+      const selectedTrack = state.tracks.find(
+        (value) => value.id === state.selectedTrackId
+      );
+      if (selectedTrack == undefined) {
+        throw new Error("selectedTrack is undefined.");
+      }
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      updateNotesOfOverlappingNoteInfos(
-        state.overlappingNoteInfos[state.selectedTrackIndex],
-        notes
+      const overlappingNoteInfo = state.overlappingNoteInfos.get(
+        selectedTrack.id
       );
+      if (overlappingNoteInfo == undefined) {
+        throw new Error("overlappingNoteInfo is undefined.");
+      }
+      updateNotesOfOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -452,14 +472,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REMOVE_NOTES: {
     mutation(state, { noteIds }: { noteIds: string[] }) {
       const noteIdsSet = new Set(noteIds);
-      const selectedTrack = state.tracks[state.selectedTrackIndex];
+      const selectedTrack = state.tracks.find(
+        (value) => value.id === state.selectedTrackId
+      );
+      if (selectedTrack == undefined) {
+        throw new Error("selectedTrack is undefined.");
+      }
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
-      removeNotesFromOverlappingNoteInfos(
-        state.overlappingNoteInfos[state.selectedTrackIndex],
-        notes
+      const overlappingNoteInfo = state.overlappingNoteInfos.get(
+        selectedTrack.id
       );
+      if (overlappingNoteInfo == undefined) {
+        throw new Error("overlappingNoteInfo is undefined.");
+      }
+      removeNotesFromOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos
       );
@@ -498,8 +526,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECT_ALL_NOTES: {
     mutation(state) {
-      const currentTrack = state.tracks[state.selectedTrackIndex];
-      const allNoteIds = currentTrack.notes.map((note) => note.id);
+      const selectedTrack = state.tracks.find(
+        (value) => value.id === state.selectedTrackId
+      );
+      if (selectedTrack == undefined) {
+        throw new Error("selectedTrack is undefined.");
+      }
+      const allNoteIds = selectedTrack.notes.map((note) => note.id);
       state.selectedNoteIds = new Set(allNoteIds);
     },
     async action({ commit }) {
@@ -593,19 +626,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_SELECTED_TRACK_INDEX: {
-    mutation(state, { trackIndex }: { trackIndex: number }) {
-      state.selectedTrackIndex = trackIndex;
+  SET_SELECTED_TRACK: {
+    mutation(state, { trackId }: { trackId: TrackId }) {
+      state.selectedTrackId = trackId;
       state.selectedNoteIds.clear();
     },
-    async action({ commit }, { trackIndex }) {
-      commit("SET_SELECTED_TRACK_INDEX", { trackIndex });
+    async action({ commit }, { trackId }) {
+      commit("SET_SELECTED_TRACK", { trackId });
     },
   },
 
   SELECTED_TRACK: {
     getter(state) {
-      return state.tracks[state.selectedTrackIndex];
+      const selectedTrack = state.tracks.find(
+        (value) => value.id === state.selectedTrackId
+      );
+      if (selectedTrack == undefined) {
+        throw new Error("selectedTrack is undefined.");
+      }
+      return selectedTrack;
     },
   },
 
@@ -806,7 +845,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tpqn: number,
         tempos: Tempo[],
         notes: Note[],
-        trackIndex: number
+        trackId: TrackId
       ) => {
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
@@ -833,7 +872,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               tpqn,
               tempos,
               notes: phraseNotes,
-              trackIndex,
+              trackId,
             };
             const hash = await generatePhraseHash(params);
             foundPhrases.set(hash, {
@@ -1017,7 +1056,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             tpqn,
             tempos,
             notes,
-            i
+            track.id
           );
           for (const [hash, phrase] of foundPhrases) {
             const phraseKey = hash;
@@ -1203,6 +1242,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               audioPlayer,
               audioEvents,
             };
+
             audioPlayer.output.connect(
               trackNodes[phrase.trackIndex].channelStrip.input
             );
@@ -2121,7 +2161,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const trackNode = new TrackNode(offlineAudioContext);
             trackNode.channelStrip.volume = track.volume;
             trackNode.channelStrip.pan = track.pan;
-            trackNode.setMute(!tracksShouldPlay[i]);
+            trackNode.setMute(!tracksShouldPlay[track.id]);
             trackNode.output.connect(globalChannelStrip.input);
 
             await setupAudioEvents(
@@ -2129,7 +2169,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               trackNode,
               offlineTransport,
               [...state.phrases].flatMap(([phraseKey, phrase]) => {
-                if (phrase.trackIndex !== i) {
+                if (phrase.trackId !== track.id) {
                   return [];
                 }
                 const phraseData = phraseDataMap.get(phraseKey);
@@ -2343,7 +2383,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         singer,
       };
       state.tracks.push(track);
-      state.overlappingNoteInfos.push(new Map());
+      state.overlappingNoteInfos.set(track.id, new Map());
       if (trackNodes.length < state.tracks.length) {
         if (!audioContext || !globalChannelStrip) {
           throw new Error("audioContext or globalChannelStrip is undefined.");
@@ -2359,54 +2399,67 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_TRACK_PAN: {
-    mutation(state, { trackIndex, pan }) {
-      state.tracks[trackIndex].pan = pan;
-      trackNodes[trackIndex].channelStrip.pan = pan;
+    mutation(state, { trackId, pan }) {
+      const track = state.tracks.find((track) => track.id === trackId);
+      if (!track) {
+        throw new Error("The track is not found.");
+      }
+      track.pan = pan;
+      trackNodes[track].channelStrip.pan = pan;
     },
-    action({ commit }, { trackIndex, pan }) {
-      commit("SET_TRACK_PAN", { trackIndex, pan });
+    action({ commit }, { trackId, pan }) {
+      commit("SET_TRACK_PAN", { trackId, pan });
     },
   },
 
   SET_TRACK_VOLUME: {
-    mutation(state, { trackIndex, volume }) {
-      state.tracks[trackIndex].volume = volume;
-      trackNodes[trackIndex].channelStrip.volume = volume;
+    mutation(state, { trackId, volume }) {
+      const track = state.tracks.find((track) => track.id === trackId);
+      if (!track) {
+        throw new Error("The track is not found.");
+      }
+      track.volume = volume;
+      trackNodes[track].channelStrip.volume = volume;
     },
-    action({ commit }, { trackIndex, volume }) {
-      commit("SET_TRACK_VOLUME", { trackIndex, volume });
+    action({ commit }, { trackId, volume }) {
+      commit("SET_TRACK_VOLUME", { trackId, volume });
     },
   },
 
   SET_TRACK_MUTE: {
-    mutation(state, { trackIndex, mute }) {
-      state.tracks[trackIndex].mute = mute;
+    mutation(state, { trackId, mute }) {
+      const track = state.tracks.find((track) => track.id === trackId);
+      if (!track) {
+        throw new Error("The track is not found.");
+      }
+      track.mute = mute;
       updateTrackMute(shouldPlay(state.tracks));
     },
-    action({ commit }, { trackIndex, mute }) {
-      commit("SET_TRACK_MUTE", { trackIndex, mute });
+    action({ commit }, { trackId, mute }) {
+      commit("SET_TRACK_MUTE", { trackId, mute });
     },
   },
 
   SET_TRACK_SOLO: {
-    mutation(state, { trackIndex, solo }) {
-      state.tracks[trackIndex].solo = solo;
+    mutation(state, { trackId, solo }) {
+      const track = state.tracks.find((track) => track.id === trackId);
+      if (!track) {
+        throw new Error("The track is not found.");
+      }
+      track.solo = solo;
       updateTrackMute(shouldPlay(state.tracks));
     },
-    action({ commit }, { trackIndex, solo }) {
-      commit("SET_TRACK_SOLO", { trackIndex, solo });
+    action({ commit }, { trackId, solo }) {
+      commit("SET_TRACK_SOLO", { trackId, solo });
     },
   },
 
   DELETE_TRACK: {
-    mutation(state, { trackIndex }) {
-      state.tracks.splice(trackIndex, 1);
-      state.overlappingNoteInfos.splice(trackIndex, 1);
-      if (state.selectedTrackIndex === trackIndex) {
-        state.selectedTrackIndex = Math.min(
-          state.selectedTrackIndex,
-          state.tracks.length - 1
-        );
+    mutation(state, { trackId }) {
+      state.tracks = state.tracks.filter((track) => track.id !== trackId);
+      state.overlappingNoteInfos.delete(trackId);
+      if (state.selectedTrackId === trackId) {
+        state.selectedTrackId = state.tracks[0].id;
       }
       // Undoした時に壊れるので、TrackNodeはあえて消さない。
       // TODO: もっとスマートな方法を考える
@@ -2419,29 +2472,29 @@ export const singingCommandStoreState: SingingCommandStoreState = {};
 export const singingCommandStore = transformCommandStore(
   createPartialStore<SingingCommandStoreTypes>({
     COMMAND_SET_SINGER: {
-      mutation(draft, { singer, trackIndex }) {
-        singingStore.mutations.SET_SINGER(draft, { singer, trackIndex });
+      mutation(draft, { singer, trackId }) {
+        singingStore.mutations.SET_SINGER(draft, { singer, trackId });
       },
-      async action({ dispatch, commit }, { singer, trackIndex }) {
+      async action({ dispatch, commit }, { singer, trackId }) {
         dispatch("SETUP_SINGER", { singer });
-        commit("COMMAND_SET_SINGER", { singer, trackIndex });
+        commit("COMMAND_SET_SINGER", { singer, trackId });
 
         dispatch("RENDER");
       },
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
-      mutation(draft, { keyRangeAdjustment, trackIndex }) {
+      mutation(draft, { keyRangeAdjustment, trackId }) {
         singingStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
           keyRangeAdjustment,
-          trackIndex,
+          trackId,
         });
       },
-      async action({ dispatch, commit }, { keyRangeAdjustment, trackIndex }) {
+      async action({ dispatch, commit }, { keyRangeAdjustment, trackId }) {
         if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
           throw new Error("The keyRangeAdjustment is invalid.");
         }
         commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
-          trackIndex,
+          trackId,
           keyRangeAdjustment,
         });
 
@@ -2449,22 +2502,19 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
-      mutation(draft, { trackIndex, volumeRangeAdjustment }) {
+      mutation(draft, { trackId, volumeRangeAdjustment }) {
         singingStore.mutations.SET_VOLUME_RANGE_ADJUSTMENT(draft, {
           volumeRangeAdjustment,
-          trackIndex,
+          trackId,
         });
       },
-      async action(
-        { dispatch, commit },
-        { volumeRangeAdjustment, trackIndex }
-      ) {
+      async action({ dispatch, commit }, { volumeRangeAdjustment, trackId }) {
         if (!isValidvolumeRangeAdjustment(volumeRangeAdjustment)) {
           throw new Error("The volumeRangeAdjustment is invalid.");
         }
         commit("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
           volumeRangeAdjustment,
-          trackIndex,
+          trackId,
         });
 
         dispatch("RENDER");
@@ -2616,49 +2666,49 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_DELETE_TRACK: {
-      mutation(draft, { trackIndex }) {
-        singingStore.mutations.DELETE_TRACK(draft, { trackIndex });
+      mutation(draft, { trackId }) {
+        singingStore.mutations.DELETE_TRACK(draft, { trackId });
       },
-      action({ commit }, { trackIndex }) {
-        commit("COMMAND_DELETE_TRACK", { trackIndex });
+      action({ commit }, { trackId }) {
+        commit("COMMAND_DELETE_TRACK", { trackId });
       },
     },
 
     COMMAND_SET_TRACK_PAN: {
-      mutation(state, { trackIndex, pan }) {
-        singingStore.mutations.SET_TRACK_PAN(state, { trackIndex, pan });
+      mutation(state, { trackId, pan }) {
+        singingStore.mutations.SET_TRACK_PAN(state, { trackId, pan });
         trackNodes[trackIndex].channelStrip.pan = pan;
       },
-      action({ commit }, { trackIndex, pan }) {
-        commit("COMMAND_SET_TRACK_PAN", { trackIndex, pan });
+      action({ commit }, { trackId, pan }) {
+        commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
       },
     },
 
     COMMAND_SET_TRACK_VOLUME: {
-      mutation(state, { trackIndex, volume }) {
-        singingStore.mutations.SET_TRACK_VOLUME(state, { trackIndex, volume });
+      mutation(state, { trackId, volume }) {
+        singingStore.mutations.SET_TRACK_VOLUME(state, { trackId, volume });
         trackNodes[trackIndex].channelStrip.volume = volume;
       },
-      action({ commit }, { trackIndex, volume }) {
-        commit("COMMAND_SET_TRACK_VOLUME", { trackIndex, volume });
+      action({ commit }, { trackId, volume }) {
+        commit("COMMAND_SET_TRACK_VOLUME", { trackId, volume });
       },
     },
 
     COMMAND_SET_TRACK_MUTE: {
-      mutation(draft, { trackIndex, mute }) {
-        singingStore.mutations.SET_TRACK_MUTE(draft, { trackIndex, mute });
+      mutation(draft, { trackId, mute }) {
+        singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
       },
-      action({ commit }, { trackIndex, mute }) {
-        commit("COMMAND_SET_TRACK_MUTE", { trackIndex, mute });
+      action({ commit }, { trackId, mute }) {
+        commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
       },
     },
 
     COMMAND_SET_TRACK_SOLO: {
-      mutation(draft, { trackIndex, solo }) {
-        singingStore.mutations.SET_TRACK_SOLO(draft, { trackIndex, solo });
+      mutation(draft, { trackId, solo }) {
+        singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
       },
-      action({ commit }, { trackIndex, solo }) {
-        commit("COMMAND_SET_TRACK_SOLO", { trackIndex, solo });
+      action({ commit }, { trackId, solo }) {
+        commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
       },
     },
   }),

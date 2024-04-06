@@ -1,5 +1,5 @@
 import { it, expect } from "vitest";
-import { Phrase, PhraseState } from "@/store/type";
+import { Phrase, PhraseState, TrackId } from "@/store/type";
 import { DEFAULT_TPQN } from "@/sing/storeHelper";
 import { selectPriorPhrase } from "@/sing/domain";
 import { EngineId, StyleId } from "@/type/preload";
@@ -10,6 +10,7 @@ const tempos = [
     bpm: 60,
   },
 ];
+const trackId = TrackId("00000000-0000-0000-0000-000000000000");
 const createPhrase = (
   start: number,
   end: number,
@@ -24,7 +25,7 @@ const createPhrase = (
     state,
     tempos,
     tpqn: DEFAULT_TPQN,
-    trackIndex: 0,
+    trackId,
     singer: {
       engineId: EngineId("00000000-0000-0000-0000-000000000000"),
       styleId: StyleId(0),

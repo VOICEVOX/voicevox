@@ -1,4 +1,4 @@
-import { Note, Singer, Tempo } from "@/store/type";
+import { Note, Singer, Tempo, TrackId } from "@/store/type";
 import { generateHash } from "@/sing/utility";
 
 export const DEFAULT_TPQN = 480;
@@ -138,10 +138,10 @@ export function updateNotesOfOverlappingNoteInfos(
 }
 
 export function getOverlappingNoteIds(
-  currentNoteInfos: OverlappingNoteInfos[]
+  currentNoteInfos: Map<TrackId, OverlappingNoteInfos>
 ): Set<string> {
   const overlappingNoteIds = new Set<string>();
-  for (const noteInfos of currentNoteInfos) {
+  for (const noteInfos of currentNoteInfos.values()) {
     for (const [noteId, noteInfo] of noteInfos) {
       if (noteInfo.overlappingNoteIds.size !== 0) {
         overlappingNoteIds.add(noteId);

@@ -1,5 +1,6 @@
 import semver from "semver";
 import { z } from "zod";
+import { v4 as uuidv4 } from "uuid";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
 import { generateSingingStoreInitialScore } from "./singing";
@@ -115,20 +116,21 @@ const applySongProjectToStore = async (
       notes: tracks.map((track) => track.notes),
     },
   });
-  for (const [trackIndex, track] of tracks.entries()) {
+  for (const track of tracks) {
     await dispatch("SET_SINGER", {
       singer: track.singer,
-      trackIndex,
+      trackId: track.id,
     });
     await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
       keyRangeAdjustment: track.keyRangeAdjustment,
-      trackIndex,
+      trackId: track.id,
     });
     await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
       volumeRangeAdjustment: track.volumeRangeAdjustment,
-      trackIndex,
+      trackId: track.id,
     });
   }
+  await dispatch("SET_SELECTED_TRACK", { trackId: tracks[0].id });
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -171,20 +173,21 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
 
         // ソングプロジェクトの初期化
-        const { tpqn, tempos, timeSignatures, tracks } =
+        const { tpqn, tempos, timeSignatures } =
           generateSingingStoreInitialScore();
         await context.dispatch("SET_SCORE", {
           score: {
             tpqn,
             tempos,
             timeSignatures,
-            notes: tracks.map((track) => track.notes),
+            notes: [],
           },
         });
+        const track = context.state.tracks[0];
         await context.dispatch("SET_SINGER", {
-          trackIndex: 0,
+          trackId: track.id,
         });
-        context.commit("SET_SELECTED_TRACK_INDEX", { trackIndex: 0 });
+        context.commit("SET_SELECTED_TRACK", { trackId: track.id });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
@@ -469,6 +472,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           ) {
             // トラック設定の追加
             for (const track of projectData.song.tracks) {
+              track.id = uuidv4();
               track.pan = 0;
               track.volume = 1;
               track.mute = false;

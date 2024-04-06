@@ -98,7 +98,7 @@ onetimeWatch(
       // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
       try {
         await store.dispatch("SET_SINGER", {
-          trackIndex: 0,
+          trackId: store.state.tracks[0].id,
         });
       } catch (e) {
         window.backend.logError(e);

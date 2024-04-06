@@ -2,39 +2,106 @@
   <div class="sidebar">
     <QList class="tracks">
       <QItemLabel header>トラック一覧</QItemLabel>
-      <template v-for="[track, i] in trackListItems">
+      <template v-for="track in tracks" :key="track.id">
         <QItem
-          v-if="track === 'trackDetail'"
-          :key="`detail-${i}`"
+          v-ripple
+          class="track-item"
+          clickable
+          :active="track.id === selectedTrack.id"
+          :disable="uiLocked"
+          active-class="selected-item"
+          @click="selectTrack(track.id)"
+        >
+          <QItemSection
+            avatar
+            :style="{
+              opacity: tracksShouldPlay[track.id] ? 1 : 0.5,
+            }"
+          >
+            <SingerIcon
+              v-if="trackStyles[track.id]"
+              round
+              size="3rem"
+              :style="trackStyles[track.id]!"
+            />
+            <QAvatar v-else round size="3rem" color="primary"
+              ><span color="text-display-on-primary">?</span></QAvatar
+            >
+          </QItemSection>
+
+          <QItemSection>
+            <QItemLabel>
+              {{
+                mapNullablePipe(
+                  trackCharacters[track.id],
+                  (trackCharacter) => trackCharacter.metas.speakerName
+                ) || "（不明なキャラクター）"
+              }}
+            </QItemLabel>
+            <QItemLabel v-if="trackStyles[track.id]" caption>
+              {{ getStyleDescription(trackStyles[track.id]!) }}
+            </QItemLabel>
+          </QItemSection>
+          <div side class="track-control">
+            <QBtn
+              color="default"
+              :icon="track.mute ? 'volume_off' : 'volume_up'"
+              round
+              flat
+              dense
+              size="sm"
+              :class="{ 'track-button-active': track.mute }"
+              :disable="uiLocked"
+              @click.stop="setTrackMute(track.id, !track.mute)"
+            >
+              <QTooltip>ミュート</QTooltip>
+            </QBtn>
+            <QBtn
+              color="default"
+              icon="headset"
+              rounded
+              flat
+              dense
+              size="sm"
+              :class="{ 'track-button-active': track.solo }"
+              :disable="uiLocked"
+              @click.stop="setTrackSolo(track.id, !track.solo)"
+            >
+              <QTooltip>ソロ</QTooltip>
+            </QBtn>
+          </div>
+        </QItem>
+        <QItem
+          v-if="track.id === selectedTrack.id"
           class="track-detail-container"
         >
           <div class="track-detail">
             <div class="pan">
               <div class="l">L</div>
               <QSlider
-                :model-value="tracks[i].pan"
+                :model-value="track.pan"
                 :min="-1"
                 :max="1"
                 :step="0.1"
                 :markers="1"
                 selection-color="transparent"
                 :disable="uiLocked"
-                @change="setTrackPan(i, $event)"
-                @dblclick="setTrackPan(i, 0)"
+                @change="setTrackPan(track.id, $event)"
+                @dblclick="setTrackPan(track.id, 0)"
               />
               <div class="r">R</div>
             </div>
             <div class="volume">
               <QIcon name="volume_down" class="l" size="1rem" />
               <QSlider
-                :model-value="tracks[i].volume"
+                :model-value="track.volume"
                 :min="0"
                 :max="2"
                 :step="0.1"
                 :markers="1"
                 :disable="uiLocked"
-                @change="setTrackVolume(i, $event)"
-                @dblclick="setTrackVolume(i, 1)"
+                @change="setTrackVolume(track.id, $event)"
+                @dblclick="setTrackVolume(track.id, 1)"
               />
               <QIcon name="volume_up" class="r" size="1rem" />
             </div>
@@ -47,85 +114,9 @@
                 size="sm"
                 padding="xs sm"
                 :disable="tracks.length === 1 || uiLocked"
-                @click="
-                  store.dispatch('COMMAND_DELETE_TRACK', { trackIndex: i })
-                "
+                @click="deleteTrack(track.id)"
               />
             </div>
-          </div>
-        </QItem>
-        <QItem
-          v-else
-          :key="i"
-          v-ripple
-          class="track-item"
-          clickable
-          :active="selectedTrackIndex === i"
-          :disable="uiLocked"
-          active-class="selected-item"
-          @click="selectTrack(i)"
-        >
-          <QItemSection
-            avatar
-            :style="{
-              opacity: tracksShouldPlay[i] ? 1 : 0.5,
-            }"
-          >
-            <SingerIcon
-              v-if="trackStyles[i]"
-              round
-              size="3rem"
-              :style="trackStyles[i]!"
-            />
-            <QAvatar v-else round size="3rem" color="primary"
-              ><span color="text-display-on-primary">?</span></QAvatar
-            >
-          </QItemSection>
-
-          <QItemSection>
-            <QItemLabel>
-              {{
-                nullableToDefault(
-                  "（不明なキャラクター）",
-
-                  mapNullablePipe(
-                    trackCharacters[i],
-                    (trackCharacter) => trackCharacter.metas.speakerName
-                  )
-                )
-              }}
-            </QItemLabel>
-            <QItemLabel v-if="trackStyles[i]" caption>
-              {{ mapNullablePipe(trackStyles[i], getStyleDescription) }}
-            </QItemLabel>
-          </QItemSection>
-          <div side class="track-control">
-            <QBtn
-              color="default"
-              :icon="tracks[i].mute ? 'volume_off' : 'volume_up'"
-              round
-              flat
-              dense
-              size="sm"
-              :class="{ 'track-button-active': tracks[i].mute }"
-              :disable="uiLocked"
-              @click.stop="setTrackMute(i, !tracks[i].mute)"
-            >
-              <QTooltip>ミュート</QTooltip>
-            </QBtn>
-            <QBtn
-              color="default"
-              icon="headset"
-              rounded
-              flat
-              dense
-              size="sm"
-              :class="{ 'track-button-active': tracks[i].solo }"
-              :disable="uiLocked"
-              @click.stop="setTrackSolo(i, !tracks[i].solo)"
-            >
-              <QTooltip>ソロ</QTooltip>
-            </QBtn>
           </div>
         </QItem>
       </template>
@@ -150,73 +141,65 @@
 import { computed } from "vue";
 import SingerIcon from "./SingerIcon.vue";
 import { useStore } from "@/store";
-import { Track } from "@/store/type";
 import { getStyleDescription } from "@/sing/viewHelper";
-import { mapNullablePipe } from "@/helpers/map";
 import { shouldPlay } from "@/sing/domain";
-import { nullableToDefault } from "@/helpers/map";
+import { TrackId } from "@/store/type";
+import { mapNullablePipe } from "@/helpers/map";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const tracks = computed(() => store.state.tracks);
 const tracksShouldPlay = computed(() => shouldPlay(tracks.value));
-const trackListItems = computed<["trackDetail" | Track, number][]>(() => {
-  const items: ["trackDetail" | Track, number][] = tracks.value.map(
-    (track, i) => [track, i]
-  );
-  items.splice(selectedTrackIndex.value + 1, 0, [
-    "trackDetail",
-    selectedTrackIndex.value,
-  ]);
-
-  return items;
-});
-const setTrackPan = (index: number, pan: number) => {
+const setTrackPan = (trackId: TrackId, pan: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
-    store.dispatch("COMMAND_SET_TRACK_PAN", { trackIndex: index, pan });
+    store.dispatch("COMMAND_SET_TRACK_PAN", { trackId, pan });
   } else {
-    store.dispatch("SET_TRACK_PAN", { trackIndex: index, pan });
+    store.dispatch("SET_TRACK_PAN", { trackId, pan });
   }
 };
-const setTrackVolume = (index: number, volume: number) => {
+const setTrackVolume = (trackId: TrackId, volume: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
-    store.dispatch("COMMAND_SET_TRACK_VOLUME", { trackIndex: index, volume });
+    store.dispatch("COMMAND_SET_TRACK_VOLUME", { trackId, volume });
   } else {
-    store.dispatch("SET_TRACK_VOLUME", { trackIndex: index, volume });
+    store.dispatch("SET_TRACK_VOLUME", { trackId, volume });
   }
 };
-const setTrackMute = (index: number, mute: boolean) => {
+const setTrackMute = (trackId: TrackId, mute: boolean) => {
   if (store.state.songUndoableTrackControl === "all") {
-    store.dispatch("COMMAND_SET_TRACK_MUTE", { trackIndex: index, mute });
+    store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId, mute });
   } else {
-    store.dispatch("SET_TRACK_MUTE", { trackIndex: index, mute });
+    store.dispatch("SET_TRACK_MUTE", { trackId, mute });
   }
 };
-const setTrackSolo = (index: number, solo: boolean) => {
+const setTrackSolo = (trackId: TrackId, solo: boolean) => {
   if (store.state.songUndoableTrackControl === "all") {
-    store.dispatch("COMMAND_SET_TRACK_SOLO", { trackIndex: index, solo });
+    store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId, solo });
   } else {
-    store.dispatch("SET_TRACK_SOLO", { trackIndex: index, solo });
+    store.dispatch("SET_TRACK_SOLO", { trackId, solo });
   }
 };
 
-const selectedTrackIndex = computed(() => store.state.selectedTrackIndex);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 const trackCharacters = computed(() =>
-  tracks.value.map((track) => {
-    if (!track.singer) return undefined;
-    for (const character of store.state.characterInfos[track.singer.engineId]) {
-      for (const style of character.metas.styles) {
-        if (style.styleId === track.singer.styleId) {
-          return character;
+  Object.fromEntries(
+    tracks.value.map((track) => {
+      if (!track.singer) return [track.id, undefined];
+      for (const character of store.state.characterInfos[
+        track.singer.engineId
+      ]) {
+        for (const style of character.metas.styles) {
+          if (style.styleId === track.singer.styleId) {
+            return [track.id, character];
+          }
         }
       }
-    }
-  })
+      return [track.id, undefined];
+    })
+  )
 );
-const selectTrack = (index: number) => {
-  store.dispatch("SET_SELECTED_TRACK_INDEX", { trackIndex: index });
+const selectTrack = (trackId: TrackId) => {
+  store.dispatch("SET_SELECTED_TRACK", { trackId });
 };
 const createTrack = () => {
   const singer = selectedTrack.value.singer;
@@ -225,17 +208,23 @@ const createTrack = () => {
     singer,
   });
 };
+const deleteTrack = (trackId: TrackId) => {
+  store.dispatch("COMMAND_DELETE_TRACK", { trackId });
+};
 const trackStyles = computed(() =>
-  tracks.value.map((track, i) => {
-    if (!track.singer) return undefined;
-    const character = trackCharacters.value[i];
-    if (!character) return undefined;
-    for (const style of character.metas.styles) {
-      if (style.styleId === track.singer.styleId) {
-        return style;
+  Object.fromEntries(
+    tracks.value.map((track) => {
+      if (!track.singer) return [track.id, undefined];
+      const character = trackCharacters.value[track.id];
+      if (!character) return [track.id, undefined];
+      for (const style of character.metas.styles) {
+        if (style.styleId === track.singer.styleId) {
+          return [track.id, style];
+        }
       }
-    }
-  })
+      return [track.id, undefined];
+    })
+  )
 );
 </script>
 <style scoped lang="scss">
