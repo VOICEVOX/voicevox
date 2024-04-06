@@ -9,7 +9,5 @@ test("スクリーンショット", async ({ page }) => {
   await navigateToSettingDialog(page);
   await page.waitForTimeout(500);
 
-  await expect(page).toHaveScreenshot("スクリーンショット.png", {
-    fullPage: true,
-  });
+  await expect(page).toHaveScreenshot("スクリーンショット", { fullPage: true });
 });
