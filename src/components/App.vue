@@ -29,12 +29,6 @@ const store = useStore();
 
 const openedEditor = computed(() => store.state.openedEditor);
 
-/**
- * 読み込むプロジェクトファイルのパス。
- * undefinedのときは何も読み込むべきものがない。
- */
-const projectFilePath = ref<string | undefined>(undefined);
-
 // Google Tag Manager
 const gtm = useGtm();
 watch(
@@ -76,9 +70,6 @@ onMounted(async () => {
 
   // プロジェクトファイルのパスを取得
   const _projectFilePath = urlParams.get("projectFilePath");
-  if (_projectFilePath != undefined && _projectFilePath !== "") {
-    projectFilePath.value = _projectFilePath;
-  }
 
   // どちらのエディタを開くか設定
   await store.dispatch("SET_OPENED_EDITOR", { editor: "talk" });
@@ -129,12 +120,9 @@ onMounted(async () => {
   });
 
   // プロジェクトファイルが指定されていればロード
-  if (
-    typeof projectFilePath.value === "string" &&
-    projectFilePath.value !== ""
-  ) {
+  if (typeof _projectFilePath === "string" && _projectFilePath !== "") {
     isProjectFileLoaded.value = await store.dispatch("LOAD_PROJECT_FILE", {
-      filePath: projectFilePath.value,
+      filePath: _projectFilePath,
     });
   } else {
     isProjectFileLoaded.value = false;
