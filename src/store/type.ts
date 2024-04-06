@@ -798,7 +798,7 @@ export type SingingStoreState = {
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
-  selectedTrackId?: TrackId;
+  selectedTrackId: TrackId;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
   overlappingNoteInfos: Map<TrackId, OverlappingNoteInfos>;

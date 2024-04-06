@@ -14,6 +14,7 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
+import { TrackId } from "@/store/type";
 
 type VoicedSection = {
   readonly startFrame: number;
@@ -25,7 +26,7 @@ type PitchLine = {
   readonly frameLength: number;
   readonly frameTicksArray: number[];
   readonly lineStrip: LineStrip;
-  readonly trackIndex: number;
+  readonly trackId: TrackId;
 };
 
 const pitchLineColor = [0.647, 0.831, 0.678, 1]; // RGBA
@@ -39,7 +40,7 @@ const queries = computed(() => {
   return phrases.map((value) => value.query);
 });
 
-const selectedTrackIndex = computed(() => store.state.selectedTrackIndex);
+const selectedTrackId = computed(() => store.state.selectedTrackId);
 
 const canvasContainer = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
@@ -151,7 +152,7 @@ const render = () => {
           frameLength,
           frameTicksArray,
           lineStrip,
-          trackIndex: phrase.trackIndex,
+          trackId: phrase.trackId,
         });
       }
       // lineStripをステージに追加
@@ -193,7 +194,7 @@ const render = () => {
 
       // 選択されているトラック以外は[0, 0, 0, 0]にする
       pitchLine.lineStrip.setColor(
-        pitchLine.trackIndex === selectedTrackIndex.value
+        pitchLine.trackId === selectedTrackId.value
           ? pitchLineColor
           : [0, 0, 0, 0]
       );
@@ -203,7 +204,7 @@ const render = () => {
   renderer.render(stage);
 };
 
-watch([queries, selectedTrackIndex], () => {
+watch([queries, selectedTrackId], () => {
   renderInNextFrame = true;
 });
 

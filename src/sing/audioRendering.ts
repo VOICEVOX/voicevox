@@ -870,28 +870,6 @@ export class PolySynth implements Instrument {
   }
 }
 
-export class TrackNode {
-  public previewSynth: PolySynth;
-  public channelStrip: ChannelStrip;
-  public muteGain: GainNode;
-  constructor(audioContext: BaseAudioContext) {
-    this.previewSynth = new PolySynth(audioContext);
-    this.channelStrip = new ChannelStrip(audioContext);
-    this.muteGain = new GainNode(audioContext);
-    this.previewSynth.output.connect(this.channelStrip.input);
-    this.channelStrip.output.connect(this.muteGain);
-    this.muteGain.gain.value = 1;
-  }
-
-  setMute(value: boolean) {
-    this.muteGain.gain.value = value ? 0 : 1;
-  }
-
-  get output(): AudioNode {
-    return this.muteGain;
-  }
-}
-
 export type ChannelStripOptions = {
   readonly volume?: number;
   readonly pan?: number;
@@ -903,13 +881,22 @@ export type ChannelStripOptions = {
 export class ChannelStrip {
   private readonly gainNode: GainNode;
   private readonly panNode: StereoPannerNode;
+  private readonly muteNode: GainNode;
 
   get input(): AudioNode {
     return this.gainNode;
   }
 
   get output(): AudioNode {
-    return this.panNode;
+    return this.muteNode;
+  }
+
+  get mute(): boolean {
+    return this.muteNode.gain.value === 0;
+  }
+
+  set mute(value: boolean) {
+    this.muteNode.gain.value = value ? 0 : 1;
   }
 
   get volume() {
@@ -931,8 +918,11 @@ export class ChannelStrip {
     this.gainNode.gain.value = options?.volume ?? 1;
     this.panNode = new StereoPannerNode(audioContext);
     this.panNode.pan.value = options?.pan ?? 0;
+    this.muteNode = new GainNode(audioContext);
+    this.muteNode.gain.value = 1;
 
     this.gainNode.connect(this.panNode);
+    this.panNode.connect(this.muteNode);
   }
 }
 
@@ -1060,7 +1050,7 @@ export const generateAudioEvents = async (
 };
 export const setupAudioEvents = async (
   audioContext: BaseAudioContext,
-  trackNode: TrackNode,
+  trackNode: ChannelStrip,
   transport: Transport | OfflineTransport,
   phrases: { phrase: Phrase; blob: Blob }[]
 ) => {
@@ -1075,7 +1065,7 @@ export const setupAudioEvents = async (
       blob
     );
     const audioPlayer = new AudioPlayer(audioContext);
-    audioPlayer.output.connect(trackNode.channelStrip.input);
+    audioPlayer.output.connect(trackNode.input);
     const audioSequence: AudioSequence = {
       type: "audio",
       audioPlayer,

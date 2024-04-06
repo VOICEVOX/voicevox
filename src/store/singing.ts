@@ -35,8 +35,8 @@ import {
   NoteEvent,
   NoteSequence,
   OfflineTransport,
+  PolySynth,
   Sequence,
-  TrackNode,
   Transport,
   generateAudioEvents,
   setupAudioEvents,
@@ -77,6 +77,7 @@ import {
   round,
 } from "@/sing/utility";
 import { generateWriteErrorMessage } from "@/helpers/generateWriteErrorMessage";
+import DefaultMap from "@/helpers/DefaultMap";
 
 const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   return notes.map((value): NoteEvent => {
@@ -92,8 +93,21 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
 
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
+let previewSynth: PolySynth | undefined;
+let previewChannelStrip: ChannelStrip | undefined;
 let globalChannelStrip: ChannelStrip | undefined;
-const trackNodes: TrackNode[] = [];
+
+const channelStrips = new DefaultMap<TrackId, ChannelStrip>(() => {
+  if (!audioContext) {
+    throw new Error("audioContext is undefined.");
+  }
+  const strip = new ChannelStrip(audioContext);
+  if (!globalChannelStrip) {
+    throw new Error("globalChannelStrip is undefined.");
+  }
+  strip.output.connect(globalChannelStrip.input);
+  return strip;
+});
 let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
 
@@ -101,20 +115,24 @@ let clipper: Clipper | undefined;
 if (window.AudioContext) {
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
+  previewSynth = new PolySynth(audioContext);
+  previewChannelStrip = new ChannelStrip(audioContext);
   globalChannelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
 
-  const trackNode = new TrackNode(audioContext);
-  trackNodes.push(trackNode);
-  trackNode.output.connect(globalChannelStrip.input);
-
+  previewSynth.output.connect(previewChannelStrip.input);
+  previewChannelStrip.output.connect(globalChannelStrip.input);
   globalChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
 }
 
-const updateTrackMute = (shouldPlay: Record<TrackId, boolean>) => {};
+const updateTrackMute = (shouldPlay: Record<TrackId, boolean>) => {
+  for (const [trackId, channelStrip] of channelStrips) {
+    channelStrip.mute = !shouldPlay[trackId];
+  }
+};
 
 type PhraseData = {
   blob?: Blob;
@@ -285,7 +303,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
       state.overlappingNoteInfos = new Map();
-      trackNodes.length = 0;
+      channelStrips.clear();
       state.tracks = [];
       const scoreNotes = score.notes;
       if (scoreNotes.length === 0) {
@@ -298,11 +316,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const overlappingNoteInfo = new Map();
         state.overlappingNoteInfos.set(track.id, overlappingNoteInfo);
         addNotesToOverlappingNoteInfos(overlappingNoteInfo, notes);
-        if (audioContext && globalChannelStrip) {
-          const node = new TrackNode(audioContext);
-          node.output.connect(globalChannelStrip.input);
-          trackNodes.push(node);
-        }
       }
       state.selectedTrackId = state.tracks[0].id;
       state.overlappingNoteIds = getOverlappingNoteIds(
@@ -783,23 +796,27 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   PLAY_PREVIEW_SOUND: {
     async action(
-      { state },
+      { getters },
       { noteNumber, duration }: { noteNumber: number; duration?: number }
     ) {
-      if (!audioContext) {
-        throw new Error("audioContext is undefined.");
+      if (!previewSynth || !previewChannelStrip) {
+        throw new Error("previewSynth or previewChannelStrip is undefined.");
       }
-      const previewSynth = trackNodes[state.selectedTrackIndex].previewSynth;
+      const selectedTrack = getters.SELECTED_TRACK;
+      previewChannelStrip.volume = selectedTrack.volume;
+      previewChannelStrip.pan = selectedTrack.pan;
       previewSynth.noteOn("immediately", noteNumber, duration);
     },
   },
 
   STOP_PREVIEW_SOUND: {
-    async action({ state }, { noteNumber }: { noteNumber: number }) {
-      if (!audioContext) {
-        throw new Error("audioContext is undefined.");
+    async action({ getters }, { noteNumber }: { noteNumber: number }) {
+      if (!previewSynth || !previewChannelStrip) {
+        throw new Error("previewSynth or previewChannelStrip is undefined.");
       }
-      const previewSynth = trackNodes[state.selectedTrackIndex].previewSynth;
+      const selectedTrack = getters.SELECTED_TRACK;
+      previewChannelStrip.volume = selectedTrack.volume;
+      previewChannelStrip.pan = selectedTrack.pan;
       previewSynth.noteOff("immediately", noteNumber);
     },
   },
@@ -1036,7 +1053,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const transportRef = transport;
 
         const allFoundPhrases = new Map<string, Phrase>();
-        for (const [i, track] of state.tracks.entries()) {
+        for (const track of state.tracks) {
           // レンダリング中に変更される可能性のあるデータをコピーする
           // 重なっているノートの削除も行う
           const tpqn = state.tpqn;
@@ -1070,7 +1087,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 phrase.tempos,
                 phrase.tpqn
               );
-              const polySynth = trackNodes[i].previewSynth;
+              const polySynth = new PolySynth(audioContextRef);
+              polySynth.output.connect(channelStrips.get(phrase.trackId).input);
               const noteSequence: NoteSequence = {
                 type: "note",
                 instrument: polySynth,
@@ -1243,9 +1261,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               audioEvents,
             };
 
-            audioPlayer.output.connect(
-              trackNodes[phrase.trackIndex].channelStrip.input
-            );
+            audioPlayer.output.connect(channelStrips.get(phrase.trackId).input);
             transportRef.addSequence(audioSequence);
             phraseData.source = audioPlayer;
             phraseData.sequence = audioSequence;
@@ -2011,19 +2027,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const clipper = new Clipper(offlineAudioContext);
           const tracksShouldPlay = shouldPlay(state.tracks);
 
-          for (const [i, track] of state.tracks.entries()) {
-            const trackNode = new TrackNode(offlineAudioContext);
-            trackNode.channelStrip.volume = track.volume;
-            trackNode.channelStrip.pan = track.pan;
-            trackNode.setMute(!tracksShouldPlay[i]);
-            trackNode.output.connect(globalChannelStrip.input);
+          for (const track of state.tracks) {
+            const channelStrip = new ChannelStrip(offlineAudioContext);
+            channelStrip.volume = track.volume;
+            channelStrip.pan = track.pan;
+            channelStrip.mute = !tracksShouldPlay[track.id];
+            channelStrip.output.connect(globalChannelStrip.input);
 
             await setupAudioEvents(
               offlineAudioContext,
-              trackNode,
+              channelStrip,
               offlineTransport,
               [...state.phrases].flatMap(([phraseKey, phrase]) => {
-                if (phrase.trackIndex !== i) {
+                if (phrase.trackId !== track.id) {
                   return [];
                 }
                 const phraseData = phraseDataMap.get(phraseKey);
@@ -2158,15 +2174,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const clipper = new Clipper(offlineAudioContext);
             const tracksShouldPlay = shouldPlay(state.tracks);
 
-            const trackNode = new TrackNode(offlineAudioContext);
-            trackNode.channelStrip.volume = track.volume;
-            trackNode.channelStrip.pan = track.pan;
-            trackNode.setMute(!tracksShouldPlay[track.id]);
-            trackNode.output.connect(globalChannelStrip.input);
+            const channelStrip = new ChannelStrip(offlineAudioContext);
+            channelStrip.volume = track.volume;
+            channelStrip.pan = track.pan;
+            channelStrip.mute = !tracksShouldPlay[track.id];
+            channelStrip.output.connect(globalChannelStrip.input);
 
             await setupAudioEvents(
               offlineAudioContext,
-              trackNode,
+              channelStrip,
               offlineTransport,
               [...state.phrases].flatMap(([phraseKey, phrase]) => {
                 if (phrase.trackId !== track.id) {
@@ -2384,17 +2400,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       };
       state.tracks.push(track);
       state.overlappingNoteInfos.set(track.id, new Map());
-      if (trackNodes.length < state.tracks.length) {
-        if (!audioContext || !globalChannelStrip) {
-          throw new Error("audioContext or globalChannelStrip is undefined.");
-        }
-        const node = new TrackNode(audioContext);
-        node.output.connect(globalChannelStrip.input);
-
-        trackNodes.push(node);
-      }
-      trackNodes[state.tracks.length - 1].channelStrip.volume = track.volume;
-      trackNodes[state.tracks.length - 1].channelStrip.pan = track.pan;
     },
   },
 
@@ -2405,7 +2410,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The track is not found.");
       }
       track.pan = pan;
-      trackNodes[track].channelStrip.pan = pan;
+      channelStrips.get(trackId).pan = pan;
     },
     action({ commit }, { trackId, pan }) {
       commit("SET_TRACK_PAN", { trackId, pan });
@@ -2419,7 +2424,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The track is not found.");
       }
       track.volume = volume;
-      trackNodes[track].channelStrip.volume = volume;
+      channelStrips.get(trackId).volume = volume;
     },
     action({ commit }, { trackId, volume }) {
       commit("SET_TRACK_VOLUME", { trackId, volume });
@@ -2677,7 +2682,6 @@ export const singingCommandStore = transformCommandStore(
     COMMAND_SET_TRACK_PAN: {
       mutation(state, { trackId, pan }) {
         singingStore.mutations.SET_TRACK_PAN(state, { trackId, pan });
-        trackNodes[trackIndex].channelStrip.pan = pan;
       },
       action({ commit }, { trackId, pan }) {
         commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
@@ -2687,7 +2691,6 @@ export const singingCommandStore = transformCommandStore(
     COMMAND_SET_TRACK_VOLUME: {
       mutation(state, { trackId, volume }) {
         singingStore.mutations.SET_TRACK_VOLUME(state, { trackId, volume });
-        trackNodes[trackIndex].channelStrip.volume = volume;
       },
       action({ commit }, { trackId, volume }) {
         commit("COMMAND_SET_TRACK_VOLUME", { trackId, volume });

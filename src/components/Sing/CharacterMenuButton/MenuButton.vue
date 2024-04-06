@@ -129,7 +129,7 @@ import SingerIcon from "@/components/Sing/SingerIcon.vue";
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const selectedTrackIndex = computed(() => store.state.selectedTrackIndex);
+const selectedTrackId = computed(() => store.state.selectedTrackId);
 
 const userOrderedCharacterInfos = computed(() => {
   return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
@@ -163,7 +163,7 @@ const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
     );
 
   store.dispatch("COMMAND_SET_SINGER", {
-    trackIndex: selectedTrackIndex.value,
+    trackId: selectedTrackId.value,
     singer: { engineId, styleId },
   });
 };

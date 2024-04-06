@@ -285,7 +285,7 @@ const tempos = computed(() => state.tempos);
 const timeSignatures = computed(() => state.timeSignatures);
 
 // ノート
-const selectedTrackIndex = computed(() => state.selectedTrackIndex);
+const selectedTrackId = computed(() => state.selectedTrackId);
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 const isNoteSelected = computed(() => {
   return state.selectedNoteIds.size > 0;
@@ -299,8 +299,8 @@ const selectedNotes = computed(() => {
   return notes.value.filter((value) => selectedNoteIds.has(value.id));
 });
 const inactiveNotes = computed(() => {
-  return store.state.tracks.flatMap((track, i) =>
-    i === selectedTrackIndex.value ? [] : track.notes
+  return store.state.tracks.flatMap((track) =>
+    track.id === selectedTrackId.value ? [] : track.notes
   );
 });
 

@@ -160,7 +160,7 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 const editor = "song";
 const canUndo = computed(() => store.getters.CAN_UNDO(editor));
 const canRedo = computed(() => store.getters.CAN_REDO(editor));
-const selectedTrackIndex = computed(() => store.state.selectedTrackIndex);
+const selectedTrackId = computed(() => store.state.selectedTrackId);
 
 const isSidebarOpen = computed(() => store.state.isSidebarOpen);
 const toggleSidebar = () => {
@@ -323,7 +323,7 @@ const setTimeSignature = () => {
 const setKeyRangeAdjustment = () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
   store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
-    trackIndex: selectedTrackIndex.value,
+    trackId: selectedTrackId.value,
     keyRangeAdjustment,
   });
 };
@@ -331,7 +331,7 @@ const setKeyRangeAdjustment = () => {
 const setVolumeRangeAdjustment = () => {
   const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
   store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
-    trackIndex: selectedTrackIndex.value,
+    trackId: selectedTrackId.value,
     volumeRangeAdjustment,
   });
 };
