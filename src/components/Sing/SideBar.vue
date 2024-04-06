@@ -1,150 +1,173 @@
 <template>
   <div class="sidebar">
-    <QList class="tracks">
-      <QItemLabel header>トラック一覧</QItemLabel>
-      <template v-for="track in tracks" :key="track.id">
+    <Draggable
+      tag="QList"
+      :model-value="tracks"
+      item-key="id"
+      handle=".track-item"
+      filter=".track-control"
+      class="tracks"
+      drag-class="dragging"
+      @update:model-value="reorderTracks"
+      @start="isDragging = true"
+      @end="isDragging = false"
+    >
+      <template #header>
+        <QItemLabel header>トラック一覧</QItemLabel>
+      </template>
+      <template #item="{ element: track }">
+        <div>
+          <QItem
+            v-ripple
+            clickable
+            class="track-item"
+            :active="track.id === selectedTrack.id"
+            :disable="uiLocked"
+            active-class="selected-item"
+            @click="selectTrack(track.id)"
+          >
+            <QItemSection
+              avatar
+              :style="{
+                opacity: tracksShouldPlay[track.id] ? 1 : 0.5,
+              }"
+            >
+              <SingerIcon
+                v-if="trackStyles[track.id]"
+                round
+                size="3rem"
+                :style="trackStyles[track.id]!"
+              />
+              <QAvatar v-else round size="3rem" color="primary"
+                ><span color="text-display-on-primary">?</span></QAvatar
+              >
+            </QItemSection>
+
+            <QItemSection>
+              <QItemLabel>
+                {{
+                  mapNullablePipe(
+                    trackCharacters[track.id],
+                    (trackCharacter) => trackCharacter.metas.speakerName
+                  ) || "（不明なキャラクター）"
+                }}
+              </QItemLabel>
+              <QItemLabel v-if="trackStyles[track.id]" caption>
+                {{ getStyleDescription(trackStyles[track.id]!) }}
+              </QItemLabel>
+            </QItemSection>
+            <div side class="track-control">
+              <QBtn
+                color="default"
+                :icon="track.mute ? 'volume_off' : 'volume_up'"
+                round
+                flat
+                dense
+                size="sm"
+                :class="{ 'track-button-active': track.mute }"
+                :disable="uiLocked"
+                @click.stop="setTrackMute(track.id, !track.mute)"
+              >
+                <QTooltip>ミュート</QTooltip>
+              </QBtn>
+              <QBtn
+                color="default"
+                icon="headset"
+                rounded
+                flat
+                dense
+                size="sm"
+                :class="{ 'track-button-active': track.solo }"
+                :disable="uiLocked"
+                @click.stop="setTrackSolo(track.id, !track.solo)"
+              >
+                <QTooltip>ソロ</QTooltip>
+              </QBtn>
+            </div>
+          </QItem>
+
+          <QItem
+            v-if="!isDragging && track.id === selectedTrack.id"
+            class="track-detail-container"
+          >
+            <div class="track-detail">
+              <div class="pan">
+                <div class="l">L</div>
+                <QSlider
+                  :model-value="track.pan"
+                  :min="-1"
+                  :max="1"
+                  :step="0.1"
+                  :markers="1"
+                  selection-color="transparent"
+                  :disable="uiLocked"
+                  @change="setTrackPan(track.id, $event)"
+                  @dblclick="setTrackPan(track.id, 0)"
+                />
+                <div class="r">R</div>
+              </div>
+              <div class="volume">
+                <QIcon name="volume_down" class="l" size="1rem" />
+                <QSlider
+                  :model-value="track.volume"
+                  :min="0"
+                  :max="2"
+                  :step="0.1"
+                  :markers="1"
+                  :disable="uiLocked"
+                  @change="setTrackVolume(track.id, $event)"
+                  @dblclick="setTrackVolume(track.id, 1)"
+                />
+                <QIcon name="volume_up" class="r" size="1rem" />
+              </div>
+              <div>
+                <QBtn
+                  label="削除"
+                  rounded
+                  dense
+                  flat
+                  size="sm"
+                  padding="xs sm"
+                  :disable="tracks.length === 1 || uiLocked"
+                  @click="deleteTrack(track.id)"
+                />
+              </div>
+            </div>
+          </QItem>
+        </div>
+      </template>
+      <template #footer>
         <QItem
           v-ripple
-          class="track-item"
+          class="create-track-item"
           clickable
-          :active="track.id === selectedTrack.id"
           :disable="uiLocked"
-          active-class="selected-item"
-          @click="selectTrack(track.id)"
+          @click="createTrack"
         >
-          <QItemSection
-            avatar
-            :style="{
-              opacity: tracksShouldPlay[track.id] ? 1 : 0.5,
-            }"
-          >
-            <SingerIcon
-              v-if="trackStyles[track.id]"
-              round
-              size="3rem"
-              :style="trackStyles[track.id]!"
-            />
-            <QAvatar v-else round size="3rem" color="primary"
-              ><span color="text-display-on-primary">?</span></QAvatar
-            >
+          <QItemSection avatar>
+            <QIcon color="display" name="add" />
           </QItemSection>
-
           <QItemSection>
-            <QItemLabel>
-              {{
-                mapNullablePipe(
-                  trackCharacters[track.id],
-                  (trackCharacter) => trackCharacter.metas.speakerName
-                ) || "（不明なキャラクター）"
-              }}
-            </QItemLabel>
-            <QItemLabel v-if="trackStyles[track.id]" caption>
-              {{ getStyleDescription(trackStyles[track.id]!) }}
-            </QItemLabel>
+            <QItemLabel>トラックを追加</QItemLabel>
           </QItemSection>
-          <div side class="track-control">
-            <QBtn
-              color="default"
-              :icon="track.mute ? 'volume_off' : 'volume_up'"
-              round
-              flat
-              dense
-              size="sm"
-              :class="{ 'track-button-active': track.mute }"
-              :disable="uiLocked"
-              @click.stop="setTrackMute(track.id, !track.mute)"
-            >
-              <QTooltip>ミュート</QTooltip>
-            </QBtn>
-            <QBtn
-              color="default"
-              icon="headset"
-              rounded
-              flat
-              dense
-              size="sm"
-              :class="{ 'track-button-active': track.solo }"
-              :disable="uiLocked"
-              @click.stop="setTrackSolo(track.id, !track.solo)"
-            >
-              <QTooltip>ソロ</QTooltip>
-            </QBtn>
-          </div>
-        </QItem>
-        <QItem
-          v-if="track.id === selectedTrack.id"
-          class="track-detail-container"
-        >
-          <div class="track-detail">
-            <div class="pan">
-              <div class="l">L</div>
-              <QSlider
-                :model-value="track.pan"
-                :min="-1"
-                :max="1"
-                :step="0.1"
-                :markers="1"
-                selection-color="transparent"
-                :disable="uiLocked"
-                @change="setTrackPan(track.id, $event)"
-                @dblclick="setTrackPan(track.id, 0)"
-              />
-              <div class="r">R</div>
-            </div>
-            <div class="volume">
-              <QIcon name="volume_down" class="l" size="1rem" />
-              <QSlider
-                :model-value="track.volume"
-                :min="0"
-                :max="2"
-                :step="0.1"
-                :markers="1"
-                :disable="uiLocked"
-                @change="setTrackVolume(track.id, $event)"
-                @dblclick="setTrackVolume(track.id, 1)"
-              />
-              <QIcon name="volume_up" class="r" size="1rem" />
-            </div>
-            <div>
-              <QBtn
-                label="削除"
-                rounded
-                dense
-                flat
-                size="sm"
-                padding="xs sm"
-                :disable="tracks.length === 1 || uiLocked"
-                @click="deleteTrack(track.id)"
-              />
-            </div>
-          </div>
         </QItem>
       </template>
-      <QItem
-        v-ripple
-        class="create-track-item"
-        clickable
-        :disable="uiLocked"
-        @click="createTrack"
-      >
-        <QItemSection avatar>
-          <QIcon color="display" name="add" />
-        </QItemSection>
-        <QItemSection>
-          <QItemLabel>トラックを追加</QItemLabel>
-        </QItemSection>
-      </QItem>
-    </QList>
+    </Draggable>
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import Draggable from "vuedraggable";
+import { QList } from "quasar";
 import SingerIcon from "./SingerIcon.vue";
 import { useStore } from "@/store";
 import { getStyleDescription } from "@/sing/viewHelper";
 import { shouldPlay } from "@/sing/domain";
-import { TrackId } from "@/store/type";
+import { Track, TrackId } from "@/store/type";
 import { mapNullablePipe } from "@/helpers/map";
+
+// https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
+Draggable.components = { ...Draggable.components, QList };
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -211,6 +234,12 @@ const createTrack = () => {
 const deleteTrack = (trackId: TrackId) => {
   store.dispatch("COMMAND_DELETE_TRACK", { trackId });
 };
+const isDragging = ref(false);
+const reorderTracks = (newTracks: Track[]) => {
+  store.dispatch("COMMAND_REORDER_TRACKS", {
+    trackIds: newTracks.map((track) => track.id),
+  });
+};
 const trackStyles = computed(() =>
   Object.fromEntries(
     tracks.value.map((track) => {
@@ -247,6 +276,10 @@ const trackStyles = computed(() =>
   padding: 0;
 
   border-bottom: 1px solid colors.$sequencer-sub-divider;
+
+  .dragging & {
+    display: none;
+  }
 }
 .track-detail {
   margin-left: 0.5rem;

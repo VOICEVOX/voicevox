@@ -2466,8 +2466,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.selectedTrackId === trackId) {
         state.selectedTrackId = state.tracks[0].id;
       }
-      // Undoした時に壊れるので、TrackNodeはあえて消さない。
-      // TODO: もっとスマートな方法を考える
+      channelStrips.delete(trackId);
+    },
+  },
+
+  REORDER_TRACKS: {
+    mutation(state, { trackIds }) {
+      const newTracks: Track[] = [];
+      for (const trackId of trackIds) {
+        const track = state.tracks.find((track) => track.id === trackId);
+        if (!track) {
+          throw new Error(`Unknown trackId: ${trackId}`);
+        }
+        newTracks.push(track);
+      }
+      state.tracks = newTracks;
     },
   },
 });
@@ -2676,6 +2689,15 @@ export const singingCommandStore = transformCommandStore(
       },
       action({ commit }, { trackId }) {
         commit("COMMAND_DELETE_TRACK", { trackId });
+      },
+    },
+
+    COMMAND_REORDER_TRACKS: {
+      mutation(draft, { trackIds }) {
+        singingStore.mutations.REORDER_TRACKS(draft, { trackIds });
+      },
+      action({ commit }, { trackIds }) {
+        commit("COMMAND_REORDER_TRACKS", { trackIds });
       },
     },
 

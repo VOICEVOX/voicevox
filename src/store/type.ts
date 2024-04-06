@@ -1088,6 +1088,10 @@ export type SingingStoreTypes = {
   DELETE_TRACK: {
     mutation: { trackId: TrackId };
   };
+
+  REORDER_TRACKS: {
+    mutation: { trackIds: TrackId[] };
+  };
 };
 
 export type SingingCommandStoreState = {
@@ -1157,6 +1161,11 @@ export type SingingCommandStoreTypes = {
   COMMAND_DELETE_TRACK: {
     mutation: { trackId: TrackId };
     action(payload: { trackId: TrackId }): void;
+  };
+
+  COMMAND_REORDER_TRACKS: {
+    mutation: { trackIds: TrackId[] };
+    action(payload: { trackIds: TrackId[] }): void;
   };
 
   COMMAND_SET_TRACK_PAN: {
