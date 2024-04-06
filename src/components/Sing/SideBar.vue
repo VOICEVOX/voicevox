@@ -249,10 +249,10 @@ const trackStyles = computed(() =>
   border-bottom: 1px solid colors.$sequencer-sub-divider;
 }
 .track-detail {
-  // margin-left: 0.5rem;
+  margin-left: 0.5rem;
   padding: 0 0.5rem;
   width: 100%;
-  // border-left: 1px solid colors.$sequencer-sub-divider;
+  border-left: 1px solid colors.$sequencer-sub-divider;
   display: flex;
   flex-direction: column;
 
