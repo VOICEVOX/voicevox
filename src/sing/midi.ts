@@ -22,6 +22,8 @@ export type Note = {
   lyric?: string;
 };
 
+const bpmPrecision = 2;
+
 /**
  * midi-fileの軽いラッパー。
  */
@@ -122,7 +124,11 @@ export class Track {
 
     const tempos = tempoEvents.map((e) => ({
       ticks: e.time,
-      bpm: (60 * 1000000) / e.microsecondsPerBeat,
+      bpm:
+        Math.round(
+          ((60 * 1000000) / e.microsecondsPerBeat) * 10 ** bpmPrecision
+        ) /
+        10 ** bpmPrecision,
     }));
     tempos.sort((a, b) => a.ticks - b.ticks);
     return tempos;
