@@ -1,11 +1,13 @@
 import { it, expect } from "vitest";
-import lyricMid from "./testMidi/lyric.mid?uint8array";
+import synthvMid from "./testMidi/synthv.mid?uint8array";
+import voisonaMid from "./testMidi/voisona.midi?uint8array";
 import timeSigMid from "./testMidi/timeSig.mid?uint8array";
 import bpmMid from "./testMidi/bpm.mid?uint8array";
 import { Midi } from "@/sing/midi";
 
-// `lyrics.mid` はSynthVで作成。（Synthesizer V Studio Pro 1.11.0）
-// それ以外はsignal（https://signal.vercel.app/edit）で作成。
+// MIDIファイルはそれぞれ以下の手順で作成：
+// - synthv.mid：SynthVで作成（synthv.svp、Synthesizer V Studio Pro 1.11.0）
+// - voisona.mid：Voisonaで作成（voisona.tssln、VoiSona Version 1.9.2.0
 
 it("BPMをパースできる", async () => {
   const midi = new Midi(bpmMid);
@@ -17,16 +19,38 @@ it("BPMをパースできる", async () => {
   ]);
 });
 
-it("ノートと歌詞をパースできる", async () => {
-  const midi = new Midi(lyricMid);
+const lyricExpectation: [noteNumber: number, lyric: string][] = [
+  [60, "ど"],
+  [62, "れ"],
+  [64, "み"],
+  [65, "ふぁ"],
+  [67, "そ"],
+  [69, "ら"],
+  [71, "し"],
+  [72, "ど"],
+];
+
+it("SynthVのノートと歌詞をパースできる", async () => {
+  const midi = new Midi(synthvMid);
   const ticksPerBeat = midi.ticksPerBeat;
-  // SynthVの1トラック目はBPM変化しかないので、2トラック目をテストする
   expect(midi.tracks[1].notes).toEqual(
-    [60, 62, 64, 65, 67, 69, 71, 72].map((noteNumber, index) => ({
+    lyricExpectation.map(([noteNumber, lyric], index) => ({
       ticks: index * ticksPerBeat,
       noteNumber,
       duration: ticksPerBeat,
-      lyric: "la",
+      lyric,
+    }))
+  );
+});
+it("VoiSonaのノートと歌詞をパースできる", async () => {
+  const midi = new Midi(synthvMid);
+  const ticksPerBeat = midi.ticksPerBeat;
+  expect(midi.tracks[1].notes).toEqual(
+    lyricExpectation.map(([noteNumber, lyric], index) => ({
+      ticks: index * ticksPerBeat,
+      noteNumber,
+      duration: ticksPerBeat,
+      lyric,
     }))
   );
 });

@@ -78,7 +78,14 @@ export class Track {
       (e) => e.type === "lyrics"
     ) as MidiEventWithTime<MidiLyricsEvent>[];
     const lyricsMap = new Map<number, string>(
-      lyrics.map((e) => [e.time, e.text])
+      lyrics.map((e) => {
+        // midi-fileのtextはバイト列なので、UTF-8としてデコードする
+        const buffer = new Uint8Array(
+          e.text.split("").map((c) => c.charCodeAt(0))
+        );
+        const decoder = new TextDecoder("utf-8");
+        return [e.time, decoder.decode(buffer)];
+      })
     );
 
     const noteOnOffs = this.events.filter(
@@ -109,6 +116,7 @@ export class Track {
           ticks: note.time,
           noteNumber: note.noteNumber,
           duration: event.time - note.time,
+          // 同じタイミングの歌詞をノートの歌詞として使う
           lyric: lyricsMap.get(note.time),
         });
       }
