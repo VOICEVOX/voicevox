@@ -1,7 +1,8 @@
 import { it, expect } from "vitest";
 import { shouldPlay } from "@/sing/domain";
-import { Track, TrackId } from "@/store/type";
+import { Track } from "@/store/type";
 import { createInitialTrack } from "@/store/singing";
+import { TrackId } from "@/type/preload";
 
 const createTrack = ({
   mute,

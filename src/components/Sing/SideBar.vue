@@ -167,8 +167,9 @@ import SingerIcon from "./SingerIcon.vue";
 import { useStore } from "@/store";
 import { getStyleDescription } from "@/sing/viewHelper";
 import { shouldPlay } from "@/sing/domain";
-import { Track, TrackId } from "@/store/type";
+import { Track } from "@/store/type";
 import { mapNullablePipe } from "@/helpers/map";
+import { TrackId } from "@/type/preload";
 
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
 Draggable.components = { ...Draggable.components, QList };

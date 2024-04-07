@@ -14,7 +14,7 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
-import { TrackId } from "@/store/type";
+import { TrackId } from "@/type/preload";
 
 type VoicedSection = {
   readonly startFrame: number;

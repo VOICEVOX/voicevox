@@ -1,8 +1,8 @@
 import { it, expect } from "vitest";
-import { Phrase, PhraseState, TrackId } from "@/store/type";
+import { Phrase, PhraseState } from "@/store/type";
 import { DEFAULT_TPQN } from "@/sing/storeHelper";
 import { selectPriorPhrase } from "@/sing/domain";
-import { EngineId, StyleId } from "@/type/preload";
+import { EngineId, StyleId, TrackId } from "@/type/preload";
 
 const tempos = [
   {

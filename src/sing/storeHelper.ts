@@ -1,5 +1,6 @@
-import { Note, Singer, Tempo, TrackId } from "@/store/type";
+import { Note, Singer, Tempo } from "@/store/type";
 import { generateHash } from "@/sing/utility";
+import { TrackId } from "@/type/preload";
 
 export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;

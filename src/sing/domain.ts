@@ -1,12 +1,5 @@
-import {
-  Note,
-  Phrase,
-  Score,
-  Tempo,
-  TimeSignature,
-  Track,
-  TrackId,
-} from "@/store/type";
+import { Note, Phrase, Score, Tempo, TimeSignature, Track } from "@/store/type";
+import { TrackId } from "@/type/preload";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;

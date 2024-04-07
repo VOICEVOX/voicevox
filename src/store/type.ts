@@ -48,9 +48,8 @@ import {
   AudioKey,
   PresetKey,
   RootMiscSettingType,
-  engineIdSchema,
-  styleIdSchema,
   EditorType,
+  TrackId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -60,6 +59,13 @@ import {
   LoadingScreenOption,
 } from "@/components/Dialog/Dialog";
 import { OverlappingNoteInfos } from "@/sing/storeHelper";
+import {
+  noteSchema,
+  singerSchema,
+  tempoSchema,
+  timeSignatureSchema,
+  trackSchema,
+} from "@/domain/project/schema";
 
 /**
  * エディタ用のAudioQuery
@@ -712,27 +718,10 @@ export type AudioPlayerStoreTypes = {
  */
 
 // schemaはプロジェクトファイル用
-// TODO: schemaをsrc/domain/projectSchema.tsに移動する
-export const tempoSchema = z.object({
-  position: z.number(),
-  bpm: z.number(),
-});
 export type Tempo = z.infer<typeof tempoSchema>;
 
-export const timeSignatureSchema = z.object({
-  measureNumber: z.number(),
-  beats: z.number(),
-  beatType: z.number(),
-});
 export type TimeSignature = z.infer<typeof timeSignatureSchema>;
 
-export const noteSchema = z.object({
-  id: z.string(),
-  position: z.number(),
-  duration: z.number(),
-  noteNumber: z.number(),
-  lyric: z.string(),
-});
 export type Note = z.infer<typeof noteSchema>;
 
 export type Score = {
@@ -742,28 +731,8 @@ export type Score = {
   notes: Note[][];
 };
 
-export const singerSchema = z.object({
-  engineId: engineIdSchema,
-  styleId: styleIdSchema,
-});
-
 export type Singer = z.infer<typeof singerSchema>;
 
-export const trackIdSchema = z.string().brand("TrackId");
-export type TrackId = z.infer<typeof trackIdSchema>;
-export const TrackId = (trackId: string) => trackIdSchema.parse(trackId);
-
-export const trackSchema = z.object({
-  id: trackIdSchema,
-  singer: singerSchema.optional(),
-  keyRangeAdjustment: z.number(), // 音域調整量
-  volumeRangeAdjustment: z.number(), // 声量調整量
-  notes: z.array(noteSchema),
-  pan: z.number(),
-  volume: z.number(),
-  mute: z.boolean(),
-  solo: z.boolean(),
-});
 export type Track = z.infer<typeof trackSchema>;
 
 export type PhraseState =

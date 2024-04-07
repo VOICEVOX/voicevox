@@ -62,6 +62,10 @@ export type VoiceId = z.infer<typeof voiceIdSchema>;
 export const VoiceId = (voice: Voice): VoiceId =>
   voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
 
+export const trackIdSchema = z.string().brand("TrackId");
+export type TrackId = z.infer<typeof trackIdSchema>;
+export const TrackId = (trackId: string) => trackIdSchema.parse(trackId);
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySettingType[] = [
   {

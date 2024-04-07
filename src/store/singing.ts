@@ -17,12 +17,10 @@ import {
   Phrase,
   PhraseState,
   transformCommandStore,
-  noteSchema,
   Track,
-  TrackId,
 } from "./type";
 import { sanitizeFileName } from "./utility";
-import { EngineId } from "@/type/preload";
+import { EngineId, TrackId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
@@ -78,6 +76,7 @@ import {
 } from "@/sing/utility";
 import { generateWriteErrorMessage } from "@/helpers/generateWriteErrorMessage";
 import DefaultMap from "@/helpers/DefaultMap";
+import { noteSchema } from "@/domain/project/schema";
 
 const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   return notes.map((value): NoteEvent => {

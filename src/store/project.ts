@@ -1,5 +1,4 @@
 import semver from "semver";
-import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
@@ -10,20 +9,10 @@ import {
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
-  tempoSchema,
-  timeSignatureSchema,
-  trackSchema,
 } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
-import {
-  audioKeySchema,
-  EngineId,
-  engineIdSchema,
-  presetKeySchema,
-  speakerIdSchema,
-  styleIdSchema,
-} from "@/type/preload";
+import { EngineId } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import {
   DEFAULT_BEAT_TYPE,
@@ -31,6 +20,7 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
+import { LatestProjectType, projectSchema } from "@/domain/project/schema";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -683,69 +673,3 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     },
   },
 });
-
-const moraSchema = z.object({
-  text: z.string(),
-  vowel: z.string(),
-  vowelLength: z.number(),
-  pitch: z.number(),
-  consonant: z.string().optional(),
-  consonantLength: z.number().optional(),
-});
-
-const accentPhraseSchema = z.object({
-  moras: z.array(moraSchema),
-  accent: z.number(),
-  pauseMora: moraSchema.optional(),
-  isInterrogative: z.boolean().optional(),
-});
-
-const audioQuerySchema = z.object({
-  accentPhrases: z.array(accentPhraseSchema),
-  speedScale: z.number(),
-  pitchScale: z.number(),
-  intonationScale: z.number(),
-  volumeScale: z.number(),
-  prePhonemeLength: z.number(),
-  postPhonemeLength: z.number(),
-  outputSamplingRate: z.union([z.number(), z.literal("engineDefault")]),
-  outputStereo: z.boolean(),
-  kana: z.string().optional(),
-});
-
-const morphingInfoSchema = z.object({
-  rate: z.number(),
-  targetEngineId: engineIdSchema,
-  targetSpeakerId: speakerIdSchema,
-  targetStyleId: styleIdSchema,
-});
-
-const audioItemSchema = z.object({
-  text: z.string(),
-  voice: z.object({
-    engineId: engineIdSchema,
-    speakerId: speakerIdSchema,
-    styleId: styleIdSchema,
-  }),
-  query: audioQuerySchema.optional(),
-  presetKey: presetKeySchema.optional(),
-  morphingInfo: morphingInfoSchema.optional(),
-});
-
-const projectSchema = z.object({
-  appVersion: z.string(),
-  talk: z.object({
-    // description: "Attribute keys of audioItems.",
-    audioKeys: z.array(audioKeySchema),
-    // description: "VOICEVOX states per cell",
-    audioItems: z.record(audioKeySchema, audioItemSchema),
-  }),
-  song: z.object({
-    tpqn: z.number(),
-    tempos: z.array(tempoSchema),
-    timeSignatures: z.array(timeSignatureSchema),
-    tracks: z.array(trackSchema),
-  }),
-});
-
-export type LatestProjectType = z.infer<typeof projectSchema>;
