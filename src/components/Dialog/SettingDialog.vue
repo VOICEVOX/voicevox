@@ -421,9 +421,11 @@
               </QCardActions>
 
               <QCardActions class="q-px-md bg-surface">
-                <div>ソング：「元に戻す」機能の対象にするトラック操作</div>
+                <div>
+                  ソング：「元に戻す」機能の対象にするトラックのパラメータ
+                </div>
                 <div
-                  aria-label="「元に戻す」機能の対象にするトラック操作を選べます。"
+                  aria-label="パン、音量、ミュート、ソロのうち、「元に戻す」機能の対象にするパラメータを選べます。"
                 >
                   <QIcon name="help_outline" size="sm" class="help-hover-icon">
                     <QTooltip
@@ -433,7 +435,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      「元に戻す」機能の対象にするトラック操作を選べます。
+                      パン、音量、ミュート、ソロのうち、「元に戻す」機能の対象にするパラメータを選べます。
                     </QTooltip>
                   </QIcon>
                 </div>
@@ -466,7 +468,7 @@
                 >
                   <template #ALL>
                     <QTooltip :delay="500">
-                      全てのトラック操作を元に戻せるようにします。
+                      パン、音量、ミュート、ソロの変更を全て元に戻せるようにします。
                     </QTooltip>
                   </template>
                   <template #PAN_VOLUME>
