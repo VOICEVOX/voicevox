@@ -79,7 +79,7 @@ export class Track {
     ) as MidiEventWithTime<MidiLyricsEvent>[];
     const lyricsMap = new Map<number, string>(
       lyrics.map((e) => {
-        // midi-fileのtextはバイト列なので、UTF-8としてデコードする
+        // midi-fileはUTF-8としてデコードしてくれないので、ここでデコードする
         const buffer = new Uint8Array(
           e.text.split("").map((c) => c.charCodeAt(0))
         );
