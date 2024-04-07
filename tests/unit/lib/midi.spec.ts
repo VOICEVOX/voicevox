@@ -1,13 +1,12 @@
 import { it, expect } from "vitest";
 import synthvMid from "./testMidi/synthv.mid?uint8array";
-import voisonaMid from "./testMidi/voisona.midi?uint8array";
 import timeSigMid from "./testMidi/timeSig.mid?uint8array";
 import bpmMid from "./testMidi/bpm.mid?uint8array";
 import { Midi } from "@/sing/midi";
 
-// MIDIファイルはそれぞれ以下の手順で作成：
+// MIDIファイルの作成情報：
 // - synthv.mid：SynthVで作成（synthv.svp、Synthesizer V Studio Pro 1.11.0）
-// - voisona.mid：Voisonaで作成（voisona.tssln、VoiSona Version 1.9.2.0
+// - timeSig.mid、bpm.mid：signalで作成（https://signal.vercel.app/edit）
 
 it("BPMをパースできる", async () => {
   const midi = new Midi(bpmMid);
@@ -31,18 +30,6 @@ const lyricExpectation: [noteNumber: number, lyric: string][] = [
 ];
 
 it("SynthVのノートと歌詞をパースできる", async () => {
-  const midi = new Midi(synthvMid);
-  const ticksPerBeat = midi.ticksPerBeat;
-  expect(midi.tracks[1].notes).toEqual(
-    lyricExpectation.map(([noteNumber, lyric], index) => ({
-      ticks: index * ticksPerBeat,
-      noteNumber,
-      duration: ticksPerBeat,
-      lyric,
-    }))
-  );
-});
-it("VoiSonaのノートと歌詞をパースできる", async () => {
   const midi = new Midi(synthvMid);
   const ticksPerBeat = midi.ticksPerBeat;
   expect(midi.tracks[1].notes).toEqual(
