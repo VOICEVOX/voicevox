@@ -1310,10 +1310,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           await window.backend.readFile({ filePath })
         );
         const midi = new Midi(midiData);
-        const midiTpqn = midi.header.ticksPerBeat;
-        if (midiTpqn == undefined) {
-          throw new Error("ticksPerBeat is undefined.");
-        }
+        const midiTpqn = midi.ticksPerBeat;
         const midiTempos = midi.tempos;
         const midiTimeSignatures = midi.timeSignatures;
 

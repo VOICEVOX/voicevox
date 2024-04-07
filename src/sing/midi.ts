@@ -39,6 +39,14 @@ export class Midi {
     return this.data.header;
   }
 
+  get ticksPerBeat() {
+    const maybeTicksPerBeat = this.data.header.ticksPerBeat;
+    if (maybeTicksPerBeat == undefined) {
+      throw new Error("ticksPerBeat is undefined");
+    }
+    return maybeTicksPerBeat;
+  }
+
   get tempos(): Tempo[] {
     const tempos = this.tracks.flatMap((track) => track.tempos);
     tempos.sort((a, b) => a.ticks - b.ticks);
