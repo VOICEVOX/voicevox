@@ -276,7 +276,6 @@ export class HotkeyManager {
 
   keyInput(e: KeyboardEvent): void {
     const element = e.target;
-    console.log(element);
     // メニュー項目ではショートカットキーを無効化
     if (
       element instanceof HTMLElement &&
