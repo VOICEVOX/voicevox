@@ -1124,15 +1124,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
 
           try {
-            // シンガーが未設定でシーケンスが存在する場合、音源とシーケンスの接続を解除して削除する
+            // シーケンスが存在する場合、シーケンスの接続を解除して削除する
+            // TODO: ピッチを編集したときは行わないようにする
 
-            if (!singerAndFrameRate) {
-              const sequence = sequences.get(phraseKey);
-              if (sequence) {
-                getAudioSourceNode(sequence).disconnect();
-                transportRef.removeSequence(sequence);
-                sequences.delete(phraseKey);
-              }
+            const existingSequence = sequences.get(phraseKey);
+            if (existingSequence) {
+              getAudioSourceNode(existingSequence).disconnect();
+              transportRef.removeSequence(existingSequence);
+              sequences.delete(phraseKey);
             }
 
             // シーケンスが存在しない場合、シンセとノートシーケンスを作成してプレビュー音が鳴るようにする
