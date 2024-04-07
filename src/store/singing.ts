@@ -1115,6 +1115,32 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             return phrase.state === "WAITING_TO_BE_RENDERED";
           })
         );
+        for (const [phraseKey, phrase] of phrasesToBeRendered) {
+          // シーケンスが存在する場合、シーケンスの接続を解除して削除する
+          // TODO: ピッチを編集したときは行わないようにする
+
+          const sequence = sequences.get(phraseKey);
+          if (sequence) {
+            getAudioSourceNode(sequence).disconnect();
+            transportRef.removeSequence(sequence);
+            sequences.delete(phraseKey);
+          }
+
+          // シーケンスが存在しない場合、ノートシーケンスを作成してプレビュー音が鳴るようにする
+
+          if (!sequences.has(phraseKey)) {
+            const noteEvents = generateNoteEvents(phrase.notes, tempos, tpqn);
+            const polySynth = new PolySynth(audioContextRef);
+            const noteSequence: NoteSequence = {
+              type: "note",
+              instrument: polySynth,
+              noteEvents,
+            };
+            polySynth.output.connect(channelStripRef.input);
+            transportRef.addSequence(noteSequence);
+            sequences.set(phraseKey, noteSequence);
+          }
+        }
         while (phrasesToBeRendered.size > 0) {
           if (startRenderingRequested() || stopRenderingRequested()) {
             return;
@@ -1125,48 +1151,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           );
           phrasesToBeRendered.delete(phraseKey);
 
+          // シンガーが未設定の場合は、歌い方の生成や音声合成は行わない
+
+          if (!singerAndFrameRate) {
+            commit("SET_STATE_TO_PHRASE", {
+              phraseKey,
+              phraseState: "PLAYABLE",
+            });
+            continue;
+          }
+
           commit("SET_STATE_TO_PHRASE", {
             phraseKey,
             phraseState: "NOW_RENDERING",
           });
 
           try {
-            // シーケンスが存在する場合、シーケンスの接続を解除して削除する
-            // TODO: ピッチを編集したときは行わないようにする
-
-            const existingSequence = sequences.get(phraseKey);
-            if (existingSequence) {
-              getAudioSourceNode(existingSequence).disconnect();
-              transportRef.removeSequence(existingSequence);
-              sequences.delete(phraseKey);
-            }
-
-            // シーケンスが存在しない場合、シンセとノートシーケンスを作成してプレビュー音が鳴るようにする
-
-            if (!sequences.has(phraseKey)) {
-              const noteEvents = generateNoteEvents(phrase.notes, tempos, tpqn);
-              const polySynth = new PolySynth(audioContextRef);
-              const noteSequence: NoteSequence = {
-                type: "note",
-                instrument: polySynth,
-                noteEvents,
-              };
-              polySynth.output.connect(channelStripRef.input);
-              transportRef.addSequence(noteSequence);
-              sequences.set(phraseKey, noteSequence);
-            }
-
-            // シンガーが未設定の場合は、このフレーズのレンダリングを終了
-
-            if (!singerAndFrameRate) {
-              commit("SET_STATE_TO_PHRASE", {
-                phraseKey,
-                phraseState: "PLAYABLE",
-              });
-              continue;
-            }
-
-            // 歌い方のキャッシュがあれば取得、なければ歌い方を生成
+            // 歌い方が存在する場合、歌い方を取得する
+            // 歌い方が存在しない場合、キャッシュがあれば取得し、なければ歌い方を生成する
 
             let singingGuide: SingingGuide | undefined;
             if (phrase.singingGuideKey != undefined) {
@@ -1234,7 +1236,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               });
             }
 
-            // 歌声のキャッシュがあれば取得、なければ音声合成を行う
+            // 歌声のキャッシュがあれば取得し、なければ音声合成を行う
 
             let singingVoice: SingingVoice | undefined;
 
@@ -1267,16 +1269,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceKey,
             });
 
-            // シンセとノートシーケンスの接続を解除する
+            // シーケンスが存在する場合、シーケンスの接続を解除して削除する
 
             const sequence = sequences.get(phraseKey);
-            if (!sequence) {
-              throw new Error("sequence is undefined.");
+            if (sequence) {
+              getAudioSourceNode(sequence).disconnect();
+              transportRef.removeSequence(sequence);
+              sequences.delete(phraseKey);
             }
-            getAudioSourceNode(sequence).disconnect();
-            transportRef.removeSequence(sequence);
 
-            // オーディオプレイヤーとオーディオシーケンスを作成して接続する
+            // オーディオシーケンスを作成して接続する
 
             const audioEvents = await generateAudioEvents(
               audioContextRef,
