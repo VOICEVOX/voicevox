@@ -772,6 +772,9 @@ export type SingingGuide = {
   startTime: number;
 };
 
+/**
+ * 歌い方のソース（歌い方を生成するために必要なデータ）
+ */
 export type SingingGuideSource = {
   engineId: EngineId;
   tpqn: number;
@@ -790,6 +793,9 @@ export type SingingVoice = {
   blob: Blob;
 };
 
+/**
+ * 歌声のソース（歌声を合成するために必要なデータ）
+ */
 export type SingingVoiceSource = {
   singer: Singer;
   frameAudioQuery: FrameAudioQuery;

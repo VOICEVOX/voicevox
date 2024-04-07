@@ -946,6 +946,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       };
 
+      const getAudioSourceNode = (sequence: Sequence) => {
+        if (sequence.type === "note") {
+          return sequence.instrument.output;
+        } else if (sequence.type === "audio") {
+          return sequence.audioPlayer.output;
+        } else {
+          throw new Error("Unknown type of sequence.");
+        }
+      };
+
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
       const startRenderingRequested = () => state.startRenderingRequested;
       const stopRenderingRequested = () => state.stopRenderingRequested;
@@ -1003,13 +1013,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             // 音源とシーケンスの接続を解除して削除する
             const sequence = sequences.get(phraseKey);
             if (sequence) {
-              if (sequence.type === "note") {
-                sequence.instrument.output.disconnect();
-              } else if (sequence.type === "audio") {
-                sequence.audioPlayer.output.disconnect();
-              } else {
-                throw new Error("Unknown type of sequence.");
-              }
+              getAudioSourceNode(sequence).disconnect();
               transportRef.removeSequence(sequence);
               sequences.delete(phraseKey);
             }
@@ -1125,13 +1129,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (!singerAndFrameRate) {
               const sequence = sequences.get(phraseKey);
               if (sequence) {
-                if (sequence.type === "note") {
-                  sequence.instrument.output.disconnect();
-                } else if (sequence.type === "audio") {
-                  sequence.audioPlayer.output.disconnect();
-                } else {
-                  throw new Error("Unknown type of sequence.");
-                }
+                getAudioSourceNode(sequence).disconnect();
                 transportRef.removeSequence(sequence);
                 sequences.delete(phraseKey);
               }
@@ -1269,13 +1267,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (!sequence) {
               throw new Error("sequence is undefined.");
             }
-            if (sequence.type === "note") {
-              sequence.instrument.output.disconnect();
-            } else if (sequence.type === "audio") {
-              sequence.audioPlayer.output.disconnect();
-            } else {
-              throw new Error("Unknown type of sequence.");
-            }
+            getAudioSourceNode(sequence).disconnect();
             transportRef.removeSequence(sequence);
 
             // オーディオプレイヤーとオーディオシーケンスを作成して接続する
