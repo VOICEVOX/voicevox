@@ -32,6 +32,7 @@ const lyricExpectation: [noteNumber: number, lyric: string][] = [
 it("SynthVのノートと歌詞をパースできる", async () => {
   const midi = new Midi(synthvMid);
   const ticksPerBeat = midi.ticksPerBeat;
+  // SynthVのMIDIファイルの1トラック目はBPM情報のみなので、2トラック目を取得
   expect(midi.tracks[1].notes).toEqual(
     lyricExpectation.map(([noteNumber, lyric], index) => ({
       ticks: index * ticksPerBeat,
