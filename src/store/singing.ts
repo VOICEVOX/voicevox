@@ -1045,49 +1045,56 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               });
               phrase.singingGuideKey = undefined;
             }
-          } else if (phrase.singingGuideKey != undefined) {
-            const calculatedHash = await calculateSingingGuideSourceHash({
-              engineId: singerAndFrameRate.singer.engineId,
-              tpqn,
-              tempos,
-              notes: phrase.notes,
-              keyRangeAdjustment,
-              volumeRangeAdjustment,
-              frameRate: singerAndFrameRate.frameRate,
-              restDurationSeconds,
-            });
-            const hash = phrase.singingGuideKey;
-            if (hash !== calculatedHash) {
-              commit("DELETE_SINGING_GUIDE", {
-                singingGuideKey: phrase.singingGuideKey,
-              });
-              phrase.singingGuideKey = undefined;
-            }
-          }
-          if (!singerAndFrameRate || phrase.singingGuideKey == undefined) {
             if (phrase.singingVoiceKey != undefined) {
               singingVoices.delete(phrase.singingVoiceKey);
               phrase.singingVoiceKey = undefined;
             }
-          } else if (phrase.singingVoiceKey != undefined) {
-            const singingGuide = state.singingGuides.get(
-              phrase.singingGuideKey
-            );
-            if (singingGuide == undefined) {
-              throw new Error("singingGuide is undefined.");
+          } else {
+            if (phrase.singingGuideKey != undefined) {
+              const calculatedHash = await calculateSingingGuideSourceHash({
+                engineId: singerAndFrameRate.singer.engineId,
+                tpqn,
+                tempos,
+                notes: phrase.notes,
+                keyRangeAdjustment,
+                volumeRangeAdjustment,
+                frameRate: singerAndFrameRate.frameRate,
+                restDurationSeconds,
+              });
+              const hash = phrase.singingGuideKey;
+              if (hash !== calculatedHash) {
+                commit("DELETE_SINGING_GUIDE", {
+                  singingGuideKey: phrase.singingGuideKey,
+                });
+                phrase.singingGuideKey = undefined;
+                if (phrase.singingVoiceKey != undefined) {
+                  singingVoices.delete(phrase.singingVoiceKey);
+                  phrase.singingVoiceKey = undefined;
+                }
+              }
             }
-            const calculatedHash = await calculateSingingVoiceSourceHash({
-              singer: singerAndFrameRate.singer,
-              frameAudioQuery: singingGuide.query,
-            });
-            const hash = phrase.singingVoiceKey;
-            if (hash !== calculatedHash) {
-              singingVoices.delete(phrase.singingVoiceKey);
-              phrase.singingVoiceKey = undefined;
+            if (
+              phrase.singingGuideKey != undefined &&
+              phrase.singingVoiceKey != undefined
+            ) {
+              const singingGuide = state.singingGuides.get(
+                phrase.singingGuideKey
+              );
+              if (singingGuide == undefined) {
+                throw new Error("singingGuide is undefined.");
+              }
+              const calculatedHash = await calculateSingingVoiceSourceHash({
+                singer: singerAndFrameRate.singer,
+                frameAudioQuery: singingGuide.query,
+              });
+              const hash = phrase.singingVoiceKey;
+              if (hash !== calculatedHash) {
+                singingVoices.delete(phrase.singingVoiceKey);
+                phrase.singingVoiceKey = undefined;
+              }
             }
           }
           if (
-            !singerAndFrameRate ||
             phrase.singingGuideKey == undefined ||
             phrase.singingVoiceKey == undefined
           ) {
