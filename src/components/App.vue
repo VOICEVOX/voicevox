@@ -139,5 +139,10 @@ onMounted(async () => {
   } else {
     isProjectFileLoaded.value = false;
   }
+
+  // ショートカットキーを動作させる
+  document.addEventListener("keydown", (e) => {
+    hotkeyManager.keyInput(e);
+  });
 });
 </script>

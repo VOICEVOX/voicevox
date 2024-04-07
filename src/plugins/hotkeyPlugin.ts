@@ -91,6 +91,8 @@ const isNotSameHotkeyTarget = (a: HotkeyTarget) => (b: HotkeyTarget) => {
 export class HotkeyManager {
   /** 登録されたHotkeyAction */
   private actions: HotkeyAction[] = [];
+  /** スコープ */
+  private scope: Editor = "talk";
   /** ユーザーのショートカットキー設定 */
   private settings: HotkeySettingType[] | undefined; // ユーザーのショートカットキー設定
   /** hotkeys-jsに登録されたショートカットキーの組み合わせ */
@@ -171,7 +173,7 @@ export class HotkeyManager {
     for (const combination of combinations) {
       const bindingKey = combinationToBindingKey(combination.combination);
       this.log("Unbind:", bindingKey, "in", combination.editor);
-      this.hotkeys.unbind(bindingKey, combination.editor);
+      /* this.hotkeys.unbind(bindingKey, combination.editor); */
       this.registeredCombinations = this.registeredCombinations.filter(
         isNotSameHotkeyTarget(combination)
       );
@@ -189,7 +191,7 @@ export class HotkeyManager {
         "in",
         action.editor
       );
-      this.hotkeys(
+      /* this.hotkeys(
         combinationToBindingKey(setting.combination),
         { scope: action.editor },
         (e) => {
@@ -215,7 +217,7 @@ export class HotkeyManager {
           e.preventDefault();
           action.callback(e);
         }
-      );
+      ); */
       this.registeredCombinations = this.registeredCombinations.filter(
         isNotSameHotkeyTarget(action)
       );
@@ -267,8 +269,39 @@ export class HotkeyManager {
    * エディタが変更されたときに呼び出される。
    */
   onEditorChange(editor: "talk" | "song"): void {
-    this.hotkeys.setScope(editor);
+    // this.hotkeys.setScope(editor);
+    this.scope = editor;
     this.log("Editor changed to", editor);
+  }
+
+  keyInput(e: KeyboardEvent): void {
+    const element = e.target;
+    // メニュー項目ではショートカットキーを無効化
+    if (
+      element instanceof HTMLElement &&
+      element.getAttribute("role") == "menu"
+    ) {
+      return;
+    }
+
+    const isInTextbox =
+      element instanceof HTMLElement &&
+      (element.tagName === "INPUT" ||
+        element.tagName === "SELECT" ||
+        element.tagName === "TEXTAREA" ||
+        element.contentEditable === "true");
+
+    const combination: HotkeyCombination = eventToCombination(e);
+
+    const action = this.actions
+      .filter((item) => item.editor == this.scope)
+      .filter((item) => !isInTextbox || item.enableInTextbox)
+      .find((item) => this.getSetting(item).combination == combination);
+    if (action == null) {
+      return;
+    }
+    e.preventDefault();
+    action.callback(e);
   }
 }
 
