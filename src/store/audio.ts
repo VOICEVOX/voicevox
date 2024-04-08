@@ -279,6 +279,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  /**
+   * CharacterInfoをエンジンから取得する。
+   * GETクエリとBASE64のデコードがそこそこ重いため並行処理をしている。
+   */
   LOAD_CHARACTER: {
     action: createUILockAction(
       async ({ commit, dispatch, state }, { engineId }) => {
