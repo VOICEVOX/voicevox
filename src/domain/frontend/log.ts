@@ -1,4 +1,5 @@
 /** ログ出力用の関数を生成する。ブラウザ専用。 */
+// TODO: DIできるようにする
 export function createLogger(scope: string) {
   const createInner =
     (method: "logInfo" | "logError" | "logWarn") =>
