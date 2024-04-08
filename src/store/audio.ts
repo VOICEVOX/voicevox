@@ -358,12 +358,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
           const baseSpeaker = speaker ?? singer;
           if (baseSpeaker == undefined) {
-            throw new Error("assert baseSpeaker == undefined");
+            throw new Error("assert baseSpeaker != undefined");
           }
           const baseCharacterInfo = await (speakerInfoPromise ??
             singerInfoPromise);
           if (baseCharacterInfo == undefined) {
-            throw new Error("assert baseSpeakerInfo == undefined");
+            throw new Error("assert baseSpeakerInfo != undefined");
           }
 
           const stylesPromise = Promise.all([
