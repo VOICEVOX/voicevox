@@ -325,7 +325,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         ) => {
           // 同じIDの歌手がいる場合は歌手情報を取得し、スタイルをマージする
           let speakerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
-          let speakerStylePromise: Promise<StyleInfo[]> | never[] = [];
+          let speakerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
           if (speaker != undefined) {
             speakerInfoPromise = instance
               .invoke("speakerInfoSpeakerInfoGet")({
@@ -341,7 +341,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
 
           let singerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
-          let singerStylePromise: Promise<StyleInfo[]> | never[] = [];
+          let singerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
           if (singer != undefined) {
             singerInfoPromise = instance
               .invoke("singerInfoSingerInfoGet")({
@@ -367,8 +367,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
 
           const stylesPromise = Promise.all([
-            speakerStylePromise,
-            singerStylePromise,
+            speakerStylePromise ?? [],
+            singerStylePromise ?? [],
           ]).then((styles) => styles.flat());
 
           const characterInfo: CharacterInfo = {
