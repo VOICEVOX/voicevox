@@ -17,7 +17,6 @@ import {
   Phrase,
   PhraseState,
   transformCommandStore,
-  noteSchema,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
@@ -71,6 +70,7 @@ import {
   round,
 } from "@/sing/utility";
 import { createLogger } from "@/domain/frontend/log";
+import { noteSchema } from "@/domain/project/schema";
 
 const { info } = createLogger("store/singing");
 
