@@ -360,9 +360,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           if (baseSpeaker == undefined) {
             throw new Error("assert baseSpeaker == undefined");
           }
-          const baseSpeakerInfo = await (speakerInfoPromise ??
-            speakerInfoPromise);
-          if (baseSpeakerInfo == undefined) {
+          const baseCharacterInfo = await (speakerInfoPromise ??
+            singerInfoPromise);
+          if (baseCharacterInfo == undefined) {
             throw new Error("assert baseSpeakerInfo == undefined");
           }
 
@@ -372,12 +372,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           ]).then((styles) => styles.flat());
 
           const characterInfo: CharacterInfo = {
-            portraitPath: base64ImageToUri(baseSpeakerInfo.portrait),
+            portraitPath: base64ImageToUri(baseCharacterInfo.portrait),
             metas: {
               speakerUuid: SpeakerId(baseSpeaker.speakerUuid),
               speakerName: baseSpeaker.name,
               styles: await stylesPromise,
-              policy: baseSpeakerInfo.policy,
+              policy: baseCharacterInfo.policy,
             },
           };
           return characterInfo;
