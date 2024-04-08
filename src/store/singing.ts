@@ -72,7 +72,7 @@ import {
 import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 
-const { info } = createLogger("store/singing");
+const { info, warn } = createLogger("store/singing");
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -1222,7 +1222,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   STOP_RENDERING: {
     action: createUILockAction(async ({ state, commit }) => {
       if (state.nowRendering) {
-        const { info } = createLogger("STOP_RENDERING");
         info("Waiting for rendering to stop...");
         commit("SET_STOP_RENDERING_REQUESTED", {
           stopRenderingRequested: true,
@@ -2107,7 +2106,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   CANCEL_AUDIO_EXPORT: {
     async action({ state, commit }) {
       if (!state.nowAudioExporting) {
-        const { warn } = createLogger("CANCEL_AUDIO_EXPORT");
         warn("CANCEL_AUDIO_EXPORT on !nowAudioExporting");
         return;
       }

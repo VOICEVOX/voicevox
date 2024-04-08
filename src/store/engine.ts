@@ -10,7 +10,7 @@ export const engineStoreState: EngineStoreState = {
   engineSupportedDevices: {},
   altPortInfos: {},
 };
-const { info } = createLogger("store/engine");
+const { info, error } = createLogger("store/engine");
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
@@ -206,7 +206,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           try {
             return window.backend.restartEngine(engineId);
           } catch (e) {
-            const { error } = createLogger("RESTART_ENGINES");
             error(`Failed to restart engine: ${engineId}`);
             await dispatch("DETECTED_ENGINE_ERROR", { engineId });
             return {
