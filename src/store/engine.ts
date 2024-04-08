@@ -10,6 +10,7 @@ export const engineStoreState: EngineStoreState = {
   engineSupportedDevices: {},
   altPortInfos: {},
 };
+const { info } = createLogger("store/engine");
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
@@ -159,7 +160,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   START_WAITING_ENGINE: {
     action: createUILockAction(
       async ({ state, commit, dispatch }, { engineId }) => {
-        const { info } = createLogger("START_WAITING_ENGINE");
         let engineState: EngineState | undefined = state.engineStates[engineId];
         if (engineState == undefined)
           throw new Error(`No such engineState set: engineId == ${engineId}`);

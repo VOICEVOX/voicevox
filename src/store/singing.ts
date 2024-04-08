@@ -72,6 +72,8 @@ import {
 } from "@/sing/utility";
 import { createLogger } from "@/domain/frontend/log";
 
+const { info } = createLogger("store/singing");
+
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
   time: number,
@@ -763,7 +765,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, commit, dispatch }) {
-      const { info } = createLogger("RENDER");
       const searchPhrases = async (
         singer: Singer | undefined,
         keyRangeAdjustment: number,
