@@ -149,7 +149,7 @@
             {{ hotkey === "Meta" ? "Cmd" : hotkey }}
           </QChip>
         </template>
-        <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
+        <span v-if="lastRecord !== '' && confirmBtnDisabled"> +</span>
         <span v-if="lastActionArgumentKey !== undefined"> + </span>
         <QChip
           v-if="lastActionArgumentKey !== undefined"
@@ -199,7 +199,7 @@
           color="primary"
           text-color="display-on-primary"
           class="q-mt-sm"
-          :disabled="confirmBtnEnabled"
+          :disabled="confirmBtnDisabled"
           @click="
             changeHotkeySettings(lastAction, lastRecord).then(() =>
               closeHotkeyDialog()
@@ -214,7 +214,7 @@
           color="primary"
           text-color="display-on-primary"
           class="q-mt-sm"
-          :disabled="confirmBtnEnabled"
+          :disabled="confirmBtnDisabled"
           @click="solveDuplicated().then(() => closeHotkeyDialog())"
         />
       </QCardActions>
@@ -376,12 +376,10 @@ const getHotkeyText = (action: string, combo: string) => {
   if (checkHotkeyReadonly(action)) combo = "（読み取り専用）" + combo;
   if (combo == "") return "未設定";
   const argumentKey = getArgumentKey(action as HotkeyActionNameType);
-  return (
-    combo +
-    (argumentKey == undefined
-      ? ""
-      : " [" + getArgumentKeyCombinationText(argumentKey) + "]")
-  );
+  if (argumentKey != undefined) {
+    combo += " " + `[${getArgumentKeyCombinationText(argumentKey)}]`;
+  }
+  return combo;
 };
 
 // for later developers, in case anyone wants to add a readonly hotkey
@@ -421,8 +419,7 @@ const solveDuplicated = () => {
   return changeHotkeySettings(lastAction.value, lastRecord.value);
 };
 
-// disabledのときtrue
-const confirmBtnEnabled = computed(() => {
+const confirmBtnDisabled = computed(() => {
   return (
     lastRecord.value == "" ||
     (lastActionArgumentKey.value == undefined &&
