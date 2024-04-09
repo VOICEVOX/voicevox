@@ -330,58 +330,43 @@ const changeHotkeySettings = (
   });
 };
 
-const duplicatedHotkeys = computed(() => {
-  return filterDuplicatedHotkeysWithSetKeyAndName(
+const duplicatedHotkeys = computed(() =>
+  filterDuplicatedHotkeysWithSetKeyAndName(
     lastRecord.value,
     lastAction.value as HotkeyActionNameType
-  );
-});
+  )
+);
 
 const filterDuplicatedHotkeysWithSetKeyAndName = (
   key: HotkeyCombination,
   action: HotkeyActionNameType
 ): HotkeySettingType[] => {
-  // キーが未設定なら空の配列を返す
-  if (key == "") return [];
-  const results: HotkeySettingType[] = [];
-  // argumentKeyの配列を取得。undefinedを代入したら[ undefined ]が返ってくる
-  const argumentKeys = getArgumentKeyCombination(getArgumentKey(action));
-  for (const argumentKey of argumentKeys) {
-    // 探すキー名
-    const searchKeyCombination = HotkeyCombination(
-      key + (argumentKey == undefined ? "" : " " + argumentKey)
-    );
-    // 重複するキーを探す
-    const result: HotkeySettingType | undefined = findDuplicatedHotkeyWithKey(
-      searchKeyCombination,
-      action
-    );
-    // 重複するキーがあれば追加する
-    if (result != undefined) {
-      results.push(result);
-    }
-  }
-  return results;
+  if (!key) return [];
+  // getArgumentKeyはargumentKeyがないときは[undefined]という長さ1の配列が返ってくるので、一度処理される
+  return getArgumentKeyCombination(getArgumentKey(action))
+    .map((argumentKey) =>
+      findDuplicatedHotkeyWithKey(
+        HotkeyCombination(`${key}${argumentKey ? ` ${argumentKey}` : ""}`),
+        action
+      )
+    )
+    .filter((result): result is HotkeySettingType => result != undefined);
 };
 
 const findDuplicatedHotkeyWithKey = (
   key: HotkeyCombination,
   action: HotkeyActionNameType
-): HotkeySettingType | undefined => {
-  return hotkeySettings.value.find(
-    (item) =>
-      (getArgumentKey(item.action) == undefined
-        ? item.combination == key
-        : (
-            getArgumentKeyCombination(
-              getArgumentKey(item.action)
-            ) as HotkeyCombination[]
-          ).find(
-            (argumentKey: HotkeyCombination) =>
-              item.combination + " " + argumentKey == key
-          )) && item.action != action
-  );
-};
+): HotkeySettingType | undefined =>
+  hotkeySettings.value.find((item) => {
+    const itemKeyCombination = getArgumentKey(item.action)
+      ? `${item.combination} ${
+          getArgumentKeyCombination(
+            getArgumentKey(item.action)
+          ) as HotkeyCombination[]
+        }`
+      : item.combination;
+    return itemKeyCombination === key && item.action !== action;
+  });
 
 // FIXME: actionはHotkeyAction型にすべき
 const deleteHotkey = (action: string) => {
