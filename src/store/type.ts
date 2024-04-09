@@ -1326,18 +1326,6 @@ export type IndexStoreTypes = {
     action(): SpeakerId[];
   };
 
-  LOG_ERROR: {
-    action(...payload: unknown[]): void;
-  };
-
-  LOG_WARN: {
-    action(...payload: unknown[]): void;
-  };
-
-  LOG_INFO: {
-    action(...payload: unknown[]): void;
-  };
-
   INIT_VUEX: {
     action(): void;
   };

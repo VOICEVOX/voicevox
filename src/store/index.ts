@@ -306,24 +306,6 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
-  LOG_ERROR: {
-    action(_, ...params: unknown[]) {
-      window.backend.logError(...params);
-    },
-  },
-
-  LOG_WARN: {
-    action(_, ...params: unknown[]) {
-      window.backend.logWarn(...params);
-    },
-  },
-
-  LOG_INFO: {
-    action(_, ...params: unknown[]) {
-      window.backend.logInfo(...params);
-    },
-  },
-
   INIT_VUEX: {
     async action({ dispatch }) {
       const promises = [];
