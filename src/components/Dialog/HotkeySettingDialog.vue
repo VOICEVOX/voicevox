@@ -150,13 +150,13 @@
           </QChip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
-        <span v-if="lastArgumentKey !== undefined"> + </span>
+        <span v-if="lastActionArgumentKey !== undefined"> + </span>
         <QChip
-          v-if="lastArgumentKey !== undefined"
+          v-if="lastActionArgumentKey !== undefined"
           :ripple="false"
           color="surface"
         >
-          {{ getArgumentKeyCombinationText(lastArgumentKey) }}
+          {{ getArgumentKeyCombinationText(lastActionArgumentKey) }}
         </QChip>
         <div v-if="duplicatedHotkeys.length > 0" class="text-warning q-mt-lg">
           <div class="text-warning">
@@ -287,7 +287,8 @@ const hotkeyColumns = ref<
 
 const lastAction = ref("");
 const lastRecord = ref(HotkeyCombination(""));
-const lastArgumentKey = computed<HotkeyArgumentKeyType>(() =>
+/** lastActionに役割キーがあれば取得 */
+const lastActionArgumentKey = computed<HotkeyArgumentKeyType>(() =>
   lastAction.value == ""
     ? undefined
     : getArgumentKey(lastAction.value as HotkeyActionNameType)
@@ -300,7 +301,7 @@ const recordCombination = (event: KeyboardEvent) => {
     const recordedCombo = eventToCombination(event);
     let editedCombo: HotkeyCombination = recordedCombo;
     // 最後がCtrlなどではない時に最後を削る
-    if (lastArgumentKey.value != undefined) {
+    if (lastActionArgumentKey.value != undefined) {
       if (
         !["Ctrl", "Shift", "Alt", "Meta"].includes(
           recordedCombo.split(" ")[recordedCombo.split(" ").length - 1]
@@ -445,7 +446,7 @@ const solveDuplicated = () => {
 const confirmBtnEnabled = computed(() => {
   return (
     lastRecord.value == "" ||
-    (lastArgumentKey.value == undefined &&
+    (lastActionArgumentKey.value == undefined &&
       ["Ctrl", "Shift", "Alt", "Meta"].includes(
         lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
       ))
