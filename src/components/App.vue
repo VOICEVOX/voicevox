@@ -1,6 +1,7 @@
 <template>
   <ErrorBoundary>
     <MenuBar
+      v-if="openedEditor != undefined"
       :file-sub-menu-data="subMenuData.fileSubMenuData.value"
       :edit-sub-menu-data="subMenuData.editSubMenuData.value"
       :editor="openedEditor || 'talk'"
