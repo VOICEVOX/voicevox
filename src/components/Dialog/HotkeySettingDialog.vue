@@ -298,22 +298,17 @@ const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
     return;
   } else {
-    const recordedCombo = eventToCombination(event);
-    let editedCombo: HotkeyCombination = recordedCombo;
-    // 最後がCtrlなどではない時に最後を削る
+    let recordedCombo = eventToCombination(event);
+    // 役割キーがある場合は修飾キーのみにする
     if (lastActionArgumentKey.value != undefined) {
-      if (
-        !["Ctrl", "Shift", "Alt", "Meta"].includes(
-          recordedCombo.split(" ")[recordedCombo.split(" ").length - 1]
-        )
-      ) {
-        editedCombo = recordedCombo
+      recordedCombo = HotkeyCombination(
+        recordedCombo
           .split(" ")
-          .slice(0, -1)
-          .join(" ") as HotkeyCombination;
-      }
+          .filter((item) => ["Ctrl", "Shift", "Alt", "Meta"].includes(item))
+          .join(" ")
+      );
     }
-    lastRecord.value = editedCombo;
+    lastRecord.value = recordedCombo;
     event.preventDefault();
   }
 };
