@@ -99,7 +99,7 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
   {
     action: "N番目のキャラクターを選択",
     combination: HotkeyCombination(""),
-    // HotkeyArgumentKeySettingsに[数字]などは存在
+    // HotkeyRoleKeySettingsに[数字]などは存在
   },
   {
     action: "テキスト欄を追加",
@@ -159,10 +159,10 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
   },
 ];
 
-export const HotkeyArgumentKeySettings: HotkeyArgumentKeySettingType[] = [
+export const HotkeyRoleKeySettings: HotkeyRoleKeySettingType[] = [
   {
     action: "N番目のキャラクターを選択",
-    argumentKey: "Numbers",
+    roleKey: "Numbers",
   },
 ];
 
@@ -457,18 +457,16 @@ export const hotkeySettingSchema = z.object({
 export type HotkeySettingType = z.infer<typeof hotkeySettingSchema>;
 
 /** 数字キーや矢印キーなど特定の役割を持ったショートカット用キー。現在はNumbersのみ使用 */
-const hotkeyArgumentKeySchema = z
+const hotkeyRoleKeySchema = z
   .enum(["Numbers", "VerticalArrows", "Arrows"])
   .optional();
-export type HotkeyArgumentKeyType = z.infer<typeof hotkeyArgumentKeySchema>;
+export type HotkeyRoleKeyType = z.infer<typeof hotkeyRoleKeySchema>;
 
-const hotkeyArgumentkeySettingSchema = z.object({
+const hotkeyRoleKeySettingSchema = z.object({
   action: hotkeyActionNameSchema,
-  argumentKey: hotkeyArgumentKeySchema,
+  roleKey: hotkeyRoleKeySchema,
 });
-type HotkeyArgumentKeySettingType = z.infer<
-  typeof hotkeyArgumentkeySettingSchema
->;
+type HotkeyRoleKeySettingType = z.infer<typeof hotkeyRoleKeySettingSchema>;
 
 export type HotkeyReturnType =
   | void

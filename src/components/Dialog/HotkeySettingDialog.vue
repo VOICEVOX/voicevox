@@ -150,13 +150,13 @@
           </QChip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnDisabled"> +</span>
-        <span v-if="lastActionArgumentKey !== undefined"> + </span>
+        <span v-if="lastActionRoleKey !== undefined"> + </span>
         <QChip
-          v-if="lastActionArgumentKey !== undefined"
+          v-if="lastActionRoleKey !== undefined"
           :ripple="false"
           color="surface"
         >
-          {{ getArgumentKeyCombinationText(lastActionArgumentKey) }}
+          {{ getRoleKeyCombinationText(lastActionRoleKey) }}
         </QChip>
         <div v-if="duplicatedHotkeys.length > 0" class="text-warning q-mt-lg">
           <div class="text-warning">
@@ -227,16 +227,16 @@ import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import {
   HotkeyActionNameType,
-  HotkeyArgumentKeyType,
+  HotkeyRoleKeyType,
   HotkeyCombination,
   HotkeySettingType,
 } from "@/type/preload";
 import {
   useHotkeyManager,
   eventToCombination,
-  getArgumentKey,
-  getArgumentKeyCombinationWithSpace,
-  getArgumentKeyCombinationText,
+  getRoleKey,
+  getRoleKeyCombinationWithSpace,
+  getRoleKeyCombinationText,
 } from "@/plugins/hotkeyPlugin";
 
 const props =
@@ -288,10 +288,10 @@ const hotkeyColumns = ref<
 const lastAction = ref("");
 const lastRecord = ref(HotkeyCombination(""));
 /** lastActionに役割キーがあれば取得 */
-const lastActionArgumentKey = computed<HotkeyArgumentKeyType>(() =>
+const lastActionRoleKey = computed<HotkeyRoleKeyType>(() =>
   lastAction.value == ""
     ? undefined
-    : getArgumentKey(lastAction.value as HotkeyActionNameType)
+    : getRoleKey(lastAction.value as HotkeyActionNameType)
 );
 
 const recordCombination = (event: KeyboardEvent) => {
@@ -300,7 +300,7 @@ const recordCombination = (event: KeyboardEvent) => {
   } else {
     let recordedCombo = eventToCombination(event);
     // 役割キーがある場合は修飾キーのみにする
-    if (lastActionArgumentKey.value != undefined) {
+    if (lastActionRoleKey.value != undefined) {
       recordedCombo = HotkeyCombination(
         recordedCombo
           .split(" ")
@@ -342,11 +342,11 @@ const filterDuplicatedHotkeysWithSetKeyAndName = (
   action: HotkeyActionNameType
 ): HotkeySettingType[] => {
   if (!key) return [];
-  // getArgumentKeyWithSpaceはargumentKeyがないときは[ "" ]という長さ1の配列が返ってくるので、一度処理される
+  // getRoleKeyWithSpaceはroleKeyがないときは[ "" ]という長さ1の配列が返ってくるので、一度処理される
   // また存在するときはスペース付きで返ってくるのでただのstringの足し算で良い
-  return getArgumentKeyCombinationWithSpace(getArgumentKey(action))
-    .map((argumentKey) =>
-      findDuplicatedHotkeyWithKey(HotkeyCombination(key + argumentKey), action)
+  return getRoleKeyCombinationWithSpace(getRoleKey(action))
+    .map((roleKey) =>
+      findDuplicatedHotkeyWithKey(HotkeyCombination(key + roleKey), action)
     )
     .filter((result): result is HotkeySettingType => result != undefined);
 };
@@ -356,12 +356,10 @@ const findDuplicatedHotkeyWithKey = (
   action: HotkeyActionNameType
 ): HotkeySettingType | undefined =>
   hotkeySettings.value.find((item) => {
-    const findResult = getArgumentKeyCombinationWithSpace(
-      getArgumentKey(item.action)
-    ).find((argumentKey) => {
-      const itemKeyCombination = HotkeyCombination(
-        item.combination + argumentKey
-      );
+    const findResult = getRoleKeyCombinationWithSpace(
+      getRoleKey(item.action)
+    ).find((roleKey) => {
+      const itemKeyCombination = HotkeyCombination(item.combination + roleKey);
       return itemKeyCombination === key && item.action !== action;
     });
     return findResult != undefined;
@@ -375,9 +373,9 @@ const deleteHotkey = (action: string) => {
 const getHotkeyText = (action: string, combo: string) => {
   if (checkHotkeyReadonly(action)) combo = "（読み取り専用）" + combo;
   if (combo == "") return "未設定";
-  const argumentKey = getArgumentKey(action as HotkeyActionNameType);
-  if (argumentKey != undefined) {
-    combo += " " + `[${getArgumentKeyCombinationText(argumentKey)}]`;
+  const roleKey = getRoleKey(action as HotkeyActionNameType);
+  if (roleKey != undefined) {
+    combo += " " + `[${getRoleKeyCombinationText(roleKey)}]`;
   }
   return combo;
 };
@@ -422,7 +420,7 @@ const solveDuplicated = () => {
 const confirmBtnDisabled = computed(() => {
   return (
     lastRecord.value == "" ||
-    (lastActionArgumentKey.value == undefined &&
+    (lastActionRoleKey.value == undefined &&
       ["Ctrl", "Shift", "Alt", "Meta"].includes(
         lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
       ))

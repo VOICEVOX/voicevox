@@ -13,8 +13,8 @@ import {
   HotkeyActionNameType,
   HotkeyCombination,
   HotkeySettingType,
-  HotkeyArgumentKeyType,
-  HotkeyArgumentKeySettings,
+  HotkeyRoleKeyType,
+  HotkeyRoleKeySettings,
 } from "@/type/preload";
 
 const hotkeyManagerKey = "hotkeyManager";
@@ -171,11 +171,11 @@ export class HotkeyManager {
 
   private unbindActions(combinations: RegisteredCombination[]): void {
     for (const combination of combinations) {
-      for (const argumentKeyCombination of getArgumentKeyCombinationWithSpace(
-        getArgumentKey(combination.name)
+      for (const roleKeyCombination of getRoleKeyCombinationWithSpace(
+        getRoleKey(combination.name)
       )) {
         const bindingKey = combinationToBindingKey(
-          HotkeyCombination(combination.combination + argumentKeyCombination)
+          HotkeyCombination(combination.combination + roleKeyCombination)
         );
         this.log("Unbind:", bindingKey, "in", combination.editor);
         this.hotkeys.unbind(bindingKey, combination.editor);
@@ -189,12 +189,12 @@ export class HotkeyManager {
   private bindActions(actions: HotkeyAction[]): void {
     for (const action of actions) {
       const setting = this.getSetting(action);
-      const argumentKeyCombinations = getArgumentKeyCombinationWithSpace(
-        getArgumentKey(setting.action)
+      const roleKeyCombinations = getRoleKeyCombinationWithSpace(
+        getRoleKey(setting.action)
       );
-      for (const argumentKeyCombination of argumentKeyCombinations) {
+      for (const roleKeyCombination of roleKeyCombinations) {
         const bindingKey = combinationToBindingKey(
-          HotkeyCombination(setting.combination + argumentKeyCombination)
+          HotkeyCombination(setting.combination + roleKeyCombination)
         );
         this.log("Bind:", bindingKey, "to", action.name, "in", action.editor);
         this.hotkeys(bindingKey, { scope: action.editor }, (e) => {
@@ -292,46 +292,44 @@ const combinationToBindingKey = (
   return bindingKey as BindingKey;
 };
 
-export const getArgumentKey = (
-  action: HotkeyActionNameType
-): HotkeyArgumentKeyType => {
-  const result = HotkeyArgumentKeySettings.find(
+export const getRoleKey = (action: HotkeyActionNameType): HotkeyRoleKeyType => {
+  const result = HotkeyRoleKeySettings.find(
     (element) => element.action == action
   );
-  return result == undefined ? undefined : result.argumentKey;
+  return result == undefined ? undefined : result.roleKey;
 };
 
 /** undefinedを代入すると[""]という長さ1の配列を返す
- * argumentKeyから実際のキー配列で取得する。Combination化する都合でargumentKeyの前にスペースをつけている
+ * roleKeyから実際のキー配列で取得する。Combination化する都合でroleKeyの前にスペースをつけている
  * */
-export const getArgumentKeyCombinationWithSpace = (
-  argumentKey: HotkeyArgumentKeyType
+export const getRoleKeyCombinationWithSpace = (
+  roleKey: HotkeyRoleKeyType
 ): string[] => {
-  if (argumentKey == undefined) {
+  if (roleKey == undefined) {
     return [""];
-  } else if (argumentKey == "Numbers") {
+  } else if (roleKey == "Numbers") {
     return Array.from({ length: 10 }, (_, index) => " " + String(index));
-  } else if (argumentKey == "VerticalArrows") {
+  } else if (roleKey == "VerticalArrows") {
     return ["Up", "Down"].map((value) => " " + value);
-  } else if (argumentKey == "Arrows") {
+  } else if (roleKey == "Arrows") {
     return ["Up", "Down", "Right", "Left"].map((value) => " " + value);
   }
-  throw new Error(`Received unexpected HotkeyArgumentKeyType`);
+  throw new Error(`Received unexpected HotkeyRoleKeyType`);
 };
 
-export const getArgumentKeyCombinationText = (
-  argumentKey: HotkeyArgumentKeyType
+export const getRoleKeyCombinationText = (
+  roleKey: HotkeyRoleKeyType
 ): string => {
-  if (argumentKey == undefined) {
+  if (roleKey == undefined) {
     return "";
-  } else if (argumentKey == "Numbers") {
+  } else if (roleKey == "Numbers") {
     return "数字";
-  } else if (argumentKey == "VerticalArrows") {
+  } else if (roleKey == "VerticalArrows") {
     return "上下キー";
-  } else if (argumentKey == "Arrows") {
+  } else if (roleKey == "Arrows") {
     return "全方向キー";
   }
-  throw new Error(`Received unexpected HotkeyArgumentKeyType`);
+  throw new Error(`Received unexpected HotkeyRoleKeyType`);
 };
 
 export const hotkeyPlugin: Plugin = {
