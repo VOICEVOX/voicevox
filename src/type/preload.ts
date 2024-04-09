@@ -456,7 +456,7 @@ export const hotkeySettingSchema = z.object({
 });
 export type HotkeySettingType = z.infer<typeof hotkeySettingSchema>;
 
-// ctrl + [数字]等の[数字]の部分。現在はNumberのみ使用
+/** 数字キーや矢印キーなど特定の役割を持ったショートカット用キー。現在はNumbersのみ使用 */
 const hotkeyArgumentKeySchema = z
   .enum(["Numbers", "VerticalArrows", "Arrows"])
   .optional();
