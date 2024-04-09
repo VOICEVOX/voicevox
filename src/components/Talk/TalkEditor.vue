@@ -163,7 +163,9 @@ registerHotkeyWithCleanup({
   editor: "talk",
   name: "音声書き出し",
   callback: () => {
-    store.dispatch("SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG");
+    if (!uiLocked.value) {
+      store.dispatch("SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG");
+    }
   },
 });
 registerHotkeyWithCleanup({
