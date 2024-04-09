@@ -44,7 +44,7 @@ const subMenuData = computed(() => {
     return singMenuBarData;
   }
 
-  throw new Error("Invalid openedEditor");
+  throw new Error(`Invalid openedEditor: ${openedEditor.value}`);
 });
 
 const openedEditor = computed(() => store.state.openedEditor);
