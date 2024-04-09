@@ -229,6 +229,7 @@ const removeAudioItem = async () => {
   if (activeAudioKey.value == undefined) throw new Error();
   audioCellRefs[activeAudioKey.value].removeCell();
 };
+
 const onCharacterSelectHotkey = async (e: KeyboardEvent) => {
   if (activeAudioKey.value == undefined) throw new Error();
   const convertToNumber = (str: string) => {
