@@ -385,7 +385,7 @@ const getHotkeyText = (action: string, combo: string) => {
 };
 
 // for later developers, in case anyone wants to add a readonly hotkey
-// 読み取り専用だとすると以前のキーと被らないようにする処理に困る
+// 読み取り専用モードにする際には、ユーザーがすでに設定したキーを変更しなければならない場合があるため、慎重に
 const readonlyHotkeyKeys: string[] = [];
 
 const checkHotkeyReadonly = (action: string) => {
