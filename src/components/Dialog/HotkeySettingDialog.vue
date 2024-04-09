@@ -447,12 +447,12 @@ const resetHotkey = async (action: string) => {
         }
         // デフォルトが未設定でない場合は、衝突チェックを行う
         if (setting.combination) {
-          const duplicated: HotkeySettingType[] =
+          const duplicatedSettings =
             filterDuplicatedHotkeysWithSetKeyAndName(
               setting.combination,
               action as HotkeyActionNameType
             );
-          if (duplicated.length > 0) {
+          if (duplicatedSettings.length > 0) {
             openHotkeyDialog(action);
             lastRecord.value = setting.combination;
             return;
