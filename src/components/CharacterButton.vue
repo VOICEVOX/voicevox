@@ -215,7 +215,6 @@ const props = withDefaults(
     loading: false,
     showEngineInfo: false,
     emptiable: false,
-    isActiveAudioCell: false,
   }
 );
 
