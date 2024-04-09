@@ -77,6 +77,9 @@ import {
 import { generateWriteErrorMessage } from "@/helpers/generateWriteErrorMessage";
 import DefaultMap from "@/helpers/DefaultMap";
 import { noteSchema } from "@/domain/project/schema";
+import { createLogger } from "@/domain/frontend/log";
+
+const { info, warn } = createLogger("store/singing");
 
 const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   return notes.map((value): NoteEvent => {
@@ -1122,7 +1125,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        window.backend.logInfo("Phrases updated.");
+        info("Phrases updated.");
 
         if (startRenderingRequested() || stopRenderingRequested()) {
           return;
@@ -1185,9 +1188,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             });
 
             const phonemes = getPhonemes(frameAudioQuery);
-            window.backend.logInfo(
-              `Fetched frame audio query. Phonemes are "${phonemes}".`
-            );
+            info(`Fetched frame audio query. Phonemes are "${phonemes}".`);
 
             shiftGuidePitch(phrase.keyRangeAdjustment, frameAudioQuery);
             scaleGuideVolume(phrase.volumeRangeAdjustment, frameAudioQuery);
@@ -1231,7 +1232,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!phraseData.blob) {
             phraseData.blob = phraseAudioBlobCache.get(phraseKey);
             if (phraseData.blob) {
-              window.backend.logInfo(`Loaded audio buffer from cache.`);
+              info(`Loaded audio buffer from cache.`);
             } else {
               const blob = await synthesize(phrase.singer, phrase.query).catch(
                 (error) => {
@@ -1246,7 +1247,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseData.blob = blob;
               phraseAudioBlobCache.set(phraseKey, phraseData.blob);
 
-              window.backend.logInfo(`Synthesized.`);
+              info(`Synthesized.`);
             }
 
             // 音源とシーケンスを作成し直して、再接続する
@@ -1316,12 +1317,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   STOP_RENDERING: {
     action: createUILockAction(async ({ state, commit }) => {
       if (state.nowRendering) {
-        window.backend.logInfo("Waiting for rendering to stop...");
+        info("Waiting for rendering to stop...");
         commit("SET_STOP_RENDERING_REQUESTED", {
           stopRenderingRequested: true,
         });
         await createPromiseThatResolvesWhen(() => !state.nowRendering);
-        window.backend.logInfo("Rendering stopped.");
+        info("Rendering stopped.");
       }
     }),
   },
@@ -2276,9 +2277,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CANCEL_AUDIO_EXPORT: {
-    async action({ state, commit, dispatch }) {
+    async action({ state, commit }) {
       if (!state.nowAudioExporting) {
-        dispatch("LOG_WARN", "CANCEL_AUDIO_EXPORT on !nowAudioExporting");
+        warn("CANCEL_AUDIO_EXPORT on !nowAudioExporting");
         return;
       }
       commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {

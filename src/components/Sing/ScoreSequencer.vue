@@ -265,6 +265,7 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useShiftKey } from "@/composables/useModifierKey";
 
@@ -276,6 +277,7 @@ const isSelfEventTarget = (event: UIEvent) => {
 };
 
 const store = useStore();
+const { warn } = createLogger("ScoreSequencer");
 const state = store.state;
 
 // 分解能（Ticks Per Quarter Note）
@@ -631,7 +633,7 @@ const selectOnlyThis = (note: Note) => {
 
 const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   if (nowPreviewing.value) {
-    store.dispatch("LOG_WARN", "startPreview was called during preview.");
+    warn("startPreview was called during preview.");
     return;
   }
   const sequencerBodyElement = sequencerBody.value;

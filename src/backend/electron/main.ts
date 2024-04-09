@@ -396,7 +396,7 @@ async function createWindow() {
   if (isMac) {
     if (filePathOnMac) {
       if (filePathOnMac.endsWith(".vvproj")) {
-        projectFilePath = encodeURI(filePathOnMac);
+        projectFilePath = filePathOnMac;
       }
       filePathOnMac = undefined;
     }
@@ -408,7 +408,7 @@ async function createWindow() {
         fs.statSync(filePath).isFile() &&
         filePath.endsWith(".vvproj")
       ) {
-        projectFilePath = encodeURI(filePath);
+        projectFilePath = filePath;
       }
     }
   }
@@ -469,10 +469,13 @@ async function loadUrl(obj: {
   isMultiEngineOffMode?: boolean;
   projectFilePath?: string;
 }) {
-  const fragment =
-    `?isMultiEngineOffMode=${obj?.isMultiEngineOffMode ?? false}` +
-    `&projectFilePath=${obj?.projectFilePath ?? ""}`;
-  return win.loadURL(`${firstUrl}${fragment}`);
+  const url = new URL(firstUrl);
+  url.searchParams.append(
+    "isMultiEngineOffMode",
+    (obj?.isMultiEngineOffMode ?? false).toString()
+  );
+  url.searchParams.append("projectFilePath", obj?.projectFilePath ?? "");
+  return win.loadURL(url.toString());
 }
 
 // 開始。その他の準備が完了した後に呼ばれる。

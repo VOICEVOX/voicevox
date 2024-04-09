@@ -1089,6 +1089,7 @@ import {
   RootMiscSettingType,
   EngineId,
 } from "@/type/preload";
+import { createLogger } from "@/domain/frontend/log";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
@@ -1113,6 +1114,7 @@ const emit =
   }>();
 
 const store = useStore();
+const { warn } = createLogger("SettingDialog");
 
 const settingDialogOpenedComputed = computed({
   get: () => props.modelValue,
@@ -1238,7 +1240,7 @@ if (navigator.mediaDevices) {
   );
   updateAudioOutputDevices();
 } else {
-  store.dispatch("LOG_WARN", "navigator.mediaDevices is not available.");
+  warn("navigator.mediaDevices is not available.");
 }
 
 const acceptRetrieveTelemetryComputed = computed({

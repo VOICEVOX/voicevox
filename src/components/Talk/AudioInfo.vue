@@ -317,6 +317,7 @@ import {
 import { EngineManifest } from "@/openapi";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { SLIDER_PARAMETERS } from "@/store/utility";
+import { createLogger } from "@/domain/frontend/log";
 
 const props =
   defineProps<{
@@ -324,6 +325,7 @@ const props =
   }>();
 
 const store = useStore();
+const { info } = createLogger("AudioInfo");
 
 // accent phrase
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -920,7 +922,7 @@ const adjustSliderValue = (
   const convertedInputStr = convertFullWidthNumbers(inputStr);
   const inputNum = Number(convertedInputStr);
 
-  store.dispatch("LOG_INFO", `${inputItemName}:${inputStr}`);
+  info(`${inputItemName}: ${inputStr}`);
 
   if (isNaN(inputNum)) {
     return minimalVal;
