@@ -341,7 +341,7 @@ const filterDuplicatedHotkeysWithSetKeyAndName = (
   key: HotkeyCombination,
   action: HotkeyActionNameType
 ): HotkeySettingType[] => {
-  // ホットキー設定ダイアログで何も設定していない時
+  // キーが未設定なら空の配列を返す
   if (key == "") return [];
   const results: HotkeySettingType[] = [];
   // argumentKeyの配列を取得。undefinedを代入したら[ undefined ]が返ってくる
