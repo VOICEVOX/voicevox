@@ -301,7 +301,9 @@ export const getArgumentKey = (
   return result == undefined ? undefined : result.argumentKey;
 };
 
-/** argumentKeyから実際のキー配列で取得する。Combination化する都合でargumentKeyの前にスペースをつけている */
+/** undefinedを代入すると[""]という長さ1の配列を返す
+ * argumentKeyから実際のキー配列で取得する。Combination化する都合でargumentKeyの前にスペースをつけている
+ * */
 export const getArgumentKeyCombinationWithSpace = (
   argumentKey: HotkeyArgumentKeyType
 ): string[] => {
