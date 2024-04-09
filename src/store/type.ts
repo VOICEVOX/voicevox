@@ -48,8 +48,6 @@ import {
   AudioKey,
   PresetKey,
   RootMiscSettingType,
-  engineIdSchema,
-  styleIdSchema,
   EditorType,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -60,6 +58,13 @@ import {
   LoadingScreenOption,
 } from "@/components/Dialog/Dialog";
 import { OverlappingNoteInfos } from "@/sing/storeHelper";
+import {
+  noteSchema,
+  singerSchema,
+  tempoSchema,
+  timeSignatureSchema,
+  trackSchema,
+} from "@/domain/project/schema";
 
 /**
  * エディタ用のAudioQuery
@@ -712,27 +717,10 @@ export type AudioPlayerStoreTypes = {
  */
 
 // schemaはプロジェクトファイル用
-// TODO: schemaをsrc/domain/projectSchema.tsに移動する
-export const tempoSchema = z.object({
-  position: z.number(),
-  bpm: z.number(),
-});
 export type Tempo = z.infer<typeof tempoSchema>;
 
-export const timeSignatureSchema = z.object({
-  measureNumber: z.number(),
-  beats: z.number(),
-  beatType: z.number(),
-});
 export type TimeSignature = z.infer<typeof timeSignatureSchema>;
 
-export const noteSchema = z.object({
-  id: z.string(),
-  position: z.number(),
-  duration: z.number(),
-  noteNumber: z.number(),
-  lyric: z.string(),
-});
 export type Note = z.infer<typeof noteSchema>;
 
 export type Score = {
@@ -742,19 +730,8 @@ export type Score = {
   notes: Note[];
 };
 
-export const singerSchema = z.object({
-  engineId: engineIdSchema,
-  styleId: styleIdSchema,
-});
-
 export type Singer = z.infer<typeof singerSchema>;
 
-export const trackSchema = z.object({
-  singer: singerSchema.optional(),
-  keyRangeAdjustment: z.number(), // 音域調整量
-  volumeRangeAdjustment: z.number(), // 声量調整量
-  notes: z.array(noteSchema),
-});
 export type Track = z.infer<typeof trackSchema>;
 
 export type PhraseState =
@@ -1347,18 +1324,6 @@ export type IndexStoreTypes = {
 
   GET_NEW_CHARACTERS: {
     action(): SpeakerId[];
-  };
-
-  LOG_ERROR: {
-    action(...payload: unknown[]): void;
-  };
-
-  LOG_WARN: {
-    action(...payload: unknown[]): void;
-  };
-
-  LOG_INFO: {
-    action(...payload: unknown[]): void;
   };
 
   INIT_VUEX: {
