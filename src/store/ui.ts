@@ -473,6 +473,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       dispatch("SET_PROGRESS", { progress: -1 });
     },
   },
+
+  // TODO: この4つのアクションをVue側に移動したい
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
     async action({ state, dispatch }) {
       await multiGenerateAndSaveAudioWithDialog({
