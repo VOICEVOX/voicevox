@@ -171,12 +171,11 @@ export class HotkeyManager {
 
   private unbindActions(combinations: RegisteredCombination[]): void {
     for (const combination of combinations) {
-      for (const argumentKeyCombination of getArgumentKeyCombination(
+      for (const argumentKeyCombination of getArgumentKeyCombinationWithSpace(
         getArgumentKey(combination.name)
       )) {
-        const bindingKey = combinationAndArgumentKeyToBindingKey(
-          combination.combination,
-          argumentKeyCombination
+        const bindingKey = combinationToBindingKey(
+          HotkeyCombination(combination.combination + argumentKeyCombination)
         );
         this.log("Unbind:", bindingKey, "in", combination.editor);
         this.hotkeys.unbind(bindingKey, combination.editor);
@@ -190,13 +189,12 @@ export class HotkeyManager {
   private bindActions(actions: HotkeyAction[]): void {
     for (const action of actions) {
       const setting = this.getSetting(action);
-      const argumentKeyCombinations = getArgumentKeyCombination(
+      const argumentKeyCombinations = getArgumentKeyCombinationWithSpace(
         getArgumentKey(setting.action)
       );
       for (const argumentKeyCombination of argumentKeyCombinations) {
-        const BindingKey = combinationAndArgumentKeyToBindingKey(
-          setting.combination,
-          argumentKeyCombination
+        const BindingKey = combinationToBindingKey(
+          HotkeyCombination(setting.combination + argumentKeyCombination)
         );
         this.log("Bind:", BindingKey, "to", action.name, "in", action.editor);
         this.hotkeys(BindingKey, { scope: action.editor }, (e) => {
@@ -280,9 +278,8 @@ export class HotkeyManager {
 }
 
 /** hotkeys-js用のキーに変換する */
-const combinationAndArgumentKeyToBindingKey = (
-  combination: HotkeyCombination,
-  argumentKeyCombination: HotkeyCombination | undefined
+const combinationToBindingKey = (
+  combination: HotkeyCombination
 ): BindingKey => {
   // MetaキーはCommandキーとして扱う
   // NOTE: hotkeys-jsにはWinキーが無く、Commandキーとして扱われている
@@ -292,9 +289,7 @@ const combinationAndArgumentKeyToBindingKey = (
     .split(" ")
     .map((key) => (key === "meta" ? "command" : key))
     .join("+");
-  const argumentKeyBindingKey =
-    argumentKeyCombination != undefined ? "+" + argumentKeyCombination : "";
-  return (bindingKey + argumentKeyBindingKey) as BindingKey;
+  return bindingKey as BindingKey;
 };
 
 export const getArgumentKey = (
@@ -306,25 +301,18 @@ export const getArgumentKey = (
   return result == undefined ? undefined : result.argumentKey;
 };
 
-/** argumentKeyから実際のキー配列で取得する */
-export const getArgumentKeyCombination = (
+/** argumentKeyから実際のキー配列で取得する。Combination化する都合でargumentKeyの前にスペースをつけている */
+export const getArgumentKeyCombinationWithSpace = (
   argumentKey: HotkeyArgumentKeyType
-): HotkeyCombination[] | undefined[] => {
+): string[] => {
   if (argumentKey == undefined) {
-    return [undefined];
+    return [""];
   } else if (argumentKey == "Numbers") {
-    return Array.from({ length: 10 }, (_, index) =>
-      HotkeyCombination(String(index))
-    );
+    return Array.from({ length: 10 }, (_, index) => " " + String(index));
   } else if (argumentKey == "VerticalArrows") {
-    return [HotkeyCombination("Up"), HotkeyCombination("Down")];
+    return ["Up", "Down"].map((value) => " " + value);
   } else if (argumentKey == "Arrows") {
-    return [
-      HotkeyCombination("Left"),
-      HotkeyCombination("Right"),
-      HotkeyCombination("Up"),
-      HotkeyCombination("Down"),
-    ];
+    return ["Up", "Down", "Right", "Left"].map((value) => " " + value);
   }
   throw new Error(`Received unexpected HotkeyArgumentKeyType`);
 };

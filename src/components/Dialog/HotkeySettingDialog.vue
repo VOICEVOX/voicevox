@@ -235,7 +235,7 @@ import {
   useHotkeyManager,
   eventToCombination,
   getArgumentKey,
-  getArgumentKeyCombination,
+  getArgumentKeyCombinationWithSpace,
   getArgumentKeyCombinationText,
 } from "@/plugins/hotkeyPlugin";
 
@@ -342,13 +342,11 @@ const filterDuplicatedHotkeysWithSetKeyAndName = (
   action: HotkeyActionNameType
 ): HotkeySettingType[] => {
   if (!key) return [];
-  // getArgumentKeyはargumentKeyがないときは[undefined]という長さ1の配列が返ってくるので、一度処理される
-  return getArgumentKeyCombination(getArgumentKey(action))
+  // getArgumentKeyWithSpaceはargumentKeyがないときは[ "" ]という長さ1の配列が返ってくるので、一度処理される
+  // また存在するときはスペース付きで返ってくるのでただのstringの足し算で良い
+  return getArgumentKeyCombinationWithSpace(getArgumentKey(action))
     .map((argumentKey) =>
-      findDuplicatedHotkeyWithKey(
-        HotkeyCombination(`${key}${argumentKey ? ` ${argumentKey}` : ""}`),
-        action
-      )
+      findDuplicatedHotkeyWithKey(HotkeyCombination(key + argumentKey), action)
     )
     .filter((result): result is HotkeySettingType => result != undefined);
 };
@@ -358,14 +356,15 @@ const findDuplicatedHotkeyWithKey = (
   action: HotkeyActionNameType
 ): HotkeySettingType | undefined =>
   hotkeySettings.value.find((item) => {
-    const itemKeyCombination = getArgumentKey(item.action)
-      ? `${item.combination} ${
-          getArgumentKeyCombination(
-            getArgumentKey(item.action)
-          ) as HotkeyCombination[]
-        }`
-      : item.combination;
-    return itemKeyCombination === key && item.action !== action;
+    const findResult = getArgumentKeyCombinationWithSpace(
+      getArgumentKey(item.action)
+    ).find((argumentKey) => {
+      const itemKeyCombination = HotkeyCombination(
+        item.combination + argumentKey
+      );
+      return itemKeyCombination === key && item.action !== action;
+    });
+    return findResult != undefined;
   });
 
 // FIXME: actionはHotkeyAction型にすべき
