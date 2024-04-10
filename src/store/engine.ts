@@ -1,6 +1,7 @@
 import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import { createLogger } from "@/domain/frontend/log";
 import type { EngineManifest } from "@/openapi";
 import type { EngineId, EngineInfo } from "@/type/preload";
 
@@ -9,6 +10,7 @@ export const engineStoreState: EngineStoreState = {
   engineSupportedDevices: {},
   altPortInfos: {},
 };
+const { info, error } = createLogger("store/engine");
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
@@ -178,7 +180,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            window.backend.logInfo(`Waiting engine ${engineId}`);
+            info(`Waiting engine ${engineId}`);
             continue;
           }
           engineState = "READY";
@@ -204,10 +206,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           try {
             return window.backend.restartEngine(engineId);
           } catch (e) {
-            dispatch("LOG_ERROR", {
-              error: e,
-              message: `Failed to restart engine: ${engineId}`,
-            });
+            error(`Failed to restart engine: ${engineId}`);
             await dispatch("DETECTED_ENGINE_ERROR", { engineId });
             return {
               success: false,

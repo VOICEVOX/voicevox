@@ -19,7 +19,6 @@ import {
   transformCommandStore,
   SingingGuide,
   SingingVoice,
-  noteSchema,
   SingingGuideSourceHash,
   SingingVoiceSourceHash,
 } from "./type";
@@ -76,6 +75,10 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
+import { createLogger } from "@/domain/frontend/log";
+import { noteSchema } from "@/domain/project/schema";
+
+const logger = createLogger("store/singing");
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -880,9 +883,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const lyrics = notesForRequestToEngine
             .map((value) => value.lyric)
             .join("");
-          window.backend.logError(
-            error,
-            `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`
+          logger.error(
+            `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`,
+            error
           );
           throw error;
         }
@@ -938,9 +941,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const phonemes = query.phonemes
             .map((value) => value.phoneme)
             .join(" ");
-          window.backend.logError(
-            error,
-            `Failed to synthesis. Phonemes are "${phonemes}".`
+          logger.error(
+            `Failed to synthesis. Phonemes are "${phonemes}".`,
+            error
           );
           throw error;
         }
@@ -1106,7 +1109,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         commit("SET_PHRASES", { phrases });
 
-        window.backend.logInfo("Phrases updated.");
+        logger.info("Phrases updated.");
 
         // 各フレーズのレンダリングを行う
 
@@ -1194,7 +1197,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               if (cachedSingingGuide) {
                 singingGuide = cachedSingingGuide;
 
-                window.backend.logInfo(`Loaded singing guide from cache.`);
+                logger.info(`Loaded singing guide from cache.`);
               } else {
                 const frameAudioQuery = await fetchQuery(
                   singerAndFrameRate.singer.engineId,
@@ -1207,7 +1210,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 );
 
                 const phonemes = getPhonemes(frameAudioQuery);
-                window.backend.logInfo(
+                logger.info(
                   `Fetched frame audio query. Phonemes are "${phonemes}".`
                 );
 
@@ -1251,14 +1254,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (cachedSingingVoice) {
               singingVoice = cachedSingingVoice;
 
-              window.backend.logInfo(`Loaded singing voice from cache.`);
+              logger.info(`Loaded singing voice from cache.`);
             } else {
               const blob = await synthesize(
                 singerAndFrameRate.singer,
                 singingGuide.query
               );
 
-              window.backend.logInfo(`Synthesized.`);
+              logger.info(`Synthesized.`);
 
               singingVoice = { blob };
               singingVoiceCache.set(singingVoiceKey, singingVoice);
@@ -1328,7 +1331,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
       } catch (error) {
-        window.backend.logError(error);
+        logger.error("render error", error);
         throw error;
       } finally {
         commit("SET_STOP_RENDERING_REQUESTED", {
@@ -1345,12 +1348,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   STOP_RENDERING: {
     action: createUILockAction(async ({ state, commit }) => {
       if (state.nowRendering) {
-        window.backend.logInfo("Waiting for rendering to stop...");
+        logger.info("Waiting for rendering to stop...");
         commit("SET_STOP_RENDERING_REQUESTED", {
           stopRenderingRequested: true,
         });
         await createPromiseThatResolvesWhen(() => !state.nowRendering);
-        window.backend.logInfo("Rendering stopped.");
+        logger.info("Rendering stopped.");
       }
     }),
   },
@@ -1918,7 +1921,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (tempo) tempos[0].bpm = tempo;
           }
           // ノートセクション
-          if (params.sectionName.match(/^#\d{4}/)) {
+          // #以降に数字の場合はノートセクション ex: #0, #0000
+          if (params.sectionName.match(/^#\d+$/)) {
             // テンポ変更があれば追加
             const tempo = Number(params["Tempo"]);
             if (tempo) tempos.push({ position, bpm: tempo });
@@ -2200,7 +2204,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               })
               .then(getValueOrThrow);
           } catch (e) {
-            window.backend.logError(e);
+            logger.error("Failed to exoprt the wav file.", e);
             if (e instanceof ResultError) {
               return {
                 result: "WRITE_ERROR",
@@ -2232,9 +2236,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CANCEL_AUDIO_EXPORT: {
-    async action({ state, commit, dispatch }) {
+    async action({ state, commit }) {
       if (!state.nowAudioExporting) {
-        dispatch("LOG_WARN", "CANCEL_AUDIO_EXPORT on !nowAudioExporting");
+        logger.warn("CANCEL_AUDIO_EXPORT on !nowAudioExporting");
         return;
       }
       commit("SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED", {
@@ -2264,7 +2268,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       // クリップボードにテキストとしてコピーする
       // NOTE: Electronのclipboardも使用する必要ある？
       await navigator.clipboard.writeText(serializedNotes);
-      window.backend.logInfo("Copied to clipboard.", serializedNotes);
+      logger.info("Copied to clipboard.", serializedNotes);
     },
   },
 
