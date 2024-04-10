@@ -1621,7 +1621,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           const lyricElement = getChild(noteElement, "lyric");
-          const lyric = getChild(lyricElement, "text")?.textContent ?? "";
+          let lyric = getChild(lyricElement, "text")?.textContent ?? "";
+          lyric = lyric.trim();
 
           let tie = getTie(noteElement);
           for (const childElement of noteElement.children) {
@@ -1802,10 +1803,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (tempo) tempos.push({ position, bpm: tempo });
             const noteNumber = Number(params["NoteNum"]);
             const duration = Number(params["Length"]);
+            let lyric = params["Lyric"].trim();
             // 歌詞の前に連続音が含まれている場合は除去
-            const lyric = params["Lyric"].includes(" ")
-              ? params["Lyric"].split(" ")[1]
-              : params["Lyric"];
+            if (lyric.includes(" ")) {
+              lyric = lyric.split(" ")[1];
+            }
             // 休符であればポジションを進めるのみ
             if (lyric === "R") {
               position += duration;
