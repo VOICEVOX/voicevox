@@ -9,7 +9,7 @@ import {
   ToolbarButtonTagType,
   isMac,
 } from "@/type/preload";
-import { AccentPhrase, Mora } from "@/openapi";
+import { Mora } from "@/openapi";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 
@@ -352,8 +352,8 @@ export class TuningTranscription {
  * ２つのAccentPhrasesのテキスト内容が異なるかどうかを判定
  */
 export function isAccentPhrasesTextDifferent(
-  beforeAccent: AccentPhrase[],
-  afterAccent: AccentPhrase[]
+  beforeAccent: EditorAccentPhrase[],
+  afterAccent: EditorAccentPhrase[]
 ): boolean {
   if (beforeAccent.length !== afterAccent.length) return true;
 

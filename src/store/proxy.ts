@@ -80,7 +80,7 @@ export const convertAccentPhraseFromEngineToEditor = (
     ...accentPhrase,
   };
 };
-function generateAccentPhraseKey() {
+export const generateAccentPhraseKey = () => {
   return AccentPhraseKey(uuidv4());
 }
 

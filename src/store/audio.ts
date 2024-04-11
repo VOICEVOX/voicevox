@@ -40,11 +40,11 @@ import {
 } from "./audioGenerate";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
 import {
+  generateAccentPhraseKey,
   convertAccentPhraseFromEngineToEditor,
   convertAudioQueryFromEngineToEditor,
 } from "./proxy";
 import {
-  AccentPhraseKey,
   AudioKey,
   CharacterInfo,
   DefaultStyleId,
@@ -1014,43 +1014,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  // SET_SINGLE_ACCENT_PHRASE: {
-  //   mutation(
-  //     state,
-  //     {
-  //       audioKey,
-  //       accentPhraseIndex,
-  //       accentPhrases,
-  //     }: {
-  //       audioKey: AudioKey;
-  //       accentPhraseIndex: number;
-  //       accentPhrases: AccentPhrase[];
-  //     }
-  //   ) {
-  //     const query = state.audioItems[audioKey].query;
-  //     if (query == undefined) throw new Error("query == undefined");
-  //     query.accentPhrases.splice(accentPhraseIndex, 1, ...accentPhrases);
-  //   },
-  // },
-  SET_ACCENT_PHRASES_EDITOR_KEY: {
-    mutation(
-      state,
-      {
-        audioKey,
-      }: {
-        audioKey: AudioKey;
-      }
-    ) {
-      const accentPhrases = state.audioItems[audioKey].query?.accentPhrases;
-      if (accentPhrases)
-        accentPhrases.map((elem) => {
-          if (!elem.key) elem.key = AccentPhraseKey(uuidv4());
-        });
-    },
-    action({ commit }, { audioKey }: { audioKey: AudioKey }) {
-      commit("SET_ACCENT_PHRASES_EDITOR_KEY", { audioKey });
-    },
-  },
+  
 
   SET_AUDIO_MORA_DATA: {
     mutation(
@@ -2232,7 +2196,7 @@ export const audioCommandStore = transformCommandStore(
               ],
               accent: accentPhrases[accentPhraseIndex].accent,
               pauseMora: accentPhrases[accentPhraseIndex + 1].pauseMora,
-              key: AccentPhraseKey(uuidv4()),
+              key: generateAccentPhraseKey(),
             };
             accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
           };
@@ -2251,7 +2215,7 @@ export const audioCommandStore = transformCommandStore(
                   ? moraIndex + 1
                   : accentPhrases[accentPhraseIndex].accent,
               pauseMora: undefined,
-              key: AccentPhraseKey(uuidv4()),
+              key: generateAccentPhraseKey(),
             };
             const newAccentPhrase2: EditorAccentPhrase = {
               moras: accentPhrases[accentPhraseIndex].moras.slice(
@@ -2262,7 +2226,7 @@ export const audioCommandStore = transformCommandStore(
                   ? accentPhrases[accentPhraseIndex].accent - moraIndex - 1
                   : 1,
               pauseMora: accentPhrases[accentPhraseIndex].pauseMora,
-              key: AccentPhraseKey(uuidv4()),
+              key: generateAccentPhraseKey(),
             };
             accentPhrases.splice(
               accentPhraseIndex,

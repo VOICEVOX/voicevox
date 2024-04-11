@@ -350,19 +350,6 @@ export type AudioStoreTypes = {
     }): Promise<EditorAccentPhrase[]>;
   };
 
-  // SET_SINGLE_ACCENT_PHRASE: {
-  //   mutation: {
-  //     audioKey: AudioKey;
-  //     accentPhraseIndex: number;
-  //     accentPhrases: AccentPhrase[];
-  //   };
-  // };
-  SET_ACCENT_PHRASES_EDITOR_KEY: {
-    mutation: {
-      audioKey: AudioKey;
-    };
-    action(payload: { audioKey: AudioKey }): void;
-  };
   SET_AUDIO_MORA_DATA: {
     mutation: {
       audioKey: AudioKey;
