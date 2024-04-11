@@ -82,6 +82,6 @@ export const convertAccentPhraseFromEngineToEditor = (
 };
 export const generateAccentPhraseKey = () => {
   return AccentPhraseKey(uuidv4());
-}
+};
 
 export const proxyStore = proxyStoreCreator(OpenAPIEngineConnectorFactory);

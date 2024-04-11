@@ -3,10 +3,12 @@ import { z } from "zod";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
 import { generateSingingStoreInitialScore } from "./singing";
+import { generateAccentPhraseKey } from "./proxy";
 import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
   AudioItem,
+  EditorAccentPhrase,
   ProjectStoreState,
   ProjectStoreTypes,
   tempoSchema,
@@ -14,7 +16,6 @@ import {
   trackSchema,
 } from "@/store/type";
 
-import { AccentPhrase } from "@/openapi";
 import {
   accentPhraseKeySchema,
   audioKeySchema,
@@ -299,7 +300,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                     engineId,
                     styleId: audioItem.characterIndex,
                   })
-                  .then((accentPhrases: AccentPhrase[]) => {
+                  .then((accentPhrases: EditorAccentPhrase[]) => {
                     accentPhrases.forEach((newAccentPhrase, i) => {
                       const oldAccentPhrase = audioItem.query.accentPhrases[i];
                       if (newAccentPhrase.pauseMora) {
@@ -312,6 +313,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                             mora.consonantLength;
                         }
                         oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                        newAccentPhrase.key = generateAccentPhraseKey();
                       });
                     });
                   });
