@@ -4,7 +4,13 @@ import {
   linearToDecibel,
 } from "@/sing/domain";
 import { Timer } from "@/sing/utility";
-import { Phrase } from "@/store/type";
+import {
+  Phrase,
+  SingingGuide,
+  SingingGuideSourceHash,
+  SingingVoice,
+  SingingVoiceSourceHash,
+} from "@/store/type";
 
 const getEarliestSchedulableContextTime = (audioContext: BaseAudioContext) => {
   const renderQuantumSize = 128;
@@ -1051,28 +1057,41 @@ export const generateAudioEvents = async (
 
 export const setupAudioEvents = async (
   audioContext: BaseAudioContext,
-  trackNode: ChannelStrip,
+  channelStrip: ChannelStrip,
   transport: Transport | OfflineTransport,
-  phrases: { phrase: Phrase; blob: Blob }[]
+  singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
+  singingVoices: Map<SingingVoiceSourceHash, SingingVoice>,
+  phrases: Phrase[]
 ) => {
-  for (const { phrase, blob } of phrases) {
-    if (phrase.startTime == undefined || phrase.state !== "PLAYABLE") {
+  for (const phrase of phrases) {
+    if (
+      phrase.singingGuideKey == undefined ||
+      phrase.singingVoiceKey == undefined ||
+      phrase.state !== "PLAYABLE"
+    ) {
       continue;
     }
-
+    const singingGuide = singingGuides.get(phrase.singingGuideKey);
+    const singingVoice = singingVoices.get(phrase.singingVoiceKey);
+    if (!singingGuide) {
+      throw new Error("singingGuide is undefined");
+    }
+    if (!singingVoice) {
+      throw new Error("singingVoice is undefined");
+    }
     // TODO: この辺りの処理を共通化する
     const audioEvents = await generateAudioEvents(
       audioContext,
-      phrase.startTime,
-      blob
+      singingGuide.startTime,
+      singingVoice.blob
     );
     const audioPlayer = new AudioPlayer(audioContext);
-    audioPlayer.output.connect(trackNode.input);
     const audioSequence: AudioSequence = {
       type: "audio",
       audioPlayer,
       audioEvents,
     };
+    audioPlayer.output.connect(channelStrip.input);
     transport.addSequence(audioSequence);
   }
 };
