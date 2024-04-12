@@ -1048,6 +1048,7 @@ export const generateAudioEvents = async (
   const buffer = await audioContext.decodeAudioData(arrayBuffer);
   return [{ time, buffer }];
 };
+
 export const setupAudioEvents = async (
   audioContext: BaseAudioContext,
   trackNode: ChannelStrip,

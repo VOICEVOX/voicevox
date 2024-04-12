@@ -8,14 +8,14 @@
 </template>
 <script setup lang="ts">
 import { useAttrs } from "vue";
-import { StyleInfo } from "@/type/preload";
+import { EngineId, StyleInfo } from "@/type/preload";
 
 const attr = useAttrs();
 const props = withDefaults(
   defineProps<{
     style: StyleInfo;
     showEngineIcon?: boolean;
-    engineIcons?: Record<string, string>;
+    engineIcons?: Record<EngineId, string>;
   }>(),
   {
     showEngineIcon: false,
