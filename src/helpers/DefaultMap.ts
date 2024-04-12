@@ -1,3 +1,4 @@
+/** 存在しないキーにアクセスしたときに自動的に値を生成するMap */
 export default class DefaultMap<K, V> extends Map<K, V> {
   constructor(private readonly factory: (key: K) => V) {
     super();
