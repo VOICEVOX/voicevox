@@ -1058,6 +1058,7 @@ export const setupAudioEvents = async (
     if (phrase.startTime == undefined || phrase.state !== "PLAYABLE") {
       continue;
     }
+
     // TODO: この辺りの処理を共通化する
     const audioEvents = await generateAudioEvents(
       audioContext,

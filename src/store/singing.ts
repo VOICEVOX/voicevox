@@ -231,6 +231,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (track == undefined) {
         throw new Error("track is undefined.");
       }
+
       track.singer = singer;
     },
     async action({ state, getters, dispatch, commit }, { singer, trackId }) {
@@ -263,12 +264,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (track == undefined) {
         throw new Error("track is undefined.");
       }
+
       track.keyRangeAdjustment = keyRangeAdjustment;
     },
     async action({ dispatch, commit }, { keyRangeAdjustment, trackId }) {
       if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
         throw new Error("The keyRangeAdjustment is invalid.");
       }
+
       commit("SET_KEY_RANGE_ADJUSTMENT", { trackId, keyRangeAdjustment });
 
       dispatch("RENDER");
@@ -281,6 +284,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (track == undefined) {
         throw new Error("track is undefined.");
       }
+
       track.volumeRangeAdjustment = volumeRangeAdjustment;
     },
     async action({ dispatch, commit }, { volumeRangeAdjustment, trackId }) {
@@ -2414,6 +2418,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!track) {
         throw new Error("The track is not found.");
       }
+
       track.pan = pan;
       channelStrips.get(trackId).pan = pan;
     },
@@ -2428,6 +2433,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!track) {
         throw new Error("The track is not found.");
       }
+
       track.volume = volume;
       channelStrips.get(trackId).volume = volume;
     },
@@ -2442,6 +2448,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!track) {
         throw new Error("The track is not found.");
       }
+
       track.mute = mute;
       updateTrackMute(shouldPlay(state.tracks));
     },
@@ -2456,6 +2463,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!track) {
         throw new Error("The track is not found.");
       }
+
       track.solo = solo;
       updateTrackMute(shouldPlay(state.tracks));
     },
@@ -2673,6 +2681,7 @@ export const singingCommandStore = transformCommandStore(
         dispatch("RENDER");
       },
     },
+
     COMMAND_REMOVE_SELECTED_NOTES: {
       action({ state, commit, dispatch }) {
         commit("COMMAND_REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
@@ -2680,6 +2689,7 @@ export const singingCommandStore = transformCommandStore(
         dispatch("RENDER");
       },
     },
+
     COMMAND_CREATE_TRACK: {
       mutation(draft, { singer }) {
         singingStore.mutations.CREATE_TRACK(draft, { singer });
@@ -2688,6 +2698,7 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_CREATE_TRACK", { singer });
       },
     },
+
     COMMAND_DELETE_TRACK: {
       mutation(draft, { trackId }) {
         singingStore.mutations.DELETE_TRACK(draft, { trackId });

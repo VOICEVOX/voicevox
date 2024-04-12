@@ -353,6 +353,7 @@ export function shouldPlay(tracks: Track[]): Record<TrackId, boolean> {
     ])
   );
 }
+
 export const convertToWavFileData = (audioBuffer: AudioBuffer) => {
   const bytesPerSample = 4; // Float32
   const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT

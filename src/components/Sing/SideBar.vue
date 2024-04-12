@@ -213,6 +213,7 @@ const trackCharacters = computed(() =>
   Object.fromEntries(
     tracks.value.map((track) => {
       if (!track.singer) return [track.id, undefined];
+
       for (const character of store.state.characterInfos[
         track.singer.engineId
       ]) {
@@ -232,6 +233,7 @@ const selectTrack = (trackId: TrackId) => {
 const createTrack = () => {
   const singer = selectedTrack.value.singer;
   if (!singer) return;
+
   store.dispatch("COMMAND_CREATE_TRACK", {
     singer,
   });
@@ -239,18 +241,22 @@ const createTrack = () => {
 const deleteTrack = (trackId: TrackId) => {
   store.dispatch("COMMAND_DELETE_TRACK", { trackId });
 };
+
 const isDragging = ref(false);
 const reorderTracks = (newTracks: Track[]) => {
   store.dispatch("COMMAND_REORDER_TRACKS", {
     trackIds: newTracks.map((track) => track.id),
   });
 };
+
 const trackStyles = computed(() =>
   Object.fromEntries(
     tracks.value.map((track) => {
       if (!track.singer) return [track.id, undefined];
+
       const character = trackCharacters.value[track.id];
       if (!character) return [track.id, undefined];
+
       for (const style of character.metas.styles) {
         if (style.styleId === track.singer.styleId) {
           return [track.id, style];
