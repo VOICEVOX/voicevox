@@ -1,7 +1,7 @@
 <template>
   <MenuBar />
   <ToolBar />
-  <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
+  <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpened }">
     <EngineStartupOverlay
       :is-completed-initial-startup="isCompletedInitialStartup"
     />
@@ -22,7 +22,7 @@
         />
       </div>
     </div>
-    <SideBar v-if="isSidebarOpen" />
+    <SideBar v-if="isSidebarOpened" />
     <ScoreSequencer />
   </div>
 </template>
@@ -51,7 +51,7 @@ const props =
 
 const store = useStore();
 
-const isSidebarOpen = computed(() => store.state.isSidebarOpen);
+const isSidebarOpened = computed(() => store.state.isSidebarOpened);
 //const $q = useQuasar();
 
 const nowRendering = computed(() => {

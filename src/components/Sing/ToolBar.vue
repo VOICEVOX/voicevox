@@ -4,7 +4,7 @@
     <div class="sing-configs">
       <QBtn
         class="q-mx-xs"
-        :icon="isSidebarOpen ? 'menu_open' : 'menu'"
+        :icon="isSidebarOpened ? 'menu_open' : 'menu'"
         round
         flat
         @click="toggleSidebar"
@@ -162,9 +162,11 @@ const canUndo = computed(() => store.getters.CAN_UNDO(editor));
 const canRedo = computed(() => store.getters.CAN_REDO(editor));
 const selectedTrackId = computed(() => store.state.selectedTrackId);
 
-const isSidebarOpen = computed(() => store.state.isSidebarOpen);
+const isSidebarOpened = computed(() => store.state.isSidebarOpened);
 const toggleSidebar = () => {
-  store.dispatch("SET_SIDEBAR_OPEN", { isSidebarOpen: !isSidebarOpen.value });
+  store.dispatch("SET_SIDEBAR_OPENED", {
+    isSidebarOpened: !isSidebarOpened.value,
+  });
 };
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();

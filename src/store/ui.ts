@@ -63,7 +63,7 @@ export const uiStoreState: UiStoreState = {
   isEngineManageDialogOpen: false,
   isUpdateNotificationDialogOpen: false,
   isImportMidiDialogOpen: false,
-  isSidebarOpen: false,
+  isSidebarOpened: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -210,12 +210,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  SET_SIDEBAR_OPEN: {
-    mutation(state, { isSidebarOpen }: { isSidebarOpen: boolean }) {
-      state.isSidebarOpen = isSidebarOpen;
+  SET_SIDEBAR_OPENED: {
+    mutation(state, { isSidebarOpened }) {
+      state.isSidebarOpened = isSidebarOpened;
     },
-    action({ commit }, { isSidebarOpen }) {
-      commit("SET_SIDEBAR_OPEN", { isSidebarOpen });
+    action({ commit }, { isSidebarOpened }) {
+      commit("SET_SIDEBAR_OPENED", { isSidebarOpened });
     },
   },
 

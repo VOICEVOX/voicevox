@@ -1592,7 +1592,7 @@ export type UiStoreState = {
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
   isImportMidiDialogOpen: boolean;
-  isSidebarOpen: boolean;
+  isSidebarOpened: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1682,9 +1682,9 @@ export type UiStoreTypes = {
     }): void;
   };
 
-  SET_SIDEBAR_OPEN: {
-    mutation: { isSidebarOpen: boolean };
-    action(payload: { isSidebarOpen: boolean }): void;
+  SET_SIDEBAR_OPENED: {
+    mutation: { isSidebarOpened: boolean };
+    action(payload: { isSidebarOpened: boolean }): void;
   };
 
   SHOW_ALERT_DIALOG: {
