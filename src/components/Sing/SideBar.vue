@@ -270,6 +270,7 @@ const trackStyles = computed(() =>
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;
 @use '@/styles/variables' as vars;
+
 .sidebar {
   width: vars.$sidebar-width;
   height: 100%;
@@ -278,11 +279,13 @@ const trackStyles = computed(() =>
   border-top: 1px solid colors.$sequencer-sub-divider;
   border-right: 1px solid colors.$sequencer-main-divider;
 }
+
 .tracks {
   width: 100%;
   height: 100%;
   overflow-y: auto;
 }
+
 .track-detail-container {
   padding: 0;
 
@@ -292,6 +295,7 @@ const trackStyles = computed(() =>
     display: none;
   }
 }
+
 .track-detail {
   margin-left: 0.5rem;
   padding: 0 0.5rem;
@@ -324,6 +328,7 @@ const trackStyles = computed(() =>
     cursor: grab;
     z-index: 1;
   }
+
   .track-control {
     position: absolute;
     top: 50%;
