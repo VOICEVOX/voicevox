@@ -1143,9 +1143,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // TODO: リファクタリングする
           const phrase = { ...existingPhrase };
 
-          const trackRef = tracks.find((track) => {
-            track.id === phrase.trackId;
-          });
+          const trackRef = tracks.find((track) => track.id === phrase.trackId);
 
           if (trackRef == undefined) {
             logger.warn("Track not found.");
