@@ -748,6 +748,7 @@ export type SingingGuide = {
   query: FrameAudioQuery;
   frameRate: number;
   startTime: number;
+  phraseId: string;
 };
 
 /**

@@ -14,8 +14,12 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
-import { TrackId } from "@/type/preload";
 import { SingingGuideSourceHash } from "@/store/type";
+import DefaultMap from "@/helpers/DefaultMap";
+import { createLogger } from "@/domain/frontend/log";
+import { TrackId } from "@/type/preload";
+
+const { info } = createLogger("sequencerPitch");
 
 type VoicedSection = {
   readonly startFrame: number;
@@ -27,7 +31,6 @@ type PitchLine = {
   readonly frameLength: number;
   readonly frameTicksArray: number[];
   readonly lineStrip: LineStrip;
-  readonly trackId: TrackId;
 };
 
 const pitchLineColor = [0.647, 0.831, 0.678, 1]; // RGBA
@@ -36,12 +39,52 @@ const pitchLineWidth = 1.5;
 const props = defineProps<{ offsetX: number; offsetY: number }>();
 
 const store = useStore();
+
+const containers = new DefaultMap<TrackId, PIXI.Container>((trackId) => {
+  const container = new PIXI.Container();
+  if (stage == undefined) {
+    throw new Error("stage is undefined.");
+  }
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore TypeScript 5で修正される。
+  // ts-expect-errorは使うとtsserverが怒る（tsserverはTypeScript 5なのでunused判定になる）ので使わない
+  stage.addChild(container);
+
+  info(`Container created for track ${trackId}`);
+  return container;
+});
+
+// トラックが削除されたらContainerも削除する
+watch(
+  () => store.state.tracks,
+  () => {
+    for (const [trackId, container] of containers) {
+      if (!store.state.tracks.some((track) => track.id === trackId)) {
+        container.destroy();
+        containers.delete(trackId);
+        info(`Container destroyed for track ${trackId}`);
+      }
+    }
+  }
+);
+
+const selectedTrackId = computed(() => store.state.selectedTrackId);
+
+// トラックが選択されたらContainerの表示を切り替える
+watch(
+  selectedTrackId,
+  () => {
+    for (const [trackId, container] of containers) {
+      container.visible = trackId === selectedTrackId.value;
+    }
+  },
+  { immediate: true }
+);
+
 const queries = computed(() => {
   const singingGuides = [...store.state.singingGuides.values()];
   return singingGuides.map((value) => value.query);
 });
-
-const selectedTrackId = computed(() => store.state.selectedTrackId);
 
 const canvasContainer = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
@@ -53,7 +96,10 @@ let stage: PIXI.Container | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
 
-const pitchLinesMap = new Map<SingingGuideSourceHash, PitchLine[]>();
+const pitchLinesMap = new Map<
+  SingingGuideSourceHash,
+  { pitchLines: PitchLine[]; trackId: TrackId }
+>();
 
 const searchVoicedSections = (phonemes: FramePhoneme[]) => {
   const voicedSections: VoicedSection[] = [];
@@ -96,7 +142,6 @@ const render = () => {
 
   const tpqn = store.state.tpqn;
   const tempos = [store.state.tempos[0]];
-  const singer = store.getters.SELECTED_TRACK.singer;
   const singingGuides = store.state.singingGuides;
   const zoomX = store.state.sequencerZoomX;
   const zoomY = store.state.sequencerZoomY;
@@ -104,24 +149,22 @@ const render = () => {
   const offsetY = props.offsetY;
 
   // 無くなったフレーズを調べて、そのフレーズに対応するピッチラインを削除する
-  for (const [singingGuideKey, pitchLines] of pitchLinesMap) {
+  for (const [singingGuideKey, { pitchLines, trackId }] of pitchLinesMap) {
     if (!singingGuides.has(singingGuideKey)) {
+      const container = containers.get(trackId);
       for (const pitchLine of pitchLines) {
-        stage.removeChild(pitchLine.lineStrip.displayObject);
+        container.removeChild(pitchLine.lineStrip.displayObject);
         pitchLine.lineStrip.destroy();
       }
       pitchLinesMap.delete(singingGuideKey);
     }
   }
   // シンガーが未設定の場合はピッチラインをすべて非表示にして終了
-  if (!singer) {
-    for (const pitchLines of pitchLinesMap.values()) {
-      for (const pitchLine of pitchLines) {
-        pitchLine.lineStrip.renderable = false;
-      }
+  for (const track of store.state.tracks) {
+    if (track.singer == undefined) {
+      const container = containers.get(track.id);
+      container.visible = false;
     }
-    renderer.render(stage);
-    return;
   }
   // ピッチラインの生成・更新を行う
   for (const [singingGuideKey, singingGuide] of singingGuides) {
@@ -130,14 +173,16 @@ const render = () => {
     const startTime = singingGuide.startTime;
     const phonemes = singingGuide.query.phonemes;
 
-    let pitchLines = pitchLinesMap.get(singingGuideKey);
-
     // フレーズに対応するピッチラインが無かったら生成する
-    if (!pitchLines) {
+    if (!pitchLinesMap.has(singingGuideKey)) {
+      const phrase = store.state.phrases.get(singingGuide.phraseId);
+      if (phrase == undefined) {
+        throw new Error(`Phrase not found: ${singingGuide.phraseId}`);
+      }
       // 有声区間を調べる
       const voicedSections = searchVoicedSections(phonemes);
       // 有声区間のピッチラインを生成
-      pitchLines = [];
+      const newPitchLines = [];
       for (const voicedSection of voicedSections) {
         const startFrame = voicedSection.startFrame;
         const frameLength = voicedSection.frameLength;
@@ -156,20 +201,29 @@ const render = () => {
           pitchLineColor,
           pitchLineWidth
         );
-        pitchLines.push({
+        newPitchLines.push({
           startFrame,
           frameLength,
           frameTicksArray,
           lineStrip,
-          trackId: TrackId("000000000000-0000-0000-0000-000000000000"),
           // trackId: phrase.trackId,
         });
       }
+      const container = containers.get(phrase.trackId);
       // lineStripをステージに追加
-      for (const pitchLine of pitchLines) {
-        stage.addChild(pitchLine.lineStrip.displayObject);
+      for (const pitchLine of newPitchLines) {
+        container.addChild(pitchLine.lineStrip.displayObject);
       }
-      pitchLinesMap.set(singingGuideKey, pitchLines);
+      pitchLinesMap.set(singingGuideKey, {
+        pitchLines: newPitchLines,
+        trackId: phrase.trackId,
+      });
+    }
+    const { pitchLines } = pitchLinesMap.get(singingGuideKey) ?? {
+      pitchLines: undefined,
+    };
+    if (pitchLines == undefined) {
+      throw new Error("pitchLines is undefined.");
     }
 
     // ピッチラインを更新
@@ -202,12 +256,6 @@ const render = () => {
         pitchLine.lineStrip.setPoint(j, x, y);
       }
 
-      // 選択されているトラック以外は[0, 0, 0, 0]にする
-      pitchLine.lineStrip.setColor(
-        pitchLine.trackId === selectedTrackId.value
-          ? pitchLineColor
-          : [0, 0, 0, 0]
-      );
       pitchLine.lineStrip.update();
     }
   }
@@ -288,7 +336,7 @@ onUnmountedOrDeactivated(() => {
     window.cancelAnimationFrame(requestId);
   }
   stage?.destroy();
-  pitchLinesMap.forEach((pitchLines) => {
+  pitchLinesMap.forEach(({ pitchLines }) => {
     pitchLines.forEach((pitchLine) => {
       pitchLine.lineStrip.destroy();
     });

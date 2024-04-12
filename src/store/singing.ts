@@ -1366,6 +1366,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   query: frameAudioQuery,
                   frameRate: singerAndFrameRate.frameRate,
                   startTime,
+                  phraseId: phraseKey,
                 };
 
                 singingGuideCache.set(singingGuideKey, singingGuide);
