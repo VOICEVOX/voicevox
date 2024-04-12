@@ -1,4 +1,3 @@
-import { TrackId } from "@/type/preload";
 import { Note } from "@/store/type";
 
 export const DEFAULT_TPQN = 480;
@@ -127,14 +126,12 @@ export function updateNotesOfOverlappingNoteInfos(
 }
 
 export function getOverlappingNoteIds(
-  currentNoteInfos: Map<TrackId, OverlappingNoteInfos>
+  currentNoteInfos: OverlappingNoteInfos
 ): Set<string> {
   const overlappingNoteIds = new Set<string>();
-  for (const noteInfos of currentNoteInfos.values()) {
-    for (const [noteId, noteInfo] of noteInfos) {
-      if (noteInfo.overlappingNoteIds.size !== 0) {
-        overlappingNoteIds.add(noteId);
-      }
+  for (const [noteId, noteInfo] of currentNoteInfos) {
+    if (noteInfo.overlappingNoteIds.size !== 0) {
+      overlappingNoteIds.add(noteId);
     }
   }
   return overlappingNoteIds;

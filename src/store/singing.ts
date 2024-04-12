@@ -83,6 +83,7 @@ import {
 } from "@/sing/utility";
 import { generateWriteErrorMessage } from "@/helpers/generateWriteErrorMessage";
 import DefaultMap from "@/helpers/DefaultMap";
+import { mergeMaps } from "@/helpers/mergeMaps";
 import { noteSchema } from "@/domain/project/schema";
 import { createLogger } from "@/domain/frontend/log";
 
@@ -330,7 +331,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.selectedTrackId = state.tracks[0].id;
       state.overlappingNoteIds = getOverlappingNoteIds(
-        state.overlappingNoteInfos
+        mergeMaps(...state.overlappingNoteInfos.values())
       );
     },
     async action(
@@ -465,7 +466,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       addNotesToOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
-        state.overlappingNoteInfos
+        mergeMaps(...state.overlappingNoteInfos.values())
       );
     },
   },
@@ -493,7 +494,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       updateNotesOfOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
-        state.overlappingNoteInfos
+        mergeMaps(...state.overlappingNoteInfos.values())
       );
     },
   },
@@ -518,7 +519,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       removeNotesFromOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
-        state.overlappingNoteInfos
+        mergeMaps(...state.overlappingNoteInfos.values())
       );
       if (
         state.editingLyricNoteId != undefined &&
