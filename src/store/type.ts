@@ -48,8 +48,6 @@ import {
   AudioKey,
   PresetKey,
   RootMiscSettingType,
-  engineIdSchema,
-  styleIdSchema,
   EditorType,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -60,6 +58,13 @@ import {
   LoadingScreenOption,
 } from "@/components/Dialog/Dialog";
 import { OverlappingNoteInfos } from "@/sing/storeHelper";
+import {
+  noteSchema,
+  singerSchema,
+  tempoSchema,
+  timeSignatureSchema,
+  trackSchema,
+} from "@/domain/project/schema";
 
 /**
  * エディタ用のAudioQuery
@@ -712,27 +717,10 @@ export type AudioPlayerStoreTypes = {
  */
 
 // schemaはプロジェクトファイル用
-// TODO: schemaをsrc/domain/projectSchema.tsに移動する
-export const tempoSchema = z.object({
-  position: z.number(),
-  bpm: z.number(),
-});
 export type Tempo = z.infer<typeof tempoSchema>;
 
-export const timeSignatureSchema = z.object({
-  measureNumber: z.number(),
-  beats: z.number(),
-  beatType: z.number(),
-});
 export type TimeSignature = z.infer<typeof timeSignatureSchema>;
 
-export const noteSchema = z.object({
-  id: z.string(),
-  position: z.number(),
-  duration: z.number(),
-  noteNumber: z.number(),
-  lyric: z.string(),
-});
 export type Note = z.infer<typeof noteSchema>;
 
 export type Score = {
@@ -742,19 +730,8 @@ export type Score = {
   notes: Note[];
 };
 
-export const singerSchema = z.object({
-  engineId: engineIdSchema,
-  styleId: styleIdSchema,
-});
-
 export type Singer = z.infer<typeof singerSchema>;
 
-export const trackSchema = z.object({
-  singer: singerSchema.optional(),
-  keyRangeAdjustment: z.number(), // 音域調整量
-  volumeRangeAdjustment: z.number(), // 声量調整量
-  notes: z.array(noteSchema),
-});
 export type Track = z.infer<typeof trackSchema>;
 
 export type PhraseState =
@@ -763,18 +740,63 @@ export type PhraseState =
   | "COULD_NOT_RENDER"
   | "PLAYABLE";
 
-export type Phrase = {
-  singer?: Singer;
-  keyRangeAdjustment: number;
-  volumeRangeAdjustment: number;
+/**
+ * 歌い方
+ */
+export type SingingGuide = {
+  query: FrameAudioQuery;
+  frameRate: number;
+  startTime: number;
+};
+
+/**
+ * 歌い方のソース（歌い方を生成するために必要なデータ）
+ */
+export type SingingGuideSource = {
+  engineId: EngineId;
   tpqn: number;
   tempos: Tempo[];
   notes: Note[];
-  startTicks: number;
-  endTicks: number;
+  keyRangeAdjustment: number;
+  volumeRangeAdjustment: number;
+  frameRate: number;
+  restDurationSeconds: number;
+};
+
+/**
+ * 歌声
+ */
+export type SingingVoice = {
+  blob: Blob;
+};
+
+/**
+ * 歌声のソース（歌声を合成するために必要なデータ）
+ */
+export type SingingVoiceSource = {
+  singer: Singer;
+  frameAudioQuery: FrameAudioQuery;
+};
+
+export const singingGuideSourceHashSchema = z
+  .string()
+  .brand<"SingingGuideSourceHash">();
+export type SingingGuideSourceHash = z.infer<
+  typeof singingGuideSourceHashSchema
+>;
+
+export const singingVoiceSourceHashSchema = z
+  .string()
+  .brand<"SingingVoiceSourceHash">();
+export type SingingVoiceSourceHash = z.infer<
+  typeof singingVoiceSourceHashSchema
+>;
+
+export type Phrase = {
+  notes: Note[];
   state: PhraseState;
-  query?: FrameAudioQuery;
-  startTime?: number;
+  singingGuideKey?: SingingGuideSourceHash;
+  singingVoiceKey?: SingingVoiceSourceHash;
 };
 
 export type SingingStoreState = {
@@ -783,6 +805,7 @@ export type SingingStoreState = {
   timeSignatures: TimeSignature[];
   tracks: Track[];
   phrases: Map<string, Phrase>;
+  singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
   sequencerZoomX: number;
@@ -883,24 +906,37 @@ export type SingingStoreTypes = {
     action(payload: { noteId?: string }): void;
   };
 
-  SET_PHRASE: {
-    mutation: { phraseKey: string; phrase: Phrase };
-  };
-
-  DELETE_PHRASE: {
-    mutation: { phraseKey: string };
+  SET_PHRASES: {
+    mutation: { phrases: Map<string, Phrase> };
   };
 
   SET_STATE_TO_PHRASE: {
     mutation: { phraseKey: string; phraseState: PhraseState };
   };
 
-  SET_FRAME_AUDIO_QUERY_TO_PHRASE: {
-    mutation: { phraseKey: string; frameAudioQuery: FrameAudioQuery };
+  SET_SINGING_GUIDE_KEY_TO_PHRASE: {
+    mutation: {
+      phraseKey: string;
+      singingGuideKey: SingingGuideSourceHash | undefined;
+    };
   };
 
-  SET_START_TIME_TO_PHRASE: {
-    mutation: { phraseKey: string; startTime: number };
+  SET_SINGING_VOICE_KEY_TO_PHRASE: {
+    mutation: {
+      phraseKey: string;
+      singingVoiceKey: SingingVoiceSourceHash | undefined;
+    };
+  };
+
+  SET_SINGING_GUIDE: {
+    mutation: {
+      singingGuideKey: SingingGuideSourceHash;
+      singingGuide: SingingGuide;
+    };
+  };
+
+  DELETE_SINGING_GUIDE: {
+    mutation: { singingGuideKey: SingingGuideSourceHash };
   };
 
   SELECTED_TRACK: {
@@ -1347,18 +1383,6 @@ export type IndexStoreTypes = {
 
   GET_NEW_CHARACTERS: {
     action(): SpeakerId[];
-  };
-
-  LOG_ERROR: {
-    action(...payload: unknown[]): void;
-  };
-
-  LOG_WARN: {
-    action(...payload: unknown[]): void;
-  };
-
-  LOG_INFO: {
-    action(...payload: unknown[]): void;
   };
 
   INIT_VUEX: {
