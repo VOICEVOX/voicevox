@@ -135,8 +135,8 @@ const injectBrowserPreloadPlugin = (): Plugin => {
   return {
     name: "inject-browser-preload",
     transformIndexHtml: {
-      enforce: "pre" as const,
-      transform: (html: string) =>
+      order: "pre" as const,
+      handler: (html: string) =>
         html.replace(
           "<!-- %BROWSER_PRELOAD% -->",
           `<script type="module" src="./backend/browser/preload.ts"></script>`
