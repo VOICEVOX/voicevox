@@ -1,34 +1,36 @@
 <template>
-  <QBtn
-    ref="buttonRef"
-    flat
-    class="q-pa-none character-button"
-    :disable="uiLocked"
-    :class="{ opaque: loading }"
-    aria-haspopup="menu"
-  >
-    <!-- q-imgだとdisableのタイミングで点滅する -->
-    <div class="icon-container">
-      <img
-        v-if="selectedStyleInfo != undefined"
-        class="q-pa-none q-ma-none"
-        :src="selectedStyleInfo.iconPath"
-        :alt="selectedVoiceInfoText"
-      />
-      <QAvatar v-else-if="!emptiable" rounded size="2rem" color="primary"
-        ><span color="text-display-on-primary">?</span></QAvatar
-      >
-    </div>
-    <div v-if="loading" class="loading">
-      <QSpinner color="primary" size="1.6rem" :thickness="7" />
-    </div>
-    <QMenu
-      class="character-menu"
-      transition-show="none"
-      transition-hide="none"
-      :max-height="maxMenuHeight"
-      @before-show="updateMenuHeight"
+  <div style="position: relative">
+    <QBtn
+      ref="buttonRef"
+      flat
+      class="q-pa-none character-button"
+      :disable="uiLocked"
+      :class="{ opaque: loading }"
+      aria-haspopup="menu"
+      @click="
+        () => {
+          updateMenuHeight();
+          openMenu();
+        }
+      "
     >
+      <!-- q-imgだとdisableのタイミングで点滅する -->
+      <div class="icon-container">
+        <img
+          v-if="selectedStyleInfo != undefined"
+          class="q-pa-none q-ma-none"
+          :src="selectedStyleInfo.iconPath"
+          :alt="selectedVoiceInfoText"
+        />
+        <QAvatar v-else-if="!emptiable" rounded size="2rem" color="primary"
+          ><span color="text-display-on-primary">?</span></QAvatar
+        >
+      </div>
+      <div v-if="loading" class="loading">
+        <QSpinner color="primary" size="1.6rem" :thickness="7" />
+      </div>
+    </QBtn>
+    <div v-if="hasMenuOpen" class="character-menu">
       <QList style="min-width: max-content" class="character-item-container">
         <QItem
           v-if="selectedStyleInfo == undefined && !emptiable"
@@ -104,7 +106,6 @@
             <!-- スタイルが2つ以上あるものだけ、スタイル選択ボタンを表示する-->
             <template v-if="characterInfo.metas.styles.length >= 2">
               <QSeparator vertical />
-
               <div
                 class="flex items-center q-px-sm q-py-none cursor-pointer"
                 :class="
@@ -188,8 +189,8 @@
           </QBtnGroup>
         </QItem>
       </QList>
-    </QMenu>
-  </QBtn>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -297,7 +298,6 @@ const getDefaultStyle = (speakerUuid: SpeakerId) => {
     ) ?? characterInfo?.metas.styles[0]; // デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
 
   if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
-
   return defaultStyle;
 };
 
@@ -335,6 +335,29 @@ const updateMenuHeight = () => {
   // AudioDetailよりボタンが下に来ることはないのでその最低高185pxに余裕を持たせた170pxを最小の高さにする。
   // pxで指定するとウインドウサイズ変更に追従できないので ウインドウの高さの96% - ボタンの下端の座標 でメニューの高さを決定する。
   maxMenuHeight.value = `max(170px, min(${heightLimit}, calc(96vh - ${buttonRect.bottom}px)))`;
+};
+
+const hasMenuOpen = ref(false);
+const shouldShowMenu = ref("hidden");
+const toggleMenuVisible = () => {
+  switch (shouldShowMenu.value) {
+    case "hidden": {
+      shouldShowMenu.value = "visible";
+      console.log("Menu Open!!!");
+      document.addEventListener("click", toggleMenuVisible);
+      break;
+    }
+    case "visible": {
+      shouldShowMenu.value = "hidden";
+      console.log("Menu Close!!!");
+      document.removeEventListener("click", toggleMenuVisible);
+      break;
+    }
+  }
+};
+const openMenu = () => {
+  toggleMenuVisible();
+  hasMenuOpen.value = true;
 };
 </script>
 
@@ -383,6 +406,12 @@ const updateMenuHeight = () => {
 }
 
 .character-menu {
+  position: absolute;
+  overflow-y: scroll;
+  max-height: v-bind(maxMenuHeight);
+  visibility: v-bind(shouldShowMenu);
+  z-index: 10;
+
   .character-item-container {
     display: flex;
     flex-direction: column;
