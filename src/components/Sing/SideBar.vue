@@ -340,13 +340,11 @@ const trackStyles = computed(() =>
     gap: 0.25rem;
     z-index: 2;
 
-    .track-button {
-      &:not(.track-button-active) {
-        background-color: colors.$surface;
-      }
-      &.track-button-active {
-        background-color: colors.$primary;
-      }
+    .track-button:not(.track-button-active) {
+      background-color: colors.$surface;
+    }
+    .track-button.track-button-active {
+      background-color: colors.$primary;
     }
   }
 }
@@ -354,5 +352,9 @@ const trackStyles = computed(() =>
 .selected-item {
   background-color: rgba(colors.$primary-rgb, 0.4);
   color: colors.$display;
+
+  .track-button:not(.track-button-active) {
+    background-color: colors.$background !important;
+  }
 }
 </style>
