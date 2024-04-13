@@ -410,6 +410,7 @@ const openMenu = () => {
   overflow-y: scroll;
   max-height: v-bind(maxMenuHeight);
   visibility: v-bind(shouldShowMenu);
+  background: colors.$background;
   z-index: 10;
 
   .character-item-container {
