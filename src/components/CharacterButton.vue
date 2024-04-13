@@ -1,35 +1,35 @@
 <template>
-  <div style="position: relative">
-    <QBtn
-      ref="buttonRef"
-      flat
-      class="q-pa-none character-button"
-      :disable="uiLocked"
-      :class="{ opaque: loading }"
-      aria-haspopup="menu"
-      @click="
-        () => {
-          updateMenuHeight();
-          openMenu();
-        }
-      "
-    >
-      <!-- q-imgだとdisableのタイミングで点滅する -->
-      <div class="icon-container">
-        <img
-          v-if="selectedStyleInfo != undefined"
-          class="q-pa-none q-ma-none"
-          :src="selectedStyleInfo.iconPath"
-          :alt="selectedVoiceInfoText"
-        />
-        <QAvatar v-else-if="!emptiable" rounded size="2rem" color="primary"
-          ><span color="text-display-on-primary">?</span></QAvatar
-        >
-      </div>
-      <div v-if="loading" class="loading">
-        <QSpinner color="primary" size="1.6rem" :thickness="7" />
-      </div>
-    </QBtn>
+  <QBtn
+    ref="buttonRef"
+    flat
+    class="q-pa-none character-button"
+    :disable="uiLocked"
+    :class="{ opaque: loading }"
+    aria-haspopup="menu"
+    @click="
+      () => {
+        updateMenuHeight();
+        openMenu();
+      }
+    "
+  >
+    <!-- q-imgだとdisableのタイミングで点滅する -->
+    <div class="icon-container">
+      <img
+        v-if="selectedStyleInfo != undefined"
+        class="q-pa-none q-ma-none"
+        :src="selectedStyleInfo.iconPath"
+        :alt="selectedVoiceInfoText"
+      />
+      <QAvatar v-else-if="!emptiable" rounded size="2rem" color="primary"
+        ><span color="text-display-on-primary">?</span></QAvatar
+      >
+    </div>
+    <div v-if="loading" class="loading">
+      <QSpinner color="primary" size="1.6rem" :thickness="7" />
+    </div>
+  </QBtn>
+  <Teleport to="#character-icon-teleport">
     <div v-if="hasMenuOpen" class="character-menu">
       <QList style="min-width: max-content" class="character-item-container">
         <QItem
@@ -190,12 +190,12 @@
         </QItem>
       </QList>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
-import { computed, Ref, ref } from "vue";
+import { computed, CSSProperties, Ref, ref } from "vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
@@ -309,7 +309,6 @@ const onSelectSpeaker = (speakerUuid: SpeakerId) => {
     styleId: style.styleId,
   });
 };
-
 const subMenuOpenFlags = ref(
   [...Array(props.characterInfos.length)].map(() => false)
 );
@@ -338,26 +337,34 @@ const updateMenuHeight = () => {
 };
 
 const hasMenuOpen = ref(false);
-const shouldShowMenu = ref("hidden");
-const toggleMenuVisible = () => {
-  switch (shouldShowMenu.value) {
-    case "hidden": {
-      shouldShowMenu.value = "visible";
-      console.log("Menu Open!!!");
-      document.addEventListener("click", toggleMenuVisible);
-      break;
-    }
-    case "visible": {
-      shouldShowMenu.value = "hidden";
-      console.log("Menu Close!!!");
-      document.removeEventListener("click", toggleMenuVisible);
-      break;
-    }
-  }
+const shouldShowMenu: Ref<CSSProperties["visibility"]> = ref("hidden");
+const menuPosition = ref({ top: 0, left: 0 });
+const menuPositionTopStyle = computed(() => `${menuPosition.value.top}px`);
+const menuPositionLeftStyle = computed(() => `${menuPosition.value.left}px`);
+
+const hideMenu = () => {
+  document.removeEventListener("click", hideMenu);
+  shouldShowMenu.value = "hidden";
+};
+const showMenu = () => {
+  document.addEventListener("click", hideMenu);
+  shouldShowMenu.value = "visible";
 };
 const openMenu = () => {
-  toggleMenuVisible();
   hasMenuOpen.value = true;
+
+  if (buttonRef.value == undefined)
+    throw new Error("buttonRef.value == undefined");
+  const el = buttonRef.value.$el;
+  if (!(el instanceof Element)) throw new Error("!(el instanceof Element)");
+  const buttonRect = el.getBoundingClientRect();
+  menuPosition.value = { top: buttonRect.bottom, left: buttonRect.left };
+
+  if (shouldShowMenu.value === "hidden") {
+    showMenu();
+  } else {
+    hideMenu();
+  }
 };
 </script>
 
@@ -406,11 +413,13 @@ const openMenu = () => {
 }
 
 .character-menu {
-  position: absolute;
+  position: fixed;
   overflow-y: scroll;
+  background: colors.$background;
   max-height: v-bind(maxMenuHeight);
   visibility: v-bind(shouldShowMenu);
-  background: colors.$background;
+  top: v-bind(menuPositionTopStyle);
+  left: v-bind(menuPositionLeftStyle);
   z-index: 10;
 
   .character-item-container {
