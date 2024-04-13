@@ -2323,7 +2323,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
+          const shouldPlayTracks = shouldPlay(state.tracks);
+
           for (const [i, track] of state.tracks.entries()) {
+            if (!shouldPlayTracks[track.id]) {
+              continue;
+            }
             const offlineAudioContext = new OfflineAudioContext(
               numberOfChannels,
               sampleRate * renderDuration,
