@@ -68,6 +68,7 @@
                 flat
                 dense
                 size="sm"
+                class="track-button"
                 :class="{ 'track-button-active': track.mute }"
                 :disable="uiLocked"
                 @click.stop="setTrackMute(track.id, !track.mute)"
@@ -81,6 +82,7 @@
                 flat
                 dense
                 size="sm"
+                class="track-button"
                 :class="{ 'track-button-active': track.solo }"
                 :disable="uiLocked"
                 @click.stop="setTrackSolo(track.id, !track.solo)"
@@ -127,9 +129,8 @@
               <div>
                 <QBtn
                   label="削除"
-                  rounded
                   dense
-                  flat
+                  outline
                   size="sm"
                   padding="xs sm"
                   :disable="tracks.length === 1 || uiLocked"
@@ -298,7 +299,7 @@ const trackStyles = computed(() =>
 
 .track-detail {
   margin-left: 0.5rem;
-  padding: 0 0.5rem;
+  padding: 0 0.5rem 0.25rem 0.5rem;
   width: 100%;
   border-left: 1px solid colors.$sequencer-sub-divider;
   display: flex;
@@ -336,10 +337,17 @@ const trackStyles = computed(() =>
     right: 0.5rem;
     display: flex;
     align-items: center;
-    gap: 0.1rem;
+    gap: 0.25rem;
+    filter: drop-shadow(0 0.1rem 0.1rem #8888);
+    z-index: 2;
 
-    .track-button-active {
-      background-color: rgba(colors.$primary-rgb, 0.8);
+    .track-button {
+      &:not(.track-button-active) {
+        background-color: colors.$background;
+      }
+      &.track-button-active {
+        background-color: colors.$primary;
+      }
     }
   }
 }
