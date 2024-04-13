@@ -95,6 +95,11 @@ export default defineConfig((options) => {
             "./src/backend/electron/main.ts",
             "./src/backend/electron/preload.ts",
           ],
+          onstart: ({ startup }) => {
+            if (options.mode !== "test") {
+              startup([".", "--no-sandbox"]);
+            }
+          },
           vite: {
             plugins: [tsconfigPaths({ root: __dirname })],
             build: {
