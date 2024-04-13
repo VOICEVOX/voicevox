@@ -50,6 +50,8 @@ const containers = new DefaultMap<TrackId, PIXI.Container>((trackId) => {
   // ts-expect-errorは使うとtsserverが怒る（tsserverはTypeScript 5なのでunused判定になる）ので使わない
   stage.addChild(container);
 
+  container.visible = trackId === selectedTrackId.value;
+
   info(`Container created for track ${trackId}`);
   return container;
 });
@@ -336,6 +338,10 @@ onUnmountedOrDeactivated(() => {
     window.cancelAnimationFrame(requestId);
   }
   stage?.destroy();
+  containers.forEach((container) => {
+    container.destroy();
+  });
+  containers.clear();
   pitchLinesMap.forEach(({ pitchLines }) => {
     pitchLines.forEach((pitchLine) => {
       pitchLine.lineStrip.destroy();
