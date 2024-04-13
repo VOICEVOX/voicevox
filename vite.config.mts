@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 import path from "path";
 import { rm } from "fs/promises";
-import treeKill from "tree-kill";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -14,6 +13,12 @@ import { quasar } from "@quasar/vite-plugin";
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 
+const sevenZipNames: Partial<Record<typeof process.platform, string>> = {
+  win32: "7za.exe",
+  linux: "7zzs",
+  darwin: "7zz",
+};
+
 export default defineConfig((options) => {
   const packageName = process.env.npm_package_name;
   const env = loadEnv(options.mode, __dirname);
@@ -23,15 +28,14 @@ export default defineConfig((options) => {
     );
   }
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+  const sevenZipName = sevenZipNames[process.platform];
+  if (!sevenZipName) {
+    throw new Error(`Unsupported platform: ${process.platform}`);
+  }
   process.env.VITE_7Z_BIN_NAME =
     (options.mode === "development"
       ? path.join(__dirname, "build", "vendored", "7z") + path.sep
-      : "") +
-    {
-      win32: "7za.exe",
-      linux: "7zzs",
-      darwin: "7zz",
-    }[process.platform];
+      : "") + sevenZipName;
   process.env.VITE_APP_VERSION = process.env.npm_package_version;
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
@@ -92,18 +96,6 @@ export default defineConfig((options) => {
             "./src/backend/electron/main.ts",
             "./src/backend/electron/preload.ts",
           ],
-          // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
-          onstart: ({ startup }) => {
-            // @ts-expect-error vite-electron-pluginはprocess.electronAppにelectronのプロセスを格納している。
-            //   しかし、型定義はないので、ts-expect-errorで回避する。
-            const pid = process.electronApp?.pid;
-            if (pid) {
-              treeKill(pid);
-            }
-            if (options.mode !== "test") {
-              startup([".", "--no-sandbox"]);
-            }
-          },
           vite: {
             plugins: [tsconfigPaths({ root: __dirname })],
             build: {

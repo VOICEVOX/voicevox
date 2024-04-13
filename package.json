@@ -120,7 +120,7 @@
     "typescript": "5.4.5",
     "vite": "5.2.8",
     "vite-plugin-checker": "0.6.4",
-    "vite-plugin-electron": "0.14.1",
+    "vite-plugin-electron": "0.28.4",
     "vite-plugin-node-polyfills": "0.21.0",
     "vite-tsconfig-paths": "4.2.1",
     "vitest": "0.34.6",
