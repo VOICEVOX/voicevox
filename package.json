@@ -5,7 +5,7 @@
   "private": true,
   "main": "./dist/main.js",
   "engines": {
-    "node": ">=18.13.0 <19",
+    "node": ">=18.20.2 <19",
     "npm": ">=8.19.3 <9"
   },
   "volta": {
