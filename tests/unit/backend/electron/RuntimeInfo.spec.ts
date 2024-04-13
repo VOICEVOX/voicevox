@@ -1,6 +1,6 @@
 import { tmpdir } from "os";
 import { join } from "path";
-import fs from "fs";
+import fs from "fs/promises";
 import { expect, test } from "vitest";
 import { EngineId } from "@/type/preload";
 
@@ -32,7 +32,7 @@ test("想定通りのラインタイム情報が保存されている", async ()
 
   // ファイル読み込みしてスナップショットの比較
   // NOTE: スナップショットが変わった場合、破壊的変更ならformatVersionを上げる
-  const savedRuntimeInfo = JSON.parse(fs.readFileSync(tempFilePath, "utf-8"));
+  const savedRuntimeInfo = JSON.parse(await fs.readFile(tempFilePath, "utf-8"));
   expect(savedRuntimeInfo).toMatchInlineSnapshot(`
     {
       "appVersion": "999.999.999",

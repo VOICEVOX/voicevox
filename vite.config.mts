@@ -4,7 +4,7 @@
 // TODO: package.jsonに"type": "module"を追加し、他を良い感じに合わせる
 import path from "path";
 import { rm } from "fs/promises";
-
+import { fileURLToPath } from "node:url";
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
@@ -12,6 +12,9 @@ import checker from "vite-plugin-checker";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
@@ -65,17 +68,10 @@ export default defineConfig((options) => {
       },
     },
     test: {
-      include: [
-        path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
-      ],
+      include: ["../tests/unit/**/*.spec.ts"],
       environment: "happy-dom",
       environmentMatchGlobs: [
-        [
-          path
-            .resolve(__dirname, "tests/unit/backend/electron/**/*.spec.ts")
-            .replace(/\\/g, "/"),
-          "node",
-        ],
+        ["../tests/unit/backend/electron/**/*.spec.ts", "node"],
       ],
       globals: true,
     },

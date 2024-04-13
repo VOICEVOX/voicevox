@@ -3,7 +3,7 @@
  * ランタイム情報には起動しているエンジンのURLなどが含まれる。
  */
 
-import fs from "fs";
+import fs from "fs/promises";
 import AsyncLock from "async-lock";
 import log from "electron-log/main";
 import { EngineId, EngineInfo } from "@/type/preload";
@@ -71,10 +71,6 @@ export class RuntimeInfoManager {
    */
   public async exportFile() {
     await this.lock.acquire(this.lockKey, async () => {
-      log.info(
-        `Runtime information file has been updated. : ${this.runtimeInfoPath}`
-      );
-
       // データ化
       const runtimeInfoFormatFor3rdParty: RuntimeInfo = {
         formatVersion: this.fileFormatVersion,
@@ -90,9 +86,13 @@ export class RuntimeInfoManager {
 
       // ファイル書き出し
       try {
-        await fs.promises.writeFile(
+        await fs.writeFile(
           this.runtimeInfoPath,
           JSON.stringify(runtimeInfoFormatFor3rdParty) // FIXME: zod化する
+        );
+
+        log.info(
+          `Runtime information file has been updated. : ${this.runtimeInfoPath}`
         );
       } catch (e) {
         // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。
