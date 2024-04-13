@@ -338,12 +338,11 @@ const trackStyles = computed(() =>
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    filter: drop-shadow(0 0.1rem 0.1rem #8888);
     z-index: 2;
 
     .track-button {
       &:not(.track-button-active) {
-        background-color: colors.$background;
+        background-color: colors.$surface;
       }
       &.track-button-active {
         background-color: colors.$primary;
