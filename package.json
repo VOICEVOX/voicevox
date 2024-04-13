@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "2.13.1",
-    "@playwright/test": "1.40.1",
+    "@playwright/test": "1.43.1",
     "@quasar/vite-plugin": "1.6.0",
     "@types/async-lock": "1.4.0",
     "@types/clone-deep": "4.0.1",
