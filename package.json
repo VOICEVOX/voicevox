@@ -6,11 +6,11 @@
   "main": "./dist/main.js",
   "engines": {
     "node": ">=18.20.2 <19",
-    "npm": ">=8.19.3 <9"
+    "npm": ">=10.5.0 <11"
   },
   "volta": {
-    "node": "18.13.0",
-    "npm": "8.19.3"
+    "node": "18.20.2",
+    "npm": "10.5.0"
   },
   "scripts": {
     "test:unit": "vitest --run",
