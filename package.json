@@ -106,7 +106,7 @@
     "eslint-plugin-prettier": "3.4.0",
     "eslint-plugin-vue": "9.5.1",
     "happy-dom": "8.4.2",
-    "license-checker": "25.0.1",
+    "license-checker-rseidelsohn": "4.3.0",
     "markdownlint": "0.31.1",
     "markdownlint-cli": "0.37.0",
     "node-fetch": "3.3.1",

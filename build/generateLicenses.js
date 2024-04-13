@@ -39,10 +39,8 @@ const disallowedLicenses = ["GPL", "GPL-2.0", "GPL-3.0", "AGPL", "NGPL"];
 // On Linux (bash), they can be called without extensions.
 const extension = isWindows ? ".cmd" : "";
 
-// https://github.com/davglass/license-checker
-// npm install -g license-checker
 const licenseJson = execFileSync(
-  `license-checker${extension}`,
+  `license-checker-rseidelsohn${extension}`,
   [
     "--production",
     "--excludePrivatePackages",
