@@ -49,7 +49,7 @@ const props = withDefaults(
   }>(),
   {
     disable: false,
-  },
+  }
 );
 
 const emit = defineEmits<{
@@ -67,7 +67,7 @@ const selectedComputed = computed({
 const subMenuOpenFlags = ref(
   props.menudata.type === "root"
     ? [...Array(props.menudata.subMenu.length)].map(() => false)
-    : [],
+    : []
 );
 
 const isDisabledMenuItem = computed(() => (menu: MenuItemData) => {
@@ -98,7 +98,7 @@ if (props.menudata.type === "root") {
         const len = props.menudata.subMenu.length;
         subMenuOpenFlags.value = [...Array(len)].map(() => false);
       }
-    },
+    }
   );
 }
 </script>

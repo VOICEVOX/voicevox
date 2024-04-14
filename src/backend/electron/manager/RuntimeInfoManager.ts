@@ -88,11 +88,11 @@ export class RuntimeInfoManager {
       try {
         await fs.writeFile(
           this.runtimeInfoPath,
-          JSON.stringify(runtimeInfoFormatFor3rdParty), // FIXME: zod化する
+          JSON.stringify(runtimeInfoFormatFor3rdParty) // FIXME: zod化する
         );
 
         log.info(
-          `Runtime information file has been updated. : ${this.runtimeInfoPath}`,
+          `Runtime information file has been updated. : ${this.runtimeInfoPath}`
         );
       } catch (e) {
         // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。

@@ -35,7 +35,7 @@ export class LineStrip {
     this.shader = PIXI.Shader.from(
       lineStripVertexShaderSource,
       fragmentShaderSource,
-      { color },
+      { color }
     );
     this.points = new Float32Array(numOfPoints * 2);
     this.pointsBuffer = new PIXI.Buffer(this.points, false);
@@ -53,7 +53,7 @@ export class LineStrip {
       PIXI.TYPES.FLOAT,
       sizeOfFloat * 2,
       0,
-      true,
+      true
     );
     this.geometry.addAttribute(
       "pointB",
@@ -63,7 +63,7 @@ export class LineStrip {
       PIXI.TYPES.FLOAT,
       sizeOfFloat * 2,
       sizeOfFloat * 2,
-      true,
+      true
     );
     this.mesh = new PIXI.Mesh(this.geometry, this.shader);
   }

@@ -36,7 +36,7 @@ watch(
   (acceptRetrieveTelemetry) => {
     gtm?.enable(acceptRetrieveTelemetry === "Accepted");
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 // フォントの制御用パラメータを変更する
@@ -45,7 +45,7 @@ watch(
   (editorFont) => {
     document.body.setAttribute("data-editor-font", editorFont);
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 // エディタの切り替えを監視してショートカットキーの設定を変更する
@@ -55,7 +55,7 @@ watch(
     if (openedEditor != undefined) {
       hotkeyManager.onEditorChange(openedEditor);
     }
-  },
+  }
 );
 
 // ソフトウェアを初期化
@@ -91,7 +91,7 @@ onMounted(async () => {
   let engineIds: EngineId[];
   if (isMultiEngineOffMode) {
     const main = Object.values(store.state.engineInfos).find(
-      (engine) => engine.type === "default",
+      (engine) => engine.type === "default"
     );
     if (!main) {
       throw new Error("No main engine found");

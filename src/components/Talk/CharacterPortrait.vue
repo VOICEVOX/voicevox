@@ -47,7 +47,7 @@ const styleInfo = computed(() => {
 
   const styleId = audioItem?.voice.styleId;
   const style = characterInfo.value?.metas.styles.find(
-    (style) => style.styleId === styleId,
+    (style) => style.styleId === styleId
   );
   return style;
 });
@@ -77,7 +77,7 @@ const engineName = computed(() => {
 });
 
 const portraitPath = computed(
-  () => styleInfo.value?.portraitPath || characterInfo.value?.portraitPath,
+  () => styleInfo.value?.portraitPath || characterInfo.value?.portraitPath
 );
 
 const isInitializingSpeaker = computed(() => {

@@ -106,7 +106,7 @@ onetimeWatch(
   },
   {
     immediate: true,
-  },
+  }
 );
 </script>
 

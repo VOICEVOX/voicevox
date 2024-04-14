@@ -30,16 +30,16 @@ export const projectStoreState: ProjectStoreState = {
 const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
-      (audioKey) => audioKey in talkProject.audioItems,
+      (audioKey) => audioKey in talkProject.audioItems
     )
   ) {
     throw new Error(
-      "Every audioKey in audioKeys should be a key of audioItems",
+      "Every audioKey in audioKeys should be a key of audioItems"
     );
   }
   if (
     !talkProject.audioKeys.every(
-      (audioKey) => talkProject.audioItems[audioKey]?.voice != undefined,
+      (audioKey) => talkProject.audioItems[audioKey]?.voice != undefined
     )
   ) {
     throw new Error('Every audioItem should have a "voice" attribute.');
@@ -47,7 +47,7 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
       (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.engineId != undefined,
+        talkProject.audioItems[audioKey]?.voice.engineId != undefined
     )
   ) {
     throw new Error('Every voice should have a "engineId" attribute.');
@@ -56,15 +56,14 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
       (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.speakerId != undefined,
+        talkProject.audioItems[audioKey]?.voice.speakerId != undefined
     )
   ) {
     throw new Error('Every voice should have a "speakerId" attribute.');
   }
   if (
     !talkProject.audioKeys.every(
-      (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.styleId != undefined,
+      (audioKey) => talkProject.audioItems[audioKey]?.voice.styleId != undefined
     )
   ) {
     throw new Error('Every voice should have a "styleId" attribute.');
@@ -73,7 +72,7 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
 
 const applyTalkProjectToStore = async (
   dispatch: Dispatch<AllActions>,
-  talkProject: LatestProjectType["talk"],
+  talkProject: LatestProjectType["talk"]
 ) => {
   await dispatch("REMOVE_ALL_AUDIO_ITEM");
 
@@ -95,7 +94,7 @@ const applyTalkProjectToStore = async (
 
 const applySongProjectToStore = async (
   dispatch: Dispatch<AllActions>,
-  songProject: LatestProjectType["song"],
+  songProject: LatestProjectType["song"]
 ) => {
   const { tpqn, tempos, timeSignatures, tracks } = songProject;
   // TODO: マルチトラック対応
@@ -139,7 +138,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         if (confirm !== false && context.getters.IS_EDITED) {
           const result = await context.dispatch(
             "SAVE_OR_DISCARD_PROJECT_FILE",
-            {},
+            {}
           );
           if (result == "canceled") {
             return;
@@ -151,7 +150,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         const audioItem: AudioItem = await context.dispatch(
           "GENERATE_AUDIO_ITEM",
-          {},
+          {}
         );
         await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
@@ -172,7 +171,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         context.commit("CLEAR_COMMANDS");
-      },
+      }
     ),
   },
 
@@ -184,7 +183,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     action: createUILockAction(
       async (
         context,
-        { filePath, confirm }: { filePath?: string; confirm?: boolean },
+        { filePath, confirm }: { filePath?: string; confirm?: boolean }
       ) => {
         if (!filePath) {
           // Select and load a project File.
@@ -220,14 +219,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           ) {
             throw new Error(
               projectFileErrorMsg +
-                " The appVersion of the project file should be string",
+                " The appVersion of the project file should be string"
             );
           }
           const projectAppVersion: string = projectData.appVersion;
           if (!semver.valid(projectAppVersion)) {
             throw new Error(
               projectFileErrorMsg +
-                ` The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`,
+                ` The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`
             );
           }
 
@@ -251,10 +250,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             for (const audioItemsKey in projectData.audioItems) {
               if (projectData.audioItems[audioItemsKey].query != null) {
                 projectData.audioItems[audioItemsKey].query.volumeScale = 1;
-                projectData.audioItems[audioItemsKey].query.prePhonemeLength =
-                  0.1;
-                projectData.audioItems[audioItemsKey].query.postPhonemeLength =
-                  0.1;
+                projectData.audioItems[
+                  audioItemsKey
+                ].query.prePhonemeLength = 0.1;
+                projectData.audioItems[
+                  audioItemsKey
+                ].query.postPhonemeLength = 0.1;
                 projectData.audioItems[audioItemsKey].query.outputSamplingRate =
                   DEFAULT_SAMPLING_RATE;
               }
@@ -368,12 +369,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                   characterInfo.metas.styles.some(
                     (styeleinfo) =>
                       styeleinfo.engineId === audioItem.engineId &&
-                      styeleinfo.styleId === audioItem.styleId,
-                  ),
+                      styeleinfo.styleId === audioItem.styleId
+                  )
                 );
                 if (chracterinfo == undefined)
                   throw new Error(
-                    `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`,
+                    `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`
                   );
                 const speakerId = chracterinfo.metas.speakerUuid;
                 audioItem.voice = {
@@ -433,7 +434,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             semver.satisfies(
               projectAppVersion,
               "<0.17.1",
-              semverSatisfiesOptions,
+              semverSatisfiesOptions
             )
           ) {
             // volumeRangeAdjustmentの追加
@@ -454,7 +455,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               {
                 additionalMessage:
                   "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
-              },
+              }
             );
             if (result == "canceled") {
               return false;
@@ -463,11 +464,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
           await applyTalkProjectToStore(
             context.dispatch,
-            parsedProjectData.talk,
+            parsedProjectData.talk
           );
           await applySongProjectToStore(
             context.dispatch,
-            parsedProjectData.song,
+            parsedProjectData.song
           );
 
           context.commit("SET_PROJECT_FILEPATH", { filePath });
@@ -492,7 +493,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           });
           return false;
         }
-      },
+      }
     ),
   },
 
@@ -564,7 +565,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           };
 
           const buf = new TextEncoder().encode(
-            JSON.stringify(projectData),
+            JSON.stringify(projectData)
           ).buffer;
           await window.backend
             .writeFile({
@@ -575,7 +576,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit(
             "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
-            context.getters.LAST_COMMAND_UNIX_MILLISEC,
+            context.getters.LAST_COMMAND_UNIX_MILLISEC
           );
           return true;
         } catch (err) {
@@ -592,7 +593,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           });
           return false;
         }
-      },
+      }
     ),
   },
 

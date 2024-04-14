@@ -89,7 +89,7 @@
                     // ドラッグ中はバグるので無視
                     characterOrderDragging ||
                       selectCharacterWithChangePortrait(
-                        element.metas.speakerUuid,
+                        element.metas.speakerUuid
                       )
                   "
                 >
@@ -168,7 +168,7 @@ watch(
         ...newCharacters.value,
         ...props.characterInfos
           .filter(
-            (info) => !newCharacters.value.includes(info.metas.speakerUuid),
+            (info) => !newCharacters.value.includes(info.metas.speakerUuid)
           )
           .map((info) => info.metas.speakerUuid),
       ];
@@ -187,15 +187,15 @@ watch(
           !characterOrder.value.find(
             (characterInfoInList) =>
               characterInfoInList.metas.speakerUuid ===
-              characterInfo.metas.speakerUuid,
-          ),
+              characterInfo.metas.speakerUuid
+          )
       );
       characterOrder.value = [
         ...characterOrder.value,
         ...notIncludesCharacterInfos,
       ];
     }
-  },
+  }
 );
 
 // draggable用
@@ -215,7 +215,7 @@ audio.onended = () => stop();
 const play = (
   speakerUuid: SpeakerId,
   { styleId, voiceSamplePaths }: StyleInfo,
-  index: number,
+  index: number
 ) => {
   if (audio.src !== "") stop();
 
@@ -235,7 +235,7 @@ const stop = () => {
 const togglePlayOrStop = (
   speakerUuid: SpeakerId,
   styleInfo: StyleInfo,
-  index: number,
+  index: number
 ) => {
   if (
     playing.value == undefined ||
@@ -255,14 +255,14 @@ const characterOrderDragging = ref(false);
 const closeDialog = () => {
   store.dispatch(
     "SET_USER_CHARACTER_ORDER",
-    characterOrder.value.map((info) => info.metas.speakerUuid),
+    characterOrder.value.map((info) => info.metas.speakerUuid)
   );
   stop();
   modelValueComputed.value = false;
 };
 
 const portrait = ref<string | undefined>(
-  characterInfosMap.value[selectedCharacter.value].portraitPath,
+  characterInfosMap.value[selectedCharacter.value].portraitPath
 );
 const updatePortrait = (portraitPath: string) => {
   portrait.value = portraitPath;

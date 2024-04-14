@@ -70,7 +70,7 @@ const props = withDefaults(
   {
     offset: 0,
     numOfMeasures: 32,
-  },
+  }
 );
 const store = useStore();
 const state = store.state;
@@ -83,7 +83,7 @@ const measureWidth = computed(() => {
   const measureDuration = getMeasureDuration(
     timeSignatures.value[0].beats,
     timeSignatures.value[0].beatType,
-    tpqn.value,
+    tpqn.value
   );
   return tickToBaseX(measureDuration, tpqn.value) * zoomX.value;
 });
@@ -112,7 +112,7 @@ const measureInfos = computed(() => {
     const measureDuration = getMeasureDuration(
       ts.beats,
       ts.beatType,
-      tpqn.value,
+      tpqn.value
     );
     const nextTsPosition =
       i !== timeSignatures.value.length - 1

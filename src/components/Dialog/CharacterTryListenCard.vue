@@ -109,7 +109,7 @@ const props = defineProps<{
   togglePlayOrStop: (
     speakerUuid: SpeakerId,
     styleInfo: StyleInfo,
-    index: number,
+    index: number
   ) => void;
 }>();
 
@@ -141,7 +141,7 @@ const speakerUuid = computed(() => props.characterInfo.metas.speakerUuid);
 // 選択中のスタイル
 const selectedStyleIndex = ref<number>(0);
 const selectedStyle = computed(
-  () => props.characterInfo.metas.styles[selectedStyleIndex.value],
+  () => props.characterInfo.metas.styles[selectedStyleIndex.value]
 );
 
 // スタイル番号をずらす

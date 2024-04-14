@@ -64,7 +64,7 @@ const props = withDefaults(
   {
     offset: 0,
     blackKeyWidth: 30,
-  },
+  }
 );
 const store = useStore();
 const width = ref(48);

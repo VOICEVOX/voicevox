@@ -297,7 +297,7 @@ const lengthHoveredPhonemeType = ref<"vowel" | "consonant">("vowel");
 const handleLengthHoverText = (
   isOver: boolean,
   phoneme: MoraDataType,
-  moraIndex: number,
+  moraIndex: number
 ) => {
   if (phoneme !== "vowel" && phoneme !== "consonant")
     throw new Error("phoneme != hoveredType");
@@ -359,7 +359,7 @@ const toggleAccentPhraseSplit = (isPause: boolean, moraIndex?: number) => {
 };
 
 const lastPitches = computed(() =>
-  props.accentPhrase.moras.map((mora) => mora.pitch),
+  props.accentPhrase.moras.map((mora) => mora.pitch)
 );
 
 const maxPitch = 6.5;
@@ -369,7 +369,7 @@ const minMoraLength = 0;
 const changeMoraData = (
   moraIndex: number,
   data: number,
-  type: MoraDataType,
+  type: MoraDataType
 ) => {
   const accentPhraseIndex = props.index;
   if (!props.altKeyFlag) {

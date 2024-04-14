@@ -66,7 +66,7 @@ watch(progress, (newValue, oldValue) => {
 onUnmounted(() => clearTimeout(timeoutId));
 
 const formattedProgress = computed(() =>
-  (store.getters.PROGRESS * 100).toFixed(),
+  (store.getters.PROGRESS * 100).toFixed()
 );
 </script>
 

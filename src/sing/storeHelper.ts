@@ -52,7 +52,7 @@ export type OverlappingNoteInfos = Map<string, NoteInfo>;
 
 export function addNotesToOverlappingNoteInfos(
   overlappingNoteInfos: OverlappingNoteInfos,
-  notes: Note[],
+  notes: Note[]
 ): void {
   for (const note of notes) {
     overlappingNoteInfos.set(note.id, {
@@ -95,7 +95,7 @@ export function addNotesToOverlappingNoteInfos(
 
 export function removeNotesFromOverlappingNoteInfos(
   overlappingNoteInfos: OverlappingNoteInfos,
-  notes: Note[],
+  notes: Note[]
 ): void {
   for (const note of notes) {
     const noteId1 = note.id;
@@ -119,14 +119,14 @@ export function removeNotesFromOverlappingNoteInfos(
 
 export function updateNotesOfOverlappingNoteInfos(
   overlappingNoteInfos: OverlappingNoteInfos,
-  notes: Note[],
+  notes: Note[]
 ): void {
   removeNotesFromOverlappingNoteInfos(overlappingNoteInfos, notes);
   addNotesToOverlappingNoteInfos(overlappingNoteInfos, notes);
 }
 
 export function getOverlappingNoteIds(
-  currentNoteInfos: OverlappingNoteInfos,
+  currentNoteInfos: OverlappingNoteInfos
 ): Set<string> {
   const overlappingNoteIds = new Set<string>();
   for (const [noteId, noteInfo] of currentNoteInfos) {

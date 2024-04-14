@@ -14,7 +14,7 @@ type Target = EventTarget & GlobalEventHandlers;
 
 const useCreateUseKey = (
   key: string,
-  _target: MaybeRefOrGetter<Target> = window,
+  _target: MaybeRefOrGetter<Target> = window
 ): Ref<boolean> => {
   const target = toValue(_target);
 

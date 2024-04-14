@@ -34,7 +34,7 @@ export const UrlString = (url: string): UrlString => urlStringSchema.parse(url);
 const hotkeyCombinationSchema = z.string().brand("HotkeyCombination");
 export type HotkeyCombination = z.infer<typeof hotkeyCombinationSchema>;
 export const HotkeyCombination = (
-  hotkeyCombination: string,
+  hotkeyCombination: string
 ): HotkeyCombination => hotkeyCombinationSchema.parse(hotkeyCombination);
 
 export const engineIdSchema = z.string().brand<"EngineId">();
@@ -240,7 +240,7 @@ export interface Sandbox {
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
-    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void,
+    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void
   ): void;
   closeWindow(): void;
   minimizeWindow(): void;
@@ -263,11 +263,11 @@ export interface Sandbox {
   getSetting<Key extends keyof ConfigType>(key: Key): Promise<ConfigType[Key]>;
   setSetting<Key extends keyof ConfigType>(
     key: Key,
-    newValue: ConfigType[Key],
+    newValue: ConfigType[Key]
   ): Promise<ConfigType[Key]>;
   setEngineSetting(
     engineId: EngineId,
-    engineSetting: EngineSettingType,
+    engineSetting: EngineSettingType
   ): Promise<void>;
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
@@ -625,7 +625,7 @@ export const configSchema = z
                   targetStyleId: styleIdSchema,
                 })
                 .optional(),
-            }),
+            })
           )
           .default({}),
         keys: presetKeySchema.array().default([]),

@@ -57,7 +57,7 @@ export type HotkeysJs = {
     options: {
       scope: string;
     },
-    callback: (e: KeyboardEvent) => void,
+    callback: (e: KeyboardEvent) => void
   ): void;
   unbind: (key: BindingKey, scope: string) => void;
   setScope: (scope: string) => void;
@@ -102,7 +102,7 @@ export class HotkeyManager {
 
   constructor(
     hotkeys_: HotkeysJs = hotkeys,
-    log: Log = createLogger("HotkeyManager").info,
+    log: Log = createLogger("HotkeyManager").info
   ) {
     this.log = log;
     this.hotkeys = hotkeys_;
@@ -128,7 +128,7 @@ export class HotkeyManager {
   }
 
   private getRegisteredCombination(
-    action: HotkeyAction,
+    action: HotkeyAction
   ): HotkeyCombination | undefined {
     return this.registeredCombinations.find(isSameHotkeyTarget(action))
       ?.combination;
@@ -147,13 +147,13 @@ export class HotkeyManager {
     // 不要なBindingを削除
     const unbindedCombinations = changedActions.flatMap((a) => {
       const combination = this.registeredCombinations.find(
-        isSameHotkeyTarget(a),
+        isSameHotkeyTarget(a)
       );
       // 空じゃないCombinationを探す
       return combination?.combination ? [combination] : [];
     });
     const unregisteredCombinations = this.registeredCombinations.filter(
-      (c) => !this.actions.some(isSameHotkeyTarget(c)),
+      (c) => !this.actions.some(isSameHotkeyTarget(c))
     );
     this.unbindActions([...unbindedCombinations, ...unregisteredCombinations]);
 
@@ -172,7 +172,7 @@ export class HotkeyManager {
       this.log("Unbind:", bindingKey, "in", combination.editor);
       this.hotkeys.unbind(bindingKey, combination.editor);
       this.registeredCombinations = this.registeredCombinations.filter(
-        isNotSameHotkeyTarget(combination),
+        isNotSameHotkeyTarget(combination)
       );
     }
   }
@@ -186,7 +186,7 @@ export class HotkeyManager {
         "to",
         action.name,
         "in",
-        action.editor,
+        action.editor
       );
       this.hotkeys(
         combinationToBindingKey(setting.combination),
@@ -213,10 +213,10 @@ export class HotkeyManager {
           }
           e.preventDefault();
           action.callback(e);
-        },
+        }
       );
       this.registeredCombinations = this.registeredCombinations.filter(
-        isNotSameHotkeyTarget(action),
+        isNotSameHotkeyTarget(action)
       );
       this.registeredCombinations.push({
         editor: action.editor,
@@ -273,7 +273,7 @@ export class HotkeyManager {
 
 /** hotkeys-js用のキーに変換する */
 const combinationToBindingKey = (
-  combination: HotkeyCombination,
+  combination: HotkeyCombination
 ): BindingKey => {
   // MetaキーはCommandキーとして扱う
   // NOTE: hotkeys-jsにはWinキーが無く、Commandキーとして扱われている

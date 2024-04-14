@@ -34,7 +34,7 @@ const licenseChecker = require("license-checker-rseidelsohn");
         } else {
           resolve(json);
         }
-      },
+      }
     );
   });
 
@@ -51,19 +51,19 @@ const licenseChecker = require("license-checker-rseidelsohn");
           win32: "7za.exe",
           linux: "7zzs",
           darwin: "7zz",
-        }[process.platform],
+        }[process.platform]
       ),
 
       {
         encoding: "utf-8",
-      },
+      }
     ).match(/7-Zip\s+(?:\(.\))?\s*([0-9.]+)/)[1],
     license: "LGPL-2.1",
     text: await fs.readFile(
       path.join(__dirname, "vendored", "7z", "License.txt"),
       {
         encoding: "utf-8",
-      },
+      }
     ),
   });
 

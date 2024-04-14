@@ -74,7 +74,7 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
-  },
+  }
 );
 
 const emit = defineEmits<{
@@ -82,13 +82,13 @@ const emit = defineEmits<{
     e: "changeValue",
     moraIndex: number,
     newValue: number,
-    type: MoraDataType,
+    type: MoraDataType
   ): Promise<void>;
   (
     e: "mouseOver",
     isOver: boolean,
     type: MoraDataType,
-    moraIndex: number,
+    moraIndex: number
   ): void;
 }>();
 

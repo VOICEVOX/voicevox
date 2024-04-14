@@ -14,7 +14,7 @@ export const calculateHash = async <T>(obj: T) => {
 
 export const createPromiseThatResolvesWhen = (
   condition: () => boolean,
-  interval = 200,
+  interval = 200
 ) => {
   return new Promise<void>((resolve) => {
     const checkCondition = () => {

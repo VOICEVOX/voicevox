@@ -132,7 +132,7 @@ const toolbarButtons = ref([...store.state.toolbarSetting]);
 const toolbarButtonKey = (button: ToolbarButtonTagType) => button;
 const toolbarButtonDragging = ref(false);
 const selectedButton: Ref<ToolbarButtonTagType | undefined> = ref(
-  toolbarButtons.value[0],
+  toolbarButtons.value[0]
 );
 watch(
   () => store.state.toolbarSetting,
@@ -143,7 +143,7 @@ watch(
       toolbarButtons.value = [...newData];
       selectedButton.value = newData[0];
     }
-  },
+  }
 );
 
 const defaultSetting: ToolbarSettingType = [];
@@ -202,7 +202,7 @@ watch(
     ) {
       selectedButton.value = newData[0];
     }
-  },
+  }
 );
 
 const applyDefaultSetting = async () => {

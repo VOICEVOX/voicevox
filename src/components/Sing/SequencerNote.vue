@@ -91,7 +91,7 @@ const props = withDefaults(
   }>(),
   {
     isSelected: false,
-  },
+  }
 );
 
 const emit = defineEmits<{
@@ -140,7 +140,7 @@ const hasPhraseError = computed(() => {
   return Array.from(state.phrases.values()).some(
     (phrase) =>
       phrase.state === "COULD_NOT_RENDER" &&
-      phrase.notes.some((note) => note.id === props.note.id),
+      phrase.notes.some((note) => note.id === props.note.id)
   );
 });
 
@@ -315,10 +315,7 @@ const onLyricInputBlur = () => {
   color: #121212;
   font-size: 1rem;
   font-weight: 700;
-  text-shadow:
-    -1px -1px 0 #fff,
-    1px -1px 0 #fff,
-    -1px 1px 0 #fff,
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff,
     1px 1px 0 #fff;
   white-space: nowrap;
   pointer-events: none;

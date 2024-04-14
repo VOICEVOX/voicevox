@@ -297,7 +297,7 @@ const loadingDictProcess = async () => {
   loadingDictState.value = "loading";
   try {
     userDict.value = await createUILockAction(
-      store.dispatch("LOAD_ALL_USER_DICT"),
+      store.dispatch("LOAD_ALL_USER_DICT")
     );
   } catch {
     const result = await store.dispatch("SHOW_ALERT_DIALOG", {
@@ -404,7 +404,7 @@ const setYomi = async (text: string, changeWord?: boolean) => {
           engineId,
           styleId,
           isKana: true,
-        }),
+        })
       )
     )[0];
     if (selectedId.value && userDict.value[selectedId.value].yomi === text) {
@@ -427,7 +427,7 @@ const changeAccent = async (_: number, accent: number) => {
           accentPhrases: [accentPhrase.value],
           engineId,
           styleId,
-        }),
+        })
       )
     )[0];
   }
@@ -542,7 +542,7 @@ const saveWord = async () => {
           pronunciation: yomi.value,
           accentType: accent,
           priority: wordPriority.value,
-        }),
+        })
       );
     } catch {
       store.dispatch("SHOW_ALERT_DIALOG", {
@@ -567,7 +567,7 @@ const deleteWord = async () => {
       await createUILockAction(
         store.dispatch("DELETE_WORD", {
           wordUuid: selectedId.value,
-        }),
+        })
       );
     } catch {
       store.dispatch("SHOW_ALERT_DIALOG", {
