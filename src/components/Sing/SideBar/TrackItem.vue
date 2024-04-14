@@ -293,7 +293,7 @@ const trackStyles = computed(() =>
       padding: 0;
 
       &:not(.track-button-active)::before {
-        border-color: colors.$sequencer-sub-divider;
+        border-color: rgba(colors.$display-rgb, 0.5);
       }
       &.track-button-active {
         color: colors.$primary;
