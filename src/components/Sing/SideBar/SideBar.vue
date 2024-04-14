@@ -132,7 +132,7 @@ const reorderTracks = (newTracks: Track[]) => {
 
   color: colors.$display;
 
-  ::before {
+  &::before {
     border-color: rgba(colors.$display-rgb, 0.5);
   }
 }
