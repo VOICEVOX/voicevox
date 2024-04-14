@@ -8,6 +8,16 @@
     :disable="uiLocked"
     @click="selectTrack(props.track.id)"
   >
+    <ContextMenu
+      :menudata="[
+        {
+          type: 'button',
+          label: '削除',
+          onClick: () => deleteTrack(props.track.id),
+          disableWhenUiLocked: true,
+        },
+      ]"
+    />
     <div class="track-handle" />
     <QIcon
       v-if="props.track.id === selectedTrack.id"
@@ -16,12 +26,7 @@
       size="md"
       class="active-arrow"
     />
-    <QItemSection
-      avatar
-      :style="{
-        opacity: tracksShouldPlay[props.track.id] ? 1 : 0.5,
-      }"
-    >
+    <QItemSection avatar>
       <SingerIcon
         v-if="trackStyles[props.track.id]"
         round
@@ -55,7 +60,7 @@
         color="default"
         icon="volume_off"
         round
-        flat
+        outline
         dense
         size="sm"
         class="track-button"
@@ -69,7 +74,7 @@
         color="default"
         icon="headset"
         rounded
-        flat
+        outline
         dense
         size="sm"
         class="track-button"
@@ -116,17 +121,6 @@
         />
         <QIcon name="volume_up" class="r" size="1rem" />
       </div>
-      <div>
-        <QBtn
-          label="削除"
-          dense
-          outline
-          size="sm"
-          padding="xs sm"
-          :disable="tracks.length === 1 || uiLocked"
-          @click="deleteTrack(props.track.id)"
-        />
-      </div>
     </div>
   </QItem>
 </template>
@@ -141,6 +135,7 @@ import { shouldPlay } from "@/sing/domain";
 import { Track } from "@/store/type";
 import { mapNullablePipe } from "@/helpers/map";
 import { TrackId } from "@/type/preload";
+import ContextMenu from "@/components/Menu/ContextMenu.vue";
 
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
 Draggable.components = { ...Draggable.components, QList };
@@ -292,11 +287,20 @@ const trackStyles = computed(() =>
     gap: 0.25rem;
     z-index: 2;
 
-    .track-button:not(.track-button-active) {
-      background-color: colors.$surface;
-    }
-    .track-button.track-button-active {
-      background-color: colors.$primary;
+    .track-button {
+      width: 1.75rem;
+      height: 1.75rem;
+      padding: 0;
+
+      &:not(.track-button-active)::before {
+        border-color: colors.$sequencer-sub-divider;
+      }
+      &.track-button-active {
+        color: colors.$primary;
+        :deep(i) {
+          color: colors.$display;
+        }
+      }
     }
   }
 }
