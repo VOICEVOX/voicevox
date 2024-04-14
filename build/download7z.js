@@ -53,7 +53,7 @@ const { spawnSync } = require("child_process");
   const existingFiles = await fs.promises.readdir(distPath);
 
   const notDownloaded = filesToExtract.filter(
-    (file) => !existingFiles.includes(file)
+    (file) => !existingFiles.includes(file),
   );
 
   if (notDownloaded.length === 0) {
@@ -74,14 +74,14 @@ const { spawnSync } = require("child_process");
         ["x", "-y", "-o" + distPath, sevenZipPath, ...filesToExtract],
         {
           stdio: ["ignore", "inherit", "inherit"],
-        }
+        },
       )
     : spawnSync(
         "tar",
         ["xvf", sevenZipPath, "-v", "-C", distPath, ...filesToExtract],
         {
           stdio: ["ignore", "inherit", "inherit"],
-        }
+        },
       );
 
   if (extractor.status !== 0) {

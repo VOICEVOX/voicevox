@@ -18,7 +18,7 @@ const createHotkeyManager = (): {
   const registeredHotkeys: DummyHotkeysJs["registeredHotkeys"] = [];
   const dummyHotkeysJs: DummyHotkeysJs = (
     key: string,
-    { scope }: { scope: string }
+    { scope }: { scope: string },
   ) => {
     if (registeredHotkeys.some((h) => h.key === key && h.scope === scope)) {
       throw new Error("assert: duplicate key");
@@ -27,7 +27,7 @@ const createHotkeyManager = (): {
   };
   dummyHotkeysJs.unbind = (key: string) => {
     const index = dummyHotkeysJs.registeredHotkeys.findIndex(
-      (h) => h.key === key
+      (h) => h.key === key,
     );
     if (index === -1) {
       throw new Error("assert: unknown binding");

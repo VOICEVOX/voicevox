@@ -25,7 +25,7 @@ export async function fetchAudioFromAudioItem(
     audioItem,
   }: {
     audioItem: AudioItem;
-  }
+  },
 ): Promise<FetchAudioResult> {
   const engineId = audioItem.voice.engineId;
 
@@ -42,7 +42,7 @@ export async function fetchAudioFromAudioItem(
 
   const engineAudioQuery = convertAudioQueryFromEditorToEngine(
     audioQuery,
-    state.engineManifests[engineId].defaultSamplingRate
+    state.engineManifests[engineId].defaultSamplingRate,
   );
 
   let blob: Blob;
@@ -69,7 +69,7 @@ export async function fetchAudioFromAudioItem(
 
 export async function generateLabFromAudioQuery(
   audioQuery: EditorAudioQuery,
-  offset?: number
+  offset?: number,
 ) {
   const speedScale = audioQuery.speedScale;
 
@@ -116,7 +116,7 @@ export async function generateLabFromAudioQuery(
 
 async function generateUniqueIdAndQuery(
   state: SettingStoreState,
-  audioItem: AudioItem
+  audioItem: AudioItem,
 ): Promise<[string, EditorAudioQuery | undefined]> {
   audioItem = JSON.parse(JSON.stringify(audioItem)) as AudioItem;
   const audioQuery = audioItem.query;
@@ -142,7 +142,7 @@ export function isMorphable(
     audioItem,
   }: {
     audioItem: AudioItem;
-  }
+  },
 ) {
   if (audioItem.morphingInfo?.targetStyleId == undefined) return false;
   const { engineId, styleId } = audioItem.voice;
