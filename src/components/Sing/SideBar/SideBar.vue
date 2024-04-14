@@ -12,7 +12,23 @@
       @end="isDragging = false"
     >
       <template #header>
-        <QItemLabel header>トラック一覧</QItemLabel>
+        <QItemLabel header class="tracks-header"
+          >トラック一覧
+          <QBtn
+            v-if="isThereSoloTrack"
+            color="default"
+            icon="headset_off"
+            rounded
+            outline
+            dense
+            size="sm"
+            :disable="uiLocked"
+            class="unsolo-button"
+            @click="unsoloAllTracks"
+          >
+            <QTooltip>ソロを解除</QTooltip>
+          </QBtn>
+        </QItemLabel>
       </template>
       <template #item="{ element: track }">
         <div>
@@ -55,6 +71,9 @@ const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const tracks = computed(() => store.state.tracks);
+const isThereSoloTrack = computed(() =>
+  tracks.value.some((track) => track.solo)
+);
 
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 
@@ -65,6 +84,10 @@ const createTrack = () => {
   store.dispatch("COMMAND_CREATE_TRACK", {
     singer,
   });
+};
+
+const unsoloAllTracks = () => {
+  store.dispatch("COMMAND_UNSOLO_ALL_TRACKS");
 };
 
 const isDragging = ref(false);
@@ -91,5 +114,26 @@ const reorderTracks = (newTracks: Track[]) => {
   width: 100%;
   height: 100%;
   overflow-y: auto;
+}
+
+.tracks-header {
+  position: relative;
+}
+
+.unsolo-button {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+
+  color: colors.$display;
+
+  ::before {
+    border-color: rgba(colors.$display-rgb, 0.5);
+  }
 }
 </style>

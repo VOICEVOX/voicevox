@@ -1216,6 +1216,11 @@ export type SingingCommandStoreTypes = {
     mutation: { trackId: TrackId; solo: boolean };
     action(payload: { trackId: TrackId; solo: boolean }): void;
   };
+
+  COMMAND_UNSOLO_ALL_TRACKS: {
+    mutation: undefined;
+    action(): void;
+  };
 };
 
 /*

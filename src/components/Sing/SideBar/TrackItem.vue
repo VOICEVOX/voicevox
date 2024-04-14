@@ -65,7 +65,7 @@
         size="sm"
         class="track-button"
         :class="{ 'track-button-active': props.track.mute }"
-        :disable="uiLocked"
+        :disable="uiLocked || isThereSoloTrack"
         @click.stop="setTrackMute(props.track.id, !props.track.mute)"
       >
         <QTooltip>ミュート</QTooltip>
@@ -131,7 +131,6 @@ import { QList } from "quasar";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
 import { getStyleDescription } from "@/sing/viewHelper";
-import { shouldPlay } from "@/sing/domain";
 import { Track } from "@/store/type";
 import { mapNullablePipe } from "@/helpers/map";
 import { TrackId } from "@/type/preload";
@@ -149,7 +148,9 @@ const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const tracks = computed(() => store.state.tracks);
-const tracksShouldPlay = computed(() => shouldPlay(tracks.value));
+const isThereSoloTrack = computed(() =>
+  tracks.value.some((track) => track.solo)
+);
 const setTrackPan = (trackId: TrackId, pan: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
     store.dispatch("COMMAND_SET_TRACK_PAN", { trackId, pan });

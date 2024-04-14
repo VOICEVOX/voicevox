@@ -2898,6 +2898,20 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
       },
     },
+
+    COMMAND_UNSOLO_ALL_TRACKS: {
+      mutation(draft) {
+        for (const track of draft.tracks) {
+          singingStore.mutations.SET_TRACK_SOLO(draft, {
+            trackId: track.id,
+            solo: false,
+          });
+        }
+      },
+      action({ commit }) {
+        commit("COMMAND_UNSOLO_ALL_TRACKS");
+      },
+    },
   }),
   "song"
 );
