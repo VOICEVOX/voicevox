@@ -72,7 +72,7 @@ module.exports = {
       },
     ],
     "import/order": "error",
-    // TODO: ちゃんと修正する
+    // TODO: ちゃんと設定する
     "@typescript-eslint/no-unsafe-declaration-merging": "off",
   },
   overrides: [

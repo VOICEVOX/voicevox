@@ -1,4 +1,7 @@
 /// <reference types="vitest" />
+
+// CommonJSでViteの設定を書くのがDeprecatedなのでmtsに変更したが、そうするとESLintがこれをTypeScriptとして認識しなくなる。
+// TODO: package.jsonに"type": "module"を追加し、他を良い感じに合わせる
 import path from "path";
 import { rm } from "fs/promises";
 import { fileURLToPath } from "node:url";
