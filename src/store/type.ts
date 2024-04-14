@@ -1772,6 +1772,22 @@ export type UiStoreTypes = {
   RESET_PROGRESS: {
     action(): void;
   };
+
+  SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
+    action(): void;
+  };
+
+  SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
+    action(): void;
+  };
+
+  SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG: {
+    action(): void;
+  };
+
+  SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG: {
+    action(): void;
+  };
 };
 
 /*

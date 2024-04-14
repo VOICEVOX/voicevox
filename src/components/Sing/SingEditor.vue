@@ -1,5 +1,4 @@
 <template>
-  <MenuBar />
   <ToolBar />
   <div class="sing-main">
     <EngineStartupOverlay
@@ -28,7 +27,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
