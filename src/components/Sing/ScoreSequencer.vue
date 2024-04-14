@@ -130,7 +130,7 @@
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
       />
-      <SequencerInactiveNote
+      <SequencerShadowNote
         v-for="note in inactiveNotes"
         :key="note.id"
         :note="note"
@@ -262,7 +262,7 @@ import {
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
-import SequencerInactiveNote from "@/components/Sing/SequencerInactiveNote.vue";
+import SequencerShadowNote from "@/components/Sing/SequencerShadowNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
