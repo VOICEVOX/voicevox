@@ -1,21 +1,9 @@
-import { Note, Singer, Tempo } from "@/store/type";
-import { generateHash } from "@/sing/utility";
+import { Note } from "@/store/type";
 
 export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
 export const DEFAULT_BEAT_TYPE = 4;
-
-export const generatePhraseHash = async (obj: {
-  singer: Singer | undefined;
-  keyRangeAdjustment: number;
-  volumeRangeAdjustment: number;
-  tpqn: number;
-  tempos: Tempo[];
-  notes: Note[];
-}) => {
-  return generateHash(obj);
-};
 
 /**
  * 頻繁に変更される値を保持します。
