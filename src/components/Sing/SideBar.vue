@@ -63,7 +63,7 @@
             <div side class="track-control">
               <QBtn
                 color="default"
-                :icon="track.mute ? 'volume_off' : 'volume_up'"
+                icon="volume_off"
                 round
                 flat
                 dense

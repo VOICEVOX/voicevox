@@ -115,6 +115,7 @@
         :key="note.id"
         :note="note"
         :is-selected="false"
+        :style="{ zIndex: 1 }"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
@@ -125,6 +126,7 @@
         :key="note.id"
         :note="note"
         :is-selected="true"
+        :style="{ zIndex: 1 }"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
@@ -142,6 +144,7 @@
       :style="{
         marginRight: `${scrollBarWidth}px`,
         marginBottom: `${scrollBarWidth}px`,
+        zIndex: 2,
       }"
       :offset-x="scrollX"
       :offset-y="scrollY"

@@ -69,7 +69,7 @@ const width = computed(() => {
     width: 100%;
     height: 2px;
     transform: translateY(-50%);
-    background-color: rgba(colors.$primary-rgb, 0.5);
+    background-color: colors.$sequencer-main-divider;
   }
 }
 </style>
