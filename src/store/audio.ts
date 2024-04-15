@@ -1,7 +1,6 @@
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import Encoding from "encoding-japanese";
-import { diffArrays } from "diff";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -397,24 +396,24 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           throw error;
         });
 
-        const characterInfosPromise = diffArrays(
-          speakers.map((speaker) => speaker.speakerUuid),
-          singers.map((singer) => singer.speakerUuid)
-        ).flatMap((diff) => {
-          const isSpeaker = diff.removed || !diff.added;
-          const isSinger = diff.added || !diff.removed;
-          return diff.value.map((speakerUuid) => {
-            const speaker = isSpeaker
-              ? speakers.find((speaker) => speaker.speakerUuid === speakerUuid)
-              : undefined;
-            const singer = isSinger
-              ? singers.find((singer) => singer.speakerUuid === speakerUuid)
-              : undefined;
-            return getCharacterInfo(speaker, singer);
-          });
-        });
+        const allUuids = new Set([
+          ...speakers.map((speaker) => speaker.speakerUuid),
+          ...singers.map((singer) => singer.speakerUuid),
+        ]);
 
-        const characterInfos = await Promise.all(characterInfosPromise);
+        const characterInfoPromises = Array.from(allUuids).map(
+          (speakerUuid) => {
+            const speaker = speakers.find(
+              (speaker) => speaker.speakerUuid === speakerUuid
+            );
+            const singer = singers.find(
+              (singer) => singer.speakerUuid === speakerUuid
+            );
+            return getCharacterInfo(speaker, singer);
+          }
+        );
+
+        const characterInfos = await Promise.all(characterInfoPromises);
 
         commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
       }
