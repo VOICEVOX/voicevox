@@ -250,12 +250,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             for (const audioItemsKey in projectData.audioItems) {
               if (projectData.audioItems[audioItemsKey].query != null) {
                 projectData.audioItems[audioItemsKey].query.volumeScale = 1;
-                projectData.audioItems[
-                  audioItemsKey
-                ].query.prePhonemeLength = 0.1;
-                projectData.audioItems[
-                  audioItemsKey
-                ].query.postPhonemeLength = 0.1;
+                projectData.audioItems[audioItemsKey].query.prePhonemeLength =
+                  0.1;
+                projectData.audioItems[audioItemsKey].query.postPhonemeLength =
+                  0.1;
                 projectData.audioItems[audioItemsKey].query.outputSamplingRate =
                   DEFAULT_SAMPLING_RATE;
               }

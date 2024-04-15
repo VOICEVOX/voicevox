@@ -195,9 +195,7 @@
         </span>
       </div>
       <div
-        class="
-          splitter-cell splitter-cell-be-split splitter-cell-be-split-pause
-        "
+        class="splitter-cell splitter-cell-be-split splitter-cell-be-split-pause"
         @click.stop="uiLocked || toggleAccentPhraseSplit(true)"
       />
     </template>
@@ -216,17 +214,16 @@ import { AudioKey, MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
 import { AccentPhrase } from "@/openapi";
 
-const props =
-  defineProps<{
-    audioKey: AudioKey;
-    accentPhrase: AccentPhrase;
-    index: number;
-    isActive: boolean;
-    isLast: boolean;
-    selectedDetail: DetailTypes;
-    shiftKeyFlag: boolean;
-    altKeyFlag: boolean;
-  }>();
+const props = defineProps<{
+  audioKey: AudioKey;
+  accentPhrase: AccentPhrase;
+  index: number;
+  isActive: boolean;
+  isLast: boolean;
+  selectedDetail: DetailTypes;
+  shiftKeyFlag: boolean;
+  altKeyFlag: boolean;
+}>();
 
 defineEmits<{
   (e: "click", index: number): void;
@@ -417,8 +414,8 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .text-cell {
   min-width: 20px;

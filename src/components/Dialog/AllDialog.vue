@@ -42,10 +42,9 @@ import ImportMidiDialog from "@/components/Dialog/ImportMidiDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
-const props =
-  defineProps<{
-    isEnginesReady: boolean;
-  }>();
+const props = defineProps<{
+  isEnginesReady: boolean;
+}>();
 const store = useStore();
 
 // ライセンス表示

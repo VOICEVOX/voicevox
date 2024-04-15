@@ -147,7 +147,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const _: IsEqual<
         keyof RootMiscSettingType,
-        typeof rootMiscSettingKeys[number]
+        (typeof rootMiscSettingKeys)[number]
       > = true;
 
       for (const key of rootMiscSettingKeys) {

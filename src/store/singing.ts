@@ -1895,13 +1895,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!sectionNameMatch) {
             throw new Error("UST section name not found");
           }
-          const params = section.split(/[\r\n]+/).reduce((acc, line) => {
-            const [key, value] = line.split("=");
-            if (key && value) {
-              acc[key] = value;
-            }
-            return acc;
-          }, {} as { [key: string]: string });
+          const params = section.split(/[\r\n]+/).reduce(
+            (acc, line) => {
+              const [key, value] = line.split("=");
+              if (key && value) {
+                acc[key] = value;
+              }
+              return acc;
+            },
+            {} as { [key: string]: string }
+          );
           return {
             ...params,
             sectionName: sectionNameMatch[1],

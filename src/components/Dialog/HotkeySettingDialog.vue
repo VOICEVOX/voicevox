@@ -222,14 +222,12 @@ import {
 } from "@/type/preload";
 import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -395,8 +393,8 @@ const resetHotkey = async (action: string) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .search-box {
   width: 200px;

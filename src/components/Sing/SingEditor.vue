@@ -39,11 +39,10 @@ import {
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
 
-const props =
-  defineProps<{
-    isEnginesReady: boolean;
-    isProjectFileLoaded: boolean | "waiting";
-  }>();
+const props = defineProps<{
+  isEnginesReady: boolean;
+  isProjectFileLoaded: boolean | "waiting";
+}>();
 
 const store = useStore();
 //const $q = useQuasar();
@@ -110,8 +109,8 @@ onetimeWatch(
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .layout-container {
   min-height: calc(100vh - #{vars.$menubar-height});

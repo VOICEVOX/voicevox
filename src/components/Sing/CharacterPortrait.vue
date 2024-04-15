@@ -30,8 +30,8 @@ const portraitPath = computed(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 // 画面右下に固定表示
 // 幅固定、高さ可変、画像のアスペクト比を保持、wrapのwidthに合わせてheightを調整

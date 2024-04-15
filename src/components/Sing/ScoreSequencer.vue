@@ -1306,8 +1306,8 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .score-sequencer {
   backface-visibility: hidden;

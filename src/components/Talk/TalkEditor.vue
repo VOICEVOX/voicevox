@@ -146,11 +146,10 @@ import {
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
 
-const props =
-  defineProps<{
-    isEnginesReady: boolean;
-    isProjectFileLoaded: boolean | "waiting";
-  }>();
+const props = defineProps<{
+  isEnginesReady: boolean;
+  isProjectFileLoaded: boolean | "waiting";
+}>();
 
 const store = useStore();
 
@@ -599,8 +598,8 @@ const onAudioCellPaneClick = () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-header {
   height: vars.$toolbar-height;

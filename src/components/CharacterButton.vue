@@ -339,7 +339,7 @@ const updateMenuHeight = () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .character-button {
   border: solid 1px;

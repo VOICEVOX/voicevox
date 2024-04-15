@@ -1040,14 +1040,12 @@ const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
   return [state, setter] as const;
 };
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
 const { warn } = createLogger("SettingDialog");
@@ -1342,7 +1340,7 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/visually-hidden' as visually-hidden;
+@use "@/styles/visually-hidden" as visually-hidden;
 @use "@/styles/colors" as colors;
 
 .text-h5 {

@@ -418,8 +418,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-input {
   :deep(.q-field__control::before) {

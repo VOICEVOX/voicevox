@@ -91,10 +91,9 @@ import { useShiftKey, useAltKey } from "@/composables/useModifierKey";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
 
-const props =
-  defineProps<{
-    activeAudioKey: AudioKey;
-  }>();
+const props = defineProps<{
+  activeAudioKey: AudioKey;
+}>();
 
 const store = useStore();
 
@@ -356,7 +355,7 @@ const isAltKeyDown = useAltKey();
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .tip-tweakable-slider-by-scroll {
   position: absolute;

@@ -1897,7 +1897,7 @@ export type IEngineConnectorFactoryActions = ReturnType<
 >;
 
 export type IEngineConnectorFactoryActionsMapper = <
-  K extends keyof IEngineConnectorFactoryActions
+  K extends keyof IEngineConnectorFactoryActions,
 >(
   action: K
 ) => (
@@ -1960,7 +1960,7 @@ export const transformCommandStore = <
   S,
   G extends GettersBase,
   A extends ActionsBase,
-  M extends MutationsBase
+  M extends MutationsBase,
 >(
   options: StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations>,
   editor: EditorType

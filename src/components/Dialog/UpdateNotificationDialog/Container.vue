@@ -21,10 +21,9 @@ import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { useStore } from "@/store";
 import { UrlString } from "@/type/preload";
 
-const props =
-  defineProps<{
-    canOpenDialog: boolean; // ダイアログを開いても良いかどうか
-  }>();
+const props = defineProps<{
+  canOpenDialog: boolean; // ダイアログを開いても良いかどうか
+}>();
 
 const store = useStore();
 

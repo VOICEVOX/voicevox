@@ -354,14 +354,12 @@ import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 
 type EngineLoaderType = "dir" | "vvpp";
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -660,8 +658,8 @@ const toDialogClosedState = () => {
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/colors' as colors;
-@use '@/styles/variables' as vars;
+@use "@/styles/colors" as colors;
+@use "@/styles/variables" as vars;
 
 .engine-list-col {
   border-right: solid 1px colors.$surface;

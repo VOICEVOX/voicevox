@@ -111,16 +111,14 @@ import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-    characterInfos: CharacterInfo[];
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+  characterInfos: CharacterInfo[];
+}>();
 
-const emit =
-  defineEmits<{
-    (event: "update:modelValue", value: boolean): void;
-  }>();
+const emit = defineEmits<{
+  (event: "update:modelValue", value: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -204,8 +202,11 @@ watch(
 const keyOfCharacterOrderItem = (item: CharacterInfo) => item.metas.speakerUuid;
 
 // 音声再生
-const playing =
-  ref<{ speakerUuid: SpeakerId; styleId: StyleId; index: number }>();
+const playing = ref<{
+  speakerUuid: SpeakerId;
+  styleId: StyleId;
+  index: number;
+}>();
 
 const audio = new Audio();
 audio.volume = 0.5;
@@ -269,8 +270,8 @@ const updatePortrait = (portraitPath: string) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-toolbar div:first-child {
   min-width: 0;

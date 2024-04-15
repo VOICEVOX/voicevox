@@ -50,14 +50,12 @@ import { useStore } from "@/store";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { Preset, PresetKey } from "@/type/preload";
 
-const props =
-  defineProps<{
-    openDialog: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:openDialog", val: boolean): void;
-  }>();
+const props = defineProps<{
+  openDialog: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:openDialog", val: boolean): void;
+}>();
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 

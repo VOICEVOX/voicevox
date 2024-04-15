@@ -71,7 +71,7 @@ const formattedProgress = computed(() =>
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .progress {
   background-color: rgba(colors.$display-rgb, 0.15);

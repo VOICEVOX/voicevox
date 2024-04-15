@@ -118,14 +118,12 @@ import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -246,8 +244,8 @@ const finishOrNotDialog = async () => {
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .tool-bar-custom-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;

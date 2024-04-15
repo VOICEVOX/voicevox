@@ -128,18 +128,16 @@ import {
   StyleInfo,
 } from "@/type/preload";
 
-const props =
-  defineProps<{
-    isOpen: boolean;
-    selectedStyleIndex: number;
-    characterInfo: CharacterInfo;
-  }>();
+const props = defineProps<{
+  isOpen: boolean;
+  selectedStyleIndex: number;
+  characterInfo: CharacterInfo;
+}>();
 
-const emit =
-  defineEmits<{
-    (e: "update:isOpen", value: boolean): void;
-    (e: "update:selectedStyleIndex", value: number): void;
-  }>();
+const emit = defineEmits<{
+  (e: "update:isOpen", value: boolean): void;
+  (e: "update:selectedStyleIndex", value: number): void;
+}>();
 
 const store = useStore();
 
@@ -236,8 +234,8 @@ const closeDialog = () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-toolbar div:first-child {
   min-width: 0;

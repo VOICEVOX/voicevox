@@ -263,14 +263,12 @@ import {
 
 const defaultDictPriority = 5;
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", v: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", v: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -656,8 +654,8 @@ const toDialogClosedState = () => {
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/colors' as colors;
-@use '@/styles/variables' as vars;
+@use "@/styles/colors" as colors;
+@use "@/styles/variables" as vars;
 
 .word-list-col {
   border-right: solid 1px colors.$surface;

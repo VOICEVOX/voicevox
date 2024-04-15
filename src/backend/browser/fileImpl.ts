@@ -53,7 +53,7 @@ const showWritableDirectoryPicker = async (): Promise<
     // キャンセルするとエラーが投げられる
     .catch(() => undefined); // FIXME: このままだとダイアログ表示エラーと見分けがつかない
 
-export const showOpenDirectoryDialogImpl: typeof window[typeof SandboxKey]["showOpenDirectoryDialog"] =
+export const showOpenDirectoryDialogImpl: (typeof window)[typeof SandboxKey]["showOpenDirectoryDialog"] =
   async () => {
     const _directoryHandler = await showWritableDirectoryPicker();
     if (_directoryHandler == undefined) {
@@ -109,7 +109,7 @@ const getDirectoryHandleFromDirectoryPath = async (
 
 // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
 // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
-export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
+export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
   async (obj: { filePath: string; buffer: ArrayBuffer }) => {
     const path = obj.filePath;
 
@@ -147,7 +147,7 @@ export const writeFileImpl: typeof window[typeof SandboxKey]["writeFile"] =
       });
   };
 
-export const checkFileExistsImpl: typeof window[typeof SandboxKey]["checkFileExists"] =
+export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileExists"] =
   async (file) => {
     const path = file;
 

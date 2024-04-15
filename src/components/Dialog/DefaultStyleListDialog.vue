@@ -106,15 +106,13 @@ import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
-const props =
-  defineProps<{
-    modelValue: boolean;
-    characterInfos: CharacterInfo[];
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+  characterInfos: CharacterInfo[];
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -223,8 +221,8 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-toolbar div:first-child {
   min-width: 0;

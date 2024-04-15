@@ -86,15 +86,13 @@ import {
   sanitizeFileName,
 } from "@/store/utility";
 
-const props =
-  defineProps<{
-    openDialog: boolean;
-  }>();
+const props = defineProps<{
+  openDialog: boolean;
+}>();
 
-const emit =
-  defineEmits<{
-    (e: "update:openDialog", val: boolean): void;
-  }>();
+const emit = defineEmits<{
+  (e: "update:openDialog", val: boolean): void;
+}>();
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
@@ -191,7 +189,7 @@ const submit = async () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .setting-card {
   width: 100%;

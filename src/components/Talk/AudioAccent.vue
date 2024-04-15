@@ -112,7 +112,7 @@ const stopPropagation = () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 div {
   padding: 0px;

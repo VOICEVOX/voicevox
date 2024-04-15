@@ -72,6 +72,7 @@ module.exports = {
       },
     ],
     "import/order": "error",
+    "@typescript-eslint/no-unsafe-declaration-merging": "off",
   },
   overrides: [
     {

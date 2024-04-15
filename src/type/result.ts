@@ -88,7 +88,7 @@ export const failure: Failure = <C extends string>(
 };
 
 export class ResultError<
-  E extends string | undefined = string | undefined
+  E extends string | undefined = string | undefined,
 > extends Error {
   public code: E;
 

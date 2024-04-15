@@ -124,21 +124,19 @@ import {
   useCommandOrControlKey,
 } from "@/composables/useModifierKey";
 
-const props =
-  defineProps<{
-    audioKey: AudioKey;
-  }>();
+const props = defineProps<{
+  audioKey: AudioKey;
+}>();
 
-const emit =
-  defineEmits<{
-    // focusTarget：
-    //   textField: テキストフィールドにフォーカス。複数選択が解除される。特別な理由がない限りはこちらを使う。
-    //   root: AudioCell自体にフォーカス。こちらは複数選択を解除しない。
-    (
-      e: "focusCell",
-      payload: { audioKey: AudioKey; focusTarget?: "textField" | "root" }
-    ): void;
-  }>();
+const emit = defineEmits<{
+  // focusTarget：
+  //   textField: テキストフィールドにフォーカス。複数選択が解除される。特別な理由がない限りはこちらを使う。
+  //   root: AudioCell自体にフォーカス。こちらは複数選択を解除しない。
+  (
+    e: "focusCell",
+    payload: { audioKey: AudioKey; focusTarget?: "textField" | "root" }
+  ): void;
+}>();
 
 defineExpose({
   audioKey: computed(() => props.audioKey),
@@ -514,7 +512,7 @@ const contextMenudata = ref<
     MenuItemSeparator,
     MenuItemButton,
     MenuItemSeparator,
-    MenuItemButton
+    MenuItemButton,
   ]
 >([
   // NOTE: audioTextBuffer.value の変更が nativeEl.value に反映されるのはnextTick。
@@ -641,8 +639,8 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/visually-hidden' as visually-hidden;
-@use '@/styles/colors' as colors;
+@use "@/styles/visually-hidden" as visually-hidden;
+@use "@/styles/colors" as colors;
 
 .audio-cell {
   display: flex;

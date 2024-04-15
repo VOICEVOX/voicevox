@@ -319,10 +319,9 @@ import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { SLIDER_PARAMETERS } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 
-const props =
-  defineProps<{
-    activeAudioKey: AudioKey;
-  }>();
+const props = defineProps<{
+  activeAudioKey: AudioKey;
+}>();
 
 const store = useStore();
 const { info } = createLogger("AudioInfo");
@@ -851,7 +850,7 @@ const presetPartsFromParameter = computed<Omit<Preset, "name">>(() => {
         [parameter.key]: parameter.slider.state.currentValue.value,
       }),
       {} as {
-        [K in typeof parameters.value[number]["key"]]: number;
+        [K in (typeof parameters.value)[number]["key"]]: number;
       }
     ),
     morphingInfo:

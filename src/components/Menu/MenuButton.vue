@@ -2,13 +2,7 @@
   <QBtn
     flat
     text-color="display"
-    class="
-      full-height
-      cursor-pointer
-      no-border-radius
-      text-no-wrap
-      q-py-none q-px-sm
-    "
+    class="full-height cursor-pointer no-border-radius text-no-wrap q-py-none q-px-sm"
     :class="selected ? 'active-menu' : 'bg-transparent'"
     :disable="disable"
     aria-haspopup="menu"
@@ -58,10 +52,9 @@ const props = withDefaults(
   }
 );
 
-const emit =
-  defineEmits<{
-    (event: "update:selected", value: boolean): void;
-  }>();
+const emit = defineEmits<{
+  (event: "update:selected", value: boolean): void;
+}>();
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -111,7 +104,7 @@ if (props.menudata.type === "root") {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
+@use "@/styles/variables" as vars;
 
 .q-btn {
   min-height: 0;

@@ -92,7 +92,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .character-name {
   position: absolute;

@@ -84,10 +84,9 @@ const props = withDefaults(
     selected: false,
   }
 );
-const emit =
-  defineEmits<{
-    (e: "update:selected", val: boolean): void;
-  }>();
+const emit = defineEmits<{
+  (e: "update:selected", val: boolean): void;
+}>();
 const store = useStore();
 const hotkeySettingsMap = computed(
   () =>

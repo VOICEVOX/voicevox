@@ -142,19 +142,28 @@ export class GenerateStartEvent extends Event {
 }
 
 export class GenerateEndEvent extends Event {
-  constructor(public audioKey: AudioKey, public audioBlob: Blob) {
+  constructor(
+    public audioKey: AudioKey,
+    public audioBlob: Blob
+  ) {
     super("generateend");
   }
 }
 
 export class PlayStartEvent extends Event {
-  constructor(public audioKey: AudioKey, public audioBlob: Blob) {
+  constructor(
+    public audioKey: AudioKey,
+    public audioBlob: Blob
+  ) {
     super("playstart");
   }
 }
 
 export class PlayEndEvent extends Event {
-  constructor(public audioKey: AudioKey, public forceFinish: boolean) {
+  constructor(
+    public audioKey: AudioKey,
+    public forceFinish: boolean
+  ) {
     super("playend");
   }
 }

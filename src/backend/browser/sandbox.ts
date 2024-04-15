@@ -225,7 +225,7 @@ export const api: Sandbox = {
   },
   async hotkeySettings(newData?: HotkeySettingType) {
     type HotkeySettingType = ReturnType<
-      typeof configSchema["parse"]
+      (typeof configSchema)["parse"]
     >["hotkeySettings"];
     if (newData != undefined) {
       const hotkeySettings = (await this.getSetting(
@@ -280,7 +280,7 @@ export const api: Sandbox = {
             ({
               ...v,
               currentTheme,
-            } as { currentTheme: string; availableThemes: ThemeConf[] })
+            }) as { currentTheme: string; availableThemes: ThemeConf[] }
         )
       );
   },

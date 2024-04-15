@@ -626,7 +626,7 @@ ipcMainHandle("GET_ALT_PORT_INFOS", () => {
  * @param showDialogFunction ダイアログを表示する関数
  */
 const retryShowSaveDialogWhileSafeDir = async <
-  T extends Electron.OpenDialogReturnValue | Electron.SaveDialogReturnValue
+  T extends Electron.OpenDialogReturnValue | Electron.SaveDialogReturnValue,
 >(
   showDialogFunction: () => Promise<T>
 ): Promise<T> => {

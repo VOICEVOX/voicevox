@@ -113,14 +113,12 @@ type PageSeparator = {
 };
 type PageData = PageItem | PageSeparator;
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const modelValueComputed = computed({
   get: () => props.modelValue,
@@ -269,7 +267,7 @@ const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .help-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;

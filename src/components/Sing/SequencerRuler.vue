@@ -189,8 +189,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .sequencer-ruler {
   background: colors.$background;
