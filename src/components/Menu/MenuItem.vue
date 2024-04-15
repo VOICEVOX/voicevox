@@ -82,7 +82,7 @@ const props = withDefaults(
   }>(),
   {
     selected: false,
-  }
+  },
 );
 const emit = defineEmits<{
   (e: "update:selected", val: boolean): void;
@@ -91,8 +91,8 @@ const store = useStore();
 const hotkeySettingsMap = computed(
   () =>
     new Map(
-      store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
-    )
+      store.state.hotkeySettings.map((obj) => [obj.action, obj.combination]),
+    ),
 );
 const getMenuBarHotkey = (rawLabel: string) => {
   const label = hotkeyActionNameSchema.safeParse(rawLabel);
@@ -117,7 +117,7 @@ const selectedComputed = computed({
 const subMenuOpenFlags = ref(
   props.menudata.type === "root"
     ? [...Array(props.menudata.subMenu.length)].map(() => false)
-    : []
+    : [],
 );
 const reassignSubMenuOpen = (i: number) => {
   if (subMenuOpenFlags.value[i]) return;
@@ -138,7 +138,7 @@ if (props.menudata.type === "root") {
         const len = props.menudata.subMenu.length;
         subMenuOpenFlags.value = [...Array(len)].map(() => false);
       }
-    }
+    },
   );
 }
 </script>

@@ -38,10 +38,10 @@ class TestConfigManager extends BaseConfigManager {
 
 it("新規作成できる", async () => {
   vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
-    async () => false
+    async () => false,
   );
   vi.spyOn(TestConfigManager.prototype, "save").mockImplementation(
-    async () => undefined
+    async () => undefined,
   );
 
   const configManager = new TestConfigManager();
@@ -51,7 +51,7 @@ it("新規作成できる", async () => {
 
 it("バージョンが保存される", async () => {
   vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
-    async () => false
+    async () => false,
   );
   const saveSpy = vi
     .spyOn(TestConfigManager.prototype, "save")
@@ -68,13 +68,13 @@ it("バージョンが保存される", async () => {
 for (const [version, data] of pastConfigs) {
   it(`${version}からマイグレーションできる`, async () => {
     vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
-      async () => true
+      async () => true,
     );
     vi.spyOn(TestConfigManager.prototype, "save").mockImplementation(
-      async () => undefined
+      async () => undefined,
     );
     vi.spyOn(TestConfigManager.prototype, "load").mockImplementation(
-      async () => data
+      async () => data,
     );
 
     const configManager = new TestConfigManager();
@@ -85,16 +85,16 @@ for (const [version, data] of pastConfigs) {
 
 it("getできる", async () => {
   vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
-    async () => true
+    async () => true,
   );
   vi.spyOn(TestConfigManager.prototype, "save").mockImplementation(
-    async () => undefined
+    async () => undefined,
   );
   vi.spyOn(TestConfigManager.prototype, "load").mockImplementation(
     async () => ({
       ...configBase,
       inheritAudioInfo: false,
-    })
+    }),
   );
 
   const configManager = new TestConfigManager();
@@ -104,16 +104,16 @@ it("getできる", async () => {
 
 it("setできる", async () => {
   vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
-    async () => true
+    async () => true,
   );
   vi.spyOn(TestConfigManager.prototype, "save").mockImplementation(
-    async () => undefined
+    async () => undefined,
   );
   vi.spyOn(TestConfigManager.prototype, "load").mockImplementation(
     async () => ({
       ...configBase,
       inheritAudioInfo: false,
-    })
+    }),
   );
 
   const configManager = new TestConfigManager();

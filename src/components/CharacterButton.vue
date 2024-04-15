@@ -213,7 +213,7 @@ const props = withDefaults(
     loading: false,
     showEngineInfo: false,
     emptiable: false,
-  }
+  },
 );
 
 const emit = defineEmits({
@@ -238,8 +238,8 @@ const selectedCharacter = computed(() => {
       characterInfo.metas.styles.some(
         (style) =>
           style.engineId === selectedVoice.engineId &&
-          style.styleId === selectedVoice.styleId
-      )
+          style.styleId === selectedVoice.styleId,
+      ),
   );
   return character;
 });
@@ -268,7 +268,7 @@ const selectedStyleInfo = computed(() => {
   const style = selectedCharacter.value?.metas.styles.find(
     (style) =>
       style.engineId === selectedVoice?.engineId &&
-      style.styleId === selectedVoice.styleId
+      style.styleId === selectedVoice.styleId,
   );
   return style;
 });
@@ -278,22 +278,22 @@ const engineIcons = computed(() =>
     store.state.engineIds.map((engineId) => [
       engineId,
       base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ])
-  )
+    ]),
+  ),
 );
 
 const getDefaultStyle = (speakerUuid: SpeakerId) => {
   // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
   const characterInfo = props.characterInfos.find(
-    (info) => info.metas.speakerUuid === speakerUuid
+    (info) => info.metas.speakerUuid === speakerUuid,
   );
   const defaultStyleId = store.state.defaultStyleIds.find(
-    (x) => x.speakerUuid === speakerUuid
+    (x) => x.speakerUuid === speakerUuid,
   )?.defaultStyleId;
 
   const defaultStyle =
     characterInfo?.metas.styles.find(
-      (style) => style.styleId === defaultStyleId
+      (style) => style.styleId === defaultStyleId,
     ) ?? characterInfo?.metas.styles[0]; // デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
 
   if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
@@ -311,7 +311,7 @@ const onSelectSpeaker = (speakerUuid: SpeakerId) => {
 };
 
 const subMenuOpenFlags = ref(
-  [...Array(props.characterInfos.length)].map(() => false)
+  [...Array(props.characterInfos.length)].map(() => false),
 );
 
 const reassignSubMenuOpen = debounce((idx: number) => {

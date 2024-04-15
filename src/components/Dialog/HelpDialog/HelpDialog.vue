@@ -134,12 +134,12 @@ store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
 if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
   throw new Error(
-    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。"
+    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。",
   );
 }
 const newUpdateResult = useFetchNewUpdateInfos(
   () => window.backend.getAppInfos().then((obj) => obj.version), // アプリのバージョン
-  UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL)
+  UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
 );
 
 // エディタのOSSライセンス取得
@@ -254,7 +254,7 @@ const pagedata = computed(() => {
             //       https://github.com/VOICEVOX/voicevox_engine/issues/476
             isUpdateAvailable: false,
           },
-        }
+        },
       );
     }
   }

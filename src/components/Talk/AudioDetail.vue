@@ -101,10 +101,10 @@ const supportedFeatures = computed(
   () =>
     (audioItem.value?.voice.engineId &&
       store.state.engineIds.some(
-        (id) => id === audioItem.value.voice.engineId
+        (id) => id === audioItem.value.voice.engineId,
       ) &&
       store.state.engineManifests[audioItem.value.voice.engineId]
-        .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
+        .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined,
 );
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
@@ -200,7 +200,7 @@ watch(
       selectedDetail.value = "accent";
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const activePointScrollMode = computed(() => store.state.activePointScrollMode);
@@ -261,7 +261,7 @@ const stop = () => {
 
 const nowPlaying = computed(() => store.getters.NOW_PLAYING);
 const nowGenerating = computed(
-  () => store.state.audioStates[props.activeAudioKey]?.nowGenerating
+  () => store.state.audioStates[props.activeAudioKey]?.nowGenerating,
 );
 
 const audioDetail = ref<HTMLElement>();
@@ -284,7 +284,7 @@ const scrollToActivePoint = () => {
         audioDetail.value.offsetLeft +
         elem.offsetWidth / 2 -
         audioDetail.value.offsetWidth / 2,
-      0
+      0,
     );
     audioDetail.value.scroll(scrollCount, 0);
   } else if (activePointScrollMode.value === "PAGE") {
@@ -322,7 +322,7 @@ watch(nowPlaying, async (newState) => {
       }
       const playingAccentPhraseIndex =
         accentPhraseOffsets.findIndex(
-          (currentOffset) => currentTime < currentOffset
+          (currentOffset) => currentTime < currentOffset,
         ) - 1;
       if (playingAccentPhraseIndex === -1) {
         // accentPhraseOffsets[0] は必ず 0 なので到達しないはず

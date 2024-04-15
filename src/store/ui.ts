@@ -28,10 +28,10 @@ import {
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
     context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
-    payload: Parameters<A[K]>[0]
+    payload: Parameters<A[K]>[0],
   ) => ReturnType<A[K]> extends Promise<unknown>
     ? ReturnType<A[K]>
-    : Promise<ReturnType<A[K]>>
+    : Promise<ReturnType<A[K]>>,
 ): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
   return (context, payload: Parameters<A[K]>[0]) => {
     context.commit("LOCK_UI");
@@ -43,7 +43,7 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 
 export function withProgress<T>(
   action: Promise<T>,
-  dispatch: Dispatch<AllActions>
+  dispatch: Dispatch<AllActions>,
 ): Promise<T> {
   dispatch("START_PROGRESS");
   return action.finally(() => dispatch("RESET_PROGRESS"));
@@ -107,7 +107,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (_, { callback }: { callback: () => Promise<void> }) => {
         await callback();
-      }
+      },
     ),
   },
 
@@ -127,7 +127,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       } else {
         // eslint-disable-next-line no-console
         window.backend.logWarn(
-          "UNLOCK_UI is called when state.uiLockCount == 0"
+          "UNLOCK_UI is called when state.uiLockCount == 0",
         );
       }
     },
@@ -188,7 +188,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         isEngineManageDialogOpen?: boolean;
         isUpdateNotificationDialogOpen?: boolean;
         isImportMidiDialogOpen?: boolean;
-      }
+      },
     ) {
       for (const [key, value] of Object.entries(dialogState)) {
         if (!(key in state)) {
@@ -218,7 +218,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (_, payload: { title: string; message: string; ok?: string }) => {
         return await showAlertDialog(payload);
-      }
+      },
     ),
   },
 
@@ -226,7 +226,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (_, payload: CommonDialogOptions["confirm"]) => {
         return await showConfirmDialog(payload);
-      }
+      },
     ),
   },
 
@@ -234,7 +234,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (_, payload: CommonDialogOptions["warning"]) => {
         return await showWarningDialog(payload);
-      }
+      },
     ),
   },
 
@@ -264,7 +264,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       commit("SET_ACTIVE_POINT_SCROLL_MODE", {
         activePointScrollMode: await window.backend.getSetting(
-          "activePointScrollMode"
+          "activePointScrollMode",
         ),
       });
 
@@ -308,12 +308,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
     async action(
       { commit },
-      { inheritAudioInfo }: { inheritAudioInfo: boolean }
+      { inheritAudioInfo }: { inheritAudioInfo: boolean },
     ) {
       commit("SET_INHERIT_AUDIOINFO", {
         inheritAudioInfo: await window.backend.setSetting(
           "inheritAudioInfo",
-          inheritAudioInfo
+          inheritAudioInfo,
         ),
       });
     },
@@ -324,7 +324,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       state,
       {
         activePointScrollMode,
-      }: { activePointScrollMode: ActivePointScrollMode }
+      }: { activePointScrollMode: ActivePointScrollMode },
     ) {
       state.activePointScrollMode = activePointScrollMode;
     },
@@ -332,12 +332,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       { commit },
       {
         activePointScrollMode,
-      }: { activePointScrollMode: ActivePointScrollMode }
+      }: { activePointScrollMode: ActivePointScrollMode },
     ) {
       commit("SET_ACTIVE_POINT_SCROLL_MODE", {
         activePointScrollMode: await window.backend.setSetting(
           "activePointScrollMode",
-          activePointScrollMode
+          activePointScrollMode,
         ),
       });
     },
@@ -435,13 +435,13 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (
         { dispatch },
-        { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }
+        { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean },
       ) => {
         await dispatch("LOCK_RELOADING");
         await window.backend.reloadApp({
           isMultiEngineOffMode: !!isMultiEngineOffMode,
         });
-      }
+      },
     ),
   },
 

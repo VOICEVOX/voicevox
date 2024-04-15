@@ -88,7 +88,7 @@ const isAcceptTermsDialogOpenComputed = computed({
 
 // キャラクター並び替え
 const orderedAllCharacterInfos = computed(
-  () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
+  () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
 );
 const isCharacterOrderDialogOpenComputed = computed({
   get: () =>
@@ -105,7 +105,7 @@ const isCharacterOrderDialogOpenComputed = computed({
 const orderedTalkCharacterInfos = computed(() => {
   return filterCharacterInfosByStyleType(
     store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
-    "talk"
+    "talk",
   );
 });
 const isDefaultStyleSelectDialogOpenComputed = computed({

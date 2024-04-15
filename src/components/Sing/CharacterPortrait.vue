@@ -20,10 +20,10 @@ const portraitPath = computed(() => {
   }
   const characterInfo = store.getters.CHARACTER_INFO(
     singer.engineId,
-    singer.styleId
+    singer.styleId,
   );
   const styleInfo = characterInfo?.metas.styles.find(
-    (style) => style.styleId === singer.styleId
+    (style) => style.styleId === singer.styleId,
   );
   return styleInfo?.portraitPath || characterInfo?.portraitPath;
 });

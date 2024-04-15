@@ -95,7 +95,7 @@
                           : play(
                               characterInfo.metas.speakerUuid,
                               style,
-                              voiceSampleIndex
+                              voiceSampleIndex,
                             )
                       "
                     />
@@ -191,7 +191,7 @@ audio.onended = () => stop();
 const play = (
   speakerUuid: SpeakerId,
   { styleId, voiceSamplePaths }: StyleInfo,
-  index: number
+  index: number,
 ) => {
   if (audio.src !== "") stop();
 
@@ -210,12 +210,12 @@ const stop = () => {
 // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
 const closeDialog = () => {
   const defaultStyleIds = JSON.parse(
-    JSON.stringify(store.state.defaultStyleIds)
+    JSON.stringify(store.state.defaultStyleIds),
   ) as DefaultStyleId[];
   store.dispatch("SET_DEFAULT_STYLE_IDS", [
     ...defaultStyleIds.filter(
       (defaultStyleId) =>
-        defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid
+        defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid,
     ),
     {
       speakerUuid: props.characterInfo.metas.speakerUuid,

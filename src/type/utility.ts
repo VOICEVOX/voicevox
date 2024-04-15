@@ -6,7 +6,7 @@ export type IsEqual<X, Y> =
 
 // undefinedかnullでないことを保証する
 export function assertNonNullable<T>(
-  value: T
+  value: T,
 ): asserts value is NonNullable<T> {
   if (value == undefined) {
     throw new Error("Value is null or undefined");

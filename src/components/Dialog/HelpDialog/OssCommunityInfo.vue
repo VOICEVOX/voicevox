@@ -15,7 +15,7 @@ const ossCommunityInfos = ref("");
 const md = useMarkdownIt();
 onMounted(async () => {
   ossCommunityInfos.value = md.render(
-    await store.dispatch("GET_OSS_COMMUNITY_INFOS")
+    await store.dispatch("GET_OSS_COMMUNITY_INFOS"),
   );
 });
 </script>

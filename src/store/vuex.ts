@@ -86,7 +86,7 @@ export interface Dispatch<A extends ActionsBase> {
     >
       ? Parameters<A[T]>[0]
       : // eslint-disable-next-line @typescript-eslint/ban-types
-        {})
+        {}),
   ): Promise<PromiseType<ReturnType<A[T]>>>;
 }
 
@@ -99,7 +99,7 @@ export interface Commit<M extends MutationsBase> {
     payloadWithType: { type: T } & (M[T] extends Record<string, any>
       ? M[T]
       : // eslint-disable-next-line @typescript-eslint/ban-types
-        {})
+        {}),
   ): void;
 }
 
@@ -147,7 +147,7 @@ export type ActionHandler<
 > = (
   this: Store<S, SG, SA, SM>,
   injectee: ActionContext<S, R, SG, SA, SM>,
-  payload: Parameters<SA[K]>[0]
+  payload: Parameters<SA[K]>[0],
 ) => ReturnType<SA[K]>;
 export interface ActionObject<
   S,
@@ -165,7 +165,7 @@ export type Getter<S, R, G, K extends keyof G, SG extends GettersBase> = (
   state: S,
   getters: SG,
   rootState: R,
-  rootGetters: any
+  rootGetters: any,
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
 ) => SG[K];
@@ -183,7 +183,7 @@ export type Action<
 > = ActionHandler<S, R, SG, SA, SM, K> | ActionObject<S, R, SG, SA, SM, K>;
 export type Mutation<S, M extends MutationsBase, K extends keyof M> = (
   state: S,
-  payload: M[K]
+  payload: M[K],
 ) => void;
 
 export type GetterTree<
@@ -274,7 +274,7 @@ export const createPartialStore = <
   A extends ActionsBase = StoreType<T, "action">,
   M extends MutationsBase = StoreType<T, "mutation">,
 >(
-  options: PartialStoreOptions<State, T, G, A, M>
+  options: PartialStoreOptions<State, T, G, A, M>,
 ): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
   const obj = Object.keys(options).reduce(
     (acc, cur) => {
@@ -296,7 +296,7 @@ export const createPartialStore = <
       getters: Object.create(null),
       mutations: Object.create(null),
       actions: Object.create(null),
-    }
+    },
   );
 
   return obj;

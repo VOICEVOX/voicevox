@@ -95,7 +95,7 @@ const md = useMarkdownIt();
 const privacyPolicy = ref("");
 onMounted(async () => {
   privacyPolicy.value = md.render(
-    await store.dispatch("GET_PRIVACY_POLICY_TEXT")
+    await store.dispatch("GET_PRIVACY_POLICY_TEXT"),
   );
 });
 </script>

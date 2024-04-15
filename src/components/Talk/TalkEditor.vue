@@ -286,12 +286,12 @@ const changeAudioDetailPaneMaxHeight = (height: number) => {
 };
 
 const splitterPosition = computed<SplitterPositionType>(
-  () => store.state.splitterPosition
+  () => store.state.splitterPosition,
 );
 
 const updateSplitterPosition = async (
   propertyName: keyof SplitterPositionType,
-  newValue: number
+  newValue: number,
 ) => {
   const newSplitterPosition = {
     ...splitterPosition.value,
@@ -338,7 +338,7 @@ const itemKey = (key: string) => key;
 
 // セルを追加
 const activeAudioKey = computed<AudioKey | undefined>(
-  () => store.getters.ACTIVE_AUDIO_KEY
+  () => store.getters.ACTIVE_AUDIO_KEY,
 );
 const addAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
@@ -381,7 +381,7 @@ const duplicateAudioItem = async () => {
 
 // Pane
 const shouldShowPanes = computed<boolean>(
-  () => store.getters.SHOULD_SHOW_PANES
+  () => store.getters.SHOULD_SHOW_PANES,
 );
 watch(shouldShowPanes, (val, old) => {
   if (val === old) return;
@@ -394,28 +394,28 @@ watch(shouldShowPanes, (val, old) => {
     portraitPaneWidth.value = clamp(
       splitterPosition.value.portraitPaneWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH,
       MIN_PORTRAIT_PANE_WIDTH,
-      MAX_PORTRAIT_PANE_WIDTH
+      MAX_PORTRAIT_PANE_WIDTH,
     );
 
     audioInfoPaneWidth.value = clamp(
       splitterPosition.value.audioInfoPaneWidth ??
         DEFAULT_AUDIO_INFO_PANE_WIDTH,
       MIN_AUDIO_INFO_PANE_WIDTH,
-      MAX_AUDIO_INFO_PANE_WIDTH
+      MAX_AUDIO_INFO_PANE_WIDTH,
     );
     audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
     audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
 
     audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
     changeAudioDetailPaneMaxHeight(
-      resizeObserverRef.value?.$el.parentElement.clientHeight
+      resizeObserverRef.value?.$el.parentElement.clientHeight,
     );
 
     audioDetailPaneHeight.value = clamp(
       splitterPosition.value.audioDetailPaneHeight ??
         MIN_AUDIO_DETAIL_PANE_HEIGHT,
       audioDetailPaneMinHeight.value,
-      audioDetailPaneMaxHeight.value
+      audioDetailPaneMaxHeight.value,
     );
   } else {
     portraitPaneWidth.value = 0;
@@ -442,7 +442,7 @@ const focusCell = ({
 };
 
 const userOrderedCharacterInfos = computed(
-  () => store.state.userCharacterOrder
+  () => store.state.userCharacterOrder,
 );
 const audioItems = computed(() => store.state.audioItems);
 // 並び替え後、テキスト欄が１つで空欄なら話者を更新
@@ -461,7 +461,7 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
 
     const speakerId = userOrderedCharacterInfos[0];
     const defaultStyleId = store.state.defaultStyleIds.find(
-      (styleId) => styleId.speakerUuid === speakerId
+      (styleId) => styleId.speakerUuid === speakerId,
     );
     if (!defaultStyleId || audioItem.voice.speakerId === speakerId) return;
 
@@ -509,7 +509,7 @@ onetimeWatch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 // 代替ポート情報の変更を監視
@@ -534,7 +534,7 @@ watch(
         tipName: "engineStartedOnAltPort",
       });
     }
-  }
+  },
 );
 
 // ドラッグ＆ドロップ
@@ -569,7 +569,7 @@ watch(activeAudioKey, (audioKey) => {
     !(cellsElement instanceof Element)
   )
     throw new Error(
-      `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`
+      `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`,
     );
   const activeCellRect = activeCellElement.getBoundingClientRect();
   const cellsRect = cellsElement.getBoundingClientRect();

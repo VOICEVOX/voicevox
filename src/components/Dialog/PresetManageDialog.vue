@@ -72,7 +72,7 @@ const presetList = computed(() =>
     .map((key) => ({
       key,
       ...presetItems.value[key],
-    }))
+    })),
 );
 
 const isPreview = ref(false);
@@ -87,7 +87,7 @@ const previewPresetList = computed(() =>
           key,
           ...presetItems.value[key],
         }))
-    : presetList.value
+    : presetList.value,
 );
 
 const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {

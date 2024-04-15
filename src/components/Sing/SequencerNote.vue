@@ -91,7 +91,7 @@ const props = withDefaults(
   }>(),
   {
     isSelected: false,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -140,7 +140,7 @@ const hasPhraseError = computed(() => {
   return Array.from(state.phrases.values()).some(
     (phrase) =>
       phrase.state === "COULD_NOT_RENDER" &&
-      phrase.notes.some((note) => note.id === props.note.id)
+      phrase.notes.some((note) => note.id === props.note.id),
   );
 });
 

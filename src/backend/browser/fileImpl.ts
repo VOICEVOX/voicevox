@@ -5,7 +5,7 @@ import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 
 const storeDirectoryHandle = async (
-  directoryHandle: FileSystemDirectoryHandle
+  directoryHandle: FileSystemDirectoryHandle,
 ): Promise<void> => {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -34,7 +34,7 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
       request.onerror = () => {
         reject(request.error);
       };
-    }
+    },
   );
 };
 
@@ -79,7 +79,7 @@ const resolveFileName = (path: string) => {
 // FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、以下の if 文で separator を除去している
 // また separator 以前の文字列はディレクトリ名として扱われ、それを key として directoryHandleMap からハンドラを取得したり、set している
 const getDirectoryHandleFromDirectoryPath = async (
-  maybeDirectoryPathKey: string
+  maybeDirectoryPathKey: string,
 ): Promise<FileSystemDirectoryHandle> => {
   const maybeHandle = directoryHandleMap.get(maybeDirectoryPathKey);
 
@@ -88,18 +88,18 @@ const getDirectoryHandleFromDirectoryPath = async (
   } else {
     // NOTE: fixedDirectoryの場合こっちに落ちる場合がある
     const maybeFixedDirectory = await fetchStoredDirectoryHandle(
-      maybeDirectoryPathKey
+      maybeDirectoryPathKey,
     );
 
     if (maybeFixedDirectory == undefined) {
       throw new Error(
-        `フォルダへのアクセス許可がありません。アクセスしようとしたフォルダ名: ${maybeDirectoryPathKey}`
+        `フォルダへのアクセス許可がありません。アクセスしようとしたフォルダ名: ${maybeDirectoryPathKey}`,
       );
     }
 
     if (!(await maybeFixedDirectory.requestPermission({ mode: "readwrite" }))) {
       throw new Error(
-        "フォルダへのアクセス許可がありません。ファイルの読み書きのためにアクセス許可が必要です。"
+        "フォルダへのアクセス許可がありません。ファイルの読み書きのためにアクセス許可が必要です。",
       );
     }
 
@@ -129,7 +129,7 @@ export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
     const maybeDirectoryHandleName = resolveDirectoryName(path);
 
     const directoryHandle = await getDirectoryHandleFromDirectoryPath(
-      maybeDirectoryHandleName
+      maybeDirectoryHandleName,
     );
 
     directoryHandleMap.set(maybeDirectoryHandleName, directoryHandle);
@@ -159,7 +159,7 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
     const maybeDirectoryHandleName = resolveDirectoryName(path);
 
     const directoryHandle = await getDirectoryHandleFromDirectoryPath(
-      maybeDirectoryHandleName
+      maybeDirectoryHandleName,
     );
 
     directoryHandleMap.set(maybeDirectoryHandleName, directoryHandle);

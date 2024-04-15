@@ -34,7 +34,7 @@ export class ContinuousPlayer extends EventTarget {
 
   constructor(
     private generationQueue: AudioKey[],
-    { generateAudio, playAudioBlob }: DI
+    { generateAudio, playAudioBlob }: DI,
   ) {
     super();
 
@@ -117,12 +117,12 @@ export interface ContinuousPlayer extends EventTarget {
   addEventListener<K extends keyof ContinuousPlayerEvents>(
     type: K,
     listener: (this: ContinuousPlayer, ev: ContinuousPlayerEvents[K]) => void,
-    options?: boolean | AddEventListenerOptions
+    options?: boolean | AddEventListenerOptions,
   ): void;
   addEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions
+    options?: boolean | AddEventListenerOptions,
   ): void;
 }
 
@@ -144,7 +144,7 @@ export class GenerateStartEvent extends Event {
 export class GenerateEndEvent extends Event {
   constructor(
     public audioKey: AudioKey,
-    public audioBlob: Blob
+    public audioBlob: Blob,
   ) {
     super("generateend");
   }
@@ -153,7 +153,7 @@ export class GenerateEndEvent extends Event {
 export class PlayStartEvent extends Event {
   constructor(
     public audioKey: AudioKey,
-    public audioBlob: Blob
+    public audioBlob: Blob,
   ) {
     super("playstart");
   }
@@ -162,7 +162,7 @@ export class PlayStartEvent extends Event {
 export class PlayEndEvent extends Event {
   constructor(
     public audioKey: AudioKey,
-    public forceFinish: boolean
+    public forceFinish: boolean,
   ) {
     super("playend");
   }

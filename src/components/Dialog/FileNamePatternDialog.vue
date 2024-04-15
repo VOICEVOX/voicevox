@@ -108,11 +108,12 @@ const savedBaseNamePattern = computed(() => {
 });
 const currentBaseNamePattern = ref(savedBaseNamePattern.value);
 const currentNamePattern = computed(
-  () => `${currentBaseNamePattern.value}.wav`
+  () => `${currentBaseNamePattern.value}.wav`,
 );
 
 const hasNotIndexTagString = computed(
-  () => !currentBaseNamePattern.value.includes(replaceTagIdToTagString["index"])
+  () =>
+    !currentBaseNamePattern.value.includes(replaceTagIdToTagString["index"]),
 );
 const invalidChar = computed(() => {
   const current = currentBaseNamePattern.value;
@@ -139,7 +140,7 @@ const errorMessage = computed(() => {
 const hasError = computed(() => errorMessage.value !== "");
 
 const previewFileName = computed(() =>
-  buildAudioFileNameFromRawData(currentNamePattern.value)
+  buildAudioFileNameFromRawData(currentNamePattern.value),
 );
 
 const initializeInput = () => {

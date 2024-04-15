@@ -143,14 +143,14 @@ const render = () => {
           const ticks = secondToTick(
             startTime + (startFrame + j) / frameRate,
             tempos,
-            tpqn
+            tpqn,
           );
           frameTicksArray.push(ticks);
         }
         const lineStrip = new LineStrip(
           frameLength,
           pitchLineColor,
-          pitchLineWidth
+          pitchLineWidth,
         );
         pitchLines.push({
           startFrame,
@@ -214,7 +214,7 @@ watch(
   ],
   () => {
     renderInNextFrame = true;
-  }
+  },
 );
 
 onMountedOrActivated(() => {
