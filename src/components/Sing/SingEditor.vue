@@ -1,5 +1,4 @@
 <template>
-  <MenuBar />
   <ToolBar />
   <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpened }">
     <EngineStartupOverlay
@@ -29,7 +28,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";

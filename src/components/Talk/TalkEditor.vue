@@ -1,6 +1,4 @@
 <template>
-  <MenuBar />
-
   <QLayout reveal elevated container class="layout-container">
     <ToolBar />
 
@@ -136,7 +134,6 @@ import AudioInfo from "./AudioInfo.vue";
 import CharacterPortrait from "./CharacterPortrait.vue";
 import ToolBar from "./ToolBar.vue";
 import { useStore } from "@/store";
-import MenuBar from "@/components/Talk/MenuBar.vue";
 import ProgressView from "@/components/ProgressView.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { AudioItem } from "@/store/type";
@@ -160,8 +157,44 @@ const store = useStore();
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-// hotkeys handled by Mousetrap
 const { registerHotkeyWithCleanup } = useHotkeyManager();
+
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "音声書き出し",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG");
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "選択音声を書き出し",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG");
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "音声を繋げて書き出し",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG");
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "テキスト読み込む",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG");
+    }
+  },
+});
 
 registerHotkeyWithCleanup({
   editor: "talk",
