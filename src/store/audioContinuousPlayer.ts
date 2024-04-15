@@ -117,6 +117,11 @@ export class ContinuousPlayer extends EventTarget {
     listener: (this: ContinuousPlayer, ev: ContinuousPlayerEvents[K]) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
 
   addEventListener(
     type: string,
