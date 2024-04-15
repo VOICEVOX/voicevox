@@ -7,7 +7,6 @@ import {
   UiStoreTypes,
 } from "./type";
 import { createPartialStore } from "./vuex";
-import { store } from ".";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
   CommonDialogOptions,
@@ -513,12 +512,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         await multiGenerateAndSaveAudioWithDialog({
           audioKeys: selectedAudioKeys,
           dispatch: dispatch,
-          disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+          disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         });
       } else {
         await generateAndSaveOneAudioWithDialog({
           audioKey: activeAudioKey,
-          disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
+          disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
           dispatch: dispatch,
         });
       }
