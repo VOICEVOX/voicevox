@@ -111,19 +111,20 @@ export class ContinuousPlayer extends EventTarget {
 
     await this.promise;
   }
-}
 
-export interface ContinuousPlayer extends EventTarget {
   addEventListener<K extends keyof ContinuousPlayerEvents>(
     type: K,
     listener: (this: ContinuousPlayer, ev: ContinuousPlayerEvents[K]) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
+
   addEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
-  ): void;
+  ) {
+    super.addEventListener(type, listener, options);
+  }
 }
 
 interface ContinuousPlayerEvents {

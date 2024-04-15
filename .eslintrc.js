@@ -72,9 +72,6 @@ module.exports = {
       },
     ],
     "import/order": "error",
-
-    // EventTargetの定義が楽になるので許可。
-    "@typescript-eslint/no-unsafe-declaration-merging": "off",
   },
   overrides: [
     {
