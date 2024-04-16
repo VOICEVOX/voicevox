@@ -342,14 +342,15 @@ const menuPosition = ref({ top: 0, left: 0 });
 const menuPositionTopStyle = computed(() => `${menuPosition.value.top}px`);
 const menuPositionLeftStyle = computed(() => `${menuPosition.value.left}px`);
 
-const hideMenu = () => {
-  document.removeEventListener("click", hideMenu);
+const hideMenu = debounce(() => {
+  document.removeEventListener("click", hideMenu, { capture: true });
   shouldShowMenu.value = "hidden";
-};
-const showMenu = () => {
-  document.addEventListener("click", hideMenu);
+}, 50);
+const showMenu = debounce(() => {
+  document.addEventListener("click", hideMenu, { capture: true });
   shouldShowMenu.value = "visible";
-};
+}, 50);
+
 const openMenu = () => {
   hasMenuOpen.value = true;
 
