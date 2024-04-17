@@ -110,25 +110,32 @@
         }"
       ></div>
       <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
+      <!-- undefinedだと警告が出るのでnullを渡す -->
       <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
+        :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="false"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-input="onNoteLyricInput($event, note)"
+        @lyric-blur="onNoteLyricBlur()"
       />
       <SequencerNote
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
+        :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="true"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-input="onNoteLyricInput($event, note)"
+        @lyric-blur="onNoteLyricBlur()"
       />
     </div>
     <SequencerPitch
@@ -229,9 +236,11 @@ import { isMac } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
+  getEndTicksOfPhrase,
   getMeasureDuration,
   getNoteDuration,
   getNumOfMeasures,
+  getStartTicksOfPhrase,
 } from "@/sing/domain";
 import {
   getKeyBaseHeight,
@@ -248,6 +257,9 @@ import {
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
+  DoubleClickDetector,
+  NoteAreaInfo,
+  GridAreaInfo,
 } from "@/sing/viewHelper";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -256,8 +268,10 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useShiftKey } from "@/composables/useModifierKey";
+import { useLyricInput } from "@/composables/useLyricInput";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -267,6 +281,7 @@ const isSelfEventTarget = (event: UIEvent) => {
 };
 
 const store = useStore();
+const { warn } = createLogger("ScoreSequencer");
 const state = store.state;
 
 // 分解能（Ticks Per Quarter Note）
@@ -327,8 +342,8 @@ const numOfMeasures = computed(() => {
       notes.value,
       tempos.value,
       timeSignatures.value,
-      tpqn.value
-    ) + 1
+      tpqn.value,
+    ) + 1,
   );
 });
 const beatsPerMeasure = computed(() => {
@@ -367,13 +382,16 @@ const playheadX = computed(() => {
 // フレーズ
 const phraseInfos = computed(() => {
   return [...state.phrases.entries()].map(([key, phrase]) => {
-    const startBaseX = tickToBaseX(phrase.startTicks, tpqn.value);
-    const endBaseX = tickToBaseX(phrase.endTicks, tpqn.value);
+    const startTicks = getStartTicksOfPhrase(phrase);
+    const endTicks = getEndTicksOfPhrase(phrase);
+    const startBaseX = tickToBaseX(startTicks, tpqn.value);
+    const endBaseX = tickToBaseX(endTicks, tpqn.value);
     const startX = startBaseX * zoomX.value;
     const endX = endBaseX * zoomX.value;
     return { key, x: startX, width: endX - startX };
   });
 });
+
 const showPitch = computed(() => {
   return state.experimentalSetting.showPitchInSongEditor;
 });
@@ -383,6 +401,18 @@ const sequencerBody = ref<HTMLElement | null>(null);
 // マウスカーソル位置
 const cursorX = ref(0);
 const cursorY = ref(0);
+
+// 歌詞入力
+const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
+  useLyricInput();
+
+const onNoteLyricInput = (text: string, note: Note) => {
+  splitAndUpdatePreview(text, note);
+};
+
+const onNoteLyricBlur = () => {
+  commitPreviewLyrics();
+};
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
@@ -399,11 +429,10 @@ let executePreviewProcess = false;
 let edited = false; // プレビュー終了時にstore.stateの更新を行うかどうかを表す変数
 
 // ダブルクリック
-let mouseDownNoteId: string | undefined;
-const clickedNoteIds: [string | undefined, string | undefined] = [
-  undefined,
-  undefined,
-];
+let mouseDownAreaInfo: NoteAreaInfo | GridAreaInfo | undefined;
+const doubleClickDetector = new DoubleClickDetector<
+  NoteAreaInfo | GridAreaInfo
+>();
 let ignoreDoubleClick = false;
 
 // 入力を補助する線
@@ -486,7 +515,7 @@ const previewMove = () => {
 
   const guideLineBaseX = tickToBaseX(
     dragStartGuideLineTicks + movingTicks,
-    tpqn.value
+    tpqn.value,
   );
   guideLineX.value = guideLineBaseX * zoomX.value;
 };
@@ -514,7 +543,7 @@ const previewResizeRight = () => {
     const noteEndPos = copiedNote.position + copiedNote.duration;
     const duration = Math.max(
       snapTicks.value,
-      noteEndPos + movingTicks - notePos
+      noteEndPos + movingTicks - notePos,
     );
     if (note.duration !== duration) {
       editedNotes.set(note.id, { ...note, duration });
@@ -554,7 +583,7 @@ const previewResizeLeft = () => {
     const noteEndPos = copiedNote.position + copiedNote.duration;
     const position = Math.min(
       noteEndPos - snapTicks.value,
-      notePos + movingTicks
+      notePos + movingTicks,
     );
     const duration = noteEndPos - position;
     if (note.position !== position && note.duration !== duration) {
@@ -616,7 +645,7 @@ const selectOnlyThis = (note: Note) => {
 
 const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   if (nowPreviewing.value) {
-    store.dispatch("LOG_WARN", "startPreview was called during preview.");
+    warn("startPreview was called during preview.");
     return;
   }
   const sequencerBodyElement = sequencerBody.value;
@@ -704,8 +733,8 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
+    mouseDownAreaInfo = new NoteAreaInfo(note.id);
     startPreview(event, "MOVE", note);
-    mouseDownNoteId = note.id;
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -716,8 +745,8 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
+    mouseDownAreaInfo = new NoteAreaInfo(note.id);
     startPreview(event, "RESIZE_LEFT", note);
-    mouseDownNoteId = note.id;
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -728,8 +757,8 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   if (event.button === 0) {
+    mouseDownAreaInfo = new NoteAreaInfo(note.id);
     startPreview(event, "RESIZE_RIGHT", note);
-    mouseDownNoteId = note.id;
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -739,11 +768,11 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
   if (!isSelfEventTarget(event)) {
     return;
   }
+  if (event.button === 0) {
+    mouseDownAreaInfo = new NoteAreaInfo(note.id);
+  }
   if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
-  }
-  if (event.button === 0) {
-    mouseDownNoteId = note.id;
   }
 };
 
@@ -761,6 +790,7 @@ const onMouseDown = (event: MouseEvent) => {
 
   // 選択中のノートが無い場合、プレビューを開始しノートIDをリセット
   if (event.button === 0) {
+    mouseDownAreaInfo = new GridAreaInfo();
     if (event.shiftKey) {
       isRectSelecting.value = true;
       rectSelectStartX.value = cursorX.value;
@@ -768,7 +798,6 @@ const onMouseDown = (event: MouseEvent) => {
     } else {
       startPreview(event, "ADD");
     }
-    mouseDownNoteId = undefined;
   } else {
     store.dispatch("DESELECT_ALL_NOTES");
   }
@@ -800,20 +829,15 @@ const onMouseUp = (event: MouseEvent) => {
   if (event.button !== 0) {
     return;
   }
-  clickedNoteIds[0] = clickedNoteIds[1];
-  clickedNoteIds[1] = mouseDownNoteId;
-  if (event.detail === 1) {
-    ignoreDoubleClick = false;
+  if (mouseDownAreaInfo) {
+    doubleClickDetector.recordClick(event.detail, mouseDownAreaInfo);
   }
-  if (nowPreviewing.value && edited) {
-    ignoreDoubleClick = true;
-  }
+  ignoreDoubleClick = nowPreviewing.value && edited;
 
   if (isRectSelecting.value) {
     rectSelect(isOnCommandOrCtrlKeyDown(event));
     return;
   }
-
   if (!nowPreviewing.value) {
     return;
   }
@@ -853,15 +877,15 @@ const rectSelect = (additive: boolean) => {
   const height = Math.abs(cursorY.value - rectSelectStartY.value);
   const startTicks = baseXToTick(
     (scrollX.value + left) / zoomX.value,
-    tpqn.value
+    tpqn.value,
   );
   const endTicks = baseXToTick(
     (scrollX.value + left + width) / zoomX.value,
-    tpqn.value
+    tpqn.value,
   );
   const endNoteNumber = baseYToNoteNumber((scrollY.value + top) / zoomY.value);
   const startNoteNumber = baseYToNoteNumber(
-    (scrollY.value + top + height) / zoomY.value
+    (scrollY.value + top + height) / zoomY.value,
   );
 
   const noteIdsToSelect: string[] = [];
@@ -882,17 +906,18 @@ const rectSelect = (additive: boolean) => {
 };
 
 const onDoubleClick = () => {
-  if (
-    ignoreDoubleClick ||
-    clickedNoteIds[0] !== clickedNoteIds[1] ||
-    clickedNoteIds[1] == undefined
-  ) {
+  if (ignoreDoubleClick) {
     return;
   }
-
-  const noteId = clickedNoteIds[1];
-  if (state.editingLyricNoteId !== noteId) {
-    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId });
+  const doubleClickInfo = doubleClickDetector.detect();
+  if (doubleClickInfo) {
+    const areaInfo = doubleClickInfo.clickInfos[0].areaInfo;
+    if (
+      areaInfo.type === "note" &&
+      areaInfo.noteId !== state.editingLyricNoteId
+    ) {
+      store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: areaInfo.noteId });
+    }
   }
 };
 
@@ -1301,8 +1326,8 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .score-sequencer {
   backface-visibility: hidden;

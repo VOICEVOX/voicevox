@@ -14,7 +14,7 @@ const moveToFilenameDialog = async (page: Page, optionDialog: Locator) => {
 
   const filenameDialog = getNewestQuasarDialog(page);
   await expect(
-    filenameDialog.getByText("書き出しファイル名パターン")
+    filenameDialog.getByText("書き出しファイル名パターン"),
   ).toBeVisible();
 
   const doneButton = filenameDialog.getByRole("button", { name: "確定" });
@@ -57,7 +57,7 @@ test("「オプション」から「書き出しファイル名パターン」�
   await textbox.press("Enter");
   await expect(doneButton).toBeDisabled();
   await expect(
-    optionDialog.getByText("使用できない文字が含まれています：「\\」")
+    optionDialog.getByText("使用できない文字が含まれています：「\\」"),
   ).toBeVisible();
 
   // $連番$ を含めると確定ボタンが押せる

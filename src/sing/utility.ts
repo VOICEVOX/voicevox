@@ -3,7 +3,7 @@ export function round(value: number, digits: number) {
   return Math.round(value * powerOf10) / powerOf10;
 }
 
-export const generateHash = async <T>(obj: T) => {
+export const calculateHash = async <T>(obj: T) => {
   const textEncoder = new TextEncoder();
   const data = textEncoder.encode(JSON.stringify(obj));
   const digest = await crypto.subtle.digest("SHA-256", data);
@@ -14,7 +14,7 @@ export const generateHash = async <T>(obj: T) => {
 
 export const createPromiseThatResolvesWhen = (
   condition: () => boolean,
-  interval = 200
+  interval = 200,
 ) => {
   return new Promise<void>((resolve) => {
     const checkCondition = () => {

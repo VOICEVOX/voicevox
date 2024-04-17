@@ -69,7 +69,7 @@ type Failure = {
  */
 export const failure: Failure = <C extends string>(
   codeOrError: C | undefined | Error,
-  error?: Error
+  error?: Error,
 ) => {
   if (codeOrError instanceof Error) {
     return {
@@ -88,7 +88,7 @@ export const failure: Failure = <C extends string>(
 };
 
 export class ResultError<
-  E extends string | undefined = string | undefined
+  E extends string | undefined = string | undefined,
 > extends Error {
   public code: E;
 
