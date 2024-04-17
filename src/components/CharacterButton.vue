@@ -196,7 +196,7 @@
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
 import { computed, Ref, ref } from "vue";
-import { base64ImageToUri } from "@/helpers/imageHelper";
+import { base64ImageToUri } from "@/helpers/base64Helper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";

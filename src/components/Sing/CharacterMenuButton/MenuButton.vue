@@ -148,7 +148,7 @@ import { computed, ref } from "vue";
 import { debounce } from "quasar";
 import SelectedCharacter from "./SelectedCharacter.vue";
 import { useStore } from "@/store";
-import { base64ImageToUri } from "@/helpers/imageHelper";
+import { base64ImageToUri } from "@/helpers/base64Helper";
 import { SpeakerId, StyleId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 

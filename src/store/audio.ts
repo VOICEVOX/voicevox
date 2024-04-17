@@ -53,7 +53,7 @@ import {
   Voice,
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
-import { base64ImageToUri, base64ToUri } from "@/helpers/imageHelper";
+import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 
 function generateAudioKey() {
