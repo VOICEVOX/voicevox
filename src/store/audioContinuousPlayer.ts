@@ -123,6 +123,7 @@ export class ContinuousPlayer extends EventTarget {
     options?: boolean | AddEventListenerOptions,
   ): void;
 
+  // FIXME: 冗長かも？
   addEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
