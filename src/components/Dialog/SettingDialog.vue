@@ -176,7 +176,7 @@
                       @update:model-value="
                         changeExperimentalSetting(
                           'shouldApplyDefaultPresetOnVoiceChanged',
-                          $event
+                          $event,
                         )
                       "
                     >
@@ -868,7 +868,7 @@
                   @update:model-value="
                     changeExperimentalSetting(
                       'enableInterrogativeUpspeak',
-                      $event
+                      $event,
                     )
                   "
                 >
@@ -948,7 +948,7 @@
                   @update:model-value="
                     changeExperimentalSetting(
                       'shouldKeepTuningOnTextChange',
-                      $event
+                      $event,
                     )
                   "
                 >
@@ -1040,14 +1040,12 @@ const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
   return [state, setter] as const;
 };
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
 const { warn } = createLogger("SettingDialog");
@@ -1133,7 +1131,7 @@ const currentAudioOutputDeviceComputed = computed<
     // 再生デバイスが見つからなかったらデフォルト値に戻す
     // FIXME: watchなどにしてgetter内で操作しないようにする
     const device = availableAudioOutputDevices.value?.find(
-      (device) => device.key === store.state.savingSetting.audioOutputDevice
+      (device) => device.key === store.state.savingSetting.audioOutputDevice,
     );
     if (device) {
       return device;
@@ -1161,7 +1159,7 @@ const updateAudioOutputDevices = async () => {
 if (navigator.mediaDevices) {
   navigator.mediaDevices.addEventListener(
     "devicechange",
-    updateAudioOutputDevices
+    updateAudioOutputDevices,
   );
   updateAudioOutputDevices();
 } else {
@@ -1219,7 +1217,7 @@ const changeEnablePreset = (value: boolean) => {
 
 const changeExperimentalSetting = async (
   key: keyof ExperimentalSettingType,
-  data: boolean
+  data: boolean,
 ) => {
   store.dispatch("SET_EXPERIMENTAL_SETTING", {
     experimentalSetting: { ...experimentalSetting.value, [key]: data },
@@ -1256,7 +1254,7 @@ const renderSamplingRateLabel = (value: SamplingRateOption): string => {
 
 const handleSavingSettingChange = (
   key: keyof SavingSetting,
-  data: string | boolean | number
+  data: string | boolean | number,
 ) => {
   store.dispatch("SET_SAVING_SETTING", {
     data: { ...savingSetting.value, [key]: data },
@@ -1342,7 +1340,7 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/visually-hidden' as visually-hidden;
+@use "@/styles/visually-hidden" as visually-hidden;
 @use "@/styles/colors" as colors;
 
 .text-h5 {

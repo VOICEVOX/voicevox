@@ -97,15 +97,14 @@ const props = withDefaults(
   }
 );
 
-const emit =
-  defineEmits<{
-    (name: "barMousedown", event: MouseEvent): void;
-    (name: "rightEdgeMousedown", event: MouseEvent): void;
-    (name: "leftEdgeMousedown", event: MouseEvent): void;
-    (name: "lyricMouseDown", event: MouseEvent): void;
-    (name: "lyricInput", text: string): void;
-    (name: "lyricBlur"): void;
-  }>();
+const emit = defineEmits<{
+  (name: "barMousedown", event: MouseEvent): void;
+  (name: "rightEdgeMousedown", event: MouseEvent): void;
+  (name: "leftEdgeMousedown", event: MouseEvent): void;
+  (name: "lyricMouseDown", event: MouseEvent): void;
+  (name: "lyricInput", text: string): void;
+  (name: "lyricBlur"): void;
+}>();
 
 const store = useStore();
 const state = store.state;
@@ -268,8 +267,8 @@ const onLyricInput = (event: Event) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .note {
   position: absolute;
@@ -338,7 +337,10 @@ const onLyricInput = (event: Event) => {
   color: #121212;
   font-size: 1rem;
   font-weight: 700;
-  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff,
+  text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
     1px 1px 0 #fff;
   white-space: nowrap;
   pointer-events: none;

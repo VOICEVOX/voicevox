@@ -73,17 +73,15 @@
 import { computed } from "vue";
 import { UpdateInfo } from "@/type/preload";
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-    latestVersion: string;
-    newUpdateInfos: UpdateInfo[];
-    onSkipThisVersionClick: (version: string) => void;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", value: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+  latestVersion: string;
+  newUpdateInfos: UpdateInfo[];
+  onSkipThisVersionClick: (version: string) => void;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", value: boolean): void;
+}>();
 
 const modelValueComputed = computed({
   get: () => props.modelValue,
@@ -100,7 +98,7 @@ const openOfficialWebsite = () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .dialog-card {
   width: 700px;

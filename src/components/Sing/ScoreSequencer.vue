@@ -342,8 +342,8 @@ const numOfMeasures = computed(() => {
       notes.value,
       tempos.value,
       timeSignatures.value,
-      tpqn.value
-    ) + 1
+      tpqn.value,
+    ) + 1,
   );
 });
 const beatsPerMeasure = computed(() => {
@@ -515,7 +515,7 @@ const previewMove = () => {
 
   const guideLineBaseX = tickToBaseX(
     dragStartGuideLineTicks + movingTicks,
-    tpqn.value
+    tpqn.value,
   );
   guideLineX.value = guideLineBaseX * zoomX.value;
 };
@@ -543,7 +543,7 @@ const previewResizeRight = () => {
     const noteEndPos = copiedNote.position + copiedNote.duration;
     const duration = Math.max(
       snapTicks.value,
-      noteEndPos + movingTicks - notePos
+      noteEndPos + movingTicks - notePos,
     );
     if (note.duration !== duration) {
       editedNotes.set(note.id, { ...note, duration });
@@ -583,7 +583,7 @@ const previewResizeLeft = () => {
     const noteEndPos = copiedNote.position + copiedNote.duration;
     const position = Math.min(
       noteEndPos - snapTicks.value,
-      notePos + movingTicks
+      notePos + movingTicks,
     );
     const duration = noteEndPos - position;
     if (note.position !== position && note.duration !== duration) {
@@ -877,15 +877,15 @@ const rectSelect = (additive: boolean) => {
   const height = Math.abs(cursorY.value - rectSelectStartY.value);
   const startTicks = baseXToTick(
     (scrollX.value + left) / zoomX.value,
-    tpqn.value
+    tpqn.value,
   );
   const endTicks = baseXToTick(
     (scrollX.value + left + width) / zoomX.value,
-    tpqn.value
+    tpqn.value,
   );
   const endNoteNumber = baseYToNoteNumber((scrollY.value + top) / zoomY.value);
   const startNoteNumber = baseYToNoteNumber(
-    (scrollY.value + top + height) / zoomY.value
+    (scrollY.value + top + height) / zoomY.value,
   );
 
   const noteIdsToSelect: string[] = [];
@@ -1326,8 +1326,8 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .score-sequencer {
   backface-visibility: hidden;

@@ -102,11 +102,11 @@ export class Transport {
   constructor(
     audioContext: AudioContext,
     lookahead = 0.2,
-    scheduleAheadTime = 0.6
+    scheduleAheadTime = 0.6,
   ) {
     if (scheduleAheadTime <= lookahead) {
       throw new Error(
-        "The scheduleAheadTime must be longer than the lookahead."
+        "The scheduleAheadTime must be longer than the lookahead.",
       );
     }
 
@@ -684,7 +684,7 @@ class SynthVoice {
     this.filterNode.frequency.value = this.calcFilterFreq(
       params.filter.cutoff,
       params.filter.keyTrack,
-      params.noteNumber
+      params.noteNumber,
     );
     this.filterNode.Q.value = this.calcFilterQ(params.filter.resonance);
     this.gainNode = new GainNode(audioContext, { gain: 0 });
@@ -711,7 +711,7 @@ class SynthVoice {
     const freq = noteNumberToFrequency(this.noteNumber);
     const t0 = Math.max(
       getEarliestSchedulableContextTime(this.audioContext),
-      contextTime
+      contextTime,
     );
 
     // アタック、ディケイ、サスティーンのスケジュールを行う
@@ -735,7 +735,7 @@ class SynthVoice {
     const rel = this.ampParams.release;
     const t0 = Math.max(
       getEarliestSchedulableContextTime(this.audioContext),
-      contextTime
+      contextTime,
     );
     const stopContextTime = t0 + rel * 4;
 
@@ -810,7 +810,7 @@ export class PolySynth implements Instrument {
   noteOn(
     contextTime: number | "immediately",
     noteNumber: number,
-    duration?: number
+    duration?: number,
   ) {
     let voice = this.voices.find((value) => {
       return value.isActive && value.noteNumber === noteNumber;

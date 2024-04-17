@@ -97,7 +97,7 @@ export const isValidScore = (score: Score) => {
 const tickToSecondForConstantBpm = (
   ticks: number,
   bpm: number,
-  tpqn: number
+  tpqn: number,
 ) => {
   const quarterNotesPerMinute = bpm;
   const quarterNotesPerSecond = quarterNotesPerMinute / 60;
@@ -107,7 +107,7 @@ const tickToSecondForConstantBpm = (
 const secondToTickForConstantBpm = (
   seconds: number,
   bpm: number,
-  tpqn: number
+  tpqn: number,
 ) => {
   const quarterNotesPerMinute = bpm;
   const quarterNotesPerSecond = quarterNotesPerMinute / 60;
@@ -128,7 +128,7 @@ export const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
     timeOfTempo += tickToSecondForConstantBpm(
       tempos[i + 1].position - tempos[i].position,
       tempos[i].bpm,
-      tpqn
+      tpqn,
     );
   }
   return (
@@ -140,7 +140,7 @@ export const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
 export const secondToTick = (
   seconds: number,
   tempos: Tempo[],
-  tpqn: number
+  tpqn: number,
 ) => {
   let timeOfTempo = 0;
   let tempo = tempos[tempos.length - 1];
@@ -153,7 +153,7 @@ export const secondToTick = (
       tickToSecondForConstantBpm(
         tempos[i + 1].position - tempos[i].position,
         tempos[i].bpm,
-        tpqn
+        tpqn,
       );
     if (timeOfNextTempo > seconds) {
       tempo = tempos[i];
@@ -170,7 +170,7 @@ export const secondToTick = (
 // NOTE: 戻り値の単位はtick
 export function getTimeSignaturePositions(
   timeSignatures: TimeSignature[],
-  tpqn: number
+  tpqn: number,
 ) {
   const tsPositions: number[] = [0];
   for (let i = 0; i < timeSignatures.length - 1; i++) {
@@ -188,7 +188,7 @@ export function getTimeSignaturePositions(
 export function tickToMeasureNumber(
   ticks: number,
   timeSignatures: TimeSignature[],
-  tpqn: number
+  tpqn: number,
 ) {
   const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
   const nextTsIndex = tsPositions.findIndex((value) => ticks < value);
@@ -205,7 +205,7 @@ export function tickToMeasureNumber(
 export function getMeasureDuration(
   beats: number,
   beatType: number,
-  tpqn: number
+  tpqn: number,
 ) {
   const wholeNoteDuration = tpqn * 4;
   return (wholeNoteDuration / beatType) * beats;
@@ -215,7 +215,7 @@ export function getNumOfMeasures(
   notes: Note[],
   tempos: Tempo[],
   timeSignatures: TimeSignature[],
-  tpqn: number
+  tpqn: number,
 ) {
   const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
   let maxTicks = 0;
@@ -312,14 +312,14 @@ export const calculateNotesHash = async (notes: Note[]) => {
 };
 
 export const calculateSingingGuideSourceHash = async (
-  singingGuideSource: SingingGuideSource
+  singingGuideSource: SingingGuideSource,
 ) => {
   const hash = await calculateHash(singingGuideSource);
   return singingGuideSourceHashSchema.parse(hash);
 };
 
 export const calculateSingingVoiceSourceHash = async (
-  singingVoiceSource: SingingVoiceSource
+  singingVoiceSource: SingingVoiceSource,
 ) => {
   const hash = await calculateHash(singingVoiceSource);
   return singingVoiceSourceHashSchema.parse(hash);
@@ -358,7 +358,7 @@ export function toSortedPhrases(phrases: Map<string, Phrase>) {
  */
 export function selectPriorPhrase(
   phrases: Map<string, Phrase>,
-  position: number
+  position: number,
 ): [string, Phrase] {
   if (phrases.size === 0) {
     throw new Error("Received empty phrases");
