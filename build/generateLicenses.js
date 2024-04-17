@@ -29,6 +29,7 @@ const licenseChecker = require("license-checker-rseidelsohn");
         start: process.cwd(),
         production: true,
         failOn: disallowedLicenses.join(";"),
+        excludePrivatePackages: true,
         customFormat: {
           name: "",
           version: "",
@@ -52,7 +53,7 @@ const licenseChecker = require("license-checker-rseidelsohn");
 
   const externalLicenses = [];
 
-  const sevenZipLicense = execFileSync(
+  const sevenZipVersionMatch = execFileSync(
     path.join(
       __dirname,
       "vendored",
@@ -69,13 +70,13 @@ const licenseChecker = require("license-checker-rseidelsohn");
     },
   ).match(/7-Zip\s+(?:\(.\))?\s*([0-9.]+)/);
 
-  if (!sevenZipLicense) {
-    throw new Error("Failed to find 7-Zip license version");
+  if (!sevenZipVersionMatch) {
+    throw new Error("Failed to find 7-Zip version");
   }
 
   externalLicenses.push({
     name: "7-Zip",
-    version: sevenZipLicense[1],
+    version: sevenZipVersionMatch[1],
     license: "LGPL-2.1",
     text: await fs.readFile(
       path.join(__dirname, "vendored", "7z", "License.txt"),
