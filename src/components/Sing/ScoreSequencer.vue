@@ -110,25 +110,32 @@
         }"
       ></div>
       <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
+      <!-- undefinedだと警告が出るのでnullを渡す -->
       <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
+        :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="false"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-input="onNoteLyricInput($event, note)"
+        @lyric-blur="onNoteLyricBlur()"
       />
       <SequencerNote
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
+        :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="true"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-input="onNoteLyricInput($event, note)"
+        @lyric-blur="onNoteLyricBlur()"
       />
     </div>
     <SequencerPitch
@@ -264,6 +271,7 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useShiftKey } from "@/composables/useModifierKey";
+import { useLyricInput } from "@/composables/useLyricInput";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -334,8 +342,8 @@ const numOfMeasures = computed(() => {
       notes.value,
       tempos.value,
       timeSignatures.value,
-      tpqn.value
-    ) + 1
+      tpqn.value,
+    ) + 1,
   );
 });
 const beatsPerMeasure = computed(() => {
@@ -393,6 +401,18 @@ const sequencerBody = ref<HTMLElement | null>(null);
 // マウスカーソル位置
 const cursorX = ref(0);
 const cursorY = ref(0);
+
+// 歌詞入力
+const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
+  useLyricInput();
+
+const onNoteLyricInput = (text: string, note: Note) => {
+  splitAndUpdatePreview(text, note);
+};
+
+const onNoteLyricBlur = () => {
+  commitPreviewLyrics();
+};
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
@@ -495,7 +515,7 @@ const previewMove = () => {
 
   const guideLineBaseX = tickToBaseX(
     dragStartGuideLineTicks + movingTicks,
-    tpqn.value
+    tpqn.value,
   );
   guideLineX.value = guideLineBaseX * zoomX.value;
 };
@@ -523,7 +543,7 @@ const previewResizeRight = () => {
     const noteEndPos = copiedNote.position + copiedNote.duration;
     const duration = Math.max(
       snapTicks.value,
-      noteEndPos + movingTicks - notePos
+      noteEndPos + movingTicks - notePos,
     );
     if (note.duration !== duration) {
       editedNotes.set(note.id, { ...note, duration });
@@ -563,7 +583,7 @@ const previewResizeLeft = () => {
     const noteEndPos = copiedNote.position + copiedNote.duration;
     const position = Math.min(
       noteEndPos - snapTicks.value,
-      notePos + movingTicks
+      notePos + movingTicks,
     );
     const duration = noteEndPos - position;
     if (note.position !== position && note.duration !== duration) {
@@ -857,15 +877,15 @@ const rectSelect = (additive: boolean) => {
   const height = Math.abs(cursorY.value - rectSelectStartY.value);
   const startTicks = baseXToTick(
     (scrollX.value + left) / zoomX.value,
-    tpqn.value
+    tpqn.value,
   );
   const endTicks = baseXToTick(
     (scrollX.value + left + width) / zoomX.value,
-    tpqn.value
+    tpqn.value,
   );
   const endNoteNumber = baseYToNoteNumber((scrollY.value + top) / zoomY.value);
   const startNoteNumber = baseYToNoteNumber(
-    (scrollY.value + top + height) / zoomY.value
+    (scrollY.value + top + height) / zoomY.value,
   );
 
   const noteIdsToSelect: string[] = [];
@@ -1306,8 +1326,8 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .score-sequencer {
   backface-visibility: hidden;

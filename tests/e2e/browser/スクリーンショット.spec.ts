@@ -32,22 +32,22 @@ async function getSpeakerImages(): Promise<
     icons.sort(
       (a, b) =>
         parseInt(a.split(".")[0].split("_")[1]) -
-        parseInt(b.split(".")[0].split("_")[1])
+        parseInt(b.split(".")[0].split("_")[1]),
     );
     speakerImages = await Promise.all(
       icons.map(async (iconPath) => {
         const portraitPath = iconPath.replace("icon_", "portrait_");
         const portrait = await fs.readFile(
           path.join(assetsPath, portraitPath),
-          "base64"
+          "base64",
         );
         const icon = await fs.readFile(
           path.join(assetsPath, iconPath),
-          "base64"
+          "base64",
         );
 
         return { portrait, icon };
-      })
+      }),
     );
   }
   return speakerImages;
@@ -96,7 +96,7 @@ test.beforeEach(async ({ page }) => {
     const response = await route.fetch();
     const json: SpeakerInfo = await response.json().then(SpeakerInfoFromJSON);
     const speakerIndex = speakers.findIndex(
-      (speaker) => speaker.speakerUuid === speakerUuid
+      (speaker) => speaker.speakerUuid === speakerUuid,
     );
     if (speakerIndex === -1) {
       throw new Error(`speaker_uuid=${speakerUuid} is not found`);

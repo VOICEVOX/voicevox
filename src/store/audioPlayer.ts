@@ -42,7 +42,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   SET_AUDIO_NOW_PLAYING: {
     mutation(
       state,
-      { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean }
+      { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean },
     ) {
       state.nowPlayingAudioKey = nowPlaying ? audioKey : undefined;
     },
@@ -57,7 +57,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   PLAY_AUDIO_PLAYER: {
     async action(
       { state, commit },
-      { offset, audioKey }: { offset?: number; audioKey?: AudioKey }
+      { offset, audioKey }: { offset?: number; audioKey?: AudioKey },
     ) {
       const audioElement = getAudioElement();
 

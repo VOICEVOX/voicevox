@@ -34,7 +34,7 @@ export class ContinuousPlayer extends EventTarget {
 
   constructor(
     private generationQueue: AudioKey[],
-    { generateAudio, playAudioBlob }: DI
+    { generateAudio, playAudioBlob }: DI,
   ) {
     super();
 
@@ -111,19 +111,26 @@ export class ContinuousPlayer extends EventTarget {
 
     await this.promise;
   }
-}
 
-export interface ContinuousPlayer extends EventTarget {
   addEventListener<K extends keyof ContinuousPlayerEvents>(
     type: K,
     listener: (this: ContinuousPlayer, ev: ContinuousPlayerEvents[K]) => void,
-    options?: boolean | AddEventListenerOptions
+    options?: boolean | AddEventListenerOptions,
   ): void;
   addEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions
+    options?: boolean | AddEventListenerOptions,
   ): void;
+
+  // FIXME: 上のシグネチャ定義と同じ形なので冗長かも？
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ) {
+    super.addEventListener(type, listener, options);
+  }
 }
 
 interface ContinuousPlayerEvents {
@@ -142,19 +149,28 @@ export class GenerateStartEvent extends Event {
 }
 
 export class GenerateEndEvent extends Event {
-  constructor(public audioKey: AudioKey, public audioBlob: Blob) {
+  constructor(
+    public audioKey: AudioKey,
+    public audioBlob: Blob,
+  ) {
     super("generateend");
   }
 }
 
 export class PlayStartEvent extends Event {
-  constructor(public audioKey: AudioKey, public audioBlob: Blob) {
+  constructor(
+    public audioKey: AudioKey,
+    public audioBlob: Blob,
+  ) {
     super("playstart");
   }
 }
 
 export class PlayEndEvent extends Event {
-  constructor(public audioKey: AudioKey, public forceFinish: boolean) {
+  constructor(
+    public audioKey: AudioKey,
+    public forceFinish: boolean,
+  ) {
     super("playend");
   }
 }

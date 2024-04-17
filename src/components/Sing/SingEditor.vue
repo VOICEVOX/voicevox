@@ -1,5 +1,4 @@
 <template>
-  <MenuBar />
   <ToolBar />
   <div class="sing-main">
     <EngineStartupOverlay
@@ -28,7 +27,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import MenuBar from "./MenuBar.vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
@@ -41,11 +39,10 @@ import {
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
 
-const props =
-  defineProps<{
-    isEnginesReady: boolean;
-    isProjectFileLoaded: boolean | "waiting";
-  }>();
+const props = defineProps<{
+  isEnginesReady: boolean;
+  isProjectFileLoaded: boolean | "waiting";
+}>();
 
 const store = useStore();
 //const $q = useQuasar();
@@ -107,13 +104,13 @@ onetimeWatch(
   },
   {
     immediate: true,
-  }
+  },
 );
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .layout-container {
   min-height: calc(100vh - #{vars.$menubar-height});

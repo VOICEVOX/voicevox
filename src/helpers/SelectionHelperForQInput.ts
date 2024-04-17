@@ -23,7 +23,7 @@ export class SelectionHelperForQInput {
   getAsString() {
     return this.nativeEl.value.substring(
       this.nativeEl.selectionStart ?? 0,
-      this.nativeEl.selectionEnd ?? 0
+      this.nativeEl.selectionEnd ?? 0,
     );
   }
 

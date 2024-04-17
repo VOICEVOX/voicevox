@@ -23,7 +23,7 @@ createApp(App)
       id: import.meta.env.VITE_GTM_CONTAINER_ID ?? "GTM-DUMMY",
       // NOTE: 最初はgtm.jsを読まず、プライバシーポリシーに同意後に読み込む
       enabled: false,
-    })
+    }),
   )
   .use(Quasar, {
     config: {

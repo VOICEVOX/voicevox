@@ -1,4 +1,5 @@
 import { calculateHash } from "./utility";
+import { convertLongVowel } from "@/store/utility";
 import {
   Note,
   Phrase,
@@ -96,7 +97,7 @@ export const isValidScore = (score: Score) => {
 const tickToSecondForConstantBpm = (
   ticks: number,
   bpm: number,
-  tpqn: number
+  tpqn: number,
 ) => {
   const quarterNotesPerMinute = bpm;
   const quarterNotesPerSecond = quarterNotesPerMinute / 60;
@@ -106,7 +107,7 @@ const tickToSecondForConstantBpm = (
 const secondToTickForConstantBpm = (
   seconds: number,
   bpm: number,
-  tpqn: number
+  tpqn: number,
 ) => {
   const quarterNotesPerMinute = bpm;
   const quarterNotesPerSecond = quarterNotesPerMinute / 60;
@@ -127,7 +128,7 @@ export const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
     timeOfTempo += tickToSecondForConstantBpm(
       tempos[i + 1].position - tempos[i].position,
       tempos[i].bpm,
-      tpqn
+      tpqn,
     );
   }
   return (
@@ -139,7 +140,7 @@ export const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
 export const secondToTick = (
   seconds: number,
   tempos: Tempo[],
-  tpqn: number
+  tpqn: number,
 ) => {
   let timeOfTempo = 0;
   let tempo = tempos[tempos.length - 1];
@@ -152,7 +153,7 @@ export const secondToTick = (
       tickToSecondForConstantBpm(
         tempos[i + 1].position - tempos[i].position,
         tempos[i].bpm,
-        tpqn
+        tpqn,
       );
     if (timeOfNextTempo > seconds) {
       tempo = tempos[i];
@@ -169,7 +170,7 @@ export const secondToTick = (
 // NOTE: 戻り値の単位はtick
 export function getTimeSignaturePositions(
   timeSignatures: TimeSignature[],
-  tpqn: number
+  tpqn: number,
 ) {
   const tsPositions: number[] = [0];
   for (let i = 0; i < timeSignatures.length - 1; i++) {
@@ -187,7 +188,7 @@ export function getTimeSignaturePositions(
 export function tickToMeasureNumber(
   ticks: number,
   timeSignatures: TimeSignature[],
-  tpqn: number
+  tpqn: number,
 ) {
   const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
   const nextTsIndex = tsPositions.findIndex((value) => ticks < value);
@@ -204,7 +205,7 @@ export function tickToMeasureNumber(
 export function getMeasureDuration(
   beats: number,
   beatType: number,
-  tpqn: number
+  tpqn: number,
 ) {
   const wholeNoteDuration = tpqn * 4;
   return (wholeNoteDuration / beatType) * beats;
@@ -214,7 +215,7 @@ export function getNumOfMeasures(
   notes: Note[],
   tempos: Tempo[],
   timeSignatures: TimeSignature[],
-  tpqn: number
+  tpqn: number,
 ) {
   const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
   let maxTicks = 0;
@@ -311,14 +312,14 @@ export const calculateNotesHash = async (notes: Note[]) => {
 };
 
 export const calculateSingingGuideSourceHash = async (
-  singingGuideSource: SingingGuideSource
+  singingGuideSource: SingingGuideSource,
 ) => {
   const hash = await calculateHash(singingGuideSource);
   return singingGuideSourceHashSchema.parse(hash);
 };
 
 export const calculateSingingVoiceSourceHash = async (
-  singingVoiceSource: SingingVoiceSource
+  singingVoiceSource: SingingVoiceSource,
 ) => {
   const hash = await calculateHash(singingVoiceSource);
   return singingVoiceSourceHashSchema.parse(hash);
@@ -357,7 +358,7 @@ export function toSortedPhrases(phrases: Map<string, Phrase>) {
  */
 export function selectPriorPhrase(
   phrases: Map<string, Phrase>,
-  position: number
+  position: number,
 ): [string, Phrase] {
   if (phrases.size === 0) {
     throw new Error("Received empty phrases");
@@ -383,3 +384,61 @@ export function selectPriorPhrase(
   // 再生位置より前のPhrase
   return sortedPhrases[0];
 }
+
+// 参考：https://github.com/VOICEVOX/voicevox_core/blob/0848630d81ae3e917c6ff2038f0b15bbd4270702/crates/voicevox_core/src/user_dict/word.rs#L83-L90
+export const moraPattern = new RegExp(
+  "(?:" +
+    "[イ][ェ]|[ヴ][ャュョ]|[トド][ゥ]|[テデ][ィャュョ]|[デ][ェ]|[クグ][ヮ]|" + // rule_others
+    "[キシチニヒミリギジビピ][ェャュョ]|" + // rule_line_i
+    "[ツフヴ][ァ]|[ウスツフヴズ][ィ]|[ウツフヴ][ェォ]|" + // rule_line_u
+    "[ァ-ヴー]|" + // rule_one_mora
+    "[い][ぇ]|[ゃゅょ]|[とど][ぅ]|[てで][ぃゃゅょ]|[で][ぇ]|[くぐ][ゎ]|" + // rule_others
+    "[きしちにひみりぎじびぴ][ぇゃゅょ]|" + // rule_line_i
+    "[つふゔ][ぁ]|[うすつふゔず][ぃ]|[うつふゔ][ぇぉ]|" + // rule_line_u
+    "[ぁ-ゔー]" + // rule_one_mora
+    ")",
+  "g",
+);
+
+/**
+ * 文字列をモーラと非モーラに分割する。長音は展開される。連続する非モーラはまとめる。
+ * 例："カナー漢字" -> ["カ", "ナ", "ア", "漢字"]
+ *
+ * @param text 分割する文字列
+ * @param maxLength 最大の要素数
+ * @returns 分割された文字列
+ */
+export const splitLyricsByMoras = (
+  text: string,
+  maxLength = Infinity,
+): string[] => {
+  const moraAndNonMoras: string[] = [];
+  const matches = convertLongVowel(text).matchAll(moraPattern);
+  let lastMatchEnd = 0;
+  // aアbイウc で説明：
+  for (const match of matches) {
+    if (match.index == undefined) {
+      throw new Error("match.index is undefined.");
+    }
+    // 直前のモーラとの間 = a、b、空文字列
+    if (lastMatchEnd < match.index) {
+      moraAndNonMoras.push(text.substring(lastMatchEnd, match.index));
+    }
+    // モーラ = ア、イ、ウ
+    moraAndNonMoras.push(match[0]);
+    lastMatchEnd = match.index + match[0].length;
+  }
+  // 最後のモーラから後 = cの部分
+  if (lastMatchEnd < text.length) {
+    moraAndNonMoras.push(text.substring(lastMatchEnd));
+  }
+  // 指定した最大要素数より多い場合は配列を削る
+  if (moraAndNonMoras.length > maxLength) {
+    moraAndNonMoras.splice(
+      maxLength - 1,
+      moraAndNonMoras.length,
+      moraAndNonMoras.slice(maxLength - 1).join(""),
+    );
+  }
+  return moraAndNonMoras;
+};
