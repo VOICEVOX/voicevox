@@ -14,7 +14,7 @@ export const useLyricInput = () => {
   const splitAndUpdatePreview = (lyric: string, note: Note) => {
     // TODO: マルチトラック対応
     const inputNoteIndex = store.state.tracks[0].notes.findIndex(
-      (value) => value.id === note.id
+      (value) => value.id === note.id,
     );
     if (inputNoteIndex === -1) {
       throw new Error("inputNoteIndex is -1.");
@@ -23,7 +23,7 @@ export const useLyricInput = () => {
 
     const lyricPerNote = splitLyricsByMoras(
       lyric,
-      store.state.tracks[0].notes.length - inputNoteIndex
+      store.state.tracks[0].notes.length - inputNoteIndex,
     );
     for (const [index, mora] of lyricPerNote.entries()) {
       const noteIndex = inputNoteIndex + index;

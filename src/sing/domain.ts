@@ -397,7 +397,7 @@ export const moraPattern = new RegExp(
     "[つふゔ][ぁ]|[うすつふゔず][ぃ]|[うつふゔ][ぇぉ]|" + // rule_line_u
     "[ぁ-ゔー]" + // rule_one_mora
     ")",
-  "g"
+  "g",
 );
 
 /**
@@ -410,7 +410,7 @@ export const moraPattern = new RegExp(
  */
 export const splitLyricsByMoras = (
   text: string,
-  maxLength = Infinity
+  maxLength = Infinity,
 ): string[] => {
   const moraAndNonMoras: string[] = [];
   const matches = convertLongVowel(text).matchAll(moraPattern);
@@ -437,7 +437,7 @@ export const splitLyricsByMoras = (
     moraAndNonMoras.splice(
       maxLength - 1,
       moraAndNonMoras.length,
-      moraAndNonMoras.slice(maxLength - 1).join("")
+      moraAndNonMoras.slice(maxLength - 1).join(""),
     );
   }
   return moraAndNonMoras;

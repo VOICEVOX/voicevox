@@ -94,7 +94,7 @@ const props = withDefaults(
   }>(),
   {
     isSelected: false,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -145,14 +145,14 @@ const hasPhraseError = computed(() => {
   return Array.from(state.phrases.values()).some(
     (phrase) =>
       phrase.state === "COULD_NOT_RENDER" &&
-      phrase.notes.some((note) => note.id === props.note.id)
+      phrase.notes.some((note) => note.id === props.note.id),
   );
 });
 
 // 表示する歌詞。
 // 優先度：入力中の歌詞 > 他ノートの入力中の歌詞 > 渡された（=Storeの）歌詞
 const lyricToDisplay = computed(
-  () => temporaryLyric.value ?? props.previewLyric ?? props.note.lyric
+  () => temporaryLyric.value ?? props.previewLyric ?? props.note.lyric,
 );
 // 歌詞入力中の一時的な歌詞
 const temporaryLyric = ref<string | undefined>(undefined);
