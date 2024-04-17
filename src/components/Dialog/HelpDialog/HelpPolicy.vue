@@ -9,10 +9,9 @@
 import { onMounted, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
-const props =
-  defineProps<{
-    policy: string;
-  }>();
+const props = defineProps<{
+  policy: string;
+}>();
 const policyHtml = ref("");
 
 const md = useMarkdownIt();

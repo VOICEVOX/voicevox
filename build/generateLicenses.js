@@ -53,7 +53,7 @@ const licenseJson = execFileSync(
   {
     encoding: "utf-8",
     maxBuffer: 1024 * 1024 * 10, // FIXME: stdoutではなくファイル出力にする
-  }
+  },
 );
 
 const checkerLicenses = JSON.parse(licenseJson);
@@ -71,12 +71,12 @@ externalLicenses.push({
         win32: "7za.exe",
         linux: "7zzs",
         darwin: "7zz",
-      }[process.platform]
+      }[process.platform],
     ),
 
     {
       encoding: "utf-8",
-    }
+    },
   ).match(/7-Zip\s+(?:\(.\))?\s*([0-9.]+)/)[1],
   license: "LGPL-2.1",
   text: fs.readFileSync(path.join(__dirname, "vendored", "7z", "License.txt"), {

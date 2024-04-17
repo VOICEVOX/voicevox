@@ -14,7 +14,7 @@ export class PreviewableValue {
     this.storeValue = computed(storeFunc);
     this.previewValue = ref(undefined);
     this.currentValue = computed(() =>
-      this.isPreview.value ? this.previewValue.value : this.storeValue.value
+      this.isPreview.value ? this.previewValue.value : this.storeValue.value,
     );
   }
 

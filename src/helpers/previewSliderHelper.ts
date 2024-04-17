@@ -84,13 +84,13 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   const disable = computed(() => (props.disable && props.disable()) ?? false);
   const step = computed(() => (props.step && props.step()) ?? 1);
   const scrollStep = computed(
-    () => (props.scrollStep && props.scrollStep()) ?? step.value
+    () => (props.scrollStep && props.scrollStep()) ?? step.value,
   );
   const scrollMinStep = computed(
-    () => (props.scrollMinStep && props.scrollMinStep()) ?? scrollStep.value
+    () => (props.scrollMinStep && props.scrollMinStep()) ?? scrollStep.value,
   );
   const disableScroll = computed(
-    () => (props.disableScroll && props.disableScroll()) ?? false
+    () => (props.disableScroll && props.disableScroll()) ?? false,
   );
 
   // Inner states
@@ -161,7 +161,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     return String(scrollMinStep.value).split(".")[1]?.length ?? 0;
   });
   const scrollDecimals = computed(() =>
-    Math.max(scrollStepDecimals.value, scrollMinStepDecimals.value)
+    Math.max(scrollStepDecimals.value, scrollMinStepDecimals.value),
   );
   // This function is called when the q-slider fire onWheel.
   const onWheel = (event: Events["onWheel"]) => {
@@ -175,10 +175,10 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     const diff = -step * Math.sign(deltaY);
     const nextValue = Math.min(
       Math.max(currentValue.value + diff, min.value),
-      max.value
+      max.value,
     );
     updatePreviewValue(
-      Number.parseFloat(nextValue.toFixed(scrollDecimals.value))
+      Number.parseFloat(nextValue.toFixed(scrollDecimals.value)),
     );
     // start scrolling
     isScrolling.value = true;

@@ -7,7 +7,7 @@ import { selectPriorPhrase } from "@/sing/domain";
 const createPhrase = (
   start: number,
   end: number,
-  state: PhraseState
+  state: PhraseState,
 ): Phrase => {
   return {
     notes: [

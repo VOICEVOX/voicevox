@@ -120,7 +120,7 @@ export class VvppManager {
   }
 
   private async extractVvpp(
-    vvppLikeFilePath: string
+    vvppLikeFilePath: string,
   ): Promise<{ outputDir: string; manifest: MinimumEngineManifestType }> {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
@@ -170,14 +170,14 @@ export class VvppManager {
           log.log(`Concatenating ${archiveFileParts.length} files...`);
           tmpConcatenatedFile = path.join(
             app.getPath("temp"),
-            `vvpp-${new Date().getTime()}.${format}`
+            `vvpp-${new Date().getTime()}.${format}`,
           );
           log.log("Temporary file:", tmpConcatenatedFile);
           archiveFile = tmpConcatenatedFile;
           await new Promise<void>((resolve, reject) => {
             if (!tmpConcatenatedFile) throw new Error("tmpFile is undefined");
             const inputStreams = archiveFileParts.map((f) =>
-              fs.createReadStream(f)
+              fs.createReadStream(f),
             );
             const outputStream = fs.createWriteStream(tmpConcatenatedFile);
             new MultiStream(inputStreams)
@@ -203,13 +203,13 @@ export class VvppManager {
         if (import.meta.env.PROD) {
           sevenZipPath = path.join(
             path.dirname(app.getPath("exe")),
-            sevenZipPath
+            sevenZipPath,
           );
         }
         log.log(
           "Spawning 7z:",
           sevenZipPath,
-          args.map((a) => JSON.stringify(a)).join(" ")
+          args.map((a) => JSON.stringify(a)).join(" "),
         );
         await new Promise<void>((resolve, reject) => {
           const child = spawn(sevenZipPath, args, {
@@ -245,9 +245,9 @@ export class VvppManager {
           JSON.parse(
             await fs.promises.readFile(
               path.join(outputDir, "engine_manifest.json"),
-              "utf-8"
-            )
-          )
+              "utf-8",
+            ),
+          ),
         );
       return {
         outputDir,
@@ -285,7 +285,7 @@ export class VvppManager {
     if (isNotWin) {
       await fs.promises.chmod(
         path.join(engineDirectory, manifest.command),
-        "755"
+        "755",
       );
     }
   }
@@ -320,7 +320,7 @@ export class VvppManager {
               log.error(e);
               dialog.showErrorBox(
                 "エンジン削除エラー",
-                `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${deletingEngineDir}\nエラー内容: ${e}`
+                `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${deletingEngineDir}\nエラー内容: ${e}`,
               );
             } else {
               log.error(`Failed to rename engine directory: ${e}, retrying`);
@@ -328,7 +328,7 @@ export class VvppManager {
             }
           }
         }
-      })
+      }),
     );
     this.willDeleteEngineIds.clear();
     await Promise.all(
@@ -344,7 +344,7 @@ export class VvppManager {
               log.error(e);
               dialog.showErrorBox(
                 "エンジン追加エラー",
-                `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${from}\nエラー内容: ${e}`
+                `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${from}\nエラー内容: ${e}`,
               );
             } else {
               log.error(`Failed to rename engine directory: ${e}, retrying`);
@@ -352,7 +352,7 @@ export class VvppManager {
             }
           }
         }
-      })
+      }),
     );
     this.willReplaceEngineDirs = [];
   }
@@ -364,7 +364,7 @@ export class VvppManager {
   }
 
   private async detectFileFormat(
-    filePath: string
+    filePath: string,
   ): Promise<"zip" | "7z" | undefined> {
     const file = await fs.promises.open(filePath, "r");
 
