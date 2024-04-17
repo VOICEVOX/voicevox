@@ -259,7 +259,10 @@ const onLyricInputBlur = () => {
   emit("lyricBlur");
 };
 const onLyricInput = (event: Event) => {
-  temporaryLyric.value = (event.target as HTMLInputElement).value;
+  if (!(event.target instanceof HTMLInputElement)) {
+    throw new Error("Invalid event target");
+  }
+  temporaryLyric.value = event.target.value;
   emit("lyricInput", temporaryLyric.value);
 };
 </script>

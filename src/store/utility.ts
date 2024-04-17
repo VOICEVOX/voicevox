@@ -449,11 +449,6 @@ export const convertHiraToKana = (text: string): string => {
     return String.fromCharCode(s.charCodeAt(0) + 0x60);
   });
 };
-export const convertKanaToHira = (text: string): string => {
-  return text.replace(/[\u30A1-\u30F4]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) - 0x60);
-  });
-};
 
 export const convertLongVowel = (text: string): string => {
   return text

@@ -401,7 +401,7 @@ export const moraPattern = new RegExp(
 );
 
 /**
- * 文字列をモーラと非モーラに分割する。長音は展開される。
+ * 文字列をモーラと非モーラに分割する。長音は展開される。連続する非モーラはまとめる。
  * 例："カナー漢字" -> ["カ", "ナ", "ア", "漢字"]
  *
  * @param text 分割する文字列
@@ -432,6 +432,7 @@ export const splitLyricsByMoras = (
   if (lastMatchEnd < text.length) {
     moraAndNonMoras.push(text.substring(lastMatchEnd));
   }
+  // 指定した最大要素数より多い場合は配列を削る
   if (moraAndNonMoras.length > maxLength) {
     moraAndNonMoras.splice(
       maxLength - 1,
