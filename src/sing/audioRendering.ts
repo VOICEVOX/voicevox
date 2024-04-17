@@ -109,11 +109,11 @@ export class Transport {
   constructor(
     audioContext: AudioContext,
     lookahead = 0.2,
-    scheduleAheadTime = 0.6
+    scheduleAheadTime = 0.6,
   ) {
     if (scheduleAheadTime <= lookahead) {
       throw new Error(
-        "The scheduleAheadTime must be longer than the lookahead."
+        "The scheduleAheadTime must be longer than the lookahead.",
       );
     }
 
@@ -691,7 +691,7 @@ class SynthVoice {
     this.filterNode.frequency.value = this.calcFilterFreq(
       params.filter.cutoff,
       params.filter.keyTrack,
-      params.noteNumber
+      params.noteNumber,
     );
     this.filterNode.Q.value = this.calcFilterQ(params.filter.resonance);
     this.gainNode = new GainNode(audioContext, { gain: 0 });
@@ -718,7 +718,7 @@ class SynthVoice {
     const freq = noteNumberToFrequency(this.noteNumber);
     const t0 = Math.max(
       getEarliestSchedulableContextTime(this.audioContext),
-      contextTime
+      contextTime,
     );
 
     // アタック、ディケイ、サスティーンのスケジュールを行う
@@ -742,7 +742,7 @@ class SynthVoice {
     const rel = this.ampParams.release;
     const t0 = Math.max(
       getEarliestSchedulableContextTime(this.audioContext),
-      contextTime
+      contextTime,
     );
     const stopContextTime = t0 + rel * 4;
 
@@ -817,7 +817,7 @@ export class PolySynth implements Instrument {
   noteOn(
     contextTime: number | "immediately",
     noteNumber: number,
-    duration?: number
+    duration?: number,
   ) {
     let voice = this.voices.find((value) => {
       return value.isActive && value.noteNumber === noteNumber;
@@ -1048,7 +1048,7 @@ export class Clipper {
 export const generateAudioEvents = async (
   audioContext: BaseAudioContext,
   time: number,
-  blob: Blob
+  blob: Blob,
 ): Promise<AudioEvent[]> => {
   const arrayBuffer = await blob.arrayBuffer();
   const buffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -1061,7 +1061,7 @@ export const setupAudioEvents = async (
   transport: Transport | OfflineTransport,
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
   singingVoices: Map<SingingVoiceSourceHash, SingingVoice>,
-  phrases: Phrase[]
+  phrases: Phrase[],
 ) => {
   for (const phrase of phrases) {
     if (
@@ -1083,7 +1083,7 @@ export const setupAudioEvents = async (
     const audioEvents = await generateAudioEvents(
       audioContext,
       singingGuide.startTime,
-      singingVoice.blob
+      singingVoice.blob,
     );
     const audioPlayer = new AudioPlayer(audioContext);
     const audioSequence: AudioSequence = {

@@ -22,8 +22,8 @@ describe("mapNullablePipe", () => {
       mapNullablePipe(
         map.get(key),
         (v) => v.outerValue,
-        (v) => v.innerValue
-      )
+        (v) => v.innerValue,
+      ),
     ).toEqual(innerValue);
   });
 
@@ -39,8 +39,8 @@ describe("mapNullablePipe", () => {
       mapNullablePipe(
         map.get(key),
         (v) => v.outerValue,
-        (v) => v.innerValue
-      )
+        (v) => v.innerValue,
+      ),
     ).toBeUndefined();
   });
 });

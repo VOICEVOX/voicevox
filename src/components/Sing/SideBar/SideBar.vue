@@ -72,7 +72,7 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const tracks = computed(() => store.state.tracks);
 const isThereSoloTrack = computed(() =>
-  tracks.value.some((track) => track.solo)
+  tracks.value.some((track) => track.solo),
 );
 
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
@@ -98,8 +98,8 @@ const reorderTracks = (newTracks: Track[]) => {
 };
 </script>
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
-@use '@/styles/variables' as vars;
+@use "@/styles/colors" as colors;
+@use "@/styles/variables" as vars;
 
 .sidebar {
   width: vars.$sidebar-width;

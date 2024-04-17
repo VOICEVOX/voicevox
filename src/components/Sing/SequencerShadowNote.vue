@@ -24,10 +24,9 @@ import {
   noteNumberToBaseY,
 } from "@/sing/viewHelper";
 
-const props =
-  defineProps<{
-    note: Note;
-  }>();
+const props = defineProps<{
+  note: Note;
+}>();
 
 const store = useStore();
 const state = store.state;
@@ -53,8 +52,8 @@ const width = computed(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .note {
   position: absolute;

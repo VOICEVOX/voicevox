@@ -89,7 +89,7 @@
                     // ドラッグ中はバグるので無視
                     characterOrderDragging ||
                       selectCharacterWithChangePortrait(
-                        element.metas.speakerUuid
+                        element.metas.speakerUuid,
                       )
                   "
                 >
@@ -111,16 +111,14 @@ import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-    characterInfos: CharacterInfo[];
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+  characterInfos: CharacterInfo[];
+}>();
 
-const emit =
-  defineEmits<{
-    (event: "update:modelValue", value: boolean): void;
-  }>();
+const emit = defineEmits<{
+  (event: "update:modelValue", value: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -170,7 +168,7 @@ watch(
         ...newCharacters.value,
         ...props.characterInfos
           .filter(
-            (info) => !newCharacters.value.includes(info.metas.speakerUuid)
+            (info) => !newCharacters.value.includes(info.metas.speakerUuid),
           )
           .map((info) => info.metas.speakerUuid),
       ];
@@ -189,23 +187,26 @@ watch(
           !characterOrder.value.find(
             (characterInfoInList) =>
               characterInfoInList.metas.speakerUuid ===
-              characterInfo.metas.speakerUuid
-          )
+              characterInfo.metas.speakerUuid,
+          ),
       );
       characterOrder.value = [
         ...characterOrder.value,
         ...notIncludesCharacterInfos,
       ];
     }
-  }
+  },
 );
 
 // draggable用
 const keyOfCharacterOrderItem = (item: CharacterInfo) => item.metas.speakerUuid;
 
 // 音声再生
-const playing =
-  ref<{ speakerUuid: SpeakerId; styleId: StyleId; index: number }>();
+const playing = ref<{
+  speakerUuid: SpeakerId;
+  styleId: StyleId;
+  index: number;
+}>();
 
 const audio = new Audio();
 audio.volume = 0.5;
@@ -214,7 +215,7 @@ audio.onended = () => stop();
 const play = (
   speakerUuid: SpeakerId,
   { styleId, voiceSamplePaths }: StyleInfo,
-  index: number
+  index: number,
 ) => {
   if (audio.src !== "") stop();
 
@@ -234,7 +235,7 @@ const stop = () => {
 const togglePlayOrStop = (
   speakerUuid: SpeakerId,
   styleInfo: StyleInfo,
-  index: number
+  index: number,
 ) => {
   if (
     playing.value == undefined ||
@@ -254,14 +255,14 @@ const characterOrderDragging = ref(false);
 const closeDialog = () => {
   store.dispatch(
     "SET_USER_CHARACTER_ORDER",
-    characterOrder.value.map((info) => info.metas.speakerUuid)
+    characterOrder.value.map((info) => info.metas.speakerUuid),
   );
   stop();
   modelValueComputed.value = false;
 };
 
 const portrait = ref<string | undefined>(
-  characterInfosMap.value[selectedCharacter.value].portraitPath
+  characterInfosMap.value[selectedCharacter.value].portraitPath,
 );
 const updatePortrait = (portraitPath: string) => {
   portrait.value = portraitPath;
@@ -269,8 +270,8 @@ const updatePortrait = (portraitPath: string) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-toolbar div:first-child {
   min-width: 0;

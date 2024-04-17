@@ -67,7 +67,7 @@ watch(
         info(`Container destroyed for track ${trackId}`);
       }
     }
-  }
+  },
 );
 
 const selectedTrackId = computed(() => store.state.selectedTrackId);
@@ -80,7 +80,7 @@ watch(
       container.visible = trackId === selectedTrackId.value;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const queries = computed(() => {
@@ -194,14 +194,14 @@ const render = () => {
           const ticks = secondToTick(
             startTime + (startFrame + j) / frameRate,
             tempos,
-            tpqn
+            tpqn,
           );
           frameTicksArray.push(ticks);
         }
         const lineStrip = new LineStrip(
           frameLength,
           pitchLineColor,
-          pitchLineWidth
+          pitchLineWidth,
         );
         newPitchLines.push({
           startFrame,
@@ -277,7 +277,7 @@ watch(
   ],
   () => {
     renderInNextFrame = true;
-  }
+  },
 );
 
 onMountedOrActivated(() => {
@@ -354,8 +354,8 @@ onUnmountedOrDeactivated(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .canvas-container {
   overflow: hidden;

@@ -35,8 +35,8 @@ const switchEditor = async (editor: EditorType) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 .q-btn-group {
   :deep(.q-btn) {
     padding-left: 0.75rem;

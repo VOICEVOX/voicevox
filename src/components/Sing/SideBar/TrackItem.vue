@@ -43,7 +43,7 @@
         {{
           mapNullablePipe(
             trackCharacters[props.track.id],
-            (trackCharacter) => trackCharacter.metas.speakerName
+            (trackCharacter) => trackCharacter.metas.speakerName,
           ) || "（不明なキャラクター）"
         }}
       </QItemLabel>
@@ -139,17 +139,16 @@ import ContextMenu from "@/components/Menu/ContextMenu.vue";
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
 Draggable.components = { ...Draggable.components, QList };
 
-const props =
-  defineProps<{
-    track: Track;
-  }>();
+const props = defineProps<{
+  track: Track;
+}>();
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const tracks = computed(() => store.state.tracks);
 const isThereSoloTrack = computed(() =>
-  tracks.value.some((track) => track.solo)
+  tracks.value.some((track) => track.solo),
 );
 const setTrackPan = (trackId: TrackId, pan: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
@@ -196,8 +195,8 @@ const trackCharacters = computed(() =>
         }
       }
       return [track.id, undefined];
-    })
-  )
+    }),
+  ),
 );
 const selectTrack = (trackId: TrackId) => {
   store.dispatch("SET_SELECTED_TRACK", { trackId });
@@ -223,13 +222,13 @@ const trackStyles = computed(() =>
         }
       }
       return [track.id, undefined];
-    })
-  )
+    }),
+  ),
 );
 </script>
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
-@use '@/styles/variables' as vars;
+@use "@/styles/colors" as colors;
+@use "@/styles/variables" as vars;
 
 .track-detail-container {
   padding: 0;

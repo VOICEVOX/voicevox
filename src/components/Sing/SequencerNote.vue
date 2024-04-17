@@ -91,16 +91,15 @@ const props = withDefaults(
   }>(),
   {
     isSelected: false,
-  }
+  },
 );
 
-const emit =
-  defineEmits<{
-    (name: "barMousedown", event: MouseEvent): void;
-    (name: "rightEdgeMousedown", event: MouseEvent): void;
-    (name: "leftEdgeMousedown", event: MouseEvent): void;
-    (name: "lyricMouseDown", event: MouseEvent): void;
-  }>();
+const emit = defineEmits<{
+  (name: "barMousedown", event: MouseEvent): void;
+  (name: "rightEdgeMousedown", event: MouseEvent): void;
+  (name: "leftEdgeMousedown", event: MouseEvent): void;
+  (name: "lyricMouseDown", event: MouseEvent): void;
+}>();
 
 const store = useStore();
 const state = store.state;
@@ -141,7 +140,7 @@ const hasPhraseError = computed(() => {
   return Array.from(state.phrases.values()).some(
     (phrase) =>
       phrase.state === "COULD_NOT_RENDER" &&
-      phrase.notes.some((note) => note.id === props.note.id)
+      phrase.notes.some((note) => note.id === props.note.id),
   );
 });
 
@@ -259,8 +258,8 @@ const onLyricInputBlur = () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .note {
   position: absolute;
@@ -316,7 +315,10 @@ const onLyricInputBlur = () => {
   color: #121212;
   font-size: 1rem;
   font-weight: 700;
-  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff,
+  text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
     1px 1px 0 #fff;
   white-space: nowrap;
   pointer-events: none;

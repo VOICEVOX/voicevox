@@ -223,7 +223,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       // 指定されたstyleIdに対して、エンジン側の初期化を行う
       const isInitialized = await dispatch(
         "IS_INITIALIZED_ENGINE_SPEAKER",
-        singer
+        singer,
       );
       if (!isInitialized) {
         await dispatch("INITIALIZE_ENGINE_SPEAKER", singer);
@@ -331,12 +331,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.selectedTrackId = state.tracks[0].id;
       state.overlappingNoteIds = getOverlappingNoteIds(
-        mergeMaps(...state.overlappingNoteInfos.values())
+        mergeMaps(...state.overlappingNoteInfos.values()),
       );
     },
     async action(
       { state, getters, commit, dispatch },
-      { score }: { score: Score }
+      { score }: { score: Score },
     ) {
       if (!isValidScore(score)) {
         throw new Error("The score is invalid.");
@@ -437,7 +437,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   NOTE_IDS: {
     getter(state) {
       const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId
+        (value) => value.id === state.selectedTrackId,
       );
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
@@ -450,7 +450,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   ADD_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
       const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId
+        (value) => value.id === state.selectedTrackId,
       );
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
@@ -459,14 +459,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
       const overlappingNoteInfo = state.overlappingNoteInfos.get(
-        selectedTrack.id
+        selectedTrack.id,
       );
       if (overlappingNoteInfo == undefined) {
         throw new Error("overlappingNoteInfo is undefined.");
       }
       addNotesToOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
-        mergeMaps(...state.overlappingNoteInfos.values())
+        mergeMaps(...state.overlappingNoteInfos.values()),
       );
     },
   },
@@ -478,7 +478,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notesMap.set(note.id, note);
       }
       const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId
+        (value) => value.id === state.selectedTrackId,
       );
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
@@ -487,14 +487,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
       const overlappingNoteInfo = state.overlappingNoteInfos.get(
-        selectedTrack.id
+        selectedTrack.id,
       );
       if (overlappingNoteInfo == undefined) {
         throw new Error("overlappingNoteInfo is undefined.");
       }
       updateNotesOfOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
-        mergeMaps(...state.overlappingNoteInfos.values())
+        mergeMaps(...state.overlappingNoteInfos.values()),
       );
     },
   },
@@ -503,7 +503,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { noteIds }: { noteIds: string[] }) {
       const noteIdsSet = new Set(noteIds);
       const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId
+        (value) => value.id === state.selectedTrackId,
       );
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
@@ -512,14 +512,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return noteIdsSet.has(value.id);
       });
       const overlappingNoteInfo = state.overlappingNoteInfos.get(
-        selectedTrack.id
+        selectedTrack.id,
       );
       if (overlappingNoteInfo == undefined) {
         throw new Error("overlappingNoteInfo is undefined.");
       }
       removeNotesFromOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
-        mergeMaps(...state.overlappingNoteInfos.values())
+        mergeMaps(...state.overlappingNoteInfos.values()),
       );
       if (
         state.editingLyricNoteId != undefined &&
@@ -557,7 +557,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SELECT_ALL_NOTES: {
     mutation(state) {
       const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId
+        (value) => value.id === state.selectedTrackId,
       );
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
@@ -608,7 +608,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       {
         phraseKey,
         phraseState,
-      }: { phraseKey: string; phraseState: PhraseState }
+      }: { phraseKey: string; phraseState: PhraseState },
     ) {
       const phrase = state.phrases.get(phraseKey);
       if (phrase == undefined) {
@@ -627,7 +627,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }: {
         phraseKey: string;
         singingGuideKey: SingingGuideSourceHash | undefined;
-      }
+      },
     ) {
       const phrase = state.phrases.get(phraseKey);
       if (phrase == undefined) {
@@ -646,7 +646,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }: {
         phraseKey: string;
         singingVoiceKey: SingingVoiceSourceHash | undefined;
-      }
+      },
     ) {
       const phrase = state.phrases.get(phraseKey);
       if (phrase == undefined) {
@@ -662,7 +662,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       {
         singingGuideKey,
         singingGuide,
-      }: { singingGuideKey: SingingGuideSourceHash; singingGuide: SingingGuide }
+      }: {
+        singingGuideKey: SingingGuideSourceHash;
+        singingGuide: SingingGuide;
+      },
     ) {
       state.singingGuides.set(singingGuideKey, singingGuide);
     },
@@ -671,7 +674,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   DELETE_SINGING_GUIDE: {
     mutation(
       state,
-      { singingGuideKey }: { singingGuideKey: SingingGuideSourceHash }
+      { singingGuideKey }: { singingGuideKey: SingingGuideSourceHash },
     ) {
       state.singingGuides.delete(singingGuideKey);
     },
@@ -690,7 +693,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SELECTED_TRACK: {
     getter(state) {
       const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId
+        (value) => value.id === state.selectedTrackId,
       );
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
@@ -835,7 +838,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   PLAY_PREVIEW_SOUND: {
     async action(
       { getters },
-      { noteNumber, duration }: { noteNumber: number; duration?: number }
+      { noteNumber, duration }: { noteNumber: number; duration?: number },
     ) {
       if (!previewSynth || !previewChannelStrip) {
         throw new Error("previewSynth or previewChannelStrip is undefined.");
@@ -930,7 +933,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tpqn: number,
         keyRangeAdjustment: number,
         frameRate: number,
-        restDurationSeconds: number
+        restDurationSeconds: number,
       ) => {
         const restFrameLength = Math.round(restDurationSeconds * frameRate);
         const notesForRequestToEngine: NoteForRequestToEngine[] = [];
@@ -948,10 +951,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const noteOffTime = tickToSecond(
             note.position + note.duration,
             tempos,
-            tpqn
+            tpqn,
           );
           const noteOffFrame = Math.round(
-            (noteOffTime - firstNoteOnTime) * frameRate
+            (noteOffTime - firstNoteOnTime) * frameRate,
           );
           const noteFrameLength = Math.max(1, noteOffFrame - frame);
           // トランスポーズする
@@ -978,7 +981,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             engineId,
           });
           return await instance.invoke(
-            "singFrameAudioQuerySingFrameAudioQueryPost"
+            "singFrameAudioQuerySingFrameAudioQueryPost",
           )({
             score: { notes: notesForRequestToEngine },
             speaker: 6000, // TODO: 設定できるようにする
@@ -989,7 +992,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             .join("");
           logger.error(
             `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`,
-            error
+            error,
           );
           throw error;
         }
@@ -1001,7 +1004,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const shiftGuidePitch = (
         pitchShift: number,
-        frameAudioQuery: FrameAudioQuery
+        frameAudioQuery: FrameAudioQuery,
       ) => {
         frameAudioQuery.f0 = frameAudioQuery.f0.map((value) => {
           return value * Math.pow(2, pitchShift / 12);
@@ -1010,7 +1013,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const scaleGuideVolume = (
         volumeRangeAdjustment: number,
-        frameAudioQuery: FrameAudioQuery
+        frameAudioQuery: FrameAudioQuery,
       ) => {
         frameAudioQuery.volume = frameAudioQuery.volume.map((value) => {
           return value * decibelToLinear(volumeRangeAdjustment);
@@ -1021,7 +1024,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notes: Note[],
         tempos: Tempo[],
         tpqn: number,
-        restDurationSeconds: number
+        restDurationSeconds: number,
       ) => {
         let startTime = tickToSecond(notes[0].position, tempos, tpqn);
         startTime -= restDurationSeconds;
@@ -1047,7 +1050,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             .join(" ");
           logger.error(
             `Failed to synthesis. Phonemes are "${phonemes}".`,
-            error
+            error,
           );
           throw error;
         }
@@ -1087,7 +1090,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const tempos = state.tempos.map((value) => ({ ...value }));
         const foundPhrases = new Map<string, Phrase>();
         const tracks = state.tracks.map((value) =>
-          structuredClone(toRaw(value))
+          structuredClone(toRaw(value)),
         );
 
         for (const track of tracks) {
@@ -1202,7 +1205,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.singingVoiceKey != undefined
             ) {
               const singingGuide = state.singingGuides.get(
-                phrase.singingGuideKey
+                phrase.singingGuideKey,
               );
               if (singingGuide == undefined) {
                 throw new Error("singingGuide is undefined.");
@@ -1237,7 +1240,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const phrasesToBeRendered = new Map(
           [...state.phrases.entries()].filter(([, phrase]) => {
             return phrase.state === "WAITING_TO_BE_RENDERED";
-          })
+          }),
         );
         for (const [phraseKey, phrase] of phrasesToBeRendered) {
           // シーケンスが存在する場合、シーケンスの接続を解除して削除する
@@ -1271,7 +1274,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
           const [phraseKey, phrase] = selectPriorPhrase(
             phrasesToBeRendered,
-            playheadPosition.value
+            playheadPosition.value,
           );
           phrasesToBeRendered.delete(phraseKey);
 
@@ -1344,12 +1347,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   tpqn,
                   keyRangeAdjustment,
                   singerAndFrameRate.frameRate,
-                  restDurationSeconds
+                  restDurationSeconds,
                 );
 
                 const phonemes = getPhonemes(frameAudioQuery);
                 logger.info(
-                  `Fetched frame audio query. Phonemes are "${phonemes}".`
+                  `Fetched frame audio query. Phonemes are "${phonemes}".`,
                 );
 
                 shiftGuidePitch(keyRangeAdjustment, frameAudioQuery);
@@ -1359,7 +1362,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   phrase.notes,
                   tempos,
                   tpqn,
-                  restDurationSeconds
+                  restDurationSeconds,
                 );
 
                 singingGuide = {
@@ -1397,7 +1400,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             } else {
               const blob = await synthesize(
                 singerAndFrameRate.singer,
-                singingGuide.query
+                singingGuide.query,
               );
 
               logger.info(`Synthesized.`);
@@ -1425,7 +1428,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const audioEvents = await generateAudioEvents(
               audioContextRef,
               singingGuide.startTime,
-              singingVoice.blob
+              singingVoice.blob,
             );
             const audioPlayer = new AudioPlayer(audioContextRef);
             const audioSequence: AudioSequence = {
@@ -1502,12 +1505,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action: createUILockAction(
       async (
         { dispatch },
-        { filePath, trackIndex = 0 }: { filePath: string; trackIndex: number }
+        { filePath, trackIndex = 0 }: { filePath: string; trackIndex: number },
       ) => {
         const convertPosition = (
           position: number,
           sourceTpqn: number,
-          targetTpqn: number
+          targetTpqn: number,
         ) => {
           return Math.round(position * (targetTpqn / sourceTpqn));
         };
@@ -1516,17 +1519,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           startPosition: number,
           endPosition: number,
           sourceTpqn: number,
-          targetTpqn: number
+          targetTpqn: number,
         ) => {
           const convertedEndPosition = convertPosition(
             endPosition,
             sourceTpqn,
-            targetTpqn
+            targetTpqn,
           );
           const convertedStartPosition = convertPosition(
             startPosition,
             sourceTpqn,
-            targetTpqn
+            targetTpqn,
           );
           return Math.max(1, convertedEndPosition - convertedStartPosition);
         };
@@ -1562,7 +1565,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         const removeDuplicateTimeSignatures = (
-          timeSignatures: TimeSignature[]
+          timeSignatures: TimeSignature[],
         ) => {
           return timeSignatures.filter((value, index, array) => {
             return (
@@ -1574,7 +1577,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // NOTE: トラック選択のために一度ファイルを読み込んでいるので、Midiを渡すなどでもよさそう
         const midiData = getValueOrThrow(
-          await window.backend.readFile({ filePath })
+          await window.backend.readFile({ filePath }),
         );
         const midi = new Midi(midiData);
         const midiTpqn = midi.header.ppq;
@@ -1597,7 +1600,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               value.ticks,
               value.ticks + value.durationTicks,
               midiTpqn,
-              tpqn
+              tpqn,
             ),
             noteNumber: value.midi,
             lyric: getDoremiFromNoteNumber(value.midi),
@@ -1653,7 +1656,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             notes: [notes],
           },
         });
-      }
+      },
     ),
   },
 
@@ -1670,11 +1673,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         let xmlStr = new TextDecoder("utf-8").decode(
-          getValueOrThrow(await window.backend.readFile({ filePath }))
+          getValueOrThrow(await window.backend.readFile({ filePath })),
         );
         if (xmlStr.indexOf("\ufffd") > -1) {
           xmlStr = new TextDecoder("shift-jis").decode(
-            getValueOrThrow(await window.backend.readFile({ filePath }))
+            getValueOrThrow(await window.backend.readFile({ filePath })),
           );
         }
 
@@ -1701,7 +1704,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         let measureDuration = getMeasureDuration(
           timeSignatures[0].beats,
           timeSignatures[0].beatType,
-          tpqn
+          tpqn,
         );
         let tieStartNote: Note | undefined;
 
@@ -1726,7 +1729,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const getAttributeAsNumber = (
           element: Element,
-          qualifiedName: string
+          qualifiedName: string,
         ) => {
           const value = Number(element.getAttribute(qualifiedName));
           if (Number.isNaN(value)) {
@@ -1975,7 +1978,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             notes: [notes],
           },
         });
-      }
+      },
     ),
   },
 
@@ -1993,7 +1996,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
         // ファイルの読み込み
         const fileData = getValueOrThrow(
-          await window.backend.readFile({ filePath })
+          await window.backend.readFile({ filePath }),
         );
 
         // ファイルフォーマットに応じてエンコーディングを変える
@@ -2035,13 +2038,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!sectionNameMatch) {
             throw new Error("UST section name not found");
           }
-          const params = section.split(/[\r\n]+/).reduce((acc, line) => {
-            const [key, value] = line.split("=");
-            if (key && value) {
-              acc[key] = value;
-            }
-            return acc;
-          }, {} as { [key: string]: string });
+          const params = section.split(/[\r\n]+/).reduce(
+            (acc, line) => {
+              const [key, value] = line.split("=");
+              if (key && value) {
+                acc[key] = value;
+              }
+              return acc;
+            },
+            {} as { [key: string]: string },
+          );
           return {
             ...params,
             sectionName: sectionNameMatch[1],
@@ -2097,7 +2103,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             notes: [notes],
           },
         });
-      }
+      },
     ),
   },
 
@@ -2127,7 +2133,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (singer) {
             const singerName = getters.CHARACTER_INFO(
               singer.engineId,
-              singer.styleId
+              singer.styleId,
             )?.metas.speakerName;
             if (singerName) {
               const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
@@ -2135,7 +2141,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 .map((note) => note.lyric)
                 .join("");
               return sanitizeFileName(
-                `${singerName}_${beginningPartLyrics}.wav`
+                `${singerName}_${beginningPartLyrics}.wav`,
               );
             }
           }
@@ -2151,7 +2157,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const renderDuration = calcRenderDuration(
             state.tracks,
-            getters.TICK_TO_SECOND
+            getters.TICK_TO_SECOND,
           );
 
           if (state.nowPlaying) {
@@ -2193,7 +2199,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const offlineAudioContext = new OfflineAudioContext(
             numberOfChannels,
             sampleRate * renderDuration,
-            sampleRate
+            sampleRate,
           );
           const offlineTransport = new OfflineTransport();
           const globalChannelStrip = new ChannelStrip(offlineAudioContext);
@@ -2217,8 +2223,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               state.singingGuides,
               singingVoices,
               [...state.phrases.values()].filter(
-                (phrase) => phrase.trackId === track.id
-              )
+                (phrase) => phrase.trackId === track.id,
+              ),
             );
           }
           globalChannelStrip.volume = 1;
@@ -2279,7 +2285,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
           commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: false });
         }
-      }
+      },
     ),
   },
 
@@ -2294,7 +2300,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const renderDuration = calcRenderDuration(
             state.tracks,
-            getters.TICK_TO_SECOND
+            getters.TICK_TO_SECOND,
           );
 
           if (state.nowPlaying) {
@@ -2332,7 +2338,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const offlineAudioContext = new OfflineAudioContext(
               numberOfChannels,
               sampleRate * renderDuration,
-              sampleRate
+              sampleRate,
             );
             const offlineTransport = new OfflineTransport();
             const globalChannelStrip = new ChannelStrip(offlineAudioContext);
@@ -2355,8 +2361,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               state.singingGuides,
               singingVoices,
               [...state.phrases.values()].filter(
-                (phrase) => phrase.trackId === track.id
-              )
+                (phrase) => phrase.trackId === track.id,
+              ),
             );
             globalChannelStrip.volume = 1;
             if (limiter) {
@@ -2376,7 +2382,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const filePath = path.join(
               dirPath,
               // TODO: 設定可能にする
-              (i + 1).toString().padStart(3, "0") + ".wav"
+              (i + 1).toString().padStart(3, "0") + ".wav",
             );
 
             try {
@@ -2422,7 +2428,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
           commit("SET_NOW_AUDIO_EXPORTING", { nowAudioExporting: false });
         }
-      }
+      },
     ),
   },
 
@@ -2704,7 +2710,7 @@ export const singingCommandStore = transformCommandStore(
       // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
       action(
         { state, getters, commit, dispatch },
-        { tempo }: { tempo: Tempo }
+        { tempo }: { tempo: Tempo },
       ) {
         if (!transport) {
           throw new Error("transport is undefined.");
@@ -2729,7 +2735,7 @@ export const singingCommandStore = transformCommandStore(
       // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
       action(
         { state, getters, commit, dispatch },
-        { position }: { position: number }
+        { position }: { position: number },
       ) {
         const exists = state.tempos.some((value) => {
           return value.position === position;
@@ -2913,5 +2919,5 @@ export const singingCommandStore = transformCommandStore(
       },
     },
   }),
-  "song"
+  "song",
 );

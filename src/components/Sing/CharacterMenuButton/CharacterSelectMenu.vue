@@ -24,7 +24,7 @@
             @click="
               changeStyleId(
                 characterInfo.metas.speakerUuid,
-                getDefaultStyle(characterInfo.metas.speakerUuid).styleId
+                getDefaultStyle(characterInfo.metas.speakerUuid).styleId,
               )
             "
             @mouseover="reassignSubMenuOpen(-1)"
@@ -74,7 +74,7 @@
                     @click="
                       changeStyleId(
                         characterInfo.metas.speakerUuid,
-                        style.styleId
+                        style.styleId,
                       )
                     "
                   >
@@ -127,13 +127,13 @@ const userOrderedCharacterInfos = computed(() => {
 });
 
 const subMenuOpenFlags = ref(
-  [...Array(userOrderedCharacterInfos.value?.length)].map(() => false)
+  [...Array(userOrderedCharacterInfos.value?.length)].map(() => false),
 );
 
 const reassignSubMenuOpen = debounce((idx: number) => {
   if (subMenuOpenFlags.value[idx]) return;
   const arr = [...Array(userOrderedCharacterInfos.value?.length)].map(
-    () => false
+    () => false,
   );
   arr[idx] = true;
   subMenuOpenFlags.value = arr;
@@ -144,12 +144,12 @@ const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
     (store.state.characterInfos[_engineId] ?? []).some(
       (characterInfo) =>
         characterInfo.metas.speakerUuid === speakerUuid &&
-        characterInfo.metas.styles.some((style) => style.styleId === styleId)
-    )
+        characterInfo.metas.styles.some((style) => style.styleId === styleId),
+    ),
   );
   if (engineId == undefined)
     throw new Error(
-      `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
+      `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`,
     );
 
   store.dispatch("COMMAND_SET_SINGER", {
@@ -161,7 +161,7 @@ const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
 const getDefaultStyle = (speakerUuid: string) => {
   // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
   const characterInfo = userOrderedCharacterInfos.value?.find(
-    (info) => info.metas.speakerUuid === speakerUuid
+    (info) => info.metas.speakerUuid === speakerUuid,
   );
 
   // ここで取得されるcharacterInfoには、ソングエディタ向けのスタイルのみ含まれるので、
@@ -170,7 +170,7 @@ const getDefaultStyle = (speakerUuid: string) => {
   const defaultStyleId = characterInfo?.metas.styles[0].styleId;
 
   const defaultStyle = characterInfo?.metas.styles.find(
-    (style) => style.styleId === defaultStyleId
+    (style) => style.styleId === defaultStyleId,
   );
 
   if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
@@ -195,8 +195,8 @@ const selectedStyleId = computed(
     selectedCharacterInfo.value?.metas.styles.find(
       (style) =>
         style.styleId === store.getters.SELECTED_TRACK.singer?.styleId &&
-        style.engineId === store.getters.SELECTED_TRACK.singer?.engineId
-    )?.styleId
+        style.engineId === store.getters.SELECTED_TRACK.singer?.engineId,
+    )?.styleId,
 );
 
 // 複数エンジン
@@ -207,14 +207,14 @@ const engineIcons = computed(() =>
     store.state.engineIds.map((engineId) => [
       engineId,
       base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ])
-  )
+    ]),
+  ),
 );
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .character-menu {
   .q-item {

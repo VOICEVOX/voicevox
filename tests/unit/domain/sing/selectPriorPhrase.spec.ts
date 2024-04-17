@@ -10,7 +10,7 @@ const trackId = TrackId("00000000-0000-0000-0000-000000000000");
 const createPhrase = (
   start: number,
   end: number,
-  state: PhraseState
+  state: PhraseState,
 ): Phrase => {
   return {
     notes: [

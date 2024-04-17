@@ -20,7 +20,7 @@ const props = withDefaults(
   {
     showEngineIcon: false,
     engineIcons: () => ({}),
-  }
+  },
 );
 </script>
 <style scoped lang="scss">
