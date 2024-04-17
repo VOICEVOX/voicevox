@@ -139,7 +139,7 @@ const handleMidiFileChange = (event: Event) => {
         // MIDIファイルをパース
         midi.value = new Midi(e.target.result);
         selectedTrack.value = midi.value.tracks.findIndex(
-          (track) => track.notes.length > 0
+          (track) => track.notes.length > 0,
         );
         if (selectedTrack.value === -1) {
           selectedTrack.value = 0;

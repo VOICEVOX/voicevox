@@ -39,7 +39,7 @@ it("SynthVのノートと歌詞をパースできる", async () => {
       noteNumber,
       duration: ticksPerBeat,
       lyric,
-    }))
+    })),
   );
 });
 

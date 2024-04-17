@@ -75,21 +75,21 @@ export class Track {
       return { time, ...event };
     });
     const lyrics = this.events.filter(
-      (e) => e.type === "lyrics"
+      (e) => e.type === "lyrics",
     ) as MidiEventWithTime<MidiLyricsEvent>[];
     const lyricsMap = new Map<number, string>(
       lyrics.map((e) => {
         // midi-fileはUTF-8としてデコードしてくれないので、ここでデコードする
         const buffer = new Uint8Array(
-          e.text.split("").map((c) => c.charCodeAt(0))
+          e.text.split("").map((c) => c.charCodeAt(0)),
         );
         const decoder = new TextDecoder("utf-8");
         return [e.time, decoder.decode(buffer)];
-      })
+      }),
     );
 
     const noteOnOffs = this.events.filter(
-      (e) => e.type === "noteOn" || e.type === "noteOff"
+      (e) => e.type === "noteOn" || e.type === "noteOff",
     ) as MidiEventWithTime<MidiNoteOnEvent | MidiNoteOffEvent>[];
     noteOnOffs.sort((a, b) => a.time - b.time);
     this.notes = [];
@@ -125,7 +125,7 @@ export class Track {
 
   get name() {
     const nameEvent = this.data.find(
-      (e) => e.type === "trackName"
+      (e) => e.type === "trackName",
     ) as MidiTrackNameEvent;
     if (!nameEvent) {
       return "";
@@ -135,14 +135,14 @@ export class Track {
 
   get tempos(): Tempo[] {
     const tempoEvents = this.events.filter(
-      (e) => e.type === "setTempo"
+      (e) => e.type === "setTempo",
     ) as MidiEventWithTime<MidiSetTempoEvent>[];
 
     const tempos = tempoEvents.map((e) => ({
       ticks: e.time,
       bpm:
         Math.round(
-          ((60 * 1000000) / e.microsecondsPerBeat) * 10 ** bpmPrecision
+          ((60 * 1000000) / e.microsecondsPerBeat) * 10 ** bpmPrecision,
         ) /
         10 ** bpmPrecision,
     }));
@@ -152,7 +152,7 @@ export class Track {
 
   get timeSignatures(): TimeSignature[] {
     const timeSignatureEvents = this.events.filter(
-      (e) => e.type === "timeSignature"
+      (e) => e.type === "timeSignature",
     ) as MidiEventWithTime<MidiTimeSignatureEvent>[];
 
     const timeSignatures = timeSignatureEvents.map((e) => ({
