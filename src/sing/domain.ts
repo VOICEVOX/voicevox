@@ -1,4 +1,5 @@
 import { calculateHash } from "./utility";
+import { convertLongVowel } from "@/store/utility";
 import {
   Note,
   Phrase,
@@ -383,3 +384,61 @@ export function selectPriorPhrase(
   // 再生位置より前のPhrase
   return sortedPhrases[0];
 }
+
+// 参考：https://github.com/VOICEVOX/voicevox_core/blob/0848630d81ae3e917c6ff2038f0b15bbd4270702/crates/voicevox_core/src/user_dict/word.rs#L83-L90
+export const moraPattern = new RegExp(
+  "(?:" +
+    "[イ][ェ]|[ヴ][ャュョ]|[トド][ゥ]|[テデ][ィャュョ]|[デ][ェ]|[クグ][ヮ]|" + // rule_others
+    "[キシチニヒミリギジビピ][ェャュョ]|" + // rule_line_i
+    "[ツフヴ][ァ]|[ウスツフヴズ][ィ]|[ウツフヴ][ェォ]|" + // rule_line_u
+    "[ァ-ヴー]|" + // rule_one_mora
+    "[い][ぇ]|[ゃゅょ]|[とど][ぅ]|[てで][ぃゃゅょ]|[で][ぇ]|[くぐ][ゎ]|" + // rule_others
+    "[きしちにひみりぎじびぴ][ぇゃゅょ]|" + // rule_line_i
+    "[つふゔ][ぁ]|[うすつふゔず][ぃ]|[うつふゔ][ぇぉ]|" + // rule_line_u
+    "[ぁ-ゔー]" + // rule_one_mora
+    ")",
+  "g",
+);
+
+/**
+ * 文字列をモーラと非モーラに分割する。長音は展開される。連続する非モーラはまとめる。
+ * 例："カナー漢字" -> ["カ", "ナ", "ア", "漢字"]
+ *
+ * @param text 分割する文字列
+ * @param maxLength 最大の要素数
+ * @returns 分割された文字列
+ */
+export const splitLyricsByMoras = (
+  text: string,
+  maxLength = Infinity,
+): string[] => {
+  const moraAndNonMoras: string[] = [];
+  const matches = convertLongVowel(text).matchAll(moraPattern);
+  let lastMatchEnd = 0;
+  // aアbイウc で説明：
+  for (const match of matches) {
+    if (match.index == undefined) {
+      throw new Error("match.index is undefined.");
+    }
+    // 直前のモーラとの間 = a、b、空文字列
+    if (lastMatchEnd < match.index) {
+      moraAndNonMoras.push(text.substring(lastMatchEnd, match.index));
+    }
+    // モーラ = ア、イ、ウ
+    moraAndNonMoras.push(match[0]);
+    lastMatchEnd = match.index + match[0].length;
+  }
+  // 最後のモーラから後 = cの部分
+  if (lastMatchEnd < text.length) {
+    moraAndNonMoras.push(text.substring(lastMatchEnd));
+  }
+  // 指定した最大要素数より多い場合は配列を削る
+  if (moraAndNonMoras.length > maxLength) {
+    moraAndNonMoras.splice(
+      maxLength - 1,
+      moraAndNonMoras.length,
+      moraAndNonMoras.slice(maxLength - 1).join(""),
+    );
+  }
+  return moraAndNonMoras;
+};

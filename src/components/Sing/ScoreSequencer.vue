@@ -110,25 +110,32 @@
         }"
       ></div>
       <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
+      <!-- undefinedだと警告が出るのでnullを渡す -->
       <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
         :note="note"
+        :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="false"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-input="onNoteLyricInput($event, note)"
+        @lyric-blur="onNoteLyricBlur()"
       />
       <SequencerNote
         v-for="note in nowPreviewing ? previewNotes : selectedNotes"
         :key="note.id"
         :note="note"
+        :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="true"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
         @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
         @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
+        @lyric-input="onNoteLyricInput($event, note)"
+        @lyric-blur="onNoteLyricBlur()"
       />
     </div>
     <SequencerPitch
@@ -264,6 +271,7 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useShiftKey } from "@/composables/useModifierKey";
+import { useLyricInput } from "@/composables/useLyricInput";
 
 type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
 
@@ -393,6 +401,18 @@ const sequencerBody = ref<HTMLElement | null>(null);
 // マウスカーソル位置
 const cursorX = ref(0);
 const cursorY = ref(0);
+
+// 歌詞入力
+const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
+  useLyricInput();
+
+const onNoteLyricInput = (text: string, note: Note) => {
+  splitAndUpdatePreview(text, note);
+};
+
+const onNoteLyricBlur = () => {
+  commitPreviewLyrics();
+};
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
