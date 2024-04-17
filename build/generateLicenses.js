@@ -7,6 +7,7 @@ const fs = require("fs/promises");
 const path = require("path");
 const yargs = require("yargs");
 const { hideBin } = require("yargs/helpers");
+
 const argv = yargs(hideBin(process.argv))
   .option("output_path", {
     alias: "o",
