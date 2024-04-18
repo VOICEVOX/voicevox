@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import path from "path";
 import { rm } from "fs/promises";
+import { fileURLToPath } from "url";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -9,6 +10,9 @@ import checker from "vite-plugin-checker";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
