@@ -1,4 +1,5 @@
 import { StyleInfo } from "@/type/preload";
+import { calculateHash } from "@/sing/utility";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_SEMITONE = 30;
@@ -6,8 +7,8 @@ const BASE_Y_PER_SEMITONE = 30;
 export const ZOOM_X_MIN = 0.2;
 export const ZOOM_X_MAX = 1;
 export const ZOOM_X_STEP = 0.05;
-export const ZOOM_Y_MIN = 0.35;
-export const ZOOM_Y_MAX = 1;
+export const ZOOM_Y_MIN = 0.6;
+export const ZOOM_Y_MAX = 1.5;
 export const ZOOM_Y_STEP = 0.05;
 export const PREVIEW_SOUND_DURATION = 0.15;
 
@@ -19,6 +20,7 @@ export function tickToBaseX(ticks: number, tpqn: number) {
   return (ticks / tpqn) * BASE_X_PER_QUARTER_NOTE;
 }
 
+// NOTE: 戻り値は実数
 export function baseXToTick(baseX: number, tpqn: number) {
   return (baseX / BASE_X_PER_QUARTER_NOTE) * tpqn;
 }
@@ -177,4 +179,14 @@ export class GridAreaInfo implements AreaInfo {
     this.type = "grid";
     this.id = "GRID";
   }
+}
+
+export type DataSection = {
+  readonly startFrame: number;
+  readonly frameRate: number;
+  readonly data: number[];
+};
+
+export async function calculateDataSectionHash(dataSection: DataSection) {
+  return await calculateHash(dataSection);
 }

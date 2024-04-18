@@ -82,11 +82,17 @@ export const singerSchema = z.object({
   styleId: styleIdSchema,
 });
 
+export const pitchEditSchema = z.object({
+  data: z.array(z.number()),
+  frameRate: z.number(),
+});
+
 export const trackSchema = z.object({
   singer: singerSchema.optional(),
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
+  pitchEdit: pitchEditSchema,
 });
 
 // プロジェクトファイルのスキーマ

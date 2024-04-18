@@ -3,19 +3,32 @@ export function round(value: number, digits: number) {
   return Math.round(value * powerOf10) / powerOf10;
 }
 
-export const calculateHash = async <T>(obj: T) => {
+export function linearInterpolation(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  x: number,
+) {
+  if (x2 <= x1) {
+    throw new Error("x2 must be greater than x1.");
+  }
+  return y1 + ((y2 - y1) * (x - x1)) / (x2 - x1);
+}
+
+export async function calculateHash<T>(obj: T) {
   const textEncoder = new TextEncoder();
   const data = textEncoder.encode(JSON.stringify(obj));
   const digest = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(digest))
     .map((v) => v.toString(16).padStart(2, "0"))
     .join("");
-};
+}
 
-export const createPromiseThatResolvesWhen = (
+export function createPromiseThatResolvesWhen(
   condition: () => boolean,
   interval = 200,
-) => {
+) {
   return new Promise<void>((resolve) => {
     const checkCondition = () => {
       if (condition()) {
@@ -25,7 +38,7 @@ export const createPromiseThatResolvesWhen = (
     };
     checkCondition();
   });
-};
+}
 
 /**
  * タイマーです。関数を定期的に実行します。

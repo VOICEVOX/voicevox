@@ -18,7 +18,7 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
-      :class="{ 'rect-selecting': shiftKey }"
+      :class="{ 'rect-selecting': editMode === 'NOTE' && shiftKey }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
@@ -102,7 +102,7 @@
         />
       </svg>
       <div
-        v-if="showGuideLine"
+        v-if="editMode === 'NOTE' && showGuideLine"
         class="sequencer-guideline"
         :style="{
           height: `${gridHeight}px`,
@@ -125,7 +125,9 @@
         @lyric-blur="onNoteLyricBlur()"
       />
       <SequencerNote
-        v-for="note in nowPreviewing ? previewNotes : selectedNotes"
+        v-for="note in editMode === 'NOTE' && nowPreviewing
+          ? previewNotes
+          : selectedNotes"
         :key="note.id"
         :note="note"
         :preview-lyric="previewLyrics.get(note.id) || null"
@@ -139,7 +141,7 @@
       />
     </div>
     <SequencerPitch
-      v-if="showPitch"
+      v-if="editMode === 'PITCH'"
       class="sequencer-pitch"
       :style="{
         marginRight: `${scrollBarWidth}px`,
@@ -147,6 +149,7 @@
       }"
       :offset-x="scrollX"
       :offset-y="scrollY"
+      :preview-pitch-edit="previewPitchEdit"
     />
     <div
       class="sequencer-overlay"
@@ -215,7 +218,11 @@
       }"
       @input="setZoomY"
     />
-    <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
+    <ContextMenu
+      v-if="editMode === 'NOTE'"
+      ref="contextMenu"
+      :menudata="contextMenuData"
+    />
   </div>
 </template>
 
@@ -234,13 +241,16 @@ import ContextMenu, {
 } from "@/components/Menu/ContextMenu.vue";
 import { isMac } from "@/type/preload";
 import { useStore } from "@/store";
-import { Note } from "@/store/type";
+import { Note, SequencerEditMode } from "@/store/type";
 import {
+  EDITOR_FRAME_RATE,
   getEndTicksOfPhrase,
   getMeasureDuration,
   getNoteDuration,
   getNumOfMeasures,
   getStartTicksOfPhrase,
+  noteNumberToFrequency,
+  tickToSecond,
 } from "@/sing/domain";
 import {
   getKeyBaseHeight,
@@ -271,9 +281,16 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useShiftKey } from "@/composables/useModifierKey";
+import { linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 
-type PreviewMode = "ADD" | "MOVE" | "RESIZE_RIGHT" | "RESIZE_LEFT";
+type PreviewMode =
+  | "ADD"
+  | "MOVE"
+  | "RESIZE_RIGHT"
+  | "RESIZE_LEFT"
+  | "DRAW_PITCH"
+  | "ERASE_PITCH";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -392,9 +409,7 @@ const phraseInfos = computed(() => {
   });
 });
 
-const showPitch = computed(() => {
-  return state.experimentalSetting.showPitchInSongEditor;
-});
+const editMode = computed(() => state.sequencerEditMode);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 
@@ -417,16 +432,26 @@ const onNoteLyricBlur = () => {
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
 const nowPreviewing = ref(false);
-const previewNotes = ref<Note[]>([]);
-const copiedNotesForPreview = new Map<string, Note>();
 let previewMode: PreviewMode = "ADD";
 let previewRequestId = 0;
+let previewStartEditMode: SequencerEditMode = "NOTE";
+let executePreviewProcess = false;
+// ノート編集のプレビュー
+const previewNotes = ref<Note[]>([]);
+const copiedNotesForPreview = new Map<string, Note>();
 let dragStartTicks = 0;
 let dragStartNoteNumber = 0;
 let dragStartGuideLineTicks = 0;
 let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
-let executePreviewProcess = false;
 let edited = false; // プレビュー終了時にstore.stateの更新を行うかどうかを表す変数
+// ピッチ編集のプレビュー
+const previewPitchEdit = ref<
+  | { type: "draw"; data: number[]; startFrame: number }
+  | { type: "erase"; startFrame: number; frameLength: number }
+  | undefined
+>(undefined);
+let prevCursorFrame = 0;
+let prevCursorFrequency = 0;
 
 // ダブルクリック
 let mouseDownAreaInfo: NoteAreaInfo | GridAreaInfo | undefined;
@@ -607,6 +632,110 @@ const previewResizeLeft = () => {
   guideLineX.value = guideLineBaseX * zoomX.value;
 };
 
+const previewDrawPitch = () => {
+  if (previewPitchEdit.value == undefined) {
+    throw new Error("previewPitchEdit.value is undefined.");
+  }
+  if (previewPitchEdit.value.type !== "draw") {
+    throw new Error("previewPitchEdit.value.type is not draw.");
+  }
+  const frameRate = EDITOR_FRAME_RATE;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
+  const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
+  const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+  const cursorSeconds = tickToSecond(cursorTicks, tempos.value, tpqn.value);
+  const cursorFrame = Math.round(cursorSeconds * frameRate);
+  const cursorNoteNumber = baseYToNoteNumber(cursorBaseY, false);
+  const cursorFrequency = noteNumberToFrequency(cursorNoteNumber);
+  if (cursorFrame < 0) {
+    return;
+  }
+  const tempPitchEdit = {
+    ...previewPitchEdit.value,
+    data: [...previewPitchEdit.value.data],
+  };
+
+  if (tempPitchEdit.startFrame > cursorFrame) {
+    const numOfFramesToUnshift = tempPitchEdit.startFrame - cursorFrame;
+    tempPitchEdit.data = new Array(numOfFramesToUnshift)
+      .fill(0)
+      .concat(tempPitchEdit.data);
+    tempPitchEdit.startFrame = cursorFrame;
+  }
+
+  const lastFrame = tempPitchEdit.startFrame + tempPitchEdit.data.length - 1;
+  if (lastFrame < cursorFrame) {
+    const numOfFramesToPush = cursorFrame - lastFrame;
+    tempPitchEdit.data = tempPitchEdit.data.concat(
+      new Array(numOfFramesToPush).fill(0),
+    );
+  }
+
+  if (cursorFrame === prevCursorFrame) {
+    const i = cursorFrame - tempPitchEdit.startFrame;
+    tempPitchEdit.data[i] = cursorFrequency;
+  } else if (cursorFrame < prevCursorFrame) {
+    for (let i = cursorFrame; i <= prevCursorFrame; i++) {
+      tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
+        linearInterpolation(
+          cursorFrame,
+          Math.log(cursorFrequency),
+          prevCursorFrame,
+          Math.log(prevCursorFrequency),
+          i,
+        ),
+      );
+    }
+  } else {
+    for (let i = prevCursorFrame; i <= cursorFrame; i++) {
+      tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
+        linearInterpolation(
+          prevCursorFrame,
+          Math.log(prevCursorFrequency),
+          cursorFrame,
+          Math.log(cursorFrequency),
+          i,
+        ),
+      );
+    }
+  }
+
+  previewPitchEdit.value = tempPitchEdit;
+  prevCursorFrame = cursorFrame;
+  prevCursorFrequency = cursorFrequency;
+};
+
+const previewErasePitch = () => {
+  if (previewPitchEdit.value == undefined) {
+    throw new Error("previewPitchEdit.value is undefined.");
+  }
+  if (previewPitchEdit.value.type !== "erase") {
+    throw new Error("previewPitchEdit.value.type is not erase.");
+  }
+  const frameRate = EDITOR_FRAME_RATE;
+  const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
+  const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+  const cursorSeconds = tickToSecond(cursorTicks, tempos.value, tpqn.value);
+  const cursorFrame = Math.round(cursorSeconds * frameRate);
+  if (cursorFrame < 0) {
+    return;
+  }
+  const tempPitchEdit = { ...previewPitchEdit.value };
+
+  if (tempPitchEdit.startFrame > cursorFrame) {
+    tempPitchEdit.frameLength += tempPitchEdit.startFrame - cursorFrame;
+    tempPitchEdit.startFrame = cursorFrame;
+  }
+
+  const lastFrame = tempPitchEdit.startFrame + tempPitchEdit.frameLength - 1;
+  if (lastFrame < cursorFrame) {
+    tempPitchEdit.frameLength += cursorFrame - lastFrame;
+  }
+
+  previewPitchEdit.value = tempPitchEdit;
+  prevCursorFrame = cursorFrame;
+};
+
 const preview = () => {
   if (executePreviewProcess) {
     if (previewMode === "ADD") {
@@ -620,6 +749,12 @@ const preview = () => {
     }
     if (previewMode === "RESIZE_LEFT") {
       previewResizeLeft();
+    }
+    if (previewMode === "DRAW_PITCH") {
+      previewDrawPitch();
+    }
+    if (previewMode === "ERASE_PITCH") {
+      previewErasePitch();
     }
     executePreviewProcess = false;
   }
@@ -662,78 +797,161 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   }
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
-  const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-  const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
-  // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
-  const guideLineTicks =
-    Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
-  const copiedNotes: Note[] = [];
-  if (mode === "ADD") {
-    if (cursorNoteNumber < 0) {
-      return;
+
+  if (editMode.value === "NOTE") {
+    // ノート編集モードのときの処理
+
+    const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+    const cursorNoteNumber = baseYToNoteNumber(cursorBaseY, true);
+    // NOTE: 入力を補助する線の判定の境目はスナップ幅の3/4の位置
+    const guideLineTicks =
+      Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
+    const copiedNotes: Note[] = [];
+    if (mode === "ADD") {
+      if (cursorNoteNumber < 0) {
+        return;
+      }
+      note = {
+        id: uuidv4(),
+        position: guideLineTicks,
+        duration: snapTicks.value,
+        noteNumber: cursorNoteNumber,
+        lyric: getDoremiFromNoteNumber(cursorNoteNumber),
+      };
+      store.dispatch("DESELECT_ALL_NOTES");
+      copiedNotes.push(note);
+    } else {
+      if (!note) {
+        throw new Error("note is undefined.");
+      }
+      if (event.shiftKey) {
+        let minIndex = notes.value.length - 1;
+        let maxIndex = 0;
+        for (let i = 0; i < notes.value.length; i++) {
+          const noteId = notes.value[i].id;
+          if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
+            minIndex = Math.min(minIndex, i);
+            maxIndex = Math.max(maxIndex, i);
+          }
+        }
+        const noteIdsToSelect: string[] = [];
+        for (let i = minIndex; i <= maxIndex; i++) {
+          const noteId = notes.value[i].id;
+          if (!state.selectedNoteIds.has(noteId)) {
+            noteIdsToSelect.push(noteId);
+          }
+        }
+        store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+      } else if (isOnCommandOrCtrlKeyDown(event)) {
+        store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+      } else if (!state.selectedNoteIds.has(note.id)) {
+        selectOnlyThis(note);
+      }
+      for (const note of selectedNotes.value) {
+        copiedNotes.push({ ...note });
+      }
     }
-    note = {
-      id: uuidv4(),
-      position: guideLineTicks,
-      duration: snapTicks.value,
-      noteNumber: cursorNoteNumber,
-      lyric: getDoremiFromNoteNumber(cursorNoteNumber),
-    };
-    store.dispatch("DESELECT_ALL_NOTES");
-    copiedNotes.push(note);
+    dragStartTicks = cursorTicks;
+    dragStartNoteNumber = cursorNoteNumber;
+    dragStartGuideLineTicks = guideLineTicks;
+    draggingNoteId = note.id;
+    edited = mode === "ADD";
+    copiedNotesForPreview.clear();
+    for (const copiedNote of copiedNotes) {
+      copiedNotesForPreview.set(copiedNote.id, copiedNote);
+    }
+    previewNotes.value = copiedNotes;
+  } else if (editMode.value === "PITCH") {
+    // ピッチ編集モードのときの処理
+
+    const frameRate = EDITOR_FRAME_RATE;
+    const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
+    const cursorSeconds = tickToSecond(cursorTicks, tempos.value, tpqn.value);
+    const cursorFrame = Math.round(cursorSeconds * frameRate);
+    const cursorNoteNumber = baseYToNoteNumber(cursorBaseY, false);
+    const cursorFrequency = noteNumberToFrequency(cursorNoteNumber);
+    if (mode === "DRAW_PITCH") {
+      previewPitchEdit.value = {
+        type: "draw",
+        data: [cursorFrequency],
+        startFrame: cursorFrame,
+      };
+    } else if (mode === "ERASE_PITCH") {
+      previewPitchEdit.value = {
+        type: "erase",
+        startFrame: cursorFrame,
+        frameLength: 1,
+      };
+    } else {
+      throw new Error("Unknown preview mode.");
+    }
+    prevCursorFrame = cursorFrame;
+    prevCursorFrequency = cursorFrequency;
   } else {
-    if (!note) {
-      throw new Error("note is undefined.");
-    }
-    if (event.shiftKey) {
-      let minIndex = notes.value.length - 1;
-      let maxIndex = 0;
-      for (let i = 0; i < notes.value.length; i++) {
-        const noteId = notes.value[i].id;
-        if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
-          minIndex = Math.min(minIndex, i);
-          maxIndex = Math.max(maxIndex, i);
-        }
-      }
-      const noteIdsToSelect: string[] = [];
-      for (let i = minIndex; i <= maxIndex; i++) {
-        const noteId = notes.value[i].id;
-        if (!state.selectedNoteIds.has(noteId)) {
-          noteIdsToSelect.push(noteId);
-        }
-      }
-      store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
-    } else if (isOnCommandOrCtrlKeyDown(event)) {
-      store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-    } else if (!state.selectedNoteIds.has(note.id)) {
-      selectOnlyThis(note);
-    }
-    for (const note of selectedNotes.value) {
-      copiedNotes.push({ ...note });
-    }
+    throw new Error("Unknown edit mode.");
   }
   previewMode = mode;
-  dragStartTicks = cursorTicks;
-  dragStartNoteNumber = cursorNoteNumber;
-  dragStartGuideLineTicks = guideLineTicks;
-  draggingNoteId = note.id;
+  previewStartEditMode = editMode.value;
   executePreviewProcess = true;
-  edited = mode === "ADD";
-  copiedNotesForPreview.clear();
-  for (const copiedNote of copiedNotes) {
-    copiedNotesForPreview.set(copiedNote.id, copiedNote);
-  }
-  previewNotes.value = copiedNotes;
   nowPreviewing.value = true;
   previewRequestId = requestAnimationFrame(preview);
 };
 
+const endPreview = () => {
+  cancelAnimationFrame(previewRequestId);
+  if (previewStartEditMode === "NOTE") {
+    // ノート編集モードのときにプレビューを開始した場合の処理
+
+    if (edited) {
+      if (previewMode === "ADD") {
+        store.dispatch("COMMAND_ADD_NOTES", { notes: previewNotes.value });
+        store.dispatch("SELECT_NOTES", {
+          noteIds: previewNotes.value.map((value) => value.id),
+        });
+      } else {
+        store.dispatch("COMMAND_UPDATE_NOTES", { notes: previewNotes.value });
+      }
+      if (previewNotes.value.length === 1) {
+        store.dispatch("PLAY_PREVIEW_SOUND", {
+          noteNumber: previewNotes.value[0].noteNumber,
+          duration: PREVIEW_SOUND_DURATION,
+        });
+      }
+    }
+  } else if (previewStartEditMode === "PITCH") {
+    // ピッチ編集モードのときにプレビューを開始した場合の処理
+
+    if (previewPitchEdit.value == undefined) {
+      throw new Error("previewPitchEdit.value is undefined.");
+    }
+    if (previewPitchEdit.value.type === "draw") {
+      store.dispatch("SET_PITCH_EDIT_DATA", {
+        data: previewPitchEdit.value.data,
+        startFrame: previewPitchEdit.value.startFrame,
+      });
+    } else if (previewPitchEdit.value.type === "erase") {
+      store.dispatch("ERASE_PITCH_EDIT_DATA", {
+        startFrame: previewPitchEdit.value.startFrame,
+        frameLength: previewPitchEdit.value.frameLength,
+      });
+    } else {
+      throw new Error("Unknown preview pitch edit type.");
+    }
+    previewPitchEdit.value = undefined;
+  } else {
+    throw new Error("Unknown edit mode.");
+  }
+  nowPreviewing.value = false;
+};
+
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
-  if (!isSelfEventTarget(event)) {
+  if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   if (event.button === 0) {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
+  }
+  if (event.button === 0) {
     startPreview(event, "MOVE", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -741,11 +959,13 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
-  if (!isSelfEventTarget(event)) {
+  if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   if (event.button === 0) {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
+  }
+  if (event.button === 0) {
     startPreview(event, "RESIZE_LEFT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -753,11 +973,13 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
-  if (!isSelfEventTarget(event)) {
+  if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   if (event.button === 0) {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
+  }
+  if (event.button === 0) {
     startPreview(event, "RESIZE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -765,7 +987,7 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
-  if (!isSelfEventTarget(event)) {
+  if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   if (event.button === 0) {
@@ -777,29 +999,42 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onMouseDown = (event: MouseEvent) => {
-  if (!isSelfEventTarget(event)) {
+  if (editMode.value === "NOTE" && !isSelfEventTarget(event)) {
     return;
   }
-
   // macOSの場合、Ctrl+クリックが右クリックのため、その場合はノートを追加しない
+  // TODO: 他の箇所でもチェックを行うようにする
   if (isMac && event.ctrlKey && event.button === 0) {
     return;
   }
 
-  // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
-
-  // 選択中のノートが無い場合、プレビューを開始しノートIDをリセット
   if (event.button === 0) {
     mouseDownAreaInfo = new GridAreaInfo();
-    if (event.shiftKey) {
-      isRectSelecting.value = true;
-      rectSelectStartX.value = cursorX.value;
-      rectSelectStartY.value = cursorY.value;
+  }
+  // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
+  // 選択中のノートが無い場合、プレビューを開始しノートIDをリセット
+  if (editMode.value === "NOTE") {
+    if (event.button === 0) {
+      if (event.shiftKey) {
+        isRectSelecting.value = true;
+        rectSelectStartX.value = cursorX.value;
+        rectSelectStartY.value = cursorY.value;
+      } else {
+        startPreview(event, "ADD");
+      }
     } else {
-      startPreview(event, "ADD");
+      store.dispatch("DESELECT_ALL_NOTES");
+    }
+  } else if (editMode.value === "PITCH") {
+    if (event.button === 0) {
+      if (event.ctrlKey) {
+        startPreview(event, "ERASE_PITCH");
+      } else {
+        startPreview(event, "DRAW_PITCH");
+      }
     }
   } else {
-    store.dispatch("DESELECT_ALL_NOTES");
+    throw new Error("Unknown edit mode.");
   }
 };
 
@@ -832,33 +1067,14 @@ const onMouseUp = (event: MouseEvent) => {
   if (mouseDownAreaInfo) {
     doubleClickDetector.recordClick(event.detail, mouseDownAreaInfo);
   }
-  ignoreDoubleClick = nowPreviewing.value && edited;
+  ignoreDoubleClick =
+    editMode.value !== "NOTE" || (nowPreviewing.value && edited);
 
   if (isRectSelecting.value) {
     rectSelect(isOnCommandOrCtrlKeyDown(event));
-    return;
+  } else if (nowPreviewing.value) {
+    endPreview();
   }
-  if (!nowPreviewing.value) {
-    return;
-  }
-  cancelAnimationFrame(previewRequestId);
-  if (edited) {
-    if (previewMode === "ADD") {
-      store.dispatch("COMMAND_ADD_NOTES", { notes: previewNotes.value });
-      store.dispatch("SELECT_NOTES", {
-        noteIds: previewNotes.value.map((value) => value.id),
-      });
-    } else {
-      store.dispatch("COMMAND_UPDATE_NOTES", { notes: previewNotes.value });
-    }
-    if (previewNotes.value.length === 1) {
-      store.dispatch("PLAY_PREVIEW_SOUND", {
-        noteNumber: previewNotes.value[0].noteNumber,
-        duration: PREVIEW_SOUND_DURATION,
-      });
-    }
-  }
-  nowPreviewing.value = false;
 };
 
 /**

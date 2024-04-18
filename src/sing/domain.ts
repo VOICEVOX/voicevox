@@ -3,7 +3,9 @@ import { convertLongVowel } from "@/store/utility";
 import {
   Note,
   Phrase,
+  PitchEdit,
   Score,
+  SingingGuide,
   SingingGuideSource,
   SingingVoiceSource,
   Tempo,
@@ -281,6 +283,22 @@ export function decibelToLinear(decibelValue: number) {
   return Math.pow(10, decibelValue / 20);
 }
 
+export const EDITOR_FRAME_RATE = 93.75;
+
+export const UNVOICED_PHONEMES = [
+  "pau",
+  "cl",
+  "ch",
+  "f",
+  "h",
+  "k",
+  "p",
+  "s",
+  "sh",
+  "t",
+  "ts",
+];
+
 export function getSnapTypes(tpqn: number) {
   return getRepresentableNoteTypes(tpqn).filter((value) => {
     return value <= MAX_SNAP_TYPE;
@@ -383,6 +401,27 @@ export function selectPriorPhrase(
 
   // 再生位置より前のPhrase
   return sortedPhrases[0];
+}
+
+export function applyPitchEdit(
+  singingGuide: SingingGuide,
+  pitchEdit: PitchEdit,
+) {
+  if (singingGuide.frameRate !== pitchEdit.frameRate) {
+    throw new Error("The frame rates of f0 and pitch editing do not match.");
+  }
+  const f0 = singingGuide.query.f0;
+  const f0StartFrame = Math.round(
+    singingGuide.startTime * singingGuide.frameRate,
+  );
+  for (let i = 0; i < f0.length; i++) {
+    if (f0StartFrame + i >= pitchEdit.data.length) {
+      break;
+    }
+    if (pitchEdit.data[f0StartFrame + i] !== 0) {
+      f0[i] = pitchEdit.data[f0StartFrame + i];
+    }
+  }
 }
 
 // 参考：https://github.com/VOICEVOX/voicevox_core/blob/0848630d81ae3e917c6ff2038f0b15bbd4270702/crates/voicevox_core/src/user_dict/word.rs#L83-L90

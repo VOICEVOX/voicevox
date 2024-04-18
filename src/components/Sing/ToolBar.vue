@@ -94,6 +94,15 @@
     <!-- settings for edit controls -->
     <div class="sing-controls">
       <QBtn
+        v-if="showEditModeToggleButton"
+        dense
+        icon="show_chart"
+        :color="editMode === 'PITCH' ? 'primary' : 'white'"
+        :text-color="editMode === 'PITCH' ? 'white' : 'display'"
+        class="edit-mode-toggle-button"
+        @click="toggleEditMode"
+      />
+      <QBtn
         flat
         dense
         round
@@ -191,6 +200,22 @@ const undo = () => {
 };
 const redo = () => {
   store.dispatch("REDO", { editor });
+};
+
+const showEditModeToggleButton = computed(() => {
+  return store.state.experimentalSetting.enablePitchEditInSongEditor;
+});
+
+const editMode = computed(() => store.state.sequencerEditMode);
+
+const toggleEditMode = () => {
+  if (editMode.value === "NOTE") {
+    store.dispatch("SET_EDIT_MODE", { editMode: "PITCH" });
+  } else if (editMode.value === "PITCH") {
+    store.dispatch("SET_EDIT_MODE", { editMode: "NOTE" });
+  } else {
+    throw new Error("Unknown edit mode.");
+  }
 };
 
 const tempos = computed(() => store.state.tempos);
@@ -523,6 +548,10 @@ onUnmounted(() => {
   justify-content: flex-end;
   display: flex;
   flex: 1;
+}
+
+.edit-mode-toggle-button {
+  margin-right: 6px;
 }
 
 .sing-undo-button,

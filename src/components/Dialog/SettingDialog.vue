@@ -955,9 +955,9 @@
                 </QToggle>
               </QCardActions>
               <QCardActions class="q-px-md bg-surface">
-                <div>ソング：ピッチを表示</div>
+                <div>ソング：ピッチ編集機能</div>
                 <div
-                  aria-label="ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。"
+                  aria-label="ピッチ編集機能を有効にします。ピッチ編集モードに切り替えられるようになります。"
                 >
                   <QIcon name="help_outline" size="sm" class="help-hover-icon">
                     <QTooltip
@@ -966,15 +966,18 @@
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
-                      >ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。</QTooltip
+                      >ピッチ編集機能を有効にします。ピッチ編集モードに切り替えられるようになります。</QTooltip
                     >
                   </QIcon>
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="experimentalSetting.showPitchInSongEditor"
+                  :model-value="experimentalSetting.enablePitchEditInSongEditor"
                   @update:model-value="
-                    changeExperimentalSetting('showPitchInSongEditor', $event)
+                    changeExperimentalSetting(
+                      'enablePitchEditInSongEditor',
+                      $event,
+                    )
                   "
                 >
                 </QToggle>
@@ -1219,6 +1222,14 @@ const changeExperimentalSetting = async (
   key: keyof ExperimentalSettingType,
   data: boolean,
 ) => {
+  if (
+    key === "enablePitchEditInSongEditor" &&
+    data === false &&
+    store.state.sequencerEditMode === "PITCH"
+  ) {
+    // ピッチ編集機能を無効にする前に、ノート編集モードに切り替える
+    store.dispatch("SET_EDIT_MODE", { editMode: "NOTE" });
+  }
   store.dispatch("SET_EXPERIMENTAL_SETTING", {
     experimentalSetting: { ...experimentalSetting.value, [key]: data },
   });

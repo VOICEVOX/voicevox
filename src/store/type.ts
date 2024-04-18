@@ -60,6 +60,7 @@ import {
 import { OverlappingNoteInfos } from "@/sing/storeHelper";
 import {
   noteSchema,
+  pitchEditSchema,
   singerSchema,
   tempoSchema,
   timeSignatureSchema,
@@ -732,6 +733,8 @@ export type Score = {
 
 export type Singer = z.infer<typeof singerSchema>;
 
+export type PitchEdit = z.infer<typeof pitchEditSchema>;
+
 export type Track = z.infer<typeof trackSchema>;
 
 export type PhraseState =
@@ -799,6 +802,8 @@ export type Phrase = {
   singingVoiceKey?: SingingVoiceSourceHash;
 };
 
+export type SequencerEditMode = "NOTE" | "PITCH";
+
 export type SingingStoreState = {
   tpqn: number;
   tempos: Tempo[];
@@ -811,6 +816,7 @@ export type SingingStoreState = {
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
+  sequencerEditMode: SequencerEditMode;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
   overlappingNoteInfos: OverlappingNoteInfos;
@@ -906,6 +912,21 @@ export type SingingStoreTypes = {
     action(payload: { noteId?: string }): void;
   };
 
+  SET_PITCH_EDIT_DATA: {
+    mutation: { data: number[]; startFrame: number };
+    action(payload: { data: number[]; startFrame: number }): void;
+  };
+
+  ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number };
+    action(payload: { startFrame: number; frameLength: number }): void;
+  };
+
+  CLEAR_PITCH_EDIT_DATA: {
+    mutation: undefined;
+    action(): void;
+  };
+
   SET_PHRASES: {
     mutation: { phrases: Map<string, Phrase> };
   };
@@ -956,6 +977,11 @@ export type SingingStoreTypes = {
   SET_ZOOM_Y: {
     mutation: { zoomY: number };
     action(payload: { zoomY: number }): void;
+  };
+
+  SET_EDIT_MODE: {
+    mutation: { editMode: SequencerEditMode };
+    action(payload: { editMode: SequencerEditMode }): void;
   };
 
   SET_IS_DRAG: {
