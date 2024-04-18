@@ -1,5 +1,5 @@
 <template>
-  <div class="score-sequencer">
+  <div class="score-sequencer full-height">
     <!-- 左上の角 -->
     <div class="sequencer-corner"></div>
     <!-- ルーラー -->
@@ -1350,6 +1350,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   grid-template-rows: 30px 1fr;
   grid-template-columns: 48px 1fr;
   flex: 1;
+  position: relative;
 }
 
 .sequencer-corner {

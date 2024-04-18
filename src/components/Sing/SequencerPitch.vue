@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import * as PIXI from "pixi.js";
+import { debounce } from "quasar";
 import { useStore } from "@/store";
 import { frequencyToNoteNumber, secondToTick } from "@/sing/domain";
 import { noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
@@ -311,25 +312,28 @@ onMountedOrActivated(() => {
   renderInNextFrame = true;
   requestId = window.requestAnimationFrame(callback);
 
-  resizeObserver = new ResizeObserver(() => {
-    if (renderer == undefined) {
-      throw new Error("renderer is undefined.");
-    }
-    const canvasContainerWidth = canvasContainerElement.clientWidth;
-    const canvasContainerHeight = canvasContainerElement.clientHeight;
+  resizeObserver = new ResizeObserver(
+    debounce(() => {
+      if (renderer == undefined) {
+        throw new Error("renderer is undefined.");
+      }
+      const canvasContainerWidth = canvasContainerElement.clientWidth;
+      const canvasContainerHeight = canvasContainerElement.clientHeight;
 
-    if (
-      canvasContainerWidth > 0 &&
-      canvasContainerHeight > 0 &&
-      (canvasWidth !== canvasContainerWidth ||
-        canvasHeight !== canvasContainerHeight)
-    ) {
-      canvasWidth = canvasContainerWidth;
-      canvasHeight = canvasContainerHeight;
-      renderer.resize(canvasWidth, canvasHeight);
-      renderInNextFrame = true;
-    }
-  });
+      if (
+        canvasContainerWidth > 0 &&
+        canvasContainerHeight > 0 &&
+        (canvasWidth !== canvasContainerWidth ||
+          canvasHeight !== canvasContainerHeight)
+      ) {
+        canvasWidth = canvasContainerWidth;
+        canvasHeight = canvasContainerHeight;
+        renderer.resize(canvasWidth, canvasHeight);
+        renderInNextFrame = true;
+        info(`Canvas resized to ${canvasWidth}x${canvasHeight}`);
+      }
+    }, 100),
+  );
   resizeObserver.observe(canvasContainerElement);
 });
 
@@ -361,5 +365,19 @@ onUnmountedOrDeactivated(() => {
   overflow: hidden;
   z-index: 0;
   pointer-events: none;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  position: relative;
+
+  :deep(canvas) {
+    // position: absoluteにして、Canvasのサイズ変更がContainerに影響しないようにする
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
 }
 </style>

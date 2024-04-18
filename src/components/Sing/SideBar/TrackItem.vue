@@ -150,6 +150,7 @@ const tracks = computed(() => store.state.tracks);
 const isThereSoloTrack = computed(() =>
   tracks.value.some((track) => track.solo),
 );
+
 const setTrackPan = (trackId: TrackId, pan: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
     store.dispatch("COMMAND_SET_TRACK_PAN", { trackId, pan });
@@ -157,6 +158,7 @@ const setTrackPan = (trackId: TrackId, pan: number) => {
     store.dispatch("SET_TRACK_PAN", { trackId, pan });
   }
 };
+
 const setTrackVolume = (trackId: TrackId, volume: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
     store.dispatch("COMMAND_SET_TRACK_VOLUME", { trackId, volume });
@@ -164,6 +166,7 @@ const setTrackVolume = (trackId: TrackId, volume: number) => {
     store.dispatch("SET_TRACK_VOLUME", { trackId, volume });
   }
 };
+
 const setTrackMute = (trackId: TrackId, mute: boolean) => {
   if (store.state.songUndoableTrackControl === "all") {
     store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId, mute });
@@ -171,6 +174,7 @@ const setTrackMute = (trackId: TrackId, mute: boolean) => {
     store.dispatch("SET_TRACK_MUTE", { trackId, mute });
   }
 };
+
 const setTrackSolo = (trackId: TrackId, solo: boolean) => {
   if (store.state.songUndoableTrackControl === "all") {
     store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId, solo });
@@ -309,5 +313,13 @@ const trackStyles = computed(() =>
   left: -0.5rem;
   top: 50%;
   transform: translateY(-50%);
+}
+
+.singer-name,
+.singer-style {
+  width: calc(100% - 3.5rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

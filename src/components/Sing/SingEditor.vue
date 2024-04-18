@@ -21,13 +21,29 @@
         />
       </div>
     </div>
-    <SideBar v-if="isSidebarOpened" />
-    <ScoreSequencer />
+
+    <QSplitter
+      :model-value="isSidebarOpened ? sidebarWidth : 0"
+      unit="px"
+      class="full-width"
+      after-class="flex"
+      :limits="[200, 300]"
+      :disable="!isSidebarOpened"
+      emit-immediately
+      @update:model-value="sidebarWidth = $event"
+    >
+      <template #before>
+        <SideBar v-if="isSidebarOpened" />
+      </template>
+      <template #after>
+        <ScoreSequencer />
+      </template>
+    </QSplitter>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, watch, ref } from "vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
@@ -49,7 +65,17 @@ const props = defineProps<{
 const store = useStore();
 
 const isSidebarOpened = computed(() => store.state.isSidebarOpened);
+const sidebarWidth = ref(300);
 //const $q = useQuasar();
+
+watch(
+  () => isSidebarOpened.value,
+  (isSidebarOpened) => {
+    if (isSidebarOpened) {
+      sidebarWidth.value = 300;
+    }
+  },
+);
 
 const nowRendering = computed(() => {
   return store.state.nowRendering;

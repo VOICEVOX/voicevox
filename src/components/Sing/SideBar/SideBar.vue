@@ -102,7 +102,7 @@ const reorderTracks = (newTracks: Track[]) => {
 @use "@/styles/variables" as vars;
 
 .sidebar {
-  width: vars.$sidebar-width;
+  width: 100%;
   height: 100%;
   background-color: colors.$background;
   display: flex;
