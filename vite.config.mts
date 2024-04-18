@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 import path from "path";
 import { rm } from "fs/promises";
-import treeKill from "tree-kill";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -58,17 +57,10 @@ export default defineConfig((options) => {
       },
     },
     test: {
-      include: [
-        path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
-      ],
-      environment: "happy-dom",
+      include: ["../tests/unit/**/*.spec.ts"],
       environmentMatchGlobs: [
-        [
-          path
-            .resolve(__dirname, "tests/unit/backend/electron/**/*.spec.ts")
-            .replace(/\\/g, "/"),
-          "node",
-        ],
+        ["../**/*.node.spec.ts", "node"],
+        ["../**/*.spec.ts", "happy-dom"],
       ],
       globals: true,
     },
@@ -76,7 +68,9 @@ export default defineConfig((options) => {
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),
-      nodePolyfills(),
+      nodePolyfills({
+        include: ["path"],
+      }),
       options.mode !== "test" &&
         checker({
           overlay: false,
@@ -94,12 +88,6 @@ export default defineConfig((options) => {
           ],
           // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
           onstart: ({ startup }) => {
-            // @ts-expect-error vite-electron-pluginはprocess.electronAppにelectronのプロセスを格納している。
-            //   しかし、型定義はないので、ts-expect-errorで回避する。
-            const pid = process.electronApp?.pid;
-            if (pid) {
-              treeKill(pid);
-            }
             if (options.mode !== "test") {
               startup([".", "--no-sandbox"]);
             }
