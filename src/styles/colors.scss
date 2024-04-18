@@ -59,6 +59,9 @@ $sequencer-black-key: var(--color-sequencer-black-key);
   --color-toast-warning: rgba(var(--color-mix-warning-background-rgb), 0.85);
   --color-toast-display-warning: var(--color-display);
   --color-toast-button-display-warning: rgba(var(--color-display-rgb), 0.6);
+
+  --color-circle-button-active-fill: var(--color-primary);
+  --color-circle-button-active-inner-fill: var(--color-background);
 }
 
 :root[is-dark-theme="true"] {

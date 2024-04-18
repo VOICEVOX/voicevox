@@ -300,14 +300,26 @@ const trackStyles = computed(() =>
         border-color: rgba(colors.$display-rgb, 0.5);
       }
       &.track-button-active {
-        color: colors.$primary;
-        :deep(i) {
-          color: colors.$display;
+        html[is-dark-theme="false"] & {
+          background-color: colors.$primary;
+          color: colors.$primary;
+
+          :deep(i) {
+            color: colors.$background;
+          }
+        }
+        html[is-dark-theme="true"] & {
+          color: colors.$primary;
+
+          :deep(i) {
+            color: colors.$primary;
+          }
         }
       }
     }
   }
 }
+
 .active-arrow {
   position: absolute;
   left: -0.5rem;

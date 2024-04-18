@@ -29,6 +29,7 @@
       after-class="flex"
       :limits="[200, 300]"
       :disable="!isSidebarOpened"
+      :separator-style="{ display: isSidebarOpened ? 'block' : 'none' }"
       emit-immediately
       @update:model-value="sidebarWidth = $event"
     >
