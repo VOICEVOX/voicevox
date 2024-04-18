@@ -231,22 +231,6 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  private createFlatArray<T, K extends keyof T>(
-    collection: T[],
-    key: K,
-  ): T[K] extends (infer U)[] ? U[] : T[K][] {
-    const result = [];
-    for (const element of collection) {
-      const value = element[key];
-      if (Array.isArray(value)) {
-        result.push(...value);
-      } else {
-        result.push(value);
-      }
-    }
-    return result as T[K] extends (infer U)[] ? U[] : T[K][];
-  }
-
   /**
    * 変更前の配列を操作してpatchMora配列を作る。
    *
@@ -263,12 +247,12 @@ export class TuningTranscription {
   private createDiffPatch() {
     const before = structuredClone(this.beforeAccent);
     const after = structuredClone(this.afterAccent);
+    const beforeFlatArray = before.flatMap((accent) => accent.moras);
+    const afterFlatArray = after.flatMap((accent) => accent.moras);
 
-    const beforeFlatArray = this.createFlatArray(before, "moras");
-    const afterFlatArray = this.createFlatArray(after, "moras");
     const diffed = diffArrays(
-      this.createFlatArray(beforeFlatArray, "text"),
-      this.createFlatArray(afterFlatArray, "text"),
+      beforeFlatArray.map((mora) => mora?.text),
+      afterFlatArray.map((mora) => mora?.text)
     );
 
     // FIXME: beforeFlatArrayを破壊的に変更しなくても良いようにしてasを不要にする
