@@ -1,7 +1,7 @@
 import { computed, ref } from "vue";
 import { splitLyricsByMoras } from "@/sing/domain";
 import { useStore } from "@/store";
-import { Note } from "@/store/type";
+import { Note, Track } from "@/store/type";
 
 // 歌詞入力のロジック。
 export const useLyricInput = () => {
@@ -11,9 +11,8 @@ export const useLyricInput = () => {
   // プレビュー中の歌詞。NoteID -> 歌詞のMap。
   const previewLyrics = ref<Map<string, string>>(new Map());
   // 入力中の歌詞を分割してプレビューに反映する。
-  const splitAndUpdatePreview = (lyric: string, note: Note) => {
-    // TODO: マルチトラック対応
-    const inputNoteIndex = store.state.tracks[0].notes.findIndex(
+  const splitAndUpdatePreview = (lyric: string, note: Note, track: Track) => {
+    const inputNoteIndex = track.notes.findIndex(
       (value) => value.id === note.id,
     );
     if (inputNoteIndex === -1) {

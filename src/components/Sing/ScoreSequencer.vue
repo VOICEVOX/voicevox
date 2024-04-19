@@ -304,6 +304,7 @@ const timeSignatures = computed(() => state.timeSignatures);
 
 // ノート
 const selectedTrackId = computed(() => state.selectedTrackId);
+const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 const isNoteSelected = computed(() => {
   return state.selectedNoteIds.size > 0;
@@ -422,7 +423,7 @@ const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
   useLyricInput();
 
 const onNoteLyricInput = (text: string, note: Note) => {
-  splitAndUpdatePreview(text, note);
+  splitAndUpdatePreview(text, note, selectedTrack.value);
 };
 
 const onNoteLyricBlur = () => {
