@@ -655,7 +655,7 @@ const previewDrawPitch = () => {
     data: [...previewPitchEdit.value.data],
   };
 
-  if (tempPitchEdit.startFrame > cursorFrame) {
+  if (cursorFrame < tempPitchEdit.startFrame) {
     const numOfFramesToUnshift = tempPitchEdit.startFrame - cursorFrame;
     tempPitchEdit.data = new Array(numOfFramesToUnshift)
       .fill(0)
@@ -664,7 +664,7 @@ const previewDrawPitch = () => {
   }
 
   const lastFrame = tempPitchEdit.startFrame + tempPitchEdit.data.length - 1;
-  if (lastFrame < cursorFrame) {
+  if (cursorFrame > lastFrame) {
     const numOfFramesToPush = cursorFrame - lastFrame;
     tempPitchEdit.data = tempPitchEdit.data.concat(
       new Array(numOfFramesToPush).fill(0),
@@ -925,10 +925,12 @@ const endPreview = () => {
       throw new Error("previewPitchEdit.value is undefined.");
     }
     if (previewPitchEdit.value.type === "draw") {
-      store.dispatch("SET_PITCH_EDIT_DATA", {
-        data: previewPitchEdit.value.data,
-        startFrame: previewPitchEdit.value.startFrame,
-      });
+      if (previewPitchEdit.value.data.length >= 2) {
+        store.dispatch("SET_PITCH_EDIT_DATA", {
+          data: previewPitchEdit.value.data,
+          startFrame: previewPitchEdit.value.startFrame,
+        });
+      }
     } else if (previewPitchEdit.value.type === "erase") {
       store.dispatch("ERASE_PITCH_EDIT_DATA", {
         startFrame: previewPitchEdit.value.startFrame,

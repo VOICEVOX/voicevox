@@ -541,7 +541,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { data, startFrame }: { data: number[]; startFrame: number },
     ) {
       if (startFrame < 0) {
-        throw new Error("startFrame is less than 0.");
+        throw new Error("startFrame must be greater than or equal to 0.");
       }
       if (data.some((value) => !Number.isFinite(value) || value <= 0)) {
         throw new Error("data is invalid.");
@@ -573,10 +573,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { startFrame, frameLength }: { startFrame: number; frameLength: number },
     ) {
       if (startFrame < 0) {
-        throw new Error("startFrame is less than 0.");
+        throw new Error("startFrame must be greater than or equal to 0.");
       }
       if (frameLength < 1) {
-        throw new Error("frameLength is less than 1.");
+        throw new Error("frameLength must be at least 1.");
       }
       commit("ERASE_PITCH_EDIT_DATA", { startFrame, frameLength });
 
@@ -1093,10 +1093,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const notes = trackRef.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
-        const pitchEdit = {
-          ...trackRef.pitchEdit,
-          data: [...trackRef.pitchEdit.data],
-        };
+        const pitchEditData = [...trackRef.pitchEdit.data];
         const restDurationSeconds = 1; // 前後の休符の長さはとりあえず1秒に設定
 
         // フレーズを更新する
@@ -1196,7 +1193,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   f0: [...singingGuide.query.f0],
                 },
               };
-              applyPitchEdit(singingGuide, pitchEdit);
+              applyPitchEdit(singingGuide, pitchEditData);
               const calculatedHash = await calculateSingingVoiceSourceHash({
                 singer: singerAndFrameRate.singer,
                 frameAudioQuery: singingGuide.query,
@@ -1356,7 +1353,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               ...singingGuide,
               query: { ...singingGuide.query, f0: [...singingGuide.query.f0] },
             };
-            applyPitchEdit(singingGuide, pitchEdit);
+            applyPitchEdit(singingGuide, pitchEditData);
 
             // 歌声のキャッシュがあれば取得し、なければ音声合成を行う
 

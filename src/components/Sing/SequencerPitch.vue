@@ -85,7 +85,7 @@ const updatePitchLines = (
 
   const removedLineStrips: LineStrip[] = [];
 
-  // 無くなったピッチ編集を調べて、そのピッチ編集に対応するピッチ編集ラインを削除する
+  // 無くなったデータ区間を調べて、そのデータ区間に対応するピッチラインを削除する
   for (const [key, pitchLine] of pitchLineMap) {
     if (!dataSectionMap.has(key)) {
       stage.removeChild(pitchLine.lineStrip.displayObject);
@@ -94,7 +94,7 @@ const updatePitchLines = (
     }
   }
 
-  // ピッチ編集に対応するピッチ編集ラインが無かったら生成する
+  // データ区間に対応するピッチラインが無かったら生成する
   for (const [key, dataSection] of dataSectionMap) {
     if (pitchLineMap.has(key)) {
       continue;
@@ -134,7 +134,7 @@ const updatePitchLines = (
     lineStrip.destroy();
   }
 
-  // ピッチ編集ラインを更新
+  // ピッチラインを更新
   for (const [key, dataSection] of dataSectionMap) {
     const pitchLine = pitchLineMap.get(key);
     if (pitchLine == undefined) {
@@ -258,7 +258,7 @@ const updateOriginalPitchDataSectionMap = async () => {
     }
   }
 
-  // データ区間の配列にする
+  // データ区間（ピッチのデータがある区間）の配列を生成する
   // TODO: コピペなので共通化する
   let dataSections: DataSection[] = [];
   for (let i = 0; i < tempData.length; i++) {
@@ -312,7 +312,7 @@ const updatePitchEditDataSectionMap = async () => {
     }
   }
 
-  // データ区間の配列にする
+  // データ区間（ピッチ編集データがある区間）の配列を生成する
   // TODO: コピペなので共通化する
   let dataSections: DataSection[] = [];
   for (let i = 0; i < tempData.length; i++) {

@@ -3,7 +3,6 @@ import { convertLongVowel } from "@/store/utility";
 import {
   Note,
   Phrase,
-  PitchEdit,
   Score,
   SingingGuide,
   SingingGuideSource,
@@ -405,21 +404,21 @@ export function selectPriorPhrase(
 
 export function applyPitchEdit(
   singingGuide: SingingGuide,
-  pitchEdit: PitchEdit,
+  pitchEditData: number[],
 ) {
-  if (singingGuide.frameRate !== pitchEdit.frameRate) {
-    throw new Error("The frame rates of f0 and pitch editing do not match.");
+  if (singingGuide.frameRate !== EDITOR_FRAME_RATE) {
+    throw new Error(
+      "The frame rate between the singing guide and the editor does not match.",
+    );
   }
   const f0 = singingGuide.query.f0;
-  const f0StartFrame = Math.round(
+  const startFrame = Math.round(
     singingGuide.startTime * singingGuide.frameRate,
   );
-  for (let i = 0; i < f0.length; i++) {
-    if (f0StartFrame + i >= pitchEdit.data.length) {
-      break;
-    }
-    if (pitchEdit.data[f0StartFrame + i] !== 0) {
-      f0[i] = pitchEdit.data[f0StartFrame + i];
+  const endFrame = Math.min(startFrame + f0.length, pitchEditData.length);
+  for (let i = startFrame; i < endFrame; i++) {
+    if (pitchEditData[i] !== 0) {
+      f0[i - startFrame] = pitchEditData[i];
     }
   }
 }
