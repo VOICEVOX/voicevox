@@ -26,7 +26,11 @@
       size="md"
       class="active-arrow"
     />
-    <QItemSection avatar class="singer-icon-container track-handle">
+    <QItemSection
+      avatar
+      class="singer-icon-container track-handle"
+      @click.stop=""
+    >
       <SingerIcon
         v-if="trackStyles[props.track.id]"
         round
@@ -37,6 +41,7 @@
       <QAvatar v-else round size="3rem" color="primary"
         ><span color="text-display-on-primary">?</span></QAvatar
       >
+      <CharacterSelectMenu :track-id="props.track.id" />
     </QItemSection>
     <QItemSection>
       <QItemLabel class="singer-name">
@@ -128,6 +133,7 @@
 import { computed, ref } from "vue";
 import Draggable from "vuedraggable";
 import { QList } from "quasar";
+import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/CharacterSelectMenu.vue";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
 import { getStyleDescription } from "@/sing/viewHelper";
@@ -322,6 +328,7 @@ const trackStyles = computed(() =>
 
 .singer-icon-container {
   z-index: 2;
+  position: relative;
 }
 
 .singer-name,

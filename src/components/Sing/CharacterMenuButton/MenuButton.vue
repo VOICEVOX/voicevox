@@ -5,7 +5,7 @@
       :selected-character-info="selectedCharacterInfo"
       :selected-singer="selectedSinger"
     />
-    <CharacterSelectMenu />
+    <CharacterSelectMenu :track-id="selectedTrackId" />
   </QBtn>
 </template>
 
@@ -21,6 +21,8 @@ defineOptions({
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const selectedTrackId = computed(() => store.state.selectedTrackId);
 
 const showSkeleton = computed(() => selectedCharacterInfo.value == undefined);
 

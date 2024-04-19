@@ -114,13 +114,14 @@ import { computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { SpeakerId, StyleId } from "@/type/preload";
+import { SpeakerId, StyleId, TrackId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 
 const store = useStore();
-
-const selectedTrackId = computed(() => store.state.selectedTrackId);
+const props = defineProps<{
+  trackId: TrackId;
+}>();
 
 const userOrderedCharacterInfos = computed(() => {
   return store.getters.USER_ORDERED_CHARACTER_INFOS("singerLike");
@@ -153,7 +154,7 @@ const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
     );
 
   store.dispatch("COMMAND_SET_SINGER", {
-    trackId: selectedTrackId.value,
+    trackId: props.trackId,
     singer: { engineId, styleId },
   });
 };
