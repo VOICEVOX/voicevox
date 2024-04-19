@@ -18,7 +18,7 @@
         },
       ]"
     />
-    <div class="track-handle" />
+    <div class="track-handle track-handle-bg" />
     <QIcon
       v-if="props.track.id === selectedTrack.id"
       name="arrow_right"
@@ -26,7 +26,7 @@
       size="md"
       class="active-arrow"
     />
-    <QItemSection avatar>
+    <QItemSection avatar class="singer-icon-container track-handle">
       <SingerIcon
         v-if="trackStyles[props.track.id]"
         round
@@ -271,7 +271,7 @@ const trackStyles = computed(() =>
     color: colors.$display;
   }
 
-  .track-handle {
+  .track-handle-bg {
     position: absolute;
     top: 0;
     left: 0;
@@ -300,20 +300,13 @@ const trackStyles = computed(() =>
         border-color: rgba(colors.$display-rgb, 0.5);
       }
       &.track-button-active {
-        html[is-dark-theme="false"] & {
-          background-color: colors.$primary;
-          color: colors.$primary;
-
-          :deep(i) {
-            color: colors.$background;
-          }
+        &::before {
+          border-width: 2px;
         }
-        html[is-dark-theme="true"] & {
-          color: colors.$primary;
+        color: colors.$primary;
 
-          :deep(i) {
-            color: colors.$primary;
-          }
+        :deep(i) {
+          color: colors.$display;
         }
       }
     }
@@ -325,6 +318,10 @@ const trackStyles = computed(() =>
   left: -0.5rem;
   top: 50%;
   transform: translateY(-50%);
+}
+
+.singer-icon-container {
+  z-index: 2;
 }
 
 .singer-name,
