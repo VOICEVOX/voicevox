@@ -97,8 +97,8 @@
         v-if="showEditModeToggleButton"
         dense
         icon="show_chart"
-        :color="editMode === 'PITCH' ? 'primary' : 'white'"
-        :text-color="editMode === 'PITCH' ? 'white' : 'display'"
+        :color="editMode === 'PITCH' ? 'primary' : undefined"
+        :text-color="editMode === 'PITCH' ? 'white' : undefined"
         class="edit-mode-toggle-button"
         @click="toggleEditMode"
       />
