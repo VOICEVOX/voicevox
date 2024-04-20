@@ -44,7 +44,6 @@
     "clone-deep": "4.0.1",
     "core-js": "3.12.1",
     "dayjs": "1.10.7",
-    "diff": "5.1.0",
     "electron-log": "5.0.0",
     "electron-window-state": "5.0.3",
     "encoding-japanese": "1.0.30",
