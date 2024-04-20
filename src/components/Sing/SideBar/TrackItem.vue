@@ -6,14 +6,14 @@
     active-class="selected-track"
     :active="props.track.id === selectedTrack.id"
     :disable="uiLocked"
-    @click="selectTrack(props.track.id)"
+    @click="selectTrack()"
   >
     <ContextMenu
       :menudata="[
         {
           type: 'button',
           label: '削除',
-          onClick: () => deleteTrack(props.track.id),
+          onClick: deleteTrack,
           disableWhenUiLocked: true,
         },
       ]"
@@ -32,11 +32,11 @@
       @click.stop=""
     >
       <SingerIcon
-        v-if="trackStyles[props.track.id]"
+        v-if="trackStyle"
         round
         class="singer-icon"
         size="3rem"
-        :style="trackStyles[props.track.id]!"
+        :style="trackStyle"
       />
       <QAvatar v-else round size="3rem" color="primary"
         ><span color="text-display-on-primary">?</span></QAvatar
@@ -44,14 +44,10 @@
       <CharacterSelectMenu :track-id="props.track.id" />
     </QItemSection>
     <QItemSection>
-      <QItemLabel class="singer-name" @click.stop>
+      <QItemLabel class="singer-name" @click.stop="selectTrack()">
         <QInput v-model="temporaryTrackName" dense @blur="updateTrackName" />
       </QItemLabel>
-      <QItemLabel
-        v-if="trackStyles[props.track.id]"
-        caption
-        class="singer-style"
-      >
+      <QItemLabel v-if="trackStyle" caption class="singer-style">
         {{ singerName }}
       </QItemLabel>
     </QItemSection>
@@ -132,7 +128,6 @@ import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/Character
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
 import { Track } from "@/store/type";
-import { TrackId } from "@/type/preload";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
@@ -209,54 +204,46 @@ const setTrackSolo = (solo: boolean) => {
 };
 
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
-const trackCharacters = computed(() =>
-  Object.fromEntries(
-    tracks.value.map((track) => {
-      if (!track.singer) return [track.id, undefined];
+const trackCharacter = computed(() => {
+  if (!props.track.singer) return undefined;
 
-      for (const character of store.state.characterInfos[
-        track.singer.engineId
-      ]) {
-        for (const style of character.metas.styles) {
-          if (style.styleId === track.singer.styleId) {
-            return [track.id, character];
-          }
-        }
+  for (const character of store.state.characterInfos[
+    props.track.singer.engineId
+  ]) {
+    for (const style of character.metas.styles) {
+      if (style.styleId === props.track.singer.styleId) {
+        return character;
       }
-      return [track.id, undefined];
-    }),
-  ),
-);
-const selectTrack = (trackId: TrackId) => {
-  store.dispatch("SET_SELECTED_TRACK", { trackId });
+    }
+  }
+  return undefined;
+});
+const selectTrack = () => {
+  store.dispatch("SET_SELECTED_TRACK", { trackId: props.track.id });
 };
 
-const deleteTrack = (trackId: TrackId) => {
-  store.dispatch("COMMAND_DELETE_TRACK", { trackId });
+const deleteTrack = () => {
+  store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.track.id });
 };
 
 const isDragging = ref(false);
 
-const trackStyles = computed(() =>
-  Object.fromEntries(
-    tracks.value.map((track) => {
-      if (!track.singer) return [track.id, undefined];
+const trackStyle = computed(() => {
+  if (!props.track.singer) return undefined;
 
-      const character = trackCharacters.value[track.id];
-      if (!character) return [track.id, undefined];
+  const character = trackCharacter.value;
+  if (!character) return undefined;
 
-      for (const style of character.metas.styles) {
-        if (style.styleId === track.singer.styleId) {
-          return [track.id, style];
-        }
-      }
-      return [track.id, undefined];
-    }),
-  ),
-);
+  for (const style of character.metas.styles) {
+    if (style.styleId === props.track.singer.styleId) {
+      return style;
+    }
+  }
+  return undefined;
+});
 
 const singerName = computed(() => {
-  const character = trackCharacters.value[props.track.id];
+  const character = trackCharacter.value;
   if (!character) return "（不明なキャラクター）";
   return character.metas.speakerName;
 });

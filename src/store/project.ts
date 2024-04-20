@@ -9,6 +9,7 @@ import {
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
+  State,
 } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
@@ -96,6 +97,7 @@ const applyTalkProjectToStore = async (
 
 const applySongProjectToStore = async (
   dispatch: Dispatch<AllActions>,
+  state: State,
   songProject: LatestProjectType["song"],
 ) => {
   const { tpqn, tempos, timeSignatures, tracks } = songProject;
@@ -107,25 +109,26 @@ const applySongProjectToStore = async (
       notes: tracks.map((track) => track.notes),
     },
   });
-  for (const track of tracks) {
+  for (const [i, track] of tracks.entries()) {
+    const trackId = state.tracks[i].id;
     await dispatch("SET_SINGER", {
       singer: track.singer,
-      trackId: track.id,
+      trackId,
     });
     await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
       keyRangeAdjustment: track.keyRangeAdjustment,
-      trackId: track.id,
+      trackId,
     });
     await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
       volumeRangeAdjustment: track.volumeRangeAdjustment,
-      trackId: track.id,
+      trackId,
     });
     await dispatch("SET_TRACK_NAME", {
       name: track.name,
-      trackId: track.id,
+      trackId,
     });
   }
-  await dispatch("SET_SELECTED_TRACK", { trackId: tracks[0].id });
+  await dispatch("SET_SELECTED_TRACK", { trackId: state.tracks[0].id });
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -499,6 +502,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           );
           await applySongProjectToStore(
             context.dispatch,
+            context.state,
             parsedProjectData.song,
           );
 
