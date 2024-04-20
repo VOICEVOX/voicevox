@@ -406,6 +406,8 @@ export function applyPitchEdit(
   singingGuide: SingingGuide,
   pitchEditData: number[],
 ) {
+  // 歌い方のフレームレートとエディターのフレームレートが一致しない場合はエラー
+  // TODO: 補完するようにする
   if (singingGuide.frameRate !== EDITOR_FRAME_RATE) {
     throw new Error(
       "The frame rate between the singing guide and the editor does not match.",
