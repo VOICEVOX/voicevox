@@ -249,7 +249,7 @@ export class TuningTranscription {
     return diff.applyPatch(beforeFlatArray, morasDiff);
   }
 
-  private mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
+  private mergeAccentPhrases(moraPatch: Mora[]): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
