@@ -14,43 +14,41 @@
       <template #header>
         <QItemLabel header class="tracks-header"
           >トラック一覧
-          <QBtn
-            v-if="isThereSoloTrack"
-            color="default"
-            icon="headset_off"
-            rounded
-            outline
-            dense
-            size="sm"
-            :disable="uiLocked"
-            class="unsolo-button"
-            @click="unsoloAllTracks"
-          >
-            <QTooltip>ソロを解除</QTooltip>
-          </QBtn>
+          <div class="track-list-button-container">
+            <QBtn
+              v-if="isThereSoloTrack"
+              color="default"
+              icon="headset_off"
+              rounded
+              outline
+              dense
+              size="sm"
+              :disable="uiLocked"
+              class="track-list-button"
+              @click="unsoloAllTracks"
+            >
+              <QTooltip>ソロを解除</QTooltip>
+            </QBtn>
+            <QBtn
+              color="default"
+              icon="add"
+              rounded
+              outline
+              dense
+              size="sm"
+              :disable="uiLocked"
+              class="track-list-button"
+              @click="createTrack"
+            >
+              <QTooltip>トラックを追加</QTooltip>
+            </QBtn>
+          </div>
         </QItemLabel>
       </template>
       <template #item="{ element: track }">
         <div>
           <TrackItem :track="track" />
         </div>
-      </template>
-
-      <template #footer>
-        <QItem
-          v-ripple
-          class="create-track-item"
-          clickable
-          :disable="uiLocked"
-          @click="createTrack"
-        >
-          <QItemSection avatar>
-            <QIcon color="display" name="add" />
-          </QItemSection>
-          <QItemSection>
-            <QItemLabel>トラックを追加</QItemLabel>
-          </QItemSection>
-        </QItem>
       </template>
     </Draggable>
   </div>
@@ -120,12 +118,18 @@ const reorderTracks = (newTracks: Track[]) => {
   position: relative;
 }
 
-.unsolo-button {
+.track-list-button-container {
   position: absolute;
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  gap: 0.25rem;
+  flex-direction: row;
+  justify-content: flex-end;
+}
 
+.track-list-button {
   width: 1.75rem;
   height: 1.75rem;
   padding: 0;

@@ -2560,8 +2560,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         ...createInitialTrack(),
         singer,
       };
-      state.tracks.push(track);
+      const currentTrackIndex = state.tracks.findIndex(
+        (track) => track.id === state.selectedTrackId,
+      );
+      state.tracks.splice(currentTrackIndex + 1, 0, track);
       state.overlappingNoteInfos.set(track.id, new Map());
+      state.selectedTrackId = track.id;
     },
   },
 
