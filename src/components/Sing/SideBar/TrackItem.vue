@@ -31,17 +31,19 @@
       class="singer-icon-container track-handle"
       @click.stop=""
     >
-      <SingerIcon
-        v-if="trackStyle"
-        round
-        class="singer-icon"
-        size="3rem"
-        :style="trackStyle"
-      />
-      <QAvatar v-else round size="3rem" color="primary"
-        ><span color="text-display-on-primary">?</span></QAvatar
-      >
-      <CharacterSelectMenu :track-id="props.track.id" />
+      <div class="singer-icon-hitbox">
+        <SingerIcon
+          v-if="trackStyle"
+          round
+          class="singer-icon"
+          size="3rem"
+          :style="trackStyle"
+        />
+        <QAvatar v-else round size="3rem" color="primary"
+          ><span color="text-display-on-primary">?</span></QAvatar
+        >
+        <CharacterSelectMenu :track-id="props.track.id" />
+      </div>
     </QItemSection>
     <QItemSection>
       <QItemLabel class="singer-name" @click.stop="selectTrack()">
@@ -341,6 +343,13 @@ const singerName = computed(() => {
 .singer-icon-container {
   z-index: 2;
   position: relative;
+  cursor: grab;
+}
+
+.singer-icon-hitbox {
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
 }
 
 .singer-name :deep(.q-field__control) {
