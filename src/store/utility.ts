@@ -246,9 +246,7 @@ export class TuningTranscription {
       matchRequirements // beforeFlatArrayとafterFlatArrayの特定の要素が一致するかどうかを判定する関数
     );
 
-    const patchMora = diff.applyPatch(beforeFlatArray, morasDiff);
-
-    return patchMora;
+    return diff.applyPatch(beforeFlatArray, morasDiff);
   }
 
   private mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
