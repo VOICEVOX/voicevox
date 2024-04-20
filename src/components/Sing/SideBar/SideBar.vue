@@ -27,7 +27,7 @@
               class="track-list-button"
               @click="unsoloAllTracks"
             >
-              <QTooltip>ソロを解除</QTooltip>
+              <QTooltip :delay="500">ソロを解除</QTooltip>
             </QBtn>
             <QBtn
               color="default"
@@ -40,7 +40,7 @@
               class="track-list-button"
               @click="createTrack"
             >
-              <QTooltip>トラックを追加</QTooltip>
+              <QTooltip :delay="500">トラックを追加</QTooltip>
             </QBtn>
           </div>
         </QItemLabel>

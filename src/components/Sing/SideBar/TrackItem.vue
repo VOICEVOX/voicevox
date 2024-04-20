@@ -72,7 +72,7 @@
         :disable="uiLocked || isThereSoloTrack"
         @click.stop="setTrackMute(!props.track.mute)"
       >
-        <QTooltip>ミュート</QTooltip>
+        <QTooltip :delay="500">ミュート</QTooltip>
       </QBtn>
       <QBtn
         color="default"
@@ -86,7 +86,7 @@
         :disable="uiLocked"
         @click.stop="setTrackSolo(!props.track.solo)"
       >
-        <QTooltip>ソロ</QTooltip>
+        <QTooltip :delay="500">ソロ</QTooltip>
       </QBtn>
     </div>
   </QItem>
