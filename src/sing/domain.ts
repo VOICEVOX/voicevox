@@ -12,6 +12,7 @@ import {
   singingGuideSourceHashSchema,
   singingVoiceSourceHashSchema,
 } from "@/store/type";
+import { FramePhoneme } from "@/openapi";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -402,6 +403,16 @@ export function selectPriorPhrase(
   return sortedPhrases[0];
 }
 
+export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
+  const framePhonemes: string[] = [];
+  for (const phoneme of phonemes) {
+    for (let i = 0; i < phoneme.frameLength; i++) {
+      framePhonemes.push(phoneme.phoneme);
+    }
+  }
+  return framePhonemes;
+}
+
 export function applyPitchEdit(
   singingGuide: SingingGuide,
   pitchEditData: number[],
@@ -413,13 +424,24 @@ export function applyPitchEdit(
       "The frame rate between the singing guide and the editor does not match.",
     );
   }
+  const unvoicedPhonemes = UNVOICED_PHONEMES;
   const f0 = singingGuide.query.f0;
+  const phonemes = singingGuide.query.phonemes;
+
+  // 各フレームの音素の配列を生成する
+  const framePhonemes = convertToFramePhonemes(phonemes);
+  if (f0.length !== framePhonemes.length) {
+    throw new Error("f0.length and framePhonemes.length do not match.");
+  }
+
   const startFrame = Math.round(
     singingGuide.startTime * singingGuide.frameRate,
   );
   const endFrame = Math.min(startFrame + f0.length, pitchEditData.length);
   for (let i = startFrame; i < endFrame; i++) {
-    if (pitchEditData[i] !== 0) {
+    const phoneme = framePhonemes[i - startFrame];
+    const voiced = !unvoicedPhonemes.includes(phoneme);
+    if (voiced && pitchEditData[i] !== 0) {
       f0[i - startFrame] = pitchEditData[i];
     }
   }

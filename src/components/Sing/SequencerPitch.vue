@@ -9,6 +9,7 @@ import { useStore } from "@/store";
 import {
   EDITOR_FRAME_RATE,
   UNVOICED_PHONEMES,
+  convertToFramePhonemes,
   frequencyToNoteNumber,
   secondToTick,
 } from "@/sing/domain";
@@ -235,12 +236,7 @@ const updateOriginalPitchDataSectionMap = async () => {
     const endFrame = startFrame + f0.length;
 
     // 各フレームの音素の配列を生成する
-    const framePhonemes: string[] = [];
-    for (const phoneme of phonemes) {
-      for (let i = 0; i < phoneme.frameLength; i++) {
-        framePhonemes.push(phoneme.phoneme);
-      }
-    }
+    const framePhonemes = convertToFramePhonemes(phonemes);
     if (f0.length !== framePhonemes.length) {
       throw new Error("f0.length and framePhonemes.length do not match.");
     }
@@ -252,7 +248,8 @@ const updateOriginalPitchDataSectionMap = async () => {
     }
     for (let i = 0; i < f0.length; i++) {
       const phoneme = framePhonemes[i];
-      if (!unvoicedPhonemes.includes(phoneme)) {
+      const voiced = !unvoicedPhonemes.includes(phoneme);
+      if (voiced) {
         tempData[startFrame + i] = f0[i];
       }
     }
