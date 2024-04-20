@@ -50,6 +50,12 @@
         <QInput v-model="temporaryTrackName" dense @blur="updateTrackName" />
       </QItemLabel>
       <QItemLabel v-if="trackStyle" caption class="singer-style">
+        <QIcon
+          v-if="!shouldPlayTrack"
+          name="volume_off"
+          color="display"
+          :style="{ opacity: 0.8 }"
+        />
         {{ singerName }}
       </QItemLabel>
     </QItemSection>
@@ -131,6 +137,7 @@ import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
 import { Track } from "@/store/type";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import { shouldPlay } from "@/sing/domain";
 
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
 Draggable.components = { ...Draggable.components, QList };
@@ -145,6 +152,9 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 const tracks = computed(() => store.state.tracks);
 const isThereSoloTrack = computed(() =>
   tracks.value.some((track) => track.solo),
+);
+const shouldPlayTrack = computed(
+  () => shouldPlay(store.state.tracks)[props.track.id],
 );
 
 const setTrackPan = (pan: number) => {
@@ -172,7 +182,9 @@ watch(
     temporaryTrackName.value = props.track.name;
   },
 );
+
 const temporaryTrackName = ref(props.track.name);
+
 const updateTrackName = () => {
   if (temporaryTrackName.value === props.track.name) return;
   if (temporaryTrackName.value === "") {
@@ -181,6 +193,7 @@ const updateTrackName = () => {
   }
   setTrackName(temporaryTrackName.value);
 };
+
 const setTrackName = (name: string) => {
   if (store.state.songUndoableTrackControl === "all") {
     store.dispatch("COMMAND_SET_TRACK_NAME", { trackId: props.track.id, name });

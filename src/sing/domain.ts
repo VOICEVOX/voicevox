@@ -388,21 +388,17 @@ export function selectPriorPhrase(
 }
 
 /**
- * トラックを再生するべきかどうかの配列を返す
+ * トラックを再生するべきかどうかを返す
  * - ソロのトラックがある場合、ソロのトラックのみ再生する
  * - ソロのトラックがない場合、ミュートされていないトラックを再生する
  */
 export function shouldPlay(tracks: Track[]): Record<TrackId, boolean> {
   const isThereSoloTrack = tracks.some((track) => track.solo);
-  const baseState = isThereSoloTrack
-    ? tracks.map((track) => track.solo)
-    : tracks.map(() => true);
-  return Object.fromEntries(
-    baseState.map((value, index) => [
-      tracks[index].id,
-      value && !tracks[index].mute,
-    ]),
-  );
+  if (isThereSoloTrack) {
+    return Object.fromEntries(tracks.map((track) => [track.id, track.solo]));
+  } else {
+    return Object.fromEntries(tracks.map((track) => [track.id, !track.mute]));
+  }
 }
 
 export const convertToWavFileData = (audioBuffer: AudioBuffer) => {
