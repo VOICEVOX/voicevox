@@ -16,6 +16,40 @@ export function linearInterpolation(
   return y1 + ((y2 - y1) * (x - x1)) / (x2 - x1);
 }
 
+function ceilToOdd(value: number) {
+  return 1 + Math.ceil((value - 1) / 2) * 2;
+}
+
+export function createGaussianKernel(sigma: number) {
+  const kernelSize = ceilToOdd(sigma * 3);
+  const center = Math.floor(kernelSize / 2);
+  let kernel: number[] = [];
+  let sum = 0;
+  for (let i = 0; i < kernelSize; i++) {
+    const x = Math.abs(center - i);
+    const value = Math.exp(-(x ** 2) / (2 * sigma ** 2));
+    kernel.push(value);
+    sum += value;
+  }
+  kernel = kernel.map((value) => value / sum);
+  return kernel;
+}
+
+export function applyGaussianFilter(data: number[], sigma: number) {
+  const kernel = createGaussianKernel(sigma);
+  const center = Math.floor(kernel.length / 2);
+  for (let i = 0; i < data.length; i++) {
+    let sum = 0;
+    for (let j = 0; j < kernel.length; j++) {
+      let indexToRead = i - center + j;
+      indexToRead = Math.max(0, indexToRead);
+      indexToRead = Math.min(data.length - 1, indexToRead);
+      sum += data[indexToRead] * kernel[j];
+    }
+    data[i] = sum;
+  }
+}
+
 export async function calculateHash<T>(obj: T) {
   const textEncoder = new TextEncoder();
   const data = textEncoder.encode(JSON.stringify(obj));

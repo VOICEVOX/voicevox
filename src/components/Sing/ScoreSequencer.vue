@@ -287,7 +287,7 @@ import {
   useCommandOrControlKey,
   useShiftKey,
 } from "@/composables/useModifierKey";
-import { linearInterpolation } from "@/sing/utility";
+import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 
 type PreviewMode =
@@ -933,8 +933,12 @@ const endPreview = () => {
     }
     if (previewPitchEdit.value.type === "draw") {
       if (previewPitchEdit.value.data.length >= 2) {
+        let data = previewPitchEdit.value.data;
+        data = data.map((value) => Math.log(value));
+        applyGaussianFilter(data, 0.7);
+        data = data.map((value) => Math.exp(value));
         store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
-          data: previewPitchEdit.value.data,
+          data,
           startFrame: previewPitchEdit.value.startFrame,
         });
       }
