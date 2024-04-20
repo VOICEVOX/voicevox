@@ -33,6 +33,7 @@ const className = computed(() => {
 
 .waiting-to-be-rendered {
   background-color: colors.$background;
+  z-index: 1;
   background-image: linear-gradient(
     to right,
     rgba(colors.$primary-rgb, 0.8),
@@ -42,6 +43,7 @@ const className = computed(() => {
 
 .now-rendering {
   border: 1px solid rgba(colors.$primary-rgb, 0.7);
+  z-index: 2;
   background-color: colors.$background;
   background-size: 28px 28px;
   background-image: linear-gradient(
@@ -69,6 +71,7 @@ const className = computed(() => {
 
 .could-not-render {
   background-color: colors.$warning;
+  z-index: 3;
 }
 
 .playable {
