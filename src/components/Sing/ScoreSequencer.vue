@@ -18,7 +18,10 @@
     <div
       ref="sequencerBody"
       class="sequencer-body"
-      :class="{ 'rect-selecting': editMode === 'NOTE' && shiftKey }"
+      :class="{
+        'rect-selecting': editMode === 'NOTE' && shiftKey,
+        'cursor-draw': editMode === 'PITCH' && !ctrlKey,
+      }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
@@ -280,7 +283,10 @@ import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import { useShiftKey } from "@/composables/useModifierKey";
+import {
+  useCommandOrControlKey,
+  useShiftKey,
+} from "@/composables/useModifierKey";
 import { linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 
@@ -409,6 +415,7 @@ const phraseInfos = computed(() => {
   });
 });
 
+const ctrlKey = useCommandOrControlKey();
 const editMode = computed(() => state.sequencerEditMode);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
@@ -1668,5 +1675,11 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   position: absolute;
   border: 2px solid rgba(colors.$primary-rgb, 0.5);
   background: rgba(colors.$primary-rgb, 0.25);
+}
+
+.cursor-draw {
+  cursor:
+    url("draw-cursor.png") 2 30,
+    auto;
 }
 </style>
