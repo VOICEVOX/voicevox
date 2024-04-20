@@ -1,6 +1,7 @@
 import path from "path";
 import { Platform } from "quasar";
 import { diffArrays } from "diff";
+import * as diff from "fast-array-diff";
 import {
   CharacterInfo,
   StyleInfo,
@@ -14,7 +15,7 @@ export const DEFAULT_STYLE_NAME = "ノーマル";
 
 export const formatCharacterStyleName = (
   characterName: string,
-  styleName = DEFAULT_STYLE_NAME,
+  styleName = DEFAULT_STYLE_NAME
 ) => `${characterName}（${styleName}）`;
 
 export function sanitizeFileName(fileName: string): string {
@@ -122,7 +123,7 @@ export const replaceTagIdToTagString = {
   date: "日付",
 };
 const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
-  replaceTagIdToTagString,
+  replaceTagIdToTagString
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
 export const DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE =
@@ -147,7 +148,7 @@ export function currentDateString(): string {
 
 function replaceTag(
   template: string,
-  replacer: { [key: string]: string },
+  replacer: { [key: string]: string }
 ): string {
   const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
     const replaceTagId = replaceTagStringToTagId[p1];
@@ -168,7 +169,7 @@ export function extractExportText(
   {
     enableMemoNotation,
     enableRubyNotation,
-  }: { enableMemoNotation: boolean; enableRubyNotation: boolean },
+  }: { enableMemoNotation: boolean; enableRubyNotation: boolean }
 ): string {
   if (enableMemoNotation) {
     text = skipMemoText(text);
@@ -187,7 +188,7 @@ export function extractYomiText(
   {
     enableMemoNotation,
     enableRubyNotation,
-  }: { enableMemoNotation: boolean; enableRubyNotation: boolean },
+  }: { enableMemoNotation: boolean; enableRubyNotation: boolean }
 ): string {
   if (enableMemoNotation) {
     text = skipMemoText(text);
@@ -250,6 +251,17 @@ export class TuningTranscription {
     const beforeFlatArray = before.flatMap((accent) => accent.moras);
     const afterFlatArray = after.flatMap((accent) => accent.moras);
 
+    const matchRequirements = (beforeMora: Mora, afterMora: Mora) =>
+      beforeMora?.text === afterMora?.text;
+    const morasDiff = diff.getPatch(
+      beforeFlatArray,
+      afterFlatArray,
+      matchRequirements // beforeFlatArrayとafterFlatArrayの特定の要素が一致するかどうかを判定する関数
+    );
+
+    const patchMora = diff.applyPatch(beforeFlatArray, morasDiff);
+
+    return patchMora;
     const diffed = diffArrays(
       beforeFlatArray.map((mora) => mora?.text),
       afterFlatArray.map((mora) => mora?.text)
@@ -265,7 +277,7 @@ export class TuningTranscription {
           beforeFlatArray.splice(
             currentTextIndex,
             0,
-            undefined as never as Mora,
+            undefined as never as Mora
           );
           currentTextIndex++;
         });
@@ -331,7 +343,7 @@ export class TuningTranscription {
  */
 export function isAccentPhrasesTextDifferent(
   beforeAccent: AccentPhrase[],
-  afterAccent: AccentPhrase[],
+  afterAccent: AccentPhrase[]
 ): boolean {
   if (beforeAccent.length !== afterAccent.length) return true;
 
@@ -362,7 +374,7 @@ export function isAccentPhrasesTextDifferent(
 
 export function buildAudioFileNameFromRawData(
   fileNamePattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
-  vars = DEFAULT_AUDIO_FILE_NAME_VARIABLES,
+  vars = DEFAULT_AUDIO_FILE_NAME_VARIABLES
 ): string {
   let pattern = fileNamePattern;
   if (pattern === "") {
@@ -507,7 +519,7 @@ export const isSingingStyle = (styleInfo: StyleInfo) => {
  */
 export const filterCharacterInfosByStyleType = (
   characterInfos: CharacterInfo[],
-  styleType: StyleType | "singerLike",
+  styleType: StyleType | "singerLike"
 ): CharacterInfo[] => {
   const withStylesFiltered: CharacterInfo[] = characterInfos.map(
     (characterInfo) => {
@@ -522,11 +534,11 @@ export const filterCharacterInfosByStyleType = (
         return styleInfo.styleType === styleType;
       });
       return { ...characterInfo, metas: { ...characterInfo.metas, styles } };
-    },
+    }
   );
 
   const withoutEmptyStyles = withStylesFiltered.filter(
-    (characterInfo) => characterInfo.metas.styles.length > 0,
+    (characterInfo) => characterInfo.metas.styles.length > 0
   );
 
   return withoutEmptyStyles;
