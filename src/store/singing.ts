@@ -536,20 +536,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         frameRate: pitchEdit.frameRate,
       };
     },
-    async action(
-      { commit, dispatch },
-      { data, startFrame }: { data: number[]; startFrame: number },
-    ) {
-      if (startFrame < 0) {
-        throw new Error("startFrame must be greater than or equal to 0.");
-      }
-      if (data.some((value) => !Number.isFinite(value) || value <= 0)) {
-        throw new Error("data is invalid.");
-      }
-      commit("SET_PITCH_EDIT_DATA", { data, startFrame });
-
-      dispatch("RENDER");
-    },
   },
 
   ERASE_PITCH_EDIT_DATA: {
@@ -567,20 +553,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         data: tempData,
         frameRate: pitchEdit.frameRate,
       };
-    },
-    async action(
-      { commit, dispatch },
-      { startFrame, frameLength }: { startFrame: number; frameLength: number },
-    ) {
-      if (startFrame < 0) {
-        throw new Error("startFrame must be greater than or equal to 0.");
-      }
-      if (frameLength < 1) {
-        throw new Error("frameLength must be at least 1.");
-      }
-      commit("ERASE_PITCH_EDIT_DATA", { startFrame, frameLength });
-
-      dispatch("RENDER");
     },
   },
 
@@ -2662,6 +2634,50 @@ export const singingCommandStore = transformCommandStore(
     COMMAND_REMOVE_SELECTED_NOTES: {
       action({ state, commit, dispatch }) {
         commit("COMMAND_REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_SET_PITCH_EDIT_DATA: {
+      mutation(draft, { data, startFrame }) {
+        singingStore.mutations.SET_PITCH_EDIT_DATA(draft, { data, startFrame });
+      },
+      action(
+        { commit, dispatch },
+        { data, startFrame }: { data: number[]; startFrame: number },
+      ) {
+        if (startFrame < 0) {
+          throw new Error("startFrame must be greater than or equal to 0.");
+        }
+        if (data.some((value) => !Number.isFinite(value) || value <= 0)) {
+          throw new Error("data is invalid.");
+        }
+        commit("COMMAND_SET_PITCH_EDIT_DATA", { data, startFrame });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_ERASE_PITCH_EDIT_DATA: {
+      mutation(draft, { startFrame, frameLength }) {
+        singingStore.mutations.ERASE_PITCH_EDIT_DATA(draft, {
+          startFrame,
+          frameLength,
+        });
+      },
+      action(
+        { commit, dispatch },
+        {
+          startFrame,
+          frameLength,
+        }: { startFrame: number; frameLength: number },
+      ) {
+        if (startFrame < 0) {
+          throw new Error("startFrame must be greater than or equal to 0.");
+        }
+        if (frameLength < 1) {
+          throw new Error("frameLength must be at least 1.");
+        }
+        commit("COMMAND_ERASE_PITCH_EDIT_DATA", { startFrame, frameLength });
 
         dispatch("RENDER");
       },

@@ -914,12 +914,10 @@ export type SingingStoreTypes = {
 
   SET_PITCH_EDIT_DATA: {
     mutation: { data: number[]; startFrame: number };
-    action(payload: { data: number[]; startFrame: number }): void;
   };
 
   ERASE_PITCH_EDIT_DATA: {
     mutation: { startFrame: number; frameLength: number };
-    action(payload: { startFrame: number; frameLength: number }): void;
   };
 
   CLEAR_PITCH_EDIT_DATA: {
@@ -1160,6 +1158,16 @@ export type SingingCommandStoreTypes = {
 
   COMMAND_REMOVE_SELECTED_NOTES: {
     action(): void;
+  };
+
+  COMMAND_SET_PITCH_EDIT_DATA: {
+    mutation: { data: number[]; startFrame: number };
+    action(payload: { data: number[]; startFrame: number }): void;
+  };
+
+  COMMAND_ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number };
+    action(payload: { startFrame: number; frameLength: number }): void;
   };
 };
 

@@ -933,13 +933,13 @@ const endPreview = () => {
     }
     if (previewPitchEdit.value.type === "draw") {
       if (previewPitchEdit.value.data.length >= 2) {
-        store.dispatch("SET_PITCH_EDIT_DATA", {
+        store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
           data: previewPitchEdit.value.data,
           startFrame: previewPitchEdit.value.startFrame,
         });
       }
     } else if (previewPitchEdit.value.type === "erase") {
-      store.dispatch("ERASE_PITCH_EDIT_DATA", {
+      store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
         startFrame: previewPitchEdit.value.startFrame,
         frameLength: previewPitchEdit.value.frameLength,
       });
