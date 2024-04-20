@@ -89,6 +89,7 @@ export const trackSchema = z.object({
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
+  name: z.string(),
   pan: z.number(),
   volume: z.number(),
   mute: z.boolean(),

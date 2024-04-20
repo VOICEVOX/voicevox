@@ -44,20 +44,15 @@
       <CharacterSelectMenu :track-id="props.track.id" />
     </QItemSection>
     <QItemSection>
-      <QItemLabel class="singer-name">
-        {{
-          mapNullablePipe(
-            trackCharacters[props.track.id],
-            (trackCharacter) => trackCharacter.metas.speakerName,
-          ) || "（不明なキャラクター）"
-        }}
+      <QItemLabel class="singer-name" @click.stop>
+        <QInput v-model="temporaryTrackName" dense @blur="updateTrackName" />
       </QItemLabel>
       <QItemLabel
         v-if="trackStyles[props.track.id]"
         caption
         class="singer-style"
       >
-        {{ getStyleDescription(trackStyles[props.track.id]!) }}
+        {{ singerName }}
       </QItemLabel>
     </QItemSection>
     <div side class="track-control">
@@ -71,7 +66,7 @@
         class="track-button"
         :class="{ 'track-button-active': props.track.mute }"
         :disable="uiLocked || isThereSoloTrack"
-        @click.stop="setTrackMute(props.track.id, !props.track.mute)"
+        @click.stop="setTrackMute(!props.track.mute)"
       >
         <QTooltip>ミュート</QTooltip>
       </QBtn>
@@ -85,7 +80,7 @@
         class="track-button"
         :class="{ 'track-button-active': props.track.solo }"
         :disable="uiLocked"
-        @click.stop="setTrackSolo(props.track.id, !props.track.solo)"
+        @click.stop="setTrackSolo(!props.track.solo)"
       >
         <QTooltip>ソロ</QTooltip>
       </QBtn>
@@ -107,8 +102,8 @@
           :markers="1"
           selection-color="transparent"
           :disable="uiLocked"
-          @change="setTrackPan(props.track.id, $event)"
-          @dblclick="setTrackPan(props.track.id, 0)"
+          @change="setTrackPan($event)"
+          @dblclick="setTrackPan(0)"
         />
         <div class="r">R</div>
       </div>
@@ -121,8 +116,8 @@
           :step="0.1"
           :markers="1"
           :disable="uiLocked"
-          @change="setTrackVolume(props.track.id, $event)"
-          @dblclick="setTrackVolume(props.track.id, 1)"
+          @change="setTrackVolume($event)"
+          @dblclick="setTrackVolume(1)"
         />
         <QIcon name="volume_up" class="r" size="1rem" />
       </div>
@@ -130,15 +125,13 @@
   </QItem>
 </template>
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, watch, ref } from "vue";
 import Draggable from "vuedraggable";
 import { QList } from "quasar";
 import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/CharacterSelectMenu.vue";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
-import { getStyleDescription } from "@/sing/viewHelper";
 import { Track } from "@/store/type";
-import { mapNullablePipe } from "@/helpers/map";
 import { TrackId } from "@/type/preload";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 
@@ -157,35 +150,61 @@ const isThereSoloTrack = computed(() =>
   tracks.value.some((track) => track.solo),
 );
 
-const setTrackPan = (trackId: TrackId, pan: number) => {
+const setTrackPan = (pan: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
-    store.dispatch("COMMAND_SET_TRACK_PAN", { trackId, pan });
+    store.dispatch("COMMAND_SET_TRACK_PAN", { trackId: props.track.id, pan });
   } else {
-    store.dispatch("SET_TRACK_PAN", { trackId, pan });
+    store.dispatch("SET_TRACK_PAN", { trackId: props.track.id, pan });
   }
 };
 
-const setTrackVolume = (trackId: TrackId, volume: number) => {
+const setTrackVolume = (volume: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
-    store.dispatch("COMMAND_SET_TRACK_VOLUME", { trackId, volume });
+    store.dispatch("COMMAND_SET_TRACK_VOLUME", {
+      trackId: props.track.id,
+      volume,
+    });
   } else {
-    store.dispatch("SET_TRACK_VOLUME", { trackId, volume });
+    store.dispatch("SET_TRACK_VOLUME", { trackId: props.track.id, volume });
   }
 };
 
-const setTrackMute = (trackId: TrackId, mute: boolean) => {
+watch(
+  () => props.track.name,
+  () => {
+    temporaryTrackName.value = props.track.name;
+  },
+);
+const temporaryTrackName = ref(props.track.name);
+const updateTrackName = () => {
+  if (temporaryTrackName.value === props.track.name) return;
+  if (temporaryTrackName.value === "") {
+    temporaryTrackName.value = props.track.name;
+    return;
+  }
+  setTrackName(temporaryTrackName.value);
+};
+const setTrackName = (name: string) => {
   if (store.state.songUndoableTrackControl === "all") {
-    store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId, mute });
+    store.dispatch("COMMAND_SET_TRACK_NAME", { trackId: props.track.id, name });
   } else {
-    store.dispatch("SET_TRACK_MUTE", { trackId, mute });
+    store.dispatch("SET_TRACK_NAME", { trackId: props.track.id, name });
   }
 };
 
-const setTrackSolo = (trackId: TrackId, solo: boolean) => {
+const setTrackMute = (mute: boolean) => {
   if (store.state.songUndoableTrackControl === "all") {
-    store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId, solo });
+    store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId: props.track.id, mute });
   } else {
-    store.dispatch("SET_TRACK_SOLO", { trackId, solo });
+    store.dispatch("SET_TRACK_MUTE", { trackId: props.track.id, mute });
+  }
+};
+
+const setTrackSolo = (solo: boolean) => {
+  if (store.state.songUndoableTrackControl === "all") {
+    store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId: props.track.id, solo });
+  } else {
+    store.dispatch("SET_TRACK_SOLO", { trackId: props.track.id, solo });
   }
 };
 
@@ -235,6 +254,12 @@ const trackStyles = computed(() =>
     }),
   ),
 );
+
+const singerName = computed(() => {
+  const character = trackCharacters.value[props.track.id];
+  if (!character) return "（不明なキャラクター）";
+  return character.metas.speakerName;
+});
 </script>
 <style scoped lang="scss">
 @use "@/styles/colors" as colors;
@@ -329,6 +354,10 @@ const trackStyles = computed(() =>
 .singer-icon-container {
   z-index: 2;
   position: relative;
+}
+
+.singer-name :deep(.q-field__control) {
+  height: 1.5rem;
 }
 
 .singer-name,

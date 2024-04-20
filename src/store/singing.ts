@@ -149,6 +149,7 @@ export const createInitialTrack = (): Track => ({
   keyRangeAdjustment: 0,
   volumeRangeAdjustment: 0,
   notes: [],
+  name: "新規トラック",
   pan: 0,
   volume: 1,
   mute: false,
@@ -2564,6 +2565,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_TRACK_NAME: {
+    mutation(state, { trackId, name }) {
+      const track = state.tracks.find((track) => track.id === trackId);
+      if (!track) {
+        throw new Error("The track is not found.");
+      }
+      track.name = name;
+    },
+    action({ commit }, { trackId, name }) {
+      commit("SET_TRACK_NAME", { trackId, name });
+    },
+  },
+
   SET_TRACK_PAN: {
     mutation(state, { trackId, pan }) {
       const track = state.tracks.find((track) => track.id === trackId);
@@ -2866,6 +2880,15 @@ export const singingCommandStore = transformCommandStore(
       },
       action({ commit }, { trackIds }) {
         commit("COMMAND_REORDER_TRACKS", { trackIds });
+      },
+    },
+
+    COMMAND_SET_TRACK_NAME: {
+      mutation(draft, { trackId, name }) {
+        singingStore.mutations.SET_TRACK_NAME(draft, { trackId, name });
+      },
+      action({ commit }, { trackId, name }) {
+        commit("COMMAND_SET_TRACK_NAME", { trackId, name });
       },
     },
 

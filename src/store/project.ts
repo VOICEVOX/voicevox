@@ -120,6 +120,10 @@ const applySongProjectToStore = async (
       volumeRangeAdjustment: track.volumeRangeAdjustment,
       trackId: track.id,
     });
+    await dispatch("SET_TRACK_NAME", {
+      name: track.name,
+      trackId: track.id,
+    });
   }
   await dispatch("SET_SELECTED_TRACK", { trackId: tracks[0].id });
 };
@@ -466,6 +470,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               track.volume = 1;
               track.mute = false;
               track.solo = false;
+              track.name = "新規トラック";
             }
           }
 

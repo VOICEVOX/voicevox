@@ -1093,6 +1093,11 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
+  SET_TRACK_NAME: {
+    mutation: { trackId: TrackId; name: string };
+    action(payload: { trackId: TrackId; name: string }): void;
+  };
+
   SET_TRACK_PAN: {
     mutation: { trackId: TrackId; pan: number };
 
@@ -1195,6 +1200,11 @@ export type SingingCommandStoreTypes = {
   COMMAND_REORDER_TRACKS: {
     mutation: { trackIds: TrackId[] };
     action(payload: { trackIds: TrackId[] }): void;
+  };
+
+  COMMAND_SET_TRACK_NAME: {
+    mutation: { trackId: TrackId; name: string };
+    action(payload: { trackId: TrackId; name: string }): void;
   };
 
   COMMAND_SET_TRACK_PAN: {

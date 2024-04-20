@@ -425,7 +425,7 @@
                   ソング：「元に戻す」機能の対象にするトラックのパラメータ
                 </div>
                 <div
-                  aria-label="パン、音量、ミュート、ソロのうち、「元に戻す」機能の対象にするパラメータを選べます。"
+                  aria-label="パン、音量、ミュート、ソロ、名前のうち、「元に戻す」機能の対象にするパラメータを選べます。"
                 >
                   <QIcon name="help_outline" size="sm" class="help-hover-icon">
                     <QTooltip
@@ -435,7 +435,7 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      パン、音量、ミュート、ソロのうち、「元に戻す」機能の対象にするパラメータを選べます。
+                      パン、音量、ミュート、ソロ、名前のうち、「元に戻す」機能の対象にするパラメータを選べます。
                     </QTooltip>
                   </QIcon>
                 </div>
@@ -468,7 +468,7 @@
                 >
                   <template #ALL>
                     <QTooltip :delay="500">
-                      パン、音量、ミュート、ソロの変更を全て元に戻せるようにします。
+                      パン、音量、ミュート、ソロ、名前の変更を全て元に戻せるようにします。
                     </QTooltip>
                   </template>
                   <template #PAN_VOLUME>
