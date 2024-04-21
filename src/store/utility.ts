@@ -231,7 +231,7 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  private createDiffPatch() {
+  private createTranscriptionSouce() {
     const before = structuredClone(this.beforeAccent);
     const after = structuredClone(this.afterAccent);
     const beforeFlatArray = before.flatMap((accent) => accent.moras);
@@ -246,12 +246,10 @@ export class TuningTranscription {
       matchRequirements, // beforeFlatArrayとafterFlatArrayの特定の要素が一致するかどうかを判定する関数
     );
 
-    const patchMora = diff.applyPatch(beforeFlatArray, morasDiff);
-
-    return patchMora;
+    return diff.applyPatch(beforeFlatArray, morasDiff);
   }
 
-  private mergeAccentPhrases(moraPatch: Mora[]): AccentPhrase[] {
+  private mergeAccentPhrases(transcriptionSouce: Mora[]): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
@@ -264,9 +262,9 @@ export class TuningTranscription {
       ) {
         if (
           after[accentIndex]["moras"][moraIndex].text ===
-          moraPatch[moraPatchIndex]?.text
+          transcriptionSouce[moraPatchIndex]?.text
         ) {
-          after[accentIndex]["moras"][moraIndex] = moraPatch[
+          after[accentIndex]["moras"][moraIndex] = transcriptionSouce[
             moraPatchIndex
           ] as Mora;
         }
@@ -278,8 +276,8 @@ export class TuningTranscription {
   }
 
   transcribe() {
-    const moraPatch = this.createDiffPatch();
-    return this.mergeAccentPhrases(moraPatch as never);
+    const transcriptionSouce = this.createTranscriptionSouce();
+    return this.mergeAccentPhrases(transcriptionSouce);
   }
 }
 
