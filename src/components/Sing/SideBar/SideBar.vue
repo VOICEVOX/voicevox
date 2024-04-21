@@ -1,5 +1,29 @@
 <template>
   <div class="sidebar">
+    <div class="tracks-header">
+      トラック一覧
+      <QSpace />
+      <QBtn
+        rounded
+        unelevated
+        size="0.75rem"
+        padding="xs sm"
+        :disable="uiLocked"
+        @click="createTrack"
+      >
+        追加
+      </QBtn>
+      <QBtn
+        rounded
+        unelevated
+        size="0.75rem"
+        padding="xs sm"
+        :disable="uiLocked || tracks.length === 1"
+        @click="deleteTrack"
+      >
+        削除
+      </QBtn>
+    </div>
     <Draggable
       tag="QList"
       :model-value="tracks"
@@ -11,46 +35,27 @@
       @start="isDragging = true"
       @end="isDragging = false"
     >
-      <template #header>
-        <QItemLabel header class="tracks-header"
-          >トラック一覧
-          <div class="track-list-button-container">
-            <QBtn
-              v-if="isThereSoloTrack"
-              color="default"
-              icon="headset_off"
-              rounded
-              outline
-              dense
-              size="sm"
-              :disable="uiLocked"
-              class="track-list-button"
-              @click="unsoloAllTracks"
-            >
-              <QTooltip :delay="500">ソロを解除</QTooltip>
-            </QBtn>
-            <QBtn
-              color="default"
-              icon="add"
-              rounded
-              outline
-              dense
-              size="sm"
-              :disable="uiLocked"
-              class="track-list-button"
-              @click="createTrack"
-            >
-              <QTooltip :delay="500">トラックを追加</QTooltip>
-            </QBtn>
-          </div>
-        </QItemLabel>
-      </template>
       <template #item="{ element: track }">
         <div>
           <TrackItem :track="track" />
         </div>
       </template>
     </Draggable>
+    <div class="tracks-footer">
+      <QBtn
+        color="default"
+        icon="headset_off"
+        rounded
+        outline
+        dense
+        size="sm"
+        :disable="uiLocked || !isThereSoloTrack"
+        class="track-list-button"
+        @click="unsoloAllTracks"
+      >
+        <QTooltip :delay="500">ソロを解除</QTooltip>
+      </QBtn>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -83,6 +88,12 @@ const createTrack = () => {
     singer,
   });
 };
+const deleteTrack = () => {
+  if (tracks.value.length === 1) return;
+  store.dispatch("COMMAND_DELETE_TRACK", {
+    trackId: selectedTrack.value.id,
+  });
+};
 
 const unsoloAllTracks = () => {
   store.dispatch("COMMAND_UNSOLO_ALL_TRACKS");
@@ -104,6 +115,7 @@ const reorderTracks = (newTracks: Track[]) => {
   height: 100%;
   background-color: colors.$background;
   display: flex;
+  flex-direction: column;
   border-top: 1px solid colors.$sequencer-sub-divider;
   border-right: 1px solid colors.$sequencer-main-divider;
 }
@@ -111,22 +123,28 @@ const reorderTracks = (newTracks: Track[]) => {
 .tracks {
   width: 100%;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 
-.tracks-header {
-  position: relative;
-}
-
-.track-list-button-container {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
+.tracks-header,
+.tracks-footer {
+  position: sticky;
   display: flex;
-  gap: 0.25rem;
-  flex-direction: row;
-  justify-content: flex-end;
+  background: colors.$background;
+  z-index: 10;
+  align-items: center;
+}
+.tracks-header {
+  border-bottom: 1px solid colors.$sequencer-sub-divider;
+
+  padding: 0.5rem;
+  padding-left: 1rem;
+}
+.tracks-footer {
+  border-top: 1px solid colors.$sequencer-sub-divider;
+  justify-content: end;
+
+  padding: 0.5rem 1.25rem;
 }
 
 .track-list-button {

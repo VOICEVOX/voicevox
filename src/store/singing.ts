@@ -2644,11 +2644,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   DELETE_TRACK: {
     mutation(state, { trackId }) {
-      state.tracks = state.tracks.filter((track) => track.id !== trackId);
-      state.overlappingNoteInfos.delete(trackId);
       if (state.selectedTrackId === trackId) {
-        state.selectedTrackId = state.tracks[0].id;
+        const currentTrackIndex = state.tracks.findIndex(
+          (track) => track.id === trackId,
+        );
+        const nextTrack =
+          currentTrackIndex === 0
+            ? state.tracks[currentTrackIndex + 1]
+            : state.tracks[currentTrackIndex - 1];
+        state.selectedTrackId = nextTrack.id;
       }
+      state.tracks = state.tracks.filter((track) => track.id !== trackId);
+
+      state.overlappingNoteInfos.delete(trackId);
       channelStrips.delete(trackId);
     },
   },
