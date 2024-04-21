@@ -957,7 +957,7 @@
               <QCardActions class="q-px-md bg-surface">
                 <div>ソング：ピッチ編集機能</div>
                 <div
-                  aria-label="ピッチ編集機能を有効にします。ピッチ編集モードに切り替えられるようになります。"
+                  aria-label="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
                 >
                   <QIcon name="help_outline" size="sm" class="help-hover-icon">
                     <QTooltip
