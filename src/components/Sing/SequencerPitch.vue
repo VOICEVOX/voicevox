@@ -218,6 +218,10 @@ const render = () => {
 };
 
 const updateOriginalPitchDataSectionMap = async () => {
+  // 歌い方のf0を結合して1次元のデータにし、
+  // 1次元のデータからデータ区間のマップを生成して、
+  // originalPitchDataSectionMapに設定する
+
   const unvoicedPhonemes = UNVOICED_PHONEMES;
   const frameRate = EDITOR_FRAME_RATE;
   const singingGuidesValue = singingGuides.value;
@@ -244,7 +248,7 @@ const updateOriginalPitchDataSectionMap = async () => {
       throw new Error("f0.length and framePhonemes.length do not match.");
     }
 
-    // 有声区間のf0をtempDataにコピーする
+    // 無声子音区間以外のf0をtempDataにコピーする
     if (tempData.length < endFrame) {
       const arrayToConcat = new Array(endFrame - tempData.length).fill(
         VALUE_INDICATING_NO_DATA,
@@ -253,8 +257,8 @@ const updateOriginalPitchDataSectionMap = async () => {
     }
     for (let i = 0; i < f0.length; i++) {
       const phoneme = framePhonemes[i];
-      const voiced = !unvoicedPhonemes.includes(phoneme);
-      if (voiced) {
+      const unvoiced = unvoicedPhonemes.includes(phoneme);
+      if (!unvoiced) {
         tempData[startFrame + i] = f0[i];
       }
     }
@@ -284,6 +288,10 @@ const updateOriginalPitchDataSectionMap = async () => {
 };
 
 const updatePitchEditDataSectionMap = async () => {
+  // ピッチ編集データとプレビュー中のピッチ編集データを結合して1次元のデータにし、
+  // 1次元のデータからデータ区間のマップを生成して、
+  // pitchEditDataSectionMapに設定する
+
   const frameRate = EDITOR_FRAME_RATE;
 
   // プレビュー中のピッチ編集があれば、適用する
