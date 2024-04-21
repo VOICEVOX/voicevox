@@ -6,7 +6,7 @@
       'preview-lyric': props.previewLyric != undefined,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
-      'below-pitch': editMode === 'PITCH',
+      'below-pitch': pitchEditModeNow,
     }"
     :style="{
       width: `${width}px`,
@@ -17,26 +17,26 @@
     <div
       class="note-bar"
       :class="{
-        'cursor-move': editMode === 'NOTE',
+        'cursor-move': noteEditModeNow,
       }"
       @mousedown="onBarMouseDown"
     >
       <div
         class="note-left-edge"
         :class="{
-          'cursor-ew-resize': editMode === 'NOTE',
+          'cursor-ew-resize': noteEditModeNow,
         }"
         @mousedown="onLeftEdgeMouseDown"
       ></div>
       <div
         class="note-right-edge"
         :class="{
-          'cursor-ew-resize': editMode === 'NOTE',
+          'cursor-ew-resize': noteEditModeNow,
         }"
         @mousedown="onRightEdgeMouseDown"
       ></div>
       <ContextMenu
-        v-if="editMode === 'NOTE'"
+        v-if="noteEditModeNow"
         ref="contextMenu"
         :menudata="contextMenuData"
       />
@@ -155,7 +155,12 @@ const noteState = computed((): NoteState => {
   }
   return "NORMAL";
 });
-const editMode = computed(() => state.sequencerEditMode);
+const noteEditModeNow = computed(() => {
+  return state.sequencerEditMode === "NOTE";
+});
+const pitchEditModeNow = computed(() => {
+  return state.sequencerEditMode === "PITCH";
+});
 
 // ノートの重なりエラー
 const hasOverlappingError = computed(() => {
