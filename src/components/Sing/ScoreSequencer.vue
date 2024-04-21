@@ -642,6 +642,7 @@ const previewResizeLeft = () => {
   guideLineX.value = guideLineBaseX * zoomX.value;
 };
 
+// ピッチを描く処理を行う
 const previewDrawPitch = () => {
   if (previewPitchEdit.value == undefined) {
     throw new Error("previewPitchEdit.value is undefined.");
@@ -715,6 +716,7 @@ const previewDrawPitch = () => {
   prevCursorPos.frequency = cursorFrequency;
 };
 
+// ドラッグした範囲のピッチ編集データを消去する処理を行う
 const previewErasePitch = () => {
   if (previewPitchEdit.value == undefined) {
     throw new Error("previewPitchEdit.value is undefined.");
