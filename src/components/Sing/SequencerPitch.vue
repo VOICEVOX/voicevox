@@ -245,8 +245,10 @@ const updateOriginalPitchDataSectionMap = async () => {
 
     // 有声区間のf0をtempDataにコピーする
     if (tempData.length < endFrame) {
-      const zeros = new Array(endFrame - tempData.length).fill(0);
-      tempData = tempData.concat(zeros);
+      const arrayToConcat = new Array(endFrame - tempData.length).fill(
+        VALUE_INDICATING_NO_DATA,
+      );
+      tempData = tempData.concat(arrayToConcat);
     }
     for (let i = 0; i < f0.length; i++) {
       const phoneme = framePhonemes[i];
@@ -261,8 +263,8 @@ const updateOriginalPitchDataSectionMap = async () => {
   // TODO: コピペなので共通化する
   let dataSections: DataSection[] = [];
   for (let i = 0; i < tempData.length; i++) {
-    if (tempData[i] !== 0) {
-      if (i === 0 || tempData[i - 1] === 0) {
+    if (tempData[i] !== VALUE_INDICATING_NO_DATA) {
+      if (i === 0 || tempData[i - 1] === VALUE_INDICATING_NO_DATA) {
         dataSections.push({ startFrame: i, frameRate, data: [] });
       }
       dataSections[dataSections.length - 1].data.push(tempData[i]);
@@ -292,10 +294,10 @@ const updatePitchEditDataSectionMap = async () => {
       const previewStartFrame = previewPitchEdit.value.startFrame;
       const previewEndFrame = previewStartFrame + previewData.length;
       if (tempData.length < previewEndFrame) {
-        const zeros = new Array(previewEndFrame - tempData.length).fill(
+        const arrayToConcat = new Array(previewEndFrame - tempData.length).fill(
           VALUE_INDICATING_NO_DATA,
         );
-        tempData = tempData.concat(zeros);
+        tempData = tempData.concat(arrayToConcat);
       }
       for (let i = 0; i < previewData.length; i++) {
         tempData[previewStartFrame + i] = previewData[i];

@@ -526,10 +526,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       let tempData = [...pitchEdit.data];
       const endFrame = startFrame + data.length;
       if (tempData.length < endFrame) {
-        const zeros = new Array(endFrame - tempData.length).fill(
+        const arrayToConcat = new Array(endFrame - tempData.length).fill(
           VALUE_INDICATING_NO_DATA,
         );
-        tempData = tempData.concat(zeros);
+        tempData = tempData.concat(arrayToConcat);
       }
       for (let i = 0; i < data.length; i++) {
         tempData[startFrame + i] = data[i];
