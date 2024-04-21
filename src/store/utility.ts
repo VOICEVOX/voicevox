@@ -216,8 +216,7 @@ function skipMemoText(targettext: string): string {
 }
 
 /**
- * 2つのアクセント句配列を比べて同じだと思われるモーラの調整結果を転写し
- * 変更前のアクセント句の調整結果を変更後のアクセント句に保持する。
+ * 調整したモーラのパラメーターがリセットされるのを防ぐ
  *
  * <例>
  * 「こんにちは」 -> 「こんばんは」と変更した場合、[]に囲まれる部分で変更前のモーラが転写される。
@@ -231,6 +230,10 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
+  /**
+   * 変更前と変更後のAccentPhraseに存在するモーラの差分を取得し
+   * 変更内容を適用したモーラの配列を返す
+   */
   private createTranscriptionSouce() {
     const before = structuredClone(this.beforeAccent);
     const after = structuredClone(this.afterAccent);
@@ -249,6 +252,9 @@ export class TuningTranscription {
     return diff.applyPatch(beforeFlatArray, morasDiff);
   }
 
+  /**
+   * transcriptionSouceで得られたモーラの配列を、変更後のAccentPhraseの各モーラに適用する
+   */
   private mergeAccentPhrases(transcriptionSouce: Mora[]): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
