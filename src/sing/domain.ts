@@ -285,6 +285,8 @@ export function decibelToLinear(decibelValue: number) {
 
 export const EDITOR_FRAME_RATE = 93.75;
 
+export const VALUE_INDICATING_NO_DATA = -1;
+
 export const UNVOICED_PHONEMES = [
   "pau",
   "cl",
@@ -441,7 +443,7 @@ export function applyPitchEdit(
   for (let i = startFrame; i < endFrame; i++) {
     const phoneme = framePhonemes[i - startFrame];
     const voiced = !unvoicedPhonemes.includes(phoneme);
-    if (voiced && pitchEditData[i] !== 0) {
+    if (voiced && pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
       f0[i - startFrame] = pitchEditData[i];
     }
   }

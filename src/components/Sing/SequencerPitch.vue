@@ -9,6 +9,7 @@ import { useStore } from "@/store";
 import {
   EDITOR_FRAME_RATE,
   UNVOICED_PHONEMES,
+  VALUE_INDICATING_NO_DATA,
   convertToFramePhonemes,
   frequencyToNoteNumber,
   secondToTick,
@@ -291,7 +292,9 @@ const updatePitchEditDataSectionMap = async () => {
       const previewStartFrame = previewPitchEdit.value.startFrame;
       const previewEndFrame = previewStartFrame + previewData.length;
       if (tempData.length < previewEndFrame) {
-        const zeros = new Array(previewEndFrame - tempData.length).fill(0);
+        const zeros = new Array(previewEndFrame - tempData.length).fill(
+          VALUE_INDICATING_NO_DATA,
+        );
         tempData = tempData.concat(zeros);
       }
       for (let i = 0; i < previewData.length; i++) {
@@ -304,7 +307,7 @@ const updatePitchEditDataSectionMap = async () => {
         tempData.length,
       );
       for (let i = startFrame; i < endFrame; i++) {
-        tempData[i] = 0;
+        tempData[i] = VALUE_INDICATING_NO_DATA;
       }
     } else {
       throw new ExhaustiveError(previewPitchEditType);
@@ -315,8 +318,8 @@ const updatePitchEditDataSectionMap = async () => {
   // TODO: コピペなので共通化する
   let dataSections: DataSection[] = [];
   for (let i = 0; i < tempData.length; i++) {
-    if (tempData[i] !== 0) {
-      if (i === 0 || tempData[i - 1] === 0) {
+    if (tempData[i] !== VALUE_INDICATING_NO_DATA) {
+      if (i === 0 || tempData[i - 1] === VALUE_INDICATING_NO_DATA) {
         dataSections.push({ startFrame: i, frameRate, data: [] });
       }
       dataSections[dataSections.length - 1].data.push(tempData[i]);

@@ -60,6 +60,7 @@ import {
   decibelToLinear,
   EDITOR_FRAME_RATE,
   applyPitchEdit,
+  VALUE_INDICATING_NO_DATA,
 } from "@/sing/domain";
 import {
   DEFAULT_BEATS,
@@ -525,7 +526,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       let tempData = [...pitchEdit.data];
       const endFrame = startFrame + data.length;
       if (tempData.length < endFrame) {
-        const zeros = new Array(endFrame - tempData.length).fill(0);
+        const zeros = new Array(endFrame - tempData.length).fill(
+          VALUE_INDICATING_NO_DATA,
+        );
         tempData = tempData.concat(zeros);
       }
       for (let i = 0; i < data.length; i++) {
@@ -547,7 +550,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const tempData = [...pitchEdit.data];
       const endFrame = Math.min(startFrame + frameLength, tempData.length);
       for (let i = startFrame; i < endFrame; i++) {
-        tempData[i] = 0;
+        tempData[i] = VALUE_INDICATING_NO_DATA;
       }
       state.tracks[selectedTrackIndex].pitchEdit = {
         data: tempData,

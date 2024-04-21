@@ -83,7 +83,7 @@ export const singerSchema = z.object({
 });
 
 export const pitchEditSchema = z.object({
-  data: z.array(z.number()),
+  data: z.array(z.number()), // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
   frameRate: z.number(),
 });
 
