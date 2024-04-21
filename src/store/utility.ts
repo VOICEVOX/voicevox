@@ -1,6 +1,5 @@
 import path from "path";
 import { Platform } from "quasar";
-import { diffArrays } from "diff";
 import * as diff from "fast-array-diff";
 import {
   CharacterInfo,
@@ -232,19 +231,6 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  /**
-   * 変更前の配列を操作してpatchMora配列を作る。
-   *
-   * <例> (Ｕはundefined）
-   * 変更前 [ ズ, ン, ダ, モ, ン, ナ, ノ, ダ ]
-   * 変更後 [ ボ, ク, ズ, ン, ダ, ナ, ノ, デ, ス ]
-   *
-   * 再利用される文字列とundefinedで構成されたデータを作る。
-   *       [ Ｕ, Ｕ, ズ, ン, ダ, ナ, ノ, Ｕ, Ｕ ]
-   *
-   * 実際には"ズ"などの文字列部分は{text: "ズ"...}のようなデータ構造になっている。
-   * [ Ｕ, Ｕ, {text: "ズ"...}, {text: "ン"...}, {text: "ダ"...}, {text: "ナ"...}, {text: "ノ"...}, Ｕ, Ｕ ]
-   */
   private createDiffPatch() {
     const before = structuredClone(this.beforeAccent);
     const after = structuredClone(this.afterAccent);
@@ -253,6 +239,7 @@ export class TuningTranscription {
 
     const matchRequirements = (beforeMora: Mora, afterMora: Mora) =>
       beforeMora?.text === afterMora?.text;
+
     const morasDiff = diff.getPatch(
       beforeFlatArray,
       afterFlatArray,
@@ -262,46 +249,9 @@ export class TuningTranscription {
     const patchMora = diff.applyPatch(beforeFlatArray, morasDiff);
 
     return patchMora;
-    const diffed = diffArrays(
-      beforeFlatArray.map((mora) => mora?.text),
-      afterFlatArray.map((mora) => mora?.text),
-    );
-
-    // FIXME: beforeFlatArrayを破壊的に変更しなくても良いようにしてasを不要にする
-    let currentTextIndex = 0;
-    for (const diff of diffed) {
-      if (diff.removed) {
-        beforeFlatArray.splice(currentTextIndex, diff.count);
-      } else if (diff.added) {
-        diff.value.forEach(() => {
-          beforeFlatArray.splice(
-            currentTextIndex,
-            0,
-            undefined as never as Mora,
-          );
-          currentTextIndex++;
-        });
-      } else {
-        currentTextIndex += diff.value.length;
-      }
-    }
-    return beforeFlatArray as (Mora | undefined)[];
   }
 
-  /**
-   * moraPatchとafterAccentを比較し、textが一致するモーラを転写する。
-   *
-   *  <例> (「||」は等号記号を表す)
-   * 「こんにちは」 -> 「こんばんは」 とテキストを変更した場合、以下の例のように比較する。
-   *
-   *           moraPatch = [ {text: "コ"...}, {text: "ン"...}, undefined      , undefined      , {text: "ハ"...} ]
-   *                              ||                ||                                                ||
-   * after[...]["moras"] = [ {text: "コ"...}, {text: "ン"...}, {text: "バ"...}, {text: "ン"...}, {text: "ハ"...} ]
-   *
-   * あとは一致したモーラを転写するだけ。
-   *
-   */
-  private mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
+  private mergeAccentPhrases(moraPatch: Mora[]): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
@@ -312,11 +262,6 @@ export class TuningTranscription {
         moraIndex < after[accentIndex]["moras"].length;
         moraIndex++
       ) {
-        // undefinedのとき、何もせず次のモーラへ移動
-        if (moraPatch[moraPatchIndex] == undefined) {
-          moraPatchIndex++;
-          continue;
-        }
         if (
           after[accentIndex]["moras"][moraIndex].text ===
           moraPatch[moraPatchIndex]?.text
