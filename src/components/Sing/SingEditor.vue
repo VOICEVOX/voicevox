@@ -62,9 +62,10 @@ const cancelExport = () => {
 };
 
 watch(enablePitchEditInSongEditor, (value) => {
-  if (value === false && store.state.sequencerEditMode === "PITCH") {
-    // ピッチ編集機能が無効になったときピッチ編集モードだったら、ノート編集モードに切り替える
-    store.dispatch("SET_EDIT_MODE", { editMode: "NOTE" });
+  if (value === false && store.state.sequencerEditTarget === "PITCH") {
+    // ピッチ編集機能が無効になったとき編集ターゲットがピッチだったら、
+    // 編集ターゲットをノートに切り替える
+    store.dispatch("SET_EDIT_TARGET", { editTarget: "NOTE" });
   }
 });
 

@@ -802,7 +802,7 @@ export type Phrase = {
   singingVoiceKey?: SingingVoiceSourceHash;
 };
 
-export type SequencerEditMode = "NOTE" | "PITCH";
+export type SequencerEditTarget = "NOTE" | "PITCH";
 
 export type SingingStoreState = {
   tpqn: number;
@@ -816,7 +816,7 @@ export type SingingStoreState = {
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
-  sequencerEditMode: SequencerEditMode;
+  sequencerEditTarget: SequencerEditTarget;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
   overlappingNoteInfos: OverlappingNoteInfos;
@@ -977,9 +977,9 @@ export type SingingStoreTypes = {
     action(payload: { zoomY: number }): void;
   };
 
-  SET_EDIT_MODE: {
-    mutation: { editMode: SequencerEditMode };
-    action(payload: { editMode: SequencerEditMode }): void;
+  SET_EDIT_TARGET: {
+    mutation: { editTarget: SequencerEditTarget };
+    action(payload: { editTarget: SequencerEditTarget }): void;
   };
 
   SET_IS_DRAG: {

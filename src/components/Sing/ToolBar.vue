@@ -94,13 +94,13 @@
     <!-- settings for edit controls -->
     <div class="sing-controls">
       <QBtn
-        v-if="showEditModeToggleButton"
+        v-if="showEditTargetToggleButton"
         dense
         icon="show_chart"
-        :color="editMode === 'PITCH' ? 'primary' : undefined"
-        :text-color="editMode === 'PITCH' ? 'white' : undefined"
-        class="edit-mode-toggle-button"
-        @click="toggleEditMode"
+        :color="editTarget === 'PITCH' ? 'primary' : undefined"
+        :text-color="editTarget === 'PITCH' ? 'white' : undefined"
+        class="edit-target-switch-button"
+        @click="switchEditTarget"
       />
       <QBtn
         flat
@@ -203,19 +203,19 @@ const redo = () => {
   store.dispatch("REDO", { editor });
 };
 
-const showEditModeToggleButton = computed(() => {
+const showEditTargetToggleButton = computed(() => {
   return store.state.experimentalSetting.enablePitchEditInSongEditor;
 });
 
-const editMode = computed(() => store.state.sequencerEditMode);
+const editTarget = computed(() => store.state.sequencerEditTarget);
 
-const toggleEditMode = () => {
-  if (editMode.value === "NOTE") {
-    store.dispatch("SET_EDIT_MODE", { editMode: "PITCH" });
-  } else if (editMode.value === "PITCH") {
-    store.dispatch("SET_EDIT_MODE", { editMode: "NOTE" });
+const switchEditTarget = () => {
+  if (editTarget.value === "NOTE") {
+    store.dispatch("SET_EDIT_TARGET", { editTarget: "PITCH" });
+  } else if (editTarget.value === "PITCH") {
+    store.dispatch("SET_EDIT_TARGET", { editTarget: "NOTE" });
   } else {
-    throw new ExhaustiveError(editMode.value);
+    throw new ExhaustiveError(editTarget.value);
   }
 };
 
@@ -551,7 +551,7 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.edit-mode-toggle-button {
+.edit-target-switch-button {
   margin-right: 6px;
 }
 

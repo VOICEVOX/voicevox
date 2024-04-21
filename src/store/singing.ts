@@ -21,7 +21,7 @@ import {
   SingingVoice,
   SingingGuideSourceHash,
   SingingVoiceSourceHash,
-  SequencerEditMode,
+  SequencerEditTarget,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
@@ -179,7 +179,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
-  sequencerEditMode: "NOTE",
+  sequencerEditTarget: "NOTE",
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
   overlappingNoteInfos: new Map(),
@@ -695,12 +695,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_EDIT_MODE: {
-    mutation(state, { editMode }: { editMode: SequencerEditMode }) {
-      state.sequencerEditMode = editMode;
+  SET_EDIT_TARGET: {
+    mutation(state, { editTarget }: { editTarget: SequencerEditTarget }) {
+      state.sequencerEditTarget = editTarget;
     },
-    async action({ commit }, { editMode }: { editMode: SequencerEditMode }) {
-      commit("SET_EDIT_MODE", { editMode });
+    async action(
+      { commit },
+      { editTarget }: { editTarget: SequencerEditTarget },
+    ) {
+      commit("SET_EDIT_TARGET", { editTarget });
     },
   },
 

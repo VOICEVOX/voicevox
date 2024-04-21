@@ -19,8 +19,8 @@
       ref="sequencerBody"
       class="sequencer-body"
       :class="{
-        'rect-selecting': editMode === 'NOTE' && shiftKey,
-        'cursor-draw': editMode === 'PITCH' && !ctrlKey,
+        'rect-selecting': editTarget === 'NOTE' && shiftKey,
+        'cursor-draw': editTarget === 'PITCH' && !ctrlKey,
       }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
@@ -105,7 +105,7 @@
         />
       </svg>
       <div
-        v-if="editMode === 'NOTE' && showGuideLine"
+        v-if="editTarget === 'NOTE' && showGuideLine"
         class="sequencer-guideline"
         :style="{
           height: `${gridHeight}px`,
@@ -128,7 +128,7 @@
         @lyric-blur="onNoteLyricBlur()"
       />
       <SequencerNote
-        v-for="note in editMode === 'NOTE' && nowPreviewing
+        v-for="note in editTarget === 'NOTE' && nowPreviewing
           ? previewNotes
           : selectedNotes"
         :key="note.id"
@@ -144,7 +144,7 @@
       />
     </div>
     <SequencerPitch
-      v-if="editMode === 'PITCH'"
+      v-if="editTarget === 'PITCH'"
       class="sequencer-pitch"
       :style="{
         marginRight: `${scrollBarWidth}px`,
@@ -222,7 +222,7 @@
       @input="setZoomY"
     />
     <ContextMenu
-      v-if="editMode === 'NOTE'"
+      v-if="editTarget === 'NOTE'"
       ref="contextMenu"
       :menudata="contextMenuData"
     />
@@ -244,7 +244,7 @@ import ContextMenu, {
 } from "@/components/Menu/ContextMenu.vue";
 import { isMac } from "@/type/preload";
 import { useStore } from "@/store";
-import { Note, SequencerEditMode } from "@/store/type";
+import { Note, SequencerEditTarget } from "@/store/type";
 import {
   EDITOR_FRAME_RATE,
   getEndTicksOfPhrase,
@@ -420,7 +420,7 @@ const phraseInfos = computed(() => {
 });
 
 const ctrlKey = useCommandOrControlKey();
-const editMode = computed(() => state.sequencerEditMode);
+const editTarget = computed(() => state.sequencerEditTarget);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 
@@ -445,7 +445,7 @@ const onNoteLyricBlur = () => {
 const nowPreviewing = ref(false);
 let previewMode: PreviewMode = "ADD";
 let previewRequestId = 0;
-let previewStartEditMode: SequencerEditMode = "NOTE";
+let previewStartEditTarget: SequencerEditTarget = "NOTE";
 let executePreviewProcess = false;
 // ノート編集のプレビュー
 const previewNotes = ref<Note[]>([]);
@@ -810,8 +810,8 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
 
-  if (editMode.value === "NOTE") {
-    // ノート編集モードのときの処理
+  if (editTarget.value === "NOTE") {
+    // 編集ターゲットがノートのときの処理
 
     const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
     const cursorNoteNumber = baseYToNoteNumber(cursorBaseY, true);
@@ -873,8 +873,8 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
       copiedNotesForPreview.set(copiedNote.id, copiedNote);
     }
     previewNotes.value = copiedNotes;
-  } else if (editMode.value === "PITCH") {
-    // ピッチ編集モードのときの処理
+  } else if (editTarget.value === "PITCH") {
+    // 編集ターゲットがピッチのときの処理
 
     const frameRate = EDITOR_FRAME_RATE;
     const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
@@ -900,10 +900,10 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
     prevCursorPos.frame = cursorFrame;
     prevCursorPos.frequency = cursorFrequency;
   } else {
-    throw new ExhaustiveError(editMode.value);
+    throw new ExhaustiveError(editTarget.value);
   }
   previewMode = mode;
-  previewStartEditMode = editMode.value;
+  previewStartEditTarget = editTarget.value;
   executePreviewProcess = true;
   nowPreviewing.value = true;
   previewRequestId = requestAnimationFrame(preview);
@@ -911,8 +911,8 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
 
 const endPreview = () => {
   cancelAnimationFrame(previewRequestId);
-  if (previewStartEditMode === "NOTE") {
-    // ノート編集モードのときにプレビューを開始した場合の処理
+  if (previewStartEditTarget === "NOTE") {
+    // 編集ターゲットがノートのときにプレビューを開始した場合の処理
 
     if (edited) {
       if (previewMode === "ADD") {
@@ -930,8 +930,8 @@ const endPreview = () => {
         });
       }
     }
-  } else if (previewStartEditMode === "PITCH") {
-    // ピッチ編集モードのときにプレビューを開始した場合の処理
+  } else if (previewStartEditTarget === "PITCH") {
+    // 編集ターゲットがピッチのときにプレビューを開始した場合の処理
 
     if (previewPitchEdit.value == undefined) {
       throw new Error("previewPitchEdit.value is undefined.");
@@ -962,13 +962,13 @@ const endPreview = () => {
     }
     previewPitchEdit.value = undefined;
   } else {
-    throw new ExhaustiveError(previewStartEditMode);
+    throw new ExhaustiveError(previewStartEditTarget);
   }
   nowPreviewing.value = false;
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
-  if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
+  if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   // ダブルクリック用の処理を行う
@@ -984,7 +984,7 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
-  if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
+  if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   // ダブルクリック用の処理を行う
@@ -1000,7 +1000,7 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
-  if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
+  if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   // ダブルクリック用の処理を行う
@@ -1016,7 +1016,7 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
-  if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
+  if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   // ダブルクリック用の処理を行う
@@ -1030,7 +1030,7 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onMouseDown = (event: MouseEvent) => {
-  if (editMode.value === "NOTE" && !isSelfEventTarget(event)) {
+  if (editTarget.value === "NOTE" && !isSelfEventTarget(event)) {
     return;
   }
   // macOSの場合、Ctrl+クリックが右クリックのため、その場合はノートを追加しない
@@ -1044,7 +1044,7 @@ const onMouseDown = (event: MouseEvent) => {
   }
 
   // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
-  if (editMode.value === "NOTE") {
+  if (editTarget.value === "NOTE") {
     if (event.button === 0) {
       if (event.shiftKey) {
         isRectSelecting.value = true;
@@ -1056,7 +1056,7 @@ const onMouseDown = (event: MouseEvent) => {
     } else {
       store.dispatch("DESELECT_ALL_NOTES");
     }
-  } else if (editMode.value === "PITCH") {
+  } else if (editTarget.value === "PITCH") {
     if (event.button === 0) {
       if (event.ctrlKey) {
         startPreview(event, "ERASE_PITCH");
@@ -1065,7 +1065,7 @@ const onMouseDown = (event: MouseEvent) => {
       }
     }
   } else {
-    throw new ExhaustiveError(editMode.value);
+    throw new ExhaustiveError(editTarget.value);
   }
 };
 
@@ -1100,7 +1100,7 @@ const onMouseUp = (event: MouseEvent) => {
     doubleClickDetector.recordClick(event.detail, mouseDownAreaInfo);
   }
   ignoreDoubleClick =
-    editMode.value !== "NOTE" || (nowPreviewing.value && edited);
+    editTarget.value !== "NOTE" || (nowPreviewing.value && edited);
 
   if (isRectSelecting.value) {
     rectSelect(isOnCommandOrCtrlKeyDown(event));
