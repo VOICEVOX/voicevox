@@ -461,8 +461,7 @@ const previewPitchEdit = ref<
   | { type: "erase"; startFrame: number; frameLength: number }
   | undefined
 >(undefined);
-let prevCursorFrame = 0;
-let prevCursorFrequency = 0;
+const prevCursorPos = { frame: 0, frequency: 0 }; // 前のカーソル位置
 
 // ダブルクリック
 let mouseDownAreaInfo: NoteAreaInfo | GridAreaInfo | undefined;
@@ -682,27 +681,27 @@ const previewDrawPitch = () => {
     );
   }
 
-  if (cursorFrame === prevCursorFrame) {
+  if (cursorFrame === prevCursorPos.frame) {
     const i = cursorFrame - tempPitchEdit.startFrame;
     tempPitchEdit.data[i] = cursorFrequency;
-  } else if (cursorFrame < prevCursorFrame) {
-    for (let i = cursorFrame; i <= prevCursorFrame; i++) {
+  } else if (cursorFrame < prevCursorPos.frame) {
+    for (let i = cursorFrame; i <= prevCursorPos.frame; i++) {
       tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
         linearInterpolation(
           cursorFrame,
           Math.log(cursorFrequency),
-          prevCursorFrame,
-          Math.log(prevCursorFrequency),
+          prevCursorPos.frame,
+          Math.log(prevCursorPos.frequency),
           i,
         ),
       );
     }
   } else {
-    for (let i = prevCursorFrame; i <= cursorFrame; i++) {
+    for (let i = prevCursorPos.frame; i <= cursorFrame; i++) {
       tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
         linearInterpolation(
-          prevCursorFrame,
-          Math.log(prevCursorFrequency),
+          prevCursorPos.frame,
+          Math.log(prevCursorPos.frequency),
           cursorFrame,
           Math.log(cursorFrequency),
           i,
@@ -712,8 +711,8 @@ const previewDrawPitch = () => {
   }
 
   previewPitchEdit.value = tempPitchEdit;
-  prevCursorFrame = cursorFrame;
-  prevCursorFrequency = cursorFrequency;
+  prevCursorPos.frame = cursorFrame;
+  prevCursorPos.frequency = cursorFrequency;
 };
 
 const previewErasePitch = () => {
@@ -744,7 +743,7 @@ const previewErasePitch = () => {
   }
 
   previewPitchEdit.value = tempPitchEdit;
-  prevCursorFrame = cursorFrame;
+  prevCursorPos.frame = cursorFrame;
 };
 
 const preview = () => {
@@ -896,8 +895,8 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
     } else {
       throw new Error("Unknown preview mode.");
     }
-    prevCursorFrame = cursorFrame;
-    prevCursorFrequency = cursorFrequency;
+    prevCursorPos.frame = cursorFrame;
+    prevCursorPos.frequency = cursorFrequency;
   } else {
     throw new ExhaustiveError(editMode.value);
   }
