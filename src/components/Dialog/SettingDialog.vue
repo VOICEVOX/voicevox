@@ -1222,14 +1222,6 @@ const changeExperimentalSetting = async (
   key: keyof ExperimentalSettingType,
   data: boolean,
 ) => {
-  if (
-    key === "enablePitchEditInSongEditor" &&
-    data === false &&
-    store.state.sequencerEditMode === "PITCH"
-  ) {
-    // ピッチ編集機能を無効にする前に、ノート編集モードに切り替える
-    store.dispatch("SET_EDIT_MODE", { editMode: "NOTE" });
-  }
   store.dispatch("SET_EXPERIMENTAL_SETTING", {
     experimentalSetting: { ...experimentalSetting.value, [key]: data },
   });

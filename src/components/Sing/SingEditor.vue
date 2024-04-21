@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import ToolBar from "./ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
@@ -53,10 +53,20 @@ const nowRendering = computed(() => {
 const nowAudioExporting = computed(() => {
   return store.state.nowAudioExporting;
 });
+const enablePitchEditInSongEditor = computed(() => {
+  return store.state.experimentalSetting.enablePitchEditInSongEditor;
+});
 
 const cancelExport = () => {
   store.dispatch("CANCEL_AUDIO_EXPORT");
 };
+
+watch(enablePitchEditInSongEditor, (value) => {
+  if (value === false && store.state.sequencerEditMode === "PITCH") {
+    // ピッチ編集機能が無効になったときピッチ編集モードだったら、ノート編集モードに切り替える
+    store.dispatch("SET_EDIT_MODE", { editMode: "NOTE" });
+  }
+});
 
 const isCompletedInitialStartup = ref(false);
 // TODO: Vueっぽくないので解体する
