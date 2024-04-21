@@ -155,6 +155,7 @@ import {
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { ExhaustiveError } from "@/sing/utility";
 
 const store = useStore();
 
@@ -214,7 +215,7 @@ const toggleEditMode = () => {
   } else if (editMode.value === "PITCH") {
     store.dispatch("SET_EDIT_MODE", { editMode: "NOTE" });
   } else {
-    throw new Error("Unknown edit mode.");
+    throw new ExhaustiveError(editMode.value);
   }
 };
 

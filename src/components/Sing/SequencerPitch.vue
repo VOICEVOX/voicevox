@@ -24,6 +24,7 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
+import { ExhaustiveError } from "@/sing/utility";
 
 type PitchLine = {
   readonly frameTicksArray: number[];
@@ -284,7 +285,8 @@ const updatePitchEditDataSectionMap = async () => {
   // プレビュー中のピッチ編集があれば、適用する
   let tempData = [...pitchEdit.value.data];
   if (previewPitchEdit.value != undefined) {
-    if (previewPitchEdit.value.type === "draw") {
+    const previewPitchEditType = previewPitchEdit.value.type;
+    if (previewPitchEditType === "draw") {
       const previewData = previewPitchEdit.value.data;
       const previewStartFrame = previewPitchEdit.value.startFrame;
       const previewEndFrame = previewStartFrame + previewData.length;
@@ -295,7 +297,7 @@ const updatePitchEditDataSectionMap = async () => {
       for (let i = 0; i < previewData.length; i++) {
         tempData[previewStartFrame + i] = previewData[i];
       }
-    } else if (previewPitchEdit.value.type === "erase") {
+    } else if (previewPitchEditType === "erase") {
       const startFrame = previewPitchEdit.value.startFrame;
       const endFrame = Math.min(
         startFrame + previewPitchEdit.value.frameLength,
@@ -305,7 +307,7 @@ const updatePitchEditDataSectionMap = async () => {
         tempData[i] = 0;
       }
     } else {
-      throw new Error("Unknown preview pitch edit type.");
+      throw new ExhaustiveError(previewPitchEditType);
     }
   }
 

@@ -287,7 +287,11 @@ import {
   useCommandOrControlKey,
   useShiftKey,
 } from "@/composables/useModifierKey";
-import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
+import {
+  ExhaustiveError,
+  applyGaussianFilter,
+  linearInterpolation,
+} from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 
 type PreviewMode =
@@ -895,7 +899,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
     prevCursorFrame = cursorFrame;
     prevCursorFrequency = cursorFrequency;
   } else {
-    throw new Error("Unknown edit mode.");
+    throw new ExhaustiveError(editMode.value);
   }
   previewMode = mode;
   previewStartEditMode = editMode.value;
@@ -931,28 +935,30 @@ const endPreview = () => {
     if (previewPitchEdit.value == undefined) {
       throw new Error("previewPitchEdit.value is undefined.");
     }
-    if (previewPitchEdit.value.type === "draw") {
+    const previewPitchEditType = previewPitchEdit.value.type;
+    if (previewPitchEditType === "draw") {
       if (previewPitchEdit.value.data.length >= 2) {
         let data = previewPitchEdit.value.data;
         data = data.map((value) => Math.log(value));
         applyGaussianFilter(data, 0.7);
         data = data.map((value) => Math.exp(value));
+
         store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
           data,
           startFrame: previewPitchEdit.value.startFrame,
         });
       }
-    } else if (previewPitchEdit.value.type === "erase") {
+    } else if (previewPitchEditType === "erase") {
       store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
         startFrame: previewPitchEdit.value.startFrame,
         frameLength: previewPitchEdit.value.frameLength,
       });
     } else {
-      throw new Error("Unknown preview pitch edit type.");
+      throw new ExhaustiveError(previewPitchEditType);
     }
     previewPitchEdit.value = undefined;
   } else {
-    throw new Error("Unknown edit mode.");
+    throw new ExhaustiveError(previewStartEditMode);
   }
   nowPreviewing.value = false;
 };
@@ -1047,7 +1053,7 @@ const onMouseDown = (event: MouseEvent) => {
       }
     }
   } else {
-    throw new Error("Unknown edit mode.");
+    throw new ExhaustiveError(editMode.value);
   }
 };
 
