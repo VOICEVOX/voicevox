@@ -16,6 +16,7 @@ import {
 } from "@/sing/domain";
 import {
   DataSection,
+  DataSectionHash,
   calculateDataSectionHash,
   noteNumberToBaseY,
   tickToBaseX,
@@ -60,15 +61,15 @@ let stage: PIXI.Container | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
 
-let originalPitchDataSectionMap = new Map<string, DataSection>();
-let pitchEditDataSectionMap = new Map<string, DataSection>();
+let originalPitchDataSectionMap = new Map<DataSectionHash, DataSection>();
+let pitchEditDataSectionMap = new Map<DataSectionHash, DataSection>();
 
-const originalPitchLineMap = new Map<string, PitchLine>();
-const pitchEditLineMap = new Map<string, PitchLine>();
+const originalPitchLineMap = new Map<DataSectionHash, PitchLine>();
+const pitchEditLineMap = new Map<DataSectionHash, PitchLine>();
 
 const updatePitchLines = (
-  dataSectionMap: Map<string, DataSection>,
-  pitchLineMap: Map<string, PitchLine>,
+  dataSectionMap: Map<DataSectionHash, DataSection>,
+  pitchLineMap: Map<DataSectionHash, PitchLine>,
   pitchLineColor: Color,
   pitchLineWidth: number,
 ) => {
@@ -274,7 +275,7 @@ const updateOriginalPitchDataSectionMap = async () => {
 
   // データ区間のハッシュを計算して、ハッシュがキーのマップにする
   // TODO: コピペなので共通化する
-  const tempMap = new Map<string, DataSection>();
+  const tempMap = new Map<DataSectionHash, DataSection>();
   for (const dataSection of dataSections) {
     const hash = await calculateDataSectionHash(dataSection);
     tempMap.set(hash, dataSection);
@@ -331,7 +332,7 @@ const updatePitchEditDataSectionMap = async () => {
 
   // データ区間のハッシュを計算して、ハッシュがキーのマップにする
   // TODO: コピペなので共通化する
-  const tempMap = new Map<string, DataSection>();
+  const tempMap = new Map<DataSectionHash, DataSection>();
   for (const dataSection of dataSections) {
     const hash = await calculateDataSectionHash(dataSection);
     tempMap.set(hash, dataSection);

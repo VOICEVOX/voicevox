@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { StyleInfo } from "@/type/preload";
 import { calculateHash } from "@/sing/utility";
 
@@ -187,6 +188,11 @@ export type DataSection = {
   readonly data: number[];
 };
 
+const dataSectionHashSchema = z.string().brand<"DataSectionHash">();
+
+export type DataSectionHash = z.infer<typeof dataSectionHashSchema>;
+
 export async function calculateDataSectionHash(dataSection: DataSection) {
-  return await calculateHash(dataSection);
+  const hash = await calculateHash(dataSection);
+  return dataSectionHashSchema.parse(hash);
 }
