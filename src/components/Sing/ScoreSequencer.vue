@@ -941,6 +941,7 @@ const endPreview = () => {
       // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
       // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
       if (previewPitchEdit.value.data.length >= 2) {
+        // 平滑化を行う
         let data = previewPitchEdit.value.data;
         data = data.map((value) => Math.log(value));
         applyGaussianFilter(data, 0.7);
@@ -970,9 +971,11 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
+  // ダブルクリック用の処理を行う
   if (event.button === 0) {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
   }
+
   if (event.button === 0) {
     startPreview(event, "MOVE", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
@@ -984,9 +987,11 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
   if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
+  // ダブルクリック用の処理を行う
   if (event.button === 0) {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
   }
+
   if (event.button === 0) {
     startPreview(event, "RESIZE_LEFT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
@@ -998,9 +1003,11 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
   if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
+  // ダブルクリック用の処理を行う
   if (event.button === 0) {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
   }
+
   if (event.button === 0) {
     startPreview(event, "RESIZE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
@@ -1012,9 +1019,11 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
   if (editMode.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
+  // ダブルクリック用の処理を行う
   if (event.button === 0) {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
   }
+
   if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -1029,12 +1038,12 @@ const onMouseDown = (event: MouseEvent) => {
   if (isMac && event.ctrlKey && event.button === 0) {
     return;
   }
-
+  // ダブルクリック用の処理を行う
   if (event.button === 0) {
     mouseDownAreaInfo = new GridAreaInfo();
   }
+
   // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
-  // 選択中のノートが無い場合、プレビューを開始しノートIDをリセット
   if (editMode.value === "NOTE") {
     if (event.button === 0) {
       if (event.shiftKey) {
@@ -1086,6 +1095,7 @@ const onMouseUp = (event: MouseEvent) => {
   if (event.button !== 0) {
     return;
   }
+  // ダブルクリック用の処理を先に行う
   if (mouseDownAreaInfo) {
     doubleClickDetector.recordClick(event.detail, mouseDownAreaInfo);
   }
