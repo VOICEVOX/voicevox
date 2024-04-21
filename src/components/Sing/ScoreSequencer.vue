@@ -1683,7 +1683,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 
 .cursor-draw {
   cursor:
-    url("draw-cursor.png") 2 30,
+    url("/draw-cursor.png") 2 30,
     auto;
 }
 </style>
