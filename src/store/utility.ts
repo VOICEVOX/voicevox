@@ -1,6 +1,7 @@
 import path from "path";
 import { Platform } from "quasar";
 import { diffArrays } from "diff";
+import * as diff from "fast-array-diff";
 import {
   CharacterInfo,
   StyleInfo,
@@ -250,6 +251,17 @@ export class TuningTranscription {
     const beforeFlatArray = before.flatMap((accent) => accent.moras);
     const afterFlatArray = after.flatMap((accent) => accent.moras);
 
+    const matchRequirements = (beforeMora: Mora, afterMora: Mora) =>
+      beforeMora?.text === afterMora?.text;
+    const morasDiff = diff.getPatch(
+      beforeFlatArray,
+      afterFlatArray,
+      matchRequirements, // beforeFlatArrayとafterFlatArrayの特定の要素が一致するかどうかを判定する関数
+    );
+
+    const patchMora = diff.applyPatch(beforeFlatArray, morasDiff);
+
+    return patchMora;
     const diffed = diffArrays(
       beforeFlatArray.map((mora) => mora?.text),
       afterFlatArray.map((mora) => mora?.text),
