@@ -936,6 +936,8 @@ const endPreview = () => {
     }
     const previewPitchEditType = previewPitchEdit.value.type;
     if (previewPitchEditType === "draw") {
+      // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
+      // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
       if (previewPitchEdit.value.data.length >= 2) {
         let data = previewPitchEdit.value.data;
         data = data.map((value) => Math.log(value));
