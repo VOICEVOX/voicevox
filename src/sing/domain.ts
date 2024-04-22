@@ -283,8 +283,6 @@ export function decibelToLinear(decibelValue: number) {
   return Math.pow(10, decibelValue / 20);
 }
 
-export const EDITOR_FRAME_RATE = 93.75;
-
 export const VALUE_INDICATING_NO_DATA = -1;
 
 export const UNVOICED_PHONEMES = [
@@ -418,12 +416,13 @@ export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
 export function applyPitchEdit(
   singingGuide: SingingGuide,
   pitchEditData: number[],
+  editFrameRate: number,
 ) {
-  // 歌い方のフレームレートとエディターのフレームレートが一致しない場合はエラー
-  // TODO: 補完するようにする
-  if (singingGuide.frameRate !== EDITOR_FRAME_RATE) {
+  // 歌い方のフレームレートと編集フレームレートが一致しない場合はエラー
+  // TODO: 補間するようにする
+  if (singingGuide.frameRate !== editFrameRate) {
     throw new Error(
-      "The frame rate between the singing guide and the editor does not match.",
+      "The frame rate between the singing guide and the edit data does not match.",
     );
   }
   const unvoicedPhonemes = UNVOICED_PHONEMES;

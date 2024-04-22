@@ -60,7 +60,6 @@ import {
 import { OverlappingNoteInfos } from "@/sing/storeHelper";
 import {
   noteSchema,
-  pitchEditSchema,
   singerSchema,
   tempoSchema,
   timeSignatureSchema,
@@ -733,8 +732,6 @@ export type Score = {
 
 export type Singer = z.infer<typeof singerSchema>;
 
-export type PitchEdit = z.infer<typeof pitchEditSchema>;
-
 export type Track = z.infer<typeof trackSchema>;
 
 export type PhraseState =
@@ -809,6 +806,7 @@ export type SingingStoreState = {
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
   tracks: Track[];
+  editFrameRate: number;
   phrases: Map<string, Phrase>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する

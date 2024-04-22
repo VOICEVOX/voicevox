@@ -4,6 +4,7 @@ export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
 export const DEFAULT_BEAT_TYPE = 4;
+export const DEFAULT_EDIT_FRAME_RATE = 93.75;
 
 /**
  * 頻繁に変更される値を保持します。

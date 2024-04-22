@@ -7,7 +7,6 @@ import { ref, watch, computed } from "vue";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import {
-  EDITOR_FRAME_RATE,
   UNVOICED_PHONEMES,
   VALUE_INDICATING_NO_DATA,
   convertToFramePhonemes,
@@ -48,8 +47,11 @@ const props = defineProps<{
 
 const store = useStore();
 const singingGuides = computed(() => [...store.state.singingGuides.values()]);
-const pitchEdit = computed(() => store.getters.SELECTED_TRACK.pitchEdit);
+const pitchEditData = computed(() => {
+  return store.getters.SELECTED_TRACK.pitchEditData;
+});
 const previewPitchEdit = computed(() => props.previewPitchEdit);
+const editFrameRate = computed(() => store.state.editFrameRate);
 
 const canvasContainer = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
@@ -223,14 +225,15 @@ const updateOriginalPitchDataSectionMap = async () => {
   // originalPitchDataSectionMapに設定する
 
   const unvoicedPhonemes = UNVOICED_PHONEMES;
-  const frameRate = EDITOR_FRAME_RATE;
+  const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
   const singingGuidesValue = singingGuides.value;
 
   let tempData: number[] = [];
   for (const singingGuide of singingGuidesValue) {
+    // TODO: 補間を行うようにする
     if (singingGuide.frameRate !== frameRate) {
       throw new Error(
-        "The frame rate between the singing guide and the editor does not match.",
+        "The frame rate between the singing guide and the edit does not match.",
       );
     }
     const phonemes = singingGuide.query.phonemes;
@@ -292,10 +295,10 @@ const updatePitchEditDataSectionMap = async () => {
   // 1次元のデータからデータ区間のマップを生成して、
   // pitchEditDataSectionMapに設定する
 
-  const frameRate = EDITOR_FRAME_RATE;
+  const frameRate = editFrameRate.value;
 
   // プレビュー中のピッチ編集があれば、適用する
-  let tempData = [...pitchEdit.value.data];
+  let tempData = [...pitchEditData.value];
   if (previewPitchEdit.value != undefined) {
     const previewPitchEditType = previewPitchEdit.value.type;
     if (previewPitchEditType === "draw") {
@@ -353,7 +356,7 @@ watch(singingGuides, async () => {
   renderInNextFrame = true;
 });
 
-watch([pitchEdit, previewPitchEdit], async () => {
+watch([pitchEditData, previewPitchEdit], async () => {
   await updatePitchEditDataSectionMap();
   renderInNextFrame = true;
 });

@@ -58,7 +58,6 @@ import {
   calculateSingingGuideSourceHash,
   calculateSingingVoiceSourceHash,
   decibelToLinear,
-  EDITOR_FRAME_RATE,
   applyPitchEdit,
   VALUE_INDICATING_NO_DATA,
 } from "@/sing/domain";
@@ -66,6 +65,7 @@ import {
   DEFAULT_BEATS,
   DEFAULT_BEAT_TYPE,
   DEFAULT_BPM,
+  DEFAULT_EDIT_FRAME_RATE,
   DEFAULT_TPQN,
   FrequentlyUpdatedState,
   addNotesToOverlappingNoteInfos,
@@ -161,10 +161,7 @@ export const generateSingingStoreInitialScore = () => {
         keyRangeAdjustment: 0,
         volumeRangeAdjustment: 0,
         notes: [],
-        pitchEdit: {
-          data: [],
-          frameRate: EDITOR_FRAME_RATE,
-        },
+        pitchEditData: [],
       },
     ],
   };
@@ -172,6 +169,7 @@ export const generateSingingStoreInitialScore = () => {
 
 export const singingStoreState: SingingStoreState = {
   ...generateSingingStoreInitialScore(),
+  editFrameRate: DEFAULT_EDIT_FRAME_RATE,
   phrases: new Map(),
   singingGuides: new Map(),
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
@@ -522,8 +520,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state,
       { data, startFrame }: { data: number[]; startFrame: number },
     ) {
-      const pitchEdit = state.tracks[selectedTrackIndex].pitchEdit;
-      let tempData = [...pitchEdit.data];
+      const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
+      let tempData = [...pitchEditData];
       const endFrame = startFrame + data.length;
       if (tempData.length < endFrame) {
         const arrayToConcat = new Array(endFrame - tempData.length).fill(
@@ -534,10 +532,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       for (let i = 0; i < data.length; i++) {
         tempData[startFrame + i] = data[i];
       }
-      state.tracks[selectedTrackIndex].pitchEdit = {
-        data: tempData,
-        frameRate: pitchEdit.frameRate,
-      };
+      state.tracks[selectedTrackIndex].pitchEditData = tempData;
     },
   },
 
@@ -546,26 +541,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state,
       { startFrame, frameLength }: { startFrame: number; frameLength: number },
     ) {
-      const pitchEdit = state.tracks[selectedTrackIndex].pitchEdit;
-      const tempData = [...pitchEdit.data];
+      const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
+      const tempData = [...pitchEditData];
       const endFrame = Math.min(startFrame + frameLength, tempData.length);
       for (let i = startFrame; i < endFrame; i++) {
         tempData[i] = VALUE_INDICATING_NO_DATA;
       }
-      state.tracks[selectedTrackIndex].pitchEdit = {
-        data: tempData,
-        frameRate: pitchEdit.frameRate,
-      };
+      state.tracks[selectedTrackIndex].pitchEditData = tempData;
     },
   },
 
   CLEAR_PITCH_EDIT_DATA: {
     mutation(state) {
-      const pitchEdit = state.tracks[selectedTrackIndex].pitchEdit;
-      state.tracks[selectedTrackIndex].pitchEdit = {
-        data: [],
-        frameRate: pitchEdit.frameRate,
-      };
+      state.tracks[selectedTrackIndex].pitchEditData = [];
     },
     async action({ commit, dispatch }) {
       commit("CLEAR_PITCH_EDIT_DATA");
@@ -1071,7 +1059,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const notes = trackRef.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
-        const pitchEditData = [...trackRef.pitchEdit.data];
+        const pitchEditData = [...trackRef.pitchEditData];
+        const editFrameRate = state.editFrameRate;
         const restDurationSeconds = 1; // 前後の休符の長さはとりあえず1秒に設定
 
         // フレーズを更新する
@@ -1171,7 +1160,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   f0: [...singingGuide.query.f0],
                 },
               };
-              applyPitchEdit(singingGuide, pitchEditData);
+              applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
               const calculatedHash = await calculateSingingVoiceSourceHash({
                 singer: singerAndFrameRate.singer,
                 frameAudioQuery: singingGuide.query,
@@ -1331,7 +1320,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               ...singingGuide,
               query: { ...singingGuide.query, f0: [...singingGuide.query.f0] },
             };
-            applyPitchEdit(singingGuide, pitchEditData);
+            applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
 
             // 歌声のキャッシュがあれば取得し、なければ音声合成を行う
 
