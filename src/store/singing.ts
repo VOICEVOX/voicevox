@@ -528,7 +528,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const valuesToPush = new Array(endFrame - pitchEditData.length).fill(
           VALUE_INDICATING_NO_DATA,
         );
-        valuesToPush.push(...valuesToPush);
+        pitchEditData.push(...valuesToPush);
       }
       pitchEditData.splice(startFrame, data.length, ...data);
     },
