@@ -2,6 +2,9 @@ import * as PIXI from "pixi.js";
 import lineStripVertexShaderSource from "@/sing/graphics/shaders/lineStripVertexShader.glsl?raw";
 import fragmentShaderSource from "@/sing/graphics/shaders/fragmentShader.glsl?raw";
 
+/**
+ * 色を表します。値は0以上255以下です。
+ */
 export class Color {
   readonly r: number;
   readonly g: number;
