@@ -25,7 +25,7 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
-import { ExhaustiveError } from "@/sing/utility";
+import { AsyncProcessRunController, ExhaustiveError } from "@/sing/utility";
 
 type PitchLine = {
   readonly frameTicksArray: number[];
@@ -346,20 +346,32 @@ const updatePitchEditDataSectionMap = async () => {
   pitchEditDataSectionMap = dataSectionMap;
 };
 
-watch(
-  singingGuides,
+const originalPitchDataProcessController = new AsyncProcessRunController(
   async () => {
     await updateOriginalPitchDataSectionMap();
     renderInNextFrame = true;
   },
+);
+
+watch(
+  singingGuides,
+  async () => {
+    originalPitchDataProcessController.requestsRun();
+  },
   { immediate: true },
+);
+
+const pitchEditDataProcessController = new AsyncProcessRunController(
+  async () => {
+    await updatePitchEditDataSectionMap();
+    renderInNextFrame = true;
+  },
 );
 
 watch(
   [pitchEditData, previewPitchEdit],
   async () => {
-    await updatePitchEditDataSectionMap();
-    renderInNextFrame = true;
+    pitchEditDataProcessController.requestsRun();
   },
   { immediate: true },
 );
@@ -428,6 +440,8 @@ onUnmountedOrDeactivated(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
+  originalPitchDataProcessController.cancelsRequestToRun();
+  pitchEditDataProcessController.cancelsRequestToRun();
   stage?.destroy();
   originalPitchLineMap.forEach((value) => {
     value.lineStrip.destroy();

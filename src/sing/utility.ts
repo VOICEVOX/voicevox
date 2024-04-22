@@ -75,6 +75,58 @@ export function createPromiseThatResolvesWhen(
 }
 
 /**
+ * 非同期処理の実行を制御します。
+ */
+export class AsyncProcessRunController {
+  private readonly asyncProcess: () => Promise<void>;
+  private _isRunning = false;
+  private _isRunRequested = false;
+
+  get isRunning() {
+    return this._isRunning;
+  }
+
+  get isRunRequested() {
+    return this._isRunRequested;
+  }
+
+  /**
+   * @param asyncProcess 実行する非同期処理
+   */
+  constructor(asyncProcess: () => Promise<void>) {
+    this.asyncProcess = asyncProcess;
+  }
+
+  private async run() {
+    this._isRunning = true;
+    while (this._isRunRequested) {
+      this._isRunRequested = false;
+      await this.asyncProcess();
+    }
+    this._isRunning = false;
+  }
+
+  /**
+   * 非同期処理の実行をリクエストします。
+   * 未処理の実行リクエストがある場合は、何も行いません。
+   */
+  requestsRun() {
+    this._isRunRequested = true;
+    if (!this._isRunning) {
+      this.run();
+    }
+  }
+
+  /**
+   * 非同期処理の実行リクエストをキャンセルします。
+   * 実行リクエストが無い場合は、何も行いません。
+   */
+  cancelsRequestToRun() {
+    this._isRunRequested = false;
+  }
+}
+
+/**
  * タイマーです。関数を定期的に実行します。
  */
 export class Timer {
