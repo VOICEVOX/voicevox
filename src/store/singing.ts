@@ -1147,6 +1147,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               if (singingGuide == undefined) {
                 throw new Error("singingGuide is undefined.");
               }
+              // 歌い方をコピーする
               singingGuide = {
                 ...singingGuide,
                 query: {
@@ -1154,7 +1155,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   f0: [...singingGuide.query.f0],
                 },
               };
+              // 歌い方にピッチ編集を適用する
               applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
+
               const calculatedHash = await calculateSingingVoiceSourceHash({
                 singer: singerAndFrameRate.singer,
                 frameAudioQuery: singingGuide.query,
