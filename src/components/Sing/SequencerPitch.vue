@@ -346,7 +346,7 @@ const updatePitchEditDataSectionMap = async () => {
   pitchEditDataSectionMap = dataSectionMap;
 };
 
-const originalPitchDataProcessController = new AsyncProcessRunController(
+const originalPitchDataProcessRunController = new AsyncProcessRunController(
   async () => {
     await updateOriginalPitchDataSectionMap();
     renderInNextFrame = true;
@@ -356,12 +356,12 @@ const originalPitchDataProcessController = new AsyncProcessRunController(
 watch(
   singingGuides,
   async () => {
-    originalPitchDataProcessController.requestsRun();
+    originalPitchDataProcessRunController.requestsRun();
   },
   { immediate: true },
 );
 
-const pitchEditDataProcessController = new AsyncProcessRunController(
+const pitchEditDataProcessRunController = new AsyncProcessRunController(
   async () => {
     await updatePitchEditDataSectionMap();
     renderInNextFrame = true;
@@ -371,7 +371,7 @@ const pitchEditDataProcessController = new AsyncProcessRunController(
 watch(
   [pitchEditData, previewPitchEdit],
   async () => {
-    pitchEditDataProcessController.requestsRun();
+    pitchEditDataProcessRunController.requestsRun();
   },
   { immediate: true },
 );
@@ -440,8 +440,8 @@ onUnmountedOrDeactivated(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
-  originalPitchDataProcessController.cancelsRequestToRun();
-  pitchEditDataProcessController.cancelsRequestToRun();
+  originalPitchDataProcessRunController.cancelsRequestToRun();
+  pitchEditDataProcessRunController.cancelsRequestToRun();
   stage?.destroy();
   originalPitchLineMap.forEach((value) => {
     value.lineStrip.destroy();
