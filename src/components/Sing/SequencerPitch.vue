@@ -225,10 +225,34 @@ const render = () => {
   renderer.render(stage);
 };
 
+const generateDataSectionMap = async (data: number[], frameRate: number) => {
+  // データ区間（データがある区間）の配列を生成する
+  let dataSections: FramewiseDataSection[] = [];
+  for (let i = 0; i < data.length; i++) {
+    if (data[i] !== VALUE_INDICATING_NO_DATA) {
+      if (i === 0 || data[i - 1] === VALUE_INDICATING_NO_DATA) {
+        dataSections.push({ startFrame: i, frameRate, data: [] });
+      }
+      dataSections[dataSections.length - 1].data.push(data[i]);
+    }
+  }
+  dataSections = dataSections.filter((value) => value.data.length >= 2);
+
+  // データ区間のハッシュを計算して、ハッシュがキーのマップにする
+  const dataSectionMap = new Map<
+    FramewiseDataSectionHash,
+    FramewiseDataSection
+  >();
+  for (const dataSection of dataSections) {
+    const hash = await calculateFramewiseDataSectionHash(dataSection);
+    dataSectionMap.set(hash, dataSection);
+  }
+  return dataSectionMap;
+};
+
 const updateOriginalPitchDataSectionMap = async () => {
   // 歌い方のf0を結合して1次元のデータにし、
-  // 1次元のデータからデータ区間のマップを生成して、
-  // originalPitchDataSectionMapに設定する
+  // 1次元のデータからデータ区間のマップを生成して、originalPitchDataSectionMapに設定する
 
   const unvoicedPhonemes = UNVOICED_PHONEMES;
   const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
@@ -273,33 +297,15 @@ const updateOriginalPitchDataSectionMap = async () => {
     }
   }
 
-  // データ区間（ピッチのデータがある区間）の配列を生成する
-  // TODO: コピペなので共通化する
-  let dataSections: FramewiseDataSection[] = [];
-  for (let i = 0; i < tempData.length; i++) {
-    if (tempData[i] !== VALUE_INDICATING_NO_DATA) {
-      if (i === 0 || tempData[i - 1] === VALUE_INDICATING_NO_DATA) {
-        dataSections.push({ startFrame: i, frameRate, data: [] });
-      }
-      dataSections[dataSections.length - 1].data.push(tempData[i]);
-    }
-  }
-  dataSections = dataSections.filter((value) => value.data.length >= 2);
+  // データ区間（ピッチのデータがある区間）のマップを生成する
+  const dataSectionMap = await generateDataSectionMap(tempData, frameRate);
 
-  // データ区間のハッシュを計算して、ハッシュがキーのマップにする
-  // TODO: コピペなので共通化する
-  const tempMap = new Map<FramewiseDataSectionHash, FramewiseDataSection>();
-  for (const dataSection of dataSections) {
-    const hash = await calculateFramewiseDataSectionHash(dataSection);
-    tempMap.set(hash, dataSection);
-  }
-  originalPitchDataSectionMap = tempMap;
+  originalPitchDataSectionMap = dataSectionMap;
 };
 
 const updatePitchEditDataSectionMap = async () => {
   // ピッチ編集データとプレビュー中のピッチ編集データを結合して1次元のデータにし、
-  // 1次元のデータからデータ区間のマップを生成して、
-  // pitchEditDataSectionMapに設定する
+  // 1次元のデータからデータ区間のマップを生成して、pitchEditDataSectionMapに設定する
 
   const frameRate = editFrameRate.value;
 
@@ -334,27 +340,10 @@ const updatePitchEditDataSectionMap = async () => {
     }
   }
 
-  // データ区間（ピッチ編集データがある区間）の配列を生成する
-  // TODO: コピペなので共通化する
-  let dataSections: FramewiseDataSection[] = [];
-  for (let i = 0; i < tempData.length; i++) {
-    if (tempData[i] !== VALUE_INDICATING_NO_DATA) {
-      if (i === 0 || tempData[i - 1] === VALUE_INDICATING_NO_DATA) {
-        dataSections.push({ startFrame: i, frameRate, data: [] });
-      }
-      dataSections[dataSections.length - 1].data.push(tempData[i]);
-    }
-  }
-  dataSections = dataSections.filter((value) => value.data.length >= 2);
+  // データ区間（ピッチ編集データがある区間）のマップを生成する
+  const dataSectionMap = await generateDataSectionMap(tempData, frameRate);
 
-  // データ区間のハッシュを計算して、ハッシュがキーのマップにする
-  // TODO: コピペなので共通化する
-  const tempMap = new Map<FramewiseDataSectionHash, FramewiseDataSection>();
-  for (const dataSection of dataSections) {
-    const hash = await calculateFramewiseDataSectionHash(dataSection);
-    tempMap.set(hash, dataSection);
-  }
-  pitchEditDataSectionMap = tempMap;
+  pitchEditDataSectionMap = dataSectionMap;
 };
 
 watch(
