@@ -14,9 +14,9 @@ import {
   secondToTick,
 } from "@/sing/domain";
 import {
-  DataSection,
-  DataSectionHash,
-  calculateDataSectionHash,
+  FramewiseDataSection,
+  FramewiseDataSectionHash,
+  calculateFramewiseDataSectionHash,
   noteNumberToBaseY,
   tickToBaseX,
 } from "@/sing/viewHelper";
@@ -63,15 +63,21 @@ let stage: PIXI.Container | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
 
-let originalPitchDataSectionMap = new Map<DataSectionHash, DataSection>();
-let pitchEditDataSectionMap = new Map<DataSectionHash, DataSection>();
+let originalPitchDataSectionMap = new Map<
+  FramewiseDataSectionHash,
+  FramewiseDataSection
+>();
+let pitchEditDataSectionMap = new Map<
+  FramewiseDataSectionHash,
+  FramewiseDataSection
+>();
 
-const originalPitchLineMap = new Map<DataSectionHash, PitchLine>();
-const pitchEditLineMap = new Map<DataSectionHash, PitchLine>();
+const originalPitchLineMap = new Map<FramewiseDataSectionHash, PitchLine>();
+const pitchEditLineMap = new Map<FramewiseDataSectionHash, PitchLine>();
 
 const updatePitchLines = (
-  dataSectionMap: Map<DataSectionHash, DataSection>,
-  pitchLineMap: Map<DataSectionHash, PitchLine>,
+  dataSectionMap: Map<FramewiseDataSectionHash, FramewiseDataSection>,
+  pitchLineMap: Map<FramewiseDataSectionHash, PitchLine>,
   pitchLineColor: Color,
   pitchLineWidth: number,
 ) => {
@@ -269,7 +275,7 @@ const updateOriginalPitchDataSectionMap = async () => {
 
   // データ区間（ピッチのデータがある区間）の配列を生成する
   // TODO: コピペなので共通化する
-  let dataSections: DataSection[] = [];
+  let dataSections: FramewiseDataSection[] = [];
   for (let i = 0; i < tempData.length; i++) {
     if (tempData[i] !== VALUE_INDICATING_NO_DATA) {
       if (i === 0 || tempData[i - 1] === VALUE_INDICATING_NO_DATA) {
@@ -282,9 +288,9 @@ const updateOriginalPitchDataSectionMap = async () => {
 
   // データ区間のハッシュを計算して、ハッシュがキーのマップにする
   // TODO: コピペなので共通化する
-  const tempMap = new Map<DataSectionHash, DataSection>();
+  const tempMap = new Map<FramewiseDataSectionHash, FramewiseDataSection>();
   for (const dataSection of dataSections) {
-    const hash = await calculateDataSectionHash(dataSection);
+    const hash = await calculateFramewiseDataSectionHash(dataSection);
     tempMap.set(hash, dataSection);
   }
   originalPitchDataSectionMap = tempMap;
@@ -330,7 +336,7 @@ const updatePitchEditDataSectionMap = async () => {
 
   // データ区間（ピッチ編集データがある区間）の配列を生成する
   // TODO: コピペなので共通化する
-  let dataSections: DataSection[] = [];
+  let dataSections: FramewiseDataSection[] = [];
   for (let i = 0; i < tempData.length; i++) {
     if (tempData[i] !== VALUE_INDICATING_NO_DATA) {
       if (i === 0 || tempData[i - 1] === VALUE_INDICATING_NO_DATA) {
@@ -343,9 +349,9 @@ const updatePitchEditDataSectionMap = async () => {
 
   // データ区間のハッシュを計算して、ハッシュがキーのマップにする
   // TODO: コピペなので共通化する
-  const tempMap = new Map<DataSectionHash, DataSection>();
+  const tempMap = new Map<FramewiseDataSectionHash, FramewiseDataSection>();
   for (const dataSection of dataSections) {
-    const hash = await calculateDataSectionHash(dataSection);
+    const hash = await calculateFramewiseDataSectionHash(dataSection);
     tempMap.set(hash, dataSection);
   }
   pitchEditDataSectionMap = tempMap;

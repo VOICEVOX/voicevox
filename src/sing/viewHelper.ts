@@ -182,17 +182,23 @@ export class GridAreaInfo implements AreaInfo {
   }
 }
 
-export type DataSection = {
+export type FramewiseDataSection = {
   readonly startFrame: number;
   readonly frameRate: number;
   readonly data: number[];
 };
 
-const dataSectionHashSchema = z.string().brand<"DataSectionHash">();
+const framewiseDataSectionHashSchema = z
+  .string()
+  .brand<"FramewiseDataSectionHash">();
 
-export type DataSectionHash = z.infer<typeof dataSectionHashSchema>;
+export type FramewiseDataSectionHash = z.infer<
+  typeof framewiseDataSectionHashSchema
+>;
 
-export async function calculateDataSectionHash(dataSection: DataSection) {
+export async function calculateFramewiseDataSectionHash(
+  dataSection: FramewiseDataSection,
+) {
   const hash = await calculateHash(dataSection);
-  return dataSectionHashSchema.parse(hash);
+  return framewiseDataSectionHashSchema.parse(hash);
 }
