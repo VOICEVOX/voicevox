@@ -516,6 +516,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_PITCH_EDIT_DATA: {
+    // ピッチ編集データをセットする。
+    // track.pitchEditDataの長さが足りない場合は、伸長も行う。
     mutation(
       state,
       { data, startFrame }: { data: number[]; startFrame: number },
