@@ -357,15 +357,23 @@ const updatePitchEditDataSectionMap = async () => {
   pitchEditDataSectionMap = tempMap;
 };
 
-watch(singingGuides, async () => {
-  await updateOriginalPitchDataSectionMap();
-  renderInNextFrame = true;
-});
+watch(
+  singingGuides,
+  async () => {
+    await updateOriginalPitchDataSectionMap();
+    renderInNextFrame = true;
+  },
+  { immediate: true },
+);
 
-watch([pitchEditData, previewPitchEdit], async () => {
-  await updatePitchEditDataSectionMap();
-  renderInNextFrame = true;
-});
+watch(
+  [pitchEditData, previewPitchEdit],
+  async () => {
+    await updatePitchEditDataSectionMap();
+    renderInNextFrame = true;
+  },
+  { immediate: true },
+);
 
 watch(
   () => [
@@ -408,14 +416,7 @@ onMountedOrActivated(() => {
     requestId = window.requestAnimationFrame(callback);
   };
   requestId = window.requestAnimationFrame(callback);
-
-  updateOriginalPitchDataSectionMap()
-    .then(() => {
-      return updatePitchEditDataSectionMap();
-    })
-    .then(() => {
-      renderInNextFrame = true;
-    });
+  renderInNextFrame = true;
 
   resizeObserver = new ResizeObserver(() => {
     if (renderer == undefined) {
