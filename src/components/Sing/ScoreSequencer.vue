@@ -286,12 +286,9 @@ import {
   useCommandOrControlKey,
   useShiftKey,
 } from "@/composables/useModifierKey";
-import {
-  ExhaustiveError,
-  applyGaussianFilter,
-  linearInterpolation,
-} from "@/sing/utility";
+import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
+import { ExhaustiveError } from "@/type/utility";
 
 type PreviewMode =
   | "ADD"

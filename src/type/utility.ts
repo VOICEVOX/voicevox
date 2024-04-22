@@ -12,3 +12,9 @@ export function assertNonNullable<T>(
     throw new Error("Value is null or undefined");
   }
 }
+
+export class ExhaustiveError extends Error {
+  constructor(value: never) {
+    super(`Not exhaustive. value: ${value}`);
+  }
+}

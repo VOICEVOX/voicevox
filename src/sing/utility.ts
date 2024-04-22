@@ -218,9 +218,3 @@ export class AnimationTimer {
     this.requestId = undefined;
   }
 }
-
-export class ExhaustiveError extends Error {
-  constructor(value: never) {
-    super(`Not exhaustive. value: ${value}`);
-  }
-}

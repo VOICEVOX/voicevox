@@ -155,7 +155,7 @@ import {
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import { ExhaustiveError } from "@/sing/utility";
+import { ExhaustiveError } from "@/type/utility";
 
 const store = useStore();
 

@@ -25,7 +25,8 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
-import { AsyncProcessRunController, ExhaustiveError } from "@/sing/utility";
+import { AsyncProcessRunController } from "@/sing/utility";
+import { ExhaustiveError } from "@/type/utility";
 
 type PitchLine = {
   readonly frameTicksArray: number[];
