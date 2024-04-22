@@ -521,18 +521,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { data, startFrame }: { data: number[]; startFrame: number },
     ) {
       const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
-      let tempData = [...pitchEditData];
       const endFrame = startFrame + data.length;
-      if (tempData.length < endFrame) {
-        const arrayToConcat = new Array(endFrame - tempData.length).fill(
+      if (pitchEditData.length < endFrame) {
+        const valuesToPush = new Array(endFrame - pitchEditData.length).fill(
           VALUE_INDICATING_NO_DATA,
         );
-        tempData = tempData.concat(arrayToConcat);
+        valuesToPush.push(...valuesToPush);
       }
-      for (let i = 0; i < data.length; i++) {
-        tempData[startFrame + i] = data[i];
-      }
-      state.tracks[selectedTrackIndex].pitchEditData = tempData;
+      pitchEditData.splice(startFrame, data.length, ...data);
     },
   },
 
@@ -542,12 +538,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { startFrame, frameLength }: { startFrame: number; frameLength: number },
     ) {
       const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
-      const tempData = [...pitchEditData];
-      const endFrame = Math.min(startFrame + frameLength, tempData.length);
-      for (let i = startFrame; i < endFrame; i++) {
-        tempData[i] = VALUE_INDICATING_NO_DATA;
-      }
-      state.tracks[selectedTrackIndex].pitchEditData = tempData;
+      const endFrame = Math.min(startFrame + frameLength, pitchEditData.length);
+      pitchEditData.fill(VALUE_INDICATING_NO_DATA, startFrame, endFrame);
     },
   },
 

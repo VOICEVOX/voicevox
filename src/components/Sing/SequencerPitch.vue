@@ -258,7 +258,7 @@ const updateOriginalPitchDataSectionMap = async () => {
   const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
   const singingGuidesValue = singingGuides.value;
 
-  let tempData: number[] = [];
+  const tempData: number[] = [];
   for (const singingGuide of singingGuidesValue) {
     // TODO: 補間を行うようにする
     if (singingGuide.frameRate !== frameRate) {
@@ -283,10 +283,10 @@ const updateOriginalPitchDataSectionMap = async () => {
 
     // 無声子音区間以外のf0をtempDataにコピーする
     if (tempData.length < endFrame) {
-      const arrayToConcat = new Array(endFrame - tempData.length).fill(
+      const valuesToPush = new Array(endFrame - tempData.length).fill(
         VALUE_INDICATING_NO_DATA,
       );
-      tempData = tempData.concat(arrayToConcat);
+      tempData.push(...valuesToPush);
     }
     for (let i = 0; i < f0.length; i++) {
       const phoneme = framePhonemes[i];
@@ -308,9 +308,9 @@ const updatePitchEditDataSectionMap = async () => {
   // 1次元のデータからデータ区間のマップを生成して、pitchEditDataSectionMapに設定する
 
   const frameRate = editFrameRate.value;
+  const tempData = [...pitchEditData.value];
 
   // プレビュー中のピッチ編集があれば、適用する
-  let tempData = [...pitchEditData.value];
   if (previewPitchEdit.value != undefined) {
     const previewPitchEditType = previewPitchEdit.value.type;
     if (previewPitchEditType === "draw") {
@@ -318,10 +318,10 @@ const updatePitchEditDataSectionMap = async () => {
       const previewStartFrame = previewPitchEdit.value.startFrame;
       const previewEndFrame = previewStartFrame + previewData.length;
       if (tempData.length < previewEndFrame) {
-        const arrayToConcat = new Array(previewEndFrame - tempData.length).fill(
+        const valuesToPush = new Array(previewEndFrame - tempData.length).fill(
           VALUE_INDICATING_NO_DATA,
         );
-        tempData = tempData.concat(arrayToConcat);
+        tempData.push(...valuesToPush);
       }
       for (let i = 0; i < previewData.length; i++) {
         tempData[previewStartFrame + i] = previewData[i];
