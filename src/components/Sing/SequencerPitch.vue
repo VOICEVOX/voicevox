@@ -283,6 +283,7 @@ const updateOriginalPitchDataSectionMap = async () => {
     }
 
     // 無声子音区間以外のf0をtempDataにコピーする
+    // NOTE: 無声子音区間は音程が無く、f0の値が大きく上下するので表示しない
     if (tempData.length < endFrame) {
       const arrayToConcat = new Array(endFrame - tempData.length).fill(
         VALUE_INDICATING_NO_DATA,
