@@ -1,6 +1,7 @@
 import path from "path";
 import { Midi } from "@tonejs/midi";
 import { v4 as uuidv4 } from "uuid";
+import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -1155,15 +1156,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               if (singingGuide == undefined) {
                 throw new Error("singingGuide is undefined.");
               }
-              // 歌い方をコピーする
-              singingGuide = {
-                ...singingGuide,
-                query: {
-                  ...singingGuide.query,
-                  f0: [...singingGuide.query.f0],
-                },
-              };
-              // 歌い方にピッチ編集を適用する
+              // 歌い方をコピーして、ピッチ編集を適用する
+              singingGuide = structuredClone(toRaw(singingGuide));
               applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
 
               const calculatedHash = await calculateSingingVoiceSourceHash({
@@ -1319,12 +1313,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               });
             }
 
-            // ピッチ編集を適用する
+            // 歌い方をコピーして、ピッチ編集を適用する
 
-            singingGuide = {
-              ...singingGuide,
-              query: { ...singingGuide.query, f0: [...singingGuide.query.f0] },
-            };
+            singingGuide = structuredClone(toRaw(singingGuide));
             applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
 
             // 歌声のキャッシュがあれば取得し、なければ音声合成を行う
