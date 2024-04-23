@@ -99,11 +99,15 @@ export class AsyncProcessRunController {
 
   private async run() {
     this._isRunning = true;
-    while (this._isRunRequested) {
+    try {
+      while (this._isRunRequested) {
+        this._isRunRequested = false;
+        await this.asyncProcess();
+      }
+    } finally {
       this._isRunRequested = false;
-      await this.asyncProcess();
+      this._isRunning = false;
     }
-    this._isRunning = false;
   }
 
   /**
