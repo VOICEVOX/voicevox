@@ -3,7 +3,7 @@ import lineStripVertexShaderSource from "@/sing/graphics/shaders/lineStripVertex
 import fragmentShaderSource from "@/sing/graphics/shaders/fragmentShader.glsl?raw";
 
 /**
- * 色を表します。値は0以上255以下です。
+ * 色を表します。各値は0以上255以下です。
  */
 export class Color {
   readonly r: number;

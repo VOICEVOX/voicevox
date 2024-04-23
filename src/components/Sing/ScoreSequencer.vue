@@ -1092,7 +1092,7 @@ const onMouseUp = (event: MouseEvent) => {
   if (event.button !== 0) {
     return;
   }
-  // ダブルクリック用の処理を先に行う
+  // ダブルクリック用の処理を行う
   if (mouseDownAreaInfo) {
     doubleClickDetector.recordClick(event.detail, mouseDownAreaInfo);
   }

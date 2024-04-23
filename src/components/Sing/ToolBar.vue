@@ -94,7 +94,7 @@
     <!-- settings for edit controls -->
     <div class="sing-controls">
       <QBtn
-        v-if="showEditTargetToggleButton"
+        v-if="showEditTargetSwitchButton"
         dense
         icon="show_chart"
         :color="editTarget === 'PITCH' ? 'primary' : undefined"
@@ -203,7 +203,7 @@ const redo = () => {
   store.dispatch("REDO", { editor });
 };
 
-const showEditTargetToggleButton = computed(() => {
+const showEditTargetSwitchButton = computed(() => {
   return store.state.experimentalSetting.enablePitchEditInSongEditor;
 });
 
