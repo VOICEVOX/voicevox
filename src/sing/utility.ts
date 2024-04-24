@@ -20,7 +20,7 @@ function ceilToOdd(value: number) {
   return 1 + Math.ceil((value - 1) / 2) * 2;
 }
 
-export function createGaussianKernel(sigma: number) {
+function createGaussianKernel(sigma: number) {
   const kernelSize = ceilToOdd(sigma * 3);
   const center = Math.floor(kernelSize / 2);
   let kernel: number[] = [];
