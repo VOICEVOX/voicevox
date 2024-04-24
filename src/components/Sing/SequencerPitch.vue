@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import * as PIXI from "pixi.js";
+import AsyncLock from "async-lock";
 import { useStore } from "@/store";
 import {
   UNVOICED_PHONEMES,
@@ -25,8 +26,8 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
-import { AsyncTaskRunner } from "@/sing/utility";
 import { ExhaustiveError } from "@/type/utility";
+import { createLogger } from "@/domain/frontend/log";
 
 type PitchLine = {
   readonly frameTicksArray: number[];
@@ -46,6 +47,7 @@ const props = defineProps<{
     | { type: "erase"; startFrame: number; frameLength: number };
 }>();
 
+const { warn } = createLogger("SequencerPitch");
 const store = useStore();
 const singingGuides = computed(() => [...store.state.singingGuides.values()]);
 const pitchEditData = computed(() => {
@@ -348,24 +350,23 @@ const updatePitchEditDataSectionMap = async () => {
   pitchEditDataSectionMap = dataSectionMap;
 };
 
-const asyncTaskRunners = {
-  forUpdatingOriginalPitchLine: new AsyncTaskRunner(),
-  forUpdatingPitchEditLine: new AsyncTaskRunner(),
-};
+const asyncLock = new AsyncLock({ maxPending: 1 });
 
 watch(
   singingGuides,
   async () => {
-    const asyncTaskRunner = asyncTaskRunners.forUpdatingOriginalPitchLine;
-    // DataSectionMapの更新は1回で十分なので、
-    // キューが空でない場合はclearQueueしてからenqueueする
-    if (asyncTaskRunner.queueLength > 0) {
-      asyncTaskRunner.clearQueue();
-    }
-    asyncTaskRunner.enqueue(async () => {
-      await updateOriginalPitchDataSectionMap();
-      renderInNextFrame = true;
-    });
+    asyncLock.acquire(
+      "originalPitch",
+      async () => {
+        await updateOriginalPitchDataSectionMap();
+        renderInNextFrame = true;
+      },
+      (err) => {
+        if (err != undefined) {
+          warn(`An error occurred.`, err);
+        }
+      },
+    );
   },
   { immediate: true },
 );
@@ -373,16 +374,18 @@ watch(
 watch(
   [pitchEditData, previewPitchEdit],
   async () => {
-    const asyncTaskRunner = asyncTaskRunners.forUpdatingPitchEditLine;
-    // DataSectionMapの更新は1回で十分なので、
-    // キューが空でない場合はclearQueueしてからenqueueする
-    if (asyncTaskRunner.queueLength > 0) {
-      asyncTaskRunner.clearQueue();
-    }
-    asyncTaskRunner.enqueue(async () => {
-      await updatePitchEditDataSectionMap();
-      renderInNextFrame = true;
-    });
+    asyncLock.acquire(
+      "pitchEdit",
+      async () => {
+        await updatePitchEditDataSectionMap();
+        renderInNextFrame = true;
+      },
+      (err) => {
+        if (err != undefined) {
+          warn(`An error occurred.`, err);
+        }
+      },
+    );
   },
   { immediate: true },
 );
@@ -451,7 +454,6 @@ onUnmountedOrDeactivated(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
-  Object.values(asyncTaskRunners).map((value) => value.clearQueue());
   stage?.destroy();
   originalPitchLineMap.forEach((value) => {
     value.lineStrip.destroy();

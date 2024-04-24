@@ -75,58 +75,6 @@ export function createPromiseThatResolvesWhen(
 }
 
 /**
- * キューに入っている非同期タスクを1つずつ取り出して実行します。
- * 実行中のタスクが完了した後に次のタスクが実行されます。
- */
-export class AsyncTaskRunner {
-  private _isRunning = false;
-  private queue: (() => Promise<void>)[] = [];
-
-  get isRunning() {
-    return this._isRunning;
-  }
-
-  get queueLength() {
-    return this.queue.length;
-  }
-
-  private async run() {
-    this._isRunning = true;
-    try {
-      for (
-        let asyncTask = this.queue.shift();
-        asyncTask != undefined;
-        asyncTask = this.queue.shift()
-      ) {
-        await asyncTask();
-      }
-    } finally {
-      this.queue = [];
-      this._isRunning = false;
-    }
-  }
-
-  /**
-   * 非同期タスクをキューに入れます。
-   * 実行中のタスクが無い場合は、タスクの実行を開始し、
-   * タスクが無くなったら（キューが空になったら）停止します。
-   */
-  enqueue(asyncTask: () => Promise<void>) {
-    this.queue.push(asyncTask);
-    if (!this._isRunning) {
-      this.run();
-    }
-  }
-
-  /**
-   * キューをクリアします。
-   */
-  clearQueue() {
-    this.queue = [];
-  }
-}
-
-/**
  * タイマーです。関数を定期的に実行します。
  */
 export class Timer {
