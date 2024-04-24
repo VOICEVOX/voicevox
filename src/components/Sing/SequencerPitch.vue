@@ -25,7 +25,7 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
-import { AsyncProcessRunController } from "@/sing/utility";
+import { AsyncTaskRunner } from "@/sing/utility";
 import { ExhaustiveError } from "@/type/utility";
 
 type PitchLine = {
@@ -348,32 +348,41 @@ const updatePitchEditDataSectionMap = async () => {
   pitchEditDataSectionMap = dataSectionMap;
 };
 
-const originalPitchDataProcessRunController = new AsyncProcessRunController(
-  async () => {
-    await updateOriginalPitchDataSectionMap();
-    renderInNextFrame = true;
-  },
-);
+const asyncTaskRunners = {
+  forUpdatingOriginalPitchLine: new AsyncTaskRunner(),
+  forUpdatingPitchEditLine: new AsyncTaskRunner(),
+};
 
 watch(
   singingGuides,
   async () => {
-    originalPitchDataProcessRunController.requestsRun();
+    const asyncTaskRunner = asyncTaskRunners.forUpdatingOriginalPitchLine;
+    // DataSectionMapの更新は1回で十分なので、
+    // キューが空でない場合はclearQueueしてからenqueueする
+    if (asyncTaskRunner.queueLength > 0) {
+      asyncTaskRunner.clearQueue();
+    }
+    asyncTaskRunner.enqueue(async () => {
+      await updateOriginalPitchDataSectionMap();
+      renderInNextFrame = true;
+    });
   },
   { immediate: true },
-);
-
-const pitchEditDataProcessRunController = new AsyncProcessRunController(
-  async () => {
-    await updatePitchEditDataSectionMap();
-    renderInNextFrame = true;
-  },
 );
 
 watch(
   [pitchEditData, previewPitchEdit],
   async () => {
-    pitchEditDataProcessRunController.requestsRun();
+    const asyncTaskRunner = asyncTaskRunners.forUpdatingPitchEditLine;
+    // DataSectionMapの更新は1回で十分なので、
+    // キューが空でない場合はclearQueueしてからenqueueする
+    if (asyncTaskRunner.queueLength > 0) {
+      asyncTaskRunner.clearQueue();
+    }
+    asyncTaskRunner.enqueue(async () => {
+      await updatePitchEditDataSectionMap();
+      renderInNextFrame = true;
+    });
   },
   { immediate: true },
 );
@@ -442,8 +451,7 @@ onUnmountedOrDeactivated(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
-  originalPitchDataProcessRunController.cancelsRequestToRun();
-  pitchEditDataProcessRunController.cancelsRequestToRun();
+  Object.values(asyncTaskRunners).map((value) => value.clearQueue());
   stage?.destroy();
   originalPitchLineMap.forEach((value) => {
     value.lineStrip.destroy();

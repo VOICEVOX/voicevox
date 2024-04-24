@@ -75,58 +75,54 @@ export function createPromiseThatResolvesWhen(
 }
 
 /**
- * 非同期処理の実行を制御します。
+ * キューに入っている非同期タスクを1つずつ取り出して実行します。
+ * 実行中のタスクが完了した後に次のタスクが実行されます。
  */
-export class AsyncProcessRunController {
-  private readonly asyncProcess: () => Promise<void>;
+export class AsyncTaskRunner {
   private _isRunning = false;
-  private _isRunRequested = false;
+  private queue: (() => Promise<void>)[] = [];
 
   get isRunning() {
     return this._isRunning;
   }
 
-  get isRunRequested() {
-    return this._isRunRequested;
-  }
-
-  /**
-   * @param asyncProcess 実行する非同期処理
-   */
-  constructor(asyncProcess: () => Promise<void>) {
-    this.asyncProcess = asyncProcess;
+  get queueLength() {
+    return this.queue.length;
   }
 
   private async run() {
     this._isRunning = true;
     try {
-      while (this._isRunRequested) {
-        this._isRunRequested = false;
-        await this.asyncProcess();
+      for (
+        let asyncTask = this.queue.shift();
+        asyncTask != undefined;
+        asyncTask = this.queue.shift()
+      ) {
+        await asyncTask();
       }
     } finally {
-      this._isRunRequested = false;
+      this.queue = [];
       this._isRunning = false;
     }
   }
 
   /**
-   * 非同期処理の実行をリクエストします。
-   * 未処理の実行リクエストがある場合は、何も行いません。
+   * 非同期タスクをキューに入れます。
+   * 実行中のタスクが無い場合は、タスクの実行を開始し、
+   * タスクが無くなったら（キューが空になったら）停止します。
    */
-  requestsRun() {
-    this._isRunRequested = true;
+  enqueue(asyncTask: () => Promise<void>) {
+    this.queue.push(asyncTask);
     if (!this._isRunning) {
       this.run();
     }
   }
 
   /**
-   * 非同期処理の実行リクエストをキャンセルします。
-   * 実行リクエストが無い場合は、何も行いません。
+   * キューをクリアします。
    */
-  cancelsRequestToRun() {
-    this._isRunRequested = false;
+  clearQueue() {
+    this.queue = [];
   }
 }
 
