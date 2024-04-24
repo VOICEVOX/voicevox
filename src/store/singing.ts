@@ -66,7 +66,7 @@ import {
   DEFAULT_BEATS,
   DEFAULT_BEAT_TYPE,
   DEFAULT_BPM,
-  DEFAULT_EDIT_FRAME_RATE,
+  DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   DEFAULT_TPQN,
   FrequentlyUpdatedState,
   addNotesToOverlappingNoteInfos,
@@ -170,7 +170,7 @@ export const generateSingingStoreInitialScore = () => {
 
 export const singingStoreState: SingingStoreState = {
   ...generateSingingStoreInitialScore(),
-  editFrameRate: DEFAULT_EDIT_FRAME_RATE,
+  editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   phrases: new Map(),
   singingGuides: new Map(),
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
