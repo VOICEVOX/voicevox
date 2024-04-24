@@ -918,11 +918,6 @@ export type SingingStoreTypes = {
     mutation: { startFrame: number; frameLength: number };
   };
 
-  CLEAR_PITCH_EDIT_DATA: {
-    mutation: undefined;
-    action(): void;
-  };
-
   SET_PHRASES: {
     mutation: { phrases: Map<string, Phrase> };
   };

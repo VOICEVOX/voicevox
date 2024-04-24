@@ -554,17 +554,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  CLEAR_PITCH_EDIT_DATA: {
-    mutation(state) {
-      state.tracks[selectedTrackIndex].pitchEditData = [];
-    },
-    async action({ commit, dispatch }) {
-      commit("CLEAR_PITCH_EDIT_DATA");
-
-      dispatch("RENDER");
-    },
-  },
-
   SET_PHRASES: {
     mutation(state, { phrases }: { phrases: Map<string, Phrase> }) {
       state.phrases = phrases;
