@@ -62,10 +62,7 @@ export default defineConfig((options) => {
     },
     test: {
       include: ["../tests/unit/**/*.spec.ts"],
-      environmentMatchGlobs: [
-        ["../**/*.node.spec.ts", "node"],
-        ["../**/*.spec.ts", "happy-dom"],
-      ],
+      environment: "happy-dom",
       globals: true,
     },
 
