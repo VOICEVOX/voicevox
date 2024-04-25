@@ -242,7 +242,6 @@ import { v4 as uuidv4 } from "uuid";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { isMac } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import {
@@ -1056,7 +1055,7 @@ const onMouseDown = (event: MouseEvent) => {
     }
   } else if (editTarget.value === "PITCH") {
     if (mouseButton === "LEFT_BUTTON") {
-      if (isMac ? event.metaKey : event.ctrlKey) {
+      if (isOnCommandOrCtrlKeyDown(event)) {
         startPreview(event, "ERASE_PITCH");
       } else {
         startPreview(event, "DRAW_PITCH");
