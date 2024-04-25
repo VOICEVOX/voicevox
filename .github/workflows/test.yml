@@ -95,7 +95,7 @@ jobs:
           target: ${{ matrix.voicevox_engine_asset_name }}
 
       - name: Setup
-        if: matrix.os != 'macos-latest' # TODO: 最新バージョンのmacOSで動作できるようにする(2024年4月現在は最新バージョンでテストが落ちる)
+        if: matrix.os != 'macos-latest' # TODO: 最新バージョンのmacOSで動作できるようにする(2024年4月現在、最新バージョンでテストが落ちる)
         run: |
           # playwright
           npx playwright install
@@ -113,7 +113,7 @@ jobs:
           cp .env.test .env
 
       - name: Run npm run test:browser-e2e
-        if: matrix.os != 'macos-latest' # TODO: 最新バージョンのmacOSで動作できるようにする(2024年4月現在は最新バージョンでテストが落ちる)
+        if: matrix.os != 'macos-latest' # TODO: 最新バージョンのmacOSで動作できるようにする(2024年4月現在、最新バージョンでテストが落ちる)
         run: |
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
@@ -125,7 +125,7 @@ jobs:
           npm run test:browser-e2e -- $ARGS
 
       - name: Run npm run test:electron-e2e
-        if: matrix.os != 'macos-latest' # TODO: 最新バージョンのmacOSで動作できるようにする(2024年4月現在は最新バージョンでテストが落ちる)
+        if: matrix.os != 'macos-latest' # TODO: 最新バージョンのmacOSで動作できるようにする(2024年4月現在、最新バージョンでテストが落ちる)
         run: |
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
