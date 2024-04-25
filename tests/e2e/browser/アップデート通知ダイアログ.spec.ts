@@ -47,7 +47,7 @@ test("アップデートが通知されたりスキップしたりできる", as
   test.skip(
     process.platform === "darwin",
     // https://github.com/VOICEVOX/voicevox/issues/2007
-    "macOSだと原因不明でテストが落ちるためスキップします"
+    "macOSだと原因不明でテストが落ちるためスキップします",
   );
   await page.waitForTimeout(500);
 
