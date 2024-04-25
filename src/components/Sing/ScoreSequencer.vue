@@ -174,16 +174,30 @@
           height: `${Math.abs(cursorY - rectSelectStartY)}px`,
         }"
       />
-      <SequencerPhraseIndicator
-        v-for="phraseInfo in phraseInfos"
-        :key="phraseInfo.key"
-        :phrase-key="phraseInfo.key"
-        class="sequencer-phrase-indicator"
-        :style="{
-          width: `${phraseInfo.width}px`,
-          transform: `translateX(${phraseInfo.x - scrollX}px)`,
-        }"
-      />
+      <div class="current-track-phrase-indicator-container">
+        <SequencerPhraseIndicator
+          v-for="phraseInfo in phraseInfosInCurrentTrack"
+          :key="phraseInfo.key"
+          :phrase-key="phraseInfo.key"
+          class="sequencer-phrase-indicator"
+          :style="{
+            width: `${phraseInfo.width}px`,
+            transform: `translateX(${phraseInfo.x - scrollX}px)`,
+          }"
+        />
+      </div>
+      <div class="other-track-phrase-indicator-container">
+        <SequencerPhraseIndicator
+          v-for="phraseInfo in phraseInfosInOtherTracks"
+          :key="phraseInfo.key"
+          :phrase-key="phraseInfo.key"
+          class="sequencer-phrase-indicator"
+          :style="{
+            width: `${phraseInfo.width}px`,
+            transform: `translateX(${phraseInfo.x - scrollX}px)`,
+          }"
+        />
+      </div>
       <div
         class="sequencer-playhead"
         data-testid="sequencer-playhead"
@@ -404,7 +418,17 @@ const phraseInfos = computed(() => {
     const endBaseX = tickToBaseX(endTicks, tpqn.value);
     const startX = startBaseX * zoomX.value;
     const endX = endBaseX * zoomX.value;
-    return { key, x: startX, width: endX - startX };
+    return { key, x: startX, width: endX - startX, trackId: phrase.trackId };
+  });
+});
+const phraseInfosInCurrentTrack = computed(() => {
+  return phraseInfos.value.filter((value) => {
+    return value.trackId === selectedTrackId.value;
+  });
+});
+const phraseInfosInOtherTracks = computed(() => {
+  return phraseInfos.value.filter((value) => {
+    return value.trackId !== selectedTrackId.value;
   });
 });
 
@@ -1442,6 +1466,15 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   position: relative;
   overflow: hidden;
   pointer-events: none;
+}
+
+.current-track-phrase-indicator-container,
+.other-track-phrase-indicator-container {
+  position: absolute;
+  inset: 0;
+}
+.other-track-phrase-indicator-container {
+  opacity: 0.5;
 }
 
 .sequencer-phrase-indicator {
