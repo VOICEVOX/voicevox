@@ -1055,16 +1055,8 @@ const onMouseDown = (event: MouseEvent) => {
       store.dispatch("DESELECT_ALL_NOTES");
     }
   } else if (editTarget.value === "PITCH") {
-    if (isMac) {
-      // Macの場合、左ボタンでDRAW、右ボタンでERASE
-      if (mouseButton === "LEFT_BUTTON") {
-        startPreview(event, "DRAW_PITCH");
-      } else if (mouseButton === "RIGHT_BUTTON") {
-        startPreview(event, "ERASE_PITCH");
-      }
-    } else if (mouseButton === "LEFT_BUTTON") {
-      // Mac以外の場合、左ボタンでDRAW、左ボタン+CtrlでERASE
-      if (event.ctrlKey) {
+    if (mouseButton === "LEFT_BUTTON") {
+      if (isMac ? event.metaKey : event.ctrlKey) {
         startPreview(event, "ERASE_PITCH");
       } else {
         startPreview(event, "DRAW_PITCH");
