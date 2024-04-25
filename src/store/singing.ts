@@ -1505,9 +1505,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   IMPORT_MIDI_FILE: {
     action: createUILockAction(
       async (
-        { dispatch },
+        { getters, commit, dispatch },
         { filePath, trackIndex = 0 }: { filePath: string; trackIndex: number },
       ) => {
+        const currentSinger = getters.SELECTED_TRACK.singer;
+        if (!currentSinger) {
+          throw new Error("Singer is not set.");
+        }
+
         const convertPosition = (
           position: number,
           sourceTpqn: number,
@@ -1646,24 +1651,32 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
         timeSignatures = removeDuplicateTimeSignatures(timeSignatures);
 
-        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
-
-        await dispatch("SET_SCORE", {
-          score: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            notes: [notes],
-          },
+        // TODO: 良い感じに共通化する
+        // TODO: 複数テンポ、複数拍子に対応したら[0]をなくす
+        commit("SET_TEMPO", { tempo: tempos[0] });
+        commit("SET_TIME_SIGNATURE", {
+          timeSignature: timeSignatures[0],
         });
+
+        if (getters.SELECTED_TRACK.notes.length > 0) {
+          // singerにProxyを渡すとバグるので、toRawでProxyを取り除く
+          commit("CREATE_TRACK", {
+            singer: structuredClone(toRaw(currentSinger)),
+          });
+        }
+        commit("ADD_NOTES", { notes });
+
+        dispatch("RENDER");
       },
     ),
   },
 
   IMPORT_MUSICXML_FILE: {
     action: createUILockAction(
-      async ({ dispatch }, { filePath }: { filePath?: string }) => {
+      async (
+        { dispatch, getters, commit },
+        { filePath }: { filePath?: string },
+      ) => {
         if (!filePath) {
           filePath = await window.backend.showImportFileDialog({
             title: "MusicXML読み込み",
@@ -1671,6 +1684,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             extensions: ["musicxml", "xml"],
           });
           if (!filePath) return;
+        }
+        const currentSinger = getters.SELECTED_TRACK.singer;
+        if (!currentSinger) {
+          throw new Error("Singer is not set.");
         }
 
         let xmlStr = new TextDecoder("utf-8").decode(
@@ -1968,17 +1985,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         parseMusicXml(xmlStr);
 
-        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
-
-        await dispatch("SET_SCORE", {
-          score: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            notes: [notes],
-          },
+        // TODO: 良い感じに共通化する
+        // TODO: 複数テンポ、複数拍子に対応したら[0]をなくす
+        commit("SET_TEMPO", { tempo: tempos[0] });
+        commit("SET_TIME_SIGNATURE", {
+          timeSignature: timeSignatures[0],
         });
+
+        if (getters.SELECTED_TRACK.notes.length > 0) {
+          // singerにProxyを渡すとバグるので、toRawでProxyを取り除く
+          commit("CREATE_TRACK", {
+            singer: structuredClone(toRaw(currentSinger)),
+          });
+        }
+        commit("ADD_NOTES", { notes });
+
+        dispatch("RENDER");
       },
     ),
   },

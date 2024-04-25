@@ -14,6 +14,7 @@
           type: 'button',
           label: '削除',
           onClick: deleteTrack,
+          disabled: tracks.length === 1,
           disableWhenUiLocked: true,
         },
       ]"
