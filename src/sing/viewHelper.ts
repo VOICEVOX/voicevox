@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StyleInfo } from "@/type/preload";
+import { StyleInfo, isMac } from "@/type/preload";
 import { calculateHash } from "@/sing/utility";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
@@ -201,4 +201,20 @@ export async function calculateFramewiseDataSectionHash(
 ) {
   const hash = await calculateHash(dataSection);
   return framewiseDataSectionHashSchema.parse(hash);
+}
+
+export type MouseButton = "LEFT_BUTTON" | "RIGHT_BUTTON" | "OTHER_BUTTON";
+
+export function getButton(event: MouseEvent): MouseButton {
+  // macOSの場合、Ctrl+クリックは右クリック
+  if (isMac && event.button === 0 && event.ctrlKey) {
+    return "RIGHT_BUTTON";
+  }
+  if (event.button === 0) {
+    return "LEFT_BUTTON";
+  } else if (event.button === 2) {
+    return "RIGHT_BUTTON";
+  } else {
+    return "OTHER_BUTTON";
+  }
 }

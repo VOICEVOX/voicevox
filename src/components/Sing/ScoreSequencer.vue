@@ -272,6 +272,7 @@ import {
   DoubleClickDetector,
   NoteAreaInfo,
   GridAreaInfo,
+  getButton,
 } from "@/sing/viewHelper";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -968,12 +969,13 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
+  const downButton = getButton(event);
   // ダブルクリック用の処理を行う
-  if (event.button === 0) {
+  if (downButton === "LEFT_BUTTON") {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
   }
 
-  if (event.button === 0) {
+  if (downButton === "LEFT_BUTTON") {
     startPreview(event, "MOVE", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -984,12 +986,13 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
+  const downButton = getButton(event);
   // ダブルクリック用の処理を行う
-  if (event.button === 0) {
+  if (downButton === "LEFT_BUTTON") {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
   }
 
-  if (event.button === 0) {
+  if (downButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_LEFT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -1000,12 +1003,13 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
+  const downButton = getButton(event);
   // ダブルクリック用の処理を行う
-  if (event.button === 0) {
+  if (downButton === "LEFT_BUTTON") {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
   }
 
-  if (event.button === 0) {
+  if (downButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
@@ -1016,8 +1020,9 @@ const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
+  const downButton = getButton(event);
   // ダブルクリック用の処理を行う
-  if (event.button === 0) {
+  if (downButton === "LEFT_BUTTON") {
     mouseDownAreaInfo = new NoteAreaInfo(note.id);
   }
 
@@ -1030,19 +1035,15 @@ const onMouseDown = (event: MouseEvent) => {
   if (editTarget.value === "NOTE" && !isSelfEventTarget(event)) {
     return;
   }
-  // macOSの場合、Ctrl+クリックが右クリックのため、その場合はノートを追加しない
-  // TODO: 他の箇所でもチェックを行うようにする
-  if (isMac && event.ctrlKey && event.button === 0) {
-    return;
-  }
+  const downButton = getButton(event);
   // ダブルクリック用の処理を行う
-  if (event.button === 0) {
+  if (downButton === "LEFT_BUTTON") {
     mouseDownAreaInfo = new GridAreaInfo();
   }
 
   // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
   if (editTarget.value === "NOTE") {
-    if (event.button === 0) {
+    if (downButton === "LEFT_BUTTON") {
       if (event.shiftKey) {
         isRectSelecting.value = true;
         rectSelectStartX.value = cursorX.value;
@@ -1054,7 +1055,15 @@ const onMouseDown = (event: MouseEvent) => {
       store.dispatch("DESELECT_ALL_NOTES");
     }
   } else if (editTarget.value === "PITCH") {
-    if (event.button === 0) {
+    if (isMac) {
+      // Macの場合、左ボタンでDRAW、右ボタンでERASE
+      if (downButton === "LEFT_BUTTON") {
+        startPreview(event, "DRAW_PITCH");
+      } else if (downButton === "RIGHT_BUTTON") {
+        startPreview(event, "ERASE_PITCH");
+      }
+    } else if (downButton === "LEFT_BUTTON") {
+      // Mac以外の場合、左ボタンでDRAW、左ボタン+CtrlでERASE
       if (event.ctrlKey) {
         startPreview(event, "ERASE_PITCH");
       } else {
@@ -1089,7 +1098,8 @@ const onMouseMove = (event: MouseEvent) => {
 };
 
 const onMouseUp = (event: MouseEvent) => {
-  if (event.button !== 0) {
+  const upButton = getButton(event);
+  if (upButton !== "LEFT_BUTTON") {
     return;
   }
   // ダブルクリック用の処理を行う
