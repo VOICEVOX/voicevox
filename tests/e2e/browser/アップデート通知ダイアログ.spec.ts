@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
   // 動作環境より新しいバージョン
   const latestVersion = semver.inc(
     process.env.VITE_APP_VERSION ?? process.env.npm_package_version ?? "0.0.0",
-    "major"
+    "major",
   );
   assertNonNullable(latestVersion);
 
