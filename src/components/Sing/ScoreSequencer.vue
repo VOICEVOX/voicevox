@@ -1330,6 +1330,9 @@ const onWheel = (event: WheelEvent) => {
     throw new Error("sequencerBodyElement is null.");
   }
   if (isOnCommandOrCtrlKeyDown(event)) {
+    // scrollイベントの発火を阻止する
+    event.preventDefault();
+
     cursorX.value = getXInBorderBox(event.clientX, sequencerBodyElement);
     // マウスカーソル位置を基準に水平方向のズームを行う
     const oldZoomX = zoomX.value;
