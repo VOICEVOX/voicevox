@@ -955,9 +955,9 @@
                 </QToggle>
               </QCardActions>
               <QCardActions class="q-px-md bg-surface">
-                <div>ソング：ピッチを表示</div>
+                <div>ソング：ピッチ編集機能</div>
                 <div
-                  aria-label="ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。"
+                  aria-label="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
                 >
                   <QIcon name="help_outline" size="sm" class="help-hover-icon">
                     <QTooltip
@@ -966,15 +966,18 @@
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
-                      >ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。</QTooltip
+                      >ピッチ編集機能を有効にします。ピッチ編集モードに切り替えられるようになります。</QTooltip
                     >
                   </QIcon>
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="experimentalSetting.showPitchInSongEditor"
+                  :model-value="experimentalSetting.enablePitchEditInSongEditor"
                   @update:model-value="
-                    changeExperimentalSetting('showPitchInSongEditor', $event)
+                    changeExperimentalSetting(
+                      'enablePitchEditInSongEditor',
+                      $event,
+                    )
                   "
                 >
                 </QToggle>

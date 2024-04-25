@@ -1,6 +1,7 @@
 import path from "path";
 import { Midi } from "@tonejs/midi";
 import { v4 as uuidv4 } from "uuid";
+import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -21,6 +22,7 @@ import {
   SingingVoice,
   SingingGuideSourceHash,
   SingingVoiceSourceHash,
+  SequencerEditTarget,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId } from "@/type/preload";
@@ -57,11 +59,14 @@ import {
   calculateSingingGuideSourceHash,
   calculateSingingVoiceSourceHash,
   decibelToLinear,
+  applyPitchEdit,
+  VALUE_INDICATING_NO_DATA,
 } from "@/sing/domain";
 import {
   DEFAULT_BEATS,
   DEFAULT_BEAT_TYPE,
   DEFAULT_BPM,
+  DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   DEFAULT_TPQN,
   FrequentlyUpdatedState,
   addNotesToOverlappingNoteInfos,
@@ -157,6 +162,7 @@ export const generateSingingStoreInitialScore = () => {
         keyRangeAdjustment: 0,
         volumeRangeAdjustment: 0,
         notes: [],
+        pitchEditData: [],
       },
     ],
   };
@@ -164,6 +170,7 @@ export const generateSingingStoreInitialScore = () => {
 
 export const singingStoreState: SingingStoreState = {
   ...generateSingingStoreInitialScore(),
+  editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   phrases: new Map(),
   singingGuides: new Map(),
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
@@ -171,6 +178,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
+  sequencerEditTarget: "NOTE",
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
   overlappingNoteInfos: new Map(),
@@ -508,6 +516,40 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_PITCH_EDIT_DATA: {
+    // ピッチ編集データをセットする。
+    // track.pitchEditDataの長さが足りない場合は、伸長も行う。
+    mutation(
+      state,
+      { data, startFrame }: { data: number[]; startFrame: number },
+    ) {
+      const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
+      const tempData = [...pitchEditData];
+      const endFrame = startFrame + data.length;
+      if (tempData.length < endFrame) {
+        const valuesToPush = new Array(endFrame - tempData.length).fill(
+          VALUE_INDICATING_NO_DATA,
+        );
+        tempData.push(...valuesToPush);
+      }
+      tempData.splice(startFrame, data.length, ...data);
+      state.tracks[selectedTrackIndex].pitchEditData = tempData;
+    },
+  },
+
+  ERASE_PITCH_EDIT_DATA: {
+    mutation(
+      state,
+      { startFrame, frameLength }: { startFrame: number; frameLength: number },
+    ) {
+      const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
+      const tempData = [...pitchEditData];
+      const endFrame = Math.min(startFrame + frameLength, tempData.length);
+      tempData.fill(VALUE_INDICATING_NO_DATA, startFrame, endFrame);
+      state.tracks[selectedTrackIndex].pitchEditData = tempData;
+    },
+  },
+
   SET_PHRASES: {
     mutation(state, { phrases }: { phrases: Map<string, Phrase> }) {
       state.phrases = phrases;
@@ -616,9 +658,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.sequencerZoomX = zoomX;
     },
     async action({ commit }, { zoomX }) {
-      commit("SET_ZOOM_X", {
-        zoomX,
-      });
+      commit("SET_ZOOM_X", { zoomX });
     },
   },
 
@@ -627,9 +667,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.sequencerZoomY = zoomY;
     },
     async action({ commit }, { zoomY }) {
-      commit("SET_ZOOM_Y", {
-        zoomY,
-      });
+      commit("SET_ZOOM_Y", { zoomY });
+    },
+  },
+
+  SET_EDIT_TARGET: {
+    mutation(state, { editTarget }: { editTarget: SequencerEditTarget }) {
+      state.sequencerEditTarget = editTarget;
+    },
+    async action(
+      { commit },
+      { editTarget }: { editTarget: SequencerEditTarget },
+    ) {
+      commit("SET_EDIT_TARGET", { editTarget });
     },
   },
 
@@ -997,6 +1047,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const notes = trackRef.notes
           .map((value) => ({ ...value }))
           .filter((value) => !state.overlappingNoteIds.has(value.id));
+        const pitchEditData = [...trackRef.pitchEditData];
+        const editFrameRate = state.editFrameRate;
         const restDurationSeconds = 1; // 前後の休符の長さはとりあえず1秒に設定
 
         // フレーズを更新する
@@ -1083,12 +1135,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.singingGuideKey != undefined &&
               phrase.singingVoiceKey != undefined
             ) {
-              const singingGuide = state.singingGuides.get(
+              let singingGuide = state.singingGuides.get(
                 phrase.singingGuideKey,
               );
               if (singingGuide == undefined) {
                 throw new Error("singingGuide is undefined.");
               }
+              // 歌い方をコピーして、ピッチ編集を適用する
+              singingGuide = structuredClone(toRaw(singingGuide));
+              applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
+
               const calculatedHash = await calculateSingingVoiceSourceHash({
                 singer: singerAndFrameRate.singer,
                 frameAudioQuery: singingGuide.query,
@@ -1202,7 +1258,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
                 logger.info(`Loaded singing guide from cache.`);
               } else {
-                const frameAudioQuery = await fetchQuery(
+                const query = await fetchQuery(
                   singerAndFrameRate.singer.engineId,
                   phrase.notes,
                   tempos,
@@ -1212,13 +1268,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   restDurationSeconds,
                 );
 
-                const phonemes = getPhonemes(frameAudioQuery);
+                const phonemes = getPhonemes(query);
                 logger.info(
                   `Fetched frame audio query. Phonemes are "${phonemes}".`,
                 );
 
-                shiftGuidePitch(keyRangeAdjustment, frameAudioQuery);
-                scaleGuideVolume(volumeRangeAdjustment, frameAudioQuery);
+                shiftGuidePitch(keyRangeAdjustment, query);
+                scaleGuideVolume(volumeRangeAdjustment, query);
 
                 const startTime = calcStartTime(
                   phrase.notes,
@@ -1228,7 +1284,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 );
 
                 singingGuide = {
-                  query: frameAudioQuery,
+                  query,
                   frameRate: singerAndFrameRate.frameRate,
                   startTime,
                 };
@@ -1241,6 +1297,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 singingGuideKey,
               });
             }
+
+            // 歌い方をコピーして、ピッチ編集を適用する
+
+            singingGuide = structuredClone(toRaw(singingGuide));
+            applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
 
             // 歌声のキャッシュがあれば取得し、なければ音声合成を行う
 
@@ -2549,6 +2610,50 @@ export const singingCommandStore = transformCommandStore(
     COMMAND_REMOVE_SELECTED_NOTES: {
       action({ state, commit, dispatch }) {
         commit("COMMAND_REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_SET_PITCH_EDIT_DATA: {
+      mutation(draft, { data, startFrame }) {
+        singingStore.mutations.SET_PITCH_EDIT_DATA(draft, { data, startFrame });
+      },
+      action(
+        { commit, dispatch },
+        { data, startFrame }: { data: number[]; startFrame: number },
+      ) {
+        if (startFrame < 0) {
+          throw new Error("startFrame must be greater than or equal to 0.");
+        }
+        if (data.some((value) => !Number.isFinite(value) || value <= 0)) {
+          throw new Error("data is invalid.");
+        }
+        commit("COMMAND_SET_PITCH_EDIT_DATA", { data, startFrame });
+
+        dispatch("RENDER");
+      },
+    },
+    COMMAND_ERASE_PITCH_EDIT_DATA: {
+      mutation(draft, { startFrame, frameLength }) {
+        singingStore.mutations.ERASE_PITCH_EDIT_DATA(draft, {
+          startFrame,
+          frameLength,
+        });
+      },
+      action(
+        { commit, dispatch },
+        {
+          startFrame,
+          frameLength,
+        }: { startFrame: number; frameLength: number },
+      ) {
+        if (startFrame < 0) {
+          throw new Error("startFrame must be greater than or equal to 0.");
+        }
+        if (frameLength < 1) {
+          throw new Error("frameLength must be at least 1.");
+        }
+        commit("COMMAND_ERASE_PITCH_EDIT_DATA", { startFrame, frameLength });
 
         dispatch("RENDER");
       },

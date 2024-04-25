@@ -12,3 +12,13 @@ export function assertNonNullable<T>(
     throw new Error("Value is null or undefined");
   }
 }
+
+/**
+ * never型になるはずの値を使って型システムで非到達をチェックできる便利クラス。
+ * valueに指定した値がnever型じゃなかった場合に型システムがエラーを出してくれる。
+ */
+export class ExhaustiveError extends Error {
+  constructor(value: never) {
+    super(`Not exhaustive. value: ${value}`);
+  }
+}

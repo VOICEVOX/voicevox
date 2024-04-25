@@ -94,6 +94,15 @@
     <!-- settings for edit controls -->
     <div class="sing-controls">
       <QBtn
+        v-if="showEditTargetSwitchButton"
+        dense
+        icon="show_chart"
+        :color="editTarget === 'PITCH' ? 'primary' : undefined"
+        :text-color="editTarget === 'PITCH' ? 'white' : undefined"
+        class="edit-target-switch-button"
+        @click="switchEditTarget"
+      />
+      <QBtn
         flat
         dense
         round
@@ -146,6 +155,7 @@ import {
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { ExhaustiveError } from "@/type/utility";
 
 const store = useStore();
 
@@ -191,6 +201,22 @@ const undo = () => {
 };
 const redo = () => {
   store.dispatch("REDO", { editor });
+};
+
+const showEditTargetSwitchButton = computed(() => {
+  return store.state.experimentalSetting.enablePitchEditInSongEditor;
+});
+
+const editTarget = computed(() => store.state.sequencerEditTarget);
+
+const switchEditTarget = () => {
+  if (editTarget.value === "NOTE") {
+    store.dispatch("SET_EDIT_TARGET", { editTarget: "PITCH" });
+  } else if (editTarget.value === "PITCH") {
+    store.dispatch("SET_EDIT_TARGET", { editTarget: "NOTE" });
+  } else {
+    throw new ExhaustiveError(editTarget.value);
+  }
 };
 
 const tempos = computed(() => store.state.tempos);
@@ -523,6 +549,10 @@ onUnmounted(() => {
   justify-content: flex-end;
   display: flex;
   flex: 1;
+}
+
+.edit-target-switch-button {
+  margin-right: 6px;
 }
 
 .sing-undo-button,

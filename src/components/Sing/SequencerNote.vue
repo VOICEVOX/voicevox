@@ -6,7 +6,7 @@
       'preview-lyric': props.previewLyric != undefined,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
-      'below-pitch': showPitch,
+      'below-pitch': editTargetIsPitch,
     }"
     :style="{
       width: `${width}px`,
@@ -14,10 +14,32 @@
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
   >
-    <div class="note-bar" @mousedown="onBarMouseDown">
-      <div class="note-left-edge" @mousedown="onLeftEdgeMouseDown"></div>
-      <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
-      <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
+    <div
+      class="note-bar"
+      :class="{
+        'cursor-move': editTargetIsNote,
+      }"
+      @mousedown="onBarMouseDown"
+    >
+      <div
+        class="note-left-edge"
+        :class="{
+          'cursor-ew-resize': editTargetIsNote,
+        }"
+        @mousedown="onLeftEdgeMouseDown"
+      ></div>
+      <div
+        class="note-right-edge"
+        :class="{
+          'cursor-ew-resize': editTargetIsNote,
+        }"
+        @mousedown="onRightEdgeMouseDown"
+      ></div>
+      <ContextMenu
+        v-if="editTargetIsNote"
+        ref="contextMenu"
+        :menudata="contextMenuData"
+      />
     </div>
     <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
     <input
@@ -133,6 +155,12 @@ const noteState = computed((): NoteState => {
   }
   return "NORMAL";
 });
+const editTargetIsNote = computed(() => {
+  return state.sequencerEditTarget === "NOTE";
+});
+const editTargetIsPitch = computed(() => {
+  return state.sequencerEditTarget === "PITCH";
+});
 
 // ノートの重なりエラー
 const hasOverlappingError = computed(() => {
@@ -158,9 +186,6 @@ const lyricToDisplay = computed(
 const temporaryLyric = ref<string | undefined>(undefined);
 const showLyricInput = computed(() => {
   return state.editingLyricNoteId === props.note.id;
-});
-const showPitch = computed(() => {
-  return state.experimentalSetting.showPitchInSongEditor;
 });
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuData = ref<ContextMenuItemData[]>([
@@ -290,7 +315,7 @@ const onLyricInput = (event: Event) => {
 
     &.below-pitch {
       .note-bar {
-        background-color: rgba(hsl(33, 100%, 50%), 0.18);
+        background-color: rgba(colors.$primary-rgb, 0.18);
       }
     }
   }
@@ -353,7 +378,6 @@ const onLyricInput = (event: Event) => {
   background-color: colors.$primary;
   border: 1px solid rgba(colors.$background-rgb, 0.5);
   border-radius: 2px;
-  cursor: move;
 }
 
 .note-left-edge {
@@ -362,7 +386,6 @@ const onLyricInput = (event: Event) => {
   left: -1px;
   width: 5px;
   height: 100%;
-  cursor: ew-resize;
 }
 
 .note-right-edge {
@@ -371,7 +394,6 @@ const onLyricInput = (event: Event) => {
   right: -1px;
   width: 5px;
   height: 100%;
-  cursor: ew-resize;
 }
 
 .note-lyric-input {
@@ -383,5 +405,13 @@ const onLyricInput = (event: Event) => {
   border: 0;
   outline: 2px solid colors.$primary;
   border-radius: 0.25rem;
+}
+
+.cursor-move {
+  cursor: move;
+}
+
+.cursor-ew-resize {
+  cursor: ew-resize;
 }
 </style>

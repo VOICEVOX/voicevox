@@ -535,7 +535,7 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
-  showPitchInSongEditor: z.boolean().default(false),
+  enablePitchEditInSongEditor: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;

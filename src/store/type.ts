@@ -799,11 +799,14 @@ export type Phrase = {
   singingVoiceKey?: SingingVoiceSourceHash;
 };
 
+export type SequencerEditTarget = "NOTE" | "PITCH";
+
 export type SingingStoreState = {
   tpqn: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
   tracks: Track[];
+  editFrameRate: number;
   phrases: Map<string, Phrase>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
@@ -811,6 +814,7 @@ export type SingingStoreState = {
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
+  sequencerEditTarget: SequencerEditTarget;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
   overlappingNoteInfos: OverlappingNoteInfos;
@@ -906,6 +910,14 @@ export type SingingStoreTypes = {
     action(payload: { noteId?: string }): void;
   };
 
+  SET_PITCH_EDIT_DATA: {
+    mutation: { data: number[]; startFrame: number };
+  };
+
+  ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number };
+  };
+
   SET_PHRASES: {
     mutation: { phrases: Map<string, Phrase> };
   };
@@ -956,6 +968,11 @@ export type SingingStoreTypes = {
   SET_ZOOM_Y: {
     mutation: { zoomY: number };
     action(payload: { zoomY: number }): void;
+  };
+
+  SET_EDIT_TARGET: {
+    mutation: { editTarget: SequencerEditTarget };
+    action(payload: { editTarget: SequencerEditTarget }): void;
   };
 
   SET_IS_DRAG: {
@@ -1134,6 +1151,16 @@ export type SingingCommandStoreTypes = {
 
   COMMAND_REMOVE_SELECTED_NOTES: {
     action(): void;
+  };
+
+  COMMAND_SET_PITCH_EDIT_DATA: {
+    mutation: { data: number[]; startFrame: number };
+    action(payload: { data: number[]; startFrame: number }): void;
+  };
+
+  COMMAND_ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number };
+    action(payload: { startFrame: number; frameLength: number }): void;
   };
 };
 
