@@ -2007,7 +2007,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   IMPORT_UST_FILE: {
     action: createUILockAction(
-      async ({ dispatch }, { filePath }: { filePath?: string }) => {
+      async (
+        { dispatch, commit, getters },
+        { filePath }: { filePath?: string },
+      ) => {
+        const currentSinger = getters.SELECTED_TRACK.singer;
+        if (!currentSinger) {
+          throw new Error("Singer is not set.");
+        }
+
         // USTファイルの読み込み
         if (!filePath) {
           filePath = await window.backend.showImportFileDialog({
@@ -2039,7 +2047,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         // 初期化
-        const tpqn = DEFAULT_TPQN;
         const tempos: Tempo[] = [
           {
             position: 0,
@@ -2118,14 +2125,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         });
 
-        await dispatch("SET_SCORE", {
-          score: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            notes: [notes],
-          },
+        commit("SET_TEMPO", { tempo: tempos[0] });
+        commit("SET_TIME_SIGNATURE", {
+          timeSignature: timeSignatures[0],
         });
+        if (getters.SELECTED_TRACK.notes.length > 0) {
+          commit("CREATE_TRACK", {
+            singer: currentSinger,
+          });
+        }
+        commit("ADD_NOTES", { notes });
+
+        dispatch("RENDER");
       },
     ),
   },
