@@ -140,8 +140,12 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
     ">=0.19",
     (config) => {
-      config.enablePitchEditInSongEditor = config.showPitchInSongEditor;
-      delete config.showPitchInSongEditor;
+      if (
+        Object.prototype.hasOwnProperty.call(config, "showPitchInSongEditor")
+      ) {
+        config.enablePitchEditInSongEditor = config.showPitchInSongEditor;
+        delete config.showPitchInSongEditor;
+      }
     },
   ],
 ];
