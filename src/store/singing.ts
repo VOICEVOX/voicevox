@@ -1360,6 +1360,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 engineId: singerAndFrameRate.singer.engineId,
               });
               singingGuide.query.volume = volumes;
+              scaleGuideVolume(volumeRangeAdjustment, singingGuide.query);
 
               const blob = await synthesize(
                 singerAndFrameRate.singer,
