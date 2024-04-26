@@ -8,7 +8,7 @@
     dense
     icon="piano"
     :color="editTarget === 'NOTE' ? 'primary' : undefined"
-    :text-color="editTarget === 'NOTE' ? 'display' : undefined"
+    :text-color="editTarget === 'NOTE' ? 'display-on-primary' : undefined"
     @click="editTarget !== 'NOTE' && changeEditTarget('NOTE')"
     ><QTooltip :delay="500" anchor="bottom middle">ノート編集</QTooltip></QBtn
   >
@@ -18,7 +18,7 @@
     dense
     icon="show_chart"
     :color="editTarget === 'PITCH' ? 'primary' : undefined"
-    :text-color="editTarget === 'PITCH' ? 'display' : undefined"
+    :text-color="editTarget === 'PITCH' ? 'display-on-primary' : undefined"
     class="margin-right"
     @click="editTarget !== 'PITCH' && changeEditTarget('PITCH')"
     ><QTooltip :delay="500" anchor="bottom middle"
