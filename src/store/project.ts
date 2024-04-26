@@ -173,7 +173,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             notes: tracks[0].notes,
           },
         });
-        await context.dispatch("SET_SINGER", {});
+        await context.dispatch("SET_SINGER", { withRelated: true });
         await context.dispatch("CLEAR_PITCH_EDIT_DATA");
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });

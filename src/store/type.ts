@@ -840,8 +840,8 @@ export type SingingStoreTypes = {
   };
 
   SET_SINGER: {
-    mutation: { singer?: Singer };
-    action(payload: { singer?: Singer }): void;
+    mutation: { singer?: Singer; withRelated?: boolean };
+    action(payload: { singer?: Singer; withRelated?: boolean }): void;
   };
 
   SET_KEY_RANGE_ADJUSTMENT: {
@@ -1116,8 +1116,8 @@ export type SingingCommandStoreState = {
 
 export type SingingCommandStoreTypes = {
   COMMAND_SET_SINGER: {
-    mutation: { singer: Singer };
-    action(payload: { singer: Singer }): void;
+    mutation: { singer: Singer; withRelated?: boolean };
+    action(payload: { singer: Singer; withRelated?: boolean }): void;
   };
 
   COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
