@@ -37,7 +37,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
       }
       const engineId = EngineId(
-        JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
+        JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid,
       );
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
@@ -78,7 +78,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       if (
         Object.prototype.hasOwnProperty.call(
           experimentalSetting,
-          "enableMultiEngine"
+          "enableMultiEngine",
         )
       ) {
         const enableMultiEngine: boolean =
@@ -116,11 +116,25 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
           // @ts-expect-error 名前変更なので合わない。
           toolbarSetting === "EXPORT_AUDIO_ONE"
             ? "EXPORT_AUDIO_SELECTED"
-            : toolbarSetting
+            : toolbarSetting,
         );
       config.toolbarSetting = newToolbarSetting;
 
       return config;
+    },
+  ],
+  [
+    ">=0.17",
+    (config) => {
+      // 書き出し先のディレクトリが空文字の場合書き出し先固定を無効化する
+      // FIXME: 勝手に書き換えるのは少し不親切なので、ダイアログで書き換えたことを案内する
+      const savingSetting = config.savingSetting as ConfigType["savingSetting"];
+      if (
+        savingSetting.fixedExportEnabled &&
+        savingSetting.fixedExportDir === ""
+      ) {
+        savingSetting.fixedExportEnabled = false;
+      }
     },
   ],
 ];
@@ -229,23 +243,23 @@ export abstract class BaseConfigManager {
     const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
       (defaultHotkey) => {
         const loadedHotkey = loadedHotkeys.find(
-          (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
+          (loadedHotkey) => loadedHotkey.action === defaultHotkey.action,
         );
         const hotkeyWithoutCombination: HotkeySettingType = {
           action: defaultHotkey.action,
           combination: COMBINATION_IS_NONE,
         };
         return loadedHotkey || hotkeyWithoutCombination;
-      }
+      },
     );
     const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
       if (hotkey.combination === COMBINATION_IS_NONE) {
         const newHotkey =
           defaultHotkeySettings.find(
-            (defaultHotkey) => defaultHotkey.action === hotkey.action
+            (defaultHotkey) => defaultHotkey.action === hotkey.action,
           ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
         const combinationExists = hotkeysWithoutNewCombination.some(
-          (hotkey) => hotkey.combination === newHotkey.combination
+          (hotkey) => hotkey.combination === newHotkey.combination,
         );
         if (combinationExists) {
           const emptyHotkey: HotkeySettingType = {

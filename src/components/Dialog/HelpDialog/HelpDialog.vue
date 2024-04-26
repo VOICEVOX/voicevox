@@ -98,6 +98,7 @@ import ContactInfo from "./ContactInfo.vue";
 import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
+import { createLogger } from "@/domain/frontend/log";
 
 type PageItem = {
   type: "item";
@@ -112,14 +113,12 @@ type PageSeparator = {
 };
 type PageData = PageItem | PageSeparator;
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const modelValueComputed = computed({
   get: () => props.modelValue,
@@ -128,18 +127,19 @@ const modelValueComputed = computed({
 
 // エディタのアップデート確認
 const store = useStore();
+const { warn } = createLogger("HelpDialog");
 
 const updateInfos = ref<UpdateInfoObject[]>();
 store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
 if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
   throw new Error(
-    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。"
+    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。",
   );
 }
 const newUpdateResult = useFetchNewUpdateInfos(
   () => window.backend.getAppInfos().then((obj) => obj.version), // アプリのバージョン
-  UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL)
+  UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
 );
 
 // エディタのOSSライセンス取得
@@ -216,7 +216,7 @@ const pagedata = computed(() => {
     for (const id of store.getters.GET_SORTED_ENGINE_INFOS.map((m) => m.uuid)) {
       const manifest = store.state.engineManifests[id];
       if (!manifest) {
-        store.dispatch("LOG_WARN", `manifest not found: ${id}`);
+        warn(`manifest not found: ${id}`);
         continue;
       }
 
@@ -254,7 +254,7 @@ const pagedata = computed(() => {
             //       https://github.com/VOICEVOX/voicevox_engine/issues/476
             isUpdateAvailable: false,
           },
-        }
+        },
       );
     }
   }
@@ -267,7 +267,7 @@ const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .help-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;

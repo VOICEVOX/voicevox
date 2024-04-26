@@ -36,13 +36,14 @@ import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
-const props =
-  defineProps<{
-    /** 「ファイル」メニューのサブメニュー */
-    fileSubMenuData: MenuItemData[];
-    /** エディタの種類 */
-    editor: "talk" | "song";
-  }>();
+const props = defineProps<{
+  /** 「ファイル」メニューのサブメニュー */
+  fileSubMenuData: MenuItemData[];
+  /** 「編集」メニューのサブメニュー */
+  editSubMenuData: MenuItemData[];
+  /** エディタの種類 */
+  editor: "talk" | "song";
+}>();
 
 const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
@@ -54,7 +55,7 @@ const defaultEngineAltPortTo = computed<number | undefined>(() => {
 
   // ref: https://github.com/VOICEVOX/voicevox/blob/32940eab36f4f729dd0390dca98f18656240d60d/src/views/EditorHome.vue#L522-L528
   const defaultEngineInfo = Object.values(store.state.engineInfos).find(
-    (engine) => engine.type === "default"
+    (engine) => engine.type === "default",
   );
   if (defaultEngineInfo == undefined) return undefined;
 
@@ -88,8 +89,10 @@ const titleText = computed(
     (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
     (defaultEngineAltPortTo.value != null
       ? ` - Port: ${defaultEngineAltPortTo.value}`
-      : "")
+      : ""),
 );
+const canUndo = computed(() => store.getters.CAN_UNDO(props.editor));
+const canRedo = computed(() => store.getters.CAN_REDO(props.editor));
 
 // FIXME: App.vue内に移動する
 watch(titleText, (newTitle) => {
@@ -151,7 +154,7 @@ const importProject = () => {
 const recentProjectsSubMenuData = ref<MenuItemData[]>([]);
 const updateRecentProjects = async () => {
   const recentlyUsedProjects = await store.dispatch(
-    "GET_RECENTLY_USED_PROJECTS"
+    "GET_RECENTLY_USED_PROJECTS",
   );
   recentProjectsSubMenuData.value =
     recentlyUsedProjects.length === 0
@@ -232,7 +235,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
                 disableWhenUiLocked: false,
               },
             ].filter((x) => x),
-          } as MenuItemRoot)
+          }) as MenuItemRoot,
       ),
       {
         type: "separator",
@@ -325,6 +328,39 @@ const menudata = computed<MenuItemData[]>(() => [
         disableWhenUiLocked: true,
         subMenu: recentProjectsSubMenuData.value,
       },
+    ],
+  },
+  {
+    type: "root",
+    label: "編集",
+    onClick: () => {
+      closeAllDialog();
+    },
+    disableWhenUiLocked: false,
+    subMenu: [
+      {
+        type: "button",
+        label: "元に戻す",
+        onClick: async () => {
+          if (!uiLocked.value) {
+            await store.dispatch("UNDO", { editor: props.editor });
+          }
+        },
+        disabled: !canUndo.value,
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "やり直す",
+        onClick: async () => {
+          if (!uiLocked.value) {
+            await store.dispatch("REDO", { editor: props.editor });
+          }
+        },
+        disabled: !canRedo.value,
+        disableWhenUiLocked: true,
+      },
+      ...props.editSubMenuData,
     ],
   },
   {
@@ -422,7 +458,7 @@ const menudata = computed<MenuItemData[]>(() => [
 ]);
 
 const subMenuOpenFlags = ref(
-  [...Array(menudata.value.length)].map(() => false)
+  [...Array(menudata.value.length)].map(() => false),
 );
 
 const reassignSubMenuOpen = (idx: number) => {
@@ -464,7 +500,7 @@ registerHotkeyWithCleanup({
 </script>
 
 <style lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .active-menu {
   background-color: rgba(colors.$primary-rgb, 0.3) !important;
@@ -472,8 +508,8 @@ registerHotkeyWithCleanup({
 </style>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-bar {
   min-height: vars.$menubar-height;

@@ -176,7 +176,7 @@
                       @update:model-value="
                         changeExperimentalSetting(
                           'shouldApplyDefaultPresetOnVoiceChanged',
-                          $event
+                          $event,
                         )
                       "
                     >
@@ -470,7 +470,7 @@
                       flat
                       color="primary"
                       icon="folder_open"
-                      @click="openFileExplore"
+                      @click="selectFixedExportDir()"
                     >
                       <QTooltip :delay="500" anchor="bottom left">
                         フォルダ選択
@@ -868,7 +868,7 @@
                   @update:model-value="
                     changeExperimentalSetting(
                       'enableInterrogativeUpspeak',
-                      $event
+                      $event,
                     )
                   "
                 >
@@ -948,15 +948,17 @@
                   @update:model-value="
                     changeExperimentalSetting(
                       'shouldKeepTuningOnTextChange',
-                      $event
+                      $event,
                     )
                   "
                 >
                 </QToggle>
               </QCardActions>
-              <QCardActions v-if="!isProduction" class="q-px-md bg-surface">
-                <div>[開発時のみ機能] ピッチの表示</div>
-                <div aria-label="ソングエディターで、ピッチを表示します。">
+              <QCardActions class="q-px-md bg-surface">
+                <div>ソング：ピッチ編集機能</div>
+                <div
+                  aria-label="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
+                >
                   <QIcon name="help_outline" size="sm" class="help-hover-icon">
                     <QTooltip
                       :delay="500"
@@ -964,15 +966,18 @@
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
-                      >ONの場合、ソングエディターで、レンダリング後にピッチが表示されます。</QTooltip
+                      >ピッチ編集機能を有効にします。ピッチ編集モードに切り替えられるようになります。</QTooltip
                     >
                   </QIcon>
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="experimentalSetting.showPitchInSongEditor"
+                  :model-value="experimentalSetting.enablePitchEditInSongEditor"
                   @update:model-value="
-                    changeExperimentalSetting('showPitchInSongEditor', $event)
+                    changeExperimentalSetting(
+                      'enablePitchEditInSongEditor',
+                      $event,
+                    )
                   "
                 >
                 </QToggle>
@@ -1011,7 +1016,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
@@ -1023,6 +1028,7 @@ import {
   RootMiscSettingType,
   EngineId,
 } from "@/type/preload";
+import { createLogger } from "@/domain/frontend/log";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
@@ -1037,16 +1043,15 @@ const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
   return [state, setter] as const;
 };
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
+const { warn } = createLogger("SettingDialog");
 
 const settingDialogOpenedComputed = computed({
   get: () => props.modelValue,
@@ -1129,7 +1134,7 @@ const currentAudioOutputDeviceComputed = computed<
     // 再生デバイスが見つからなかったらデフォルト値に戻す
     // FIXME: watchなどにしてgetter内で操作しないようにする
     const device = availableAudioOutputDevices.value?.find(
-      (device) => device.key === store.state.savingSetting.audioOutputDevice
+      (device) => device.key === store.state.savingSetting.audioOutputDevice,
     );
     if (device) {
       return device;
@@ -1157,11 +1162,11 @@ const updateAudioOutputDevices = async () => {
 if (navigator.mediaDevices) {
   navigator.mediaDevices.addEventListener(
     "devicechange",
-    updateAudioOutputDevices
+    updateAudioOutputDevices,
   );
   updateAudioOutputDevices();
 } else {
-  store.dispatch("LOG_WARN", "navigator.mediaDevices is not available.");
+  warn("navigator.mediaDevices is not available.");
 }
 
 const acceptRetrieveTelemetryComputed = computed({
@@ -1215,7 +1220,7 @@ const changeEnablePreset = (value: boolean) => {
 
 const changeExperimentalSetting = async (
   key: keyof ExperimentalSettingType,
-  data: boolean
+  data: boolean,
 ) => {
   store.dispatch("SET_EXPERIMENTAL_SETTING", {
     experimentalSetting: { ...experimentalSetting.value, [key]: data },
@@ -1252,7 +1257,7 @@ const renderSamplingRateLabel = (value: SamplingRateOption): string => {
 
 const handleSavingSettingChange = (
   key: keyof SavingSetting,
-  data: string | boolean | number
+  data: string | boolean | number,
 ) => {
   store.dispatch("SET_SAVING_SETTING", {
     data: { ...savingSetting.value, [key]: data },
@@ -1289,16 +1294,34 @@ const outputSamplingRate = computed({
   },
 });
 
-const openFileExplore = async () => {
-  const path = await window.backend.showSaveDirectoryDialog({
+const openFileExplore = () => {
+  return window.backend.showSaveDirectoryDialog({
     title: "書き出し先のフォルダを選択",
   });
-  if (path) {
-    store.dispatch("SET_SAVING_SETTING", {
-      data: { ...savingSetting.value, fixedExportDir: path },
-    });
+};
+
+const selectFixedExportDir = async () => {
+  const path = await openFileExplore();
+  if (path != undefined) {
+    handleSavingSettingChange("fixedExportDir", path);
   }
 };
+
+// 書き出し先を固定を有効にしたときに書き出し先が未選択の場合は自動的にダイアログを表示する
+watchEffect(async () => {
+  if (
+    savingSetting.value.fixedExportEnabled &&
+    savingSetting.value.fixedExportDir === ""
+  ) {
+    const path = await openFileExplore();
+    if (path != undefined) {
+      handleSavingSettingChange("fixedExportDir", path);
+    } else {
+      // キャンセルした場合書き出し先の固定を無効化する
+      handleSavingSettingChange("fixedExportEnabled", false);
+    }
+  }
+});
 
 const [splitTextWhenPaste, changeSplitTextWhenPaste] =
   useRootMiscSetting("splitTextWhenPaste");
@@ -1320,7 +1343,7 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/visually-hidden' as visually-hidden;
+@use "@/styles/visually-hidden" as visually-hidden;
 @use "@/styles/colors" as colors;
 
 .text-h5 {

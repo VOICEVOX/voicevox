@@ -40,13 +40,12 @@
 <script setup lang="ts">
 import { UpdateInfo } from "@/type/preload";
 
-const props =
-  defineProps<{
-    latestVersion?: string;
-    downloadLink?: string;
-    updateInfos: UpdateInfo[];
-    isUpdateAvailable: boolean;
-  }>();
+const props = defineProps<{
+  latestVersion?: string;
+  downloadLink?: string;
+  updateInfos: UpdateInfo[];
+  isUpdateAvailable: boolean;
+}>();
 </script>
 
 <style scoped lang="scss">

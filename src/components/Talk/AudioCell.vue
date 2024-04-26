@@ -124,21 +124,19 @@ import {
   useCommandOrControlKey,
 } from "@/composables/useModifierKey";
 
-const props =
-  defineProps<{
-    audioKey: AudioKey;
-  }>();
+const props = defineProps<{
+  audioKey: AudioKey;
+}>();
 
-const emit =
-  defineEmits<{
-    // focusTarget：
-    //   textField: テキストフィールドにフォーカス。複数選択が解除される。特別な理由がない限りはこちらを使う。
-    //   root: AudioCell自体にフォーカス。こちらは複数選択を解除しない。
-    (
-      e: "focusCell",
-      payload: { audioKey: AudioKey; focusTarget?: "textField" | "root" }
-    ): void;
-  }>();
+const emit = defineEmits<{
+  // focusTarget：
+  //   textField: テキストフィールドにフォーカス。複数選択が解除される。特別な理由がない限りはこちらを使う。
+  //   root: AudioCell自体にフォーカス。こちらは複数選択を解除しない。
+  (
+    e: "focusCell",
+    payload: { audioKey: AudioKey; focusTarget?: "textField" | "root" },
+  ): void;
+}>();
 
 defineExpose({
   audioKey: computed(() => props.audioKey),
@@ -167,14 +165,14 @@ const userOrderedCharacterInfos = computed(() => {
   return infos;
 });
 const isInitializingSpeaker = computed(() =>
-  store.state.audioKeysWithInitializingSpeaker.includes(props.audioKey)
+  store.state.audioKeysWithInitializingSpeaker.includes(props.audioKey),
 );
 const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultiSelectEnabled = computed(
-  () => store.state.experimentalSetting.enableMultiSelect
+  () => store.state.experimentalSetting.enableMultiSelect,
 );
 
 const selectAndSetActiveAudioKey = () => {
@@ -201,14 +199,14 @@ const onClickWithModifierKey = (event: MouseEvent) => {
   if (event.shiftKey) {
     if (currentActiveAudioKey) {
       const currentAudioIndex = store.state.audioKeys.indexOf(
-        currentActiveAudioKey
+        currentActiveAudioKey,
       );
       const clickedAudioIndex = store.state.audioKeys.indexOf(props.audioKey);
       const minIndex = Math.min(currentAudioIndex, clickedAudioIndex);
       const maxIndex = Math.max(currentAudioIndex, clickedAudioIndex);
       const audioKeysBetween = store.state.audioKeys.slice(
         minIndex,
-        maxIndex + 1
+        maxIndex + 1,
       );
       newActiveAudioKey = props.audioKey;
       newSelectedAudioKeys = [...currentSelectedAudioKeys, ...audioKeysBetween];
@@ -223,20 +221,20 @@ const onClickWithModifierKey = (event: MouseEvent) => {
     if (props.audioKey === currentActiveAudioKey) {
       if (currentSelectedAudioKeys.length > 1) {
         const currentAudioIndex = currentSelectedAudioKeys.indexOf(
-          currentActiveAudioKey
+          currentActiveAudioKey,
         );
         newActiveAudioKey =
           currentSelectedAudioKeys[
             (currentAudioIndex + 1) % currentSelectedAudioKeys.length
           ];
         newSelectedAudioKeys = currentSelectedAudioKeys.filter(
-          (audioKey) => audioKey !== props.audioKey
+          (audioKey) => audioKey !== props.audioKey,
         );
       }
     } else if (currentSelectedAudioKeys.includes(props.audioKey)) {
       newActiveAudioKey = currentActiveAudioKey;
       newSelectedAudioKeys = currentSelectedAudioKeys.filter(
-        (audioKey) => audioKey !== props.audioKey
+        (audioKey) => audioKey !== props.audioKey,
       );
     } else {
       newActiveAudioKey = props.audioKey;
@@ -278,11 +276,11 @@ const selectedVoice = computed<Voice | undefined>({
 });
 
 const isActiveAudioCell = computed(
-  () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY
+  () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY,
 );
 const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const isSelectedAudioCell = computed(() =>
-  selectedAudioKeys.value.includes(props.audioKey)
+  selectedAudioKeys.value.includes(props.audioKey),
 );
 
 const audioTextBuffer = ref(audioItem.value.text);
@@ -300,7 +298,7 @@ watch(
     if (!isChangeFlag.value && newText != undefined) {
       audioTextBuffer.value = newText;
     }
-  }
+  },
 );
 
 const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
@@ -361,7 +359,7 @@ const paste = async (options?: { text?: string }) => {
   await nextTick();
   // 自動的に削除される改行などの文字数を念のため考慮している
   textFieldSelection.setCursorPosition(
-    end + audioTextBuffer.value.length - beforeLength
+    end + audioTextBuffer.value.length - beforeLength,
   );
 };
 const putMultilineText = async (texts: string[]) => {
@@ -394,7 +392,7 @@ const putMultilineText = async (texts: string[]) => {
 const showTextLineNumber = computed(() => store.state.showTextLineNumber);
 // 行番号
 const textLineNumberIndex = computed(
-  () => audioKeys.value.indexOf(props.audioKey) + 1
+  () => audioKeys.value.indexOf(props.audioKey) + 1,
 );
 // 行番号の幅: 2桁はデフォで入るように, 3桁以上は1remずつ広げる
 const textLineNumberWidth = computed(() => {
@@ -478,7 +476,7 @@ const removeCell = async () => {
       }
       if (willNextFocusIndex === -1) {
         throw new Error(
-          "次に選択するaudioKeyが見付かりませんでした（unreachable）"
+          "次に選択するaudioKeyが見付かりませんでした（unreachable）",
         );
       }
       emit("focusCell", {
@@ -514,7 +512,7 @@ const contextMenudata = ref<
     MenuItemSeparator,
     MenuItemButton,
     MenuItemSeparator,
-    MenuItemButton
+    MenuItemButton,
   ]
 >([
   // NOTE: audioTextBuffer.value の変更が nativeEl.value に反映されるのはnextTick。
@@ -616,9 +614,9 @@ const readyForContextMenu = () => {
           ? selectionText
           : `${selectionText.substring(
               0,
-              SHORTED_HEADER_FRAGMENT_LENGTH
+              SHORTED_HEADER_FRAGMENT_LENGTH,
             )} ... ${selectionText.substring(
-              selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH
+              selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH,
             )}`;
     } else {
       contextMenuHeader.value = selectionText;
@@ -641,8 +639,8 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/visually-hidden' as visually-hidden;
-@use '@/styles/colors' as colors;
+@use "@/styles/visually-hidden" as visually-hidden;
+@use "@/styles/colors" as colors;
 
 .audio-cell {
   display: flex;

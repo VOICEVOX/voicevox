@@ -34,7 +34,7 @@ export const UrlString = (url: string): UrlString => urlStringSchema.parse(url);
 const hotkeyCombinationSchema = z.string().brand("HotkeyCombination");
 export type HotkeyCombination = z.infer<typeof hotkeyCombinationSchema>;
 export const HotkeyCombination = (
-  hotkeyCombination: string
+  hotkeyCombination: string,
 ): HotkeyCombination => hotkeyCombinationSchema.parse(hotkeyCombination);
 
 export const engineIdSchema = z.string().brand<"EngineId">();
@@ -152,6 +152,26 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     action: "選択中のアクセント句のイントネーションをリセット",
     combination: HotkeyCombination("R"),
   },
+  {
+    action: "コピー",
+    combination: HotkeyCombination(!isMac ? "Ctrl C" : "Meta C"),
+  },
+  {
+    action: "切り取り",
+    combination: HotkeyCombination(!isMac ? "Ctrl X" : "Meta X"),
+  },
+  {
+    action: "貼り付け",
+    combination: HotkeyCombination(!isMac ? "Ctrl V" : "Meta V"),
+  },
+  {
+    action: "すべて選択",
+    combination: HotkeyCombination(!isMac ? "Ctrl A" : "Meta A"),
+  },
+  {
+    action: "選択解除",
+    combination: HotkeyCombination("Escape"),
+  },
 ];
 
 export const defaultToolbarButtonSetting: ToolbarSettingType = [
@@ -220,7 +240,7 @@ export interface Sandbox {
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
-    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void
+    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void,
   ): void;
   closeWindow(): void;
   minimizeWindow(): void;
@@ -243,11 +263,11 @@ export interface Sandbox {
   getSetting<Key extends keyof ConfigType>(key: Key): Promise<ConfigType[Key]>;
   setSetting<Key extends keyof ConfigType>(
     key: Key,
-    newValue: ConfigType[Key]
+    newValue: ConfigType[Key],
   ): Promise<ConfigType[Key]>;
   setEngineSetting(
     engineId: EngineId,
-    engineSetting: EngineSettingType
+    engineSetting: EngineSettingType,
   ): Promise<void>;
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
@@ -433,6 +453,11 @@ export const hotkeyActionNameSchema = z.enum([
   "テキスト読み込む",
   "全体のイントネーションをリセット",
   "選択中のアクセント句のイントネーションをリセット",
+  "コピー",
+  "切り取り",
+  "貼り付け",
+  "すべて選択",
+  "選択解除",
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
@@ -510,7 +535,7 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
-  showPitchInSongEditor: z.boolean().default(false),
+  enablePitchEditInSongEditor: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
@@ -600,7 +625,7 @@ export const configSchema = z
                   targetStyleId: styleIdSchema,
                 })
                 .optional(),
-            })
+            }),
           )
           .default({}),
         keys: presetKeySchema.array().default([]),

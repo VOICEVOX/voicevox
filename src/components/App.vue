@@ -1,6 +1,11 @@
 <template>
   <ErrorBoundary>
-    <!-- TODO: メニューバーをEditorHomeから移動する -->
+    <MenuBar
+      v-if="openedEditor != undefined"
+      :file-sub-menu-data="subMenuData.fileSubMenuData.value"
+      :edit-sub-menu-data="subMenuData.editSubMenuData.value"
+      :editor="openedEditor"
+    />
     <KeepAlive>
       <Component
         :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
@@ -24,16 +29,26 @@ import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import AllDialog from "@/components/Dialog/AllDialog.vue";
+import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
+import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
+import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
 
 const store = useStore();
 
-const openedEditor = computed(() => store.state.openedEditor);
+const talkMenuBarData = useTalkMenuBarData();
+const singMenuBarData = useSingMenuBarData();
 
-/**
- * 読み込むプロジェクトファイルのパス。
- * undefinedのときは何も読み込むべきものがない。
- */
-const projectFilePath = ref<string | undefined>(undefined);
+const subMenuData = computed(() => {
+  if (openedEditor.value === "talk" || openedEditor.value == undefined) {
+    return talkMenuBarData;
+  } else if (openedEditor.value === "song") {
+    return singMenuBarData;
+  }
+
+  throw new Error(`Invalid openedEditor: ${openedEditor.value}`);
+});
+
+const openedEditor = computed(() => store.state.openedEditor);
 
 // Google Tag Manager
 const gtm = useGtm();
@@ -42,7 +57,7 @@ watch(
   (acceptRetrieveTelemetry) => {
     gtm?.enable(acceptRetrieveTelemetry === "Accepted");
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // フォントの制御用パラメータを変更する
@@ -51,7 +66,7 @@ watch(
   (editorFont) => {
     document.body.setAttribute("data-editor-font", editorFont);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // エディタの切り替えを監視してショートカットキーの設定を変更する
@@ -61,7 +76,7 @@ watch(
     if (openedEditor != undefined) {
       hotkeyManager.onEditorChange(openedEditor);
     }
-  }
+  },
 );
 
 // ソフトウェアを初期化
@@ -75,10 +90,7 @@ onMounted(async () => {
   await store.dispatch("INIT_VUEX");
 
   // プロジェクトファイルのパスを取得
-  const _projectFilePath = urlParams.get("projectFilePath");
-  if (_projectFilePath != undefined && _projectFilePath !== "") {
-    projectFilePath.value = _projectFilePath;
-  }
+  const projectFilePath = urlParams.get("projectFilePath");
 
   // どちらのエディタを開くか設定
   await store.dispatch("SET_OPENED_EDITOR", { editor: "talk" });
@@ -100,7 +112,7 @@ onMounted(async () => {
   let engineIds: EngineId[];
   if (isMultiEngineOffMode) {
     const main = Object.values(store.state.engineInfos).find(
-      (engine) => engine.type === "default"
+      (engine) => engine.type === "default",
     );
     if (!main) {
       throw new Error("No main engine found");
@@ -129,12 +141,9 @@ onMounted(async () => {
   });
 
   // プロジェクトファイルが指定されていればロード
-  if (
-    typeof projectFilePath.value === "string" &&
-    projectFilePath.value !== ""
-  ) {
+  if (typeof projectFilePath === "string" && projectFilePath !== "") {
     isProjectFileLoaded.value = await store.dispatch("LOAD_PROJECT_FILE", {
-      filePath: projectFilePath.value,
+      filePath: projectFilePath,
     });
   } else {
     isProjectFileLoaded.value = false;
