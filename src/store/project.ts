@@ -436,7 +436,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               semverSatisfiesOptions,
             )
           ) {
-            // volumeRangeAdjustmentの追加
+            // 声量調整値の追加
             for (const track of projectData.song.tracks) {
               track.volumeRangeAdjustment = 0;
             }
@@ -449,7 +449,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               semverSatisfiesOptions,
             )
           ) {
-            // pitchEditDataの追加
+            // ピッチ編集値の追加
             for (const track of projectData.song.tracks) {
               track.pitchEditData = [];
             }

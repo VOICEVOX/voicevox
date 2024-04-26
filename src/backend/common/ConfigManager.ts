@@ -140,11 +140,16 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
     ">=0.19",
     (config) => {
+      // ピッチ表示機能の設定をピッチ編集機能に引き継ぐ
+      const experimentalSetting =
+        config.experimentalSetting as ExperimentalSettingType;
       if (
-        Object.prototype.hasOwnProperty.call(config, "showPitchInSongEditor")
+        "showPitchInSongEditor" in experimentalSetting &&
+        typeof experimentalSetting.showPitchInSongEditor === "boolean"
       ) {
-        config.enablePitchEditInSongEditor = config.showPitchInSongEditor;
-        delete config.showPitchInSongEditor;
+        experimentalSetting.enablePitchEditInSongEditor =
+          experimentalSetting.showPitchInSongEditor;
+        delete experimentalSetting.showPitchInSongEditor;
       }
     },
   ],
