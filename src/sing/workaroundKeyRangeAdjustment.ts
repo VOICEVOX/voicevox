@@ -159,6 +159,8 @@ const workaroundKeyRangeAdjustmentValues: {
 
 /**
  * 指定した歌手の音域調整量を取得するワークアラウンド。
+ * ハミングの場合はマジックナンバーを使う。
+ * 歌手の場合は0を返す。
  */
 export function getWorkaroundKeyRangeAdjustment(
   engineCharacterInfos: Record<EngineId, CharacterInfo[]>,
