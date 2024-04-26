@@ -1359,7 +1359,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 styleId: singingTeacherStyleId,
                 engineId: singerAndFrameRate.singer.engineId,
               });
-              // TODO: 新しく推論した音量をどう保存するか検討する
+              // TODO: 新しく推論した音量をどうプロジェクトファイルへ保存するか検討する
               singingGuide.query.volume = volumes;
 
               const blob = await synthesize(
