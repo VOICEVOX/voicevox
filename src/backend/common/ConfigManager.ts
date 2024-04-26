@@ -137,6 +137,13 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       }
     },
   ],
+  [
+    ">=0.19",
+    (config) => {
+      config.enablePitchEditInSongEditor = config.showPitchInSongEditor;
+      delete config.showPitchInSongEditor;
+    },
+  ],
 ];
 
 export type Metadata = {

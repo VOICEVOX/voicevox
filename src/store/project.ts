@@ -442,6 +442,19 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
           }
 
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.19.0",
+              semverSatisfiesOptions,
+            )
+          ) {
+            // pitchEditDataの追加
+            for (const track of projectData.song.tracks) {
+              track.pitchEditData = [];
+            }
+          }
+
           // Validation check
           // トークはvalidateTalkProjectで検証する
           // ソングはSET_SCOREの中の`isValidScore`関数で検証される
