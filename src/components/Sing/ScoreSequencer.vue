@@ -190,36 +190,23 @@
         }"
       ></div>
     </div>
-    <input
-      type="range"
+    <QSlider
+      :model-value="zoomX"
       :min="ZOOM_X_MIN"
       :max="ZOOM_X_MAX"
       :step="ZOOM_X_STEP"
-      :value="zoomX"
-      :style="{
-        position: 'fixed',
-        zIndex: 100,
-        bottom: '20px',
-        right: '36px',
-        width: '80px',
-      }"
-      @input="setZoomX"
+      class="zoom-x-slider"
+      @update:model-value="setZoomX"
     />
-    <input
-      type="range"
+    <QSlider
+      :model-value="zoomY"
       :min="ZOOM_Y_MIN"
       :max="ZOOM_Y_MAX"
       :step="ZOOM_Y_STEP"
-      :value="zoomY"
-      :style="{
-        position: 'fixed',
-        zIndex: 100,
-        bottom: '68px',
-        right: '-12px',
-        transform: 'rotate(-90deg)',
-        width: '80px',
-      }"
-      @input="setZoomY"
+      vertical
+      reverse
+      class="zoom-y-slider"
+      @update:model-value="setZoomY"
     />
     <ContextMenu
       v-if="editTarget === 'NOTE'"
@@ -1286,47 +1273,49 @@ const handleKeydown = (event: KeyboardEvent) => {
 };
 
 // X軸ズーム
-const setZoomX = (event: Event) => {
+const setZoomX = (value: number | null) => {
+  if (value == null) {
+    return;
+  }
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-  if (event.target instanceof HTMLInputElement) {
-    // 画面の中央を基準に水平方向のズームを行う
-    const oldZoomX = zoomX.value;
-    const newZoomX = Number(event.target.value);
-    const scrollLeft = sequencerBodyElement.scrollLeft;
-    const scrollTop = sequencerBodyElement.scrollTop;
-    const clientWidth = sequencerBodyElement.clientWidth;
+  // 画面の中央を基準に水平方向のズームを行う
+  const oldZoomX = zoomX.value;
+  const newZoomX = value;
+  const scrollLeft = sequencerBodyElement.scrollLeft;
+  const scrollTop = sequencerBodyElement.scrollTop;
+  const clientWidth = sequencerBodyElement.clientWidth;
 
-    store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
-      const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
-      const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
-      sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
-    });
-  }
+  store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+    const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
+    const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
+    sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+  });
 };
 
 // Y軸ズーム
-const setZoomY = (event: Event) => {
+const setZoomY = (value: number | null) => {
+  if (value == null) {
+    return;
+  }
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
   }
-  if (event.target instanceof HTMLInputElement) {
-    // 画面の中央を基準に垂直方向のズームを行う
-    const oldZoomY = zoomY.value;
-    const newZoomY = Number(event.target.value);
-    const scrollLeft = sequencerBodyElement.scrollLeft;
-    const scrollTop = sequencerBodyElement.scrollTop;
-    const clientHeight = sequencerBodyElement.clientHeight;
+  // 画面の中央を基準に垂直方向のズームを行う
+  const oldZoomY = zoomY.value;
+  const newZoomY = value;
+  const scrollLeft = sequencerBodyElement.scrollLeft;
+  const scrollTop = sequencerBodyElement.scrollTop;
+  const clientHeight = sequencerBodyElement.clientHeight;
 
-    store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
-      const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
-      const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
-      sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
-    });
-  }
+  store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
+    const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
+    const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
+    sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
+  });
 };
 
 const onWheel = (event: WheelEvent) => {
@@ -1691,12 +1680,11 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 .sequencer-playhead {
   position: absolute;
   top: 0;
-  left: -2px;
-  width: 4px;
+  left: -1px;
+  width: 2px;
   height: 100%;
-  background: colors.$primary;
-  border-left: 1px solid rgba(colors.$background-rgb, 0.83);
-  border-right: 1px solid rgba(colors.$background-rgb, 0.83);
+  background: rgba(colors.$display-rgb, 0.8);
+  will-change: transform;
 }
 
 .rect-select-preview {
@@ -1710,5 +1698,19 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   cursor:
     url("/draw-cursor.png") 2 30,
     auto;
+}
+
+.zoom-x-slider {
+  position: fixed;
+  bottom: 16px;
+  right: 32px;
+  width: 80px;
+}
+
+.zoom-y-slider {
+  position: fixed;
+  bottom: 40px;
+  right: 16px;
+  height: 80px;
 }
 </style>

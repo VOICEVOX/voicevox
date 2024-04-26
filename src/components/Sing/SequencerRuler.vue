@@ -6,24 +6,18 @@
           id="sequencer-ruler-measure"
           patternUnits="userSpaceOnUse"
           :x="-offset"
-          :width="measureWidth"
+          :width="beatWidth * beatsPerMeasure"
           :height="height"
         >
           <line
-            x1="0"
-            x2="0"
-            y1="20"
-            :y2="height"
+            v-for="n in beatsPerMeasure"
+            :key="n"
+            :x1="beatWidth * (n - 1)"
+            :x2="beatWidth * (n - 1)"
+            :y1="n === 1 ? 16 : 24"
+            y2="100%"
             stroke-width="1"
-            class="sequencer-ruler-measure-line"
-          />
-          <line
-            :x1="measureWidth"
-            :x2="measureWidth"
-            y1="20"
-            :y2="height"
-            stroke-width="1"
-            class="sequencer-ruler-measure-line"
+            :class="`sequencer-ruler-${n === 1 ? 'measure' : 'beat'}-line`"
           />
         </pattern>
         <symbol id="sequencer-ruler-measure-numbers">
@@ -79,13 +73,14 @@ const playheadTicks = ref(0);
 const tpqn = computed(() => state.tpqn);
 const timeSignatures = computed(() => state.timeSignatures);
 const zoomX = computed(() => state.sequencerZoomX);
-const measureWidth = computed(() => {
-  const measureDuration = getMeasureDuration(
-    timeSignatures.value[0].beats,
-    timeSignatures.value[0].beatType,
-    tpqn.value,
-  );
-  return tickToBaseX(measureDuration, tpqn.value) * zoomX.value;
+const beatsPerMeasure = computed(() => {
+  return timeSignatures.value[0].beats;
+});
+const beatWidth = computed(() => {
+  const beatType = timeSignatures.value[0].beatType;
+  const wholeNoteDuration = tpqn.value * 4;
+  const beatTicks = wholeNoteDuration / beatType;
+  return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
 });
 const tsPositions = computed(() => {
   return getTimeSignaturePositions(timeSignatures.value, tpqn.value);
@@ -211,13 +206,12 @@ onUnmounted(() => {
 .sequencer-ruler-playhead {
   position: absolute;
   top: 0;
-  left: -2px;
-  width: 4px;
+  left: -1px;
+  width: 2px;
   height: 100%;
-  background: colors.$primary;
-  border-left: 1px solid rgba(colors.$background-rgb, 0.83);
-  border-right: 1px solid rgba(colors.$background-rgb, 0.83);
+  background: rgba(colors.$display-rgb, 0.8);
   pointer-events: none;
+  will-change: transform;
 }
 
 .sequencer-ruler-measure-number {
@@ -226,6 +220,11 @@ onUnmounted(() => {
 
 .sequencer-ruler-measure-line {
   backface-visibility: hidden;
-  stroke: rgba(colors.$display-rgb, 0.3);
+  stroke: rgba(colors.$display-rgb, 0.5);
+}
+
+.sequencer-ruler-beat-line {
+  backface-visibility: hidden;
+  stroke: rgba(colors.$display-rgb, 0.25);
 }
 </style>
