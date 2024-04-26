@@ -1345,7 +1345,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               // ピッチ編集を適用したクエリから音量を作る
               // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
               const notesForRequestToEngine = createNotesForRequestToEngine(
-                notes,
+                phrase.notes,
                 tempos,
                 tpqn,
                 keyRangeAdjustment,
