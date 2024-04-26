@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import ToolBar from "./ToolBar.vue";
+import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";

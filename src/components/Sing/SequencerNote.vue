@@ -310,9 +310,9 @@ const onLyricInput = (event: Event) => {
   &.selected {
     // 色は仮
     .note-bar {
-      background-color: rgb(179 241 191);
-      border-color: #65bd7f;
-      outline: solid 2px #80d998;
+      background-color: lab(90, -22.953, 14.365);
+      border-color: lab(75, -22.953, 14.365);
+      outline: solid 2px lab(80, -22.953, 14.365);
     }
 
     &.below-pitch {
@@ -324,9 +324,9 @@ const onLyricInput = (event: Event) => {
   // TODO：もっといい見た目を考える
   &.preview-lyric {
     .note-bar {
-      background-color: rgb(179 241 191);
-      border-color: #65bd7f;
-      outline: solid 2px #80d998;
+      background-color: lab(90, -22.953, 14.365);
+      border-color: lab(75, -22.953, 14.365);
+      outline: solid 2px lab(80, -22.953, 14.365);
     }
 
     .note-lyric {
@@ -398,7 +398,7 @@ const onLyricInput = (event: Event) => {
 
   &:hover {
     // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: #80d998;
+    background-color: lab(80, -22.953, 14.365);
   }
 }
 
@@ -411,7 +411,7 @@ const onLyricInput = (event: Event) => {
 
   &:hover {
     // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: #80d998;
+    background-color: lab(80, -22.953, 14.365);
   }
 }
 
@@ -422,7 +422,7 @@ const onLyricInput = (event: Event) => {
   min-width: 3rem;
   max-width: 6rem;
   border: 0;
-  outline: 2px solid #80d998;
+  outline: 2px solid lab(80, -22.953, 14.365);
   border-radius: 4px;
 }
 

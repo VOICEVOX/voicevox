@@ -93,14 +93,10 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
-      <QBtn
+      <EditTargetSwicher
         v-if="showEditTargetSwitchButton"
-        dense
-        icon="show_chart"
-        :color="editTarget === 'PITCH' ? 'primary' : undefined"
-        :text-color="editTarget === 'PITCH' ? 'white' : undefined"
-        class="edit-target-switch-button"
-        @click="switchEditTarget"
+        :edit-target="editTarget"
+        :change-edit-target="changeEditTarget"
       />
       <QBtn
         flat
@@ -142,6 +138,7 @@
 
 <script setup lang="ts">
 import { computed, watch, ref, onMounted, onUnmounted } from "vue";
+import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
 
 import {
@@ -155,7 +152,7 @@ import {
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import { ExhaustiveError } from "@/type/utility";
+import { SequencerEditTarget } from "@/store/type";
 
 const store = useStore();
 
@@ -209,14 +206,8 @@ const showEditTargetSwitchButton = computed(() => {
 
 const editTarget = computed(() => store.state.sequencerEditTarget);
 
-const switchEditTarget = () => {
-  if (editTarget.value === "NOTE") {
-    store.dispatch("SET_EDIT_TARGET", { editTarget: "PITCH" });
-  } else if (editTarget.value === "PITCH") {
-    store.dispatch("SET_EDIT_TARGET", { editTarget: "NOTE" });
-  } else {
-    throw new ExhaustiveError(editTarget.value);
-  }
+const changeEditTarget = (editTarget: SequencerEditTarget) => {
+  store.dispatch("SET_EDIT_TARGET", { editTarget });
 };
 
 const tempos = computed(() => store.state.tempos);
@@ -549,10 +540,6 @@ onUnmounted(() => {
   justify-content: flex-end;
   display: flex;
   flex: 1;
-}
-
-.edit-target-switch-button {
-  margin-right: 6px;
 }
 
 .sing-undo-button,
