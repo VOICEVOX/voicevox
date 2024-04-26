@@ -420,6 +420,8 @@ onMountedOrActivated(() => {
     view: canvasElement,
     backgroundAlpha: 0,
     antialias: true,
+    resolution: window.devicePixelRatio || 1,
+    autoDensity: true,
   });
   stage = new PIXI.Container();
 
