@@ -116,6 +116,11 @@ const applySongProjectToStore = async (
       notes: tracks[0].notes,
     },
   });
+  await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+  await dispatch("SET_PITCH_EDIT_DATA", {
+    data: tracks[0].pitchEditData,
+    startFrame: 0,
+  });
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -168,6 +173,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             notes: tracks[0].notes,
           },
         });
+        await context.dispatch("SET_SINGER", {});
+        await context.dispatch("CLEAR_PITCH_EDIT_DATA");
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
@@ -436,9 +443,22 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               semverSatisfiesOptions,
             )
           ) {
-            // volumeRangeAdjustmentの追加
+            // 声量調整値の追加
             for (const track of projectData.song.tracks) {
               track.volumeRangeAdjustment = 0;
+            }
+          }
+
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.19.0",
+              semverSatisfiesOptions,
+            )
+          ) {
+            // ピッチ編集値の追加
+            for (const track of projectData.song.tracks) {
+              track.pitchEditData = [];
             }
           }
 

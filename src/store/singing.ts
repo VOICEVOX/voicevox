@@ -61,6 +61,7 @@ import {
   decibelToLinear,
   applyPitchEdit,
   VALUE_INDICATING_NO_DATA,
+  isValidPitchEditData,
 } from "@/sing/domain";
 import {
   DEFAULT_BEATS,
@@ -546,6 +547,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       tempData.splice(startFrame, data.length, ...data);
       state.tracks[selectedTrackIndex].pitchEditData = tempData;
     },
+    async action(
+      { dispatch, commit },
+      { data, startFrame }: { data: number[]; startFrame: number },
+    ) {
+      if (startFrame < 0) {
+        throw new Error("startFrame must be greater than or equal to 0.");
+      }
+      if (!isValidPitchEditData(data)) {
+        throw new Error("The pitch edit data is invalid.");
+      }
+      commit("SET_PITCH_EDIT_DATA", { data, startFrame });
+
+      dispatch("RENDER");
+    },
   },
 
   ERASE_PITCH_EDIT_DATA: {
@@ -558,6 +573,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const endFrame = Math.min(startFrame + frameLength, tempData.length);
       tempData.fill(VALUE_INDICATING_NO_DATA, startFrame, endFrame);
       state.tracks[selectedTrackIndex].pitchEditData = tempData;
+    },
+  },
+
+  CLEAR_PITCH_EDIT_DATA: {
+    // ピッチ編集データを失くす。
+    mutation(state) {
+      state.tracks[selectedTrackIndex].pitchEditData = [];
+    },
+    async action({ dispatch, commit }) {
+      commit("CLEAR_PITCH_EDIT_DATA");
+
+      dispatch("RENDER");
     },
   },
 
@@ -1371,6 +1398,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 engineId: singerAndFrameRate.singer.engineId,
               });
               singingGuide.query.volume = volumes;
+              scaleGuideVolume(volumeRangeAdjustment, singingGuide.query);
 
               const blob = await synthesize(
                 singerAndFrameRate.singer,
@@ -2718,8 +2746,8 @@ export const singingCommandStore = transformCommandStore(
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
-        if (data.some((value) => !Number.isFinite(value) || value <= 0)) {
-          throw new Error("data is invalid.");
+        if (!isValidPitchEditData(data)) {
+          throw new Error("The pitch edit data is invalid.");
         }
         commit("COMMAND_SET_PITCH_EDIT_DATA", { data, startFrame });
 
