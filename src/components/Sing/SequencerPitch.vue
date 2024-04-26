@@ -47,7 +47,7 @@ const props = defineProps<{
     | { type: "erase"; startFrame: number; frameLength: number };
 }>();
 
-const { warn } = createLogger("SequencerPitch");
+const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const singingGuides = computed(() => [...store.state.singingGuides.values()]);
 const pitchEditData = computed(() => {
@@ -424,6 +424,13 @@ onMountedOrActivated(() => {
     autoDensity: true,
   });
   stage = new PIXI.Container();
+
+  // webGLVersionをチェックする
+  // 2未満の場合、ピッチの表示ができないのでエラーとしてロギングする
+  const webGLVersion = renderer.context.webGLVersion;
+  if (webGLVersion < 2) {
+    error(`webGLVersion is less than 2. webGLVersion: ${webGLVersion}`);
+  }
 
   const callback = () => {
     if (renderInNextFrame) {
