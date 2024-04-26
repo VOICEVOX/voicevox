@@ -2546,17 +2546,7 @@ export const singingCommandStore = transformCommandStore(
   createPartialStore<SingingCommandStoreTypes>({
     COMMAND_SET_SINGER: {
       mutation(draft, { singer, withRelated }) {
-        singingStore.mutations.SET_SINGER(draft, { singer });
-        if (withRelated == true && singer != undefined) {
-          // 音域調整量マジックナンバーを設定するワークアラウンド
-          const keyRangeAdjustment = getWorkaroundKeyRangeAdjustment(
-            draft.characterInfos,
-            singer,
-          );
-          singingStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
-            keyRangeAdjustment,
-          });
-        }
+        singingStore.mutations.SET_SINGER(draft, { singer, withRelated });
       },
       async action({ dispatch, commit }, { singer, withRelated }) {
         dispatch("SETUP_SINGER", { singer });
