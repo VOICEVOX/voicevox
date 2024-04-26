@@ -1,5 +1,24 @@
 [
   {
+    "version": "0.19.0",
+    "descriptions": [
+      "ソング：ピッチ編集機能",
+      "ソング：歌詞の一括入力",
+      "バグ修正"
+    ],
+    "contributors": [
+      "Hiroshiba",
+      "KoharuYuzuki",
+      "madosuki",
+      "palm209",
+      "romot-co",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "weweweok",
+      "y-chan"
+    ]
+  },
+  {
     "version": "0.18.1",
     "descriptions": [
       "キャラクター「†聖騎士 紅桜†」「雀松朱司」「麒ヶ島宗麟」「春歌ナナ」「猫使アル」「猫使ビィ」「中国うさぎ」のハミングを追加",
