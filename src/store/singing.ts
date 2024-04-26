@@ -81,6 +81,7 @@ import {
   createPromiseThatResolvesWhen,
   round,
 } from "@/sing/utility";
+import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
 import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 
@@ -218,12 +219,27 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGER: {
-    mutation(state, { singer }: { singer?: Singer }) {
+    // 歌手をセットする。
+    // withRelatedがtrueの場合、関連する情報もセットする。
+    mutation(
+      state,
+      { singer, withRelated }: { singer?: Singer; withRelated?: boolean },
+    ) {
       state.tracks[selectedTrackIndex].singer = singer;
+
+      if (withRelated == true && singer != undefined) {
+        // 音域調整量マジックナンバーを設定するワークアラウンド
+        const keyRangeAdjustment = getWorkaroundKeyRangeAdjustment(
+          state.characterInfos,
+          singer,
+        );
+        state.tracks[selectedTrackIndex].keyRangeAdjustment =
+          keyRangeAdjustment;
+      }
     },
     async action(
       { state, getters, dispatch, commit },
-      { singer }: { singer?: Singer },
+      { singer, withRelated }: { singer?: Singer; withRelated?: boolean },
     ) {
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
@@ -242,7 +258,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const styleId = singer?.styleId ?? defaultStyleId;
 
       dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
-      commit("SET_SINGER", { singer: { engineId, styleId } });
+      commit("SET_SINGER", { singer: { engineId, styleId }, withRelated });
 
       dispatch("RENDER");
     },
@@ -2529,12 +2545,12 @@ export const singingCommandStoreState: SingingCommandStoreState = {};
 export const singingCommandStore = transformCommandStore(
   createPartialStore<SingingCommandStoreTypes>({
     COMMAND_SET_SINGER: {
-      mutation(draft, { singer }) {
-        singingStore.mutations.SET_SINGER(draft, { singer });
+      mutation(draft, { singer, withRelated }) {
+        singingStore.mutations.SET_SINGER(draft, { singer, withRelated });
       },
-      async action({ dispatch, commit }, { singer }) {
+      async action({ dispatch, commit }, { singer, withRelated }) {
         dispatch("SETUP_SINGER", { singer });
-        commit("COMMAND_SET_SINGER", { singer });
+        commit("COMMAND_SET_SINGER", { singer, withRelated });
 
         dispatch("RENDER");
       },
