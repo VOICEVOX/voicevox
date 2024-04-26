@@ -1683,7 +1683,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   left: -1px;
   width: 2px;
   height: 100%;
-  background: rgba(colors.$display-rgb, 0.8);
+  background: rgba(colors.$display-rgb, 0.6);
   will-change: transform;
 }
 
