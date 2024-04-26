@@ -398,6 +398,7 @@ const onLyricInput = (event: Event) => {
   height: 100%;
 
   &:hover {
+    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
     background-color: #80d998;
   }
 }
@@ -410,6 +411,7 @@ const onLyricInput = (event: Event) => {
   height: 100%;
 
   &:hover {
+    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
     background-color: #80d998;
   }
 }
