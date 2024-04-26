@@ -25,7 +25,7 @@ import {
   SequencerEditTarget,
 } from "./type";
 import { sanitizeFileName } from "./utility";
-import { EngineId } from "@/type/preload";
+import { EngineId, StyleId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
@@ -872,8 +872,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return foundPhrases;
       };
 
-      const fetchQuery = async (
-        engineId: EngineId,
+      const createNotesForRequestToEngine = (
         notes: Note[],
         tempos: Tempo[],
         tpqn: number,
@@ -919,6 +918,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           lyric: "",
         });
 
+        return notesForRequestToEngine;
+      };
+
+      const singingTeacherStyleId = StyleId(6000); // TODO: 設定できるようにする
+
+      const fetchQuery = async (
+        engineId: EngineId,
+        notes: Note[],
+        tempos: Tempo[],
+        tpqn: number,
+        keyRangeAdjustment: number,
+        frameRate: number,
+        restDurationSeconds: number,
+      ) => {
+        const notesForRequestToEngine = createNotesForRequestToEngine(
+          notes,
+          tempos,
+          tpqn,
+          keyRangeAdjustment,
+          frameRate,
+          restDurationSeconds,
+        );
+
         try {
           if (!getters.IS_ENGINE_READY(engineId)) {
             throw new Error("Engine not ready.");
@@ -930,7 +952,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             "singFrameAudioQuerySingFrameAudioQueryPost",
           )({
             score: { notes: notesForRequestToEngine },
-            speaker: 6000, // TODO: 設定できるようにする
+            speaker: singingTeacherStyleId,
           });
         } catch (error) {
           const lyrics = notesForRequestToEngine
@@ -1320,6 +1342,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
               logger.info(`Loaded singing voice from cache.`);
             } else {
+              // ピッチ編集を適用したクエリから音量を作る
+              // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
+              const notesForRequestToEngine = createNotesForRequestToEngine(
+                phrase.notes,
+                tempos,
+                tpqn,
+                keyRangeAdjustment,
+                singingGuide.frameRate,
+                restDurationSeconds,
+              );
+
+              const volumes = await dispatch("FETCH_SING_FRAME_VOLUME", {
+                notes: notesForRequestToEngine,
+                frameAudioQuery: singingGuide.query,
+                styleId: singingTeacherStyleId,
+                engineId: singerAndFrameRate.singer.engineId,
+              });
+              singingGuide.query.volume = volumes;
+
               const blob = await synthesize(
                 singerAndFrameRate.singer,
                 singingGuide.query,
@@ -2030,6 +2071,35 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
+  FETCH_SING_FRAME_VOLUME: {
+    async action(
+      { dispatch },
+      {
+        notes,
+        frameAudioQuery,
+        engineId,
+        styleId,
+      }: {
+        notes: NoteForRequestToEngine[];
+        frameAudioQuery: FrameAudioQuery;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+        engineId,
+      });
+      return await instance.invoke("singFrameVolumeSingFrameVolumePost")({
+        bodySingFrameVolumeSingFrameVolumePost: {
+          score: {
+            notes,
+          },
+          frameAudioQuery,
+        },
+        speaker: styleId,
+      });
+    },
+  },
   SET_NOW_AUDIO_EXPORTING: {
     mutation(state, { nowAudioExporting }) {
       state.nowAudioExporting = nowAudioExporting;
