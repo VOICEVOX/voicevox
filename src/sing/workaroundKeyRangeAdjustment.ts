@@ -173,6 +173,7 @@ export function getWorkaroundKeyRangeAdjustment(
     logger.warn("characterInfos not found.", singer);
     return defaultKeyRangeAdjustment;
   }
+
   const characterInfo = characterInfos.find((c) =>
     c.metas.styles.find((s) => s.styleId === singer.styleId),
   );
@@ -180,6 +181,7 @@ export function getWorkaroundKeyRangeAdjustment(
     logger.warn("characterInfo not found.", singer);
     return defaultKeyRangeAdjustment;
   }
+
   const styleInfo = characterInfo.metas.styles.find(
     (s) => s.styleId === singer.styleId,
   );
@@ -196,6 +198,7 @@ export function getWorkaroundKeyRangeAdjustment(
       logger.warn("styleName not found.", singer);
       return defaultKeyRangeAdjustment;
     }
+
     const keyRangeAdjustment =
       workaroundKeyRangeAdjustmentValues[singerName]?.[styleName];
     if (keyRangeAdjustment == undefined) {
@@ -203,6 +206,7 @@ export function getWorkaroundKeyRangeAdjustment(
       logger.warn("keyRangeAdjustment not found.", singer);
       return defaultKeyRangeAdjustment;
     }
+
     return keyRangeAdjustment;
   } else {
     // 歌手の場合はそのまま
