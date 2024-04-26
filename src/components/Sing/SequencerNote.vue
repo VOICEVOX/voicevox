@@ -387,7 +387,6 @@ const onLyricInput = (event: Event) => {
   background-color: colors.$primary;
   border: 1px solid rgba(colors.$background-rgb, 0.5);
   border-radius: 4px;
-  transition: all ease-out 0.16s;
 }
 
 .note-left-edge {
