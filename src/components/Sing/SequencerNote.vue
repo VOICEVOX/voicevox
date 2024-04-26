@@ -310,9 +310,9 @@ const onLyricInput = (event: Event) => {
   &.selected {
     // 色は仮
     .note-bar {
-      background-color: lab(90, -22.953, 14.365);
-      border-color: lab(75, -22.953, 14.365);
-      outline: solid 2px lab(80, -22.953, 14.365);
+      background-color: lab(95, -22.953, 14.365);
+      border-color: lab(65, -22.953, 14.365);
+      outline: solid 2px lab(70, -22.953, 14.365);
     }
 
     &.below-pitch {
