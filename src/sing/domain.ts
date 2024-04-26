@@ -325,6 +325,14 @@ export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
   );
 }
 
+export function isValidPitchEditData(pitchEditData: number[]) {
+  return pitchEditData.every(
+    (value) =>
+      Number.isFinite(value) &&
+      (value > 0 || value === VALUE_INDICATING_NO_DATA),
+  );
+}
+
 export const calculateNotesHash = async (notes: Note[]) => {
   return await calculateHash({ notes });
 };

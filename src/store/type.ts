@@ -913,10 +913,16 @@ export type SingingStoreTypes = {
 
   SET_PITCH_EDIT_DATA: {
     mutation: { data: number[]; startFrame: number };
+    action(payload: { data: number[]; startFrame: number }): void;
   };
 
   ERASE_PITCH_EDIT_DATA: {
     mutation: { startFrame: number; frameLength: number };
+  };
+
+  CLEAR_PITCH_EDIT_DATA: {
+    mutation: undefined;
+    action(): void;
   };
 
   SET_PHRASES: {
