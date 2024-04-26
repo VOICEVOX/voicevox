@@ -476,6 +476,7 @@ const previewMove = () => {
   }
   for (const note of editedNotes.values()) {
     if (note.noteNumber < 0 || note.noteNumber >= keyInfos.length) {
+      // MIDIキー範囲外へはドラッグしない
       return;
     }
 
