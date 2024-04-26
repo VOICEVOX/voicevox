@@ -17,6 +17,7 @@ import {
   UserDictWord,
   MorphableTargetInfo,
   FrameAudioQuery,
+  Note as NoteForRequestToEngine,
 } from "@/openapi";
 import {
   CharacterInfo,
@@ -998,6 +999,15 @@ export type SingingStoreTypes = {
 
   CANCEL_AUDIO_EXPORT: {
     action(): void;
+  };
+
+  FETCH_SING_FRAME_VOLUME: {
+    action(palyoad: {
+      notes: NoteForRequestToEngine[];
+      frameAudioQuery: FrameAudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<number[]>;
   };
 
   TICK_TO_SECOND: {
