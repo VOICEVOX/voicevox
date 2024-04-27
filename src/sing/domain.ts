@@ -443,10 +443,15 @@ export function applyPitchEdit(
     throw new Error("f0.length and framePhonemes.length do not match.");
   }
 
-  const startFrame = Math.round(
+  // f0の開始フレームと終了フレームを計算する
+  const f0StartFrame = Math.round(
     singingGuide.startTime * singingGuide.frameRate,
   );
-  const endFrame = Math.min(startFrame + f0.length, pitchEditData.length);
+  const f0EndFrame = f0StartFrame + f0.length;
+
+  // ピッチ編集をf0に適用する
+  const startFrame = Math.max(0, f0StartFrame);
+  const endFrame = Math.min(pitchEditData.length, f0EndFrame);
   for (let i = startFrame; i < endFrame; i++) {
     const phoneme = framePhonemes[i - startFrame];
     const voiced = !unvoicedPhonemes.includes(phoneme);
