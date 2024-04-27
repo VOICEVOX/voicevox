@@ -1338,8 +1338,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   `Fetched frame audio query. Phonemes are "${phonemes}".`,
                 );
 
+                // 音域調整を適用する
                 shiftGuidePitch(keyRangeAdjustment, query);
-                scaleGuideVolume(volumeRangeAdjustment, query);
 
                 const startTime = calcStartTime(
                   phrase.notes,
@@ -1363,9 +1363,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               });
             }
 
-            // 歌い方をコピーして、ピッチ編集を適用する
+            // ピッチ編集を適用する前に、歌い方をコピーする
 
             singingGuide = structuredClone(toRaw(singingGuide));
+
+            // ピッチ編集を適用する
+
             applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
 
             // 歌声のキャッシュがあれば取得し、なければ音声合成を行う
@@ -1395,7 +1398,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 singingGuide.frameRate,
                 restDurationSeconds,
               );
-
               const volumes = await dispatch("FETCH_SING_FRAME_VOLUME", {
                 notes: notesForRequestToEngine,
                 frameAudioQuery: singingGuide.query,
@@ -1403,6 +1405,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 engineId: singerAndFrameRate.singer.engineId,
               });
               singingGuide.query.volume = volumes;
+
+              // 声量調整を適用する
               scaleGuideVolume(volumeRangeAdjustment, singingGuide.query);
 
               const blob = await synthesize(
