@@ -1388,19 +1388,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
               logger.info(`Loaded singing voice from cache.`);
             } else {
-              // ピッチ編集を適用したクエリから音量を作る
-              // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
+              // 音量生成用のクエリを作る
+              // ピッチ編集を適用したクエリをコピーし、
+              // f0をもう一度シフトして、f0生成時の（シフトする前の）高さに戻す
+              const queryForVolume = structuredClone(singingGuide.query);
+              shiftGuidePitch(-keyRangeAdjustment, queryForVolume);
               const notesForRequestToEngine = createNotesForRequestToEngine(
                 phrase.notes,
                 tempos,
                 tpqn,
-                0, // クエリのピッチは音域調整済みなので、音域調整の処理（noteのkeyのシフト）は行わない
+                keyRangeAdjustment,
                 singingGuide.frameRate,
                 restDurationSeconds,
               );
+              // 音量生成用のクエリから音量を作る
+              // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
               const volumes = await dispatch("FETCH_SING_FRAME_VOLUME", {
                 notes: notesForRequestToEngine,
-                frameAudioQuery: singingGuide.query,
+                frameAudioQuery: queryForVolume,
                 styleId: singingTeacherStyleId,
                 engineId: singerAndFrameRate.singer.engineId,
               });
