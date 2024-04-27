@@ -1393,16 +1393,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               // f0をもう一度シフトして、f0生成時の（シフトする前の）高さに戻す
               const queryForVolume = structuredClone(singingGuide.query);
               shiftGuidePitch(-keyRangeAdjustment, queryForVolume);
+
+              // 音量生成用のクエリから音量を作る
+              // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
               const notesForRequestToEngine = createNotesForRequestToEngine(
                 phrase.notes,
                 tempos,
                 tpqn,
-                keyRangeAdjustment,
+                keyRangeAdjustment, // f0を生成するときと同様に、noteのkeyのシフトを行う
                 singingGuide.frameRate,
                 restDurationSeconds,
               );
-              // 音量生成用のクエリから音量を作る
-              // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
               const volumes = await dispatch("FETCH_SING_FRAME_VOLUME", {
                 notes: notesForRequestToEngine,
                 frameAudioQuery: queryForVolume,
