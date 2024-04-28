@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.19.1",
+    "descriptions": [
+      "ソング：音域調整時に音量が変わるバグを修正",
+      "ソング：１小節目の最初にノートを配置するとエラーになる問題を修正"
+    ],
+    "contributors": ["Hiroshiba", "sigprogramming"]
+  },
+  {
     "version": "0.19.0",
     "descriptions": [
       "ソング：ピッチ編集機能",
