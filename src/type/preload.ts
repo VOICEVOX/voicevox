@@ -175,7 +175,7 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
   ...Array.from({ length: 10 }, (_, index) => {
     const roleKey = index == 9 ? 0 : index + 1;
     return {
-      action: `${index + 1}番目のキャラクターを選択`,
+      action: `${index + 1}番目のキャラクターを選択` as HotkeyActionNameType,
       combination: HotkeyCombination(
         !isMac ? "Ctrl " + roleKey : "Meta " + roleKey,
       ),
@@ -467,10 +467,16 @@ export const hotkeyActionNameSchema = z.enum([
   "貼り付け",
   "すべて選択",
   "選択解除",
-  ...Array.from(
-    { length: 10 },
-    (_, index) => `${index + 1}番目のキャラクターを選択`,
-  ),
+  "1番目のキャラクターを選択",
+  "2番目のキャラクターを選択",
+  "3番目のキャラクターを選択",
+  "4番目のキャラクターを選択",
+  "5番目のキャラクターを選択",
+  "6番目のキャラクターを選択",
+  "7番目のキャラクターを選択",
+  "8番目のキャラクターを選択",
+  "9番目のキャラクターを選択",
+  "10番目のキャラクターを選択",
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
