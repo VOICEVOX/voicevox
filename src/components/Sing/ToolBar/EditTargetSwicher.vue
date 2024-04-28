@@ -22,13 +22,14 @@
     class="margin-right"
     @click="editTarget !== 'PITCH' && changeEditTarget('PITCH')"
     ><QTooltip :delay="500" anchor="bottom middle"
-      >ピッチ編集<br />Ctrl+クリックで消去</QTooltip
+      >ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去</QTooltip
     ></QBtn
   >
 </template>
 
 <script setup lang="ts">
 import { SequencerEditTarget } from "@/store/type";
+import { isMac } from "@/type/preload";
 
 defineProps<{
   editTarget: SequencerEditTarget;
