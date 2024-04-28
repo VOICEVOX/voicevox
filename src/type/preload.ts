@@ -172,6 +172,15 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     action: "選択解除",
     combination: HotkeyCombination("Escape"),
   },
+  ...Array.from({ length: 10 }, (_, index) => {
+    const roleKey = index == 9 ? 0 : index + 1;
+    return {
+      action: `${index + 1}番目のキャラクターを選択`,
+      combination: HotkeyCombination(
+        !isMac ? "Ctrl " + roleKey : "Meta " + roleKey,
+      ),
+    };
+  }),
 ];
 
 export const defaultToolbarButtonSetting: ToolbarSettingType = [
@@ -458,6 +467,10 @@ export const hotkeyActionNameSchema = z.enum([
   "貼り付け",
   "すべて選択",
   "選択解除",
+  ...Array.from(
+    { length: 10 },
+    (_, index) => `${index + 1}番目のキャラクターを選択`,
+  ),
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;

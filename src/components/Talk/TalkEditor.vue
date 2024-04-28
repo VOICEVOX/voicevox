@@ -143,7 +143,7 @@ import {
   SplitterPositionType,
   Voice,
 } from "@/type/preload";
-import { parseUnshiftedDigit, useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
 
 const props = defineProps<{
@@ -246,34 +246,26 @@ registerHotkeyWithCleanup({
     }
   },
 });
-registerHotkeyWithCleanup({
-  editor: "talk",
-  enableInTextbox: true,
-  name: "N番目のキャラクターを選択",
-  callback: (e) => {
-    if (!uiLocked.value) {
-      onCharacterSelectHotkey(e);
-    }
-  },
-});
+for (let i = 0; i < 10; i++) {
+  registerHotkeyWithCleanup({
+    editor: "talk",
+    enableInTextbox: true,
+    name: `${i + 1}番目のキャラクターを選択`,
+    callback: () => {
+      if (!uiLocked.value) {
+        onCharacterSelectHotkey(i);
+      }
+    },
+  });
+}
 
 const removeAudioItem = async () => {
   if (activeAudioKey.value == undefined) throw new Error();
   audioCellRefs[activeAudioKey.value].removeCell();
 };
 
-const onCharacterSelectHotkey = async (e: KeyboardEvent) => {
+const onCharacterSelectHotkey = async (selectedCharacterIndex: number) => {
   if (activeAudioKey.value == undefined) throw new Error();
-  const convertToNumber = (str: string) => {
-    str = parseUnshiftedDigit(str);
-    if (/^[0-9]$/.test(str)) {
-      return parseInt(str, 10);
-    } else {
-      throw new Error(`onCharacterSelectHotkey Invalid key: ${str}`);
-    }
-  };
-  const convertedKey = convertToNumber(e.key);
-  const selectedCharacterIndex = convertedKey != 0 ? convertedKey - 1 : 9;
   audioCellRefs[activeAudioKey.value].selectCharacterAt(selectedCharacterIndex);
 };
 
