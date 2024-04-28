@@ -45,7 +45,7 @@ class VstConfigManager extends BaseConfigManager {
   protected getDefaultConfig() {
     const baseConfig = super.getDefaultConfig();
     baseConfig.engineSettings[defaultEngineId] ??= engineSettingSchema.parse(
-      {}
+      {},
     );
     return baseConfig;
   }

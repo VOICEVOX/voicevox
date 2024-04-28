@@ -6,8 +6,13 @@ import { clearPhrases, getPhrases, getProject, updatePhrases } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
-import { secondToTick, tickToSecond } from "@/sing/domain";
-import { phraseDataMap } from "@/store/singing";
+import {
+  getEndTicksOfPhrase,
+  getStartTicksOfPhrase,
+  secondToTick,
+  tickToSecond,
+} from "@/sing/domain";
+import { restDurationSeconds, singingVoices } from "@/store/singing";
 import { blobToBase64 } from "@/helpers/binaryHelper";
 import onetimeWatch from "@/helpers/onetimeWatch";
 
@@ -40,7 +45,7 @@ export const vstMessageReceiver: Plugin = {
       store,
     }: {
       store: Store<State, AllGetters, AllActions, AllMutations>;
-    }
+    },
   ) => {
     if (import.meta.env.VITE_TARGET !== "vst") {
       return;
@@ -63,7 +68,7 @@ export const vstMessageReceiver: Plugin = {
             uiLockPromiseResolve = undefined;
           } else {
             window.backend.logWarn(
-              `[vstOnMessage] unexpected isPlaying state: isPlaying=${message.isPlaying}, uiLockPromiseResolve=${uiLockPromiseResolve}`
+              `[vstOnMessage] unexpected isPlaying state: isPlaying=${message.isPlaying}, uiLockPromiseResolve=${uiLockPromiseResolve}`,
             );
           }
 
@@ -73,7 +78,7 @@ export const vstMessageReceiver: Plugin = {
             position: secondToTick(
               message.time,
               store.state.tempos,
-              store.state.tpqn
+              store.state.tpqn,
             ),
           });
           break;
@@ -96,7 +101,7 @@ export const vstMessageReceiver: Plugin = {
       () => songProjectState,
       debounce(() => {
         const isEmptyProject = songProjectState.tracks.every(
-          (track) => track.notes.length === 0
+          (track) => track.notes.length === 0,
         );
         if (isEmptyProject && !haveSentNonEmptyProject) {
           return;
@@ -106,7 +111,7 @@ export const vstMessageReceiver: Plugin = {
         store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
         store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
       }, 5000),
-      { deep: true }
+      { deep: true },
     );
 
     watch(
@@ -115,7 +120,7 @@ export const vstMessageReceiver: Plugin = {
         if (openedEditor !== "song") {
           store.dispatch("SET_OPENED_EDITOR", { editor: "song" });
         }
-      }
+      },
     );
 
     getProject().then((project) => {
@@ -137,7 +142,7 @@ export const vstMessageReceiver: Plugin = {
           });
           return "unwatch";
         },
-        { deep: true }
+        { deep: true },
       );
     });
 
@@ -146,14 +151,17 @@ export const vstMessageReceiver: Plugin = {
       (phrases) => {
         phrasesLock.acquire("phrases", async () => {
           const playablePhrases = [...phrases.entries()].filter(
-            ([, phrase]) => phrase.state === "PLAYABLE"
+            ([, phrase]) => phrase.state === "PLAYABLE",
           );
           const idToWav = Object.fromEntries(
             await Promise.all(
-              playablePhrases.map(async ([id]) => {
-                const data = phraseDataMap.get(id);
+              playablePhrases.map(async ([id, phrase]) => {
+                if (phrase.singingVoiceKey == undefined) {
+                  throw new Error("singingVoiceKey is not found");
+                }
+                const data = singingVoices.get(phrase.singingVoiceKey);
                 if (!data) {
-                  throw new Error("phraseDataMap is not found");
+                  throw new Error("singingVoice is not found");
                 }
                 const wav = data.blob;
                 if (!wav) {
@@ -162,8 +170,8 @@ export const vstMessageReceiver: Plugin = {
 
                 const hash = SparkMD5.ArrayBuffer.hash(await wav.arrayBuffer());
                 return [id, { wav, hash }] as const;
-              })
-            )
+              }),
+            ),
           );
 
           const removedPhrases: string[] = [];
@@ -172,7 +180,7 @@ export const vstMessageReceiver: Plugin = {
             if (
               !playablePhrases.some(
                 ([phraseId]) =>
-                  phraseId === id && vstPhrase.hash === idToWav[id].hash
+                  phraseId === id && vstPhrase.hash === idToWav[id].hash,
               )
             ) {
               removedPhrases.push(id);
@@ -184,35 +192,37 @@ export const vstMessageReceiver: Plugin = {
               const { wav, hash } = idToWav[id];
 
               const vstPhrase = vstPhrases.get(id);
+              const startTicks = getStartTicksOfPhrase(phrase);
+              const startTime =
+                tickToSecond(startTicks, store.state.tempos, store.state.tpqn) -
+                restDurationSeconds;
               if (
                 vstPhrase &&
-                vstPhrase.start === phrase.startTime &&
+                vstPhrase.start === startTime &&
                 vstPhrase.hash === hash
               ) {
                 return undefined;
               }
 
-              const startTime = phrase.startTime;
-              if (startTime == undefined) {
-                throw new Error("startTime is not found");
-              }
+              const endTicks = getEndTicksOfPhrase(phrase);
+
               return {
                 id,
                 start: startTime,
                 end: tickToSecond(
-                  phrase.endTicks,
+                  endTicks,
                   store.state.tempos,
-                  store.state.tpqn
+                  store.state.tpqn,
                 ),
                 wav: await blobToBase64(wav),
                 hash,
               };
-            })
+            }),
           ).then(
             (phrases) =>
               phrases.filter(
-                (phrase) => phrase != undefined
-              ) as PhraseWithAudio[]
+                (phrase) => phrase != undefined,
+              ) as PhraseWithAudio[],
           );
 
           if (removedPhrases.length === 0 && newPhrasesWithAudio.length === 0) {
@@ -221,7 +231,7 @@ export const vstMessageReceiver: Plugin = {
           updatePhrases(removedPhrases, newPhrasesWithAudio);
         });
       },
-      { deep: true }
+      { deep: true },
     );
   },
 };

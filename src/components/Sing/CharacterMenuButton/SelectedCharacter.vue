@@ -46,12 +46,11 @@ import { Singer } from "@/store/type";
 import { CharacterInfo } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 
-const props =
-  defineProps<{
-    showSkeleton: boolean;
-    selectedCharacterInfo: CharacterInfo | undefined;
-    selectedSinger: Singer | undefined;
-  }>();
+const props = defineProps<{
+  showSkeleton: boolean;
+  selectedCharacterInfo: CharacterInfo | undefined;
+  selectedSinger: Singer | undefined;
+}>();
 
 const selectedCharacterName = computed(() => {
   return props.selectedCharacterInfo?.metas.speakerName;
@@ -80,8 +79,8 @@ const selectedStyleIconPath = computed(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .selected-character {
   align-items: center;

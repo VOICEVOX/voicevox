@@ -25,7 +25,7 @@ export default defineConfig((options) => {
   const env = loadEnv(options.mode, __dirname);
   if (!packageName?.startsWith(env.VITE_APP_NAME)) {
     throw new Error(
-      `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`
+      `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`,
     );
   }
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
@@ -145,8 +145,8 @@ const injectPreloadPlugin = (name: string): Plugin => {
       enforce: "pre" as const,
       transform: (html: string) =>
         html.replace(
-          `<!-- %${name.toUpperCase()}_PRELOAD% -->`,
-          `<script type="module" src="./backend/${name}/preload.ts"></script>`
+          `<!-- %PRELOAD% -->`,
+          `<script type="module" src="./backend/${name}/preload.ts"></script>`,
         ),
     },
   };

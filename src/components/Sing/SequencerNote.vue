@@ -3,9 +3,10 @@
     class="note"
     :class="{
       selected: noteState === 'SELECTED',
+      'preview-lyric': props.previewLyric != undefined,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
-      'below-pitch': showPitch,
+      'below-pitch': editTargetIsPitch,
     }"
     :style="{
       width: `${width}px`,
@@ -13,30 +14,53 @@
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
   >
-    <div class="note-bar" @mousedown="onBarMouseDown">
-      <div class="note-left-edge" @mousedown="onLeftEdgeMouseDown"></div>
-      <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
-      <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
+    <div
+      class="note-bar"
+      :class="{
+        'cursor-move': editTargetIsNote,
+      }"
+      @mousedown="onBarMouseDown"
+    >
+      <div
+        class="note-left-edge"
+        :class="{
+          'cursor-ew-resize': editTargetIsNote,
+        }"
+        @mousedown="onLeftEdgeMouseDown"
+      ></div>
+      <div
+        class="note-right-edge"
+        :class="{
+          'cursor-ew-resize': editTargetIsNote,
+        }"
+        @mousedown="onRightEdgeMouseDown"
+      ></div>
+      <ContextMenu
+        v-if="editTargetIsNote"
+        ref="contextMenu"
+        :menudata="contextMenuData"
+      />
     </div>
     <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
-    <div
-      class="note-lyric"
-      data-testid="note-lyric"
-      @mousedown="onLyricMouseDown"
-    >
-      {{ lyric }}
-    </div>
     <input
       v-if="showLyricInput"
-      v-model.lazy.trim="lyric"
       v-focus
+      :value="lyricToDisplay"
       class="note-lyric-input"
+      @input="onLyricInput"
       @mousedown.stop
       @dblclick.stop
       @keydown.stop="onLyricInputKeyDown"
       @blur="onLyricInputBlur"
     />
     <template v-else>
+      <div
+        class="note-lyric"
+        data-testid="note-lyric"
+        @mousedown="onLyricMouseDown"
+      >
+        {{ lyricToDisplay }}
+      </div>
       <!-- エラー内容を表示 -->
       <QTooltip
         v-if="hasOverlappingError"
@@ -88,19 +112,21 @@ const props = withDefaults(
   defineProps<{
     note: Note;
     isSelected: boolean;
+    previewLyric: string | null;
   }>(),
   {
     isSelected: false,
-  }
+  },
 );
 
-const emit =
-  defineEmits<{
-    (name: "barMousedown", event: MouseEvent): void;
-    (name: "rightEdgeMousedown", event: MouseEvent): void;
-    (name: "leftEdgeMousedown", event: MouseEvent): void;
-    (name: "lyricMouseDown", event: MouseEvent): void;
-  }>();
+const emit = defineEmits<{
+  (name: "barMousedown", event: MouseEvent): void;
+  (name: "rightEdgeMousedown", event: MouseEvent): void;
+  (name: "leftEdgeMousedown", event: MouseEvent): void;
+  (name: "lyricMouseDown", event: MouseEvent): void;
+  (name: "lyricInput", text: string): void;
+  (name: "lyricBlur"): void;
+}>();
 
 const store = useStore();
 const state = store.state;
@@ -129,6 +155,12 @@ const noteState = computed((): NoteState => {
   }
   return "NORMAL";
 });
+const editTargetIsNote = computed(() => {
+  return state.sequencerEditTarget === "NOTE";
+});
+const editTargetIsPitch = computed(() => {
+  return state.sequencerEditTarget === "PITCH";
+});
 
 // ノートの重なりエラー
 const hasOverlappingError = computed(() => {
@@ -141,27 +173,19 @@ const hasPhraseError = computed(() => {
   return Array.from(state.phrases.values()).some(
     (phrase) =>
       phrase.state === "COULD_NOT_RENDER" &&
-      phrase.notes.some((note) => note.id === props.note.id)
+      phrase.notes.some((note) => note.id === props.note.id),
   );
 });
 
-const lyric = computed({
-  get() {
-    return props.note.lyric;
-  },
-  set(value) {
-    if (!value) {
-      return;
-    }
-    const note: Note = { ...props.note, lyric: value };
-    store.dispatch("COMMAND_UPDATE_NOTES", { notes: [note] });
-  },
-});
+// 表示する歌詞。
+// 優先度：入力中の歌詞 > 他ノートの入力中の歌詞 > 渡された（=Storeの）歌詞
+const lyricToDisplay = computed(
+  () => temporaryLyric.value ?? props.previewLyric ?? props.note.lyric,
+);
+// 歌詞入力中の一時的な歌詞
+const temporaryLyric = ref<string | undefined>(undefined);
 const showLyricInput = computed(() => {
   return state.editingLyricNoteId === props.note.id;
-});
-const showPitch = computed(() => {
-  return state.experimentalSetting.showPitchInSongEditor;
 });
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuData = ref<ContextMenuItemData[]>([
@@ -255,12 +279,21 @@ const onLyricInputBlur = () => {
   if (state.editingLyricNoteId === props.note.id) {
     store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
   }
+  temporaryLyric.value = undefined;
+  emit("lyricBlur");
+};
+const onLyricInput = (event: Event) => {
+  if (!(event.target instanceof HTMLInputElement)) {
+    throw new Error("Invalid event target");
+  }
+  temporaryLyric.value = event.target.value;
+  emit("lyricInput", temporaryLyric.value);
 };
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .note {
   position: absolute;
@@ -277,12 +310,32 @@ const onLyricInputBlur = () => {
   &.selected {
     // 色は仮
     .note-bar {
-      background-color: hsl(33, 100%, 50%);
+      background-color: lab(95, -22.953, 14.365);
+      border-color: lab(65, -22.953, 14.365);
+      outline: solid 2px lab(70, -22.953, 14.365);
     }
 
     &.below-pitch {
       .note-bar {
-        background-color: rgba(hsl(33, 100%, 50%), 0.18);
+        background-color: rgba(colors.$primary-rgb, 0.18);
+      }
+    }
+  }
+  // TODO：もっといい見た目を考える
+  &.preview-lyric {
+    .note-bar {
+      background-color: lab(90, -22.953, 14.365);
+      border-color: lab(75, -22.953, 14.365);
+      outline: solid 2px lab(80, -22.953, 14.365);
+    }
+
+    .note-lyric {
+      opacity: 0.38;
+    }
+
+    &.below-pitch {
+      .note-bar {
+        background-color: rgba(hsl(130, 100%, 50%), 0.18);
       }
     }
   }
@@ -301,6 +354,7 @@ const onLyricInputBlur = () => {
       .note-bar {
         background-color: rgba(colors.$warning-rgb, 0.5);
         border-color: colors.$warning;
+        outline: 2px solid rgba(colors.$warning-rgb, 0.3);
       }
     }
   }
@@ -316,20 +370,23 @@ const onLyricInputBlur = () => {
   color: #121212;
   font-size: 1rem;
   font-weight: 700;
-  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff,
+  text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
     1px 1px 0 #fff;
   white-space: nowrap;
   pointer-events: none;
 }
 
 .note-bar {
+  box-sizing: border-box;
   position: absolute;
   width: calc(100% + 1px);
   height: 100%;
   background-color: colors.$primary;
   border: 1px solid rgba(colors.$background-rgb, 0.5);
-  border-radius: 2px;
-  cursor: move;
+  border-radius: 4px;
 }
 
 .note-left-edge {
@@ -338,7 +395,11 @@ const onLyricInputBlur = () => {
   left: -1px;
   width: 5px;
   height: 100%;
-  cursor: ew-resize;
+
+  &:hover {
+    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+    background-color: lab(80, -22.953, 14.365);
+  }
 }
 
 .note-right-edge {
@@ -347,7 +408,11 @@ const onLyricInputBlur = () => {
   right: -1px;
   width: 5px;
   height: 100%;
-  cursor: ew-resize;
+
+  &:hover {
+    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+    background-color: lab(80, -22.953, 14.365);
+  }
 }
 
 .note-lyric-input {
@@ -357,7 +422,15 @@ const onLyricInputBlur = () => {
   min-width: 3rem;
   max-width: 6rem;
   border: 0;
-  outline: 2px solid colors.$primary;
-  border-radius: 0.25rem;
+  outline: 2px solid lab(80, -22.953, 14.365);
+  border-radius: 4px;
+}
+
+.cursor-move {
+  cursor: move;
+}
+
+.cursor-ew-resize {
+  cursor: ew-resize;
 }
 </style>

@@ -7,9 +7,9 @@ const onetimeWatch = <T>(
   source: WatchSource<T>,
   fn: (
     before: T,
-    after: T | undefined
+    after: T | undefined,
   ) => Promise<"unwatch" | "continue"> | "unwatch" | "continue",
-  options: WatchOptions = {}
+  options: WatchOptions = {},
 ) => {
   const unwatch = watch(
     source,
@@ -18,7 +18,7 @@ const onetimeWatch = <T>(
         unwatch();
       }
     },
-    options
+    options,
   );
 };
 

@@ -47,7 +47,7 @@ export type LoadingScreenOption = { message: string };
 
 // 汎用ダイアログを表示
 export const showAlertDialog = async (
-  options: CommonDialogOptions["alert"]
+  options: CommonDialogOptions["alert"],
 ) => {
   options.ok ??= "閉じる";
 
@@ -62,7 +62,7 @@ export const showAlertDialog = async (
           textColor: "display",
         },
       }),
-      resolve
+      resolve,
     );
   });
 };
@@ -72,7 +72,7 @@ export const showAlertDialog = async (
  * see https://quasar.dev/quasar-plugins/dialog#using-html
  */
 export const showConfirmDialog = async (
-  options: CommonDialogOptions["confirm"]
+  options: CommonDialogOptions["confirm"],
 ) => {
   options.cancel ??= "キャンセル";
 
@@ -95,13 +95,13 @@ export const showConfirmDialog = async (
           textColor: "display",
         },
       }),
-      resolve
+      resolve,
     );
   });
 };
 
 export const showWarningDialog = async (
-  options: CommonDialogOptions["warning"]
+  options: CommonDialogOptions["warning"],
 ) => {
   options.cancel ??= "キャンセル";
 
@@ -123,14 +123,14 @@ export const showWarningDialog = async (
           textColor: "display",
         },
       }),
-      resolve
+      resolve,
     );
   });
 };
 
 const setCommonDialogCallback = (
   dialog: DialogChainObject,
-  resolve: (result: CommonDialogResult) => void
+  resolve: (result: CommonDialogResult) => void,
 ) => {
   return dialog
     .onOk(() => {
@@ -157,7 +157,7 @@ export async function generateAndSaveOneAudioWithDialog({
       audioKey,
       filePath,
     }),
-    dispatch
+    dispatch,
   );
 
   if (result.result === "CANCELED") return;
@@ -195,14 +195,14 @@ export async function multiGenerateAndSaveAudioWithDialog({
           totalCount: audioKeys.length,
         }),
     }),
-    dispatch
+    dispatch,
   );
 
   if (result == undefined) return;
 
   // 書き出し成功時の出力先パスを配列に格納
   const successArray: Array<string | undefined> = result.flatMap((result) =>
-    result.result === "SUCCESS" ? result.path : []
+    result.result === "SUCCESS" ? result.path : [],
   );
 
   // 書き込みエラーを配列に格納
@@ -210,7 +210,7 @@ export async function multiGenerateAndSaveAudioWithDialog({
     result.flatMap((result) =>
       result.result === "WRITE_ERROR"
         ? { path: result.path ?? "", message: result.errorMessage ?? "" }
-        : []
+        : [],
     );
 
   // エンジンエラーを配列に格納
@@ -218,7 +218,7 @@ export async function multiGenerateAndSaveAudioWithDialog({
     result.flatMap((result) =>
       result.result === "ENGINE_ERROR"
         ? { path: result.path ?? "", message: result.errorMessage ?? "" }
-        : []
+        : [],
     );
 
   if (successArray.length === result.length) {
@@ -257,7 +257,7 @@ export async function generateAndConnectAndSaveAudioWithDialog({
       callback: (finishedCount, totalCount) =>
         dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
     }),
-    dispatch
+    dispatch,
   );
 
   if (result == undefined || result.result === "CANCELED") return;
@@ -360,7 +360,7 @@ export const showNotifyAndNotShowAgainButton = (
   }: {
     dispatch: Dispatch<AllActions>;
   },
-  options: NotifyAndNotShowAgainButtonOption
+  options: NotifyAndNotShowAgainButtonOption,
 ) => {
   options.icon ??= options.isWarning ? "warning" : "info";
 

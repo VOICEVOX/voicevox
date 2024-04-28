@@ -19,7 +19,7 @@ test("「ヘルプ」メニューから各項目をクリックすると、そ�
   // 音声ライブラリの利用規約
   await page.getByText("音声ライブラリの利用規約", { exact: true }).click();
   await expect(
-    page.getByText("ヘルプ / 音声ライブラリの利用規約")
+    page.getByText("ヘルプ / 音声ライブラリの利用規約"),
   ).toBeVisible();
 
   // 使い方

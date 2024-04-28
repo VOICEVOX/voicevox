@@ -132,7 +132,7 @@ export const api: Sandbox = {
     // FIXME
     // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
     throw new Error(
-      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`
+      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
     );
   },
   showImportFileDialog(options) {
@@ -169,7 +169,7 @@ export const api: Sandbox = {
   },
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
-    listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void
+    listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void,
   ) {
     window.addEventListener("message", (event) => {
       if (event.data.channel == channel) {
@@ -214,14 +214,14 @@ export const api: Sandbox = {
   },
   async hotkeySettings(newData?: HotkeySettingType) {
     type HotkeySettingType = ReturnType<
-      typeof configSchema["parse"]
+      (typeof configSchema)["parse"]
     >["hotkeySettings"];
     if (newData != undefined) {
       const hotkeySettings = (await this.getSetting(
-        "hotkeySettings"
+        "hotkeySettings",
       )) as HotkeySettingType;
       const hotkeySetting = hotkeySettings.find(
-        (hotkey) => hotkey.action == newData.action
+        (hotkey) => hotkey.action == newData.action,
       );
       if (hotkeySetting != undefined) {
         hotkeySetting.combination = newData.combination;
@@ -256,8 +256,8 @@ export const api: Sandbox = {
     return Promise.all(
       // FIXME: themeファイルのいい感じのパスの設定
       ["/themes/default.json", "/themes/dark.json"].map((url) =>
-        fetch(url).then((res) => res.json())
-      )
+        fetch(url).then((res) => res.json()),
+      ),
     )
       .then((v) => ({
         currentTheme: "Default",
@@ -269,8 +269,8 @@ export const api: Sandbox = {
             ({
               ...v,
               currentTheme,
-            } as { currentTheme: string; availableThemes: ThemeConf[] })
-        )
+            }) as { currentTheme: string; availableThemes: ThemeConf[] },
+        ),
       );
   },
   vuexReady() {
@@ -288,7 +288,7 @@ export const api: Sandbox = {
   },
   async setEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
     const engineSettings = (await this.getSetting(
-      "engineSettings"
+      "engineSettings",
     )) as EngineSettings;
     engineSettings[engineId] = engineSetting;
     await this.setSetting("engineSettings", engineSettings);

@@ -10,13 +10,13 @@ declare function vstGetProject(): Promise<string>;
 declare function vstSetProject(value: string): Promise<void>;
 declare function vstUpdatePhrases(
   remove: string[],
-  add: unknown[]
+  add: unknown[],
 ): Promise<void>;
 declare function vstGetPhrases(): Promise<Record<string, VstPhrase>>;
 declare function vstClearPhrases(): Promise<void>;
 declare function vstShowImportFileDialog(
   title: string,
-  extensions: string[] | undefined
+  extensions: string[] | undefined,
 ): Promise<string>;
 declare function vstReadFile(filePath: string): Promise<string | -1>;
 declare function vstGetProjectName(): Promise<string>;
@@ -71,7 +71,7 @@ declare global {
     vstOnFileChosen?: (uuid: string, path: string) => void;
     vstOnExportProjectFinished?: (
       uuid: string,
-      result: "cancelled" | "error" | "success"
+      result: "cancelled" | "error" | "success",
     ) => void;
   }
 }
@@ -87,7 +87,7 @@ const exportProjectCallbacks = new Map<
 >();
 
 export async function showImportFileDialog(
-  options: ShowImportFileDialogOptions
+  options: ShowImportFileDialogOptions,
 ): Promise<string | undefined> {
   log("showImportFileDialog", options);
   if (!window.vstOnFileChosen) {
@@ -103,7 +103,7 @@ export async function showImportFileDialog(
   }
   const nonce = await vstShowImportFileDialog(
     options.title,
-    options.extensions
+    options.extensions,
   );
 
   const promise = new Promise<string | undefined>((resolve) => {
@@ -141,7 +141,7 @@ export async function exportProject() {
   if (!window.vstOnExportProjectFinished) {
     window.vstOnExportProjectFinished = (
       nonce: string,
-      result: "cancelled" | "error" | "success"
+      result: "cancelled" | "error" | "success",
     ) => {
       log("vstOnExportProjectFinished", nonce, result);
       const callback = exportProjectCallbacks.get(nonce);
