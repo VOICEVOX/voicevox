@@ -26,8 +26,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import ToolBar from "./ToolBar.vue";
+import { computed, ref, watch } from "vue";
+import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
@@ -53,10 +53,21 @@ const nowRendering = computed(() => {
 const nowAudioExporting = computed(() => {
   return store.state.nowAudioExporting;
 });
+const enablePitchEditInSongEditor = computed(() => {
+  return store.state.experimentalSetting.enablePitchEditInSongEditor;
+});
 
 const cancelExport = () => {
   store.dispatch("CANCEL_AUDIO_EXPORT");
 };
+
+watch(enablePitchEditInSongEditor, (value) => {
+  if (value === false && store.state.sequencerEditTarget === "PITCH") {
+    // ピッチ編集機能が無効になったとき編集ターゲットがピッチだったら、
+    // 編集ターゲットをノートに切り替える
+    store.dispatch("SET_EDIT_TARGET", { editTarget: "NOTE" });
+  }
+});
 
 const isCompletedInitialStartup = ref(false);
 // TODO: Vueっぽくないので解体する
@@ -90,7 +101,7 @@ onetimeWatch(
       // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
       // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
       try {
-        await store.dispatch("SET_SINGER", {});
+        await store.dispatch("SET_SINGER", { withRelated: true });
       } catch (e) {
         window.backend.logError(e);
       }

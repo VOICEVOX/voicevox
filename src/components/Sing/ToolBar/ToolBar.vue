@@ -93,6 +93,11 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
+      <EditTargetSwicher
+        v-if="showEditTargetSwitchButton"
+        :edit-target="editTarget"
+        :change-edit-target="changeEditTarget"
+      />
       <QBtn
         flat
         dense
@@ -133,6 +138,7 @@
 
 <script setup lang="ts">
 import { computed, watch, ref, onMounted, onUnmounted } from "vue";
+import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
 
 import {
@@ -146,6 +152,7 @@ import {
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { SequencerEditTarget } from "@/store/type";
 
 const store = useStore();
 
@@ -191,6 +198,16 @@ const undo = () => {
 };
 const redo = () => {
   store.dispatch("REDO", { editor });
+};
+
+const showEditTargetSwitchButton = computed(() => {
+  return store.state.experimentalSetting.enablePitchEditInSongEditor;
+});
+
+const editTarget = computed(() => store.state.sequencerEditTarget);
+
+const changeEditTarget = (editTarget: SequencerEditTarget) => {
+  store.dispatch("SET_EDIT_TARGET", { editTarget });
 };
 
 const tempos = computed(() => store.state.tempos);

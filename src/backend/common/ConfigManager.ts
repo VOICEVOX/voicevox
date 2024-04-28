@@ -137,6 +137,24 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       }
     },
   ],
+  [
+    ">=0.19",
+    (config) => {
+      // ピッチ表示機能の設定をピッチ編集機能に引き継ぐ
+      const experimentalSetting =
+        config.experimentalSetting as ExperimentalSettingType & {
+          showPitchInSongEditor?: boolean; // FIXME: TypeScript 5.4.5ならこの型の結合は不要
+        };
+      if (
+        "showPitchInSongEditor" in experimentalSetting &&
+        typeof experimentalSetting.showPitchInSongEditor === "boolean"
+      ) {
+        experimentalSetting.enablePitchEditInSongEditor =
+          experimentalSetting.showPitchInSongEditor;
+        delete experimentalSetting.showPitchInSongEditor;
+      }
+    },
+  ],
 ];
 
 export type Metadata = {
