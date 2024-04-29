@@ -394,11 +394,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.overlappingNoteInfos = new Map();
       channelStrips.clear();
       state.tracks = [];
-      const scoreNotes = score.notes;
-      if (scoreNotes.length === 0) {
-        scoreNotes.push([]);
+      const scoreParts = score.parts;
+      if (scoreParts.length === 0) {
+        scoreParts.push([]);
       }
-      for (const notes of scoreNotes) {
+      for (const notes of scoreParts) {
         const track = createInitialTrack();
         state.tracks.push(track);
         track.notes = notes;

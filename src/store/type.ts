@@ -729,7 +729,7 @@ export type Score = {
   tpqn: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
-  notes: Note[][];
+  parts: Note[][];
 };
 
 export type Singer = z.infer<typeof singerSchema>;

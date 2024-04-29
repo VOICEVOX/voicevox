@@ -125,7 +125,7 @@ onetimeWatch(
               beatType: DEFAULT_BEAT_TYPE,
             },
           ],
-          notes: [],
+          parts: [],
         },
       });
 

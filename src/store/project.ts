@@ -106,7 +106,7 @@ const applySongProjectToStore = async (
       tpqn,
       tempos,
       timeSignatures,
-      notes: tracks.map((track) => track.notes),
+      parts: tracks.map((track) => track.notes),
     },
   });
   for (const [i, track] of tracks.entries()) {
@@ -185,7 +185,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             tpqn,
             tempos,
             timeSignatures,
-            notes: [],
+            parts: [],
           },
         });
         const track = context.state.tracks[0];
