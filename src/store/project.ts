@@ -127,6 +127,13 @@ const applySongProjectToStore = async (
       name: track.name,
       trackId,
     });
+
+    await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+    await dispatch("SET_PITCH_EDIT_DATA", {
+      data: track.pitchEditData,
+      startFrame: 0,
+      trackId,
+    });
   }
   await dispatch("SET_SELECTED_TRACK", { trackId: state.tracks[0].id });
 };
@@ -184,7 +191,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         const track = context.state.tracks[0];
         await context.dispatch("SET_SINGER", {
           trackId: track.id,
+          withRelated: true,
         });
+        await context.dispatch("CLEAR_PITCH_EDIT_DATA");
         context.commit("SET_SELECTED_TRACK", { trackId: track.id });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
@@ -454,7 +463,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               semverSatisfiesOptions,
             )
           ) {
-            // volumeRangeAdjustmentの追加
+            // 声量調整値の追加
             for (const track of projectData.song.tracks) {
               track.volumeRangeAdjustment = 0;
             }
@@ -474,6 +483,19 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               track.mute = false;
               track.solo = false;
               track.name = "新規トラック";
+            }
+          }
+
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.19.0",
+              semverSatisfiesOptions,
+            )
+          ) {
+            // ピッチ編集値の追加
+            for (const track of projectData.song.tracks) {
+              track.pitchEditData = [];
             }
           }
 

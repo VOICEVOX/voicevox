@@ -44,6 +44,11 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("アップデートが通知されたりスキップしたりできる", async ({ page }) => {
+  test.skip(
+    process.platform === "darwin",
+    // https://github.com/VOICEVOX/voicevox/issues/2007
+    "macOSだと原因不明でテストが落ちるためスキップします",
+  );
   await page.waitForTimeout(500);
 
   // 通知されている

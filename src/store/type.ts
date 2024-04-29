@@ -17,6 +17,7 @@ import {
   UserDictWord,
   MorphableTargetInfo,
   FrameAudioQuery,
+  Note as NoteForRequestToEngine,
 } from "@/openapi";
 import {
   CharacterInfo,
@@ -802,11 +803,14 @@ export type Phrase = {
   singingVoiceKey?: SingingVoiceSourceHash;
 };
 
+export type SequencerEditTarget = "NOTE" | "PITCH";
+
 export type SingingStoreState = {
   tpqn: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
   tracks: Track[];
+  editFrameRate: number;
   phrases: Map<string, Phrase>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
@@ -815,6 +819,7 @@ export type SingingStoreState = {
   sequencerZoomY: number;
   sequencerSnapType: number;
   selectedTrackId: TrackId;
+  sequencerEditTarget: SequencerEditTarget;
   selectedNoteIds: Set<string>;
   overlappingNoteIds: Set<string>;
   overlappingNoteInfos: Map<TrackId, OverlappingNoteInfos>;
@@ -839,8 +844,12 @@ export type SingingStoreTypes = {
   };
 
   SET_SINGER: {
-    mutation: { trackId: TrackId; singer?: Singer };
-    action(payload: { trackId: TrackId; singer?: Singer }): void;
+    mutation: { trackId: TrackId; singer?: Singer; withRelated?: boolean };
+    action(payload: {
+      trackId: TrackId;
+      singer?: Singer;
+      withRelated?: boolean;
+    }): void;
   };
 
   SET_KEY_RANGE_ADJUSTMENT: {
@@ -910,6 +919,20 @@ export type SingingStoreTypes = {
     action(payload: { noteId?: string }): void;
   };
 
+  SET_PITCH_EDIT_DATA: {
+    mutation: { data: number[]; startFrame: number };
+    action(payload: { data: number[]; startFrame: number }): void;
+  };
+
+  ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number };
+  };
+
+  CLEAR_PITCH_EDIT_DATA: {
+    mutation: undefined;
+    action(): void;
+  };
+
   SET_PHRASES: {
     mutation: { phrases: Map<string, Phrase> };
   };
@@ -971,6 +994,11 @@ export type SingingStoreTypes = {
     action(payload: { zoomY: number }): void;
   };
 
+  SET_EDIT_TARGET: {
+    mutation: { editTarget: SequencerEditTarget };
+    action(payload: { editTarget: SequencerEditTarget }): void;
+  };
+
   SET_IS_DRAG: {
     mutation: { isDrag: boolean };
     action(payload: { isDrag: boolean }): void;
@@ -998,6 +1026,15 @@ export type SingingStoreTypes = {
 
   CANCEL_AUDIO_EXPORT: {
     action(): void;
+  };
+
+  FETCH_SING_FRAME_VOLUME: {
+    action(palyoad: {
+      notes: NoteForRequestToEngine[];
+      frameAudioQuery: FrameAudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<number[]>;
   };
 
   TICK_TO_SECOND: {
@@ -1134,8 +1171,12 @@ export type SingingCommandStoreState = {
 
 export type SingingCommandStoreTypes = {
   COMMAND_SET_SINGER: {
-    mutation: { trackId: TrackId; singer: Singer };
-    action(payload: { trackId: TrackId; singer: Singer }): void;
+    mutation: { trackId: TrackId; singer: Singer; withRelated?: boolean };
+    action(payload: {
+      trackId: TrackId;
+      singer: Singer;
+      withRelated?: boolean;
+    }): void;
   };
 
   COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
@@ -1230,6 +1271,16 @@ export type SingingCommandStoreTypes = {
   COMMAND_UNSOLO_ALL_TRACKS: {
     mutation: undefined;
     action(): void;
+  };
+
+  COMMAND_SET_PITCH_EDIT_DATA: {
+    mutation: { data: number[]; startFrame: number };
+    action(payload: { data: number[]; startFrame: number }): void;
+  };
+
+  COMMAND_ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number };
+    action(payload: { startFrame: number; frameLength: number }): void;
   };
 };
 

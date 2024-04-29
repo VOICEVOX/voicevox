@@ -6,7 +6,7 @@
       'preview-lyric': props.previewLyric != undefined,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
-      'below-pitch': showPitch,
+      'below-pitch': editTargetIsPitch,
     }"
     :style="{
       width: `${width}px`,
@@ -14,10 +14,32 @@
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
   >
-    <div class="note-bar" @mousedown="onBarMouseDown">
-      <div class="note-left-edge" @mousedown="onLeftEdgeMouseDown"></div>
-      <div class="note-right-edge" @mousedown="onRightEdgeMouseDown"></div>
-      <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
+    <div
+      class="note-bar"
+      :class="{
+        'cursor-move': editTargetIsNote,
+      }"
+      @mousedown="onBarMouseDown"
+    >
+      <div
+        class="note-left-edge"
+        :class="{
+          'cursor-ew-resize': editTargetIsNote,
+        }"
+        @mousedown="onLeftEdgeMouseDown"
+      ></div>
+      <div
+        class="note-right-edge"
+        :class="{
+          'cursor-ew-resize': editTargetIsNote,
+        }"
+        @mousedown="onRightEdgeMouseDown"
+      ></div>
+      <ContextMenu
+        v-if="editTargetIsNote"
+        ref="contextMenu"
+        :menudata="contextMenuData"
+      />
     </div>
     <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
     <input
@@ -133,6 +155,12 @@ const noteState = computed((): NoteState => {
   }
   return "NORMAL";
 });
+const editTargetIsNote = computed(() => {
+  return state.sequencerEditTarget === "NOTE";
+});
+const editTargetIsPitch = computed(() => {
+  return state.sequencerEditTarget === "PITCH";
+});
 
 // ノートの重なりエラー
 const hasOverlappingError = computed(() => {
@@ -158,9 +186,6 @@ const lyricToDisplay = computed(
 const temporaryLyric = ref<string | undefined>(undefined);
 const showLyricInput = computed(() => {
   return state.editingLyricNoteId === props.note.id;
-});
-const showPitch = computed(() => {
-  return state.experimentalSetting.showPitchInSongEditor;
 });
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuData = ref<ContextMenuItemData[]>([
@@ -285,20 +310,27 @@ const onLyricInput = (event: Event) => {
   &.selected {
     // 色は仮
     .note-bar {
-      background-color: hsl(33, 100%, 50%);
+      background-color: lab(95, -22.953, 14.365);
+      border-color: lab(65, -22.953, 14.365);
+      outline: solid 2px lab(70, -22.953, 14.365);
     }
 
     &.below-pitch {
       .note-bar {
-        background-color: rgba(hsl(33, 100%, 50%), 0.18);
+        background-color: rgba(colors.$primary-rgb, 0.18);
       }
     }
   }
   // TODO：もっといい見た目を考える
   &.preview-lyric {
     .note-bar {
-      background-color: hsl(130, 35%, 90%);
-      border: 2px solid colors.$primary;
+      background-color: lab(90, -22.953, 14.365);
+      border-color: lab(75, -22.953, 14.365);
+      outline: solid 2px lab(80, -22.953, 14.365);
+    }
+
+    .note-lyric {
+      opacity: 0.38;
     }
 
     &.below-pitch {
@@ -322,6 +354,7 @@ const onLyricInput = (event: Event) => {
       .note-bar {
         background-color: rgba(colors.$warning-rgb, 0.5);
         border-color: colors.$warning;
+        outline: 2px solid rgba(colors.$warning-rgb, 0.3);
       }
     }
   }
@@ -347,13 +380,13 @@ const onLyricInput = (event: Event) => {
 }
 
 .note-bar {
+  box-sizing: border-box;
   position: absolute;
   width: calc(100% + 1px);
   height: 100%;
   background-color: colors.$primary;
   border: 1px solid rgba(colors.$background-rgb, 0.5);
-  border-radius: 2px;
-  cursor: move;
+  border-radius: 4px;
 }
 
 .note-left-edge {
@@ -362,7 +395,11 @@ const onLyricInput = (event: Event) => {
   left: -1px;
   width: 5px;
   height: 100%;
-  cursor: ew-resize;
+
+  &:hover {
+    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+    background-color: lab(80, -22.953, 14.365);
+  }
 }
 
 .note-right-edge {
@@ -371,7 +408,11 @@ const onLyricInput = (event: Event) => {
   right: -1px;
   width: 5px;
   height: 100%;
-  cursor: ew-resize;
+
+  &:hover {
+    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+    background-color: lab(80, -22.953, 14.365);
+  }
 }
 
 .note-lyric-input {
@@ -381,7 +422,15 @@ const onLyricInput = (event: Event) => {
   min-width: 3rem;
   max-width: 6rem;
   border: 0;
-  outline: 2px solid colors.$primary;
-  border-radius: 0.25rem;
+  outline: 2px solid lab(80, -22.953, 14.365);
+  border-radius: 4px;
+}
+
+.cursor-move {
+  cursor: move;
+}
+
+.cursor-ew-resize {
+  cursor: ew-resize;
 }
 </style>

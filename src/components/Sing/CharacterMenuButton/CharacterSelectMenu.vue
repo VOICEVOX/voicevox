@@ -156,6 +156,7 @@ const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
   store.dispatch("COMMAND_SET_SINGER", {
     trackId: props.trackId,
     singer: { engineId, styleId },
+    withRelated: true,
   });
 };
 
