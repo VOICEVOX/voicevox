@@ -98,11 +98,25 @@ watch(
   { immediate: true },
 );
 
-const queries = computed(() => {
-  const singingGuides = [...store.state.singingGuides.values()];
-  return singingGuides.map((value) => value.query);
+const singingGuides = computed(() => {
+  const phrases = store.state.phrases.get(selectedTrackId.value);
+  if (phrases == undefined) {
+    return [];
+  }
+
+  return [...phrases.values()]
+    .flatMap((phrase) => phrase.singingGuideKey ?? [])
+    .map((key) => {
+      const singingGuide = store.state.singingGuides.get(key);
+      if (singingGuide == undefined) {
+        throw new Error("singingGuide is undefined.");
+      }
+      return singingGuide;
+    });
 });
-const singingGuides = computed(() => [...store.state.singingGuides.values()]);
+const queries = computed(() => {
+  return singingGuides.value.map((value) => value.query);
+});
 const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;
 });

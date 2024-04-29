@@ -185,7 +185,6 @@ export class GridAreaInfo implements AreaInfo {
 export type FramewiseDataSection = {
   readonly startFrame: number;
   readonly frameRate: number;
-  readonly trackId: TrackId;
   readonly data: number[];
 };
 
