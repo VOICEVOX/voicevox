@@ -749,7 +749,6 @@ export type SingingGuide = {
   query: FrameAudioQuery;
   frameRate: number;
   startTime: number;
-  phraseId: string;
 };
 
 /**
@@ -798,7 +797,6 @@ export type SingingVoiceSourceHash = z.infer<
 export type Phrase = {
   notes: Note[];
   state: PhraseState;
-  trackId: TrackId;
   singingGuideKey?: SingingGuideSourceHash;
   singingVoiceKey?: SingingVoiceSourceHash;
 };
@@ -811,7 +809,7 @@ export type SingingStoreState = {
   timeSignatures: TimeSignature[];
   tracks: Track[];
   editFrameRate: number;
-  phrases: Map<string, Phrase>;
+  phrases: Map<TrackId, Map<string, Phrase>>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
@@ -920,31 +918,36 @@ export type SingingStoreTypes = {
   };
 
   SET_PITCH_EDIT_DATA: {
-    mutation: { data: number[]; startFrame: number };
-    action(payload: { data: number[]; startFrame: number }): void;
+    mutation: { data: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      data: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
   };
 
   ERASE_PITCH_EDIT_DATA: {
-    mutation: { startFrame: number; frameLength: number };
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
   };
 
   CLEAR_PITCH_EDIT_DATA: {
-    mutation: undefined;
-    action(): void;
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
   };
 
   SET_PHRASES: {
-    mutation: { phrases: Map<string, Phrase> };
+    mutation: { phrases: Map<TrackId, Map<string, Phrase>> };
   };
 
   SET_STATE_TO_PHRASE: {
-    mutation: { phraseKey: string; phraseState: PhraseState };
+    mutation: { phraseKey: string; phraseState: PhraseState; trackId: TrackId };
   };
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
     mutation: {
       phraseKey: string;
       singingGuideKey: SingingGuideSourceHash | undefined;
+      trackId: TrackId;
     };
   };
 
@@ -952,6 +955,7 @@ export type SingingStoreTypes = {
     mutation: {
       phraseKey: string;
       singingVoiceKey: SingingVoiceSourceHash | undefined;
+      trackId: TrackId;
     };
   };
 
@@ -959,11 +963,12 @@ export type SingingStoreTypes = {
     mutation: {
       singingGuideKey: SingingGuideSourceHash;
       singingGuide: SingingGuide;
+      trackId: TrackId;
     };
   };
 
   DELETE_SINGING_GUIDE: {
-    mutation: { singingGuideKey: SingingGuideSourceHash };
+    mutation: { singingGuideKey: SingingGuideSourceHash; trackId: TrackId };
   };
 
   SET_SELECTED_TRACK: {
@@ -1274,13 +1279,21 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_SET_PITCH_EDIT_DATA: {
-    mutation: { data: number[]; startFrame: number };
-    action(payload: { data: number[]; startFrame: number }): void;
+    mutation: { data: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      data: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
   };
 
   COMMAND_ERASE_PITCH_EDIT_DATA: {
-    mutation: { startFrame: number; frameLength: number };
-    action(payload: { startFrame: number; frameLength: number }): void;
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+    action(payload: {
+      startFrame: number;
+      frameLength: number;
+      trackId: TrackId;
+    }): void;
   };
 };
 

@@ -16,7 +16,6 @@ import {
   SaveResultObject,
   Singer,
   Phrase,
-  PhraseState,
   transformCommandStore,
   Track,
   SingingGuide,
@@ -191,7 +190,6 @@ export const generateSingingStoreInitialScore = () => {
     tracks: [track],
     overlappingNoteInfos: new Map([[track.id, new Map()]]),
     selectedTrackId: track.id,
-    tracks: [],
   };
 };
 
@@ -250,6 +248,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (track == undefined) {
         throw new Error("track is undefined.");
       }
+
+      track.singer = singer;
 
       if (withRelated == true && singer != undefined) {
         // 音域調整量マジックナンバーを設定するワークアラウンド
@@ -626,9 +626,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_PITCH_EDIT_DATA: {
     // ピッチ編集データをセットする。
     // track.pitchEditDataの長さが足りない場合は、伸長も行う。
-    mutation(state, { data, startFrame }) {
+    mutation(state, { data, trackId, startFrame }) {
       const track = state.tracks.find((value) => value.id === trackId);
-      const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
+      if (track == undefined) {
+        throw new Error("track is undefined.");
+      }
+      const pitchEditData = track.pitchEditData;
       const tempData = [...pitchEditData];
       const endFrame = startFrame + data.length;
       if (tempData.length < endFrame) {
@@ -638,64 +641,62 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tempData.push(...valuesToPush);
       }
       tempData.splice(startFrame, data.length, ...data);
-      state.tracks[selectedTrackIndex].pitchEditData = tempData;
+      track.pitchEditData = tempData;
     },
-    async action(
-      { dispatch, commit },
-      { data, startFrame }: { data: number[]; startFrame: number },
-    ) {
+    async action({ dispatch, commit }, { data, startFrame, trackId }) {
       if (startFrame < 0) {
         throw new Error("startFrame must be greater than or equal to 0.");
       }
       if (!isValidPitchEditData(data)) {
         throw new Error("The pitch edit data is invalid.");
       }
-      commit("SET_PITCH_EDIT_DATA", { data, startFrame });
+      commit("SET_PITCH_EDIT_DATA", { data, startFrame, trackId });
 
       dispatch("RENDER");
     },
   },
 
   ERASE_PITCH_EDIT_DATA: {
-    mutation(
-      state,
-      { startFrame, frameLength }: { startFrame: number; frameLength: number },
-    ) {
-      const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
+    mutation(state, { startFrame, frameLength, trackId }) {
+      const track = state.tracks.find((value) => value.id === trackId);
+      if (track == undefined) {
+        throw new Error("track is undefined.");
+      }
+
+      const pitchEditData = track.pitchEditData;
       const tempData = [...pitchEditData];
       const endFrame = Math.min(startFrame + frameLength, tempData.length);
       tempData.fill(VALUE_INDICATING_NO_DATA, startFrame, endFrame);
-      state.tracks[selectedTrackIndex].pitchEditData = tempData;
+      track.pitchEditData = tempData;
     },
   },
 
   CLEAR_PITCH_EDIT_DATA: {
     // ピッチ編集データを失くす。
-    mutation(state) {
-      state.tracks[selectedTrackIndex].pitchEditData = [];
+    mutation(state, { trackId }) {
+      const track = state.tracks.find((value) => value.id === trackId);
+      if (track == undefined) {
+        throw new Error("track is undefined.");
+      }
+
+      track.pitchEditData = [];
     },
-    async action({ dispatch, commit }) {
-      commit("CLEAR_PITCH_EDIT_DATA");
+    async action({ dispatch, commit }, { trackId }) {
+      commit("CLEAR_PITCH_EDIT_DATA", { trackId });
 
       dispatch("RENDER");
     },
   },
 
   SET_PHRASES: {
-    mutation(state, { phrases }: { phrases: Map<string, Phrase> }) {
-      state.phrases = phrases;
+    mutation(state, { phrases }) {
+      state.phrases = structuredClone(toRaw(phrases));
     },
   },
 
   SET_STATE_TO_PHRASE: {
-    mutation(
-      state,
-      {
-        phraseKey,
-        phraseState,
-      }: { phraseKey: string; phraseState: PhraseState },
-    ) {
-      const phrase = state.phrases.get(phraseKey);
+    mutation(state, { phraseKey, phraseState, trackId }) {
+      const phrase = state.phrases.get(trackId)?.get(phraseKey);
       if (phrase == undefined) {
         throw new Error("phrase is undefined.");
       }
@@ -704,17 +705,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
-    mutation(
-      state,
-      {
-        phraseKey,
-        singingGuideKey,
-      }: {
-        phraseKey: string;
-        singingGuideKey: SingingGuideSourceHash | undefined;
-      },
-    ) {
-      const phrase = state.phrases.get(phraseKey);
+    mutation(state, { phraseKey, singingGuideKey, trackId }) {
+      const phrase = state.phrases.get(trackId)?.get(phraseKey);
       if (phrase == undefined) {
         throw new Error("phrase is undefined.");
       }
@@ -723,17 +715,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
-    mutation(
-      state,
-      {
-        phraseKey,
-        singingVoiceKey,
-      }: {
-        phraseKey: string;
-        singingVoiceKey: SingingVoiceSourceHash | undefined;
-      },
-    ) {
-      const phrase = state.phrases.get(phraseKey);
+    mutation(state, { phraseKey, singingVoiceKey, trackId }) {
+      const phrase = state.phrases.get(trackId)?.get(phraseKey);
       if (phrase == undefined) {
         throw new Error("phrase is undefined.");
       }
@@ -989,7 +972,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, commit, dispatch }) {
-      const searchPhrases = async (trackId: TrackId, notes: Note[]) => {
+      const searchPhrases = async (notes: Note[]) => {
         const foundPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
         for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
@@ -1009,7 +992,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const notesHash = await calculateNotesHash(phraseNotes);
             foundPhrases.set(notesHash, {
               notes: phraseNotes,
-              trackId,
               state: "WAITING_TO_BE_RENDERED",
             });
 
@@ -1203,7 +1185,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // 重なっているノートの削除も行う
         const tpqn = state.tpqn;
         const tempos = state.tempos.map((value) => ({ ...value }));
-        const foundPhrases = new Map<string, Phrase>();
+        const foundPhrases = new Map<
+          string,
+          { trackId: TrackId; phrase: Phrase }
+        >();
         const trackRefs = state.tracks.map((value) =>
           structuredClone(toRaw(value)),
         );
@@ -1215,43 +1200,52 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             .filter((value) => !state.overlappingNoteIds.has(value.id));
 
           // フレーズを更新する
-          const foundPhrasesInTrack = await searchPhrases(trackRef.id, notes);
+          const foundPhrasesInTrack = await searchPhrases(notes);
           for (const [phraseKey, phrase] of foundPhrasesInTrack) {
-            foundPhrases.set(phraseKey, phrase);
+            foundPhrases.set(phraseKey, { trackId: trackRef.id, phrase });
           }
         }
 
-        for (const [phraseKey, phrase] of state.phrases) {
-          const notesHash = phraseKey;
-          if (!foundPhrases.has(notesHash)) {
-            // 歌い方と歌声を削除する
-            if (phrase.singingGuideKey != undefined) {
-              commit("DELETE_SINGING_GUIDE", {
-                singingGuideKey: phrase.singingGuideKey,
-              });
-            }
-            if (phrase.singingVoiceKey != undefined) {
-              singingVoices.delete(phrase.singingVoiceKey);
-            }
+        for (const [trackId, phrases] of state.phrases) {
+          for (const [phraseKey, phrase] of phrases) {
+            const notesHash = phraseKey;
+            if (!foundPhrases.has(notesHash)) {
+              // 歌い方と歌声を削除する
+              if (phrase.singingGuideKey != undefined) {
+                commit("DELETE_SINGING_GUIDE", {
+                  singingGuideKey: phrase.singingGuideKey,
+                  trackId,
+                });
+              }
+              if (phrase.singingVoiceKey != undefined) {
+                singingVoices.delete(phrase.singingVoiceKey);
+              }
 
-            // 音源とシーケンスの接続を解除して削除する
-            const sequence = sequences.get(phraseKey);
-            if (sequence) {
-              getAudioSourceNode(sequence).disconnect();
-              transportRef.removeSequence(sequence);
-              sequences.delete(phraseKey);
+              // 音源とシーケンスの接続を解除して削除する
+              const sequence = sequences.get(phraseKey);
+              if (sequence) {
+                getAudioSourceNode(sequence).disconnect();
+                transportRef.removeSequence(sequence);
+                sequences.delete(phraseKey);
+              }
             }
           }
         }
 
-        const phrases = new Map<string, Phrase>();
+        const newPhrases = new DefaultMap<TrackId, Map<string, Phrase>>(
+          () => new Map(),
+        );
 
         for (const [notesHash, foundPhrase] of foundPhrases) {
           const phraseKey = notesHash;
-          const existingPhrase = state.phrases.get(phraseKey);
+          const existingPhrase = newPhrases
+            .get(foundPhrase.trackId)
+            .get(phraseKey);
           if (!existingPhrase) {
             // 新しいフレーズの場合
-            phrases.set(phraseKey, foundPhrase);
+            newPhrases
+              .get(foundPhrase.trackId)
+              .set(phraseKey, foundPhrase.phrase);
             continue;
           }
 
@@ -1264,7 +1258,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const phrase = structuredClone(toRaw(existingPhrase));
 
           const trackRef = trackRefs.find(
-            (track) => track.id === phrase.trackId,
+            (track) => track.id === foundPhrase.trackId,
           );
 
           if (trackRef == undefined) {
@@ -1288,6 +1282,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (phrase.singingGuideKey != undefined) {
               commit("DELETE_SINGING_GUIDE", {
                 singingGuideKey: phrase.singingGuideKey,
+                trackId: foundPhrase.trackId,
               });
               phrase.singingGuideKey = undefined;
             }
@@ -1311,6 +1306,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               if (hash !== calculatedHash) {
                 commit("DELETE_SINGING_GUIDE", {
                   singingGuideKey: phrase.singingGuideKey,
+                  trackId: foundPhrase.trackId,
                 });
                 phrase.singingGuideKey = undefined;
                 if (phrase.singingVoiceKey != undefined) {
@@ -1351,23 +1347,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrase.state = "WAITING_TO_BE_RENDERED";
           }
 
-          phrases.set(phraseKey, phrase);
+          newPhrases.get(foundPhrase.trackId).set(phraseKey, phrase);
         }
 
-        commit("SET_PHRASES", { phrases });
+        commit("SET_PHRASES", { phrases: newPhrases });
 
         logger.info("Phrases updated.");
 
         // 各フレーズのレンダリングを行う
 
         const phrasesToBeRendered = new Map(
-          [...state.phrases.entries()].filter(([, phrase]) => {
-            return phrase.state === "WAITING_TO_BE_RENDERED";
-          }),
+          [...state.phrases.entries()]
+            .flatMap(([trackId, phrases]) =>
+              [...phrases.entries()].map(([phraseKey, phrase]) => ({
+                trackId,
+                phraseKey,
+                phrase,
+              })),
+            )
+            .filter(({ phrase }) => {
+              return phrase.state === "WAITING_TO_BE_RENDERED";
+            })
+            .map(({ trackId, phraseKey, phrase }) => [
+              `${trackId}:${phraseKey}`,
+              phrase,
+            ]),
         );
-        for (const [phraseKey, phrase] of phrasesToBeRendered) {
+        for (const [trackIdAndPhraseKey, phrase] of phrasesToBeRendered) {
           // シーケンスが存在する場合、シーケンスの接続を解除して削除する
           // TODO: ピッチを編集したときは行わないようにする
+
+          const [, phraseKey] = trackIdAndPhraseKey.split(":");
 
           const sequence = sequences.get(phraseKey);
           if (sequence) {
@@ -1395,15 +1405,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (startRenderingRequested() || stopRenderingRequested()) {
             return;
           }
-          const [phraseKey, phrase] = selectPriorPhrase(
+          const [trackIdAndPhraseKey, phrase] = selectPriorPhrase(
             phrasesToBeRendered,
             playheadPosition.value,
           );
-          phrasesToBeRendered.delete(phraseKey);
+          phrasesToBeRendered.delete(trackIdAndPhraseKey);
+          const [trackId_, phraseKey] = trackIdAndPhraseKey.split(":");
+          const trackId = TrackId(trackId_);
 
-          const trackRef = trackRefs.find(
-            (track) => track.id === phrase.trackId,
-          );
+          const trackRef = trackRefs.find((track) => track.id === trackId);
           if (trackRef == undefined) {
             logger.warn("Track not found.");
             continue;
@@ -1425,6 +1435,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (!singerAndFrameRate) {
             commit("SET_STATE_TO_PHRASE", {
+              trackId,
               phraseKey,
               phraseState: "PLAYABLE",
             });
@@ -1432,6 +1443,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           commit("SET_STATE_TO_PHRASE", {
+            trackId,
             phraseKey,
             phraseState: "NOW_RENDERING",
           });
@@ -1495,15 +1507,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   query,
                   frameRate: singerAndFrameRate.frameRate,
                   startTime,
-                  phraseId: phraseKey,
                 };
 
                 singingGuideCache.set(singingGuideKey, singingGuide);
               }
-              commit("SET_SINGING_GUIDE", { singingGuideKey, singingGuide });
+              commit("SET_SINGING_GUIDE", {
+                singingGuideKey,
+                singingGuide,
+                trackId,
+              });
               commit("SET_SINGING_GUIDE_KEY_TO_PHRASE", {
                 phraseKey,
                 singingGuideKey,
+                trackId,
               });
             }
 
@@ -1573,6 +1589,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             commit("SET_SINGING_VOICE_KEY_TO_PHRASE", {
               phraseKey,
               singingVoiceKey,
+              trackId,
             });
 
             // シーケンスが存在する場合、シーケンスの接続を解除して削除する
@@ -1598,18 +1615,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               audioEvents,
             };
 
-            audioPlayer.output.connect(channelStrips.get(phrase.trackId).input);
+            audioPlayer.output.connect(channelStrips.get(trackId).input);
             transportRef.addSequence(audioSequence);
             sequences.set(phraseKey, audioSequence);
 
             commit("SET_STATE_TO_PHRASE", {
               phraseKey,
               phraseState: "PLAYABLE",
+              trackId,
             });
           } catch (error) {
             commit("SET_STATE_TO_PHRASE", {
               phraseKey,
               phraseState: "COULD_NOT_RENDER",
+              trackId,
             });
             throw error;
           }
@@ -2441,15 +2460,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             channelStrip.mute = !tracksShouldPlay[track.id];
             channelStrip.output.connect(globalChannelStrip.input);
 
+            const phrases = state.phrases.get(track.id);
+            if (!phrases) {
+              throw new Error("Phrases is not found.");
+            }
+
             await setupAudioEvents(
               offlineAudioContext,
               channelStrip,
               offlineTransport,
               state.singingGuides,
               singingVoices,
-              [...state.phrases.values()].filter(
-                (phrase) => phrase.trackId === track.id,
-              ),
+              [...phrases.values()],
             );
           }
           globalChannelStrip.volume = 1;
@@ -2579,15 +2601,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             channelStrip.mute = !tracksShouldPlay[track.id];
             channelStrip.output.connect(globalChannelStrip.input);
 
+            const phrases = state.phrases.get(track.id);
+            if (!phrases) {
+              throw new Error("Phrases is not found.");
+            }
+
             await setupAudioEvents(
               offlineAudioContext,
               channelStrip,
               offlineTransport,
               state.singingGuides,
               singingVoices,
-              [...state.phrases.values()].filter(
-                (phrase) => phrase.trackId === track.id,
-              ),
+              [...phrases.values()],
             );
             globalChannelStrip.volume = 1;
             if (limiter) {
@@ -3183,45 +3208,45 @@ export const singingCommandStore = transformCommandStore(
     },
 
     COMMAND_SET_PITCH_EDIT_DATA: {
-      mutation(draft, { data, startFrame }) {
-        singingStore.mutations.SET_PITCH_EDIT_DATA(draft, { data, startFrame });
+      mutation(draft, { data, startFrame, trackId }) {
+        singingStore.mutations.SET_PITCH_EDIT_DATA(draft, {
+          data,
+          startFrame,
+          trackId,
+        });
       },
-      action(
-        { commit, dispatch },
-        { data, startFrame }: { data: number[]; startFrame: number },
-      ) {
+      action({ commit, dispatch }, { data, startFrame, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
         if (!isValidPitchEditData(data)) {
           throw new Error("The pitch edit data is invalid.");
         }
-        commit("COMMAND_SET_PITCH_EDIT_DATA", { data, startFrame });
+        commit("COMMAND_SET_PITCH_EDIT_DATA", { data, startFrame, trackId });
 
         dispatch("RENDER");
       },
     },
     COMMAND_ERASE_PITCH_EDIT_DATA: {
-      mutation(draft, { startFrame, frameLength }) {
+      mutation(draft, { startFrame, frameLength, trackId }) {
         singingStore.mutations.ERASE_PITCH_EDIT_DATA(draft, {
           startFrame,
           frameLength,
+          trackId,
         });
       },
-      action(
-        { commit, dispatch },
-        {
-          startFrame,
-          frameLength,
-        }: { startFrame: number; frameLength: number },
-      ) {
+      action({ commit, dispatch }, { startFrame, frameLength, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
         if (frameLength < 1) {
           throw new Error("frameLength must be at least 1.");
         }
-        commit("COMMAND_ERASE_PITCH_EDIT_DATA", { startFrame, frameLength });
+        commit("COMMAND_ERASE_PITCH_EDIT_DATA", {
+          startFrame,
+          frameLength,
+          trackId,
+        });
 
         dispatch("RENDER");
       },

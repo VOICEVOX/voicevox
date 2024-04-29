@@ -27,18 +27,12 @@ import {
   onMountedOrActivated,
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
-import { SingingGuideSourceHash } from "@/store/type";
 import DefaultMap from "@/helpers/DefaultMap";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { TrackId } from "@/type/preload";
 
 const { info } = createLogger("sequencerPitch");
-
-type VoicedSection = {
-  readonly startFrame: number;
-  readonly frameLength: number;
-};
 
 type PitchLine = {
   readonly frameTicksArray: number[];
@@ -532,10 +526,8 @@ onUnmountedOrDeactivated(() => {
     container.destroy();
   });
   containers.clear();
-  originalPitchLineMap.forEach(({ pitchLines }) => {
-    pitchLines.forEach((pitchLine) => {
-      pitchLine.lineStrip.destroy();
-    });
+  originalPitchLineMap.forEach((value) => {
+    value.lineStrip.destroy();
   });
   originalPitchLineMap.clear();
   pitchEditLineMap.forEach((value) => {

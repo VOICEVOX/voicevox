@@ -128,7 +128,7 @@ const applySongProjectToStore = async (
       trackId,
     });
 
-    await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+    await dispatch("CLEAR_PITCH_EDIT_DATA", { trackId });
     await dispatch("SET_PITCH_EDIT_DATA", {
       data: track.pitchEditData,
       startFrame: 0,
@@ -193,7 +193,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           trackId: track.id,
           withRelated: true,
         });
-        await context.dispatch("CLEAR_PITCH_EDIT_DATA");
+        await context.dispatch("CLEAR_PITCH_EDIT_DATA", { trackId: track.id });
         context.commit("SET_SELECTED_TRACK", { trackId: track.id });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });

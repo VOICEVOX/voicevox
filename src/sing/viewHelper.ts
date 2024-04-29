@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StyleInfo, isMac } from "@/type/preload";
+import { StyleInfo, TrackId, isMac } from "@/type/preload";
 import { calculateHash } from "@/sing/utility";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
@@ -185,6 +185,7 @@ export class GridAreaInfo implements AreaInfo {
 export type FramewiseDataSection = {
   readonly startFrame: number;
   readonly frameRate: number;
+  readonly trackId: TrackId;
   readonly data: number[];
 };
 

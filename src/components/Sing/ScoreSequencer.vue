@@ -184,6 +184,7 @@
         <SequencerPhraseIndicator
           v-for="phraseInfo in phraseInfosInCurrentTrack"
           :key="phraseInfo.key"
+          :track-id="phraseInfo.trackId"
           :phrase-key="phraseInfo.key"
           class="sequencer-phrase-indicator"
           :style="{
@@ -196,6 +197,7 @@
         <SequencerPhraseIndicator
           v-for="phraseInfo in phraseInfosInOtherTracks"
           :key="phraseInfo.key"
+          :track-id="phraseInfo.trackId"
           :phrase-key="phraseInfo.key"
           class="sequencer-phrase-indicator"
           :style="{
@@ -421,15 +423,17 @@ const playheadX = computed(() => {
 
 // フレーズ
 const phraseInfos = computed(() => {
-  return [...state.phrases.entries()].map(([key, phrase]) => {
-    const startTicks = getStartTicksOfPhrase(phrase);
-    const endTicks = getEndTicksOfPhrase(phrase);
-    const startBaseX = tickToBaseX(startTicks, tpqn.value);
-    const endBaseX = tickToBaseX(endTicks, tpqn.value);
-    const startX = startBaseX * zoomX.value;
-    const endX = endBaseX * zoomX.value;
-    return { key, x: startX, width: endX - startX, trackId: phrase.trackId };
-  });
+  return [...state.phrases.entries()].flatMap(([trackId, phrases]) =>
+    [...phrases.entries()].map(([key, phrase]) => {
+      const startTicks = getStartTicksOfPhrase(phrase);
+      const endTicks = getEndTicksOfPhrase(phrase);
+      const startBaseX = tickToBaseX(startTicks, tpqn.value);
+      const endBaseX = tickToBaseX(endTicks, tpqn.value);
+      const startX = startBaseX * zoomX.value;
+      const endX = endBaseX * zoomX.value;
+      return { key, x: startX, width: endX - startX, trackId };
+    }),
+  );
 });
 const phraseInfosInCurrentTrack = computed(() => {
   return phraseInfos.value.filter((value) => {
@@ -977,12 +981,14 @@ const endPreview = () => {
         data = data.map((value) => Math.exp(value));
 
         store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
+          trackId: selectedTrackId.value,
           data,
           startFrame: previewPitchEdit.value.startFrame,
         });
       }
     } else if (previewPitchEditType === "erase") {
       store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
+        trackId: selectedTrackId.value,
         startFrame: previewPitchEdit.value.startFrame,
         frameLength: previewPitchEdit.value.frameLength,
       });

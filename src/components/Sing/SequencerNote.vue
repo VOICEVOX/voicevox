@@ -98,6 +98,7 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
+import { createLogger } from "@/domain/frontend/log";
 
 type NoteState = "NORMAL" | "SELECTED";
 
@@ -170,7 +171,11 @@ const hasOverlappingError = computed(() => {
 // フレーズ生成エラー
 const hasPhraseError = computed(() => {
   // エラーがあるフレーズに自身が含まれているか
-  return Array.from(state.phrases.values()).some(
+  const phrases = store.state.phrases.get(state.selectedTrackId);
+  if (phrases == undefined) {
+    return false;
+  }
+  return Array.from(phrases.values()).some(
     (phrase) =>
       phrase.state === "COULD_NOT_RENDER" &&
       phrase.notes.some((note) => note.id === props.note.id),

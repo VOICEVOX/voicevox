@@ -6,8 +6,10 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { PhraseState } from "@/store/type";
+import { TrackId } from "@/type/preload";
 
 const props = defineProps<{
+  trackId: TrackId;
   phraseKey: string;
 }>();
 
@@ -19,7 +21,7 @@ const classNames: Record<PhraseState, string> = {
   PLAYABLE: "playable",
 };
 const className = computed(() => {
-  const phrase = store.state.phrases.get(props.phraseKey);
+  const phrase = store.state.phrases.get(props.trackId)?.get(props.phraseKey);
   if (phrase == undefined) {
     throw new Error("phrase is undefined.");
   }
