@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StyleInfo, TrackId, isMac } from "@/type/preload";
+import { StyleInfo, isMac } from "@/type/preload";
 import { calculateHash } from "@/sing/utility";
 
 const BASE_X_PER_QUARTER_NOTE = 120;

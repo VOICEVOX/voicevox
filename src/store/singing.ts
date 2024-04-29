@@ -29,6 +29,7 @@ import { EngineId, TrackId, StyleId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
+  AudioEvent,
   AudioPlayer,
   AudioSequence,
   ChannelStrip,
@@ -40,8 +41,6 @@ import {
   PolySynth,
   Sequence,
   Transport,
-  generateAudioEvents,
-  setupAudioEvents,
 } from "@/sing/audioRendering";
 import {
   selectPriorPhrase,
@@ -57,7 +56,6 @@ import {
   secondToTick,
   tickToSecond,
   shouldPlay,
-  convertToWavFileData,
   calcRenderDuration,
   calculateNotesHash,
   calculateSingingGuideSourceHash,
@@ -91,6 +89,7 @@ import { mergeMaps } from "@/helpers/mergeMaps";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
 import { noteSchema } from "@/domain/project/schema";
 import { createLogger } from "@/domain/frontend/log";
+import { convertToWavFileData } from "@/sing/waveExport";
 
 const logger = createLogger("store/singing");
 
@@ -104,6 +103,57 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
       noteOffTime: tickToSecond(noteOffPos, tempos, tpqn),
     };
   });
+};
+
+export const generateAudioEvents = async (
+  audioContext: BaseAudioContext,
+  time: number,
+  blob: Blob,
+): Promise<AudioEvent[]> => {
+  const arrayBuffer = await blob.arrayBuffer();
+  const buffer = await audioContext.decodeAudioData(arrayBuffer);
+  return [{ time, buffer }];
+};
+
+export const setupAudioEvents = async (
+  audioContext: BaseAudioContext,
+  channelStrip: ChannelStrip,
+  transport: Transport | OfflineTransport,
+  singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
+  singingVoices: Map<SingingVoiceSourceHash, SingingVoice>,
+  phrases: Phrase[],
+) => {
+  for (const phrase of phrases) {
+    if (
+      phrase.singingGuideKey == undefined ||
+      phrase.singingVoiceKey == undefined ||
+      phrase.state !== "PLAYABLE"
+    ) {
+      continue;
+    }
+    const singingGuide = singingGuides.get(phrase.singingGuideKey);
+    const singingVoice = singingVoices.get(phrase.singingVoiceKey);
+    if (!singingGuide) {
+      throw new Error("singingGuide is undefined");
+    }
+    if (!singingVoice) {
+      throw new Error("singingVoice is undefined");
+    }
+    // TODO: この辺りの処理を共通化する
+    const audioEvents = await generateAudioEvents(
+      audioContext,
+      singingGuide.startTime,
+      singingVoice.blob,
+    );
+    const audioPlayer = new AudioPlayer(audioContext);
+    const audioSequence: AudioSequence = {
+      type: "audio",
+      audioPlayer,
+      audioEvents,
+    };
+    audioPlayer.output.connect(channelStrip.input);
+    transport.addSequence(audioSequence);
+  }
 };
 
 let audioContext: AudioContext | undefined;

@@ -4,13 +4,6 @@ import {
   linearToDecibel,
 } from "@/sing/domain";
 import { Timer } from "@/sing/utility";
-import {
-  Phrase,
-  SingingGuide,
-  SingingGuideSourceHash,
-  SingingVoice,
-  SingingVoiceSourceHash,
-} from "@/store/type";
 
 const getEarliestSchedulableContextTime = (audioContext: BaseAudioContext) => {
   const renderQuantumSize = 128;
@@ -1044,54 +1037,3 @@ export class Clipper {
     this.waveShaperNode.curve = new Float32Array([-1, 0, 1]);
   }
 }
-
-export const generateAudioEvents = async (
-  audioContext: BaseAudioContext,
-  time: number,
-  blob: Blob,
-): Promise<AudioEvent[]> => {
-  const arrayBuffer = await blob.arrayBuffer();
-  const buffer = await audioContext.decodeAudioData(arrayBuffer);
-  return [{ time, buffer }];
-};
-
-export const setupAudioEvents = async (
-  audioContext: BaseAudioContext,
-  channelStrip: ChannelStrip,
-  transport: Transport | OfflineTransport,
-  singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
-  singingVoices: Map<SingingVoiceSourceHash, SingingVoice>,
-  phrases: Phrase[],
-) => {
-  for (const phrase of phrases) {
-    if (
-      phrase.singingGuideKey == undefined ||
-      phrase.singingVoiceKey == undefined ||
-      phrase.state !== "PLAYABLE"
-    ) {
-      continue;
-    }
-    const singingGuide = singingGuides.get(phrase.singingGuideKey);
-    const singingVoice = singingVoices.get(phrase.singingVoiceKey);
-    if (!singingGuide) {
-      throw new Error("singingGuide is undefined");
-    }
-    if (!singingVoice) {
-      throw new Error("singingVoice is undefined");
-    }
-    // TODO: この辺りの処理を共通化する
-    const audioEvents = await generateAudioEvents(
-      audioContext,
-      singingGuide.startTime,
-      singingVoice.blob,
-    );
-    const audioPlayer = new AudioPlayer(audioContext);
-    const audioSequence: AudioSequence = {
-      type: "audio",
-      audioPlayer,
-      audioEvents,
-    };
-    audioPlayer.output.connect(channelStrip.input);
-    transport.addSequence(audioSequence);
-  }
-};

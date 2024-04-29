@@ -98,7 +98,6 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { createLogger } from "@/domain/frontend/log";
 
 type NoteState = "NORMAL" | "SELECTED";
 
