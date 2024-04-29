@@ -142,14 +142,21 @@ let pitchEditDataSectionMap = new Map<
   FramewiseDataSection
 >();
 
-const originalPitchLineMap = new Map<FramewiseDataSectionHash, PitchLine>();
-const pitchEditLineMap = new Map<FramewiseDataSectionHash, PitchLine>();
+const originalPitchLineMap = new DefaultMap<
+  TrackId,
+  Map<FramewiseDataSectionHash, PitchLine>
+>(() => new Map());
+const pitchEditLineMap = new DefaultMap<
+  TrackId,
+  Map<FramewiseDataSectionHash, PitchLine>
+>(() => new Map());
 
 const updatePitchLines = (
   dataSectionMap: Map<FramewiseDataSectionHash, FramewiseDataSection>,
   pitchLineMap: Map<FramewiseDataSectionHash, PitchLine>,
   pitchLineColor: Color,
   pitchLineWidth: number,
+  trackId: TrackId,
 ) => {
   if (stage == undefined) {
     throw new Error("stage is undefined.");
@@ -206,7 +213,8 @@ const updatePitchLines = (
     } else {
       lineStrip = new LineStrip(frameLength, pitchLineColor, pitchLineWidth);
     }
-    stage.addChild(lineStrip.displayObject);
+    const container = containers.get(trackId);
+    container.addChild(lineStrip.displayObject);
 
     pitchLineMap.set(key, { frameTicksArray, lineStrip });
   }
@@ -268,15 +276,17 @@ const render = () => {
   // ピッチラインを更新する
   updatePitchLines(
     originalPitchDataSectionMap,
-    originalPitchLineMap,
+    originalPitchLineMap.get(selectedTrackId.value),
     originalPitchLineColor,
     originalPitchLineWidth,
+    selectedTrackId.value,
   );
   updatePitchLines(
     pitchEditDataSectionMap,
-    pitchEditLineMap,
+    pitchEditLineMap.get(selectedTrackId.value),
     pitchEditLineColor,
     pitchEditLineWidth,
+    selectedTrackId.value,
   );
   renderer.render(stage);
 };
@@ -540,14 +550,6 @@ onUnmountedOrDeactivated(() => {
     container.destroy();
   });
   containers.clear();
-  originalPitchLineMap.forEach((value) => {
-    value.lineStrip.destroy();
-  });
-  originalPitchLineMap.clear();
-  pitchEditLineMap.forEach((value) => {
-    value.lineStrip.destroy();
-  });
-  pitchEditLineMap.clear();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
 });
