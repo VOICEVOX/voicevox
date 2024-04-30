@@ -173,7 +173,6 @@ export class HotkeyManager {
     for (const combination of combinations) {
       const bindingKey = combinationToBindingKey(combination.combination);
       this.log("Unbind:", bindingKey, "in", combination.editor);
-      /* this.hotkeys.unbind(bindingKey, combination.editor); */
       this.registeredCombinations = this.registeredCombinations.filter(
         isNotSameHotkeyTarget(combination)
       );
@@ -191,33 +190,6 @@ export class HotkeyManager {
         "in",
         action.editor
       );
-      /* this.hotkeys(
-        combinationToBindingKey(setting.combination),
-        { scope: action.editor },
-        (e) => {
-          const element = e.target;
-          // メニュー項目ではショートカットキーを無効化
-          if (
-            element instanceof HTMLElement &&
-            element.classList.contains("q-item")
-          ) {
-            return;
-          }
-          if (!action.enableInTextbox) {
-            if (
-              element instanceof HTMLElement &&
-              (element.tagName === "INPUT" ||
-                element.tagName === "SELECT" ||
-                element.tagName === "TEXTAREA" ||
-                element.contentEditable === "true")
-            ) {
-              return;
-            }
-          }
-          e.preventDefault();
-          action.callback(e);
-        }
-      ); */
       this.registeredCombinations = this.registeredCombinations.filter(
         isNotSameHotkeyTarget(action)
       );
@@ -291,12 +263,12 @@ export class HotkeyManager {
         element.tagName === "TEXTAREA" ||
         element.contentEditable === "true");
 
-    const combination: HotkeyCombination = eventToCombination(e);
+    const combination = eventToCombination(e);
 
-    const action = this.actions
-      .filter((item) => item.editor == this.scope)
+    const action = this.actions    
       .filter((item) => !isInTextbox || item.enableInTextbox)
-      .find((item) => this.getSetting(item).combination == combination);
+      .filter((item) => this.getSetting(item).combination == combination)
+      .find((item) => item.editor == this.scope);
     if (action == null) {
       return;
     }
