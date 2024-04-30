@@ -396,9 +396,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks = [];
       const scoreParts = score.parts;
       if (scoreParts.length === 0) {
-        scoreParts.push([]);
+        scoreParts.push({ notes: [] });
       }
-      for (const notes of scoreParts) {
+      for (const { notes } of scoreParts) {
         const track = createInitialTrack();
         state.tracks.push(track);
         track.notes = notes;

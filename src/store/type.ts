@@ -725,11 +725,13 @@ export type TimeSignature = z.infer<typeof timeSignatureSchema>;
 
 export type Note = z.infer<typeof noteSchema>;
 
+export type Part = { notes: Note[] };
+
 export type Score = {
   tpqn: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
-  parts: Note[][];
+  parts: Part[];
 };
 
 export type Singer = z.infer<typeof singerSchema>;

@@ -106,7 +106,9 @@ const applySongProjectToStore = async (
       tpqn,
       tempos,
       timeSignatures,
-      parts: tracks.map((track) => track.notes),
+      parts: tracks.map((track) => ({
+        notes: track.notes,
+      })),
     },
   });
   for (const [i, track] of tracks.entries()) {
