@@ -1458,7 +1458,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             });
             // とりあえずエラーはロギングしてcontinueする
             // NOTE: ほとんどは歌詞のエラー
-            // FIXME: 歌詞以外のエラーの場合はthrowするようにする
+            // FIXME: 歌詞以外のエラーの場合はthrowして、エラーダイアログを表示するようにする
             logger.error("An error occurred while rendering a phrase.", error);
             continue;
           }
