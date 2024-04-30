@@ -49,6 +49,8 @@ const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 const currentVersion = ref("");
 
+const audioKeys = computed(() => store.state.audioKeys);
+
 // デフォルトエンジンの代替先ポート
 const defaultEngineAltPortTo = computed<number | undefined>(() => {
   const altPortInfos = store.state.altPortInfos;
@@ -316,7 +318,7 @@ const menudata = computed<MenuItemData[]>(() => [
       },
       {
         type: "button",
-        label: "プロジェクト読み込み",
+        label: "プロジェクトを読み込む",
         onClick: () => {
           importProject();
         },
@@ -358,6 +360,18 @@ const menudata = computed<MenuItemData[]>(() => [
           }
         },
         disabled: !canRedo.value,
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "全セルを選択",
+        onClick: async () => {
+          if (!uiLocked.value) {
+            await store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+              audioKeys: audioKeys.value,
+            });
+          }
+        },
         disableWhenUiLocked: true,
       },
       ...props.editSubMenuData,
@@ -506,7 +520,7 @@ registerHotkeyForAllEditors({
 });
 registerHotkeyForAllEditors({
   callback: importProject,
-  name: "プロジェクト読み込み",
+  name: "プロジェクトを読み込む",
 });
 </script>
 
