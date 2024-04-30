@@ -1,10 +1,6 @@
 import { toRaw } from "vue";
-import { enablePatches, enableMapSet, Immer } from "immer";
-// immerの内部関数であるgetPlugin("Patches").applyPatches_はexportされていないので
-// ビルド前のsrcからソースコードを読み込んで使う必要がある
-import { enablePatches as enablePatchesImpl } from "immer/src/plugins/patches";
-import { enableMapSet as enableMapSetImpl } from "immer/src/plugins/mapset";
-import { getPlugin } from "immer/src/utils/plugins";
+import { enablePatches, enableMapSet, Patch, Immer } from "immer";
+import { applyPatch, Operation } from "rfc6902";
 
 import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
 import {
@@ -15,14 +11,8 @@ import {
 } from "@/store/vuex";
 import { EditorType } from "@/type/preload";
 
-// ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
-// enable * も両方叩く必要がある。
 enablePatches();
 enableMapSet();
-enablePatchesImpl();
-enableMapSetImpl();
-// immerのPatchをmutableに適応する内部関数
-const applyPatchesImpl = getPlugin("Patches").applyPatches_;
 
 const immer = new Immer();
 immer.setAutoFreeze(false);
@@ -59,17 +49,23 @@ export const createCommandMutation =
     editor: EditorType,
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
-    const command = recordPatches(payloadRecipe)(state, payload);
-    applyPatchesImpl(state, command.redoPatches);
+    const command = recordOperations(payloadRecipe)(state, payload);
+    applyPatch(state, command.redoOperations);
     state.undoCommands[editor].push(command);
     state.redoCommands[editor].splice(0);
   };
+
+const patchToOperation = (patch: Patch): Operation => ({
+  op: patch.op,
+  path: `/${patch.path.join("/")}`,
+  value: patch.value,
+});
 
 /**
  * @param recipe - 操作を記録したいレシピ関数
  * @returns Function - レシピの操作を与えられたstateとpayloadを用いて記録したコマンドを返す関数。
  */
-const recordPatches =
+const recordOperations =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
@@ -78,8 +74,8 @@ const recordPatches =
     );
     return {
       unixMillisec: new Date().getTime(),
-      redoPatches: doPatches,
-      undoPatches: undoPatches,
+      redoOperations: doPatches.map(patchToOperation),
+      undoOperations: undoPatches.map(patchToOperation),
     };
   };
 
@@ -112,7 +108,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       const command = state.undoCommands[editor].pop();
       if (command != null) {
         state.redoCommands[editor].push(command);
-        applyPatchesImpl(state, command.undoPatches);
+        applyPatch(state, command.undoOperations);
       }
     },
     action({ commit, dispatch }, { editor }: { editor: EditorType }) {
@@ -130,7 +126,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       const command = state.redoCommands[editor].pop();
       if (command != null) {
         state.undoCommands[editor].push(command);
-        applyPatchesImpl(state, command.redoPatches);
+        applyPatch(state, command.redoOperations);
       }
     },
     action({ commit, dispatch }, { editor }: { editor: EditorType }) {
