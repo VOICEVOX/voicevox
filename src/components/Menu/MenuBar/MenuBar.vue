@@ -539,7 +539,6 @@ registerHotkeyForAllEditors({
 .q-bar {
   min-height: vars.$menubar-height;
   -webkit-app-region: drag; // Electronのドラッグ領域
-
   :deep(.q-btn) {
     margin-left: 0;
     -webkit-app-region: no-drag; // Electronのドラッグ領域対象から外す
