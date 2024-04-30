@@ -60,9 +60,6 @@ const containers = new DefaultMap<TrackId, PIXI.Container>((trackId) => {
   if (stage == undefined) {
     throw new Error("stage is undefined.");
   }
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore TypeScript 5で修正される。
-  // ts-expect-errorは使うとtsserverが怒る（tsserverはTypeScript 5なのでunused判定になる）ので使わない
   stage.addChild(container);
 
   container.visible = trackId === selectedTrackId.value;
