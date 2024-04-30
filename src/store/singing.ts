@@ -1456,7 +1456,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseKey,
               phraseState: "COULD_NOT_RENDER",
             });
-            throw error;
+            // とりあえずエラーはロギングしてcontinueする
+            // NOTE: ほとんどは歌詞のエラー
+            // FIXME: 歌詞以外のエラーの場合はthrowするようにする
+            logger.error("An error occurred while rendering a phrase.", error);
+            continue;
           }
         }
       };
