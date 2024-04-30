@@ -1239,12 +1239,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           string,
           { trackId: TrackId; phrase: Phrase }
         >();
-        const trackRefs = state.tracks.map((value) =>
+        const tracks = state.tracks.map((value) =>
           structuredClone(toRaw(value)),
         );
         const editFrameRate = state.editFrameRate;
 
-        for (const trackRef of trackRefs) {
+        for (const trackRef of tracks) {
           const notes = trackRef.notes
             .map((value) => ({ ...value }))
             .filter((value) => !state.overlappingNoteIds.has(value.id));
@@ -1307,7 +1307,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // TODO: リファクタリングする
           const phrase = structuredClone(toRaw(existingPhrase));
 
-          const trackRef = trackRefs.find(
+          const trackRef = tracks.find(
             (track) => track.id === foundPhrase.trackId,
           );
 
@@ -1463,7 +1463,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const [trackId_, phraseKey] = trackIdAndPhraseKey.split(":");
           const trackId = TrackId(trackId_);
 
-          const trackRef = trackRefs.find((track) => track.id === trackId);
+          const trackRef = tracks.find((track) => track.id === trackId);
           if (trackRef == undefined) {
             logger.warn("Track not found.");
             continue;
