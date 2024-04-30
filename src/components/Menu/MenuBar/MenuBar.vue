@@ -34,7 +34,7 @@ import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -57,7 +57,7 @@ const defaultEngineAltPortTo = computed<number | undefined>(() => {
 
   // ref: https://github.com/VOICEVOX/voicevox/blob/32940eab36f4f729dd0390dca98f18656240d60d/src/views/EditorHome.vue#L522-L528
   const defaultEngineInfo = Object.values(store.state.engineInfos).find(
-    (engine) => engine.type === "default"
+    (engine) => engine.type === "default",
   );
   if (defaultEngineInfo == undefined) return undefined;
 
@@ -91,7 +91,7 @@ const titleText = computed(
     (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
     (defaultEngineAltPortTo.value != null
       ? ` - Port: ${defaultEngineAltPortTo.value}`
-      : "")
+      : ""),
 );
 const canUndo = computed(() => store.getters.CAN_UNDO(props.editor));
 const canRedo = computed(() => store.getters.CAN_REDO(props.editor));
@@ -156,7 +156,7 @@ const importProject = () => {
 const recentProjectsSubMenuData = ref<MenuItemData[]>([]);
 const updateRecentProjects = async () => {
   const recentlyUsedProjects = await store.dispatch(
-    "GET_RECENTLY_USED_PROJECTS"
+    "GET_RECENTLY_USED_PROJECTS",
   );
   recentProjectsSubMenuData.value =
     recentlyUsedProjects.length === 0
@@ -237,7 +237,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
                 disableWhenUiLocked: false,
               },
             ].filter((x) => x),
-          }) as MenuItemRoot
+          }) as MenuItemRoot,
       ),
       {
         type: "separator",
@@ -472,7 +472,7 @@ const menudata = computed<MenuItemData[]>(() => [
 ]);
 
 const subMenuOpenFlags = ref(
-  [...Array(menudata.value.length)].map(() => false)
+  [...Array(menudata.value.length)].map(() => false),
 );
 
 const reassignSubMenuOpen = (idx: number) => {
@@ -491,23 +491,34 @@ watch(uiLocked, () => {
   }
 });
 
-registerHotkeyWithCleanup({
-  editor: props.editor,
+/**
+ * 全エディタに対してホットキーを登録する
+ * FIXME: hotkeyPlugin側で全エディタに対して登録できるようにする
+ */
+function registerHotkeyForAllEditors(action: Omit<HotkeyAction, "editor">) {
+  registerHotkeyWithCleanup({
+    editor: "talk",
+    ...action,
+  });
+  registerHotkeyWithCleanup({
+    editor: "song",
+    ...action,
+  });
+}
+
+registerHotkeyForAllEditors({
   callback: createNewProject,
   name: "新規プロジェクト",
 });
-registerHotkeyWithCleanup({
-  editor: props.editor,
+registerHotkeyForAllEditors({
   callback: saveProject,
   name: "プロジェクトを上書き保存",
 });
-registerHotkeyWithCleanup({
-  editor: props.editor,
+registerHotkeyForAllEditors({
   callback: saveProjectAs,
   name: "プロジェクトを名前を付けて保存",
 });
-registerHotkeyWithCleanup({
-  editor: props.editor,
+registerHotkeyForAllEditors({
   callback: importProject,
   name: "プロジェクトを読み込む",
 });
@@ -528,6 +539,7 @@ registerHotkeyWithCleanup({
 .q-bar {
   min-height: vars.$menubar-height;
   -webkit-app-region: drag; // Electronのドラッグ領域
+
   :deep(.q-btn) {
     margin-left: 0;
     -webkit-app-region: no-drag; // Electronのドラッグ領域対象から外す

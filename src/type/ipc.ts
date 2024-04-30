@@ -115,7 +115,7 @@ export type IpcIHData = {
         type: "none" | "info" | "error" | "question" | "warning";
         title: string;
         message: string;
-      }
+      },
     ];
     return: MessageBoxReturnValue;
   };
@@ -129,7 +129,7 @@ export type IpcIHData = {
         buttons: string[];
         cancelId?: number;
         defaultId?: number;
-      }
+      },
     ];
     return: number;
   };
@@ -139,7 +139,7 @@ export type IpcIHData = {
       obj: {
         title: string;
         message: string;
-      }
+      },
     ];
     return: MessageBoxReturnValue;
   };
@@ -149,7 +149,7 @@ export type IpcIHData = {
       obj: {
         title: string;
         message: string;
-      }
+      },
     ];
     return: MessageBoxReturnValue;
   };
@@ -354,7 +354,7 @@ export type IpcSOData = {
       obj: {
         closeOrReload: "close" | "reload";
         isMultiEngineOffMode?: boolean;
-      }
+      },
     ];
     return: void;
   };

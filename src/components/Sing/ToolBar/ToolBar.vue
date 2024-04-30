@@ -93,6 +93,11 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
+      <EditTargetSwicher
+        v-if="showEditTargetSwitchButton"
+        :edit-target="editTarget"
+        :change-edit-target="changeEditTarget"
+      />
       <QBtn
         flat
         dense
@@ -133,6 +138,7 @@
 
 <script setup lang="ts">
 import { computed, watch, ref, onMounted, onUnmounted } from "vue";
+import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
 
 import {
@@ -146,6 +152,7 @@ import {
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { SequencerEditTarget } from "@/store/type";
 
 const store = useStore();
 
@@ -193,13 +200,23 @@ const redo = () => {
   store.dispatch("REDO", { editor });
 };
 
+const showEditTargetSwitchButton = computed(() => {
+  return store.state.experimentalSetting.enablePitchEditInSongEditor;
+});
+
+const editTarget = computed(() => store.state.sequencerEditTarget);
+
+const changeEditTarget = (editTarget: SequencerEditTarget) => {
+  store.dispatch("SET_EDIT_TARGET", { editTarget });
+};
+
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const keyRangeAdjustment = computed(
-  () => store.getters.SELECTED_TRACK.keyRangeAdjustment
+  () => store.getters.SELECTED_TRACK.keyRangeAdjustment,
 );
 const volumeRangeAdjustment = computed(
-  () => store.getters.SELECTED_TRACK.volumeRangeAdjustment
+  () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
 
 const bpmInputBuffer = ref(120);
@@ -213,7 +230,7 @@ watch(
   () => {
     bpmInputBuffer.value = tempos.value[0].bpm;
   },
-  { deep: true, immediate: true }
+  { deep: true, immediate: true },
 );
 
 watch(
@@ -222,7 +239,7 @@ watch(
     beatsInputBuffer.value = timeSignatures.value[0].beats;
     beatTypeInputBuffer.value = timeSignatures.value[0].beatType;
   },
-  { deep: true, immediate: true }
+  { deep: true, immediate: true },
 );
 
 watch(
@@ -230,7 +247,7 @@ watch(
   () => {
     keyRangeAdjustmentInputBuffer.value = keyRangeAdjustment.value;
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -238,7 +255,7 @@ watch(
   () => {
     volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustment.value;
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const setBpmInputBuffer = (bpmStr: string | number | null) => {
@@ -266,7 +283,7 @@ const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
 };
 
 const setKeyRangeAdjustmentInputBuffer = (
-  KeyRangeAdjustmentStr: string | number | null
+  KeyRangeAdjustmentStr: string | number | null,
 ) => {
   const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
   if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
@@ -276,7 +293,7 @@ const setKeyRangeAdjustmentInputBuffer = (
 };
 
 const setVolumeRangeAdjustmentInputBuffer = (
-  volumeRangeAdjustmentStr: string | number | null
+  volumeRangeAdjustmentStr: string | number | null,
 ) => {
   const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
   if (!isValidvolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
@@ -418,8 +435,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-input {
   :deep(.q-field__control::before) {

@@ -79,8 +79,8 @@ export const api: Sandbox = {
         reject(
           // storeやvue componentからdefaultPathを設定していなかったらrejectされる
           new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。"
-          )
+            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
+          ),
         );
       } else {
         resolve(obj.defaultPath);
@@ -93,8 +93,8 @@ export const api: Sandbox = {
         reject(
           // storeやvue componentからdefaultPathを設定していなかったらrejectされる
           new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。"
-          )
+            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
+          ),
         );
       } else {
         resolve(obj.defaultPath);
@@ -107,7 +107,7 @@ export const api: Sandbox = {
   showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
     // NOTE: 今後接続先を変える手段としてVvppが使われるかもしれないので、そのタイミングで実装する
     throw new Error(
-      `not implemented: showVvppOpenDialog, request: ${JSON.stringify(obj)}`
+      `not implemented: showVvppOpenDialog, request: ${JSON.stringify(obj)}`,
     );
   },
   showOpenDirectoryDialog(obj: { title: string }) {
@@ -119,8 +119,8 @@ export const api: Sandbox = {
         reject(
           // storeやvue componentからdefaultPathを設定していなかったらrejectされる
           new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。"
-          )
+            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
+          ),
         );
       } else {
         resolve(obj.defaultPath);
@@ -129,7 +129,7 @@ export const api: Sandbox = {
   },
   showProjectLoadDialog(/* obj: { title: string } */) {
     throw new Error(
-      "ブラウザ版では現在ファイルの読み込みをサポートしていません"
+      "ブラウザ版では現在ファイルの読み込みをサポートしていません",
     );
   },
   showMessageDialog(obj: {
@@ -153,12 +153,12 @@ export const api: Sandbox = {
     // FIXME
     // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
     throw new Error(
-      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`
+      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
     );
   },
   showImportFileDialog(/* obj: { title: string } */) {
     throw new Error(
-      "ブラウザ版では現在ファイルの読み込みをサポートしていません"
+      "ブラウザ版では現在ファイルの読み込みをサポートしていません",
     );
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
@@ -166,7 +166,7 @@ export const api: Sandbox = {
   },
   readFile(/* obj: { filePath: string } */) {
     throw new Error(
-      "ブラウザ版では現在ファイルの読み込みをサポートしていません"
+      "ブラウザ版では現在ファイルの読み込みをサポートしていません",
     );
   },
   isAvailableGPUMode() {
@@ -180,7 +180,7 @@ export const api: Sandbox = {
   },
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
-    listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void
+    listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void,
   ) {
     window.addEventListener("message", (event) => {
       if (event.data.channel == channel) {
@@ -225,14 +225,14 @@ export const api: Sandbox = {
   },
   async hotkeySettings(newData?: HotkeySettingType) {
     type HotkeySettingType = ReturnType<
-      typeof configSchema["parse"]
+      (typeof configSchema)["parse"]
     >["hotkeySettings"];
     if (newData != undefined) {
       const hotkeySettings = (await this.getSetting(
-        "hotkeySettings"
+        "hotkeySettings",
       )) as HotkeySettingType;
       const hotkeySetting = hotkeySettings.find(
-        (hotkey) => hotkey.action == newData.action
+        (hotkey) => hotkey.action == newData.action,
       );
       if (hotkeySetting != undefined) {
         hotkeySetting.combination = newData.combination;
@@ -267,8 +267,8 @@ export const api: Sandbox = {
     return Promise.all(
       // FIXME: themeファイルのいい感じのパスの設定
       ["/themes/default.json", "/themes/dark.json"].map((url) =>
-        fetch(url).then((res) => res.json())
-      )
+        fetch(url).then((res) => res.json()),
+      ),
     )
       .then((v) => ({
         currentTheme: "Default",
@@ -280,8 +280,8 @@ export const api: Sandbox = {
             ({
               ...v,
               currentTheme,
-            } as { currentTheme: string; availableThemes: ThemeConf[] })
-        )
+            }) as { currentTheme: string; availableThemes: ThemeConf[] },
+        ),
       );
   },
   vuexReady() {
@@ -299,7 +299,7 @@ export const api: Sandbox = {
   },
   async setEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
     const engineSettings = (await this.getSetting(
-      "engineSettings"
+      "engineSettings",
     )) as EngineSettings;
     engineSettings[engineId] = engineSetting;
     await this.setSetting("engineSettings", engineSettings);

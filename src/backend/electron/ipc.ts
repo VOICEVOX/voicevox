@@ -7,11 +7,11 @@ export function ipcMainHandle<T extends keyof IpcIHData>(
   listener: (
     event: IpcMainInvokeEvent,
     ...args: IpcIHData[T]["args"]
-  ) => IpcIHData[T]["return"] | Promise<IpcIHData[T]["return"]>
+  ) => IpcIHData[T]["return"] | Promise<IpcIHData[T]["return"]>,
 ): void;
 export function ipcMainHandle(
   channel: string,
-  listener: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown
+  listener: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown,
 ): void {
   const errorHandledListener = (
     event: IpcMainInvokeEvent,

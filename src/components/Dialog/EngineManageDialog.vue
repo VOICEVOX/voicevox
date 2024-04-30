@@ -55,7 +55,7 @@
             <QList class="engine-list">
               <template
                 v-for="([type, engineIds], i) in Object.entries(
-                  categorizedEngineIds
+                  categorizedEngineIds,
                 )"
                 :key="`engine-list-${i}`"
               >
@@ -151,7 +151,7 @@
                     {{
                       newEngineDirValidationState
                         ? getEngineDirValidationMessage(
-                            newEngineDirValidationState
+                            newEngineDirValidationState,
                           )
                         : undefined
                     }}
@@ -192,7 +192,7 @@
                     {{
                       newEngineDirValidationState
                         ? getEngineDirValidationMessage(
-                            newEngineDirValidationState
+                            newEngineDirValidationState,
                           )
                         : undefined
                     }}
@@ -354,14 +354,12 @@ import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 
 type EngineLoaderType = "dir" | "vvpp";
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -376,7 +374,7 @@ const engineLoaderType = ref<EngineLoaderType>("vvpp");
 
 const lockUi = function <T>(
   lockType: "addingEngine" | "deletingEngine",
-  action: Promise<T>
+  action: Promise<T>,
 ): Promise<T> {
   uiLockedState.value = lockType;
   return action.finally(() => {
@@ -395,7 +393,7 @@ const categorizedEngineIds = computed(() => {
       .map((info) => info.uuid),
   };
   return Object.fromEntries(
-    Object.entries(result).filter(([, ids]) => ids.length > 0)
+    Object.entries(result).filter(([, ids]) => ids.length > 0),
   );
 });
 const engineInfos = computed(() => store.state.engineInfos);
@@ -406,8 +404,8 @@ const engineIcons = computed(() =>
     Object.entries(store.state.engineManifests).map(([id, manifest]) => [
       id,
       base64ImageToUri(manifest.icon),
-    ])
-  )
+    ]),
+  ),
 );
 const engineVersions = ref<Record<EngineId, string>>({});
 
@@ -437,7 +435,7 @@ watch(
       };
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const selectedId = ref<EngineId | undefined>(undefined);
@@ -498,20 +496,20 @@ const addEngine = async () => {
         "addingEngine",
         store.dispatch("ADD_ENGINE_DIR", {
           engineDir: newEngineDir.value,
-        })
+        }),
       );
 
       requireReload(
-        "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
+        "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
       );
     } else {
       const success = await lockUi(
         "addingEngine",
-        store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
+        store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value),
       );
       if (success) {
         requireReload(
-          "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
+          "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
         );
       }
     }
@@ -535,21 +533,21 @@ const deleteEngine = async () => {
           "deletingEngine",
           store.dispatch("REMOVE_ENGINE_DIR", {
             engineDir,
-          })
+          }),
         );
         requireReload(
-          "エンジンを削除しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？"
+          "エンジンを削除しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
         );
         break;
       }
       case "vvpp": {
         const success = await lockUi(
           "deletingEngine",
-          store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value)
+          store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value),
         );
         if (success) {
           requireReload(
-            "エンジンの削除には再読み込みが必要です。今すぐ再読み込みしますか？"
+            "エンジンの削除には再読み込みが必要です。今すぐ再読み込みしますか？",
           );
         }
         break;
@@ -609,7 +607,7 @@ const selectEngineDir = async () => {
       "VALIDATE_ENGINE_DIR",
       {
         engineDir: path,
-      }
+      },
     );
   }
 };
@@ -660,8 +658,8 @@ const toDialogClosedState = () => {
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/colors' as colors;
-@use '@/styles/variables' as vars;
+@use "@/styles/colors" as colors;
+@use "@/styles/variables" as vars;
 
 .engine-list-col {
   border-right: solid 1px colors.$surface;

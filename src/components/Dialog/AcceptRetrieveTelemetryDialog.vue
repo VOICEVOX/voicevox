@@ -69,14 +69,12 @@ import { computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", value: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", value: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -97,7 +95,7 @@ const md = useMarkdownIt();
 const privacyPolicy = ref("");
 onMounted(async () => {
   privacyPolicy.value = md.render(
-    await store.dispatch("GET_PRIVACY_POLICY_TEXT")
+    await store.dispatch("GET_PRIVACY_POLICY_TEXT"),
   );
 });
 </script>

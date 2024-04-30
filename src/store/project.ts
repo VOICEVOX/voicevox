@@ -1,5 +1,4 @@
 import semver from "semver";
-import { z } from "zod";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
 import { generateSingingStoreInitialScore } from "./singing";
@@ -9,20 +8,10 @@ import {
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
-  tempoSchema,
-  timeSignatureSchema,
-  trackSchema,
 } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
-import {
-  audioKeySchema,
-  EngineId,
-  engineIdSchema,
-  presetKeySchema,
-  speakerIdSchema,
-  styleIdSchema,
-} from "@/type/preload";
+import { EngineId } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import {
   DEFAULT_BEAT_TYPE,
@@ -30,6 +19,7 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
+import { LatestProjectType, projectSchema } from "@/domain/project/schema";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -40,16 +30,16 @@ export const projectStoreState: ProjectStoreState = {
 const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
-      (audioKey) => audioKey in talkProject.audioItems
+      (audioKey) => audioKey in talkProject.audioItems,
     )
   ) {
     throw new Error(
-      "Every audioKey in audioKeys should be a key of audioItems"
+      "Every audioKey in audioKeys should be a key of audioItems",
     );
   }
   if (
     !talkProject.audioKeys.every(
-      (audioKey) => talkProject.audioItems[audioKey]?.voice != undefined
+      (audioKey) => talkProject.audioItems[audioKey]?.voice != undefined,
     )
   ) {
     throw new Error('Every audioItem should have a "voice" attribute.');
@@ -57,7 +47,7 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
       (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.engineId != undefined
+        talkProject.audioItems[audioKey]?.voice.engineId != undefined,
     )
   ) {
     throw new Error('Every voice should have a "engineId" attribute.');
@@ -66,14 +56,15 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
       (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.speakerId != undefined
+        talkProject.audioItems[audioKey]?.voice.speakerId != undefined,
     )
   ) {
     throw new Error('Every voice should have a "speakerId" attribute.');
   }
   if (
     !talkProject.audioKeys.every(
-      (audioKey) => talkProject.audioItems[audioKey]?.voice.styleId != undefined
+      (audioKey) =>
+        talkProject.audioItems[audioKey]?.voice.styleId != undefined,
     )
   ) {
     throw new Error('Every voice should have a "styleId" attribute.');
@@ -82,7 +73,7 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
 
 const applyTalkProjectToStore = async (
   dispatch: Dispatch<AllActions>,
-  talkProject: LatestProjectType["talk"]
+  talkProject: LatestProjectType["talk"],
 ) => {
   await dispatch("REMOVE_ALL_AUDIO_ITEM");
 
@@ -104,7 +95,7 @@ const applyTalkProjectToStore = async (
 
 const applySongProjectToStore = async (
   dispatch: Dispatch<AllActions>,
-  songProject: LatestProjectType["song"]
+  songProject: LatestProjectType["song"],
 ) => {
   const { tpqn, tempos, timeSignatures, tracks } = songProject;
   // TODO: マルチトラック対応
@@ -124,6 +115,11 @@ const applySongProjectToStore = async (
       timeSignatures,
       notes: tracks[0].notes,
     },
+  });
+  await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+  await dispatch("SET_PITCH_EDIT_DATA", {
+    data: tracks[0].pitchEditData,
+    startFrame: 0,
   });
 };
 
@@ -148,7 +144,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         if (confirm !== false && context.getters.IS_EDITED) {
           const result = await context.dispatch(
             "SAVE_OR_DISCARD_PROJECT_FILE",
-            {}
+            {},
           );
           if (result == "canceled") {
             return;
@@ -160,7 +156,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         const audioItem: AudioItem = await context.dispatch(
           "GENERATE_AUDIO_ITEM",
-          {}
+          {},
         );
         await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
@@ -177,11 +173,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             notes: tracks[0].notes,
           },
         });
+        await context.dispatch("SET_SINGER", { withRelated: true });
+        await context.dispatch("CLEAR_PITCH_EDIT_DATA");
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         context.commit("CLEAR_COMMANDS");
-      }
+      },
     ),
   },
 
@@ -193,7 +191,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     action: createUILockAction(
       async (
         context,
-        { filePath, confirm }: { filePath?: string; confirm?: boolean }
+        { filePath, confirm }: { filePath?: string; confirm?: boolean },
       ) => {
         if (!filePath) {
           // Select and load a project File.
@@ -229,14 +227,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           ) {
             throw new Error(
               projectFileErrorMsg +
-                " The appVersion of the project file should be string"
+                " The appVersion of the project file should be string",
             );
           }
           const projectAppVersion: string = projectData.appVersion;
           if (!semver.valid(projectAppVersion)) {
             throw new Error(
               projectFileErrorMsg +
-                ` The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`
+                ` The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`,
             );
           }
 
@@ -260,12 +258,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             for (const audioItemsKey in projectData.audioItems) {
               if (projectData.audioItems[audioItemsKey].query != null) {
                 projectData.audioItems[audioItemsKey].query.volumeScale = 1;
-                projectData.audioItems[
-                  audioItemsKey
-                ].query.prePhonemeLength = 0.1;
-                projectData.audioItems[
-                  audioItemsKey
-                ].query.postPhonemeLength = 0.1;
+                projectData.audioItems[audioItemsKey].query.prePhonemeLength =
+                  0.1;
+                projectData.audioItems[audioItemsKey].query.postPhonemeLength =
+                  0.1;
                 projectData.audioItems[audioItemsKey].query.outputSamplingRate =
                   DEFAULT_SAMPLING_RATE;
               }
@@ -379,12 +375,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                   characterInfo.metas.styles.some(
                     (styeleinfo) =>
                       styeleinfo.engineId === audioItem.engineId &&
-                      styeleinfo.styleId === audioItem.styleId
-                  )
+                      styeleinfo.styleId === audioItem.styleId,
+                  ),
                 );
                 if (chracterinfo == undefined)
                   throw new Error(
-                    `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`
+                    `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`,
                   );
                 const speakerId = chracterinfo.metas.speakerUuid;
                 audioItem.voice = {
@@ -444,12 +440,25 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             semver.satisfies(
               projectAppVersion,
               "<0.17.1",
-              semverSatisfiesOptions
+              semverSatisfiesOptions,
             )
           ) {
-            // volumeRangeAdjustmentの追加
+            // 声量調整値の追加
             for (const track of projectData.song.tracks) {
               track.volumeRangeAdjustment = 0;
+            }
+          }
+
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.19.0",
+              semverSatisfiesOptions,
+            )
+          ) {
+            // ピッチ編集値の追加
+            for (const track of projectData.song.tracks) {
+              track.pitchEditData = [];
             }
           }
 
@@ -465,7 +474,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               {
                 additionalMessage:
                   "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
-              }
+              },
             );
             if (result == "canceled") {
               return false;
@@ -474,11 +483,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
           await applyTalkProjectToStore(
             context.dispatch,
-            parsedProjectData.talk
+            parsedProjectData.talk,
           );
           await applySongProjectToStore(
             context.dispatch,
-            parsedProjectData.song
+            parsedProjectData.song,
           );
 
           context.commit("SET_PROJECT_FILEPATH", { filePath });
@@ -503,7 +512,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           });
           return false;
         }
-      }
+      },
     ),
   },
 
@@ -575,7 +584,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           };
 
           const buf = new TextEncoder().encode(
-            JSON.stringify(projectData)
+            JSON.stringify(projectData),
           ).buffer;
           await window.backend
             .writeFile({
@@ -586,7 +595,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit(
             "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
-            context.getters.LAST_COMMAND_UNIX_MILLISEC
+            context.getters.LAST_COMMAND_UNIX_MILLISEC,
           );
           return true;
         } catch (err) {
@@ -603,7 +612,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           });
           return false;
         }
-      }
+      },
     ),
   },
 
@@ -656,69 +665,3 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     },
   },
 });
-
-const moraSchema = z.object({
-  text: z.string(),
-  vowel: z.string(),
-  vowelLength: z.number(),
-  pitch: z.number(),
-  consonant: z.string().optional(),
-  consonantLength: z.number().optional(),
-});
-
-const accentPhraseSchema = z.object({
-  moras: z.array(moraSchema),
-  accent: z.number(),
-  pauseMora: moraSchema.optional(),
-  isInterrogative: z.boolean().optional(),
-});
-
-const audioQuerySchema = z.object({
-  accentPhrases: z.array(accentPhraseSchema),
-  speedScale: z.number(),
-  pitchScale: z.number(),
-  intonationScale: z.number(),
-  volumeScale: z.number(),
-  prePhonemeLength: z.number(),
-  postPhonemeLength: z.number(),
-  outputSamplingRate: z.union([z.number(), z.literal("engineDefault")]),
-  outputStereo: z.boolean(),
-  kana: z.string().optional(),
-});
-
-const morphingInfoSchema = z.object({
-  rate: z.number(),
-  targetEngineId: engineIdSchema,
-  targetSpeakerId: speakerIdSchema,
-  targetStyleId: styleIdSchema,
-});
-
-const audioItemSchema = z.object({
-  text: z.string(),
-  voice: z.object({
-    engineId: engineIdSchema,
-    speakerId: speakerIdSchema,
-    styleId: styleIdSchema,
-  }),
-  query: audioQuerySchema.optional(),
-  presetKey: presetKeySchema.optional(),
-  morphingInfo: morphingInfoSchema.optional(),
-});
-
-const projectSchema = z.object({
-  appVersion: z.string(),
-  talk: z.object({
-    // description: "Attribute keys of audioItems.",
-    audioKeys: z.array(audioKeySchema),
-    // description: "VOICEVOX states per cell",
-    audioItems: z.record(audioKeySchema, audioItemSchema),
-  }),
-  song: z.object({
-    tpqn: z.number(),
-    tempos: z.array(tempoSchema),
-    timeSignatures: z.array(timeSignatureSchema),
-    tracks: z.array(trackSchema),
-  }),
-});
-
-export type LatestProjectType = z.infer<typeof projectSchema>;
