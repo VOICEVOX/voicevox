@@ -2955,6 +2955,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.tracks = state.tracks.filter((track) => track.id !== trackId);
 
+      state.phrases.delete(trackId);
+
       state.overlappingNoteInfos.delete(trackId);
       channelStrips.delete(trackId);
     },
