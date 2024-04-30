@@ -187,7 +187,7 @@ registerHotkeyWithCleanup({
 });
 registerHotkeyWithCleanup({
   editor: "talk",
-  name: "テキスト読み込む",
+  name: "テキストを読み込む",
   callback: () => {
     if (!uiLocked.value) {
       store.dispatch("SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG");
