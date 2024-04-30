@@ -364,7 +364,7 @@ const menudata = computed<MenuItemData[]>(() => [
       },
       {
         type: "button",
-        label: "全セルを選択",
+        label: "すべて選択",
         onClick: async () => {
           if (!uiLocked.value) {
             await store.dispatch("SET_SELECTED_AUDIO_KEYS", {

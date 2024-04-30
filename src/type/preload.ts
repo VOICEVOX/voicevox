@@ -172,10 +172,6 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     action: "選択解除",
     combination: HotkeyCombination("Escape"),
   },
-  {
-    action: "全セルを選択",
-    combination: HotkeyCombination(!isMac ? "Ctrl Shift A" : "Meta Shift A"),
-  },
 ];
 
 export const defaultToolbarButtonSetting: ToolbarSettingType = [
@@ -462,7 +458,6 @@ export const hotkeyActionNameSchema = z.enum([
   "貼り付け",
   "すべて選択",
   "選択解除",
-  "全セルを選択",
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
