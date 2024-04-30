@@ -36,15 +36,14 @@ import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
-const props =
-  defineProps<{
-    /** 「ファイル」メニューのサブメニュー */
-    fileSubMenuData: MenuItemData[];
-    /** 「編集」メニューのサブメニュー */
-    editSubMenuData: MenuItemData[];
-    /** エディタの種類 */
-    editor: "talk" | "song";
-  }>();
+const props = defineProps<{
+  /** 「ファイル」メニューのサブメニュー */
+  fileSubMenuData: MenuItemData[];
+  /** 「編集」メニューのサブメニュー */
+  editSubMenuData: MenuItemData[];
+  /** エディタの種類 */
+  editor: "talk" | "song";
+}>();
 
 const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
@@ -238,7 +237,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
                 disableWhenUiLocked: false,
               },
             ].filter((x) => x),
-          } as MenuItemRoot)
+          }) as MenuItemRoot
       ),
       {
         type: "separator",
@@ -319,7 +318,7 @@ const menudata = computed<MenuItemData[]>(() => [
       },
       {
         type: "button",
-        label: "プロジェクトを読み込み",
+        label: "プロジェクトを読み込む",
         onClick: () => {
           importProject();
         },
@@ -510,12 +509,12 @@ registerHotkeyWithCleanup({
 registerHotkeyWithCleanup({
   editor: props.editor,
   callback: importProject,
-  name: "プロジェクトを読み込み",
+  name: "プロジェクトを読み込む",
 });
 </script>
 
 <style lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .active-menu {
   background-color: rgba(colors.$primary-rgb, 0.3) !important;
@@ -523,8 +522,8 @@ registerHotkeyWithCleanup({
 </style>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-bar {
   min-height: vars.$menubar-height;

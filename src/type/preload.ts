@@ -137,11 +137,11 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     combination: HotkeyCombination(!isMac ? "Ctrl S" : "Meta S"),
   },
   {
-    action: "プロジェクトを読み込み",
+    action: "プロジェクトを読み込む",
     combination: HotkeyCombination(!isMac ? "Ctrl O" : "Meta O"),
   },
   {
-    action: "テキストを読み込み",
+    action: "テキストを読み込む",
     combination: HotkeyCombination(""),
   },
   {
@@ -453,8 +453,8 @@ export const hotkeyActionNameSchema = z.enum([
   "新規プロジェクト",
   "プロジェクトを名前を付けて保存",
   "プロジェクトを上書き保存",
-  "プロジェクトを読み込み",
-  "テキストを読み込み",
+  "プロジェクトを読み込む",
+  "テキストを読み込む",
   "全体のイントネーションをリセット",
   "選択中のアクセント句のイントネーションをリセット",
   "コピー",

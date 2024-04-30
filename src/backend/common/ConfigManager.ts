@@ -138,9 +138,9 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     },
   ],
   [
-    ">=0.18",
+    ">=0.20",
     (config) => {
-      // プロジェクト読み込み → プロジェクトを読み込み
+      // プロジェクト読み込み → プロジェクトを読み込む
       const hotkeySettings =
         config.hotkeySettings as ConfigType["hotkeySettings"];
       const newHotkeySettings: ConfigType["hotkeySettings"] =
@@ -149,14 +149,14 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
           if (hotkeySetting.action === "プロジェクト読み込み") {
             return {
               ...hotkeySetting,
-              action: "プロジェクトを読み込み",
+              action: "プロジェクトを読み込む",
             };
           }
           /// @ts-expect-error 名前変更なので合わない。
           if (hotkeySetting.action === "テキスト読み込む") {
             return {
               ...hotkeySetting,
-              action: "テキストを読み込み",
+              action: "テキストを読み込む",
             };
           }
           return hotkeySetting;
