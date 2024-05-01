@@ -143,6 +143,7 @@ import {
   SplitterPositionType,
   Voice,
   HotkeyActionNameType,
+  actionPostfixSelectNthCharacter,
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
@@ -251,7 +252,7 @@ for (let i = 0; i < 10; i++) {
   registerHotkeyWithCleanup({
     editor: "talk",
     enableInTextbox: true,
-    name: `${i + 1}番目のキャラクターを選択` as HotkeyActionNameType,
+    name: `${i + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
     callback: () => {
       if (!uiLocked.value) {
         onCharacterSelectHotkey(i);

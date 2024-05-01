@@ -62,6 +62,9 @@ export type VoiceId = z.infer<typeof voiceIdSchema>;
 export const VoiceId = (voice: Voice): VoiceId =>
   voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
 
+// 共通のアクション名
+export const actionPostfixSelectNthCharacter = "番目のキャラクターを選択";
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySettingType[] = [
   {
@@ -175,10 +178,9 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
   ...Array.from({ length: 10 }, (_, index) => {
     const roleKey = index == 9 ? 0 : index + 1;
     return {
-      action: `${index + 1}番目のキャラクターを選択` as HotkeyActionNameType,
-      combination: HotkeyCombination(
-        !isMac ? "Ctrl " + roleKey : "Meta " + roleKey,
-      ),
+      action:
+        `${index + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
+      combination: HotkeyCombination((!isMac ? "Ctrl " : "Meta ") + roleKey),
     };
   }),
 ];
@@ -467,16 +469,16 @@ export const hotkeyActionNameSchema = z.enum([
   "貼り付け",
   "すべて選択",
   "選択解除",
-  "1番目のキャラクターを選択",
-  "2番目のキャラクターを選択",
-  "3番目のキャラクターを選択",
-  "4番目のキャラクターを選択",
-  "5番目のキャラクターを選択",
-  "6番目のキャラクターを選択",
-  "7番目のキャラクターを選択",
-  "8番目のキャラクターを選択",
-  "9番目のキャラクターを選択",
-  "10番目のキャラクターを選択",
+  `1${actionPostfixSelectNthCharacter}`,
+  `2${actionPostfixSelectNthCharacter}`,
+  `3${actionPostfixSelectNthCharacter}`,
+  `4${actionPostfixSelectNthCharacter}`,
+  `5${actionPostfixSelectNthCharacter}`,
+  `6${actionPostfixSelectNthCharacter}`,
+  `7${actionPostfixSelectNthCharacter}`,
+  `8${actionPostfixSelectNthCharacter}`,
+  `9${actionPostfixSelectNthCharacter}`,
+  `10${actionPostfixSelectNthCharacter}`,
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;

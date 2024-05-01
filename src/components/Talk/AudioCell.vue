@@ -497,26 +497,26 @@ const removeCell = async () => {
 
 // N番目のキャラクターを選ぶ
 const selectCharacterAt = (index: number) => {
-  if (userOrderedCharacterInfos.value.length >= index + 1) {
-    const speakerUuid =
-      userOrderedCharacterInfos.value[index].metas.speakerUuid;
-    const style = getDefaultStyle(
-      speakerUuid,
-      userOrderedCharacterInfos.value,
-      store.state.defaultStyleIds,
-    );
-    const voice = {
-      engineId: style.engineId,
-      speakerId: speakerUuid,
-      styleId: style.styleId,
-    };
-    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
-      audioKeys: isMultiSelectEnabled.value
-        ? store.getters.SELECTED_AUDIO_KEYS
-        : [props.audioKey],
-      voice,
-    });
+  if (userOrderedCharacterInfos.value.length < index + 1) {
+    return;
   }
+  const speakerUuid = userOrderedCharacterInfos.value[index].metas.speakerUuid;
+  const style = getDefaultStyle(
+    speakerUuid,
+    userOrderedCharacterInfos.value,
+    store.state.defaultStyleIds,
+  );
+  const voice = {
+    engineId: style.engineId,
+    speakerId: speakerUuid,
+    styleId: style.styleId,
+  };
+  store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+    audioKeys: isMultiSelectEnabled.value
+      ? store.getters.SELECTED_AUDIO_KEYS
+      : [props.audioKey],
+    voice,
+  });
 };
 
 // 削除ボタンの有効／無効判定
