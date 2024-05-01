@@ -7,7 +7,9 @@ $primitive-red: #d04756;
 
 // ライトテーマの色
 :root[is-dark-theme="false"] {
-  --newcolor-background: #{lighten($primitive-primary, 20%)};
+  --newcolor-background: #{$primitive-white};
+  --newcolor-background-drawer: #{rgba(lighten($primitive-primary, 20%), 0.75)};
+
   --newcolor-surface: #{lighten($primitive-primary, 25%)};
   --newcolor-border: #{rgba($primitive-black, 0.2)};
   --newcolor-selected: #{rgba($primitive-primary, 0.3)};
@@ -42,6 +44,8 @@ $primitive-red: #d04756;
 // ダークテーマの色
 :root[is-dark-theme="true"] {
   --newcolor-background: #{$primitive-black};
+  --newcolor-background-drawer: #{rgba($primitive-black, 0.75)};
+
   --newcolor-surface: #{lighten($primitive-black, 3%)};
   --newcolor-border: #{rgba($primitive-white, 0.2)};
   --newcolor-selected: #{rgba($primitive-primary, 0.3)};
@@ -74,6 +78,8 @@ $primitive-red: #d04756;
 }
 
 $background: var(--newcolor-background);
+$background-drawer: var(--newcolor-background-drawer);
+
 $surface: var(--newcolor-surface);
 $border: var(--newcolor-border);
 $selected: var(--newcolor-selected);
