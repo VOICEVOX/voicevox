@@ -42,6 +42,7 @@ defineEmits<{
   padding: vars.$padding-2;
   gap: vars.$gap-2;
   transition: background-color vars.$transition-duration;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .clickable:not(:disabled) {
