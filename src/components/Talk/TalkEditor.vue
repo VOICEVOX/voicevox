@@ -187,7 +187,7 @@ registerHotkeyWithCleanup({
 });
 registerHotkeyWithCleanup({
   editor: "talk",
-  name: "テキスト読み込む",
+  name: "テキストを読み込む",
   callback: () => {
     if (!uiLocked.value) {
       store.dispatch("SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG");
@@ -243,6 +243,18 @@ registerHotkeyWithCleanup({
       if (document.activeElement instanceof HTMLInputElement) {
         document.activeElement.blur();
       }
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: false,
+  name: "全セルを選択",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+        audioKeys: audioKeys.value,
+      });
     }
   },
 });

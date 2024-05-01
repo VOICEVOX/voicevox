@@ -137,11 +137,11 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     combination: HotkeyCombination(!isMac ? "Ctrl S" : "Meta S"),
   },
   {
-    action: "プロジェクト読み込み",
+    action: "プロジェクトを読み込む",
     combination: HotkeyCombination(!isMac ? "Ctrl O" : "Meta O"),
   },
   {
-    action: "テキスト読み込む",
+    action: "テキストを読み込む",
     combination: HotkeyCombination(""),
   },
   {
@@ -171,6 +171,10 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
   {
     action: "選択解除",
     combination: HotkeyCombination("Escape"),
+  },
+  {
+    action: "全セルを選択",
+    combination: HotkeyCombination(!isMac ? "Ctrl Shift A" : "Meta Shift A"),
   },
 ];
 
@@ -449,8 +453,8 @@ export const hotkeyActionNameSchema = z.enum([
   "新規プロジェクト",
   "プロジェクトを名前を付けて保存",
   "プロジェクトを上書き保存",
-  "プロジェクト読み込み",
-  "テキスト読み込む",
+  "プロジェクトを読み込む",
+  "テキストを読み込む",
   "全体のイントネーションをリセット",
   "選択中のアクセント句のイントネーションをリセット",
   "コピー",
@@ -458,6 +462,7 @@ export const hotkeyActionNameSchema = z.enum([
   "貼り付け",
   "すべて選択",
   "選択解除",
+  "全セルを選択",
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
