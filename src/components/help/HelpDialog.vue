@@ -277,15 +277,7 @@ const openLogDirectory = window.electron.openLogDirectory;
   display: grid;
   grid-template-columns: auto 1fr;
   backdrop-filter: blur(32px);
-
-  &::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background-color: colors.$background;
-    opacity: 0.75;
-    z-index: -1;
-  }
+  background-color: colors.$background-drawer;
 }
 
 // TODO: MenuBar+Header分のマージン。Dialogコンポーネント置き換え後削除
