@@ -1962,7 +1962,6 @@ export type ProxyStoreTypes = {
 export type State = AudioStoreState &
   AudioPlayerStoreState &
   AudioCommandStoreState &
-  SingingStoreState &
   CommandStoreState &
   EngineStoreState &
   IndexStoreState &
