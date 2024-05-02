@@ -45,7 +45,7 @@ export const useMenuBarData = () => {
     },
     {
       type: "button",
-      label: "トラック毎に音声を出力",
+      label: "トラックごとに音声を出力",
       onClick: () => {
         exportWaveFileParaout();
       },
