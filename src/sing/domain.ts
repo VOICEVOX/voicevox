@@ -442,7 +442,7 @@ export const calcRenderDuration = (
   const lastNoteEndTimes = tracks.map((track) => {
     const notes = track.notes;
     if (notes.length === 0) {
-      return 1;
+      return 0;
     }
     const lastNote = notes[notes.length - 1];
     const lastNoteEndPosition = lastNote.position + lastNote.duration;
@@ -450,7 +450,7 @@ export const calcRenderDuration = (
 
     return lastNoteEndTime;
   });
-  return Math.max(1, Math.max(...lastNoteEndTimes) + 1);
+  return Math.max(...lastNoteEndTimes) + 1;
 };
 
 export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
