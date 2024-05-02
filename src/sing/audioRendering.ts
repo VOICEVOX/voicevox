@@ -881,7 +881,7 @@ export class ChannelStrip {
   private readonly gainNode: GainNode;
   private readonly panNode: StereoPannerNode;
   private readonly muteNode: GainNode;
-  private readonly isMute = false;
+  private isMute = false;
 
   get input(): AudioNode {
     return this.gainNode;
