@@ -10,6 +10,8 @@ import {
   HotkeySettingType,
   ExperimentalSettingType,
   HotkeyCombination,
+  VoiceId,
+  PresetKey,
 } from "@/type/preload";
 
 const lockKey = "save";
@@ -182,6 +184,39 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       config.hotkeySettings = newHotkeySettings;
 
       return config;
+    },
+  ],
+  [
+    ">=999.999.999",
+    (config) => {
+      const defaultPresetKeys =
+        config.defaultPresetKeys as ConfigType["defaultPresetKeys"];
+      const filteredVoiceIdOnlySinger = Object.keys(defaultPresetKeys).filter(
+        (voiceId) => {
+          const splited = voiceId.split(":");
+          if (splited.length < 3) return false;
+
+          const styleId = parseInt(splited[2]);
+          return (styleId >= 3000 && styleId <= 3085) || styleId === 6000;
+        },
+      );
+
+      const presets = config.presets as ConfigType["presets"];
+      const singerPresetsKeys: string[] = [];
+      for (const voiceId of filteredVoiceIdOnlySinger) {
+        const defaultPresetKey = defaultPresetKeys[
+          voiceId as VoiceId
+        ] as PresetKey;
+        singerPresetsKeys.push(defaultPresetKey);
+        delete presets.items[defaultPresetKey];
+        delete defaultPresetKeys[voiceId as VoiceId];
+      }
+
+      if (singerPresetsKeys.length === 0) return;
+      const newPresetsKeys = presets.keys.filter(
+        (key) => !singerPresetsKeys.includes(key),
+      );
+      presets.keys = newPresetsKeys;
     },
   ],
 ];
