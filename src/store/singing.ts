@@ -76,6 +76,7 @@ import {
   getOverlappingNoteIds,
   removeNotesFromOverlappingNoteInfos,
   updateNotesOfOverlappingNoteInfos,
+  OverlappingNoteInfos,
 } from "@/sing/storeHelper";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import {
@@ -199,7 +200,6 @@ const sequences = new Map<string, Sequence>(); // キーはPhraseKey
 const animationTimer = new AnimationTimer();
 
 export const createInitialTrack = (): Track => ({
-  id: TrackId(uuidv4()),
   singer: undefined,
   keyRangeAdjustment: 0,
   volumeRangeAdjustment: 0,
@@ -222,6 +222,7 @@ const updateTrackMute = (shouldPlay: Record<TrackId, boolean>) => {
 
 export const generateSingingStoreInitialScore = () => {
   const track = createInitialTrack();
+  const trackId = TrackId(uuidv4());
   return {
     tpqn: DEFAULT_TPQN,
     tempos: [
@@ -237,9 +238,10 @@ export const generateSingingStoreInitialScore = () => {
         beatType: DEFAULT_BEAT_TYPE,
       },
     ],
-    tracks: [track],
-    overlappingNoteInfos: new Map([[track.id, new Map()]]),
-    selectedTrackId: track.id,
+    tracks: new Map([[trackId, track]]),
+    trackOrder: [trackId],
+    overlappingNoteInfos: new Map([[trackId, new Map()]]),
+    selectedTrackId: trackId,
   };
 };
 
@@ -294,9 +296,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     // 歌手をセットする。
     // withRelatedがtrueの場合、関連する情報もセットする。
     mutation(state, { trackId, singer, withRelated }) {
-      const track = state.tracks.find((value) => value.id === trackId);
+      const track = state.tracks.get(trackId);
       if (track == undefined) {
-        throw new Error("track is undefined.");
+        throw new Error("Track is not found.");
       }
 
       track.singer = singer;
@@ -343,9 +345,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_KEY_RANGE_ADJUSTMENT: {
     mutation(state, { keyRangeAdjustment, trackId }) {
-      const track = state.tracks.find((value) => value.id === trackId);
+      const track = state.tracks.get(trackId);
       if (track == undefined) {
-        throw new Error("track is undefined.");
+        throw new Error("Track is not found.");
       }
 
       track.keyRangeAdjustment = keyRangeAdjustment;
@@ -363,9 +365,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_VOLUME_RANGE_ADJUSTMENT: {
     mutation(state, { volumeRangeAdjustment, trackId }) {
-      const track = state.tracks.find((value) => value.id === trackId);
+      const track = state.tracks.get(trackId);
       if (track == undefined) {
-        throw new Error("track is undefined.");
+        throw new Error("Track is not found.");
       }
 
       track.volumeRangeAdjustment = volumeRangeAdjustment;
@@ -391,25 +393,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tpqn = score.tpqn;
       state.tempos = score.tempos;
       state.timeSignatures = score.timeSignatures;
-      state.overlappingNoteInfos = new Map();
+      const trackOrder: TrackId[] = [];
+      const overlappingNoteInfos = new Map<TrackId, OverlappingNoteInfos>();
+      const tracks = new Map<TrackId, Track>();
       channelStrips.clear();
-      state.tracks = [];
       const scoreParts = score.parts;
       if (scoreParts.length === 0) {
         scoreParts.push({ notes: [] });
       }
       for (const { notes } of scoreParts) {
         const track = createInitialTrack();
-        state.tracks.push(track);
+        const trackId = TrackId(uuidv4());
         track.notes = notes;
         const overlappingNoteInfo = new Map();
-        state.overlappingNoteInfos.set(track.id, overlappingNoteInfo);
+        overlappingNoteInfos.set(trackId, overlappingNoteInfo);
         addNotesToOverlappingNoteInfos(overlappingNoteInfo, notes);
+        trackOrder.push(trackId);
+        tracks.set(trackId, track);
       }
-      state.selectedTrackId = state.tracks[0].id;
+      state.trackOrder = trackOrder;
+      state.tracks = tracks;
+      state.overlappingNoteInfos = overlappingNoteInfos;
       state.overlappingNoteIds = getOverlappingNoteIds(
         mergeMaps(...state.overlappingNoteInfos.values()),
       );
+      state.selectedTrackId = state.trackOrder[0];
     },
     async action(
       { state, getters, commit, dispatch },
@@ -425,9 +433,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await dispatch("SING_STOP_AUDIO");
       }
       commit("SET_SCORE", { score });
-      for (const track of state.tracks) {
+      for (const id of state.tracks.keys()) {
         await dispatch("SET_SINGER", {
-          trackId: track.id,
+          trackId: id,
         });
       }
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
@@ -513,12 +521,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   NOTE_IDS: {
     getter(state) {
-      const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId,
-      );
+      const selectedTrack = state.tracks.get(state.selectedTrackId);
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
       }
+
       const noteIds = selectedTrack.notes.map((value) => value.id);
       return new Set(noteIds);
     },
@@ -526,17 +533,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   ADD_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
-      const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId,
-      );
+      const selectedTrack = state.tracks.get(state.selectedTrackId);
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
       }
+
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
       const overlappingNoteInfo = state.overlappingNoteInfos.get(
-        selectedTrack.id,
+        state.selectedTrackId,
       );
       if (overlappingNoteInfo == undefined) {
         throw new Error("overlappingNoteInfo is undefined.");
@@ -554,21 +560,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       for (const note of notes) {
         notesMap.set(note.id, note);
       }
-      const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId,
-      );
+
+      const selectedTrack = state.tracks.get(state.selectedTrackId);
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
       }
+
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
+
       const overlappingNoteInfo = state.overlappingNoteInfos.get(
-        selectedTrack.id,
+        state.selectedTrackId,
       );
       if (overlappingNoteInfo == undefined) {
         throw new Error("overlappingNoteInfo is undefined.");
       }
+
       updateNotesOfOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         mergeMaps(...state.overlappingNoteInfos.values()),
@@ -579,21 +587,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REMOVE_NOTES: {
     mutation(state, { noteIds }: { noteIds: string[] }) {
       const noteIdsSet = new Set(noteIds);
-      const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId,
-      );
+      const selectedTrack = state.tracks.get(state.selectedTrackId);
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
       }
+
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
+
       const overlappingNoteInfo = state.overlappingNoteInfos.get(
-        selectedTrack.id,
+        state.selectedTrackId,
       );
       if (overlappingNoteInfo == undefined) {
         throw new Error("overlappingNoteInfo is undefined.");
       }
+
       removeNotesFromOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         mergeMaps(...state.overlappingNoteInfos.values()),
@@ -633,12 +642,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECT_ALL_NOTES: {
     mutation(state) {
-      const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId,
-      );
+      const selectedTrack = state.tracks.get(state.selectedTrackId);
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
       }
+
       const allNoteIds = selectedTrack.notes.map((note) => note.id);
       state.selectedNoteIds = new Set(allNoteIds);
     },
@@ -677,10 +685,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     // ピッチ編集データをセットする。
     // track.pitchEditDataの長さが足りない場合は、伸長も行う。
     mutation(state, { data, trackId, startFrame }) {
-      const track = state.tracks.find((value) => value.id === trackId);
+      const track = state.tracks.get(trackId);
       if (track == undefined) {
         throw new Error("track is undefined.");
       }
+
       const pitchEditData = track.pitchEditData;
       const tempData = [...pitchEditData];
       const endFrame = startFrame + data.length;
@@ -708,7 +717,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   ERASE_PITCH_EDIT_DATA: {
     mutation(state, { startFrame, frameLength, trackId }) {
-      const track = state.tracks.find((value) => value.id === trackId);
+      const track = state.tracks.get(trackId);
       if (track == undefined) {
         throw new Error("track is undefined.");
       }
@@ -724,7 +733,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   CLEAR_PITCH_EDIT_DATA: {
     // ピッチ編集データを失くす。
     mutation(state, { trackId }) {
-      const track = state.tracks.find((value) => value.id === trackId);
+      const track = state.tracks.get(trackId);
       if (track == undefined) {
         throw new Error("track is undefined.");
       }
@@ -810,12 +819,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECTED_TRACK: {
     getter(state) {
-      const selectedTrack = state.tracks.find(
-        (value) => value.id === state.selectedTrackId,
-      );
+      const selectedTrack = state.tracks.get(state.selectedTrackId);
       if (selectedTrack == undefined) {
         throw new Error("selectedTrack is undefined.");
       }
+
       return selectedTrack;
     },
   },
@@ -1239,20 +1247,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           string,
           { trackId: TrackId; phrase: Phrase }
         >();
-        const tracks = state.tracks.map((value) =>
-          structuredClone(toRaw(value)),
-        );
+        const tracks = structuredClone(toRaw(state.tracks));
+
         const editFrameRate = state.editFrameRate;
 
-        for (const trackRef of tracks) {
-          const notes = trackRef.notes
+        for (const [trackId, track] of tracks) {
+          const notes = track.notes
             .map((value) => ({ ...value }))
             .filter((value) => !state.overlappingNoteIds.has(value.id));
 
           // フレーズを更新する
           const foundPhrasesInTrack = await searchPhrases(notes);
           for (const [phraseKey, phrase] of foundPhrasesInTrack) {
-            foundPhrases.set(phraseKey, { trackId: trackRef.id, phrase });
+            foundPhrases.set(phraseKey, { trackId, phrase });
           }
         }
 
@@ -1307,9 +1314,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // TODO: リファクタリングする
           const phrase = structuredClone(toRaw(existingPhrase));
 
-          const trackRef = tracks.find(
-            (track) => track.id === foundPhrase.trackId,
-          );
+          const trackRef = tracks.get(foundPhrase.trackId);
 
           if (trackRef == undefined) {
             logger.warn("Track not found.");
@@ -1463,7 +1468,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const [trackId_, phraseKey] = trackIdAndPhraseKey.split(":");
           const trackId = TrackId(trackId_);
 
-          const trackRef = tracks.find((track) => track.id === trackId);
+          const trackRef = tracks.get(trackId);
           if (trackRef == undefined) {
             logger.warn("Track not found.");
             continue;
@@ -2450,7 +2455,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const withLimiter = false; // TODO: 設定できるようにする
 
           const renderDuration = calcRenderDuration(
-            state.tracks,
+            [...state.tracks.values()],
             getters.TICK_TO_SECOND,
           );
 
@@ -2503,14 +2508,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const clipper = new Clipper(offlineAudioContext);
           const tracksShouldPlay = shouldPlay(state.tracks);
 
-          for (const track of state.tracks) {
+          for (const [trackId, track] of state.tracks) {
             const channelStrip = new ChannelStrip(offlineAudioContext);
             channelStrip.volume = track.volume;
             channelStrip.pan = track.pan;
-            channelStrip.mute = !tracksShouldPlay[track.id];
+            channelStrip.mute = !tracksShouldPlay[trackId];
             channelStrip.output.connect(globalChannelStrip.input);
 
-            const phrases = state.phrases.get(track.id);
+            const phrases = state.phrases.get(trackId);
             if (!phrases) {
               throw new Error("Phrases is not found.");
             }
@@ -2596,7 +2601,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const withLimiter = false; // TODO: 設定できるようにする
 
           const renderDuration = calcRenderDuration(
-            state.tracks,
+            [...state.tracks.values()],
             getters.TICK_TO_SECOND,
           );
 
@@ -2628,8 +2633,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const shouldPlayTracks = shouldPlay(state.tracks);
 
-          for (const [i, track] of state.tracks.entries()) {
-            if (!shouldPlayTracks[track.id]) {
+          for (const [i, [trackId, track]] of [
+            ...state.tracks.entries(),
+          ].entries()) {
+            if (!shouldPlayTracks[trackId]) {
               continue;
             }
             const offlineAudioContext = new OfflineAudioContext(
@@ -2648,10 +2655,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const channelStrip = new ChannelStrip(offlineAudioContext);
             channelStrip.volume = track.volume;
             channelStrip.pan = track.pan;
-            channelStrip.mute = !tracksShouldPlay[track.id];
+            channelStrip.mute = !tracksShouldPlay[trackId];
             channelStrip.output.connect(globalChannelStrip.input);
 
-            const phrases = state.phrases.get(track.id);
+            const phrases = state.phrases.get(trackId);
             if (!phrases) {
               throw new Error("Phrases is not found.");
             }
@@ -2859,21 +2866,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         ...createInitialTrack(),
         singer,
       };
-      const currentTrackIndex = state.tracks.findIndex(
-        (track) => track.id === state.selectedTrackId,
-      );
-      state.tracks.splice(currentTrackIndex + 1, 0, track);
-      state.overlappingNoteInfos.set(track.id, new Map());
-      state.selectedTrackId = track.id;
+      const trackId = TrackId(uuidv4());
+      const currentTrackIndex = state.trackOrder.indexOf(state.selectedTrackId);
+
+      state.tracks.set(trackId, track);
+      state.overlappingNoteInfos.set(trackId, new Map());
+      state.trackOrder.splice(currentTrackIndex + 1, 0, trackId);
+      state.selectedTrackId = trackId;
     },
   },
 
   SET_TRACK_NAME: {
     mutation(state, { trackId, name }) {
-      const track = state.tracks.find((track) => track.id === trackId);
-      if (!track) {
-        throw new Error("The track is not found.");
+      const track = state.tracks.get(trackId);
+      if (track == undefined) {
+        throw new Error("Track is not found.");
       }
+
       track.name = name;
     },
     action({ commit }, { trackId, name }) {
@@ -2883,9 +2892,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_TRACK_PAN: {
     mutation(state, { trackId, pan }) {
-      const track = state.tracks.find((track) => track.id === trackId);
-      if (!track) {
-        throw new Error("The track is not found.");
+      const track = state.tracks.get(trackId);
+      if (track == undefined) {
+        throw new Error("Track is not found.");
       }
 
       track.pan = pan;
@@ -2898,9 +2907,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_TRACK_VOLUME: {
     mutation(state, { trackId, volume }) {
-      const track = state.tracks.find((track) => track.id === trackId);
-      if (!track) {
-        throw new Error("The track is not found.");
+      const track = state.tracks.get(trackId);
+      if (track == undefined) {
+        throw new Error("Track is not found.");
       }
 
       track.volume = volume;
@@ -2913,9 +2922,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_TRACK_MUTE: {
     mutation(state, { trackId, mute }) {
-      const track = state.tracks.find((track) => track.id === trackId);
-      if (!track) {
-        throw new Error("The track is not found.");
+      const track = state.tracks.get(trackId);
+      if (track == undefined) {
+        throw new Error("Track is not found.");
       }
 
       track.mute = mute;
@@ -2928,9 +2937,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_TRACK_SOLO: {
     mutation(state, { trackId, solo }) {
-      const track = state.tracks.find((track) => track.id === trackId);
-      if (!track) {
-        throw new Error("The track is not found.");
+      const track = state.tracks.get(trackId);
+      if (track == undefined) {
+        throw new Error("Track is not found.");
       }
 
       track.solo = solo;
@@ -2944,16 +2953,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   DELETE_TRACK: {
     mutation(state, { trackId }) {
       if (state.selectedTrackId === trackId) {
-        const currentTrackIndex = state.tracks.findIndex(
-          (track) => track.id === trackId,
-        );
-        const nextTrack =
+        const currentTrackIndex = state.trackOrder.indexOf(trackId);
+
+        const nextTrackId =
           currentTrackIndex === 0
-            ? state.tracks[currentTrackIndex + 1]
-            : state.tracks[currentTrackIndex - 1];
-        state.selectedTrackId = nextTrack.id;
+            ? state.trackOrder[currentTrackIndex + 1]
+            : state.trackOrder[currentTrackIndex - 1];
+        state.selectedTrackId = nextTrackId;
       }
-      state.tracks = state.tracks.filter((track) => track.id !== trackId);
+      state.trackOrder = state.trackOrder.filter((id) => id !== trackId);
+      state.tracks.delete(trackId);
 
       state.phrases.delete(trackId);
 
@@ -2964,15 +2973,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REORDER_TRACKS: {
     mutation(state, { trackIds }) {
-      const newTracks: Track[] = [];
-      for (const trackId of trackIds) {
-        const track = state.tracks.find((track) => track.id === trackId);
-        if (!track) {
-          throw new Error(`Unknown trackId: ${trackId}`);
-        }
-        newTracks.push(track);
-      }
-      state.tracks = newTracks;
+      state.trackOrder = trackIds;
     },
   },
 });
@@ -3247,9 +3248,9 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_UNSOLO_ALL_TRACKS: {
       mutation(draft) {
-        for (const track of draft.tracks) {
+        for (const trackId of draft.trackOrder) {
           singingStore.mutations.SET_TRACK_SOLO(draft, {
-            trackId: track.id,
+            trackId: trackId,
             solo: false,
           });
         }

@@ -1,4 +1,5 @@
 import { it, expect } from "vitest";
+import { v4 as uuidv4 } from "uuid";
 import { shouldPlay } from "@/sing/domain";
 import { Track } from "@/store/type";
 import { createInitialTrack } from "@/store/singing";
@@ -18,8 +19,14 @@ const createTrack = ({
   return track;
 };
 
-const resultToArray = (tracks: Track[], result: Record<TrackId, boolean>) => {
-  return tracks.map((track) => result[track.id]);
+const checkResult = (tracks: Track[], expected: boolean[]) => {
+  const tracksMap = new Map<TrackId, Track>(
+    tracks.map((track) => [TrackId(uuidv4()), track]),
+  );
+  const result = shouldPlay(tracksMap);
+  for (const trackId of tracksMap.keys()) {
+    expect(result[trackId]).toBe(expected.shift());
+  }
 };
 
 it("ソロのトラックがある場合、ソロのトラックのみ再生する", () => {
@@ -28,11 +35,7 @@ it("ソロのトラックがある場合、ソロのトラックのみ再生す�
     createTrack({ mute: false, solo: true }),
     createTrack({ mute: false, solo: false }),
   ];
-  expect(resultToArray(tracks, shouldPlay(tracks))).toEqual([
-    false,
-    true,
-    false,
-  ]);
+  checkResult(tracks, [false, true, false]);
 });
 
 it("ソロのトラックがない場合、ミュートされていないトラックを再生する", () => {
@@ -41,11 +44,7 @@ it("ソロのトラックがない場合、ミュートされていないトラ�
     createTrack({ mute: true, solo: false }),
     createTrack({ mute: false, solo: false }),
   ];
-  expect(resultToArray(tracks, shouldPlay(tracks))).toEqual([
-    true,
-    false,
-    true,
-  ]);
+  checkResult(tracks, [true, false, true]);
 });
 
 it("ソロのトラックはミュートを貫通する", () => {
@@ -54,9 +53,5 @@ it("ソロのトラックはミュートを貫通する", () => {
     createTrack({ mute: true, solo: true }),
     createTrack({ mute: false, solo: false }),
   ];
-  expect(resultToArray(tracks, shouldPlay(tracks))).toEqual([
-    false,
-    true,
-    false,
-  ]);
+  checkResult(tracks, [true, true, false]);
 });

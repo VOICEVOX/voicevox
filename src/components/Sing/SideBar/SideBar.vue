@@ -18,7 +18,7 @@
         unelevated
         size="0.75rem"
         padding="xs sm"
-        :disable="uiLocked || tracks.length === 1"
+        :disable="uiLocked || tracks.size === 1"
         @click="deleteTrack"
       >
         削除
@@ -26,7 +26,7 @@
     </div>
     <Draggable
       tag="QList"
-      :model-value="tracks"
+      :model-value="trackOrder"
       item-key="id"
       handle=".track-handle"
       class="tracks"
@@ -35,9 +35,9 @@
       @start="isDragging = true"
       @end="isDragging = false"
     >
-      <template #item="{ element: track }">
+      <template #item="{ element: trackId }">
         <div>
-          <TrackItem :track="track" />
+          <TrackItem :track-id="trackId" />
         </div>
       </template>
     </Draggable>
@@ -64,7 +64,7 @@ import Draggable from "vuedraggable";
 import { QList } from "quasar";
 import TrackItem from "./TrackItem.vue";
 import { useStore } from "@/store";
-import { Track } from "@/store/type";
+import { TrackId } from "@/type/preload";
 
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
 Draggable.components = { ...Draggable.components, QList };
@@ -75,13 +75,14 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const tracks = computed(() => store.state.tracks);
 const isThereSoloTrack = computed(() =>
-  tracks.value.some((track) => track.solo),
+  [...tracks.value.values()].some((track) => track.solo),
 );
 
-const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
+const trackOrder = computed(() => store.state.trackOrder);
+const selectedTrackId = computed(() => store.state.selectedTrackId);
 
 const createTrack = () => {
-  const singer = selectedTrack.value.singer;
+  const singer = tracks.value.get(selectedTrackId.value)?.singer;
   if (!singer) return;
 
   store.dispatch("COMMAND_CREATE_TRACK", {
@@ -89,9 +90,9 @@ const createTrack = () => {
   });
 };
 const deleteTrack = () => {
-  if (tracks.value.length === 1) return;
+  if (tracks.value.size === 1) return;
   store.dispatch("COMMAND_DELETE_TRACK", {
-    trackId: selectedTrack.value.id,
+    trackId: selectedTrackId.value,
   });
 };
 
@@ -100,9 +101,9 @@ const unsoloAllTracks = () => {
 };
 
 const isDragging = ref(false);
-const reorderTracks = (newTracks: Track[]) => {
+const reorderTracks = (trackIds: TrackId[]) => {
   store.dispatch("COMMAND_REORDER_TRACKS", {
-    trackIds: newTracks.map((track) => track.id),
+    trackIds,
   });
 };
 </script>

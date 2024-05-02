@@ -13,7 +13,7 @@ import {
 } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
-import { EngineId } from "@/type/preload";
+import { EngineId, TrackId } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import {
   DEFAULT_BEAT_TYPE,
@@ -106,13 +106,20 @@ const applySongProjectToStore = async (
       tpqn,
       tempos,
       timeSignatures,
-      parts: tracks.map((track) => ({
-        notes: track.notes,
-      })),
+      parts: Object.values(tracks).flatMap((track) =>
+        track
+          ? [
+              {
+                notes: track.notes,
+              },
+            ]
+          : [],
+      ),
     },
   });
-  for (const [i, track] of tracks.entries()) {
-    const trackId = state.tracks[i].id;
+  for (const [trackId_, track] of Object.entries(tracks)) {
+    const trackId = TrackId(trackId_);
+    if (track == undefined) throw new Error("track == undefined");
     await dispatch("SET_SINGER", {
       singer: track.singer,
       trackId,
@@ -137,7 +144,7 @@ const applySongProjectToStore = async (
       trackId,
     });
   }
-  await dispatch("SET_SELECTED_TRACK", { trackId: state.tracks[0].id });
+  await dispatch("SET_SELECTED_TRACK", { trackId: state.trackOrder[0] });
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -190,13 +197,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             parts: [],
           },
         });
-        const track = context.state.tracks[0];
+        const trackId = context.state.trackOrder[0];
         await context.dispatch("SET_SINGER", {
-          trackId: track.id,
+          trackId,
           withRelated: true,
         });
-        await context.dispatch("CLEAR_PITCH_EDIT_DATA", { trackId: track.id });
-        context.commit("SET_SELECTED_TRACK", { trackId: track.id });
+        await context.dispatch("CLEAR_PITCH_EDIT_DATA", { trackId });
+        context.commit("SET_SELECTED_TRACK", { trackId });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
@@ -619,7 +626,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               tpqn,
               tempos,
               timeSignatures,
-              tracks,
+              tracks: Object.fromEntries([...tracks.entries()]),
             },
           };
 

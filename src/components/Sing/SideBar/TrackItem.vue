@@ -4,7 +4,7 @@
     clickable
     class="track-item"
     active-class="selected-track"
-    :active="props.track.id === selectedTrack.id"
+    :active="props.trackId === selectedTrackId"
     :disable="uiLocked"
     @click="selectTrack()"
   >
@@ -14,14 +14,14 @@
           type: 'button',
           label: '削除',
           onClick: deleteTrack,
-          disabled: tracks.length === 1,
+          disabled: tracks.size === 1,
           disableWhenUiLocked: true,
         },
       ]"
     />
     <div class="track-handle track-handle-bg" />
     <QIcon
-      v-if="props.track.id === selectedTrack.id"
+      v-if="props.trackId === selectedTrackId"
       name="arrow_right"
       color="primary"
       size="md"
@@ -43,7 +43,7 @@
         <QAvatar v-else round size="3rem" color="primary"
           ><span color="text-display-on-primary">?</span></QAvatar
         >
-        <CharacterSelectMenu :track-id="props.track.id" />
+        <CharacterSelectMenu :track-id="props.trackId" />
       </div>
     </QItemSection>
     <QItemSection>
@@ -69,9 +69,9 @@
         dense
         size="sm"
         class="track-button"
-        :class="{ 'track-button-active': props.track.mute }"
+        :class="{ 'track-button-active': track.mute }"
         :disable="uiLocked || isThereSoloTrack"
-        @click.stop="setTrackMute(!props.track.mute)"
+        @click.stop="setTrackMute(!track.mute)"
       >
         <QTooltip :delay="500">ミュート</QTooltip>
       </QBtn>
@@ -83,9 +83,9 @@
         dense
         size="sm"
         class="track-button"
-        :class="{ 'track-button-active': props.track.solo }"
+        :class="{ 'track-button-active': track.solo }"
         :disable="uiLocked"
-        @click.stop="setTrackSolo(!props.track.solo)"
+        @click.stop="setTrackSolo(!track.solo)"
       >
         <QTooltip :delay="500">ソロ</QTooltip>
       </QBtn>
@@ -93,14 +93,14 @@
   </QItem>
 
   <QItem
-    v-if="!isDragging && props.track.id === selectedTrack.id"
+    v-if="!isDragging && props.trackId === selectedTrackId"
     class="track-detail-container"
   >
     <div class="track-detail">
       <div class="pan">
         <div class="l">L</div>
         <QSlider
-          :model-value="props.track.pan"
+          :model-value="track.pan"
           :min="-1"
           :max="1"
           :step="0.1"
@@ -115,7 +115,7 @@
       <div class="volume">
         <QIcon name="volume_down" class="l" size="1rem" />
         <QSlider
-          :model-value="props.track.volume"
+          :model-value="track.volume"
           :min="0"
           :max="2"
           :step="0.1"
@@ -136,60 +136,65 @@ import { QList } from "quasar";
 import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/CharacterSelectMenu.vue";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
-import { Track } from "@/store/type";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { shouldPlay } from "@/sing/domain";
+import { TrackId } from "@/type/preload";
 
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
 Draggable.components = { ...Draggable.components, QList };
 
 const props = defineProps<{
-  track: Track;
+  trackId: TrackId;
 }>();
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+const track = computed(() => {
+  const track = store.state.tracks.get(props.trackId);
+  if (!track) throw new Error(`Track not found: ${props.trackId}`);
+  return track;
+});
 
 const tracks = computed(() => store.state.tracks);
 const isThereSoloTrack = computed(() =>
-  tracks.value.some((track) => track.solo),
+  [...tracks.value.values()].some((track) => track.solo),
 );
 const shouldPlayTrack = computed(
-  () => shouldPlay(store.state.tracks)[props.track.id],
+  () => shouldPlay(store.state.tracks)[props.trackId],
 );
 
 const setTrackPan = (pan: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
-    store.dispatch("COMMAND_SET_TRACK_PAN", { trackId: props.track.id, pan });
+    store.dispatch("COMMAND_SET_TRACK_PAN", { trackId: props.trackId, pan });
   } else {
-    store.dispatch("SET_TRACK_PAN", { trackId: props.track.id, pan });
+    store.dispatch("SET_TRACK_PAN", { trackId: props.trackId, pan });
   }
 };
 
 const setTrackVolume = (volume: number) => {
   if (["panVolume", "all"].includes(store.state.songUndoableTrackControl)) {
     store.dispatch("COMMAND_SET_TRACK_VOLUME", {
-      trackId: props.track.id,
+      trackId: props.trackId,
       volume,
     });
   } else {
-    store.dispatch("SET_TRACK_VOLUME", { trackId: props.track.id, volume });
+    store.dispatch("SET_TRACK_VOLUME", { trackId: props.trackId, volume });
   }
 };
 
 watch(
-  () => props.track.name,
+  () => track.value.name,
   () => {
-    temporaryTrackName.value = props.track.name;
+    temporaryTrackName.value = track.value.name;
   },
 );
 
-const temporaryTrackName = ref(props.track.name);
+const temporaryTrackName = ref(track.value.name);
 
 const updateTrackName = () => {
-  if (temporaryTrackName.value === props.track.name) return;
+  if (temporaryTrackName.value === track.value.name) return;
   if (temporaryTrackName.value === "") {
-    temporaryTrackName.value = props.track.name;
+    temporaryTrackName.value = track.value.name;
     return;
   }
   setTrackName(temporaryTrackName.value);
@@ -197,37 +202,37 @@ const updateTrackName = () => {
 
 const setTrackName = (name: string) => {
   if (store.state.songUndoableTrackControl === "all") {
-    store.dispatch("COMMAND_SET_TRACK_NAME", { trackId: props.track.id, name });
+    store.dispatch("COMMAND_SET_TRACK_NAME", { trackId: props.trackId, name });
   } else {
-    store.dispatch("SET_TRACK_NAME", { trackId: props.track.id, name });
+    store.dispatch("SET_TRACK_NAME", { trackId: props.trackId, name });
   }
 };
 
 const setTrackMute = (mute: boolean) => {
   if (store.state.songUndoableTrackControl === "all") {
-    store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId: props.track.id, mute });
+    store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId: props.trackId, mute });
   } else {
-    store.dispatch("SET_TRACK_MUTE", { trackId: props.track.id, mute });
+    store.dispatch("SET_TRACK_MUTE", { trackId: props.trackId, mute });
   }
 };
 
 const setTrackSolo = (solo: boolean) => {
   if (store.state.songUndoableTrackControl === "all") {
-    store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId: props.track.id, solo });
+    store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId: props.trackId, solo });
   } else {
-    store.dispatch("SET_TRACK_SOLO", { trackId: props.track.id, solo });
+    store.dispatch("SET_TRACK_SOLO", { trackId: props.trackId, solo });
   }
 };
 
-const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
+const selectedTrackId = computed(() => store.state.selectedTrackId);
 const trackCharacter = computed(() => {
-  if (!props.track.singer) return undefined;
+  if (!track.value.singer) return undefined;
 
   for (const character of store.state.characterInfos[
-    props.track.singer.engineId
+    track.value.singer.engineId
   ]) {
     for (const style of character.metas.styles) {
-      if (style.styleId === props.track.singer.styleId) {
+      if (style.styleId === track.value.singer.styleId) {
         return character;
       }
     }
@@ -235,23 +240,23 @@ const trackCharacter = computed(() => {
   return undefined;
 });
 const selectTrack = () => {
-  store.dispatch("SET_SELECTED_TRACK", { trackId: props.track.id });
+  store.dispatch("SET_SELECTED_TRACK", { trackId: props.trackId });
 };
 
 const deleteTrack = () => {
-  store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.track.id });
+  store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.trackId });
 };
 
 const isDragging = ref(false);
 
 const trackStyle = computed(() => {
-  if (!props.track.singer) return undefined;
+  if (!track.value.singer) return undefined;
 
   const character = trackCharacter.value;
   if (!character) return undefined;
 
   for (const style of character.metas.styles) {
-    if (style.styleId === props.track.singer.styleId) {
+    if (style.styleId === track.value.singer.styleId) {
       return style;
     }
   }

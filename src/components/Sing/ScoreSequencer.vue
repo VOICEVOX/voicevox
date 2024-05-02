@@ -344,8 +344,8 @@ const selectedNotes = computed(() => {
   return notes.value.filter((value) => selectedNoteIds.has(value.id));
 });
 const inactiveNotes = computed(() => {
-  return store.state.tracks.flatMap((track) =>
-    track.id === selectedTrackId.value ? [] : track.notes,
+  return [...store.state.tracks.entries()].flatMap(([trackId, track]) =>
+    trackId === selectedTrackId.value ? [] : track.notes,
   );
 });
 
@@ -465,7 +465,7 @@ const onNoteLyricInput = (text: string, note: Note) => {
 };
 
 const onNoteLyricBlur = () => {
-  commitPreviewLyrics();
+  commitPreviewLyrics(selectedTrack.value);
 };
 
 // プレビュー

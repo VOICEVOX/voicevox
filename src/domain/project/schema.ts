@@ -84,7 +84,6 @@ export const singerSchema = z.object({
 });
 
 export const trackSchema = z.object({
-  id: trackIdSchema,
   singer: singerSchema.optional(),
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
@@ -110,7 +109,7 @@ export const projectSchema = z.object({
     tpqn: z.number(),
     tempos: z.array(tempoSchema),
     timeSignatures: z.array(timeSignatureSchema),
-    tracks: z.array(trackSchema),
+    tracks: z.record(trackIdSchema, trackSchema),
   }),
 });
 

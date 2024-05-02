@@ -1,4 +1,4 @@
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { splitLyricsByMoras } from "@/sing/domain";
 import { useStore } from "@/store";
 import { Note, Track } from "@/store/type";
@@ -6,7 +6,6 @@ import { Note, Track } from "@/store/type";
 // 歌詞入力のロジック。
 export const useLyricInput = () => {
   const store = useStore();
-  const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 
   // プレビュー中の歌詞。NoteID -> 歌詞のMap。
   const previewLyrics = ref<Map<string, string>>(new Map());
@@ -22,27 +21,27 @@ export const useLyricInput = () => {
 
     const lyricPerNote = splitLyricsByMoras(
       lyric,
-      store.state.tracks[0].notes.length - inputNoteIndex,
+      track.notes.length - inputNoteIndex,
     );
     for (const [index, mora] of lyricPerNote.entries()) {
       const noteIndex = inputNoteIndex + index;
-      if (noteIndex >= notes.value.length) {
+      if (noteIndex >= track.notes.length) {
         // splitLyricsByMorasで制限してるのでUnreachableのはず。
         throw new Error("noteIndex is out of range.");
       }
-      const note = notes.value[noteIndex];
+      const note = track.notes[noteIndex];
       newPreviewLyrics.set(note.id, mora);
     }
     previewLyrics.value = newPreviewLyrics;
   };
   // プレビューの歌詞を確定する。
-  const commitPreviewLyrics = () => {
+  const commitPreviewLyrics = (track: Track) => {
     const newNotes: Note[] = [];
     if (previewLyrics.value.size === 0) {
       return;
     }
     for (const [noteId, lyric] of previewLyrics.value) {
-      const note = notes.value.find((value) => value.id === noteId);
+      const note = track.notes.find((value) => value.id === noteId);
       if (!note) {
         throw new Error("note is undefined.");
       }

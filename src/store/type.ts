@@ -809,7 +809,8 @@ export type SingingStoreState = {
   tpqn: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
-  tracks: Track[];
+  tracks: Map<TrackId, Track>;
+  trackOrder: TrackId[];
   editFrameRate: number;
   phrases: Map<TrackId, Map<string, Phrase>>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;

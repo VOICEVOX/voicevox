@@ -73,7 +73,7 @@ watch(
   () => store.state.tracks,
   () => {
     for (const [trackId, container] of containers) {
-      if (!store.state.tracks.some((track) => track.id === trackId)) {
+      if (!store.state.tracks.has(trackId)) {
         container.destroy();
         containers.delete(trackId);
         info(`Container destroyed for track ${trackId}`);

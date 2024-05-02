@@ -418,12 +418,18 @@ export function selectPriorPhrase(
  * - ソロのトラックがある場合、ソロのトラックのみ再生する
  * - ソロのトラックがない場合、ミュートされていないトラックを再生する
  */
-export function shouldPlay(tracks: Track[]): Record<TrackId, boolean> {
-  const isThereSoloTrack = tracks.some((track) => track.solo);
+export function shouldPlay(
+  tracks: Map<TrackId, Track>,
+): Record<TrackId, boolean> {
+  const isThereSoloTrack = [...tracks.values()].some((track) => track.solo);
   if (isThereSoloTrack) {
-    return Object.fromEntries(tracks.map((track) => [track.id, track.solo]));
+    return Object.fromEntries(
+      [...tracks.entries()].map(([trackId, track]) => [trackId, track.solo]),
+    );
   } else {
-    return Object.fromEntries(tracks.map((track) => [track.id, !track.mute]));
+    return Object.fromEntries(
+      [...tracks.entries()].map(([trackId, track]) => [trackId, !track.mute]),
+    );
   }
 }
 
