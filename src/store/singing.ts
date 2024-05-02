@@ -64,6 +64,7 @@ import {
   applyPitchEdit,
   VALUE_INDICATING_NO_DATA,
   isValidPitchEditData,
+  defaultTrackName,
 } from "@/sing/domain";
 import {
   DEFAULT_BEATS,
@@ -205,7 +206,7 @@ export const createInitialTrack = (): Track => ({
   volumeRangeAdjustment: 0,
   notes: [],
   pitchEditData: [],
-  name: "新規トラック",
+  name: defaultTrackName,
   pan: 0,
   volume: 1,
   mute: false,

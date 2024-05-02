@@ -20,6 +20,8 @@ const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
 const MAX_SNAP_TYPE = 32;
 
+export const defaultTrackName = "新規トラック";
+
 export const isValidTpqn = (tpqn: number) => {
   return (
     Number.isInteger(tpqn) &&

@@ -1,5 +1,4 @@
 import semver from "semver";
-import { v4 as uuidv4 } from "uuid";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
 import { generateSingingStoreInitialScore } from "./singing";
@@ -22,6 +21,7 @@ import {
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
 import { LatestProjectType, projectSchema } from "@/domain/project/schema";
+import { defaultTrackName } from "@/sing/domain";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -477,23 +477,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               track.volumeRangeAdjustment = 0;
             }
           }
-          if (
-            semver.satisfies(
-              projectAppVersion,
-              "<0.19.0",
-              semverSatisfiesOptions,
-            )
-          ) {
-            // トラック設定の追加
-            for (const track of projectData.song.tracks) {
-              track.id = uuidv4();
-              track.pan = 0;
-              track.volume = 1;
-              track.mute = false;
-              track.solo = false;
-              track.name = "新規トラック";
-            }
-          }
 
           if (
             semver.satisfies(
@@ -505,6 +488,23 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             // ピッチ編集値の追加
             for (const track of projectData.song.tracks) {
               track.pitchEditData = [];
+            }
+          }
+
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.20.0",
+              semverSatisfiesOptions,
+            )
+          ) {
+            // トラック設定の追加
+            for (const track of projectData.song.tracks) {
+              track.pan = 0;
+              track.volume = 1;
+              track.mute = false;
+              track.solo = false;
+              track.name = defaultTrackName;
             }
           }
 
