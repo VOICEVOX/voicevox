@@ -3,7 +3,6 @@
 -->
 
 <template>
-  <!-- ノート -->
   <QBtnToggle
     dense
     :model-value="editTarget"
