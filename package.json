@@ -65,7 +65,7 @@
     "vue": "3.4.21",
     "vuedraggable": "4.1.0",
     "vuex": "4.0.2",
-    "zod": "3.22.4"
+    "zod": "3.23.5"
   },
   "optionalDependencies": {
     "dmg-license": "1.0.11"
