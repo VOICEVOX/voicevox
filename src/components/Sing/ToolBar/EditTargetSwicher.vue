@@ -1,4 +1,4 @@
-<!-- 
+<!--
   ノートやピッチなどの編集対象を切り替えるボタン
 -->
 
@@ -8,6 +8,7 @@
     dense
     :model-value="editTarget"
     toggle-text-color="display"
+    class="q-mr-sm"
     :options="[
       {
         icon: 'piano',
@@ -41,9 +42,3 @@ defineProps<{
   changeEditTarget: (editTarget: SequencerEditTarget) => void;
 }>();
 </script>
-
-<style scoped lang="scss">
-.margin-right {
-  margin-right: 6px;
-}
-</style>
