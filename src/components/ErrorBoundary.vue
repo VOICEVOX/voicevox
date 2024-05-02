@@ -21,7 +21,15 @@ onMounted(() => {
     }
   };
   window.addEventListener("error", (event: ErrorEvent) => {
-    if (event.error) logError(event.error);
+    if (event.error) {
+      logError(event.error);
+    } else {
+      logError(
+        new Error(
+          `Unknown error at ${event.filename}:${event.lineno}:${event.colno}`,
+        ),
+      );
+    }
   });
   window.addEventListener("unhandledrejection", handlePromiseRejectionEvent);
   window.addEventListener("rejectionhandled", handlePromiseRejectionEvent);
