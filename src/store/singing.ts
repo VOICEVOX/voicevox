@@ -106,7 +106,7 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   });
 };
 
-export const generateAudioEvents = async (
+const generateAudioEvents = async (
   audioContext: BaseAudioContext,
   time: number,
   blob: Blob,
@@ -116,7 +116,7 @@ export const generateAudioEvents = async (
   return [{ time, buffer }];
 };
 
-export const setupAudioEvents = async (
+const setupAudioEvents = async (
   audioContext: BaseAudioContext,
   channelStrip: ChannelStrip,
   transport: Transport | OfflineTransport,
