@@ -5,9 +5,11 @@
 <template>
   <QBtnToggle
     dense
+    unelevated
+    toggle-color="primary"
     :model-value="editTarget"
-    toggle-text-color="display"
-    class="q-mr-sm"
+    toggle-text-color="display-on-primary"
+    class="edit-target-switcher q-mr-sm"
     :options="[
       {
         icon: 'piano',
@@ -41,3 +43,22 @@ defineProps<{
   changeEditTarget: (editTarget: SequencerEditTarget) => void;
 }>();
 </script>
+
+<style lang="scss" scoped>
+.edit-target-switcher :deep(.q-btn-item) {
+  position: relative;
+
+  &.bg-primary {
+    border: 1px solid var(--color-primary);
+  }
+  &:not(.bg-primary) {
+    border: 1px solid rgba(var(--color-display-rgb), 0.3);
+    &:first-child {
+      border-right: 0;
+    }
+    &:last-child {
+      border-left: 0;
+    }
+  }
+}
+</style>
