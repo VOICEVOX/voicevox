@@ -4,6 +4,7 @@ import {
   Note,
   Phrase,
   Score,
+  SingingGuide,
   SingingGuideSource,
   SingingVoiceSource,
   Tempo,
@@ -11,6 +12,7 @@ import {
   singingGuideSourceHashSchema,
   singingVoiceSourceHashSchema,
 } from "@/store/type";
+import { FramePhoneme } from "@/openapi";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -281,6 +283,22 @@ export function decibelToLinear(decibelValue: number) {
   return Math.pow(10, decibelValue / 20);
 }
 
+export const VALUE_INDICATING_NO_DATA = -1;
+
+export const UNVOICED_PHONEMES = [
+  "pau",
+  "cl",
+  "ch",
+  "f",
+  "h",
+  "k",
+  "p",
+  "s",
+  "sh",
+  "t",
+  "ts",
+];
+
 export function getSnapTypes(tpqn: number) {
   return getRepresentableNoteTypes(tpqn).filter((value) => {
     return value <= MAX_SNAP_TYPE;
@@ -304,6 +322,14 @@ export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
     Number.isInteger(volumeRangeAdjustment) &&
     volumeRangeAdjustment <= 20 &&
     volumeRangeAdjustment >= -20
+  );
+}
+
+export function isValidPitchEditData(pitchEditData: number[]) {
+  return pitchEditData.every(
+    (value) =>
+      Number.isFinite(value) &&
+      (value > 0 || value === VALUE_INDICATING_NO_DATA),
   );
 }
 
@@ -383,6 +409,57 @@ export function selectPriorPhrase(
 
   // 再生位置より前のPhrase
   return sortedPhrases[0];
+}
+
+export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
+  const framePhonemes: string[] = [];
+  for (const phoneme of phonemes) {
+    for (let i = 0; i < phoneme.frameLength; i++) {
+      framePhonemes.push(phoneme.phoneme);
+    }
+  }
+  return framePhonemes;
+}
+
+export function applyPitchEdit(
+  singingGuide: SingingGuide,
+  pitchEditData: number[],
+  editFrameRate: number,
+) {
+  // 歌い方のフレームレートと編集フレームレートが一致しない場合はエラー
+  // TODO: 補間するようにする
+  if (singingGuide.frameRate !== editFrameRate) {
+    throw new Error(
+      "The frame rate between the singing guide and the edit data does not match.",
+    );
+  }
+  const unvoicedPhonemes = UNVOICED_PHONEMES;
+  const f0 = singingGuide.query.f0;
+  const phonemes = singingGuide.query.phonemes;
+
+  // 各フレームの音素の配列を生成する
+  const framePhonemes = convertToFramePhonemes(phonemes);
+  if (f0.length !== framePhonemes.length) {
+    throw new Error("f0.length and framePhonemes.length do not match.");
+  }
+
+  // 歌い方の開始フレームと終了フレームを計算する
+  const singingGuideFrameLength = f0.length;
+  const singingGuideStartFrame = Math.round(
+    singingGuide.startTime * singingGuide.frameRate,
+  );
+  const singingGuideEndFrame = singingGuideStartFrame + singingGuideFrameLength;
+
+  // ピッチ編集をf0に適用する
+  const startFrame = Math.max(0, singingGuideStartFrame);
+  const endFrame = Math.min(pitchEditData.length, singingGuideEndFrame);
+  for (let i = startFrame; i < endFrame; i++) {
+    const phoneme = framePhonemes[i - singingGuideStartFrame];
+    const voiced = !unvoicedPhonemes.includes(phoneme);
+    if (voiced && pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
+      f0[i - singingGuideStartFrame] = pitchEditData[i];
+    }
+  }
 }
 
 // 参考：https://github.com/VOICEVOX/voicevox_core/blob/0848630d81ae3e917c6ff2038f0b15bbd4270702/crates/voicevox_core/src/user_dict/word.rs#L83-L90
