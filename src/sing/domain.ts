@@ -325,6 +325,14 @@ export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
   );
 }
 
+export function isValidPitchEditData(pitchEditData: number[]) {
+  return pitchEditData.every(
+    (value) =>
+      Number.isFinite(value) &&
+      (value > 0 || value === VALUE_INDICATING_NO_DATA),
+  );
+}
+
 export const calculateNotesHash = async (notes: Note[]) => {
   return await calculateHash({ notes });
 };
@@ -435,15 +443,21 @@ export function applyPitchEdit(
     throw new Error("f0.length and framePhonemes.length do not match.");
   }
 
-  const startFrame = Math.round(
+  // 歌い方の開始フレームと終了フレームを計算する
+  const singingGuideFrameLength = f0.length;
+  const singingGuideStartFrame = Math.round(
     singingGuide.startTime * singingGuide.frameRate,
   );
-  const endFrame = Math.min(startFrame + f0.length, pitchEditData.length);
+  const singingGuideEndFrame = singingGuideStartFrame + singingGuideFrameLength;
+
+  // ピッチ編集をf0に適用する
+  const startFrame = Math.max(0, singingGuideStartFrame);
+  const endFrame = Math.min(pitchEditData.length, singingGuideEndFrame);
   for (let i = startFrame; i < endFrame; i++) {
-    const phoneme = framePhonemes[i - startFrame];
+    const phoneme = framePhonemes[i - singingGuideStartFrame];
     const voiced = !unvoicedPhonemes.includes(phoneme);
     if (voiced && pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
-      f0[i - startFrame] = pitchEditData[i];
+      f0[i - singingGuideStartFrame] = pitchEditData[i];
     }
   }
 }

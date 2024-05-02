@@ -137,6 +137,53 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       }
     },
   ],
+  [
+    ">=0.19",
+    (config) => {
+      // ピッチ表示機能の設定をピッチ編集機能に引き継ぐ
+      const experimentalSetting =
+        config.experimentalSetting as ExperimentalSettingType & {
+          showPitchInSongEditor?: boolean; // FIXME: TypeScript 5.4.5ならこの型の結合は不要
+        };
+      if (
+        "showPitchInSongEditor" in experimentalSetting &&
+        typeof experimentalSetting.showPitchInSongEditor === "boolean"
+      ) {
+        experimentalSetting.enablePitchEditInSongEditor =
+          experimentalSetting.showPitchInSongEditor;
+        delete experimentalSetting.showPitchInSongEditor;
+      }
+    },
+  ],
+  [
+    ">=0.20",
+    (config) => {
+      // プロジェクト読み込み → プロジェクトを読み込む
+      const hotkeySettings =
+        config.hotkeySettings as ConfigType["hotkeySettings"];
+      const newHotkeySettings: ConfigType["hotkeySettings"] =
+        hotkeySettings.map((hotkeySetting) => {
+          /// @ts-expect-error 名前変更なので合わない。
+          if (hotkeySetting.action === "プロジェクト読み込み") {
+            return {
+              ...hotkeySetting,
+              action: "プロジェクトを読み込む",
+            };
+          }
+          /// @ts-expect-error 名前変更なので合わない。
+          if (hotkeySetting.action === "テキスト読み込む") {
+            return {
+              ...hotkeySetting,
+              action: "テキストを読み込む",
+            };
+          }
+          return hotkeySetting;
+        });
+      config.hotkeySettings = newHotkeySettings;
+
+      return config;
+    },
+  ],
 ];
 
 export type Metadata = {

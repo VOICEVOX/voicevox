@@ -34,7 +34,7 @@ import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -48,6 +48,8 @@ const props = defineProps<{
 const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 const currentVersion = ref("");
+
+const audioKeys = computed(() => store.state.audioKeys);
 
 // デフォルトエンジンの代替先ポート
 const defaultEngineAltPortTo = computed<number | undefined>(() => {
@@ -316,7 +318,7 @@ const menudata = computed<MenuItemData[]>(() => [
       },
       {
         type: "button",
-        label: "プロジェクト読み込み",
+        label: "プロジェクトを読み込む",
         onClick: () => {
           importProject();
         },
@@ -358,6 +360,18 @@ const menudata = computed<MenuItemData[]>(() => [
           }
         },
         disabled: !canRedo.value,
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "全セルを選択",
+        onClick: async () => {
+          if (!uiLocked.value) {
+            await store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+              audioKeys: audioKeys.value,
+            });
+          }
+        },
         disableWhenUiLocked: true,
       },
       ...props.editSubMenuData,
@@ -477,25 +491,36 @@ watch(uiLocked, () => {
   }
 });
 
-registerHotkeyWithCleanup({
-  editor: props.editor,
+/**
+ * 全エディタに対してホットキーを登録する
+ * FIXME: hotkeyPlugin側で全エディタに対して登録できるようにする
+ */
+function registerHotkeyForAllEditors(action: Omit<HotkeyAction, "editor">) {
+  registerHotkeyWithCleanup({
+    editor: "talk",
+    ...action,
+  });
+  registerHotkeyWithCleanup({
+    editor: "song",
+    ...action,
+  });
+}
+
+registerHotkeyForAllEditors({
   callback: createNewProject,
   name: "新規プロジェクト",
 });
-registerHotkeyWithCleanup({
-  editor: props.editor,
+registerHotkeyForAllEditors({
   callback: saveProject,
   name: "プロジェクトを上書き保存",
 });
-registerHotkeyWithCleanup({
-  editor: props.editor,
+registerHotkeyForAllEditors({
   callback: saveProjectAs,
   name: "プロジェクトを名前を付けて保存",
 });
-registerHotkeyWithCleanup({
-  editor: props.editor,
+registerHotkeyForAllEditors({
   callback: importProject,
-  name: "プロジェクト読み込み",
+  name: "プロジェクトを読み込む",
 });
 </script>
 

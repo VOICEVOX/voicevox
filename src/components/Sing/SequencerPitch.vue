@@ -47,7 +47,7 @@ const props = defineProps<{
     | { type: "erase"; startFrame: number; frameLength: number };
 }>();
 
-const { warn } = createLogger("SequencerPitch");
+const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const singingGuides = computed(() => [...store.state.singingGuides.values()]);
 const pitchEditData = computed(() => {
@@ -274,9 +274,6 @@ const updateOriginalPitchDataSectionMap = async () => {
       throw new Error("phonemes.length is 0.");
     }
     const f0 = singingGuide.query.f0;
-    const startTime = singingGuide.startTime;
-    const startFrame = Math.round(startTime * frameRate);
-    const endFrame = startFrame + f0.length;
 
     // 各フレームの音素の配列を生成する
     const framePhonemes = convertToFramePhonemes(phonemes);
@@ -284,19 +281,29 @@ const updateOriginalPitchDataSectionMap = async () => {
       throw new Error("f0.length and framePhonemes.length do not match.");
     }
 
+    // 歌い方の開始フレームと終了フレームを計算する
+    const singingGuideFrameLength = f0.length;
+    const singingGuideStartFrame = Math.round(
+      singingGuide.startTime * frameRate,
+    );
+    const singingGuideEndFrame =
+      singingGuideStartFrame + singingGuideFrameLength;
+
     // 無声子音区間以外のf0をtempDataにコピーする
     // NOTE: 無声子音区間は音程が無く、f0の値が大きく上下するので表示しない
-    if (tempData.length < endFrame) {
-      const valuesToPush = new Array(endFrame - tempData.length).fill(
-        VALUE_INDICATING_NO_DATA,
-      );
+    if (tempData.length < singingGuideEndFrame) {
+      const valuesToPush = new Array(
+        singingGuideEndFrame - tempData.length,
+      ).fill(VALUE_INDICATING_NO_DATA);
       tempData.push(...valuesToPush);
     }
-    for (let i = 0; i < f0.length; i++) {
-      const phoneme = framePhonemes[i];
+    const startFrame = Math.max(0, singingGuideStartFrame);
+    const endFrame = singingGuideEndFrame;
+    for (let i = startFrame; i < endFrame; i++) {
+      const phoneme = framePhonemes[i - singingGuideStartFrame];
       const unvoiced = unvoicedPhonemes.includes(phoneme);
       if (!unvoiced) {
-        tempData[startFrame + i] = f0[i];
+        tempData[i] = f0[i - singingGuideStartFrame];
       }
     }
   }
@@ -424,6 +431,13 @@ onMountedOrActivated(() => {
     autoDensity: true,
   });
   stage = new PIXI.Container();
+
+  // webGLVersionをチェックする
+  // 2未満の場合、ピッチの表示ができないのでエラーとしてロギングする
+  const webGLVersion = renderer.context.webGLVersion;
+  if (webGLVersion < 2) {
+    error(`webGLVersion is less than 2. webGLVersion: ${webGLVersion}`);
+  }
 
   const callback = () => {
     if (renderInNextFrame) {

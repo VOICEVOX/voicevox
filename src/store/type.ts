@@ -17,6 +17,7 @@ import {
   UserDictWord,
   MorphableTargetInfo,
   FrameAudioQuery,
+  Note as NoteForRequestToEngine,
 } from "@/openapi";
 import {
   CharacterInfo,
@@ -839,8 +840,8 @@ export type SingingStoreTypes = {
   };
 
   SET_SINGER: {
-    mutation: { singer?: Singer };
-    action(payload: { singer?: Singer }): void;
+    mutation: { singer?: Singer; withRelated?: boolean };
+    action(payload: { singer?: Singer; withRelated?: boolean }): void;
   };
 
   SET_KEY_RANGE_ADJUSTMENT: {
@@ -912,10 +913,16 @@ export type SingingStoreTypes = {
 
   SET_PITCH_EDIT_DATA: {
     mutation: { data: number[]; startFrame: number };
+    action(payload: { data: number[]; startFrame: number }): void;
   };
 
   ERASE_PITCH_EDIT_DATA: {
     mutation: { startFrame: number; frameLength: number };
+  };
+
+  CLEAR_PITCH_EDIT_DATA: {
+    mutation: undefined;
+    action(): void;
   };
 
   SET_PHRASES: {
@@ -998,6 +1005,15 @@ export type SingingStoreTypes = {
 
   CANCEL_AUDIO_EXPORT: {
     action(): void;
+  };
+
+  FETCH_SING_FRAME_VOLUME: {
+    action(palyoad: {
+      notes: NoteForRequestToEngine[];
+      frameAudioQuery: FrameAudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<number[]>;
   };
 
   TICK_TO_SECOND: {
@@ -1100,8 +1116,8 @@ export type SingingCommandStoreState = {
 
 export type SingingCommandStoreTypes = {
   COMMAND_SET_SINGER: {
-    mutation: { singer: Singer };
-    action(payload: { singer: Singer }): void;
+    mutation: { singer: Singer; withRelated?: boolean };
+    action(payload: { singer: Singer; withRelated?: boolean }): void;
   };
 
   COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
@@ -1946,7 +1962,6 @@ export type ProxyStoreTypes = {
 export type State = AudioStoreState &
   AudioPlayerStoreState &
   AudioCommandStoreState &
-  SingingStoreState &
   CommandStoreState &
   EngineStoreState &
   IndexStoreState &

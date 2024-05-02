@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import ToolBar from "./ToolBar.vue";
+import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
@@ -101,7 +101,7 @@ onetimeWatch(
       // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
       // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
       try {
-        await store.dispatch("SET_SINGER", {});
+        await store.dispatch("SET_SINGER", { withRelated: true });
       } catch (e) {
         window.backend.logError(e);
       }
