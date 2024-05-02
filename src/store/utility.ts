@@ -255,7 +255,9 @@ export class TuningTranscription {
   /**
    * transcriptionSourceで得られたモーラの配列を、変更後のAccentPhraseの各モーラに適用する
    */
-  private mergeAccentPhrases(transcriptionSource: Mora[]): AccentPhrase[] {
+  private applyTranscriptionSource(
+    transcriptionSource: Mora[],
+  ): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
@@ -270,9 +272,8 @@ export class TuningTranscription {
           after[accentIndex]["moras"][moraIndex].text ===
           transcriptionSource[moraPatchIndex]?.text
         ) {
-          after[accentIndex]["moras"][moraIndex] = transcriptionSource[
-            moraPatchIndex
-          ] as Mora;
+          after[accentIndex]["moras"][moraIndex] =
+            transcriptionSource[moraPatchIndex];
         }
         moraPatchIndex++;
       }
@@ -283,7 +284,7 @@ export class TuningTranscription {
 
   transcribe() {
     const transcriptionSource = this.createTranscriptionSource();
-    return this.mergeAccentPhrases(transcriptionSource);
+    return this.applyTranscriptionSource(transcriptionSource);
   }
 }
 
