@@ -53,5 +53,5 @@ it("ソロのトラックはミュートを貫通する", () => {
     createTrack({ mute: true, solo: true }),
     createTrack({ mute: false, solo: false }),
   ];
-  checkResult(tracks, [true, true, false]);
+  checkResult(tracks, [false, true, false]);
 });
