@@ -191,6 +191,8 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     (config) => {
       const defaultPresetKeys =
         config.defaultPresetKeys as ConfigType["defaultPresetKeys"];
+      if (Object.keys(defaultPresetKeys).length < 1) return;
+
       const filteredVoiceIdOnlySinger = Object.keys(defaultPresetKeys).filter(
         (voiceId) => {
           const splited = voiceId.split(":");
