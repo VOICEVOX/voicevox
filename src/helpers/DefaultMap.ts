@@ -5,9 +5,8 @@ export default class DefaultMap<K, V> extends Map<K, V> {
   }
 
   get(key: K): V {
-    const maybeValue = super.get(key);
-    if (maybeValue) {
-      return maybeValue;
+    if (super.has(key)) {
+      return super.get(key) as V;
     }
     const value = this.factory(key);
     this.set(key, value);
