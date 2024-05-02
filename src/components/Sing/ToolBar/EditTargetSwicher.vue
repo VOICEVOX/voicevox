@@ -4,27 +4,32 @@
 
 <template>
   <!-- ノート -->
-  <QBtn
+  <QBtnToggle
     dense
-    icon="piano"
-    :color="editTarget === 'NOTE' ? 'primary' : undefined"
-    :text-color="editTarget === 'NOTE' ? 'display-on-primary' : undefined"
-    @click="editTarget !== 'NOTE' && changeEditTarget('NOTE')"
-    ><QTooltip :delay="500" anchor="bottom middle">ノート編集</QTooltip></QBtn
-  >
-
-  <!-- ピッチ -->
-  <QBtn
-    dense
-    icon="show_chart"
-    :color="editTarget === 'PITCH' ? 'primary' : undefined"
-    :text-color="editTarget === 'PITCH' ? 'display-on-primary' : undefined"
-    class="margin-right"
-    @click="editTarget !== 'PITCH' && changeEditTarget('PITCH')"
-    ><QTooltip :delay="500" anchor="bottom middle"
-      >ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去</QTooltip
-    ></QBtn
-  >
+    :model-value="editTarget"
+    toggle-text-color="display"
+    :options="[
+      {
+        icon: 'piano',
+        value: 'NOTE',
+        slot: 'NOTE',
+      },
+      {
+        icon: 'show_chart',
+        value: 'PITCH',
+        slot: 'PITCH',
+      },
+    ]"
+    @update:model-value="changeEditTarget"
+    ><template #NOTE
+      ><QTooltip :delay="500" anchor="bottom middle">ノート編集</QTooltip>
+    </template>
+    <template #PITCH>
+      <QTooltip :delay="500" anchor="bottom middle"
+        >ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去</QTooltip
+      >
+    </template>
+  </QBtnToggle>
 </template>
 
 <script setup lang="ts">
