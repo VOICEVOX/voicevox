@@ -396,6 +396,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           throw error;
         });
 
+        // エンジン側の順番を保ってCharacterInfoを作る
         const allUuids = new Set([
           ...speakers.map((speaker) => speaker.speakerUuid),
           ...singers.map((singer) => singer.speakerUuid),
