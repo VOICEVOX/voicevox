@@ -49,6 +49,7 @@ defineProps<{
   position: relative;
 
   &.bg-primary {
+    // borderがないと切り換え時に1px動くのでそれを防ぐ
     border: 1px solid var(--color-primary);
   }
   &:not(.bg-primary) {
