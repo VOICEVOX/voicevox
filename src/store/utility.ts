@@ -240,20 +240,21 @@ export class TuningTranscription {
     const beforeFlatArray = before.flatMap((accent) => accent.moras);
     const afterFlatArray = after.flatMap((accent) => accent.moras);
 
+    // beforeFlatArrayとafterFlatArrayの特定の要素が一致するかどうかを判定する関数
     const matchRequirements = (beforeMora: Mora, afterMora: Mora) =>
       beforeMora?.text === afterMora?.text;
 
     const morasDiff = diff.getPatch(
       beforeFlatArray,
       afterFlatArray,
-      matchRequirements, // beforeFlatArrayとafterFlatArrayの特定の要素が一致するかどうかを判定する関数
+      matchRequirements,
     );
 
     return diff.applyPatch(beforeFlatArray, morasDiff);
   }
 
   /**
-   * transcriptionSourceで得られたモーラの配列を、変更後のAccentPhraseの各モーラに適用する
+   * transcriptionSourceのモーラ配列のうち、テキストが一致するものを変更後のAccentPhraseの各モーラに適用する
    */
   private applyTranscriptionSource(
     transcriptionSource: Mora[],
