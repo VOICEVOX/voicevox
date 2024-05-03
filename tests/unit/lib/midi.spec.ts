@@ -1,7 +1,7 @@
+// @vitest-environment node
+
+import { promises as fs } from "fs";
 import { it, expect } from "vitest";
-import synthvMid from "./testMidi/synthv.mid?uint8array";
-import timeSigMid from "./testMidi/timeSig.mid?uint8array";
-import bpmMid from "./testMidi/bpm.mid?uint8array";
 import { Midi } from "@/sing/midi";
 
 // MIDIファイルの作成情報：
@@ -9,6 +9,7 @@ import { Midi } from "@/sing/midi";
 // - timeSig.mid、bpm.mid：signalで作成（https://signal.vercel.app/edit）
 
 it("BPMをパースできる", async () => {
+  const bpmMid = await fs.readFile("tests/unit/lib/testMidi/bpm.mid");
   const midi = new Midi(bpmMid);
   const ticksPerBeat = midi.ticksPerBeat;
   expect(midi.tempos).toEqual([
@@ -30,6 +31,7 @@ const lyricExpectation: [noteNumber: number, lyric: string][] = [
 ];
 
 it("SynthVのノートと歌詞をパースできる", async () => {
+  const synthvMid = await fs.readFile("tests/unit/lib/testMidi/synthv.mid");
   const midi = new Midi(synthvMid);
   const ticksPerBeat = midi.ticksPerBeat;
   // SynthVのMIDIファイルの1トラック目はBPM情報のみなので、2トラック目を取得
@@ -44,6 +46,7 @@ it("SynthVのノートと歌詞をパースできる", async () => {
 });
 
 it("拍子をパースできる", async () => {
+  const timeSigMid = await fs.readFile("tests/unit/lib/testMidi/timeSig.mid");
   const midi = new Midi(timeSigMid);
   const ticksPerBeat = midi.ticksPerBeat;
   expect(midi.timeSignatures).toEqual([

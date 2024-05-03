@@ -10,7 +10,6 @@ import checker from "vite-plugin-checker";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
-import arraybuffer from "vite-plugin-arraybuffer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,7 +69,6 @@ export default defineConfig((options) => {
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),
-      arraybuffer(),
       nodePolyfills({
         include: ["path"],
       }),
