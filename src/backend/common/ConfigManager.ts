@@ -187,7 +187,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     },
   ],
   [
-    ">=999.999.999",
+    ">=0.21",
     (config) => {
       const defaultPresetKeys = config.defaultPresetKeys as
         | ConfigType["defaultPresetKeys"]
