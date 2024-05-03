@@ -189,8 +189,11 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
     ">=999.999.999",
     (config) => {
-      const defaultPresetKeys =
-        config.defaultPresetKeys as ConfigType["defaultPresetKeys"];
+      const defaultPresetKeys = config.defaultPresetKeys as
+        | ConfigType["defaultPresetKeys"]
+        | undefined;
+      // unit testの0.13からマイグレーションできるかどうかに引っかかるので回避するためのundefinedチェック
+      if (defaultPresetKeys == undefined) return;
       if (Object.keys(defaultPresetKeys).length < 1) return;
 
       const filteredVoiceIdOnlySinger = Object.keys(defaultPresetKeys).filter(
