@@ -49,7 +49,7 @@ export const createCommandMutation =
     editor: EditorType,
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
-    const command = recordOperations(payloadRecipe)(state, payload);
+    const command = recordPatches(payloadRecipe)(state, payload);
     applyPatches(state, command.redoPatches);
     state.undoCommands[editor].push(command);
     state.redoCommands[editor].splice(0);
@@ -59,7 +59,7 @@ export const createCommandMutation =
  * @param recipe - 操作を記録したいレシピ関数
  * @returns Function - レシピの操作を与えられたstateとpayloadを用いて記録したコマンドを返す関数。
  */
-const recordOperations =
+const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
