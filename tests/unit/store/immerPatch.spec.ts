@@ -239,7 +239,7 @@ test("complexObject1", () => {
   expect(object).toStrictEqual({ a: 1, b: 2, c: { d: 3 } });
 });
 
-test("complextObject2", () => {
+test("complexObject2", () => {
   const immer = new Immer();
   immer.setAutoFreeze(false);
   enablePatches();
