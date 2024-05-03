@@ -881,7 +881,6 @@ export class ChannelStrip {
   private readonly gainNode: GainNode;
   private readonly panNode: StereoPannerNode;
   private readonly muteNode: GainNode;
-  private isMute = false;
 
   get input(): AudioNode {
     return this.gainNode;
@@ -892,17 +891,11 @@ export class ChannelStrip {
   }
 
   get mute(): boolean {
-    return this.isMute;
+    return this.muteNode.gain.value === 0;
   }
 
   set mute(value: boolean) {
-    if (value) {
-      this.muteNode.gain.value = 0;
-      this.isMute = true;
-    } else {
-      this.muteNode.gain.value = 1;
-      this.isMute = false;
-    }
+    this.muteNode.gain.value = value ? 0 : 1;
   }
 
   get volume() {
