@@ -110,6 +110,7 @@ export const projectSchema = z.object({
     tempos: z.array(tempoSchema),
     timeSignatures: z.array(timeSignatureSchema),
     tracks: z.record(trackIdSchema, trackSchema),
+    trackOrder: z.array(trackIdSchema),
   }),
 });
 

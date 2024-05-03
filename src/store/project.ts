@@ -1,4 +1,5 @@
 import semver from "semver";
+import { v4 as uuidv4 } from "uuid";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
 import { generateSingingStoreInitialScore } from "./singing";
@@ -8,7 +9,7 @@ import {
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
-  State,
+  Track,
 } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
@@ -97,54 +98,27 @@ const applyTalkProjectToStore = async (
 
 const applySongProjectToStore = async (
   dispatch: Dispatch<AllActions>,
-  state: State,
   songProject: LatestProjectType["song"],
 ) => {
-  const { tpqn, tempos, timeSignatures, tracks } = songProject;
+  const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
   await dispatch("SET_SCORE", {
     score: {
       tpqn,
       tempos,
       timeSignatures,
-      parts: Object.values(tracks).flatMap((track) =>
-        track
-          ? [
-              {
-                notes: track.notes,
-              },
-            ]
-          : [],
-      ),
+      parts: [],
     },
   });
   for (const [trackId_, track] of Object.entries(tracks)) {
     const trackId = TrackId(trackId_);
     if (track == undefined) throw new Error("track == undefined");
-    await dispatch("SET_SINGER", {
-      singer: track.singer,
-      trackId,
-    });
-    await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-      keyRangeAdjustment: track.keyRangeAdjustment,
-      trackId,
-    });
-    await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-      volumeRangeAdjustment: track.volumeRangeAdjustment,
-      trackId,
-    });
-    await dispatch("SET_TRACK_NAME", {
-      name: track.name,
-      trackId,
-    });
-
-    await dispatch("CLEAR_PITCH_EDIT_DATA", { trackId });
-    await dispatch("SET_PITCH_EDIT_DATA", {
-      data: track.pitchEditData,
-      startFrame: 0,
-      trackId,
-    });
+    await dispatch("CREATE_TRACK", { trackId, ...track });
   }
-  await dispatch("SET_SELECTED_TRACK", { trackId: state.trackOrder[0] });
+  // メモ：この時点で宙ぶらりんのトラックが存在してしまっている。SET_SCOREを爆破する？
+  await dispatch("REORDER_TRACKS", { trackIds: trackOrder });
+  await dispatch("SET_SELECTED_TRACK", {
+    trackId: TrackId([...Object.keys(tracks)][0]),
+  });
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -506,6 +480,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               track.solo = false;
               track.name = defaultTrackName;
             }
+            const trackOrder = projectData.song.tracks.map(() =>
+              TrackId(uuidv4()),
+            );
+            // Track[] -> Record<TrackId, Track>
+            projectData.song.tracks = Object.fromEntries(
+              projectData.song.tracks.map((track: Track, i: number) => [
+                trackOrder[i],
+                track,
+              ]),
+            );
+            projectData.song.trackOrder = trackOrder;
           }
 
           // Validation check
@@ -533,7 +518,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           );
           await applySongProjectToStore(
             context.dispatch,
-            context.state,
             parsedProjectData.song,
           );
 
@@ -615,6 +599,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             tempos,
             timeSignatures,
             tracks,
+            trackOrder,
           } = context.state;
           const projectData: LatestProjectType = {
             appVersion: appInfos.version,
@@ -627,6 +612,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               tempos,
               timeSignatures,
               tracks: Object.fromEntries([...tracks.entries()]),
+              trackOrder,
             },
           };
 

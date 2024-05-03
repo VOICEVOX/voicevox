@@ -984,7 +984,10 @@ export type SingingStoreTypes = {
   };
 
   CREATE_TRACK: {
-    mutation: { singer: Singer };
+    mutation: Partial<Track> & {
+      trackId: TrackId;
+    };
+    action(payload: Partial<Track> & { trackId: TrackId }): void;
   };
 
   SET_SNAP_TYPE: {
@@ -1170,6 +1173,7 @@ export type SingingStoreTypes = {
 
   REORDER_TRACKS: {
     mutation: { trackIds: TrackId[] };
+    action(payload: { trackIds: TrackId[] }): void;
   };
 };
 

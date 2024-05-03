@@ -1894,9 +1894,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
 
         if (getters.SELECTED_TRACK.notes.length > 0) {
+          const trackId = TrackId(uuidv4());
           // singerにProxyを渡すとバグるので、toRawでProxyを取り除く
           commit("CREATE_TRACK", {
             singer: structuredClone(toRaw(currentSinger)),
+            trackId,
           });
         }
         commit("ADD_NOTES", { notes });
@@ -2229,9 +2231,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
 
         if (getters.SELECTED_TRACK.notes.length > 0) {
+          const trackId = TrackId(uuidv4());
           // singerにProxyを渡すとバグるので、toRawでProxyを取り除く
           commit("CREATE_TRACK", {
             singer: structuredClone(toRaw(currentSinger)),
+            trackId,
           });
         }
         commit("ADD_NOTES", { notes });
@@ -2367,8 +2371,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           timeSignature: timeSignatures[0],
         });
         if (getters.SELECTED_TRACK.notes.length > 0) {
+          const trackId = TrackId(uuidv4());
           commit("CREATE_TRACK", {
             singer: currentSinger,
+            trackId,
           });
         }
         commit("ADD_NOTES", { notes });
@@ -2862,18 +2868,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CREATE_TRACK: {
-    mutation(state, { singer }) {
+    mutation(state, payload) {
       const track: Track = {
         ...createInitialTrack(),
-        singer,
+        ...payload,
       };
-      const trackId = TrackId(uuidv4());
       const currentTrackIndex = state.trackOrder.indexOf(state.selectedTrackId);
 
-      state.tracks.set(trackId, track);
-      state.overlappingNoteInfos.set(trackId, new Map());
-      state.trackOrder.splice(currentTrackIndex + 1, 0, trackId);
-      state.selectedTrackId = trackId;
+      state.tracks.set(payload.trackId, track);
+      state.overlappingNoteInfos.set(payload.trackId, new Map());
+      state.trackOrder.splice(currentTrackIndex + 1, 0, payload.trackId);
+    },
+    action({ commit }, payload) {
+      commit("CREATE_TRACK", payload);
     },
   },
 
@@ -2975,6 +2982,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REORDER_TRACKS: {
     mutation(state, { trackIds }) {
       state.trackOrder = trackIds;
+    },
+    action({ commit }, { trackIds }) {
+      commit("REORDER_TRACKS", { trackIds });
     },
   },
 });
@@ -3177,7 +3187,9 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_CREATE_TRACK: {
       mutation(draft, { singer }) {
-        singingStore.mutations.CREATE_TRACK(draft, { singer });
+        const trackId = TrackId(uuidv4());
+        singingStore.mutations.CREATE_TRACK(draft, { singer, trackId });
+        draft.selectedTrackId = trackId;
       },
       action({ commit }, { singer }) {
         commit("COMMAND_CREATE_TRACK", { singer });
