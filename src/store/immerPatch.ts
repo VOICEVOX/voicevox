@@ -24,15 +24,18 @@ export function applyPatches<T>(target: T, patches: Patch[]) {
 export function applyPatch<T>(target: T, patch: Patch) {
   const { path, value, op } = patch;
   for (const p of patch.path.slice(0, path.length - 1)) {
+    // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、targetはany型として扱う
     target = target[p];
   }
   const v = structuredClone(value);
   switch (op) {
     case "add":
     case "replace":
+      // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、targetはany型として扱う
       target[path[path.length - 1]] = v;
       break;
     case "remove":
+      // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、targetはany型として扱う
       delete target[path[path.length - 1]];
       break;
     default:
