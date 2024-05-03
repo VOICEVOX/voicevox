@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Operation } from "rfc6902";
+import { Patch } from "immer";
 import {
   MutationTree,
   MutationsBase,
@@ -93,8 +93,8 @@ export type FetchAudioResult = {
 
 export type Command = {
   unixMillisec: number;
-  undoOperations: Operation[];
-  redoOperations: Operation[];
+  undoPatches: Patch[];
+  redoPatches: Patch[];
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";

@@ -1,8 +1,8 @@
 import { toRaw } from "vue";
-import { enablePatches, enableMapSet, Patch, Immer } from "immer";
-import { applyPatch, Operation } from "rfc6902";
+import { enablePatches, enableMapSet, Immer } from "immer";
 
 import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
+import { applyPatches } from "@/store/immerPatch";
 import {
   createPartialStore,
   Mutation,
@@ -50,16 +50,10 @@ export const createCommandMutation =
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
     const command = recordOperations(payloadRecipe)(state, payload);
-    applyPatch(state, command.redoOperations);
+    applyPatches(state, command.redoPatches);
     state.undoCommands[editor].push(command);
     state.redoCommands[editor].splice(0);
   };
-
-const patchToOperation = (patch: Patch): Operation => ({
-  op: patch.op,
-  path: `/${patch.path.join("/")}`,
-  value: patch.value,
-});
 
 /**
  * @param recipe - 操作を記録したいレシピ関数
@@ -74,8 +68,8 @@ const recordOperations =
     );
     return {
       unixMillisec: new Date().getTime(),
-      redoOperations: doPatches.map(patchToOperation),
-      undoOperations: undoPatches.map(patchToOperation),
+      redoPatches: doPatches,
+      undoPatches: undoPatches,
     };
   };
 
@@ -108,7 +102,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       const command = state.undoCommands[editor].pop();
       if (command != null) {
         state.redoCommands[editor].push(command);
-        applyPatch(state, command.undoOperations);
+        applyPatches(state, command.undoPatches);
       }
     },
     action({ commit, dispatch }, { editor }: { editor: EditorType }) {
@@ -126,7 +120,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       const command = state.redoCommands[editor].pop();
       if (command != null) {
         state.undoCommands[editor].push(command);
-        applyPatch(state, command.redoOperations);
+        applyPatches(state, command.redoPatches);
       }
     },
     action({ commit, dispatch }, { editor }: { editor: EditorType }) {
