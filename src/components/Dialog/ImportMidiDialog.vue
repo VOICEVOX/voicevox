@@ -93,7 +93,7 @@ const tracks = computed(() => {
   // トラックリストを生成
   // "トラックNo: トラック名 / ノート数" の形式で表示
   return midi.value.tracks.map((track, index) => ({
-    label: `${index + 1}: ${track.name || "（無名）"} / ノート数：${
+    label: `${index + 1}: ${track.name || "（トラック名なし）"} / ノート数：${
       track.notes.length
     }`,
     value: index,
