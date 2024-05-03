@@ -3,12 +3,14 @@ import { convertLongVowel } from "@/store/utility";
 import {
   Note,
   Phrase,
+  PhraseSource,
   Score,
   SingingGuide,
   SingingGuideSource,
   SingingVoiceSource,
   Tempo,
   TimeSignature,
+  phraseSourceHashSchema,
   singingGuideSourceHashSchema,
   singingVoiceSourceHashSchema,
 } from "@/store/type";
@@ -333,8 +335,9 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   );
 }
 
-export const calculateNotesHash = async (notes: Note[]) => {
-  return await calculateHash({ notes });
+export const calculatePhraseSourceHash = async (phraseSource: PhraseSource) => {
+  const hash = await calculateHash(phraseSource);
+  return phraseSourceHashSchema.parse(hash);
 };
 
 export const calculateSingingGuideSourceHash = async (

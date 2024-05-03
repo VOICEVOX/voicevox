@@ -757,11 +757,12 @@ export type SingingGuideSource = {
   engineId: EngineId;
   tpqn: number;
   tempos: Tempo[];
+  firstRestDuration: number;
   notes: Note[];
   keyRangeAdjustment: number;
   volumeRangeAdjustment: number;
   frameRate: number;
-  restDurationSeconds: number;
+  lastRestDurationSeconds: number;
 };
 
 /**
@@ -793,12 +794,27 @@ export type SingingVoiceSourceHash = z.infer<
   typeof singingVoiceSourceHashSchema
 >;
 
+/**
+ * フレーズ（レンダリング区間）
+ */
 export type Phrase = {
+  firstRestDuration: number;
   notes: Note[];
   state: PhraseState;
   singingGuideKey?: SingingGuideSourceHash;
   singingVoiceKey?: SingingVoiceSourceHash;
 };
+
+/**
+ * フレーズのソース
+ */
+export type PhraseSource = {
+  firstRestDuration: number;
+  notes: Note[];
+};
+
+export const phraseSourceHashSchema = z.string().brand<"PhraseSourceHash">();
+export type PhraseSourceHash = z.infer<typeof phraseSourceHashSchema>;
 
 export type SequencerEditTarget = "NOTE" | "PITCH";
 

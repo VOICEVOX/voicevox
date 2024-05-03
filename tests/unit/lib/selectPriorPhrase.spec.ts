@@ -5,11 +5,13 @@ import { DEFAULT_TPQN } from "@/sing/storeHelper";
 import { selectPriorPhrase } from "@/sing/domain";
 
 const createPhrase = (
+  firstRestDuration: number,
   start: number,
   end: number,
   state: PhraseState,
 ): Phrase => {
   return {
+    firstRestDuration: firstRestDuration * DEFAULT_TPQN,
     notes: [
       {
         id: uuidv4(),
@@ -23,11 +25,11 @@ const createPhrase = (
   };
 };
 const basePhrases = new Map<string, Phrase>([
-  ["1", createPhrase(0, 1, "WAITING_TO_BE_RENDERED")],
-  ["2", createPhrase(1, 2, "WAITING_TO_BE_RENDERED")],
-  ["3", createPhrase(2, 3, "WAITING_TO_BE_RENDERED")],
-  ["4", createPhrase(3, 4, "WAITING_TO_BE_RENDERED")],
-  ["5", createPhrase(4, 5, "WAITING_TO_BE_RENDERED")],
+  ["1", createPhrase(0, 0, 1, "WAITING_TO_BE_RENDERED")],
+  ["2", createPhrase(0, 1, 2, "WAITING_TO_BE_RENDERED")],
+  ["3", createPhrase(0, 2, 3, "WAITING_TO_BE_RENDERED")],
+  ["4", createPhrase(0, 3, 4, "WAITING_TO_BE_RENDERED")],
+  ["5", createPhrase(0, 4, 5, "WAITING_TO_BE_RENDERED")],
 ]);
 
 it("しっかり優先順位に従って探している", () => {
