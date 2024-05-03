@@ -58,7 +58,7 @@
     "systeminformation": "5.21.15",
     "tree-kill": "1.2.2",
     "uuid": "9.0.0",
-    "vue": "3.4.21",
+    "vue": "3.4.26",
     "vuedraggable": "4.1.0",
     "vuex": "4.0.2",
     "zod": "3.22.4"
@@ -91,7 +91,7 @@
     "@voicevox/eslint-plugin": "file:./eslint-plugin",
     "@vue/eslint-config-prettier": "9.0.0",
     "@vue/eslint-config-typescript": "13.0.0",
-    "@vue/test-utils": "2.3.0",
+    "@vue/test-utils": "2.4.5",
     "cross-env": "7.0.3",
     "dotenv": "16.0.0",
     "electron": "30.0.1",
