@@ -22,6 +22,7 @@ export type Note = {
   lyric?: string;
 };
 
+// BPMの精度。（小数点以下の桁数）
 const bpmPrecision = 2;
 
 /**
