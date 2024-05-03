@@ -324,3 +324,39 @@ test("complexObject3", () => {
     c: { d: 3, e: { f: "4", g: [5, 6] } },
   });
 });
+
+test("unCloneableObject", () => {
+  const immer = new Immer();
+  immer.setAutoFreeze(false);
+  enablePatches();
+
+  const object: (() => number)[] = [() => 1, () => 2, () => 3];
+  const [new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    object,
+    (obj) => {
+      obj[1] = () => 4;
+    },
+  );
+
+  expect(new_object.length).toBe(3);
+  expect(new_object[0]()).toBe(1);
+  expect(new_object[1]()).toBe(4);
+  expect(new_object[2]()).toBe(3);
+  applyPatches(new_object, undoPatches);
+  expect(new_object[0]()).toBe(1);
+  expect(new_object[1]()).toBe(2);
+  expect(new_object[2]()).toBe(3);
+  applyPatches(new_object, redoPatches);
+  expect(new_object[0]()).toBe(1);
+  expect(new_object[1]()).toBe(4);
+  expect(new_object[2]()).toBe(3);
+
+  applyPatches(object, redoPatches);
+  expect(object[0]()).toBe(1);
+  expect(object[1]()).toBe(4);
+  expect(object[2]()).toBe(3);
+  applyPatches(object, undoPatches);
+  expect(object[0]()).toBe(1);
+  expect(object[1]()).toBe(2);
+  expect(object[2]()).toBe(3);
+});

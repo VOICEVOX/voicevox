@@ -14,6 +14,30 @@ export function applyPatches<T>(target: T, patches: Patch[]) {
   }
 }
 
+function isObject(value: unknown): value is object {
+  return typeof value === "object" && value != null;
+}
+
+// structuredCloneはfunction等を処理できないため、適当なフォールバックを用意する
+function clone<T>(value: T): T {
+  try {
+    return structuredClone(value);
+  } catch {
+    // これ以下の処理へのフォールバックが目的なので何もしない
+  }
+  if (!isObject(value)) return value;
+  if (Array.isArray(value)) {
+    return value.map((v) => clone(v)) as T;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: any = {};
+  for (const [k, v] of Object.entries(value)) {
+    result[k] = clone(v);
+  }
+  return result as T;
+}
+
 /**
  * produceWithPatchesにより生成された単一のパッチをオブジェクトに適用します。
  *
@@ -27,7 +51,7 @@ export function applyPatch<T>(target: T, patch: Patch) {
     // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、targetはany型として扱う
     target = target[p];
   }
-  const v = structuredClone(value);
+  const v = clone(value);
   switch (op) {
     case "add":
     case "replace":
