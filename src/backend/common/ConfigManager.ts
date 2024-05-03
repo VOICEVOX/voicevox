@@ -207,21 +207,21 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       );
 
       const presets = config.presets as ConfigType["presets"];
-      const singerPresetsKeys: string[] = [];
+      const singerPresetKeys: string[] = [];
       for (const voiceId of filteredVoiceIdOnlySinger) {
         const defaultPresetKey = defaultPresetKeys[
           voiceId as VoiceId
         ] as PresetKey;
-        singerPresetsKeys.push(defaultPresetKey);
+        singerPresetKeys.push(defaultPresetKey);
         delete presets.items[defaultPresetKey];
         delete defaultPresetKeys[voiceId as VoiceId];
       }
 
-      if (singerPresetsKeys.length === 0) return;
-      const newPresetsKeys = presets.keys.filter(
-        (key) => !singerPresetsKeys.includes(key),
+      if (singerPresetKeys.length === 0) return;
+      const newPresetKeys = presets.keys.filter(
+        (key) => !singerPresetKeys.includes(key),
       );
-      presets.keys = newPresetsKeys;
+      presets.keys = newPresetKeys;
     },
   ],
 ];
