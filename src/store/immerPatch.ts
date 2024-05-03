@@ -38,6 +38,37 @@ function clone<T>(value: T): T {
   return result as T;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function get(value: unknown, key: string | number): any {
+  if (value instanceof Map) {
+    return value.get(key);
+  }
+  // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、valueはany型として扱う
+  return value[key];
+}
+
+function add(value: unknown, key: string | number, v: unknown): void {
+  if (value instanceof Map) {
+    value.set(key, v);
+  } else if (value instanceof Set) {
+    value.add(v);
+  } else {
+    // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、valueはany型として扱う
+    value[key] = v;
+  }
+}
+
+function remove(value: unknown, key: string | number, v: unknown): void {
+  if (value instanceof Map) {
+    value.delete(key);
+  } else if (value instanceof Set) {
+    value.delete(v);
+  } else {
+    // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、valueはany型として扱う
+    delete value[key];
+  }
+}
+
 /**
  * produceWithPatchesにより生成された単一のパッチをオブジェクトに適用します。
  *
@@ -48,19 +79,16 @@ function clone<T>(value: T): T {
 export function applyPatch<T>(target: T, patch: Patch) {
   const { path, value, op } = patch;
   for (const p of patch.path.slice(0, path.length - 1)) {
-    // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、targetはany型として扱う
-    target = target[p];
+    target = get(target, p);
   }
   const v = clone(value);
   switch (op) {
     case "add":
     case "replace":
-      // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、targetはany型として扱う
-      target[path[path.length - 1]] = v;
+      add(target, path[path.length - 1], v);
       break;
     case "remove":
-      // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、targetはany型として扱う
-      delete target[path[path.length - 1]];
+      remove(target, path[path.length - 1], v);
       break;
     default:
       throw new ExhaustiveError(op);

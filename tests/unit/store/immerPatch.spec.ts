@@ -1,4 +1,4 @@
-import { enablePatches, Immer } from "immer";
+import { enableMapSet, enablePatches, Immer } from "immer";
 import { applyPatches } from "@/store/immerPatch";
 
 test("objectAdd", () => {
@@ -359,4 +359,73 @@ test("unCloneableObject", () => {
   expect(object[0]()).toBe(1);
   expect(object[1]()).toBe(2);
   expect(object[2]()).toBe(3);
+});
+
+test("map", () => {
+  const immer = new Immer();
+  immer.setAutoFreeze(false);
+  enablePatches();
+  enableMapSet();
+
+  const object: Map<number, number> = new Map([
+    [1, 2],
+    [3, 4],
+  ]);
+  const [new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    object,
+    (obj) => {
+      obj.set(3, 5);
+    },
+  );
+
+  expect(new_object.get(1)).toBe(2);
+  expect(new_object.get(3)).toBe(5);
+  applyPatches(new_object, undoPatches);
+  expect(new_object.get(1)).toBe(2);
+  expect(new_object.get(3)).toBe(4);
+  applyPatches(new_object, redoPatches);
+  expect(new_object.get(1)).toBe(2);
+  expect(new_object.get(3)).toBe(5);
+
+  applyPatches(object, redoPatches);
+  expect(object.get(1)).toBe(2);
+  expect(object.get(3)).toBe(5);
+  applyPatches(object, undoPatches);
+  expect(object.get(1)).toBe(2);
+  expect(object.get(3)).toBe(4);
+});
+
+test("set", () => {
+  const immer = new Immer();
+  immer.setAutoFreeze(false);
+  enablePatches();
+  enableMapSet();
+
+  const object1: Set<number> = new Set([1, 2, 3]);
+  const [new_object1, redoPatches1, undoPatches1] = immer.produceWithPatches(
+    object1,
+    (obj) => {
+      obj.delete(2);
+    },
+  );
+  expect(new_object1.has(1)).toBe(true);
+  expect(new_object1.has(2)).toBe(false);
+  expect(new_object1.has(3)).toBe(true);
+  applyPatches(new_object1, undoPatches1);
+  expect(new_object1.has(1)).toBe(true);
+  expect(new_object1.has(2)).toBe(true);
+  expect(new_object1.has(3)).toBe(true);
+  applyPatches(new_object1, redoPatches1);
+  expect(new_object1.has(1)).toBe(true);
+  expect(new_object1.has(2)).toBe(false);
+  expect(new_object1.has(3)).toBe(true);
+
+  applyPatches(object1, redoPatches1);
+  expect(object1.has(1)).toBe(true);
+  expect(object1.has(2)).toBe(false);
+  expect(object1.has(3)).toBe(true);
+  applyPatches(object1, undoPatches1);
+  expect(object1.has(1)).toBe(true);
+  expect(object1.has(2)).toBe(true);
+  expect(object1.has(3)).toBe(true);
 });
