@@ -120,7 +120,7 @@ jobs:
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-dmg
             macos_artifact_name: "VOICEVOX.${version}.${ext}"
-            os: macos-11
+            os: macos-12
 
     runs-on: ${{ matrix.os }}
     steps:
