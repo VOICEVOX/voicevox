@@ -1,6 +1,5 @@
 src/openapi/**/* linguist-generated=true
 openapi.json linguist-generated=true
 *.woff2 linguist-vendored=true
-*.vvproj linguist-generated=true
 
 * text=auto eol=lf
