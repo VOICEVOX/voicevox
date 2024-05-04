@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/// <reference types="vite-plugin-arraybuffer/types" />
 
 interface ImportMetaEnv {
   readonly VITE_7Z_BIN_NAME: string;
