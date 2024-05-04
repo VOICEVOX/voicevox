@@ -61,7 +61,7 @@ export class Midi {
   }
 }
 
-export type MidiEventWithTime<T extends MidiEvent = MidiEvent> = {
+type MidiEventWithTime<T extends MidiEvent = MidiEvent> = {
   time: number;
 } & T;
 export class Track {
