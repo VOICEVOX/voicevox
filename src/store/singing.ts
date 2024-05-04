@@ -1225,7 +1225,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const pitchEditData = [...trackRef.pitchEditData];
         const editFrameRate = state.editFrameRate;
         const firstRestMinDurationSeconds = 0.12;
-        const lastRestDurationSeconds = 1;
+        const lastRestDurationSeconds = 0.5;
         const fadeOutDurationSeconds = 0.15;
 
         // フレーズを更新する
