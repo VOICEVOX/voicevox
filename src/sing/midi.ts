@@ -9,13 +9,13 @@ import {
   MidiNoteOnEvent,
   MidiNoteOffEvent,
 } from "midi-file";
-export type Tempo = { ticks: number; bpm: number };
-export type TimeSignature = {
+type Tempo = { ticks: number; bpm: number };
+type TimeSignature = {
   ticks: number;
   numerator: number;
   denominator: number;
 };
-export type Note = {
+type Note = {
   ticks: number;
   noteNumber: number;
   duration: number;
