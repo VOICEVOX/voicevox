@@ -21,8 +21,8 @@ const DEFAULT_SAMPLING_RATE = 24000;
  * FIXME: Result型にする
  */
 export class ProjectFileFormatError extends Error {
-  constructor(message: string, options?: { cause?: unknown }) {
-    super(message, options);
+  constructor(message: string) {
+    super(message);
     this.name = "ProjectFileFormatError";
   }
 }
