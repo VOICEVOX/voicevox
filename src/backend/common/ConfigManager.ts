@@ -37,7 +37,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
       }
       const engineId = EngineId(
-        JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid
+        JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid,
       );
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
@@ -78,7 +78,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       if (
         Object.prototype.hasOwnProperty.call(
           experimentalSetting,
-          "enableMultiEngine"
+          "enableMultiEngine",
         )
       ) {
         const enableMultiEngine: boolean =
@@ -116,7 +116,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
           // @ts-expect-error 名前変更なので合わない。
           toolbarSetting === "EXPORT_AUDIO_ONE"
             ? "EXPORT_AUDIO_SELECTED"
-            : toolbarSetting
+            : toolbarSetting,
         );
       config.toolbarSetting = newToolbarSetting;
 
@@ -135,6 +135,53 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       ) {
         savingSetting.fixedExportEnabled = false;
       }
+    },
+  ],
+  [
+    ">=0.19",
+    (config) => {
+      // ピッチ表示機能の設定をピッチ編集機能に引き継ぐ
+      const experimentalSetting =
+        config.experimentalSetting as ExperimentalSettingType & {
+          showPitchInSongEditor?: boolean; // FIXME: TypeScript 5.4.5ならこの型の結合は不要
+        };
+      if (
+        "showPitchInSongEditor" in experimentalSetting &&
+        typeof experimentalSetting.showPitchInSongEditor === "boolean"
+      ) {
+        experimentalSetting.enablePitchEditInSongEditor =
+          experimentalSetting.showPitchInSongEditor;
+        delete experimentalSetting.showPitchInSongEditor;
+      }
+    },
+  ],
+  [
+    ">=0.20",
+    (config) => {
+      // プロジェクト読み込み → プロジェクトを読み込む
+      const hotkeySettings =
+        config.hotkeySettings as ConfigType["hotkeySettings"];
+      const newHotkeySettings: ConfigType["hotkeySettings"] =
+        hotkeySettings.map((hotkeySetting) => {
+          /// @ts-expect-error 名前変更なので合わない。
+          if (hotkeySetting.action === "プロジェクト読み込み") {
+            return {
+              ...hotkeySetting,
+              action: "プロジェクトを読み込む",
+            };
+          }
+          /// @ts-expect-error 名前変更なので合わない。
+          if (hotkeySetting.action === "テキスト読み込む") {
+            return {
+              ...hotkeySetting,
+              action: "テキストを読み込む",
+            };
+          }
+          return hotkeySetting;
+        });
+      config.hotkeySettings = newHotkeySettings;
+
+      return config;
     },
   ],
 ];
@@ -243,23 +290,23 @@ export abstract class BaseConfigManager {
     const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
       (defaultHotkey) => {
         const loadedHotkey = loadedHotkeys.find(
-          (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
+          (loadedHotkey) => loadedHotkey.action === defaultHotkey.action,
         );
         const hotkeyWithoutCombination: HotkeySettingType = {
           action: defaultHotkey.action,
           combination: COMBINATION_IS_NONE,
         };
         return loadedHotkey || hotkeyWithoutCombination;
-      }
+      },
     );
     const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
       if (hotkey.combination === COMBINATION_IS_NONE) {
         const newHotkey =
           defaultHotkeySettings.find(
-            (defaultHotkey) => defaultHotkey.action === hotkey.action
+            (defaultHotkey) => defaultHotkey.action === hotkey.action,
           ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
         const combinationExists = hotkeysWithoutNewCombination.some(
-          (hotkey) => hotkey.combination === newHotkey.combination
+          (hotkey) => hotkey.combination === newHotkey.combination,
         );
         if (combinationExists) {
           const emptyHotkey: HotkeySettingType = {

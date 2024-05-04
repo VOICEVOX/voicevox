@@ -1,33 +1,26 @@
 import { it, expect } from "vitest";
+import { v4 as uuidv4 } from "uuid";
 import { Phrase, PhraseState } from "@/store/type";
 import { DEFAULT_TPQN } from "@/sing/storeHelper";
 import { selectPriorPhrase } from "@/sing/domain";
-import { EngineId, StyleId } from "@/type/preload";
+import { NoteId } from "@/type/preload";
 
-const tempos = [
-  {
-    position: 0,
-    bpm: 60,
-  },
-];
 const createPhrase = (
   start: number,
   end: number,
-  state: PhraseState
+  state: PhraseState,
 ): Phrase => {
   return {
-    notes: [],
-    startTicks: start * DEFAULT_TPQN,
-    endTicks: end * DEFAULT_TPQN,
-    keyRangeAdjustment: 0,
-    volumeRangeAdjustment: 0,
+    notes: [
+      {
+        id: NoteId(uuidv4()),
+        position: start * DEFAULT_TPQN,
+        duration: (end - start) * DEFAULT_TPQN,
+        noteNumber: 60,
+        lyric: "ド",
+      },
+    ],
     state,
-    tempos,
-    tpqn: DEFAULT_TPQN,
-    singer: {
-      engineId: EngineId("00000000-0000-0000-0000-000000000000"),
-      styleId: StyleId(0),
-    },
   };
 };
 const basePhrases = new Map<string, Phrase>([

@@ -1,5 +1,42 @@
 [
   {
+    "version": "0.19.1",
+    "descriptions": [
+      "ソング：音域調整時に音量が変わるバグを修正",
+      "ソング：１小節目の最初にノートを配置するとエラーになる問題を修正"
+    ],
+    "contributors": ["Hiroshiba", "sigprogramming"]
+  },
+  {
+    "version": "0.19.0",
+    "descriptions": [
+      "ソング：ピッチ編集機能",
+      "ソング：歌詞の一括入力",
+      "バグ修正"
+    ],
+    "contributors": [
+      "Hiroshiba",
+      "KoharuYuzuki",
+      "madosuki",
+      "palm209",
+      "romot-co",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "weweweok",
+      "y-chan"
+    ]
+  },
+  {
+    "version": "0.18.1",
+    "descriptions": [
+      "キャラクター「†聖騎士 紅桜†」「雀松朱司」「麒ヶ島宗麟」「春歌ナナ」「猫使アル」「猫使ビィ」「中国うさぎ」のハミングを追加",
+      "キャラクター「栗田まろん」「あいえるたん」「満別花丸」「琴詠ニア」のハミングを追加",
+      "ソング：一部のUSTファイルが読み込めないバグの修正",
+      "起動に必要なメモリ量を大幅に削減"
+    ],
+    "contributors": ["Hiroshiba", "qryxip", "romot-co"]
+  },
+  {
     "version": "0.18.0",
     "descriptions": [
       "キャラクター「WhiteCUL」「後鬼」「No.7」のハミングを追加",

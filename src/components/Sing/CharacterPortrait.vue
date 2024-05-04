@@ -20,18 +20,18 @@ const portraitPath = computed(() => {
   }
   const characterInfo = store.getters.CHARACTER_INFO(
     singer.engineId,
-    singer.styleId
+    singer.styleId,
   );
   const styleInfo = characterInfo?.metas.styles.find(
-    (style) => style.styleId === singer.styleId
+    (style) => style.styleId === singer.styleId,
   );
   return styleInfo?.portraitPath || characterInfo?.portraitPath;
 });
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 // 画面右下に固定表示
 // 幅固定、高さ可変、画像のアスペクト比を保持、wrapのwidthに合わせてheightを調整

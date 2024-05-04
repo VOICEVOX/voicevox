@@ -81,7 +81,8 @@
                   no-transition
                   :ratio="1"
                   :src="
-                    getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
+                    getDefaultStyleWrapper(characterInfo.metas.speakerUuid)
+                      .iconPath
                   "
                 />
                 <QAvatar
@@ -92,7 +93,7 @@
                   <img
                     :src="
                       engineIcons[
-                        getDefaultStyle(characterInfo.metas.speakerUuid)
+                        getDefaultStyleWrapper(characterInfo.metas.speakerUuid)
                           .engineId
                       ]
                     "
@@ -199,6 +200,7 @@ import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
+import { getDefaultStyle } from "@/domain/talk";
 
 const props = withDefaults(
   defineProps<{
@@ -213,7 +215,7 @@ const props = withDefaults(
     loading: false,
     showEngineInfo: false,
     emptiable: false,
-  }
+  },
 );
 
 const emit = defineEmits({
@@ -238,8 +240,8 @@ const selectedCharacter = computed(() => {
       characterInfo.metas.styles.some(
         (style) =>
           style.engineId === selectedVoice.engineId &&
-          style.styleId === selectedVoice.styleId
-      )
+          style.styleId === selectedVoice.styleId,
+      ),
   );
   return character;
 });
@@ -268,7 +270,7 @@ const selectedStyleInfo = computed(() => {
   const style = selectedCharacter.value?.metas.styles.find(
     (style) =>
       style.engineId === selectedVoice?.engineId &&
-      style.styleId === selectedVoice.styleId
+      style.styleId === selectedVoice.styleId,
   );
   return style;
 });
@@ -278,31 +280,19 @@ const engineIcons = computed(() =>
     store.state.engineIds.map((engineId) => [
       engineId,
       base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ])
-  )
+    ]),
+  ),
 );
 
-const getDefaultStyle = (speakerUuid: SpeakerId) => {
-  // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
-  const characterInfo = props.characterInfos.find(
-    (info) => info.metas.speakerUuid === speakerUuid
+const getDefaultStyleWrapper = (speakerUuid: SpeakerId) =>
+  getDefaultStyle(
+    speakerUuid,
+    props.characterInfos,
+    store.state.defaultStyleIds,
   );
-  const defaultStyleId = store.state.defaultStyleIds.find(
-    (x) => x.speakerUuid === speakerUuid
-  )?.defaultStyleId;
-
-  const defaultStyle =
-    characterInfo?.metas.styles.find(
-      (style) => style.styleId === defaultStyleId
-    ) ?? characterInfo?.metas.styles[0]; // デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
-
-  if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
-
-  return defaultStyle;
-};
 
 const onSelectSpeaker = (speakerUuid: SpeakerId) => {
-  const style = getDefaultStyle(speakerUuid);
+  const style = getDefaultStyleWrapper(speakerUuid);
   emit("update:selectedVoice", {
     engineId: style.engineId,
     speakerId: speakerUuid,
@@ -311,7 +301,7 @@ const onSelectSpeaker = (speakerUuid: SpeakerId) => {
 };
 
 const subMenuOpenFlags = ref(
-  [...Array(props.characterInfos.length)].map(() => false)
+  [...Array(props.characterInfos.length)].map(() => false),
 );
 
 const reassignSubMenuOpen = debounce((idx: number) => {
@@ -339,7 +329,7 @@ const updateMenuHeight = () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .character-button {
   border: solid 1px;

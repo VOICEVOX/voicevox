@@ -7,8 +7,6 @@ const fs = require("fs");
 const { spawnSync } = require("child_process");
 
 (async () => {
-  // node-fetchはESModuleなので、import()で読み込む
-  const { default: fetch } = await import("node-fetch");
   const distPath = path.resolve(__dirname, "vendored", "7z");
   let url;
   let filesToExtract;
@@ -53,7 +51,7 @@ const { spawnSync } = require("child_process");
   const existingFiles = await fs.promises.readdir(distPath);
 
   const notDownloaded = filesToExtract.filter(
-    (file) => !existingFiles.includes(file)
+    (file) => !existingFiles.includes(file),
   );
 
   if (notDownloaded.length === 0) {
@@ -74,14 +72,14 @@ const { spawnSync } = require("child_process");
         ["x", "-y", "-o" + distPath, sevenZipPath, ...filesToExtract],
         {
           stdio: ["ignore", "inherit", "inherit"],
-        }
+        },
       )
     : spawnSync(
         "tar",
         ["xvf", sevenZipPath, "-v", "-C", distPath, ...filesToExtract],
         {
           stdio: ["ignore", "inherit", "inherit"],
-        }
+        },
       );
 
   if (extractor.status !== 0) {

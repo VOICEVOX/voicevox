@@ -31,7 +31,7 @@ it("新バージョンがある場合、latestVersionに最新バージョンが
 
   const result = useFetchNewUpdateInfos(
     async () => currentVersion,
-    UrlString("http://example.com")
+    UrlString("http://example.com"),
   );
 
   await waitFinished(result);
@@ -48,7 +48,7 @@ it("新バージョンがない場合は状態が変わるだけ", async () => {
 
   const result = useFetchNewUpdateInfos(
     async () => currentVersion,
-    UrlString("http://example.com")
+    UrlString("http://example.com"),
   );
 
   await waitFinished(result);

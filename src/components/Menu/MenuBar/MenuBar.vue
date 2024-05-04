@@ -34,21 +34,22 @@ import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
-const props =
-  defineProps<{
-    /** 「ファイル」メニューのサブメニュー */
-    fileSubMenuData: MenuItemData[];
-    /** 「編集」メニューのサブメニュー */
-    editSubMenuData: MenuItemData[];
-    /** エディタの種類 */
-    editor: "talk" | "song";
-  }>();
+const props = defineProps<{
+  /** 「ファイル」メニューのサブメニュー */
+  fileSubMenuData: MenuItemData[];
+  /** 「編集」メニューのサブメニュー */
+  editSubMenuData: MenuItemData[];
+  /** エディタの種類 */
+  editor: "talk" | "song";
+}>();
 
 const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 const currentVersion = ref("");
+
+const audioKeys = computed(() => store.state.audioKeys);
 
 // デフォルトエンジンの代替先ポート
 const defaultEngineAltPortTo = computed<number | undefined>(() => {
@@ -56,7 +57,7 @@ const defaultEngineAltPortTo = computed<number | undefined>(() => {
 
   // ref: https://github.com/VOICEVOX/voicevox/blob/32940eab36f4f729dd0390dca98f18656240d60d/src/views/EditorHome.vue#L522-L528
   const defaultEngineInfo = Object.values(store.state.engineInfos).find(
-    (engine) => engine.type === "default"
+    (engine) => engine.type === "default",
   );
   if (defaultEngineInfo == undefined) return undefined;
 
@@ -90,7 +91,7 @@ const titleText = computed(
     (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
     (defaultEngineAltPortTo.value != null
       ? ` - Port: ${defaultEngineAltPortTo.value}`
-      : "")
+      : ""),
 );
 const canUndo = computed(() => store.getters.CAN_UNDO(props.editor));
 const canRedo = computed(() => store.getters.CAN_REDO(props.editor));
@@ -155,7 +156,7 @@ const importProject = () => {
 const recentProjectsSubMenuData = ref<MenuItemData[]>([]);
 const updateRecentProjects = async () => {
   const recentlyUsedProjects = await store.dispatch(
-    "GET_RECENTLY_USED_PROJECTS"
+    "GET_RECENTLY_USED_PROJECTS",
   );
   recentProjectsSubMenuData.value =
     recentlyUsedProjects.length === 0
@@ -236,7 +237,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
                 disableWhenUiLocked: false,
               },
             ].filter((x) => x),
-          } as MenuItemRoot)
+          }) as MenuItemRoot,
       ),
       {
         type: "separator",
@@ -317,7 +318,7 @@ const menudata = computed<MenuItemData[]>(() => [
       },
       {
         type: "button",
-        label: "プロジェクト読み込み",
+        label: "プロジェクトを読み込む",
         onClick: () => {
           importProject();
         },
@@ -359,6 +360,18 @@ const menudata = computed<MenuItemData[]>(() => [
           }
         },
         disabled: !canRedo.value,
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "全セルを選択",
+        onClick: async () => {
+          if (!uiLocked.value) {
+            await store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+              audioKeys: audioKeys.value,
+            });
+          }
+        },
         disableWhenUiLocked: true,
       },
       ...props.editSubMenuData,
@@ -459,7 +472,7 @@ const menudata = computed<MenuItemData[]>(() => [
 ]);
 
 const subMenuOpenFlags = ref(
-  [...Array(menudata.value.length)].map(() => false)
+  [...Array(menudata.value.length)].map(() => false),
 );
 
 const reassignSubMenuOpen = (idx: number) => {
@@ -478,30 +491,41 @@ watch(uiLocked, () => {
   }
 });
 
-registerHotkeyWithCleanup({
-  editor: props.editor,
+/**
+ * 全エディタに対してホットキーを登録する
+ * FIXME: hotkeyPlugin側で全エディタに対して登録できるようにする
+ */
+function registerHotkeyForAllEditors(action: Omit<HotkeyAction, "editor">) {
+  registerHotkeyWithCleanup({
+    editor: "talk",
+    ...action,
+  });
+  registerHotkeyWithCleanup({
+    editor: "song",
+    ...action,
+  });
+}
+
+registerHotkeyForAllEditors({
   callback: createNewProject,
   name: "新規プロジェクト",
 });
-registerHotkeyWithCleanup({
-  editor: props.editor,
+registerHotkeyForAllEditors({
   callback: saveProject,
   name: "プロジェクトを上書き保存",
 });
-registerHotkeyWithCleanup({
-  editor: props.editor,
+registerHotkeyForAllEditors({
   callback: saveProjectAs,
   name: "プロジェクトを名前を付けて保存",
 });
-registerHotkeyWithCleanup({
-  editor: props.editor,
+registerHotkeyForAllEditors({
   callback: importProject,
-  name: "プロジェクト読み込み",
+  name: "プロジェクトを読み込む",
 });
 </script>
 
 <style lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .active-menu {
   background-color: rgba(colors.$primary-rgb, 0.3) !important;
@@ -509,8 +533,8 @@ registerHotkeyWithCleanup({
 </style>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-bar {
   min-height: vars.$menubar-height;
