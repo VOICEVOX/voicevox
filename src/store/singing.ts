@@ -164,6 +164,8 @@ let previewSynth: PolySynth | undefined;
 let previewChannelStrip: ChannelStrip | undefined;
 let globalChannelStrip: ChannelStrip | undefined;
 
+// Undoしたときに不明なトラックを参照してしまうので、DefaultMapを使う。
+// TODO: 通常のMapに変更する
 const channelStrips = new DefaultMap<TrackId, ChannelStrip>(() => {
   if (!audioContext) {
     throw new Error("audioContext is undefined.");
@@ -175,6 +177,7 @@ const channelStrips = new DefaultMap<TrackId, ChannelStrip>(() => {
   strip.output.connect(globalChannelStrip.input);
   return strip;
 });
+
 let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
 
