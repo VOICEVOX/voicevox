@@ -19,7 +19,7 @@ const classNames: Record<PhraseState, string> = {
   PLAYABLE: "playable",
 };
 const className = computed(() => {
-  const phrase = store.state.phrases.mustGet(props.phraseKey);
+  const phrase = store.state.phrases.getOrThrow(props.phraseKey);
 
   return classNames[phrase.state];
 });

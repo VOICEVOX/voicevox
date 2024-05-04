@@ -10,7 +10,7 @@ const addProperty = (key: string, value: (...args: never[]) => unknown) => {
 };
 
 addProperty(
-  "mustGet",
+  "getOrThrow",
   function (this: Map<unknown, unknown>, key: unknown): unknown {
     if (!this.has(key)) {
       throw new Error(`Key not found: ${key}`);
@@ -20,7 +20,7 @@ addProperty(
 );
 
 addProperty(
-  "mustDelete",
+  "deleteOrThrow",
   function (this: Map<unknown, unknown>, key: unknown): void {
     if (!this.has(key)) {
       throw new Error(`Key not found: ${key}`);
@@ -31,8 +31,8 @@ addProperty(
 
 declare global {
   interface Map<K, V> {
-    mustGet(key: K): V;
-    mustDelete(key: K): void;
+    getOrThrow(key: K): V;
+    deleteOrThrow(key: K): void;
   }
 }
 

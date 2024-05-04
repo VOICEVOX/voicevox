@@ -607,7 +607,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseState,
       }: { phraseKey: string; phraseState: PhraseState },
     ) {
-      const phrase = state.phrases.mustGet(phraseKey);
+      const phrase = state.phrases.getOrThrow(phraseKey);
 
       phrase.state = phraseState;
     },
@@ -624,7 +624,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         singingGuideKey: SingingGuideSourceHash | undefined;
       },
     ) {
-      const phrase = state.phrases.mustGet(phraseKey);
+      const phrase = state.phrases.getOrThrow(phraseKey);
 
       phrase.singingGuideKey = singingGuideKey;
     },
@@ -641,7 +641,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         singingVoiceKey: SingingVoiceSourceHash | undefined;
       },
     ) {
-      const phrase = state.phrases.mustGet(phraseKey);
+      const phrase = state.phrases.getOrThrow(phraseKey);
 
       phrase.singingVoiceKey = singingVoiceKey;
     },
@@ -1194,7 +1194,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.singingGuideKey != undefined &&
               phrase.singingVoiceKey != undefined
             ) {
-              let singingGuide = state.singingGuides.mustGet(
+              let singingGuide = state.singingGuides.getOrThrow(
                 phrase.singingGuideKey,
               );
 
@@ -1291,7 +1291,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
             let singingGuide: SingingGuide | undefined;
             if (phrase.singingGuideKey != undefined) {
-              singingGuide = state.singingGuides.mustGet(
+              singingGuide = state.singingGuides.getOrThrow(
                 phrase.singingGuideKey,
               );
             } else {
@@ -2344,10 +2344,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             ) {
               continue;
             }
-            const singingGuide = state.singingGuides.mustGet(
+            const singingGuide = state.singingGuides.getOrThrow(
               phrase.singingGuideKey,
             );
-            const singingVoice = singingVoices.mustGet(phrase.singingVoiceKey);
+            const singingVoice = singingVoices.getOrThrow(
+              phrase.singingVoiceKey,
+            );
 
             // TODO: この辺りの処理を共通化する
             const audioEvents = await generateAudioEvents(
