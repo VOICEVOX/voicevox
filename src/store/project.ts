@@ -11,7 +11,10 @@ import {
 
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { LatestProjectType } from "@/domain/project/schema";
-import { migrateProjectFileObject } from "@/domain/project";
+import {
+  migrateProjectFileObject,
+  ProjectFileFormatError,
+} from "@/domain/project";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandUnixMillisec: null,
@@ -150,9 +153,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           filePath = ret[0];
         }
 
-        const projectFileErrorMsg = `VOICEVOX Project file "${filePath}" is a invalid file.`;
-        // TODO: ↑のエラーメッセージをちゃんとする
-
         let buf: ArrayBuffer;
         try {
           buf = await window.backend
@@ -213,7 +213,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             if (!(err instanceof Error)) return "エラーが発生しました。";
             if (err instanceof ResultError && err.code === "ENOENT")
               return "プロジェクトファイルが見つかりませんでした。ファイルが移動、または削除された可能性があります。";
-            if (err.message.startsWith(projectFileErrorMsg))
+            if (err instanceof ProjectFileFormatError)
               return "ファイルフォーマットが正しくありません。";
             return err.message;
           })();

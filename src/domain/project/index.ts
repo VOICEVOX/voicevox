@@ -16,6 +16,17 @@ import {
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
+/**
+ * プロジェクトファイルのフォーマットエラー
+ * FIXME: Result型にする
+ */
+export class ProjectFileFormatError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "ProjectFileFormatError";
+  }
+}
+
 const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
@@ -81,11 +92,13 @@ export const migrateProjectFileObject = async (
   if (
     !("appVersion" in projectData && typeof projectData.appVersion === "string")
   ) {
-    throw new Error("The appVersion of the project file should be string");
+    throw new ProjectFileFormatError(
+      "The appVersion of the project file should be string",
+    );
   }
   const projectAppVersion: string = projectData.appVersion;
   if (!semver.valid(projectAppVersion)) {
-    throw new Error(
+    throw new ProjectFileFormatError(
       `The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`,
     );
   }
