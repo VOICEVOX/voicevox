@@ -5,7 +5,7 @@ import { it, expect } from "vitest";
 import { Midi } from "@/sing/midi";
 
 // MIDIファイルの作成情報：
-// - synthv.mid：SynthVで作成（synthv.svp、Synthesizer V Studio Pro 1.11.0）
+// - synthv.mid：SynthVで作成（Synthesizer V Studio Pro 1.11.0、プロジェクトファイルは https://github.com/VOICEVOX/voicevox/pull/1982 を参照）
 // - timeSig.mid、bpm.mid：signalで作成（https://signal.vercel.app/edit）
 
 it("BPMをパースできる", async () => {
