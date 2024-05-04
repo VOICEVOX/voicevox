@@ -14,3 +14,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+interface Map<K, V> {
+  mustGet(key: K): V;
+  mustDelete(key: K): void;
+}
