@@ -23,6 +23,7 @@
           v-if="midi"
           v-model="selectedTrack"
           :options="tracks"
+          :disable="midiFileError != undefined"
           emit-value
           map-options
           label="インポートするトラック"
@@ -47,7 +48,7 @@
             color="toolbar-button"
             text-color="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
-            :disabled="selectedTrack === null"
+            :disabled="selectedTrack === null || midiFileError != undefined"
             @click="handleImportTrack"
           />
         </QToolbar>
@@ -59,7 +60,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
-import { Midi } from "@tonejs/midi";
+import { Midi } from "@/sing/midi";
 import { useStore } from "@/store";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -73,12 +74,16 @@ const midiFile = ref<File | null>(null);
 const midiFileError = computed(() => {
   if (midiFile.value && !midi.value) {
     return "MIDIファイルの読み込みに失敗しました";
-  } else if (midiFile.value && midi.value && !midi.value.tracks.length) {
-    return "トラックがありません";
+  } else if (midiFile.value && midi.value) {
+    if (!midi.value.tracks.length) {
+      return "トラックがありません";
+    } else if (midi.value.tracks.every((track) => track.notes.length === 0)) {
+      return "ノートがありません";
+    }
   }
   return undefined;
 });
-// MIDIデータ(tone.jsでパースしたもの)
+// MIDIデータ
 const midi = ref<Midi | null>(null);
 // トラック
 const tracks = computed(() => {
@@ -86,10 +91,13 @@ const tracks = computed(() => {
     return [];
   }
   // トラックリストを生成
-  // トラックNo: トラック名 形式
+  // "トラックNo: トラック名 / ノート数" の形式で表示
   return midi.value.tracks.map((track, index) => ({
-    label: `${index + 1}: ${track.name}`,
+    label: `${index + 1}: ${track.name || "（トラック名なし）"} / ノート数：${
+      track.notes.length
+    }`,
     value: index,
+    disable: track.notes.length === 0,
   }));
 });
 // 選択中のトラック
@@ -130,8 +138,12 @@ const handleMidiFileChange = (event: Event) => {
       ) {
         // MIDIファイルをパース
         midi.value = new Midi(e.target.result);
-        const DEFAULT_TRACK = 0;
-        selectedTrack.value = DEFAULT_TRACK;
+        selectedTrack.value = midi.value.tracks.findIndex(
+          (track) => track.notes.length > 0,
+        );
+        if (selectedTrack.value === -1) {
+          selectedTrack.value = 0;
+        }
       } else {
         throw new Error("Could not find MIDI file data");
       }

@@ -1,5 +1,4 @@
 import path from "path";
-import { Midi } from "@tonejs/midi";
 import { v4 as uuidv4 } from "uuid";
 import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
@@ -25,6 +24,7 @@ import {
   SequencerEditTarget,
 } from "./type";
 import { sanitizeFileName } from "./utility";
+import { Midi } from "@/sing/midi";
 import { EngineId, StyleId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
@@ -1600,14 +1600,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           await window.backend.readFile({ filePath }),
         );
         const midi = new Midi(midiData);
-        const midiTpqn = midi.header.ppq;
-        const midiTempos = [...midi.header.tempos];
-        const midiTimeSignatures = [...midi.header.timeSignatures];
+        const midiTpqn = midi.ticksPerBeat;
+        const midiTempos = midi.tempos;
+        const midiTimeSignatures = midi.timeSignatures;
 
-        const midiNotes = [...midi.tracks[trackIndex].notes];
+        const midiNotes = midi.tracks[trackIndex].notes;
 
-        midiTempos.sort((a, b) => a.ticks - b.ticks);
-        midiTimeSignatures.sort((a, b) => a.ticks - b.ticks);
         midiNotes.sort((a, b) => a.ticks - b.ticks);
 
         const tpqn = DEFAULT_TPQN;
@@ -1618,12 +1616,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             position: convertPosition(value.ticks, midiTpqn, tpqn),
             duration: convertDuration(
               value.ticks,
-              value.ticks + value.durationTicks,
+              value.ticks + value.duration,
               midiTpqn,
               tpqn,
             ),
-            noteNumber: value.midi,
-            lyric: getDoremiFromNoteNumber(value.midi),
+            noteNumber: value.noteNumber,
+            lyric: value.lyric || getDoremiFromNoteNumber(value.noteNumber),
           };
         });
         // ノートの重なりを考慮して、一番音が高いノート（トップノート）のみインポートする
@@ -1646,8 +1644,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         let measureNumber = 1;
         for (let i = 0; i < midiTimeSignatures.length; i++) {
           const midiTs = midiTimeSignatures[i];
-          const beats = midiTs.timeSignature[0];
-          const beatType = midiTs.timeSignature[1];
+          const beats = midiTs.numerator;
+          const beatType = midiTs.denominator;
           timeSignatures.push({ measureNumber, beats, beatType });
           if (i < midiTimeSignatures.length - 1) {
             const nextTsTicks = midiTimeSignatures[i + 1].ticks;
