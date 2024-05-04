@@ -50,14 +50,12 @@ import { useStore } from "@/store";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { Preset, PresetKey } from "@/type/preload";
 
-const props =
-  defineProps<{
-    openDialog: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:openDialog", val: boolean): void;
-  }>();
+const props = defineProps<{
+  openDialog: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:openDialog", val: boolean): void;
+}>();
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
@@ -74,7 +72,7 @@ const presetList = computed(() =>
     .map((key) => ({
       key,
       ...presetItems.value[key],
-    }))
+    })),
 );
 
 const isPreview = ref(false);
@@ -89,7 +87,7 @@ const previewPresetList = computed(() =>
           key,
           ...presetItems.value[key],
         }))
-    : presetList.value
+    : presetList.value,
 );
 
 const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {

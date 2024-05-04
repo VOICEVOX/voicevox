@@ -40,7 +40,7 @@ export function url2HostInfo(url: URL): HostInfo {
  */
 function netstatStdout2pid(
   stdout: string,
-  hostInfo: HostInfo
+  hostInfo: HostInfo,
 ): number | undefined {
   const lines = stdout.split("\n");
 
@@ -59,7 +59,7 @@ function netstatStdout2pid(
 
 export async function getPidFromPort(
   hostInfo: HostInfo,
-  isNested = false // ログ整形用の引数
+  isNested = false, // ログ整形用の引数
 ): Promise<number | undefined> {
   // Windows の場合は, hostname が以下のループバックアドレスが割り当てられているか確認
   const parse4windows = (stdout: string): string | undefined => {
@@ -69,14 +69,14 @@ export async function getPidFromPort(
       portLog(
         hostInfo.port,
         `Hostname is not loopback address; Getting process id from ${hostInfo.hostname}...`,
-        isNested
+        isNested,
       );
       return netstatStdout2pid(stdout, hostInfo)?.toString();
     } else {
       portLog(
         hostInfo.port,
         "Hostname is loopback address; Getting process id from all loopback addresses...",
-        isNested
+        isNested,
       );
 
       const pidArr: (number | undefined)[] = [];
@@ -93,7 +93,7 @@ export async function getPidFromPort(
           `| ${hostname}\t-> ${
             pid == undefined ? "Assignable" : `pid=${pid} uses this port`
           }`,
-          isNested
+          isNested,
         );
 
         pidArr.push(pid);
@@ -119,7 +119,7 @@ export async function getPidFromPort(
   portLog(
     hostInfo.port,
     `Running command: "${exec.cmd} ${exec.args.join(" ")}"...`,
-    isNested
+    isNested,
   );
 
   // lsofは、ポートを使用しているプロセスが存在しない場合は
@@ -146,14 +146,14 @@ export async function getPidFromPort(
   portWarn(
     hostInfo.port,
     `Nonassignable; pid=${pid} uses this port!`,
-    isNested
+    isNested,
   );
   return Number(pid);
 }
 
 export async function getProcessNameFromPid(
   hostInfo: HostInfo,
-  pid: number
+  pid: number,
 ): Promise<string> {
   portLog(hostInfo.port, `Getting process name from pid=${pid}...`);
   const exec = isWindows
@@ -191,7 +191,7 @@ export async function getProcessNameFromPid(
  */
 function findOrCheckPort(
   port: number,
-  hostname: string
+  hostname: string,
 ): Promise<number | undefined> {
   return new Promise((resolve, reject) => {
     const server = createServer();
@@ -220,7 +220,7 @@ function findOrCheckPort(
  */
 export async function findAltPort(
   basePort: number,
-  hostname: string
+  hostname: string,
 ): Promise<number | undefined> {
   portLog(basePort, `Find another assignable port from ${basePort}...`);
 

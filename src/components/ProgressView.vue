@@ -66,12 +66,12 @@ watch(progress, (newValue, oldValue) => {
 onUnmounted(() => clearTimeout(timeoutId));
 
 const formattedProgress = computed(() =>
-  (store.getters.PROGRESS * 100).toFixed()
+  (store.getters.PROGRESS * 100).toFixed(),
 );
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .progress {
   background-color: rgba(colors.$display-rgb, 0.15);

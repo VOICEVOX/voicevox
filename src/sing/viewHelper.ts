@@ -1,4 +1,6 @@
-import { StyleInfo } from "@/type/preload";
+import { z } from "zod";
+import { StyleInfo, isMac, NoteId } from "@/type/preload";
+import { calculateHash } from "@/sing/utility";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_SEMITONE = 30;
@@ -6,8 +8,8 @@ const BASE_Y_PER_SEMITONE = 30;
 export const ZOOM_X_MIN = 0.2;
 export const ZOOM_X_MAX = 1;
 export const ZOOM_X_STEP = 0.05;
-export const ZOOM_Y_MIN = 0.35;
-export const ZOOM_Y_MAX = 1;
+export const ZOOM_Y_MIN = 0.5;
+export const ZOOM_Y_MAX = 1.5;
 export const ZOOM_Y_STEP = 0.05;
 export const PREVIEW_SOUND_DURATION = 0.15;
 
@@ -19,6 +21,7 @@ export function tickToBaseX(ticks: number, tpqn: number) {
   return (ticks / tpqn) * BASE_X_PER_QUARTER_NOTE;
 }
 
+// NOTE: 戻り値は実数
 export function baseXToTick(baseX: number, tpqn: number) {
   return (baseX / BASE_X_PER_QUARTER_NOTE) * tpqn;
 }
@@ -116,3 +119,102 @@ export const getStyleDescription = (style: StyleInfo) => {
   }
   return description.join("・");
 };
+
+interface AreaInfo {
+  readonly id: string;
+}
+
+type ClickInfo<T extends AreaInfo> = {
+  readonly clickCount: number;
+  readonly areaInfo: T;
+};
+
+type DoubleClickInfo<T extends AreaInfo> = {
+  readonly clickInfos: [ClickInfo<T>, ClickInfo<T>];
+};
+
+export class DoubleClickDetector<T extends AreaInfo> {
+  private clickInfos: ClickInfo<T>[] = [];
+
+  recordClick(clickCount: number, areaInfo: T) {
+    if (clickCount === 1) {
+      this.clickInfos = [];
+    }
+    this.clickInfos.push({ clickCount, areaInfo });
+  }
+
+  detect(): DoubleClickInfo<T> | undefined {
+    if (this.clickInfos.length < 2) {
+      return undefined;
+    }
+    const clickInfo1 = this.clickInfos[this.clickInfos.length - 2];
+    const clickInfo2 = this.clickInfos[this.clickInfos.length - 1];
+    if (
+      clickInfo1.clickCount === 1 &&
+      clickInfo2.clickCount === 2 &&
+      clickInfo1.areaInfo.id === clickInfo2.areaInfo.id
+    ) {
+      return { clickInfos: [clickInfo1, clickInfo2] };
+    }
+    return undefined;
+  }
+}
+
+export class NoteAreaInfo implements AreaInfo {
+  readonly type: "note";
+  readonly id: string;
+  readonly noteId: NoteId;
+
+  constructor(noteId: NoteId) {
+    this.type = "note";
+    this.id = `NOTE-${noteId}`;
+    this.noteId = noteId;
+  }
+}
+
+export class GridAreaInfo implements AreaInfo {
+  readonly type: "grid";
+  readonly id: string;
+
+  constructor() {
+    this.type = "grid";
+    this.id = "GRID";
+  }
+}
+
+export type FramewiseDataSection = {
+  readonly startFrame: number;
+  readonly frameRate: number;
+  readonly data: number[];
+};
+
+const framewiseDataSectionHashSchema = z
+  .string()
+  .brand<"FramewiseDataSectionHash">();
+
+export type FramewiseDataSectionHash = z.infer<
+  typeof framewiseDataSectionHashSchema
+>;
+
+export async function calculateFramewiseDataSectionHash(
+  dataSection: FramewiseDataSection,
+) {
+  const hash = await calculateHash(dataSection);
+  return framewiseDataSectionHashSchema.parse(hash);
+}
+
+export type MouseButton = "LEFT_BUTTON" | "RIGHT_BUTTON" | "OTHER_BUTTON";
+
+export function getButton(event: MouseEvent): MouseButton {
+  // macOSの場合、Ctrl+クリックは右クリック
+  if (isMac && event.button === 0 && event.ctrlKey) {
+    return "RIGHT_BUTTON";
+  }
+  if (event.button === 0) {
+    return "LEFT_BUTTON";
+  } else if (event.button === 2) {
+    return "RIGHT_BUTTON";
+  } else {
+    return "OTHER_BUTTON";
+  }
+}

@@ -36,7 +36,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
       const allDict = await Promise.all(
         state.engineIds.map((engineId) => {
           return dispatch("LOAD_USER_DICT", { engineId });
-        })
+        }),
       );
       const mergedDictMap = new Map<string, [string, UserDictWord]>();
       for (const dict of allDict) {
@@ -62,7 +62,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
   ADD_WORD: {
     async action(
       { state, dispatch },
-      { surface, pronunciation, accentType, priority }
+      { surface, pronunciation, accentType, priority },
     ) {
       // 同じ単語IDで登録するために、１つのエンジンで登録したあと全エンジンに同期する。
       const engineId: EngineId | undefined = state.engineIds[0];
@@ -77,7 +77,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
           pronunciation,
           accentType,
           priority,
-        })
+        }),
       );
 
       await dispatch("SYNC_ALL_USER_DICT");
@@ -87,7 +87,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
   REWRITE_WORD: {
     async action(
       { state, dispatch },
-      { wordUuid, surface, pronunciation, accentType, priority }
+      { wordUuid, surface, pronunciation, accentType, priority },
     ) {
       if (state.engineIds.length === 0)
         throw new Error(`At least one engine must be registered`);
@@ -101,7 +101,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
             pronunciation,
             accentType,
             priority,
-          })
+          }),
         );
       }
     },
@@ -117,7 +117,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
         }).then((instance) =>
           instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")({
             wordUuid,
-          })
+          }),
         );
       }
     },
@@ -134,9 +134,9 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
           async (instance) =>
             new Set(
               Object.keys(
-                await instance.invoke("getUserDictWordsUserDictGet")({})
-              )
-            )
+                await instance.invoke("getUserDictWordsUserDictGet")({}),
+              ),
+            ),
         );
         if (Object.keys(mergedDict).some((id) => !dictIdSet.has(id))) {
           await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
@@ -149,9 +149,9 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
                 Object.entries(mergedDict).map(([k, v]) => [
                   k,
                   UserDictWordToJSON(v),
-                ])
+                ]),
               ),
-            })
+            }),
           );
         }
         const removedDictIdSet = new Set(dictIdSet);
@@ -171,11 +171,11 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
                 instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")(
                   {
                     wordUuid: id,
-                  }
-                )
-              )
+                  },
+                ),
+              ),
             );
-          }
+          },
         );
       }
     },

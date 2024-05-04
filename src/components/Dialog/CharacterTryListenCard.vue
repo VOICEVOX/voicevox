@@ -97,28 +97,26 @@ import { computed, ref } from "vue";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 
-const props =
-  defineProps<{
-    characterInfo: CharacterInfo;
-    isSelected: boolean;
-    isNewCharacter?: boolean;
-    playing?: {
-      speakerUuid: SpeakerId;
-      styleId: StyleId;
-      index: number;
-    };
-    togglePlayOrStop: (
-      speakerUuid: SpeakerId,
-      styleInfo: StyleInfo,
-      index: number
-    ) => void;
-  }>();
+const props = defineProps<{
+  characterInfo: CharacterInfo;
+  isSelected: boolean;
+  isNewCharacter?: boolean;
+  playing?: {
+    speakerUuid: SpeakerId;
+    styleId: StyleId;
+    index: number;
+  };
+  togglePlayOrStop: (
+    speakerUuid: SpeakerId,
+    styleInfo: StyleInfo,
+    index: number,
+  ) => void;
+}>();
 
-const emit =
-  defineEmits<{
-    (event: "update:selectCharacter", speakerUuid: SpeakerId): void;
-    (event: "update:portrait", portrait: string): void;
-  }>();
+const emit = defineEmits<{
+  (event: "update:selectCharacter", speakerUuid: SpeakerId): void;
+  (event: "update:portrait", portrait: string): void;
+}>();
 
 // キャラクター枠のホバー状態を表示するかどうか
 // 再生ボタンなどにカーソルがある場合はキャラクター枠のホバーUIを表示しないようにするため
@@ -143,7 +141,7 @@ const speakerUuid = computed(() => props.characterInfo.metas.speakerUuid);
 // 選択中のスタイル
 const selectedStyleIndex = ref<number>(0);
 const selectedStyle = computed(
-  () => props.characterInfo.metas.styles[selectedStyleIndex.value]
+  () => props.characterInfo.metas.styles[selectedStyleIndex.value],
 );
 
 // スタイル番号をずらす
@@ -162,8 +160,8 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .character-item {
   box-shadow: 0 0 0 1px rgba(colors.$primary-rgb, 0.5);

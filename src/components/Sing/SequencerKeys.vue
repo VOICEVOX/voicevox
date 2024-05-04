@@ -64,7 +64,7 @@ const props = withDefaults(
   {
     offset: 0,
     blackKeyWidth: 30,
-  }
+  },
 );
 const store = useStore();
 const width = ref(48);
@@ -170,8 +170,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .sequencer-keys {
   backface-visibility: hidden;
