@@ -8,8 +8,10 @@ import { Midi } from "@/sing/midi";
 // - synthv.mid：SynthVで作成（Synthesizer V Studio Pro 1.11.0、プロジェクトファイルは https://github.com/VOICEVOX/voicevox/pull/1982 を参照）
 // - timeSig.mid、bpm.mid：signalで作成（https://signal.vercel.app/edit）
 
+const midiRoot = "tests/unit/lib/midi/";
+
 it("BPMをパースできる", async () => {
-  const bpmMid = await fs.readFile("tests/unit/lib/testMidi/bpm.mid");
+  const bpmMid = await fs.readFile(midiRoot + "bpm.mid");
   const midi = new Midi(bpmMid);
   const ticksPerBeat = midi.ticksPerBeat;
   expect(midi.tempos).toEqual([
@@ -31,7 +33,7 @@ const lyricExpectation: [noteNumber: number, lyric: string][] = [
 ];
 
 it("SynthVのノートと歌詞をパースできる", async () => {
-  const synthvMid = await fs.readFile("tests/unit/lib/testMidi/synthv.mid");
+  const synthvMid = await fs.readFile(midiRoot + "synthv.mid");
   const midi = new Midi(synthvMid);
   const ticksPerBeat = midi.ticksPerBeat;
   // SynthVのMIDIファイルの1トラック目はBPM情報のみなので、2トラック目を取得
@@ -46,7 +48,7 @@ it("SynthVのノートと歌詞をパースできる", async () => {
 });
 
 it("拍子をパースできる", async () => {
-  const timeSigMid = await fs.readFile("tests/unit/lib/testMidi/timeSig.mid");
+  const timeSigMid = await fs.readFile(midiRoot + "timeSig.mid");
   const midi = new Midi(timeSigMid);
   const ticksPerBeat = midi.ticksPerBeat;
   expect(midi.timeSignatures).toEqual([
