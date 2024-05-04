@@ -62,6 +62,10 @@ export type VoiceId = z.infer<typeof voiceIdSchema>;
 export const VoiceId = (voice: Voice): VoiceId =>
   voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
 
+export const noteIdSchema = z.string().brand<"NoteId">();
+export type NoteId = z.infer<typeof noteIdSchema>;
+export const NoteId = (id: string): NoteId => noteIdSchema.parse(id);
+
 // 共通のアクション名
 export const actionPostfixSelectNthCharacter = "番目のキャラクターを選択";
 
