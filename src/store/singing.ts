@@ -887,14 +887,60 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, commit, dispatch }) {
+      const calcPhraseFirstRestDuration = (
+        prevPhraseLastNote: Note | undefined,
+        phraseFirstNote: Note,
+        phraseFirstRestMinDurationSeconds: number,
+        tempos: Tempo[],
+        tpqn: number,
+      ) => {
+        const quarterNoteDuration = getNoteDuration(4, tpqn);
+        let phraseFirstRestDuration: number | undefined = undefined;
+
+        // 実際のフレーズ先頭の休符の長さを調べる
+        if (prevPhraseLastNote == undefined) {
+          if (phraseFirstNote.position === 0) {
+            // 1小節目の最初から始まっているフレーズの場合は、
+            // とりあえず4分音符の長さをフレーズ先頭の休符の長さにする
+            phraseFirstRestDuration = quarterNoteDuration;
+          } else {
+            phraseFirstRestDuration = phraseFirstNote.position;
+          }
+        } else {
+          const prevPhraseLastNoteEndPos =
+            prevPhraseLastNote.position + prevPhraseLastNote.duration;
+          phraseFirstRestDuration =
+            phraseFirstNote.position - prevPhraseLastNoteEndPos;
+        }
+        // 4分音符の長さ以下にする
+        phraseFirstRestDuration = Math.min(
+          phraseFirstRestDuration,
+          quarterNoteDuration,
+        );
+        // 最小の長さ以上にする
+        phraseFirstRestDuration = Math.max(
+          phraseFirstRestDuration,
+          phraseFirstNote.position -
+            secondToTick(
+              tickToSecond(phraseFirstNote.position, tempos, tpqn) -
+                phraseFirstRestMinDurationSeconds,
+              tempos,
+              tpqn,
+            ),
+        );
+        // 1tick以上にする
+        phraseFirstRestDuration = Math.max(1, phraseFirstRestDuration);
+
+        return phraseFirstRestDuration;
+      };
+
       const searchPhrases = async (
         notes: Note[],
         tempos: Tempo[],
         tpqn: number,
-        firstRestMinDurationSeconds: number,
+        phraseFirstRestMinDurationSeconds: number,
       ) => {
         const foundPhrases = new Map<string, Phrase>();
-        const quarterNoteDuration = getNoteDuration(4, tpqn);
 
         let phraseNotes: Note[] = [];
         let prevPhraseLastNote: Note | undefined = undefined;
@@ -911,42 +957,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             nextNote == undefined ||
             currentNoteEndPos !== nextNote.position
           ) {
-            //先頭の休符の長さを計算する
             const phraseFirstNote = phraseNotes[0];
-            let phraseFirstRestDuration: number | undefined = undefined;
-            if (prevPhraseLastNote == undefined) {
-              if (phraseFirstNote.position === 0) {
-                // 1小節目の最初から始まっているフレーズの場合は、
-                // とりあえず4分音符の長さを先頭の休符の長さにする
-                phraseFirstRestDuration = quarterNoteDuration;
-              } else {
-                phraseFirstRestDuration = phraseFirstNote.position;
-              }
-            } else {
-              const prevPhraseLastNoteEndPos =
-                prevPhraseLastNote.position + prevPhraseLastNote.duration;
-              phraseFirstRestDuration =
-                phraseFirstNote.position - prevPhraseLastNoteEndPos;
-            }
-            // 先頭の休符の長さを4分音符の長さ以下にする
-            phraseFirstRestDuration = Math.min(
-              phraseFirstRestDuration,
-              quarterNoteDuration,
+            const phraseFirstRestDuration = calcPhraseFirstRestDuration(
+              prevPhraseLastNote,
+              phraseFirstNote,
+              phraseFirstRestMinDurationSeconds,
+              tempos,
+              tpqn,
             );
-            // 先頭の休符の長さを最小の長さ以上にする
-            phraseFirstRestDuration = Math.max(
-              phraseFirstRestDuration,
-              phraseFirstNote.position -
-                secondToTick(
-                  tickToSecond(phraseFirstNote.position, tempos, tpqn) -
-                    firstRestMinDurationSeconds,
-                  tempos,
-                  tpqn,
-                ),
-            );
-            // 先頭の休符の長さを1以上にする
-            phraseFirstRestDuration = Math.max(1, phraseFirstRestDuration);
-
             const notesHash = await calculatePhraseSourceHash({
               firstRestDuration: phraseFirstRestDuration,
               notes: phraseNotes,
