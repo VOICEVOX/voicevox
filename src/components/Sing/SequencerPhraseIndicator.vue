@@ -19,10 +19,8 @@ const classNames: Record<PhraseState, string> = {
   PLAYABLE: "playable",
 };
 const className = computed(() => {
-  const phrase = store.state.phrases.get(props.phraseKey);
-  if (phrase == undefined) {
-    throw new Error("phrase is undefined.");
-  }
+  const phrase = store.state.phrases.mustGet(props.phraseKey);
+
   return classNames[phrase.state];
 });
 </script>
