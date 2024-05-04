@@ -4,6 +4,7 @@ import {
   Note,
   Phrase,
   PhraseSource,
+  PhraseSourceHash,
   Score,
   SingingGuide,
   SingingGuideSource,
@@ -369,7 +370,7 @@ export function getEndTicksOfPhrase(phrase: Phrase) {
   return lastNote.position + lastNote.duration;
 }
 
-export function toSortedPhrases(phrases: Map<string, Phrase>) {
+export function toSortedPhrases(phrases: Map<PhraseSourceHash, Phrase>) {
   return [...phrases.entries()].sort((a, b) => {
     const startTicksOfPhraseA = getStartTicksOfPhrase(a[1]);
     const startTicksOfPhraseB = getStartTicksOfPhrase(b[1]);
@@ -386,9 +387,9 @@ export function toSortedPhrases(phrases: Map<string, Phrase>) {
  * - 再生位置より前のPhrase
  */
 export function selectPriorPhrase(
-  phrases: Map<string, Phrase>,
+  phrases: Map<PhraseSourceHash, Phrase>,
   position: number,
-): [string, Phrase] {
+): [PhraseSourceHash, Phrase] {
   if (phrases.size === 0) {
     throw new Error("Received empty phrases");
   }

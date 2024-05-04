@@ -23,6 +23,7 @@ import {
   SingingGuideSourceHash,
   SingingVoiceSourceHash,
   SequencerEditTarget,
+  PhraseSourceHash,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId, StyleId } from "@/type/preload";
@@ -595,7 +596,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_PHRASES: {
-    mutation(state, { phrases }: { phrases: Map<string, Phrase> }) {
+    mutation(state, { phrases }: { phrases: Map<PhraseSourceHash, Phrase> }) {
       state.phrases = phrases;
     },
   },
@@ -606,7 +607,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       {
         phraseKey,
         phraseState,
-      }: { phraseKey: string; phraseState: PhraseState },
+      }: { phraseKey: PhraseSourceHash; phraseState: PhraseState },
     ) {
       const phrase = state.phrases.get(phraseKey);
       if (phrase == undefined) {
@@ -623,7 +624,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseKey,
         singingGuideKey,
       }: {
-        phraseKey: string;
+        phraseKey: PhraseSourceHash;
         singingGuideKey: SingingGuideSourceHash | undefined;
       },
     ) {
@@ -642,7 +643,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseKey,
         singingVoiceKey,
       }: {
-        phraseKey: string;
+        phraseKey: PhraseSourceHash;
         singingVoiceKey: SingingVoiceSourceHash | undefined;
       },
     ) {
@@ -940,7 +941,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tpqn: number,
         phraseFirstRestMinDurationSeconds: number,
       ) => {
-        const foundPhrases = new Map<string, Phrase>();
+        const foundPhrases = new Map<PhraseSourceHash, Phrase>();
 
         let phraseNotes: Note[] = [];
         let prevPhraseLastNote: Note | undefined = undefined;
@@ -1278,7 +1279,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        const phrases = new Map<string, Phrase>();
+        const phrases = new Map<PhraseSourceHash, Phrase>();
 
         for (const [notesHash, foundPhrase] of foundPhrases) {
           const phraseKey = notesHash;

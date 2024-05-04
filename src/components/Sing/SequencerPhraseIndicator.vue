@@ -5,10 +5,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useStore } from "@/store";
-import { PhraseState } from "@/store/type";
+import { PhraseSourceHash, PhraseState } from "@/store/type";
 
 const props = defineProps<{
-  phraseKey: string;
+  phraseKey: PhraseSourceHash;
 }>();
 
 const store = useStore();
