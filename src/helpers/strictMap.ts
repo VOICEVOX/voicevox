@@ -1,4 +1,4 @@
-// Mapの拡張。型定義はvite-env.d.tsで行う。
+// Mapの拡張。
 //
 // - Mapを継承したStrictMapはimmerにより通常のMapになってしまう。
 // - implements Map<K, V>のカスタムクラスはstructuredCloneにより{ map: Map<K, V> }になってしまう。
@@ -28,3 +28,12 @@ addProperty(
     this.delete(key);
   },
 );
+
+declare global {
+  interface Map<K, V> {
+    mustGet(key: K): V;
+    mustDelete(key: K): void;
+  }
+}
+
+export {};
