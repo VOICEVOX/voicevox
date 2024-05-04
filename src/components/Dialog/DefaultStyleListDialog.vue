@@ -106,15 +106,13 @@ import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
-const props =
-  defineProps<{
-    modelValue: boolean;
-    characterInfos: CharacterInfo[];
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+  characterInfos: CharacterInfo[];
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -130,7 +128,7 @@ const showStyleSelectDialog = ref<boolean>(false);
 const selectedCharacterInfo = computed(() => {
   return props.characterInfos.find(
     (characterInfo) =>
-      characterInfo.metas.speakerUuid === selectedCharacter.value
+      characterInfo.metas.speakerUuid === selectedCharacter.value,
   );
 });
 
@@ -165,14 +163,14 @@ watch([() => props.modelValue], async ([newValue]) => {
       .map((speakerUuid) => characterInfosMap.value[speakerUuid])
       .filter((characterInfo) => characterInfo != undefined)
       .filter(
-        (characterInfo) => characterInfo.metas.styles.length > 1
+        (characterInfo) => characterInfo.metas.styles.length > 1,
       ) as CharacterInfo[];
     // FIXME: エンジン未起動状態でデフォルトスタイル選択ダイアログを開くと
     // 未起動エンジンのキャラのデフォルトスタイルが消えてしまう
     selectedStyleIndexes.value = Object.fromEntries(
       [
         ...store.state.userCharacterOrder.map(
-          (speakerUuid) => [speakerUuid, 0] as const
+          (speakerUuid) => [speakerUuid, 0] as const,
         ),
         ...store.state.defaultStyleIds.map(
           (defaultStyle) =>
@@ -181,11 +179,11 @@ watch([() => props.modelValue], async ([newValue]) => {
               characterInfosMap.value[
                 defaultStyle.speakerUuid
               ]?.metas.styles.findIndex(
-                (style) => style.styleId === defaultStyle.defaultStyleId
+                (style) => style.styleId === defaultStyle.defaultStyleId,
               ),
-            ] as const
+            ] as const,
         ),
-      ].filter(([speakerUuid]) => speakerUuid in characterInfosMap.value)
+      ].filter(([speakerUuid]) => speakerUuid in characterInfosMap.value),
     );
   }
 });
@@ -209,8 +207,8 @@ const closeDialog = () => {
             characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
               .engineId,
         };
-      }
-    )
+      },
+    ),
   );
   stop();
   modelValueComputed.value = false;
@@ -223,8 +221,8 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-toolbar div:first-child {
   min-width: 0;

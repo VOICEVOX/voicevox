@@ -41,7 +41,7 @@ async function openDictDialog(page: Page): Promise<void> {
 async function validateInputTag(
   page: Page,
   inputTag: Locator,
-  expectedWord: string
+  expectedWord: string,
 ) {
   await inputTag.press("Enter");
   await page.waitForTimeout(100);

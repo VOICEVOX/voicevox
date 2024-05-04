@@ -46,7 +46,7 @@ function createDummyAccentPhrase(moraTexts: string[]): AccentPhrase {
 // AccentPhrasesから特定のmora textを持つものMoraを返す
 function findMora(
   accentPhrases: AccentPhrase[],
-  text: string
+  text: string,
 ): Mora | undefined {
   let candidate: Mora | undefined;
   for (let i = 0; i < accentPhrases.length; i++) {
@@ -64,16 +64,16 @@ function findMora(
 
 test("formatCharacterStyleName", () => {
   expect(formatCharacterStyleName("四国めたん", DEFAULT_STYLE_NAME)).toEqual(
-    "四国めたん（ノーマル）"
+    "四国めたん（ノーマル）",
   );
 });
 
 test("sanitizeFileName", () => {
   expect(sanitizeFileName("テスト\x00ファイル\x1f名.txt")).toBe(
-    "テストファイル名.txt"
+    "テストファイル名.txt",
   );
   expect(sanitizeFileName('テスト"*/:<>?\\|ファイル名.txt')).toBe(
-    "テストファイル名.txt"
+    "テストファイル名.txt",
   );
 });
 
@@ -126,10 +126,10 @@ describe.each([
         enableRubyNotation: false,
       };
       expect(extractExportText(text, param)).toBe(
-        expectedSkippedMemoText + rubyText
+        expectedSkippedMemoText + rubyText,
       );
       expect(extractYomiText(text, param)).toBe(
-        expectedSkippedMemoText + rubyText
+        expectedSkippedMemoText + rubyText,
       );
     });
 
@@ -139,10 +139,10 @@ describe.each([
         enableRubyNotation: true,
       };
       expect(extractExportText(text, param)).toBe(
-        memoText + expectedSkippedRubyYomiText
+        memoText + expectedSkippedRubyYomiText,
       );
       expect(extractYomiText(text, param)).toBe(
-        memoText + expectedSkippedRubyExportText
+        memoText + expectedSkippedRubyExportText,
       );
     });
 
@@ -152,13 +152,13 @@ describe.each([
         enableRubyNotation: true,
       };
       expect(extractExportText(text, param)).toBe(
-        expectedSkippedMemoText + expectedSkippedRubyYomiText
+        expectedSkippedMemoText + expectedSkippedRubyYomiText,
       );
       expect(extractYomiText(text, param)).toBe(
-        expectedSkippedMemoText + expectedSkippedRubyExportText
+        expectedSkippedMemoText + expectedSkippedRubyExportText,
       );
     });
-  }
+  },
 );
 
 describe("TuningTranscription", () => {
@@ -190,7 +190,7 @@ describe("TuningTranscription", () => {
     // 転写されていない
     ["あ", "う", "お", "た", "ち", "つ", "て", "と"].forEach((moraText) => {
       expect(findMora(result, moraText)).not.toEqual(
-        findMora(before, moraText)
+        findMora(before, moraText),
       );
     });
   });
@@ -219,7 +219,7 @@ describe("TuningTranscription", () => {
     // 転写されていない
     ["あ", "しゃ", "き", "きゅ"].forEach((moraText) => {
       expect(findMora(result, moraText)).not.toEqual(
-        findMora(before, moraText)
+        findMora(before, moraText),
       );
     });
   });
@@ -265,7 +265,7 @@ test("buildAudioFileNameFromRawData", () => {
   };
   const result = buildAudioFileNameFromRawData(fileNamePattern, vars);
   expect(result).toBe(
-    "index=011 characterName=キャラ１ text=テストテキスト styleName=スタイル１ date=20210801"
+    "index=011 characterName=キャラ１ text=テストテキスト styleName=スタイル１ date=20210801",
   );
 });
 
@@ -273,14 +273,14 @@ test("getToolbarButtonName", () => {
   expect(getToolbarButtonName("PLAY_CONTINUOUSLY")).toBe("連続再生");
   expect(getToolbarButtonName("STOP")).toBe("停止");
   expect(getToolbarButtonName("EXPORT_AUDIO_SELECTED")).toBe(
-    "選択音声を書き出し"
+    "選択音声を書き出し",
   );
   expect(getToolbarButtonName("EXPORT_AUDIO_ALL")).toBe("全部書き出し");
   expect(getToolbarButtonName("EXPORT_AUDIO_CONNECT_ALL")).toBe(
-    "音声を繋げて書き出し"
+    "音声を繋げて書き出し",
   );
   expect(getToolbarButtonName("存在しないタグ" as ToolbarButtonTagType)).toBe(
-    undefined
+    undefined,
   );
 });
 
@@ -318,20 +318,20 @@ test("getBaseName", () => {
 
 test("isOnCommandOrCtrlKeyDown", () => {
   expect(isOnCommandOrCtrlKeyDown({ metaKey: true, ctrlKey: false })).toBe(
-    isMac
+    isMac,
   );
   expect(isOnCommandOrCtrlKeyDown({ metaKey: false, ctrlKey: true })).toBe(
-    !isMac
+    !isMac,
   );
   expect(isOnCommandOrCtrlKeyDown({ metaKey: true, ctrlKey: true })).toBe(true);
   expect(isOnCommandOrCtrlKeyDown({ metaKey: false, ctrlKey: false })).toBe(
-    false
+    false,
   );
 });
 
 describe("filterCharacterInfosByStyleType", () => {
   const createCharacterInfo = (
-    styleTypes: (undefined | "talk" | "frame_decode" | "sing")[]
+    styleTypes: (undefined | "talk" | "frame_decode" | "sing")[],
   ): CharacterInfo => {
     const engineId = EngineId(uuidv4());
     return {
@@ -364,7 +364,7 @@ describe("filterCharacterInfosByStyleType", () => {
     test(`${styleType}のキャラクターが取得できる`, () => {
       const filtered = filterCharacterInfosByStyleType(
         characterInfos,
-        styleType
+        styleType,
       );
       // talkしかないキャラクターは除外される
       expect(filtered.length).toBe(2);
@@ -380,7 +380,7 @@ describe("filterCharacterInfosByStyleType", () => {
   test(`singerLikeを指定するとsingとhummingのキャラクターが取得できる`, () => {
     const filtered = filterCharacterInfosByStyleType(
       characterInfos,
-      "singerLike"
+      "singerLike",
     );
     expect(filtered.length).toBe(3);
     expect(filtered[0].metas.styles.length).toBe(1);

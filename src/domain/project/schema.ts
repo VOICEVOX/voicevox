@@ -87,6 +87,7 @@ export const trackSchema = z.object({
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
+  pitchEditData: z.array(z.number()), // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
 });
 
 // プロジェクトファイルのスキーマ

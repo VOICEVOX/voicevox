@@ -39,13 +39,13 @@ export type PayloadRecipeTree<S, M> = {
  */
 export const createCommandMutationTree = <S, M extends MutationsBase>(
   payloadRecipeTree: PayloadRecipeTree<S, M>,
-  editor: EditorType
+  editor: EditorType,
 ): MutationTree<S, M> =>
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
       createCommandMutation(val, editor),
-    ])
+    ]),
   ) as MutationTree<S, M>;
 
 /**
@@ -56,7 +56,7 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
 export const createCommandMutation =
   <S extends State, M extends MutationsBase, K extends keyof M>(
     payloadRecipe: PayloadRecipe<S, M[K]>,
-    editor: EditorType
+    editor: EditorType,
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
     const command = recordPatches(payloadRecipe)(state, payload);
@@ -74,7 +74,7 @@ const recordPatches =
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
       toRaw(state) as S,
-      (draft: S) => recipe(draft, payload)
+      (draft: S) => recipe(draft, payload),
     );
     return {
       unixMillisec: new Date().getTime(),
@@ -146,7 +146,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
   LAST_COMMAND_UNIX_MILLISEC: {
     getter(state) {
       const getLastCommandUnixMillisec = (
-        commands: Command[]
+        commands: Command[],
       ): number | null => {
         const lastCommand = commands[commands.length - 1];
         // 型的にはundefinedにはならないが、lengthが0の場合はundefinedになる
@@ -154,10 +154,10 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       };
 
       const lastTalkCommandTime = getLastCommandUnixMillisec(
-        state.undoCommands["talk"]
+        state.undoCommands["talk"],
       );
       const lastSongCommandTime = getLastCommandUnixMillisec(
-        state.undoCommands["song"]
+        state.undoCommands["song"],
       );
 
       if (lastTalkCommandTime != null && lastSongCommandTime != null) {

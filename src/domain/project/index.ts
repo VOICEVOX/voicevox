@@ -19,16 +19,16 @@ const DEFAULT_SAMPLING_RATE = 24000;
 const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
-      (audioKey) => audioKey in talkProject.audioItems
+      (audioKey) => audioKey in talkProject.audioItems,
     )
   ) {
     throw new Error(
-      "Every audioKey in audioKeys should be a key of audioItems"
+      "Every audioKey in audioKeys should be a key of audioItems",
     );
   }
   if (
     !talkProject.audioKeys.every(
-      (audioKey) => talkProject.audioItems[audioKey]?.voice != undefined
+      (audioKey) => talkProject.audioItems[audioKey]?.voice != undefined,
     )
   ) {
     throw new Error('Every audioItem should have a "voice" attribute.');
@@ -36,7 +36,7 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
       (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.engineId != undefined
+        talkProject.audioItems[audioKey]?.voice.engineId != undefined,
     )
   ) {
     throw new Error('Every voice should have a "engineId" attribute.');
@@ -45,14 +45,15 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (
     !talkProject.audioKeys.every(
       (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.speakerId != undefined
+        talkProject.audioItems[audioKey]?.voice.speakerId != undefined,
     )
   ) {
     throw new Error('Every voice should have a "speakerId" attribute.');
   }
   if (
     !talkProject.audioKeys.every(
-      (audioKey) => talkProject.audioItems[audioKey]?.voice.styleId != undefined
+      (audioKey) =>
+        talkProject.audioItems[audioKey]?.voice.styleId != undefined,
     )
   ) {
     throw new Error('Every voice should have a "styleId" attribute.');
@@ -72,7 +73,7 @@ export const migrateProjectFileObject = async (
       styleId: StyleId;
     }) => Promise<AccentPhrase[]>;
     characterInfos: CharacterInfo[];
-  }
+  },
 ) => {
   const { fetchMoraData, characterInfos } = DI;
 
@@ -85,7 +86,7 @@ export const migrateProjectFileObject = async (
   const projectAppVersion: string = projectData.appVersion;
   if (!semver.valid(projectAppVersion)) {
     throw new Error(
-      `The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`
+      `The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`,
     );
   }
 
@@ -205,12 +206,12 @@ export const migrateProjectFileObject = async (
           characterInfo.metas.styles.some(
             (styeleinfo) =>
               styeleinfo.engineId === audioItem.engineId &&
-              styeleinfo.styleId === audioItem.styleId
-          )
+              styeleinfo.styleId === audioItem.styleId,
+          ),
         );
         if (chracterinfo == undefined)
           throw new Error(
-            `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`
+            `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`,
           );
         const speakerId = chracterinfo.metas.speakerUuid;
         audioItem.voice = {
@@ -265,9 +266,16 @@ export const migrateProjectFileObject = async (
   }
 
   if (semver.satisfies(projectAppVersion, "<0.17.1", semverSatisfiesOptions)) {
-    // volumeRangeAdjustmentの追加
+    // 声量調整値の追加
     for (const track of projectData.song.tracks) {
       track.volumeRangeAdjustment = 0;
+    }
+  }
+
+  if (semver.satisfies(projectAppVersion, "<0.19.0", semverSatisfiesOptions)) {
+    // ピッチ編集値の追加
+    for (const track of projectData.song.tracks) {
+      track.pitchEditData = [];
     }
   }
 

@@ -18,11 +18,11 @@ function ipcRendererInvoke(channel: string, ...args: unknown[]): unknown {
 
 function ipcRendererOn<T extends keyof IpcSOData>(
   channel: T,
-  listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
+  listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void,
 ): IpcRenderer;
 function ipcRendererOn(
   channel: string,
-  listener: (event: IpcRendererEvent, ...args: unknown[]) => void
+  listener: (event: IpcRendererEvent, ...args: unknown[]) => void,
 ) {
   return ipcRenderer.on(channel, listener);
 }
@@ -240,7 +240,7 @@ const api: Sandbox = {
   getSetting: async (key) => {
     return (await ipcRendererInvoke(
       "GET_SETTING",
-      key
+      key,
     )) as ConfigType[typeof key];
   },
 
@@ -251,7 +251,7 @@ const api: Sandbox = {
     return (await ipcRendererInvoke(
       "SET_SETTING",
       key,
-      newValue
+      newValue,
     )) as typeof newValue;
   },
 
@@ -259,7 +259,7 @@ const api: Sandbox = {
     return await ipcRendererInvoke(
       "SET_ENGINE_SETTING",
       engineId,
-      engineSetting
+      engineSetting,
     );
   },
 

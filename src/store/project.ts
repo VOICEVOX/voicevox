@@ -19,7 +19,7 @@ export const projectStoreState: ProjectStoreState = {
 
 const applyTalkProjectToStore = async (
   dispatch: Dispatch<AllActions>,
-  talkProject: LatestProjectType["talk"]
+  talkProject: LatestProjectType["talk"],
 ) => {
   await dispatch("REMOVE_ALL_AUDIO_ITEM");
 
@@ -41,7 +41,7 @@ const applyTalkProjectToStore = async (
 
 const applySongProjectToStore = async (
   dispatch: Dispatch<AllActions>,
-  songProject: LatestProjectType["song"]
+  songProject: LatestProjectType["song"],
 ) => {
   const { tpqn, tempos, timeSignatures, tracks } = songProject;
   // TODO: マルチトラック対応
@@ -61,6 +61,11 @@ const applySongProjectToStore = async (
       timeSignatures,
       notes: tracks[0].notes,
     },
+  });
+  await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+  await dispatch("SET_PITCH_EDIT_DATA", {
+    data: tracks[0].pitchEditData,
+    startFrame: 0,
   });
 };
 
@@ -85,7 +90,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         if (confirm !== false && context.getters.IS_EDITED) {
           const result = await context.dispatch(
             "SAVE_OR_DISCARD_PROJECT_FILE",
-            {}
+            {},
           );
           if (result == "canceled") {
             return;
@@ -97,7 +102,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         const audioItem: AudioItem = await context.dispatch(
           "GENERATE_AUDIO_ITEM",
-          {}
+          {},
         );
         await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
@@ -114,11 +119,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             notes: tracks[0].notes,
           },
         });
+        await context.dispatch("SET_SINGER", { withRelated: true });
+        await context.dispatch("CLEAR_PITCH_EDIT_DATA");
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         context.commit("CLEAR_COMMANDS");
-      }
+      },
     ),
   },
 
@@ -130,7 +137,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     action: createUILockAction(
       async (
         context,
-        { filePath, confirm }: { filePath?: string; confirm?: boolean }
+        { filePath, confirm }: { filePath?: string; confirm?: boolean },
       ) => {
         if (!filePath) {
           // Select and load a project File.
@@ -170,7 +177,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               fetchMoraData: (payload) =>
                 context.dispatch("FETCH_MORA_DATA", payload),
               characterInfos,
-            }
+            },
           );
 
           if (confirm !== false && context.getters.IS_EDITED) {
@@ -179,7 +186,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               {
                 additionalMessage:
                   "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
-              }
+              },
             );
             if (result == "canceled") {
               return false;
@@ -188,11 +195,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
           await applyTalkProjectToStore(
             context.dispatch,
-            parsedProjectData.talk
+            parsedProjectData.talk,
           );
           await applySongProjectToStore(
             context.dispatch,
-            parsedProjectData.song
+            parsedProjectData.song,
           );
 
           context.commit("SET_PROJECT_FILEPATH", { filePath });
@@ -217,7 +224,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           });
           return false;
         }
-      }
+      },
     ),
   },
 
@@ -289,7 +296,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           };
 
           const buf = new TextEncoder().encode(
-            JSON.stringify(projectData)
+            JSON.stringify(projectData),
           ).buffer;
           await window.backend
             .writeFile({
@@ -300,7 +307,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit(
             "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
-            context.getters.LAST_COMMAND_UNIX_MILLISEC
+            context.getters.LAST_COMMAND_UNIX_MILLISEC,
           );
           return true;
         } catch (err) {
@@ -317,7 +324,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           });
           return false;
         }
-      }
+      },
     ),
   },
 

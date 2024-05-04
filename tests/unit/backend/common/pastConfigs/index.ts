@@ -4,7 +4,7 @@ const pastConfigs: [
   string,
   Record<string, unknown> & {
     __internal__: { migrations: { version: string } };
-  }
+  },
 ][] = [["0.13.0", config013]];
 
 export default pastConfigs;

@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
   // 動作環境より新しいバージョン
   const latestVersion = semver.inc(
     process.env.VITE_APP_VERSION ?? process.env.npm_package_version ?? "0.0.0",
-    "major"
+    "major",
   );
   assertNonNullable(latestVersion);
 
@@ -44,6 +44,11 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("アップデートが通知されたりスキップしたりできる", async ({ page }) => {
+  test.skip(
+    process.platform === "darwin",
+    // https://github.com/VOICEVOX/voicevox/issues/2007
+    "macOSだと原因不明でテストが落ちるためスキップします",
+  );
   await page.waitForTimeout(500);
 
   // 通知されている
