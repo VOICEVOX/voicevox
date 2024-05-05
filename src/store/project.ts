@@ -464,7 +464,22 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               track.pitchEditData = [];
             }
           }
-
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.20.0",
+              semverSatisfiesOptions,
+            )
+          ) {
+            for (const audioItemsKey in projectData.audioItems) {
+              const audioItem = projectData.audioItems[audioItemsKey];
+              if (audioItem.query != null) {
+                audioItem.query.accentPhrases.forEach((accentPhrase: EditorAccentPhrase) => {
+                  accentPhrase.key = generateAccentPhraseKey();
+                })
+              }
+            }
+          }
           // Validation check
           // トークはvalidateTalkProjectで検証する
           // ソングはSET_SCOREの中の`isValidScore`関数で検証される
