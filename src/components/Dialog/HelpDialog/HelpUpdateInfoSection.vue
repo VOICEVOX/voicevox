@@ -43,8 +43,8 @@
 </template>
 
 <script setup lang="ts">
-import BaseScrollArea from "../base/BaseScrollArea.vue";
-import BaseDocumentView from "../base/BaseDocumentView.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { UpdateInfo } from "@/type/preload";
 
 const props =

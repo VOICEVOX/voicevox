@@ -77,12 +77,12 @@
 
 <script setup lang="ts">
 import { computed, ref, type Component } from "vue";
-import BaseScrollArea from "../base/BaseScrollArea.vue";
-import BaseListItem from "../base/BaseListItem.vue";
-import MarkdownView from "../template/HelpMarkdownViewSection.vue";
-import OssLicense from "../template/HelpOssLicenseSection.vue";
-import UpdateInfo from "../template/HelpUpdateInfoSection.vue";
-import LibraryPolicy from "../template/HelpLibraryPolicySection.vue";
+import MarkdownView from "./HelpMarkdownViewSection.vue";
+import OssLicense from "./HelpOssLicenseSection.vue";
+import UpdateInfo from "./HelpUpdateInfoSection.vue";
+import LibraryPolicy from "./HelpLibraryPolicySection.vue";
+import BaseListItem from "@/components/Base/BaseListItem.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
