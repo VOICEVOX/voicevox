@@ -985,6 +985,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return foundPhrases;
       };
 
+      // リクエスト用のノーツ（と休符）を作成する
       const createNotesForRequestToEngine = (
         firstRestDuration: number,
         lastRestDurationSeconds: number,
