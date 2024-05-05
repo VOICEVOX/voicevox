@@ -758,11 +758,11 @@ export type SingingGuideSource = {
   tpqn: number;
   tempos: Tempo[];
   firstRestDuration: number;
+  lastRestDurationSeconds: number;
   notes: Note[];
   keyRangeAdjustment: number;
   volumeRangeAdjustment: number;
   frameRate: number;
-  lastRestDurationSeconds: number;
 };
 
 /**

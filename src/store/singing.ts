@@ -987,11 +987,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const createNotesForRequestToEngine = (
         firstRestDuration: number,
+        lastRestDurationSeconds: number,
         notes: Note[],
         tempos: Tempo[],
         tpqn: number,
         frameRate: number,
-        lastRestDurationSeconds: number,
       ) => {
         const notesForRequestToEngine: NoteForRequestToEngine[] = [];
 
@@ -1315,11 +1315,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 tpqn,
                 tempos,
                 firstRestDuration: phrase.firstRestDuration,
+                lastRestDurationSeconds,
                 notes: phrase.notes,
                 keyRangeAdjustment,
                 volumeRangeAdjustment,
                 frameRate: singerAndFrameRate.frameRate,
-                lastRestDurationSeconds,
               });
               const hash = phrase.singingGuideKey;
               if (hash !== calculatedHash) {
@@ -1447,11 +1447,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   tpqn,
                   tempos,
                   firstRestDuration: phrase.firstRestDuration,
+                  lastRestDurationSeconds,
                   notes: phrase.notes,
                   keyRangeAdjustment,
                   volumeRangeAdjustment,
                   frameRate: singerAndFrameRate.frameRate,
-                  lastRestDurationSeconds,
                 });
 
               const singingGuideKey = singingGuideSourceHash;
@@ -1464,11 +1464,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 // リクエスト用のノーツを作る
                 const notesForRequestToEngine = createNotesForRequestToEngine(
                   phrase.firstRestDuration,
+                  lastRestDurationSeconds,
                   phrase.notes,
                   tempos,
                   tpqn,
                   singerAndFrameRate.frameRate,
-                  lastRestDurationSeconds,
                 );
 
                 // ノーツのキーのシフトを行う
@@ -1540,11 +1540,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               // リクエスト用のノーツを作る
               const notesForRequestToEngine = createNotesForRequestToEngine(
                 phrase.firstRestDuration,
+                lastRestDurationSeconds,
                 phrase.notes,
                 tempos,
                 tpqn,
                 singingGuide.frameRate,
-                lastRestDurationSeconds,
               );
 
               // ノーツのキーのシフトを行う
