@@ -1430,6 +1430,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
 
           try {
+            // リクエスト（クエリ生成と音量生成）用のノーツを作る
+            const notesForRequestToEngine = createNotesForRequestToEngine(
+              phrase.firstRestDuration,
+              lastRestDurationSeconds,
+              phrase.notes,
+              tempos,
+              tpqn,
+              singerAndFrameRate.frameRate,
+            );
+
+            // リクエスト用のノーツのキーのシフトを行う
+            shiftKeyOfNotes(notesForRequestToEngine, -keyRangeAdjustment);
+
             // 歌い方が存在する場合、歌い方を取得する
             // 歌い方が存在しない場合、キャッシュがあれば取得し、なければ歌い方を生成する
 
@@ -1460,19 +1473,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
                 logger.info(`Loaded singing guide from cache.`);
               } else {
-                // リクエスト用のノーツを作る
-                const notesForRequestToEngine = createNotesForRequestToEngine(
-                  phrase.firstRestDuration,
-                  lastRestDurationSeconds,
-                  phrase.notes,
-                  tempos,
-                  tpqn,
-                  singerAndFrameRate.frameRate,
-                );
-
-                // ノーツのキーのシフトを行う
-                shiftKeyOfNotes(notesForRequestToEngine, -keyRangeAdjustment);
-
                 // クエリを生成する
                 const query = await fetchQuery(
                   singerAndFrameRate.singer.engineId,
@@ -1504,11 +1504,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
 
             // ピッチ編集を適用する前に、歌い方をコピーする
-
             singingGuide = structuredClone(toRaw(singingGuide));
 
             // ピッチ編集を適用する
-
             applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
 
             // 歌声のキャッシュがあれば取得し、なければ音声合成を行う
@@ -1535,19 +1533,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 singingGuide.query,
               );
               shiftGuidePitch(queryForVolumeGeneration, -keyRangeAdjustment);
-
-              // リクエスト用のノーツを作る
-              const notesForRequestToEngine = createNotesForRequestToEngine(
-                phrase.firstRestDuration,
-                lastRestDurationSeconds,
-                phrase.notes,
-                tempos,
-                tpqn,
-                singingGuide.frameRate,
-              );
-
-              // ノーツのキーのシフトを行う
-              shiftKeyOfNotes(notesForRequestToEngine, -keyRangeAdjustment);
 
               // 音量を生成して、生成した音量を歌い方のクエリにセットする
               // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
