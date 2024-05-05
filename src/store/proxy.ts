@@ -57,12 +57,12 @@ export const convertAudioQueryFromEditorToEngine = (
 
 /** AudioQueryをEditorAudioQueryに変換する */
 export const convertAudioQueryFromEngineToEditor = (
-  audioQuery: AudioQuery
+  audioQuery: AudioQuery,
 ): EditorAudioQuery => {
   return {
     ...audioQuery,
     accentPhrases: audioQuery.accentPhrases.map((accentPhrase) =>
-      convertAccentPhraseFromEngineToEditor(accentPhrase)
+      convertAccentPhraseFromEngineToEditor(accentPhrase),
     ),
     outputSamplingRate:
       audioQuery.outputSamplingRate == undefined
@@ -73,7 +73,7 @@ export const convertAudioQueryFromEngineToEditor = (
 
 /** AccentPhraseをEditorAccentPhraseに変換する */
 export const convertAccentPhraseFromEngineToEditor = (
-  accentPhrase: AccentPhrase
+  accentPhrase: AccentPhrase,
 ): EditorAccentPhrase => {
   return {
     key: generateAccentPhraseKey(),

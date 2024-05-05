@@ -12,7 +12,6 @@ import {
   ProjectStoreTypes,
 } from "@/store/type";
 
-import { AccentPhrase } from "@/openapi";
 import { EngineId } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import {
@@ -474,9 +473,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             for (const audioItemsKey in projectData.audioItems) {
               const audioItem = projectData.audioItems[audioItemsKey];
               if (audioItem.query != null) {
-                audioItem.query.accentPhrases.forEach((accentPhrase: EditorAccentPhrase) => {
-                  accentPhrase.key = generateAccentPhraseKey();
-                })
+                audioItem.query.accentPhrases.forEach(
+                  (accentPhrase: EditorAccentPhrase) => {
+                    accentPhrase.key = generateAccentPhraseKey();
+                  },
+                );
               }
             }
           }

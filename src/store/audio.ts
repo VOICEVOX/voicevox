@@ -909,13 +909,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         audioQuery,
-      }: { audioKey: AudioKey; audioQuery: EditorAudioQuery }
+      }: { audioKey: AudioKey; audioQuery: EditorAudioQuery },
     ) {
       state.audioItems[audioKey].query = audioQuery;
     },
     action(
       { commit },
-      payload: { audioKey: AudioKey; audioQuery: EditorAudioQuery }
+      payload: { audioKey: AudioKey; audioQuery: EditorAudioQuery },
     ) {
       commit("SET_AUDIO_QUERY", payload);
     },
@@ -965,7 +965,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         accentPhrases,
-      }: { audioKey: AudioKey; accentPhrases: EditorAccentPhrase[] }
+      }: { audioKey: AudioKey; accentPhrases: EditorAccentPhrase[] },
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
@@ -1002,7 +1002,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }),
         )
         .then((accentPhrases) =>
-          accentPhrases.map(convertAccentPhraseFromEngineToEditor)
+          accentPhrases.map(convertAccentPhraseFromEngineToEditor),
         )
         .catch((error) => {
           window.backend.logError(
@@ -1098,7 +1098,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         accentPhrases: EditorAccentPhrase[];
         engineId: EngineId;
         styleId: StyleId;
-      }
+      },
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -1110,7 +1110,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }),
         )
         .then((fetchedAccentPhrases) =>
-          fetchedAccentPhrases.map(convertAccentPhraseFromEngineToEditor)
+          fetchedAccentPhrases.map(convertAccentPhraseFromEngineToEditor),
         )
         .then((fetchedAccentPhrases) => {
           // keyのコピー
@@ -1862,7 +1862,7 @@ export const audioCommandStore = transformCommandStore(
           | { update: "Text" }
           | { update: "AccentPhrases"; accentPhrases: EditorAccentPhrase[] }
           | { update: "AudioQuery"; query: EditorAudioQuery }
-        )
+        ),
       ) {
         audioStore.mutations.SET_AUDIO_TEXT(draft, {
           audioKey: payload.audioKey,
@@ -1921,7 +1921,7 @@ export const audioCommandStore = transformCommandStore(
                 const mergedDiff: EditorAccentPhrase[] =
                   new TuningTranscription(
                     query.accentPhrases,
-                    accentPhrases
+                    accentPhrases,
                   ).transcribe();
 
                 newAccentPhrases = mergedDiff;
@@ -2098,7 +2098,7 @@ export const audioCommandStore = transformCommandStore(
         {
           audioKey,
           accentPhrases,
-        }: { audioKey: AudioKey; accentPhrases: EditorAccentPhrase[] }
+        }: { audioKey: AudioKey; accentPhrases: EditorAccentPhrase[] },
       ) {
         audioStore.mutations.SET_ACCENT_PHRASES(draft, {
           audioKey,
@@ -2116,7 +2116,7 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         if (query != undefined) {
           const newAccentPhrases: EditorAccentPhrase[] = JSON.parse(
-            JSON.stringify(query.accentPhrases)
+            JSON.stringify(query.accentPhrases),
           );
           newAccentPhrases[accentPhraseIndex].accent = accent;
 
@@ -2155,7 +2155,7 @@ export const audioCommandStore = transformCommandStore(
         payload: {
           audioKey: AudioKey;
           accentPhrases: EditorAccentPhrase[];
-        }
+        },
       ) {
         audioStore.mutations.SET_ACCENT_PHRASES(draft, payload);
       },
@@ -2178,7 +2178,7 @@ export const audioCommandStore = transformCommandStore(
           );
         }
         const newAccentPhrases: EditorAccentPhrase[] = JSON.parse(
-          JSON.stringify(query.accentPhrases)
+          JSON.stringify(query.accentPhrases),
         );
         const changeIndexes = [accentPhraseIndex];
         // toggleAccentPhrase to newAccentPhrases and record changeIndexes
@@ -2309,7 +2309,7 @@ export const audioCommandStore = transformCommandStore(
         payload: {
           audioKey: AudioKey;
           accentPhrases: EditorAccentPhrase[];
-        }
+        },
       ) {
         audioStore.mutations.SET_ACCENT_PHRASES(draft, payload);
       },

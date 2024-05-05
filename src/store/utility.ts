@@ -9,7 +9,7 @@ import {
   isMac,
 } from "@/type/preload";
 import { Mora } from "@/openapi";
-
+import { EditorAccentPhrase } from "@/store/type";
 export const DEFAULT_STYLE_NAME = "ノーマル";
 
 export const formatCharacterStyleName = (
@@ -227,7 +227,7 @@ export class TuningTranscription {
   afterAccent: EditorAccentPhrase[];
   constructor(
     beforeAccent: EditorAccentPhrase[],
-    afterAccent: EditorAccentPhrase[]
+    afterAccent: EditorAccentPhrase[],
   ) {
     this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
@@ -262,7 +262,7 @@ export class TuningTranscription {
   private applyTranscriptionSource(
     transcriptionSource: Mora[],
   ): EditorAccentPhrase[] {
-    const after: AccentPhrase[] = structuredClone(this.afterAccent);
+    const after: EditorAccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
     // AccentPhrasesから[ accentIndex ]["moras"][ moraIndex ]でモーラが得られる。
@@ -297,7 +297,7 @@ export class TuningTranscription {
  */
 export function isAccentPhrasesTextDifferent(
   beforeAccent: EditorAccentPhrase[],
-  afterAccent: EditorAccentPhrase[]
+  afterAccent: EditorAccentPhrase[],
 ): boolean {
   if (beforeAccent.length !== afterAccent.length) return true;
 

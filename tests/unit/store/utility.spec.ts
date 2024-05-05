@@ -49,7 +49,7 @@ function createDummyAccentPhrase(moraTexts: string[]): EditorAccentPhrase {
 // AccentPhrasesから特定のmora textを持つものMoraを返す
 function findMora(
   accentPhrases: EditorAccentPhrase[],
-  text: string
+  text: string,
 ): Mora | undefined {
   let candidate: Mora | undefined;
   for (let i = 0; i < accentPhrases.length; i++) {
