@@ -279,10 +279,12 @@ const combinationToBindingKey = (
   // MetaキーはCommandキーとして扱う
   // NOTE: hotkeys-jsにはWinキーが無く、Commandキーとして扱われている
   // NOTE: Metaキーは以前採用していたmousetrapがそうだった名残り
+  // hotkeys-jsでは方向キーをup, down, left, rightで表す
   const bindingKey = combination
     .toLowerCase()
     .split(" ")
     .map((key) => (key === "meta" ? "command" : key))
+    .map((key) => key.replace("arrow", ""))
     .join("+");
   return bindingKey as BindingKey;
 };
@@ -311,12 +313,15 @@ export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
   if (event.metaKey) {
     recordedCombination += "Meta ";
   }
-  // event.codeから保存する形へと変換
-  let eventKey = event.code.replace(/Key|Digit|Numpad|Arrow/, "");
-  eventKey = eventKey.length > 1 ? eventKey : eventKey.toUpperCase();
-  // 英字 数字 上下左右 Enter Space Backspace Delete Escape F1~のみ認める
+  // event.codeから以前のevent.key形式へと変換
+  // 列挙するのは将来的に変更する
+  let eventKey = event.code
+    .replace(/Key|Digit|Numpad/, "")
+    .replace("Minus", "-")
+    .replace("Slash", "/");
+  // 英字 数字 上下左右 Enter Space Backspace Delete Escape F1~ - /のみ認める
   if (
-    /^([A-Z]|\d|Up|Down|Left|Right|Enter|Space|Backspace|Delete|Escape|F\d+)$/.test(
+    /^([A-Z]|\d|Arrow(Up|Down|Left|Right)|Enter|Space|Backspace|Delete|Escape|F\d+|-|\/)$/.test(
       eventKey
     )
   ) {
