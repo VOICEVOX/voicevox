@@ -22,6 +22,7 @@
   <UpdateNotificationDialogContainer
     :can-open-dialog="canOpenNotificationDialog"
   />
+  <ImportMidiDialog v-model="isImportMidiDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
@@ -37,13 +38,13 @@ import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
+import ImportMidiDialog from "@/components/Dialog/ImportMidiDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
-const props =
-  defineProps<{
-    isEnginesReady: boolean;
-  }>();
+const props = defineProps<{
+  isEnginesReady: boolean;
+}>();
 const store = useStore();
 
 // ライセンス表示
@@ -87,7 +88,7 @@ const isAcceptTermsDialogOpenComputed = computed({
 
 // キャラクター並び替え
 const orderedAllCharacterInfos = computed(
-  () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
+  () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
 );
 const isCharacterOrderDialogOpenComputed = computed({
   get: () =>
@@ -104,7 +105,7 @@ const isCharacterOrderDialogOpenComputed = computed({
 const orderedTalkCharacterInfos = computed(() => {
   return filterCharacterInfosByStyleType(
     store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
-    "talk"
+    "talk",
   );
 });
 const isDefaultStyleSelectDialogOpenComputed = computed({
@@ -157,5 +158,14 @@ const canOpenNotificationDialog = computed(() => {
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
     props.isEnginesReady
   );
+});
+
+// MIDIインポート時の設定ダイアログ
+const isImportMidiDialogOpenComputed = computed({
+  get: () => store.state.isImportMidiDialogOpen,
+  set: (val) =>
+    store.dispatch("SET_DIALOG_OPEN", {
+      isImportMidiDialogOpen: val,
+    }),
 });
 </script>

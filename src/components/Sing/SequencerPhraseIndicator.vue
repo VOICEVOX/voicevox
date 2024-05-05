@@ -7,10 +7,9 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 import { PhraseState } from "@/store/type";
 
-const props =
-  defineProps<{
-    phraseKey: string;
-  }>();
+const props = defineProps<{
+  phraseKey: string;
+}>();
 
 const store = useStore();
 const classNames: Record<PhraseState, string> = {
@@ -29,8 +28,8 @@ const className = computed(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .waiting-to-be-rendered {
   background-color: colors.$background;

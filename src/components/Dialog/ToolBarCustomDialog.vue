@@ -118,14 +118,12 @@ import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
 
@@ -134,7 +132,7 @@ const toolbarButtons = ref([...store.state.toolbarSetting]);
 const toolbarButtonKey = (button: ToolbarButtonTagType) => button;
 const toolbarButtonDragging = ref(false);
 const selectedButton: Ref<ToolbarButtonTagType | undefined> = ref(
-  toolbarButtons.value[0]
+  toolbarButtons.value[0],
 );
 watch(
   () => store.state.toolbarSetting,
@@ -145,7 +143,7 @@ watch(
       toolbarButtons.value = [...newData];
       selectedButton.value = newData[0];
     }
-  }
+  },
 );
 
 const defaultSetting: ToolbarSettingType = [];
@@ -204,7 +202,7 @@ watch(
     ) {
       selectedButton.value = newData[0];
     }
-  }
+  },
 );
 
 const applyDefaultSetting = async () => {
@@ -246,8 +244,8 @@ const finishOrNotDialog = async () => {
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .tool-bar-custom-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;

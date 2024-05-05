@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 import path from "path";
 import { rm } from "fs/promises";
-import treeKill from "tree-kill";
+import { fileURLToPath } from "url";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -11,6 +11,9 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 
@@ -19,7 +22,7 @@ export default defineConfig((options) => {
   const env = loadEnv(options.mode, __dirname);
   if (!packageName?.startsWith(env.VITE_APP_NAME)) {
     throw new Error(
-      `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`
+      `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`,
     );
   }
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
@@ -58,25 +61,17 @@ export default defineConfig((options) => {
       },
     },
     test: {
-      include: [
-        path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
-      ],
+      include: ["../tests/unit/**/*.spec.ts"],
       environment: "happy-dom",
-      environmentMatchGlobs: [
-        [
-          path
-            .resolve(__dirname, "tests/unit/backend/electron/**/*.spec.ts")
-            .replace(/\\/g, "/"),
-          "node",
-        ],
-      ],
       globals: true,
     },
 
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),
-      nodePolyfills(),
+      nodePolyfills({
+        include: ["path"],
+      }),
       options.mode !== "test" &&
         checker({
           overlay: false,
@@ -94,12 +89,6 @@ export default defineConfig((options) => {
           ],
           // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
           onstart: ({ startup }) => {
-            // @ts-expect-error vite-electron-pluginはprocess.electronAppにelectronのプロセスを格納している。
-            //   しかし、型定義はないので、ts-expect-errorで回避する。
-            const pid = process.electronApp?.pid;
-            if (pid) {
-              treeKill(pid);
-            }
             if (options.mode !== "test") {
               startup([".", "--no-sandbox"]);
             }
@@ -135,11 +124,11 @@ const injectBrowserPreloadPlugin = (): Plugin => {
   return {
     name: "inject-browser-preload",
     transformIndexHtml: {
-      enforce: "pre" as const,
-      transform: (html: string) =>
+      order: "pre",
+      handler: (html: string) =>
         html.replace(
           "<!-- %BROWSER_PRELOAD% -->",
-          `<script type="module" src="./backend/browser/preload.ts"></script>`
+          `<script type="module" src="./backend/browser/preload.ts"></script>`,
         ),
     },
   };

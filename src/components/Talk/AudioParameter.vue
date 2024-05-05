@@ -17,6 +17,16 @@
           : undefined
       }}
     </QBadge>
+    <!-- NOTE: QTooltipをQSlider内にしたいがquasarが未対応っぽいので兄弟に -->
+    <QTooltip
+      v-if="previewSlider.qSliderProps.disable.value"
+      :delay="500"
+      transition-show="jump-up"
+      transition-hide="jump-down"
+      anchor="top middle"
+      self="center middle"
+      >無声化した音にイントネーションは存在しません。<br />テキストをクリックすることで無声化を解けます。</QTooltip
+    >
     <QSlider
       vertical
       reverse
@@ -64,24 +74,23 @@ const props = withDefaults(
     type: "vowel",
     clip: false,
     shiftKeyFlag: false,
-  }
+  },
 );
 
-const emit =
-  defineEmits<{
-    (
-      e: "changeValue",
-      moraIndex: number,
-      newValue: number,
-      type: MoraDataType
-    ): Promise<void>;
-    (
-      e: "mouseOver",
-      isOver: boolean,
-      type: MoraDataType,
-      moraIndex: number
-    ): void;
-  }>();
+const emit = defineEmits<{
+  (
+    e: "changeValue",
+    moraIndex: number,
+    newValue: number,
+    type: MoraDataType,
+  ): Promise<void>;
+  (
+    e: "mouseOver",
+    isOver: boolean,
+    type: MoraDataType,
+    moraIndex: number,
+  ): void;
+}>();
 
 const changeValue = (newValue: number, type: MoraDataType = props.type) =>
   emit("changeValue", props.moraIndex, newValue, type);

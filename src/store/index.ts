@@ -62,17 +62,17 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         ...new Set(
           state.engineIds.flatMap((engineId) =>
             (state.characterInfos[engineId] ?? []).map(
-              (c) => c.metas.speakerUuid
-            )
-          )
+              (c) => c.metas.speakerUuid,
+            ),
+          ),
         ),
       ];
       const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
         const characterInfos = state.engineIds.flatMap(
           (engineId) =>
             state.characterInfos[engineId]?.find(
-              (c) => c.metas.speakerUuid === speakerUuid
-            ) ?? []
+              (c) => c.metas.speakerUuid === speakerUuid,
+            ) ?? [],
         );
 
         // エンジンの登録順が早い方が優先される。
@@ -85,7 +85,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         };
       });
       return new Map(
-        flattenCharacterInfos.map((c) => [c.metas.speakerUuid, c])
+        flattenCharacterInfos.map((c) => [c.metas.speakerUuid, c]),
       );
     },
   },
@@ -97,15 +97,17 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     getter(state) {
       const speakerUuids = state.engineIds
         .flatMap((engineId) =>
-          (state.characterInfos[engineId] ?? []).map((c) => c.metas.speakerUuid)
+          (state.characterInfos[engineId] ?? []).map(
+            (c) => c.metas.speakerUuid,
+          ),
         )
         .filter((uuid, index, uuids) => uuids.indexOf(uuid) === index); // Setを使うと順番が保証されないのでindexOfで重複削除をする。
       const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
         const characterInfos = state.engineIds.flatMap(
           (engineId) =>
             state.characterInfos[engineId]?.find(
-              (c) => c.metas.speakerUuid === speakerUuid
-            ) ?? []
+              (c) => c.metas.speakerUuid === speakerUuid,
+            ) ?? [],
         );
 
         // エンジンの登録順が早い方が優先される。
@@ -124,14 +126,14 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   GET_ALL_VOICES: {
     getter(state) {
       const flattenCharacters = Object.values(state.characterInfos).flatMap(
-        (characterInfos) => characterInfos
+        (characterInfos) => characterInfos,
       );
       const flattenVoices: Voice[] = flattenCharacters.flatMap((c) =>
         c.metas.styles.map((s) => ({
           engineId: EngineId(s.engineId),
           speakerId: SpeakerId(c.metas.speakerUuid),
           styleId: StyleId(s.styleId),
-        }))
+        })),
       );
 
       return flattenVoices;
@@ -198,7 +200,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       const unsetCharacterInfos = [...allCharacterInfos.keys()].filter(
         (speakerUuid) => {
           const defaultStyleId = defaultStyleIds.find(
-            (styleId) => styleId.speakerUuid == speakerUuid
+            (styleId) => styleId.speakerUuid == speakerUuid,
           );
           if (defaultStyleId == undefined) {
             return true;
@@ -210,9 +212,9 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
             return false;
           }
           return !characterInfo.metas.styles.some(
-            (style) => style.styleId == defaultStyleId.defaultStyleId
+            (style) => style.styleId == defaultStyleId.defaultStyleId,
           );
-        }
+        },
       );
       defaultStyleIds = [
         ...defaultStyleIds,
@@ -220,7 +222,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
           const characterInfo = allCharacterInfos.get(speakerUuid);
           if (!characterInfo) {
             throw new Error(
-              `characterInfo not found. speakerUuid=${speakerUuid}`
+              `characterInfo not found. speakerUuid=${speakerUuid}`,
             );
           }
           return {
@@ -247,7 +249,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
           const characterInfo = getCharacterInfo(
             state,
             audioItem.voice.engineId,
-            audioItem.voice.styleId
+            audioItem.voice.styleId,
           );
 
           if (characterInfo == undefined)
@@ -255,7 +257,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
           const speakerUuid = characterInfo.metas.speakerUuid;
           const defaultStyleId = defaultStyleIds.find(
-            (styleId) => speakerUuid == styleId.speakerUuid
+            (styleId) => speakerUuid == styleId.speakerUuid,
           );
           if (defaultStyleId == undefined)
             throw new Error("defaultStyleId == undefined");
@@ -276,9 +278,8 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   LOAD_USER_CHARACTER_ORDER: {
     async action({ commit }) {
-      const userCharacterOrder = await window.backend.getSetting(
-        "userCharacterOrder"
-      );
+      const userCharacterOrder =
+        await window.backend.getSetting("userCharacterOrder");
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
     },
   },
@@ -300,27 +301,9 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       // キャラクター表示順序に含まれていなければ新規キャラとみなす
       const allSpeakerUuid = [...allCharacterInfos.keys()];
       const newSpeakerUuid = allSpeakerUuid.filter(
-        (speakerUuid) => !state.userCharacterOrder.includes(speakerUuid)
+        (speakerUuid) => !state.userCharacterOrder.includes(speakerUuid),
       );
       return newSpeakerUuid;
-    },
-  },
-
-  LOG_ERROR: {
-    action(_, ...params: unknown[]) {
-      window.backend.logError(...params);
-    },
-  },
-
-  LOG_WARN: {
-    action(_, ...params: unknown[]) {
-      window.backend.logWarn(...params);
-    },
-  },
-
-  LOG_INFO: {
-    action(_, ...params: unknown[]) {
-      window.backend.logInfo(...params);
     },
   },
 
