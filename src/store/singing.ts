@@ -1120,11 +1120,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       };
 
+      // 歌とpauの呼吸音が重ならないようにvolumeを制御する
+      // fadeOutDurationSecondsが0の場合は即座にvolumeを0にする
       const muteLastPauSection = (
         frameAudioQuery: FrameAudioQuery,
         frameRate: number,
-        fadeOutOnMuteStart = false,
-        fadeOutDurationSeconds = 0.1,
+        fadeOutDurationSeconds: number,
       ) => {
         const lastPhoneme = frameAudioQuery.phonemes.at(-1);
         if (lastPhoneme == undefined || lastPhoneme.phoneme !== "pau") {
@@ -1137,12 +1138,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         const lastPauFrameLength = lastPhoneme.frameLength;
-        let fadeOutFrameLength = 0;
-        if (fadeOutOnMuteStart) {
-          fadeOutFrameLength = Math.round(fadeOutDurationSeconds * frameRate);
-          fadeOutFrameLength = Math.max(0, fadeOutFrameLength);
-          fadeOutFrameLength = Math.min(lastPauFrameLength, fadeOutFrameLength);
-        }
+        let fadeOutFrameLength = Math.round(fadeOutDurationSeconds * frameRate);
+        fadeOutFrameLength = Math.max(0, fadeOutFrameLength);
+        fadeOutFrameLength = Math.min(lastPauFrameLength, fadeOutFrameLength);
 
         // フェードアウト処理を行う
         if (fadeOutFrameLength === 1) {
@@ -1567,7 +1565,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               muteLastPauSection(
                 singingGuide.query,
                 singerAndFrameRate.frameRate,
-                true,
                 fadeOutDurationSeconds,
               );
 
