@@ -7,6 +7,7 @@ import {
   presetKeySchema,
   speakerIdSchema,
   styleIdSchema,
+  accentPhraseKeySchema,
 } from "@/type/preload";
 
 // トーク系のスキーマ
@@ -24,6 +25,7 @@ const accentPhraseSchema = z.object({
   accent: z.number(),
   pauseMora: moraSchema.optional(),
   isInterrogative: z.boolean().optional(),
+  key: accentPhraseKeySchema,
 });
 
 const audioQuerySchema = z.object({

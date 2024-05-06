@@ -21,6 +21,7 @@ import {
   DEFAULT_TPQN,
 } from "@/sing/storeHelper";
 import { LatestProjectType, projectSchema } from "@/domain/project/schema";
+import { AccentPhrase } from "@/openapi";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -298,7 +299,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                     engineId,
                     styleId: audioItem.characterIndex,
                   })
-                  .then((accentPhrases: EditorAccentPhrase[]) => {
+                  .then((accentPhrases: AccentPhrase[]) => {
                     accentPhrases.forEach((newAccentPhrase, i) => {
                       const oldAccentPhrase = audioItem.query.accentPhrases[i];
                       if (newAccentPhrase.pauseMora) {
@@ -311,7 +312,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                             mora.consonantLength;
                         }
                         oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
-                        newAccentPhrase.key = generateAccentPhraseKey();
                       });
                     });
                   });
