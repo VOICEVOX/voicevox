@@ -1,54 +1,44 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { HotkeyManager, HotkeysJs, HotkeyAction } from "@/plugins/hotkeyPlugin";
+import { HotkeyManager, HotkeyAction } from "@/plugins/hotkeyPlugin";
 import { HotkeyCombination, HotkeySettingType } from "@/type/preload";
 
-type DummyHotkeysJs = HotkeysJs & {
-  registeredHotkeys: {
-    key: string;
-    scope: string;
-    // callbackを持たせると比較が面倒になるので持たせない
-    // callback: (e: KeyboardEvent) => void;
-  }[];
-  currentScope: string;
+type DummyKeyboardEvent = {
+  key: string;
+  code: string;
+  target: EventTarget | null;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  altKey: boolean;
+  metaKey: boolean;
+  preventDefault: () => void;
 };
-const createHotkeyManager = (): {
-  hotkeyManager: HotkeyManager;
-  dummyHotkeysJs: DummyHotkeysJs;
-} => {
-  const registeredHotkeys: DummyHotkeysJs["registeredHotkeys"] = [];
-  const dummyHotkeysJs: DummyHotkeysJs = (
-    key: string,
-    { scope }: { scope: string }
-  ) => {
-    if (registeredHotkeys.some((h) => h.key === key && h.scope === scope)) {
-      throw new Error("assert: duplicate key");
-    }
-    registeredHotkeys.push({ key, scope });
-  };
-  dummyHotkeysJs.unbind = (key: string) => {
-    const index = dummyHotkeysJs.registeredHotkeys.findIndex(
-      (h) => h.key === key
-    );
-    if (index === -1) {
-      throw new Error("assert: unknown binding");
-    }
-    registeredHotkeys.splice(index, 1);
-  };
-  dummyHotkeysJs.setScope = (scope: string) => {
-    dummyHotkeysJs.currentScope = scope;
-  };
-  dummyHotkeysJs.registeredHotkeys = registeredHotkeys;
-  dummyHotkeysJs.currentScope = "talk";
-  return {
-    hotkeyManager: new HotkeyManager(dummyHotkeysJs, () => {
+const createDummyInput = (
+  combinationKey: string,
+  combinationCode: string,
+): DummyKeyboardEvent => {
+  const dummyInput: DummyKeyboardEvent = {
+    key: combinationKey,
+    code: combinationCode,
+    target: null,
+    ctrlKey: false,
+    shiftKey: false,
+    altKey: false,
+    metaKey: false,
+    preventDefault: () => {
       /* noop */
-    }),
-    dummyHotkeysJs,
+    },
   };
+  return dummyInput;
+};
+
+const createHotkeyManager = (): HotkeyManager => {
+  return new HotkeyManager(() => {
+    /* noop */
+  });
 };
 
 it("registerできる", () => {
-  const { hotkeyManager } = createHotkeyManager();
+  const hotkeyManager = createHotkeyManager();
   hotkeyManager.register({
     editor: "talk",
     name: "音声書き出し",
@@ -59,12 +49,13 @@ it("registerできる", () => {
 });
 
 it("unregisterできる", () => {
-  const { hotkeyManager, dummyHotkeysJs } = createHotkeyManager();
+  const hotkeyManager = createHotkeyManager();
+  let testCount = 0;
   const action = {
     editor: "talk",
     name: "音声書き出し",
     callback: () => {
-      /* noop */
+      testCount++;
     },
   } as const;
   hotkeyManager.load([
@@ -74,15 +65,17 @@ it("unregisterできる", () => {
     },
   ]);
   hotkeyManager.register(action);
-  expect(dummyHotkeysJs.registeredHotkeys).toEqual([
-    { key: "1", scope: "talk" },
-  ]);
+  hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
+  expect(testCount).toBe(1);
+
   hotkeyManager.unregister(action);
-  expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
+  hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
+  expect(testCount).toBe(1);
 });
 
+let testCount = 0;
 const callback = () => {
-  /* noop */
+  testCount++;
 };
 const dummyAction: HotkeyAction = {
   editor: "talk",
@@ -96,63 +89,60 @@ const createDummySetting = (combination: string): HotkeySettingType => ({
 
 describe("設定変更", () => {
   let hotkeyManager: HotkeyManager;
-  let dummyHotkeysJs: DummyHotkeysJs;
   beforeEach(() => {
-    const { hotkeyManager: hotkeyManager_, dummyHotkeysJs: dummyHotkeysJs_ } =
-      createHotkeyManager();
+    const hotkeyManager_ = createHotkeyManager();
     hotkeyManager = hotkeyManager_;
-    dummyHotkeysJs = dummyHotkeysJs_;
+    testCount = 0;
   });
 
   it("設定を登録するとhotkeysが更新される", () => {
     hotkeyManager.register(dummyAction);
     hotkeyManager.load([createDummySetting("1")]);
-    expect(dummyHotkeysJs.registeredHotkeys).toEqual([
-      { key: "1", scope: "talk" },
-    ]);
+    hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
+    expect(testCount).toBe(1);
   });
 
   it("設定を更新するとhotkeysが更新される", () => {
     hotkeyManager.register(dummyAction);
     hotkeyManager.load([createDummySetting("1")]);
-    hotkeyManager.replace(createDummySetting("a"));
+    hotkeyManager.replace(createDummySetting("A"));
+    hotkeyManager.keyInput(createDummyInput("a", "KeyA") as KeyboardEvent);
 
-    expect(dummyHotkeysJs.registeredHotkeys).toEqual([
-      { key: "a", scope: "talk" },
-    ]);
+    expect(testCount).toBe(1);
   });
 
   it("未割り当てにするとhotkeysから削除される", () => {
     hotkeyManager.register(dummyAction);
     hotkeyManager.load([createDummySetting("1")]);
     hotkeyManager.replace(createDummySetting(""));
-    expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
+    hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
+    expect(testCount).toBe(0);
   });
 
   it("未割り当てから割り当てるとhotkeysが更新される", () => {
     hotkeyManager.register(dummyAction);
     hotkeyManager.load([createDummySetting("")]);
-    expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
+    hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
+    expect(testCount).toBe(0);
+
     hotkeyManager.replace(createDummySetting("1"));
-    expect(dummyHotkeysJs.registeredHotkeys).toEqual([
-      { key: "1", scope: "talk" },
-    ]);
+    hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
+    expect(testCount).toBe(1);
   });
 
   it("割り当て -> 未割り当て -> 割り当てでhotkeysが更新される", () => {
     hotkeyManager.register(dummyAction);
     hotkeyManager.load([createDummySetting("1")]);
 
-    expect(dummyHotkeysJs.registeredHotkeys).toEqual([
-      { key: "1", scope: "talk" },
-    ]);
+    hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
+    expect(testCount).toBe(1);
 
     hotkeyManager.replace(createDummySetting(""));
-    expect(dummyHotkeysJs.registeredHotkeys).toEqual([]);
+    hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
+    expect(testCount).toBe(1);
 
-    hotkeyManager.replace(createDummySetting("a"));
-    expect(dummyHotkeysJs.registeredHotkeys).toEqual([
-      { key: "a", scope: "talk" },
-    ]);
+    hotkeyManager.replace(createDummySetting("A"));
+    hotkeyManager.keyInput(createDummyInput("a", "KeyA") as KeyboardEvent);
+    expect(testCount).toBe(2);
   });
 });
