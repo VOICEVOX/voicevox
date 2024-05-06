@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   audioKeySchema,
   engineIdSchema,
+  noteIdSchema,
   presetKeySchema,
   speakerIdSchema,
   styleIdSchema,
@@ -70,7 +71,7 @@ export const timeSignatureSchema = z.object({
 });
 
 export const noteSchema = z.object({
-  id: z.string(),
+  id: noteIdSchema,
   position: z.number(),
   duration: z.number(),
   noteNumber: z.number(),
@@ -87,6 +88,7 @@ export const trackSchema = z.object({
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
+  pitchEditData: z.array(z.number()), // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
 });
 
 // プロジェクトファイルのスキーマ

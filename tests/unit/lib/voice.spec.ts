@@ -19,7 +19,7 @@ describe("voiceToVoiceId", () => {
     };
 
     expect(VoiceId(voice)).toEqual(
-      `${voice.engineId}:${voice.speakerId}:${voice.styleId}`
+      `${voice.engineId}:${voice.speakerId}:${voice.styleId}`,
     );
   });
 });

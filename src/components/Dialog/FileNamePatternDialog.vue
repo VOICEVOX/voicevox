@@ -86,15 +86,13 @@ import {
   sanitizeFileName,
 } from "@/store/utility";
 
-const props =
-  defineProps<{
-    openDialog: boolean;
-  }>();
+const props = defineProps<{
+  openDialog: boolean;
+}>();
 
-const emit =
-  defineEmits<{
-    (e: "update:openDialog", val: boolean): void;
-  }>();
+const emit = defineEmits<{
+  (e: "update:openDialog", val: boolean): void;
+}>();
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
@@ -110,11 +108,12 @@ const savedBaseNamePattern = computed(() => {
 });
 const currentBaseNamePattern = ref(savedBaseNamePattern.value);
 const currentNamePattern = computed(
-  () => `${currentBaseNamePattern.value}.wav`
+  () => `${currentBaseNamePattern.value}.wav`,
 );
 
 const hasNotIndexTagString = computed(
-  () => !currentBaseNamePattern.value.includes(replaceTagIdToTagString["index"])
+  () =>
+    !currentBaseNamePattern.value.includes(replaceTagIdToTagString["index"]),
 );
 const invalidChar = computed(() => {
   const current = currentBaseNamePattern.value;
@@ -141,7 +140,7 @@ const errorMessage = computed(() => {
 const hasError = computed(() => errorMessage.value !== "");
 
 const previewFileName = computed(() =>
-  buildAudioFileNameFromRawData(currentNamePattern.value)
+  buildAudioFileNameFromRawData(currentNamePattern.value),
 );
 
 const initializeInput = () => {
@@ -191,7 +190,7 @@ const submit = async () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 .setting-card {
   width: 100%;

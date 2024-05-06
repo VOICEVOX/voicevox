@@ -176,7 +176,7 @@
                       @update:model-value="
                         changeExperimentalSetting(
                           'shouldApplyDefaultPresetOnVoiceChanged',
-                          $event
+                          $event,
                         )
                       "
                     >
@@ -868,7 +868,7 @@
                   @update:model-value="
                     changeExperimentalSetting(
                       'enableInterrogativeUpspeak',
-                      $event
+                      $event,
                     )
                   "
                 >
@@ -948,16 +948,16 @@
                   @update:model-value="
                     changeExperimentalSetting(
                       'shouldKeepTuningOnTextChange',
-                      $event
+                      $event,
                     )
                   "
                 >
                 </QToggle>
               </QCardActions>
               <QCardActions class="q-px-md bg-surface">
-                <div>ソング：ピッチを表示</div>
+                <div>ソング：ピッチ編集機能</div>
                 <div
-                  aria-label="ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。"
+                  aria-label="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
                 >
                   <QIcon name="help_outline" size="sm" class="help-hover-icon">
                     <QTooltip
@@ -966,15 +966,18 @@
                       self="center left"
                       transition-show="jump-right"
                       transition-hide="jump-left"
-                      >ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。</QTooltip
+                      >ピッチ編集機能を有効にします。ピッチ編集モードに切り替えられるようになります。</QTooltip
                     >
                   </QIcon>
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="experimentalSetting.showPitchInSongEditor"
+                  :model-value="experimentalSetting.enablePitchEditInSongEditor"
                   @update:model-value="
-                    changeExperimentalSetting('showPitchInSongEditor', $event)
+                    changeExperimentalSetting(
+                      'enablePitchEditInSongEditor',
+                      $event,
+                    )
                   "
                 >
                 </QToggle>
@@ -1025,6 +1028,7 @@ import {
   RootMiscSettingType,
   EngineId,
 } from "@/type/preload";
+import { createLogger } from "@/domain/frontend/log";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
@@ -1039,16 +1043,15 @@ const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
   return [state, setter] as const;
 };
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
+const { warn } = createLogger("SettingDialog");
 
 const settingDialogOpenedComputed = computed({
   get: () => props.modelValue,
@@ -1131,7 +1134,7 @@ const currentAudioOutputDeviceComputed = computed<
     // 再生デバイスが見つからなかったらデフォルト値に戻す
     // FIXME: watchなどにしてgetter内で操作しないようにする
     const device = availableAudioOutputDevices.value?.find(
-      (device) => device.key === store.state.savingSetting.audioOutputDevice
+      (device) => device.key === store.state.savingSetting.audioOutputDevice,
     );
     if (device) {
       return device;
@@ -1159,11 +1162,11 @@ const updateAudioOutputDevices = async () => {
 if (navigator.mediaDevices) {
   navigator.mediaDevices.addEventListener(
     "devicechange",
-    updateAudioOutputDevices
+    updateAudioOutputDevices,
   );
   updateAudioOutputDevices();
 } else {
-  store.dispatch("LOG_WARN", "navigator.mediaDevices is not available.");
+  warn("navigator.mediaDevices is not available.");
 }
 
 const acceptRetrieveTelemetryComputed = computed({
@@ -1217,7 +1220,7 @@ const changeEnablePreset = (value: boolean) => {
 
 const changeExperimentalSetting = async (
   key: keyof ExperimentalSettingType,
-  data: boolean
+  data: boolean,
 ) => {
   store.dispatch("SET_EXPERIMENTAL_SETTING", {
     experimentalSetting: { ...experimentalSetting.value, [key]: data },
@@ -1254,7 +1257,7 @@ const renderSamplingRateLabel = (value: SamplingRateOption): string => {
 
 const handleSavingSettingChange = (
   key: keyof SavingSetting,
-  data: string | boolean | number
+  data: string | boolean | number,
 ) => {
   store.dispatch("SET_SAVING_SETTING", {
     data: { ...savingSetting.value, [key]: data },
@@ -1340,7 +1343,7 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/visually-hidden' as visually-hidden;
+@use "@/styles/visually-hidden" as visually-hidden;
 @use "@/styles/colors" as colors;
 
 .text-h5 {

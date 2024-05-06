@@ -19,6 +19,6 @@ export function base64ImageToUri(image: string): string {
   return URL.createObjectURL(
     new Blob([buffer.buffer], {
       type: mimeType,
-    })
+    }),
   );
 }

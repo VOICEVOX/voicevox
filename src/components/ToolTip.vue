@@ -22,10 +22,9 @@ import { computed } from "vue";
 import { ConfirmedTips } from "@/type/preload";
 import { useStore } from "@/store";
 
-const props =
-  defineProps<{
-    tipKey: keyof ConfirmedTips;
-  }>();
+const props = defineProps<{
+  tipKey: keyof ConfirmedTips;
+}>();
 
 const store = useStore();
 

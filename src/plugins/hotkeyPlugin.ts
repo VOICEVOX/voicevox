@@ -13,6 +13,7 @@ import {
   HotkeyCombination,
   HotkeySettingType,
 } from "@/type/preload";
+import { createLogger } from "@/domain/frontend/log";
 
 const hotkeyManagerKey = "hotkeyManager";
 export const useHotkeyManager = () => {
@@ -84,9 +85,7 @@ export class HotkeyManager {
   private log: Log;
 
   constructor(
-    log: Log = (message: string, ...args: unknown[]) => {
-      window.backend.logInfo(`[HotkeyManager] ${message}`, ...args);
-    }
+    log: Log = createLogger("HotkeyManager").info,
   ) {
     this.log = log;
   }
@@ -111,7 +110,7 @@ export class HotkeyManager {
   }
 
   private getRegisteredCombination(
-    action: HotkeyAction
+    action: HotkeyAction,
   ): HotkeyCombination | undefined {
     return this.registeredCombinations.find(isSameHotkeyTarget(action))
       ?.combination;
@@ -130,13 +129,13 @@ export class HotkeyManager {
     // 不要なBindingを削除
     const unbindedCombinations = changedActions.flatMap((a) => {
       const combination = this.registeredCombinations.find(
-        isSameHotkeyTarget(a)
+        isSameHotkeyTarget(a),
       );
       // 空じゃないCombinationを探す
       return combination?.combination ? [combination] : [];
     });
     const unregisteredCombinations = this.registeredCombinations.filter(
-      (c) => !this.actions.some(isSameHotkeyTarget(c))
+      (c) => !this.actions.some(isSameHotkeyTarget(c)),
     );
     this.unbindActions([...unbindedCombinations, ...unregisteredCombinations]);
 
@@ -154,7 +153,7 @@ export class HotkeyManager {
       const bindingKey = combinationToBindingKey(combination.combination);
       this.log("Unbind:", bindingKey, "in", combination.editor);
       this.registeredCombinations = this.registeredCombinations.filter(
-        isNotSameHotkeyTarget(combination)
+        isNotSameHotkeyTarget(combination),
       );
     }
   }
@@ -168,10 +167,10 @@ export class HotkeyManager {
         "to",
         action.name,
         "in",
-        action.editor
+        action.editor,
       );
       this.registeredCombinations = this.registeredCombinations.filter(
-        isNotSameHotkeyTarget(action)
+        isNotSameHotkeyTarget(action),
       );
       this.registeredCombinations.push({
         editor: action.editor,
@@ -264,7 +263,7 @@ export class HotkeyManager {
 // もし必要になった時の為に残している
 /** 判定用のキーに変換する */
 const combinationToBindingKey = (
-  combination: HotkeyCombination
+  combination: HotkeyCombination,
 ): BindingKey => {
   // MetaキーはCommandキーとして扱う
   // NOTE: Metaキーは以前採用していたmousetrapがそうだった名残り

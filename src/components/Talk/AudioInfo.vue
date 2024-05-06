@@ -317,13 +317,14 @@ import {
 import { EngineManifest } from "@/openapi";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { SLIDER_PARAMETERS } from "@/store/utility";
+import { createLogger } from "@/domain/frontend/log";
 
-const props =
-  defineProps<{
-    activeAudioKey: AudioKey;
-  }>();
+const props = defineProps<{
+  activeAudioKey: AudioKey;
+}>();
 
 const store = useStore();
+const { info } = createLogger("AudioInfo");
 
 // accent phrase
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -334,10 +335,10 @@ const query = computed(() => audioItem.value?.query);
 const supportedFeatures = computed(
   () =>
     (store.state.engineIds.some(
-      (id) => id === audioItem.value.voice.engineId
+      (id) => id === audioItem.value.voice.engineId,
     ) &&
       store.state.engineManifests[audioItem.value.voice.engineId]
-        .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
+        .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined,
 );
 
 // FIXME: slider.onChangeとhandleParameterChangeでstate変更が２経路になっているので統一する
@@ -350,7 +351,7 @@ type Parameter = {
 const selectedAudioKeys = computed(() =>
   store.state.experimentalSetting.enableMultiSelect
     ? store.getters.SELECTED_AUDIO_KEYS
-    : [props.activeAudioKey]
+    : [props.activeAudioKey],
 );
 const parameters = computed<Parameter[]>(() => [
   {
@@ -474,14 +475,14 @@ const parameters = computed<Parameter[]>(() => [
 ]);
 const handleParameterChange = (
   parameter: Parameter,
-  inputValue: string | number | null
+  inputValue: string | number | null,
 ) => {
   if (inputValue == null) throw new Error("inputValue is null");
   const value = adjustSliderValue(
     parameter.label + "入力",
     inputValue.toString(),
     parameter.slider.qSliderProps.min.value,
-    parameter.slider.qSliderProps.max.value
+    parameter.slider.qSliderProps.max.value,
   );
   store.dispatch(parameter.action, {
     audioKeys: selectedAudioKeys.value,
@@ -491,15 +492,15 @@ const handleParameterChange = (
 
 // モーフィング
 const shouldShowMorphing = computed(
-  () => store.state.experimentalSetting.enableMorphing
+  () => store.state.experimentalSetting.enableMorphing,
 );
 
 const isSupportedMorphing = computed(
-  () => supportedFeatures.value?.synthesisMorphing
+  () => supportedFeatures.value?.synthesisMorphing,
 );
 
 const isValidMorphingInfo = computed(() =>
-  store.getters.VALID_MORPHING_INFO(audioItem.value)
+  store.getters.VALID_MORPHING_INFO(audioItem.value),
 );
 
 const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
@@ -537,7 +538,7 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
       const styles = character.metas.styles.filter(
         (style) =>
           morphableStyleIds.includes(style.styleId) &&
-          style.engineId == baseEngineId
+          style.engineId == baseEngineId,
       );
       return {
         ...character,
@@ -554,11 +555,11 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
   if (
     morphingTargetVoice.value != undefined &&
     !characterInfos.some(
-      (info) => info.metas.speakerUuid == morphingTargetVoice.value?.speakerId
+      (info) => info.metas.speakerUuid == morphingTargetVoice.value?.speakerId,
     )
   ) {
     const info = allCharacterInfos.find(
-      (info) => info.metas.speakerUuid == morphingTargetVoice.value?.speakerId
+      (info) => info.metas.speakerUuid == morphingTargetVoice.value?.speakerId,
     );
     if (info == undefined) throw new Error("info == undefined");
     characterInfos.unshift(info);
@@ -599,8 +600,8 @@ const morphingTargetCharacterInfo = computed(() =>
     .USER_ORDERED_CHARACTER_INFOS("talk")
     ?.find(
       (character) =>
-        character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
-    )
+        character.metas.speakerUuid === morphingTargetVoice.value?.speakerId,
+    ),
 );
 
 const morphingTargetStyleInfo = computed(() => {
@@ -608,7 +609,7 @@ const morphingTargetStyleInfo = computed(() => {
   return morphingTargetCharacterInfo.value?.metas.styles.find(
     (style) =>
       style.engineId === targetVoice?.engineId &&
-      style.styleId === targetVoice.styleId
+      style.styleId === targetVoice.styleId,
   );
 });
 
@@ -640,7 +641,7 @@ const morphingRateSlider = previewSliderHelper({
 
 // プリセット
 const enablePreset = computed(
-  () => store.state.experimentalSetting.enablePreset
+  () => store.state.experimentalSetting.enablePreset,
 );
 
 const presetItems = computed(() => store.state.presetItems);
@@ -649,13 +650,13 @@ const audioPresetKey = computed(() => audioItem.value?.presetKey);
 const isRegisteredPreset = computed(
   () =>
     audioPresetKey.value != undefined &&
-    presetItems.value[audioPresetKey.value] != undefined
+    presetItems.value[audioPresetKey.value] != undefined,
 );
 
 const { isDefaultPresetKey, getDefaultPresetKeyForVoice } = useDefaultPreset();
 
 const currentDefaultPresetKey = computed(() =>
-  getDefaultPresetKeyForVoice(audioItem.value.voice)
+  getDefaultPresetKeyForVoice(audioItem.value.voice),
 );
 
 // 入力パラメータがプリセットから変更されたか
@@ -680,10 +681,10 @@ const isChangedPreset = computed(() => {
   const morphingInfoFromParameter = presetPartsFromParameter.value.morphingInfo;
   if (morphingInfo && morphingInfoFromParameter) {
     const morphingInfoKeys = Object.keys(
-      morphingInfo
+      morphingInfo,
     ) as (keyof MorphingInfo)[];
     return morphingInfoKeys.some(
-      (key) => morphingInfo[key] !== morphingInfoFromParameter[key]
+      (key) => morphingInfo[key] !== morphingInfoFromParameter[key],
     );
   }
   return morphingInfo != morphingInfoFromParameter;
@@ -707,7 +708,7 @@ const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
     .map((key) => ({
       key,
       label: presetItems.value[key].name,
-    }))
+    })),
 );
 
 // セルへのプリセットの設定
@@ -724,12 +725,12 @@ const selectablePresetList = computed<PresetSelectModelType[]>(() => {
   // 選択中のstyleのデフォルトプリセットは常に一番上
   topPresetList.push(
     ...presetList.value.filter(
-      (preset) => preset.key === currentDefaultPresetKey.value
-    )
+      (preset) => preset.key === currentDefaultPresetKey.value,
+    ),
   );
   // 他のstyleのデフォルトプリセットを除外
   const commonPresets = presetList.value.filter(
-    (preset) => !isDefaultPresetKey(preset.key)
+    (preset) => !isDefaultPresetKey(preset.key),
   );
 
   return [...topPresetList, ...commonPresets];
@@ -762,7 +763,7 @@ const setPresetByScroll = (event: WheelEvent) => {
   if (presetNumber === 0 || presetNumber == undefined) return;
 
   const nowIndex = selectablePresetList.value.findIndex(
-    (value) => value.key == presetSelectModel.value.key
+    (value) => value.key == presetSelectModel.value.key,
   );
 
   const isUp = event.deltaY > 0;
@@ -811,7 +812,7 @@ const registerPreset = ({ overwrite }: { overwrite: boolean }) => {
 const presetOptionsList = ref<string[]>([]);
 const filterPresetOptionsList: QSelectProps["onFilter"] = (
   inputValue,
-  doneFn
+  doneFn,
 ) => {
   const presetNames = presetKeys.value
     .filter((presetKey) => !isDefaultPresetKey(presetKey))
@@ -819,7 +820,7 @@ const filterPresetOptionsList: QSelectProps["onFilter"] = (
     .filter((value) => value != undefined);
   doneFn(() => {
     presetOptionsList.value = presetNames.filter((name) =>
-      name.startsWith(inputValue)
+      name.startsWith(inputValue),
     );
   });
 };
@@ -837,7 +838,7 @@ const checkRewritePreset = async () => {
 const presetPartsFromParameter = computed<Omit<Preset, "name">>(() => {
   if (
     parameters.value.some(
-      (parameter) => parameter.slider.state.currentValue.value == undefined
+      (parameter) => parameter.slider.state.currentValue.value == undefined,
     )
   )
     throw new Error("slider value is null");
@@ -849,8 +850,8 @@ const presetPartsFromParameter = computed<Omit<Preset, "name">>(() => {
         [parameter.key]: parameter.slider.state.currentValue.value,
       }),
       {} as {
-        [K in typeof parameters.value[number]["key"]]: number;
-      }
+        [K in (typeof parameters.value)[number]["key"]]: number;
+      },
     ),
     morphingInfo:
       morphingTargetStyleInfo.value &&
@@ -886,7 +887,7 @@ const addPreset = () => {
 
 const updatePreset = async (fullApply: boolean) => {
   const key = presetList.value.find(
-    (preset) => preset.label === presetName.value
+    (preset) => preset.label === presetName.value,
   )?.key;
   if (key == undefined) return;
 
@@ -915,12 +916,12 @@ const adjustSliderValue = (
   inputItemName: string,
   inputStr: string,
   minimalVal: number,
-  maximamVal: number
+  maximamVal: number,
 ) => {
   const convertedInputStr = convertFullWidthNumbers(inputStr);
   const inputNum = Number(convertedInputStr);
 
-  store.dispatch("LOG_INFO", `${inputItemName}:${inputStr}`);
+  info(`${inputItemName}: ${inputStr}`);
 
   if (isNaN(inputNum)) {
     return minimalVal;
