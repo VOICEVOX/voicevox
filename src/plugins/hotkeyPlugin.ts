@@ -84,9 +84,7 @@ export class HotkeyManager {
 
   private log: Log;
 
-  constructor(
-    log: Log = createLogger("HotkeyManager").info
-  ) {
+  constructor(log: Log = createLogger("HotkeyManager").info) {
     this.log = log;
   }
 
