@@ -10,6 +10,8 @@ import {
   HotkeySettingType,
   ExperimentalSettingType,
   HotkeyCombination,
+  VoiceId,
+  PresetKey,
 } from "@/type/preload";
 
 const lockKey = "save";
@@ -180,6 +182,45 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
           return hotkeySetting;
         });
       config.hotkeySettings = newHotkeySettings;
+
+      // バグで追加されたソング・ハミングスタイルのデフォルトプリセットを削除する
+      (() => {
+        const defaultPresetKeys = config.defaultPresetKeys as
+          | ConfigType["defaultPresetKeys"]
+          | undefined;
+        if (
+          defaultPresetKeys == undefined ||
+          Object.keys(defaultPresetKeys).length == 0
+        )
+          return;
+
+        const singStyleVoiceId: VoiceId[] = Object.keys(
+          defaultPresetKeys,
+        ).filter((voiceId) => {
+          // VoiceIdの3番目はスタイルIDなので、それが3000以上3085以下または6000のものをソング・ハミングスタイルとみなす
+          const splited = voiceId.split(":");
+          if (splited.length < 3) return false;
+
+          const styleId = parseInt(splited[2]);
+          return (styleId >= 3000 && styleId <= 3085) || styleId === 6000;
+        }) as VoiceId[];
+
+        const presets = config.presets as ConfigType["presets"];
+        const singerPresetKeys: PresetKey[] = [];
+        for (const voiceId of singStyleVoiceId) {
+          const defaultPresetKey = defaultPresetKeys[voiceId];
+          if (defaultPresetKey == undefined) continue;
+          singerPresetKeys.push(defaultPresetKey);
+          delete presets.items[defaultPresetKey];
+          delete defaultPresetKeys[voiceId];
+        }
+
+        if (singerPresetKeys.length === 0) return;
+        const newPresetKeys = presets.keys.filter(
+          (key) => !singerPresetKeys.includes(key),
+        );
+        presets.keys = newPresetKeys;
+      })();
 
       return config;
     },
