@@ -1,6 +1,6 @@
 import pastConfigs from "./pastConfigs";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
-import { configSchema } from "@/type/preload";
+import { Preset, PresetKey, VoiceId, configSchema } from "@/type/preload";
 
 const configBase = {
   ...configSchema.parse({}),
@@ -80,6 +80,37 @@ for (const [version, data] of pastConfigs) {
     const configManager = new TestConfigManager();
     await configManager.initialize();
     expect(configManager).toBeTruthy();
+    if (version === "0.19.1") {
+      const presets = configManager.get("presets");
+      const defaultPresetKeys = configManager.get("defaultPresetKeys");
+
+      let metanCount = 0;
+      for (const key of Object.keys(defaultPresetKeys)) {
+        // VoiceIdの3番目はスタイルIDなので、それが3000以上3085以下または6000のものをソング・ハミングスタイルとみなす
+        const voiceId = key as VoiceId;
+        const splited = voiceId.split(":");
+        const styleId = parseInt(splited[2]);
+        expect(
+          (styleId >= 3000 && styleId <= 3085) || styleId === 6000,
+        ).toBeFalsy();
+
+        const presetsKey: PresetKey | undefined = defaultPresetKeys[voiceId];
+        expect(presetsKey).toBeTruthy();
+        if (presetsKey != undefined) {
+          expect(presets.keys.find((v) => v === presetsKey)).toBeTruthy();
+          const preset: Preset | undefined = presets.items[presetsKey];
+          expect(preset).toBeTruthy();
+          if (
+            preset != undefined &&
+            preset.name === "デフォルト：四国めたん（ノーマル）"
+          ) {
+            metanCount++;
+          }
+        }
+      }
+
+      expect(metanCount).toBe(1);
+    }
   });
 }
 
