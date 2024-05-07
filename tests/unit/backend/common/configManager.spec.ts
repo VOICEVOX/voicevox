@@ -84,7 +84,11 @@ for (const [version, data] of pastConfigs) {
       const presets = configManager.get("presets");
       const defaultPresetKeys = configManager.get("defaultPresetKeys");
 
-      let metanCount = 0;
+      expect(Object.keys(defaultPresetKeys).length).toEqual(
+        presets.keys.length,
+      );
+      expect(Object.keys(presets.items).length).toEqual(presets.keys.length);
+
       for (const key of Object.keys(defaultPresetKeys)) {
         // VoiceIdの3番目はスタイルIDなので、それが3000以上3085以下または6000のものをソング・ハミングスタイルとみなす
         const voiceId = key as VoiceId;
@@ -100,16 +104,8 @@ for (const [version, data] of pastConfigs) {
           expect(presets.keys.find((v) => v === presetsKey)).toBeTruthy();
           const preset: Preset | undefined = presets.items[presetsKey];
           expect(preset).toBeTruthy();
-          if (
-            preset != undefined &&
-            preset.name === "デフォルト：四国めたん（ノーマル）"
-          ) {
-            metanCount++;
-          }
         }
       }
-
-      expect(metanCount).toBe(1);
     }
   });
 }
