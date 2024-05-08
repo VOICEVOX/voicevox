@@ -596,7 +596,7 @@ const discardOrNotDialog = async (okCallback: () => void) => {
       title: "単語の追加・変更を破棄しますか？",
       message:
         "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
-      actionName: "続行",
+      actionName: "破棄",
     });
     if (result === "OK") {
       okCallback();
