@@ -5,9 +5,7 @@
     <QPageContainer>
       <QPage class="main-row-panes">
         <ProgressView />
-        <EngineStartupOverlay
-          :isCompletedInitialStartup="isCompletedInitialStartup"
-        />
+        <EngineStartupOverlay :isCompletedInitialStartup />
 
         <QSplitter
           horizontal
@@ -64,7 +62,7 @@
                         ref="cellsRef"
                         class="audio-cells"
                         :modelValue="audioKeys"
-                        :itemKey="itemKey"
+                        :itemKey
                         ghostClass="ghost"
                         filter="input"
                         :preventOnFilter="false"
@@ -98,7 +96,7 @@
                   <template #after>
                     <AudioInfo
                       v-if="activeAudioKey != undefined"
-                      :activeAudioKey="activeAudioKey"
+                      :activeAudioKey
                     />
                   </template>
                 </QSplitter>
@@ -106,10 +104,7 @@
             </QSplitter>
           </template>
           <template #after>
-            <AudioDetail
-              v-if="activeAudioKey != undefined"
-              :activeAudioKey="activeAudioKey"
-            />
+            <AudioDetail v-if="activeAudioKey != undefined" :activeAudioKey />
           </template>
         </QSplitter>
 

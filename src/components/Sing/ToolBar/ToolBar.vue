@@ -95,8 +95,8 @@
     <div class="sing-controls">
       <EditTargetSwicher
         v-if="showEditTargetSwitchButton"
-        :editTarget="editTarget"
-        :changeEditTarget="changeEditTarget"
+        :editTarget
+        :changeEditTarget
       />
       <QBtn
         flat

@@ -1,9 +1,7 @@
 <template>
   <ToolBar />
   <div class="sing-main">
-    <EngineStartupOverlay
-      :isCompletedInitialStartup="isCompletedInitialStartup"
-    />
+    <EngineStartupOverlay :isCompletedInitialStartup />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <QSpinner color="primary" size="2.5rem" />

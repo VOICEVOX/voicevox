@@ -4,7 +4,7 @@
     textColor="display"
     class="full-height cursor-pointer no-border-radius text-no-wrap q-py-none q-px-sm"
     :class="selected ? 'active-menu' : 'bg-transparent'"
-    :disable="disable"
+    :disable
     aria-haspopup="menu"
     @click="
       (menudata.type === 'button' || menudata.type === 'root') &&

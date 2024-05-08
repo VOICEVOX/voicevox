@@ -77,7 +77,7 @@
             <QList class="word-list">
               <QItem
                 v-for="(value, key) in userDict"
-                :key="key"
+                :key
                 v-ripple
                 tag="label"
                 clickable
@@ -160,9 +160,9 @@
               >
                 <div v-if="accentPhrase" class="mora-table">
                   <AudioAccent
-                    :accentPhrase="accentPhrase"
+                    :accentPhrase
                     :accentPhraseIndex="0"
-                    :uiLocked="uiLocked"
+                    :uiLocked
                     :onChangeAccent="changeAccent"
                   />
                   <template

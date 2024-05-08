@@ -1,10 +1,6 @@
 <template>
   <QBtn flat class="q-pa-none" :disable="uiLocked">
-    <SelectedCharacter
-      :showSkeleton="showSkeleton"
-      :selectedCharacterInfo="selectedCharacterInfo"
-      :selectedSinger="selectedSinger"
-    />
+    <SelectedCharacter :showSkeleton :selectedCharacterInfo :selectedSinger />
     <QMenu
       class="character-menu"
       transitionShow="none"

@@ -52,15 +52,15 @@
               <CharacterTryListenCard
                 v-for="characterInfo of characterInfos"
                 :key="characterInfo.metas.speakerUuid"
-                :characterInfo="characterInfo"
+                :characterInfo
                 :isSelected="
                   selectedCharacter === characterInfo.metas.speakerUuid
                 "
                 :isNewCharacter="
                   newCharacters.includes(characterInfo.metas.speakerUuid)
                 "
-                :playing="playing"
-                :togglePlayOrStop="togglePlayOrStop"
+                :playing
+                :togglePlayOrStop
                 @update:portrait="updatePortrait"
                 @update:select-character="selectCharacter"
               />

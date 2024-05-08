@@ -11,11 +11,11 @@
         :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
         v-if="openedEditor != undefined"
         :key="openedEditor"
-        :isEnginesReady="isEnginesReady"
-        :isProjectFileLoaded="isProjectFileLoaded"
+        :isEnginesReady
+        :isProjectFileLoaded
       />
     </KeepAlive>
-    <AllDialog :isEnginesReady="isEnginesReady" />
+    <AllDialog :isEnginesReady />
   </ErrorBoundary>
 </template>
 

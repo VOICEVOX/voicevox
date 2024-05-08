@@ -63,14 +63,14 @@
           :key="accentPhraseIndex"
           ref="accentPhraseComponents"
           :audioKey="activeAudioKey"
-          :accentPhrase="accentPhrase"
+          :accentPhrase
           :index="accentPhraseIndex"
           :isLast="
             accentPhrases !== undefined &&
             accentPhrases.length - 1 === accentPhraseIndex
           "
           :isActive="accentPhraseIndex === activePoint"
-          :selectedDetail="selectedDetail"
+          :selectedDetail
           :shiftKeyFlag="isShiftKeyDown"
           :altKeyFlag="isAltKeyDown"
           @click="setPlayAndStartPoint"

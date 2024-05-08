@@ -3,11 +3,7 @@
     <!-- 左上の角 -->
     <div class="sequencer-corner"></div>
     <!-- ルーラー -->
-    <SequencerRuler
-      class="sequencer-ruler"
-      :offset="scrollX"
-      :numOfMeasures="numOfMeasures"
-    />
+    <SequencerRuler class="sequencer-ruler" :offset="scrollX" :numOfMeasures />
     <!-- 鍵盤 -->
     <SequencerKeys
       class="sequencer-keys"
@@ -117,7 +113,7 @@
       <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
-        :note="note"
+        :note
         :previewLyric="previewLyrics.get(note.id) || null"
         :isSelected="false"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
@@ -132,7 +128,7 @@
           ? previewNotes
           : selectedNotes"
         :key="note.id"
-        :note="note"
+        :note
         :previewLyric="previewLyrics.get(note.id) || null"
         :isSelected="true"
         @bar-mousedown="onNoteBarMouseDown($event, note)"
@@ -152,7 +148,7 @@
       }"
       :offsetX="scrollX"
       :offsetY="scrollY"
-      :previewPitchEdit="previewPitchEdit"
+      :previewPitchEdit
     />
     <div
       class="sequencer-overlay"

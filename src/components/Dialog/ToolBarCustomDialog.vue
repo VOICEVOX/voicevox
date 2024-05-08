@@ -90,7 +90,7 @@
               <QList class="usable-button-list bg-surface">
                 <QItem
                   v-for="(desc, key) in usableButtonsDesc"
-                  :key="key"
+                  :key
                   v-ripple
                   tag="label"
                 >

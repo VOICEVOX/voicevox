@@ -11,9 +11,9 @@
     <template v-if="selectedDetail === 'accent'">
       <AudioAccent
         :accentPhraseIndex="index"
-        :accentPhrase="accentPhrase"
-        :uiLocked="uiLocked"
-        :shiftKeyFlag="shiftKeyFlag"
+        :accentPhrase
+        :uiLocked
+        :shiftKeyFlag
         :onChangeAccent="changeAccent"
       />
     </template>
@@ -26,15 +26,15 @@
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
       >
         <AudioParameter
-          :moraIndex="moraIndex"
+          :moraIndex
           :value="mora.pitch"
-          :uiLocked="uiLocked"
+          :uiLocked
           :min="minPitch"
           :max="maxPitch"
           :disable="mora.pitch == 0.0"
           :type="'pitch'"
           :clip="false"
-          :shiftKeyFlag="shiftKeyFlag"
+          :shiftKeyFlag
           @change-value="changeMoraData"
         />
       </div>
@@ -51,29 +51,29 @@
         <!-- consonant length -->
         <AudioParameter
           v-if="mora.consonant && mora.consonantLength != undefined"
-          :moraIndex="moraIndex"
+          :moraIndex
           :value="mora.consonantLength"
-          :uiLocked="uiLocked"
+          :uiLocked
           :min="minMoraLength"
           :max="maxMoraLength"
           :step="0.001"
           :type="'consonant'"
           :clip="true"
-          :shiftKeyFlag="shiftKeyFlag"
+          :shiftKeyFlag
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
         <!-- vowel length -->
         <AudioParameter
-          :moraIndex="moraIndex"
+          :moraIndex
           :value="mora.vowelLength"
-          :uiLocked="uiLocked"
+          :uiLocked
           :min="minMoraLength"
           :max="maxMoraLength"
           :step="0.001"
           :type="'vowel'"
           :clip="mora.consonant ? true : false"
-          :shiftKeyFlag="shiftKeyFlag"
+          :shiftKeyFlag
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
@@ -89,12 +89,12 @@
         <AudioParameter
           :moraIndex="accentPhrase.moras.length"
           :value="accentPhrase.pauseMora.vowelLength"
-          :uiLocked="uiLocked"
+          :uiLocked
           :min="0"
           :max="1.0"
           :step="0.01"
           :type="'pause'"
-          :shiftKeyFlag="shiftKeyFlag"
+          :shiftKeyFlag
           @change-value="changeMoraData"
         />
       </div>

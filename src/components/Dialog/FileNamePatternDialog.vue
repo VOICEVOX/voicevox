@@ -24,7 +24,7 @@
               suffix=".wav"
               :maxlength="maxLength"
               :error="hasError"
-              :errorMessage="errorMessage"
+              :errorMessage
             >
               <template #after>
                 <QBtn

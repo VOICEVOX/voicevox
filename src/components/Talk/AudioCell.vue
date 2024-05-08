@@ -49,7 +49,7 @@
       :characterInfos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
       :showEngineInfo="isMultipleEngine"
-      :uiLocked="uiLocked"
+      :uiLocked
       @focus="
         if (!isSelectedAudioCell) {
           selectAndSetActiveAudioKey();

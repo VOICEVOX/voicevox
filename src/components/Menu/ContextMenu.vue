@@ -3,7 +3,7 @@
     ref="contextMenu"
     touchPosition
     contextMenu
-    :noFocus="noFocus"
+    :noFocus
     transitionShow="none"
     transitionHide="none"
   >

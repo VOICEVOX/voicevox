@@ -221,7 +221,7 @@
           :characterInfos="morphingTargetCharacters"
           :showEngineInfo="morphingTargetEngines.length >= 2"
           :emptiable="true"
-          :uiLocked="uiLocked"
+          :uiLocked
         />
         <div class="q-pl-xs row overflow-hidden">
           <div class="text-body2 ellipsis overflow-hidden">
