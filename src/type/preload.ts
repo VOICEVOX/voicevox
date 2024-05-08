@@ -62,6 +62,13 @@ export type VoiceId = z.infer<typeof voiceIdSchema>;
 export const VoiceId = (voice: Voice): VoiceId =>
   voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
 
+export const noteIdSchema = z.string().brand<"NoteId">();
+export type NoteId = z.infer<typeof noteIdSchema>;
+export const NoteId = (id: string): NoteId => noteIdSchema.parse(id);
+
+// 共通のアクション名
+export const actionPostfixSelectNthCharacter = "番目のキャラクターを選択";
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySettingType[] = [
   {
@@ -176,6 +183,14 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     action: "全セルを選択",
     combination: HotkeyCombination(!isMac ? "Ctrl Shift A" : "Meta Shift A"),
   },
+  ...Array.from({ length: 10 }, (_, index) => {
+    const roleKey = index == 9 ? 0 : index + 1;
+    return {
+      action:
+        `${index + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
+      combination: HotkeyCombination((!isMac ? "Ctrl " : "Meta ") + roleKey),
+    };
+  }),
 ];
 
 export const defaultToolbarButtonSetting: ToolbarSettingType = [
@@ -463,6 +478,16 @@ export const hotkeyActionNameSchema = z.enum([
   "すべて選択",
   "選択解除",
   "全セルを選択",
+  `1${actionPostfixSelectNthCharacter}`,
+  `2${actionPostfixSelectNthCharacter}`,
+  `3${actionPostfixSelectNthCharacter}`,
+  `4${actionPostfixSelectNthCharacter}`,
+  `5${actionPostfixSelectNthCharacter}`,
+  `6${actionPostfixSelectNthCharacter}`,
+  `7${actionPostfixSelectNthCharacter}`,
+  `8${actionPostfixSelectNthCharacter}`,
+  `9${actionPostfixSelectNthCharacter}`,
+  `10${actionPostfixSelectNthCharacter}`,
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;

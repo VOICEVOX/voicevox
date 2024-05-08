@@ -1,30 +1,37 @@
-<!-- 
+<!--
   ノートやピッチなどの編集対象を切り替えるボタン
 -->
 
 <template>
-  <!-- ノート -->
-  <QBtn
+  <QBtnToggle
     dense
-    icon="piano"
-    :color="editTarget === 'NOTE' ? 'primary' : undefined"
-    :text-color="editTarget === 'NOTE' ? 'display-on-primary' : undefined"
-    @click="editTarget !== 'NOTE' && changeEditTarget('NOTE')"
-    ><QTooltip :delay="500" anchor="bottom middle">ノート編集</QTooltip></QBtn
-  >
-
-  <!-- ピッチ -->
-  <QBtn
-    dense
-    icon="show_chart"
-    :color="editTarget === 'PITCH' ? 'primary' : undefined"
-    :text-color="editTarget === 'PITCH' ? 'display-on-primary' : undefined"
-    class="margin-right"
-    @click="editTarget !== 'PITCH' && changeEditTarget('PITCH')"
-    ><QTooltip :delay="500" anchor="bottom middle"
-      >ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去</QTooltip
-    ></QBtn
-  >
+    unelevated
+    toggle-color="primary"
+    :model-value="editTarget"
+    toggle-text-color="display-on-primary"
+    class="edit-target-switcher q-mr-sm"
+    :options="[
+      {
+        icon: 'piano',
+        value: 'NOTE',
+        slot: 'NOTE',
+      },
+      {
+        icon: 'show_chart',
+        value: 'PITCH',
+        slot: 'PITCH',
+      },
+    ]"
+    @update:model-value="changeEditTarget"
+    ><template #NOTE
+      ><QTooltip :delay="500" anchor="bottom middle">ノート編集</QTooltip>
+    </template>
+    <template #PITCH>
+      <QTooltip :delay="500" anchor="bottom middle"
+        >ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去</QTooltip
+      >
+    </template>
+  </QBtnToggle>
 </template>
 
 <script setup lang="ts">
@@ -37,8 +44,22 @@ defineProps<{
 }>();
 </script>
 
-<style scoped lang="scss">
-.margin-right {
-  margin-right: 6px;
+<style lang="scss" scoped>
+.edit-target-switcher :deep(.q-btn-item) {
+  position: relative;
+
+  &.bg-primary {
+    // borderがないと切り換え時に1px動くのでそれを防ぐ
+    border: 1px solid var(--color-primary);
+  }
+  &:not(.bg-primary) {
+    border: 1px solid rgba(var(--color-display-rgb), 0.3);
+    &:first-child {
+      border-right: 0;
+    }
+    &:last-child {
+      border-left: 0;
+    }
+  }
 }
 </style>
