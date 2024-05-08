@@ -1,6 +1,4 @@
 <template>
-  <MenuBar />
-
   <QLayout reveal elevated container class="layout-container">
     <ToolBar />
 
@@ -136,7 +134,6 @@ import AudioInfo from "./AudioInfo.vue";
 import CharacterPortrait from "./CharacterPortrait.vue";
 import ToolBar from "./ToolBar.vue";
 import { useStore } from "@/store";
-import MenuBar from "@/components/Talk/MenuBar.vue";
 import ProgressView from "@/components/ProgressView.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { AudioItem } from "@/store/type";
@@ -145,23 +142,60 @@ import {
   PresetKey,
   SplitterPositionType,
   Voice,
+  HotkeyActionNameType,
+  actionPostfixSelectNthCharacter,
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
 
-const props =
-  defineProps<{
-    isEnginesReady: boolean;
-    isProjectFileLoaded: boolean | "waiting";
-  }>();
+const props = defineProps<{
+  isEnginesReady: boolean;
+  isProjectFileLoaded: boolean | "waiting";
+}>();
 
 const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-// hotkeys handled by Mousetrap
 const { registerHotkeyWithCleanup } = useHotkeyManager();
+
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "音声書き出し",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG");
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "選択音声を書き出し",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG");
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "音声を繋げて書き出し",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG");
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "テキストを読み込む",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG");
+    }
+  },
+});
 
 registerHotkeyWithCleanup({
   editor: "talk",
@@ -214,10 +248,39 @@ registerHotkeyWithCleanup({
     }
   },
 });
+registerHotkeyWithCleanup({
+  editor: "talk",
+  enableInTextbox: false,
+  name: "全セルを選択",
+  callback: () => {
+    if (!uiLocked.value) {
+      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+        audioKeys: audioKeys.value,
+      });
+    }
+  },
+});
+for (let i = 0; i < 10; i++) {
+  registerHotkeyWithCleanup({
+    editor: "talk",
+    enableInTextbox: true,
+    name: `${i + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
+    callback: () => {
+      if (!uiLocked.value) {
+        onCharacterSelectHotkey(i);
+      }
+    },
+  });
+}
 
 const removeAudioItem = async () => {
   if (activeAudioKey.value == undefined) throw new Error();
   audioCellRefs[activeAudioKey.value].removeCell();
+};
+
+const onCharacterSelectHotkey = async (selectedCharacterIndex: number) => {
+  if (activeAudioKey.value == undefined) throw new Error();
+  audioCellRefs[activeAudioKey.value].selectCharacterAt(selectedCharacterIndex);
 };
 
 // view
@@ -254,12 +317,12 @@ const changeAudioDetailPaneMaxHeight = (height: number) => {
 };
 
 const splitterPosition = computed<SplitterPositionType>(
-  () => store.state.splitterPosition
+  () => store.state.splitterPosition,
 );
 
 const updateSplitterPosition = async (
   propertyName: keyof SplitterPositionType,
-  newValue: number
+  newValue: number,
 ) => {
   const newSplitterPosition = {
     ...splitterPosition.value,
@@ -306,7 +369,7 @@ const itemKey = (key: string) => key;
 
 // セルを追加
 const activeAudioKey = computed<AudioKey | undefined>(
-  () => store.getters.ACTIVE_AUDIO_KEY
+  () => store.getters.ACTIVE_AUDIO_KEY,
 );
 const addAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
@@ -349,7 +412,7 @@ const duplicateAudioItem = async () => {
 
 // Pane
 const shouldShowPanes = computed<boolean>(
-  () => store.getters.SHOULD_SHOW_PANES
+  () => store.getters.SHOULD_SHOW_PANES,
 );
 watch(shouldShowPanes, (val, old) => {
   if (val === old) return;
@@ -362,28 +425,28 @@ watch(shouldShowPanes, (val, old) => {
     portraitPaneWidth.value = clamp(
       splitterPosition.value.portraitPaneWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH,
       MIN_PORTRAIT_PANE_WIDTH,
-      MAX_PORTRAIT_PANE_WIDTH
+      MAX_PORTRAIT_PANE_WIDTH,
     );
 
     audioInfoPaneWidth.value = clamp(
       splitterPosition.value.audioInfoPaneWidth ??
         DEFAULT_AUDIO_INFO_PANE_WIDTH,
       MIN_AUDIO_INFO_PANE_WIDTH,
-      MAX_AUDIO_INFO_PANE_WIDTH
+      MAX_AUDIO_INFO_PANE_WIDTH,
     );
     audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
     audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
 
     audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
     changeAudioDetailPaneMaxHeight(
-      resizeObserverRef.value?.$el.parentElement.clientHeight
+      resizeObserverRef.value?.$el.parentElement.clientHeight,
     );
 
     audioDetailPaneHeight.value = clamp(
       splitterPosition.value.audioDetailPaneHeight ??
         MIN_AUDIO_DETAIL_PANE_HEIGHT,
       audioDetailPaneMinHeight.value,
-      audioDetailPaneMaxHeight.value
+      audioDetailPaneMaxHeight.value,
     );
   } else {
     portraitPaneWidth.value = 0;
@@ -410,7 +473,7 @@ const focusCell = ({
 };
 
 const userOrderedCharacterInfos = computed(
-  () => store.state.userCharacterOrder
+  () => store.state.userCharacterOrder,
 );
 const audioItems = computed(() => store.state.audioItems);
 // 並び替え後、テキスト欄が１つで空欄なら話者を更新
@@ -429,7 +492,7 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
 
     const speakerId = userOrderedCharacterInfos[0];
     const defaultStyleId = store.state.defaultStyleIds.find(
-      (styleId) => styleId.speakerUuid === speakerId
+      (styleId) => styleId.speakerUuid === speakerId,
     );
     if (!defaultStyleId || audioItem.voice.speakerId === speakerId) return;
 
@@ -477,7 +540,7 @@ onetimeWatch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 // 代替ポート情報の変更を監視
@@ -502,7 +565,7 @@ watch(
         tipName: "engineStartedOnAltPort",
       });
     }
-  }
+  },
 );
 
 // ドラッグ＆ドロップ
@@ -537,7 +600,7 @@ watch(activeAudioKey, (audioKey) => {
     !(cellsElement instanceof Element)
   )
     throw new Error(
-      `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`
+      `invalid element: activeCellElement=${activeCellElement}, cellsElement=${cellsElement}`,
     );
   const activeCellRect = activeCellElement.getBoundingClientRect();
   const cellsRect = cellsElement.getBoundingClientRect();
@@ -566,8 +629,8 @@ const onAudioCellPaneClick = () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .q-header {
   height: vars.$toolbar-height;

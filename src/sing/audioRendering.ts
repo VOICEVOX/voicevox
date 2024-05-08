@@ -102,11 +102,11 @@ export class Transport {
   constructor(
     audioContext: AudioContext,
     lookahead = 0.2,
-    scheduleAheadTime = 0.6
+    scheduleAheadTime = 0.6,
   ) {
     if (scheduleAheadTime <= lookahead) {
       throw new Error(
-        "The scheduleAheadTime must be longer than the lookahead."
+        "The scheduleAheadTime must be longer than the lookahead.",
       );
     }
 
@@ -683,7 +683,7 @@ class SynthVoice {
     this.filterNode.frequency.value = this.calcFilterFreq(
       params.filter.cutoff,
       params.filter.keyTrack,
-      params.noteNumber
+      params.noteNumber,
     );
     this.filterNode.Q.value = this.calcFilterQ(params.filter.resonance);
     this.gainNode = new GainNode(audioContext, { gain: 0 });
@@ -717,7 +717,7 @@ class SynthVoice {
     const freq = noteNumberToFrequency(this.noteNumber);
     const t0 = Math.max(
       getEarliestSchedulableContextTime(this.audioContext),
-      contextTime
+      contextTime,
     );
 
     // アタック、ディケイ、サスティーンのスケジュールを行う
@@ -739,7 +739,7 @@ class SynthVoice {
     const rel = this.ampParams.release;
     const t0 = Math.max(
       getEarliestSchedulableContextTime(this.audioContext),
-      contextTime
+      contextTime,
     );
 
     if (this.noteOffContextTime == undefined || t0 < this.noteOffContextTime) {
@@ -833,7 +833,7 @@ export class Synth implements Instrument {
   noteOn(
     contextTime: number | "immediately",
     noteNumber: number,
-    duration?: number
+    duration?: number,
   ) {
     this.voices = this.voices.filter((value) => !value.isStopped);
     if (contextTime === "immediately") {

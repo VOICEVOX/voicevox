@@ -15,7 +15,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
       .locator("header")
       .getByRole("toolbar")
       .getByText("全部書き出し")
-      .count()
+      .count(),
   ).toBe(0);
 
   // ツールバーのカスタマイズページに移動
@@ -27,11 +27,11 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
 
   // 全部書き出しボタンを追加する
   expect(
-    await page.getByRole("button").filter({ hasText: "全部書き出し" }).count()
+    await page.getByRole("button").filter({ hasText: "全部書き出し" }).count(),
   ).toBe(0);
   await page.getByRole("listitem").filter({ hasText: "全部書き出し" }).click();
   expect(
-    await page.getByRole("button").filter({ hasText: "全部書き出し" }).count()
+    await page.getByRole("button").filter({ hasText: "全部書き出し" }).count(),
   ).toBe(1);
   await page.getByText("保存", { exact: true }).click();
   await getNewestQuasarDialog(page)
@@ -46,7 +46,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
       .locator("header")
       .getByRole("toolbar")
       .getByText("全部書き出し")
-      .count()
+      .count(),
   ).toBe(1);
 
   // 再度ツールバーのカスタマイズページに移動し、デフォルトに戻すボタンを押す
@@ -59,7 +59,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
       .locator("main")
       .getByRole("button")
       .filter({ hasText: "全部書き出し" })
-      .count()
+      .count(),
   ).toBe(1);
   await page.getByText("デフォルトに戻す").click();
   await page.locator(".q-card").getByText("はい").click();
@@ -69,7 +69,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
       .locator("main")
       .getByRole("button")
       .filter({ hasText: "全部書き出し" })
-      .count()
+      .count(),
   ).toBe(0);
 
   // 閉じるボタンを再度押し、全部書き出しボタンが消えてることを確認
@@ -85,6 +85,6 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
       .locator("header")
       .getByRole("toolbar")
       .getByText("全部書き出し")
-      .count()
+      .count(),
   ).toBe(0);
 });

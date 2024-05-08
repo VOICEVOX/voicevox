@@ -75,12 +75,11 @@
 import { useDialogPluginComponent } from "quasar";
 import { ErrorTypeForSaveAllResultDialog } from "@/store/type";
 
-const props =
-  defineProps<{
-    successArray: string | undefined[];
-    writeErrorArray: ErrorTypeForSaveAllResultDialog[];
-    engineErrorArray: ErrorTypeForSaveAllResultDialog[];
-  }>();
+const props = defineProps<{
+  successArray: string | undefined[];
+  writeErrorArray: ErrorTypeForSaveAllResultDialog[];
+  engineErrorArray: ErrorTypeForSaveAllResultDialog[];
+}>();
 
 const { dialogRef, onDialogOK } = useDialogPluginComponent();
 const close = () => onDialogOK();

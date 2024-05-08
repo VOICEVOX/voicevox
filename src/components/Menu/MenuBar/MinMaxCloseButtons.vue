@@ -45,12 +45,7 @@
     transparent
     color="transparent"
     text-color="display"
-    class="
-      full-height
-      cursor-not-allowed
-      no-border-radius
-      title-bar-buttons-root
-    "
+    class="full-height cursor-not-allowed no-border-radius title-bar-buttons-root"
   >
     <QBtn
       dense

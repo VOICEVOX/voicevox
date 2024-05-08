@@ -32,7 +32,7 @@ export class Store<
   S,
   G extends GettersBase,
   A extends ActionsBase,
-  M extends MutationsBase
+  M extends MutationsBase,
 > extends BaseStore<S> {
   constructor(options: OriginalStoreOptions<S>) {
     super(options);
@@ -54,7 +54,7 @@ export function createStore<
   S,
   G extends GettersBase,
   A extends ActionsBase,
-  M extends MutationsBase
+  M extends MutationsBase,
 >(options: StoreOptions<S, G, A, M>): Store<S, G, A, M> {
   // optionsをOriginalStoreOptions<S>で型キャストしないとTS2589を吐く
   return baseCreateStore<S>(options as OriginalStoreOptions<S>) as Store<
@@ -69,15 +69,16 @@ export function useStore<
   S,
   G extends GettersBase,
   A extends ActionsBase,
-  M extends MutationsBase
+  M extends MutationsBase,
 >(injectKey?: InjectionKey<Store<S, G, A, M>> | string): Store<S, G, A, M> {
   return baseUseStore<S>(injectKey) as Store<S, G, A, M>;
 }
 
 export interface Dispatch<A extends ActionsBase> {
-  <T extends keyof A>(type: T, ...payload: Parameters<A[T]>): Promise<
-    PromiseType<ReturnType<A[T]>>
-  >;
+  <T extends keyof A>(
+    type: T,
+    ...payload: Parameters<A[T]>
+  ): Promise<PromiseType<ReturnType<A[T]>>>;
   <T extends keyof A>(
     payloadWithType: { type: T } & (Parameters<A[T]>[0] extends Record<
       string,
@@ -85,7 +86,7 @@ export interface Dispatch<A extends ActionsBase> {
     >
       ? Parameters<A[T]>[0]
       : // eslint-disable-next-line @typescript-eslint/ban-types
-        {})
+        {}),
   ): Promise<PromiseType<ReturnType<A[T]>>>;
 }
 
@@ -98,7 +99,7 @@ export interface Commit<M extends MutationsBase> {
     payloadWithType: { type: T } & (M[T] extends Record<string, any>
       ? M[T]
       : // eslint-disable-next-line @typescript-eslint/ban-types
-        {})
+        {}),
   ): void;
 }
 
@@ -109,7 +110,7 @@ export interface StoreOptions<
   M extends MutationsBase,
   SG extends GettersBase = G,
   SA extends ActionsBase = A,
-  SM extends MutationsBase = M
+  SM extends MutationsBase = M,
 > {
   state?: S | (() => S);
   getters: GetterTree<S, S, G, SG>;
@@ -126,7 +127,7 @@ export interface ActionContext<
   R,
   SG extends GettersBase,
   SA extends ActionsBase,
-  SM extends MutationsBase
+  SM extends MutationsBase,
 > {
   dispatch: Dispatch<SA>;
   commit: Commit<SM>;
@@ -142,11 +143,11 @@ export type ActionHandler<
   SG extends GettersBase,
   SA extends ActionsBase,
   SM extends MutationsBase,
-  K extends keyof SA
+  K extends keyof SA,
 > = (
   this: Store<S, SG, SA, SM>,
   injectee: ActionContext<S, R, SG, SA, SM>,
-  payload: Parameters<SA[K]>[0]
+  payload: Parameters<SA[K]>[0],
 ) => ReturnType<SA[K]>;
 export interface ActionObject<
   S,
@@ -154,7 +155,7 @@ export interface ActionObject<
   SG extends GettersBase,
   SA extends ActionsBase,
   SM extends MutationsBase,
-  K extends keyof SA
+  K extends keyof SA,
 > {
   root?: boolean;
   handler: ActionHandler<S, R, SG, SA, SM, K>;
@@ -164,7 +165,7 @@ export type Getter<S, R, G, K extends keyof G, SG extends GettersBase> = (
   state: S,
   getters: SG,
   rootState: R,
-  rootGetters: any
+  rootGetters: any,
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
 ) => SG[K];
@@ -176,20 +177,20 @@ export type Action<
   K extends keyof A,
   SG extends GettersBase,
   SA extends ActionsBase,
-  SM extends MutationsBase
+  SM extends MutationsBase,
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
 > = ActionHandler<S, R, SG, SA, SM, K> | ActionObject<S, R, SG, SA, SM, K>;
 export type Mutation<S, M extends MutationsBase, K extends keyof M> = (
   state: S,
-  payload: M[K]
+  payload: M[K],
 ) => void;
 
 export type GetterTree<
   S,
   R,
   G extends GettersBase,
-  SG extends GettersBase = G
+  SG extends GettersBase = G,
 > = G extends GettersBase
   ? CustomGetterTree<S, R, G, SG>
   : OriginalGetterTree<S, R>;
@@ -198,7 +199,7 @@ export type CustomGetterTree<
   S,
   R,
   G extends GettersBase,
-  SG extends GettersBase
+  SG extends GettersBase,
 > = {
   [K in keyof G]: Getter<S, R, G, K, SG>;
 };
@@ -209,7 +210,7 @@ export type ActionTree<
   A,
   SG extends GettersBase,
   SA extends ActionsBase,
-  SM extends MutationsBase
+  SM extends MutationsBase,
 > = A extends ActionsBase
   ? SA extends ActionsBase
     ? CustomActionTree<S, R, A, SG, SA, SM>
@@ -222,7 +223,7 @@ export type CustomActionTree<
   A extends ActionsBase,
   SG extends GettersBase,
   SA extends ActionsBase,
-  SM extends MutationsBase
+  SM extends MutationsBase,
 > = {
   [K in keyof A]: Action<S, R, A, K, SG, SA, SM>;
 };
@@ -248,7 +249,7 @@ type PartialStoreOptions<
   T extends StoreTypesBase,
   G extends GettersBase,
   A extends ActionsBase,
-  M extends MutationsBase
+  M extends MutationsBase,
 > = {
   [K in keyof T]: {
     [GAM in keyof T[K]]: GAM extends "getter"
@@ -256,14 +257,14 @@ type PartialStoreOptions<
         ? Getter<S, S, G, K, AllGetters>
         : never
       : GAM extends "action"
-      ? K extends keyof A
-        ? Action<S, S, A, K, AllGetters, AllActions, AllMutations>
-        : never
-      : GAM extends "mutation"
-      ? K extends keyof M
-        ? Mutation<S, M, K>
-        : never
-      : never;
+        ? K extends keyof A
+          ? Action<S, S, A, K, AllGetters, AllActions, AllMutations>
+          : never
+        : GAM extends "mutation"
+          ? K extends keyof M
+            ? Mutation<S, M, K>
+            : never
+          : never;
   };
 };
 
@@ -271,9 +272,9 @@ export const createPartialStore = <
   T extends StoreTypesBase,
   G extends GettersBase = StoreType<T, "getter">,
   A extends ActionsBase = StoreType<T, "action">,
-  M extends MutationsBase = StoreType<T, "mutation">
+  M extends MutationsBase = StoreType<T, "mutation">,
 >(
-  options: PartialStoreOptions<State, T, G, A, M>
+  options: PartialStoreOptions<State, T, G, A, M>,
 ): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
   const obj = Object.keys(options).reduce(
     (acc, cur) => {
@@ -295,7 +296,7 @@ export const createPartialStore = <
       getters: Object.create(null),
       mutations: Object.create(null),
       actions: Object.create(null),
-    }
+    },
   );
 
   return obj;

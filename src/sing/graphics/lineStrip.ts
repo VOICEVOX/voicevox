@@ -3,14 +3,47 @@ import lineStripVertexShaderSource from "@/sing/graphics/shaders/lineStripVertex
 import fragmentShaderSource from "@/sing/graphics/shaders/fragmentShader.glsl?raw";
 
 /**
- * 複数の点から折れ線を引きます。点の数は途中で変更できません。
+ * 色を表します。各値は0以上255以下です。
+ */
+export class Color {
+  readonly r: number;
+  readonly g: number;
+  readonly b: number;
+  readonly a: number;
+
+  constructor(r: number, g: number, b: number, a: number) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this.a = a;
+  }
+
+  equals(color: Color) {
+    return (
+      this.r === color.r &&
+      this.g === color.g &&
+      this.b === color.b &&
+      this.a === color.a
+    );
+  }
+
+  toRgbaArray() {
+    return [this.r, this.g, this.b, this.a];
+  }
+}
+
+/**
+ * 複数のポイントから折れ線を引きます。
  */
 export class LineStrip {
+  readonly color: Color;
+  readonly width: number;
   private readonly mesh: PIXI.Mesh<PIXI.Shader>;
   private readonly shader: PIXI.Shader;
   private readonly geometry: PIXI.Geometry;
-  private readonly points: Float32Array;
   private readonly pointsBuffer: PIXI.Buffer;
+
+  private points: Float32Array;
 
   get displayObject() {
     return this.mesh as PIXI.DisplayObject;
@@ -23,19 +56,31 @@ export class LineStrip {
     this.mesh.renderable = value;
   }
 
+  get numOfPoints() {
+    return this.points.length / 2;
+  }
+  set numOfPoints(value: number) {
+    if (value < 2) {
+      throw new Error("The number of points must be at least 2.");
+    }
+    this.points = new Float32Array(value * 2);
+  }
+
   /**
-   * @param numOfPoints 点の数
+   * @param numOfPoints ポイントの数
    * @param color 線の色（RGBA）
    * @param width 線の幅（px）
    */
-  constructor(numOfPoints: number, color: number[], width: number) {
+  constructor(numOfPoints: number, color: Color, width: number) {
     if (numOfPoints < 2) {
       throw new Error("The number of points must be at least 2.");
     }
+    this.color = color;
+    this.width = width;
     this.shader = PIXI.Shader.from(
       lineStripVertexShaderSource,
       fragmentShaderSource,
-      { color }
+      { color: color.toRgbaArray().map((value) => value / 255) },
     );
     this.points = new Float32Array(numOfPoints * 2);
     this.pointsBuffer = new PIXI.Buffer(this.points, false);
@@ -53,7 +98,7 @@ export class LineStrip {
       PIXI.TYPES.FLOAT,
       sizeOfFloat * 2,
       0,
-      true
+      true,
     );
     this.geometry.addAttribute(
       "pointB",
@@ -63,7 +108,7 @@ export class LineStrip {
       PIXI.TYPES.FLOAT,
       sizeOfFloat * 2,
       sizeOfFloat * 2,
-      true
+      true,
     );
     this.mesh = new PIXI.Mesh(this.geometry, this.shader);
   }
@@ -81,7 +126,7 @@ export class LineStrip {
   }
 
   /**
-   * 点の位置を設定します。設定し終わったら`update()`を呼んでください。
+   * ポイントを設定します。設定し終わったら`update()`を呼んでください。
    */
   setPoint(index: number, x: number, y: number) {
     this.points[2 * index] = x;
@@ -89,10 +134,13 @@ export class LineStrip {
   }
 
   /**
-   * 折れ線を更新します。（設定された点の位置を適用します）
+   * 折れ線を更新します。（設定されたポイントを適用します）
    */
   update() {
     this.pointsBuffer.update(this.points);
+    if (this.geometry.instanceCount !== this.numOfPoints - 1) {
+      this.geometry.instanceCount = this.numOfPoints - 1;
+    }
   }
 
   /**
