@@ -229,6 +229,7 @@ import { v4 as uuidv4 } from "uuid";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
+import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import {
@@ -433,11 +434,11 @@ let previewStartEditTarget: SequencerEditTarget = "NOTE";
 let executePreviewProcess = false;
 // ノート編集のプレビュー
 const previewNotes = ref<Note[]>([]);
-const copiedNotesForPreview = new Map<string, Note>();
+const copiedNotesForPreview = new Map<NoteId, Note>();
 let dragStartTicks = 0;
 let dragStartNoteNumber = 0;
 let dragStartGuideLineTicks = 0;
-let draggingNoteId = ""; // FIXME: 無効状態はstring以外の型にする
+let draggingNoteId = NoteId(""); // FIXME: 無効状態はstring以外の型にする
 let edited = false; // プレビュー終了時にstore.stateの更新を行うかどうかを表す変数
 // ピッチ編集のプレビュー
 const previewPitchEdit = ref<
@@ -470,7 +471,7 @@ const previewAdd = () => {
     Math.round(dragTicks / snapTicks.value) * snapTicks.value;
   const noteEndPos = draggingNote.position + noteDuration;
 
-  const editedNotes = new Map<string, Note>();
+  const editedNotes = new Map<NoteId, Note>();
   for (const note of previewNotes.value) {
     const copiedNote = copiedNotesForPreview.get(note.id);
     if (!copiedNote) {
@@ -507,7 +508,7 @@ const previewMove = () => {
   const movingTicks = newNotePos - notePos;
   const movingSemitones = cursorNoteNumber - dragStartNoteNumber;
 
-  const editedNotes = new Map<string, Note>();
+  const editedNotes = new Map<NoteId, Note>();
   for (const note of previewNotes.value) {
     const copiedNote = copiedNotesForPreview.get(note.id);
     if (!copiedNote) {
@@ -557,7 +558,7 @@ const previewResizeRight = () => {
     Math.round((noteEndPos + dragTicks) / snapTicks.value) * snapTicks.value;
   const movingTicks = newNoteEndPos - noteEndPos;
 
-  const editedNotes = new Map<string, Note>();
+  const editedNotes = new Map<NoteId, Note>();
   for (const note of previewNotes.value) {
     const copiedNote = copiedNotesForPreview.get(note.id);
     if (!copiedNote) {
@@ -597,7 +598,7 @@ const previewResizeLeft = () => {
     Math.round((notePos + dragTicks) / snapTicks.value) * snapTicks.value;
   const movingTicks = newNotePos - notePos;
 
-  const editedNotes = new Map<string, Note>();
+  const editedNotes = new Map<NoteId, Note>();
   for (const note of previewNotes.value) {
     const copiedNote = copiedNotesForPreview.get(note.id);
     if (!copiedNote) {
@@ -813,7 +814,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         return;
       }
       note = {
-        id: uuidv4(),
+        id: NoteId(uuidv4()),
         position: guideLineTicks,
         duration: snapTicks.value,
         noteNumber: cursorNoteNumber,
@@ -835,7 +836,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
             maxIndex = Math.max(maxIndex, i);
           }
         }
-        const noteIdsToSelect: string[] = [];
+        const noteIdsToSelect: NoteId[] = [];
         for (let i = minIndex; i <= maxIndex; i++) {
           const noteId = notes.value[i].id;
           if (!state.selectedNoteIds.has(noteId)) {
@@ -1126,7 +1127,7 @@ const rectSelect = (additive: boolean) => {
     (scrollY.value + top + height) / zoomY.value,
   );
 
-  const noteIdsToSelect: string[] = [];
+  const noteIdsToSelect: NoteId[] = [];
   for (const note of notes.value) {
     if (
       note.position + note.duration >= startTicks &&

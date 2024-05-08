@@ -200,7 +200,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   CREATE_ALL_DEFAULT_PRESET: {
     async action({ state, dispatch, getters }) {
-      const voices = getters.GET_ALL_VOICES;
+      const voices = getters.GET_ALL_VOICES("talk");
 
       for (const voice of voices) {
         const voiceId = VoiceId(voice);

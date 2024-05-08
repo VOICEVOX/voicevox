@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StyleInfo, isMac } from "@/type/preload";
+import { StyleInfo, isMac, NoteId } from "@/type/preload";
 import { calculateHash } from "@/sing/utility";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
@@ -163,9 +163,9 @@ export class DoubleClickDetector<T extends AreaInfo> {
 export class NoteAreaInfo implements AreaInfo {
   readonly type: "note";
   readonly id: string;
-  readonly noteId: string;
+  readonly noteId: NoteId;
 
-  constructor(noteId: string) {
+  constructor(noteId: NoteId) {
     this.type = "note";
     this.id = `NOTE-${noteId}`;
     this.noteId = noteId;
