@@ -228,7 +228,8 @@ const finishOrNotDialog = async () => {
   if (isChanged.value) {
     const result = await store.dispatch("SHOW_WARNING_DIALOG", {
       title: "カスタマイズを終了しますか？",
-      message: "このまま終了すると、カスタマイズは破棄されてリセットされます。",
+      message:
+        "保存せずに終了すると、カスタマイズは破棄されてリセットされます。",
       actionName: "終了",
     });
     if (result === "OK") {
