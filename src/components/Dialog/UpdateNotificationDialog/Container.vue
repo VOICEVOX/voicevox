@@ -7,8 +7,8 @@
   <UpdateNotificationDialog
     v-if="newUpdateResult.status == 'updateAvailable'"
     v-model="isDialogOpenComputed"
-    :latest-version="newUpdateResult.latestVersion"
-    :new-update-infos="newUpdateResult.newUpdateInfos"
+    :latestVersion="newUpdateResult.latestVersion"
+    :newUpdateInfos="newUpdateResult.newUpdateInfos"
     @skip-this-version-click="handleSkipThisVersionClick"
   />
 </template>

@@ -2,7 +2,7 @@
   <ToolBar />
   <div class="sing-main">
     <EngineStartupOverlay
-      :is-completed-initial-startup="isCompletedInitialStartup"
+      :isCompletedInitialStartup="isCompletedInitialStartup"
     />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
@@ -15,7 +15,7 @@
           padding="xs md"
           label="音声の書き出しをキャンセル"
           color="surface"
-          text-color="display"
+          textColor="display"
           class="q-mt-sm"
           @click="cancelExport"
         />

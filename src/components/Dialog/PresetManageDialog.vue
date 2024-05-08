@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    :model-value="props.openDialog"
+    :modelValue="props.openDialog"
     @update:model-value="updateOpenDialog"
   >
     <QCard class="setting-card q-pa-md dialog-card">
@@ -11,8 +11,8 @@
         <div class="full-width row wrap justify-between">
           <QList bordered separator class="col-sm-grow">
             <Draggable
-              :model-value="previewPresetList"
-              item-key="key"
+              :modelValue="previewPresetList"
+              itemKey="key"
               @update:model-value="reorderPreset"
             >
               <template #item="{ element: item }">

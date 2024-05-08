@@ -2,8 +2,8 @@
   <QDialog
     v-model="dictionaryManageDialogOpenedComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr fFf" class="bg-background">
@@ -50,7 +50,7 @@
               <div class="row no-wrap">
                 <QBtn
                   outline
-                  text-color="warning"
+                  textColor="warning"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   :disable="uiLocked || !isDeletable"
                   @click="deleteWord"
@@ -58,7 +58,7 @@
                 >
                 <QBtn
                   outline
-                  text-color="display"
+                  textColor="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   :disable="uiLocked || !selectedId"
                   @click="editWord"
@@ -66,7 +66,7 @@
                 >
                 <QBtn
                   outline
-                  text-color="display"
+                  textColor="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   :disable="uiLocked"
                   @click="newWord"
@@ -82,7 +82,7 @@
                 tag="label"
                 clickable
                 :active="selectedId === key"
-                active-class="active-word"
+                activeClass="active-word"
                 @click="selectWord(key)"
                 @dblclick="editWord"
               >
@@ -140,7 +140,7 @@
                   v-if="!nowPlaying && !nowGenerating"
                   fab
                   color="primary"
-                  text-color="display-on-primary"
+                  textColor="display-on-primary"
                   icon="play_arrow"
                   @click="play"
                 />
@@ -148,7 +148,7 @@
                   v-else
                   fab
                   color="primary"
-                  text-color="display-on-primary"
+                  textColor="display-on-primary"
                   icon="stop"
                   :disable="nowGenerating"
                   @click="stop"
@@ -160,10 +160,10 @@
               >
                 <div v-if="accentPhrase" class="mora-table">
                   <AudioAccent
-                    :accent-phrase="accentPhrase"
-                    :accent-phrase-index="0"
-                    :ui-locked="uiLocked"
-                    :on-change-accent="changeAccent"
+                    :accentPhrase="accentPhrase"
+                    :accentPhraseIndex="0"
+                    :uiLocked="uiLocked"
+                    :onChangeAccent="changeAccent"
                   />
                   <template
                     v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -207,7 +207,7 @@
                 :min="0"
                 :max="10"
                 :step="1"
-                :marker-labels="wordPriorityLabels"
+                :markerLabels="wordPriorityLabels"
                 :style="{
                   width: '80%',
                 }"
@@ -218,7 +218,7 @@
               <QBtn
                 v-show="!!selectedId"
                 outline
-                text-color="display"
+                textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
                 @click="resetWord"
@@ -226,7 +226,7 @@
               >
               <QBtn
                 outline
-                text-color="display"
+                textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked"
                 @click="discardOrNotDialog(cancel)"
@@ -234,7 +234,7 @@
               >
               <QBtn
                 outline
-                text-color="display"
+                textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
                 @click="saveWord"

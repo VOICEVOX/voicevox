@@ -5,30 +5,30 @@
       <CharacterMenuButton />
       <QInput
         type="number"
-        :model-value="keyRangeAdjustmentInputBuffer"
+        :modelValue="keyRangeAdjustmentInputBuffer"
         label="音域調整"
         dense
-        hide-bottom-space
+        hideBottomSpace
         class="key-range-adjustment"
         @update:model-value="setKeyRangeAdjustmentInputBuffer"
         @change="setKeyRangeAdjustment"
       />
       <QInput
         type="number"
-        :model-value="volumeRangeAdjustmentInputBuffer"
+        :modelValue="volumeRangeAdjustmentInputBuffer"
         label="声量調整"
         dense
-        hide-bottom-space
+        hideBottomSpace
         class="volume-range-adjustment"
         @update:model-value="setVolumeRangeAdjustmentInputBuffer"
         @change="setVolumeRangeAdjustment"
       />
       <QInput
         type="number"
-        :model-value="bpmInputBuffer"
+        :modelValue="bpmInputBuffer"
         label="テンポ"
         dense
-        hide-bottom-space
+        hideBottomSpace
         class="sing-tempo"
         @update:model-value="setBpmInputBuffer"
         @change="setTempo"
@@ -40,10 +40,10 @@
       <div class="sing-beats">
         <QInput
           type="number"
-          :model-value="beatsInputBuffer"
+          :modelValue="beatsInputBuffer"
           label="拍子"
           dense
-          hide-bottom-space
+          hideBottomSpace
           class="sing-time-signature"
           @update:model-value="setBeatsInputBuffer"
           @change="setTimeSignature"
@@ -51,10 +51,10 @@
         <div class="sing-beats-separator">/</div>
         <QInput
           type="number"
-          :model-value="beatTypeInputBuffer"
+          :modelValue="beatTypeInputBuffer"
           label=""
           dense
-          hide-bottom-space
+          hideBottomSpace
           class="sing-time-signature"
           @update:model-value="setBeatTypeInputBuffer"
           @change="setTimeSignature"
@@ -95,8 +95,8 @@
     <div class="sing-controls">
       <EditTargetSwicher
         v-if="showEditTargetSwitchButton"
-        :edit-target="editTarget"
-        :change-edit-target="changeEditTarget"
+        :editTarget="editTarget"
+        :changeEditTarget="changeEditTarget"
       />
       <QBtn
         flat
@@ -124,12 +124,12 @@
         outlined
         color="primary"
         dense
-        text-color="display-on-primary"
-        hide-bottom-space
-        options-dense
+        textColor="display-on-primary"
+        hideBottomSpace
+        optionsDense
         label="スナップ"
-        transition-show="none"
-        transition-hide="none"
+        transitionShow="none"
+        transitionHide="none"
         class="sing-snap"
       />
     </div>

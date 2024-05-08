@@ -6,9 +6,9 @@
   <QBtnToggle
     dense
     unelevated
-    toggle-color="primary"
-    :model-value="editTarget"
-    toggle-text-color="display-on-primary"
+    toggleColor="primary"
+    :modelValue="editTarget"
+    toggleTextColor="display-on-primary"
     class="edit-target-switcher q-mr-sm"
     :options="[
       {

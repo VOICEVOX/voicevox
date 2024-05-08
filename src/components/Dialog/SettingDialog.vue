@@ -2,8 +2,8 @@
   <QDialog
     v-model="settingDialogOpenedComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr fFf" class="bg-background">
@@ -39,7 +39,7 @@
                     dense
                     name="engine"
                     :options="engineIds"
-                    :option-label="renderEngineNameLabel"
+                    :optionLabel="renderEngineNameLabel"
                   />
                 </template>
               </QCardActions>
@@ -54,8 +54,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       GPU モードの利用には GPU が必要です。Linux は
                       NVIDIA&trade; 製 GPU のみ対応しています。
@@ -68,9 +68,9 @@
                   padding="xs md"
                   unelevated
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="engineUseGpuOptions"
                   :disable="!gpuSwitchEnabled(selectedEngineId)"
                 >
@@ -94,8 +94,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       再生・保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。
                     </QTooltip>
@@ -108,7 +108,7 @@
                   dense
                   name="samplingRate"
                   :options="samplingRateOptions"
-                  :option-label="renderSamplingRateLabel"
+                  :optionLabel="renderSamplingRateLabel"
                 >
                 </QSelect>
               </QCardActions>
@@ -128,8 +128,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       プリセット機能を有効にします。パラメータを登録したり適用したりできます。
                     </QTooltip>
@@ -137,7 +137,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="experimentalSetting.enablePreset"
+                  :modelValue="experimentalSetting.enablePreset"
                   @update:model-value="changeEnablePreset"
                 >
                 </QToggle>
@@ -161,8 +161,8 @@
                           :delay="500"
                           anchor="center right"
                           self="center left"
-                          transition-show="jump-right"
-                          transition-hide="jump-left"
+                          transitionShow="jump-right"
+                          transitionHide="jump-left"
                         >
                           ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。
                         </QTooltip>
@@ -170,7 +170,7 @@
                     </div>
                     <QSpace />
                     <QToggle
-                      :model-value="
+                      :modelValue="
                         experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
                       "
                       @update:model-value="
@@ -194,8 +194,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。
                     </QTooltip>
@@ -203,7 +203,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="inheritAudioInfoMode"
+                  :modelValue="inheritAudioInfoMode"
                   @update:model-value="changeinheritAudioInfo($event)"
                 >
                 </QToggle>
@@ -218,8 +218,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       音声再生中の、詳細調整欄の自動スクロールのモードを選べます。
                     </QTooltip>
@@ -231,9 +231,9 @@
                   padding="xs md"
                   unelevated
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="[
                     {
                       label: '連続',
@@ -279,8 +279,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       テキスト貼り付けの際のテキストの分割箇所を選べます。
                     </QTooltip>
@@ -291,11 +291,11 @@
                 <QBtnToggle
                   padding="xs md"
                   unelevated
-                  :model-value="splitTextWhenPaste"
+                  :modelValue="splitTextWhenPaste"
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="[
                     {
                       label: '句点と改行',
@@ -336,8 +336,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、テキストを []
                       で囲むことで、テキスト中にメモを書けます。
@@ -346,7 +346,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="enableMemoNotation"
+                  :modelValue="enableMemoNotation"
                   @update:model-value="changeEnableMemoNotation($event)"
                 >
                 </QToggle>
@@ -361,8 +361,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、テキストに {ルビ対象|よみかた}
                       と書くことで、テキストの読み方を変えられます。
@@ -371,7 +371,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="enableRubyNotation"
+                  :modelValue="enableRubyNotation"
                   @update:model-value="changeEnableRubyNotation($event)"
                 >
                 </QToggle>
@@ -386,8 +386,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       過去に非表示にしたヒントを全て再表示できます。
                     </QTooltip>
@@ -407,7 +407,7 @@
                   label="再表示する"
                   unelevated
                   color="background"
-                  text-color="display"
+                  textColor="display"
                   class="text-no-wrap q-mr-sm"
                   :disable="isDefaultConfirmedTips"
                   @click="
@@ -435,8 +435,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、書き出す際のフォルダをあらかじめ指定できます。
                     </QTooltip>
@@ -448,10 +448,10 @@
                   dense
                   maxheight="10px"
                   label="書き出し先のフォルダ"
-                  hide-bottom-space
+                  hideBottomSpace
                   readonly
-                  :model-value="savingSetting.fixedExportDir"
-                  :input-style="{
+                  :modelValue="savingSetting.fixedExportDir"
+                  :inputStyle="{
                     width: `${savingSetting.fixedExportDir.length / 2 + 1}em`,
                     minWidth: '150px',
                     maxWidth: '450px',
@@ -479,7 +479,7 @@
                   </template>
                 </QInput>
                 <QToggle
-                  :model-value="savingSetting.fixedExportEnabled"
+                  :modelValue="savingSetting.fixedExportEnabled"
                   @update:model-value="
                     handleSavingSettingChange('fixedExportEnabled', $event)
                   "
@@ -501,8 +501,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       書き出す際のファイル名のパターンをカスタマイズできます。
                     </QTooltip>
@@ -516,7 +516,7 @@
                   label="編集する"
                   unelevated
                   color="background"
-                  text-color="display"
+                  textColor="display"
                   class="text-no-wrap q-mr-sm"
                   @click="showsFilePatternEditDialog = true"
                 />
@@ -532,8 +532,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。
                     </QTooltip>
@@ -541,7 +541,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="savingSetting.avoidOverwrite"
+                  :modelValue="savingSetting.avoidOverwrite"
                   @update:model-value="
                     handleSavingSettingChange('avoidOverwrite', $event)
                   "
@@ -558,8 +558,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       テキストファイルを書き出す際の文字コードを選べます。
                     </QTooltip>
@@ -569,11 +569,11 @@
                 <QBtnToggle
                   padding="xs md"
                   unelevated
-                  :model-value="savingSetting.fileEncoding"
+                  :modelValue="savingSetting.fileEncoding"
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="[
                     { label: 'UTF-8', value: 'UTF-8' },
                     { label: 'Shift_JIS', value: 'Shift_JIS' },
@@ -593,8 +593,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。
                     </QTooltip>
@@ -602,7 +602,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="savingSetting.exportText"
+                  :modelValue="savingSetting.exportText"
                   color="primary"
                   @update:model-value="
                     handleSavingSettingChange('exportText', $event)
@@ -620,8 +620,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。
                     </QTooltip>
@@ -629,7 +629,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="savingSetting.exportLab"
+                  :modelValue="savingSetting.exportLab"
                   @update:model-value="
                     handleSavingSettingChange('exportLab', $event)
                   "
@@ -650,8 +650,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       エディタの色を選べます。
                     </QTooltip>
@@ -663,9 +663,9 @@
                   unelevated
                   padding="xs md"
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="availableThemeNameComputed"
                 />
               </QCardActions>
@@ -678,8 +678,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       エディタのフォントを選べます。
                     </QTooltip>
@@ -689,11 +689,11 @@
                 <QBtnToggle
                   padding="xs md"
                   unelevated
-                  :model-value="editorFont"
+                  :modelValue="editorFont"
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="[
                     { label: 'デフォルト', value: 'default' },
                     { label: 'OS標準', value: 'os' },
@@ -711,8 +711,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、テキスト欄の左側に行番号が表示されます。
                     </QTooltip>
@@ -720,7 +720,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="showTextLineNumber"
+                  :modelValue="showTextLineNumber"
                   @update:model-value="changeShowTextLineNumber($event)"
                 >
                 </QToggle>
@@ -735,8 +735,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は
                       Shift + Enter で追加できます）
@@ -745,7 +745,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="showAddAudioItemButton"
+                  :modelValue="showAddAudioItemButton"
                   @update:model-value="changeShowAddAudioItemButton($event)"
                 >
                 </QToggle>
@@ -765,8 +765,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       複数のVOICEVOX準拠エンジンを利用可能にする
                     </QTooltip>
@@ -774,7 +774,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="enableMultiEngine"
+                  :modelValue="enableMultiEngine"
                   @update:model-value="setEnableMultiEngine($event)"
                 >
                 </QToggle>
@@ -789,8 +789,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、音声データがモノラルからステレオに変換されてから再生・保存が行われます。
                     </QTooltip>
@@ -798,7 +798,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="savingSetting.outputStereo"
+                  :modelValue="savingSetting.outputStereo"
                   @update:model-value="
                     handleSavingSettingChange('outputStereo', $event)
                   "
@@ -816,8 +816,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       音声の再生デバイスを変更できます。
                       <template v-if="!canSetAudioOutputDevice">
@@ -855,8 +855,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、疑問文の語尾の音高が自動的に上げられます。
                     </QTooltip>
@@ -864,7 +864,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="experimentalSetting.enableInterrogativeUpspeak"
+                  :modelValue="experimentalSetting.enableInterrogativeUpspeak"
                   @update:model-value="
                     changeExperimentalSetting(
                       'enableInterrogativeUpspeak',
@@ -884,8 +884,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       モーフィング機能を有効にします。2つの音声混ぜられるようになります。
                     </QTooltip>
@@ -893,7 +893,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="experimentalSetting.enableMorphing"
+                  :modelValue="experimentalSetting.enableMorphing"
                   @update:model-value="
                     changeExperimentalSetting('enableMorphing', $event)
                   "
@@ -908,8 +908,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       複数のテキスト欄を選択できるようにします。
                     </QTooltip>
@@ -917,7 +917,7 @@
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="experimentalSetting.enableMultiSelect"
+                  :modelValue="experimentalSetting.enableMultiSelect"
                   @update:model-value="
                     changeExperimentalSetting('enableMultiSelect', $event)
                   "
@@ -934,17 +934,15 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                       >ONの場合、テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。</QTooltip
                     >
                   </QIcon>
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="
-                    experimentalSetting.shouldKeepTuningOnTextChange
-                  "
+                  :modelValue="experimentalSetting.shouldKeepTuningOnTextChange"
                   @update:model-value="
                     changeExperimentalSetting(
                       'shouldKeepTuningOnTextChange',
@@ -964,15 +962,15 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                       >ピッチ編集機能を有効にします。ピッチ編集モードに切り替えられるようになります。</QTooltip
                     >
                   </QIcon>
                 </div>
                 <QSpace />
                 <QToggle
-                  :model-value="experimentalSetting.enablePitchEditInSongEditor"
+                  :modelValue="experimentalSetting.enablePitchEditInSongEditor"
                   @update:model-value="
                     changeExperimentalSetting(
                       'enablePitchEditInSongEditor',
@@ -997,8 +995,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、各UIの利用率などのデータが送信され、VOICEVOXの改善に役立てられます。テキストデータ・音声データは送信されません。
                     </QTooltip>

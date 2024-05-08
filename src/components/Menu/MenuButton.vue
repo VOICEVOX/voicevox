@@ -1,7 +1,7 @@
 <template>
   <QBtn
     flat
-    text-color="display"
+    textColor="display"
     class="full-height cursor-pointer no-border-radius text-no-wrap q-py-none q-px-sm"
     :class="selected ? 'active-menu' : 'bg-transparent'"
     :disable="disable"
@@ -15,8 +15,8 @@
     <QMenu
       v-if="'subMenu' in menudata"
       v-model="selectedComputed"
-      transition-show="none"
-      transition-hide="none"
+      transitionShow="none"
+      transitionHide="none"
       :fit="true"
     >
       <QList dense>
