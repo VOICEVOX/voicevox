@@ -1,4 +1,3 @@
-import "@/helpers/strictMap";
 import { createApp } from "vue";
 import { createGtm } from "@gtm-support/vue-gtm";
 import { Quasar, Dialog, Loading, Notify } from "quasar";

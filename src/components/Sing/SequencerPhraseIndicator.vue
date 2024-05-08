@@ -6,6 +6,7 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { PhraseState } from "@/store/type";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 const props = defineProps<{
   phraseKey: string;
@@ -19,7 +20,7 @@ const classNames: Record<PhraseState, string> = {
   PLAYABLE: "playable",
 };
 const className = computed(() => {
-  const phrase = store.state.phrases.getOrThrow(props.phraseKey);
+  const phrase = getOrThrow(store.state.phrases, props.phraseKey);
 
   return classNames[phrase.state];
 });
