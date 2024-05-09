@@ -317,11 +317,16 @@ export function createDefaultTimeSignature(
 
 export function createDefaultTrack(): Track {
   return {
+    name: defaultTrackName,
     singer: undefined,
     keyRangeAdjustment: 0,
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
+    mute: false,
+    solo: false,
+    pan: 0,
+    volume: 1,
   };
 }
 

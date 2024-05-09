@@ -113,12 +113,14 @@ onetimeWatch(
       await store.dispatch("SET_TIME_SIGNATURES", {
         timeSignatures: [createDefaultTimeSignature(1)],
       });
-      await store.dispatch("SET_NOTES", { notes: [] });
+      const trackId = store.state.trackOrder[0];
+      await store.dispatch("SET_NOTES", { notes: [], trackId });
+      await store.dispatch("REORDER_TRACKS", { trackIds: [trackId] });
       // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
       // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
       try {
         await store.dispatch("SET_SINGER", {
-          trackId: store.state.trackOrder[0],
+          trackId,
           withRelated: true,
         });
       } catch (e) {

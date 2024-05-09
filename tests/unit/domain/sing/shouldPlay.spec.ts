@@ -2,7 +2,7 @@ import { it, expect } from "vitest";
 import { v4 as uuidv4 } from "uuid";
 import { shouldPlay } from "@/sing/domain";
 import { Track } from "@/store/type";
-import { createInitialTrack } from "@/store/singing";
+import { createDefaultTrack } from "@/sing/domain";
 import { TrackId } from "@/type/preload";
 
 const createTrack = ({
@@ -12,7 +12,7 @@ const createTrack = ({
   mute: boolean;
   solo: boolean;
 }): Track => {
-  const track = createInitialTrack();
+  const track = createDefaultTrack();
   track.mute = mute;
   track.solo = solo;
 

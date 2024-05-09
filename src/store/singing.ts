@@ -62,7 +62,6 @@ import {
   applyPitchEdit,
   VALUE_INDICATING_NO_DATA,
   isValidPitchEditData,
-  defaultTrackName,
   isValidTempos,
   isValidTimeSignatures,
   isValidTpqn,
@@ -88,7 +87,6 @@ import {
 } from "@/sing/utility";
 import { generateWriteErrorMessage } from "@/helpers/generateWriteErrorMessage";
 import DefaultMap from "@/helpers/DefaultMap";
-import { mergeMaps } from "@/helpers/mergeMaps";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
 import { noteSchema } from "@/domain/project/schema";
 import { createLogger } from "@/domain/frontend/log";
@@ -204,18 +202,6 @@ const singingVoices = new Map<SingingVoiceSourceHash, SingingVoice>();
 const sequences = new Map<string, Sequence>(); // キーはPhraseKey
 const animationTimer = new AnimationTimer();
 
-export const createInitialTrack = (): Track => ({
-  singer: undefined,
-  keyRangeAdjustment: 0,
-  volumeRangeAdjustment: 0,
-  notes: [],
-  pitchEditData: [],
-  name: defaultTrackName,
-  pan: 0,
-  volume: 1,
-  mute: false,
-  solo: false,
-});
 const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
 const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
@@ -225,11 +211,15 @@ const updateTrackMute = (shouldPlay: Record<TrackId, boolean>) => {
   }
 };
 
+const initialTrackId = TrackId(uuidv4());
+
 export const singingStoreState: SingingStoreState = {
   tpqn: DEFAULT_TPQN,
   tempos: [createDefaultTempo(0)],
   timeSignatures: [createDefaultTimeSignature(1)],
-  tracks: [createDefaultTrack()],
+  tracks: new Map([[initialTrackId, createDefaultTrack()]]),
+  trackOrder: [initialTrackId],
+  selectedTrackId: initialTrackId,
   editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   phrases: new Map(),
   singingGuides: new Map(),
@@ -241,6 +231,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerEditTarget: "NOTE",
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
+  overlappingNoteInfos: new Map([[initialTrackId, new Map()]]),
   nowPlaying: false,
   volume: 0,
   startRenderingRequested: false,
@@ -514,23 +505,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_NOTES: {
-    mutation(state, { notes }: { notes: Note[] }) {
-      // TODO: マルチトラック対応
-      state.overlappingNoteInfos.clear();
+    mutation(state, { notes, trackId }) {
+      const track = state.tracks.get(trackId);
+      if (track == undefined) {
+        throw new Error("track is undefined.");
+      }
       state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
       state.selectedNoteIds.clear();
-      state.tracks[selectedTrackIndex].notes = notes;
-      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      track.notes = notes;
+
+      const overlappingNoteInfos = state.overlappingNoteInfos.get(trackId);
+      if (overlappingNoteInfos == undefined) {
+        throw new Error("overlappingNoteInfos is undefined.");
+      }
+      overlappingNoteInfos.clear();
+      addNotesToOverlappingNoteInfos(overlappingNoteInfos, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos,
       );
     },
-    async action({ commit, dispatch }, { notes }: { notes: Note[] }) {
+    async action({ commit, dispatch }, { notes, trackId }) {
       if (!isValidNotes(notes)) {
         throw new Error("The notes are invalid.");
       }
-      commit("SET_NOTES", { notes });
+      commit("SET_NOTES", { notes, trackId });
 
       dispatch("RENDER");
     },
@@ -554,7 +553,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       addNotesToOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
-        mergeMaps(...state.overlappingNoteInfos.values()),
+        state.overlappingNoteInfos,
       );
     },
   },
@@ -584,7 +583,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       updateNotesOfOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
-        mergeMaps(...state.overlappingNoteInfos.values()),
+        state.overlappingNoteInfos,
       );
     },
   },
@@ -610,7 +609,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       removeNotesFromOverlappingNoteInfos(overlappingNoteInfo, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
-        mergeMaps(...state.overlappingNoteInfos.values()),
+        state.overlappingNoteInfos,
       );
       if (
         state.editingLyricNoteId != undefined &&
@@ -1885,6 +1884,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         timeSignatures.unshift(createDefaultTimeSignature(1));
         timeSignatures = removeDuplicateTimeSignatures(timeSignatures);
 
+        if (tpqn !== state.tpqn) {
+          throw new Error("TPQN does not match. Must be converted.");
+        }
+        await dispatch("SET_TEMPOS", { tempos });
+        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+
         if (getters.SELECTED_TRACK.notes.length > 0) {
           const trackId = TrackId(uuidv4());
           // singerにProxyを渡すとバグるので、toRawでProxyを取り除く
@@ -1893,13 +1898,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             trackId,
           });
         }
-
-        if (tpqn !== state.tpqn) {
-          throw new Error("TPQN does not match. Must be converted.");
-        }
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes });
+        await dispatch("SET_NOTES", {
+          notes,
+          trackId: state.selectedTrackId,
+        });
 
         dispatch("RENDER");
       },
@@ -1909,7 +1911,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   IMPORT_MUSICXML_FILE: {
     action: createUILockAction(
       async (
-        { dispatch, getters, state },
+        { dispatch, getters, state, commit },
         { filePath }: { filePath?: string },
       ) => {
         if (!filePath) {
@@ -2218,7 +2220,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes });
+
+        if (getters.SELECTED_TRACK.notes.length > 0) {
+          const trackId = TrackId(uuidv4());
+          // singerにProxyを渡すとバグるので、toRawでProxyを取り除く
+          commit("CREATE_TRACK", {
+            singer: structuredClone(toRaw(currentSinger)),
+            trackId,
+          });
+        }
+        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
       },
     ),
   },
@@ -2226,7 +2237,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   IMPORT_UST_FILE: {
     action: createUILockAction(
       async (
-        { dispatch, state, getters },
+        { dispatch, state, getters, commit },
         { filePath }: { filePath?: string },
       ) => {
         const currentSinger = getters.SELECTED_TRACK.singer;
@@ -2339,7 +2350,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes });
+
+        if (getters.SELECTED_TRACK.notes.length > 0) {
+          const trackId = TrackId(uuidv4());
+          // singerにProxyを渡すとバグるので、toRawでProxyを取り除く
+          commit("CREATE_TRACK", {
+            singer: structuredClone(toRaw(currentSinger)),
+            trackId,
+          });
+        }
+        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
         dispatch("RENDER");
       },
     ),
@@ -2828,10 +2848,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_TRACKS: {
+    mutation(state, { tracks }) {
+      state.tracks = tracks;
+      state.overlappingNoteInfos = new Map(
+        [...tracks.keys()].map((trackId) => [trackId, new Map()]),
+      );
+    },
+    action({ commit }, { tracks }) {
+      commit("SET_TRACKS", { tracks });
+    },
+  },
+
   CREATE_TRACK: {
     mutation(state, payload) {
       const track: Track = {
-        ...createInitialTrack(),
+        ...createDefaultTrack(),
         ...payload,
       };
       const currentTrackIndex = state.trackOrder.indexOf(state.selectedTrackId);

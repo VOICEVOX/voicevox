@@ -891,8 +891,8 @@ export type SingingStoreTypes = {
   };
 
   SET_NOTES: {
-    mutation: { notes: Note[] };
-    action(payload: { notes: Note[] }): void;
+    mutation: { notes: Note[]; trackId: TrackId };
+    action(payload: { notes: Note[]; trackId: TrackId }): void;
   };
 
   ADD_NOTES: {
@@ -995,6 +995,11 @@ export type SingingStoreTypes = {
       trackId: TrackId;
     };
     action(payload: Partial<Track> & { trackId: TrackId }): void;
+  };
+
+  SET_TRACKS: {
+    mutation: { tracks: Map<TrackId, Track> };
+    action(payload: { tracks: Map<TrackId, Track> }): void;
   };
 
   SET_SNAP_TYPE: {

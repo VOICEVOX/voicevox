@@ -100,26 +100,19 @@ const applySongProjectToStore = async (
   dispatch: Dispatch<AllActions>,
   songProject: LatestProjectType["song"],
 ) => {
-  const { tpqn, tempos, timeSignatures, tracks } = songProject;
-  // TODO: マルチトラック対応
-  await dispatch("SET_SINGER", {
-    singer: tracks[0].singer,
-  });
-  await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-    keyRangeAdjustment: tracks[0].keyRangeAdjustment,
-  });
-  await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-    volumeRangeAdjustment: tracks[0].volumeRangeAdjustment,
-  });
+  const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
   await dispatch("SET_TPQN", { tpqn });
   await dispatch("SET_TEMPOS", { tempos });
   await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-  await dispatch("SET_NOTES", { notes: tracks[0].notes });
-  await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-  await dispatch("SET_PITCH_EDIT_DATA", {
-    data: tracks[0].pitchEditData,
-    startFrame: 0,
+
+  const tracksMap = new Map<TrackId, Track>(
+    Object.entries(tracks) as [TrackId, Track][],
+  );
+  await dispatch("SET_SELECTED_TRACK", {
+    trackId: trackOrder[0],
   });
+  await dispatch("SET_TRACKS", { tracks: tracksMap });
+  await dispatch("REORDER_TRACKS", { trackIds: trackOrder });
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -139,43 +132,60 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   CREATE_NEW_PROJECT: {
     action: createUILockAction(
-      async (context, { confirm }: { confirm?: boolean }) => {
-        if (confirm !== false && context.getters.IS_EDITED) {
-          const result = await context.dispatch(
-            "SAVE_OR_DISCARD_PROJECT_FILE",
-            {},
-          );
+      async (
+        { getters, commit, dispatch },
+        { confirm }: { confirm?: boolean },
+      ) => {
+        if (confirm !== false && getters.IS_EDITED) {
+          const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {});
           if (result == "canceled") {
             return;
           }
         }
 
         // トークプロジェクトの初期化
-        await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
+        await dispatch("REMOVE_ALL_AUDIO_ITEM");
 
-        const audioItem: AudioItem = await context.dispatch(
-          "GENERATE_AUDIO_ITEM",
-          {},
-        );
-        await context.dispatch("REGISTER_AUDIO_ITEM", {
+        const audioItem: AudioItem = await dispatch("GENERATE_AUDIO_ITEM", {});
+        await dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
 
         // ソングプロジェクトの初期化
-        await context.dispatch("SET_TPQN", { tpqn: DEFAULT_TPQN });
-        await context.dispatch("SET_TEMPOS", {
+        await dispatch("SET_TPQN", { tpqn: DEFAULT_TPQN });
+        await dispatch("SET_TEMPOS", {
           tempos: [createDefaultTempo(0)],
         });
-        await context.dispatch("SET_TIME_SIGNATURES", {
+        await dispatch("SET_TIME_SIGNATURES", {
           timeSignatures: [createDefaultTimeSignature(1)],
         });
-        await context.dispatch("SET_NOTES", { notes: [] });
-        await context.dispatch("SET_SINGER", { withRelated: true });
-        await context.dispatch("CLEAR_PITCH_EDIT_DATA");
 
-        context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
-        context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
-        context.commit("CLEAR_COMMANDS");
+        const trackId = TrackId(uuidv4());
+        await dispatch("SET_TRACKS", {
+          tracks: new Map([
+            [
+              trackId,
+              {
+                singer: undefined,
+                keyRangeAdjustment: 0,
+                notes: [],
+                volumeRangeAdjustment: 0,
+                pitchEditData: [],
+                pan: 0,
+                volume: 1,
+                mute: false,
+                solo: false,
+                name: defaultTrackName,
+              },
+            ],
+          ]),
+        });
+        await dispatch("REORDER_TRACKS", { trackIds: [trackId] });
+        await dispatch("SET_SELECTED_TRACK", { trackId });
+
+        commit("SET_PROJECT_FILEPATH", { filePath: undefined });
+        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        commit("CLEAR_COMMANDS");
       },
     ),
   },
