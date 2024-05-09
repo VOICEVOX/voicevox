@@ -1,8 +1,8 @@
 import { it, expect } from "vitest";
 import { v4 as uuidv4 } from "uuid";
 import { Phrase, PhraseState } from "@/store/type";
-import { DEFAULT_TPQN } from "@/sing/storeHelper";
-import { selectPriorPhrase } from "@/sing/domain";
+import { DEFAULT_TPQN, selectPriorPhrase } from "@/sing/domain";
+import { NoteId } from "@/type/preload";
 
 const createPhrase = (
   start: number,
@@ -12,7 +12,7 @@ const createPhrase = (
   return {
     notes: [
       {
-        id: uuidv4(),
+        id: NoteId(uuidv4()),
         position: start * DEFAULT_TPQN,
         duration: (end - start) * DEFAULT_TPQN,
         noteNumber: 60,

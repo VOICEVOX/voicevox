@@ -155,7 +155,7 @@ import {
   isValidBeats,
   isValidBpm,
   isValidKeyRangeAdjustment,
-  isValidvolumeRangeAdjustment,
+  isValidVolumeRangeAdjustment,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -311,7 +311,7 @@ const setVolumeRangeAdjustmentInputBuffer = (
   volumeRangeAdjustmentStr: string | number | null,
 ) => {
   const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
-  if (!isValidvolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
+  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
     return;
   }
   volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;

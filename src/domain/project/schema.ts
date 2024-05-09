@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   audioKeySchema,
   engineIdSchema,
+  noteIdSchema,
   presetKeySchema,
   speakerIdSchema,
   styleIdSchema,
@@ -71,7 +72,7 @@ export const timeSignatureSchema = z.object({
 });
 
 export const noteSchema = z.object({
-  id: z.string(),
+  id: noteIdSchema,
   position: z.number(),
   duration: z.number(),
   noteNumber: z.number(),

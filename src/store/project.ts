@@ -2,7 +2,6 @@ import semver from "semver";
 import { v4 as uuidv4 } from "uuid";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
-import { generateSingingStoreInitialScore } from "./singing";
 import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
@@ -11,16 +10,17 @@ import {
   ProjectStoreTypes,
   Track,
 } from "@/store/type";
-
 import { AccentPhrase } from "@/openapi";
 import { EngineId, TrackId } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import {
+  createDefaultTempo,
+  createDefaultTimeSignature,
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
   DEFAULT_BPM,
   DEFAULT_TPQN,
-} from "@/sing/storeHelper";
+} from "@/sing/domain";
 import { LatestProjectType, projectSchema } from "@/domain/project/schema";
 import { defaultTrackName } from "@/sing/domain";
 
@@ -100,24 +100,25 @@ const applySongProjectToStore = async (
   dispatch: Dispatch<AllActions>,
   songProject: LatestProjectType["song"],
 ) => {
-  const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
-  await dispatch("SET_SCORE", {
-    score: {
-      tpqn,
-      tempos,
-      timeSignatures,
-      parts: [],
-    },
+  const { tpqn, tempos, timeSignatures, tracks } = songProject;
+  // TODO: マルチトラック対応
+  await dispatch("SET_SINGER", {
+    singer: tracks[0].singer,
   });
-  for (const [trackId_, track] of Object.entries(tracks)) {
-    const trackId = TrackId(trackId_);
-    if (track == undefined) throw new Error("track == undefined");
-    await dispatch("CREATE_TRACK", { trackId, ...track });
-  }
-  // メモ：この時点で宙ぶらりんのトラックが存在してしまっている。SET_SCOREを爆破する？
-  await dispatch("REORDER_TRACKS", { trackIds: trackOrder });
-  await dispatch("SET_SELECTED_TRACK", {
-    trackId: TrackId([...Object.keys(tracks)][0]),
+  await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
+    keyRangeAdjustment: tracks[0].keyRangeAdjustment,
+  });
+  await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
+    volumeRangeAdjustment: tracks[0].volumeRangeAdjustment,
+  });
+  await dispatch("SET_TPQN", { tpqn });
+  await dispatch("SET_TEMPOS", { tempos });
+  await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+  await dispatch("SET_NOTES", { notes: tracks[0].notes });
+  await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+  await dispatch("SET_PITCH_EDIT_DATA", {
+    data: tracks[0].pitchEditData,
+    startFrame: 0,
   });
 };
 
@@ -161,23 +162,16 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
 
         // ソングプロジェクトの初期化
-        const { tpqn, tempos, timeSignatures } =
-          generateSingingStoreInitialScore();
-        await context.dispatch("SET_SCORE", {
-          score: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            parts: [],
-          },
+        await context.dispatch("SET_TPQN", { tpqn: DEFAULT_TPQN });
+        await context.dispatch("SET_TEMPOS", {
+          tempos: [createDefaultTempo(0)],
         });
-        const trackId = context.state.trackOrder[0];
-        await context.dispatch("SET_SINGER", {
-          trackId,
-          withRelated: true,
+        await context.dispatch("SET_TIME_SIGNATURES", {
+          timeSignatures: [createDefaultTimeSignature(1)],
         });
-        await context.dispatch("CLEAR_PITCH_EDIT_DATA", { trackId });
-        context.commit("SET_SELECTED_TRACK", { trackId });
+        await context.dispatch("SET_NOTES", { notes: [] });
+        await context.dispatch("SET_SINGER", { withRelated: true });
+        await context.dispatch("CLEAR_PITCH_EDIT_DATA");
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
