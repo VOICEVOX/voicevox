@@ -725,13 +725,6 @@ export type TimeSignature = z.infer<typeof timeSignatureSchema>;
 
 export type Note = z.infer<typeof noteSchema>;
 
-export type Score = {
-  tpqn: number;
-  tempos: Tempo[];
-  timeSignatures: TimeSignature[];
-  notes: Note[];
-};
-
 export type Singer = z.infer<typeof singerSchema>;
 
 export type Track = z.infer<typeof trackSchema>;
@@ -855,9 +848,14 @@ export type SingingStoreTypes = {
     action(payload: { volumeRangeAdjustment: number }): void;
   };
 
-  SET_SCORE: {
-    mutation: { score: Score };
-    action(payload: { score: Score }): void;
+  SET_TPQN: {
+    mutation: { tpqn: number };
+    action(payload: { tpqn: number }): void;
+  };
+
+  SET_TEMPOS: {
+    mutation: { tempos: Tempo[] };
+    action(payload: { tempos: Tempo[] }): void;
   };
 
   SET_TEMPO: {
@@ -866,6 +864,11 @@ export type SingingStoreTypes = {
 
   REMOVE_TEMPO: {
     mutation: { position: number };
+  };
+
+  SET_TIME_SIGNATURES: {
+    mutation: { timeSignatures: TimeSignature[] };
+    action(payload: { timeSignatures: TimeSignature[] }): void;
   };
 
   SET_TIME_SIGNATURE: {
@@ -878,6 +881,11 @@ export type SingingStoreTypes = {
 
   NOTE_IDS: {
     getter: Set<NoteId>;
+  };
+
+  SET_NOTES: {
+    mutation: { notes: Note[] };
+    action(payload: { notes: Note[] }): void;
   };
 
   ADD_NOTES: {
