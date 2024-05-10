@@ -85,7 +85,7 @@
                       dense
                       round
                       icon="delete"
-                      @click="deleteWord"
+                      @click.stop="deleteWord"
                     >
                       <QTooltip :delay="500">削除</QTooltip>
                     </QBtn>
