@@ -13,8 +13,8 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import BaseDocumentView from "../base/BaseDocumentView.vue";
-import BaseScrollArea from "../base/BaseScrollArea.vue";
+import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 const props =

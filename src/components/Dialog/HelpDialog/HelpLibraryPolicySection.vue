@@ -68,10 +68,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import BaseRowCard from "../base/BaseRowCard.vue";
-import BaseScrollArea from "../base/BaseScrollArea.vue";
-import BaseButton from "../base/BaseButton.vue";
-import BaseDocumentView from "../base/BaseDocumentView.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";

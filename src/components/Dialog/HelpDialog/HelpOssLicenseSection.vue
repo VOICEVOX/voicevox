@@ -39,9 +39,9 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import BaseRowCard from "../base/BaseRowCard.vue";
-import BaseButton from "../base/BaseButton.vue";
-import BaseScrollArea from "../base/BaseScrollArea.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 
 const props =
   defineProps<{
