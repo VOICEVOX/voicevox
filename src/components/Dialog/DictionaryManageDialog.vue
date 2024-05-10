@@ -46,28 +46,12 @@
               @click="discardOrNotDialog(cancel)"
             />
             <div class="word-list-header text-no-wrap">
-              <div class="row word-list-title text-h5">単語一覧</div>
-              <div class="row no-wrap">
-                <QBtn
-                  outline
-                  text-color="warning"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
-                  :disable="uiLocked || !isDeletable"
-                  @click="deleteWord"
-                  >削除</QBtn
-                >
+              <div class="row word-list-title">
+                <span class="text-h5 col-8">単語一覧</span>
                 <QBtn
                   outline
                   text-color="display"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
-                  :disable="uiLocked || !selectedId"
-                  @click="editWord"
-                  >編集</QBtn
-                >
-                <QBtn
-                  outline
-                  text-color="display"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
+                  class="text-no-wrap text-bold col"
                   :disable="uiLocked"
                   @click="newWord"
                   >追加</QBtn
@@ -87,10 +71,33 @@
                 @dblclick="editWord"
               >
                 <QItemSection>
-                  <QItemLabel class="text-display">{{
+                  <QItemLabel lines="1" class="text-display">{{
                     value.surface
                   }}</QItemLabel>
-                  <QItemLabel caption>{{ value.yomi }}</QItemLabel>
+                  <QItemLabel lines="1" caption>{{ value.yomi }}</QItemLabel>
+                </QItemSection>
+
+                <QItemSection v-if="!uiLocked && selectedId === key" side>
+                  <div class="q-gutter-xs">
+                    <QBtn
+                      size="12px"
+                      flat
+                      dense
+                      round
+                      icon="delete"
+                      title="削除"
+                      @click="deleteWord"
+                    />
+                    <QBtn
+                      size="12px"
+                      flat
+                      dense
+                      round
+                      icon="edit"
+                      title="編集"
+                      @click.stop="editWord"
+                    />
+                  </div>
                 </QItemSection>
               </QItem>
             </QList>
@@ -555,7 +562,6 @@ const saveWord = async () => {
   await loadingDictProcess();
   toInitialState();
 };
-const isDeletable = computed(() => !!selectedId.value);
 const deleteWord = async () => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "登録された単語を削除しますか？",
@@ -676,13 +682,14 @@ const toDialogClosedState = () => {
 
 .word-list {
   // menubar-height + toolbar-height + window-border-width +
-  // 82(title & buttons) + 30(margin 15x2)
+  // 36(title & buttons) + 30(margin 15x2)
   height: calc(
     100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width + 82px + 30px}
+      vars.$window-border-width + 36px + 30px}
   );
   width: 100%;
   overflow-y: auto;
+  padding-bottom: 16px;
 }
 
 .active-word {
