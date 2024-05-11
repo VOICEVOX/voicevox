@@ -2444,7 +2444,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const renderDuration = calcRenderDuration(
             [...state.tracks.values()],
-            getters.TICK_TO_SECOND,
+            state.tempos,
+            state.tpqn,
           );
 
           if (state.nowPlaying) {
@@ -2581,7 +2582,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   EXPORT_WAVE_FILE_PARAOUT: {
     action: createUILockAction(
-      async ({ state, getters, dispatch, commit }, { dirPath }) => {
+      async ({ state, dispatch, commit }, { dirPath }) => {
         // TODO: EXPORT_WAVE_FILEと共通化できるはずなので共通化する
         const exportWaveFile = async (): Promise<SaveResultObject> => {
           const numberOfChannels = 2;
@@ -2590,7 +2591,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const renderDuration = calcRenderDuration(
             [...state.tracks.values()],
-            getters.TICK_TO_SECOND,
+            state.tempos,
+            state.tpqn,
           );
 
           if (state.nowPlaying) {

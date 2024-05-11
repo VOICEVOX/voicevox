@@ -464,7 +464,8 @@ export function shouldPlay(
 
 export const calcRenderDuration = (
   tracks: Track[],
-  tickToSecond: (ticks: number) => number,
+  tempos: Tempo[],
+  tpqn: number,
 ) => {
   const lastNoteEndTimes = tracks.map((track) => {
     const notes = track.notes;
@@ -473,7 +474,7 @@ export const calcRenderDuration = (
     }
     const lastNote = notes[notes.length - 1];
     const lastNoteEndPosition = lastNote.position + lastNote.duration;
-    const lastNoteEndTime = tickToSecond(lastNoteEndPosition);
+    const lastNoteEndTime = tickToSecond(lastNoteEndPosition, tempos, tpqn);
 
     return lastNoteEndTime;
   });
