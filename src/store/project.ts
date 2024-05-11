@@ -106,13 +106,13 @@ const applySongProjectToStore = async (
   await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
 
   const tracksMap = new Map<TrackId, Track>(
-    Object.entries(tracks) as [TrackId, Track][],
+    trackOrder.map((trackId) => {
+      const track = tracks[trackId];
+      if (track == undefined) throw new Error("track == undefined");
+      return [trackId, track] as const;
+    }),
   );
-  await dispatch("SET_SELECTED_TRACK", {
-    trackId: trackOrder[0],
-  });
   await dispatch("SET_TRACKS", { tracks: tracksMap });
-  await dispatch("REORDER_TRACKS", { trackIds: trackOrder });
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -180,8 +180,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             ],
           ]),
         });
-        await dispatch("REORDER_TRACKS", { trackIds: [trackId] });
-        await dispatch("SET_SELECTED_TRACK", { trackId });
+        await dispatch("SET_SINGER", { trackId, singer: undefined });
 
         commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
