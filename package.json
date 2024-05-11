@@ -61,7 +61,7 @@
     "uuid": "9.0.0",
     "vue": "3.4.26",
     "vuedraggable": "4.1.0",
-    "vuex": "4.1.0",
+    "vuex": "4.0.2",
     "zod": "3.22.4"
   },
   "optionalDependencies": {
