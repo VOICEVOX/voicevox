@@ -4,6 +4,7 @@
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "main": "./dist/main.js",
+  "type": "module",
   "engines": {
     "node": ">=20.12.2 <21",
     "npm": ">=10.5.0 <11"
@@ -19,18 +20,18 @@
     "test-watch:electron-e2e": "cross-env PWTEST_WATCH=1 VITE_TARGET=electron playwright test",
     "test:browser-e2e": "cross-env VITE_TARGET=browser playwright test",
     "test-watch:browser-e2e": "cross-env PWTEST_WATCH=1 VITE_TARGET=browser playwright test",
-    "lint": "eslint --ext .js,.vue,.ts *.config.* src tests build",
-    "fmt": "eslint --ext .js,.vue,.ts *.config.* src tests build --fix",
+    "lint": "eslint --ext .cjs,.vue,.ts *.config.* src tests build",
+    "fmt": "eslint --ext .cjs,.vue,.ts *.config.* src tests build --fix",
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ ./",
     "typecheck": "vue-tsc --noEmit",
-    "electron:build": "cross-env VITE_TARGET=electron vite build && electron-builder --config electron-builder.config.js --publish never",
+    "electron:build": "cross-env VITE_TARGET=electron vite build && electron-builder --config electron-builder.config.cjs --publish never",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
     "browser:build": "cross-env VITE_TARGET=browser vite build",
-    "postinstall": "electron-builder install-app-deps && node build/download7z.js",
+    "postinstall": "electron-builder install-app-deps && node build/download7z.cjs",
     "postuninstall": "electron-builder install-app-deps",
-    "license:generate": "node build/generateLicenses.js",
-    "license:merge": "node build/mergeLicenses.js"
+    "license:generate": "node build/generateLicenses.cjs",
+    "license:merge": "node build/mergeLicenses.cjs"
   },
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
@@ -60,7 +61,7 @@
     "uuid": "9.0.0",
     "vue": "3.4.26",
     "vuedraggable": "4.1.0",
-    "vuex": "4.0.2",
+    "vuex": "4.1.0",
     "zod": "3.22.4"
   },
   "optionalDependencies": {

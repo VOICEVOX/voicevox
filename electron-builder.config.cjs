@@ -44,7 +44,7 @@ const sevenZipFile = fs
 
 if (!sevenZipFile) {
   throw new Error(
-    "7z binary file not found. Run `node ./build/download7z.js` first.",
+    "7z binary file not found. Run `node ./build/download7z.cjs` first.",
   );
 }
 
@@ -104,7 +104,7 @@ const builderOptions = {
   afterAllArtifactBuild: path.resolve(
     __dirname,
     "build",
-    "afterAllArtifactBuild.js",
+    "afterAllArtifactBuild.cjs",
   ),
   win: {
     icon: "public/icon.png",
