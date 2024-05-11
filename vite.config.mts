@@ -3,7 +3,7 @@ import path from "path";
 import { rm } from "fs/promises";
 import { fileURLToPath } from "url";
 
-import electron from "vite-plugin-electron";
+import electron from "vite-plugin-electron/simple";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
@@ -39,6 +39,14 @@ export default defineConfig((options) => {
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
     : false;
+  const electronViteConfig = {
+    plugins: [tsconfigPaths({ root: __dirname })],
+    build: {
+      outDir: path.resolve(__dirname, "dist"),
+      sourcemap,
+    },
+  };
+
   return {
     root: path.resolve(__dirname, "src"),
     envDir: __dirname,
@@ -83,21 +91,29 @@ export default defineConfig((options) => {
       isElectron && [
         cleanDistPlugin(),
         electron({
-          entry: [
-            "./src/backend/electron/main.ts",
-            "./src/backend/electron/preload.ts",
-          ],
-          // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
-          onstart: ({ startup }) => {
-            if (options.mode !== "test") {
-              startup([".", "--no-sandbox"]);
-            }
+          main: {
+            entry: "./src/backend/electron/main.ts",
+            onstart: ({ startup }) => {
+              if (options.mode !== "test") {
+                startup([".", "--no-sandbox"]);
+              }
+            },
+            vite: electronViteConfig,
           },
-          vite: {
-            plugins: [tsconfigPaths({ root: __dirname })],
-            build: {
-              outDir: path.resolve(__dirname, "dist"),
-              sourcemap,
+          preload: {
+            input: "./src/backend/electron/preload.ts",
+            vite: {
+              ...electronViteConfig,
+              build: {
+                ...electronViteConfig.build,
+                rollupOptions: {
+                  output: {
+                    entryFileNames: `[name].cjs`,
+                    chunkFileNames: `[name].cjs`,
+                    assetFileNames: "[name].[ext]",
+                  },
+                },
+              },
             },
           },
         }),

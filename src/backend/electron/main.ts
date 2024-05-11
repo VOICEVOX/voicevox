@@ -387,7 +387,7 @@ async function createWindow() {
     show: false,
     backgroundColor,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload.cjs"),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false, // TODO: 外しても問題ないか検証して外す
