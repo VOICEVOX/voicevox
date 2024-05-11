@@ -1,6 +1,5 @@
 import path from "path";
 import fs from "fs/promises";
-import { fileURLToPath } from "url";
 import { test, expect } from "@playwright/test";
 import { gotoHome, navigateToMain } from "../navigators";
 import {
@@ -16,9 +15,6 @@ let speakerImages: {
   portrait: string;
   icon: string;
 }[];
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 /**
  * 差し替え用の立ち絵・アイコンを取得する。
