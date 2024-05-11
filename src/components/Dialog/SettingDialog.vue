@@ -1143,7 +1143,7 @@ const songUndoableTrackControlOptions: {
   value: SongUndoableTrackControl;
 }[] = [
   {
-    label: "名前変更",
+    label: "名前",
     value: "name",
   },
   {
