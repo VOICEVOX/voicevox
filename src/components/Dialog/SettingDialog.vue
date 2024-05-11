@@ -435,53 +435,37 @@
                       transition-show="jump-right"
                       transition-hide="jump-left"
                     >
-                      パン、音量、ミュート、ソロ、名前のうち、「元に戻す」機能の対象にするパラメータを選べます。
+                      名前変更、パン、音量、ミュート、ソロ、名前のうち、「元に戻す」機能の対象にするパラメータを選べます。
                     </QTooltip>
                   </QIcon>
                 </div>
                 <QSpace />
-                <QBtnToggle
+                <QSelect
                   v-model="songUndoableTrackControl"
                   padding="xs md"
                   unelevated
+                  emit-value
+                  multiple
                   color="background"
                   text-color="display"
                   toggle-color="primary"
                   toggle-text-color="display-on-primary"
-                  :options="[
-                    {
-                      label: '全て',
-                      value: 'all',
-                      slot: 'ALL',
-                    },
-                    {
-                      label: 'パン、音量',
-                      value: 'panVolume',
-                      slot: 'PAN_VOLUME',
-                    },
-                    {
-                      label: 'なし',
-                      value: 'none',
-                      slot: 'NONE',
-                    },
-                  ]"
+                  :options="songUndoableTrackControlOptions"
+                  :display-value="songUndoableTrackControlDisplayValue"
                 >
-                  <template #ALL>
-                    <QTooltip :delay="500">
-                      パン、音量、ミュート、ソロ、名前の変更を全て元に戻せるようにします。
-                    </QTooltip>
+                  <template #option="{ itemProps, opt, selected }">
+                    <QItem v-ripple v-bind="itemProps" clickable>
+                      <QItemSection avatar>
+                        <QIcon v-if="selected" name="check" color="display" />
+                      </QItemSection>
+                      <QItemSection class="text-display">
+                        <QItemLabel>
+                          {{ opt.label }}
+                        </QItemLabel>
+                      </QItemSection>
+                    </QItem>
                   </template>
-                  <template #PAN_VOLUME>
-                    <QTooltip :delay="500">
-                      パン、音量の変更のみを元に戻せるようにします。
-                    </QTooltip>
-                  </template>
-                  <template #NONE>
-                    <QTooltip :delay="500">
-                      トラック操作を元に戻す対象にしません。
-                    </QTooltip>
-                  </template>
-                </QBtnToggle>
+                </QSelect>
               </QCardActions>
             </QCard>
             <!-- Saving Card -->
@@ -1152,12 +1136,57 @@ const isDefaultConfirmedTips = computed(() => {
 });
 
 // トラック操作のUndo対象
+type SongUndoableTrackControl =
+  keyof RootMiscSettingType["songUndoableTrackControl"];
+const songUndoableTrackControlOptions: {
+  label: string;
+  value: SongUndoableTrackControl;
+}[] = [
+  {
+    label: "名前変更",
+    value: "name",
+  },
+  {
+    label: "パン、音量",
+    value: "panVolume",
+  },
+  {
+    label: "ミュート、ソロ",
+    value: "soloMute",
+  },
+];
+const songUndoableTrackControlDisplayValue = computed(() => {
+  const labels = Object.entries(store.state.songUndoableTrackControl)
+    .filter((v) => v[1])
+    .map((v) => {
+      const option = songUndoableTrackControlOptions.find(
+        (option) => option.value === v[0],
+      );
+      if (!option) {
+        throw new Error("Invalid songUndoableTrackControl value");
+      }
+      return option.label;
+    });
+  if (labels.length === 0) {
+    return "（なし）";
+  }
+  return labels.join("、");
+});
+
 const songUndoableTrackControl = computed({
-  get: () => store.state.songUndoableTrackControl,
-  set: (songUndoableTrackControl: "all" | "panVolume" | "none") => {
+  get: () =>
+    Object.entries(store.state.songUndoableTrackControl)
+      .filter((v) => v[1])
+      .map((v) => v[0] as SongUndoableTrackControl),
+  set: (songUndoableTrackControl: SongUndoableTrackControl[]) => {
     store.dispatch("SET_ROOT_MISC_SETTING", {
       key: "songUndoableTrackControl",
-      value: songUndoableTrackControl,
+      value: Object.fromEntries(
+        Object.keys(store.state.songUndoableTrackControl).map((key) => [
+          key,
+          songUndoableTrackControl.includes(key as SongUndoableTrackControl),
+        ]),
+      ) as Record<SongUndoableTrackControl, boolean>,
     });
   },
 });

@@ -97,7 +97,11 @@ const deleteTrack = () => {
 };
 
 const unsoloAllTracks = () => {
-  store.dispatch("COMMAND_UNSOLO_ALL_TRACKS");
+  if (store.state.songUndoableTrackControl.soloMute) {
+    store.dispatch("COMMAND_UNSOLO_ALL_TRACKS");
+  } else {
+    store.dispatch("UNSOLO_ALL_TRACKS");
+  }
 };
 
 const isDragging = ref(false);

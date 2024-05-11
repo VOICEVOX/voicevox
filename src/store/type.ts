@@ -1179,6 +1179,11 @@ export type SingingStoreTypes = {
     action(payload: { trackId: TrackId; solo: boolean }): void;
   };
 
+  UNSOLO_ALL_TRACKS: {
+    mutation: undefined;
+    action(): void;
+  };
+
   DELETE_TRACK: {
     mutation: { trackId: TrackId };
   };

@@ -65,7 +65,11 @@ export const settingStoreState: SettingStoreState = {
   enableMultiEngine: false,
   enableMemoNotation: false,
   enableRubyNotation: false,
-  songUndoableTrackControl: "all",
+  songUndoableTrackControl: {
+    name: false,
+    panVolume: false,
+    soloMute: false,
+  },
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({

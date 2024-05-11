@@ -2955,6 +2955,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  UNSOLO_ALL_TRACKS: {
+    mutation(draft) {
+      for (const trackId of draft.trackOrder) {
+        singingStore.mutations.SET_TRACK_SOLO(draft, {
+          trackId: trackId,
+          solo: false,
+        });
+      }
+    },
+    action({ commit }) {
+      commit("UNSOLO_ALL_TRACKS");
+    },
+  },
+
   DELETE_TRACK: {
     mutation(state, { trackId }) {
       if (state.selectedTrackId === trackId) {
@@ -3258,12 +3272,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_UNSOLO_ALL_TRACKS: {
       mutation(draft) {
-        for (const trackId of draft.trackOrder) {
-          singingStore.mutations.SET_TRACK_SOLO(draft, {
-            trackId: trackId,
-            solo: false,
-          });
-        }
+        singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
       },
       action({ commit }) {
         commit("COMMAND_UNSOLO_ALL_TRACKS");
