@@ -279,7 +279,7 @@ const combinationToBindingKey = (
   // MetaキーはCommandキーとして扱う
   // NOTE: hotkeys-jsにはWinキーが無く、Commandキーとして扱われている
   // NOTE: Metaキーは以前採用していたmousetrapがそうだった名残り
-  // hotkeys-jsでは方向キーをup, down, left, rightで表す
+  // NOTE: hotkeys-jsでは方向キーのarrowプレフィックスが不要
   const bindingKey = combination
     .toLowerCase()
     .split(" ")
