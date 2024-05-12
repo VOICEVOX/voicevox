@@ -313,8 +313,8 @@ export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
   if (event.metaKey) {
     recordedCombination += "Meta ";
   }
-  // event.codeから以前のevent.key形式へと変換
-  // 列挙するのは将来的に変更する
+  // event.codeからevent.key形式へと変換
+  // TODO: 主要なキーも使えるようにする
   const eventKey = event.code
     .replace(/Key|Digit|Numpad/, "")
     .replace("Minus", "-")
