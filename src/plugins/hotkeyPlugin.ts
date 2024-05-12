@@ -315,10 +315,7 @@ export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
   }
   // event.codeからevent.key形式へと変換
   // TODO: 主要なキーも使えるようにする
-  const eventKey = event.code
-    .replace(/Key|Digit|Numpad/, "")
-    .replace("Minus", "-")
-    .replace("Slash", "/");
+  const eventKey = event.code.replace(/Key|Digit|Numpad/, "");
   // 英字 数字 上下左右 Enter Space Backspace Delete Escape F1~ - /のみ認める
   if (
     /^([A-Z]|\d|Arrow(Up|Down|Left|Right)|Enter|Space|Backspace|Delete|Escape|F\d+|-|\/)$/.test(
