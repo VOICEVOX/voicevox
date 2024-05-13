@@ -751,11 +751,12 @@ export type SingingGuideSource = {
   engineId: EngineId;
   tpqn: number;
   tempos: Tempo[];
+  firstRestDuration: number;
+  lastRestDurationSeconds: number;
   notes: Note[];
   keyRangeAdjustment: number;
   volumeRangeAdjustment: number;
   frameRate: number;
-  restDurationSeconds: number;
 };
 
 /**
@@ -787,12 +788,27 @@ export type SingingVoiceSourceHash = z.infer<
   typeof singingVoiceSourceHashSchema
 >;
 
+/**
+ * フレーズ（レンダリング区間）
+ */
 export type Phrase = {
+  firstRestDuration: number;
   notes: Note[];
   state: PhraseState;
   singingGuideKey?: SingingGuideSourceHash;
   singingVoiceKey?: SingingVoiceSourceHash;
 };
+
+/**
+ * フレーズのソース
+ */
+export type PhraseSource = {
+  firstRestDuration: number;
+  notes: Note[];
+};
+
+export const phraseSourceHashSchema = z.string().brand<"PhraseSourceHash">();
+export type PhraseSourceHash = z.infer<typeof phraseSourceHashSchema>;
 
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
@@ -802,7 +818,7 @@ export type SingingStoreState = {
   timeSignatures: TimeSignature[];
   tracks: Track[];
   editFrameRate: number;
-  phrases: Map<string, Phrase>;
+  phrases: Map<PhraseSourceHash, Phrase>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
@@ -935,23 +951,23 @@ export type SingingStoreTypes = {
   };
 
   SET_PHRASES: {
-    mutation: { phrases: Map<string, Phrase> };
+    mutation: { phrases: Map<PhraseSourceHash, Phrase> };
   };
 
   SET_STATE_TO_PHRASE: {
-    mutation: { phraseKey: string; phraseState: PhraseState };
+    mutation: { phraseKey: PhraseSourceHash; phraseState: PhraseState };
   };
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
     mutation: {
-      phraseKey: string;
+      phraseKey: PhraseSourceHash;
       singingGuideKey: SingingGuideSourceHash | undefined;
     };
   };
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
     mutation: {
-      phraseKey: string;
+      phraseKey: PhraseSourceHash;
       singingVoiceKey: SingingVoiceSourceHash | undefined;
     };
   };
