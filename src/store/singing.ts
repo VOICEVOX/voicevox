@@ -4,7 +4,6 @@ import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
-  Score,
   Tempo,
   TimeSignature,
   Note,
@@ -47,12 +46,11 @@ import {
   getMeasureDuration,
   getNoteDuration,
   isValidNote,
-  isValidScore,
   isValidSnapType,
   isValidTempo,
   isValidTimeSignature,
   isValidKeyRangeAdjustment,
-  isValidvolumeRangeAdjustment,
+  isValidVolumeRangeAdjustment,
   secondToTick,
   tickToSecond,
   calculateNotesHash,
@@ -62,13 +60,17 @@ import {
   applyPitchEdit,
   VALUE_INDICATING_NO_DATA,
   isValidPitchEditData,
+  isValidTempos,
+  isValidTimeSignatures,
+  isValidTpqn,
+  DEFAULT_TPQN,
+  DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
+  createDefaultTrack,
+  createDefaultTempo,
+  createDefaultTimeSignature,
+  isValidNotes,
 } from "@/sing/domain";
 import {
-  DEFAULT_BEATS,
-  DEFAULT_BEAT_TYPE,
-  DEFAULT_BPM,
-  DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
-  DEFAULT_TPQN,
   FrequentlyUpdatedState,
   addNotesToOverlappingNoteInfos,
   getOverlappingNoteIds,
@@ -143,36 +145,11 @@ const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 // TODO: マルチトラックに対応する
 const selectedTrackIndex = 0;
 
-export const generateSingingStoreInitialScore = () => {
-  return {
-    tpqn: DEFAULT_TPQN,
-    tempos: [
-      {
-        position: 0,
-        bpm: DEFAULT_BPM,
-      },
-    ],
-    timeSignatures: [
-      {
-        measureNumber: 1,
-        beats: DEFAULT_BEATS,
-        beatType: DEFAULT_BEAT_TYPE,
-      },
-    ],
-    tracks: [
-      {
-        singer: undefined,
-        keyRangeAdjustment: 0,
-        volumeRangeAdjustment: 0,
-        notes: [],
-        pitchEditData: [],
-      },
-    ],
-  };
-};
-
 export const singingStoreState: SingingStoreState = {
-  ...generateSingingStoreInitialScore(),
+  tpqn: DEFAULT_TPQN,
+  tempos: [createDefaultTempo(0)],
+  timeSignatures: [createDefaultTimeSignature(1)],
+  tracks: [createDefaultTrack()],
   editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   phrases: new Map(),
   singingGuides: new Map(),
@@ -294,7 +271,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { dispatch, commit },
       { volumeRangeAdjustment }: { volumeRangeAdjustment: number },
     ) {
-      if (!isValidvolumeRangeAdjustment(volumeRangeAdjustment)) {
+      if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
         throw new Error("The volumeRangeAdjustment is invalid.");
       }
       commit("SET_VOLUME_RANGE_ADJUSTMENT", {
@@ -305,27 +282,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_SCORE: {
-    mutation(state, { score }: { score: Score }) {
-      state.overlappingNoteInfos.clear();
-      state.overlappingNoteIds.clear();
-      state.editingLyricNoteId = undefined;
-      state.selectedNoteIds.clear();
-      state.tpqn = score.tpqn;
-      state.tempos = score.tempos;
-      state.timeSignatures = score.timeSignatures;
-      state.tracks[selectedTrackIndex].notes = score.notes;
-      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, score.notes);
-      state.overlappingNoteIds = getOverlappingNoteIds(
-        state.overlappingNoteInfos,
-      );
+  SET_TPQN: {
+    mutation(state, { tpqn }: { tpqn: number }) {
+      state.tpqn = tpqn;
     },
     async action(
       { state, getters, commit, dispatch },
-      { score }: { score: Score },
+      { tpqn }: { tpqn: number },
     ) {
-      if (!isValidScore(score)) {
-        throw new Error("The score is invalid.");
+      if (!isValidTpqn(tpqn)) {
+        throw new Error("The tpqn is invalid.");
       }
       if (!transport) {
         throw new Error("transport is undefined.");
@@ -333,7 +299,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.nowPlaying) {
         await dispatch("SING_STOP_AUDIO");
       }
-      commit("SET_SCORE", { score });
+      commit("SET_TPQN", { tpqn });
+      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
+
+      dispatch("RENDER");
+    },
+  },
+
+  SET_TEMPOS: {
+    mutation(state, { tempos }: { tempos: Tempo[] }) {
+      state.tempos = tempos;
+    },
+    async action(
+      { state, getters, commit, dispatch },
+      { tempos }: { tempos: Tempo[] },
+    ) {
+      if (!isValidTempos(tempos)) {
+        throw new Error("The tempos are invalid.");
+      }
+      if (!transport) {
+        throw new Error("transport is undefined.");
+      }
+      if (state.nowPlaying) {
+        await dispatch("SING_STOP_AUDIO");
+      }
+      commit("SET_TEMPOS", { tempos });
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
       dispatch("RENDER");
@@ -366,14 +356,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       const tempos = [...state.tempos];
       if (index === 0) {
-        tempos.splice(index, 1, {
-          position: 0,
-          bpm: DEFAULT_BPM,
-        });
+        tempos.splice(index, 1, createDefaultTempo(0));
       } else {
         tempos.splice(index, 1);
       }
       state.tempos = tempos;
+    },
+  },
+
+  SET_TIME_SIGNATURES: {
+    mutation(state, { timeSignatures }: { timeSignatures: TimeSignature[] }) {
+      state.timeSignatures = timeSignatures;
+    },
+    async action(
+      { commit, dispatch },
+      { timeSignatures }: { timeSignatures: TimeSignature[] },
+    ) {
+      if (!isValidTimeSignatures(timeSignatures)) {
+        throw new Error("The time signatures are invalid.");
+      }
+      commit("SET_TIME_SIGNATURES", { timeSignatures });
+
+      dispatch("RENDER");
     },
   },
 
@@ -403,11 +407,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       const timeSignatures = [...state.timeSignatures];
       if (index === 0) {
-        timeSignatures.splice(index, 1, {
-          measureNumber: 1,
-          beats: DEFAULT_BEATS,
-          beatType: DEFAULT_BEAT_TYPE,
-        });
+        timeSignatures.splice(index, 1, createDefaultTimeSignature(1));
       } else {
         timeSignatures.splice(index, 1);
       }
@@ -420,6 +420,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const selectedTrack = state.tracks[selectedTrackIndex];
       const noteIds = selectedTrack.notes.map((value) => value.id);
       return new Set(noteIds);
+    },
+  },
+
+  SET_NOTES: {
+    mutation(state, { notes }: { notes: Note[] }) {
+      // TODO: マルチトラック対応
+      state.overlappingNoteInfos.clear();
+      state.overlappingNoteIds.clear();
+      state.editingLyricNoteId = undefined;
+      state.selectedNoteIds.clear();
+      state.tracks[selectedTrackIndex].notes = notes;
+      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      state.overlappingNoteIds = getOverlappingNoteIds(
+        state.overlappingNoteInfos,
+      );
+    },
+    async action({ commit, dispatch }, { notes }: { notes: Note[] }) {
+      if (!isValidNotes(notes)) {
+        throw new Error("The notes are invalid.");
+      }
+      commit("SET_NOTES", { notes });
+
+      dispatch("RENDER");
     },
   },
 
@@ -1518,7 +1541,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   IMPORT_MIDI_FILE: {
     action: createUILockAction(
       async (
-        { dispatch },
+        { state, dispatch },
         { filePath, trackIndex = 0 }: { filePath: string; trackIndex: number },
       ) => {
         const convertPosition = (
@@ -1627,10 +1650,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             bpm: round(value.bpm, 2),
           };
         });
-        tempos.unshift({
-          position: 0,
-          bpm: DEFAULT_BPM,
-        });
+        tempos.unshift(createDefaultTempo(0));
         tempos = removeDuplicateTempos(tempos);
 
         let timeSignatures: TimeSignature[] = [];
@@ -1650,31 +1670,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             measureNumber += tsDuration / measureDuration;
           }
         }
-        timeSignatures.unshift({
-          measureNumber: 1,
-          beats: DEFAULT_BEATS,
-          beatType: DEFAULT_BEAT_TYPE,
-        });
+        timeSignatures.unshift(createDefaultTimeSignature(1));
         timeSignatures = removeDuplicateTimeSignatures(timeSignatures);
 
         tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
         timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
 
-        await dispatch("SET_SCORE", {
-          score: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            notes,
-          },
-        });
+        if (tpqn !== state.tpqn) {
+          throw new Error("TPQN does not match. Must be converted.");
+        }
+        await dispatch("SET_TEMPOS", { tempos });
+        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+        await dispatch("SET_NOTES", { notes });
       },
     ),
   },
 
   IMPORT_MUSICXML_FILE: {
     action: createUILockAction(
-      async ({ dispatch }, { filePath }: { filePath?: string }) => {
+      async ({ state, dispatch }, { filePath }: { filePath?: string }) => {
         if (!filePath) {
           filePath = await window.backend.showImportFileDialog({
             title: "MusicXML読み込み",
@@ -1694,19 +1708,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         const tpqn = DEFAULT_TPQN;
-        const tempos: Tempo[] = [
-          {
-            position: 0,
-            bpm: DEFAULT_BPM,
-          },
-        ];
-        const timeSignatures: TimeSignature[] = [
-          {
-            measureNumber: 1,
-            beats: DEFAULT_BEATS,
-            beatType: DEFAULT_BEAT_TYPE,
-          },
-        ];
+        const tempos = [createDefaultTempo(0)];
+        const timeSignatures = [createDefaultTimeSignature(1)];
         const notes: Note[] = [];
 
         let divisions = 1;
@@ -1983,21 +1986,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
         timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
 
-        await dispatch("SET_SCORE", {
-          score: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            notes,
-          },
-        });
+        if (tpqn !== state.tpqn) {
+          throw new Error("TPQN does not match. Must be converted.");
+        }
+        await dispatch("SET_TEMPOS", { tempos });
+        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+        await dispatch("SET_NOTES", { notes });
       },
     ),
   },
 
   IMPORT_UST_FILE: {
     action: createUILockAction(
-      async ({ dispatch }, { filePath }: { filePath?: string }) => {
+      async ({ state, dispatch }, { filePath }: { filePath?: string }) => {
         // USTファイルの読み込み
         if (!filePath) {
           filePath = await window.backend.showImportFileDialog({
@@ -2030,19 +2031,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // 初期化
         const tpqn = DEFAULT_TPQN;
-        const tempos: Tempo[] = [
-          {
-            position: 0,
-            bpm: DEFAULT_BPM,
-          },
-        ];
-        const timeSignatures: TimeSignature[] = [
-          {
-            measureNumber: 1,
-            beats: DEFAULT_BEATS,
-            beatType: DEFAULT_BEAT_TYPE,
-          },
-        ];
+        const tempos = [createDefaultTempo(0)];
+        const timeSignatures = [createDefaultTimeSignature(1)];
         const notes: Note[] = [];
 
         // USTファイルのセクションをパース
@@ -2109,14 +2099,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         });
 
-        await dispatch("SET_SCORE", {
-          score: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            notes,
-          },
-        });
+        if (tpqn !== state.tpqn) {
+          throw new Error("TPQN does not match. Must be converted.");
+        }
+        await dispatch("SET_TEMPOS", { tempos });
+        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+        await dispatch("SET_NOTES", { notes });
       },
     ),
   },
@@ -2588,7 +2576,7 @@ export const singingCommandStore = transformCommandStore(
         { dispatch, commit },
         { volumeRangeAdjustment }: { volumeRangeAdjustment: number },
       ) {
-        if (!isValidvolumeRangeAdjustment(volumeRangeAdjustment)) {
+        if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
           throw new Error("The volumeRangeAdjustment is invalid.");
         }
         commit("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {

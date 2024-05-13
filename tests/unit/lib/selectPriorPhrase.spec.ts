@@ -1,8 +1,7 @@
 import { it, expect } from "vitest";
 import { v4 as uuidv4 } from "uuid";
 import { Phrase, PhraseState } from "@/store/type";
-import { DEFAULT_TPQN } from "@/sing/storeHelper";
-import { selectPriorPhrase } from "@/sing/domain";
+import { DEFAULT_TPQN, selectPriorPhrase } from "@/sing/domain";
 import { NoteId } from "@/type/preload";
 
 const createPhrase = (
