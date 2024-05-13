@@ -6,8 +6,8 @@ import {
   PhraseState,
   phraseSourceHashSchema,
 } from "@/store/type";
-import { DEFAULT_TPQN } from "@/sing/storeHelper";
-import { selectPriorPhrase } from "@/sing/domain";
+import { DEFAULT_TPQN, selectPriorPhrase } from "@/sing/domain";
+import { NoteId } from "@/type/preload";
 
 const createPhrase = (
   firstRestDuration: number,
@@ -19,7 +19,7 @@ const createPhrase = (
     firstRestDuration: firstRestDuration * DEFAULT_TPQN,
     notes: [
       {
-        id: uuidv4(),
+        id: NoteId(uuidv4()),
         position: start * DEFAULT_TPQN,
         duration: (end - start) * DEFAULT_TPQN,
         noteNumber: 60,

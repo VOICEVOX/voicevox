@@ -1,14 +1,12 @@
-import { Ref, ref, onUnmounted, onMounted, unref } from "vue";
+import {
+  Ref,
+  ref,
+  onUnmounted,
+  onMounted,
+  MaybeRefOrGetter,
+  toValue,
+} from "vue";
 import { isMac } from "@/type/preload";
-
-// FIXME: Vue3.3以上では定義済みなので削除する
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyFn = (...args: any[]) => any;
-type MaybeRef<T> = T | Ref<T>;
-type MaybeRefOrGetter<T> = MaybeRef<T> | (() => T);
-function toValue<T>(r: MaybeRefOrGetter<T>): T {
-  return typeof r === "function" ? (r as AnyFn)() : unref(r);
-}
 
 type Target = EventTarget & GlobalEventHandlers;
 

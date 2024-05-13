@@ -23,10 +23,7 @@
     "fmt": "eslint --ext .js,.vue,.ts *.config.* src tests build --fix",
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ ./",
     "typecheck": "vue-tsc --noEmit",
-    "electron:build": "cross-env VITE_TARGET=electron vite build && electron-builder --config electron-builder.config.js",
-    "electron:build_dir": "cross-env VITE_TARGET=electron vite build && electron-builder --config electron-builder.config.js --dir",
-    "electron:build_pnever": "cross-env VITE_TARGET=electron vite build && electron-builder --config electron-builder.config.js --publish never",
-    "electron:build_pnever_prepackaged": "cross-var electron-builder --config electron-builder.config.js --publish never --prepackaged $PREPACKAGED",
+    "electron:build": "cross-env VITE_TARGET=electron vite build && electron-builder --config electron-builder.config.js --publish never",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
     "browser:build": "cross-env VITE_TARGET=browser vite build",
@@ -38,20 +35,19 @@
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
     "@quasar/extras": "1.10.10",
-    "@tonejs/midi": "2.0.28",
     "async-lock": "1.4.0",
     "buffer": "6.0.3",
     "clone-deep": "4.0.1",
-    "core-js": "3.12.1",
     "dayjs": "1.10.7",
-    "diff": "5.1.0",
     "electron-log": "5.0.0",
     "electron-window-state": "5.0.3",
     "encoding-japanese": "1.0.30",
+    "fast-array-diff": "1.1.0",
     "glob": "8.0.3",
     "hotkeys-js": "3.13.6",
     "immer": "9.0.21",
     "markdown-it": "13.0.2",
+    "midi-file": "1.2.4",
     "move-file": "3.0.0",
     "multistream": "4.1.0",
     "pixi.js": "7.4.0",
@@ -62,7 +58,7 @@
     "systeminformation": "5.21.15",
     "tree-kill": "1.2.2",
     "uuid": "9.0.0",
-    "vue": "3.4.21",
+    "vue": "3.4.26",
     "vuedraggable": "4.1.0",
     "vuex": "4.0.2",
     "zod": "3.22.4"
@@ -71,7 +67,7 @@
     "dmg-license": "1.0.11"
   },
   "devDependencies": {
-    "@openapitools/openapi-generator-cli": "2.7.0",
+    "@openapitools/openapi-generator-cli": "2.13.4",
     "@playwright/test": "1.43.1",
     "@quasar/vite-plugin": "1.6.0",
     "@types/async-lock": "1.4.0",
@@ -95,9 +91,8 @@
     "@voicevox/eslint-plugin": "file:./eslint-plugin",
     "@vue/eslint-config-prettier": "9.0.0",
     "@vue/eslint-config-typescript": "13.0.0",
-    "@vue/test-utils": "2.3.0",
+    "@vue/test-utils": "2.4.5",
     "cross-env": "7.0.3",
-    "cross-var": "1.1.0",
     "dotenv": "16.0.0",
     "electron": "30.0.1",
     "electron-builder": "24.13.3",
@@ -111,7 +106,6 @@
     "license-checker-rseidelsohn": "4.3.0",
     "markdownlint": "0.31.1",
     "markdownlint-cli": "0.37.0",
-    "node-fetch": "3.3.1",
     "optionator": "0.9.1",
     "prettier": "3.2.5",
     "sass": "1.32.13",
@@ -128,8 +122,5 @@
     "vitest": "1.5.0",
     "vue-tsc": "1.8.19",
     "yargs": "17.2.1"
-  },
-  "overrides": {
-    "json5": "2.2.3"
   }
 }
