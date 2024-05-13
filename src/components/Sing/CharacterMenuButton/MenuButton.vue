@@ -200,7 +200,6 @@ const getDefaultStyle = (speakerUuid: string) => {
 
   // ここで取得されるcharacterInfoには、ソングエディタ向けのスタイルのみ含まれるので、
   // その中の最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
-  // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
   const defaultStyleId = characterInfo?.metas.styles[0].styleId;
 
   const defaultStyle = characterInfo?.metas.styles.find(
