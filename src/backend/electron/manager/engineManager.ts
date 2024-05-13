@@ -422,7 +422,11 @@ export class EngineManager {
 
     const enginePid = engineProcess.pid;
     if (enginePid == undefined) {
-      log.error(`ENGINE ${engineId}: Pid is ${enginePid}`);
+      // エンジン起動済みの場合来ないはず
+      // 万が一の場合はエンジン停止済みとみなす
+      log.error(
+        `ENGINE ${engineId}: Process PID is undefined, assuming closed`,
+      );
       return undefined;
     }
     return new Promise<void>((resolve, reject) => {
