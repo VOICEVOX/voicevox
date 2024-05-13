@@ -88,6 +88,7 @@ import {
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
 import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 const logger = createLogger("store/singing");
 
@@ -632,10 +633,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseState,
       }: { phraseKey: PhraseSourceHash; phraseState: PhraseState },
     ) {
-      const phrase = state.phrases.get(phraseKey);
-      if (phrase == undefined) {
-        throw new Error("phrase is undefined.");
-      }
+      const phrase = getOrThrow(state.phrases, phraseKey);
+
       phrase.state = phraseState;
     },
   },
@@ -651,10 +650,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         singingGuideKey: SingingGuideSourceHash | undefined;
       },
     ) {
-      const phrase = state.phrases.get(phraseKey);
-      if (phrase == undefined) {
-        throw new Error("phrase is undefined.");
-      }
+      const phrase = getOrThrow(state.phrases, phraseKey);
+
       phrase.singingGuideKey = singingGuideKey;
     },
   },
@@ -670,10 +667,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         singingVoiceKey: SingingVoiceSourceHash | undefined;
       },
     ) {
-      const phrase = state.phrases.get(phraseKey);
-      if (phrase == undefined) {
-        throw new Error("phrase is undefined.");
-      }
+      const phrase = getOrThrow(state.phrases, phraseKey);
+
       phrase.singingVoiceKey = singingVoiceKey;
     },
   },
@@ -1359,12 +1354,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.singingGuideKey != undefined &&
               phrase.singingVoiceKey != undefined
             ) {
-              let singingGuide = state.singingGuides.get(
+              let singingGuide = getOrThrow(
+                state.singingGuides,
                 phrase.singingGuideKey,
               );
-              if (singingGuide == undefined) {
-                throw new Error("singingGuide is undefined.");
-              }
+
               // 歌い方をコピーして、ピッチ編集を適用する
               singingGuide = structuredClone(toRaw(singingGuide));
               applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
@@ -1471,10 +1465,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
             let singingGuide: SingingGuide | undefined;
             if (phrase.singingGuideKey != undefined) {
-              singingGuide = state.singingGuides.get(phrase.singingGuideKey);
-              if (!singingGuide) {
-                throw new Error("singingGuide is undefined.");
-              }
+              singingGuide = getOrThrow(
+                state.singingGuides,
+                phrase.singingGuideKey,
+              );
             } else {
               const singingGuideSourceHash =
                 await calculateSingingGuideSourceHash({
@@ -2479,16 +2473,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             ) {
               continue;
             }
-            const singingGuide = state.singingGuides.get(
+            const singingGuide = getOrThrow(
+              state.singingGuides,
               phrase.singingGuideKey,
             );
-            const singingVoice = singingVoices.get(phrase.singingVoiceKey);
-            if (!singingGuide) {
-              throw new Error("singingGuide is undefined");
-            }
-            if (!singingVoice) {
-              throw new Error("singingVoice is undefined");
-            }
+            const singingVoice = getOrThrow(
+              singingVoices,
+              phrase.singingVoiceKey,
+            );
+
             // TODO: この辺りの処理を共通化する
             const audioEvents = await generateAudioEvents(
               offlineAudioContext,

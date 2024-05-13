@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useStore } from "@/store";
+import { getOrThrow } from "@/helpers/mapHelper";
 import { PhraseSourceHash, PhraseState } from "@/store/type";
 
 const props = defineProps<{
@@ -19,10 +20,8 @@ const classNames: Record<PhraseState, string> = {
   PLAYABLE: "playable",
 };
 const className = computed(() => {
-  const phrase = store.state.phrases.get(props.phraseKey);
-  if (phrase == undefined) {
-    throw new Error("phrase is undefined.");
-  }
+  const phrase = getOrThrow(store.state.phrases, props.phraseKey);
+
   return classNames[phrase.state];
 });
 </script>
