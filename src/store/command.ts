@@ -40,6 +40,7 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
 
 /**
  * 与えられたレシピから操作を記録し実行後にStateに追加するMutationを返す。
+ * note: applyPatches関数実装の都合により、レシピによる操作対象が独自classを含んでいると正常に動作しない。
  * @param payloadRecipe - 操作を記録するレシピ
  * @returns レシピと同じPayloadの型を持つMutation.
  */

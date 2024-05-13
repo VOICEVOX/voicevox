@@ -3,7 +3,7 @@ import { ExhaustiveError } from "@/type/utility";
 
 /**
  * produceWithPatchesにより生成された複数のパッチをオブジェクトに適用します。
- *
+ * 実装の都合により、patches[i].valueが独自classを含む場合は正常に動作しない可能性があります。
  * @param {T} target パッチを適用する対象オブジェクト
  * @param {Patch[]} patches 適用するパッチの配列
  * @template T 対象オブジェクトの型(任意)
@@ -71,7 +71,7 @@ function remove(value: unknown, key: string | number, v: unknown): void {
 
 /**
  * produceWithPatchesにより生成された単一のパッチをオブジェクトに適用します。
- *
+ * 実装の都合により、patch.valueが独自classを含む場合は正常に動作しない可能性があります。
  * @param {T} target パッチを適用する対象オブジェクト
  * @param {Patch} patch 適用するパッチ
  * @template T 対象オブジェクトの型(任意)
