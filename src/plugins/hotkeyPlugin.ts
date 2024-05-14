@@ -244,19 +244,19 @@ export class HotkeyManager {
 
     const combination = combinationToBindingKey(eventToCombination(e));
 
-    const action = this.actions
+    const actions = this.actions
       .filter((item) => !isInTextbox || item.enableInTextbox)
       .filter(
         (item) =>
           combinationToBindingKey(this.getSetting(item).combination) ==
           combination,
       )
-      .find((item) => item.editor.split("&").includes(this.scope));
-    if (action == null) {
+      .filter((item) => item.editor.split("&").includes(this.scope));
+    if (actions.length == 0) {
       return;
     }
     e.preventDefault();
-    action.callback(e);
+    actions.forEach((action) => action.callback(e));
   }
 }
 
