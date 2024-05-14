@@ -265,7 +265,8 @@ const combinationToBindingKey = (
 ): BindingKey => {
   // MetaキーはCommandキーとして扱う
   // NOTE: Metaキーは以前採用していたmousetrapがそうだった名残り
-  return combination as unknown as BindingKey;
+  // 順番が違うものも一致させるために並べ替え
+  return combination.split(" ").sort().join(" ") as BindingKey;
 };
 
 export const hotkeyPlugin: Plugin = {
