@@ -113,16 +113,21 @@ if (errorForRemoveBeforeUserDataDir != undefined) {
 let win: BrowserWindow;
 
 process.on("uncaughtException", (error) => {
-  const stack = error.stack ? error.stack : `${error.name}: ${error.message}`;
-  const message = "Uncaught Exception:\n" + stack;
-  log.error(message);
+  log.error(error);
+
   if (isDevelopment) {
     app.exit(1);
   } else {
-    dialog.showErrorBox(
-      "メインプロセスで原因不明のエラーが発生しました",
-      message,
-    );
+    const { message, name } = error;
+    let detailedMessage = "";
+    detailedMessage += `メインプロセスで原因不明のエラーが発生しました。\n`;
+    detailedMessage += `エラー名: ${name}\n`;
+    detailedMessage += `メッセージ: ${message}\n`;
+    if (error.stack) {
+      detailedMessage += `スタックトレース: \n${error.stack}`;
+    }
+
+    dialog.showErrorBox("エラー", detailedMessage);
   }
 });
 process.on("unhandledRejection", (reason) => {
