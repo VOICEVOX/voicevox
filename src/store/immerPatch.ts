@@ -54,6 +54,64 @@ function clone<T>(value: T): T {
   return result as T;
 }
 
+function assert(value: unknown, message: string): asserts value {
+  if (!value) {
+    throw new Error(message);
+  }
+}
+
+// cloneした値がclone前と等しいことを確認する
+// この関数内で落ちる場合、clone関数及びapplyPatchがサポートしていない値を利用している可能性がある
+function assert_equals(a: unknown, b: unknown) {
+  if (a === b) return;
+  assert(isObject(a) === isObject(b), "type mismatch");
+  if (!isObject(a) || !isObject(b)) return;
+  assert(
+    Object.getPrototypeOf(a) === Object.getPrototypeOf(b),
+    "prototype mismatch",
+  );
+  if (Array.isArray(a)) {
+    assert(Array.isArray(b), "type mismatch");
+    assert(a.length === b.length, "array length mismatch");
+    for (let i = 0; i < a.length; i++) {
+      assert_equals(a[i], b[i]);
+    }
+    return;
+  }
+
+  if (a instanceof Map) {
+    assert(b instanceof Map, "type mismatch");
+    assert(a.size === b.size, "Map size mismatch");
+    for (const [key, value] of a) {
+      assert(b.has(key), "missing key");
+      assert_equals(value, b.get(key));
+    }
+    return;
+  }
+
+  if (a instanceof Set) {
+    assert(b instanceof Set, "type mismatch");
+    assert(a.size === b.size, "Set size mismatch");
+    for (const value of a) {
+      assert(b.has(value), "missing value");
+    }
+    return;
+  }
+
+  assert(
+    Object.entries(a).length === Object.entries(b).length,
+    "Object length mismatch",
+  );
+
+  // b_anyのように明示的にanyを経由しない場合、assertが期待通りにはたらかない
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const b_any = b as any;
+  for (const [key, value] of Object.entries(a)) {
+    assert(key in b_any, "missing key");
+    assert_equals(value, b_any[key]);
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function get(value: unknown, key: string | number): any {
   if (value instanceof Map) {
@@ -98,6 +156,7 @@ export function applyPatch<T>(target: T, patch: Patch) {
     target = get(target, p);
   }
   const v = clone(value);
+  assert_equals(value, v);
   switch (op) {
     case "add":
     case "replace":
