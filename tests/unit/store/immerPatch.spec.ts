@@ -367,32 +367,64 @@ test("map", () => {
   enablePatches();
   enableMapSet();
 
-  const object: Map<number, number> = new Map([
+  const object1: Map<number, number> = new Map([
     [1, 2],
     [3, 4],
   ]);
-  const [new_object, redoPatches, undoPatches] = immer.produceWithPatches(
-    object,
+  const [new_object1, redoPatches1, undoPatches1] = immer.produceWithPatches(
+    object1,
     (obj) => {
       obj.set(3, 5);
     },
   );
 
-  expect(new_object.get(1)).toBe(2);
-  expect(new_object.get(3)).toBe(5);
-  applyPatches(new_object, undoPatches);
-  expect(new_object.get(1)).toBe(2);
-  expect(new_object.get(3)).toBe(4);
-  applyPatches(new_object, redoPatches);
-  expect(new_object.get(1)).toBe(2);
-  expect(new_object.get(3)).toBe(5);
+  expect(new_object1.get(1)).toBe(2);
+  expect(new_object1.get(3)).toBe(5);
+  applyPatches(new_object1, undoPatches1);
+  expect(new_object1.get(1)).toBe(2);
+  expect(new_object1.get(3)).toBe(4);
+  applyPatches(new_object1, redoPatches1);
+  expect(new_object1.get(1)).toBe(2);
+  expect(new_object1.get(3)).toBe(5);
 
-  applyPatches(object, redoPatches);
-  expect(object.get(1)).toBe(2);
-  expect(object.get(3)).toBe(5);
-  applyPatches(object, undoPatches);
-  expect(object.get(1)).toBe(2);
-  expect(object.get(3)).toBe(4);
+  applyPatches(object1, redoPatches1);
+  expect(object1.get(1)).toBe(2);
+  expect(object1.get(3)).toBe(5);
+  applyPatches(object1, undoPatches1);
+  expect(object1.get(1)).toBe(2);
+  expect(object1.get(3)).toBe(4);
+
+  const object2: { field: Map<number, () => number> } = {
+    field: new Map([
+      [1, () => 2],
+      [3, () => 4],
+    ]),
+  };
+  const [new_object2, redoPatches2, undoPatches2] = immer.produceWithPatches(
+    object2,
+    (obj) => {
+      obj.field = new Map([
+        [5, () => 6],
+        [7, () => 8],
+      ]);
+    },
+  );
+
+  expect(new_object2.field.get(5)!()).toBe(6);
+  expect(new_object2.field.get(7)!()).toBe(8);
+  applyPatches(new_object2, undoPatches2);
+  expect(new_object2.field.get(1)!()).toBe(2);
+  expect(new_object2.field.get(3)!()).toBe(4);
+  applyPatches(new_object2, redoPatches2);
+  expect(new_object2.field.get(5)!()).toBe(6);
+  expect(new_object2.field.get(7)!()).toBe(8);
+
+  applyPatches(object2, redoPatches2);
+  expect(object2.field.get(5)!()).toBe(6);
+  expect(object2.field.get(7)!()).toBe(8);
+  applyPatches(object2, undoPatches2);
+  expect(object2.field.get(1)!()).toBe(2);
+  expect(object2.field.get(3)!()).toBe(4);
 });
 
 test("set", () => {
@@ -428,4 +460,22 @@ test("set", () => {
   expect(object1.has(1)).toBe(true);
   expect(object1.has(2)).toBe(true);
   expect(object1.has(3)).toBe(true);
+
+  const object2: { field: Set<() => number> } = { field: new Set([() => 1]) };
+  const [new_object2, redoPatches2, undoPatches2] = immer.produceWithPatches(
+    object2,
+    (obj) => {
+      obj.field = new Set([() => 2]);
+    },
+  );
+  expect(new_object2.field.values().next().value()).toBe(2);
+  applyPatches(new_object2, undoPatches2);
+  expect(new_object2.field.values().next().value()).toBe(1);
+  applyPatches(new_object2, redoPatches2);
+  expect(new_object2.field.values().next().value()).toBe(2);
+
+  applyPatches(object2, redoPatches2);
+  expect(object2.field.values().next().value()).toBe(2);
+  applyPatches(object2, undoPatches2);
+  expect(object2.field.values().next().value()).toBe(1);
 });

@@ -30,6 +30,22 @@ function clone<T>(value: T): T {
     return value.map((v) => clone(v)) as T;
   }
 
+  if (value instanceof Map) {
+    const result = new Map();
+    for (const [k, v] of value.entries()) {
+      result.set(clone(k), clone(v));
+    }
+    return result as T;
+  }
+
+  if (value instanceof Set) {
+    const result = new Set();
+    for (const v of value.values()) {
+      result.add(clone(v));
+    }
+    return result as T;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: any = {};
   for (const [k, v] of Object.entries(value)) {
