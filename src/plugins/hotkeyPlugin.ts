@@ -12,6 +12,7 @@ import {
   HotkeyActionNameType,
   HotkeyCombination,
   HotkeySettingType,
+  EditorType,
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 
@@ -32,7 +33,8 @@ export const useHotkeyManager = () => {
   return { hotkeyManager, registerHotkeyWithCleanup };
 };
 
-type Editor = "talk" | "song";
+// FIXME: EditorType型内の要素数が増えてきたら型定義をより一般な形に変更
+type Editor = "talk" | "song" | "talk&song";
 
 type BindingKey = string & { __brand: "BindingKey" }; // BindingKey専用のブランド型
 
@@ -76,7 +78,7 @@ export class HotkeyManager {
   /** 登録されたHotkeyAction */
   private actions: HotkeyAction[] = [];
   /** スコープ */
-  private scope: Editor = "talk";
+  private scope: EditorType = "talk";
   /** ユーザーのショートカットキー設定 */
   private settings: HotkeySettingType[] | undefined; // ユーザーのショートカットキー設定
   /** 登録されたショートカットキーの組み合わせ */
@@ -217,7 +219,7 @@ export class HotkeyManager {
   /**
    * エディタが変更されたときに呼び出される。
    */
-  onEditorChange(editor: "talk" | "song"): void {
+  onEditorChange(editor: EditorType): void {
     // this.hotkeys.setScope(editor);
     this.scope = editor;
     this.log("Editor changed to", editor);
@@ -249,7 +251,7 @@ export class HotkeyManager {
           combinationToBindingKey(this.getSetting(item).combination) ==
           combination,
       )
-      .find((item) => item.editor == this.scope);
+      .find((item) => item.editor.split("&").includes(this.scope));
     if (action == null) {
       return;
     }

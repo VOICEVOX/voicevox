@@ -32,9 +32,10 @@ import { MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
+import { EditorType } from "@/type/preload";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -42,7 +43,7 @@ const props = defineProps<{
   /** 「編集」メニューのサブメニュー */
   editSubMenuData: MenuItemData[];
   /** エディタの種類 */
-  editor: "talk" | "song";
+  editor: EditorType;
 }>();
 
 const store = useStore();
@@ -491,34 +492,23 @@ watch(uiLocked, () => {
   }
 });
 
-/**
- * 全エディタに対してホットキーを登録する
- * FIXME: hotkeyPlugin側で全エディタに対して登録できるようにする
- */
-function registerHotkeyForAllEditors(action: Omit<HotkeyAction, "editor">) {
-  registerHotkeyWithCleanup({
-    editor: "talk",
-    ...action,
-  });
-  registerHotkeyWithCleanup({
-    editor: "song",
-    ...action,
-  });
-}
-
-registerHotkeyForAllEditors({
+registerHotkeyWithCleanup({
+  editor: "talk&song",
   callback: createNewProject,
   name: "新規プロジェクト",
 });
-registerHotkeyForAllEditors({
+registerHotkeyWithCleanup({
+  editor: "talk&song",
   callback: saveProject,
   name: "プロジェクトを上書き保存",
 });
-registerHotkeyForAllEditors({
+registerHotkeyWithCleanup({
+  editor: "talk&song",
   callback: saveProjectAs,
   name: "プロジェクトを名前を付けて保存",
 });
-registerHotkeyForAllEditors({
+registerHotkeyWithCleanup({
+  editor: "talk&song",
   callback: importProject,
   name: "プロジェクトを読み込む",
 });
