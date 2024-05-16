@@ -227,10 +227,11 @@ export class HotkeyManager {
 
   keyInput(e: KeyboardEvent): void {
     const element = e.target;
-    // メニュー項目ではショートカットキーを無効化
+    // メニュー項目・ダイアログではショートカットキーを無効化
     if (
       element instanceof HTMLElement &&
-      element.getAttribute("role") == "menu"
+      (element.getAttribute("role") == "menu" ||
+        element.classList.contains("q-dialog__inner"))
     ) {
       return;
     }
