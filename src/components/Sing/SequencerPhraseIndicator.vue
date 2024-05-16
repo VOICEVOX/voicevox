@@ -5,20 +5,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useStore } from "@/store";
-<<<<<<< HEAD
-import { PhraseState } from "@/store/type";
 import { TrackId } from "@/type/preload";
-
-const props = defineProps<{
-  trackId: TrackId;
-  phraseKey: string;
-=======
-import { getOrThrow } from "@/helpers/mapHelper";
 import { PhraseSourceHash, PhraseState } from "@/store/type";
 
 const props = defineProps<{
+  trackId: TrackId;
   phraseKey: PhraseSourceHash;
->>>>>>> upstream/main
 }>();
 
 const store = useStore();
@@ -29,15 +21,11 @@ const classNames: Record<PhraseState, string> = {
   PLAYABLE: "playable",
 };
 const className = computed(() => {
-<<<<<<< HEAD
   const phrase = store.state.phrases.get(props.trackId)?.get(props.phraseKey);
   if (phrase == undefined) {
     throw new Error("phrase is undefined.");
   }
-=======
-  const phrase = getOrThrow(store.state.phrases, props.phraseKey);
 
->>>>>>> upstream/main
   return classNames[phrase.state];
 });
 </script>
