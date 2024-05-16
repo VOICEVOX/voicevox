@@ -69,6 +69,8 @@
                 active-class="active-word"
                 @click="selectWord(key)"
                 @dblclick="editWord"
+                @mouseover="hover.add(key)"
+                @mouseleave="hover.delete(key)"
               >
                 <QItemSection>
                   <QItemLabel lines="1" class="text-display">{{
@@ -77,7 +79,10 @@
                   <QItemLabel lines="1" caption>{{ value.yomi }}</QItemLabel>
                 </QItemSection>
 
-                <QItemSection v-if="!uiLocked && selectedId === key" side>
+                <QItemSection
+                  v-if="!uiLocked && (hover.has(key) || selectedId === key)"
+                  side
+                >
                   <div class="q-gutter-xs">
                     <QBtn
                       size="12px"
@@ -258,7 +263,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { useStore } from "@/store";
@@ -288,6 +293,10 @@ const dictionaryManageDialogOpenedComputed = computed({
 const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
 const nowGenerating = ref(false);
 const nowPlaying = ref(false);
+
+// word-list の要素のうち、どの要素がホバーされているかを管理する Set。
+// レースコンディションを確実に避けられそうなので Set を使用している。
+const hover = reactive(new Set<string>());
 
 const loadingDictState = ref<null | "loading" | "synchronizing">("loading");
 const userDict = ref<Record<string, UserDictWord>>({});
