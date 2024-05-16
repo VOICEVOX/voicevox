@@ -963,19 +963,15 @@ export type SingingStoreTypes = {
   };
 
   SET_PHRASES: {
-<<<<<<< HEAD
-    mutation: { phrases: Map<TrackId, Map<string, Phrase>> };
+    mutation: { phrases: Map<TrackId, Map<PhraseSourceHash, Phrase>> };
   };
 
   SET_STATE_TO_PHRASE: {
-    mutation: { phraseKey: string; phraseState: PhraseState; trackId: TrackId };
-=======
-    mutation: { phrases: Map<PhraseSourceHash, Phrase> };
-  };
-
-  SET_STATE_TO_PHRASE: {
-    mutation: { phraseKey: PhraseSourceHash; phraseState: PhraseState };
->>>>>>> upstream/main
+    mutation: {
+      phraseKey: PhraseSourceHash;
+      phraseState: PhraseState;
+      trackId: TrackId;
+    };
   };
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
