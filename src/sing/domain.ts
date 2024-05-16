@@ -4,11 +4,13 @@ import { convertLongVowel } from "@/store/utility";
 import {
   Note,
   Phrase,
+  PhraseSource,
   SingingGuide,
   SingingGuideSource,
   SingingVoiceSource,
   Tempo,
   TimeSignature,
+  phraseSourceHashSchema,
   Track,
   singingGuideSourceHashSchema,
   singingVoiceSourceHashSchema,
@@ -364,8 +366,9 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   );
 }
 
-export const calculateNotesHash = async (notes: Note[]) => {
-  return await calculateHash({ notes });
+export const calculatePhraseSourceHash = async (phraseSource: PhraseSource) => {
+  const hash = await calculateHash(phraseSource);
+  return phraseSourceHashSchema.parse(hash);
 };
 
 export const calculateSingingGuideSourceHash = async (
@@ -397,7 +400,7 @@ export function getEndTicksOfPhrase(phrase: Phrase) {
   return lastNote.position + lastNote.duration;
 }
 
-export function toSortedPhrases(phrases: Map<string, Phrase>) {
+export function toSortedPhrases<T extends string>(phrases: Map<T, Phrase>) {
   return [...phrases.entries()].sort((a, b) => {
     const startTicksOfPhraseA = getStartTicksOfPhrase(a[1]);
     const startTicksOfPhraseB = getStartTicksOfPhrase(b[1]);
@@ -413,10 +416,10 @@ export function toSortedPhrases(phrases: Map<string, Phrase>) {
  * - 再生位置より後のPhrase
  * - 再生位置より前のPhrase
  */
-export function selectPriorPhrase(
-  phrases: Map<string, Phrase>,
+export function selectPriorPhrase<T extends string>(
+  phrases: Map<T, Phrase>,
   position: number,
-): [string, Phrase] {
+): [T, Phrase] {
   if (phrases.size === 0) {
     throw new Error("Received empty phrases");
   }
