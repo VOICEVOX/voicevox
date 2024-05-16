@@ -525,7 +525,7 @@ export const PREVIEW_SOUND_DURATION_SECONDS = 0.6;
 
 export function createSynthForPreview(audioContext: BaseAudioContext) {
   const maxHarmonics = 36;
-  const oddHarmonicsAmount = 0.89;
+  const oddHarmonicsAmount = 0.89; // 1のとき矩形波、0.5のとき三角波
   const real = new Float32Array(maxHarmonics);
   const imag = new Float32Array(maxHarmonics);
   for (let i = 0; i <= maxHarmonics; i++) {
