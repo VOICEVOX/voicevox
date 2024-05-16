@@ -521,11 +521,11 @@ export const splitLyricsByMoras = (
   return moraAndNonMoras;
 };
 
-export const PREVIEW_SOUND_DURATION_SECONDS = 0.55;
+export const PREVIEW_SOUND_DURATION_SECONDS = 0.6;
 
 export function createSynthForPreview(audioContext: BaseAudioContext) {
   const maxHarmonics = 36;
-  const oddHarmonicsAmount = 0.88;
+  const oddHarmonicsAmount = 0.89;
   const real = new Float32Array(maxHarmonics);
   const imag = new Float32Array(maxHarmonics);
   for (let i = 0; i <= maxHarmonics; i++) {
@@ -543,18 +543,18 @@ export function createSynthForPreview(audioContext: BaseAudioContext) {
       periodicWave,
     },
     filter: {
-      cutoff: 1900,
+      cutoff: 1930,
       resonance: 0,
-      keyTrack: 0.01,
+      keyTrack: 0,
     },
     amp: {
       attack: 0.002,
-      decay: 0.15,
+      decay: 0.16,
       sustain: 0,
       release: 0.02,
     },
     maxNumOfVoices: 1,
-    lowCutFrequency: 150,
+    lowCutFrequency: 130,
     volume: 0.1,
   });
   return synth;
