@@ -99,7 +99,7 @@
                       flat
                       dense
                       round
-                      icon="delete"
+                      icon="delete_outline"
                       @click.stop="deleteWord"
                     >
                       <QTooltip :delay="500">削除</QTooltip>
