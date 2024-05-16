@@ -62,6 +62,7 @@ import {
   applyPitchEdit,
   VALUE_INDICATING_NO_DATA,
   isValidPitchEditData,
+  createSynthForPreview,
 } from "@/sing/domain";
 import {
   DEFAULT_BEATS,
@@ -111,7 +112,7 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
 
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
-let previewSynth: Synth | undefined;
+let synthForPreview: Synth | undefined;
 let channelStrip: ChannelStrip | undefined;
 let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
@@ -120,12 +121,12 @@ let clipper: Clipper | undefined;
 if (window.AudioContext) {
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
-  previewSynth = new Synth(audioContext);
+  synthForPreview = createSynthForPreview(audioContext);
   channelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
 
-  previewSynth.output.connect(channelStrip.input);
+  synthForPreview.output.connect(channelStrip.input);
   channelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
@@ -833,10 +834,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!audioContext) {
         throw new Error("audioContext is undefined.");
       }
-      if (!previewSynth) {
-        throw new Error("previewSynth is undefined.");
+      if (!synthForPreview) {
+        throw new Error("synthForPreview is undefined.");
       }
-      previewSynth.noteOn("immediately", noteNumber, duration);
+      synthForPreview.noteOn("immediately", noteNumber, duration);
     },
   },
 
@@ -845,10 +846,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!audioContext) {
         throw new Error("audioContext is undefined.");
       }
-      if (!previewSynth) {
-        throw new Error("previewSynth is undefined.");
+      if (!synthForPreview) {
+        throw new Error("synthForPreview is undefined.");
       }
-      previewSynth.noteOff("immediately", noteNumber);
+      synthForPreview.noteOff("immediately", noteNumber);
     },
   },
 
@@ -1257,7 +1258,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (!sequences.has(phraseKey)) {
             const noteEvents = generateNoteEvents(phrase.notes, tempos, tpqn);
-            const synth = new Synth(audioContextRef);
+            const synth = createSynthForPreview(audioContextRef);
             const noteSequence: NoteSequence = {
               type: "note",
               instrument: synth,

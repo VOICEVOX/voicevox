@@ -620,6 +620,7 @@ export class AudioPlayer {
 
 export type SynthOscParams = {
   readonly type: OscillatorType;
+  readonly periodicWave?: PeriodicWave;
 };
 
 export type SynthFilterParams = {
@@ -674,7 +675,11 @@ class SynthVoice {
     this.ampParams = params.amp;
 
     this.oscNode = new OscillatorNode(audioContext);
-    this.oscNode.type = params.osc.type;
+    if (params.osc.periodicWave != undefined) {
+      this.oscNode.setPeriodicWave(params.osc.periodicWave);
+    } else {
+      this.oscNode.type = params.osc.type;
+    }
     this.oscNode.onended = () => {
       this._isStopped = true;
     };
@@ -760,7 +765,6 @@ export type SynthOptions = {
   readonly filter?: SynthFilterParams;
   readonly amp?: SynthAmpParams;
   readonly lowCutFrequency?: number;
-  readonly highCutFrequency?: number;
   readonly volume?: number;
 };
 
@@ -770,7 +774,6 @@ export type SynthOptions = {
 export class Synth implements Instrument {
   private readonly audioContext: BaseAudioContext;
   private readonly highPassFilterNode: BiquadFilterNode;
-  private readonly lowPassFilterNode: BiquadFilterNode;
   private readonly gainNode: GainNode;
   private readonly maxNumOfActiveVoices: number;
   private readonly oscParams: SynthOscParams;
@@ -785,38 +788,32 @@ export class Synth implements Instrument {
 
   constructor(audioContext: BaseAudioContext, options?: SynthOptions) {
     this.audioContext = audioContext;
-    this.maxNumOfActiveVoices = options?.maxNumOfVoices ?? 1;
+    this.maxNumOfActiveVoices = options?.maxNumOfVoices ?? 16;
     this.oscParams = options?.osc ?? {
-      type: "square",
+      type: "triangle",
     };
     this.filterParams = options?.filter ?? {
-      cutoff: 2100,
+      cutoff: 15000,
       resonance: 0,
-      keyTrack: 0.22,
+      keyTrack: 0,
     };
     this.ampParams = options?.amp ?? {
       attack: 0.001,
-      decay: 0.23,
-      sustain: 0,
+      decay: 0.2,
+      sustain: 0.8,
       release: 0.02,
     };
 
     this.highPassFilterNode = new BiquadFilterNode(audioContext, {
       type: "highpass",
-      frequency: options?.lowCutFrequency ?? 160,
-      Q: linearToDecibel(Math.SQRT1_2),
-    });
-    this.lowPassFilterNode = new BiquadFilterNode(audioContext, {
-      type: "lowpass",
-      frequency: options?.highCutFrequency ?? 4300,
+      frequency: options?.lowCutFrequency ?? 60,
       Q: linearToDecibel(Math.SQRT1_2),
     });
     this.gainNode = new GainNode(this.audioContext, {
-      gain: options?.volume ?? 0.09,
+      gain: options?.volume ?? 0.1,
     });
 
-    this.highPassFilterNode.connect(this.lowPassFilterNode);
-    this.lowPassFilterNode.connect(this.gainNode);
+    this.highPassFilterNode.connect(this.gainNode);
   }
 
   private getActiveVoicesAt(contextTime: number) {

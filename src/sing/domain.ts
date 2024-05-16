@@ -1,4 +1,5 @@
 import { calculateHash } from "./utility";
+import { Synth } from "./audioRendering";
 import { convertLongVowel } from "@/store/utility";
 import {
   Note,
@@ -519,3 +520,42 @@ export const splitLyricsByMoras = (
   }
   return moraAndNonMoras;
 };
+
+export const PREVIEW_SOUND_DURATION_SECONDS = 0.55;
+
+export function createSynthForPreview(audioContext: BaseAudioContext) {
+  const maxHarmonics = 36;
+  const oddHarmonicsAmount = 0.88;
+  const real = new Float32Array(maxHarmonics);
+  const imag = new Float32Array(maxHarmonics);
+  for (let i = 0; i <= maxHarmonics; i++) {
+    real[i] = 0;
+    if (i === 0 || (i & 1) === 0) {
+      imag[i] = 0;
+    } else {
+      imag[i] = 1 / Math.pow(i, 1 / oddHarmonicsAmount);
+    }
+  }
+  const periodicWave = audioContext.createPeriodicWave(real, imag);
+  const synth = new Synth(audioContext, {
+    osc: {
+      type: "custom",
+      periodicWave,
+    },
+    filter: {
+      cutoff: 1900,
+      resonance: 0,
+      keyTrack: 0.01,
+    },
+    amp: {
+      attack: 0.002,
+      decay: 0.15,
+      sustain: 0,
+      release: 0.02,
+    },
+    maxNumOfVoices: 1,
+    lowCutFrequency: 150,
+    volume: 0.1,
+  });
+  return synth;
+}
