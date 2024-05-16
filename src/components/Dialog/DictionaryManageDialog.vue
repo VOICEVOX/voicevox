@@ -89,20 +89,20 @@
                       flat
                       dense
                       round
-                      icon="delete"
-                      @click.stop="deleteWord"
+                      icon="edit"
+                      @click.stop="editWord"
                     >
-                      <QTooltip :delay="500">削除</QTooltip>
+                      <QTooltip :delay="500">編集</QTooltip>
                     </QBtn>
                     <QBtn
                       size="12px"
                       flat
                       dense
                       round
-                      icon="edit"
-                      @click.stop="editWord"
+                      icon="delete"
+                      @click.stop="deleteWord"
                     >
-                      <QTooltip :delay="500">編集</QTooltip>
+                      <QTooltip :delay="500">削除</QTooltip>
                     </QBtn>
                   </div>
                 </QItemSection>
