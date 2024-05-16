@@ -2,6 +2,7 @@ import semver from "semver";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
 import { createUILockAction } from "@/store/ui";
+import { generateAccentPhraseKey } from "./proxy";
 import {
   AllActions,
   AudioItem,
