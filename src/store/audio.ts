@@ -639,7 +639,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const baseAudioItem = payload.baseAudioItem;
 
       const fetchQueryParams = {
-        text,
+        text: extractYomiText(text, {
+          enableMemoNotation: state.enableMemoNotation,
+          enableRubyNotation: state.enableRubyNotation,
+        }),
         engineId: voice.engineId,
         styleId: voice.styleId,
       };
