@@ -29,25 +29,12 @@ export const useMenuBarData = () => {
     await store.dispatch("EXPORT_WAVE_FILE", {});
   };
 
-  const exportWaveFileParaout = async () => {
-    if (uiLocked.value) return;
-    await store.dispatch("EXPORT_WAVE_FILE_PARAOUT", {});
-  };
-
   const fileSubMenuData = computed<MenuItemData[]>(() => [
     {
       type: "button",
       label: "音声を出力",
       onClick: () => {
         exportWaveFile();
-      },
-      disableWhenUiLocked: true,
-    },
-    {
-      type: "button",
-      label: "トラックごとに音声を出力",
-      onClick: () => {
-        exportWaveFileParaout();
       },
       disableWhenUiLocked: true,
     },
