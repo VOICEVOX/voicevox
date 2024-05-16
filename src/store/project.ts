@@ -1,8 +1,6 @@
 import semver from "semver";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
-import { generateSingingStoreInitialScore } from "./singing";
-import { generateAccentPhraseKey } from "./proxy";
 import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
@@ -11,17 +9,18 @@ import {
   ProjectStoreState,
   ProjectStoreTypes,
 } from "@/store/type";
-
+import { AccentPhrase } from "@/openapi";
 import { EngineId } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
+import { LatestProjectType, projectSchema } from "@/domain/project/schema";
 import {
+  createDefaultTempo,
+  createDefaultTimeSignature,
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
   DEFAULT_BPM,
   DEFAULT_TPQN,
-} from "@/sing/storeHelper";
-import { LatestProjectType, projectSchema } from "@/domain/project/schema";
-import { AccentPhrase } from "@/openapi";
+} from "@/sing/domain";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -110,14 +109,10 @@ const applySongProjectToStore = async (
   await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
     volumeRangeAdjustment: tracks[0].volumeRangeAdjustment,
   });
-  await dispatch("SET_SCORE", {
-    score: {
-      tpqn,
-      tempos,
-      timeSignatures,
-      notes: tracks[0].notes,
-    },
-  });
+  await dispatch("SET_TPQN", { tpqn });
+  await dispatch("SET_TEMPOS", { tempos });
+  await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+  await dispatch("SET_NOTES", { notes: tracks[0].notes });
   await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
   await dispatch("SET_PITCH_EDIT_DATA", {
     data: tracks[0].pitchEditData,
@@ -165,16 +160,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
 
         // ソングプロジェクトの初期化
-        const { tpqn, tempos, timeSignatures, tracks } =
-          generateSingingStoreInitialScore();
-        await context.dispatch("SET_SCORE", {
-          score: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            notes: tracks[0].notes,
-          },
+        await context.dispatch("SET_TPQN", { tpqn: DEFAULT_TPQN });
+        await context.dispatch("SET_TEMPOS", {
+          tempos: [createDefaultTempo(0)],
         });
+        await context.dispatch("SET_TIME_SIGNATURES", {
+          timeSignatures: [createDefaultTimeSignature(1)],
+        });
+        await context.dispatch("SET_NOTES", { notes: [] });
         await context.dispatch("SET_SINGER", { withRelated: true });
         await context.dispatch("CLEAR_PITCH_EDIT_DATA");
 

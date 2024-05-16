@@ -32,6 +32,7 @@ import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { engineStoreState, engineStore } from "./engine";
+import { filterCharacterInfosByStyleType } from "./utility";
 import {
   DefaultStyleId,
   EngineId,
@@ -124,10 +125,16 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   },
 
   GET_ALL_VOICES: {
-    getter(state) {
-      const flattenCharacters = Object.values(state.characterInfos).flatMap(
+    getter: (state) => (styleType: "all" | "singerLike" | "talk") => {
+      let flattenCharacters = Object.values(state.characterInfos).flatMap(
         (characterInfos) => characterInfos,
       );
+      if (styleType !== "all") {
+        flattenCharacters = filterCharacterInfosByStyleType(
+          flattenCharacters,
+          styleType,
+        );
+      }
       const flattenVoices: Voice[] = flattenCharacters.flatMap((c) =>
         c.metas.styles.map((s) => ({
           engineId: EngineId(s.engineId),
