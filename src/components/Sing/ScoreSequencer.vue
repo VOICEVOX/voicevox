@@ -211,10 +211,10 @@ import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 
 type PreviewMode =
-  | "ADD"
-  | "MOVE"
-  | "RESIZE_RIGHT"
-  | "RESIZE_LEFT"
+  | "ADD_NOTE"
+  | "MOVE_NOTE"
+  | "RESIZE_NOTE_RIGHT"
+  | "RESIZE_NOTE_LEFT"
   | "DRAW_PITCH"
   | "ERASE_PITCH";
 
@@ -319,7 +319,7 @@ const onNoteLyricBlur = () => {
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
 const nowPreviewing = ref(false);
-let previewMode: PreviewMode = "ADD";
+let previewMode: PreviewMode = "ADD_NOTE";
 let previewRequestId = 0;
 let previewStartEditTarget: SequencerEditTarget = "NOTE";
 let executePreviewProcess = false;
@@ -631,16 +631,16 @@ const previewErasePitch = () => {
 
 const preview = () => {
   if (executePreviewProcess) {
-    if (previewMode === "ADD") {
+    if (previewMode === "ADD_NOTE") {
       previewAdd();
     }
-    if (previewMode === "MOVE") {
+    if (previewMode === "MOVE_NOTE") {
       previewMove();
     }
-    if (previewMode === "RESIZE_RIGHT") {
+    if (previewMode === "RESIZE_NOTE_RIGHT") {
       previewResizeRight();
     }
-    if (previewMode === "RESIZE_LEFT") {
+    if (previewMode === "RESIZE_NOTE_LEFT") {
       previewResizeLeft();
     }
     if (previewMode === "DRAW_PITCH") {
@@ -700,7 +700,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
     const guideLineTicks =
       Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
     const copiedNotes: Note[] = [];
-    if (mode === "ADD") {
+    if (mode === "ADD_NOTE") {
       if (cursorNoteNumber < 0) {
         return;
       }
@@ -748,7 +748,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
     dragStartNoteNumber = cursorNoteNumber;
     dragStartGuideLineTicks = guideLineTicks;
     draggingNoteId = note.id;
-    edited = mode === "ADD";
+    edited = mode === "ADD_NOTE";
     copiedNotesForPreview.clear();
     for (const copiedNote of copiedNotes) {
       copiedNotesForPreview.set(copiedNote.id, copiedNote);
@@ -796,7 +796,7 @@ const endPreview = () => {
     // 編集ターゲットがノートのときにプレビューを開始した場合の処理
 
     if (edited) {
-      if (previewMode === "ADD") {
+      if (previewMode === "ADD_NOTE") {
         store.dispatch("COMMAND_ADD_NOTES", { notes: previewNotes.value });
         store.dispatch("SELECT_NOTES", {
           noteIds: previewNotes.value.map((value) => value.id),
@@ -859,7 +859,7 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   }
 
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "MOVE", note);
+    startPreview(event, "MOVE_NOTE", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -876,7 +876,7 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
   }
 
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "RESIZE_LEFT", note);
+    startPreview(event, "RESIZE_NOTE_LEFT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -893,7 +893,7 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
   }
 
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "RESIZE_RIGHT", note);
+    startPreview(event, "RESIZE_NOTE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -932,7 +932,7 @@ const onMouseDown = (event: MouseEvent) => {
         rectSelectStartX.value = cursorX.value;
         rectSelectStartY.value = cursorY.value;
       } else {
-        startPreview(event, "ADD");
+        startPreview(event, "ADD_NOTE");
       }
     } else {
       store.dispatch("DESELECT_ALL_NOTES");
