@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 function detectImageTypeFromBase64(data: string): string {
   switch (data[0]) {
     case "/":
@@ -13,17 +15,8 @@ function detectImageTypeFromBase64(data: string): string {
   }
 }
 
-const base64ToUint8Array = (data: string) => {
-  const binaryString = atob(data);
-  const buffer = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    buffer[i] = binaryString.charCodeAt(i);
-  }
-  return buffer;
-};
-
 export const base64ToUri = (data: string, type: string) => {
-  const buffer = base64ToUint8Array(data);
+  const buffer = Buffer.from(data, "base64");
   return URL.createObjectURL(new Blob([buffer.buffer], { type }));
 };
 
