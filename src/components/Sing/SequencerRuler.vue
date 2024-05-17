@@ -59,11 +59,11 @@ import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 const props = withDefaults(
   defineProps<{
     offset: number;
-    numOfMeasures: number;
+    numMeasures: number;
   }>(),
   {
     offset: 0,
-    numOfMeasures: 32,
+    numMeasures: 32,
   },
 );
 const store = useStore();
@@ -91,7 +91,7 @@ const endTicks = computed(() => {
   return (
     lastTsPosition +
     getMeasureDuration(lastTs.beats, lastTs.beatType, tpqn.value) *
-      (props.numOfMeasures - lastTs.measureNumber + 1)
+      (props.numMeasures - lastTs.measureNumber + 1)
   );
 });
 const width = computed(() => {
