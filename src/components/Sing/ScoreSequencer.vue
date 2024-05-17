@@ -1228,6 +1228,7 @@ const onWheel = (event: WheelEvent) => {
     newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
     const scrollLeft = sequencerBodyElement.scrollLeft;
     const scrollTop = sequencerBodyElement.scrollTop;
+    guideLineX.value = 0; // 補助線がはみ出さないように位置を一旦0にする
 
     store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
       const cursorBaseX = (scrollLeft + cursorX.value) / oldZoomX;
