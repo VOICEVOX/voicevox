@@ -3,7 +3,6 @@
 import path from "path";
 
 import fs from "fs";
-import { fileURLToPath } from "url";
 import {
   app,
   protocol,
@@ -51,8 +50,6 @@ import {
 type SingleInstanceLockData = {
   filePath: string | undefined;
 };
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const isDevelopment = import.meta.env.DEV;
 const isTest = import.meta.env.MODE === "test";
