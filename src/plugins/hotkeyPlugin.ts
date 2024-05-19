@@ -324,7 +324,7 @@ export const eventToCombination = (event: KeyboardEvent): HotkeyCombination => {
   ) {
     recordedCombination += eventKey;
   }
-  // 末尾がスペースならそれを削除
+  // 修飾キーのみだった場合末尾がスペースになるので削除
   recordedCombination = recordedCombination.replace(/\s$/, "");
   return HotkeyCombination(recordedCombination);
 };
