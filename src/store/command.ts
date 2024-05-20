@@ -40,7 +40,6 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
 
 /**
  * 与えられたレシピから操作を記録し実行後にStateに追加するMutationを返す。
- *
  * @param payloadRecipe - 操作を記録するレシピ
  * @returns レシピと同じPayloadの型を持つMutation.
  */
