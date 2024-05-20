@@ -8,8 +8,8 @@ import {
   ToolbarButtonTagType,
   isMac,
 } from "@/type/preload";
-import { AccentPhrase, Mora } from "@/openapi";
-
+import { Mora } from "@/openapi";
+import { EditorAccentPhrase } from "@/store/type";
 export const DEFAULT_STYLE_NAME = "ノーマル";
 
 export const formatCharacterStyleName = (
@@ -223,9 +223,12 @@ function skipMemoText(targettext: string): string {
  * 「 [こん]ばん[は] 」
  */
 export class TuningTranscription {
-  beforeAccent: AccentPhrase[];
-  afterAccent: AccentPhrase[];
-  constructor(beforeAccent: AccentPhrase[], afterAccent: AccentPhrase[]) {
+  beforeAccent: EditorAccentPhrase[];
+  afterAccent: EditorAccentPhrase[];
+  constructor(
+    beforeAccent: EditorAccentPhrase[],
+    afterAccent: EditorAccentPhrase[],
+  ) {
     this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
@@ -258,8 +261,8 @@ export class TuningTranscription {
    */
   private applyTranscriptionSource(
     transcriptionSource: Mora[],
-  ): AccentPhrase[] {
-    const after: AccentPhrase[] = structuredClone(this.afterAccent);
+  ): EditorAccentPhrase[] {
+    const after: EditorAccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
     // AccentPhrasesから[ accentIndex ]["moras"][ moraIndex ]でモーラが得られる。
@@ -293,8 +296,8 @@ export class TuningTranscription {
  * ２つのAccentPhrasesのテキスト内容が異なるかどうかを判定
  */
 export function isAccentPhrasesTextDifferent(
-  beforeAccent: AccentPhrase[],
-  afterAccent: AccentPhrase[],
+  beforeAccent: EditorAccentPhrase[],
+  afterAccent: EditorAccentPhrase[],
 ): boolean {
   if (beforeAccent.length !== afterAccent.length) return true;
 

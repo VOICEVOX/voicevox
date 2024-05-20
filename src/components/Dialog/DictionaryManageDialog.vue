@@ -253,8 +253,8 @@ import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { useStore } from "@/store";
-import type { FetchAudioResult } from "@/store/type";
-import { AccentPhrase, UserDictWord } from "@/openapi";
+import type { EditorAccentPhrase, FetchAudioResult } from "@/store/type";
+import { UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -358,7 +358,7 @@ const voiceComputed = computed(() => {
 
 const kanaRegex = createKanaRegex();
 const isOnlyHiraOrKana = ref(true);
-const accentPhrase = ref<AccentPhrase | undefined>();
+const accentPhrase = ref<EditorAccentPhrase | undefined>();
 const accentPhraseTable = ref<HTMLElement>();
 
 const convertHankakuToZenkaku = (text: string) => {

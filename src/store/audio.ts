@@ -12,6 +12,8 @@ import {
   AudioCommandStoreTypes,
   transformCommandStore,
   FetchAudioResult,
+  EditorAudioQuery,
+  EditorAccentPhrase,
 } from "./type";
 import {
   buildAudioFileNameFromRawData,
@@ -38,6 +40,11 @@ import {
 } from "./audioGenerate";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
 import {
+  generateAccentPhraseKey,
+  convertAccentPhraseFromEngineToEditor,
+  convertAudioQueryFromEngineToEditor,
+} from "./proxy";
+import {
   AudioKey,
   CharacterInfo,
   DefaultStyleId,
@@ -52,7 +59,7 @@ import {
   StyleInfo,
   Voice,
 } from "@/type/preload";
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
+import { AccentPhrase, AudioQuery, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 
@@ -931,20 +938,26 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   SET_AUDIO_QUERY: {
     mutation(
       state,
-      { audioKey, audioQuery }: { audioKey: AudioKey; audioQuery: AudioQuery },
+      {
+        audioKey,
+        audioQuery,
+      }: { audioKey: AudioKey; audioQuery: EditorAudioQuery },
     ) {
       state.audioItems[audioKey].query = audioQuery;
     },
     action(
       { commit },
-      payload: { audioKey: AudioKey; audioQuery: AudioQuery },
+      payload: { audioKey: AudioKey; audioQuery: EditorAudioQuery },
     ) {
       commit("SET_AUDIO_QUERY", payload);
     },
   },
 
+  /**
+   * TODO: proxy.tsに移動する
+   */
   FETCH_AUDIO_QUERY: {
-    action(
+    async action(
       { dispatch },
       {
         text,
@@ -952,7 +965,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         styleId,
       }: { text: string; engineId: EngineId; styleId: StyleId },
     ) {
-      return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+      const query = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
       })
         .then((instance) =>
@@ -968,6 +981,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           );
           throw error;
         });
+      return convertAudioQueryFromEngineToEditor(query);
     },
   },
 
@@ -983,7 +997,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         accentPhrases,
-      }: { audioKey: AudioKey; accentPhrases: AccentPhrase[] },
+      }: { audioKey: AudioKey; accentPhrases: EditorAccentPhrase[] },
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
@@ -991,6 +1005,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  /**
+   * TODO: proxy.tsに移動する
+   */
   FETCH_ACCENT_PHRASES: {
     action(
       { dispatch },
@@ -1016,6 +1033,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             isKana,
           }),
         )
+        .then((accentPhrases) =>
+          accentPhrases.map(convertAccentPhraseFromEngineToEditor),
+        )
         .catch((error) => {
           window.backend.logError(
             error,
@@ -1023,25 +1043,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           );
           throw error;
         });
-    },
-  },
-
-  SET_SINGLE_ACCENT_PHRASE: {
-    mutation(
-      state,
-      {
-        audioKey,
-        accentPhraseIndex,
-        accentPhrases,
-      }: {
-        audioKey: AudioKey;
-        accentPhraseIndex: number;
-        accentPhrases: AccentPhrase[];
-      },
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.accentPhrases.splice(accentPhraseIndex, 1, ...accentPhrases);
     },
   },
 
@@ -1115,6 +1116,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  /**
+   * TODO: proxy.tsに移動する
+   */
   FETCH_MORA_DATA: {
     action(
       { dispatch },
@@ -1123,7 +1127,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         engineId,
         styleId,
       }: {
-        accentPhrases: AccentPhrase[];
+        accentPhrases: EditorAccentPhrase[];
         engineId: EngineId;
         styleId: StyleId;
       },
@@ -1137,6 +1141,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             speaker: styleId,
           }),
         )
+        .then((fetchedAccentPhrases) =>
+          fetchedAccentPhrases.map(convertAccentPhraseFromEngineToEditor),
+        )
+        .then((fetchedAccentPhrases) => {
+          // keyのコピー
+          for (let i = 0; i < accentPhrases.length; i++) {
+            fetchedAccentPhrases[i].key = accentPhrases[i].key;
+          }
+          return fetchedAccentPhrases;
+        })
         .catch((error) => {
           window.backend.logError(
             error,
@@ -1158,13 +1172,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         styleId,
         copyIndexes,
       }: {
-        accentPhrases: AccentPhrase[];
+        accentPhrases: EditorAccentPhrase[];
         engineId: EngineId;
         styleId: StyleId;
         copyIndexes: number[];
       },
     ) {
-      const fetchedAccentPhrases: AccentPhrase[] = await dispatch(
+      const fetchedAccentPhrases: EditorAccentPhrase[] = await dispatch(
         "FETCH_MORA_DATA",
         {
           accentPhrases,
@@ -1878,8 +1892,8 @@ export const audioCommandStore = transformCommandStore(
         draft,
         payload: { audioKey: AudioKey; text: string } & (
           | { update: "Text" }
-          | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
-          | { update: "AudioQuery"; query: AudioQuery }
+          | { update: "AccentPhrases"; accentPhrases: EditorAccentPhrase[] }
+          | { update: "AudioQuery"; query: EditorAudioQuery }
         ),
       ) {
         audioStore.mutations.SET_AUDIO_TEXT(draft, {
@@ -1915,7 +1929,7 @@ export const audioCommandStore = transformCommandStore(
 
         try {
           if (query != undefined) {
-            const accentPhrases: AccentPhrase[] = await dispatch(
+            const accentPhrases: EditorAccentPhrase[] = await dispatch(
               "FETCH_ACCENT_PHRASES",
               {
                 text: skippedText,
@@ -1929,17 +1943,18 @@ export const audioCommandStore = transformCommandStore(
               query.accentPhrases,
               accentPhrases,
             );
-            let newAccentPhrases: AccentPhrase[] = [];
+            let newAccentPhrases: EditorAccentPhrase[] = [];
             if (isSameText) {
               newAccentPhrases = query.accentPhrases;
             } else {
               if (!state.experimentalSetting.shouldKeepTuningOnTextChange) {
                 newAccentPhrases = accentPhrases;
               } else {
-                const mergedDiff: AccentPhrase[] = new TuningTranscription(
-                  query.accentPhrases,
-                  accentPhrases,
-                ).transcribe();
+                const mergedDiff: EditorAccentPhrase[] =
+                  new TuningTranscription(
+                    query.accentPhrases,
+                    accentPhrases,
+                  ).transcribe();
 
                 newAccentPhrases = mergedDiff;
               }
@@ -1983,11 +1998,11 @@ export const audioCommandStore = transformCommandStore(
             AudioKey,
             | {
                 update: "AccentPhrases";
-                accentPhrases: AccentPhrase[];
+                accentPhrases: EditorAccentPhrase[];
               }
             | {
                 update: "AudioQuery";
-                query: AudioQuery;
+                query: EditorAudioQuery;
               }
             | {
                 update: "OnlyVoice";
@@ -2047,11 +2062,11 @@ export const audioCommandStore = transformCommandStore(
           AudioKey,
           | {
               update: "AccentPhrases";
-              accentPhrases: AccentPhrase[];
+              accentPhrases: EditorAccentPhrase[];
             }
           | {
               update: "AudioQuery";
-              query: AudioQuery;
+              query: EditorAudioQuery;
             }
           | {
               update: "OnlyVoice";
@@ -2062,24 +2077,24 @@ export const audioCommandStore = transformCommandStore(
           try {
             const audioItem = state.audioItems[audioKey];
             if (audioItem.query == undefined) {
-              const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
-                text: audioItem.text,
-                engineId: voice.engineId,
-                styleId: voice.styleId,
-              });
+              const query: EditorAudioQuery = await dispatch(
+                "FETCH_AUDIO_QUERY",
+                {
+                  text: audioItem.text,
+                  engineId: voice.engineId,
+                  styleId: voice.styleId,
+                },
+              );
               changes[audioKey] = {
                 update: "AudioQuery",
                 query,
               };
             } else {
-              const newAccentPhrases: AccentPhrase[] = await dispatch(
-                "FETCH_MORA_DATA",
-                {
-                  accentPhrases: audioItem.query.accentPhrases,
-                  engineId: voice.engineId,
-                  styleId: voice.styleId,
-                },
-              );
+              const newAccentPhrases = await dispatch("FETCH_MORA_DATA", {
+                accentPhrases: audioItem.query.accentPhrases,
+                engineId: voice.engineId,
+                styleId: voice.styleId,
+              });
 
               changes[audioKey] = {
                 update: "AccentPhrases",
@@ -2115,7 +2130,7 @@ export const audioCommandStore = transformCommandStore(
         {
           audioKey,
           accentPhrases,
-        }: { audioKey: AudioKey; accentPhrases: AccentPhrase[] },
+        }: { audioKey: AudioKey; accentPhrases: EditorAccentPhrase[] },
       ) {
         audioStore.mutations.SET_ACCENT_PHRASES(draft, {
           audioKey,
@@ -2132,7 +2147,7 @@ export const audioCommandStore = transformCommandStore(
       ) {
         const query = state.audioItems[audioKey].query;
         if (query != undefined) {
-          const newAccentPhrases: AccentPhrase[] = JSON.parse(
+          const newAccentPhrases: EditorAccentPhrase[] = JSON.parse(
             JSON.stringify(query.accentPhrases),
           );
           newAccentPhrases[accentPhraseIndex].accent = accent;
@@ -2141,7 +2156,7 @@ export const audioCommandStore = transformCommandStore(
             const engineId = state.audioItems[audioKey].voice.engineId;
             const styleId = state.audioItems[audioKey].voice.styleId;
 
-            const resultAccentPhrases: AccentPhrase[] = await dispatch(
+            const resultAccentPhrases: EditorAccentPhrase[] = await dispatch(
               "FETCH_AND_COPY_MORA_DATA",
               {
                 accentPhrases: newAccentPhrases,
@@ -2171,7 +2186,7 @@ export const audioCommandStore = transformCommandStore(
         draft,
         payload: {
           audioKey: AudioKey;
-          accentPhrases: AccentPhrase[];
+          accentPhrases: EditorAccentPhrase[];
         },
       ) {
         audioStore.mutations.SET_ACCENT_PHRASES(draft, payload);
@@ -2194,7 +2209,7 @@ export const audioCommandStore = transformCommandStore(
             "`COMMAND_CHANGE_ACCENT_PHRASE_SPLIT` should not be called if the query does not exist.",
           );
         }
-        const newAccentPhrases: AccentPhrase[] = JSON.parse(
+        const newAccentPhrases: EditorAccentPhrase[] = JSON.parse(
           JSON.stringify(query.accentPhrases),
         );
         const changeIndexes = [accentPhraseIndex];
@@ -2204,13 +2219,14 @@ export const audioCommandStore = transformCommandStore(
             accentPhrases: AccentPhrase[],
             accentPhraseIndex: number,
           ) => {
-            const newAccentPhrase: AccentPhrase = {
+            const newAccentPhrase: EditorAccentPhrase = {
               moras: [
                 ...accentPhrases[accentPhraseIndex].moras,
                 ...accentPhrases[accentPhraseIndex + 1].moras,
               ],
               accent: accentPhrases[accentPhraseIndex].accent,
               pauseMora: accentPhrases[accentPhraseIndex + 1].pauseMora,
+              key: generateAccentPhraseKey(),
             };
             accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
           };
@@ -2219,7 +2235,7 @@ export const audioCommandStore = transformCommandStore(
             accentPhraseIndex: number,
             moraIndex: number,
           ) => {
-            const newAccentPhrase1: AccentPhrase = {
+            const newAccentPhrase1: EditorAccentPhrase = {
               moras: accentPhrases[accentPhraseIndex].moras.slice(
                 0,
                 moraIndex + 1,
@@ -2229,8 +2245,9 @@ export const audioCommandStore = transformCommandStore(
                   ? moraIndex + 1
                   : accentPhrases[accentPhraseIndex].accent,
               pauseMora: undefined,
+              key: generateAccentPhraseKey(),
             };
-            const newAccentPhrase2: AccentPhrase = {
+            const newAccentPhrase2: EditorAccentPhrase = {
               moras: accentPhrases[accentPhraseIndex].moras.slice(
                 moraIndex + 1,
               ),
@@ -2239,6 +2256,7 @@ export const audioCommandStore = transformCommandStore(
                   ? accentPhrases[accentPhraseIndex].accent - moraIndex - 1
                   : 1,
               pauseMora: accentPhrases[accentPhraseIndex].pauseMora,
+              key: generateAccentPhraseKey(),
             };
             accentPhrases.splice(
               accentPhraseIndex,
@@ -2265,7 +2283,7 @@ export const audioCommandStore = transformCommandStore(
         }
 
         try {
-          const resultAccentPhrases: AccentPhrase[] = await dispatch(
+          const resultAccentPhrases: EditorAccentPhrase[] = await dispatch(
             "FETCH_AND_COPY_MORA_DATA",
             {
               accentPhrases: newAccentPhrases,
@@ -2322,7 +2340,7 @@ export const audioCommandStore = transformCommandStore(
         draft,
         payload: {
           audioKey: AudioKey;
-          accentPhrases: AccentPhrase[];
+          accentPhrases: EditorAccentPhrase[];
         },
       ) {
         audioStore.mutations.SET_ACCENT_PHRASES(draft, payload);
@@ -2344,7 +2362,8 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
 
-        let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
+        let newAccentPhrasesSegment: EditorAccentPhrase[] | undefined =
+          undefined;
 
         const kanaRegex = createKanaRegex(true);
         if (kanaRegex.test(newPronunciation)) {
@@ -2412,7 +2431,7 @@ export const audioCommandStore = transformCommandStore(
         );
 
         try {
-          const resultAccentPhrases: AccentPhrase[] = await dispatch(
+          const resultAccentPhrases: EditorAccentPhrase[] = await dispatch(
             "FETCH_AND_COPY_MORA_DATA",
             {
               accentPhrases: newAccentPhrases,

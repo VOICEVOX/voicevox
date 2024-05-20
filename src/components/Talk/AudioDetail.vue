@@ -60,7 +60,7 @@
         </ToolTip>
         <AccentPhrase
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
-          :key="accentPhraseIndex"
+          :key="accentPhrase.key"
           ref="accentPhraseComponents"
           :audio-key="activeAudioKey"
           :accent-phrase="accentPhrase"
