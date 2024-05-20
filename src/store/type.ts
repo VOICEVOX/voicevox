@@ -51,6 +51,7 @@ import {
   RootMiscSettingType,
   EditorType,
   NoteId,
+  TrackId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -816,7 +817,9 @@ export type SingingStoreState = {
   tpqn: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
-  tracks: Track[];
+  tracks: Map<TrackId, Track>;
+  trackOrder: TrackId[];
+  selectedTrackId: TrackId;
   editFrameRate: number;
   phrases: Map<PhraseSourceHash, Phrase>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
@@ -850,18 +853,22 @@ export type SingingStoreTypes = {
   };
 
   SET_SINGER: {
-    mutation: { singer?: Singer; withRelated?: boolean };
-    action(payload: { singer?: Singer; withRelated?: boolean }): void;
+    mutation: { singer?: Singer; withRelated?: boolean; trackId: TrackId };
+    action(payload: {
+      singer?: Singer;
+      withRelated?: boolean;
+      trackId: TrackId;
+    }): void;
   };
 
   SET_KEY_RANGE_ADJUSTMENT: {
-    mutation: { keyRangeAdjustment: number };
-    action(payload: { keyRangeAdjustment: number }): void;
+    mutation: { keyRangeAdjustment: number; trackId: TrackId };
+    action(payload: { keyRangeAdjustment: number; trackId: TrackId }): void;
   };
 
   SET_VOLUME_RANGE_ADJUSTMENT: {
-    mutation: { volumeRangeAdjustment: number };
-    action(payload: { volumeRangeAdjustment: number }): void;
+    mutation: { volumeRangeAdjustment: number; trackId: TrackId };
+    action(payload: { volumeRangeAdjustment: number; trackId: TrackId }): void;
   };
 
   SET_TPQN: {
@@ -900,20 +907,20 @@ export type SingingStoreTypes = {
   };
 
   SET_NOTES: {
-    mutation: { notes: Note[] };
-    action(payload: { notes: Note[] }): void;
+    mutation: { notes: Note[]; trackId: TrackId };
+    action(payload: { notes: Note[]; trackId: TrackId }): void;
   };
 
   ADD_NOTES: {
-    mutation: { notes: Note[] };
+    mutation: { notes: Note[]; trackId: TrackId };
   };
 
   UPDATE_NOTES: {
-    mutation: { notes: Note[] };
+    mutation: { notes: Note[]; trackId: TrackId };
   };
 
   REMOVE_NOTES: {
-    mutation: { noteIds: NoteId[] };
+    mutation: { noteIds: NoteId[]; trackId: TrackId };
   };
 
   SELECT_NOTES: {
@@ -937,31 +944,40 @@ export type SingingStoreTypes = {
   };
 
   SET_PITCH_EDIT_DATA: {
-    mutation: { data: number[]; startFrame: number };
-    action(payload: { data: number[]; startFrame: number }): void;
+    mutation: { data: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      data: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
   };
 
   ERASE_PITCH_EDIT_DATA: {
-    mutation: { startFrame: number; frameLength: number };
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
   };
 
   CLEAR_PITCH_EDIT_DATA: {
-    mutation: undefined;
-    action(): void;
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
   };
 
   SET_PHRASES: {
-    mutation: { phrases: Map<PhraseSourceHash, Phrase> };
+    mutation: { phrases: Map<PhraseSourceHash, Phrase>; trackId: TrackId };
   };
 
   SET_STATE_TO_PHRASE: {
-    mutation: { phraseKey: PhraseSourceHash; phraseState: PhraseState };
+    mutation: {
+      phraseKey: PhraseSourceHash;
+      phraseState: PhraseState;
+      trackId: TrackId;
+    };
   };
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
     mutation: {
       phraseKey: PhraseSourceHash;
       singingGuideKey: SingingGuideSourceHash | undefined;
+      trackId: TrackId;
     };
   };
 
@@ -969,6 +985,7 @@ export type SingingStoreTypes = {
     mutation: {
       phraseKey: PhraseSourceHash;
       singingVoiceKey: SingingVoiceSourceHash | undefined;
+      trackId: TrackId;
     };
   };
 
@@ -976,11 +993,12 @@ export type SingingStoreTypes = {
     mutation: {
       singingGuideKey: SingingGuideSourceHash;
       singingGuide: SingingGuide;
+      trackId: TrackId;
     };
   };
 
   DELETE_SINGING_GUIDE: {
-    mutation: { singingGuideKey: SingingGuideSourceHash };
+    mutation: { singingGuideKey: SingingGuideSourceHash; trackId: TrackId };
   };
 
   SELECTED_TRACK: {
@@ -1141,18 +1159,22 @@ export type SingingCommandStoreState = {
 
 export type SingingCommandStoreTypes = {
   COMMAND_SET_SINGER: {
-    mutation: { singer: Singer; withRelated?: boolean };
-    action(payload: { singer: Singer; withRelated?: boolean }): void;
+    mutation: { singer: Singer; withRelated?: boolean; trackId: TrackId };
+    action(payload: {
+      singer: Singer;
+      withRelated?: boolean;
+      trackId: TrackId;
+    }): void;
   };
 
   COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
-    mutation: { keyRangeAdjustment: number };
-    action(payload: { keyRangeAdjustment: number }): void;
+    mutation: { keyRangeAdjustment: number; trackId: TrackId };
+    action(payload: { keyRangeAdjustment: number; trackId: TrackId }): void;
   };
 
   COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
-    mutation: { volumeRangeAdjustment: number };
-    action(payload: { volumeRangeAdjustment: number }): void;
+    mutation: { volumeRangeAdjustment: number; trackId: TrackId };
+    action(payload: { volumeRangeAdjustment: number; trackId: TrackId }): void;
   };
 
   COMMAND_SET_TEMPO: {
@@ -1176,18 +1198,18 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_ADD_NOTES: {
-    mutation: { notes: Note[] };
-    action(payload: { notes: Note[] }): void;
+    mutation: { notes: Note[]; trackId: TrackId };
+    action(payload: { notes: Note[]; trackId: TrackId }): void;
   };
 
   COMMAND_UPDATE_NOTES: {
-    mutation: { notes: Note[] };
-    action(payload: { notes: Note[] }): void;
+    mutation: { notes: Note[]; trackId: TrackId };
+    action(payload: { notes: Note[]; trackId: TrackId }): void;
   };
 
   COMMAND_REMOVE_NOTES: {
-    mutation: { noteIds: NoteId[] };
-    action(payload: { noteIds: NoteId[] }): void;
+    mutation: { noteIds: NoteId[]; trackId: TrackId };
+    action(payload: { noteIds: NoteId[]; trackId: TrackId }): void;
   };
 
   COMMAND_REMOVE_SELECTED_NOTES: {
@@ -1195,13 +1217,21 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_SET_PITCH_EDIT_DATA: {
-    mutation: { data: number[]; startFrame: number };
-    action(payload: { data: number[]; startFrame: number }): void;
+    mutation: { data: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      data: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
   };
 
   COMMAND_ERASE_PITCH_EDIT_DATA: {
-    mutation: { startFrame: number; frameLength: number };
-    action(payload: { startFrame: number; frameLength: number }): void;
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+    action(payload: {
+      startFrame: number;
+      frameLength: number;
+      trackId: TrackId;
+    }): void;
   };
 };
 

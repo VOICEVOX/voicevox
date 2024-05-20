@@ -7,6 +7,7 @@ import {
   presetKeySchema,
   speakerIdSchema,
   styleIdSchema,
+  trackIdSchema,
 } from "@/type/preload";
 
 // トーク系のスキーマ
