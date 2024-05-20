@@ -188,7 +188,8 @@ watch(projectFilePath, updateRecentProjects, {
 });
 
 // 「エンジン」メニューのエンジン毎の項目
-const engineSubMenuData = computed<MenuItemData[]>(() => {
+const engineSubMenuData = ref<MenuItemData[]>([]);
+watch(engineInfos, async () => {
   let subMenu: MenuItemData[] = [];
 
   if (Object.values(engineInfos.value).length === 1) {
@@ -206,15 +207,17 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
       },
     ].filter((x) => x) as MenuItemData[];
   } else {
-    subMenu = [
+    subMenu = await Promise.all([
       ...store.getters.GET_SORTED_ENGINE_INFOS.map(
-        (engineInfo) =>
+        async (engineInfo) =>
           ({
             type: "root",
             label: engineInfo.name,
             icon:
               engineManifests.value[engineInfo.uuid] &&
-              base64ImageToUri(engineManifests.value[engineInfo.uuid].icon),
+              (await base64ImageToUri(
+                engineManifests.value[engineInfo.uuid].icon,
+              )),
             subMenu: [
               engineInfo.path && {
                 type: "button",
@@ -250,7 +253,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
         },
         disableWhenUiLocked: false,
       },
-    ];
+    ]);
   }
   if (enableMultiEngine.value) {
     subMenu.push({
@@ -279,7 +282,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
     });
   }
 
-  return subMenu;
+  engineSubMenuData.value = subMenu;
 });
 
 // メニュー一覧

@@ -398,15 +398,23 @@ const categorizedEngineIds = computed(() => {
 });
 const engineInfos = computed(() => store.state.engineInfos);
 const engineStates = computed(() => store.state.engineStates);
-const engineManifests = computed(() => store.state.engineManifests);
-const engineIcons = computed(() =>
-  Object.fromEntries(
-    Object.entries(store.state.engineManifests).map(([id, manifest]) => [
-      id,
-      base64ImageToUri(manifest.icon),
-    ]),
-  ),
+
+const engineIcons = ref<Record<EngineId, string>>({});
+
+watch(
+  () => store.state.engineIds,
+  async () => {
+    for (const [engineId, manifest] of Object.entries(
+      store.state.engineManifests,
+    )) {
+      engineIcons.value[EngineId(engineId)] = await base64ImageToUri(
+        manifest.icon,
+      );
+    }
+  },
+  { immediate: true },
 );
+const engineManifests = computed(() => store.state.engineManifests);
 const engineVersions = ref<Record<EngineId, string>>({});
 
 watch(

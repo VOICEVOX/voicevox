@@ -195,10 +195,10 @@
 
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
-import { computed, Ref, ref } from "vue";
+import { computed, Ref, ref, watch } from "vue";
 import { base64ImageToUri } from "@/helpers/base64Helper";
 import { useStore } from "@/store";
-import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
+import { CharacterInfo, SpeakerId, EngineId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
 import { getDefaultStyle } from "@/domain/talk";
 
@@ -275,7 +275,21 @@ const selectedStyleInfo = computed(() => {
   return style;
 });
 
-const engineIcons = computed(() =>
+const engineIcons = ref<Record<EngineId, string>>({});
+
+watch(
+  () => store.state.engineIds,
+  async () => {
+    for (const engineId of store.state.engineIds) {
+      engineIcons.value[engineId] = await base64ImageToUri(
+        store.state.engineManifests[engineId].icon,
+      );
+    }
+  },
+  { immediate: true },
+);
+
+computed(() =>
   Object.fromEntries(
     store.state.engineIds.map((engineId) => [
       engineId,

@@ -144,12 +144,12 @@ export default {
 };
 </script>
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { debounce } from "quasar";
 import SelectedCharacter from "./SelectedCharacter.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/base64Helper";
-import { SpeakerId, StyleId } from "@/type/preload";
+import { SpeakerId, StyleId, EngineId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 
 const store = useStore();
@@ -240,13 +240,18 @@ const selectedStyleId = computed(
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
-const engineIcons = computed(() =>
-  Object.fromEntries(
-    store.state.engineIds.map((engineId) => [
-      engineId,
-      base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ]),
-  ),
+const engineIcons = ref<Record<EngineId, string>>({});
+
+watch(
+  () => store.state.engineIds,
+  async () => {
+    for (const engineId of store.state.engineIds) {
+      engineIcons.value[engineId] = await base64ImageToUri(
+        store.state.engineManifests[engineId].icon,
+      );
+    }
+  },
+  { immediate: true },
 );
 </script>
 

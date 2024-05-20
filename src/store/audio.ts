@@ -288,12 +288,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
         });
-        const getStyles = function (
+        const getStyles = async function (
           speaker: Speaker,
           speakerInfo: SpeakerInfo,
         ) {
           const styles: StyleInfo[] = new Array(speaker.styles.length);
-          speaker.styles.forEach((style, i) => {
+          for (const [i, style] of speaker.styles.entries()) {
             const styleInfo = speakerInfo.styleInfos.find(
               (styleInfo) => style.id === styleInfo.id,
             );
@@ -301,20 +301,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               throw new Error(
                 `Not found the style id "${style.id}" of "${speaker.name}". `,
               );
-            const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
-              return base64ToUri(voiceSample, "audio/wav");
-            });
+            const voiceSamples = await Promise.all(
+              styleInfo.voiceSamples.map((voiceSample) => {
+                return base64ToUri(voiceSample, "audio/wav");
+              }),
+            );
             styles[i] = {
               styleName: style.name,
               styleId: StyleId(style.id),
               styleType: style.type,
               engineId,
-              iconPath: base64ImageToUri(styleInfo.icon),
+              iconPath: await base64ImageToUri(styleInfo.icon),
               portraitPath:
-                styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
+                styleInfo.portrait &&
+                (await base64ImageToUri(styleInfo.portrait)),
               voiceSamplePaths: voiceSamples,
             };
-          });
+          }
           return styles;
         };
         const getCharacterInfo = async (
@@ -370,7 +373,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           ]).then((styles) => styles.flat());
 
           const characterInfo: CharacterInfo = {
-            portraitPath: base64ImageToUri(baseCharacterInfo.portrait),
+            portraitPath: await base64ImageToUri(baseCharacterInfo.portrait),
             metas: {
               speakerUuid: SpeakerId(baseSpeaker.speakerUuid),
               speakerName: baseSpeaker.name,
