@@ -1,6 +1,5 @@
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
-import { generateSingingStoreInitialScore } from "./singing";
 import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
@@ -15,6 +14,11 @@ import {
   migrateProjectFileObject,
   ProjectFileFormatError,
 } from "@/domain/project";
+import {
+  createDefaultTempo,
+  createDefaultTimeSignature,
+  DEFAULT_TPQN,
+} from "@/sing/domain";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandUnixMillisec: null,
@@ -57,14 +61,10 @@ const applySongProjectToStore = async (
   await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
     volumeRangeAdjustment: tracks[0].volumeRangeAdjustment,
   });
-  await dispatch("SET_SCORE", {
-    score: {
-      tpqn,
-      tempos,
-      timeSignatures,
-      notes: tracks[0].notes,
-    },
-  });
+  await dispatch("SET_TPQN", { tpqn });
+  await dispatch("SET_TEMPOS", { tempos });
+  await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+  await dispatch("SET_NOTES", { notes: tracks[0].notes });
   await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
   await dispatch("SET_PITCH_EDIT_DATA", {
     data: tracks[0].pitchEditData,
@@ -112,16 +112,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
 
         // ソングプロジェクトの初期化
-        const { tpqn, tempos, timeSignatures, tracks } =
-          generateSingingStoreInitialScore();
-        await context.dispatch("SET_SCORE", {
-          score: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            notes: tracks[0].notes,
-          },
+        await context.dispatch("SET_TPQN", { tpqn: DEFAULT_TPQN });
+        await context.dispatch("SET_TEMPOS", {
+          tempos: [createDefaultTempo(0)],
         });
+        await context.dispatch("SET_TIME_SIGNATURES", {
+          timeSignatures: [createDefaultTimeSignature(1)],
+        });
+        await context.dispatch("SET_NOTES", { notes: [] });
         await context.dispatch("SET_SINGER", { withRelated: true });
         await context.dispatch("CLEAR_PITCH_EDIT_DATA");
 

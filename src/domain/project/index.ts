@@ -12,7 +12,7 @@ import {
   DEFAULT_BEATS,
   DEFAULT_BPM,
   DEFAULT_TPQN,
-} from "@/sing/storeHelper";
+} from "@/sing/domain";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 

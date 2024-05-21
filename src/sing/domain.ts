@@ -3,12 +3,15 @@ import { convertLongVowel } from "@/store/utility";
 import {
   Note,
   Phrase,
-  Score,
+  PhraseSource,
+  PhraseSourceHash,
   SingingGuide,
   SingingGuideSource,
   SingingVoiceSource,
   Tempo,
   TimeSignature,
+  phraseSourceHashSchema,
+  Track,
   singingGuideSourceHashSchema,
   singingVoiceSourceHashSchema,
 } from "@/store/type";
@@ -85,15 +88,6 @@ export const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
 
 export const isValidNotes = (notes: Note[]) => {
   return notes.every((value) => isValidNote(value));
-};
-
-export const isValidScore = (score: Score) => {
-  return (
-    isValidTpqn(score.tpqn) &&
-    isValidTempos(score.tempos) &&
-    isValidTimeSignatures(score.timeSignatures) &&
-    isValidNotes(score.notes)
-  );
 };
 
 const tickToSecondForConstantBpm = (
@@ -283,6 +277,14 @@ export function decibelToLinear(decibelValue: number) {
   return Math.pow(10, decibelValue / 20);
 }
 
+export const DEFAULT_TPQN = 480;
+export const DEFAULT_BPM = 120;
+export const DEFAULT_BEATS = 4;
+export const DEFAULT_BEAT_TYPE = 4;
+
+// マルチエンジン対応のために将来的に廃止予定で、利用は非推奨
+export const DEPRECATED_DEFAULT_EDIT_FRAME_RATE = 93.75;
+
 export const VALUE_INDICATING_NO_DATA = -1;
 
 export const UNVOICED_PHONEMES = [
@@ -298,6 +300,30 @@ export const UNVOICED_PHONEMES = [
   "t",
   "ts",
 ];
+
+export function createDefaultTempo(position: number): Tempo {
+  return { position, bpm: DEFAULT_BPM };
+}
+
+export function createDefaultTimeSignature(
+  measureNumber: number,
+): TimeSignature {
+  return {
+    measureNumber,
+    beats: DEFAULT_BEATS,
+    beatType: DEFAULT_BEAT_TYPE,
+  };
+}
+
+export function createDefaultTrack(): Track {
+  return {
+    singer: undefined,
+    keyRangeAdjustment: 0,
+    volumeRangeAdjustment: 0,
+    notes: [],
+    pitchEditData: [],
+  };
+}
 
 export function getSnapTypes(tpqn: number) {
   return getRepresentableNoteTypes(tpqn).filter((value) => {
@@ -317,7 +343,7 @@ export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
   );
 }
 
-export function isValidvolumeRangeAdjustment(volumeRangeAdjustment: number) {
+export function isValidVolumeRangeAdjustment(volumeRangeAdjustment: number) {
   return (
     Number.isInteger(volumeRangeAdjustment) &&
     volumeRangeAdjustment <= 20 &&
@@ -333,8 +359,9 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   );
 }
 
-export const calculateNotesHash = async (notes: Note[]) => {
-  return await calculateHash({ notes });
+export const calculatePhraseSourceHash = async (phraseSource: PhraseSource) => {
+  const hash = await calculateHash(phraseSource);
+  return phraseSourceHashSchema.parse(hash);
 };
 
 export const calculateSingingGuideSourceHash = async (
@@ -366,7 +393,7 @@ export function getEndTicksOfPhrase(phrase: Phrase) {
   return lastNote.position + lastNote.duration;
 }
 
-export function toSortedPhrases(phrases: Map<string, Phrase>) {
+export function toSortedPhrases(phrases: Map<PhraseSourceHash, Phrase>) {
   return [...phrases.entries()].sort((a, b) => {
     const startTicksOfPhraseA = getStartTicksOfPhrase(a[1]);
     const startTicksOfPhraseB = getStartTicksOfPhrase(b[1]);
@@ -383,9 +410,9 @@ export function toSortedPhrases(phrases: Map<string, Phrase>) {
  * - 再生位置より前のPhrase
  */
 export function selectPriorPhrase(
-  phrases: Map<string, Phrase>,
+  phrases: Map<PhraseSourceHash, Phrase>,
   position: number,
-): [string, Phrase] {
+): [PhraseSourceHash, Phrase] {
   if (phrases.size === 0) {
     throw new Error("Received empty phrases");
   }
