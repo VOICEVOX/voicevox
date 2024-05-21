@@ -259,7 +259,7 @@ import {
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
-} from "@/store/utility";
+} from "@/domain/japanese";
 
 const defaultDictPriority = 5;
 
