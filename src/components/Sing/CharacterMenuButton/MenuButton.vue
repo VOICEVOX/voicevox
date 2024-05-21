@@ -144,13 +144,14 @@ export default {
 };
 </script>
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { debounce } from "quasar";
 import SelectedCharacter from "./SelectedCharacter.vue";
 import { useStore } from "@/store";
 import { base64ImageToUri } from "@/helpers/base64Helper";
 import { SpeakerId, StyleId, EngineId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
+import { asyncComputed } from "@/composables/asyncComputed";
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -240,18 +241,17 @@ const selectedStyleId = computed(
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
-const engineIcons = ref<Record<EngineId, string>>({});
-
-watch(
-  () => store.state.engineIds,
-  async () => {
-    for (const engineId of store.state.engineIds) {
-      engineIcons.value[engineId] = await base64ImageToUri(
-        store.state.engineManifests[engineId].icon,
-      );
+const engineIcons = asyncComputed(
+  () => store.state.engineManifests,
+  {} as Record<EngineId, string>,
+  async (engineManifests) => {
+    const engineIcons: Record<EngineId, string> = {};
+    for (const [engineId, manifest] of Object.entries(engineManifests)) {
+      engineIcons[EngineId(engineId)] = await base64ImageToUri(manifest.icon);
     }
+
+    return engineIcons;
   },
-  { immediate: true },
 );
 </script>
 
