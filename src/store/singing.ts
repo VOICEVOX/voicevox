@@ -70,6 +70,8 @@ import {
   createDefaultTempo,
   createDefaultTimeSignature,
   isValidNotes,
+  SEQUENCER_MIN_NUM_MEASURES,
+  getNumMeasures,
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
@@ -713,6 +715,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The snap type is invalid.");
       }
       commit("SET_SNAP_TYPE", { snapType });
+    },
+  },
+
+  SEQUENCER_NUM_MEASURES: {
+    getter(state) {
+      // NOTE: スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
+      // NOTE: いったん最後尾に足した場合は伸びるようにする
+      return Math.max(
+        SEQUENCER_MIN_NUM_MEASURES,
+        getNumMeasures(
+          state.tracks[selectedTrackIndex].notes,
+          state.tempos,
+          state.timeSignatures,
+          state.tpqn,
+        ) + 1,
+      );
     },
   },
 
