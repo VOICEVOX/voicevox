@@ -559,7 +559,7 @@ const isDeletable = computed(() => !!selectedId.value);
 const deleteWord = async () => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "登録された単語を削除しますか？",
-    message: "削除された単語は復旧できません。",
+    message: "削除された単語は元に戻せません。",
     actionName: "削除",
   });
   if (result === "OK") {
@@ -594,9 +594,8 @@ const discardOrNotDialog = async (okCallback: () => void) => {
   if (isWordChanged.value) {
     const result = await store.dispatch("SHOW_WARNING_DIALOG", {
       title: "単語の追加・変更を破棄しますか？",
-      message:
-        "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
-      actionName: "続行",
+      message: "破棄すると、単語の追加・変更はリセットされます。",
+      actionName: "破棄",
     });
     if (result === "OK") {
       okCallback();
