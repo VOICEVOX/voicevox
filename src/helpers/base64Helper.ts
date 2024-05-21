@@ -1,4 +1,7 @@
 import { toBytes } from "fast-base64";
+
+const cache = new Map<string, string>();
+
 function detectImageTypeFromBase64(data: string): string {
   switch (data[0]) {
     case "/":
@@ -15,8 +18,14 @@ function detectImageTypeFromBase64(data: string): string {
 }
 
 export const base64ToUri = async (data: string, type: string) => {
+  const cached = cache.get(data);
+  if (cached) {
+    return cached;
+  }
   const buffer = await toBytes(data);
-  return URL.createObjectURL(new Blob([buffer.buffer], { type }));
+  const url = URL.createObjectURL(new Blob([buffer.buffer], { type }));
+  cache.set(data, url);
+  return url;
 };
 
 export async function base64ImageToUri(image: string): Promise<string> {
