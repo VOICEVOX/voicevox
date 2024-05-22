@@ -811,6 +811,15 @@ export type PhraseSource = {
 export const phraseSourceHashSchema = z.string().brand<"PhraseSourceHash">();
 export type PhraseSourceHash = z.infer<typeof phraseSourceHashSchema>;
 
+export type PhraseKey = `${TrackId}:${PhraseSourceHash}`;
+export const separatePhraseKey = (
+  key: PhraseKey,
+): [TrackId, PhraseSourceHash] => key.split(":") as [TrackId, PhraseSourceHash];
+export const createPhraseKey = (
+  trackId: TrackId,
+  sourceHash: PhraseSourceHash,
+): PhraseKey => `${trackId}:${sourceHash}`;
+
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
 export type SingingStoreState = {
@@ -821,7 +830,7 @@ export type SingingStoreState = {
   trackOrder: TrackId[];
   selectedTrackId: TrackId;
   editFrameRate: number;
-  phrases: Map<PhraseSourceHash, Phrase>;
+  phrases: Map<PhraseKey, Phrase>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
@@ -962,30 +971,27 @@ export type SingingStoreTypes = {
   };
 
   SET_PHRASES: {
-    mutation: { phrases: Map<PhraseSourceHash, Phrase>; trackId: TrackId };
+    mutation: { phrases: Map<PhraseKey, Phrase> };
   };
 
   SET_STATE_TO_PHRASE: {
     mutation: {
-      phraseKey: PhraseSourceHash;
+      phraseKey: PhraseKey;
       phraseState: PhraseState;
-      trackId: TrackId;
     };
   };
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
     mutation: {
-      phraseKey: PhraseSourceHash;
+      phraseKey: PhraseKey;
       singingGuideKey: SingingGuideSourceHash | undefined;
-      trackId: TrackId;
     };
   };
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
     mutation: {
-      phraseKey: PhraseSourceHash;
+      phraseKey: PhraseKey;
       singingVoiceKey: SingingVoiceSourceHash | undefined;
-      trackId: TrackId;
     };
   };
 
@@ -993,12 +999,11 @@ export type SingingStoreTypes = {
     mutation: {
       singingGuideKey: SingingGuideSourceHash;
       singingGuide: SingingGuide;
-      trackId: TrackId;
     };
   };
 
   DELETE_SINGING_GUIDE: {
-    mutation: { singingGuideKey: SingingGuideSourceHash; trackId: TrackId };
+    mutation: { singingGuideKey: SingingGuideSourceHash };
   };
 
   SELECTED_TRACK: {

@@ -14,7 +14,6 @@ import {
   SaveResultObject,
   Singer,
   Phrase,
-  PhraseState,
   transformCommandStore,
   SingingGuide,
   SingingVoice,
@@ -22,6 +21,9 @@ import {
   SingingVoiceSourceHash,
   SequencerEditTarget,
   PhraseSourceHash,
+  separatePhraseKey,
+  createPhraseKey,
+  PhraseKey,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
@@ -610,19 +612,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_PHRASES: {
-    mutation(state, { phrases }: { phrases: Map<PhraseSourceHash, Phrase> }) {
+    mutation(state, { phrases }) {
       state.phrases = phrases;
     },
   },
 
   SET_STATE_TO_PHRASE: {
-    mutation(
-      state,
-      {
-        phraseKey,
-        phraseState,
-      }: { phraseKey: PhraseSourceHash; phraseState: PhraseState },
-    ) {
+    mutation(state, { phraseKey, phraseState }) {
       const phrase = getOrThrow(state.phrases, phraseKey);
 
       phrase.state = phraseState;
@@ -630,16 +626,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
-    mutation(
-      state,
-      {
-        phraseKey,
-        singingGuideKey,
-      }: {
-        phraseKey: PhraseSourceHash;
-        singingGuideKey: SingingGuideSourceHash | undefined;
-      },
-    ) {
+    mutation(state, { phraseKey, singingGuideKey }) {
       const phrase = getOrThrow(state.phrases, phraseKey);
 
       phrase.singingGuideKey = singingGuideKey;
@@ -647,16 +634,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
-    mutation(
-      state,
-      {
-        phraseKey,
-        singingVoiceKey,
-      }: {
-        phraseKey: PhraseSourceHash;
-        singingVoiceKey: SingingVoiceSourceHash | undefined;
-      },
-    ) {
+    mutation(state, { phraseKey, singingVoiceKey }) {
       const phrase = getOrThrow(state.phrases, phraseKey);
 
       phrase.singingVoiceKey = singingVoiceKey;
@@ -1230,25 +1208,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const audioContextRef = audioContext;
         const transportRef = transport;
         const channelStripRef = channelStrip;
-        const trackRef = getters.SELECTED_TRACK;
+        const tracks = structuredClone(state.tracks);
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         // 重なっているノートの削除も行う
         const tpqn = state.tpqn;
         const tempos = state.tempos.map((value) => ({ ...value }));
-        const singerAndFrameRate = trackRef.singer
-          ? {
-              singer: { ...trackRef.singer },
-              frameRate:
-                state.engineManifests[trackRef.singer.engineId].frameRate,
-            }
-          : undefined;
-        const keyRangeAdjustment = trackRef.keyRangeAdjustment;
-        const volumeRangeAdjustment = trackRef.volumeRangeAdjustment;
-        const notes = trackRef.notes
-          .map((value) => ({ ...value }))
-          .filter((value) => !state.overlappingNoteIds.has(value.id));
-        const pitchEditData = [...trackRef.pitchEditData];
         const editFrameRate = state.editFrameRate;
         const firstRestMinDurationSeconds = 0.12;
         const lastRestDurationSeconds = 0.5;
@@ -1256,12 +1221,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // フレーズを更新する
 
-        const foundPhrases = await searchPhrases(
-          notes,
-          tempos,
-          tpqn,
-          firstRestMinDurationSeconds,
-        );
+        const foundPhrases = new Map<PhraseKey, Phrase>();
+        for (const [trackId, track] of tracks) {
+          if (!track.singer) {
+            continue;
+          }
+          const notes = track.notes;
+          const phrases = await searchPhrases(
+            notes,
+            tempos,
+            tpqn,
+            firstRestMinDurationSeconds,
+          );
+          for (const [phraseHash, phrase] of phrases) {
+            const phraseKey = createPhraseKey(trackId, phraseHash);
+            foundPhrases.set(phraseKey, phrase);
+          }
+        }
 
         for (const [phraseKey, phrase] of state.phrases) {
           const notesHash = phraseKey;
@@ -1270,7 +1246,53 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (phrase.singingGuideKey != undefined) {
               commit("DELETE_SINGING_GUIDE", {
                 singingGuideKey: phrase.singingGuideKey,
-                trackId: state.selectedTrackId,
+              });
+            }
+            if (phrase.singingVoiceKey != undefined) {
+              singingVoices.delete(phrase.singingVoiceKey);
+            }
+
+            // 音源とシーケンスの接続を解除して削除する
+            const sequence = sequences.get(phraseKey);
+            if (sequence) {
+              getAudioSourceNode(sequence).disconnect();
+              transportRef.removeSequence(sequence);
+              sequences.delete(phraseKey);
+            }
+          }
+        }
+        const newPhrases = new Map<PhraseKey, Phrase>();
+
+        const getSingerAndFrameRate = (singer: Singer | undefined) =>
+          singer && {
+            singer: singer,
+            frameRate: state.engineManifests[singer.engineId].frameRate,
+          };
+
+        for (const [phraseKey, foundPhrase] of foundPhrases) {
+          const [trackId] = separatePhraseKey(phraseKey);
+          const existingPhrase = state.phrases.get(phraseKey);
+          if (!existingPhrase) {
+            // 新しいフレーズの場合
+            newPhrases.set(phraseKey, foundPhrase);
+            continue;
+          }
+
+          const track = getOrThrow(tracks, trackId);
+
+          const singerAndFrameRate = getSingerAndFrameRate(track.singer);
+
+          // すでに存在するフレーズの場合
+          // 再レンダリングする必要があるかどうかをチェックする
+          // シンガーが未設定の場合、とりあえず常に再レンダリングする
+          // 音声合成を行う必要がある場合、現在フレーズに設定されている歌声を削除する
+          // 歌い方の推論も行う必要がある場合、現在フレーズに設定されている歌い方を削除する
+          // TODO: リファクタリングする
+          const phrase = { ...existingPhrase };
+          if (!singerAndFrameRate || phrase.state === "COULD_NOT_RENDER") {
+            if (phrase.singingGuideKey != undefined) {
+              commit("DELETE_SINGING_GUIDE", {
+                singingGuideKey: phrase.singingGuideKey,
               });
               phrase.singingGuideKey = undefined;
             }
@@ -1287,8 +1309,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 firstRestDuration: phrase.firstRestDuration,
                 lastRestDurationSeconds,
                 notes: phrase.notes,
-                keyRangeAdjustment,
-                volumeRangeAdjustment,
+                keyRangeAdjustment: track.keyRangeAdjustment,
+                volumeRangeAdjustment: track.volumeRangeAdjustment,
                 frameRate: singerAndFrameRate.frameRate,
               });
               const hash = phrase.singingGuideKey;
@@ -1314,7 +1336,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
               // 歌い方をコピーして、ピッチ編集を適用する
               singingGuide = structuredClone(toRaw(singingGuide));
-              applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
+              applyPitchEdit(singingGuide, track.pitchEditData, editFrameRate);
 
               const calculatedHash = await calculateSingingVoiceSourceHash({
                 singer: singerAndFrameRate.singer,
@@ -1334,10 +1356,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrase.state = "WAITING_TO_BE_RENDERED";
           }
 
-          phrases.set(phraseKey, phrase);
+          newPhrases.set(phraseKey, phrase);
         }
 
-        commit("SET_PHRASES", { phrases });
+        commit("SET_PHRASES", { phrases: newPhrases });
 
         logger.info("Phrases updated.");
 
@@ -1382,7 +1404,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrasesToBeRendered,
             playheadPosition.value,
           );
+          const [trackId] = separatePhraseKey(phraseKey);
           phrasesToBeRendered.delete(phraseKey);
+
+          const track = getOrThrow(tracks, trackId);
+
+          const singerAndFrameRate = getSingerAndFrameRate(track.singer);
 
           // シンガーが未設定の場合は、歌い方の生成や音声合成は行わない
 
@@ -1411,7 +1438,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
 
             // リクエスト用のノーツのキーのシフトを行う
-            shiftKeyOfNotes(notesForRequestToEngine, -keyRangeAdjustment);
+            shiftKeyOfNotes(notesForRequestToEngine, -track.keyRangeAdjustment);
 
             // 歌い方が存在する場合、歌い方を取得する
             // 歌い方が存在しない場合、キャッシュがあれば取得し、なければ歌い方を生成する
@@ -1431,8 +1458,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   firstRestDuration: phrase.firstRestDuration,
                   lastRestDurationSeconds,
                   notes: phrase.notes,
-                  keyRangeAdjustment,
-                  volumeRangeAdjustment,
+                  keyRangeAdjustment: track.keyRangeAdjustment,
+                  volumeRangeAdjustment: track.volumeRangeAdjustment,
                   frameRate: singerAndFrameRate.frameRate,
                 });
 
@@ -1453,7 +1480,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 logger.info(`Fetched frame audio query. phonemes: ${phonemes}`);
 
                 // ピッチのシフトを行う
-                shiftGuidePitch(query, keyRangeAdjustment);
+                shiftGuidePitch(query, track.keyRangeAdjustment);
 
                 // フレーズの開始時刻を計算する
                 const startTime = calculateStartTime(phrase, tempos, tpqn);
@@ -1477,7 +1504,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingGuide = structuredClone(toRaw(singingGuide));
 
             // ピッチ編集を適用する
-            applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
+            applyPitchEdit(singingGuide, track.pitchEditData, editFrameRate);
 
             // 歌声のキャッシュがあれば取得し、なければ音声合成を行う
 
@@ -1502,7 +1529,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               const queryForVolumeGeneration = structuredClone(
                 singingGuide.query,
               );
-              shiftGuidePitch(queryForVolumeGeneration, -keyRangeAdjustment);
+              shiftGuidePitch(
+                queryForVolumeGeneration,
+                -track.keyRangeAdjustment,
+              );
 
               // 音量を生成して、生成した音量を歌い方のクエリにセットする
               // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
@@ -1515,7 +1545,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingGuide.query.volume = volumes;
 
               // 音量のシフトを行う
-              shiftGuideVolume(singingGuide.query, volumeRangeAdjustment);
+              shiftGuideVolume(singingGuide.query, track.volumeRangeAdjustment);
 
               // 末尾のpauの区間の音量を0にする
               muteLastPauSection(
@@ -1774,7 +1804,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes });
+        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
       },
     ),
   },
@@ -2084,7 +2114,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes });
+        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
       },
     ),
   },
@@ -2197,7 +2227,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes });
+        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
       },
     ),
   },
@@ -2597,7 +2627,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
       // ノートを追加してレンダリングする
-      commit("COMMAND_ADD_NOTES", { notes: notesToPaste });
+      commit("COMMAND_ADD_NOTES", {
+        notes: notesToPaste,
+        trackId: state.selectedTrackId,
+      });
       dispatch("RENDER");
       // 貼り付けたノートを選択する
       commit("DESELECT_ALL_NOTES");
@@ -2620,7 +2653,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           Math.round(note.position / snapTicks) * snapTicks;
         return { ...note, position: quantizedPosition };
       });
-      commit("COMMAND_UPDATE_NOTES", { notes: quantizedNotes });
+      commit("COMMAND_UPDATE_NOTES", {
+        notes: quantizedNotes,
+        trackId: state.selectedTrackId,
+      });
       dispatch("RENDER");
     },
   },
@@ -2631,49 +2667,53 @@ export const singingCommandStoreState: SingingCommandStoreState = {};
 export const singingCommandStore = transformCommandStore(
   createPartialStore<SingingCommandStoreTypes>({
     COMMAND_SET_SINGER: {
-      mutation(draft, { singer, withRelated }) {
-        singingStore.mutations.SET_SINGER(draft, { singer, withRelated });
+      mutation(draft, { singer, withRelated, trackId }) {
+        singingStore.mutations.SET_SINGER(draft, {
+          singer,
+          withRelated,
+          trackId,
+        });
       },
-      async action({ dispatch, commit }, { singer, withRelated }) {
+      async action({ dispatch, commit }, { singer, withRelated, trackId }) {
         dispatch("SETUP_SINGER", { singer });
-        commit("COMMAND_SET_SINGER", { singer, withRelated });
+        commit("COMMAND_SET_SINGER", { singer, withRelated, trackId });
 
         dispatch("RENDER");
       },
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
-      mutation(draft, { keyRangeAdjustment }) {
+      mutation(draft, { keyRangeAdjustment, trackId }) {
         singingStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
           keyRangeAdjustment,
+          trackId,
         });
       },
-      async action(
-        { dispatch, commit },
-        { keyRangeAdjustment }: { keyRangeAdjustment: number },
-      ) {
+      async action({ dispatch, commit }, { keyRangeAdjustment, trackId }) {
         if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
           throw new Error("The keyRangeAdjustment is invalid.");
         }
-        commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+        commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+          keyRangeAdjustment,
+          trackId,
+        });
 
         dispatch("RENDER");
       },
     },
     COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
-      mutation(draft, { volumeRangeAdjustment }) {
+      mutation(draft, { volumeRangeAdjustment, trackId }) {
         singingStore.mutations.SET_VOLUME_RANGE_ADJUSTMENT(draft, {
           volumeRangeAdjustment,
+          trackId,
         });
       },
-      async action(
-        { dispatch, commit },
-        { volumeRangeAdjustment }: { volumeRangeAdjustment: number },
-      ) {
+      async action({ dispatch, commit }, { volumeRangeAdjustment, trackId }) {
         if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
           throw new Error("The volumeRangeAdjustment is invalid.");
         }
         commit("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
           volumeRangeAdjustment,
+          trackId,
         });
 
         dispatch("RENDER");
@@ -2776,7 +2816,7 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_UPDATE_NOTES: {
-      mutation(draft, { notes }) {
+      mutation(draft, { notes, trackId }) {
         singingStore.mutations.UPDATE_NOTES(draft, { notes, trackId });
       },
       action({ getters, commit, dispatch }, { notes, trackId }) {
