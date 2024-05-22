@@ -1156,6 +1156,26 @@ export type SingingStoreTypes = {
   COMMAND_QUANTIZE_SELECTED_NOTES: {
     action(): void;
   };
+
+  CREATE_TRACK: {
+    mutation: { trackId: TrackId };
+    action(): TrackId;
+  };
+
+  SELECT_TRACK: {
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
+  };
+
+  SET_TRACKS: {
+    mutation: { tracks: Map<TrackId, Track> };
+    action(payload: { tracks: Map<TrackId, Track> }): void;
+  };
+
+  SET_TRACK_ORDER: {
+    mutation: { trackOrder: TrackId[] };
+    action(payload: { trackOrder: TrackId[] }): void;
+  };
 };
 
 export type SingingCommandStoreState = {

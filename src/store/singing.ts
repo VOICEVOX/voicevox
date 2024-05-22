@@ -1208,7 +1208,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const audioContextRef = audioContext;
         const transportRef = transport;
         const channelStripRef = channelStrip;
-        const tracks = structuredClone(state.tracks);
+        const tracks = structuredClone(toRaw(state.tracks));
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         // 重なっているノートの削除も行う
@@ -2658,6 +2658,47 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         trackId: state.selectedTrackId,
       });
       dispatch("RENDER");
+    },
+  },
+
+  CREATE_TRACK: {
+    mutation(state, { trackId }) {
+      state.tracks.set(trackId, createDefaultTrack());
+      state.trackOrder.push(trackId);
+    },
+    action({ commit, dispatch }) {
+      const trackId = TrackId(uuidv4());
+      commit("CREATE_TRACK", { trackId });
+      dispatch("SELECT_TRACK", { trackId });
+      return trackId;
+    },
+  },
+
+  SELECT_TRACK: {
+    mutation(state, { trackId }) {
+      state.selectedTrackId = trackId;
+    },
+    action({ commit }, { trackId }) {
+      commit("SELECT_TRACK", { trackId });
+    },
+  },
+
+  SET_TRACKS: {
+    mutation(state, { tracks }) {
+      state.tracks = tracks;
+      state.trackOrder = Array.from(tracks.keys());
+    },
+    action({ commit }, { tracks }) {
+      commit("SET_TRACKS", { tracks });
+    },
+  },
+
+  SET_TRACK_ORDER: {
+    mutation(state, { trackOrder }) {
+      state.trackOrder = trackOrder;
+    },
+    action({ commit }, { trackOrder }) {
+      commit("SET_TRACK_ORDER", { trackOrder });
     },
   },
 });

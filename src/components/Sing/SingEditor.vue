@@ -82,11 +82,17 @@ onetimeWatch(
       await store.dispatch("SET_TIME_SIGNATURES", {
         timeSignatures: [createDefaultTimeSignature(1)],
       });
-      await store.dispatch("SET_NOTES", { notes: [] });
+      await store.dispatch("SET_NOTES", {
+        notes: [],
+        trackId: store.state.selectedTrackId,
+      });
       // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
       // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
       try {
-        await store.dispatch("SET_SINGER", { withRelated: true });
+        await store.dispatch("SET_SINGER", {
+          withRelated: true,
+          trackId: store.state.selectedTrackId,
+        });
       } catch (e) {
         window.backend.logError(e);
       }

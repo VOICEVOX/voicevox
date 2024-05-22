@@ -173,6 +173,8 @@ const reassignSubMenuOpen = debounce((idx: number) => {
 }, 100);
 const showSkeleton = computed(() => selectedCharacterInfo.value == undefined);
 
+const selectedTrackId = computed(() => store.state.selectedTrackId);
+
 const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
   const engineId = store.state.engineIds.find((_engineId) =>
     (store.state.characterInfos[_engineId] ?? []).some(
@@ -189,6 +191,8 @@ const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
   store.dispatch("COMMAND_SET_SINGER", {
     singer: { engineId, styleId },
     withRelated: true,
+
+    trackId: selectedTrackId.value,
   });
 };
 
