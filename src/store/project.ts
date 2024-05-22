@@ -456,6 +456,22 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
           }
 
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.20.0",
+              semverSatisfiesOptions,
+            )
+          ) {
+            // tracks: Track[] -> tracks: Record<TrackId, Track> + trackOrder: TrackId[]
+            const newTracks: Record<TrackId, unknown> = {};
+            for (const track of projectData.song.tracks) {
+              newTracks[TrackId(uuidv4())] = track;
+            }
+            projectData.song.tracks = newTracks;
+            projectData.song.trackOrder = Object.keys(newTracks);
+          }
+
           // Validation check
           // トークはvalidateTalkProjectで検証する
           // ソングはSET_SCOREの中の`isValidScore`関数で検証される
