@@ -27,6 +27,26 @@ function checkIsMac(): boolean {
 }
 export const isMac = checkIsMac();
 
+function checkIsWindows(): boolean {
+  let isWindows: boolean | undefined = undefined;
+  if (process?.platform) {
+    // electronのメインプロセス用
+    isWindows = process.platform === "win32";
+  } else if (navigator?.userAgentData) {
+    // electronのレンダラープロセス用、Chrome系統が実装する実験的機能
+    isWindows = navigator.userAgentData.platform.toLowerCase().includes("win");
+  } else if (navigator?.platform) {
+    // ブラウザ用、非推奨機能
+    isWindows = navigator.platform.toLowerCase().includes("win");
+  } else {
+    // ブラウザ用、不正確
+    isWindows = navigator.userAgent.toLowerCase().includes("win");
+  }
+  return isWindows;
+}
+
+export const isWindows = checkIsWindows();
+
 const urlStringSchema = z.string().url().brand("URL");
 export type UrlString = z.infer<typeof urlStringSchema>;
 export const UrlString = (url: string): UrlString => urlStringSchema.parse(url);

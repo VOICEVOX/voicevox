@@ -1,8 +1,11 @@
 import { sep } from "path";
 import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./browserConfig";
-import { SandboxKey } from "@/type/preload";
+import { SandboxKey, isWindows } from "@/type/preload";
 import { failure, success } from "@/type/result";
+import { createLogger } from "@/domain/frontend/log";
+
+const log = createLogger("fileImpl");
 
 const storeDirectoryHandle = async (
   directoryHandle: FileSystemDirectoryHandle,
@@ -176,3 +179,40 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
 
     return Promise.resolve(fileEntries.includes(fileName));
   };
+
+const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
+
+const filePrefix = isWindows ? "Z:/fakepath/" : "/fakepath/";
+
+export const showOpenFilePickerImpl = async (options: {
+  multiple: boolean;
+  fileTypes: {
+    description: string;
+    accept: Record<string, string[]>;
+  }[];
+}) => {
+  try {
+    const handles = await showOpenFilePicker({
+      excludeAcceptAllOption: true,
+      multiple: options.multiple,
+      types: options.fileTypes,
+    });
+    for (const handle of handles) {
+      fileHandleMap.set(filePrefix + handle.name, handle);
+    }
+    return handles.map((handle) => filePrefix + handle.name);
+  } catch (e) {
+    log.warn(`showOpenFilePicker error: ${e}`);
+    return undefined;
+  }
+};
+
+export const readFileImpl = async (filePath: string) => {
+  const fileHandle = fileHandleMap.get(filePath);
+  if (fileHandle == undefined) {
+    return failure(new Error("ファイルが見つかりません"));
+  }
+  const file = await fileHandle.getFile();
+  const buffer = await file.arrayBuffer();
+  return success(buffer);
+};

@@ -1,7 +1,9 @@
 import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
+  readFileImpl,
   showOpenDirectoryDialogImpl,
+  showOpenFilePickerImpl,
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
@@ -127,10 +129,18 @@ export const api: Sandbox = {
       }
     });
   },
-  showProjectLoadDialog(/* obj: { title: string } */) {
-    throw new Error(
-      "ブラウザ版では現在ファイルの読み込みをサポートしていません",
-    );
+  async showProjectLoadDialog() {
+    return showOpenFilePickerImpl({
+      multiple: false,
+      fileTypes: [
+        {
+          description: "Voicevox Project File",
+          accept: {
+            "application/json": [".vvproj"],
+          },
+        },
+      ],
+    });
   },
   showMessageDialog(obj: {
     type: "none" | "info" | "error" | "question" | "warning";
@@ -156,18 +166,34 @@ export const api: Sandbox = {
       `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
     );
   },
-  showImportFileDialog(/* obj: { title: string } */) {
-    throw new Error(
-      "ブラウザ版では現在ファイルの読み込みをサポートしていません",
-    );
+  async showImportFileDialog(obj) {
+    const fileHandle = await showOpenFilePickerImpl({
+      multiple: false,
+      fileTypes: [
+        obj.extensions
+          ? {
+              description: obj.name || obj.extensions.join(", "),
+              accept: {
+                "application/octet-stream": obj.extensions.map(
+                  (ext) => `.${ext}`,
+                ),
+              },
+            }
+          : {
+              accept: {
+                "application/octet-stream": [".*"],
+              },
+              description: "All files",
+            },
+      ],
+    });
+    return fileHandle?.[0];
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
     return writeFileImpl(obj);
   },
-  readFile(/* obj: { filePath: string } */) {
-    throw new Error(
-      "ブラウザ版では現在ファイルの読み込みをサポートしていません",
-    );
+  readFile(obj: { filePath: string }) {
+    return readFileImpl(obj.filePath);
   },
   isAvailableGPUMode() {
     // TODO: WebAssembly版をサポートする時に実装する
