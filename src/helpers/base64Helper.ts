@@ -1,5 +1,6 @@
 import { toBytes } from "fast-base64";
 
+// base64 -> uriのキャッシュ。
 const cache = new Map<string, string>();
 
 function detectImageTypeFromBase64(data: string): string {
