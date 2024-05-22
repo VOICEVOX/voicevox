@@ -196,12 +196,11 @@
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
 import { computed, Ref, ref } from "vue";
-import { base64ImageToUri } from "@/helpers/base64Helper";
 import { useStore } from "@/store";
-import { CharacterInfo, SpeakerId, EngineId, Voice } from "@/type/preload";
+import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
 import { getDefaultStyle } from "@/domain/talk";
-import { asyncComputed } from "@/composables/asyncComputed";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 const props = withDefaults(
   defineProps<{
@@ -276,27 +275,7 @@ const selectedStyleInfo = computed(() => {
   return style;
 });
 
-const engineIcons = asyncComputed(
-  () => store.state.engineManifests,
-  {} as Record<EngineId, string>,
-  async (engineManifests) => {
-    const engineIcons: Record<EngineId, string> = {};
-    for (const [engineId, manifest] of Object.entries(engineManifests)) {
-      engineIcons[EngineId(engineId)] = await base64ImageToUri(manifest.icon);
-    }
-
-    return engineIcons;
-  },
-);
-
-computed(() =>
-  Object.fromEntries(
-    store.state.engineIds.map((engineId) => [
-      engineId,
-      base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ]),
-  ),
-);
+const engineIcons = useEngineIcons(() => store.state.engineManifests);
 
 const getDefaultStyleWrapper = (speakerUuid: SpeakerId) =>
   getDefaultStyle(

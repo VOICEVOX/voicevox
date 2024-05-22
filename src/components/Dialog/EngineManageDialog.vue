@@ -348,10 +348,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { base64ImageToUri } from "@/helpers/base64Helper";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
-import { asyncComputed } from "@/composables/asyncComputed";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 type EngineLoaderType = "dir" | "vvpp";
 
@@ -400,18 +399,7 @@ const categorizedEngineIds = computed(() => {
 const engineInfos = computed(() => store.state.engineInfos);
 const engineStates = computed(() => store.state.engineStates);
 
-const engineIcons = asyncComputed(
-  () => store.state.engineManifests,
-  {} as Record<EngineId, string>,
-  async (engineManifests) => {
-    const engineIcons: Record<EngineId, string> = {};
-    for (const [engineId, manifest] of Object.entries(engineManifests)) {
-      engineIcons[EngineId(engineId)] = await base64ImageToUri(manifest.icon);
-    }
-
-    return engineIcons;
-  },
-);
+const engineIcons = useEngineIcons(() => store.state.engineManifests);
 const engineManifests = computed(() => store.state.engineManifests);
 const engineVersions = ref<Record<EngineId, string>>({});
 
