@@ -2687,6 +2687,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { tracks }) {
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
+      state.selectedTrackId = state.trackOrder[0];
     },
     action({ commit }, { tracks }) {
       commit("SET_TRACKS", { tracks });
