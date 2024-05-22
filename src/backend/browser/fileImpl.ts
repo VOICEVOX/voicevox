@@ -182,6 +182,7 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
 
 const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
 
+// dirnameなどが呼ばれる可能性があるので、ファイル名の前にそれっぽいパスを付与しておく。
 const filePrefix = isWindows ? "Z:/fakepath/" : "/fakepath/";
 
 export const showOpenFilePickerImpl = async (options: {
