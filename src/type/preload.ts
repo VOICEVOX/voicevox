@@ -7,45 +7,28 @@ export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
 
-// electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なmacOS判定
-function checkIsMac(): boolean {
-  let isMac: boolean | undefined = undefined;
+// electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なOS判定
+function checkOs(os: "windows" | "mac"): boolean {
+  let isSpecifiedOs: boolean | undefined = undefined;
   if (process?.platform) {
     // electronのメインプロセス用
-    isMac = process.platform === "darwin";
+    isSpecifiedOs =
+      process.platform === (os === "windows" ? "win32" : "darwin");
   } else if (navigator?.userAgentData) {
     // electronのレンダラープロセス用、Chrome系統が実装する実験的機能
-    isMac = navigator.userAgentData.platform.toLowerCase().includes("mac");
+    isSpecifiedOs = navigator.userAgentData.platform.toLowerCase().includes(os);
   } else if (navigator?.platform) {
     // ブラウザ用、非推奨機能
-    isMac = navigator.platform.toLowerCase().includes("mac");
+    isSpecifiedOs = navigator.platform.toLowerCase().includes(os);
   } else {
     // ブラウザ用、不正確
-    isMac = navigator.userAgent.toLowerCase().includes("mac");
+    isSpecifiedOs = navigator.userAgent.toLowerCase().includes(os);
   }
-  return isMac;
-}
-export const isMac = checkIsMac();
-
-function checkIsWindows(): boolean {
-  let isWindows: boolean | undefined = undefined;
-  if (process?.platform) {
-    // electronのメインプロセス用
-    isWindows = process.platform === "win32";
-  } else if (navigator?.userAgentData) {
-    // electronのレンダラープロセス用、Chrome系統が実装する実験的機能
-    isWindows = navigator.userAgentData.platform.toLowerCase().includes("win");
-  } else if (navigator?.platform) {
-    // ブラウザ用、非推奨機能
-    isWindows = navigator.platform.toLowerCase().includes("win");
-  } else {
-    // ブラウザ用、不正確
-    isWindows = navigator.userAgent.toLowerCase().includes("win");
-  }
-  return isWindows;
+  return isSpecifiedOs;
 }
 
-export const isWindows = checkIsWindows();
+export const isMac = checkOs("mac");
+export const isWindows = checkOs("windows");
 
 const urlStringSchema = z.string().url().brand("URL");
 export type UrlString = z.infer<typeof urlStringSchema>;
