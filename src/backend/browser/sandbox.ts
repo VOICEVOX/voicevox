@@ -166,7 +166,11 @@ export const api: Sandbox = {
       `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
     );
   },
-  async showImportFileDialog(obj) {
+  async showImportFileDialog(obj: {
+    name?: string;
+    extensions?: string[];
+    title: string;
+  }) {
     const fileHandle = await showOpenFilePickerImpl({
       multiple: false,
       fileTypes: [
