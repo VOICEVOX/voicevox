@@ -11,10 +11,6 @@ import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
   configSchema,
-  EngineId,
-  EngineSettingType,
-  EngineSettings,
-  HotkeySettingType,
   Sandbox,
   ThemeConf,
 } from "@/type/preload";
@@ -73,7 +69,7 @@ export const api: Sandbox = {
     // NOTE: ブラウザ版ではサポートされていません
     return Promise.resolve({});
   },
-  showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
+  showAudioSaveDialog(obj) {
     return new Promise((resolve, reject) => {
       if (obj.defaultPath == undefined) {
         reject(
@@ -87,7 +83,7 @@ export const api: Sandbox = {
       }
     });
   },
-  showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
+  showTextSaveDialog(obj) {
     return new Promise((resolve, reject) => {
       if (obj.defaultPath == undefined) {
         reject(
@@ -101,19 +97,19 @@ export const api: Sandbox = {
       }
     });
   },
-  showSaveDirectoryDialog(obj: { title: string }) {
+  showSaveDirectoryDialog(obj) {
     return showOpenDirectoryDialogImpl(obj);
   },
-  showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
+  showVvppOpenDialog(obj) {
     // NOTE: 今後接続先を変える手段としてVvppが使われるかもしれないので、そのタイミングで実装する
     throw new Error(
       `not implemented: showVvppOpenDialog, request: ${JSON.stringify(obj)}`,
     );
   },
-  showOpenDirectoryDialog(obj: { title: string }) {
+  showOpenDirectoryDialog(obj) {
     return showOpenDirectoryDialogImpl(obj);
   },
-  showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
+  showProjectSaveDialog(obj) {
     return new Promise((resolve, reject) => {
       if (obj.defaultPath == undefined) {
         reject(
@@ -132,24 +128,13 @@ export const api: Sandbox = {
       "ブラウザ版では現在ファイルの読み込みをサポートしていません",
     );
   },
-  showMessageDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-  }) {
+  showMessageDialog(obj) {
     window.alert(`${obj.title}\n${obj.message}`);
     // NOTE: どの呼び出し元も、return valueを使用していないので雑に対応している
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return Promise.resolve({} as any);
   },
-  showQuestionDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
-  }) {
+  showQuestionDialog(obj) {
     // FIXME
     // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
     throw new Error(
@@ -161,7 +146,7 @@ export const api: Sandbox = {
       "ブラウザ版では現在ファイルの読み込みをサポートしていません",
     );
   },
-  writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
+  writeFile(obj) {
     return writeFileImpl(obj);
   },
   readFile(/* obj: { filePath: string } */) {
@@ -198,15 +183,15 @@ export const api: Sandbox = {
     throw new Error(`Not supported on Browser version: maximizeWindow`);
   },
   /* eslint-disable no-console */ // ログの吐き出し先は console ぐらいしかないので、ここでは特例で許可している
-  logError(...params: unknown[]) {
+  logError(...params) {
     console.error(...params);
     return;
   },
-  logWarn(...params: unknown[]) {
+  logWarn(...params) {
     console.warn(...params);
     return;
   },
-  logInfo(...params: unknown[]) {
+  logInfo(...params) {
     console.info(...params);
     return;
   },
@@ -223,7 +208,7 @@ export const api: Sandbox = {
   openEngineDirectory(/* engineId: EngineId */) {
     throw new Error(`Not supported on Browser version: openEngineDirectory`);
   },
-  async hotkeySettings(newData?: HotkeySettingType) {
+  async hotkeySettings(newData?) {
     type HotkeySettingType = ReturnType<
       (typeof configSchema)["parse"]
     >["hotkeySettings"];
@@ -241,7 +226,7 @@ export const api: Sandbox = {
     }
     return this.getSetting("hotkeySettings") as Promise<HotkeySettingType>;
   },
-  checkFileExists(file: string) {
+  checkFileExists(file) {
     return checkFileExistsImpl(file);
   },
   changePinWindow() {
@@ -257,7 +242,7 @@ export const api: Sandbox = {
     // TODO: Impl
     return;
   },
-  async theme(newData?: string) {
+  async theme(newData?) {
     if (newData != undefined) {
       await this.setSetting("currentTheme", newData);
       return;
@@ -297,7 +282,7 @@ export const api: Sandbox = {
     configManager.set(key, newValue);
     return newValue;
   },
-  async setEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
+  async setEngineSetting(engineId, engineSetting) {
     const engineSettings = (await this.getSetting(
       "engineSettings",
     )) as EngineSettings;
