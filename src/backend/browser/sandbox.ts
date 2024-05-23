@@ -13,6 +13,7 @@ import {
   configSchema,
   Sandbox,
   ThemeConf,
+  EngineSettings,
 } from "@/type/preload";
 import {
   ContactTextFileName,
