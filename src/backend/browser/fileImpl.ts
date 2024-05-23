@@ -1,4 +1,5 @@
 import { sep } from "path";
+import { v4 as uuidv4 } from "uuid";
 import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./browserConfig";
 import { SandboxKey, isWindows } from "@/type/preload";
@@ -180,6 +181,7 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
     return Promise.resolve(fileEntries.includes(fileName));
   };
 
+// 疑似パス -> FileSystemFileHandle のマップ
 const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
 
 // dirnameなどが呼ばれる可能性があるので、ファイル名の前にそれっぽいパスを付与しておく。
@@ -198,10 +200,13 @@ export const showOpenFilePickerImpl = async (options: {
       multiple: options.multiple,
       types: options.fileTypes,
     });
+    const paths = [];
     for (const handle of handles) {
-      fileHandleMap.set(filePrefix + handle.name, handle);
+      const fakePath = `${filePrefix}${uuidv4()}/${handle.name}`;
+      fileHandleMap.set(fakePath, handle);
+      paths.push(fakePath);
     }
-    return handles.map((handle) => filePrefix + handle.name);
+    return handles.length > 0 ? paths : undefined;
   } catch (e) {
     log.warn(`showOpenFilePicker error: ${e}`);
     return undefined;
