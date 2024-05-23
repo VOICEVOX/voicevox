@@ -170,21 +170,18 @@ export const api: Sandbox = {
     const fileHandle = await showOpenFilePickerImpl({
       multiple: false,
       fileTypes: [
-        obj.extensions
-          ? {
-              description: obj.name || obj.extensions.join(", "),
-              accept: {
+        {
+          description: obj.name ?? "Text",
+          accept: obj.extensions
+            ? {
                 "application/octet-stream": obj.extensions.map(
                   (ext) => `.${ext}`,
                 ),
+              }
+            : {
+                "plain/text": [".txt"],
               },
-            }
-          : {
-              accept: {
-                "application/octet-stream": [".*"],
-              },
-              description: "All files",
-            },
+        },
       ],
     });
     return fileHandle?.[0];
