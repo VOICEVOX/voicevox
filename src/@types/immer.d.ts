@@ -1,3 +1,4 @@
+// immerの内部APIの型定義。exportsで指定されていないファイルを参照するために用意したもの。
 declare module "immer/src/plugins/patches" {
   export function enablePatches(): void;
 }
