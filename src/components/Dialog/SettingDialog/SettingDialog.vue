@@ -120,7 +120,7 @@
               </QCardActions>
               <ToggleCell
                 title="プリセット機能"
-                description="プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
+                description="ONの場合、プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
                 :model-value="experimentalSetting.enablePreset"
                 @updated="changeEnablePreset"
               />
