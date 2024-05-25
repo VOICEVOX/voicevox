@@ -21,9 +21,6 @@ import {
   SingingVoiceSourceHash,
   SequencerEditTarget,
   PhraseSourceHash,
-  separatePhraseKey,
-  createPhraseKey,
-  PhraseKey,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
@@ -140,7 +137,7 @@ if (window.AudioContext) {
 
 const playheadPosition = new FrequentlyUpdatedState(0);
 const singingVoices = new Map<SingingVoiceSourceHash, SingingVoice>();
-const sequences = new Map<string, Sequence>(); // キーはPhraseKey
+const sequences = new Map<string, Sequence>(); // キーはPhraseSourceHash
 const animationTimer = new AnimationTimer();
 
 const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
@@ -632,7 +629,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseKey,
         singingGuideKey,
       }: {
-        phraseKey: PhraseKey;
+        phraseKey: PhraseSourceHash;
         singingGuideKey: SingingGuideSourceHash | undefined;
       },
     ) {
@@ -649,7 +646,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseKey,
         singingVoiceKey,
       }: {
-        phraseKey: PhraseKey;
+        phraseKey: PhraseSourceHash;
         singingVoiceKey: SingingVoiceSourceHash | undefined;
       },
     ) {
@@ -1239,7 +1236,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // フレーズを更新する
 
-        const foundPhrases = new Map<PhraseKey, Phrase>();
+        const foundPhrases = new Map<PhraseSourceHash, Phrase>();
         for (const [trackId, track] of tracks) {
           if (!track.singer) {
             continue;
@@ -1252,7 +1249,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             firstRestMinDurationSeconds,
           );
           for (const [phraseHash, phrase] of phrases) {
-            const phraseKey = createPhraseKey(trackId, phraseHash);
+            const phraseKey = createPhraseSourceHash(trackId, phraseHash);
             foundPhrases.set(phraseKey, phrase);
           }
         }
@@ -1279,7 +1276,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
         }
-        const newPhrases = new Map<PhraseKey, Phrase>();
+        const newPhrases = new Map<PhraseSourceHash, Phrase>();
 
         const getSingerAndFrameRate = (singer: Singer | undefined) =>
           singer && {
@@ -1288,7 +1285,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           };
 
         for (const [phraseKey, foundPhrase] of foundPhrases) {
-          const [trackId] = separatePhraseKey(phraseKey);
+          const [trackId] = separatePhraseSourceHash(phraseKey);
           const existingPhrase = state.phrases.get(phraseKey);
           if (!existingPhrase) {
             // 新しいフレーズの場合
@@ -1422,7 +1419,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrasesToBeRendered,
             playheadPosition.value,
           );
-          const [trackId] = separatePhraseKey(phraseKey);
+          const [trackId] = separatePhraseSourceHash(phraseKey);
           phrasesToBeRendered.delete(phraseKey);
 
           const track = getOrThrow(tracks, trackId);

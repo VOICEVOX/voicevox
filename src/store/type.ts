@@ -811,15 +811,6 @@ export type PhraseSource = {
 export const phraseSourceHashSchema = z.string().brand<"PhraseSourceHash">();
 export type PhraseSourceHash = z.infer<typeof phraseSourceHashSchema>;
 
-export type PhraseKey = `${TrackId}:${PhraseSourceHash}`;
-export const separatePhraseKey = (
-  key: PhraseKey,
-): [TrackId, PhraseSourceHash] => key.split(":") as [TrackId, PhraseSourceHash];
-export const createPhraseKey = (
-  trackId: TrackId,
-  sourceHash: PhraseSourceHash,
-): PhraseKey => `${trackId}:${sourceHash}`;
-
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
 export type SingingStoreState = {
@@ -830,7 +821,7 @@ export type SingingStoreState = {
   trackOrder: TrackId[];
   selectedTrackId: TrackId;
   editFrameRate: number;
-  phrases: Map<PhraseKey, Phrase>;
+  phrases: Map<TrackId, Map<PhraseSourceHash, Phrase>>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
@@ -971,26 +962,29 @@ export type SingingStoreTypes = {
   };
 
   SET_PHRASES: {
-    mutation: { phrases: Map<PhraseKey, Phrase> };
+    mutation: { phrases: Map<TrackId, Map<PhraseSourceHash, Phrase>> };
   };
 
   SET_STATE_TO_PHRASE: {
     mutation: {
-      phraseKey: PhraseKey;
+      trackId: TrackId;
+      phraseKey: PhraseSourceHash;
       phraseState: PhraseState;
     };
   };
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
     mutation: {
-      phraseKey: PhraseKey;
+      trackId: TrackId;
+      phraseKey: PhraseSourceHash;
       singingGuideKey: SingingGuideSourceHash | undefined;
     };
   };
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
     mutation: {
-      phraseKey: PhraseKey;
+      trackId: TrackId;
+      phraseKey: PhraseSourceHash;
       singingVoiceKey: SingingVoiceSourceHash | undefined;
     };
   };
