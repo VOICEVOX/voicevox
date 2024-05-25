@@ -560,28 +560,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_PITCH_EDIT_DATA: {
     // ピッチ編集データをセットする。
     // track.pitchEditDataの長さが足りない場合は、伸長も行う。
-    mutation(state, { data, startFrame, trackId }) {
+    mutation(state, { pitchArray, startFrame, trackId }) {
       const track = getOrThrow(state.tracks, trackId);
       const pitchEditData = track.pitchEditData;
       const tempData = [...pitchEditData];
-      const endFrame = startFrame + data.length;
+      const endFrame = startFrame + pitchArray.length;
       if (tempData.length < endFrame) {
         const valuesToPush = new Array(endFrame - tempData.length).fill(
           VALUE_INDICATING_NO_DATA,
         );
         tempData.push(...valuesToPush);
       }
-      tempData.splice(startFrame, data.length, ...data);
+      tempData.splice(startFrame, pitchArray.length, ...pitchArray);
       track.pitchEditData = tempData;
     },
-    async action({ dispatch, commit }, { data, startFrame, trackId }) {
+    async action({ dispatch, commit }, { pitchArray, startFrame, trackId }) {
       if (startFrame < 0) {
         throw new Error("startFrame must be greater than or equal to 0.");
       }
-      if (!isValidPitchEditData(data)) {
+      if (!isValidPitchEditData(pitchArray)) {
         throw new Error("The pitch edit data is invalid.");
       }
-      commit("SET_PITCH_EDIT_DATA", { data, startFrame, trackId });
+      commit("SET_PITCH_EDIT_DATA", { pitchArray, startFrame, trackId });
 
       dispatch("RENDER");
     },
@@ -2901,21 +2901,25 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_SET_PITCH_EDIT_DATA: {
-      mutation(draft, { data, startFrame, trackId }) {
+      mutation(draft, { pitchArray, startFrame, trackId }) {
         singingStore.mutations.SET_PITCH_EDIT_DATA(draft, {
-          data,
+          pitchArray,
           startFrame,
           trackId,
         });
       },
-      action({ commit, dispatch }, { data, startFrame, trackId }) {
+      action({ commit, dispatch }, { pitchArray, startFrame, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
-        if (!isValidPitchEditData(data)) {
+        if (!isValidPitchEditData(pitchArray)) {
           throw new Error("The pitch edit data is invalid.");
         }
-        commit("COMMAND_SET_PITCH_EDIT_DATA", { data, startFrame, trackId });
+        commit("COMMAND_SET_PITCH_EDIT_DATA", {
+          pitchArray,
+          startFrame,
+          trackId,
+        });
 
         dispatch("RENDER");
       },

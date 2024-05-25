@@ -134,7 +134,7 @@ const applySongProjectToStore = async (
       trackId,
     }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
     await dispatch("SET_PITCH_EDIT_DATA", {
-      data: track.pitchEditData,
+      pitchArray: track.pitchEditData,
       startFrame: 0,
       trackId,
     });

@@ -953,9 +953,9 @@ export type SingingStoreTypes = {
   };
 
   SET_PITCH_EDIT_DATA: {
-    mutation: { data: number[]; startFrame: number; trackId: TrackId };
+    mutation: { pitchArray: number[]; startFrame: number; trackId: TrackId };
     action(payload: {
-      data: number[];
+      pitchArray: number[];
       startFrame: number;
       trackId: TrackId;
     }): void;
@@ -1242,9 +1242,9 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_SET_PITCH_EDIT_DATA: {
-    mutation: { data: number[]; startFrame: number; trackId: TrackId };
+    mutation: { pitchArray: number[]; startFrame: number; trackId: TrackId };
     action(payload: {
-      data: number[];
+      pitchArray: number[];
       startFrame: number;
       trackId: TrackId;
     }): void;

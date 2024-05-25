@@ -947,7 +947,7 @@ const endPreview = () => {
         data = data.map((value) => Math.exp(value));
 
         store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
-          data,
+          pitchArray: data,
           startFrame: previewPitchEdit.value.startFrame,
           trackId: selectedTrackId.value,
         });
