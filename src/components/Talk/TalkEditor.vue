@@ -158,6 +158,10 @@ const store = useStore();
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
+const isMultiSelectEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiSelect,
+);
+
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 
 registerHotkeyWithCleanup({
@@ -251,9 +255,9 @@ registerHotkeyWithCleanup({
 registerHotkeyWithCleanup({
   editor: "talk",
   enableInTextbox: false,
-  name: "全セルを選択",
+  name: "すべて選択",
   callback: () => {
-    if (!uiLocked.value) {
+    if (!uiLocked.value && isMultiSelectEnabled.value) {
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: audioKeys.value,
       });

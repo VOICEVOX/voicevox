@@ -95,6 +95,9 @@ const titleText = computed(
 );
 const canUndo = computed(() => store.getters.CAN_UNDO(props.editor));
 const canRedo = computed(() => store.getters.CAN_REDO(props.editor));
+const isMultiSelectEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiSelect,
+);
 
 // FIXME: App.vue内に移動する
 watch(titleText, (newTitle) => {
@@ -362,18 +365,22 @@ const menudata = computed<MenuItemData[]>(() => [
         disabled: !canRedo.value,
         disableWhenUiLocked: true,
       },
-      {
-        type: "button",
-        label: "全セルを選択",
-        onClick: async () => {
-          if (!uiLocked.value) {
-            await store.dispatch("SET_SELECTED_AUDIO_KEYS", {
-              audioKeys: audioKeys.value,
-            });
-          }
-        },
-        disableWhenUiLocked: true,
-      },
+      ...(isMultiSelectEnabled.value
+        ? [
+            {
+              type: "button",
+              label: "すべて選択",
+              onClick: async () => {
+                if (!uiLocked.value && isMultiSelectEnabled.value) {
+                  await store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+                    audioKeys: audioKeys.value,
+                  });
+                }
+              },
+              disableWhenUiLocked: true,
+            } as const,
+          ]
+        : []),
       ...props.editSubMenuData,
     ],
   },
