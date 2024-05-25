@@ -6,7 +6,7 @@ import semver from "semver";
 
 import { LatestProjectType, projectSchema } from "./schema";
 import { AccentPhrase } from "@/openapi";
-import { CharacterInfo, EngineId, StyleId, Voice } from "@/type/preload";
+import { EngineId, StyleId, Voice } from "@/type/preload";
 import {
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
