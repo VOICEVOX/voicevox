@@ -28,25 +28,14 @@ export type MutationsBase = Record<string, any>;
 
 export type PromiseType<T> = T extends Promise<infer P> ? P : T;
 
-export class Store<
+export interface Store<
   S,
   G extends GettersBase,
   A extends ActionsBase,
   M extends MutationsBase,
-> extends BaseStore<S> {
-  constructor(options: OriginalStoreOptions<S>) {
-    super(options);
-  }
-
-  readonly getters!: G;
-
-  // 既に型がつけられているものを上書きすることになるので、TS2564を吐く、それの回避
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+> extends Omit<BaseStore<S>, "getters" | "dispatch" | "commit"> {
+  readonly getters: G;
   dispatch: Dispatch<A>;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   commit: Commit<M>;
 }
 
@@ -66,6 +55,15 @@ export function createStore<
 }
 
 export function useStore<
+  S,
+  G extends GettersBase,
+  A extends ActionsBase,
+  M extends MutationsBase,
+>(injectKey?: InjectionKey<Store<S, G, A, M>> | string): Store<S, G, A, M> {
+  return baseUseStore<S>(injectKey) as Store<S, G, A, M>;
+}
+
+export function useDotNotationStore<
   S,
   G extends GettersBase,
   A extends ActionsBase,
