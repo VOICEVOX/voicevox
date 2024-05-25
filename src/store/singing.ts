@@ -232,11 +232,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const engineId = singer?.engineId ?? state.engineIds[0];
 
-      // 最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
-      // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
       const defaultStyleId =
         userOrderedCharacterInfos[0].metas.styles[0].styleId;
-
       const styleId = singer?.styleId ?? defaultStyleId;
 
       dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
