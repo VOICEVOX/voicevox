@@ -8,12 +8,12 @@ import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 
 const engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
 
-const vvprojDir = path.resolve(__dirname, "vvproj");
+const vvprojDir = "tests/unit/domain/vvproj/";
 
 describe("migrateProjectFileObject", () => {
   test("v0.14.11", async () => {
     // ８期生のプロジェクトファイル
-    const vvprojFile = path.resolve(vvprojDir, "v0.14.11.vvproj");
+    const vvprojFile = path.resolve(vvprojDir, "0.14.11.vvproj");
     const projectData = JSON.parse(fs.readFileSync(vvprojFile, "utf-8"));
 
     await migrateProjectFileObject(projectData, {
