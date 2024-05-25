@@ -604,6 +604,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             tempos,
             timeSignatures,
             tracks,
+            trackOrder,
           } = context.state;
           const projectData: LatestProjectType = {
             appVersion: appInfos.version,
@@ -616,7 +617,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               tempos,
               timeSignatures,
               tracks: Object.fromEntries(tracks),
-              trackOrder: Array.from(tracks.keys()),
+              trackOrder,
             },
           };
 
