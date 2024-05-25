@@ -1,5 +1,5 @@
 import { calculateHash } from "./utility";
-import { convertLongVowel } from "@/store/utility";
+import { convertLongVowel } from "@/domain/japanese";
 import {
   Note,
   Phrase,
