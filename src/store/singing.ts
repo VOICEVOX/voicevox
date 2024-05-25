@@ -643,7 +643,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
-    mutation(state, { phraseKey, singingVoiceKey }) {
+    mutation(
+      state,
+      {
+        phraseKey,
+        singingVoiceKey,
+      }: {
+        phraseKey: PhraseKey;
+        singingVoiceKey: SingingVoiceSourceHash | undefined;
+      },
+    ) {
       const phrase = getOrThrow(state.phrases, phraseKey);
 
       phrase.singingVoiceKey = singingVoiceKey;
