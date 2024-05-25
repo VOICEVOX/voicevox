@@ -2666,10 +2666,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks.set(trackId, createDefaultTrack());
       state.trackOrder.push(trackId);
     },
-    action({ commit, dispatch }) {
+    action({ commit }) {
       const trackId = TrackId(uuidv4());
       commit("CREATE_TRACK", { trackId });
-      dispatch("SELECT_TRACK", { trackId });
       return trackId;
     },
   },
