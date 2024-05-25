@@ -103,6 +103,43 @@ export interface Commit<M extends MutationsBase> {
   ): void;
 }
 
+export type DotNotationDispatch<A extends ActionsBase> = {
+  [T in keyof A]: (
+    ...payload: Parameters<A[T]>
+  ) => Promise<PromiseType<ReturnType<A[T]>>>;
+};
+
+const dotNotationDispatchProxy = <A extends ActionsBase>(
+  dispatch: Dispatch<A>,
+): DotNotationDispatch<A> =>
+  new Proxy(
+    { dispatch },
+    {
+      get(target, tag: string) {
+        return (...payloads: Parameters<A[string]>) =>
+          target.dispatch(tag, ...payloads);
+      },
+    },
+  ) as DotNotationDispatch<A>;
+
+export type DotNotationCommit<M extends MutationsBase> = {
+  [T in keyof M]: (
+    ...payload: M[T] extends undefined ? void[] : [M[T]]
+  ) => void;
+};
+
+const dotNotationCommitProxy = <M extends MutationsBase>(
+  commit: Commit<M>,
+): DotNotationCommit<M> =>
+  new Proxy(
+    { commit },
+    {
+      get(target, tag: string) {
+        return (...payloads: [M[string]]) => target.commit(tag, ...payloads);
+      },
+    },
+  ) as DotNotationCommit<M>;
+
 export interface StoreOptions<
   S,
   G extends GettersBase,
@@ -161,6 +198,45 @@ export interface ActionObject<
   handler: ActionHandler<S, R, SG, SA, SM, K>;
 }
 
+export interface DotNotationActionContext<
+  S,
+  R,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+> {
+  actions: DotNotationDispatch<SA>;
+  mutations: DotNotationCommit<SM>;
+  state: S;
+  getters: SG;
+  rootState: R;
+  rootGetters: any;
+}
+
+export type DotNotationActionHandler<
+  S,
+  R,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+  K extends keyof SA,
+> = (
+  this: Store<S, SG, SA, SM>,
+  injectee: DotNotationActionContext<S, R, SG, SA, SM>,
+  payload: Parameters<SA[K]>[0],
+) => ReturnType<SA[K]>;
+export interface DotNotationActionObject<
+  S,
+  R,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+  K extends keyof SA,
+> {
+  root?: boolean;
+  handler: DotNotationActionHandler<S, R, SG, SA, SM, K>;
+}
+
 export type Getter<S, R, G, K extends keyof G, SG extends GettersBase> = (
   state: S,
   getters: SG,
@@ -185,6 +261,63 @@ export type Mutation<S, M extends MutationsBase, K extends keyof M> = (
   state: S,
   payload: M[K],
 ) => void;
+
+export type DotNotationAction<
+  S,
+  R,
+  A extends ActionsBase,
+  K extends keyof A,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+> =
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  | DotNotationActionHandler<S, R, SG, SA, SM, K>
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  | DotNotationActionObject<S, R, SG, SA, SM, K>;
+
+// ドット記法のActionを通常のActionに変換する関数
+const unwrapDotNotationAction = <
+  S,
+  R,
+  A extends ActionsBase,
+  K extends keyof A,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+>(
+  dotNotationAction: DotNotationAction<S, R, A, K, SG, SA, SM>,
+): Action<S, R, A, K, SG, SA, SM> => {
+  const wrappedHandler =
+    typeof dotNotationAction === "function"
+      ? dotNotationAction
+      : dotNotationAction.handler;
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const handler: ActionHandler<S, R, SG, SA, SM, K> = function (
+    injectee,
+    payload,
+  ) {
+    const dotNotationInjectee = {
+      ...injectee,
+      actions: dotNotationDispatchProxy(injectee.dispatch),
+      mutations: dotNotationCommitProxy(injectee.commit),
+    };
+    return wrappedHandler.call(this, dotNotationInjectee, payload);
+  };
+
+  if (typeof dotNotationAction === "function") {
+    return handler;
+  } else {
+    return {
+      ...dotNotationAction,
+      handler,
+    };
+  }
+};
 
 export type GetterTree<
   S,
@@ -268,6 +401,30 @@ type PartialStoreOptions<
   };
 };
 
+type DotNotationPartialStoreOptions<
+  S,
+  T extends StoreTypesBase,
+  G extends GettersBase,
+  A extends ActionsBase,
+  M extends MutationsBase,
+> = {
+  [K in keyof T]: {
+    [GAM in keyof T[K]]: GAM extends "getter"
+      ? K extends keyof G
+        ? Getter<S, S, G, K, AllGetters>
+        : never
+      : GAM extends "action"
+        ? K extends keyof A
+          ? DotNotationAction<S, S, A, K, AllGetters, AllActions, AllMutations>
+          : never
+        : GAM extends "mutation"
+          ? K extends keyof M
+            ? Mutation<S, M, K>
+            : never
+          : never;
+  };
+};
+
 export const createPartialStore = <
   T extends StoreTypesBase,
   G extends GettersBase = StoreType<T, "getter">,
@@ -288,6 +445,40 @@ export const createPartialStore = <
       }
       if (option.action) {
         acc.actions[cur] = option.action;
+      }
+
+      return acc;
+    },
+    {
+      getters: Object.create(null),
+      mutations: Object.create(null),
+      actions: Object.create(null),
+    },
+  );
+
+  return obj;
+};
+
+export const createDotNotationPartialStore = <
+  T extends StoreTypesBase,
+  G extends GettersBase = StoreType<T, "getter">,
+  A extends ActionsBase = StoreType<T, "action">,
+  M extends MutationsBase = StoreType<T, "mutation">,
+>(
+  options: DotNotationPartialStoreOptions<State, T, G, A, M>,
+): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
+  const obj = Object.keys(options).reduce(
+    (acc, cur) => {
+      const option = options[cur];
+
+      if (option.getter) {
+        acc.getters[cur] = option.getter;
+      }
+      if (option.mutation) {
+        acc.mutations[cur] = option.mutation;
+      }
+      if (option.action) {
+        acc.actions[cur] = unwrapDotNotationAction(option.action);
       }
 
       return acc;
