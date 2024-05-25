@@ -34,6 +34,7 @@ import {
   UpdateInfo,
   Preset,
   MorphingInfo,
+  SwitchPauseLengthMode,
   ActivePointScrollMode,
   EngineInfo,
   ConfirmedTips,
@@ -287,6 +288,14 @@ export type AudioStoreTypes = {
 
   SET_AUDIO_POST_PHONEME_LENGTH: {
     mutation: { audioKey: AudioKey; postPhonemeLength: number };
+  };
+
+  SET_AUDIO_PAUSE_LENGTH: {
+    mutation: { audioKey: AudioKey; pauseLength: number };
+  };
+
+  SET_AUDIO_PAUSE_LENGTH_SCALE: {
+    mutation: { audioKey: AudioKey; pauseLengthScale: number };
   };
 
   LOAD_MORPHABLE_TARGETS: {
@@ -626,6 +635,16 @@ export type AudioCommandStoreTypes = {
   COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH: {
     mutation: { audioKeys: AudioKey[]; postPhonemeLength: number };
     action(payload: { audioKeys: AudioKey[]; postPhonemeLength: number }): void;
+  };
+
+  COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH: {
+    mutation: { audioKeys: AudioKey[]; pauseLength: number };
+    action(payload: { audioKeys: AudioKey[]; pauseLength: number }): void;
+  };
+
+  COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
+    mutation: { audioKeys: AudioKey[]; pauseLengthScale: number };
+    action(payload: { audioKeys: AudioKey[]; pauseLengthScale: number }): void;
   };
 
   COMMAND_MULTI_SET_MORPHING_INFO: {
@@ -1625,6 +1644,7 @@ export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
   reloadingLock: boolean;
+  switchPauseLengthMode: SwitchPauseLengthMode;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
@@ -1763,6 +1783,11 @@ export type UiStoreTypes = {
 
   HYDRATE_UI_STORE: {
     action(): void;
+  };
+
+  SET_SWITCH_PAUSE_LENGTH_MODE: {
+    mutation: { switchPauseLengthMode: SwitchPauseLengthMode };
+    action(payload: { switchPauseLengthMode: SwitchPauseLengthMode }): void;
   };
 
   SET_INHERIT_AUDIOINFO: {

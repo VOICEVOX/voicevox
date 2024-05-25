@@ -242,6 +242,7 @@ watch(accentPhrases, async () => {
 
 // audio play
 const play = async () => {
+  console.log("play in AudioDetail");
   try {
     await store.dispatch("PLAY_AUDIO", {
       audioKey: props.activeAudioKey,

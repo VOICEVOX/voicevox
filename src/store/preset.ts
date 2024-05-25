@@ -167,6 +167,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         presetKeys,
       }: { presetItems: Record<PresetKey, Preset>; presetKeys: PresetKey[] },
     ) {
+      console.log("SAVE_PRESET_CONFIG");
       const result = await window.backend.setSetting("presets", {
         items: JSON.parse(JSON.stringify(presetItems)),
         keys: JSON.parse(JSON.stringify(presetKeys)),
@@ -200,8 +201,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   CREATE_ALL_DEFAULT_PRESET: {
     async action({ state, dispatch, getters }) {
+      console.log("CREATE_ALL_DEFAULT_PRESET");
       const voices = getters.GET_ALL_VOICES("talk");
-
       for (const voice of voices) {
         const voiceId = VoiceId(voice);
         const defaultPresetKey = state.defaultPresetKeys[voiceId];
@@ -211,7 +212,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         }
 
         const characterName = getters.VOICE_NAME(voice);
-
+        console.log(`characterName : ${characterName}`);
         const presetData: Preset = {
           name: `デフォルト：${characterName}`,
           speedScale: 1.0,
@@ -220,6 +221,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
           volumeScale: 1.0,
           prePhonemeLength: 0.1,
           postPhonemeLength: 0.1,
+          pauseLength: 0.3,
+          pauseLengthScale: 1,
         };
         const newPresetKey = await dispatch("ADD_PRESET", { presetData });
 
@@ -238,6 +241,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       context,
       { presetKey, presetData }: { presetData: Preset; presetKey: PresetKey },
     ) {
+      console.log("UPDATE_PRESET");
       const newPresetItems = {
         ...context.state.presetItems,
         [presetKey]: presetData,

@@ -48,7 +48,7 @@
         class="q-mb-sm pitch-cell"
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
       >
-        <!-- consonant length -->
+        <!-- consonant length 母音 -->
         <AudioParameter
           v-if="mora.consonant && mora.consonantLength != undefined"
           :mora-index="moraIndex"
@@ -63,7 +63,7 @@
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
-        <!-- vowel length -->
+        <!-- vowel length 子音 -->
         <AudioParameter
           :mora-index="moraIndex"
           :value="mora.vowelLength"
@@ -85,7 +85,7 @@
           'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
         }"
       >
-        <!-- pause length -->
+        <!-- pause length 無音 -->
         <AudioParameter
           :mora-index="accentPhrase.moras.length"
           :value="accentPhrase.pauseMora.vowelLength"
@@ -263,6 +263,7 @@ const pronunciation = computed(() => {
 });
 
 const handleChangePronounce = (newPronunciation: string) => {
+  console.log("handleChangePronounce");
   let popUntilPause = false;
   newPronunciation = newPronunciation
     .replace(/,/g, "、")

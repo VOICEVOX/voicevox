@@ -1,5 +1,6 @@
 {
 	"useGpu": false,
+	"switchPauseLengthMode": "SCALE",
 	"inheritAudioInfo": true,
 	"activePointScrollMode": "OFF",
 	"savingSetting": {

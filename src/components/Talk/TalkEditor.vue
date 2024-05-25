@@ -512,15 +512,17 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
 
 // エンジン初期化後の処理
 const isCompletedInitialStartup = ref(false);
-// TODO: Vueっぽくないので解体する
+// TODO: Vueっぽくないので解体する ﾁｮｯﾄﾏｯﾃ
 onetimeWatch(
   () => props.isProjectFileLoaded,
   async (isProjectFileLoaded) => {
+    console.log("onetimeWatch");
     if (isProjectFileLoaded == "waiting" || !props.isEnginesReady)
       return "continue";
     if (!isProjectFileLoaded) {
       // 最初のAudioCellを作成
       const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
+      console.log(audioItem);
       const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
         audioItem,
       });

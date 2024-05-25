@@ -103,6 +103,26 @@ export const SLIDER_PARAMETERS = {
     scrollMinStep: () => 0.01,
   },
   /**
+   *  文内無音(絶対値)パラメータの定義
+   */
+  PAUSE_LENGTH: {
+    max: () => 3,
+    min: () => 0,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+  /**
+   *  文内無音(倍率)パラメータの定義
+   */
+  PAUSE_LENGTH_SCALE: {
+    max: () => 2,
+    min: () => 0,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+  /**
    *  モーフィングレートパラメータの定義
    */
   MORPHING_RATE: {

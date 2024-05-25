@@ -349,6 +349,8 @@ export type AcceptRetrieveTelemetryStatus =
 
 export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
+export type SwitchPauseLengthMode = "SCALE" | "ABSOLUTE";
+
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
@@ -424,6 +426,8 @@ export type Preset = {
   volumeScale: number;
   prePhonemeLength: number;
   postPhonemeLength: number;
+  pauseLength: number;
+  pauseLengthScale: number;
   morphingInfo?: MorphingInfo;
 };
 
@@ -601,6 +605,7 @@ export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
 export const configSchema = z
   .object({
+    switchPauseLengthMode: z.enum(["SCALE", "ABSOLUTE"]).default("SCALE"),
     inheritAudioInfo: z.boolean().default(true),
     activePointScrollMode: z
       .enum(["CONTINUOUSLY", "PAGE", "OFF"])
@@ -647,6 +652,8 @@ export const configSchema = z
               volumeScale: z.number(),
               prePhonemeLength: z.number(),
               postPhonemeLength: z.number(),
+              pauseLength: z.number(),
+              pauseLengthScale: z.number(),
               morphingInfo: z
                 .object({
                   rate: z.number(),

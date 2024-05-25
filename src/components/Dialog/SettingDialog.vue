@@ -185,6 +185,51 @@
                 </div>
               </QSlideTransition>
               <QCardActions class="q-px-md bg-surface">
+                <div>無音時間の指定方法</div>
+                <div aria-label="無音時間を一括指定する際のモードを選べます。">
+                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
+                    <QTooltip
+                      :delay="500"
+                      anchor="center right"
+                      self="center left"
+                      transition-show="jump-right"
+                      transition-hide="jump-left"
+                    >
+                      無音時間を一括指定する際のモードを選べます。
+                    </QTooltip>
+                  </QIcon>
+                </div>
+                <QSpace />
+                <QBtnToggle
+                  v-model="switchPauseLengthMode"
+                  padding="xs md"
+                  unelevated
+                  color="background"
+                  text-color="display"
+                  toggle-color="primary"
+                  toggle-text-color="display-on-primary"
+                  :options="[
+                    {
+                      label: '倍率',
+                      value: 'SCALE',
+                      slot: 'SCALE',
+                    },
+                    {
+                      label: '絶対値',
+                      value: 'ABSOLUTE',
+                      slot: 'ABSOLUTE',
+                    },
+                  ]"
+                >
+                  <template #SCALE>
+                    <QTooltip :delay="500">倍率で指定します(n倍)。</QTooltip>
+                  </template>
+                  <template #ABSOLUTE>
+                    <QTooltip :delay="500">絶対値で指定します(n秒)。</QTooltip>
+                  </template>
+                </QBtnToggle>
+              </QCardActions>
+              <QCardActions class="q-px-md bg-surface">
                 <div>パラメータの引き継ぎ</div>
                 <div
                   aria-label="ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。"
@@ -1024,6 +1069,7 @@ import {
   SavingSetting,
   EngineSettingType,
   ExperimentalSettingType,
+  SwitchPauseLengthMode,
   ActivePointScrollMode,
   RootMiscSettingType,
   EngineId,
@@ -1068,6 +1114,18 @@ const engineUseGpu = computed({
 });
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
+// 新規
+// QBtnToggleはv-modelがの変更がsetに結びつく設計になってるみたい
+// Vuexの変更がgetで反映される
+// それらがcomputedによって自動反映
+const switchPauseLengthMode = computed({
+  get: () => store.state.switchPauseLengthMode,
+  set: (switchPauseLengthMode: SwitchPauseLengthMode) => {
+    store.dispatch("SET_SWITCH_PAUSE_LENGTH_MODE", {
+      switchPauseLengthMode,
+    });
+  },
+});
 const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
   get: () => store.state.activePointScrollMode,

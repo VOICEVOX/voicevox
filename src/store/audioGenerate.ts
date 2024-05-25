@@ -27,23 +27,35 @@ export async function fetchAudioFromAudioItem(
     audioItem: AudioItem;
   },
 ): Promise<FetchAudioResult> {
+  console.log("fetchAudioFromAudioItem");
+  // 試しにここで弄ってみる
+  // audioItem.query.accentPhrases[0].moras[0].consonantLength = 0.1; コンソールには出るがqueryでundefined
+  // 多分非同期が悪さしててこの時点ではまだaudioQueryのresponseは入ってない
   const engineId = audioItem.voice.engineId;
 
   const [id, audioQuery] = await generateUniqueIdAndQuery(state, audioItem);
+  await console.log(audioQuery); // preset未反映
+  // audioQuery.accentPhrases[0].moras[0].vowelLength = 0.1; // まだ
   if (audioQuery == undefined)
     throw new Error("audioQuery is not defined for audioItem");
 
   if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
+    console.log("check"); // 来てない
     const blob = audioBlobCache[id];
     return { audioQuery, blob };
   }
-
+  // audioQuery.accentPhrases[0].moras[0].vowelLength = 0.1; // 反映確認
   const speaker = audioItem.voice.styleId;
-
+  // audioQuery.accentPhrases[0].moras[0].vowelLength = 0.1; // 反映確認
+  // 何かしらの互換のための処理？
   const engineAudioQuery = convertAudioQueryFromEditorToEngine(
     audioQuery,
     state.engineManifests[engineId].defaultSamplingRate,
   );
+  // audioQuery.accentPhrases[0].moras[0].vowelLength = 0.1; // 反映確認
+  // マニュアル値の設定はどこでやってるんだろ audioQueryの前？
+  // console.log(audioQuery);
+  await console.log(engineAudioQuery);
 
   let blob: Blob;
   // FIXME: モーフィングが設定で無効化されていてもモーフィングが行われるので気づけるUIを作成する
@@ -71,6 +83,7 @@ export async function generateLabFromAudioQuery(
   audioQuery: EditorAudioQuery,
   offset?: number,
 ) {
+  console.log("generateLabFromAudioQuery");
   const speedScale = audioQuery.speedScale;
 
   let labString = "";

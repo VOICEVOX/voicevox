@@ -7,6 +7,7 @@ import {
   UiStoreTypes,
 } from "./type";
 import { createPartialStore } from "./vuex";
+import { SwitchPauseLengthMode } from "@/type/preload";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
   CommonDialogOptions,
@@ -53,6 +54,7 @@ export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
   reloadingLock: false,
+  switchPauseLengthMode: "SCALE",
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
@@ -257,6 +259,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   HYDRATE_UI_STORE: {
     async action({ commit }) {
+      commit("SET_SWITCH_PAUSE_LENGTH_MODE", {
+        switchPauseLengthMode: await window.backend.getSetting(
+          "switchPauseLengthMode",
+        ),
+      });
+
       commit("SET_INHERIT_AUDIOINFO", {
         inheritAudioInfo: await window.backend.getSetting("inheritAudioInfo"),
       });
@@ -298,6 +306,30 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         await new Promise((resolve) => setTimeout(resolve, 300));
         vuexReadyTimeout += 300;
       }
+    },
+  },
+
+  SET_SWITCH_PAUSE_LENGTH_MODE: {
+    mutation(
+      state,
+      {
+        switchPauseLengthMode,
+      }: { switchPauseLengthMode: SwitchPauseLengthMode },
+    ) {
+      state.switchPauseLengthMode = switchPauseLengthMode;
+    },
+    async action(
+      { commit },
+      {
+        switchPauseLengthMode,
+      }: { switchPauseLengthMode: SwitchPauseLengthMode },
+    ) {
+      commit("SET_SWITCH_PAUSE_LENGTH_MODE", {
+        switchPauseLengthMode: await window.backend.setSetting(
+          "switchPauseLengthMode",
+          switchPauseLengthMode,
+        ),
+      });
     },
   },
 

@@ -397,6 +397,7 @@ const setYomi = async (text: string, changeWord?: boolean) => {
   if (isOnlyHiraOrKana.value && text.length) {
     text = convertHiraToKana(text);
     text = convertLongVowel(text);
+    console.log("setYomi");
     accentPhrase.value = (
       await createUILockAction(
         store.dispatch("FETCH_ACCENT_PHRASES", {

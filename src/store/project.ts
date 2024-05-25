@@ -187,6 +187,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         context,
         { filePath, confirm }: { filePath?: string; confirm?: boolean },
       ) => {
+        console.log("LOAD_PROJECT_FILE");
         if (!filePath) {
           // Select and load a project File.
           const ret = await window.backend.showProjectLoadDialog({
@@ -250,12 +251,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               }
             }
             for (const audioItemsKey in projectData.audioItems) {
+              console.log(`audioItemsKey : ${audioItemsKey}`);
               if (projectData.audioItems[audioItemsKey].query != null) {
+                console.log("query代入");
                 projectData.audioItems[audioItemsKey].query.volumeScale = 1;
                 projectData.audioItems[audioItemsKey].query.prePhonemeLength =
                   0.1;
                 projectData.audioItems[audioItemsKey].query.postPhonemeLength =
                   0.1;
+                projectData.audioItems[audioItemsKey].query.pauseLength = 0.1;
+                projectData.audioItems[audioItemsKey].query.pauseLengthScale =
+                  1;
                 projectData.audioItems[audioItemsKey].query.outputSamplingRate =
                   DEFAULT_SAMPLING_RATE;
               }
@@ -459,6 +465,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           // Validation check
           // トークはvalidateTalkProjectで検証する
           // ソングはSET_SCOREの中の`isValidScore`関数で検証される
+          console.log("parsedProjectData");
           const parsedProjectData = projectSchema.parse(projectData);
           validateTalkProject(parsedProjectData.talk);
 

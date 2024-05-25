@@ -202,6 +202,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   RESTART_ENGINES: {
     async action({ dispatch, commit }, { engineIds }) {
+      console.log("RESTART_ENGINES");
       await Promise.all(
         engineIds.map(async (engineId) => {
           commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
@@ -230,6 +231,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   POST_ENGINE_START: {
     async action({ state, dispatch }, { engineIds }) {
+      console.log("POST_ENGINE_START");
       await dispatch("GET_ALT_PORT_INFOS");
       const result = await Promise.all(
         engineIds.map(async (engineId) => {
@@ -311,6 +313,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
      * 指定した話者（スタイルID）がエンジン側で初期化されているか
      */
     async action({ dispatch }, { engineId, styleId }) {
+      console.log("IS_INITIALIZED_ENGINE_SPEAKER");
       const isInitialized = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
       }).then((instance) =>
