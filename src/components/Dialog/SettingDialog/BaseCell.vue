@@ -30,7 +30,7 @@ const props = defineProps<Props>();
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/visually-hidden' as visually-hidden;
+@use "@/styles/visually-hidden" as visually-hidden;
 @use "@/styles/colors" as colors;
 
 .help-hover-icon {
