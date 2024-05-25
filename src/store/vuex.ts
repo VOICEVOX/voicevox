@@ -3,7 +3,6 @@
 import { InjectionKey } from "vue";
 import {
   Store as BaseStore,
-  createStore as baseCreateStore,
   useStore as baseUseStore,
   ModuleTree,
   Plugin,
@@ -28,15 +27,31 @@ export type MutationsBase = Record<string, any>;
 
 export type PromiseType<T> = T extends Promise<infer P> ? P : T;
 
-export interface Store<
+export class Store<
   S,
   G extends GettersBase,
   A extends ActionsBase,
   M extends MutationsBase,
-> extends Omit<BaseStore<S>, "getters" | "dispatch" | "commit"> {
-  readonly getters: G;
+> extends BaseStore<S> {
+  constructor(options: StoreOptions<S, G, A, M>) {
+    super(options as OriginalStoreOptions<S>);
+    // @ts-expect-error Storeの型を書き換えている影響で未初期化として判定される
+    this.actions = dotNotationDispatchProxy(this.dispatch.bind(this));
+    this.mutations = dotNotationCommitProxy(
+      // @ts-expect-error Storeの型を書き換えている影響で未初期化として判定される
+      this.commit.bind(this) as Commit<M>,
+    );
+  }
+
+  readonly getters!: G;
+
+  // @ts-expect-error Storeの型を非互換な型で書き換えているためエラー
   dispatch: Dispatch<A>;
+  // @ts-expect-error Storeの型を非互換な型で書き換えているためエラー
   commit: Commit<M>;
+
+  actions: DotNotationDispatch<A>;
+  mutations: DotNotationCommit<M>;
 }
 
 export function createStore<
@@ -45,13 +60,7 @@ export function createStore<
   A extends ActionsBase,
   M extends MutationsBase,
 >(options: StoreOptions<S, G, A, M>): Store<S, G, A, M> {
-  // optionsをOriginalStoreOptions<S>で型キャストしないとTS2589を吐く
-  return baseCreateStore<S>(options as OriginalStoreOptions<S>) as Store<
-    S,
-    G,
-    A,
-    M
-  >;
+  return new Store<S, G, A, M>(options);
 }
 
 export function useStore<
@@ -60,16 +69,7 @@ export function useStore<
   A extends ActionsBase,
   M extends MutationsBase,
 >(injectKey?: InjectionKey<Store<S, G, A, M>> | string): Store<S, G, A, M> {
-  return baseUseStore<S>(injectKey) as Store<S, G, A, M>;
-}
-
-export function useDotNotationStore<
-  S,
-  G extends GettersBase,
-  A extends ActionsBase,
-  M extends MutationsBase,
->(injectKey?: InjectionKey<Store<S, G, A, M>> | string): Store<S, G, A, M> {
-  return baseUseStore<S>(injectKey) as Store<S, G, A, M>;
+  return baseUseStore<S>(injectKey) as unknown as Store<S, G, A, M>;
 }
 
 export interface Dispatch<A extends ActionsBase> {
