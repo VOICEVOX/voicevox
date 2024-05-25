@@ -1,12 +1,5 @@
+import { NoteId } from "@/type/preload";
 import { Note } from "@/store/type";
-
-export const DEFAULT_TPQN = 480;
-export const DEFAULT_BPM = 120;
-export const DEFAULT_BEATS = 4;
-export const DEFAULT_BEAT_TYPE = 4;
-
-// マルチエンジン対応のために将来的に廃止予定で、利用は非推奨
-export const DEPRECATED_DEFAULT_EDIT_FRAME_RATE = 93.75;
 
 /**
  * 頻繁に変更される値を保持します。
@@ -48,10 +41,10 @@ export class FrequentlyUpdatedState<T> {
 type NoteInfo = {
   startTicks: number;
   endTicks: number;
-  overlappingNoteIds: Set<string>;
+  overlappingNoteIds: Set<NoteId>;
 };
 
-export type OverlappingNoteInfos = Map<string, NoteInfo>;
+export type OverlappingNoteInfos = Map<NoteId, NoteInfo>;
 
 export function addNotesToOverlappingNoteInfos(
   overlappingNoteInfos: OverlappingNoteInfos,
@@ -66,7 +59,7 @@ export function addNotesToOverlappingNoteInfos(
   }
   // TODO: 計算量がO(n^2)になっているので、区間木などを使用してO(nlogn)にする
   for (const note of notes) {
-    const overlappingNoteIds = new Set<string>();
+    const overlappingNoteIds = new Set<NoteId>();
     for (const [noteId, noteInfo] of overlappingNoteInfos) {
       if (noteId === note.id) {
         continue;
@@ -130,8 +123,8 @@ export function updateNotesOfOverlappingNoteInfos(
 
 export function getOverlappingNoteIds(
   currentNoteInfos: OverlappingNoteInfos,
-): Set<string> {
-  const overlappingNoteIds = new Set<string>();
+): Set<NoteId> {
+  const overlappingNoteIds = new Set<NoteId>();
   for (const [noteId, noteInfo] of currentNoteInfos) {
     if (noteInfo.overlappingNoteIds.size !== 0) {
       overlappingNoteIds.add(noteId);

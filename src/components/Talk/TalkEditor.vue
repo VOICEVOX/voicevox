@@ -142,6 +142,8 @@ import {
   PresetKey,
   SplitterPositionType,
   Voice,
+  HotkeyActionNameType,
+  actionPostfixSelectNthCharacter,
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
@@ -262,10 +264,27 @@ registerHotkeyWithCleanup({
     }
   },
 });
+for (let i = 0; i < 10; i++) {
+  registerHotkeyWithCleanup({
+    editor: "talk",
+    enableInTextbox: true,
+    name: `${i + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
+    callback: () => {
+      if (!uiLocked.value) {
+        onCharacterSelectHotkey(i);
+      }
+    },
+  });
+}
 
 const removeAudioItem = async () => {
   if (activeAudioKey.value == undefined) throw new Error();
   audioCellRefs[activeAudioKey.value].removeCell();
+};
+
+const onCharacterSelectHotkey = async (selectedCharacterIndex: number) => {
+  if (activeAudioKey.value == undefined) throw new Error();
+  audioCellRefs[activeAudioKey.value].selectCharacterAt(selectedCharacterIndex);
 };
 
 // view

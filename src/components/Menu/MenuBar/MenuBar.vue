@@ -33,7 +33,7 @@ import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
-import { base64ImageToUri } from "@/helpers/imageHelper";
+import { base64ImageToUri } from "@/helpers/base64Helper";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 const props = defineProps<{

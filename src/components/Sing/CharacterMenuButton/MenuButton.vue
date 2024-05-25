@@ -148,7 +148,7 @@ import { computed, ref } from "vue";
 import { debounce } from "quasar";
 import SelectedCharacter from "./SelectedCharacter.vue";
 import { useStore } from "@/store";
-import { base64ImageToUri } from "@/helpers/imageHelper";
+import { base64ImageToUri } from "@/helpers/base64Helper";
 import { SpeakerId, StyleId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 
@@ -200,7 +200,6 @@ const getDefaultStyle = (speakerUuid: string) => {
 
   // ここで取得されるcharacterInfoには、ソングエディタ向けのスタイルのみ含まれるので、
   // その中の最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
-  // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
   const defaultStyleId = characterInfo?.metas.styles[0].styleId;
 
   const defaultStyle = characterInfo?.metas.styles.find(
