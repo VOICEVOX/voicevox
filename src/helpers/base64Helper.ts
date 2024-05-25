@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 function detectImageTypeFromBase64(data: string): string {
   switch (data[0]) {
     case "/":
@@ -13,12 +15,12 @@ function detectImageTypeFromBase64(data: string): string {
   }
 }
 
+export const base64ToUri = (data: string, type: string) => {
+  const buffer = Buffer.from(data, "base64");
+  return URL.createObjectURL(new Blob([buffer.buffer], { type }));
+};
+
 export function base64ImageToUri(image: string): string {
   const mimeType = detectImageTypeFromBase64(image);
-  const buffer = Buffer.from(image, "base64");
-  return URL.createObjectURL(
-    new Blob([buffer.buffer], {
-      type: mimeType,
-    })
-  );
+  return base64ToUri(image, mimeType);
 }

@@ -5,12 +5,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useStore } from "@/store";
-import { PhraseState } from "@/store/type";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { PhraseSourceHash, PhraseState } from "@/store/type";
 
-const props =
-  defineProps<{
-    phraseKey: string;
-  }>();
+const props = defineProps<{
+  phraseKey: PhraseSourceHash;
+}>();
 
 const store = useStore();
 const classNames: Record<PhraseState, string> = {
@@ -20,17 +20,15 @@ const classNames: Record<PhraseState, string> = {
   PLAYABLE: "playable",
 };
 const className = computed(() => {
-  const phrase = store.state.phrases.get(props.phraseKey);
-  if (phrase == undefined) {
-    throw new Error("phrase is undefined.");
-  }
+  const phrase = getOrThrow(store.state.phrases, props.phraseKey);
+
   return classNames[phrase.state];
 });
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .waiting-to-be-rendered {
   background-color: colors.$background;

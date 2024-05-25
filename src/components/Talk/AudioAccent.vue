@@ -72,12 +72,12 @@ const props = withDefaults(
     shiftKeyFlag?: boolean;
     onChangeAccent: (
       accentPhraseIndex: number,
-      accent: number
+      accent: number,
     ) => Promise<void>;
   }>(),
   {
     shiftKeyFlag: false,
-  }
+  },
 );
 
 const changeAccent = (accent: number) =>
@@ -100,7 +100,7 @@ const accentLine = computed(() => {
       (index) =>
         `${index * 40 + 10} ${
           index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
-        }`
+        }`,
     )
     .toString();
 });
@@ -112,7 +112,7 @@ const stopPropagation = () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors' as colors;
+@use "@/styles/colors" as colors;
 
 div {
   padding: 0px;

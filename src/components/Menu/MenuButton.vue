@@ -2,13 +2,7 @@
   <QBtn
     flat
     text-color="display"
-    class="
-      full-height
-      cursor-pointer
-      no-border-radius
-      text-no-wrap
-      q-py-none q-px-sm
-    "
+    class="full-height cursor-pointer no-border-radius text-no-wrap q-py-none q-px-sm"
     :class="selected ? 'active-menu' : 'bg-transparent'"
     :disable="disable"
     aria-haspopup="menu"
@@ -55,13 +49,12 @@ const props = withDefaults(
   }>(),
   {
     disable: false,
-  }
+  },
 );
 
-const emit =
-  defineEmits<{
-    (event: "update:selected", value: boolean): void;
-  }>();
+const emit = defineEmits<{
+  (event: "update:selected", value: boolean): void;
+}>();
 
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -74,7 +67,7 @@ const selectedComputed = computed({
 const subMenuOpenFlags = ref(
   props.menudata.type === "root"
     ? [...Array(props.menudata.subMenu.length)].map(() => false)
-    : []
+    : [],
 );
 
 const isDisabledMenuItem = computed(() => (menu: MenuItemData) => {
@@ -105,13 +98,13 @@ if (props.menudata.type === "root") {
         const len = props.menudata.subMenu.length;
         subMenuOpenFlags.value = [...Array(len)].map(() => false);
       }
-    }
+    },
   );
 }
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
+@use "@/styles/variables" as vars;
 
 .q-btn {
   min-height: 0;

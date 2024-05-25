@@ -42,10 +42,9 @@ import ImportMidiDialog from "@/components/Dialog/ImportMidiDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
-const props =
-  defineProps<{
-    isEnginesReady: boolean;
-  }>();
+const props = defineProps<{
+  isEnginesReady: boolean;
+}>();
 const store = useStore();
 
 // ライセンス表示
@@ -89,7 +88,7 @@ const isAcceptTermsDialogOpenComputed = computed({
 
 // キャラクター並び替え
 const orderedAllCharacterInfos = computed(
-  () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
+  () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
 );
 const isCharacterOrderDialogOpenComputed = computed({
   get: () =>
@@ -101,12 +100,11 @@ const isCharacterOrderDialogOpenComputed = computed({
     }),
 });
 
-// TODO: デフォルトスタイル選択(ソング)の実装
 // デフォルトスタイル選択(トーク)
 const orderedTalkCharacterInfos = computed(() => {
   return filterCharacterInfosByStyleType(
     store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
-    "talk"
+    "talk",
   );
 });
 const isDefaultStyleSelectDialogOpenComputed = computed({

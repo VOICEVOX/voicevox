@@ -49,7 +49,7 @@ const canUndo = computed(() => store.getters.CAN_UNDO(editor));
 const canRedo = computed(() => store.getters.CAN_REDO(editor));
 const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
 const nowPlayingContinuously = computed(
-  () => store.state.nowPlayingContinuously
+  () => store.state.nowPlayingContinuously,
 );
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
@@ -204,6 +204,6 @@ const buttons = computed(() =>
         text: null,
       };
     }
-  })
+  }),
 );
 </script>

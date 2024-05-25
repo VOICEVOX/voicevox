@@ -39,12 +39,12 @@ const sevenZipFile = fs
   .readdirSync(path.resolve(__dirname, "build", "vendored", "7z"))
   .find(
     // Windows: 7za.exe, Linux: 7zzs, macOS: 7zz
-    (fileName) => ["7za.exe", "7zzs", "7zz"].includes(fileName)
+    (fileName) => ["7za.exe", "7zzs", "7zz"].includes(fileName),
   );
 
 if (!sevenZipFile) {
   throw new Error(
-    "7z binary file not found. Run `node ./build/download7z.js` first."
+    "7z binary file not found. Run `node ./build/download7z.js` first.",
   );
 }
 
@@ -104,7 +104,7 @@ const builderOptions = {
   afterAllArtifactBuild: path.resolve(
     __dirname,
     "build",
-    "afterAllArtifactBuild.js"
+    "afterAllArtifactBuild.js",
   ),
   win: {
     icon: "public/icon.png",

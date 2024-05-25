@@ -1,5 +1,4 @@
 <template>
-  <MenuBar />
   <ToolBar />
   <div class="sing-main">
     <EngineStartupOverlay
@@ -22,30 +21,27 @@
         />
       </div>
     </div>
-    <ScoreSequencer :is-activated="isActivated" />
+    <ScoreSequencer />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, ref } from "vue";
-import MenuBar from "./MenuBar.vue";
-import ToolBar from "./ToolBar.vue";
+import { computed, ref, watch } from "vue";
+import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import {
-  DEFAULT_BEATS,
-  DEFAULT_BEAT_TYPE,
-  DEFAULT_BPM,
   DEFAULT_TPQN,
-} from "@/sing/storeHelper";
+  createDefaultTempo,
+  createDefaultTimeSignature,
+} from "@/sing/domain";
 
-const props =
-  defineProps<{
-    isEnginesReady: boolean;
-    isProjectFileLoaded: boolean | "waiting";
-  }>();
+const props = defineProps<{
+  isEnginesReady: boolean;
+  isProjectFileLoaded: boolean | "waiting";
+}>();
 
 const store = useStore();
 //const $q = useQuasar();
@@ -56,10 +52,21 @@ const nowRendering = computed(() => {
 const nowAudioExporting = computed(() => {
   return store.state.nowAudioExporting;
 });
+const enablePitchEditInSongEditor = computed(() => {
+  return store.state.experimentalSetting.enablePitchEditInSongEditor;
+});
 
 const cancelExport = () => {
   store.dispatch("CANCEL_AUDIO_EXPORT");
 };
+
+watch(enablePitchEditInSongEditor, (value) => {
+  if (value === false && store.state.sequencerEditTarget === "PITCH") {
+    // ピッチ編集機能が無効になったとき編集ターゲットがピッチだったら、
+    // 編集ターゲットをノートに切り替える
+    store.dispatch("SET_EDIT_TARGET", { editTarget: "NOTE" });
+  }
+});
 
 const isCompletedInitialStartup = ref(false);
 // TODO: Vueっぽくないので解体する
@@ -70,30 +77,16 @@ onetimeWatch(
       return "continue";
 
     if (!isProjectFileLoaded) {
-      await store.dispatch("SET_SCORE", {
-        score: {
-          tpqn: DEFAULT_TPQN,
-          tempos: [
-            {
-              position: 0,
-              bpm: DEFAULT_BPM,
-            },
-          ],
-          timeSignatures: [
-            {
-              measureNumber: 1,
-              beats: DEFAULT_BEATS,
-              beatType: DEFAULT_BEAT_TYPE,
-            },
-          ],
-          notes: [],
-        },
+      await store.dispatch("SET_TPQN", { tpqn: DEFAULT_TPQN });
+      await store.dispatch("SET_TEMPOS", { tempos: [createDefaultTempo(0)] });
+      await store.dispatch("SET_TIME_SIGNATURES", {
+        timeSignatures: [createDefaultTimeSignature(1)],
       });
-
+      await store.dispatch("SET_NOTES", { notes: [] });
       // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
       // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
       try {
-        await store.dispatch("SET_SINGER", {});
+        await store.dispatch("SET_SINGER", { withRelated: true });
       } catch (e) {
         window.backend.logError(e);
       }
@@ -107,23 +100,13 @@ onetimeWatch(
   },
   {
     immediate: true,
-  }
+  },
 );
-
-const isActivated = ref(false);
-
-onActivated(() => {
-  isActivated.value = true;
-});
-
-onDeactivated(() => {
-  isActivated.value = false;
-});
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/colors' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
 
 .layout-container {
   min-height: calc(100vh - #{vars.$menubar-height});

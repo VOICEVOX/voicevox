@@ -137,7 +137,7 @@
                     @updated="
                       changeExperimentalSetting(
                         'shouldApplyDefaultPresetOnVoiceChanged',
-                        $event
+                        $event,
                       )
                     "
                   />
@@ -621,7 +621,7 @@
                 @updated="
                   changeExperimentalSetting(
                     'enableInterrogativeUpspeak',
-                    $event
+                    $event,
                   )
                 "
               />
@@ -647,16 +647,19 @@
                 @updated="
                   changeExperimentalSetting(
                     'shouldKeepTuningOnTextChange',
-                    $event
+                    $event,
                   )
                 "
               />
               <ToggleCell
-                title="ソング：ピッチを表示"
-                description="ONの場合、ソングエディターでピッチ（音の高さ）が表示されます。"
-                :model-value="experimentalSetting.showPitchInSongEditor"
+                title="ソング：ピッチ編集機能"
+                description="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
+                :model-value="experimentalSetting.enablePitchEditInSongEditor"
                 @updated="
-                  changeExperimentalSetting('showPitchInSongEditor', $event)
+                  changeExperimentalSetting(
+                    'enablePitchEditInSongEditor',
+                    $event,
+                  )
                 "
               />
             </QCard>
@@ -692,6 +695,7 @@ import {
   RootMiscSettingType,
   EngineId,
 } from "@/type/preload";
+import { createLogger } from "@/domain/frontend/log";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
@@ -706,16 +710,15 @@ const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
   return [state, setter] as const;
 };
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const store = useStore();
+const { warn } = createLogger("SettingDialog");
 
 const settingDialogOpenedComputed = computed({
   get: () => props.modelValue,
@@ -798,7 +801,7 @@ const currentAudioOutputDeviceComputed = computed<
     // 再生デバイスが見つからなかったらデフォルト値に戻す
     // FIXME: watchなどにしてgetter内で操作しないようにする
     const device = availableAudioOutputDevices.value?.find(
-      (device) => device.key === store.state.savingSetting.audioOutputDevice
+      (device) => device.key === store.state.savingSetting.audioOutputDevice,
     );
     if (device) {
       return device;
@@ -826,11 +829,11 @@ const updateAudioOutputDevices = async () => {
 if (navigator.mediaDevices) {
   navigator.mediaDevices.addEventListener(
     "devicechange",
-    updateAudioOutputDevices
+    updateAudioOutputDevices,
   );
   updateAudioOutputDevices();
 } else {
-  store.dispatch("LOG_WARN", "navigator.mediaDevices is not available.");
+  warn("navigator.mediaDevices is not available.");
 }
 
 const acceptRetrieveTelemetryComputed = computed({
@@ -884,7 +887,7 @@ const changeEnablePreset = (value: boolean) => {
 
 const changeExperimentalSetting = async (
   key: keyof ExperimentalSettingType,
-  data: boolean
+  data: boolean,
 ) => {
   store.dispatch("SET_EXPERIMENTAL_SETTING", {
     experimentalSetting: { ...experimentalSetting.value, [key]: data },
@@ -921,7 +924,7 @@ const renderSamplingRateLabel = (value: SamplingRateOption): string => {
 
 const handleSavingSettingChange = (
   key: keyof SavingSetting,
-  data: string | boolean | number
+  data: string | boolean | number,
 ) => {
   store.dispatch("SET_SAVING_SETTING", {
     data: { ...savingSetting.value, [key]: data },
@@ -1007,7 +1010,7 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/visually-hidden' as visually-hidden;
+@use "@/styles/visually-hidden" as visually-hidden;
 @use "@/styles/colors" as colors;
 
 .text-h5 {
