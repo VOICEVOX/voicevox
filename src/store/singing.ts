@@ -626,7 +626,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
-    mutation(state, { phraseKey, singingGuideKey }) {
+    mutation(
+      state,
+      {
+        phraseKey,
+        singingGuideKey,
+      }: {
+        phraseKey: PhraseKey;
+        singingGuideKey: SingingGuideSourceHash | undefined;
+      },
+    ) {
       const phrase = getOrThrow(state.phrases, phraseKey);
 
       phrase.singingGuideKey = singingGuideKey;
