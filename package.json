@@ -39,7 +39,7 @@
     "buffer": "6.0.3",
     "clone-deep": "4.0.1",
     "dayjs": "1.10.7",
-    "electron-log": "5.0.0",
+    "electron-log": "5.1.2",
     "electron-window-state": "5.0.3",
     "encoding-japanese": "1.0.30",
     "fast-array-diff": "1.1.0",

@@ -100,7 +100,6 @@ const isCharacterOrderDialogOpenComputed = computed({
     }),
 });
 
-// TODO: デフォルトスタイル選択(ソング)の実装
 // デフォルトスタイル選択(トーク)
 const orderedTalkCharacterInfos = computed(() => {
   return filterCharacterInfosByStyleType(

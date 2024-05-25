@@ -13,11 +13,6 @@
       <strong>JavaScriptが無効化されている環境では動作しません。</strong>
     </noscript>
     <div id="app" style="height: 100%"></div>
-    <script type="module">
-      // https://stackoverflow.com/questions/70714690/buffer-is-not-defined-in-react-vite#:~:text=installing%20buffer%20as%20a%20dev%20dependency%20yarn%20add%20buffer%20(use%20npm%20equivalent%20if%20you%20use%20npm)
-      import { Buffer } from "buffer";
-      window.Buffer = Buffer;
-    </script>
     <!-- %BROWSER_PRELOAD% -->
     <script type="module" src="main.ts"></script>
   </body>
