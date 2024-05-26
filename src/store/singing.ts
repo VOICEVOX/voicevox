@@ -941,6 +941,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tempos: Tempo[],
         tpqn: number,
         phraseFirstRestMinDurationSeconds: number,
+        trackId: TrackId,
       ) => {
         const foundPhrases = new Map<PhraseSourceHash, Phrase>();
 
@@ -970,11 +971,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const notesHash = await calculatePhraseSourceHash({
               firstRestDuration: phraseFirstRestDuration,
               notes: phraseNotes,
+              trackId,
             });
             foundPhrases.set(notesHash, {
               firstRestDuration: phraseFirstRestDuration,
               notes: phraseNotes,
               state: "WAITING_TO_BE_RENDERED",
+              trackId,
             });
 
             if (nextNote != undefined) {
@@ -1247,10 +1250,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             tempos,
             tpqn,
             firstRestMinDurationSeconds,
+            trackId,
           );
           for (const [phraseHash, phrase] of phrases) {
-            const phraseKey = createPhraseSourceHash(trackId, phraseHash);
-            foundPhrases.set(phraseKey, phrase);
+            foundPhrases.set(phraseHash, phrase);
           }
         }
 
@@ -1279,13 +1282,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const newPhrases = new Map<PhraseSourceHash, Phrase>();
 
         const getSingerAndFrameRate = (singer: Singer | undefined) =>
-          singer && {
-            singer: singer,
-            frameRate: state.engineManifests[singer.engineId].frameRate,
-          };
+          singer != undefined
+            ? {
+                singer: singer,
+                frameRate: state.engineManifests[singer.engineId].frameRate,
+              }
+            : undefined;
 
         for (const [phraseKey, foundPhrase] of foundPhrases) {
-          const [trackId] = separatePhraseSourceHash(phraseKey);
           const existingPhrase = state.phrases.get(phraseKey);
           if (!existingPhrase) {
             // 新しいフレーズの場合
@@ -1293,7 +1297,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             continue;
           }
 
-          const track = getOrThrow(tracks, trackId);
+          const track = getOrThrow(tracks, existingPhrase.trackId);
 
           const singerAndFrameRate = getSingerAndFrameRate(track.singer);
 
@@ -1419,10 +1423,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrasesToBeRendered,
             playheadPosition.value,
           );
-          const [trackId] = separatePhraseSourceHash(phraseKey);
           phrasesToBeRendered.delete(phraseKey);
 
-          const track = getOrThrow(tracks, trackId);
+          const track = getOrThrow(tracks, phrase.trackId);
 
           const singerAndFrameRate = getSingerAndFrameRate(track.singer);
 

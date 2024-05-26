@@ -794,6 +794,7 @@ export type SingingVoiceSourceHash = z.infer<
  */
 export type Phrase = {
   firstRestDuration: number;
+  trackId: TrackId;
   notes: Note[];
   state: PhraseState;
   singingGuideKey?: SingingGuideSourceHash;
@@ -805,6 +806,7 @@ export type Phrase = {
  */
 export type PhraseSource = {
   firstRestDuration: number;
+  trackId: TrackId;
   notes: Note[];
 };
 
@@ -821,7 +823,7 @@ export type SingingStoreState = {
   trackOrder: TrackId[];
   selectedTrackId: TrackId;
   editFrameRate: number;
-  phrases: Map<TrackId, Map<PhraseSourceHash, Phrase>>;
+  phrases: Map<PhraseSourceHash, Phrase>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
@@ -962,12 +964,11 @@ export type SingingStoreTypes = {
   };
 
   SET_PHRASES: {
-    mutation: { phrases: Map<TrackId, Map<PhraseSourceHash, Phrase>> };
+    mutation: { phrases: Map<PhraseSourceHash, Phrase> };
   };
 
   SET_STATE_TO_PHRASE: {
     mutation: {
-      trackId: TrackId;
       phraseKey: PhraseSourceHash;
       phraseState: PhraseState;
     };
@@ -975,7 +976,6 @@ export type SingingStoreTypes = {
 
   SET_SINGING_GUIDE_KEY_TO_PHRASE: {
     mutation: {
-      trackId: TrackId;
       phraseKey: PhraseSourceHash;
       singingGuideKey: SingingGuideSourceHash | undefined;
     };
@@ -983,7 +983,6 @@ export type SingingStoreTypes = {
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
     mutation: {
-      trackId: TrackId;
       phraseKey: PhraseSourceHash;
       singingVoiceKey: SingingVoiceSourceHash | undefined;
     };
