@@ -15,9 +15,9 @@ import {
   secondToTick,
 } from "@/sing/domain";
 import {
-  FramewiseDataSection,
-  FramewiseDataSectionHash,
-  calculateFramewiseDataSectionHash,
+  PitchData,
+  PitchDataHash,
+  calculatePitchDataHash,
   noteNumberToBaseY,
   tickToBaseX,
 } from "@/sing/viewHelper";
@@ -28,16 +28,14 @@ import {
 } from "@/composables/onMountOrActivate";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/domain/frontend/log";
+import { getLast } from "@/sing/utility";
 
 type PitchLine = {
-  readonly frameTicksArray: number[];
-  readonly lineStrip: LineStrip;
+  readonly color: Color;
+  readonly width: number;
+  readonly pitchDataMap: Map<PitchDataHash, PitchData>;
+  readonly lineStripMap: Map<PitchDataHash, LineStrip>;
 };
-
-const originalPitchLineColor = new Color(171, 201, 176, 255);
-const originalPitchLineWidth = 1.2;
-const pitchEditLineColor = new Color(146, 214, 154, 255);
-const pitchEditLineWidth = 2;
 
 const props = defineProps<{
   offsetX: number;
@@ -49,12 +47,27 @@ const props = defineProps<{
 
 const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
+const tpqn = computed(() => store.state.tpqn);
+const tempos = computed(() => [store.state.tempos[0]]);
 const singingGuides = computed(() => [...store.state.singingGuides.values()]);
 const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;
 });
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const editFrameRate = computed(() => store.state.editFrameRate);
+
+const originalPitchLine: PitchLine = {
+  color: new Color(171, 201, 176, 255),
+  width: 1.2,
+  pitchDataMap: new Map(),
+  lineStripMap: new Map(),
+};
+const pitchEditLine: PitchLine = {
+  color: new Color(146, 214, 154, 255),
+  width: 2,
+  pitchDataMap: new Map(),
+  lineStripMap: new Map(),
+};
 
 const canvasContainer = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
@@ -66,24 +79,7 @@ let stage: PIXI.Container | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
 
-let originalPitchDataSectionMap = new Map<
-  FramewiseDataSectionHash,
-  FramewiseDataSection
->();
-let pitchEditDataSectionMap = new Map<
-  FramewiseDataSectionHash,
-  FramewiseDataSection
->();
-
-const originalPitchLineMap = new Map<FramewiseDataSectionHash, PitchLine>();
-const pitchEditLineMap = new Map<FramewiseDataSectionHash, PitchLine>();
-
-const updatePitchLines = (
-  dataSectionMap: Map<FramewiseDataSectionHash, FramewiseDataSection>,
-  pitchLineMap: Map<FramewiseDataSectionHash, PitchLine>,
-  pitchLineColor: Color,
-  pitchLineWidth: number,
-) => {
+const updateLineStrips = (pitchLine: PitchLine) => {
   if (stage == undefined) {
     throw new Error("stage is undefined.");
   }
@@ -91,7 +87,6 @@ const updatePitchLines = (
     throw new Error("canvasWidth is undefined.");
   }
   const tpqn = store.state.tpqn;
-  const tempos = [store.state.tempos[0]];
   const canvasWidthValue = canvasWidth;
   const zoomX = store.state.sequencerZoomX;
   const zoomY = store.state.sequencerZoomY;
@@ -100,48 +95,37 @@ const updatePitchLines = (
 
   const removedLineStrips: LineStrip[] = [];
 
-  // 無くなったデータ区間を調べて、そのデータ区間に対応するピッチラインを削除する
-  for (const [key, pitchLine] of pitchLineMap) {
-    if (!dataSectionMap.has(key)) {
-      stage.removeChild(pitchLine.lineStrip.displayObject);
-      removedLineStrips.push(pitchLine.lineStrip);
-      pitchLineMap.delete(key);
+  // 無くなったピッチデータを調べて、そのピッチデータに対応するLineStripを削除する
+  for (const [key, lineStrip] of pitchLine.lineStripMap) {
+    if (!pitchLine.pitchDataMap.has(key)) {
+      stage.removeChild(lineStrip.displayObject);
+      removedLineStrips.push(lineStrip);
+      pitchLine.lineStripMap.delete(key);
     }
   }
 
-  // データ区間に対応するピッチラインが無かったら生成する
-  for (const [key, dataSection] of dataSectionMap) {
-    if (pitchLineMap.has(key)) {
+  // ピッチデータに対応するLineStripが無かったら作成する
+  for (const [key, pitchData] of pitchLine.pitchDataMap) {
+    if (pitchLine.lineStripMap.has(key)) {
       continue;
     }
-    const startFrame = dataSection.startFrame;
-    const frameLength = dataSection.data.length;
-    const endFrame = startFrame + frameLength;
-    const frameRate = dataSection.frameRate;
-
-    // 各フレームのticksは前もって計算しておく
-    const frameTicksArray: number[] = [];
-    for (let i = startFrame; i < endFrame; i++) {
-      const ticks = secondToTick(i / frameRate, tempos, tpqn);
-      frameTicksArray.push(ticks);
-    }
+    const dataLength = pitchData.data.length;
 
     // 再利用できるLineStripがあれば再利用し、なければLineStripを作成する
     let lineStrip = removedLineStrips.pop();
     if (lineStrip != undefined) {
       if (
-        !lineStrip.color.equals(pitchLineColor) ||
-        lineStrip.width !== pitchLineWidth
+        !lineStrip.color.equals(pitchLine.color) ||
+        lineStrip.width !== pitchLine.width
       ) {
         throw new Error("Color or width does not match.");
       }
-      lineStrip.numOfPoints = frameLength;
+      lineStrip.numOfPoints = dataLength;
     } else {
-      lineStrip = new LineStrip(frameLength, pitchLineColor, pitchLineWidth);
+      lineStrip = new LineStrip(dataLength, pitchLine.color, pitchLine.width);
     }
     stage.addChild(lineStrip.displayObject);
-
-    pitchLineMap.set(key, { frameTicksArray, lineStrip });
+    pitchLine.lineStripMap.set(key, lineStrip);
   }
 
   // 再利用されなかったLineStripは破棄する
@@ -149,44 +133,38 @@ const updatePitchLines = (
     lineStrip.destroy();
   }
 
-  // ピッチラインを更新
-  for (const [key, dataSection] of dataSectionMap) {
-    const pitchLine = pitchLineMap.get(key);
-    if (pitchLine == undefined) {
-      throw new Error("pitchLine is undefined.");
-    }
-    if (pitchLine.frameTicksArray.length !== dataSection.data.length) {
-      throw new Error(
-        "frameTicksArray.length and dataSection.length do not match.",
-      );
+  // LineStripを更新
+  for (const [key, pitchData] of pitchLine.pitchDataMap) {
+    const lineStrip = pitchLine.lineStripMap.get(key);
+    if (lineStrip == undefined) {
+      throw new Error("lineStrip is undefined.");
     }
 
     // カリングを行う
-    const startTicks = pitchLine.frameTicksArray[0];
+    const startTicks = pitchData.ticksArray[0];
     const startBaseX = tickToBaseX(startTicks, tpqn);
     const startX = startBaseX * zoomX - offsetX;
-    const lastIndex = pitchLine.frameTicksArray.length - 1;
-    const endTicks = pitchLine.frameTicksArray[lastIndex];
-    const endBaseX = tickToBaseX(endTicks, tpqn);
-    const endX = endBaseX * zoomX - offsetX;
-    if (startX >= canvasWidthValue || endX <= 0) {
-      pitchLine.lineStrip.renderable = false;
+    const lastTicks = getLast(pitchData.ticksArray);
+    const lastBaseX = tickToBaseX(lastTicks, tpqn);
+    const lastX = lastBaseX * zoomX - offsetX;
+    if (startX >= canvasWidthValue || lastX <= 0) {
+      lineStrip.renderable = false;
       continue;
     }
-    pitchLine.lineStrip.renderable = true;
+    lineStrip.renderable = true;
 
     // ポイントを計算してlineStripに設定＆更新
-    for (let i = 0; i < dataSection.data.length; i++) {
-      const ticks = pitchLine.frameTicksArray[i];
+    for (let i = 0; i < pitchData.data.length; i++) {
+      const ticks = pitchData.ticksArray[i];
       const baseX = tickToBaseX(ticks, tpqn);
       const x = baseX * zoomX - offsetX;
-      const freq = dataSection.data[i];
+      const freq = pitchData.data[i];
       const noteNumber = frequencyToNoteNumber(freq);
       const baseY = noteNumberToBaseY(noteNumber);
       const y = baseY * zoomY - offsetY;
-      pitchLine.lineStrip.setPoint(i, x, y);
+      lineStrip.setPoint(i, x, y);
     }
-    pitchLine.lineStrip.update();
+    lineStrip.update();
   }
 };
 
@@ -201,66 +179,72 @@ const render = () => {
   // シンガーが未設定の場合はピッチラインをすべて非表示にして終了
   const singer = store.getters.SELECTED_TRACK.singer;
   if (!singer) {
-    for (const originalPitchLine of originalPitchLineMap.values()) {
-      originalPitchLine.lineStrip.renderable = false;
+    for (const lineStrip of originalPitchLine.lineStripMap.values()) {
+      lineStrip.renderable = false;
     }
-    for (const pitchEditLine of pitchEditLineMap.values()) {
-      pitchEditLine.lineStrip.renderable = false;
+    for (const lineStrip of pitchEditLine.lineStripMap.values()) {
+      lineStrip.renderable = false;
     }
     renderer.render(stage);
     return;
   }
 
-  // ピッチラインを更新する
-  updatePitchLines(
-    originalPitchDataSectionMap,
-    originalPitchLineMap,
-    originalPitchLineColor,
-    originalPitchLineWidth,
-  );
-  updatePitchLines(
-    pitchEditDataSectionMap,
-    pitchEditLineMap,
-    pitchEditLineColor,
-    pitchEditLineWidth,
-  );
+  // ピッチラインのLineStripを更新する
+  updateLineStrips(originalPitchLine);
+  updateLineStrips(pitchEditLine);
 
   renderer.render(stage);
 };
 
-const generateDataSectionMap = async (data: number[], frameRate: number) => {
-  // データ区間（データがある区間）の配列を生成する
-  let dataSections: FramewiseDataSection[] = [];
+const toPitchData = (framewiseData: number[], frameRate: number): PitchData => {
+  const data = framewiseData;
+  const ticksArray: number[] = [];
   for (let i = 0; i < data.length; i++) {
-    if (data[i] !== VALUE_INDICATING_NO_DATA) {
-      if (i === 0 || data[i - 1] === VALUE_INDICATING_NO_DATA) {
-        dataSections.push({ startFrame: i, frameRate, data: [] });
-      }
-      dataSections[dataSections.length - 1].data.push(data[i]);
-    }
+    const ticks = secondToTick(i / frameRate, tempos.value, tpqn.value);
+    ticksArray.push(ticks);
   }
-  dataSections = dataSections.filter((value) => value.data.length >= 2);
-
-  // データ区間のハッシュを計算して、ハッシュがキーのマップにする
-  const dataSectionMap = new Map<
-    FramewiseDataSectionHash,
-    FramewiseDataSection
-  >();
-  for (const dataSection of dataSections) {
-    const hash = await calculateFramewiseDataSectionHash(dataSection);
-    dataSectionMap.set(hash, dataSection);
-  }
-  return dataSectionMap;
+  return { ticksArray, data };
 };
 
-const updateOriginalPitchDataSectionMap = async () => {
-  // 歌い方のf0を結合して1次元のデータにし、
-  // 1次元のデータからデータ区間のマップを生成して、originalPitchDataSectionMapに設定する
+const splitPitchData = (pitchData: PitchData, delimiter: number) => {
+  const ticksArray = pitchData.ticksArray;
+  const data = pitchData.data;
+  const pitchDataArray: PitchData[] = [];
+  for (let i = 0; i < data.length; i++) {
+    if (data[i] !== delimiter) {
+      if (i === 0 || data[i - 1] === delimiter) {
+        pitchDataArray.push({ ticksArray: [], data: [] });
+      }
+      const lastPitchData = getLast(pitchDataArray);
+      lastPitchData.ticksArray.push(ticksArray[i]);
+      lastPitchData.data.push(data[i]);
+    }
+  }
+  return pitchDataArray;
+};
 
+const setPitchDataToPitchLine = async (
+  pitchData: PitchData,
+  pitchLine: PitchLine,
+) => {
+  const partialPitchDataArray = splitPitchData(
+    pitchData,
+    VALUE_INDICATING_NO_DATA,
+  ).filter((value) => value.data.length >= 2);
+
+  pitchLine.pitchDataMap.clear();
+  for (const partialPitchData of partialPitchDataArray) {
+    const hash = await calculatePitchDataHash(partialPitchData);
+    pitchLine.pitchDataMap.set(hash, partialPitchData);
+  }
+};
+
+const generateOriginalPitchData = () => {
   const unvoicedPhonemes = UNVOICED_PHONEMES;
-  const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
   const singingGuidesValue = singingGuides.value;
+  const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
 
+  // 歌い方のf0を結合してピッチデータを生成する
   const tempData: number[] = [];
   for (const singingGuide of singingGuidesValue) {
     // TODO: 補間を行うようにする
@@ -307,20 +291,13 @@ const updateOriginalPitchDataSectionMap = async () => {
       }
     }
   }
-
-  // データ区間（ピッチのデータがある区間）のマップを生成する
-  const dataSectionMap = await generateDataSectionMap(tempData, frameRate);
-
-  originalPitchDataSectionMap = dataSectionMap;
+  return toPitchData(tempData, frameRate);
 };
 
-const updatePitchEditDataSectionMap = async () => {
-  // ピッチ編集データとプレビュー中のピッチ編集データを結合して1次元のデータにし、
-  // 1次元のデータからデータ区間のマップを生成して、pitchEditDataSectionMapに設定する
-
+const generatePitchEditData = () => {
   const frameRate = editFrameRate.value;
-  const tempData = [...pitchEditData.value];
 
+  const tempData = [...pitchEditData.value];
   // プレビュー中のピッチ編集があれば、適用する
   if (previewPitchEdit.value != undefined) {
     const previewPitchEditType = previewPitchEdit.value.type;
@@ -350,22 +327,19 @@ const updatePitchEditDataSectionMap = async () => {
       throw new ExhaustiveError(previewPitchEditType);
     }
   }
-
-  // データ区間（ピッチ編集データがある区間）のマップを生成する
-  const dataSectionMap = await generateDataSectionMap(tempData, frameRate);
-
-  pitchEditDataSectionMap = dataSectionMap;
+  return toPitchData(tempData, frameRate);
 };
 
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
 watch(
-  singingGuides,
+  [singingGuides, tempos, tpqn],
   async () => {
     asyncLock.acquire(
       "originalPitch",
       async () => {
-        await updateOriginalPitchDataSectionMap();
+        const originalPitchData = generateOriginalPitchData();
+        await setPitchDataToPitchLine(originalPitchData, originalPitchLine);
         renderInNextFrame = true;
       },
       (err) => {
@@ -379,12 +353,13 @@ watch(
 );
 
 watch(
-  [pitchEditData, previewPitchEdit],
+  [pitchEditData, previewPitchEdit, tempos, tpqn],
   async () => {
     asyncLock.acquire(
       "pitchEdit",
       async () => {
-        await updatePitchEditDataSectionMap();
+        const pitchEditData = generatePitchEditData();
+        await setPitchDataToPitchLine(pitchEditData, pitchEditLine);
         renderInNextFrame = true;
       },
       (err) => {
@@ -471,14 +446,10 @@ onUnmountedOrDeactivated(() => {
     window.cancelAnimationFrame(requestId);
   }
   stage?.destroy();
-  originalPitchLineMap.forEach((value) => {
-    value.lineStrip.destroy();
-  });
-  originalPitchLineMap.clear();
-  pitchEditLineMap.forEach((value) => {
-    value.lineStrip.destroy();
-  });
-  pitchEditLineMap.clear();
+  originalPitchLine.lineStripMap.forEach((value) => value.destroy());
+  originalPitchLine.lineStripMap.clear();
+  pitchEditLine.lineStripMap.forEach((value) => value.destroy());
+  pitchEditLine.lineStripMap.clear();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
 });
