@@ -685,6 +685,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             () => undefined,
           )
         : undefined;
+      if (query) {
+        query.pauseLength = 0.3;
+      }
       console.log(query);
 
       const newAudioItem: AudioItem = { text, voice };
@@ -1319,7 +1322,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const audioItem: AudioItem = JSON.parse(
         JSON.stringify(state.audioItems[audioKey]),
       );
-      await console.log(audioItem); // この時点ではまだpresetがmoraに反映されていない
+      // ここでqueryのチェックを行う
+      if (audioItem.query?.pauseLengthScale !== 1) {
+        if (audioItem.query) {
+          audioItem.query.pauseLength = -1;
+        }
+      }
+      await console.log("以下audioItem");
+      await console.log(audioItem);
       return dispatch("FETCH_AUDIO_FROM_AUDIO_ITEM", {
         audioItem,
         ...options,
@@ -1823,6 +1833,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   PLAY_CONTINUOUSLY_AUDIO: {
     action: createUILockAction(async ({ state, getters, commit, dispatch }) => {
+      console.log("PLAY_CONTINUOUSLY_AUDIO");
       const currentAudioKey = state._activeAudioKey;
       const currentAudioPlayStartPoint = getters.AUDIO_PLAY_START_POINT;
 

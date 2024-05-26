@@ -362,49 +362,49 @@ const selectedAudioKeys = computed(() =>
     : [props.activeAudioKey],
 );
 
-const plParam: Parameter = {
-  label: "文内無音",
-  slider: previewSliderHelper({
-    modelValue: () => query.value?.pauseLength ?? null,
-    disable: () => uiLocked.value,
-    max: SLIDER_PARAMETERS.PAUSE_LENGTH.max,
-    min: SLIDER_PARAMETERS.PAUSE_LENGTH.min,
-    step: SLIDER_PARAMETERS.PAUSE_LENGTH.step,
-    scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollStep,
-    scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollMinStep,
-    onChange: (pauseLength: number) =>
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
-        audioKeys: selectedAudioKeys.value,
-        pauseLength,
-      }),
-  }),
-  action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH",
-  key: "pauseLength",
-};
-
-const plsParam: Parameter = {
-  label: "文内無音",
-  slider: previewSliderHelper({
-    modelValue: () => query.value?.pauseLengthScale ?? null,
-    disable: () => uiLocked.value,
-    max: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.max,
-    min: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.min,
-    step: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.step,
-    scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollStep,
-    scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollMinStep,
-    onChange: (pauseLengthScale: number) =>
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
-        audioKeys: selectedAudioKeys.value,
-        pauseLengthScale,
-      }),
-  }),
-  action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH",
-  key: "pauseLength",
-};
-
 // 文内無音はひとまず倍率verを表示 のち必要に応じ絶対値に切替
 // 泥臭くなっちゃったかも
 const parameters = computed<Parameter[]>(() => {
+  // 一旦ここで初期値を入れてしまう
+  const plParam: Parameter = {
+    label: "文内無音(秒)",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.pauseLength ?? null,
+      disable: () => uiLocked.value,
+      max: SLIDER_PARAMETERS.PAUSE_LENGTH.max,
+      min: SLIDER_PARAMETERS.PAUSE_LENGTH.min,
+      step: SLIDER_PARAMETERS.PAUSE_LENGTH.step,
+      scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollMinStep,
+      onChange: (pauseLength: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
+          audioKeys: selectedAudioKeys.value,
+          pauseLength: pauseLength,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH",
+    key: "pauseLength",
+  };
+
+  const plsParam: Parameter = {
+    label: "文内無音(倍)",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.pauseLengthScale ?? null,
+      disable: () => uiLocked.value,
+      max: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.max,
+      min: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.min,
+      step: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.step,
+      scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollMinStep,
+      onChange: (pauseLengthScale: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
+          audioKeys: selectedAudioKeys.value,
+          pauseLengthScale: pauseLengthScale,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE",
+    key: "pauseLengthScale",
+  };
   const baseParam: Parameter[] = [
     {
       label: "話速",

@@ -4,7 +4,10 @@
   />
   <AcceptTermsDialog v-model="isAcceptTermsDialogOpenComputed" />
   <HelpDialog v-model="isHelpDialogOpenComputed" />
-  <SettingDialog v-model="isSettingDialogOpenComputed" />
+  <SettingDialog
+    v-model="isSettingDialogOpenComputed"
+    :active-audio-key="activeAudioKey"
+  />
   <HotkeySettingDialog v-model="isHotkeySettingDialogOpenComputed" />
   <ToolBarCustomDialog v-model="isToolbarSettingDialogOpenComputed" />
   <CharacterOrderDialog
@@ -41,11 +44,16 @@ import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotific
 import ImportMidiDialog from "@/components/Dialog/ImportMidiDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
+import { AudioKey } from "@/type/preload";
 
 const props = defineProps<{
   isEnginesReady: boolean;
 }>();
 const store = useStore();
+
+const activeAudioKey = computed<AudioKey | undefined>(
+  () => store.getters.ACTIVE_AUDIO_KEY,
+);
 
 // ライセンス表示
 const isHelpDialogOpenComputed = computed({

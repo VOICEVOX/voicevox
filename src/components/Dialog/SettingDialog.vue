@@ -1065,6 +1065,7 @@ import { computed, ref, watchEffect } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
+  AudioKey,
   isProduction,
   SavingSetting,
   EngineSettingType,
@@ -1091,6 +1092,7 @@ const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
 
 const props = defineProps<{
   modelValue: boolean;
+  activeAudioKey: AudioKey;
 }>();
 const emit = defineEmits<{
   (e: "update:modelValue", val: boolean): void;
@@ -1126,6 +1128,29 @@ const switchPauseLengthMode = computed({
     });
   },
 });
+
+const selectedAudioKeys = computed(() =>
+  store.state.experimentalSetting.enableMultiSelect
+    ? store.getters.SELECTED_AUDIO_KEYS
+    : [props.activeAudioKey],
+);
+
+watchEffect(() => {
+  if (selectedAudioKeys.value) {
+    if (switchPauseLengthMode.value === "SCALE") {
+      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
+        audioKeys: selectedAudioKeys.value,
+        pauseLength: 0.3,
+      });
+    } else {
+      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
+        audioKeys: selectedAudioKeys.value,
+        pauseLengthScale: 1,
+      });
+    }
+  }
+});
+
 const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
   get: () => store.state.activePointScrollMode,
