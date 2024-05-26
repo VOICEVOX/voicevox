@@ -1,4 +1,5 @@
 import pastConfigs from "./pastConfigs";
+import configBugDefaultPreset1996 from "./pastConfigs/0.19.1-bug_default_preset.json";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
 import { configSchema } from "@/type/preload";
 
@@ -82,6 +83,65 @@ for (const [version, data] of pastConfigs) {
     expect(configManager).toBeTruthy();
   });
 }
+
+it("0.19.1からのマイグレーション時にハミング・ソングスタイル由来のデフォルトプリセットを削除できている", async () => {
+  const data = configBugDefaultPreset1996;
+  vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
+    async () => true,
+  );
+  vi.spyOn(TestConfigManager.prototype, "save").mockImplementation(
+    async () => undefined,
+  );
+  vi.spyOn(TestConfigManager.prototype, "load").mockImplementation(
+    async () => data,
+  );
+
+  // VoiceIdからスタイルIDを取得する。VoiceIdの3番目がスタイルID。
+  function getStyleIdFromVoiceId(voiceId: string): number {
+    const splited = voiceId.split(":");
+    const styleId = parseInt(splited[2]);
+    return styleId;
+  }
+
+  // ソング・ハミングスタイルかどうかを判定する
+  function isSingerLikeStyle(styleId: number): boolean {
+    // スタイルIDが3000以上3085以下または6000のものをソング・ハミングスタイルとみなす
+    return (styleId >= 3000 && styleId <= 3085) || styleId === 6000;
+  }
+
+  // マイグレーション前のデフォルトプリセットのスタイルID
+  const beforeDefaultPresetStyleIds = Object.keys(
+    configBugDefaultPreset1996.defaultPresetKeys,
+  ).map((key) => getStyleIdFromVoiceId(key));
+
+  // マイグレーション
+  const configManager = new TestConfigManager();
+  await configManager.initialize();
+  const presets = configManager.get("presets");
+  const defaultPresetKeys = configManager.get("defaultPresetKeys");
+
+  // ソング・ハミングスタイルのデフォルトプリセットが削除されていることを確認
+  const afterDefaultPresetStyleIds = Object.keys(defaultPresetKeys).map((key) =>
+    getStyleIdFromVoiceId(key),
+  );
+  const deletedStyleIds = beforeDefaultPresetStyleIds.filter(
+    (styleId) => !afterDefaultPresetStyleIds.includes(styleId),
+  );
+  expect(deletedStyleIds.length).toBe(86 - 5 + 1);
+  expect(deletedStyleIds.every(isSingerLikeStyle)).toBeTruthy();
+
+  // 残っているデフォルトプリセットはトークスタイルなことを確認
+  const remainingStyleIds = afterDefaultPresetStyleIds.filter(
+    (styleId) => !deletedStyleIds.includes(styleId),
+  );
+  expect(
+    remainingStyleIds.every((styleId) => !isSingerLikeStyle(styleId)),
+  ).toBeTruthy();
+
+  // プリセットが削除されていることを確認
+  expect(remainingStyleIds.length).toBe(presets.keys.length);
+  expect(remainingStyleIds.length).toBe(Object.keys(presets.items).length);
+});
 
 it("getできる", async () => {
   vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(

@@ -179,10 +179,6 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     action: "選択解除",
     combination: HotkeyCombination("Escape"),
   },
-  {
-    action: "全セルを選択",
-    combination: HotkeyCombination(!isMac ? "Ctrl Shift A" : "Meta Shift A"),
-  },
   ...Array.from({ length: 10 }, (_, index) => {
     const roleKey = index == 9 ? 0 : index + 1;
     return {
