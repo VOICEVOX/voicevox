@@ -49,8 +49,15 @@ export class Store<
   dispatch: Dispatch<A>;
   // @ts-expect-error Storeの型を非互換な型で書き換えているためエラー
   commit: Commit<M>;
-
+  /**
+   * ドット記法用のActionを直接呼べる。エラーになる場合はdispatchを使ってください。
+   * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
+   */
   actions: DotNotationDispatch<A>;
+  /**
+   * ドット記法用のMutationを直接呼べる。エラーになる場合はcommitを使う。
+   * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
+   */
   mutations: DotNotationCommit<M>;
 }
 
@@ -196,20 +203,24 @@ export interface ActionObject<
   handler: ActionHandler<S, R, SG, SA, SM, K>;
 }
 
-export interface DotNotationActionContext<
+export type DotNotationActionContext<
   S,
   R,
   SG extends GettersBase,
   SA extends ActionsBase,
   SM extends MutationsBase,
-> {
+> = {
+  /**
+   * ドット記法用のActionを直接呼べる。エラーになる場合はdispatchを使ってください。
+   * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
+   */
   actions: DotNotationDispatch<SA>;
+  /**
+   * ドット記法用のMutationを直接呼べる。エラーになる場合はcommitを使う。
+   * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
+   */
   mutations: DotNotationCommit<SM>;
-  state: S;
-  getters: SG;
-  rootState: R;
-  rootGetters: any;
-}
+} & ActionContext<S, R, SG, SA, SM>;
 
 export type DotNotationActionHandler<
   S,
