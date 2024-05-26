@@ -1,11 +1,11 @@
-import { createDotNotationPartialStore as createDotPartialStore } from "./vuex";
+import { createDotNotationPartialStore as createDotPartStore } from "./vuex";
 import { UserDictWord, UserDictWordToJSON } from "@/openapi";
 import { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
 import { EngineId } from "@/type/preload";
 
 export const dictionaryStoreState: DictionaryStoreState = {};
 
-export const dictionaryStore = createDotPartialStore<DictionaryStoreTypes>({
+export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
   LOAD_USER_DICT: {
     async action({ actions }, { engineId }) {
       const engineDict = await actions
