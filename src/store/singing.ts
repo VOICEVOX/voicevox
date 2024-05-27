@@ -25,7 +25,6 @@ import {
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId, NoteId, StyleId } from "@/type/preload";
-import { Midi } from "@/sing/midi";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {

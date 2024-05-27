@@ -4,23 +4,23 @@
       <QHeader>
         <QToolbar>
           <QToolbarTitle class="text-display"
-            >MIDIファイルのインポート</QToolbarTitle
+            >外部プロジェクトファイルのインポート</QToolbarTitle
           >
         </QToolbar>
       </QHeader>
       <QPageContainer class="q-px-lg q-py-md">
         <QFile
           v-model="midiFile"
-          label="インポートするMIDIファイル"
+          label="インポートするファイル"
           class="q-my-sm"
-          accept=".mid,.midi"
+          :accept="acceptExtensions"
           :error-message="midiFileError"
           :error="!!midiFileError"
-          placeholder="MIDIファイルを選択してください"
-          @input="handleMidiFileChange"
+          placeholder="外部プロジェクトファイルを選択してください"
+          @input="handleFileChange"
         />
         <QSelect
-          v-if="midi"
+          v-if="project"
           v-model="selectedTrack"
           :options="tracks"
           :disable="midiFileError != undefined"
@@ -60,39 +60,67 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
-import { Midi } from "@/sing/midi";
+import {
+  Project,
+  EmptyProjectException,
+  IllegalFileException,
+  NotesOverlappingException,
+  parseFunctions,
+} from "@sevenc-nanashi/utaformatix-ts";
 import { useStore } from "@/store";
+import { createLogger } from "@/domain/frontend/log";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const store = useStore();
+const log = createLogger("ImportExternalProjectDialog");
 
-// MIDIファイル
+// 受け入れる拡張子
+const acceptExtensions = computed(() =>
+  Object.keys(parseFunctions)
+    .map((ext) => `.${ext}`)
+    .join(","),
+);
+
+// プロジェクトファイル
 const midiFile = ref<File | null>(null);
+// エラー
+const error = ref<
+  "emptyProject" | "overlapping" | "parseFailed" | "unknown" | null
+>(null);
 
-// MIDIファイルエラー
+// ファイルエラー
 const midiFileError = computed(() => {
-  if (midiFile.value && !midi.value) {
-    return "MIDIファイルの読み込みに失敗しました";
-  } else if (midiFile.value && midi.value) {
-    if (!midi.value.tracks.length) {
+  if (midiFile.value && error.value) {
+    switch (error.value) {
+      case "emptyProject":
+        return "プロジェクトが空です";
+      case "overlapping":
+        return "ノートが重なっています";
+      default:
+        return "不明なエラーが発生しました";
+    }
+  } else if (midiFile.value && project.value) {
+    if (!project.value.tracks.length) {
       return "トラックがありません";
-    } else if (midi.value.tracks.every((track) => track.notes.length === 0)) {
+    } else if (
+      project.value.tracks.every((track) => track.notes.length === 0)
+    ) {
       return "ノートがありません";
     }
   }
   return undefined;
 });
-// MIDIデータ
-const midi = ref<Midi | null>(null);
+// データ
+const project = ref<Project | null>(null);
 // トラック
 const tracks = computed(() => {
-  if (!midi.value) {
+  if (!project.value) {
     return [];
   }
   // トラックリストを生成
   // "トラックNo: トラック名 / ノート数" の形式で表示
-  return midi.value.tracks.map((track, index) => ({
+  return project.value.tracks.map((track, index) => ({
     label: `${index + 1}: ${track.name || "（トラック名なし）"} / ノート数：${
       track.notes.length
     }`,
@@ -106,12 +134,12 @@ const selectedTrack = ref<string | number | null>(null);
 // データ初期化
 const initializeValues = () => {
   midiFile.value = null;
-  midi.value = null;
+  project.value = null;
   selectedTrack.value = null;
 };
 
-// MIDIファイル変更時
-const handleMidiFileChange = (event: Event) => {
+// ファイル変更時
+const handleFileChange = async (event: Event) => {
   if (!(event.target instanceof HTMLInputElement)) {
     throw new Error("Event target is not an HTMLInputElement");
   }
@@ -123,47 +151,39 @@ const handleMidiFileChange = (event: Event) => {
     throw new Error("No file selected");
   }
 
-  // 既存のMIDIデータおよび選択中のトラックをクリア
-  midi.value = null;
+  // 既存のデータおよび選択中のトラックをクリア
+  project.value = null;
   selectedTrack.value = null;
+  error.value = null;
 
   const file = input.files[0];
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      if (
-        e.target &&
-        e.target.result &&
-        e.target.result instanceof ArrayBuffer
-      ) {
-        // MIDIファイルをパース
-        midi.value = new Midi(e.target.result);
-        selectedTrack.value = midi.value.tracks.findIndex(
-          (track) => track.notes.length > 0,
-        );
-        if (selectedTrack.value === -1) {
-          selectedTrack.value = 0;
-        }
-      } else {
-        throw new Error("Could not find MIDI file data");
-      }
-    } catch (error) {
-      throw new Error("Failed to parse MIDI file", { cause: error });
+  // ファイルをパース
+  try {
+    project.value = await Project.fromAny(file);
+    selectedTrack.value = project.value.tracks.findIndex(
+      (track) => track.notes.length > 0,
+    );
+    if (selectedTrack.value === -1) {
+      selectedTrack.value = 0;
     }
-  };
-  reader.onerror = () => {
-    throw new Error("Failed to read MIDI file");
-  };
-
-  // MIDIファイルをバイナリデータとして読み込む
-  reader.readAsArrayBuffer(file);
+  } catch (e) {
+    log.error(String(e));
+    error.value = "unknown";
+    if (e instanceof EmptyProjectException) {
+      error.value = "emptyProject";
+    } else if (e instanceof NotesOverlappingException) {
+      error.value = "overlapping";
+    } else if (e instanceof IllegalFileException) {
+      error.value = "parseFailed";
+    }
+  }
 };
 
 // トラックインポート実行時
 const handleImportTrack = () => {
-  // MIDIファイルまたは選択中のトラックが未設定の場合はエラー
+  // ファイルまたは選択中のトラックが未設定の場合はエラー
   if (midiFile.value == null || typeof selectedTrack.value !== "number") {
-    throw new Error("MIDI file or selected track is not set");
+    throw new Error("file or selected track is not set");
   }
   // トラックをインポート
   store.dispatch("IMPORT_MIDI_FILE", {
