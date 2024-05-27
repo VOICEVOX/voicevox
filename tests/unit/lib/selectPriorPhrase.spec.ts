@@ -7,7 +7,9 @@ import {
   phraseSourceHashSchema,
 } from "@/store/type";
 import { DEFAULT_TPQN, selectPriorPhrase } from "@/sing/domain";
-import { NoteId } from "@/type/preload";
+import { NoteId, TrackId } from "@/type/preload";
+
+const trackId = TrackId("00000000-0000-0000-0000-000000000000");
 
 const createPhrase = (
   firstRestDuration: number,
@@ -16,6 +18,7 @@ const createPhrase = (
   state: PhraseState,
 ): Phrase => {
   return {
+    trackId,
     firstRestDuration: firstRestDuration * DEFAULT_TPQN,
     notes: [
       {

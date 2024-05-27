@@ -6,10 +6,10 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { PhraseKey, PhraseState } from "@/store/type";
+import { PhraseSourceHash, PhraseState } from "@/store/type";
 
 const props = defineProps<{
-  phraseKey: PhraseKey;
+  phraseKey: PhraseSourceHash;
 }>();
 
 const store = useStore();
