@@ -1,5 +1,6 @@
 import { Patch } from "immer";
 import { z } from "zod";
+import { Project } from "@sevenc-nanashi/utaformatix-ts";
 import {
   MutationTree,
   MutationsBase,
@@ -1016,16 +1017,8 @@ export type SingingStoreTypes = {
     action(payload: { isDrag: boolean }): void;
   };
 
-  IMPORT_MIDI_FILE: {
-    action(payload: { filePath: string; trackIndex: number }): void;
-  };
-
-  IMPORT_MUSICXML_FILE: {
-    action(payload: { filePath?: string }): void;
-  };
-
-  IMPORT_UST_FILE: {
-    action(payload: { filePath?: string }): void;
+  IMPORT_EXTERNAL_PROJECT_FILE: {
+    action(payload: { project: Project; trackIndex: number }): void;
   };
 
   EXPORT_WAVE_FILE: {

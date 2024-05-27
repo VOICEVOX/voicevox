@@ -129,7 +129,7 @@ const tracks = computed(() => {
   }));
 });
 // 選択中のトラック
-const selectedTrack = ref<string | number | null>(null);
+const selectedTrack = ref<number | null>(null);
 
 // データ初期化
 const initializeValues = () => {
@@ -182,12 +182,12 @@ const handleFileChange = async (event: Event) => {
 // トラックインポート実行時
 const handleImportTrack = () => {
   // ファイルまたは選択中のトラックが未設定の場合はエラー
-  if (midiFile.value == null || typeof selectedTrack.value !== "number") {
-    throw new Error("file or selected track is not set");
+  if (project.value == null || selectedTrack.value == null) {
+    throw new Error("project or selected track is not set");
   }
   // トラックをインポート
-  store.dispatch("IMPORT_MIDI_FILE", {
-    filePath: midiFile.value.path,
+  store.dispatch("IMPORT_EXTERNAL_PROJECT_FILE", {
+    project: project.value,
     trackIndex: selectedTrack.value,
   });
   onDialogOK();
