@@ -1741,12 +1741,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
         };
 
+        // 歌詞をひらがなの単独音に変換する
+        // TODO: 手動で変換元を選べるようにする
+        const convertedProject = project.convertJapaneseLyrics(
+          "auto",
+          "KanaCv",
+        );
+
         // https://github.com/sdercolin/utaformatix-data?tab=readme-ov-file#value-conventions
         const projectTpqn = 480;
-        const projectTempos = project.tempos;
-        const projectTimeSignatures = project.timeSignatures;
+        const projectTempos = convertedProject.tempos;
+        const projectTimeSignatures = convertedProject.timeSignatures;
 
-        const trackNotes = project.tracks[trackIndex].notes;
+        const trackNotes = convertedProject.tracks[trackIndex].notes;
 
         trackNotes.sort((a, b) => a.tickOn - b.tickOn);
 
