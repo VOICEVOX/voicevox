@@ -220,7 +220,6 @@ export class HotkeyManager {
    * エディタが変更されたときに呼び出される。
    */
   onEditorChange(editor: EditorType): void {
-    // this.hotkeys.setScope(editor);
     this.scope = editor;
     this.log("Editor changed to", editor);
   }
