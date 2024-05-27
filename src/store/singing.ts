@@ -143,16 +143,15 @@ const animationTimer = new AnimationTimer();
 const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
 const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
-// TODO: 選択できるようにする
-const selectedTrackId = TrackId("00000000-0000-0000-0000-000000000000");
+const initialTrackId = TrackId(uuidv4());
 
 export const singingStoreState: SingingStoreState = {
   tpqn: DEFAULT_TPQN,
   tempos: [createDefaultTempo(0)],
   timeSignatures: [createDefaultTimeSignature(1)],
-  tracks: new Map([[selectedTrackId, createDefaultTrack()]]),
-  trackOrder: [selectedTrackId],
-  selectedTrackId,
+  tracks: new Map([[initialTrackId, createDefaultTrack()]]),
+  trackOrder: [initialTrackId],
+  selectedTrackId: initialTrackId,
   editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   phrases: new Map(),
   singingGuides: new Map(),
