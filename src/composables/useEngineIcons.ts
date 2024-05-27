@@ -16,7 +16,7 @@ export const useEngineIcons = (
         engineIcons[EngineId(engineId)] = await base64ImageToUri(manifest.icon);
       }
 
-      return engineIcons;
+      result.value = engineIcons;
     },
     {
       immediate: true,
