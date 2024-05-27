@@ -165,6 +165,14 @@ npm run license:generate -- -o voicevox_licenses.json
 npm run license:merge -- -o public/licenses.json -i engine_licenses.json -i voicevox_licenses.json
 ```
 
+## リント（静的解析）
+
+コードの静的解析を行い、バグを未然に防ぎます。プルリクエストを送る前に実行してください。
+
+```bash
+npm run lint
+```
+
 ## コードフォーマット
 
 コードのフォーマットを整えます。プルリクエストを送る前に実行してください。

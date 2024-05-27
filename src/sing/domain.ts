@@ -1,5 +1,5 @@
 import { calculateHash } from "./utility";
-import { convertLongVowel } from "@/store/utility";
+import { convertLongVowel } from "@/domain/japanese";
 import {
   Note,
   Phrase,
@@ -174,8 +174,8 @@ export function getTimeSignaturePositions(
     const tsPosition = tsPositions[i];
     const nextTs = timeSignatures[i + 1];
     const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
-    const numOfMeasures = nextTs.measureNumber - ts.measureNumber;
-    const nextTsPosition = tsPosition + measureDuration * numOfMeasures;
+    const numMeasures = nextTs.measureNumber - ts.measureNumber;
+    const nextTsPosition = tsPosition + measureDuration * numMeasures;
     tsPositions.push(nextTsPosition);
   }
   return tsPositions;
@@ -207,7 +207,7 @@ export function getMeasureDuration(
   return (wholeNoteDuration / beatType) * beats;
 }
 
-export function getNumOfMeasures(
+export function getNumMeasures(
   notes: Note[],
   tempos: Tempo[],
   timeSignatures: TimeSignature[],
@@ -281,6 +281,7 @@ export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
 export const DEFAULT_BEAT_TYPE = 4;
+export const SEQUENCER_MIN_NUM_MEASURES = 32;
 
 // マルチエンジン対応のために将来的に廃止予定で、利用は非推奨
 export const DEPRECATED_DEFAULT_EDIT_FRAME_RATE = 93.75;

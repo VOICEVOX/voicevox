@@ -16,9 +16,6 @@ import {
 import {
   buildAudioFileNameFromRawData,
   isAccentPhrasesTextDifferent,
-  convertHiraToKana,
-  convertLongVowel,
-  createKanaRegex,
   currentDateString,
   extractExportText,
   extractYomiText,
@@ -37,6 +34,11 @@ import {
   isMorphable,
 } from "./audioGenerate";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
+import {
+  convertHiraToKana,
+  convertLongVowel,
+  createKanaRegex,
+} from "@/domain/japanese";
 import {
   AudioKey,
   CharacterInfo,

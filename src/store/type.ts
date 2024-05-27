@@ -813,7 +813,7 @@ export type PhraseSourceHash = z.infer<typeof phraseSourceHashSchema>;
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
 export type SingingStoreState = {
-  tpqn: number;
+  tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
   tracks: Track[];
@@ -990,6 +990,10 @@ export type SingingStoreTypes = {
   SET_SNAP_TYPE: {
     mutation: { snapType: number };
     action(payload: { snapType: number }): void;
+  };
+
+  SEQUENCER_NUM_MEASURES: {
+    getter: number;
   };
 
   SET_ZOOM_X: {
