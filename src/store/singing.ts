@@ -883,6 +883,72 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  CREATE_TRACK: {
+    mutation(state, { trackId }) {
+      state.tracks.set(trackId, createDefaultTrack());
+      state.trackOrder.push(trackId);
+    },
+    action({ commit }) {
+      const trackId = TrackId(uuidv4());
+      commit("CREATE_TRACK", { trackId });
+      return trackId;
+    },
+  },
+
+  SELECT_TRACK: {
+    mutation(state, { trackId }) {
+      state.selectedTrackId = trackId;
+    },
+    action({ commit }, { trackId }) {
+      commit("SELECT_TRACK", { trackId });
+    },
+  },
+
+  SET_TRACKS: {
+    mutation(state, { tracks }) {
+      state.tracks = tracks;
+      state.trackOrder = Array.from(tracks.keys());
+      state.selectedTrackId = state.trackOrder[0];
+    },
+    async action({ commit, dispatch }, { tracks }) {
+      commit("SET_TRACKS", { tracks });
+      // 色々な処理を動かすため、二重にセットする
+      // TODO: もっとスマートな方法を考える
+      for (const [trackId, track] of tracks) {
+        await dispatch("SET_SINGER", {
+          singer: track.singer,
+          trackId,
+        });
+        await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
+          keyRangeAdjustment: track.keyRangeAdjustment,
+          trackId,
+        });
+        await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
+          volumeRangeAdjustment: track.volumeRangeAdjustment,
+          trackId,
+        });
+        await dispatch("SET_NOTES", { notes: track.notes, trackId });
+        await dispatch("CLEAR_PITCH_EDIT_DATA", {
+          trackId,
+        }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+        await dispatch("SET_PITCH_EDIT_DATA", {
+          pitchArray: track.pitchEditData,
+          startFrame: 0,
+          trackId,
+        });
+      }
+    },
+  },
+
+  SET_TRACK_ORDER: {
+    mutation(state, { trackOrder }) {
+      state.trackOrder = trackOrder;
+    },
+    action({ commit }, { trackOrder }) {
+      commit("SET_TRACK_ORDER", { trackOrder });
+    },
+  },
+
   /**
    * レンダリングを行う。レンダリング中だった場合は停止して再レンダリングする。
    */
@@ -2692,72 +2758,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         trackId: state.selectedTrackId,
       });
       dispatch("RENDER");
-    },
-  },
-
-  CREATE_TRACK: {
-    mutation(state, { trackId }) {
-      state.tracks.set(trackId, createDefaultTrack());
-      state.trackOrder.push(trackId);
-    },
-    action({ commit }) {
-      const trackId = TrackId(uuidv4());
-      commit("CREATE_TRACK", { trackId });
-      return trackId;
-    },
-  },
-
-  SELECT_TRACK: {
-    mutation(state, { trackId }) {
-      state.selectedTrackId = trackId;
-    },
-    action({ commit }, { trackId }) {
-      commit("SELECT_TRACK", { trackId });
-    },
-  },
-
-  SET_TRACKS: {
-    mutation(state, { tracks }) {
-      state.tracks = tracks;
-      state.trackOrder = Array.from(tracks.keys());
-      state.selectedTrackId = state.trackOrder[0];
-    },
-    async action({ commit, dispatch }, { tracks }) {
-      commit("SET_TRACKS", { tracks });
-      // 色々な処理を動かすため、二重にセットする
-      // TODO: もっとスマートな方法を考える
-      for (const [trackId, track] of tracks) {
-        await dispatch("SET_SINGER", {
-          singer: track.singer,
-          trackId,
-        });
-        await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-          keyRangeAdjustment: track.keyRangeAdjustment,
-          trackId,
-        });
-        await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-          volumeRangeAdjustment: track.volumeRangeAdjustment,
-          trackId,
-        });
-        await dispatch("SET_NOTES", { notes: track.notes, trackId });
-        await dispatch("CLEAR_PITCH_EDIT_DATA", {
-          trackId,
-        }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-        await dispatch("SET_PITCH_EDIT_DATA", {
-          pitchArray: track.pitchEditData,
-          startFrame: 0,
-          trackId,
-        });
-      }
-    },
-  },
-
-  SET_TRACK_ORDER: {
-    mutation(state, { trackOrder }) {
-      state.trackOrder = trackOrder;
-    },
-    action({ commit }, { trackOrder }) {
-      commit("SET_TRACK_ORDER", { trackOrder });
     },
   },
 });
