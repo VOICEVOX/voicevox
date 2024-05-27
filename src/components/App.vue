@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, ref, computed, toRaw } from "vue";
+import { watch, onMounted, onUnmounted, ref, computed, toRaw } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
 import SingEditor from "@/components/Sing/SingEditor.vue";
@@ -148,10 +148,22 @@ onMounted(async () => {
   } else {
     isProjectFileLoaded.value = false;
   }
-
-  // ショートカットキーを動作させる
-  document.addEventListener("keydown", (e) => {
-    hotkeyManager.keyInput(e);
-  });
 });
+
+// ホットキーの監視を開始/終了
+const startKeyInputWithCleanup = () => {
+  const keyInputHandler = (e: KeyboardEvent) => {
+    hotkeyManager.keyInput(e);
+  };
+
+  onMounted(() => {
+    document.addEventListener("keydown", keyInputHandler);
+  });
+
+  onUnmounted(() => {
+    document.removeEventListener("keydown", keyInputHandler);
+  });
+};
+
+startKeyInputWithCleanup();
 </script>
