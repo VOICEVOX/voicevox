@@ -76,6 +76,7 @@ export function useStore<
   A extends ActionsBase,
   M extends MutationsBase
 >(injectKey?: InjectionKey<Store<S, G, A, M>> | string): Store<S, G, A, M> {
+  // FIXME: dispatchとcommitの型を戻せばsuper typeになるのでunknownを消せる。
   return baseUseStore<S>(injectKey) as unknown as Store<S, G, A, M>;
 }
 
