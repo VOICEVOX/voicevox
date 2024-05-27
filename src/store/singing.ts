@@ -1746,6 +1746,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const convertedProject = project.convertJapaneseLyrics(
           "auto",
           "KanaCv",
+          { convertVowelConnections: true },
         );
 
         // https://github.com/sdercolin/utaformatix-data?tab=readme-ov-file#value-conventions
