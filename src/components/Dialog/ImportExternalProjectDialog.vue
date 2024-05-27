@@ -97,6 +97,8 @@ const midiFileError = computed(() => {
         return "プロジェクトが空です";
       case "overlapping":
         return "ノートが重なっています";
+      case "parseFailed":
+        return "ファイルの解析に失敗しました";
       default:
         return "不明なエラーが発生しました";
     }
