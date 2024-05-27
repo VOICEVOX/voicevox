@@ -78,7 +78,7 @@ export class HotkeyManager {
   /** 登録されたHotkeyAction */
   private actions: HotkeyAction[] = [];
   /** スコープ */
-  private scope: EditorType = "talk";
+  private scope: EditorType | undefined;
   /** ユーザーのショートカットキー設定 */
   private settings: HotkeySettingType[] | undefined; // ユーザーのショートカットキー設定
   /** 登録されたショートカットキーの組み合わせ */
@@ -227,6 +227,12 @@ export class HotkeyManager {
 
   keyInput(e: KeyboardEvent): void {
     const element = e.target;
+
+    if (this.scope == undefined) {
+      console.error("hotkeyPluginのスコープが未設定です");
+      return;
+    }
+
     // メニュー項目・ダイアログではショートカットキーを無効化
     if (
       element instanceof HTMLElement &&
@@ -252,7 +258,10 @@ export class HotkeyManager {
           combinationToBindingKey(this.getSetting(item).combination) ==
           combination,
       )
-      .filter((item) => item.editor.split("&").includes(this.scope));
+      .filter((item) =>
+        // エラー表記を回避するために三項演算子を利用
+        item.editor.split("&").includes(this.scope ? this.scope : ""),
+      );
     if (actions.length == 0) {
       return;
     }
