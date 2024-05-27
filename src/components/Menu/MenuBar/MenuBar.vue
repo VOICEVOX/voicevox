@@ -33,8 +33,8 @@ import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
-import { base64ImageToUri } from "@/helpers/base64Helper";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -81,6 +81,7 @@ const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
+const engineIcons = useEngineIcons(engineManifests);
 const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 const titleText = computed(
   () =>
@@ -188,8 +189,7 @@ watch(projectFilePath, updateRecentProjects, {
 });
 
 // 「エンジン」メニューのエンジン毎の項目
-const engineSubMenuData = ref<MenuItemData[]>([]);
-watch(engineInfos, async () => {
+const engineSubMenuData = computed(() => {
   let subMenu: MenuItemData[] = [];
 
   if (Object.values(engineInfos.value).length === 1) {
@@ -207,17 +207,15 @@ watch(engineInfos, async () => {
       },
     ].filter((x) => x) as MenuItemData[];
   } else {
-    subMenu = await Promise.all([
+    subMenu = [
       ...store.getters.GET_SORTED_ENGINE_INFOS.map(
-        async (engineInfo) =>
+        (engineInfo) =>
           ({
             type: "root",
             label: engineInfo.name,
             icon:
               engineManifests.value[engineInfo.uuid] &&
-              (await base64ImageToUri(
-                engineManifests.value[engineInfo.uuid].icon,
-              )),
+              engineIcons.value[engineInfo.uuid],
             subMenu: [
               engineInfo.path && {
                 type: "button",
@@ -253,7 +251,7 @@ watch(engineInfos, async () => {
         },
         disableWhenUiLocked: false,
       },
-    ]);
+    ];
   }
   if (enableMultiEngine.value) {
     subMenu.push({
@@ -282,7 +280,7 @@ watch(engineInfos, async () => {
     });
   }
 
-  engineSubMenuData.value = subMenu;
+  return subMenu;
 });
 
 // メニュー一覧
