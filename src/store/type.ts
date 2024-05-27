@@ -833,7 +833,7 @@ export type SingingStoreState = {
   sequencerEditTarget: SequencerEditTarget;
   selectedNoteIds: Set<NoteId>;
   overlappingNoteIds: Set<NoteId>;
-  overlappingNoteInfos: OverlappingNoteInfos;
+  overlappingNoteInfos: Map<TrackId, OverlappingNoteInfos>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
   volume: number;

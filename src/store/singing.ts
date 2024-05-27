@@ -163,7 +163,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerEditTarget: "NOTE",
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Set(),
-  overlappingNoteInfos: new Map(),
+  overlappingNoteInfos: new Map([[initialTrackId, new Map()]]),
   nowPlaying: false,
   volume: 0,
   startRenderingRequested: false,
@@ -421,13 +421,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_NOTES: {
     mutation(state, { notes, trackId }) {
-      state.overlappingNoteInfos.clear();
       state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
       state.selectedNoteIds.clear();
       const selectedTrack = getOrThrow(state.tracks, trackId);
       selectedTrack.notes = notes;
-      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+
+      const overlappingNoteInfos = getOrThrow(
+        state.overlappingNoteInfos,
+        trackId,
+      );
+      overlappingNoteInfos.clear();
+      addNotesToOverlappingNoteInfos(overlappingNoteInfos, notes);
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos,
       );
@@ -448,7 +453,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      addNotesToOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      addNotesToOverlappingNoteInfos(
+        getOrThrow(state.overlappingNoteInfos, trackId),
+        notes,
+      );
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos,
       );
@@ -465,7 +473,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      updateNotesOfOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      updateNotesOfOverlappingNoteInfos(
+        getOrThrow(state.overlappingNoteInfos, trackId),
+        notes,
+      );
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos,
       );
@@ -479,7 +490,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
-      removeNotesFromOverlappingNoteInfos(state.overlappingNoteInfos, notes);
+      removeNotesFromOverlappingNoteInfos(
+        getOrThrow(state.overlappingNoteInfos, trackId),
+        notes,
+      );
       state.overlappingNoteIds = getOverlappingNoteIds(
         state.overlappingNoteInfos,
       );
@@ -887,6 +901,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId }) {
       state.tracks.set(trackId, createDefaultTrack());
       state.trackOrder.push(trackId);
+      state.overlappingNoteInfos.set(trackId, new Map());
     },
     action({ commit }) {
       const trackId = TrackId(uuidv4());
@@ -908,6 +923,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { tracks }) {
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
+      state.overlappingNoteInfos = new Map(
+        [...tracks.keys()].map((trackId) => [trackId, new Map()]),
+      );
       state.selectedTrackId = state.trackOrder[0];
     },
     async action({ commit, dispatch }, { tracks }) {
