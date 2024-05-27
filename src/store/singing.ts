@@ -1244,7 +1244,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!track.singer) {
             continue;
           }
-          const notes = track.notes;
+          const notes = track.notes.filter(
+            (value) => !state.overlappingNoteIds.has(value.id),
+          );
           const phrases = await searchPhrases(
             notes,
             tempos,
