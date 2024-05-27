@@ -1228,7 +1228,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const tracks = structuredClone(toRaw(state.tracks));
 
         // レンダリング中に変更される可能性のあるデータをコピーする
-        // 重なっているノートの削除も行う
         const tpqn = state.tpqn;
         const tempos = state.tempos.map((value) => ({ ...value }));
         const editFrameRate = state.editFrameRate;
@@ -1243,6 +1242,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!track.singer) {
             continue;
           }
+
+          // 重なっているノートを削除する
           const notes = track.notes.filter(
             (value) => !state.overlappingNoteIds.has(value.id),
           );
