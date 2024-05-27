@@ -113,32 +113,6 @@ const applySongProjectToStore = async (
       }),
     ),
   });
-  // 色々な処理を動かすため、二重にセットする
-  for (const [trackId_, track] of Object.entries(tracks)) {
-    if (track == undefined) throw new Error("track == undefined");
-    const trackId = TrackId(trackId_);
-    await dispatch("SET_SINGER", {
-      singer: track.singer,
-      trackId,
-    });
-    await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-      keyRangeAdjustment: track.keyRangeAdjustment,
-      trackId,
-    });
-    await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-      volumeRangeAdjustment: track.volumeRangeAdjustment,
-      trackId,
-    });
-    await dispatch("SET_NOTES", { notes: track.notes, trackId });
-    await dispatch("CLEAR_PITCH_EDIT_DATA", {
-      trackId,
-    }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-    await dispatch("SET_PITCH_EDIT_DATA", {
-      pitchArray: track.pitchEditData,
-      startFrame: 0,
-      trackId,
-    });
-  }
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({

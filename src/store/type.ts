@@ -1162,7 +1162,7 @@ export type SingingStoreTypes = {
 
   SET_TRACKS: {
     mutation: { tracks: Map<TrackId, Track> };
-    action(payload: { tracks: Map<TrackId, Track> }): void;
+    action(payload: { tracks: Map<TrackId, Track> }): Promise<void>;
   };
 
   SET_TRACK_ORDER: {
