@@ -1227,6 +1227,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const channelStripRef = channelStrip;
         const tracks = structuredClone(toRaw(state.tracks));
 
+        const singerAndFrameRates = new Map<
+          TrackId,
+          { singer: Singer; frameRate: number } | undefined
+        >(
+          [...tracks].map(([trackId, track]) => [
+            trackId,
+            track.singer
+              ? {
+                  singer: track.singer,
+                  frameRate:
+                    state.engineManifests[track.singer.engineId].frameRate,
+                }
+              : undefined,
+          ]),
+        );
+
         // レンダリング中に変更される可能性のあるデータをコピーする
         const tpqn = state.tpqn;
         const tempos = state.tempos.map((value) => ({ ...value }));
@@ -1283,14 +1299,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
         const newPhrases = new Map<PhraseSourceHash, Phrase>();
 
-        const getSingerAndFrameRate = (singer: Singer | undefined) =>
-          singer != undefined
-            ? {
-                singer: singer,
-                frameRate: state.engineManifests[singer.engineId].frameRate,
-              }
-            : undefined;
-
         for (const [phraseKey, foundPhrase] of foundPhrases) {
           const existingPhrase = state.phrases.get(phraseKey);
           if (!existingPhrase) {
@@ -1301,7 +1309,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const track = getOrThrow(tracks, existingPhrase.trackId);
 
-          const singerAndFrameRate = getSingerAndFrameRate(track.singer);
+          const singerAndFrameRate = getOrThrow(
+            singerAndFrameRates,
+            existingPhrase.trackId,
+          );
 
           // すでに存在するフレーズの場合
           // 再レンダリングする必要があるかどうかをチェックする
@@ -1429,7 +1440,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const track = getOrThrow(tracks, phrase.trackId);
 
-          const singerAndFrameRate = getSingerAndFrameRate(track.singer);
+          const singerAndFrameRate = getOrThrow(
+            singerAndFrameRates,
+            phrase.trackId,
+          );
 
           // シンガーが未設定の場合は、歌い方の生成や音声合成は行わない
 
