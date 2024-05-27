@@ -1,11 +1,11 @@
-import { createDotNotationPartialStore as createDotPartStore } from "./vuex";
+import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import { UserDictWord, UserDictWordToJSON } from "@/openapi";
 import { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
 import { EngineId } from "@/type/preload";
 
 export const dictionaryStoreState: DictionaryStoreState = {};
 
-export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
+export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
   LOAD_USER_DICT: {
     async action({ actions }, { engineId }) {
       const engineDict = await actions
@@ -38,7 +38,7 @@ export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
       const allDict = await Promise.all(
         state.engineIds.map((engineId) => {
           return actions.LOAD_USER_DICT({ engineId });
-        }),
+        })
       );
       const mergedDictMap = new Map<string, [string, UserDictWord]>();
       for (const dict of allDict) {
@@ -64,7 +64,7 @@ export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
   ADD_WORD: {
     async action(
       { state, actions },
-      { surface, pronunciation, accentType, priority },
+      { surface, pronunciation, accentType, priority }
     ) {
       // 同じ単語IDで登録するために、１つのエンジンで登録したあと全エンジンに同期する。
       const engineId: EngineId | undefined = state.engineIds[0];
@@ -81,7 +81,7 @@ export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
             pronunciation,
             accentType,
             priority,
-          }),
+          })
         );
 
       await actions.SYNC_ALL_USER_DICT();
@@ -91,7 +91,7 @@ export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
   REWRITE_WORD: {
     async action(
       { state, actions },
-      { wordUuid, surface, pronunciation, accentType, priority },
+      { wordUuid, surface, pronunciation, accentType, priority }
     ) {
       if (state.engineIds.length === 0)
         throw new Error(`At least one engine must be registered`);
@@ -107,7 +107,7 @@ export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
               pronunciation,
               accentType,
               priority,
-            }),
+            })
           );
       }
     },
@@ -125,7 +125,7 @@ export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
           .then((instance) =>
             instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")({
               wordUuid,
-            }),
+            })
           );
       }
     },
@@ -144,9 +144,9 @@ export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
             async (instance) =>
               new Set(
                 Object.keys(
-                  await instance.invoke("getUserDictWordsUserDictGet")({}),
-                ),
-              ),
+                  await instance.invoke("getUserDictWordsUserDictGet")({})
+                )
+              )
           );
         if (Object.keys(mergedDict).some((id) => !dictIdSet.has(id))) {
           await actions
@@ -161,9 +161,9 @@ export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
                   Object.entries(mergedDict).map(([k, v]) => [
                     k,
                     UserDictWordToJSON(v),
-                  ]),
+                  ])
                 ),
-              }),
+              })
             );
         }
         const removedDictIdSet = new Set(dictIdSet);
@@ -184,9 +184,9 @@ export const dictionaryStore = createDotPartStore<DictionaryStoreTypes>({
                 instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")(
                   {
                     wordUuid: id,
-                  },
-                ),
-              ),
+                  }
+                )
+              )
             );
           });
       }
