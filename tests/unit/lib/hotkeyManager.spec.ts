@@ -63,12 +63,10 @@ it("unregisterできる", () => {
   ]);
   hotkeyManager.onEditorChange("talk");
   hotkeyManager.register(action);
-  hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-  expect(action.callback).toHaveBeenCalledTimes(1);
+  expect(hotkeyManager.getAllActions()).toStrictEqual([action]);
 
   hotkeyManager.unregister(action);
-  hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-  expect(action.callback).toHaveBeenCalledTimes(1); // 呼び出し回数が増えない
+  expect(hotkeyManager.getAllActions()).toStrictEqual([]);
 });
 
 const callback = vi.fn();

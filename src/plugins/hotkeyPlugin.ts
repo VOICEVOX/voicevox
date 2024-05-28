@@ -273,6 +273,13 @@ export class HotkeyManager {
     e.preventDefault();
     actions.forEach((action) => action.callback(e));
   }
+
+  /**
+   * 現在登録されているHotkeyActionをすべて取得する
+   */
+  getAllActions(): HotkeyAction[] {
+    return this.actions;
+  }
 }
 
 /** 判定用のキーに変換する */
