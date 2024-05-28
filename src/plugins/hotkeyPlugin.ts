@@ -275,7 +275,6 @@ export class HotkeyManager {
   }
 }
 
-// もし必要になった時の為に残している
 /** 判定用のキーに変換する */
 const combinationToBindingKey = (
   combination: HotkeyCombination,
