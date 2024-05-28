@@ -33,7 +33,6 @@ export const useHotkeyManager = () => {
   return { hotkeyManager, registerHotkeyWithCleanup };
 };
 
-// FIXME: EditorType型内の要素数が増えてきたら型定義をより一般な形に変更
 type Editor = "talk" | "song" | "talk&song";
 
 type BindingKey = string & { __brand: "BindingKey" }; // BindingKey専用のブランド型
@@ -257,10 +256,17 @@ export class HotkeyManager {
           combinationToBindingKey(this.getSetting(item).combination) ==
           combination,
       )
-      .filter((item) =>
-        // エラー表記を回避するために三項演算子を利用
-        item.editor.split("&").includes(this.scope ? this.scope : ""),
-      );
+      .filter((item) => {
+        if (item.editor === "talk&song") {
+          return this.scope === "talk" || this.scope === "song";
+        } else if (item.editor === "talk") {
+          return this.scope === "talk";
+        } else if (item.editor === "song") {
+          return this.scope === "song";
+        } else {
+          console.error("scopeに対する処理が設定されていません");
+        }
+      });
     if (actions.length == 0) {
       return;
     }
