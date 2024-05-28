@@ -50,13 +50,10 @@ it("registerできる", () => {
 
 it("unregisterできる", () => {
   const hotkeyManager = createHotkeyManager();
-  let testCount = 0;
   const action = {
     editor: "talk",
     name: "音声書き出し",
-    callback: () => {
-      testCount++;
-    },
+    callback: vi.fn(),
   } as const;
   hotkeyManager.load([
     {
@@ -64,23 +61,21 @@ it("unregisterできる", () => {
       combination: HotkeyCombination("1"),
     },
   ]);
+  hotkeyManager.onEditorChange("talk");
   hotkeyManager.register(action);
   hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-  expect(testCount).toBe(1);
+  expect(action.callback).toHaveBeenCalledTimes(1);
 
   hotkeyManager.unregister(action);
   hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-  expect(testCount).toBe(1);
+  expect(action.callback).toHaveBeenCalledTimes(1); // 呼び出し回数が増えない
 });
 
-let testCount = 0;
-const callback = () => {
-  testCount++;
-};
+const callback = vi.fn();
 const dummyAction: HotkeyAction = {
   editor: "talk",
   name: "音声書き出し",
-  callback,
+  callback: callback,
 };
 const createDummySetting = (combination: string): HotkeySettingType => ({
   action: "音声書き出し",
@@ -92,14 +87,15 @@ describe("設定変更", () => {
   beforeEach(() => {
     const hotkeyManager_ = createHotkeyManager();
     hotkeyManager = hotkeyManager_;
-    testCount = 0;
+    hotkeyManager.onEditorChange("talk");
+    callback.mockClear();
   });
 
   it("設定を登録するとhotkeysが更新される", () => {
     hotkeyManager.register(dummyAction);
     hotkeyManager.load([createDummySetting("1")]);
     hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-    expect(testCount).toBe(1);
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it("設定を更新するとhotkeysが更新される", () => {
@@ -108,7 +104,7 @@ describe("設定変更", () => {
     hotkeyManager.replace(createDummySetting("A"));
     hotkeyManager.keyInput(createDummyInput("a", "KeyA") as KeyboardEvent);
 
-    expect(testCount).toBe(1);
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it("未割り当てにするとhotkeysから削除される", () => {
@@ -116,18 +112,18 @@ describe("設定変更", () => {
     hotkeyManager.load([createDummySetting("1")]);
     hotkeyManager.replace(createDummySetting(""));
     hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-    expect(testCount).toBe(0);
+    expect(callback).toHaveBeenCalledTimes(0);
   });
 
   it("未割り当てから割り当てるとhotkeysが更新される", () => {
     hotkeyManager.register(dummyAction);
     hotkeyManager.load([createDummySetting("")]);
     hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-    expect(testCount).toBe(0);
+    expect(callback).toHaveBeenCalledTimes(0);
 
     hotkeyManager.replace(createDummySetting("1"));
     hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-    expect(testCount).toBe(1);
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it("割り当て -> 未割り当て -> 割り当てでhotkeysが更新される", () => {
@@ -135,14 +131,14 @@ describe("設定変更", () => {
     hotkeyManager.load([createDummySetting("1")]);
 
     hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-    expect(testCount).toBe(1);
+    expect(callback).toHaveBeenCalledTimes(1);
 
     hotkeyManager.replace(createDummySetting(""));
     hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-    expect(testCount).toBe(1);
+    expect(callback).toHaveBeenCalledTimes(1);
 
     hotkeyManager.replace(createDummySetting("A"));
     hotkeyManager.keyInput(createDummyInput("a", "KeyA") as KeyboardEvent);
-    expect(testCount).toBe(2);
+    expect(callback).toHaveBeenCalledTimes(2);
   });
 });
