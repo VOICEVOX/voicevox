@@ -3,6 +3,13 @@ export function round(value: number, digits: number) {
   return Math.round(value * powerOf10) / powerOf10;
 }
 
+export function getLast<T>(array: T[]) {
+  if (array.length === 0) {
+    throw new Error("array.length is 0.");
+  }
+  return array[array.length - 1];
+}
+
 export function linearInterpolation(
   x1: number,
   y1: number,

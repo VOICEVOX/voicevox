@@ -307,17 +307,23 @@ const onLyricInput = (event: Event) => {
     }
   }
 
-  &.selected {
-    // 色は仮
-    .note-bar {
-      background-color: lab(95, -22.953, 14.365);
-      border-color: lab(65, -22.953, 14.365);
-      outline: solid 2px lab(70, -22.953, 14.365);
+  &:not(.below-pitch) {
+    .note-left-edge:hover {
+      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+      background-color: lab(80, -22.953, 14.365);
     }
 
-    &.below-pitch {
+    .note-right-edge:hover {
+      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+      background-color: lab(80, -22.953, 14.365);
+    }
+
+    &.selected {
+      // 色は仮
       .note-bar {
-        background-color: rgba(colors.$primary-rgb, 0.18);
+        background-color: lab(95, -22.953, 14.365);
+        border-color: lab(65, -22.953, 14.365);
+        outline: solid 2px lab(70, -22.953, 14.365);
       }
     }
   }
@@ -395,11 +401,6 @@ const onLyricInput = (event: Event) => {
   left: -1px;
   width: 5px;
   height: 100%;
-
-  &:hover {
-    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: lab(80, -22.953, 14.365);
-  }
 }
 
 .note-right-edge {
@@ -408,11 +409,6 @@ const onLyricInput = (event: Event) => {
   right: -1px;
   width: 5px;
   height: 100%;
-
-  &:hover {
-    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: lab(80, -22.953, 14.365);
-  }
 }
 
 .note-lyric-input {
