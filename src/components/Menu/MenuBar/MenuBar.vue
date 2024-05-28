@@ -33,8 +33,8 @@ import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
-import { base64ImageToUri } from "@/helpers/base64Helper";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -81,6 +81,7 @@ const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
+const engineIcons = useEngineIcons(engineManifests);
 const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 const titleText = computed(
   () =>
@@ -217,7 +218,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
             label: engineInfo.name,
             icon:
               engineManifests.value[engineInfo.uuid] &&
-              base64ImageToUri(engineManifests.value[engineInfo.uuid].icon),
+              engineIcons.value[engineInfo.uuid],
             subMenu: [
               engineInfo.path && {
                 type: "button",
