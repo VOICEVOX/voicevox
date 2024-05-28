@@ -192,7 +192,7 @@ watch(projectFilePath, updateRecentProjects, {
 });
 
 // 「エンジン」メニューのエンジン毎の項目
-const engineSubMenuData = computed(() => {
+const engineSubMenuData = computed<MenuItemData[]>(() => {
   let subMenu: MenuItemData[] = [];
 
   if (Object.values(engineInfos.value).length === 1) {
