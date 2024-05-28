@@ -1301,7 +1301,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           length += m.consonantLength != undefined ? m.consonantLength : 0;
           length += m.vowelLength;
         });
-        length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
+        if (state.switchPauseLengthMode === "SCALE") {
+          length += phrase.pauseMora ? phrase.pauseMora.vowelLength * query.pauseLengthScale : 0;
+        } else {
+          length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
+        }
         // post phoneme lengthは最後のアクセント句の一部として扱う
         if (i === accentPhrases.length - 1) {
           length += query.postPhonemeLength;
@@ -1325,7 +1329,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       // pauseLength&pauseLengthScaleは無効(APIに相当する処理はAudioDetail.vue > accentPhraseで既に済んでる)
       if (audioItem.query) {
         audioItem.query.pauseLength = null;
-        audioItem.query.pauseLengthScale = 1;
       }
       await console.log("以下audioItem");
       await console.log(audioItem);

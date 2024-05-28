@@ -193,6 +193,7 @@ const query = computed(() => audioItem.value?.query);
 // storeへの反映はAccentPhrases.vueでやってくれる
 const accentPhrases = computed(() => {
   console.log("accentPhrase in AudioDetail.vue");
+  console.log(switchPauseLengthMode.value);
   const newAccentPhrases = query.value?.accentPhrases;
   if (switchPauseLengthMode.value === "ABSOLUTE" && newAccentPhrases) {
     const pauseLength = query.value?.pauseLength;
@@ -203,8 +204,9 @@ const accentPhrases = computed(() => {
         }
       });
     }
-  } else if (switchPauseLengthMode.value === "SCALE" && newAccentPhrases) {
+  }/* else if (switchPauseLengthMode.value === "SCALE" && newAccentPhrases) {
     const pauseLengthScale = query.value?.pauseLengthScale;
+    console.log(pauseLengthScale);
     if (pauseLengthScale != null) {
       newAccentPhrases.forEach((accentPhrase) => {
         if (accentPhrase.pauseMora) {
@@ -212,7 +214,7 @@ const accentPhrases = computed(() => {
         }
       });
     }
-  }
+  }*/
   return newAccentPhrases;
 });
 
