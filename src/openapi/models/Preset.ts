@@ -81,10 +81,10 @@ export interface Preset {
     postPhonemeLength: number;
     /**
      *
-     * @type {number}
-     * @memberof Preset
+     * @type {number | null}
+     * @memberof AudioQuery
      */
-    pauseLength: number;
+    pauseLength: number | null;
     /**
      *
      * @type {number}

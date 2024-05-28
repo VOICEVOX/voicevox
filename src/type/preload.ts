@@ -426,7 +426,7 @@ export type Preset = {
   volumeScale: number;
   prePhonemeLength: number;
   postPhonemeLength: number;
-  pauseLength: number;
+  pauseLength: number | null;
   pauseLengthScale: number;
   morphingInfo?: MorphingInfo;
 };

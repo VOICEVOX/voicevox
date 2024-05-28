@@ -28,14 +28,9 @@ export async function fetchAudioFromAudioItem(
   },
 ): Promise<FetchAudioResult> {
   console.log("fetchAudioFromAudioItem");
-  // 試しにここで弄ってみる
-  // audioItem.query.accentPhrases[0].moras[0].consonantLength = 0.1; コンソールには出るがqueryでundefined
-  // 多分非同期が悪さしててこの時点ではまだaudioQueryのresponseは入ってない
   const engineId = audioItem.voice.engineId;
 
   const [id, audioQuery] = await generateUniqueIdAndQuery(state, audioItem);
-  await console.log(audioQuery); // preset未反映
-  // audioQuery.accentPhrases[0].moras[0].vowelLength = 0.1; // まだ
   if (audioQuery == undefined)
     throw new Error("audioQuery is not defined for audioItem");
 

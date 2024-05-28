@@ -259,7 +259,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
                   0.1;
                 projectData.audioItems[audioItemsKey].query.postPhonemeLength =
                   0.1;
-                projectData.audioItems[audioItemsKey].query.pauseLength = 0.1;
+                projectData.audioItems[audioItemsKey].query.pauseLength = 0.3;
                 projectData.audioItems[audioItemsKey].query.pauseLengthScale =
                   1;
                 projectData.audioItems[audioItemsKey].query.outputSamplingRate =

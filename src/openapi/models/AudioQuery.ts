@@ -70,10 +70,10 @@ export interface AudioQuery {
     postPhonemeLength: number;
     /**
      *
-     * @type {number}
+     * @type {number | null}
      * @memberof AudioQuery
      */
-     pauseLength: number;
+    pauseLength: number | null;
      /**
       *
       * @type {number}

@@ -291,7 +291,7 @@ export type AudioStoreTypes = {
   };
 
   SET_AUDIO_PAUSE_LENGTH: {
-    mutation: { audioKey: AudioKey; pauseLength: number };
+    mutation: { audioKey: AudioKey; pauseLength: number | null };
   };
 
   SET_AUDIO_PAUSE_LENGTH_SCALE: {
@@ -638,8 +638,11 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH: {
-    mutation: { audioKeys: AudioKey[]; pauseLength: number };
-    action(payload: { audioKeys: AudioKey[]; pauseLength: number }): void;
+    mutation: { audioKeys: AudioKey[]; pauseLength: number | null };
+    action(payload: {
+      audioKeys: AudioKey[];
+      pauseLength: number | null;
+    }): void;
   };
 
   COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {

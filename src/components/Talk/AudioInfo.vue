@@ -365,7 +365,6 @@ const selectedAudioKeys = computed(() =>
 // 文内無音はひとまず倍率verを表示 のち必要に応じ絶対値に切替
 // 泥臭くなっちゃったかも
 const parameters = computed<Parameter[]>(() => {
-  // 一旦ここで初期値を入れてしまう
   const plParam: Parameter = {
     label: "文内無音(秒)",
     slider: previewSliderHelper({

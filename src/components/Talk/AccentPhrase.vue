@@ -363,6 +363,7 @@ const lastPitches = computed(() =>
   props.accentPhrase.moras.map((mora) => mora.pitch),
 );
 
+// スライダー操作で発火
 const maxPitch = 6.5;
 const minPitch = 3;
 const maxMoraLength = 0.3;
@@ -372,6 +373,7 @@ const changeMoraData = (
   data: number,
   type: MoraDataType,
 ) => {
+  console.log("changeMoraData in AccentPhrase.vue");
   const accentPhraseIndex = props.index;
   if (!props.altKeyFlag) {
     if (type == "pitch") {

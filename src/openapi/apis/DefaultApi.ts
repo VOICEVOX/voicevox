@@ -1881,7 +1881,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
      */
     async morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>> {
-        // console.log("morphableTargetsMorphableTargetsPostRaw");
         if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
             throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling morphableTargetsMorphableTargetsPost.');
         }
@@ -1912,7 +1911,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
      */
     async morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>> {
-        // console.log("morphableTargetsMorphableTargetsPost");
         const response = await this.morphableTargetsMorphableTargetsPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -2207,7 +2205,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Singer Info
      */
     async singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
-        // console.log("singerInfoSingerInfoGetRaw");
         if (requestParameters.speakerUuid === null || requestParameters.speakerUuid === undefined) {
             throw new runtime.RequiredError('speakerUuid','Required parameter requestParameters.speakerUuid was null or undefined when calling singerInfoSingerInfoGet.');
         }
@@ -2278,7 +2275,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Speaker Info
      */
     async speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
-        // console.log("speakerInfoSpeakerInfoGetRaw");
         if (requestParameters.speakerUuid === null || requestParameters.speakerUuid === undefined) {
             throw new runtime.RequiredError('speakerUuid','Required parameter requestParameters.speakerUuid was null or undefined when calling speakerInfoSpeakerInfoGet.');
         }

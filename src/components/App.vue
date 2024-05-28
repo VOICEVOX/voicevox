@@ -122,7 +122,6 @@ onMounted(async () => {
     engineIds = store.state.engineIds;
   }
   await store.dispatch("LOAD_USER_CHARACTER_ORDER");
-  console.log("onMounted");
   await store.dispatch("POST_ENGINE_START", {
     engineIds,
   });

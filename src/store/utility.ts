@@ -106,10 +106,10 @@ export const SLIDER_PARAMETERS = {
    *  文内無音(絶対値)パラメータの定義
    */
   PAUSE_LENGTH: {
-    max: () => 3,
+    max: () => 1,
     min: () => 0,
     step: () => 0.01,
-    scrollStep: () => 0.1,
+    scrollStep: () => 0.01,
     scrollMinStep: () => 0.01,
   },
   /**
