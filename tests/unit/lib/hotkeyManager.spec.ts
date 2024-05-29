@@ -133,7 +133,7 @@ describe("設定変更", () => {
 
     hotkeyManager.replace(createDummySetting(""));
     hotkeyManager.keyInput(createDummyInput("1", "Digit1") as KeyboardEvent);
-    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledTimes(1);// 呼び出し回数が増えない
 
     hotkeyManager.replace(createDummySetting("A"));
     hotkeyManager.keyInput(createDummyInput("a", "KeyA") as KeyboardEvent);
