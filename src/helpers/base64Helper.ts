@@ -1,4 +1,7 @@
-import { Buffer } from "buffer";
+import { toBytes } from "fast-base64";
+
+// base64 -> uriのキャッシュ。
+const cache = new Map<string, string>();
 
 function detectImageTypeFromBase64(data: string): string {
   switch (data[0]) {
@@ -15,12 +18,18 @@ function detectImageTypeFromBase64(data: string): string {
   }
 }
 
-export const base64ToUri = (data: string, type: string) => {
-  const buffer = Buffer.from(data, "base64");
-  return URL.createObjectURL(new Blob([buffer.buffer], { type }));
+export const base64ToUri = async (data: string, type: string) => {
+  const cached = cache.get(data);
+  if (cached) {
+    return cached;
+  }
+  const buffer = await toBytes(data);
+  const url = URL.createObjectURL(new Blob([buffer.buffer], { type }));
+  cache.set(data, url);
+  return url;
 };
 
-export function base64ImageToUri(image: string): string {
+export async function base64ImageToUri(image: string): Promise<string> {
   const mimeType = detectImageTypeFromBase64(image);
-  return base64ToUri(image, mimeType);
+  return await base64ToUri(image, mimeType);
 }
