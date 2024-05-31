@@ -832,7 +832,7 @@ export type SingingStoreState = {
   sequencerSnapType: number;
   sequencerEditTarget: SequencerEditTarget;
   selectedNoteIds: Set<NoteId>;
-  overlappingNoteIds: Set<NoteId>;
+  overlappingNoteIds: Map<TrackId, Set<NoteId>>;
   overlappingNoteInfos: Map<TrackId, OverlappingNoteInfos>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
@@ -1154,7 +1154,7 @@ export type SingingStoreTypes = {
     action(): { trackId: TrackId; track: Track };
   };
 
-  ADD_TRACK: {
+  REGISTER_TRACK: {
     mutation: { trackId: TrackId; track: Track };
     action(payload: { trackId: TrackId; track: Track }): void;
   };

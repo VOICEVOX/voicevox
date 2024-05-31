@@ -162,7 +162,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
   selectedNoteIds: new Set(),
-  overlappingNoteIds: new Set(),
+  overlappingNoteIds: new Map([[initialTrackId, new Set()]]),
   overlappingNoteInfos: new Map([[initialTrackId, new Map()]]),
   nowPlaying: false,
   volume: 0,
@@ -433,8 +433,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       );
       overlappingNoteInfos.clear();
       addNotesToOverlappingNoteInfos(overlappingNoteInfos, notes);
-      state.overlappingNoteIds = getOverlappingNoteIds(
-        state.overlappingNoteInfos,
+      state.overlappingNoteIds.set(
+        trackId,
+        getOverlappingNoteIds(overlappingNoteInfos),
       );
     },
     async action({ commit, dispatch }, { notes, trackId }) {
@@ -453,12 +454,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      addNotesToOverlappingNoteInfos(
-        getOrThrow(state.overlappingNoteInfos, trackId),
-        notes,
-      );
-      state.overlappingNoteIds = getOverlappingNoteIds(
+
+      const overlappingNoteInfos = getOrThrow(
         state.overlappingNoteInfos,
+        trackId,
+      );
+      addNotesToOverlappingNoteInfos(overlappingNoteInfos, notes);
+      state.overlappingNoteIds.set(
+        trackId,
+        getOverlappingNoteIds(overlappingNoteInfos),
       );
     },
   },
@@ -473,12 +477,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      updateNotesOfOverlappingNoteInfos(
-        getOrThrow(state.overlappingNoteInfos, trackId),
-        notes,
-      );
-      state.overlappingNoteIds = getOverlappingNoteIds(
+
+      const overlappingNoteInfos = getOrThrow(
         state.overlappingNoteInfos,
+        trackId,
+      );
+      updateNotesOfOverlappingNoteInfos(overlappingNoteInfos, notes);
+      state.overlappingNoteIds.set(
+        trackId,
+        getOverlappingNoteIds(overlappingNoteInfos),
       );
     },
   },
@@ -490,13 +497,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const notes = selectedTrack.notes.filter((value) => {
         return noteIdsSet.has(value.id);
       });
-      removeNotesFromOverlappingNoteInfos(
-        getOrThrow(state.overlappingNoteInfos, trackId),
-        notes,
-      );
-      state.overlappingNoteIds = getOverlappingNoteIds(
+
+      const overlappingNoteInfos = getOrThrow(
         state.overlappingNoteInfos,
+        trackId,
       );
+      removeNotesFromOverlappingNoteInfos(overlappingNoteInfos, notes);
+      state.overlappingNoteIds.set(
+        trackId,
+        getOverlappingNoteIds(overlappingNoteInfos),
+      );
+
       if (
         state.editingLyricNoteId != undefined &&
         noteIdsSet.has(state.editingLyricNoteId)
@@ -906,14 +917,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  ADD_TRACK: {
+  REGISTER_TRACK: {
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
       state.trackOrder.push(trackId);
       state.overlappingNoteInfos.set(trackId, new Map());
+      state.overlappingNoteIds.set(trackId, new Set());
     },
     action({ commit }, { trackId, track }) {
-      commit("ADD_TRACK", { trackId, track });
+      commit("REGISTER_TRACK", { trackId, track });
     },
   },
 
@@ -1351,8 +1363,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           // 重なっているノートを削除する
+          const overlappingNoteIds = getOrThrow(
+            state.overlappingNoteIds,
+            trackId,
+          );
           const notes = track.notes.filter(
-            (value) => !state.overlappingNoteIds.has(value.id),
+            (value) => !overlappingNoteIds.has(value.id),
           );
           const phrases = await searchPhrases(
             notes,

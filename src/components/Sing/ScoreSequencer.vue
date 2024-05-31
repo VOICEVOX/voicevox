@@ -112,11 +112,15 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
+
       <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
       <!-- undefinedだと警告が出るのでnullを渡す -->
+
+      <!-- TODO: ちゃんとしたトラックIDを渡す -->
       <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
+        :track-id="selectedTrackId"
         :note="note"
         :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="false"
@@ -132,6 +136,7 @@
           ? previewNotes
           : selectedNotes"
         :key="note.id"
+        :track-id="selectedTrackId"
         :note="note"
         :preview-lyric="previewLyrics.get(note.id) || null"
         :is-selected="true"
