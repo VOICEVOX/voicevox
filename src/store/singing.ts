@@ -137,7 +137,7 @@ if (window.AudioContext) {
 
 const playheadPosition = new FrequentlyUpdatedState(0);
 const singingVoices = new Map<SingingVoiceSourceHash, SingingVoice>();
-const sequences = new Map<string, Sequence>(); // キーはPhraseSourceHash
+const sequences = new Map<PhraseSourceHash, Sequence>();
 const animationTimer = new AnimationTimer();
 
 const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
