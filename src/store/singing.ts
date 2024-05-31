@@ -898,15 +898,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CREATE_TRACK: {
-    mutation(state, { trackId }) {
-      state.tracks.set(trackId, createDefaultTrack());
+    action() {
+      const trackId = TrackId(uuidv4());
+      const track = createDefaultTrack();
+
+      return { trackId, track };
+    },
+  },
+
+  ADD_TRACK: {
+    mutation(state, { trackId, track }) {
+      state.tracks.set(trackId, track);
       state.trackOrder.push(trackId);
       state.overlappingNoteInfos.set(trackId, new Map());
     },
-    action({ commit }) {
-      const trackId = TrackId(uuidv4());
-      commit("CREATE_TRACK", { trackId });
-      return trackId;
+    action({ commit }, { trackId, track }) {
+      commit("ADD_TRACK", { trackId, track });
     },
   },
 
