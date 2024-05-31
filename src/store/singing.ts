@@ -1388,6 +1388,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
         }
+
         const newPhrases = new Map<PhraseSourceHash, Phrase>();
 
         for (const [phraseKey, foundPhrase] of foundPhrases) {
