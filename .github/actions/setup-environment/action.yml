@@ -12,13 +12,13 @@ runs:
         echo "cache-version=1" >> $GITHUB_ENV
 
     - name: Setup Node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version-file: ".node-version"
         cache: "npm"
 
     - name: Cache Electron
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ env.ELECTRON_CACHE }}
         key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
@@ -26,7 +26,7 @@ runs:
           ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
     - name: Cache Electron-Builder
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ env.ELECTRON_BUILDER_CACHE }}
         key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
@@ -34,7 +34,7 @@ runs:
           ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
     - name: Cache external dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ./build/vendored
         key: ${{ env.cache-version }}-${{ runner.os }}--vendored-${{ hashFiles('build/*.js') }}
