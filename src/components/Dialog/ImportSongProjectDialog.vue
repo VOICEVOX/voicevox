@@ -72,7 +72,7 @@ import {
   IllegalFileException,
   NotesOverlappingException,
   supportedExtensions,
-  SupportedExtensions,
+  SupportedExtensions as UfSupportedExtensions,
 } from "@sevenc-nanashi/utaformatix-ts";
 import semver from "semver";
 import { useStore } from "@/store";
@@ -93,6 +93,8 @@ const acceptExtensions = computed(
   () => supportedExtensions.map((ext) => `.${ext}`).join(",") + ",.vvproj",
 );
 
+type SupportedExtensions = UfSupportedExtensions | "vvproj";
+
 const projectNameToExtensions = {
   "Cevio AI": ["ccs"],
   DeepVocal: ["dv"],
@@ -110,7 +112,7 @@ const projectNameToExtensions = {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _: IsEqual<
   (typeof projectNameToExtensions)[keyof typeof projectNameToExtensions][number],
-  SupportedExtensions | "vvproj"
+  SupportedExtensions
 > = true;
 
 // プロジェクトファイル
