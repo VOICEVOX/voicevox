@@ -22,8 +22,8 @@
   <UpdateNotificationDialogContainer
     :can-open-dialog="canOpenNotificationDialog"
   />
-  <ImportExternalProjectDialog
-    v-model="isImportExternalProjectDialogOpenComputed"
+  <ImportExternalSongProjectDialog
+    v-model="isImportExternalSongProjectDialogOpenComputed"
   />
 </template>
 
@@ -40,7 +40,7 @@ import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
-import ImportExternalProjectDialog from "@/components/Dialog/ImportExternalProjectDialog.vue";
+import ImportExternalSongProjectDialog from "@/components/Dialog/ImportExternalSongProjectDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -162,11 +162,11 @@ const canOpenNotificationDialog = computed(() => {
 });
 
 // 外部プロジェクトファイルのインポート時の設定ダイアログ
-const isImportExternalProjectDialogOpenComputed = computed({
+const isImportExternalSongProjectDialogOpenComputed = computed({
   get: () => store.state.isImportExternalProjectDialogOpen,
   set: (val) =>
     store.dispatch("SET_DIALOG_OPEN", {
-      isImportExternalProjectDialogOpen: val,
+      isImportExternalSongProjectDialogOpen: val,
     }),
 });
 </script>

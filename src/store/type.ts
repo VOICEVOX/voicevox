@@ -1721,7 +1721,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
-      isImportExternalProjectDialogOpen?: boolean;
+      isImportExternalSongProjectDialogOpen?: boolean;
     }): void;
   };
 

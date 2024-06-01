@@ -7,10 +7,10 @@ export const useMenuBarData = () => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);
   const isNotesSelected = computed(() => store.state.selectedNoteIds.size > 0);
 
-  const importExternalProjectFile = async () => {
+  const importExternalSongProject = async () => {
     if (uiLocked.value) return;
     await store.dispatch("SET_DIALOG_OPEN", {
-      isImportExternalProjectDialogOpen: true,
+      isImportExternalSongProjectDialogOpen: true,
     });
   };
 
@@ -31,9 +31,9 @@ export const useMenuBarData = () => {
     { type: "separator" },
     {
       type: "button",
-      label: "外部プロジェクトファイルの読み込み",
+      label: "インポート",
       onClick: () => {
-        importExternalProjectFile();
+        importExternalSongProject();
       },
       disableWhenUiLocked: true,
     },
