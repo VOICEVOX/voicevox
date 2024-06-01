@@ -1779,7 +1779,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               tpqn,
             ),
             noteNumber: value.key,
-            lyric: hasLyric ? value.lyric : getDoremiFromNoteNumber(value.key),
+            lyric: hasLyric
+              ? // たまに空文字が入っていることがあるので、その場合は「っ」に変換する
+                value.lyric === ""
+                ? "っ"
+                : value.lyric
+              : getDoremiFromNoteNumber(value.key),
           };
         });
 

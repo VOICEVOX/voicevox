@@ -67,8 +67,13 @@ import {
   NotesOverlappingException,
   parseFunctions,
 } from "@sevenc-nanashi/utaformatix-ts";
+import semver from "semver";
 import { useStore } from "@/store";
 import { createLogger } from "@/domain/frontend/log";
+import { readTextFile } from "@/helpers/fileReader";
+import { migrateProjectFileObject } from "@/domain/project";
+import { ExhaustiveError } from "@/type/utility";
+import { songProjectToUfData } from "@/sing/songProjectToUfData";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
@@ -76,17 +81,23 @@ const store = useStore();
 const log = createLogger("ImportExternalProjectDialog");
 
 // 受け入れる拡張子
-const acceptExtensions = computed(() =>
-  Object.keys(parseFunctions)
-    .map((ext) => `.${ext}`)
-    .join(","),
+const acceptExtensions = computed(
+  () =>
+    Object.keys(parseFunctions)
+      .map((ext) => `.${ext}`)
+      .join(",") + ",.vvproj",
 );
 
 // プロジェクトファイル
 const midiFile = ref<File | null>(null);
 // エラー
 const error = ref<
-  "emptyProject" | "overlapping" | "parseFailed" | "unknown" | null
+  | "emptyProject"
+  | "overlapping"
+  | "parseFailed"
+  | "oldProject"
+  | "unknown"
+  | null
 >(null);
 
 // ファイルエラー
@@ -99,9 +110,13 @@ const midiFileError = computed(() => {
         return "ノートが重なっています";
       case "parseFailed":
         return "ファイルの解析に失敗しました";
-      default:
+      case "oldProject":
+        return "古いプロジェクトファイルです";
+      case "unknown":
         return "不明なエラーが発生しました";
     }
+
+    throw new ExhaustiveError(error.value);
   } else if (midiFile.value && project.value) {
     if (!project.value.tracks.length) {
       return "トラックがありません";
@@ -161,7 +176,31 @@ const handleFileChange = async (event: Event) => {
   const file = input.files[0];
   // ファイルをパース
   try {
-    project.value = await Project.fromAny(file);
+    if (file.name.endsWith(".vvproj")) {
+      const vvproj = JSON.parse(await readTextFile(file));
+      if (
+        !(
+          "appVersion" in vvproj &&
+          semver.satisfies(vvproj["appVersion"], ">=0.17", {
+            includePrerelease: true,
+          })
+        )
+      ) {
+        error.value = "oldProject";
+        return;
+      }
+      const migratedVvproj = await migrateProjectFileObject(vvproj, {
+        // DIされている関数は0.17からは使われないので適当な関数を渡す。
+        // TODO: だとしても不安なのでちゃんとした関数を渡す？
+        fetchMoraData: () => {
+          throw new Error("fetchMoraData is not implemented");
+        },
+        characterInfos: [],
+      });
+      project.value = new Project(songProjectToUfData(migratedVvproj.song));
+    } else {
+      project.value = await Project.fromAny(file);
+    }
     selectedTrack.value = project.value.tracks.findIndex(
       (track) => track.notes.length > 0,
     );
