@@ -22,7 +22,7 @@
   <UpdateNotificationDialogContainer
     :can-open-dialog="canOpenNotificationDialog"
   />
-  <ImportExternalSongProjectDialog
+  <ImportSongProjectDialog
     v-model="isImportSongProjectDialogOpenComputed"
   />
 </template>
@@ -40,7 +40,7 @@ import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
-import ImportExternalSongProjectDialog from "@/components/Dialog/ImportExternalSongProjectDialog.vue";
+import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
