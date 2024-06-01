@@ -6,6 +6,7 @@
       :model-value="modelValue"
       @update:model-value="props['onUpdate:modelValue']"
     >
+      <slot />
     </QToggle>
   </BaseCell>
 </template>
