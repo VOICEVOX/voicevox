@@ -1,3 +1,5 @@
+<!-- ON/OFFを切り替えるトグルボタン付きの設定項目 -->
+
 <template>
   <BaseCell :title="title" :description="description">
     <QToggle :model-value="modelValue" @update:model-value="onUpdated">
