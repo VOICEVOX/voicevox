@@ -8,10 +8,10 @@
           >
         </QToolbar>
       </QHeader>
-      <QPageContainer class="q-px-lg q-py-md">
-        以下のプロジェクトファイルをインポートできます：
+      <QPageContainer class="q-px-lg">
+        <p class="q-pt-md">以下のプロジェクトファイルをインポートできます：</p>
         <ul>
-          <li v-for="(extensions, name) in projectNameToExtensions" :key="name">
+          <li v-for="[name, extensions] in projectNameToExtensions" :key="name">
             {{ name }}：{{ extensions.map((ext) => `.${ext}`).join("、") }}
           </li>
         </ul>
@@ -95,23 +95,23 @@ const acceptExtensions = computed(
 
 type SupportedExtensions = UfSupportedExtensions | "vvproj";
 
-const projectNameToExtensions = {
-  "Cevio AI": ["ccs"],
-  DeepVocal: ["dv"],
-  MusicXML: ["xml", "musicxml"],
-  "Piapro Studio": ["ppsf"],
-  "SMF (MIDI)": ["mid"],
-  "Synthesizer V": ["s5p", "svp"],
-  UTAU: ["ust"],
-  OpenUtau: ["ustx"],
-  VOCALOID: ["vpr", "vsq", "vsqx"],
-  VOICEVOX: ["vvproj"],
-} as const satisfies Record<string, SupportedExtensions[]>;
+const projectNameToExtensions = [
+  ["Cevio AI", ["ccs"]],
+  ["DeepVocal", ["dv"]],
+  ["MusicXML", ["xml", "musicxml"]],
+  ["Piapro Studio", ["ppsf"]],
+  ["MIDI（SMF）", ["mid"]],
+  ["Synthesizer V", ["s5p", "svp"]],
+  ["UTAU", ["ust"]],
+  ["OpenUtau", ["ustx"]],
+  ["VOCALOID", ["vpr", "vsq", "vsqx"]],
+  ["VOICEVOX", ["vvproj"]],
+] as const satisfies [string, SupportedExtensions[]][];
 
 // ちゃんと全部の拡張子があるかチェック
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _: IsEqual<
-  (typeof projectNameToExtensions)[keyof typeof projectNameToExtensions][number],
+  (typeof projectNameToExtensions)[number][1][number],
   SupportedExtensions
 > = true;
 
