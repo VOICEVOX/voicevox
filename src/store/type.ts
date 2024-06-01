@@ -1635,7 +1635,7 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
-  isImportExternalProjectDialogOpen: boolean;
+  isImportSongProjectDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1721,7 +1721,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
-      isImportExternalSongProjectDialogOpen?: boolean;
+      isImportSongProjectDialogOpen?: boolean;
     }): void;
   };
 

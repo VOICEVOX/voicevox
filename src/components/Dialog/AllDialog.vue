@@ -23,7 +23,7 @@
     :can-open-dialog="canOpenNotificationDialog"
   />
   <ImportExternalSongProjectDialog
-    v-model="isImportExternalSongProjectDialogOpenComputed"
+    v-model="isImportSongProjectDialogOpenComputed"
   />
 </template>
 
@@ -161,12 +161,12 @@ const canOpenNotificationDialog = computed(() => {
   );
 });
 
-// 外部プロジェクトファイルのインポート時の設定ダイアログ
-const isImportExternalSongProjectDialogOpenComputed = computed({
-  get: () => store.state.isImportExternalProjectDialogOpen,
+// ソングのプロジェクトファイルのインポート時の設定ダイアログ
+const isImportSongProjectDialogOpenComputed = computed({
+  get: () => store.state.isImportSongProjectDialogOpen,
   set: (val) =>
     store.dispatch("SET_DIALOG_OPEN", {
-      isImportExternalSongProjectDialogOpen: val,
+      isImportSongProjectDialogOpen: val,
     }),
 });
 </script>

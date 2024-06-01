@@ -66,7 +66,7 @@ export const uiStoreState: UiStoreState = {
   isDictionaryManageDialogOpen: false,
   isEngineManageDialogOpen: false,
   isUpdateNotificationDialogOpen: false,
-  isImportExternalProjectDialogOpen: false,
+  isImportSongProjectDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,

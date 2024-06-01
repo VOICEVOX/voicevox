@@ -4,11 +4,17 @@
       <QHeader>
         <QToolbar>
           <QToolbarTitle class="text-display"
-            >外部プロジェクトファイルのインポート</QToolbarTitle
+            >プロジェクトファイルのインポート</QToolbarTitle
           >
         </QToolbar>
       </QHeader>
       <QPageContainer class="q-px-lg q-py-md">
+        以下のプロジェクトファイルをインポートできます：
+        <ul>
+          <li v-for="(extensions, name) in projectNameToExtensions" :key="name">
+            {{ name }}：{{ extensions.map((ext) => `.${ext}`).join("、") }}
+          </li>
+        </ul>
         <QFile
           v-model="projectFile"
           label="インポートするファイル"
@@ -65,7 +71,8 @@ import {
   EmptyProjectException,
   IllegalFileException,
   NotesOverlappingException,
-  parseFunctions,
+  supportedExtensions,
+  SupportedExtensions,
 } from "@sevenc-nanashi/utaformatix-ts";
 import semver from "semver";
 import { useStore } from "@/store";
@@ -74,6 +81,7 @@ import { readTextFile } from "@/helpers/fileReader";
 import { migrateProjectFileObject } from "@/domain/project";
 import { ExhaustiveError } from "@/type/utility";
 import { songProjectToUfData } from "@/sing/songProjectToUfData";
+import { IsEqual } from "@/type/utility";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
@@ -82,11 +90,28 @@ const log = createLogger("ImportExternalProjectDialog");
 
 // 受け入れる拡張子
 const acceptExtensions = computed(
-  () =>
-    Object.keys(parseFunctions)
-      .map((ext) => `.${ext}`)
-      .join(",") + ",.vvproj",
+  () => supportedExtensions.map((ext) => `.${ext}`).join(",") + ",.vvproj",
 );
+
+const projectNameToExtensions = {
+  "Cevio AI": ["ccs"],
+  DeepVocal: ["dv"],
+  MusicXML: ["xml", "musicxml"],
+  "Piapro Studio": ["ppsf"],
+  "SMF (MIDI)": ["mid"],
+  "Synthesizer V": ["s5p", "svp"],
+  UTAU: ["ust"],
+  OpenUtau: ["ustx"],
+  VOCALOID: ["vpr", "vsq", "vsqx"],
+  VOICEVOX: ["vvproj"],
+} as const satisfies Record<string, SupportedExtensions[]>;
+
+// ちゃんと全部の拡張子があるかチェック
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _: IsEqual<
+  (typeof projectNameToExtensions)[keyof typeof projectNameToExtensions][number],
+  SupportedExtensions | "vvproj"
+> = true;
 
 // プロジェクトファイル
 const projectFile = ref<File | null>(null);

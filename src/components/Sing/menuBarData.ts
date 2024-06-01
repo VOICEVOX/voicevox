@@ -10,7 +10,7 @@ export const useMenuBarData = () => {
   const importExternalSongProject = async () => {
     if (uiLocked.value) return;
     await store.dispatch("SET_DIALOG_OPEN", {
-      isImportExternalSongProjectDialogOpen: true,
+      isImportSongProjectDialogOpen: true,
     });
   };
 
