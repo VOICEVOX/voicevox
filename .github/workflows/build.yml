@@ -27,7 +27,7 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.19.1
+  VOICEVOX_ENGINE_VERSION: 0.20-preview.0
   VOICEVOX_RESOURCE_VERSION: 0.19.1
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
@@ -55,7 +55,8 @@ jobs:
           - windows-nvidia-prepackage
           - windows-cpu-prepackage
           - windows-directml-prepackage
-          - macos-cpu-prepackage
+          - macos-x64-cpu-prepackage
+          - macos-arm64-cpu-prepackage
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-nvidia-prepackage
@@ -111,16 +112,26 @@ jobs:
             installer_artifact_name: windows-directml-nsis-web
             nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
             os: windows-2019
-          # macOS CPU
-          - artifact_name: macos-cpu-prepackage
+          # macOS CPU (x64)
+          - artifact_name: macos-x64-cpu-prepackage
             artifact_path: dist_electron/mac
             voicevox_engine_asset_name: macos-x64
             package_name: voicevox-cpu
-            compressed_artifact_name: voicevox-macos-cpu
+            compressed_artifact_name: voicevox-macos-x64-cpu
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
-            installer_artifact_name: macos-cpu-dmg
-            macos_artifact_name: "VOICEVOX.${version}.${ext}"
+            installer_artifact_name: macos-x64-cpu-dmg
+            macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             os: macos-12
+          # macOS CPU (arm64)
+          - artifact_name: macos-arm64-cpu-prepackage
+            artifact_path: dist_electron/mac-arm64
+            voicevox_engine_asset_name: macos-arm64
+            package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-macos-arm64-cpu
+            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
+            installer_artifact_name: macos-arm64-cpu-dmg
+            macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
+            os: macos-14
 
     runs-on: ${{ matrix.os }}
     steps:
