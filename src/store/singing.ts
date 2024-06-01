@@ -924,8 +924,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.overlappingNoteInfos.set(trackId, new Map());
       state.overlappingNoteIds.set(trackId, new Set());
     },
-    action({ commit }, { trackId, track }) {
+    action({ commit, dispatch }, { trackId, track }) {
       commit("REGISTER_TRACK", { trackId, track });
+
+      dispatch("RENDER");
     },
   },
 
