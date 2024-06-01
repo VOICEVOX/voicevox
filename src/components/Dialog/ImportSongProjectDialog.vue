@@ -222,7 +222,7 @@ const handleFileChange = async (event: Event) => {
         fetchMoraData: () => {
           throw new Error("fetchMoraData is not implemented");
         },
-        characterInfos: [],
+        voices: [],
       });
       project.value = new Project(songProjectToUfData(migratedVvproj.song));
     } else {
