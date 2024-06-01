@@ -22,9 +22,7 @@
   <UpdateNotificationDialogContainer
     :can-open-dialog="canOpenNotificationDialog"
   />
-  <ImportSongProjectDialog
-    v-model="isImportSongProjectDialogOpenComputed"
-  />
+  <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
