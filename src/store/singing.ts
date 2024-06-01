@@ -954,6 +954,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { tracks }) {
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
+      state.overlappingNoteIds = new Map(
+        [...tracks.keys()].map((trackId) => [trackId, new Set()]),
+      );
       state.overlappingNoteInfos = new Map(
         [...tracks.keys()].map((trackId) => [trackId, new Map()]),
       );
