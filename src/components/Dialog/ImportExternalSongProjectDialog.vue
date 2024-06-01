@@ -10,12 +10,12 @@
       </QHeader>
       <QPageContainer class="q-px-lg q-py-md">
         <QFile
-          v-model="midiFile"
+          v-model="projectFile"
           label="インポートするファイル"
           class="q-my-sm"
           :accept="acceptExtensions"
-          :error-message="midiFileError"
-          :error="!!midiFileError"
+          :error-message="projectFileError"
+          :error="!!projectFileError"
           placeholder="外部プロジェクトファイルを選択してください"
           @input="handleFileChange"
         />
@@ -23,7 +23,7 @@
           v-if="project"
           v-model="selectedTrack"
           :options="tracks"
-          :disable="midiFileError != undefined"
+          :disable="projectFileError != undefined"
           emit-value
           map-options
           label="インポートするトラック"
@@ -48,7 +48,7 @@
             color="toolbar-button"
             text-color="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
-            :disabled="selectedTrack === null || midiFileError != undefined"
+            :disabled="selectedTrack === null || projectFileError != undefined"
             @click="handleImportTrack"
           />
         </QToolbar>
@@ -89,7 +89,7 @@ const acceptExtensions = computed(
 );
 
 // プロジェクトファイル
-const midiFile = ref<File | null>(null);
+const projectFile = ref<File | null>(null);
 // エラー
 const error = ref<
   | "emptyProject"
@@ -101,8 +101,8 @@ const error = ref<
 >(null);
 
 // ファイルエラー
-const midiFileError = computed(() => {
-  if (midiFile.value && error.value) {
+const projectFileError = computed(() => {
+  if (projectFile.value && error.value) {
     switch (error.value) {
       case "emptyProject":
         return "プロジェクトが空です";
@@ -117,7 +117,7 @@ const midiFileError = computed(() => {
     }
 
     throw new ExhaustiveError(error.value);
-  } else if (midiFile.value && project.value) {
+  } else if (projectFile.value && project.value) {
     if (!project.value.tracks.length) {
       return "トラックがありません";
     } else if (
@@ -150,7 +150,7 @@ const selectedTrack = ref<number | null>(null);
 
 // データ初期化
 const initializeValues = () => {
-  midiFile.value = null;
+  projectFile.value = null;
   project.value = null;
   selectedTrack.value = null;
 };
