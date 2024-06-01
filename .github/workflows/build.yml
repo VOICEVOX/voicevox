@@ -317,6 +317,10 @@ jobs:
         if: startsWith(matrix.artifact_name, 'macos-')
         run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
+      - name: Ad hoc code signing
+        if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
+        run: codesign --force --deep -s - prepackage/VOICEVOX.app
+
       - name: Create Linux tar.gz (without nvidia)
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
         run: |
