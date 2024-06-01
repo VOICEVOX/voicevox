@@ -205,10 +205,15 @@ jobs:
 
           cp resource/editor/PRIVACYPOLICY.md public/privacyPolicy.md
 
-      - name: Overwrite .env.production for Linux and macOS
-        if: startsWith(matrix.os, 'ubuntu-') || startsWith(matrix.os, 'macos-')
+      - name: Overwrite .env.production for Linux
+        if: startsWith(matrix.os, 'ubuntu-')
         run: |
           $sed -i 's|run.exe|./run|g' .env.production
+
+      - name: Overwrite .env.production for macOS
+        if: startsWith(matrix.os, 'macos-')
+        run: |
+          $sed -i 's|vv-engine/run.exe|../Resources/vv-engine/run|g' .env.production
 
       - name: Replace .env.production infomations
         run: |
@@ -291,10 +296,10 @@ jobs:
         run: |
           mv voicevox_engine/ prepackage/vv-engine/
 
-      - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/MacOS/
+      - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/Resources/
         if: startsWith(matrix.artifact_name, 'macos-')
         run: |
-          mv voicevox_engine/ prepackage/VOICEVOX.app/Contents/MacOS/vv-engine/
+          mv voicevox_engine/ prepackage/VOICEVOX.app/Contents/Resources/vv-engine/
 
       - name: Recover file permissions
         if: startsWith(matrix.artifact_name, 'linux-') # linux
@@ -305,7 +310,7 @@ jobs:
       - name: Recover file permissions for macOS build
         if: startsWith(matrix.artifact_name, 'macos-') # macOS
         run: |
-          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/vv-engine/run"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Resources/vv-engine/run"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
