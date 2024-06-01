@@ -230,9 +230,9 @@
                 <QSpace />
                 <!-- FIXME: ツールチップの内容をaria-labelに付ける -->
                 <QBtnToggle
+                  :model-value="splitTextWhenPaste"
                   padding="xs md"
                   unelevated
-                  :model-value="splitTextWhenPaste"
                   color="background"
                   text-color="display"
                   toggle-color="primary"
@@ -450,9 +450,9 @@
                 </div>
                 <QSpace />
                 <QBtnToggle
+                  :model-value="savingSetting.fileEncoding"
                   padding="xs md"
                   unelevated
-                  :model-value="savingSetting.fileEncoding"
                   color="background"
                   text-color="display"
                   toggle-color="primary"
