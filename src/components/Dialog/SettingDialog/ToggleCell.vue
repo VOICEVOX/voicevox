@@ -2,7 +2,10 @@
 
 <template>
   <BaseCell :title="title" :description="description">
-    <QToggle :model-value="modelValue" @update:model-value="onUpdated">
+    <QToggle
+      :model-value="modelValue"
+      @update:model-value="props['onUpdate:modelValue']"
+    >
     </QToggle>
   </BaseCell>
 </template>
@@ -10,10 +13,11 @@
 <script setup lang="ts">
 import BaseCell, { Props } from "./BaseCell.vue";
 
-defineProps<
+const props = defineProps<
   Props & {
     modelValue: boolean;
-    onUpdated: (value: boolean) => void;
+    // eslint-disable-next-line vue/prop-name-casing
+    "onUpdate:modelValue"?: (value: boolean) => void;
   }
 >();
 </script>
