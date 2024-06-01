@@ -1328,6 +1328,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const audioContextRef = audioContext;
         const transportRef = transport;
         const channelStripRef = channelStrip;
+
+        // レンダリング中に変更される可能性のあるデータをコピーする
         const tracks = structuredClone(toRaw(state.tracks));
 
         const singerAndFrameRates = new Map<
@@ -1345,11 +1347,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               : undefined,
           ]),
         );
-
-        // レンダリング中に変更される可能性のあるデータをコピーする
         const tpqn = state.tpqn;
         const tempos = state.tempos.map((value) => ({ ...value }));
         const editFrameRate = state.editFrameRate;
+
         const firstRestMinDurationSeconds = 0.12;
         const lastRestDurationSeconds = 0.5;
         const fadeOutDurationSeconds = 0.15;
