@@ -89,6 +89,14 @@ export const isValidNotes = (notes: Note[]) => {
   return notes.every((value) => isValidNote(value));
 };
 
+export const isValidTrack = (track: Track) => {
+  return (
+    Number.isInteger(track.keyRangeAdjustment) &&
+    Number.isInteger(track.volumeRangeAdjustment) &&
+    isValidNotes(track.notes)
+  );
+};
+
 const tickToSecondForConstantBpm = (
   ticks: number,
   bpm: number,

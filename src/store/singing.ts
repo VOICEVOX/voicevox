@@ -69,6 +69,7 @@ import {
   createDefaultTempo,
   createDefaultTimeSignature,
   isValidNotes,
+  isValidTrack,
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
@@ -927,6 +928,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ state, commit, dispatch }, { trackId, track }) {
       if (state.trackOrder.includes(trackId)) {
         throw new Error(`Track ${trackId} is already registered.`);
+      }
+      if (!isValidTrack(track)) {
+        throw new Error("The track is invalid.");
       }
       commit("REGISTER_TRACK", { trackId, track });
 
