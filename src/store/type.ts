@@ -1168,11 +1168,6 @@ export type SingingStoreTypes = {
     mutation: { tracks: Map<TrackId, Track> };
     action(payload: { tracks: Map<TrackId, Track> }): Promise<void>;
   };
-
-  SET_TRACK_ORDER: {
-    mutation: { trackOrder: TrackId[] };
-    action(payload: { trackOrder: TrackId[] }): void;
-  };
 };
 
 export type SingingCommandStoreState = {

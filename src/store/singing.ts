@@ -985,15 +985,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_TRACK_ORDER: {
-    mutation(state, { trackOrder }) {
-      state.trackOrder = trackOrder;
-    },
-    action({ commit }, { trackOrder }) {
-      commit("SET_TRACK_ORDER", { trackOrder });
-    },
-  },
-
   /**
    * レンダリングを行う。レンダリング中だった場合は停止して再レンダリングする。
    */
