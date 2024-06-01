@@ -1331,10 +1331,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // レンダリング中に変更される可能性のあるデータをコピーする
         const tracks = structuredClone(toRaw(state.tracks));
 
-        const singerAndFrameRates = new Map<
-          TrackId,
-          { singer: Singer; frameRate: number } | undefined
-        >(
+        const singerAndFrameRates = new Map(
           [...tracks].map(([trackId, track]) => [
             trackId,
             track.singer
