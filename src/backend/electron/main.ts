@@ -403,7 +403,6 @@ async function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false, // TODO: 外しても問題ないか検証して外す
-      devTools: true, // 検証ツール有効 デバッグ時のみ
     },
     icon: path.join(__static, "icon.png"),
   });
@@ -586,7 +585,7 @@ if (isMac) {
   Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplateForMac));
 } else {
   if (!isDevelopment) {
-    //Menu.setApplicationMenu(null); // デバッグを有効にする場合、コメントアウト
+    Menu.setApplicationMenu(null);
   }
 }
 

@@ -48,7 +48,7 @@
         class="q-mb-sm pitch-cell"
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
       >
-        <!-- consonant length 母音 -->
+        <!-- consonant length -->
         <AudioParameter
           v-if="mora.consonant && mora.consonantLength != undefined"
           :mora-index="moraIndex"
@@ -63,7 +63,7 @@
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
-        <!-- vowel length 子音 -->
+        <!-- vowel length -->
         <AudioParameter
           :mora-index="moraIndex"
           :value="mora.vowelLength"
@@ -85,7 +85,7 @@
           'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
         }"
       >
-        <!-- pause length 無音 -->
+        <!-- pause length -->
         <AudioParameter
           :mora-index="accentPhrase.moras.length"
           :value="accentPhrase.pauseMora.vowelLength"
@@ -263,7 +263,6 @@ const pronunciation = computed(() => {
 });
 
 const handleChangePronounce = (newPronunciation: string) => {
-  console.log("handleChangePronounce");
   let popUntilPause = false;
   newPronunciation = newPronunciation
     .replace(/,/g, "、")
@@ -363,7 +362,6 @@ const lastPitches = computed(() =>
   props.accentPhrase.moras.map((mora) => mora.pitch),
 );
 
-// スライダー操作で発火
 const maxPitch = 6.5;
 const minPitch = 3;
 const maxMoraLength = 0.3;
@@ -373,7 +371,6 @@ const changeMoraData = (
   data: number,
   type: MoraDataType,
 ) => {
-  console.log("changeMoraData in AccentPhrase.vue");
   const accentPhraseIndex = props.index;
   if (!props.altKeyFlag) {
     if (type == "pitch") {

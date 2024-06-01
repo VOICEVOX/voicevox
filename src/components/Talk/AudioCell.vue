@@ -307,7 +307,6 @@ watch(
 );
 
 const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
-  console.log("pushAudioTextIfNeeded");
   if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;

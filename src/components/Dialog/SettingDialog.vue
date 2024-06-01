@@ -1116,10 +1116,7 @@ const engineUseGpu = computed({
 });
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
-// 新規
-// QBtnToggleはv-modelがの変更がsetに結びつく設計になってるみたい
-// Vuexの変更がgetで反映される
-// それらがcomputedによって自動反映
+
 const switchPauseLengthMode = computed({
   get: () => store.state.switchPauseLengthMode,
   set: (switchPauseLengthMode: SwitchPauseLengthMode) => {

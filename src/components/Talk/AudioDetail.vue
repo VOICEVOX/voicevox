@@ -192,8 +192,6 @@ const query = computed(() => audioItem.value?.query);
 // pauseLength&pauseLengthScaleにおいては、エンジン側で行う処理を例外的にここで行う
 // storeへの反映はAccentPhrases.vueでやってくれる
 const accentPhrases = computed(() => {
-  console.log("accentPhrase in AudioDetail.vue");
-  console.log(switchPauseLengthMode.value);
   const newAccentPhrases = query.value?.accentPhrases;
   if (switchPauseLengthMode.value === "ABSOLUTE" && newAccentPhrases) {
     const pauseLength = query.value?.pauseLength;
@@ -204,17 +202,7 @@ const accentPhrases = computed(() => {
         }
       });
     }
-  }/* else if (switchPauseLengthMode.value === "SCALE" && newAccentPhrases) {
-    const pauseLengthScale = query.value?.pauseLengthScale;
-    console.log(pauseLengthScale);
-    if (pauseLengthScale != null) {
-      newAccentPhrases.forEach((accentPhrase) => {
-        if (accentPhrase.pauseMora) {
-          accentPhrase.pauseMora.vowelLength *= pauseLengthScale;
-        }
-      });
-    }
-  }*/
+  }
   return newAccentPhrases;
 });
 
@@ -273,7 +261,6 @@ watch(accentPhrases, async () => {
 
 // audio play
 const play = async () => {
-  console.log("play in AudioDetail");
   try {
     await store.dispatch("PLAY_AUDIO", {
       audioKey: props.activeAudioKey,
@@ -345,7 +332,6 @@ watch(nowPlaying, async (newState) => {
     const accentPhraseOffsets = await store.dispatch("GET_AUDIO_PLAY_OFFSETS", {
       audioKey: props.activeAudioKey,
     });
-    console.log(accentPhraseOffsets);
     // 現在再生されているaudio elementの再生時刻を描画毎に取得(監視)し、
     // それに合わせてフォーカスするアクセント句を変えていく
     const focusAccentPhrase = () => {

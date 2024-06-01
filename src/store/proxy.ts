@@ -13,7 +13,6 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
   const proxyStore = createPartialStore<ProxyStoreTypes>({
     INSTANTIATE_ENGINE_CONNECTOR: {
       action({ state }, payload) {
-        // console.log("INSTANTIATE_ENGINE_CONNECTOR");
         const engineId = payload.engineId;
         const engineInfo: EngineInfo | undefined = state.engineInfos[engineId];
         if (engineInfo == undefined)
@@ -22,7 +21,6 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
           );
 
         const instance = _engineFactory.instance(engineInfo.host);
-        // console.log(instance);
         return Promise.resolve({
           invoke: (v) => (arg) =>
             // FIXME: anyを使わないようにする

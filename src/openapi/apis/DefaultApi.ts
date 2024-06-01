@@ -953,7 +953,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * テキストからアクセント句を得る
      */
     async accentPhrasesAccentPhrasesPostRaw(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
-        console.log("accentPhrasesAccentPhrasesPostRaw");
         if (requestParameters.text === null || requestParameters.text === undefined) {
             throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling accentPhrasesAccentPhrasesPost.');
         }
@@ -997,7 +996,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * テキストからアクセント句を得る
      */
     async accentPhrasesAccentPhrasesPost(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
-        console.log("accentPhrasesAccentPhrasesPost");
         const response = await this.accentPhrasesAccentPhrasesPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1007,7 +1005,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Add Preset
      */
     async addPresetAddPresetPostRaw(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
-        console.log("addPresetAddPresetPostRaw");
         if (requestParameters.preset === null || requestParameters.preset === undefined) {
             throw new runtime.RequiredError('preset','Required parameter requestParameters.preset was null or undefined when calling addPresetAddPresetPost.');
         }
@@ -1047,7 +1044,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Add User Dict Word
      */
     async addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
-        console.log("addUserDictWordUserDictWordPostRaw");
         if (requestParameters.surface === null || requestParameters.surface === undefined) {
             throw new runtime.RequiredError('surface','Required parameter requestParameters.surface was null or undefined when calling addUserDictWordUserDictWordPost.');
         }
@@ -1112,7 +1108,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声合成用のクエリを作成する
      */
     async audioQueryAudioQueryPostRaw(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
-        console.log("audioQueryAudioQueryPostRaw");
         if (requestParameters.text === null || requestParameters.text === undefined) {
             throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling audioQueryAudioQueryPost.');
         }
@@ -1136,7 +1131,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
-        console.log(queryParameters);
         const response = await this.request({
             path: `/audio_query`,
             method: 'POST',
@@ -1151,7 +1145,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声合成用のクエリを作成する
      */
     async audioQueryAudioQueryPost(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery> {
-        console.log("audioQueryAudioQueryPost");
         const response = await this.audioQueryAudioQueryPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1161,7 +1154,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声合成用のクエリをプリセットを用いて作成する
      */
     async audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
-        console.log("audioQueryFromPresetAudioQueryFromPresetPostRaw");
         if (requestParameters.text === null || requestParameters.text === undefined) {
             throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling audioQueryFromPresetAudioQueryFromPresetPost.');
         }
@@ -1209,7 +1201,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声合成する（キャンセル可能）
      */
     async cancellableSynthesisCancellableSynthesisPostRaw(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        console.log("cancellableSynthesisCancellableSynthesisPostRaw");
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling cancellableSynthesisCancellableSynthesisPost.');
         }
@@ -1256,7 +1247,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * base64エンコードされた複数のwavデータを一つに結合する
      */
     async connectWavesConnectWavesPostRaw(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        console.log("connectWavesConnectWavesPostRaw");
         if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
             throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling connectWavesConnectWavesPost.');
         }
@@ -1291,7 +1281,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Core Versions
      */
     async coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>> {
-        console.log("coreVersionsCoreVersionsGetRaw");
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1319,7 +1308,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Delete Preset
      */
     async deletePresetDeletePresetPostRaw(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        console.log("deletePresetDeletePresetPostRaw");
         if (requestParameters.id === null || requestParameters.id === undefined) {
             throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling deletePresetDeletePresetPost.');
         }
@@ -1355,7 +1343,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Delete User Dict Word
      */
     async deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        console.log("deleteUserDictWordUserDictWordWordUuidDeleteRaw");
         if (requestParameters.wordUuid === null || requestParameters.wordUuid === undefined) {
             throw new runtime.RequiredError('wordUuid','Required parameter requestParameters.wordUuid was null or undefined when calling deleteUserDictWordUserDictWordWordUuidDelete.');
         }
@@ -1387,7 +1374,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Downloadable Libraries
      */
     async downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<DownloadableLibraryInfo>>> {
-        console.log("downloadableLibrariesDownloadableLibrariesGetRaw");
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1415,7 +1401,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Engine Manifest
      */
     async engineManifestEngineManifestGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EngineManifest>> {
-        console.log("engineManifestEngineManifestGetRaw");
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1443,7 +1428,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Frame Synthesis
      */
     async frameSynthesisFrameSynthesisPostRaw(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        console.log("frameSynthesisFrameSynthesisPostRaw");
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling frameSynthesisFrameSynthesisPost.');
         }
@@ -1491,7 +1475,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Get Presets
      */
     async getPresetsPresetsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Preset>>> {
-        console.log("getPresetsPresetsGetRaw");
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1520,7 +1503,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Get User Dict Words
      */
     async getUserDictWordsUserDictGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: UserDictWord; }>> {
-        console.log("getUserDictWordsUserDictGetRaw");
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1549,7 +1531,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Import User Dict Words
      */
     async importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        console.log("importUserDictWordsImportUserDictPostRaw");
         if (requestParameters.override === null || requestParameters.override === undefined) {
             throw new runtime.RequiredError('override','Required parameter requestParameters.override was null or undefined when calling importUserDictWordsImportUserDictPost.');
         }
@@ -1592,7 +1573,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Initialize Speaker
      */
     async initializeSpeakerInitializeSpeakerPostRaw(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        console.log("initializeSpeakerInitializeSpeakerPostRaw");
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling initializeSpeakerInitializeSpeakerPost.');
         }
@@ -1636,7 +1616,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Install Library
      */
     async installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        console.log("installLibraryInstallLibraryLibraryUuidPostRaw");
         if (requestParameters.libraryUuid === null || requestParameters.libraryUuid === undefined) {
             throw new runtime.RequiredError('libraryUuid','Required parameter requestParameters.libraryUuid was null or undefined when calling installLibraryInstallLibraryLibraryUuidPost.');
         }
@@ -1668,7 +1647,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Installed Libraries
      */
     async installedLibrariesInstalledLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: InstalledLibraryInfo; }>> {
-        console.log("installedLibrariesInstalledLibrariesGetRaw");
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1697,7 +1675,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Is Initialized Speaker
      */
     async isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
-        console.log("isInitializedSpeakerIsInitializedSpeakerGetRaw");
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling isInitializedSpeakerIsInitializedSpeakerGet.');
         }
@@ -1733,7 +1710,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Is Initialized Speaker
      */
     async isInitializedSpeakerIsInitializedSpeakerGet(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
-        console.log("isInitializedSpeakerIsInitializedSpeakerGet");
         const response = await this.isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -1742,7 +1718,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * アクセント句から音高・音素長を得る
      */
     async moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
-        console.log("moraDataMoraDataPostRaw");
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraDataMoraDataPost.');
         }
@@ -1788,7 +1763,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * アクセント句から音素長を得る
      */
     async moraLengthMoraLengthPostRaw(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
-        console.log("moraLengthMoraLengthPostRaw");
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraLengthMoraLengthPost.');
         }
@@ -1834,7 +1808,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * アクセント句から音高を得る
      */
     async moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
-        console.log("moraPitchMoraPitchPostRaw");
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraPitchMoraPitchPost.');
         }
@@ -1919,7 +1892,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 複数まとめて音声合成する
      */
     async multiSynthesisMultiSynthesisPostRaw(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        console.log("multiSynthesisMultiSynthesisPostRaw");
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling multiSynthesisMultiSynthesisPost.');
         }
@@ -1966,7 +1938,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Rewrite User Dict Word
      */
     async rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        console.log("rewriteUserDictWordUserDictWordWordUuidPutRaw");
         if (requestParameters.wordUuid === null || requestParameters.wordUuid === undefined) {
             throw new runtime.RequiredError('wordUuid','Required parameter requestParameters.wordUuid was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
         }
@@ -2030,7 +2001,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Setting Get
      */
     async settingGetSettingGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        console.log("settingGetSettingGetRaw");
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -2058,7 +2028,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Setting Post
      */
     async settingPostSettingPostRaw(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        console.log("settingPostSettingPostRaw");
         if (requestParameters.corsPolicyMode === null || requestParameters.corsPolicyMode === undefined) {
             throw new runtime.RequiredError('corsPolicyMode','Required parameter requestParameters.corsPolicyMode was null or undefined when calling settingPostSettingPost.');
         }
@@ -2314,7 +2283,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Speakers
      */
     async speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
-        console.log("speakersSpeakersGetRaw");
         const queryParameters: any = {};
 
         if (requestParameters.coreVersion !== undefined) {
@@ -2376,7 +2344,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 2種類のスタイルでモーフィングした音声を合成する
      */
     async synthesisMorphingSynthesisMorphingPostRaw(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        console.log("synthesisMorphingSynthesisMorphingPostRaw");
         if (requestParameters.baseSpeaker === null || requestParameters.baseSpeaker === undefined) {
             throw new runtime.RequiredError('baseSpeaker','Required parameter requestParameters.baseSpeaker was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
         }
@@ -2439,7 +2406,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声合成する
      */
     async synthesisSynthesisPostRaw(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        console.log("synthesisSynthesisPostRaw");
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling synthesisSynthesisPost.');
         }
@@ -2481,7 +2447,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 音声合成する
      */
     async synthesisSynthesisPost(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
-        console.log("synthesisSynthesisPost");
         const response = await this.synthesisSynthesisPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -2522,7 +2487,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Update Preset
      */
     async updatePresetUpdatePresetPostRaw(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
-        console.log("updatePresetUpdatePresetPostRaw");
         if (requestParameters.preset === null || requestParameters.preset === undefined) {
             throw new runtime.RequiredError('preset','Required parameter requestParameters.preset was null or undefined when calling updatePresetUpdatePresetPost.');
         }
@@ -2562,7 +2526,6 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * テキストがAquesTalk 風記法に従っているか判定する
      */
     async validateKanaValidateKanaPostRaw(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
-        console.log("validateKanaValidateKanaPostRaw");
         if (requestParameters.text === null || requestParameters.text === undefined) {
             throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling validateKanaValidateKanaPost.');
         }

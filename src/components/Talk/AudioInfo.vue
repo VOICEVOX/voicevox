@@ -324,18 +324,15 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
-
 const { info } = createLogger("AudioInfo");
 
 // accent phrase
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const audioItem = computed(() => store.state.audioItems[props.activeAudioKey]);
-
 const query = computed(() => audioItem.value?.query);
 
 // 文内無音の指定方式 "SCALE" || "ABSOLUTE"
-// 折り返さないとESLintにおこられる
 const switchPauseLengthMode = computed(() => {
   return store.state.switchPauseLengthMode;
 });
@@ -571,7 +568,6 @@ const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 
 // モーフィング可能なターゲット一覧を取得
 watchEffect(() => {
-  // console.log("watchEffect");
   if (audioItem.value != undefined) {
     store.dispatch("LOAD_MORPHABLE_TARGETS", {
       engineId: audioItem.value.voice.engineId,
