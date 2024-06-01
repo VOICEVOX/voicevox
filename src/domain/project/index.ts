@@ -6,7 +6,7 @@ import semver from "semver";
 
 import { LatestProjectType, projectSchema } from "./schema";
 import { AccentPhrase } from "@/openapi";
-import { CharacterInfo, EngineId, StyleId } from "@/type/preload";
+import { EngineId, StyleId, Voice } from "@/type/preload";
 import {
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
@@ -83,10 +83,10 @@ export const migrateProjectFileObject = async (
       engineId: EngineId;
       styleId: StyleId;
     }) => Promise<AccentPhrase[]>;
-    characterInfos: CharacterInfo[];
+    voices: Voice[];
   },
 ) => {
-  const { fetchMoraData, characterInfos } = DI;
+  const { fetchMoraData, voices } = DI;
 
   // appVersion Validation check
   if (
@@ -215,23 +215,14 @@ export const migrateProjectFileObject = async (
       if (audioItem.voice == undefined) {
         const oldEngineId = audioItem.engineId;
         const oldStyleId = audioItem.styleId;
-        const chracterinfo = characterInfos.find((characterInfo) =>
-          characterInfo.metas.styles.some(
-            (styeleinfo) =>
-              styeleinfo.engineId === audioItem.engineId &&
-              styeleinfo.styleId === audioItem.styleId,
-          ),
+        const voice = voices.find(
+          (voice) =>
+            voice.engineId === audioItem.engineId &&
+            voice.styleId === audioItem.styleId,
         );
-        if (chracterinfo == undefined)
-          throw new Error(
-            `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`,
-          );
-        const speakerId = chracterinfo.metas.speakerUuid;
-        audioItem.voice = {
-          engineId: oldEngineId,
-          speakerId,
-          styleId: oldStyleId,
-        };
+        if (voice == undefined)
+          throw new Error(`voice == undefined: ${oldEngineId}, ${oldStyleId}`);
+        audioItem.voice = voice;
 
         delete audioItem.engineId;
         delete audioItem.styleId;
