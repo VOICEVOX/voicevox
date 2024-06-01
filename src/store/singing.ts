@@ -938,7 +938,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId }) {
       state.selectedTrackId = trackId;
     },
-    action({ commit }, { trackId }) {
+    action({ state, commit }, { trackId }) {
+      if (!state.tracks.has(trackId)) {
+        throw new Error(`Track ${trackId} does not exist.`);
+      }
       commit("SELECT_TRACK", { trackId });
     },
   },
