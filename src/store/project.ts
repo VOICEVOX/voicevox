@@ -174,7 +174,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             {
               fetchMoraData: (payload) =>
                 context.dispatch("FETCH_MORA_DATA", payload),
-              characterInfos,
+              voices: characterInfos.flatMap((characterInfo) =>
+                characterInfo.metas.styles.map((style) => ({
+                  engineId: style.engineId,
+                  speakerId: characterInfo.metas.speakerUuid,
+                  styleId: style.styleId,
+                })),
+              ),
             },
           );
 

@@ -182,25 +182,18 @@ export class GridAreaInfo implements AreaInfo {
   }
 }
 
-export type FramewiseDataSection = {
-  readonly startFrame: number;
-  readonly frameRate: number;
+export type PitchData = {
+  readonly ticksArray: number[];
   readonly data: number[];
 };
 
-const framewiseDataSectionHashSchema = z
-  .string()
-  .brand<"FramewiseDataSectionHash">();
+const pitchDataHashSchema = z.string().brand<"PitchDataHash">();
 
-export type FramewiseDataSectionHash = z.infer<
-  typeof framewiseDataSectionHashSchema
->;
+export type PitchDataHash = z.infer<typeof pitchDataHashSchema>;
 
-export async function calculateFramewiseDataSectionHash(
-  dataSection: FramewiseDataSection,
-) {
-  const hash = await calculateHash(dataSection);
-  return framewiseDataSectionHashSchema.parse(hash);
+export async function calculatePitchDataHash(pitchData: PitchData) {
+  const hash = await calculateHash(pitchData);
+  return pitchDataHashSchema.parse(hash);
 }
 
 export type MouseButton = "LEFT_BUTTON" | "RIGHT_BUTTON" | "OTHER_BUTTON";
