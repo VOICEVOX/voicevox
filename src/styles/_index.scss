@@ -1,5 +1,5 @@
-@use './variables' as vars;
-@use './colors' as colors;
+@use "./variables" as vars;
+@use "./colors" as colors;
 @import "./fonts";
 
 // 優先度を強引に上げる
@@ -18,6 +18,14 @@ body[data-editor-font="default"] {
 
 img {
   pointer-events: none;
+}
+
+// detailsタグのスタイル
+details {
+  summary {
+    display: list-item;
+    cursor: pointer;
+  }
 }
 
 // スクロールバーのデザイン

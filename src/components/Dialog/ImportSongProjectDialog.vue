@@ -9,12 +9,17 @@
         </QToolbar>
       </QHeader>
       <QPageContainer class="q-px-lg">
-        <p class="q-pt-md">以下のプロジェクトファイルをインポートできます：</p>
-        <ul>
-          <li v-for="[name, extensions] in projectNameToExtensions" :key="name">
-            {{ name }}：{{ extensions.map((ext) => `.${ext}`).join("、") }}
-          </li>
-        </ul>
+        <details class="q-pt-md">
+          <summary>対応しているプロジェクトファイル</summary>
+          <ul>
+            <li
+              v-for="[name, extensions] in projectNameToExtensions"
+              :key="name"
+            >
+              {{ name }}：{{ extensions.map((ext) => `.${ext}`).join("、") }}
+            </li>
+          </ul>
+        </details>
         <QFile
           v-model="projectFile"
           label="インポートするファイル"
