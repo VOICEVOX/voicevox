@@ -926,7 +926,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.overlappingNoteIds.set(trackId, new Set());
     },
     action({ state, commit, dispatch }, { trackId, track }) {
-      if (state.trackOrder.includes(trackId)) {
+      if (state.tracks.has(trackId)) {
         throw new Error(`Track ${trackId} is already registered.`);
       }
       if (!isValidTrack(track)) {
