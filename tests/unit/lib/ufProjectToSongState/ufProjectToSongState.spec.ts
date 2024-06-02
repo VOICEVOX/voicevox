@@ -9,7 +9,7 @@ import { ufProjectToSongState } from "@/sing/ufProjectToSongState";
 // - synthv.mid：SynthVで作成（Synthesizer V Studio Pro 1.11.0、プロジェクトファイルは https://github.com/VOICEVOX/voicevox/pull/1982 を参照）
 // - timeSig.mid、bpm.mid：signalで作成（https://signal.vercel.app/edit）
 
-const midiRoot = "tests/unit/lib/midi/";
+const midiRoot = "tests/unit/lib/ufProjectToSongState/";
 
 const convertMidi = async (filename: string) => {
   const midi = await fs.readFile(midiRoot + filename);
