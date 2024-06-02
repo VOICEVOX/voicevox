@@ -1,6 +1,6 @@
 import { Patch } from "immer";
 import { z } from "zod";
-import { Project } from "@sevenc-nanashi/utaformatix-ts";
+import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import {
   MutationTree,
   MutationsBase,
@@ -1018,7 +1018,7 @@ export type SingingStoreTypes = {
   };
 
   IMPORT_EXTERNAL_PROJECT_FILE: {
-    action(payload: { project: Project; trackIndex: number }): void;
+    action(payload: { project: UfProject; trackIndex: number }): void;
   };
 
   EXPORT_WAVE_FILE: {
