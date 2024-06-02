@@ -3,9 +3,7 @@
     <QLayout container view="hHh lpr fFf" class="q-dialog-plugin bg-background">
       <QHeader>
         <QToolbar>
-          <QToolbarTitle class="text-display"
-            >プロジェクトファイルのインポート</QToolbarTitle
-          >
+          <QToolbarTitle class="text-display">インポート</QToolbarTitle>
         </QToolbar>
       </QHeader>
       <QPageContainer class="q-px-lg">
