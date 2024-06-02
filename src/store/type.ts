@@ -2044,5 +2044,5 @@ export const transformCommandStore = <
 
 export type SongState = Pick<
   State,
-  "tracks" | "tpqn" | "tempos" | "timeSignatures" | "projectFilePath"
+  "tracks" | "tpqn" | "tempos" | "timeSignatures"
 >;

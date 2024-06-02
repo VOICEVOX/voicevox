@@ -88,7 +88,7 @@ import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjust
 import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { ufDataToSongState } from "@/sing/ufDataToSongState";
+import { ufProjectToSongState } from "@/sing/ufProjectToSongState";
 
 const logger = createLogger("store/singing");
 
@@ -1694,9 +1694,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   IMPORT_EXTERNAL_PROJECT_FILE: {
     action: createUILockAction(
       async ({ state, dispatch }, { project, trackIndex = 0 }) => {
-        const { tempos, timeSignatures, tracks, tpqn } = ufDataToSongState(
-          project.toUfData(),
-        );
+        const { tempos, timeSignatures, tracks, tpqn } =
+          ufProjectToSongState(project);
 
         const notes = tracks[trackIndex].notes;
 

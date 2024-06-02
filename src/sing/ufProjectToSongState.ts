@@ -1,17 +1,12 @@
-import { Project, UfData } from "@sevenc-nanashi/utaformatix-ts";
+import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import { v4 as uuidv4 } from "uuid";
-import {
-  DEFAULT_TPQN,
-  createDefaultTempo,
-  createDefaultTimeSignature,
-  createDefaultTrack,
-} from "./domain";
+import { DEFAULT_TPQN, createDefaultTrack } from "./domain";
 import { round } from "./utility";
 import { getDoremiFromNoteNumber } from "./viewHelper";
 import { NoteId } from "@/type/preload";
 import { Note, SongState, Tempo, TimeSignature, Track } from "@/store/type";
 
-export const ufDataToSongState = (ufData: UfData): SongState => {
+export const ufProjectToSongState = (project: UfProject): SongState => {
   const convertPosition = (
     position: number,
     sourceTpqn: number,
@@ -57,7 +52,6 @@ export const ufDataToSongState = (ufData: UfData): SongState => {
     });
   };
 
-  const project = new Project(ufData);
   // 歌詞をひらがなの単独音に変換する
   // TODO: 手動で変換元を選べるようにする
   const convertedProject = project.convertJapaneseLyrics("auto", "KanaCv", {
@@ -119,7 +113,6 @@ export const ufDataToSongState = (ufData: UfData): SongState => {
       bpm: round(value.bpm, 2),
     };
   });
-  tempos.unshift(createDefaultTempo(0));
   tempos = removeDuplicateTempos(tempos);
 
   let timeSignatures: TimeSignature[] = [];
@@ -132,7 +125,6 @@ export const ufDataToSongState = (ufData: UfData): SongState => {
       beatType,
     });
   }
-  timeSignatures.unshift(createDefaultTimeSignature(1));
   timeSignatures = removeDuplicateTimeSignatures(timeSignatures);
 
   return {
@@ -140,6 +132,5 @@ export const ufDataToSongState = (ufData: UfData): SongState => {
     tpqn,
     tempos,
     timeSignatures,
-    projectFilePath: "",
   };
 };

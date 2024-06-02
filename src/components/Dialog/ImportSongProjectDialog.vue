@@ -214,7 +214,9 @@ const handleFileChange = async (event: Event) => {
       const parsedProject = await store.dispatch("PARSE_PROJECT_FILE", {
         projectJson: vvproj,
       });
-      project.value = new Project(songStateToUfData(parsedProject.song));
+      project.value = new Project(
+        songStateToUfData(parsedProject.song, file.name),
+      );
     } else {
       project.value = await Project.fromAny(file);
     }

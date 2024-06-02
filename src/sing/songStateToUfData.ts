@@ -1,18 +1,10 @@
 import { UfData } from "@sevenc-nanashi/utaformatix-ts";
 import { SongState } from "@/store/type";
-import { getBaseName } from "@/store/utility";
 
-export const songStateToUfData = ({
-  tracks,
-  tpqn,
-  tempos,
-  timeSignatures,
-  projectFilePath,
-}: SongState): UfData => {
-  const projectName = projectFilePath
-    ? getBaseName(projectFilePath)
-    : "New Project";
-
+export const songStateToUfData = (
+  { tracks, tpqn, tempos, timeSignatures }: SongState,
+  projectName: string,
+): UfData => {
   const convertTicks = (ticks: number) => Math.round((ticks / tpqn) * 480);
   return {
     formatVersion: 1,
