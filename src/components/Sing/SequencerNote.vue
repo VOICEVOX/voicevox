@@ -98,6 +98,8 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
+import { TrackId } from "@/type/preload";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 type NoteState = "NORMAL" | "SELECTED";
 
@@ -110,6 +112,7 @@ const vFocus = {
 
 const props = withDefaults(
   defineProps<{
+    trackId: TrackId;
     note: Note;
     isSelected: boolean;
     previewLyric: string | null;
@@ -164,7 +167,11 @@ const editTargetIsPitch = computed(() => {
 
 // ノートの重なりエラー
 const hasOverlappingError = computed(() => {
-  return state.overlappingNoteIds.has(props.note.id);
+  const overlappingNoteIds = getOrThrow(
+    state.overlappingNoteIds,
+    props.trackId,
+  );
+  return overlappingNoteIds.has(props.note.id);
 });
 
 // フレーズ生成エラー

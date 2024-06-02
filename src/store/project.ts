@@ -1,4 +1,5 @@
 import semver from "semver";
+import { v4 as uuidv4 } from "uuid";
 import { getBaseName } from "./utility";
 import { createPartialStore, Dispatch } from "./vuex";
 import { createUILockAction } from "@/store/ui";
@@ -9,12 +10,13 @@ import {
   ProjectStoreTypes,
 } from "@/store/type";
 import { AccentPhrase } from "@/openapi";
-import { EngineId } from "@/type/preload";
+import { EngineId, TrackId } from "@/type/preload";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { LatestProjectType, projectSchema } from "@/domain/project/schema";
 import {
   createDefaultTempo,
   createDefaultTimeSignature,
+  createDefaultTrack,
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
   DEFAULT_BPM,
@@ -97,25 +99,19 @@ const applySongProjectToStore = async (
   dispatch: Dispatch<AllActions>,
   songProject: LatestProjectType["song"],
 ) => {
-  const { tpqn, tempos, timeSignatures, tracks } = songProject;
-  // TODO: マルチトラック対応
-  await dispatch("SET_SINGER", {
-    singer: tracks[0].singer,
-  });
-  await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-    keyRangeAdjustment: tracks[0].keyRangeAdjustment,
-  });
-  await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-    volumeRangeAdjustment: tracks[0].volumeRangeAdjustment,
-  });
+  const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
+
   await dispatch("SET_TPQN", { tpqn });
   await dispatch("SET_TEMPOS", { tempos });
   await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-  await dispatch("SET_NOTES", { notes: tracks[0].notes });
-  await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-  await dispatch("SET_PITCH_EDIT_DATA", {
-    data: tracks[0].pitchEditData,
-    startFrame: 0,
+  await dispatch("SET_TRACKS", {
+    tracks: new Map(
+      trackOrder.map((trackId) => {
+        const track = tracks[trackId];
+        if (!track) throw new Error("track == undefined");
+        return [trackId, track];
+      }),
+    ),
   });
 };
 
@@ -166,9 +162,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.dispatch("SET_TIME_SIGNATURES", {
           timeSignatures: [createDefaultTimeSignature(1)],
         });
-        await context.dispatch("SET_NOTES", { notes: [] });
-        await context.dispatch("SET_SINGER", { withRelated: true });
-        await context.dispatch("CLEAR_PITCH_EDIT_DATA");
+        const trackId = TrackId(uuidv4());
+        await context.dispatch("SET_TRACKS", {
+          tracks: new Map([[trackId, createDefaultTrack()]]),
+        });
+        await context.dispatch("SET_NOTES", { notes: [], trackId });
+        await context.dispatch("SET_SINGER", { withRelated: true, trackId });
+        await context.dispatch("CLEAR_PITCH_EDIT_DATA", { trackId });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
@@ -456,6 +456,22 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
           }
 
+          if (
+            semver.satisfies(
+              projectAppVersion,
+              "<0.20.0",
+              semverSatisfiesOptions,
+            )
+          ) {
+            // tracks: Track[] -> tracks: Record<TrackId, Track> + trackOrder: TrackId[]
+            const newTracks: Record<TrackId, unknown> = {};
+            for (const track of projectData.song.tracks) {
+              newTracks[TrackId(uuidv4())] = track;
+            }
+            projectData.song.tracks = newTracks;
+            projectData.song.trackOrder = Object.keys(newTracks);
+          }
+
           // Validation check
           // トークはvalidateTalkProjectで検証する
           // ソングはSET_SCOREの中の`isValidScore`関数で検証される
@@ -562,6 +578,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             tempos,
             timeSignatures,
             tracks,
+            trackOrder,
           } = context.state;
           const projectData: LatestProjectType = {
             appVersion: appInfos.version,
@@ -573,7 +590,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               tpqn,
               tempos,
               timeSignatures,
-              tracks,
+              tracks: Object.fromEntries(tracks),
+              trackOrder,
             },
           };
 

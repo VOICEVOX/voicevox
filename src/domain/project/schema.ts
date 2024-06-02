@@ -7,6 +7,7 @@ import {
   presetKeySchema,
   speakerIdSchema,
   styleIdSchema,
+  trackIdSchema,
 } from "@/type/preload";
 
 // トーク系のスキーマ
@@ -104,7 +105,8 @@ export const projectSchema = z.object({
     tpqn: z.number(),
     tempos: z.array(tempoSchema),
     timeSignatures: z.array(timeSignatureSchema),
-    tracks: z.array(trackSchema),
+    tracks: z.record(trackIdSchema, trackSchema),
+    trackOrder: z.array(trackIdSchema),
   }),
 });
 
