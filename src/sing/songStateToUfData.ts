@@ -1,17 +1,14 @@
 import { UfData } from "@sevenc-nanashi/utaformatix-ts";
-import { State } from "@/store/type";
+import { SongState } from "@/store/type";
 import { getBaseName } from "@/store/utility";
 
-export const songProjectToUfData = ({
+export const songStateToUfData = ({
   tracks,
   tpqn,
   tempos,
   timeSignatures,
   projectFilePath,
-}: Pick<
-  State,
-  "tracks" | "tpqn" | "tempos" | "timeSignatures" | "projectFilePath"
->): UfData => {
+}: SongState): UfData => {
   const projectName = projectFilePath
     ? getBaseName(projectFilePath)
     : "New Project";

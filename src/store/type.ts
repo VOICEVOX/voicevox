@@ -2041,3 +2041,8 @@ export const transformCommandStore = <
     );
   return options;
 };
+
+export type SongState = Pick<
+  State,
+  "tracks" | "tpqn" | "tempos" | "timeSignatures" | "projectFilePath"
+>;
