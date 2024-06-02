@@ -1,6 +1,7 @@
 import { UfData } from "@sevenc-nanashi/utaformatix-ts";
 import { SongState } from "@/store/type";
 
+/** Voicevoxの楽譜データをUfDataに変換する */
 export const songStateToUfData = (
   { tracks, tpqn, tempos, timeSignatures }: SongState,
   projectName: string,

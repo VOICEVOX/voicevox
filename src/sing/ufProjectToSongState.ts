@@ -6,6 +6,7 @@ import { getDoremiFromNoteNumber } from "./viewHelper";
 import { NoteId } from "@/type/preload";
 import { Note, SongState, Tempo, TimeSignature, Track } from "@/store/type";
 
+/** UtaformatixのプロジェクトをVoicevoxの楽譜データに変換する */
 export const ufProjectToSongState = (project: UfProject): SongState => {
   const convertPosition = (
     position: number,
