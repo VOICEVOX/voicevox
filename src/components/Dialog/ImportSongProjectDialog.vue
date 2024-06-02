@@ -129,7 +129,10 @@ const error = ref<
 
 // ファイルエラー
 const projectFileError = computed(() => {
-  if (projectFile.value && error.value) {
+  if (!projectFile.value) {
+    return undefined;
+  }
+  if (error.value) {
     switch (error.value) {
       case "emptyProject":
         return "プロジェクトが空です";
@@ -144,7 +147,7 @@ const projectFileError = computed(() => {
     }
 
     throw new ExhaustiveError(error.value);
-  } else if (projectFile.value && project.value) {
+  } else if (project.value) {
     if (!project.value.tracks.length) {
       return "トラックがありません";
     } else if (
@@ -153,6 +156,7 @@ const projectFileError = computed(() => {
       return "ノートがありません";
     }
   }
+
   return undefined;
 });
 // データ
