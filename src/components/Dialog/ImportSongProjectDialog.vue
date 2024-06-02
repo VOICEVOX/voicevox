@@ -97,7 +97,7 @@ type SupportedExtensions = UfSupportedExtensions | "vvproj";
 
 const projectNameToExtensions = [
   ["VOICEVOX", ["vvproj"]],
-  ["MIDI（SMF）", ["mid"]],
+  ["MIDI (SMF)", ["mid"]],
   ["MusicXML", ["xml", "musicxml"]],
   ["CeVIO", ["ccs"]],
   ["DeepVocal", ["dv"]],
