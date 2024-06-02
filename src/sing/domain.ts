@@ -91,8 +91,8 @@ export const isValidNotes = (notes: Note[]) => {
 
 export const isValidTrack = (track: Track) => {
   return (
-    Number.isInteger(track.keyRangeAdjustment) &&
-    Number.isInteger(track.volumeRangeAdjustment) &&
+    isValidKeyRangeAdjustment(track.keyRangeAdjustment) &&
+    isValidVolumeRangeAdjustment(track.volumeRangeAdjustment) &&
     isValidNotes(track.notes)
   );
 };
