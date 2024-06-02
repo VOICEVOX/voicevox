@@ -99,7 +99,7 @@ const projectNameToExtensions = [
   ["VOICEVOX", ["vvproj"]],
   ["MIDI（SMF）", ["mid"]],
   ["MusicXML", ["xml", "musicxml"]],
-  ["Cevio AI", ["ccs"]],
+  ["CeVIO", ["ccs"]],
   ["DeepVocal", ["dv"]],
   ["OpenUtau", ["ustx"]],
   ["Piapro Studio", ["ppsf"]],
