@@ -96,16 +96,16 @@ const acceptExtensions = computed(
 type SupportedExtensions = UfSupportedExtensions | "vvproj";
 
 const projectNameToExtensions = [
+  ["VOICEVOX", ["vvproj"]],
+  ["MIDI（SMF）", ["mid"]],
+  ["MusicXML", ["xml", "musicxml"]],
   ["Cevio AI", ["ccs"]],
   ["DeepVocal", ["dv"]],
-  ["MusicXML", ["xml", "musicxml"]],
+  ["OpenUtau", ["ustx"]],
   ["Piapro Studio", ["ppsf"]],
-  ["MIDI（SMF）", ["mid"]],
   ["Synthesizer V", ["s5p", "svp"]],
   ["UTAU", ["ust"]],
-  ["OpenUtau", ["ustx"]],
   ["VOCALOID", ["vpr", "vsq", "vsqx"]],
-  ["VOICEVOX", ["vvproj"]],
 ] as const satisfies [string, SupportedExtensions[]][];
 
 // ちゃんと全部の拡張子があるかチェック
