@@ -80,7 +80,7 @@ import {
 import { useStore } from "@/store";
 import { createLogger } from "@/domain/frontend/log";
 import { ExhaustiveError } from "@/type/utility";
-import { songStateToUfData } from "@/sing/songStateToUfData";
+import { exportUtaformatixProject } from "@/sing/utaformatixProject/export";
 import { IsEqual } from "@/type/utility";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -212,9 +212,7 @@ const handleFileChange = async (event: Event) => {
       const parsedProject = await store.dispatch("PARSE_PROJECT_FILE", {
         projectJson: vvproj,
       });
-      project.value = new Project(
-        songStateToUfData(parsedProject.song, file.name),
-      );
+      project.value = exportUtaformatixProject(parsedProject.song, file.name);
     } else {
       project.value = await Project.fromAny(file);
     }

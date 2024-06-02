@@ -3,7 +3,7 @@
 import { promises as fs } from "fs";
 import { it, expect } from "vitest";
 import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
-import { ufProjectToSongState } from "@/sing/ufProjectToSongState";
+import { importUtaformatixProject } from "@/sing/utaformatixProject/import";
 
 // MIDIファイルの作成情報：
 // - synthv.mid：SynthVで作成（Synthesizer V Studio Pro 1.11.0、プロジェクトファイルは https://github.com/VOICEVOX/voicevox/pull/1982 を参照）
@@ -14,7 +14,7 @@ const midiRoot = "tests/unit/lib/ufProjectToSongState/";
 const convertMidi = async (filename: string) => {
   const midi = await fs.readFile(midiRoot + filename);
   const project = await UfProject.fromStandardMid(midi);
-  return ufProjectToSongState(project);
+  return importUtaformatixProject(project);
 };
 
 it("BPMを変換できる", async () => {

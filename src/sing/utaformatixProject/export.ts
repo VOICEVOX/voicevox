@@ -1,13 +1,13 @@
-import { UfData } from "@sevenc-nanashi/utaformatix-ts";
-import { SongState } from "@/store/type";
+import { Project as UfProject, UfData } from "@sevenc-nanashi/utaformatix-ts";
+import { SongState } from "./common";
 
-/** Voicevoxの楽譜データをUfDataに変換する */
-export const songStateToUfData = (
+/** Voicevoxの楽譜データをUtaformatixのProjectに変換する */
+export const exportUtaformatixProject = (
   { tracks, tpqn, tempos, timeSignatures }: SongState,
   projectName: string,
-): UfData => {
+): UfProject => {
   const convertTicks = (ticks: number) => Math.round((ticks / tpqn) * 480);
-  return {
+  const ufData: UfData = {
     formatVersion: 1,
     project: {
       measurePrefix: 0,
@@ -32,4 +32,5 @@ export const songStateToUfData = (
       })),
     },
   };
+  return new UfProject(ufData);
 };
