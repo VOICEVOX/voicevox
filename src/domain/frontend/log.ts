@@ -3,8 +3,8 @@
 export function createLogger(scope: string) {
   const createInner =
     (method: "logInfo" | "logError" | "logWarn") =>
-    (message: string, ...args: unknown[]) => {
-      window.backend[method](`[${scope}] ${message}`, ...args);
+    (...args: unknown[]) => {
+      window.backend[method](`[${scope}] ${args[0]}`, ...args.slice(1));
     };
   return {
     info: createInner("logInfo"),

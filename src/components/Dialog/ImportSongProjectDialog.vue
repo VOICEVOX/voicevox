@@ -227,7 +227,7 @@ const handleFileChange = async (event: Event) => {
       selectedTrack.value = 0;
     }
   } catch (e) {
-    log.error(String(e));
+    log.error(e);
     error.value = "unknown";
     if (e instanceof EmptyProjectException) {
       error.value = "emptyProject";
