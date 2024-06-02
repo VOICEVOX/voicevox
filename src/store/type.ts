@@ -62,6 +62,7 @@ import {
 } from "@/components/Dialog/Dialog";
 import { OverlappingNoteInfos } from "@/sing/storeHelper";
 import {
+  LatestProjectType,
   noteSchema,
   singerSchema,
   tempoSchema,
@@ -1480,6 +1481,10 @@ export type ProjectStoreTypes = {
 
   CREATE_NEW_PROJECT: {
     action(payload: { confirm?: boolean }): void;
+  };
+
+  PARSE_PROJECT_FILE: {
+    action(payload: { projectJson: string }): Promise<LatestProjectType>;
   };
 
   LOAD_PROJECT_FILE: {

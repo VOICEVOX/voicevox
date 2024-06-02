@@ -79,11 +79,8 @@ import {
   supportedExtensions,
   SupportedExtensions as UfSupportedExtensions,
 } from "@sevenc-nanashi/utaformatix-ts";
-import semver from "semver";
 import { useStore } from "@/store";
 import { createLogger } from "@/domain/frontend/log";
-import { readTextFile } from "@/helpers/fileReader";
-import { migrateProjectFileObject } from "@/domain/project";
 import { ExhaustiveError } from "@/type/utility";
 import { songProjectToUfData } from "@/sing/songProjectToUfData";
 import { IsEqual } from "@/type/utility";
@@ -213,27 +210,11 @@ const handleFileChange = async (event: Event) => {
   // ファイルをパース
   try {
     if (file.name.endsWith(".vvproj")) {
-      const vvproj = JSON.parse(await readTextFile(file));
-      if (
-        !(
-          "appVersion" in vvproj &&
-          semver.satisfies(vvproj["appVersion"], ">=0.17", {
-            includePrerelease: true,
-          })
-        )
-      ) {
-        error.value = "oldProject";
-        return;
-      }
-      const migratedVvproj = await migrateProjectFileObject(vvproj, {
-        // DIされている関数は0.17からは使われないので適当な関数を渡す。
-        // TODO: だとしても不安なのでちゃんとした関数を渡す？
-        fetchMoraData: () => {
-          throw new Error("fetchMoraData is not implemented");
-        },
-        voices: [],
+      const vvproj = await file.text();
+      const parsedProject = await store.dispatch("PARSE_PROJECT_FILE", {
+        projectJson: vvproj,
       });
-      project.value = new Project(songProjectToUfData(migratedVvproj.song));
+      project.value = new Project(songProjectToUfData(parsedProject.song));
     } else {
       project.value = await Project.fromAny(file);
     }
