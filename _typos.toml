@@ -10,8 +10,8 @@ commitish = "commitish" # softprops/action-gh-releaseのオプションの１つ
 
 [files]
 extend-exclude = [
-	"package-lock.json",
-	"src/domain/project/index.ts",
-	"*.svg",
-	"public/res/macos-big-sur-software-update-rosetta-alert.jpg", # macos-big-surは正しい固有名詞
+    "package-lock.json",
+    "src/domain/project/index.ts",
+    "*.svg",
+    "public/res/macos-big-sur-software-update-rosetta-alert.jpg", # macos-big-surは正しい固有名詞
 ]
