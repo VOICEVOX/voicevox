@@ -35,7 +35,7 @@
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
     "@quasar/extras": "1.10.10",
-    "@sevenc-nanashi/utaformatix-ts": "npm:@jsr/sevenc-nanashi__utaformatix-ts@0.2.3",
+    "@sevenc-nanashi/utaformatix-ts": "npm:@jsr/sevenc-nanashi__utaformatix-ts@0.3.0",
     "async-lock": "1.4.0",
     "buffer": "6.0.3",
     "clone-deep": "4.0.1",
