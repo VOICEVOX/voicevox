@@ -107,7 +107,8 @@ export const importUtaformatixProject = (project: UfProject): SongState => {
     const beats = ts.numerator;
     const beatType = ts.denominator;
     timeSignatures.push({
-      measureNumber: ts.measurePosition,
+      // UtaFormatixは0から始まるので+1する
+      measureNumber: ts.measurePosition + 1,
       beats,
       beatType,
     });
