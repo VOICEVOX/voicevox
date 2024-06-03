@@ -104,6 +104,7 @@ const projectNameToExtensions = [
   ["OpenUtau", ["ustx"]],
   ["Piapro Studio", ["ppsf"]],
   ["Synthesizer V", ["s5p", "svp"]],
+  ["UtaFormatix", ["ufdata"]],
   ["UTAU", ["ust"]],
   ["VOCALOID", ["vpr", "vsq", "vsqx"]],
 ] as const satisfies [string, SupportedExtensions[]][];
@@ -250,7 +251,9 @@ const handleFileChange = async (event: Event) => {
     } else {
       project.value = {
         type: "utaformatix",
-        project: await UfProject.fromAny(file),
+        project: await UfProject.fromAny(file, {
+          defaultLyric: "",
+        }),
       };
       selectedTrack.value = project.value.project.tracks.findIndex(
         (track) => track.notes.length > 0,

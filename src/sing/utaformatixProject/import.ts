@@ -66,15 +66,9 @@ export const importUtaformatixProject = (project: UfProject): SongState => {
   const projectTempos = convertedProject.tempos;
   const projectTimeSignatures = convertedProject.timeSignatures;
 
-  // utaformatixはフォールバック歌詞を「あ」としている。
-  // このため、歌詞が「あ」の場合は歌詞が設定されていないとみなす。
-  // TODO: false positiveが起きる可能性があるので、他の方法を考える
-  //   最終的にやりたいことは歌詞が無い時に「ド」～「シ」の歌詞を設定することなので、
-  //   本家のフォールバックを変えるPRを送る？
-  // https://github.com/sdercolin/utaformatix3/blob/baee542392421a628d424d8325a5e0f14d0f2a50/src/jsMain/kotlin/model/Constants.kt#L6
   const hasLyric = convertedProject.tracks
     .flatMap((value) => value.notes)
-    .some((value) => value.lyric !== "あ");
+    .some((value) => value.lyric !== "");
 
   const tpqn = DEFAULT_TPQN;
 
@@ -95,7 +89,7 @@ export const importUtaformatixProject = (project: UfProject): SongState => {
         ),
         noteNumber: value.key,
         lyric: hasLyric
-          ? // たまに空文字が入っていることがあるので、その場合は「っ」に変換する
+          ? // UtaFormatixは「っ」を空文字で表現する
             value.lyric === ""
             ? "っ"
             : value.lyric
