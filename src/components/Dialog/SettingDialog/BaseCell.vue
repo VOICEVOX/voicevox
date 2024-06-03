@@ -7,8 +7,8 @@
           :delay="500"
           anchor="center right"
           self="center left"
-          transition-show="jump-right"
-          transition-hide="jump-left"
+          transitionShow="jump-right"
+          transitionHide="jump-left"
         >
           {{ description }}
         </QTooltip>
