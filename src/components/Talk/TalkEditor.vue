@@ -124,10 +124,9 @@
 
 <script setup lang="ts">
 import path from "path";
-import { computed, onBeforeUpdate, ref, VNodeRef, watch } from "vue";
+import { computed, onBeforeUpdate, ref, toRaw, VNodeRef, watch } from "vue";
 import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
-import cloneDeep from "clone-deep";
 import AudioCell from "./AudioCell.vue";
 import AudioDetail from "./AudioDetail.vue";
 import AudioInfo from "./AudioInfo.vue";
@@ -405,10 +404,10 @@ const duplicateAudioItem = async () => {
   // audioItemが選択されていない状態で押されたら何もしない
   if (prevAudioKey == undefined) return;
 
-  const prevAudioItem = store.state.audioItems[prevAudioKey];
+  const prevAudioItem = toRaw(store.state.audioItems[prevAudioKey]);
 
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
-    audioItem: cloneDeep(prevAudioItem),
+    audioItem: structuredClone(prevAudioItem),
     prevAudioKey: activeAudioKey.value,
   });
   audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
