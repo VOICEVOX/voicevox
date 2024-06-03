@@ -66,10 +66,6 @@ export const importUtaformatixProject = (project: UfProject): SongState => {
   const projectTempos = convertedProject.tempos;
   const projectTimeSignatures = convertedProject.timeSignatures;
 
-  const hasLyric = convertedProject.tracks
-    .flatMap((value) => value.notes)
-    .some((value) => value.lyric !== "");
-
   const tpqn = DEFAULT_TPQN;
 
   const tracks: Track[] = convertedProject.tracks.map((projectTrack) => {
@@ -88,12 +84,7 @@ export const importUtaformatixProject = (project: UfProject): SongState => {
           tpqn,
         ),
         noteNumber: value.key,
-        lyric: hasLyric
-          ? // UtaFormatixは「っ」を空文字で表現する
-            value.lyric === ""
-            ? "っ"
-            : value.lyric
-          : getDoremiFromNoteNumber(value.key),
+        lyric: value.lyric || getDoremiFromNoteNumber(value.key),
       };
     });
 
