@@ -158,7 +158,6 @@ import {
   onActivated,
   onDeactivated,
 } from "vue";
-import { v4 as uuidv4 } from "uuid";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
@@ -705,7 +704,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         return;
       }
       note = {
-        id: NoteId(uuidv4()),
+        id: NoteId(crypto.randomUUID()),
         position: guideLineTicks,
         duration: snapTicks.value,
         noteNumber: cursorNoteNumber,
