@@ -1691,7 +1691,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     }),
   },
 
-  IMPORT_EXTERNAL_PROJECT_FILE: {
+  IMPORT_UTAFORMATIX_PROJECT: {
     action: createUILockAction(
       async ({ state, dispatch }, { project, trackIndex = 0 }) => {
         const { tempos, timeSignatures, tracks, tpqn } =
@@ -1708,6 +1708,48 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes });
+
+        dispatch("RENDER");
+      },
+    ),
+  },
+
+  IMPORT_VOICEVOX_PROJECT: {
+    action: createUILockAction(
+      async ({ state, dispatch }, { project, trackIndex = 0 }) => {
+        const { tempos, timeSignatures, tracks, tpqn } = project.song;
+
+        const track = tracks[trackIndex];
+        const notes = track.notes.map((note) => ({
+          ...note,
+          id: NoteId(uuidv4()),
+        }));
+
+        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
+
+        if (tpqn !== state.tpqn) {
+          throw new Error("TPQN does not match. Must be converted.");
+        }
+        await dispatch("SET_TEMPOS", { tempos });
+        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+        await dispatch("SET_NOTES", { notes });
+        await dispatch("CLEAR_PITCH_EDIT_DATA");
+        await dispatch("SET_PITCH_EDIT_DATA", {
+          data: track.pitchEditData,
+          startFrame: 0,
+        });
+        await dispatch("SET_SINGER", {
+          singer: track.singer,
+        });
+        await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
+          keyRangeAdjustment: track.keyRangeAdjustment,
+        });
+        await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
+          volumeRangeAdjustment: track.volumeRangeAdjustment,
+        });
+
+        dispatch("RENDER");
       },
     ),
   },

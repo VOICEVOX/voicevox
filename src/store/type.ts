@@ -1018,8 +1018,12 @@ export type SingingStoreTypes = {
     action(payload: { isDrag: boolean }): void;
   };
 
-  IMPORT_EXTERNAL_PROJECT_FILE: {
+  IMPORT_UTAFORMATIX_PROJECT: {
     action(payload: { project: UfProject; trackIndex: number }): void;
+  };
+
+  IMPORT_VOICEVOX_PROJECT: {
+    action(payload: { project: LatestProjectType; trackIndex: number }): void;
   };
 
   EXPORT_WAVE_FILE: {

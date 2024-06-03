@@ -70,7 +70,7 @@
 import { computed, ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import {
-  Project,
+  Project as UfProject,
   EmptyProjectException,
   IllegalFileException,
   NotesOverlappingException,
@@ -80,8 +80,8 @@ import {
 import { useStore } from "@/store";
 import { createLogger } from "@/domain/frontend/log";
 import { ExhaustiveError } from "@/type/utility";
-import { exportUtaformatixProject } from "@/sing/utaformatixProject/export";
 import { IsEqual } from "@/type/utility";
+import { LatestProjectType } from "@/domain/project/schema";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
@@ -148,17 +148,39 @@ const projectFileError = computed(() => {
 
     throw new ExhaustiveError(error.value);
   } else if (project.value) {
-    if (!project.value.tracks.length) {
-      return "トラックがありません";
-    } else if (
-      project.value.tracks.every((track) => track.notes.length === 0)
-    ) {
-      return "ノートがありません";
+    if (project.value.type === "vvproj") {
+      if (project.value.project.song.tracks.length === 0) {
+        return "トラックがありません";
+      } else if (
+        project.value.project.song.tracks.every(
+          (track) => track.notes.length === 0,
+        )
+      ) {
+        return "ノートがありません";
+      }
+    } else {
+      if (project.value.project.tracks.length === 0) {
+        return "トラックがありません";
+      } else if (
+        project.value.project.tracks.every((track) => track.notes.length === 0)
+      ) {
+        return "ノートがありません";
+      }
     }
   }
 
   return undefined;
 });
+
+type Project =
+  | {
+      type: "utaformatix";
+      project: UfProject;
+    }
+  | {
+      type: "vvproj";
+      project: LatestProjectType;
+    };
 // データ
 const project = ref<Project | null>(null);
 // トラック
@@ -168,13 +190,19 @@ const tracks = computed(() => {
   }
   // トラックリストを生成
   // "トラックNo: トラック名 / ノート数" の形式で表示
-  return project.value.tracks.map((track, index) => ({
-    label: `${index + 1}: ${track.name || "（トラック名なし）"} / ノート数：${
-      track.notes.length
-    }`,
-    value: index,
-    disable: track.notes.length === 0,
-  }));
+  return project.value.type === "utaformatix"
+    ? project.value.project.tracks.map((track, index) => ({
+        label: `${index + 1}: ${track.name || "（トラック名なし）"} / ノート数：${
+          track.notes.length
+        }`,
+        value: index,
+        disable: track.notes.length === 0,
+      }))
+    : project.value.project.song.tracks.map((track, index) => ({
+        label: `${index + 1}: ノート数：${track.notes.length}`,
+        value: index,
+        disable: track.notes.length === 0,
+      }));
 });
 // 選択中のトラック
 const selectedTrack = ref<number | null>(null);
@@ -212,13 +240,22 @@ const handleFileChange = async (event: Event) => {
       const parsedProject = await store.dispatch("PARSE_PROJECT_FILE", {
         projectJson: vvproj,
       });
-      project.value = exportUtaformatixProject(parsedProject.song, file.name);
+      project.value = {
+        type: "vvproj",
+        project: parsedProject,
+      };
+      selectedTrack.value = project.value.project.song.tracks.findIndex(
+        (track) => track.notes.length > 0,
+      );
     } else {
-      project.value = await Project.fromAny(file);
+      project.value = {
+        type: "utaformatix",
+        project: await UfProject.fromAny(file),
+      };
+      selectedTrack.value = project.value.project.tracks.findIndex(
+        (track) => track.notes.length > 0,
+      );
     }
-    selectedTrack.value = project.value.tracks.findIndex(
-      (track) => track.notes.length > 0,
-    );
     if (selectedTrack.value === -1) {
       selectedTrack.value = 0;
     }
@@ -242,10 +279,17 @@ const handleImportTrack = () => {
     throw new Error("project or selected track is not set");
   }
   // トラックをインポート
-  store.dispatch("IMPORT_EXTERNAL_PROJECT_FILE", {
-    project: project.value,
-    trackIndex: selectedTrack.value,
-  });
+  if (project.value.type === "vvproj") {
+    store.dispatch("IMPORT_VOICEVOX_PROJECT", {
+      project: project.value.project,
+      trackIndex: selectedTrack.value,
+    });
+  } else {
+    store.dispatch("IMPORT_UTAFORMATIX_PROJECT", {
+      project: project.value.project,
+      trackIndex: selectedTrack.value,
+    });
+  }
   onDialogOK();
 };
 
