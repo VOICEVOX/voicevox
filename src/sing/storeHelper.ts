@@ -1,14 +1,6 @@
 import { NoteId } from "@/type/preload";
 import { Note } from "@/store/type";
 
-export const DEFAULT_TPQN = 480;
-export const DEFAULT_BPM = 120;
-export const DEFAULT_BEATS = 4;
-export const DEFAULT_BEAT_TYPE = 4;
-
-// マルチエンジン対応のために将来的に廃止予定で、利用は非推奨
-export const DEPRECATED_DEFAULT_EDIT_FRAME_RATE = 93.75;
-
 /**
  * 頻繁に変更される値を保持します。
  * 値変更時に実行する関数を登録できます。

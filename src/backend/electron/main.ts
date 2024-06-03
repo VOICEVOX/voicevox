@@ -114,6 +114,21 @@ let win: BrowserWindow;
 
 process.on("uncaughtException", (error) => {
   log.error(error);
+
+  if (isDevelopment) {
+    app.exit(1);
+  } else {
+    const { message, name } = error;
+    let detailedMessage = "";
+    detailedMessage += `メインプロセスで原因不明のエラーが発生しました。\n`;
+    detailedMessage += `エラー名: ${name}\n`;
+    detailedMessage += `メッセージ: ${message}\n`;
+    if (error.stack) {
+      detailedMessage += `スタックトレース: \n${error.stack}`;
+    }
+
+    dialog.showErrorBox("エラー", detailedMessage);
+  }
 });
 process.on("unhandledRejection", (reason) => {
   log.error(reason);
