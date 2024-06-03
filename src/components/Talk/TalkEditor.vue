@@ -5,32 +5,30 @@
     <QPageContainer>
       <QPage class="main-row-panes">
         <ProgressView />
-        <EngineStartupOverlay
-          :is-completed-initial-startup="isCompletedInitialStartup"
-        />
+        <EngineStartupOverlay :isCompletedInitialStartup />
 
         <QSplitter
           horizontal
           reverse
           unit="px"
           :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
-          separator-class="home-splitter"
-          :separator-style="{ height: shouldShowPanes ? '3px' : '0' }"
+          separatorClass="home-splitter"
+          :separatorStyle="{ height: shouldShowPanes ? '3px' : '0' }"
           class="full-width"
-          before-class="overflow-hidden"
+          beforeClass="overflow-hidden"
           :disable="!shouldShowPanes"
-          :model-value="audioDetailPaneHeight"
-          @update:model-value="updateAudioDetailPane"
+          :modelValue="audioDetailPaneHeight"
+          @update:modelValue="updateAudioDetailPane"
         >
           <template #before>
             <QSplitter
               :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
-              separator-class="home-splitter"
-              :separator-style="{ width: shouldShowPanes ? '3px' : '0' }"
-              before-class="overflow-hidden"
+              separatorClass="home-splitter"
+              :separatorStyle="{ width: shouldShowPanes ? '3px' : '0' }"
+              beforeClass="overflow-hidden"
               :disable="!shouldShowPanes"
-              :model-value="portraitPaneWidth"
-              @update:model-value="updatePortraitPane"
+              :modelValue="portraitPaneWidth"
+              @update:modelValue="updatePortraitPane"
             >
               <template #before>
                 <CharacterPortrait />
@@ -40,12 +38,12 @@
                   reverse
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
-                  separator-class="home-splitter"
-                  :separator-style="{ width: shouldShowPanes ? '3px' : '0' }"
+                  separatorClass="home-splitter"
+                  :separatorStyle="{ width: shouldShowPanes ? '3px' : '0' }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
-                  :model-value="audioInfoPaneWidth"
-                  @update:model-value="updateAudioInfoPane"
+                  :modelValue="audioInfoPaneWidth"
+                  @update:modelValue="updateAudioInfoPane"
                 >
                   <template #before>
                     <div
@@ -63,19 +61,19 @@
                       <Draggable
                         ref="cellsRef"
                         class="audio-cells"
-                        :model-value="audioKeys"
-                        :item-key="itemKey"
-                        ghost-class="ghost"
+                        :modelValue="audioKeys"
+                        :itemKey
+                        ghostClass="ghost"
                         filter="input"
-                        :prevent-on-filter="false"
-                        @update:model-value="updateAudioKeys"
+                        :preventOnFilter="false"
+                        @update:modelValue="updateAudioKeys"
                       >
                         <template #item="{ element }">
                           <AudioCell
                             :ref="addAudioCellRef"
                             class="draggable-cursor"
-                            :audio-key="element"
-                            @focus-cell="focusCell"
+                            :audioKey="element"
+                            @focusCell="focusCell"
                           />
                         </template>
                       </Draggable>
@@ -87,7 +85,7 @@
                           fab
                           icon="add"
                           color="primary"
-                          text-color="display-on-primary"
+                          textColor="display-on-primary"
                           :disable="uiLocked"
                           aria-label="テキストを追加"
                           @click="addAudioItem"
@@ -98,7 +96,7 @@
                   <template #after>
                     <AudioInfo
                       v-if="activeAudioKey != undefined"
-                      :active-audio-key="activeAudioKey"
+                      :activeAudioKey
                     />
                   </template>
                 </QSplitter>
@@ -106,10 +104,7 @@
             </QSplitter>
           </template>
           <template #after>
-            <AudioDetail
-              v-if="activeAudioKey != undefined"
-              :active-audio-key="activeAudioKey"
-            />
+            <AudioDetail v-if="activeAudioKey != undefined" :activeAudioKey />
           </template>
         </QSplitter>
 

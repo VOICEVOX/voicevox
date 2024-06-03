@@ -51,6 +51,9 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
+    "vue/attribute-hyphenation": ["error", "never"],
+    "vue/v-on-event-hyphenation": ["error", "never", { autofix: true }],
+    "vue/v-bind-style": ["error", "shorthand", { sameNameShorthand: "always" }],
     "vue/component-name-in-template-casing": [
       "error",
       "PascalCase",

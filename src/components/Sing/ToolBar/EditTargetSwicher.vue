@@ -6,9 +6,9 @@
   <QBtnToggle
     dense
     unelevated
-    toggle-color="primary"
-    :model-value="editTarget"
-    toggle-text-color="display-on-primary"
+    toggleColor="primary"
+    :modelValue="editTarget"
+    toggleTextColor="display-on-primary"
     class="edit-target-switcher q-mr-sm"
     :options="[
       {
@@ -22,7 +22,7 @@
         slot: 'PITCH',
       },
     ]"
-    @update:model-value="changeEditTarget"
+    @update:modelValue="changeEditTarget"
     ><template #NOTE
       ><QTooltip :delay="500" anchor="bottom middle">ノート編集</QTooltip>
     </template>

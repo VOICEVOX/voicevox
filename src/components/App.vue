@@ -2,8 +2,8 @@
   <ErrorBoundary>
     <MenuBar
       v-if="openedEditor != undefined"
-      :file-sub-menu-data="subMenuData.fileSubMenuData.value"
-      :edit-sub-menu-data="subMenuData.editSubMenuData.value"
+      :fileSubMenuData="subMenuData.fileSubMenuData.value"
+      :editSubMenuData="subMenuData.editSubMenuData.value"
       :editor="openedEditor"
     />
     <KeepAlive>
@@ -11,11 +11,11 @@
         :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
         v-if="openedEditor != undefined"
         :key="openedEditor"
-        :is-engines-ready="isEnginesReady"
-        :is-project-file-loaded="isProjectFileLoaded"
+        :isEnginesReady
+        :isProjectFileLoaded
       />
     </KeepAlive>
-    <AllDialog :is-engines-ready="isEnginesReady" />
+    <AllDialog :isEnginesReady />
   </ErrorBoundary>
 </template>
 

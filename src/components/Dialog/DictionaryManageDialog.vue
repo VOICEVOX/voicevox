@@ -2,8 +2,8 @@
   <QDialog
     v-model="dictionaryManageDialogOpenedComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr fFf" class="bg-background">
@@ -50,7 +50,7 @@
                 <span class="text-h5 col-8">単語一覧</span>
                 <QBtn
                   outline
-                  text-color="display"
+                  textColor="display"
                   class="text-no-wrap text-bold col"
                   :disable="uiLocked"
                   @click="newWord"
@@ -61,12 +61,12 @@
             <QList class="word-list">
               <QItem
                 v-for="(value, key) in userDict"
-                :key="key"
+                :key
                 v-ripple
                 tag="label"
                 clickable
                 :active="selectedId === key"
-                active-class="active-word"
+                activeClass="active-word"
                 @click="selectWord(key)"
                 @dblclick="editWord"
                 @mouseover="hoveredKey = key"
@@ -154,7 +154,7 @@
                   v-if="!nowPlaying && !nowGenerating"
                   fab
                   color="primary"
-                  text-color="display-on-primary"
+                  textColor="display-on-primary"
                   icon="play_arrow"
                   @click="play"
                 />
@@ -162,7 +162,7 @@
                   v-else
                   fab
                   color="primary"
-                  text-color="display-on-primary"
+                  textColor="display-on-primary"
                   icon="stop"
                   :disable="nowGenerating"
                   @click="stop"
@@ -174,10 +174,10 @@
               >
                 <div v-if="accentPhrase" class="mora-table">
                   <AudioAccent
-                    :accent-phrase="accentPhrase"
-                    :accent-phrase-index="0"
-                    :ui-locked="uiLocked"
-                    :on-change-accent="changeAccent"
+                    :accentPhrase
+                    :accentPhraseIndex="0"
+                    :uiLocked
+                    :onChangeAccent="changeAccent"
                   />
                   <template
                     v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -221,7 +221,7 @@
                 :min="0"
                 :max="10"
                 :step="1"
-                :marker-labels="wordPriorityLabels"
+                :markerLabels="wordPriorityLabels"
                 :style="{
                   width: '80%',
                 }"
@@ -232,7 +232,7 @@
               <QBtn
                 v-show="!!selectedId"
                 outline
-                text-color="display"
+                textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
                 @click="resetWord"
@@ -240,7 +240,7 @@
               >
               <QBtn
                 outline
-                text-color="display"
+                textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked"
                 @click="discardOrNotDialog(cancel)"
@@ -248,7 +248,7 @@
               >
               <QBtn
                 outline
-                text-color="display"
+                textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
                 @click="saveWord"

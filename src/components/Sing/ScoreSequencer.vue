@@ -3,16 +3,12 @@
     <!-- 左上の角 -->
     <div class="sequencer-corner"></div>
     <!-- ルーラー -->
-    <SequencerRuler
-      class="sequencer-ruler"
-      :offset="scrollX"
-      :num-measures="numMeasures"
-    />
+    <SequencerRuler class="sequencer-ruler" :offset="scrollX" :numMeasures />
     <!-- 鍵盤 -->
     <SequencerKeys
       class="sequencer-keys"
       :offset="scrollY"
-      :black-key-width="28"
+      :blackKeyWidth="28"
     />
     <!-- シーケンサ -->
     <div
@@ -50,30 +46,30 @@
       <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
-        :note="note"
-        :preview-lyric="previewLyrics.get(note.id) || null"
-        :is-selected="false"
-        @bar-mousedown="onNoteBarMouseDown($event, note)"
-        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
-        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-input="onNoteLyricInput($event, note)"
-        @lyric-blur="onNoteLyricBlur()"
+        :note
+        :previewLyric="previewLyrics.get(note.id) || null"
+        :isSelected="false"
+        @barMousedown="onNoteBarMouseDown($event, note)"
+        @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
+        @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyricMouseDown="onNoteLyricMouseDown($event, note)"
+        @lyricInput="onNoteLyricInput($event, note)"
+        @lyricBlur="onNoteLyricBlur()"
       />
       <SequencerNote
         v-for="note in editTarget === 'NOTE' && nowPreviewing
           ? previewNotes
           : selectedNotes"
         :key="note.id"
-        :note="note"
-        :preview-lyric="previewLyrics.get(note.id) || null"
-        :is-selected="true"
-        @bar-mousedown="onNoteBarMouseDown($event, note)"
-        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
-        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-input="onNoteLyricInput($event, note)"
-        @lyric-blur="onNoteLyricBlur()"
+        :note
+        :previewLyric="previewLyrics.get(note.id) || null"
+        :isSelected="true"
+        @barMousedown="onNoteBarMouseDown($event, note)"
+        @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
+        @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyricMouseDown="onNoteLyricMouseDown($event, note)"
+        @lyricInput="onNoteLyricInput($event, note)"
+        @lyricBlur="onNoteLyricBlur()"
       />
     </div>
     <SequencerPitch
@@ -83,9 +79,9 @@
         marginRight: `${scrollBarWidth}px`,
         marginBottom: `${scrollBarWidth}px`,
       }"
-      :offset-x="scrollX"
-      :offset-y="scrollY"
-      :preview-pitch-edit="previewPitchEdit"
+      :offsetX="scrollX"
+      :offsetY="scrollY"
+      :previewPitchEdit
     />
     <div
       class="sequencer-overlay"
@@ -108,7 +104,7 @@
       <SequencerPhraseIndicator
         v-for="phraseInfo in phraseInfos"
         :key="phraseInfo.key"
-        :phrase-key="phraseInfo.key"
+        :phraseKey="phraseInfo.key"
         class="sequencer-phrase-indicator"
         :style="{
           width: `${phraseInfo.width}px`,
@@ -124,22 +120,22 @@
       ></div>
     </div>
     <QSlider
-      :model-value="zoomX"
+      :modelValue="zoomX"
       :min="ZOOM_X_MIN"
       :max="ZOOM_X_MAX"
       :step="ZOOM_X_STEP"
       class="zoom-x-slider"
-      @update:model-value="setZoomX"
+      @update:modelValue="setZoomX"
     />
     <QSlider
-      :model-value="zoomY"
+      :modelValue="zoomY"
       :min="ZOOM_Y_MIN"
       :max="ZOOM_Y_MAX"
       :step="ZOOM_Y_STEP"
       vertical
       reverse
       class="zoom-y-slider"
-      @update:model-value="setZoomY"
+      @update:modelValue="setZoomY"
     />
     <ContextMenu
       v-if="editTarget === 'NOTE'"
