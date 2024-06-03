@@ -6,11 +6,11 @@
   <!-- FIXME: 画面サイズが小さくなると表示が崩れるのを直す -->
   <!-- NOTE: デザインしづらいからQBtnかdivの方が良い -->
   <QBtnToggle
-    :modelValue="openedEditor"
+    :model-value="openedEditor"
     unelevated
     :disable="uiLocked"
     dense
-    toggleColor="primary"
+    toggle-color="primary"
     :options="[
       { label: 'トーク', value: 'talk' },
       { label: 'ソング', value: 'song' },

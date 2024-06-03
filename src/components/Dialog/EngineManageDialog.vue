@@ -2,8 +2,8 @@
   <QDialog
     v-model="engineManageDialogOpenedComputed"
     maximized
-    transitionShow="jump-up"
-    transitionHide="jump-down"
+    transition-show="jump-up"
+    transition-hide="jump-down"
     class="setting-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr fFf" class="bg-background">
@@ -44,7 +44,7 @@
               <div class="row no-wrap">
                 <QBtn
                   outline
-                  textColor="display"
+                  text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   :disable="uiLocked"
                   @click="toAddEngineState"
@@ -68,7 +68,7 @@
                   tag="label"
                   clickable
                   :active="selectedId === id"
-                  activeClass="active-engine"
+                  active-class="active-engine"
                   @click="selectEngine(id)"
                 >
                   <QItemSection avatar>
@@ -113,9 +113,9 @@
                   ]"
                   color="surface"
                   unelevated
-                  textColor="display"
-                  toggleColor="primary"
-                  toggleTextColor="display-on-primary"
+                  text-color="display"
+                  toggle-color="primary"
+                  toggle-text-color="display-on-primary"
                 />
               </div>
             </div>
@@ -205,14 +205,14 @@
 
               <QBtn
                 outline
-                textColor="display"
+                text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="toInitialState"
                 >キャンセル</QBtn
               >
               <QBtn
                 outline
-                textColor="display"
+                text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disabled="!canAddEngine"
                 @click="addEngine"
@@ -312,7 +312,7 @@
 
               <QBtn
                 outline
-                textColor="warning"
+                text-color="warning"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="
                   uiLocked ||
@@ -323,7 +323,7 @@
               >
               <QBtn
                 outline
-                textColor="display"
+                text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !engineInfos[selectedId].path"
                 @click="openSelectedEngineDirectory"
@@ -331,7 +331,7 @@
               >
               <QBtn
                 outline
-                textColor="display"
+                text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || engineStates[selectedId] === 'STARTING'"
                 @click="restartSelectedEngine"
@@ -348,9 +348,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { base64ImageToUri } from "@/helpers/imageHelper";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 type EngineLoaderType = "dir" | "vvpp";
 
@@ -398,15 +398,9 @@ const categorizedEngineIds = computed(() => {
 });
 const engineInfos = computed(() => store.state.engineInfos);
 const engineStates = computed(() => store.state.engineStates);
+
+const engineIcons = useEngineIcons(() => store.state.engineManifests);
 const engineManifests = computed(() => store.state.engineManifests);
-const engineIcons = computed(() =>
-  Object.fromEntries(
-    Object.entries(store.state.engineManifests).map(([id, manifest]) => [
-      id,
-      base64ImageToUri(manifest.icon),
-    ]),
-  ),
-);
 const engineVersions = ref<Record<EngineId, string>>({});
 
 watch(

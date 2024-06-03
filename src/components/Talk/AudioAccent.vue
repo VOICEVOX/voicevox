@@ -13,12 +13,12 @@
           snap
           dense
           color="primary"
-          trackSize="2px"
+          track-size="2px"
           :min="previewAccentSlider.qSliderProps.min.value"
           :max="previewAccentSlider.qSliderProps.max.value"
           :step="previewAccentSlider.qSliderProps.step.value"
           :disable="previewAccentSlider.qSliderProps.disable.value"
-          :modelValue="previewAccentSlider.qSliderProps.modelValue.value"
+          :model-value="previewAccentSlider.qSliderProps.modelValue.value"
           @update:model-value="
             previewAccentSlider.qSliderProps['onUpdate:modelValue']
           "

@@ -3,7 +3,7 @@
     v-if="$q.platform.is.mac"
     transparent
     color="transparent"
-    textColor="display"
+    text-color="display"
     class="full-height cursor-not-allowed no-border-radius"
   >
     <QBtn
@@ -44,7 +44,7 @@
     v-else
     transparent
     color="transparent"
-    textColor="display"
+    text-color="display"
     class="full-height cursor-not-allowed no-border-radius title-bar-buttons-root"
   >
     <QBtn

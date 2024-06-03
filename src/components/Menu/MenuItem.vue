@@ -28,8 +28,8 @@
     <QMenu
       v-model="selectedComputed"
       anchor="top end"
-      transitionShow="none"
-      transitionHide="none"
+      transition-show="none"
+      transition-hide="none"
       :target="!uiLocked"
     >
       <MenuItem

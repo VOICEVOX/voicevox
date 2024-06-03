@@ -10,11 +10,11 @@
     <!-- ｱｸｾﾝﾄ項目のスライダー -->
     <template v-if="selectedDetail === 'accent'">
       <AudioAccent
-        :accentPhraseIndex="index"
-        :accentPhrase
-        :uiLocked
-        :shiftKeyFlag
-        :onChangeAccent="changeAccent"
+        :accent-phrase-index="index"
+        :accent-phrase="accentPhrase"
+        :ui-locked="uiLocked"
+        :shift-key-flag="shiftKeyFlag"
+        :on-change-accent="changeAccent"
       />
     </template>
     <!-- ｲﾝﾄﾈｰｼｮﾝ項目のスライダー -->
@@ -26,15 +26,15 @@
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
       >
         <AudioParameter
-          :moraIndex
+          :mora-index="moraIndex"
           :value="mora.pitch"
-          :uiLocked
+          :ui-locked="uiLocked"
           :min="minPitch"
           :max="maxPitch"
           :disable="mora.pitch == 0.0"
           :type="'pitch'"
           :clip="false"
-          :shiftKeyFlag
+          :shift-key-flag="shiftKeyFlag"
           @change-value="changeMoraData"
         />
       </div>
@@ -51,29 +51,29 @@
         <!-- consonant length -->
         <AudioParameter
           v-if="mora.consonant && mora.consonantLength != undefined"
-          :moraIndex
+          :mora-index="moraIndex"
           :value="mora.consonantLength"
-          :uiLocked
+          :ui-locked="uiLocked"
           :min="minMoraLength"
           :max="maxMoraLength"
           :step="0.001"
           :type="'consonant'"
           :clip="true"
-          :shiftKeyFlag
+          :shift-key-flag="shiftKeyFlag"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
         <!-- vowel length -->
         <AudioParameter
-          :moraIndex
+          :mora-index="moraIndex"
           :value="mora.vowelLength"
-          :uiLocked
+          :ui-locked="uiLocked"
           :min="minMoraLength"
           :max="maxMoraLength"
           :step="0.001"
           :type="'vowel'"
           :clip="mora.consonant ? true : false"
-          :shiftKeyFlag
+          :shift-key-flag="shiftKeyFlag"
           @change-value="changeMoraData"
           @mouse-over="handleLengthHoverText"
         />
@@ -87,14 +87,14 @@
       >
         <!-- pause length -->
         <AudioParameter
-          :moraIndex="accentPhrase.moras.length"
+          :mora-index="accentPhrase.moras.length"
           :value="accentPhrase.pauseMora.vowelLength"
-          :uiLocked
+          :ui-locked="uiLocked"
           :min="0"
           :max="1.0"
           :step="0.01"
           :type="'pause'"
-          :shiftKeyFlag
+          :shift-key-flag="shiftKeyFlag"
           @change-value="changeMoraData"
         />
       </div>
@@ -120,15 +120,15 @@
             selectedDetail === 'pitch' && !unvoicableVowels.includes(mora.vowel)
           "
           :delay="500"
-          transitionShow="jump-up"
-          transitionHide="jump-down"
+          transition-show="jump-up"
+          transition-hide="jump-down"
           >イ段とウ段以外の音は無声化できません</QTooltip
         >
         <QTooltip
           v-if="selectedDetail === 'length'"
           :delay="500"
-          transitionShow="jump-up"
-          transitionHide="jump-down"
+          transition-show="jump-up"
+          transition-hide="jump-down"
           >読みの変更はアクセント項目でのみ、<br />無声化はイントネーション項目でのみ操作できます</QTooltip
         >
         <span class="text-cell-inner">
@@ -137,16 +137,16 @@
         <QPopupEdit
           v-if="selectedDetail == 'accent' && !uiLocked"
           v-slot="scope"
-          :modelValue="pronunciation"
-          autoSave
-          transitionShow="none"
-          transitionHide="none"
+          :model-value="pronunciation"
+          auto-save
+          transition-show="none"
+          transition-hide="none"
           @save="handleChangePronounce($event)"
         >
           <QInput
             v-model="scope.value"
             dense
-            :inputStyle="{
+            :input-style="{
               width: `${scope.value.length + 1}em`,
               minWidth: '50px',
             }"
@@ -179,15 +179,15 @@
         <QTooltip
           v-if="selectedDetail === 'pitch'"
           :delay="500"
-          transitionShow="jump-up"
-          transitionHide="jump-down"
+          transition-show="jump-up"
+          transition-hide="jump-down"
           >イ段とウ段以外の音は無声化できません</QTooltip
         >
         <QTooltip
           v-if="selectedDetail === 'length'"
           :delay="500"
-          transitionShow="jump-up"
-          transitionHide="jump-down"
+          transition-show="jump-up"
+          transition-hide="jump-down"
           >読みの変更はアクセント項目でのみ、<br />無声化はイントネーション項目でのみ操作できます</QTooltip
         >
         <span class="text-cell-inner">

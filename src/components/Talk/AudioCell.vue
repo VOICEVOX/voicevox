@@ -46,10 +46,10 @@
     </div>
     <CharacterButton
       v-model:selected-voice="selectedVoice"
-      :characterInfos="userOrderedCharacterInfos"
+      :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
-      :showEngineInfo="isMultipleEngine"
-      :uiLocked
+      :show-engine-info="isMultipleEngine"
+      :ui-locked="uiLocked"
       @focus="
         if (!isSelectedAudioCell) {
           selectAndSetActiveAudioKey();
@@ -64,12 +64,12 @@
       ref="textField"
       filled
       dense
-      hideBottomSpace
+      hide-bottom-space
       class="full-width"
       color="primary"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
-      :modelValue="audioTextBuffer"
+      :model-value="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
       @update:model-value="setAudioTextBuffer"
       @focus="

@@ -5,29 +5,31 @@
     <QPageContainer>
       <QPage class="main-row-panes">
         <ProgressView />
-        <EngineStartupOverlay :isCompletedInitialStartup />
+        <EngineStartupOverlay
+          :is-completed-initial-startup="isCompletedInitialStartup"
+        />
 
         <QSplitter
           horizontal
           reverse
           unit="px"
           :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
-          separatorClass="home-splitter"
-          :separatorStyle="{ height: shouldShowPanes ? '3px' : '0' }"
+          separator-class="home-splitter"
+          :separator-style="{ height: shouldShowPanes ? '3px' : '0' }"
           class="full-width"
-          beforeClass="overflow-hidden"
+          before-class="overflow-hidden"
           :disable="!shouldShowPanes"
-          :modelValue="audioDetailPaneHeight"
+          :model-value="audioDetailPaneHeight"
           @update:model-value="updateAudioDetailPane"
         >
           <template #before>
             <QSplitter
               :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
-              separatorClass="home-splitter"
-              :separatorStyle="{ width: shouldShowPanes ? '3px' : '0' }"
-              beforeClass="overflow-hidden"
+              separator-class="home-splitter"
+              :separator-style="{ width: shouldShowPanes ? '3px' : '0' }"
+              before-class="overflow-hidden"
               :disable="!shouldShowPanes"
-              :modelValue="portraitPaneWidth"
+              :model-value="portraitPaneWidth"
               @update:model-value="updatePortraitPane"
             >
               <template #before>
@@ -38,11 +40,11 @@
                   reverse
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
-                  separatorClass="home-splitter"
-                  :separatorStyle="{ width: shouldShowPanes ? '3px' : '0' }"
+                  separator-class="home-splitter"
+                  :separator-style="{ width: shouldShowPanes ? '3px' : '0' }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
-                  :modelValue="audioInfoPaneWidth"
+                  :model-value="audioInfoPaneWidth"
                   @update:model-value="updateAudioInfoPane"
                 >
                   <template #before>
@@ -61,18 +63,18 @@
                       <Draggable
                         ref="cellsRef"
                         class="audio-cells"
-                        :modelValue="audioKeys"
-                        :itemKey
-                        ghostClass="ghost"
+                        :model-value="audioKeys"
+                        :item-key="itemKey"
+                        ghost-class="ghost"
                         filter="input"
-                        :preventOnFilter="false"
+                        :prevent-on-filter="false"
                         @update:model-value="updateAudioKeys"
                       >
                         <template #item="{ element }">
                           <AudioCell
                             :ref="addAudioCellRef"
                             class="draggable-cursor"
-                            :audioKey="element"
+                            :audio-key="element"
                             @focus-cell="focusCell"
                           />
                         </template>
@@ -85,7 +87,7 @@
                           fab
                           icon="add"
                           color="primary"
-                          textColor="display-on-primary"
+                          text-color="display-on-primary"
                           :disable="uiLocked"
                           aria-label="テキストを追加"
                           @click="addAudioItem"
@@ -96,7 +98,7 @@
                   <template #after>
                     <AudioInfo
                       v-if="activeAudioKey != undefined"
-                      :activeAudioKey
+                      :active-audio-key="activeAudioKey"
                     />
                   </template>
                 </QSplitter>
@@ -104,7 +106,10 @@
             </QSplitter>
           </template>
           <template #after>
-            <AudioDetail v-if="activeAudioKey != undefined" :activeAudioKey />
+            <AudioDetail
+              v-if="activeAudioKey != undefined"
+              :active-audio-key="activeAudioKey"
+            />
           </template>
         </QSplitter>
 
@@ -152,6 +157,10 @@ const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const isMultiSelectEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiSelect,
+);
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 
@@ -246,9 +255,9 @@ registerHotkeyWithCleanup({
 registerHotkeyWithCleanup({
   editor: "talk",
   enableInTextbox: false,
-  name: "全セルを選択",
+  name: "すべて選択",
   callback: () => {
-    if (!uiLocked.value) {
+    if (!uiLocked.value && isMultiSelectEnabled.value) {
       store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: audioKeys.value,
       });

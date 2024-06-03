@@ -3,7 +3,7 @@
     <div>
       <QCircularProgress
         v-if="isDeterminate"
-        showValue
+        show-value
         :value="progress"
         :min="0"
         :max="1"

@@ -1,13 +1,13 @@
 <template>
   <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
-    <svg xmlns="http://www.w3.org/2000/svg" :width :height>
+    <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
       <defs>
         <pattern
           id="sequencer-ruler-measure"
           patternUnits="userSpaceOnUse"
           :x="-offset"
           :width="beatWidth * beatsPerMeasure"
-          :height
+          :height="height"
         >
           <line
             v-for="n in beatsPerMeasure"
@@ -33,7 +33,11 @@
           </text>
         </symbol>
       </defs>
-      <rect :width :height fill="url(#sequencer-ruler-measure)" />
+      <rect
+        :width="width"
+        :height="height"
+        fill="url(#sequencer-ruler-measure)"
+      />
       <use href="#sequencer-ruler-measure-numbers" :x="-offset" />
     </svg>
     <div class="sequencer-ruler-border-bottom"></div>
@@ -55,11 +59,11 @@ import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 const props = withDefaults(
   defineProps<{
     offset: number;
-    numOfMeasures: number;
+    numMeasures: number;
   }>(),
   {
     offset: 0,
-    numOfMeasures: 32,
+    numMeasures: 32,
   },
 );
 const store = useStore();
@@ -87,7 +91,7 @@ const endTicks = computed(() => {
   return (
     lastTsPosition +
     getMeasureDuration(lastTs.beats, lastTs.beatType, tpqn.value) *
-      (props.numOfMeasures - lastTs.measureNumber + 1)
+      (props.numMeasures - lastTs.measureNumber + 1)
   );
 });
 const width = computed(() => {

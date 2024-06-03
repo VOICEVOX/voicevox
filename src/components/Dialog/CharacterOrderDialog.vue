@@ -2,8 +2,8 @@
   <QDialog
     v-model="modelValueComputed"
     maximized
-    transitionShow="jump-up"
-    transitionHide="jump-down"
+    transition-show="jump-up"
+    transition-hide="jump-down"
     class="transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff" class="bg-background">
@@ -24,7 +24,7 @@
               unelevated
               label="完了"
               color="toolbar-button"
-              textColor="toolbar-button-display"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />
@@ -34,8 +34,8 @@
 
       <QDrawer
         bordered
-        showIfAbove
-        :modelValue="true"
+        show-if-above
+        :model-value="true"
         :width="$q.screen.width / 3 > 300 ? 300 : $q.screen.width / 3"
         :breakpoint="0"
       >
@@ -52,15 +52,15 @@
               <CharacterTryListenCard
                 v-for="characterInfo of characterInfos"
                 :key="characterInfo.metas.speakerUuid"
-                :characterInfo
-                :isSelected="
+                :character-info="characterInfo"
+                :is-selected="
                   selectedCharacter === characterInfo.metas.speakerUuid
                 "
-                :isNewCharacter="
+                :is-new-character="
                   newCharacters.includes(characterInfo.metas.speakerUuid)
                 "
-                :playing
-                :togglePlayOrStop
+                :playing="playing"
+                :toggle-play-or-stop="togglePlayOrStop"
                 @update:portrait="updatePortrait"
                 @update:select-character="selectCharacter"
               />
@@ -74,7 +74,7 @@
             <Draggable
               v-model="characterOrder"
               class="character-order q-px-sm"
-              :itemKey="keyOfCharacterOrderItem"
+              :item-key="keyOfCharacterOrderItem"
               @start="characterOrderDragging = true"
               @end="characterOrderDragging = false"
             >

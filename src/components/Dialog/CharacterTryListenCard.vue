@@ -29,7 +29,7 @@
           flat
           dense
           icon="chevron_left"
-          textColor="display"
+          text-color="display"
           class="style-select-button"
           aria-label="前のスタイル"
           @mouseenter="isHoverableItem = false"
@@ -46,7 +46,7 @@
           flat
           dense
           icon="chevron_right"
-          textColor="display"
+          text-color="display"
           class="style-select-button"
           aria-label="次のスタイル"
           @mouseenter="isHoverableItem = false"

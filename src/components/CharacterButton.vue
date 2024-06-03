@@ -24,8 +24,8 @@
     </div>
     <QMenu
       class="character-menu"
-      transitionShow="none"
-      transitionHide="none"
+      transition-show="none"
+      transition-hide="none"
       :max-height="maxMenuHeight"
       @before-show="updateMenuHeight"
     >
@@ -50,7 +50,7 @@
           <QBtn
             v-close-popup
             flat
-            noCaps
+            no-caps
             class="full-width"
             :class="selectedCharacter == undefined && 'selected-background'"
             @click="$emit('update:selectedVoice', undefined)"
@@ -68,7 +68,7 @@
             <QBtn
               v-close-popup
               flat
-              noCaps
+              no-caps
               class="col-grow"
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
               @mouseover="reassignSubMenuOpen(-1)"
@@ -77,8 +77,8 @@
               <QAvatar rounded size="2rem" class="q-mr-md">
                 <QImg
                   v-if="characterInfo"
-                  noSpinner
-                  noTransition
+                  no-spinner
+                  no-transition
                   :ratio="1"
                   :src="
                     getDefaultStyleWrapper(characterInfo.metas.speakerUuid)
@@ -121,11 +121,11 @@
                 <QIcon name="keyboard_arrow_right" color="grey-6" size="sm" />
                 <QMenu
                   v-model="subMenuOpenFlags[characterIndex]"
-                  noParentEvent
+                  no-parent-event
                   anchor="top end"
                   self="top start"
-                  transitionShow="none"
-                  transitionHide="none"
+                  transition-show="none"
+                  transition-hide="none"
                   class="character-menu"
                 >
                   <QList style="min-width: max-content">
@@ -134,7 +134,7 @@
                       :key="styleIndex"
                       v-close-popup
                       clickable
-                      activeClass="selected-style-item"
+                      active-class="selected-style-item"
                       :active="
                         selectedVoice != undefined &&
                         style.styleId === selectedVoice.styleId
@@ -154,8 +154,8 @@
                     >
                       <QAvatar rounded size="2rem" class="q-mr-md">
                         <QImg
-                          noSpinner
-                          noTransition
+                          no-spinner
+                          no-transition
                           :ratio="1"
                           :src="characterInfo.metas.styles[styleIndex].iconPath"
                         />
@@ -196,11 +196,11 @@
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
 import { computed, Ref, ref } from "vue";
-import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
 import { getDefaultStyle } from "@/domain/talk";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 const props = withDefaults(
   defineProps<{
@@ -275,14 +275,7 @@ const selectedStyleInfo = computed(() => {
   return style;
 });
 
-const engineIcons = computed(() =>
-  Object.fromEntries(
-    store.state.engineIds.map((engineId) => [
-      engineId,
-      base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ]),
-  ),
-);
+const engineIcons = useEngineIcons(() => store.state.engineManifests);
 
 const getDefaultStyleWrapper = (speakerUuid: SpeakerId) =>
   getDefaultStyle(

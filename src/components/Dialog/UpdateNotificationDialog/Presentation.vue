@@ -36,7 +36,7 @@
           label="閉じる"
           unelevated
           color="surface"
-          textColor="display"
+          text-color="display"
           class="q-mt-sm"
           @click="closeUpdateNotificationDialog()"
         />
@@ -45,7 +45,7 @@
           label="このバージョンをスキップ"
           unelevated
           color="surface"
-          textColor="display"
+          text-color="display"
           class="q-mt-sm"
           @click="
             onSkipThisVersionClick(props.latestVersion);
@@ -57,7 +57,7 @@
           label="公式サイトを開く"
           unelevated
           color="primary"
-          textColor="display-on-primary"
+          text-color="display-on-primary"
           class="q-mt-sm"
           @click="
             openOfficialWebsite();

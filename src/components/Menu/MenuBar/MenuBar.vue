@@ -33,8 +33,8 @@ import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
-import { base64ImageToUri } from "@/helpers/imageHelper";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -81,6 +81,7 @@ const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
+const engineIcons = useEngineIcons(engineManifests);
 const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 const titleText = computed(
   () =>
@@ -95,6 +96,9 @@ const titleText = computed(
 );
 const canUndo = computed(() => store.getters.CAN_UNDO(props.editor));
 const canRedo = computed(() => store.getters.CAN_REDO(props.editor));
+const isMultiSelectEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiSelect,
+);
 
 // FIXME: App.vue内に移動する
 watch(titleText, (newTitle) => {
@@ -214,7 +218,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
             label: engineInfo.name,
             icon:
               engineManifests.value[engineInfo.uuid] &&
-              base64ImageToUri(engineManifests.value[engineInfo.uuid].icon),
+              engineIcons.value[engineInfo.uuid],
             subMenu: [
               engineInfo.path && {
                 type: "button",
@@ -362,18 +366,22 @@ const menudata = computed<MenuItemData[]>(() => [
         disabled: !canRedo.value,
         disableWhenUiLocked: true,
       },
-      {
-        type: "button",
-        label: "全セルを選択",
-        onClick: async () => {
-          if (!uiLocked.value) {
-            await store.dispatch("SET_SELECTED_AUDIO_KEYS", {
-              audioKeys: audioKeys.value,
-            });
-          }
-        },
-        disableWhenUiLocked: true,
-      },
+      ...(isMultiSelectEnabled.value
+        ? [
+            {
+              type: "button",
+              label: "すべて選択",
+              onClick: async () => {
+                if (!uiLocked.value && isMultiSelectEnabled.value) {
+                  await store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+                    audioKeys: audioKeys.value,
+                  });
+                }
+              },
+              disableWhenUiLocked: true,
+            } as const,
+          ]
+        : []),
       ...props.editSubMenuData,
     ],
   },

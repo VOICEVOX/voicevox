@@ -5,30 +5,30 @@
       <CharacterMenuButton />
       <QInput
         type="number"
-        :modelValue="keyRangeAdjustmentInputBuffer"
+        :model-value="keyRangeAdjustmentInputBuffer"
         label="音域調整"
         dense
-        hideBottomSpace
+        hide-bottom-space
         class="key-range-adjustment"
         @update:model-value="setKeyRangeAdjustmentInputBuffer"
         @change="setKeyRangeAdjustment"
       />
       <QInput
         type="number"
-        :modelValue="volumeRangeAdjustmentInputBuffer"
+        :model-value="volumeRangeAdjustmentInputBuffer"
         label="声量調整"
         dense
-        hideBottomSpace
+        hide-bottom-space
         class="volume-range-adjustment"
         @update:model-value="setVolumeRangeAdjustmentInputBuffer"
         @change="setVolumeRangeAdjustment"
       />
       <QInput
         type="number"
-        :modelValue="bpmInputBuffer"
+        :model-value="bpmInputBuffer"
         label="テンポ"
         dense
-        hideBottomSpace
+        hide-bottom-space
         class="sing-tempo"
         @update:model-value="setBpmInputBuffer"
         @change="setTempo"
@@ -40,10 +40,10 @@
       <div class="sing-beats">
         <QInput
           type="number"
-          :modelValue="beatsInputBuffer"
+          :model-value="beatsInputBuffer"
           label="拍子"
           dense
-          hideBottomSpace
+          hide-bottom-space
           class="sing-time-signature"
           @update:model-value="setBeatsInputBuffer"
           @change="setTimeSignature"
@@ -51,10 +51,10 @@
         <div class="sing-beats-separator">/</div>
         <QInput
           type="number"
-          :modelValue="beatTypeInputBuffer"
+          :model-value="beatTypeInputBuffer"
           label=""
           dense
-          hideBottomSpace
+          hide-bottom-space
           class="sing-time-signature"
           @update:model-value="setBeatTypeInputBuffer"
           @change="setTimeSignature"
@@ -95,8 +95,8 @@
     <div class="sing-controls">
       <EditTargetSwicher
         v-if="showEditTargetSwitchButton"
-        :editTarget
-        :changeEditTarget
+        :edit-target="editTarget"
+        :change-edit-target="changeEditTarget"
       />
       <QBtn
         flat
@@ -124,12 +124,12 @@
         outlined
         color="primary"
         dense
-        textColor="display-on-primary"
-        hideBottomSpace
-        optionsDense
+        text-color="display-on-primary"
+        hide-bottom-space
+        options-dense
         label="スナップ"
-        transitionShow="none"
-        transitionHide="none"
+        transition-show="none"
+        transition-hide="none"
         class="sing-snap"
       />
     </div>
@@ -148,7 +148,7 @@ import {
   isValidBeats,
   isValidBpm,
   isValidKeyRangeAdjustment,
-  isValidvolumeRangeAdjustment,
+  isValidVolumeRangeAdjustment,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -296,7 +296,7 @@ const setVolumeRangeAdjustmentInputBuffer = (
   volumeRangeAdjustmentStr: string | number | null,
 ) => {
   const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
-  if (!isValidvolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
+  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
     return;
   }
   volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;

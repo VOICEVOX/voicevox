@@ -1,11 +1,11 @@
 <template>
   <QMenu
     ref="contextMenu"
-    touchPosition
-    contextMenu
-    :noFocus
-    transitionShow="none"
-    transitionHide="none"
+    touch-position
+    context-menu
+    :no-focus="noFocus"
+    transition-show="none"
+    transition-hide="none"
   >
     <QList dense>
       <QItem v-if="header" dense class="bg-background">

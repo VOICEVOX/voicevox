@@ -2,9 +2,9 @@
   <QDialog
     v-model="isOpenComputed"
     maximized
-    transitionShow="none"
-    transitionHide="none"
-    transitionDuration="100"
+    transition-show="none"
+    transition-hide="none"
+    transition-duration="100"
     class="default-style-select-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff" class="bg-background">
@@ -24,7 +24,7 @@
               unelevated
               :label="isModified ? '保存' : '戻る'"
               color="toolbar-button"
-              textColor="toolbar-button-display"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />
@@ -34,8 +34,8 @@
 
       <QDrawer
         bordered
-        showIfAbove
-        :modelValue="true"
+        show-if-above
+        :model-value="true"
         :width="$q.screen.width / 3"
         :breakpoint="0"
       >
@@ -101,7 +101,7 @@
                     />
                     <QRadio
                       class="absolute-top-right no-pointer-events text-primary"
-                      :modelValue="selectedStyleIndexComputed"
+                      :model-value="selectedStyleIndexComputed"
                       :val="styleIndex"
                       @update:model-value="selectStyleIndex(styleIndex)"
                     />

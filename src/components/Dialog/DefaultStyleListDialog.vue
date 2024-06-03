@@ -9,13 +9,13 @@
     v-model:selectedStyleIndex="
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid]
     "
-    :characterInfo="selectedCharacterInfo"
+    :character-info="selectedCharacterInfo"
   />
   <QDialog
     v-model="modelValueComputed"
     maximized
-    transitionShow="jump-up"
-    transitionHide="jump-down"
+    transition-show="jump-up"
+    transition-hide="jump-down"
     class="transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff" class="bg-background">
@@ -34,7 +34,7 @@
               unelevated
               label="完了"
               color="toolbar-button"
-              textColor="toolbar-button-display"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />

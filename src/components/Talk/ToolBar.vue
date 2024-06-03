@@ -7,7 +7,7 @@
           v-else
           unelevated
           color="toolbar-button"
-          textColor="toolbar-button-display"
+          text-color="toolbar-button-display"
           class="text-no-wrap text-bold q-mr-sm"
           :disable="button.disable.value"
           @click="button.click"
