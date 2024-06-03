@@ -54,8 +54,8 @@ it("SynthVのノートと歌詞を変換できる", async () => {
 it("拍子を変換できる", async () => {
   const state = await convertMidi("timeSig.mid");
   expect(state.timeSignatures).toEqual([
-    { measureNumber: 0, beats: 4, beatType: 4 },
-    { measureNumber: 1, beats: 3, beatType: 4 },
-    { measureNumber: 2, beats: 4, beatType: 8 },
+    { measureNumber: 1, beats: 4, beatType: 4 },
+    { measureNumber: 2, beats: 3, beatType: 4 },
+    { measureNumber: 3, beats: 4, beatType: 8 },
   ]);
 });
