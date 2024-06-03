@@ -46,6 +46,7 @@ const props = defineProps<
   }
 >();
 
+/** QBtnToggle用のoptions */
 const optionsForQBtnToggle = computed(() =>
   props.options.map((option) => ({
     label: option.label,

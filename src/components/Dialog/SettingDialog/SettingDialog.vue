@@ -46,7 +46,7 @@
               <ButtonToggleCell
                 v-model="engineUseGpu"
                 title="エンジンモード"
-                description="GPU モードの利用には GPU が必要です。Linux は NVIDIA&trade; 製 GPU のみ対応しています。"
+                description="GPU モードの利用には GPU が必要です。Linux は NVIDIA™ 製 GPU のみ対応しています。"
                 :options="engineUseGpuOptions"
                 :disable="!gpuSwitchEnabled(selectedEngineId)"
               >
