@@ -1,5 +1,4 @@
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
 import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -1722,7 +1721,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const track = tracks[trackIndex];
         const notes = track.notes.map((note) => ({
           ...note,
-          id: NoteId(uuidv4()),
+          id: NoteId(crypto.randomUUID()),
         }));
 
         tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
@@ -2140,7 +2139,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const quantizedPastePos =
           Math.round(pasteOriginPos / snapTicks) * snapTicks;
         return {
-          id: NoteId(uuidv4()),
+          id: NoteId(crypto.randomUUID()),
           position: quantizedPastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),
