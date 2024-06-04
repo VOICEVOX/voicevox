@@ -10,17 +10,17 @@
   <CharacterOrderDialog
     v-if="orderedAllCharacterInfos.length > 0"
     v-model="isCharacterOrderDialogOpenComputed"
-    :character-infos="orderedAllCharacterInfos"
+    :characterInfos="orderedAllCharacterInfos"
   />
   <DefaultStyleListDialog
     v-if="orderedTalkCharacterInfos.length > 0"
     v-model="isDefaultStyleSelectDialogOpenComputed"
-    :character-infos="orderedTalkCharacterInfos"
+    :characterInfos="orderedTalkCharacterInfos"
   />
   <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
   <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
   <UpdateNotificationDialogContainer
-    :can-open-dialog="canOpenNotificationDialog"
+    :canOpenDialog="canOpenNotificationDialog"
   />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
 </template>

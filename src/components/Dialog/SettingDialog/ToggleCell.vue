@@ -1,7 +1,6 @@
 <template>
-  <BaseCell :title="title" :description="description">
-    <QToggle :model-value="modelValue" @update:model-value="onUpdated">
-    </QToggle>
+  <BaseCell :title :description>
+    <QToggle :modelValue @update:modelValue="onUpdated"> </QToggle>
   </BaseCell>
 </template>
 

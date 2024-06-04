@@ -67,8 +67,8 @@
         anchor="bottom left"
         self="top left"
         :offset="[0, 8]"
-        transition-show=""
-        transition-hide=""
+        transitionShow=""
+        transitionHide=""
       >
         ノートが重なっています
       </QTooltip>
@@ -77,8 +77,8 @@
         anchor="bottom left"
         self="top left"
         :offset="[0, 8]"
-        transition-show=""
-        transition-hide=""
+        transitionShow=""
+        transitionHide=""
       >
         フレーズが生成できません。歌詞は日本語1文字までです。
       </QTooltip>

@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { AccentPhrase, Mora } from "@/openapi";
 import {
   CharacterInfo,
@@ -305,13 +304,13 @@ describe("filterCharacterInfosByStyleType", () => {
   const createCharacterInfo = (
     styleTypes: (undefined | "talk" | "frame_decode" | "sing")[],
   ): CharacterInfo => {
-    const engineId = EngineId(uuidv4());
+    const engineId = EngineId(crypto.randomUUID());
     return {
       portraitPath: "path/to/portrait",
       metas: {
         policy: "policy",
         speakerName: "speakerName",
-        speakerUuid: SpeakerId(uuidv4()),
+        speakerUuid: SpeakerId(crypto.randomUUID()),
         styles: styleTypes.map((styleType) => ({
           styleType,
           styleName: "styleName",
