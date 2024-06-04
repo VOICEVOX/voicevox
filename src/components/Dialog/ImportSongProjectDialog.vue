@@ -1,5 +1,5 @@
 <template>
-  <QDialog ref="dialogRef" auto-scroll @before-show="initializeValues">
+  <QDialog ref="dialogRef" autoScroll @beforeShow="initializeValues">
     <QLayout container view="hHh lpr fFf" class="q-dialog-plugin bg-background">
       <QHeader>
         <QToolbar>
@@ -23,7 +23,7 @@
           label="インポートするファイル"
           class="q-my-sm"
           :accept="acceptExtensions"
-          :error-message="projectFileError"
+          :errorMessage="projectFileError"
           :error="!!projectFileError"
           placeholder="外部プロジェクトファイルを選択してください"
           @input="handleFileChange"
@@ -33,8 +33,8 @@
           v-model="selectedTrack"
           :options="tracks"
           :disable="projectFileError != undefined"
-          emit-value
-          map-options
+          emitValue
+          mapOptions
           label="インポートするトラック"
         />
       </QPageContainer>
@@ -46,7 +46,7 @@
             align="right"
             label="キャンセル"
             color="toolbar-button"
-            text-color="toolbar-button-display"
+            textColor="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
             @click="handleCancel"
           />
@@ -55,7 +55,7 @@
             align="right"
             label="インポート"
             color="toolbar-button"
-            text-color="toolbar-button-display"
+            textColor="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
             :disabled="selectedTrack === null || projectFileError != undefined"
             @click="handleImportTrack"
