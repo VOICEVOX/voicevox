@@ -1,6 +1,8 @@
-import { State } from "@/store/type";
+import { Tempo, TimeSignature, Track } from "@/store/type";
 
-export type SongState = Pick<
-  State,
-  "tracks" | "tpqn" | "tempos" | "timeSignatures"
->;
+export type VoicevoxScore = {
+  tracks: Track[];
+  tpqn: number;
+  tempos: Tempo[];
+  timeSignatures: TimeSignature[];
+};

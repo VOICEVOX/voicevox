@@ -1,9 +1,9 @@
 import { Project as UfProject, UfData } from "@sevenc-nanashi/utaformatix-ts";
-import { SongState } from "./common";
+import { VoicevoxScore } from "./common";
 
 /** Voicevoxの楽譜データをUtaformatixのProjectに変換する */
 export const ufProjectFromVoicevox = (
-  { tracks, tpqn, tempos, timeSignatures }: SongState,
+  { tracks, tpqn, tempos, timeSignatures }: VoicevoxScore,
   projectName: string,
 ): UfProject => {
   const convertTicks = (ticks: number) => Math.round((ticks / tpqn) * 480);
