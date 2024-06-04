@@ -1,5 +1,5 @@
 <template>
-  <QDialog ref="dialogRef" auto-scroll @before-show="initializeValues">
+  <QDialog ref="dialogRef" autoScroll @beforeShow="initializeValues">
     <QLayout container view="hHh lpr fFf" class="q-dialog-plugin bg-background">
       <QHeader>
         <QToolbar>
@@ -14,7 +14,7 @@
           label="インポートするMIDIファイル"
           class="q-my-sm"
           accept=".mid,.midi"
-          :error-message="midiFileError"
+          :errorMessage="midiFileError"
           :error="!!midiFileError"
           placeholder="MIDIファイルを選択してください"
           @input="handleMidiFileChange"
@@ -24,8 +24,8 @@
           v-model="selectedTrack"
           :options="tracks"
           :disable="midiFileError != undefined"
-          emit-value
-          map-options
+          emitValue
+          mapOptions
           label="インポートするトラック"
         />
       </QPageContainer>
@@ -37,7 +37,7 @@
             align="right"
             label="キャンセル"
             color="toolbar-button"
-            text-color="toolbar-button-display"
+            textColor="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
             @click="handleCancel"
           />
@@ -46,7 +46,7 @@
             align="right"
             label="インポート"
             color="toolbar-button"
-            text-color="toolbar-button-display"
+            textColor="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
             :disabled="selectedTrack === null || midiFileError != undefined"
             @click="handleImportTrack"

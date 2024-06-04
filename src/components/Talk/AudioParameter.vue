@@ -9,7 +9,7 @@
       "
       class="value-label"
       color="primary"
-      text-color="display-on-primary"
+      textColor="display-on-primary"
     >
       {{
         previewSlider.state.currentValue.value != undefined
@@ -21,8 +21,8 @@
     <QTooltip
       v-if="previewSlider.qSliderProps.disable.value"
       :delay="500"
-      transition-show="jump-up"
-      transition-hide="jump-down"
+      transitionShow="jump-up"
+      transitionHide="jump-down"
       anchor="top middle"
       self="center middle"
       >無声化した音にイントネーションは存在しません。<br />テキストをクリックすることで無声化を解けます。</QTooltip
@@ -32,14 +32,14 @@
       reverse
       snap
       color="primary"
-      track-size="2.5px"
+      trackSize="2.5px"
       :style="clipPathComputed"
       :min="previewSlider.qSliderProps.min.value"
       :max="previewSlider.qSliderProps.max.value"
       :step="previewSlider.qSliderProps.step.value"
       :disable="previewSlider.qSliderProps.disable.value"
-      :model-value="previewSlider.qSliderProps.modelValue.value"
-      @update:model-value="previewSlider.qSliderProps['onUpdate:modelValue']"
+      :modelValue="previewSlider.qSliderProps.modelValue.value"
+      @update:modelValue="previewSlider.qSliderProps['onUpdate:modelValue']"
       @click.stop="stopPropagation"
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"

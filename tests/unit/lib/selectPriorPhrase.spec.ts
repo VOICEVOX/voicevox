@@ -1,5 +1,4 @@
 import { it, expect } from "vitest";
-import { v4 as uuidv4 } from "uuid";
 import {
   Phrase,
   PhraseSourceHash,
@@ -19,7 +18,7 @@ const createPhrase = (
     firstRestDuration: firstRestDuration * DEFAULT_TPQN,
     notes: [
       {
-        id: NoteId(uuidv4()),
+        id: NoteId(crypto.randomUUID()),
         position: start * DEFAULT_TPQN,
         duration: (end - start) * DEFAULT_TPQN,
         noteNumber: 60,

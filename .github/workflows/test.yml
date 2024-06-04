@@ -43,7 +43,7 @@ jobs:
   build-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
       - run: npm run electron:build
@@ -52,7 +52,7 @@ jobs:
   unit-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
@@ -74,7 +74,7 @@ jobs:
           - os: windows-latest
             voicevox_engine_asset_name: windows-cpu
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
@@ -135,7 +135,7 @@ jobs:
 
       - name: Upload playwright report to artifact
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report-${{ matrix.os }}
           path: playwright-report
@@ -161,7 +161,7 @@ jobs:
     needs: [config, e2e-test]
     if: needs.config.outputs.shouldUpdateSnapshots == 'true'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -192,7 +192,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 

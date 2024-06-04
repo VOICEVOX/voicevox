@@ -1,11 +1,8 @@
 <!-- ON/OFFを切り替えるトグルボタン付きの設定項目 -->
 
 <template>
-  <BaseCell :title="title" :description="description">
-    <QToggle
-      :model-value="modelValue"
-      @update:model-value="props['onUpdate:modelValue']"
-    >
+  <BaseCell :title :description>
+    <QToggle :modelValue @update:modelValue="props['onUpdate:modelValue']">
       <slot />
     </QToggle>
   </BaseCell>

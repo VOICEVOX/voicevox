@@ -1,13 +1,13 @@
 <template>
   <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
-    <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
+    <svg xmlns="http://www.w3.org/2000/svg" :width :height>
       <defs>
         <pattern
           id="sequencer-ruler-measure"
           patternUnits="userSpaceOnUse"
           :x="-offset"
           :width="beatWidth * beatsPerMeasure"
-          :height="height"
+          :height
         >
           <line
             v-for="n in beatsPerMeasure"
@@ -33,11 +33,7 @@
           </text>
         </symbol>
       </defs>
-      <rect
-        :width="width"
-        :height="height"
-        fill="url(#sequencer-ruler-measure)"
-      />
+      <rect :width :height fill="url(#sequencer-ruler-measure)" />
       <use href="#sequencer-ruler-measure-numbers" :x="-offset" />
     </svg>
     <div class="sequencer-ruler-border-bottom"></div>
