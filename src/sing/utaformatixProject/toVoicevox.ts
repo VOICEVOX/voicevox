@@ -1,5 +1,4 @@
 import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
-import { v4 as uuidv4 } from "uuid";
 import { SongState } from "./common";
 import { DEFAULT_TPQN, createDefaultTrack } from "@/sing/domain";
 import { round } from "@/sing/utility";
@@ -8,7 +7,7 @@ import { NoteId } from "@/type/preload";
 import { Note, Tempo, TimeSignature, Track } from "@/store/type";
 
 /** UtaformatixのプロジェクトをVoicevoxの楽譜データに変換する */
-export const importUtaformatixProject = (project: UfProject): SongState => {
+export const ufProjectToVoicevox = (project: UfProject): SongState => {
   const convertPosition = (
     position: number,
     sourceTpqn: number,
@@ -75,7 +74,7 @@ export const importUtaformatixProject = (project: UfProject): SongState => {
 
     const notes = trackNotes.map((value): Note => {
       return {
-        id: NoteId(uuidv4()),
+        id: NoteId(crypto.randomUUID()),
         position: convertPosition(value.tickOn, projectTpqn, tpqn),
         duration: convertDuration(
           value.tickOn,

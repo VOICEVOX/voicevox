@@ -2,7 +2,7 @@ import { Project as UfProject, UfData } from "@sevenc-nanashi/utaformatix-ts";
 import { SongState } from "./common";
 
 /** Voicevoxの楽譜データをUtaformatixのProjectに変換する */
-export const exportUtaformatixProject = (
+export const ufProjectFromVoicevox = (
   { tracks, tpqn, tempos, timeSignatures }: SongState,
   projectName: string,
 ): UfProject => {

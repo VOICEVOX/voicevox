@@ -87,7 +87,7 @@ import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjust
 import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { importUtaformatixProject } from "@/sing/utaformatixProject/import";
+import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 
 const logger = createLogger("store/singing");
 
@@ -1694,7 +1694,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action: createUILockAction(
       async ({ state, dispatch }, { project, trackIndex = 0 }) => {
         const { tempos, timeSignatures, tracks, tpqn } =
-          importUtaformatixProject(project);
+          ufProjectToVoicevox(project);
 
         const notes = tracks[trackIndex].notes;
 
