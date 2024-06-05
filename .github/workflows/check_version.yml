@@ -10,12 +10,12 @@ on:
 defaults:
   run:
     shell: bash
-    
+
 jobs:
   check_node_version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Check synchronize volta and .node_version
         uses: My-MC/check-sync-volta-and-node-version@v0.0.3

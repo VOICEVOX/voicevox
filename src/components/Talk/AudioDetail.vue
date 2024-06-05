@@ -26,7 +26,7 @@
             v-if="!nowPlaying && !nowGenerating"
             fab
             color="primary"
-            text-color="display-on-primary"
+            textColor="display-on-primary"
             icon="play_arrow"
             @click="play"
           ></QBtn>
@@ -34,7 +34,7 @@
             v-else
             fab
             color="primary"
-            text-color="display-on-primary"
+            textColor="display-on-primary"
             icon="stop"
             :disable="nowGenerating"
             @click="stop"
@@ -45,7 +45,7 @@
       <div ref="audioDetail" class="overflow-hidden-y accent-phrase-table">
         <ToolTip
           v-if="selectedDetail === 'pitch'"
-          tip-key="tweakableSliderByScroll"
+          tipKey="tweakableSliderByScroll"
           class="tip-tweakable-slider-by-scroll"
         >
           <p>
@@ -62,17 +62,17 @@
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           ref="accentPhraseComponents"
-          :audio-key="activeAudioKey"
-          :accent-phrase="accentPhrase"
+          :audioKey="activeAudioKey"
+          :accentPhrase
           :index="accentPhraseIndex"
-          :is-last="
+          :isLast="
             accentPhrases !== undefined &&
             accentPhrases.length - 1 === accentPhraseIndex
           "
-          :is-active="accentPhraseIndex === activePoint"
-          :selected-detail="selectedDetail"
-          :shift-key-flag="isShiftKeyDown"
-          :alt-key-flag="isAltKeyDown"
+          :isActive="accentPhraseIndex === activePoint"
+          :selectedDetail
+          :shiftKeyFlag="isShiftKeyDown"
+          :altKeyFlag="isAltKeyDown"
           @click="setPlayAndStartPoint"
         />
       </div>

@@ -2,8 +2,8 @@
   <QDialog
     v-model="hotkeySettingDialogOpenComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="hotkey-setting-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff" class="bg-background">
@@ -14,7 +14,7 @@
           >
           <QInput
             v-model="hotkeyFilter"
-            hide-bottom-space
+            hideBottomSpace
             dense
             placeholder="検索"
             color="display"
@@ -49,10 +49,10 @@
             v-model:pagination="hotkeyPagination"
             flat
             dense
-            hide-bottom
-            card-class="bg-background text-display"
-            table-class="text-display"
-            row-key="hotkeyIndexes"
+            hideBottom
+            cardClass="bg-background text-display"
+            tableClass="text-display"
+            rowKey="hotkeyIndexes"
             :filter="hotkeyFilter"
             :rows="hotkeySettings"
             :columns="hotkeyColumns"
@@ -72,25 +72,17 @@
 
             <template #body="tableProps">
               <QTr :props="tableProps">
-                <QTd
-                  :key="tableProps.cols[0].name"
-                  no-hover
-                  :props="tableProps"
-                >
+                <QTd :key="tableProps.cols[0].name" noHover :props="tableProps">
                   {{ tableProps.row.action }}
                 </QTd>
-                <QTd
-                  :key="tableProps.cols[1].name"
-                  no-hover
-                  :props="tableProps"
-                >
+                <QTd :key="tableProps.cols[1].name" noHover :props="tableProps">
                   <QBtn
                     dense
-                    text-color="display"
+                    textColor="display"
                     padding="none sm"
                     flat
                     :disable="checkHotkeyReadonly(tableProps.row.action)"
-                    no-caps
+                    noCaps
                     :label="
                       getHotkeyText(
                         tableProps.row.action,
@@ -127,12 +119,12 @@
   </QDialog>
 
   <QDialog
-    no-esc-dismiss
-    no-shake
-    transition-show="none"
-    transition-hide="none"
-    :model-value="isHotkeyDialogOpened"
-    @update:model-value="closeHotkeyDialog"
+    noEscDismiss
+    noShake
+    transitionShow="none"
+    transitionHide="none"
+    :modelValue="isHotkeyDialogOpened"
+    @update:modelValue="closeHotkeyDialog"
   >
     <QCard class="q-py-sm q-px-md">
       <QCardSection align="center">
@@ -165,7 +157,7 @@
           label="キャンセル"
           unelevated
           color="surface"
-          text-color="display"
+          textColor="display"
           class="q-mt-sm"
           @click="closeHotkeyDialog"
         />
@@ -174,7 +166,7 @@
           label="ショートカットキーを未設定にする"
           unelevated
           color="surface"
-          text-color="display"
+          textColor="display"
           class="q-mt-sm"
           @click="
             deleteHotkey(lastAction);
@@ -187,7 +179,7 @@
           label="OK"
           unelevated
           color="primary"
-          text-color="display-on-primary"
+          textColor="display-on-primary"
           class="q-mt-sm"
           :disabled="confirmBtnEnabled"
           @click="
@@ -202,7 +194,7 @@
           label="上書きする"
           unelevated
           color="primary"
-          text-color="display-on-primary"
+          textColor="display-on-primary"
           class="q-mt-sm"
           :disabled="confirmBtnEnabled"
           @click="solveDuplicated().then(() => closeHotkeyDialog())"

@@ -1,5 +1,4 @@
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
 import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -1784,7 +1783,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         let notes = midiNotes.map((value): Note => {
           return {
-            id: NoteId(uuidv4()),
+            id: NoteId(crypto.randomUUID()),
             position: convertPosition(value.ticks, midiTpqn, tpqn),
             duration: convertDuration(
               value.ticks,
@@ -2071,7 +2070,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           const note: Note = {
-            id: NoteId(uuidv4()),
+            id: NoteId(crypto.randomUUID()),
             position,
             duration,
             noteNumber,
@@ -2243,7 +2242,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             } else {
               // それ以外の場合はノートを追加
               notes.push({
-                id: NoteId(uuidv4()),
+                id: NoteId(crypto.randomUUID()),
                 position,
                 duration,
                 noteNumber,
@@ -2650,7 +2649,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const quantizedPastePos =
           Math.round(pasteOriginPos / snapTicks) * snapTicks;
         return {
-          id: NoteId(uuidv4()),
+          id: NoteId(crypto.randomUUID()),
           position: quantizedPastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),

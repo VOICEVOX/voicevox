@@ -2,8 +2,8 @@
   <QDialog
     v-model="settingDialogOpenedComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr fFf" class="bg-background">
@@ -39,7 +39,7 @@
                     dense
                     name="engine"
                     :options="engineIds"
-                    :option-label="renderEngineNameLabel"
+                    :optionLabel="renderEngineNameLabel"
                   />
                 </template>
               </QCardActions>
@@ -54,8 +54,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       GPU モードの利用には GPU が必要です。Linux は
                       NVIDIA&trade; 製 GPU のみ対応しています。
@@ -68,9 +68,9 @@
                   padding="xs md"
                   unelevated
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="engineUseGpuOptions"
                   :disable="!gpuSwitchEnabled(selectedEngineId)"
                 >
@@ -94,8 +94,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       再生・保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。
                     </QTooltip>
@@ -108,7 +108,7 @@
                   dense
                   name="samplingRate"
                   :options="samplingRateOptions"
-                  :option-label="renderSamplingRateLabel"
+                  :optionLabel="renderSamplingRateLabel"
                 >
                 </QSelect>
               </QCardActions>
@@ -118,96 +118,37 @@
               <QCardActions>
                 <h5 class="text-h5">操作</h5>
               </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>プリセット機能</div>
-                <div
-                  aria-label="プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      プリセット機能を有効にします。パラメータを登録したり適用したりできます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="experimentalSetting.enablePreset"
-                  @update:model-value="changeEnablePreset"
-                >
-                </QToggle>
-              </QCardActions>
+              <ToggleCell
+                title="プリセット機能"
+                description="ONの場合、プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
+                :modelValue="experimentalSetting.enablePreset"
+                @updated="changeEnablePreset"
+              />
               <QSlideTransition>
                 <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
                 <div v-show="experimentalSetting.enablePreset">
-                  <QCardActions
-                    class="q-px-md bg-surface in-slide-transition-workaround"
-                  >
-                    <div>スタイル変更時にデフォルトプリセットを適用</div>
-                    <div
-                      aria-label="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
-                    >
-                      <QIcon
-                        name="help_outline"
-                        size="sm"
-                        class="help-hover-icon"
-                      >
-                        <QTooltip
-                          :delay="500"
-                          anchor="center right"
-                          self="center left"
-                          transition-show="jump-right"
-                          transition-hide="jump-left"
-                        >
-                          ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。
-                        </QTooltip>
-                      </QIcon>
-                    </div>
-                    <QSpace />
-                    <QToggle
-                      :model-value="
-                        experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
-                      "
-                      @update:model-value="
-                        changeExperimentalSetting(
-                          'shouldApplyDefaultPresetOnVoiceChanged',
-                          $event,
-                        )
-                      "
-                    >
-                    </QToggle>
-                  </QCardActions>
+                  <ToggleCell
+                    title="スタイル変更時にデフォルトプリセットを適用"
+                    description="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
+                    class="in-slide-transition-workaround"
+                    :modelValue="
+                      experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
+                    "
+                    @updated="
+                      changeExperimentalSetting(
+                        'shouldApplyDefaultPresetOnVoiceChanged',
+                        $event,
+                      )
+                    "
+                  />
                 </div>
               </QSlideTransition>
-              <QCardActions class="q-px-md bg-surface">
-                <div>パラメータの引き継ぎ</div>
-                <div
-                  aria-label="ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="inheritAudioInfoMode"
-                  @update:model-value="changeinheritAudioInfo($event)"
-                >
-                </QToggle>
-              </QCardActions>
+              <ToggleCell
+                title="パラメータの引き継ぎ"
+                description="ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。"
+                :modelValue="inheritAudioInfoMode"
+                @updated="changeinheritAudioInfo"
+              />
               <QCardActions class="q-px-md bg-surface">
                 <div>再生位置を追従</div>
                 <div
@@ -218,8 +159,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       音声再生中の、詳細調整欄の自動スクロールのモードを選べます。
                     </QTooltip>
@@ -231,9 +172,9 @@
                   padding="xs md"
                   unelevated
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="[
                     {
                       label: '連続',
@@ -279,8 +220,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       テキスト貼り付けの際のテキストの分割箇所を選べます。
                     </QTooltip>
@@ -291,11 +232,11 @@
                 <QBtnToggle
                   padding="xs md"
                   unelevated
-                  :model-value="splitTextWhenPaste"
+                  :modelValue="splitTextWhenPaste"
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="[
                     {
                       label: '句点と改行',
@@ -309,7 +250,7 @@
                     },
                     { label: 'オフ', value: 'OFF', slot: 'splitTextOFF' },
                   ]"
-                  @update:model-value="changeSplitTextWhenPaste($event)"
+                  @update:modelValue="changeSplitTextWhenPaste($event)"
                 >
                   <template #splitTextPeriodAndNewLine>
                     <QTooltip :delay="500">
@@ -326,56 +267,18 @@
                   </template>
                 </QBtnToggle>
               </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>メモ機能</div>
-                <div
-                  aria-label="ONの場合、テキストを [] で囲むことで、テキスト中にメモを書けます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、テキストを []
-                      で囲むことで、テキスト中にメモを書けます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="enableMemoNotation"
-                  @update:model-value="changeEnableMemoNotation($event)"
-                >
-                </QToggle>
-              </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>ルビ機能</div>
-                <div
-                  aria-label="ONの場合、テキストに {ルビ対象|よみかた} と書くことで、テキストの読み方を変えられます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、テキストに {ルビ対象|よみかた}
-                      と書くことで、テキストの読み方を変えられます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="enableRubyNotation"
-                  @update:model-value="changeEnableRubyNotation($event)"
-                >
-                </QToggle>
-              </QCardActions>
+              <ToggleCell
+                title="メモ機能"
+                description="ONの場合、テキストを [] で囲むことで、テキスト中にメモを書けます。"
+                :modelValue="enableMemoNotation"
+                @updated="changeEnableMemoNotation"
+              />
+              <ToggleCell
+                title="ルビ機能"
+                description="ONの場合、テキストに {ルビ対象|よみかた} と書くことで、テキストの読み方を変えられます。"
+                :modelValue="enableRubyNotation"
+                @updated="changeEnableRubyNotation"
+              />
               <QCardActions class="q-px-md bg-surface">
                 <div>非表示にしたヒントを全て再表示</div>
                 <div
@@ -386,8 +289,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       過去に非表示にしたヒントを全て再表示できます。
                     </QTooltip>
@@ -407,7 +310,7 @@
                   label="再表示する"
                   unelevated
                   color="background"
-                  text-color="display"
+                  textColor="display"
                   class="text-no-wrap q-mr-sm"
                   :disable="isDefaultConfirmedTips"
                   @click="
@@ -435,8 +338,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       ONの場合、書き出す際のフォルダをあらかじめ指定できます。
                     </QTooltip>
@@ -448,15 +351,15 @@
                   dense
                   maxheight="10px"
                   label="書き出し先のフォルダ"
-                  hide-bottom-space
+                  hideBottomSpace
                   readonly
-                  :model-value="savingSetting.fixedExportDir"
-                  :input-style="{
+                  :modelValue="savingSetting.fixedExportDir"
+                  :inputStyle="{
                     width: `${savingSetting.fixedExportDir.length / 2 + 1}em`,
                     minWidth: '150px',
                     maxWidth: '450px',
                   }"
-                  @update:model-value="
+                  @update:modelValue="
                     (event) => {
                       if (event == null) throw 'event is null';
                       handleSavingSettingChange('fixedExportDir', event);
@@ -479,8 +382,8 @@
                   </template>
                 </QInput>
                 <QToggle
-                  :model-value="savingSetting.fixedExportEnabled"
-                  @update:model-value="
+                  :modelValue="savingSetting.fixedExportEnabled"
+                  @update:modelValue="
                     handleSavingSettingChange('fixedExportEnabled', $event)
                   "
                 >
@@ -501,8 +404,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       書き出す際のファイル名のパターンをカスタマイズできます。
                     </QTooltip>
@@ -516,38 +419,18 @@
                   label="編集する"
                   unelevated
                   color="background"
-                  text-color="display"
+                  textColor="display"
                   class="text-no-wrap q-mr-sm"
                   @click="showsFilePatternEditDialog = true"
                 />
               </QCardActions>
 
-              <QCardActions class="q-px-md bg-surface">
-                <div>上書き防止</div>
-                <div
-                  aria-label="ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="savingSetting.avoidOverwrite"
-                  @update:model-value="
-                    handleSavingSettingChange('avoidOverwrite', $event)
-                  "
-                >
-                </QToggle>
-              </QCardActions>
+              <ToggleCell
+                title="上書き防止"
+                description="ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。"
+                :modelValue="savingSetting.avoidOverwrite"
+                @updated="handleSavingSettingChange('avoidOverwrite', $event)"
+              />
               <QCardActions class="q-px-md bg-surface">
                 <div>文字コード</div>
                 <div
@@ -558,8 +441,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       テキストファイルを書き出す際の文字コードを選べます。
                     </QTooltip>
@@ -569,73 +452,32 @@
                 <QBtnToggle
                   padding="xs md"
                   unelevated
-                  :model-value="savingSetting.fileEncoding"
+                  :modelValue="savingSetting.fileEncoding"
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="[
                     { label: 'UTF-8', value: 'UTF-8' },
                     { label: 'Shift_JIS', value: 'Shift_JIS' },
                   ]"
-                  @update:model-value="
+                  @update:modelValue="
                     handleSavingSettingChange('fileEncoding', $event)
                   "
                 />
               </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>txtファイルを書き出し</div>
-                <div
-                  aria-label="ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="savingSetting.exportText"
-                  color="primary"
-                  @update:model-value="
-                    handleSavingSettingChange('exportText', $event)
-                  "
-                >
-                </QToggle>
-              </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>labファイルを書き出し</div>
-                <div
-                  aria-label="ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="savingSetting.exportLab"
-                  @update:model-value="
-                    handleSavingSettingChange('exportLab', $event)
-                  "
-                >
-                </QToggle>
-              </QCardActions>
+              <ToggleCell
+                title="txtファイルを書き出し"
+                description="ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。"
+                :modelValue="savingSetting.exportText"
+                @updated="handleSavingSettingChange('exportText', $event)"
+              />
+              <ToggleCell
+                title="labファイルを書き出し"
+                description="ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。"
+                :modelValue="savingSetting.exportLab"
+                @updated="handleSavingSettingChange('exportLab', $event)"
+              />
             </QCard>
             <!-- Theme Card -->
             <QCard flat class="setting-card">
@@ -650,8 +492,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       エディタの色を選べます。
                     </QTooltip>
@@ -663,9 +505,9 @@
                   unelevated
                   padding="xs md"
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="availableThemeNameComputed"
                 />
               </QCardActions>
@@ -678,8 +520,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       エディタのフォントを選べます。
                     </QTooltip>
@@ -689,67 +531,30 @@
                 <QBtnToggle
                   padding="xs md"
                   unelevated
-                  :model-value="editorFont"
+                  :modelValue="editorFont"
                   color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
+                  textColor="display"
+                  toggleColor="primary"
+                  toggleTextColor="display-on-primary"
                   :options="[
                     { label: 'デフォルト', value: 'default' },
                     { label: 'OS標準', value: 'os' },
                   ]"
-                  @update:model-value="changeEditorFont($event)"
+                  @update:modelValue="changeEditorFont($event)"
                 />
               </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>行番号の表示</div>
-                <div
-                  aria-label="ONの場合、テキスト欄の左側に行番号が表示されます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、テキスト欄の左側に行番号が表示されます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="showTextLineNumber"
-                  @update:model-value="changeShowTextLineNumber($event)"
-                >
-                </QToggle>
-              </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>テキスト追加ボタンの表示</div>
-                <div
-                  aria-label="OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は Shift + Enter で追加できます）"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は
-                      Shift + Enter で追加できます）
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="showAddAudioItemButton"
-                  @update:model-value="changeShowAddAudioItemButton($event)"
-                >
-                </QToggle>
-              </QCardActions>
+              <ToggleCell
+                title="行番号の表示"
+                description="ONの場合、テキスト欄の左側に行番号が表示されます。"
+                :modelValue="showTextLineNumber"
+                @updated="changeShowTextLineNumber"
+              />
+              <ToggleCell
+                title="テキスト追加ボタンの表示"
+                description="OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は Shift + Enter で追加できます）"
+                :modelValue="showAddAudioItemButton"
+                @updated="changeShowAddAudioItemButton"
+              />
             </QCard>
 
             <!-- Advanced Card -->
@@ -757,54 +562,18 @@
               <QCardActions>
                 <h5 class="text-h5">高度な設定</h5>
               </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>マルチエンジン機能</div>
-                <div>
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      複数のVOICEVOX準拠エンジンを利用可能にする
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="enableMultiEngine"
-                  @update:model-value="setEnableMultiEngine($event)"
-                >
-                </QToggle>
-              </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>音声をステレオ化</div>
-                <div
-                  aria-label="ONの場合、音声データがモノラルからステレオに変換されてから再生・保存が行われます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、音声データがモノラルからステレオに変換されてから再生・保存が行われます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="savingSetting.outputStereo"
-                  @update:model-value="
-                    handleSavingSettingChange('outputStereo', $event)
-                  "
-                >
-                </QToggle>
-              </QCardActions>
+              <ToggleCell
+                title="マルチエンジン機能"
+                description="ONの場合、複数のVOICEVOX準拠エンジンを利用可能にします。"
+                :modelValue="enableMultiEngine"
+                @updated="setEnableMultiEngine"
+              />
+              <ToggleCell
+                title="音声をステレオ化"
+                description="ONの場合、音声データがモノラルからステレオに変換されてから再生・保存が行われます。"
+                :modelValue="savingSetting.outputStereo"
+                @updated="handleSavingSettingChange('outputStereo', $event)"
+              />
               <QCardActions
                 class="q-px-md bg-surface"
                 :class="{ disabled: !canSetAudioOutputDevice }"
@@ -816,8 +585,8 @@
                       :delay="500"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                     >
                       音声の再生デバイスを変更できます。
                       <template v-if="!canSetAudioOutputDevice">
@@ -845,168 +614,65 @@
                 <div class="text-h5">実験的機能</div>
               </QCardActions>
               <!-- 今後実験的機能を追加する場合はここに追加 -->
-              <QCardActions class="q-px-md bg-surface">
-                <div>疑問文を自動調整</div>
-                <div
-                  aria-label="ONの場合、疑問文の語尾の音高が自動的に上げられます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、疑問文の語尾の音高が自動的に上げられます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="experimentalSetting.enableInterrogativeUpspeak"
-                  @update:model-value="
-                    changeExperimentalSetting(
-                      'enableInterrogativeUpspeak',
-                      $event,
-                    )
-                  "
-                >
-                </QToggle>
-              </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>モーフィング機能</div>
-                <div
-                  aria-label="モーフィング機能を有効にします。2つの音声混ぜられるようになります。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      モーフィング機能を有効にします。2つの音声混ぜられるようになります。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="experimentalSetting.enableMorphing"
-                  @update:model-value="
-                    changeExperimentalSetting('enableMorphing', $event)
-                  "
-                >
-                </QToggle>
-              </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>複数選択</div>
-                <div aria-label="複数のテキスト欄を選択できるようにします。">
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      複数のテキスト欄を選択できるようにします。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="experimentalSetting.enableMultiSelect"
-                  @update:model-value="
-                    changeExperimentalSetting('enableMultiSelect', $event)
-                  "
-                >
-                </QToggle>
-              </QCardActions>
-              <QCardActions v-if="!isProduction" class="q-px-md bg-surface">
-                <div>[開発時のみ機能] 調整結果の保持</div>
-                <div
-                  aria-label="テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                      >ONの場合、テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。</QTooltip
-                    >
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="
-                    experimentalSetting.shouldKeepTuningOnTextChange
-                  "
-                  @update:model-value="
-                    changeExperimentalSetting(
-                      'shouldKeepTuningOnTextChange',
-                      $event,
-                    )
-                  "
-                >
-                </QToggle>
-              </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>ソング：ピッチ編集機能</div>
-                <div
-                  aria-label="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                      >ピッチ編集機能を有効にします。ピッチ編集モードに切り替えられるようになります。</QTooltip
-                    >
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle
-                  :model-value="experimentalSetting.enablePitchEditInSongEditor"
-                  @update:model-value="
-                    changeExperimentalSetting(
-                      'enablePitchEditInSongEditor',
-                      $event,
-                    )
-                  "
-                >
-                </QToggle>
-              </QCardActions>
+              <ToggleCell
+                title="疑問文を自動調整"
+                description="ONの場合、疑問文の語尾の音高が自動的に上げられます。"
+                :modelValue="experimentalSetting.enableInterrogativeUpspeak"
+                @updated="
+                  changeExperimentalSetting(
+                    'enableInterrogativeUpspeak',
+                    $event,
+                  )
+                "
+              />
+              <ToggleCell
+                title="モーフィング機能"
+                description="ONの場合、モーフィング機能を有効にします。2つの音声混ぜられるようになります。"
+                :modelValue="experimentalSetting.enableMorphing"
+                @updated="changeExperimentalSetting('enableMorphing', $event)"
+              />
+              <ToggleCell
+                title="複数選択"
+                description="ONの場合、複数のテキスト欄を選択できるようにします。"
+                :modelValue="experimentalSetting.enableMultiSelect"
+                @updated="
+                  changeExperimentalSetting('enableMultiSelect', $event)
+                "
+              />
+              <ToggleCell
+                v-if="!isProduction"
+                title="[開発時のみ機能] 調整結果の保持"
+                description="ONの場合、テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。"
+                :modelValue="experimentalSetting.shouldKeepTuningOnTextChange"
+                @updated="
+                  changeExperimentalSetting(
+                    'shouldKeepTuningOnTextChange',
+                    $event,
+                  )
+                "
+              />
+              <ToggleCell
+                title="ソング：ピッチ編集機能"
+                description="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
+                :modelValue="experimentalSetting.enablePitchEditInSongEditor"
+                @updated="
+                  changeExperimentalSetting(
+                    'enablePitchEditInSongEditor',
+                    $event,
+                  )
+                "
+              />
             </QCard>
             <QCard flat class="setting-card">
               <QCardActions>
                 <h5 class="text-h5">データ収集</h5>
               </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>ソフトウェア利用状況のデータ収集を許可</div>
-                <div
-                  aria-label="ONの場合、各UIの利用率などのデータが送信され、VOICEVOXの改善に役立てられます。テキストデータや音声データは送信されません。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                    >
-                      ONの場合、各UIの利用率などのデータが送信され、VOICEVOXの改善に役立てられます。テキストデータ・音声データは送信されません。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QToggle v-model="acceptRetrieveTelemetryComputed" />
-              </QCardActions>
+              <ToggleCell
+                title="ソフトウェア利用状況のデータ収集を許可"
+                description="ONの場合、各UIの利用率などのデータが送信され、VOICEVOXの改善に役立てられます。テキストデータや音声データは送信されません。"
+                :modelValue="acceptRetrieveTelemetryComputed"
+                @updated="acceptRetrieveTelemetryComputed = $event"
+              />
             </QCard>
           </div>
         </QPage>
@@ -1018,6 +684,7 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
+import ToggleCell from "./ToggleCell.vue";
 import { useStore } from "@/store";
 import {
   isProduction,

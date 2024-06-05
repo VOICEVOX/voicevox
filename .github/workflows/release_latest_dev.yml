@@ -17,7 +17,7 @@ jobs:
     if: github.repository_owner == 'VOICEVOX'
     steps:
       - name: Trigger workflow_dispatch
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

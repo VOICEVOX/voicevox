@@ -2,16 +2,16 @@
   <QDialog
     v-model="modelValueComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="help-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff">
       <QDrawer
         bordered
-        show-if-above
+        showIfAbove
         class="bg-background"
-        :model-value="true"
+        :modelValue="true"
         :width="250"
         :breakpoint="0"
       >
@@ -22,7 +22,7 @@
                 v-if="page.type === 'item'"
                 v-ripple
                 clickable
-                active-class="selected-item"
+                activeClass="selected-item"
                 :active="selectedPageIndex === pageIndex"
                 @click="selectedPageIndex = pageIndex"
               >
@@ -57,7 +57,7 @@
                       v-if="page.component === ContactInfo"
                       unelevated
                       color="toolbar-button"
-                      text-color="toolbar-button-display"
+                      textColor="toolbar-button-display"
                       class="text-no-wrap text-bold q-mr-sm"
                       @click="openLogDirectory"
                     >
