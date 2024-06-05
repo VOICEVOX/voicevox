@@ -1,8 +1,7 @@
 import { sep } from "path";
-import { v4 as uuidv4 } from "uuid";
 import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./browserConfig";
-import { SandboxKey, isWindows } from "@/type/preload";
+import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 import { createLogger } from "@/domain/frontend/log";
 
@@ -184,10 +183,6 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
 // FileSystemFileHandleを保持するMap。キーは生成した疑似パス。
 const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
 
-// dirnameなどが呼ばれる可能性があるので、ファイル名の前にそれっぽいパスを付与しておく。
-// 最終的に`/fakepath/UUID/ファイル名`の形式になる。
-const filePrefix = isWindows ? "Z:/fakepath" : "/fakepath";
-
 export const showOpenFilePickerImpl = async (options: {
   multiple: boolean;
   fileTypes: {
@@ -203,7 +198,7 @@ export const showOpenFilePickerImpl = async (options: {
     });
     const paths = [];
     for (const handle of handles) {
-      const fakePath = `${filePrefix}/${uuidv4()}/${handle.name}`;
+      const fakePath = `<browser-dummy-${crypto.randomUUID()}>-${handle.name}`;
       fileHandleMap.set(fakePath, handle);
       paths.push(fakePath);
     }
