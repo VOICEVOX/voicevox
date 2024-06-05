@@ -1690,13 +1690,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     }),
   },
 
+  // TODO: Undoableにする
   IMPORT_UTAFORMATIX_PROJECT: {
     action: createUILockAction(
-      async ({ state, dispatch }, { project, trackIndex = 0 }) => {
+      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
         const { tempos, timeSignatures, tracks, tpqn } =
           ufProjectToVoicevox(project);
 
         const notes = tracks[trackIndex].notes;
+
+        if (tempos.length > 1) {
+          logger.warn("Multiple tempos are not supported.");
+        }
+        if (timeSignatures.length > 1) {
+          logger.warn("Multiple time signatures are not supported.");
+        }
 
         tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
         timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
@@ -1708,14 +1716,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes });
 
+        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        commit("CLEAR_COMMANDS");
         dispatch("RENDER");
       },
     ),
   },
 
+  // TODO: Undoableにする
   IMPORT_VOICEVOX_PROJECT: {
     action: createUILockAction(
-      async ({ state, dispatch }, { project, trackIndex = 0 }) => {
+      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
         const { tempos, timeSignatures, tracks, tpqn } = project.song;
 
         const track = tracks[trackIndex];
@@ -1724,12 +1735,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           id: NoteId(crypto.randomUUID()),
         }));
 
-        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
-
         if (tpqn !== state.tpqn) {
           throw new Error("TPQN does not match. Must be converted.");
         }
+
+        // TODO: ここら辺のSET系の処理をまとめる
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes });
@@ -1748,6 +1758,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           volumeRangeAdjustment: track.volumeRangeAdjustment,
         });
 
+        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        commit("CLEAR_COMMANDS");
         dispatch("RENDER");
       },
     ),
