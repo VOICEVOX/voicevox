@@ -212,7 +212,7 @@ export const showOpenFilePickerImpl = async (options: {
 export const readFileImpl = async (filePath: string) => {
   const fileHandle = fileHandleMap.get(filePath);
   if (fileHandle == undefined) {
-    return failure(new Error("ファイルが見つかりません"));
+    return failure(new Error(`ファイルが見つかりません: ${filePath}`));
   }
   const file = await fileHandle.getFile();
   const buffer = await file.arrayBuffer();
