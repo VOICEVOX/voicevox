@@ -522,23 +522,23 @@ const parameters = computed<Parameter[]>(() => {
       key: "postPhonemeLength",
     },
     {
-      label: "句読点などの無音時間(秒)",
+      label: "句読点などの無音時間(倍)",
       slider: previewSliderHelper({
-        modelValue: () => query.value?.pauseLength ?? null,
+        modelValue: () => query.value?.pauseLengthScale ?? null,
         disable: () => uiLocked.value,
-        max: SLIDER_PARAMETERS.PAUSE_LENGTH.max,
-        min: SLIDER_PARAMETERS.PAUSE_LENGTH.min,
-        step: SLIDER_PARAMETERS.PAUSE_LENGTH.step,
-        scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollStep,
-        scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollMinStep,
-        onChange: (pauseLength: number) =>
-          store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
+        max: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.max,
+        min: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.min,
+        step: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.step,
+        scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollStep,
+        scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollMinStep,
+        onChange: (pauseLengthScale: number) =>
+          store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
             audioKeys: selectedAudioKeys.value,
-            pauseLength: pauseLength,
+            pauseLengthScale: pauseLengthScale,
           }),
       }),
-      action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH",
-      key: "pauseLength",
+      action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE",
+      key: "pauseLengthScale",
     },
   ];
   // switchPauseLengthModeの変更に伴って更新
