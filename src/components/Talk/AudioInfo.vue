@@ -539,7 +539,7 @@ const parameters = computed<Parameter[]>(() => {
       action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH",
       key: "pauseLength",
     },
-  ];
+  ]; // 文内無音は何故か変数埋め込みだと「test("複数選択：AudioInfo操作"・・・」でvisibilityでfillが効かない
   // switchPauseLengthModeの変更に伴って更新
   const newParam = switchPauseLengthMode.value === "SCALE" ? plsParam : plParam;
   const index = baseParam.findIndex((param) => param.label === newParam.label);
