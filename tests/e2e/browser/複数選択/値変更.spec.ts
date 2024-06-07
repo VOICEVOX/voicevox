@@ -118,9 +118,6 @@ test("複数選択：AudioInfo操作", async ({ page }) => {
 
   for (const parameter of parameters) {
     const input = parameter.locator("label input");
-    const isVisible = await input.isVisible();
-    const isEnabled = await input.isEnabled();
-    console.log(`Input visibility: ${isVisible}, enabled: ${isEnabled}`);
     await input.fill("2");
     await page.waitForTimeout(100);
   }

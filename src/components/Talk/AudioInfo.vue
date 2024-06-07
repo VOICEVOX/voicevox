@@ -521,25 +521,7 @@ const parameters = computed<Parameter[]>(() => {
       action: "COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH",
       key: "postPhonemeLength",
     },
-    {
-      label: "文内無音(倍)",
-      slider: previewSliderHelper({
-        modelValue: () => query.value?.pauseLengthScale ?? null,
-        disable: () => uiLocked.value,
-        max: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.max,
-        min: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.min,
-        step: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.step,
-        scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollStep,
-        scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollMinStep,
-        onChange: (pauseLengthScale: number) =>
-          store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
-            audioKeys: selectedAudioKeys.value,
-            pauseLengthScale: pauseLengthScale,
-          }),
-      }),
-      action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE",
-      key: "pauseLengthScale",
-    },
+    plsParam,
   ];
   // switchPauseLengthModeの変更に伴って更新
   const newParam = switchPauseLengthMode.value === "SCALE" ? plsParam : plParam;
