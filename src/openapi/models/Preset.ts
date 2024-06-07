@@ -123,7 +123,7 @@ export function PresetFromJSONTyped(json: any, ignoreDiscriminator: boolean): Pr
         return json;
     }
     return {
-
+        
         'id': json['id'],
         'name': json['name'],
         'speakerUuid': json['speaker_uuid'],
@@ -147,7 +147,7 @@ export function PresetToJSON(value?: Preset | null): any {
         return null;
     }
     return {
-
+        
         'id': value.id,
         'name': value.name,
         'speaker_uuid': value.speakerUuid,

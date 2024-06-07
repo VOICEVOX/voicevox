@@ -45,7 +45,7 @@ export interface AudioQuery {
      */
     pitchScale: number;
     /**
-     *
+     * 
      * @type {number}
      * @memberof AudioQuery
      */
@@ -129,7 +129,7 @@ export function AudioQueryFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         return json;
     }
     return {
-
+        
         'accentPhrases': ((json['accent_phrases'] as Array<any>).map(AccentPhraseFromJSON)),
         'speedScale': json['speedScale'],
         'pitchScale': json['pitchScale'],
@@ -153,7 +153,7 @@ export function AudioQueryToJSON(value?: AudioQuery | null): any {
         return null;
     }
     return {
-
+        
         'accent_phrases': ((value.accentPhrases as Array<any>).map(AccentPhraseToJSON)),
         'speedScale': value.speedScale,
         'pitchScale': value.pitchScale,
