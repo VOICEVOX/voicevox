@@ -15,62 +15,62 @@
 
 import * as runtime from '../runtime';
 import type {
-  AccentPhrase,
-  AudioQuery,
-  BodySingFrameVolumeSingFrameVolumePost,
-  CorsPolicyMode,
-  DownloadableLibraryInfo,
-  EngineManifest,
-  FrameAudioQuery,
-  HTTPValidationError,
-  InstalledLibraryInfo,
-  MorphableTargetInfo,
-  ParseKanaBadRequest,
-  Preset,
-  Score,
-  Speaker,
-  SpeakerInfo,
-  SupportedDevicesInfo,
-  UserDictWord,
-  WordTypes,
+AccentPhrase,
+AudioQuery,
+BodySingFrameVolumeSingFrameVolumePost,
+CorsPolicyMode,
+DownloadableLibraryInfo,
+EngineManifest,
+FrameAudioQuery,
+HTTPValidationError,
+InstalledLibraryInfo,
+MorphableTargetInfo,
+ParseKanaBadRequest,
+Preset,
+Score,
+Speaker,
+SpeakerInfo,
+SupportedDevicesInfo,
+UserDictWord,
+WordTypes,
 } from '../models/index';
 import {
-    AccentPhraseFromJSON,
-    AccentPhraseToJSON,
-    AudioQueryFromJSON,
-    AudioQueryToJSON,
-    BodySingFrameVolumeSingFrameVolumePostFromJSON,
-    BodySingFrameVolumeSingFrameVolumePostToJSON,
-    CorsPolicyModeFromJSON,
-    CorsPolicyModeToJSON,
-    DownloadableLibraryInfoFromJSON,
-    DownloadableLibraryInfoToJSON,
-    EngineManifestFromJSON,
-    EngineManifestToJSON,
-    FrameAudioQueryFromJSON,
-    FrameAudioQueryToJSON,
-    HTTPValidationErrorFromJSON,
-    HTTPValidationErrorToJSON,
-    InstalledLibraryInfoFromJSON,
-    InstalledLibraryInfoToJSON,
-    MorphableTargetInfoFromJSON,
-    MorphableTargetInfoToJSON,
-    ParseKanaBadRequestFromJSON,
-    ParseKanaBadRequestToJSON,
-    PresetFromJSON,
-    PresetToJSON,
-    ScoreFromJSON,
-    ScoreToJSON,
-    SpeakerFromJSON,
-    SpeakerToJSON,
-    SpeakerInfoFromJSON,
-    SpeakerInfoToJSON,
-    SupportedDevicesInfoFromJSON,
-    SupportedDevicesInfoToJSON,
-    UserDictWordFromJSON,
-    UserDictWordToJSON,
-    WordTypesFromJSON,
-    WordTypesToJSON,
+AccentPhraseFromJSON,
+AccentPhraseToJSON,
+AudioQueryFromJSON,
+AudioQueryToJSON,
+BodySingFrameVolumeSingFrameVolumePostFromJSON,
+BodySingFrameVolumeSingFrameVolumePostToJSON,
+CorsPolicyModeFromJSON,
+CorsPolicyModeToJSON,
+DownloadableLibraryInfoFromJSON,
+DownloadableLibraryInfoToJSON,
+EngineManifestFromJSON,
+EngineManifestToJSON,
+FrameAudioQueryFromJSON,
+FrameAudioQueryToJSON,
+HTTPValidationErrorFromJSON,
+HTTPValidationErrorToJSON,
+InstalledLibraryInfoFromJSON,
+InstalledLibraryInfoToJSON,
+MorphableTargetInfoFromJSON,
+MorphableTargetInfoToJSON,
+ParseKanaBadRequestFromJSON,
+ParseKanaBadRequestToJSON,
+PresetFromJSON,
+PresetToJSON,
+ScoreFromJSON,
+ScoreToJSON,
+SpeakerFromJSON,
+SpeakerToJSON,
+SpeakerInfoFromJSON,
+SpeakerInfoToJSON,
+SupportedDevicesInfoFromJSON,
+SupportedDevicesInfoToJSON,
+UserDictWordFromJSON,
+UserDictWordToJSON,
+WordTypesFromJSON,
+WordTypesToJSON,
 } from '../models/index';
 
 export interface AccentPhrasesAccentPhrasesPostRequest {
@@ -130,7 +130,7 @@ export interface FrameSynthesisFrameSynthesisPostRequest {
 
 export interface ImportUserDictWordsImportUserDictPostRequest {
     override: boolean;
-    requestBody: { [key: string]: UserDictWord; } | null;
+requestBody: { [key: string]: UserDictWord; } | null;
 }
 
 export interface InitializeSpeakerInitializeSpeakerPostRequest {
@@ -254,47 +254,47 @@ export interface ValidateKanaValidateKanaPostRequest {
 
 /**
  * DefaultApi - interface
- *
+ * 
  * @export
  * @interface DefaultApiInterface
  */
 export interface DefaultApiInterface {
-    /**
+/**
      * テキストからアクセント句を得ます。 is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。
      * @summary テキストからアクセント句を得る
-     * @param {string} text
-     * @param {number} speaker
-     * @param {boolean} [isKana]
-     * @param {string} [coreVersion]
+     * @param {string} text 
+     * @param {number} speaker 
+     * @param {boolean} [isKana] 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     accentPhrasesAccentPhrasesPostRaw(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
-    /**
+/**
      * テキストからアクセント句を得ます。 is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。
      * テキストからアクセント句を得る
      */
     accentPhrasesAccentPhrasesPost(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
-    /**
+/**
      * 新しいプリセットを追加します
      * @summary Add Preset
-     * @param {Preset} preset
+     * @param {Preset} preset 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     addPresetAddPresetPostRaw(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>>;
 
-    /**
+/**
      * 新しいプリセットを追加します
      * Add Preset
      */
     addPresetAddPresetPost(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number>;
 
-    /**
+/**
      * ユーザー辞書に言葉を追加します。
      * @summary Add User Dict Word
      * @param {string} surface 言葉の表層形
@@ -308,83 +308,83 @@ export interface DefaultApiInterface {
      */
     addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>>;
 
-    /**
+/**
      * ユーザー辞書に言葉を追加します。
      * Add User Dict Word
      */
     addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string>;
 
-    /**
+/**
      * 音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * @summary 音声合成用のクエリを作成する
-     * @param {string} text
-     * @param {number} speaker
-     * @param {string} [coreVersion]
+     * @param {string} text 
+     * @param {number} speaker 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     audioQueryAudioQueryPostRaw(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>>;
 
-    /**
+/**
      * 音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリを作成する
      */
     audioQueryAudioQueryPost(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery>;
 
-    /**
+/**
      * 音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * @summary 音声合成用のクエリをプリセットを用いて作成する
-     * @param {string} text
-     * @param {number} presetId
-     * @param {string} [coreVersion]
+     * @param {string} text 
+     * @param {number} presetId 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>>;
 
-    /**
+/**
      * 音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリをプリセットを用いて作成する
      */
     audioQueryFromPresetAudioQueryFromPresetPost(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery>;
 
-    /**
-     *
+/**
+     * 
      * @summary 音声合成する（キャンセル可能）
-     * @param {number} speaker
-     * @param {AudioQuery} audioQuery
-     * @param {string} [coreVersion]
+     * @param {number} speaker 
+     * @param {AudioQuery} audioQuery 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     cancellableSynthesisCancellableSynthesisPostRaw(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
-    /**
+/**
      * 音声合成する（キャンセル可能）
      */
     cancellableSynthesisCancellableSynthesisPost(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
-    /**
+/**
      * base64エンコードされたwavデータを一纏めにし、wavファイルで返します。
      * @summary base64エンコードされた複数のwavデータを一つに結合する
-     * @param {Array<string>} requestBody
+     * @param {Array<string>} requestBody 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     connectWavesConnectWavesPostRaw(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
-    /**
+/**
      * base64エンコードされたwavデータを一纏めにし、wavファイルで返します。
      * base64エンコードされた複数のwavデータを一つに結合する
      */
     connectWavesConnectWavesPost(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
-    /**
-     *
+/**
+     * 
      * @summary Core Versions
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -392,12 +392,12 @@ export interface DefaultApiInterface {
      */
     coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>>;
 
-    /**
+/**
      * Core Versions
      */
     coreVersionsCoreVersionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string>>;
 
-    /**
+/**
      * 既存のプリセットを削除します
      * @summary Delete Preset
      * @param {number} id 削除するプリセットのプリセットID
@@ -407,13 +407,13 @@ export interface DefaultApiInterface {
      */
     deletePresetDeletePresetPostRaw(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
-    /**
+/**
      * 既存のプリセットを削除します
      * Delete Preset
      */
     deletePresetDeletePresetPost(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
-    /**
+/**
      * ユーザー辞書に登録されている言葉を削除します。
      * @summary Delete User Dict Word
      * @param {string} wordUuid 削除する言葉のUUID
@@ -423,13 +423,13 @@ export interface DefaultApiInterface {
      */
     deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
-    /**
+/**
      * ユーザー辞書に登録されている言葉を削除します。
      * Delete User Dict Word
      */
     deleteUserDictWordUserDictWordWordUuidDelete(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
-    /**
+/**
      * ダウンロード可能な音声ライブラリの情報を返します。
      * @summary Downloadable Libraries
      * @param {*} [options] Override http request option.
@@ -438,14 +438,14 @@ export interface DefaultApiInterface {
      */
     downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<DownloadableLibraryInfo>>>;
 
-    /**
+/**
      * ダウンロード可能な音声ライブラリの情報を返します。
      * Downloadable Libraries
      */
     downloadableLibrariesDownloadableLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<DownloadableLibraryInfo>>;
 
-    /**
-     *
+/**
+     * 
      * @summary Engine Manifest
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -453,30 +453,30 @@ export interface DefaultApiInterface {
      */
     engineManifestEngineManifestGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EngineManifest>>;
 
-    /**
+/**
      * Engine Manifest
      */
     engineManifestEngineManifestGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EngineManifest>;
 
-    /**
+/**
      * 歌唱音声合成を行います。
      * @summary Frame Synthesis
-     * @param {number} speaker
-     * @param {FrameAudioQuery} frameAudioQuery
-     * @param {string} [coreVersion]
+     * @param {number} speaker 
+     * @param {FrameAudioQuery} frameAudioQuery 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     frameSynthesisFrameSynthesisPostRaw(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
-    /**
+/**
      * 歌唱音声合成を行います。
      * Frame Synthesis
      */
     frameSynthesisFrameSynthesisPost(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
-    /**
+/**
      * エンジンが保持しているプリセットの設定を返します
      * @summary Get Presets
      * @param {*} [options] Override http request option.
@@ -485,13 +485,13 @@ export interface DefaultApiInterface {
      */
     getPresetsPresetsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Preset>>>;
 
-    /**
+/**
      * エンジンが保持しているプリセットの設定を返します
      * Get Presets
      */
     getPresetsPresetsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Preset>>;
 
-    /**
+/**
      * ユーザー辞書に登録されている単語の一覧を返します。 単語の表層形(surface)は正規化済みの物を返します。
      * @summary Get User Dict Words
      * @param {*} [options] Override http request option.
@@ -500,48 +500,48 @@ export interface DefaultApiInterface {
      */
     getUserDictWordsUserDictGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: UserDictWord; }>>;
 
-    /**
+/**
      * ユーザー辞書に登録されている単語の一覧を返します。 単語の表層形(surface)は正規化済みの物を返します。
      * Get User Dict Words
      */
     getUserDictWordsUserDictGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: UserDictWord; }>;
 
-    /**
+/**
      * 他のユーザー辞書をインポートします。
      * @summary Import User Dict Words
      * @param {boolean} override 重複したエントリがあった場合、上書きするかどうか
-     * @param {{ [key: string]: UserDictWord; }} requestBody
+     * @param {{ [key: string]: UserDictWord; }} requestBody 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
-    /**
+/**
      * 他のユーザー辞書をインポートします。
      * Import User Dict Words
      */
     importUserDictWordsImportUserDictPost(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
-    /**
+/**
      * 指定されたスタイルを初期化します。 実行しなくても他のAPIは使用できますが、初回実行時に時間がかかることがあります。
      * @summary Initialize Speaker
-     * @param {number} speaker
+     * @param {number} speaker 
      * @param {boolean} [skipReinit] 既に初期化済みのスタイルの再初期化をスキップするかどうか
-     * @param {string} [coreVersion]
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     initializeSpeakerInitializeSpeakerPostRaw(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
-    /**
+/**
      * 指定されたスタイルを初期化します。 実行しなくても他のAPIは使用できますが、初回実行時に時間がかかることがあります。
      * Initialize Speaker
      */
     initializeSpeakerInitializeSpeakerPost(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
-    /**
+/**
      * 音声ライブラリをインストールします。 音声ライブラリのZIPファイルをリクエストボディとして送信してください。
      * @summary Install Library
      * @param {string} libraryUuid 音声ライブラリのID
@@ -551,13 +551,13 @@ export interface DefaultApiInterface {
      */
     installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
-    /**
+/**
      * 音声ライブラリをインストールします。 音声ライブラリのZIPファイルをリクエストボディとして送信してください。
      * Install Library
      */
     installLibraryInstallLibraryLibraryUuidPost(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
-    /**
+/**
      * インストールした音声ライブラリの情報を返します。
      * @summary Installed Libraries
      * @param {*} [options] Override http request option.
@@ -566,115 +566,115 @@ export interface DefaultApiInterface {
      */
     installedLibrariesInstalledLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: InstalledLibraryInfo; }>>;
 
-    /**
+/**
      * インストールした音声ライブラリの情報を返します。
      * Installed Libraries
      */
     installedLibrariesInstalledLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: InstalledLibraryInfo; }>;
 
-    /**
+/**
      * 指定されたスタイルが初期化されているかどうかを返します。
      * @summary Is Initialized Speaker
-     * @param {number} speaker
-     * @param {string} [coreVersion]
+     * @param {number} speaker 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>>;
 
-    /**
+/**
      * 指定されたスタイルが初期化されているかどうかを返します。
      * Is Initialized Speaker
      */
     isInitializedSpeakerIsInitializedSpeakerGet(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean>;
 
-    /**
-     *
+/**
+     * 
      * @summary アクセント句から音高・音素長を得る
-     * @param {number} speaker
-     * @param {Array<AccentPhrase>} accentPhrase
-     * @param {string} [coreVersion]
+     * @param {number} speaker 
+     * @param {Array<AccentPhrase>} accentPhrase 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
-    /**
+/**
      * アクセント句から音高・音素長を得る
      */
     moraDataMoraDataPost(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
-    /**
-     *
+/**
+     * 
      * @summary アクセント句から音素長を得る
-     * @param {number} speaker
-     * @param {Array<AccentPhrase>} accentPhrase
-     * @param {string} [coreVersion]
+     * @param {number} speaker 
+     * @param {Array<AccentPhrase>} accentPhrase 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     moraLengthMoraLengthPostRaw(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
-    /**
+/**
      * アクセント句から音素長を得る
      */
     moraLengthMoraLengthPost(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
-    /**
-     *
+/**
+     * 
      * @summary アクセント句から音高を得る
-     * @param {number} speaker
-     * @param {Array<AccentPhrase>} accentPhrase
-     * @param {string} [coreVersion]
+     * @param {number} speaker 
+     * @param {Array<AccentPhrase>} accentPhrase 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
-    /**
+/**
      * アクセント句から音高を得る
      */
     moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
-    /**
+/**
      * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
      * @summary 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
-     * @param {Array<number>} requestBody
-     * @param {string} [coreVersion]
+     * @param {Array<number>} requestBody 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>>;
 
-    /**
+/**
      * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
      * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
      */
     morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>>;
 
-    /**
-     *
+/**
+     * 
      * @summary 複数まとめて音声合成する
-     * @param {number} speaker
-     * @param {Array<AudioQuery>} audioQuery
-     * @param {string} [coreVersion]
+     * @param {number} speaker 
+     * @param {Array<AudioQuery>} audioQuery 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     multiSynthesisMultiSynthesisPostRaw(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
-    /**
+/**
      * 複数まとめて音声合成する
      */
     multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
-    /**
+/**
      * ユーザー辞書に登録されている言葉を更新します。
      * @summary Rewrite User Dict Word
      * @param {string} wordUuid 更新する言葉のUUID
@@ -689,13 +689,13 @@ export interface DefaultApiInterface {
      */
     rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
-    /**
+/**
      * ユーザー辞書に登録されている言葉を更新します。
      * Rewrite User Dict Word
      */
     rewriteUserDictWordUserDictWordWordUuidPut(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
-    /**
+/**
      * 設定ページを返します。
      * @summary Setting Get
      * @param {*} [options] Override http request option.
@@ -704,182 +704,182 @@ export interface DefaultApiInterface {
      */
     settingGetSettingGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
-    /**
+/**
      * 設定ページを返します。
      * Setting Get
      */
     settingGetSettingGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
-    /**
+/**
      * 設定を更新します。
      * @summary Setting Post
-     * @param {CorsPolicyMode} corsPolicyMode
-     * @param {string} [allowOrigin]
+     * @param {CorsPolicyMode} corsPolicyMode 
+     * @param {string} [allowOrigin] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     settingPostSettingPostRaw(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
-    /**
+/**
      * 設定を更新します。
      * Setting Post
      */
     settingPostSettingPost(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
-    /**
+/**
      * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * @summary 歌唱音声合成用のクエリを作成する
-     * @param {number} speaker
-     * @param {Score} score
-     * @param {string} [coreVersion]
+     * @param {number} speaker 
+     * @param {Score} score 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FrameAudioQuery>>;
 
-    /**
+/**
      * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 歌唱音声合成用のクエリを作成する
      */
     singFrameAudioQuerySingFrameAudioQueryPost(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FrameAudioQuery>;
 
-    /**
-     *
+/**
+     * 
      * @summary スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
-     * @param {number} speaker
-     * @param {BodySingFrameVolumeSingFrameVolumePost} bodySingFrameVolumeSingFrameVolumePost
-     * @param {string} [coreVersion]
+     * @param {number} speaker 
+     * @param {BodySingFrameVolumeSingFrameVolumePost} bodySingFrameVolumeSingFrameVolumePost 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     singFrameVolumeSingFrameVolumePostRaw(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>>;
 
-    /**
+/**
      * スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
      */
     singFrameVolumeSingFrameVolumePost(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>>;
 
-    /**
+/**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * @summary Singer Info
-     * @param {string} speakerUuid
-     * @param {string} [coreVersion]
+     * @param {string} speakerUuid 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>>;
 
-    /**
+/**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * Singer Info
      */
     singerInfoSingerInfoGet(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo>;
 
-    /**
-     *
+/**
+     * 
      * @summary Singers
-     * @param {string} [coreVersion]
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     singersSingersGetRaw(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>>;
 
-    /**
+/**
      * Singers
      */
     singersSingersGet(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>>;
 
-    /**
+/**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * @summary Speaker Info
-     * @param {string} speakerUuid
-     * @param {string} [coreVersion]
+     * @param {string} speakerUuid 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>>;
 
-    /**
+/**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * Speaker Info
      */
     speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo>;
 
-    /**
-     *
+/**
+     * 
      * @summary Speakers
-     * @param {string} [coreVersion]
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>>;
 
-    /**
+/**
      * Speakers
      */
     speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>>;
 
-    /**
-     *
+/**
+     * 
      * @summary Supported Devices
-     * @param {string} [coreVersion]
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     supportedDevicesSupportedDevicesGetRaw(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SupportedDevicesInfo>>;
 
-    /**
+/**
      * Supported Devices
      */
     supportedDevicesSupportedDevicesGet(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SupportedDevicesInfo>;
 
-    /**
+/**
      * 指定された2種類のスタイルで音声を合成、指定した割合でモーフィングした音声を得ます。 モーフィングの割合は`morph_rate`で指定でき、0.0でベースのスタイル、1.0でターゲットのスタイルに近づきます。
      * @summary 2種類のスタイルでモーフィングした音声を合成する
-     * @param {number} baseSpeaker
-     * @param {number} targetSpeaker
-     * @param {number} morphRate
-     * @param {AudioQuery} audioQuery
-     * @param {string} [coreVersion]
+     * @param {number} baseSpeaker 
+     * @param {number} targetSpeaker 
+     * @param {number} morphRate 
+     * @param {AudioQuery} audioQuery 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     synthesisMorphingSynthesisMorphingPostRaw(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
-    /**
+/**
      * 指定された2種類のスタイルで音声を合成、指定した割合でモーフィングした音声を得ます。 モーフィングの割合は`morph_rate`で指定でき、0.0でベースのスタイル、1.0でターゲットのスタイルに近づきます。
      * 2種類のスタイルでモーフィングした音声を合成する
      */
     synthesisMorphingSynthesisMorphingPost(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
-    /**
-     *
+/**
+     * 
      * @summary 音声合成する
-     * @param {number} speaker
-     * @param {AudioQuery} audioQuery
+     * @param {number} speaker 
+     * @param {AudioQuery} audioQuery 
      * @param {boolean} [enableInterrogativeUpspeak] 疑問系のテキストが与えられたら語尾を自動調整する
-     * @param {string} [coreVersion]
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     synthesisSynthesisPostRaw(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
 
-    /**
+/**
      * 音声合成する
      */
     synthesisSynthesisPost(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
-    /**
+/**
      * 音声ライブラリをアンインストールします。
      * @summary Uninstall Library
      * @param {string} libraryUuid 音声ライブラリのID
@@ -889,29 +889,29 @@ export interface DefaultApiInterface {
      */
     uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
 
-    /**
+/**
      * 音声ライブラリをアンインストールします。
      * Uninstall Library
      */
     uninstallLibraryUninstallLibraryLibraryUuidPost(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 
-    /**
+/**
      * 既存のプリセットを更新します
      * @summary Update Preset
-     * @param {Preset} preset
+     * @param {Preset} preset 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
     updatePresetUpdatePresetPostRaw(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>>;
 
-    /**
+/**
      * 既存のプリセットを更新します
      * Update Preset
      */
     updatePresetUpdatePresetPost(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number>;
 
-    /**
+/**
      * テキストがAquesTalk 風記法に従っているかどうかを判定します。 従っていない場合はエラーが返ります。
      * @summary テキストがAquesTalk 風記法に従っているか判定する
      * @param {string} text 判定する対象の文字列
@@ -921,14 +921,14 @@ export interface DefaultApiInterface {
      */
     validateKanaValidateKanaPostRaw(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>>;
 
-    /**
+/**
      * テキストがAquesTalk 風記法に従っているかどうかを判定します。 従っていない場合はエラーが返ります。
      * テキストがAquesTalk 風記法に従っているか判定する
      */
     validateKanaValidateKanaPost(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean>;
 
-    /**
-     *
+/**
+     * 
      * @summary Version
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -936,7 +936,7 @@ export interface DefaultApiInterface {
      */
     versionVersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>>;
 
-    /**
+/**
      * Version
      */
     versionVersionGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string>;
@@ -944,1653 +944,1653 @@ export interface DefaultApiInterface {
 }
 
 /**
- *
+ * 
  */
 export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
-    /**
+/**
      * テキストからアクセント句を得ます。 is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。
      * テキストからアクセント句を得る
      */
-    async accentPhrasesAccentPhrasesPostRaw(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
-        if (requestParameters.text === null || requestParameters.text === undefined) {
-            throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling accentPhrasesAccentPhrasesPost.');
-        }
+async accentPhrasesAccentPhrasesPostRaw(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+if (requestParameters.text === null || requestParameters.text === undefined) {
+        throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling accentPhrasesAccentPhrasesPost.');
+}
 
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling accentPhrasesAccentPhrasesPost.');
-        }
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling accentPhrasesAccentPhrasesPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.text !== undefined) {
-            queryParameters['text'] = requestParameters.text;
-        }
+if (requestParameters.text !== undefined) {
+    queryParameters['text'] = requestParameters.text;
+}
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.isKana !== undefined) {
-            queryParameters['is_kana'] = requestParameters.isKana;
-        }
+if (requestParameters.isKana !== undefined) {
+    queryParameters['is_kana'] = requestParameters.isKana;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/accent_phrases`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/accent_phrases`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
     }
 
-    /**
+/**
      * テキストからアクセント句を得ます。 is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。
      * テキストからアクセント句を得る
      */
-    async accentPhrasesAccentPhrasesPost(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
-        const response = await this.accentPhrasesAccentPhrasesPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async accentPhrasesAccentPhrasesPost(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
+const response = await this.accentPhrasesAccentPhrasesPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 新しいプリセットを追加します
      * Add Preset
      */
-    async addPresetAddPresetPostRaw(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
-        if (requestParameters.preset === null || requestParameters.preset === undefined) {
-            throw new runtime.RequiredError('preset','Required parameter requestParameters.preset was null or undefined when calling addPresetAddPresetPost.');
-        }
+async addPresetAddPresetPostRaw(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
+if (requestParameters.preset === null || requestParameters.preset === undefined) {
+        throw new runtime.RequiredError('preset','Required parameter requestParameters.preset was null or undefined when calling addPresetAddPresetPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/add_preset`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: PresetToJSON(requestParameters.preset),
-        }, initOverrides);
+const response = await this.request({
+    path: `/add_preset`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: PresetToJSON(requestParameters.preset),
+}, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<number>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
+if (this.isJsonMime(response.headers.get('content-type'))) {
+        return new runtime.JSONApiResponse<number>(response);
+} else {
+    return new runtime.TextApiResponse(response) as any;
+}
+}
 
-    /**
+/**
      * 新しいプリセットを追加します
      * Add Preset
      */
-    async addPresetAddPresetPost(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number> {
-        const response = await this.addPresetAddPresetPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async addPresetAddPresetPost(requestParameters: AddPresetAddPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number> {
+const response = await this.addPresetAddPresetPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * ユーザー辞書に言葉を追加します。
      * Add User Dict Word
      */
-    async addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
-        if (requestParameters.surface === null || requestParameters.surface === undefined) {
-            throw new runtime.RequiredError('surface','Required parameter requestParameters.surface was null or undefined when calling addUserDictWordUserDictWordPost.');
-        }
+async addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+if (requestParameters.surface === null || requestParameters.surface === undefined) {
+        throw new runtime.RequiredError('surface','Required parameter requestParameters.surface was null or undefined when calling addUserDictWordUserDictWordPost.');
+}
 
-        if (requestParameters.pronunciation === null || requestParameters.pronunciation === undefined) {
-            throw new runtime.RequiredError('pronunciation','Required parameter requestParameters.pronunciation was null or undefined when calling addUserDictWordUserDictWordPost.');
-        }
+if (requestParameters.pronunciation === null || requestParameters.pronunciation === undefined) {
+        throw new runtime.RequiredError('pronunciation','Required parameter requestParameters.pronunciation was null or undefined when calling addUserDictWordUserDictWordPost.');
+}
 
-        if (requestParameters.accentType === null || requestParameters.accentType === undefined) {
-            throw new runtime.RequiredError('accentType','Required parameter requestParameters.accentType was null or undefined when calling addUserDictWordUserDictWordPost.');
-        }
+if (requestParameters.accentType === null || requestParameters.accentType === undefined) {
+        throw new runtime.RequiredError('accentType','Required parameter requestParameters.accentType was null or undefined when calling addUserDictWordUserDictWordPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.surface !== undefined) {
-            queryParameters['surface'] = requestParameters.surface;
-        }
+if (requestParameters.surface !== undefined) {
+    queryParameters['surface'] = requestParameters.surface;
+}
 
-        if (requestParameters.pronunciation !== undefined) {
-            queryParameters['pronunciation'] = requestParameters.pronunciation;
-        }
+if (requestParameters.pronunciation !== undefined) {
+    queryParameters['pronunciation'] = requestParameters.pronunciation;
+}
 
-        if (requestParameters.accentType !== undefined) {
-            queryParameters['accent_type'] = requestParameters.accentType;
-        }
+if (requestParameters.accentType !== undefined) {
+    queryParameters['accent_type'] = requestParameters.accentType;
+}
 
-        if (requestParameters.wordType !== undefined) {
-            queryParameters['word_type'] = requestParameters.wordType;
-        }
+if (requestParameters.wordType !== undefined) {
+    queryParameters['word_type'] = requestParameters.wordType;
+}
 
-        if (requestParameters.priority !== undefined) {
-            queryParameters['priority'] = requestParameters.priority;
-        }
+if (requestParameters.priority !== undefined) {
+    queryParameters['priority'] = requestParameters.priority;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/user_dict_word`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/user_dict_word`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<string>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
+if (this.isJsonMime(response.headers.get('content-type'))) {
+        return new runtime.JSONApiResponse<string>(response);
+} else {
+    return new runtime.TextApiResponse(response) as any;
+}
+}
 
-    /**
+/**
      * ユーザー辞書に言葉を追加します。
      * Add User Dict Word
      */
-    async addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
-        const response = await this.addUserDictWordUserDictWordPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+const response = await this.addUserDictWordUserDictWordPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリを作成する
      */
-    async audioQueryAudioQueryPostRaw(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
-        if (requestParameters.text === null || requestParameters.text === undefined) {
-            throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling audioQueryAudioQueryPost.');
-        }
+async audioQueryAudioQueryPostRaw(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
+if (requestParameters.text === null || requestParameters.text === undefined) {
+        throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling audioQueryAudioQueryPost.');
+}
 
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling audioQueryAudioQueryPost.');
-        }
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling audioQueryAudioQueryPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.text !== undefined) {
-            queryParameters['text'] = requestParameters.text;
-        }
+if (requestParameters.text !== undefined) {
+    queryParameters['text'] = requestParameters.text;
+}
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/audio_query`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/audio_query`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => AudioQueryFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) => AudioQueryFromJSON(jsonValue));
     }
 
-    /**
+/**
      * 音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリを作成する
      */
-    async audioQueryAudioQueryPost(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery> {
-        const response = await this.audioQueryAudioQueryPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async audioQueryAudioQueryPost(requestParameters: AudioQueryAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery> {
+const response = await this.audioQueryAudioQueryPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリをプリセットを用いて作成する
      */
-    async audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
-        if (requestParameters.text === null || requestParameters.text === undefined) {
-            throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling audioQueryFromPresetAudioQueryFromPresetPost.');
-        }
+async audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
+if (requestParameters.text === null || requestParameters.text === undefined) {
+        throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling audioQueryFromPresetAudioQueryFromPresetPost.');
+}
 
-        if (requestParameters.presetId === null || requestParameters.presetId === undefined) {
-            throw new runtime.RequiredError('presetId','Required parameter requestParameters.presetId was null or undefined when calling audioQueryFromPresetAudioQueryFromPresetPost.');
-        }
+if (requestParameters.presetId === null || requestParameters.presetId === undefined) {
+        throw new runtime.RequiredError('presetId','Required parameter requestParameters.presetId was null or undefined when calling audioQueryFromPresetAudioQueryFromPresetPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.text !== undefined) {
-            queryParameters['text'] = requestParameters.text;
-        }
+if (requestParameters.text !== undefined) {
+    queryParameters['text'] = requestParameters.text;
+}
 
-        if (requestParameters.presetId !== undefined) {
-            queryParameters['preset_id'] = requestParameters.presetId;
-        }
+if (requestParameters.presetId !== undefined) {
+    queryParameters['preset_id'] = requestParameters.presetId;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/audio_query_from_preset`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/audio_query_from_preset`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => AudioQueryFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) => AudioQueryFromJSON(jsonValue));
     }
 
-    /**
+/**
      * 音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 音声合成用のクエリをプリセットを用いて作成する
      */
-    async audioQueryFromPresetAudioQueryFromPresetPost(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery> {
-        const response = await this.audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async audioQueryFromPresetAudioQueryFromPresetPost(requestParameters: AudioQueryFromPresetAudioQueryFromPresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery> {
+const response = await this.audioQueryFromPresetAudioQueryFromPresetPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 音声合成する（キャンセル可能）
      */
-    async cancellableSynthesisCancellableSynthesisPostRaw(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling cancellableSynthesisCancellableSynthesisPost.');
-        }
+async cancellableSynthesisCancellableSynthesisPostRaw(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling cancellableSynthesisCancellableSynthesisPost.');
+}
 
-        if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
-            throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling cancellableSynthesisCancellableSynthesisPost.');
-        }
+if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
+        throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling cancellableSynthesisCancellableSynthesisPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/cancellable_synthesis`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: AudioQueryToJSON(requestParameters.audioQuery),
-        }, initOverrides);
+const response = await this.request({
+    path: `/cancellable_synthesis`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: AudioQueryToJSON(requestParameters.audioQuery),
+}, initOverrides);
 
-        return new runtime.BlobApiResponse(response);
+    return new runtime.BlobApiResponse(response);
     }
 
-    /**
+/**
      * 音声合成する（キャンセル可能）
      */
-    async cancellableSynthesisCancellableSynthesisPost(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
-        const response = await this.cancellableSynthesisCancellableSynthesisPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async cancellableSynthesisCancellableSynthesisPost(requestParameters: CancellableSynthesisCancellableSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+const response = await this.cancellableSynthesisCancellableSynthesisPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * base64エンコードされたwavデータを一纏めにし、wavファイルで返します。
      * base64エンコードされた複数のwavデータを一つに結合する
      */
-    async connectWavesConnectWavesPostRaw(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
-            throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling connectWavesConnectWavesPost.');
-        }
+async connectWavesConnectWavesPostRaw(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
+        throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling connectWavesConnectWavesPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/connect_waves`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: requestParameters.requestBody,
-        }, initOverrides);
+const response = await this.request({
+    path: `/connect_waves`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: requestParameters.requestBody,
+}, initOverrides);
 
-        return new runtime.BlobApiResponse(response);
+    return new runtime.BlobApiResponse(response);
     }
 
-    /**
+/**
      * base64エンコードされたwavデータを一纏めにし、wavファイルで返します。
      * base64エンコードされた複数のwavデータを一つに結合する
      */
-    async connectWavesConnectWavesPost(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
-        const response = await this.connectWavesConnectWavesPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async connectWavesConnectWavesPost(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+const response = await this.connectWavesConnectWavesPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * Core Versions
      */
-    async coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>> {
-        const queryParameters: any = {};
+async coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>> {
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/core_versions`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/core_versions`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse<any>(response);
+    return new runtime.JSONApiResponse<any>(response);
     }
 
-    /**
+/**
      * Core Versions
      */
-    async coreVersionsCoreVersionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string>> {
-        const response = await this.coreVersionsCoreVersionsGetRaw(initOverrides);
-        return await response.value();
-    }
+async coreVersionsCoreVersionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string>> {
+const response = await this.coreVersionsCoreVersionsGetRaw(initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 既存のプリセットを削除します
      * Delete Preset
      */
-    async deletePresetDeletePresetPostRaw(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.id === null || requestParameters.id === undefined) {
-            throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling deletePresetDeletePresetPost.');
-        }
+async deletePresetDeletePresetPostRaw(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+if (requestParameters.id === null || requestParameters.id === undefined) {
+        throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling deletePresetDeletePresetPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.id !== undefined) {
-            queryParameters['id'] = requestParameters.id;
-        }
+if (requestParameters.id !== undefined) {
+    queryParameters['id'] = requestParameters.id;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/delete_preset`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/delete_preset`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+    return new runtime.VoidApiResponse(response);
     }
 
-    /**
+/**
      * 既存のプリセットを削除します
      * Delete Preset
      */
-    async deletePresetDeletePresetPost(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.deletePresetDeletePresetPostRaw(requestParameters, initOverrides);
-    }
+async deletePresetDeletePresetPost(requestParameters: DeletePresetDeletePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    await this.deletePresetDeletePresetPostRaw(requestParameters, initOverrides);
+}
 
-    /**
+/**
      * ユーザー辞書に登録されている言葉を削除します。
      * Delete User Dict Word
      */
-    async deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.wordUuid === null || requestParameters.wordUuid === undefined) {
-            throw new runtime.RequiredError('wordUuid','Required parameter requestParameters.wordUuid was null or undefined when calling deleteUserDictWordUserDictWordWordUuidDelete.');
-        }
+async deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+if (requestParameters.wordUuid === null || requestParameters.wordUuid === undefined) {
+        throw new runtime.RequiredError('wordUuid','Required parameter requestParameters.wordUuid was null or undefined when calling deleteUserDictWordUserDictWordWordUuidDelete.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/user_dict_word/{word_uuid}`.replace(`{${"word_uuid"}}`, encodeURIComponent(String(requestParameters.wordUuid))),
-            method: 'DELETE',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/user_dict_word/{word_uuid}`.replace(`{${"word_uuid"}}`, encodeURIComponent(String(requestParameters.wordUuid))),
+    method: 'DELETE',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+    return new runtime.VoidApiResponse(response);
     }
 
-    /**
+/**
      * ユーザー辞書に登録されている言葉を削除します。
      * Delete User Dict Word
      */
-    async deleteUserDictWordUserDictWordWordUuidDelete(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters, initOverrides);
-    }
+async deleteUserDictWordUserDictWordWordUuidDelete(requestParameters: DeleteUserDictWordUserDictWordWordUuidDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    await this.deleteUserDictWordUserDictWordWordUuidDeleteRaw(requestParameters, initOverrides);
+}
 
-    /**
+/**
      * ダウンロード可能な音声ライブラリの情報を返します。
      * Downloadable Libraries
      */
-    async downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<DownloadableLibraryInfo>>> {
-        const queryParameters: any = {};
+async downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<DownloadableLibraryInfo>>> {
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/downloadable_libraries`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/downloadable_libraries`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(DownloadableLibraryInfoFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(DownloadableLibraryInfoFromJSON));
     }
 
-    /**
+/**
      * ダウンロード可能な音声ライブラリの情報を返します。
      * Downloadable Libraries
      */
-    async downloadableLibrariesDownloadableLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<DownloadableLibraryInfo>> {
-        const response = await this.downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides);
-        return await response.value();
-    }
+async downloadableLibrariesDownloadableLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<DownloadableLibraryInfo>> {
+const response = await this.downloadableLibrariesDownloadableLibrariesGetRaw(initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * Engine Manifest
      */
-    async engineManifestEngineManifestGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EngineManifest>> {
-        const queryParameters: any = {};
+async engineManifestEngineManifestGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EngineManifest>> {
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/engine_manifest`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/engine_manifest`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => EngineManifestFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) => EngineManifestFromJSON(jsonValue));
     }
 
-    /**
+/**
      * Engine Manifest
      */
-    async engineManifestEngineManifestGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EngineManifest> {
-        const response = await this.engineManifestEngineManifestGetRaw(initOverrides);
-        return await response.value();
-    }
+async engineManifestEngineManifestGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EngineManifest> {
+const response = await this.engineManifestEngineManifestGetRaw(initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 歌唱音声合成を行います。
      * Frame Synthesis
      */
-    async frameSynthesisFrameSynthesisPostRaw(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling frameSynthesisFrameSynthesisPost.');
-        }
+async frameSynthesisFrameSynthesisPostRaw(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling frameSynthesisFrameSynthesisPost.');
+}
 
-        if (requestParameters.frameAudioQuery === null || requestParameters.frameAudioQuery === undefined) {
-            throw new runtime.RequiredError('frameAudioQuery','Required parameter requestParameters.frameAudioQuery was null or undefined when calling frameSynthesisFrameSynthesisPost.');
-        }
+if (requestParameters.frameAudioQuery === null || requestParameters.frameAudioQuery === undefined) {
+        throw new runtime.RequiredError('frameAudioQuery','Required parameter requestParameters.frameAudioQuery was null or undefined when calling frameSynthesisFrameSynthesisPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/frame_synthesis`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: FrameAudioQueryToJSON(requestParameters.frameAudioQuery),
-        }, initOverrides);
+const response = await this.request({
+    path: `/frame_synthesis`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: FrameAudioQueryToJSON(requestParameters.frameAudioQuery),
+}, initOverrides);
 
-        return new runtime.BlobApiResponse(response);
+    return new runtime.BlobApiResponse(response);
     }
 
-    /**
+/**
      * 歌唱音声合成を行います。
      * Frame Synthesis
      */
-    async frameSynthesisFrameSynthesisPost(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
-        const response = await this.frameSynthesisFrameSynthesisPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async frameSynthesisFrameSynthesisPost(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+const response = await this.frameSynthesisFrameSynthesisPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * エンジンが保持しているプリセットの設定を返します
      * Get Presets
      */
-    async getPresetsPresetsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Preset>>> {
-        const queryParameters: any = {};
+async getPresetsPresetsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Preset>>> {
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/presets`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/presets`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PresetFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PresetFromJSON));
     }
 
-    /**
+/**
      * エンジンが保持しているプリセットの設定を返します
      * Get Presets
      */
-    async getPresetsPresetsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Preset>> {
-        const response = await this.getPresetsPresetsGetRaw(initOverrides);
-        return await response.value();
-    }
+async getPresetsPresetsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Preset>> {
+const response = await this.getPresetsPresetsGetRaw(initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * ユーザー辞書に登録されている単語の一覧を返します。 単語の表層形(surface)は正規化済みの物を返します。
      * Get User Dict Words
      */
-    async getUserDictWordsUserDictGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: UserDictWord; }>> {
-        const queryParameters: any = {};
+async getUserDictWordsUserDictGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: UserDictWord; }>> {
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/user_dict`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/user_dict`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => runtime.mapValues(jsonValue, UserDictWordFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => runtime.mapValues(jsonValue, UserDictWordFromJSON));
     }
 
-    /**
+/**
      * ユーザー辞書に登録されている単語の一覧を返します。 単語の表層形(surface)は正規化済みの物を返します。
      * Get User Dict Words
      */
-    async getUserDictWordsUserDictGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: UserDictWord; }> {
-        const response = await this.getUserDictWordsUserDictGetRaw(initOverrides);
-        return await response.value();
-    }
+async getUserDictWordsUserDictGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: UserDictWord; }> {
+    const response = await this.getUserDictWordsUserDictGetRaw(initOverrides);
+    return await response.value();
+}
 
-    /**
+/**
      * 他のユーザー辞書をインポートします。
      * Import User Dict Words
      */
-    async importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.override === null || requestParameters.override === undefined) {
-            throw new runtime.RequiredError('override','Required parameter requestParameters.override was null or undefined when calling importUserDictWordsImportUserDictPost.');
-        }
+async importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+if (requestParameters.override === null || requestParameters.override === undefined) {
+        throw new runtime.RequiredError('override','Required parameter requestParameters.override was null or undefined when calling importUserDictWordsImportUserDictPost.');
+}
 
-        if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
-            throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling importUserDictWordsImportUserDictPost.');
-        }
+if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
+        throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling importUserDictWordsImportUserDictPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.override !== undefined) {
-            queryParameters['override'] = requestParameters.override;
-        }
+if (requestParameters.override !== undefined) {
+    queryParameters['override'] = requestParameters.override;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/import_user_dict`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: requestParameters.requestBody,
-        }, initOverrides);
+const response = await this.request({
+    path: `/import_user_dict`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: requestParameters.requestBody,
+}, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+    return new runtime.VoidApiResponse(response);
     }
 
-    /**
+/**
      * 他のユーザー辞書をインポートします。
      * Import User Dict Words
      */
-    async importUserDictWordsImportUserDictPost(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.importUserDictWordsImportUserDictPostRaw(requestParameters, initOverrides);
-    }
+async importUserDictWordsImportUserDictPost(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    await this.importUserDictWordsImportUserDictPostRaw(requestParameters, initOverrides);
+}
 
-    /**
+/**
      * 指定されたスタイルを初期化します。 実行しなくても他のAPIは使用できますが、初回実行時に時間がかかることがあります。
      * Initialize Speaker
      */
-    async initializeSpeakerInitializeSpeakerPostRaw(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling initializeSpeakerInitializeSpeakerPost.');
-        }
+async initializeSpeakerInitializeSpeakerPostRaw(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling initializeSpeakerInitializeSpeakerPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.skipReinit !== undefined) {
-            queryParameters['skip_reinit'] = requestParameters.skipReinit;
-        }
+if (requestParameters.skipReinit !== undefined) {
+    queryParameters['skip_reinit'] = requestParameters.skipReinit;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/initialize_speaker`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/initialize_speaker`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+    return new runtime.VoidApiResponse(response);
     }
 
-    /**
+/**
      * 指定されたスタイルを初期化します。 実行しなくても他のAPIは使用できますが、初回実行時に時間がかかることがあります。
      * Initialize Speaker
      */
-    async initializeSpeakerInitializeSpeakerPost(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.initializeSpeakerInitializeSpeakerPostRaw(requestParameters, initOverrides);
-    }
+async initializeSpeakerInitializeSpeakerPost(requestParameters: InitializeSpeakerInitializeSpeakerPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    await this.initializeSpeakerInitializeSpeakerPostRaw(requestParameters, initOverrides);
+}
 
-    /**
+/**
      * 音声ライブラリをインストールします。 音声ライブラリのZIPファイルをリクエストボディとして送信してください。
      * Install Library
      */
-    async installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.libraryUuid === null || requestParameters.libraryUuid === undefined) {
-            throw new runtime.RequiredError('libraryUuid','Required parameter requestParameters.libraryUuid was null or undefined when calling installLibraryInstallLibraryLibraryUuidPost.');
-        }
+async installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+if (requestParameters.libraryUuid === null || requestParameters.libraryUuid === undefined) {
+        throw new runtime.RequiredError('libraryUuid','Required parameter requestParameters.libraryUuid was null or undefined when calling installLibraryInstallLibraryLibraryUuidPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/install_library/{library_uuid}`.replace(`{${"library_uuid"}}`, encodeURIComponent(String(requestParameters.libraryUuid))),
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/install_library/{library_uuid}`.replace(`{${"library_uuid"}}`, encodeURIComponent(String(requestParameters.libraryUuid))),
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+    return new runtime.VoidApiResponse(response);
     }
 
-    /**
+/**
      * 音声ライブラリをインストールします。 音声ライブラリのZIPファイルをリクエストボディとして送信してください。
      * Install Library
      */
-    async installLibraryInstallLibraryLibraryUuidPost(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters, initOverrides);
-    }
+async installLibraryInstallLibraryLibraryUuidPost(requestParameters: InstallLibraryInstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    await this.installLibraryInstallLibraryLibraryUuidPostRaw(requestParameters, initOverrides);
+}
 
-    /**
+/**
      * インストールした音声ライブラリの情報を返します。
      * Installed Libraries
      */
-    async installedLibrariesInstalledLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: InstalledLibraryInfo; }>> {
-        const queryParameters: any = {};
+async installedLibrariesInstalledLibrariesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: InstalledLibraryInfo; }>> {
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/installed_libraries`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/installed_libraries`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => runtime.mapValues(jsonValue, InstalledLibraryInfoFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => runtime.mapValues(jsonValue, InstalledLibraryInfoFromJSON));
     }
 
-    /**
+/**
      * インストールした音声ライブラリの情報を返します。
      * Installed Libraries
      */
-    async installedLibrariesInstalledLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: InstalledLibraryInfo; }> {
-        const response = await this.installedLibrariesInstalledLibrariesGetRaw(initOverrides);
-        return await response.value();
-    }
+async installedLibrariesInstalledLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: InstalledLibraryInfo; }> {
+    const response = await this.installedLibrariesInstalledLibrariesGetRaw(initOverrides);
+    return await response.value();
+}
 
-    /**
+/**
      * 指定されたスタイルが初期化されているかどうかを返します。
      * Is Initialized Speaker
      */
-    async isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling isInitializedSpeakerIsInitializedSpeakerGet.');
-        }
+async isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling isInitializedSpeakerIsInitializedSpeakerGet.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/is_initialized_speaker`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/is_initialized_speaker`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<boolean>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
+if (this.isJsonMime(response.headers.get('content-type'))) {
+        return new runtime.JSONApiResponse<boolean>(response);
+} else {
+    return new runtime.TextApiResponse(response) as any;
+}
+}
 
-    /**
+/**
      * 指定されたスタイルが初期化されているかどうかを返します。
      * Is Initialized Speaker
      */
-    async isInitializedSpeakerIsInitializedSpeakerGet(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
-        const response = await this.isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async isInitializedSpeakerIsInitializedSpeakerGet(requestParameters: IsInitializedSpeakerIsInitializedSpeakerGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
+const response = await this.isInitializedSpeakerIsInitializedSpeakerGetRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * アクセント句から音高・音素長を得る
      */
-    async moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraDataMoraDataPost.');
-        }
+async moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraDataMoraDataPost.');
+}
 
-        if (requestParameters.accentPhrase === null || requestParameters.accentPhrase === undefined) {
-            throw new runtime.RequiredError('accentPhrase','Required parameter requestParameters.accentPhrase was null or undefined when calling moraDataMoraDataPost.');
-        }
+if (requestParameters.accentPhrase === null || requestParameters.accentPhrase === undefined) {
+        throw new runtime.RequiredError('accentPhrase','Required parameter requestParameters.accentPhrase was null or undefined when calling moraDataMoraDataPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/mora_data`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: requestParameters.accentPhrase.map(AccentPhraseToJSON),
-        }, initOverrides);
+const response = await this.request({
+    path: `/mora_data`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: requestParameters.accentPhrase.map(AccentPhraseToJSON),
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
     }
 
-    /**
+/**
      * アクセント句から音高・音素長を得る
      */
-    async moraDataMoraDataPost(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
-        const response = await this.moraDataMoraDataPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async moraDataMoraDataPost(requestParameters: MoraDataMoraDataPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
+const response = await this.moraDataMoraDataPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * アクセント句から音素長を得る
      */
-    async moraLengthMoraLengthPostRaw(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraLengthMoraLengthPost.');
-        }
+async moraLengthMoraLengthPostRaw(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraLengthMoraLengthPost.');
+}
 
-        if (requestParameters.accentPhrase === null || requestParameters.accentPhrase === undefined) {
-            throw new runtime.RequiredError('accentPhrase','Required parameter requestParameters.accentPhrase was null or undefined when calling moraLengthMoraLengthPost.');
-        }
+if (requestParameters.accentPhrase === null || requestParameters.accentPhrase === undefined) {
+        throw new runtime.RequiredError('accentPhrase','Required parameter requestParameters.accentPhrase was null or undefined when calling moraLengthMoraLengthPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/mora_length`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: requestParameters.accentPhrase.map(AccentPhraseToJSON),
-        }, initOverrides);
+const response = await this.request({
+    path: `/mora_length`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: requestParameters.accentPhrase.map(AccentPhraseToJSON),
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
     }
 
-    /**
+/**
      * アクセント句から音素長を得る
      */
-    async moraLengthMoraLengthPost(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
-        const response = await this.moraLengthMoraLengthPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async moraLengthMoraLengthPost(requestParameters: MoraLengthMoraLengthPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
+const response = await this.moraLengthMoraLengthPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * アクセント句から音高を得る
      */
-    async moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraPitchMoraPitchPost.');
-        }
+async moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraPitchMoraPitchPost.');
+}
 
-        if (requestParameters.accentPhrase === null || requestParameters.accentPhrase === undefined) {
-            throw new runtime.RequiredError('accentPhrase','Required parameter requestParameters.accentPhrase was null or undefined when calling moraPitchMoraPitchPost.');
-        }
+if (requestParameters.accentPhrase === null || requestParameters.accentPhrase === undefined) {
+        throw new runtime.RequiredError('accentPhrase','Required parameter requestParameters.accentPhrase was null or undefined when calling moraPitchMoraPitchPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/mora_pitch`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: requestParameters.accentPhrase.map(AccentPhraseToJSON),
-        }, initOverrides);
+const response = await this.request({
+    path: `/mora_pitch`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: requestParameters.accentPhrase.map(AccentPhraseToJSON),
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
     }
 
-    /**
+/**
      * アクセント句から音高を得る
      */
-    async moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
-        const response = await this.moraPitchMoraPitchPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
+const response = await this.moraPitchMoraPitchPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
      * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
      */
-    async morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>> {
-        if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
-            throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling morphableTargetsMorphableTargetsPost.');
-        }
+async morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>> {
+if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
+        throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling morphableTargetsMorphableTargetsPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+    headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/morphable_targets`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: requestParameters.requestBody,
-        }, initOverrides);
+const response = await this.request({
+    path: `/morphable_targets`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: requestParameters.requestBody,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse<any>(response);
+    return new runtime.JSONApiResponse<any>(response);
     }
 
-    /**
+/**
      * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
      * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
      */
-    async morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>> {
-        const response = await this.morphableTargetsMorphableTargetsPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>> {
+    const response = await this.morphableTargetsMorphableTargetsPostRaw(requestParameters, initOverrides);
+    return await response.value();
+}
 
-    /**
+/**
      * 複数まとめて音声合成する
      */
-    async multiSynthesisMultiSynthesisPostRaw(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling multiSynthesisMultiSynthesisPost.');
-        }
+async multiSynthesisMultiSynthesisPostRaw(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling multiSynthesisMultiSynthesisPost.');
+}
 
-        if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
-            throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling multiSynthesisMultiSynthesisPost.');
-        }
+if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
+        throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling multiSynthesisMultiSynthesisPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/multi_synthesis`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: requestParameters.audioQuery.map(AudioQueryToJSON),
-        }, initOverrides);
+const response = await this.request({
+    path: `/multi_synthesis`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: requestParameters.audioQuery.map(AudioQueryToJSON),
+}, initOverrides);
 
-        return new runtime.BlobApiResponse(response);
+    return new runtime.BlobApiResponse(response);
     }
 
-    /**
+/**
      * 複数まとめて音声合成する
      */
-    async multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
-        const response = await this.multiSynthesisMultiSynthesisPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+const response = await this.multiSynthesisMultiSynthesisPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * ユーザー辞書に登録されている言葉を更新します。
      * Rewrite User Dict Word
      */
-    async rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.wordUuid === null || requestParameters.wordUuid === undefined) {
-            throw new runtime.RequiredError('wordUuid','Required parameter requestParameters.wordUuid was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
-        }
+async rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+if (requestParameters.wordUuid === null || requestParameters.wordUuid === undefined) {
+        throw new runtime.RequiredError('wordUuid','Required parameter requestParameters.wordUuid was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
+}
 
-        if (requestParameters.surface === null || requestParameters.surface === undefined) {
-            throw new runtime.RequiredError('surface','Required parameter requestParameters.surface was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
-        }
+if (requestParameters.surface === null || requestParameters.surface === undefined) {
+        throw new runtime.RequiredError('surface','Required parameter requestParameters.surface was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
+}
 
-        if (requestParameters.pronunciation === null || requestParameters.pronunciation === undefined) {
-            throw new runtime.RequiredError('pronunciation','Required parameter requestParameters.pronunciation was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
-        }
+if (requestParameters.pronunciation === null || requestParameters.pronunciation === undefined) {
+        throw new runtime.RequiredError('pronunciation','Required parameter requestParameters.pronunciation was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
+}
 
-        if (requestParameters.accentType === null || requestParameters.accentType === undefined) {
-            throw new runtime.RequiredError('accentType','Required parameter requestParameters.accentType was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
-        }
+if (requestParameters.accentType === null || requestParameters.accentType === undefined) {
+        throw new runtime.RequiredError('accentType','Required parameter requestParameters.accentType was null or undefined when calling rewriteUserDictWordUserDictWordWordUuidPut.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.surface !== undefined) {
-            queryParameters['surface'] = requestParameters.surface;
-        }
+if (requestParameters.surface !== undefined) {
+    queryParameters['surface'] = requestParameters.surface;
+}
 
-        if (requestParameters.pronunciation !== undefined) {
-            queryParameters['pronunciation'] = requestParameters.pronunciation;
-        }
+if (requestParameters.pronunciation !== undefined) {
+    queryParameters['pronunciation'] = requestParameters.pronunciation;
+}
 
-        if (requestParameters.accentType !== undefined) {
-            queryParameters['accent_type'] = requestParameters.accentType;
-        }
+if (requestParameters.accentType !== undefined) {
+    queryParameters['accent_type'] = requestParameters.accentType;
+}
 
-        if (requestParameters.wordType !== undefined) {
-            queryParameters['word_type'] = requestParameters.wordType;
-        }
+if (requestParameters.wordType !== undefined) {
+    queryParameters['word_type'] = requestParameters.wordType;
+}
 
-        if (requestParameters.priority !== undefined) {
-            queryParameters['priority'] = requestParameters.priority;
-        }
+if (requestParameters.priority !== undefined) {
+    queryParameters['priority'] = requestParameters.priority;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/user_dict_word/{word_uuid}`.replace(`{${"word_uuid"}}`, encodeURIComponent(String(requestParameters.wordUuid))),
-            method: 'PUT',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/user_dict_word/{word_uuid}`.replace(`{${"word_uuid"}}`, encodeURIComponent(String(requestParameters.wordUuid))),
+    method: 'PUT',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+    return new runtime.VoidApiResponse(response);
     }
 
-    /**
+/**
      * ユーザー辞書に登録されている言葉を更新します。
      * Rewrite User Dict Word
      */
-    async rewriteUserDictWordUserDictWordWordUuidPut(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters, initOverrides);
-    }
+async rewriteUserDictWordUserDictWordWordUuidPut(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    await this.rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters, initOverrides);
+}
 
-    /**
+/**
      * 設定ページを返します。
      * Setting Get
      */
-    async settingGetSettingGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        const queryParameters: any = {};
+async settingGetSettingGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/setting`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/setting`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+    return new runtime.VoidApiResponse(response);
     }
 
-    /**
+/**
      * 設定ページを返します。
      * Setting Get
      */
-    async settingGetSettingGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.settingGetSettingGetRaw(initOverrides);
-    }
+async settingGetSettingGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    await this.settingGetSettingGetRaw(initOverrides);
+}
 
-    /**
+/**
      * 設定を更新します。
      * Setting Post
      */
-    async settingPostSettingPostRaw(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.corsPolicyMode === null || requestParameters.corsPolicyMode === undefined) {
-            throw new runtime.RequiredError('corsPolicyMode','Required parameter requestParameters.corsPolicyMode was null or undefined when calling settingPostSettingPost.');
-        }
+async settingPostSettingPostRaw(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+if (requestParameters.corsPolicyMode === null || requestParameters.corsPolicyMode === undefined) {
+        throw new runtime.RequiredError('corsPolicyMode','Required parameter requestParameters.corsPolicyMode was null or undefined when calling settingPostSettingPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const consumes: runtime.Consume[] = [
-            { contentType: 'application/x-www-form-urlencoded' },
-        ];
-        // @ts-ignore: canConsumeForm may be unused
-        const canConsumeForm = runtime.canConsumeForm(consumes);
+const consumes: runtime.Consume[] = [
+    { contentType: 'application/x-www-form-urlencoded' },
+];
+// @ts-ignore: canConsumeForm may be unused
+const canConsumeForm = runtime.canConsumeForm(consumes);
 
-        let formParams: { append(param: string, value: any): any };
-        let useForm = false;
-        if (useForm) {
-            formParams = new FormData();
-        } else {
-            formParams = new URLSearchParams();
-        }
+let formParams: { append(param: string, value: any): any };
+let useForm = false;
+if (useForm) {
+    formParams = new FormData();
+} else {
+    formParams = new URLSearchParams();
+}
 
-        if (requestParameters.corsPolicyMode !== undefined) {
-            formParams.append('cors_policy_mode', new Blob([JSON.stringify(CorsPolicyModeToJSON(requestParameters.corsPolicyMode))], { type: "application/json", }));
-                    }
+if (requestParameters.corsPolicyMode !== undefined) {
+    formParams.append('cors_policy_mode', new Blob([JSON.stringify(CorsPolicyModeToJSON(requestParameters.corsPolicyMode))], { type: "application/json", }));
+}
 
-        if (requestParameters.allowOrigin !== undefined) {
-            formParams.append('allow_origin', requestParameters.allowOrigin as any);
-        }
+if (requestParameters.allowOrigin !== undefined) {
+    formParams.append('allow_origin', requestParameters.allowOrigin as any);
+}
 
-        const response = await this.request({
-            path: `/setting`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: formParams,
-        }, initOverrides);
+const response = await this.request({
+    path: `/setting`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: formParams,
+}, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+    return new runtime.VoidApiResponse(response);
     }
 
-    /**
+/**
      * 設定を更新します。
      * Setting Post
      */
-    async settingPostSettingPost(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.settingPostSettingPostRaw(requestParameters, initOverrides);
-    }
+async settingPostSettingPost(requestParameters: SettingPostSettingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    await this.settingPostSettingPostRaw(requestParameters, initOverrides);
+}
 
-    /**
+/**
      * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 歌唱音声合成用のクエリを作成する
      */
-    async singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FrameAudioQuery>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
-        }
+async singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FrameAudioQuery>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
+}
 
-        if (requestParameters.score === null || requestParameters.score === undefined) {
-            throw new runtime.RequiredError('score','Required parameter requestParameters.score was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
-        }
+if (requestParameters.score === null || requestParameters.score === undefined) {
+        throw new runtime.RequiredError('score','Required parameter requestParameters.score was null or undefined when calling singFrameAudioQuerySingFrameAudioQueryPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/sing_frame_audio_query`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ScoreToJSON(requestParameters.score),
-        }, initOverrides);
+const response = await this.request({
+    path: `/sing_frame_audio_query`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: ScoreToJSON(requestParameters.score),
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => FrameAudioQueryFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) => FrameAudioQueryFromJSON(jsonValue));
     }
 
-    /**
+/**
      * 歌唱音声合成用のクエリの初期値を得ます。ここで得られたクエリはそのまま歌唱音声合成に利用できます。各値の意味は`Schemas`を参照してください。
      * 歌唱音声合成用のクエリを作成する
      */
-    async singFrameAudioQuerySingFrameAudioQueryPost(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FrameAudioQuery> {
-        const response = await this.singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async singFrameAudioQuerySingFrameAudioQueryPost(requestParameters: SingFrameAudioQuerySingFrameAudioQueryPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FrameAudioQuery> {
+const response = await this.singFrameAudioQuerySingFrameAudioQueryPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
      */
-    async singFrameVolumeSingFrameVolumePostRaw(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameVolumeSingFrameVolumePost.');
-        }
+async singFrameVolumeSingFrameVolumePostRaw(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameVolumeSingFrameVolumePost.');
+}
 
-        if (requestParameters.bodySingFrameVolumeSingFrameVolumePost === null || requestParameters.bodySingFrameVolumeSingFrameVolumePost === undefined) {
-            throw new runtime.RequiredError('bodySingFrameVolumeSingFrameVolumePost','Required parameter requestParameters.bodySingFrameVolumeSingFrameVolumePost was null or undefined when calling singFrameVolumeSingFrameVolumePost.');
-        }
+if (requestParameters.bodySingFrameVolumeSingFrameVolumePost === null || requestParameters.bodySingFrameVolumeSingFrameVolumePost === undefined) {
+        throw new runtime.RequiredError('bodySingFrameVolumeSingFrameVolumePost','Required parameter requestParameters.bodySingFrameVolumeSingFrameVolumePost was null or undefined when calling singFrameVolumeSingFrameVolumePost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/sing_frame_volume`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: BodySingFrameVolumeSingFrameVolumePostToJSON(requestParameters.bodySingFrameVolumeSingFrameVolumePost),
-        }, initOverrides);
+const response = await this.request({
+    path: `/sing_frame_volume`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: BodySingFrameVolumeSingFrameVolumePostToJSON(requestParameters.bodySingFrameVolumeSingFrameVolumePost),
+}, initOverrides);
 
-        return new runtime.JSONApiResponse<any>(response);
+    return new runtime.JSONApiResponse<any>(response);
     }
 
-    /**
+/**
      * スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
      */
-    async singFrameVolumeSingFrameVolumePost(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>> {
-        const response = await this.singFrameVolumeSingFrameVolumePostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async singFrameVolumeSingFrameVolumePost(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>> {
+const response = await this.singFrameVolumeSingFrameVolumePostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * Singer Info
      */
-    async singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
-        if (requestParameters.speakerUuid === null || requestParameters.speakerUuid === undefined) {
-            throw new runtime.RequiredError('speakerUuid','Required parameter requestParameters.speakerUuid was null or undefined when calling singerInfoSingerInfoGet.');
-        }
+async singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
+if (requestParameters.speakerUuid === null || requestParameters.speakerUuid === undefined) {
+        throw new runtime.RequiredError('speakerUuid','Required parameter requestParameters.speakerUuid was null or undefined when calling singerInfoSingerInfoGet.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speakerUuid !== undefined) {
-            queryParameters['speaker_uuid'] = requestParameters.speakerUuid;
-        }
+if (requestParameters.speakerUuid !== undefined) {
+    queryParameters['speaker_uuid'] = requestParameters.speakerUuid;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/singer_info`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/singer_info`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SpeakerInfoFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) => SpeakerInfoFromJSON(jsonValue));
     }
 
-    /**
+/**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * Singer Info
      */
-    async singerInfoSingerInfoGet(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
-        const response = await this.singerInfoSingerInfoGetRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async singerInfoSingerInfoGet(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
+const response = await this.singerInfoSingerInfoGetRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * Singers
      */
-    async singersSingersGetRaw(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
-        const queryParameters: any = {};
+async singersSingersGetRaw(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
+const queryParameters: any = {};
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/singers`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/singers`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SpeakerFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SpeakerFromJSON));
     }
 
-    /**
+/**
      * Singers
      */
-    async singersSingersGet(requestParameters: SingersSingersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
-        const response = await this.singersSingersGetRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async singersSingersGet(requestParameters: SingersSingersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
+const response = await this.singersSingersGetRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * Speaker Info
      */
-    async speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
-        if (requestParameters.speakerUuid === null || requestParameters.speakerUuid === undefined) {
-            throw new runtime.RequiredError('speakerUuid','Required parameter requestParameters.speakerUuid was null or undefined when calling speakerInfoSpeakerInfoGet.');
-        }
+async speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
+if (requestParameters.speakerUuid === null || requestParameters.speakerUuid === undefined) {
+        throw new runtime.RequiredError('speakerUuid','Required parameter requestParameters.speakerUuid was null or undefined when calling speakerInfoSpeakerInfoGet.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speakerUuid !== undefined) {
-            queryParameters['speaker_uuid'] = requestParameters.speakerUuid;
-        }
+if (requestParameters.speakerUuid !== undefined) {
+    queryParameters['speaker_uuid'] = requestParameters.speakerUuid;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/speaker_info`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/speaker_info`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SpeakerInfoFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) => SpeakerInfoFromJSON(jsonValue));
     }
 
-    /**
+/**
      * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
      * Speaker Info
      */
-    async speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
-        const response = await this.speakerInfoSpeakerInfoGetRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
+const response = await this.speakerInfoSpeakerInfoGetRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * Speakers
      */
-    async speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
-        const queryParameters: any = {};
+async speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
+const queryParameters: any = {};
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/speakers`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/speakers`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SpeakerFromJSON));
+    return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SpeakerFromJSON));
     }
 
-    /**
+/**
      * Speakers
      */
-    async speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
-        const response = await this.speakersSpeakersGetRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
+const response = await this.speakersSpeakersGetRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * Supported Devices
      */
-    async supportedDevicesSupportedDevicesGetRaw(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SupportedDevicesInfo>> {
-        const queryParameters: any = {};
+async supportedDevicesSupportedDevicesGetRaw(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SupportedDevicesInfo>> {
+const queryParameters: any = {};
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/supported_devices`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/supported_devices`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SupportedDevicesInfoFromJSON(jsonValue));
+    return new runtime.JSONApiResponse(response, (jsonValue) => SupportedDevicesInfoFromJSON(jsonValue));
     }
 
-    /**
+/**
      * Supported Devices
      */
-    async supportedDevicesSupportedDevicesGet(requestParameters: SupportedDevicesSupportedDevicesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SupportedDevicesInfo> {
-        const response = await this.supportedDevicesSupportedDevicesGetRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async supportedDevicesSupportedDevicesGet(requestParameters: SupportedDevicesSupportedDevicesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SupportedDevicesInfo> {
+const response = await this.supportedDevicesSupportedDevicesGetRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 指定された2種類のスタイルで音声を合成、指定した割合でモーフィングした音声を得ます。 モーフィングの割合は`morph_rate`で指定でき、0.0でベースのスタイル、1.0でターゲットのスタイルに近づきます。
      * 2種類のスタイルでモーフィングした音声を合成する
      */
-    async synthesisMorphingSynthesisMorphingPostRaw(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        if (requestParameters.baseSpeaker === null || requestParameters.baseSpeaker === undefined) {
-            throw new runtime.RequiredError('baseSpeaker','Required parameter requestParameters.baseSpeaker was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
-        }
+async synthesisMorphingSynthesisMorphingPostRaw(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+if (requestParameters.baseSpeaker === null || requestParameters.baseSpeaker === undefined) {
+        throw new runtime.RequiredError('baseSpeaker','Required parameter requestParameters.baseSpeaker was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
+}
 
-        if (requestParameters.targetSpeaker === null || requestParameters.targetSpeaker === undefined) {
-            throw new runtime.RequiredError('targetSpeaker','Required parameter requestParameters.targetSpeaker was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
-        }
+if (requestParameters.targetSpeaker === null || requestParameters.targetSpeaker === undefined) {
+        throw new runtime.RequiredError('targetSpeaker','Required parameter requestParameters.targetSpeaker was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
+}
 
-        if (requestParameters.morphRate === null || requestParameters.morphRate === undefined) {
-            throw new runtime.RequiredError('morphRate','Required parameter requestParameters.morphRate was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
-        }
+if (requestParameters.morphRate === null || requestParameters.morphRate === undefined) {
+        throw new runtime.RequiredError('morphRate','Required parameter requestParameters.morphRate was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
+}
 
-        if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
-            throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
-        }
+if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
+        throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling synthesisMorphingSynthesisMorphingPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.baseSpeaker !== undefined) {
-            queryParameters['base_speaker'] = requestParameters.baseSpeaker;
-        }
+if (requestParameters.baseSpeaker !== undefined) {
+    queryParameters['base_speaker'] = requestParameters.baseSpeaker;
+}
 
-        if (requestParameters.targetSpeaker !== undefined) {
-            queryParameters['target_speaker'] = requestParameters.targetSpeaker;
-        }
+if (requestParameters.targetSpeaker !== undefined) {
+    queryParameters['target_speaker'] = requestParameters.targetSpeaker;
+}
 
-        if (requestParameters.morphRate !== undefined) {
-            queryParameters['morph_rate'] = requestParameters.morphRate;
-        }
+if (requestParameters.morphRate !== undefined) {
+    queryParameters['morph_rate'] = requestParameters.morphRate;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/synthesis_morphing`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: AudioQueryToJSON(requestParameters.audioQuery),
-        }, initOverrides);
+const response = await this.request({
+    path: `/synthesis_morphing`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: AudioQueryToJSON(requestParameters.audioQuery),
+}, initOverrides);
 
-        return new runtime.BlobApiResponse(response);
+    return new runtime.BlobApiResponse(response);
     }
 
-    /**
+/**
      * 指定された2種類のスタイルで音声を合成、指定した割合でモーフィングした音声を得ます。 モーフィングの割合は`morph_rate`で指定でき、0.0でベースのスタイル、1.0でターゲットのスタイルに近づきます。
      * 2種類のスタイルでモーフィングした音声を合成する
      */
-    async synthesisMorphingSynthesisMorphingPost(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
-        const response = await this.synthesisMorphingSynthesisMorphingPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async synthesisMorphingSynthesisMorphingPost(requestParameters: SynthesisMorphingSynthesisMorphingPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+const response = await this.synthesisMorphingSynthesisMorphingPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 音声合成する
      */
-    async synthesisSynthesisPostRaw(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
-        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling synthesisSynthesisPost.');
-        }
+async synthesisSynthesisPostRaw(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+        throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling synthesisSynthesisPost.');
+}
 
-        if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
-            throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling synthesisSynthesisPost.');
-        }
+if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
+        throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling synthesisSynthesisPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.speaker !== undefined) {
-            queryParameters['speaker'] = requestParameters.speaker;
-        }
+if (requestParameters.speaker !== undefined) {
+    queryParameters['speaker'] = requestParameters.speaker;
+}
 
-        if (requestParameters.enableInterrogativeUpspeak !== undefined) {
-            queryParameters['enable_interrogative_upspeak'] = requestParameters.enableInterrogativeUpspeak;
-        }
+if (requestParameters.enableInterrogativeUpspeak !== undefined) {
+    queryParameters['enable_interrogative_upspeak'] = requestParameters.enableInterrogativeUpspeak;
+}
 
-        if (requestParameters.coreVersion !== undefined) {
-            queryParameters['core_version'] = requestParameters.coreVersion;
-        }
+if (requestParameters.coreVersion !== undefined) {
+    queryParameters['core_version'] = requestParameters.coreVersion;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/synthesis`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: AudioQueryToJSON(requestParameters.audioQuery),
-        }, initOverrides);
+const response = await this.request({
+    path: `/synthesis`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: AudioQueryToJSON(requestParameters.audioQuery),
+}, initOverrides);
 
-        return new runtime.BlobApiResponse(response);
+    return new runtime.BlobApiResponse(response);
     }
 
-    /**
+/**
      * 音声合成する
      */
-    async synthesisSynthesisPost(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
-        const response = await this.synthesisSynthesisPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async synthesisSynthesisPost(requestParameters: SynthesisSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+const response = await this.synthesisSynthesisPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * 音声ライブラリをアンインストールします。
      * Uninstall Library
      */
-    async uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.libraryUuid === null || requestParameters.libraryUuid === undefined) {
-            throw new runtime.RequiredError('libraryUuid','Required parameter requestParameters.libraryUuid was null or undefined when calling uninstallLibraryUninstallLibraryLibraryUuidPost.');
-        }
+async uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+if (requestParameters.libraryUuid === null || requestParameters.libraryUuid === undefined) {
+        throw new runtime.RequiredError('libraryUuid','Required parameter requestParameters.libraryUuid was null or undefined when calling uninstallLibraryUninstallLibraryLibraryUuidPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/uninstall_library/{library_uuid}`.replace(`{${"library_uuid"}}`, encodeURIComponent(String(requestParameters.libraryUuid))),
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/uninstall_library/{library_uuid}`.replace(`{${"library_uuid"}}`, encodeURIComponent(String(requestParameters.libraryUuid))),
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+    return new runtime.VoidApiResponse(response);
     }
 
-    /**
+/**
      * 音声ライブラリをアンインストールします。
      * Uninstall Library
      */
-    async uninstallLibraryUninstallLibraryLibraryUuidPost(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters, initOverrides);
-    }
+async uninstallLibraryUninstallLibraryLibraryUuidPost(requestParameters: UninstallLibraryUninstallLibraryLibraryUuidPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    await this.uninstallLibraryUninstallLibraryLibraryUuidPostRaw(requestParameters, initOverrides);
+}
 
-    /**
+/**
      * 既存のプリセットを更新します
      * Update Preset
      */
-    async updatePresetUpdatePresetPostRaw(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
-        if (requestParameters.preset === null || requestParameters.preset === undefined) {
-            throw new runtime.RequiredError('preset','Required parameter requestParameters.preset was null or undefined when calling updatePresetUpdatePresetPost.');
-        }
+async updatePresetUpdatePresetPostRaw(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
+if (requestParameters.preset === null || requestParameters.preset === undefined) {
+        throw new runtime.RequiredError('preset','Required parameter requestParameters.preset was null or undefined when calling updatePresetUpdatePresetPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        headerParameters['Content-Type'] = 'application/json';
+headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/update_preset`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: PresetToJSON(requestParameters.preset),
-        }, initOverrides);
+const response = await this.request({
+    path: `/update_preset`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+    body: PresetToJSON(requestParameters.preset),
+}, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<number>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
+if (this.isJsonMime(response.headers.get('content-type'))) {
+        return new runtime.JSONApiResponse<number>(response);
+} else {
+    return new runtime.TextApiResponse(response) as any;
+}
+}
 
-    /**
+/**
      * 既存のプリセットを更新します
      * Update Preset
      */
-    async updatePresetUpdatePresetPost(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number> {
-        const response = await this.updatePresetUpdatePresetPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async updatePresetUpdatePresetPost(requestParameters: UpdatePresetUpdatePresetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number> {
+const response = await this.updatePresetUpdatePresetPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * テキストがAquesTalk 風記法に従っているかどうかを判定します。 従っていない場合はエラーが返ります。
      * テキストがAquesTalk 風記法に従っているか判定する
      */
-    async validateKanaValidateKanaPostRaw(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
-        if (requestParameters.text === null || requestParameters.text === undefined) {
-            throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling validateKanaValidateKanaPost.');
-        }
+async validateKanaValidateKanaPostRaw(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
+if (requestParameters.text === null || requestParameters.text === undefined) {
+        throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling validateKanaValidateKanaPost.');
+}
 
-        const queryParameters: any = {};
+const queryParameters: any = {};
 
-        if (requestParameters.text !== undefined) {
-            queryParameters['text'] = requestParameters.text;
-        }
+if (requestParameters.text !== undefined) {
+    queryParameters['text'] = requestParameters.text;
+}
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/validate_kana`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/validate_kana`,
+    method: 'POST',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<boolean>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
+if (this.isJsonMime(response.headers.get('content-type'))) {
+        return new runtime.JSONApiResponse<boolean>(response);
+} else {
+    return new runtime.TextApiResponse(response) as any;
+}
+}
 
-    /**
+/**
      * テキストがAquesTalk 風記法に従っているかどうかを判定します。 従っていない場合はエラーが返ります。
      * テキストがAquesTalk 風記法に従っているか判定する
      */
-    async validateKanaValidateKanaPost(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
-        const response = await this.validateKanaValidateKanaPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
+async validateKanaValidateKanaPost(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
+const response = await this.validateKanaValidateKanaPostRaw(requestParameters, initOverrides);
+return await response.value();
+}
 
-    /**
+/**
      * Version
      */
-    async versionVersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
-        const queryParameters: any = {};
+async versionVersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+const queryParameters: any = {};
 
-        const headerParameters: runtime.HTTPHeaders = {};
+const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/version`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
+const response = await this.request({
+    path: `/version`,
+    method: 'GET',
+    headers: headerParameters,
+    query: queryParameters,
+}, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<string>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
+if (this.isJsonMime(response.headers.get('content-type'))) {
+        return new runtime.JSONApiResponse<string>(response);
+} else {
+    return new runtime.TextApiResponse(response) as any;
+}
+}
 
-    /**
+/**
      * Version
      */
-    async versionVersionGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
-        const response = await this.versionVersionGetRaw(initOverrides);
-        return await response.value();
-    }
+async versionVersionGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+const response = await this.versionVersionGetRaw(initOverrides);
+return await response.value();
+}
 
 }
