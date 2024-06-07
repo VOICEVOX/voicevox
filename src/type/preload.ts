@@ -652,7 +652,7 @@ export const configSchema = z
               volumeScale: z.number(),
               prePhonemeLength: z.number(),
               postPhonemeLength: z.number(),
-              pauseLength: z.number(),
+              pauseLength: z.number().nullable(),
               pauseLengthScale: z.number(),
               morphingInfo: z
                 .object({

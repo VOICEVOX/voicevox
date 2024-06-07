@@ -1750,6 +1750,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             nowGenerating: false,
           });
         }
+
         const { blob } = fetchAudioResult;
         return dispatch("PLAY_AUDIO_BLOB", {
           audioBlob: blob,
