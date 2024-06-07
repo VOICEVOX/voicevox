@@ -523,17 +523,6 @@ const parameters = computed<Parameter[]>(() => {
     },
     plsParam,
   ];
-  // switchPauseLengthModeの変更に伴って更新
-  const newParam = switchPauseLengthMode.value === "SCALE" ? plsParam : plParam;
-  const index = baseParam.findIndex((param) =>
-    param.label.includes("句読点などの無音時間"),
-  );
-
-  if (index !== -1) {
-    baseParam[index] = newParam;
-  } else {
-    baseParam.push(newParam);
-  }
   return baseParam;
 });
 
