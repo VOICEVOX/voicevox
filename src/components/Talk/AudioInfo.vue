@@ -520,7 +520,7 @@ const parameters = computed<Parameter[]>(() => {
       action: "COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH",
       key: "postPhonemeLength",
     },
-    store.state.switchPauseLengthMode.value === "SCALE" ? plsParam : plParam,
+    switchPauseLengthMode.value === "SCALE" ? plsParam : plParam,
   ];
   // switchPauseLengthModeの変更に伴って更新
   const newParam = switchPauseLengthMode.value === "SCALE" ? plsParam : plParam;
