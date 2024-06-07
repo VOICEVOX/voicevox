@@ -362,7 +362,7 @@ const selectedAudioKeys = computed(() =>
 // 句読点などの無音時間はひとまず倍率verを表示 のち必要に応じ絶対値に切替
 const parameters = computed<Parameter[]>(() => {
   const plParam: Parameter = {
-    label: "句読点などの無音時間(秒)",
+    label: "文内無音(秒)",
     slider: previewSliderHelper({
       modelValue: () => query.value?.pauseLength ?? null,
       disable: () => uiLocked.value,
@@ -382,7 +382,7 @@ const parameters = computed<Parameter[]>(() => {
   };
 
   const plsParam: Parameter = {
-    label: "句読点などの無音時間(倍)",
+    label: "文内無音(倍)",
     slider: previewSliderHelper({
       modelValue: () => query.value?.pauseLengthScale ?? null,
       disable: () => uiLocked.value,
@@ -544,7 +544,7 @@ const parameters = computed<Parameter[]>(() => {
   // switchPauseLengthModeの変更に伴って更新
   const newParam = switchPauseLengthMode.value === "SCALE" ? plsParam : plParam;
   const index = baseParam.findIndex((param) =>
-    param.label.includes("句読点などの無音時間"),
+    param.label.includes("文内無音"),
   );
 
   if (index !== -1) {
