@@ -400,6 +400,7 @@ const parameters = computed<Parameter[]>(() => {
     action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE",
     key: "pauseLengthScale",
   };
+
   const baseParam: Parameter[] = [
     {
       label: "話速",
@@ -520,7 +521,6 @@ const parameters = computed<Parameter[]>(() => {
       action: "COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH",
       key: "postPhonemeLength",
     },
-    switchPauseLengthMode.value === "SCALE" ? plsParam : plParam,
   ];
   // switchPauseLengthModeの変更に伴って更新
   const newParam = switchPauseLengthMode.value === "SCALE" ? plsParam : plParam;
