@@ -39,7 +39,7 @@ export async function fetchAudioFromAudioItem(
   }
 
   const speaker = audioItem.voice.styleId;
-  
+
   const engineAudioQuery = convertAudioQueryFromEditorToEngine(
     audioQuery,
     state.engineManifests[engineId].defaultSamplingRate,

@@ -211,7 +211,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         }
 
         const characterName = getters.VOICE_NAME(voice);
-        
+
         const presetData: Preset = {
           name: `デフォルト：${characterName}`,
           speedScale: 1.0,
