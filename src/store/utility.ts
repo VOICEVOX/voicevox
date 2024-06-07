@@ -103,7 +103,7 @@ export const SLIDER_PARAMETERS = {
     scrollMinStep: () => 0.01,
   },
   /**
-   *  句読点などの無音時間(絶対値)パラメータの定義
+   *  文内無音(絶対値)パラメータの定義
    */
   PAUSE_LENGTH: {
     max: () => 1,
@@ -113,7 +113,7 @@ export const SLIDER_PARAMETERS = {
     scrollMinStep: () => 0.01,
   },
   /**
-   *  句読点などの無音時間(倍率)パラメータの定義
+   *  文内無音(倍率)パラメータの定義
    */
   PAUSE_LENGTH_SCALE: {
     max: () => 2,

@@ -332,7 +332,7 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 const audioItem = computed(() => store.state.audioItems[props.activeAudioKey]);
 const query = computed(() => audioItem.value?.query);
 
-// 句読点などの無音時間の指定方式 "SCALE" || "ABSOLUTE"
+// 文内無音の指定方式 "SCALE" || "ABSOLUTE"
 const switchPauseLengthMode = computed(() => {
   return store.state.switchPauseLengthMode;
 });
@@ -359,7 +359,7 @@ const selectedAudioKeys = computed(() =>
     : [props.activeAudioKey],
 );
 
-// 句読点などの無音時間はひとまず倍率verを表示 のち必要に応じ絶対値に切替
+// 文内無音はひとまず倍率verを表示 のち必要に応じ絶対値に切替
 const parameters = computed<Parameter[]>(() => {
   const plParam: Parameter = {
     label: "文内無音(秒)",
@@ -522,7 +522,7 @@ const parameters = computed<Parameter[]>(() => {
       key: "postPhonemeLength",
     },
     {
-      label: "句読点などの無音時間(倍)",
+      label: "文内無音(倍)",
       slider: previewSliderHelper({
         modelValue: () => query.value?.pauseLengthScale ?? null,
         disable: () => uiLocked.value,
