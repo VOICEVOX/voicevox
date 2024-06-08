@@ -1712,6 +1712,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         if (tpqn !== state.tpqn) {
           throw new Error("TPQN does not match. Must be converted.");
         }
+
+        // TODO: ここら辺のSET系の処理をまとめる
+        await dispatch("SET_TPQN", { tpqn });
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes });
@@ -1740,6 +1743,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         // TODO: ここら辺のSET系の処理をまとめる
+        await dispatch("SET_TPQN", { tpqn });
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes });
