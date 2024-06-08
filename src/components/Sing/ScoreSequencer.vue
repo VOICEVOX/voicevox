@@ -1313,79 +1313,81 @@ registerHotkeyWithCleanup({
 
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
-const contextMenuData = ref<ContextMenuItemData[]>([
-  {
-    type: "button",
-    label: "コピー",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+const contextMenuData = computed<ContextMenuItemData[]>(() => {
+  return [
+    {
+      type: "button",
+      label: "コピー",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "切り取り",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    {
+      type: "button",
+      label: "切り取り",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "貼り付け",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+    {
+      type: "button",
+      label: "貼り付け",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "すべて選択",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("SELECT_ALL_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "すべて選択",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("SELECT_ALL_NOTES");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "選択解除",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("DESELECT_ALL_NOTES");
+    {
+      type: "button",
+      label: "選択解除",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("DESELECT_ALL_NOTES");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "クオンタイズ",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "クオンタイズ",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "削除",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "削除",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-]);
+  ];
+});
 </script>
 
 <style scoped lang="scss">
