@@ -20,6 +20,7 @@
         'cursor-move': editTargetIsNote,
       }"
       @mousedown="onBarMouseDown"
+      @dblclick="onBarDoubleClick"
     >
       <div
         class="note-left-edge"
@@ -109,6 +110,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (name: "barMousedown", event: MouseEvent): void;
+  (name: "barDoubleClick", event: MouseEvent): void;
   (name: "rightEdgeMousedown", event: MouseEvent): void;
   (name: "leftEdgeMousedown", event: MouseEvent): void;
   (name: "lyricInput", text: string): void;
@@ -219,6 +221,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 const onBarMouseDown = (event: MouseEvent) => {
   emit("barMousedown", event);
+};
+
+const onBarDoubleClick = (event: MouseEvent) => {
+  emit("barDoubleClick", event);
 };
 
 const onRightEdgeMouseDown = (event: MouseEvent) => {

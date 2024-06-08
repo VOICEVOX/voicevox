@@ -22,7 +22,6 @@
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
-      @dblclick="onDoubleClick"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
       @wheel="onWheel"
@@ -50,6 +49,7 @@
         :note
         :previewLyric="previewLyrics.get(note.id) || null"
         @barMousedown="onNoteBarMouseDown($event, note)"
+        @barDoubleClick="onNoteBarDoubleClick($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
         @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
         @lyricInput="onNoteLyricInput($event, note)"
@@ -166,9 +166,6 @@ import {
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
-  DoubleClickDetector,
-  NoteAreaInfo,
-  GridAreaInfo,
   getButton,
 } from "@/sing/viewHelper";
 import SequencerGrid from "@/components/Sing/SequencerGrid.vue";
@@ -323,13 +320,6 @@ const previewPitchEdit = ref<
   | undefined
 >(undefined);
 const prevCursorPos = { frame: 0, frequency: 0 }; // 前のカーソル位置
-
-// ダブルクリック
-let mouseDownAreaInfo: NoteAreaInfo | GridAreaInfo | undefined;
-const doubleClickDetector = new DoubleClickDetector<
-  NoteAreaInfo | GridAreaInfo
->();
-let ignoreDoubleClick = false;
 
 // 入力を補助する線
 const showGuideLine = ref(true);
@@ -838,15 +828,20 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "MOVE_NOTE", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
+  }
+};
+
+const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
+  if (editTarget.value !== "NOTE") {
+    return;
+  }
+  const mouseButton = getButton(event);
+  if (mouseButton === "LEFT_BUTTON" && note.id !== state.editingLyricNoteId) {
+    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
   }
 };
 
@@ -855,11 +850,6 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_NOTE_LEFT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
@@ -872,11 +862,6 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_NOTE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
@@ -889,11 +874,6 @@ const onMouseDown = (event: MouseEvent) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new GridAreaInfo();
-  }
-
   // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
   if (editTarget.value === "NOTE") {
     if (mouseButton === "LEFT_BUTTON") {
@@ -947,13 +927,6 @@ const onMouseUp = (event: MouseEvent) => {
   if (mouseButton !== "LEFT_BUTTON") {
     return;
   }
-  // ダブルクリック用の処理を行う
-  if (mouseDownAreaInfo) {
-    doubleClickDetector.recordClick(event.detail, mouseDownAreaInfo);
-  }
-  ignoreDoubleClick =
-    editTarget.value !== "NOTE" || (nowPreviewing.value && edited);
-
   if (isRectSelecting.value) {
     rectSelect(isOnCommandOrCtrlKeyDown(event));
   } else if (nowPreviewing.value) {
@@ -1003,22 +976,6 @@ const rectSelect = (additive: boolean) => {
     store.dispatch("DESELECT_ALL_NOTES");
   }
   store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
-};
-
-const onDoubleClick = () => {
-  if (ignoreDoubleClick) {
-    return;
-  }
-  const doubleClickInfo = doubleClickDetector.detect();
-  if (doubleClickInfo) {
-    const areaInfo = doubleClickInfo.clickInfos[0].areaInfo;
-    if (
-      areaInfo.type === "note" &&
-      areaInfo.noteId !== state.editingLyricNoteId
-    ) {
-      store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: areaInfo.noteId });
-    }
-  }
 };
 
 const onMouseEnter = () => {

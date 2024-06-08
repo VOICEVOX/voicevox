@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StyleInfo, isMac, NoteId } from "@/type/preload";
+import { StyleInfo, isMac } from "@/type/preload";
 import { calculateHash } from "@/sing/utility";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
@@ -119,68 +119,6 @@ export const getStyleDescription = (style: StyleInfo) => {
   }
   return description.join("・");
 };
-
-interface AreaInfo {
-  readonly id: string;
-}
-
-type ClickInfo<T extends AreaInfo> = {
-  readonly clickCount: number;
-  readonly areaInfo: T;
-};
-
-type DoubleClickInfo<T extends AreaInfo> = {
-  readonly clickInfos: [ClickInfo<T>, ClickInfo<T>];
-};
-
-export class DoubleClickDetector<T extends AreaInfo> {
-  private clickInfos: ClickInfo<T>[] = [];
-
-  recordClick(clickCount: number, areaInfo: T) {
-    if (clickCount === 1) {
-      this.clickInfos = [];
-    }
-    this.clickInfos.push({ clickCount, areaInfo });
-  }
-
-  detect(): DoubleClickInfo<T> | undefined {
-    if (this.clickInfos.length < 2) {
-      return undefined;
-    }
-    const clickInfo1 = this.clickInfos[this.clickInfos.length - 2];
-    const clickInfo2 = this.clickInfos[this.clickInfos.length - 1];
-    if (
-      clickInfo1.clickCount === 1 &&
-      clickInfo2.clickCount === 2 &&
-      clickInfo1.areaInfo.id === clickInfo2.areaInfo.id
-    ) {
-      return { clickInfos: [clickInfo1, clickInfo2] };
-    }
-    return undefined;
-  }
-}
-
-export class NoteAreaInfo implements AreaInfo {
-  readonly type: "note";
-  readonly id: string;
-  readonly noteId: NoteId;
-
-  constructor(noteId: NoteId) {
-    this.type = "note";
-    this.id = `NOTE-${noteId}`;
-    this.noteId = noteId;
-  }
-}
-
-export class GridAreaInfo implements AreaInfo {
-  readonly type: "grid";
-  readonly id: string;
-
-  constructor() {
-    this.type = "grid";
-    this.id = "GRID";
-  }
-}
 
 export type PitchData = {
   readonly ticksArray: number[];
