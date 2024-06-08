@@ -149,24 +149,10 @@ const projectFileError = computed(() => {
 
     throw new ExhaustiveError(error.value);
   } else if (project.value) {
-    if (project.value.type === "vvproj") {
-      if (project.value.project.song.tracks.length === 0) {
-        return "トラックがありません";
-      } else if (
-        project.value.project.song.tracks.every(
-          (track) => track.notes.length === 0,
-        )
-      ) {
-        return "ノートがありません";
-      }
-    } else {
-      if (project.value.project.tracks.length === 0) {
-        return "トラックがありません";
-      } else if (
-        project.value.project.tracks.every((track) => track.notes.length === 0)
-      ) {
-        return "ノートがありません";
-      }
+    if (projectTracks.value.length === 0) {
+      return "トラックがありません";
+    } else if (projectTracks.value.every((track) => track.notes.length === 0)) {
+      return "ノートがありません";
     }
   }
 
@@ -182,8 +168,19 @@ type Project =
       type: "vvproj";
       project: LatestProjectType;
     };
+
 // データ
 const project = ref<Project | null>(null);
+
+const projectTracks = computed(() => {
+  if (!project.value) {
+    return [];
+  }
+  return project.value.type === "utaformatix"
+    ? project.value.project.tracks
+    : project.value.project.song.tracks;
+});
+
 // トラック
 const tracks = computed(() => {
   if (!project.value) {
@@ -245,9 +242,6 @@ const handleFileChange = async (event: Event) => {
         type: "vvproj",
         project: parsedProject,
       };
-      selectedTrack.value = project.value.project.song.tracks.findIndex(
-        (track) => track.notes.length > 0,
-      );
     } else {
       project.value = {
         type: "utaformatix",
@@ -255,10 +249,8 @@ const handleFileChange = async (event: Event) => {
           defaultLyric: "",
         }),
       };
-      selectedTrack.value = project.value.project.tracks.findIndex(
-        (track) => track.notes.length > 0,
-      );
     }
+    selectedTrack.value = tracks.value.findIndex((track) => !track.disable);
     if (selectedTrack.value === -1) {
       selectedTrack.value = 0;
     }
