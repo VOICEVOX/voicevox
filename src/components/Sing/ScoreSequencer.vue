@@ -52,7 +52,6 @@
         @barMousedown="onNoteBarMouseDown($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
         @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyricMouseDown="onNoteLyricMouseDown($event, note)"
         @lyricInput="onNoteLyricInput($event, note)"
         @lyricBlur="onNoteLyricBlur()"
       />
@@ -67,7 +66,6 @@
         @barMousedown="onNoteBarMouseDown($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
         @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyricMouseDown="onNoteLyricMouseDown($event, note)"
         @lyricInput="onNoteLyricInput($event, note)"
         @lyricBlur="onNoteLyricBlur()"
       />
@@ -890,21 +888,6 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_NOTE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
-    selectOnlyThis(note);
-  }
-};
-
-const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
-  if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
-    return;
-  }
-  const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
-  if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
 };

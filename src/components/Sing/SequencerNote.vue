@@ -54,11 +54,7 @@
       @blur="onLyricInputBlur"
     />
     <template v-else>
-      <div
-        class="note-lyric"
-        data-testid="note-lyric"
-        @mousedown="onLyricMouseDown"
-      >
+      <div class="note-lyric" data-testid="note-lyric">
         {{ lyricToDisplay }}
       </div>
       <!-- エラー内容を表示 -->
@@ -123,7 +119,6 @@ const emit = defineEmits<{
   (name: "barMousedown", event: MouseEvent): void;
   (name: "rightEdgeMousedown", event: MouseEvent): void;
   (name: "leftEdgeMousedown", event: MouseEvent): void;
-  (name: "lyricMouseDown", event: MouseEvent): void;
   (name: "lyricInput", text: string): void;
   (name: "lyricBlur"): void;
 }>();
@@ -240,10 +235,6 @@ const onRightEdgeMouseDown = (event: MouseEvent) => {
 
 const onLeftEdgeMouseDown = (event: MouseEvent) => {
   emit("leftEdgeMousedown", event);
-};
-
-const onLyricMouseDown = (event: MouseEvent) => {
-  emit("lyricMouseDown", event);
 };
 
 const onLyricInputKeyDown = (event: KeyboardEvent) => {
