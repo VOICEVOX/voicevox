@@ -173,47 +173,49 @@ const showLyricInput = computed(() => {
   return state.editingLyricNoteId === props.note.id;
 });
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
-const contextMenuData = ref<ContextMenuItemData[]>([
-  {
-    type: "button",
-    label: "コピー",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+const contextMenuData = computed<ContextMenuItemData[]>(() => {
+  return [
+    {
+      type: "button",
+      label: "コピー",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "切り取り",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    {
+      type: "button",
+      label: "切り取り",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "クオンタイズ",
-    disabled: !isSelected.value,
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "クオンタイズ",
+      disabled: !isSelected.value,
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "削除",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "削除",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-]);
+  ];
+});
 
 const onBarMouseDown = (event: MouseEvent) => {
   emit("barMousedown", event);
