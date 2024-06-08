@@ -41,28 +41,14 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
-      <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
       <!-- undefinedだと警告が出るのでnullを渡す -->
       <SequencerNote
-        v-for="note in unselectedNotes"
+        v-for="note in editTarget === 'NOTE'
+          ? notesIncludingPreviewNotes
+          : notes"
         :key="note.id"
         :note
         :previewLyric="previewLyrics.get(note.id) || null"
-        :isSelected="false"
-        @barMousedown="onNoteBarMouseDown($event, note)"
-        @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
-        @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyricInput="onNoteLyricInput($event, note)"
-        @lyricBlur="onNoteLyricBlur()"
-      />
-      <SequencerNote
-        v-for="note in editTarget === 'NOTE' && nowPreviewing
-          ? previewNotes
-          : selectedNotes"
-        :key="note.id"
-        :note
-        :previewLyric="previewLyrics.get(note.id) || null"
-        :isSelected="true"
         @barMousedown="onNoteBarMouseDown($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
         @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
@@ -227,13 +213,19 @@ const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 const isNoteSelected = computed(() => {
   return state.selectedNoteIds.size > 0;
 });
-const unselectedNotes = computed(() => {
-  const selectedNoteIds = state.selectedNoteIds;
-  return notes.value.filter((value) => !selectedNoteIds.has(value.id));
-});
 const selectedNotes = computed(() => {
   const selectedNoteIds = state.selectedNoteIds;
   return notes.value.filter((value) => selectedNoteIds.has(value.id));
+});
+const notesIncludingPreviewNotes = computed(() => {
+  if (nowPreviewing.value) {
+    const previewNoteIds = new Set(previewNotes.value.map((value) => value.id));
+    return previewNotes.value
+      .concat(notes.value.filter((value) => !previewNoteIds.has(value.id)))
+      .sort((a, b) => a.position - b.position);
+  } else {
+    return notes.value;
+  }
 });
 
 // 矩形選択

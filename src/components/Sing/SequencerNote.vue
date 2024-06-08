@@ -2,7 +2,7 @@
   <div
     class="note"
     :class="{
-      selected: noteState === 'SELECTED',
+      selected: isSelected,
       'preview-lyric': props.previewLyric != undefined,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
@@ -95,8 +95,6 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
 
-type NoteState = "NORMAL" | "SELECTED";
-
 const vFocus = {
   mounted(el: HTMLInputElement) {
     el.focus();
@@ -104,16 +102,10 @@ const vFocus = {
   },
 };
 
-const props = withDefaults(
-  defineProps<{
-    note: Note;
-    isSelected: boolean;
-    previewLyric: string | null;
-  }>(),
-  {
-    isSelected: false,
-  },
-);
+const props = defineProps<{
+  note: Note;
+  previewLyric: string | null;
+}>();
 
 const emit = defineEmits<{
   (name: "barMousedown", event: MouseEvent): void;
@@ -144,11 +136,9 @@ const width = computed(() => {
   const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
   return (noteEndBaseX - noteStartBaseX) * zoomX.value;
 });
-const noteState = computed((): NoteState => {
-  if (props.isSelected) {
-    return "SELECTED";
-  }
-  return "NORMAL";
+const isSelected = computed(() => {
+  const noteId = props.note.id;
+  return state.selectedNoteIds.has(noteId);
 });
 const editTargetIsNote = computed(() => {
   return state.sequencerEditTarget === "NOTE";
@@ -206,7 +196,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   {
     type: "button",
     label: "クオンタイズ",
-    disabled: !props.isSelected,
+    disabled: !isSelected.value,
     onClick: async () => {
       contextMenu.value?.hide();
       await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
