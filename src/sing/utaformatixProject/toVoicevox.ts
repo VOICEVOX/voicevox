@@ -54,7 +54,6 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
   };
 
   // 歌詞をひらがなの単独音に変換する
-  // TODO: 手動で変換元を選べるようにする
   const convertedProject = project.convertJapaneseLyrics("auto", "KanaCv", {
     convertVowelConnections: true,
   });
