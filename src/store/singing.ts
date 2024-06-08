@@ -1690,7 +1690,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     }),
   },
 
-  // TODO: Undoableにする
+  // TODO: Undoできるようにする
   IMPORT_UTAFORMATIX_PROJECT: {
     action: createUILockAction(
       async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
@@ -1723,7 +1723,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
-  // TODO: Undoableにする
+  // TODO: Undoできるようにする
   IMPORT_VOICEVOX_PROJECT: {
     action: createUILockAction(
       async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
