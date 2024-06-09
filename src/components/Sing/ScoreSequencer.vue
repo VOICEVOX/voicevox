@@ -47,6 +47,7 @@
           : notes"
         :key="note.id"
         :note
+        :nowPreviewing
         :previewLyric="previewLyrics.get(note.id) || null"
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"

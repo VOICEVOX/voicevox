@@ -105,6 +105,7 @@ const vFocus = {
 
 const props = defineProps<{
   note: Note;
+  nowPreviewing: boolean;
   previewLyric: string | null;
 }>();
 
@@ -180,6 +181,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "コピー",
+      disabled: props.nowPreviewing,
       onClick: async () => {
         contextMenu.value?.hide();
         await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
@@ -189,6 +191,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "切り取り",
+      disabled: props.nowPreviewing,
       onClick: async () => {
         contextMenu.value?.hide();
         await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
@@ -199,7 +202,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "クオンタイズ",
-      disabled: !isSelected.value,
+      disabled: props.nowPreviewing || !isSelected.value,
       onClick: async () => {
         contextMenu.value?.hide();
         await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
@@ -210,6 +213,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "削除",
+      disabled: props.nowPreviewing,
       onClick: async () => {
         contextMenu.value?.hide();
         await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
