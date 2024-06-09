@@ -1743,15 +1743,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         // TODO: ここら辺のSET系の処理をまとめる
-        await dispatch("SET_TPQN", { tpqn });
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes });
-        await dispatch("CLEAR_PITCH_EDIT_DATA");
-        await dispatch("SET_PITCH_EDIT_DATA", {
-          data: track.pitchEditData,
-          startFrame: 0,
-        });
         await dispatch("SET_SINGER", {
           singer: track.singer,
         });
@@ -1760,6 +1751,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
         await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
           volumeRangeAdjustment: track.volumeRangeAdjustment,
+        });
+        await dispatch("SET_TPQN", { tpqn });
+        await dispatch("SET_TEMPOS", { tempos });
+        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+        await dispatch("SET_NOTES", { notes });
+        await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+        await dispatch("SET_PITCH_EDIT_DATA", {
+          data: track.pitchEditData,
+          startFrame: 0,
         });
 
         commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);

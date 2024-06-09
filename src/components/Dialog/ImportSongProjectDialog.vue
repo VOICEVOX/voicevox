@@ -23,16 +23,16 @@
           label="インポートするファイル"
           class="q-my-sm"
           :accept="acceptExtensions"
-          :errorMessage="projectFileError"
-          :error="!!projectFileError"
+          :errorMessage="projectFileErrorMessage"
+          :error="!!projectFileErrorMessage"
           placeholder="外部プロジェクトファイルを選択してください"
           @input="handleFileChange"
         />
         <QSelect
           v-if="project"
           v-model="selectedTrack"
-          :options="tracks"
-          :disable="projectFileError != undefined"
+          :options="trackOptions"
+          :disable="projectFileErrorMessage != undefined"
           emitValue
           mapOptions
           label="インポートするトラック"
@@ -57,7 +57,9 @@
             color="toolbar-button"
             textColor="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
-            :disabled="selectedTrack === null || projectFileError != undefined"
+            :disabled="
+              selectedTrack == null || projectFileErrorMessage != undefined
+            "
             @click="handleImportTrack"
           />
         </QToolbar>
@@ -95,6 +97,7 @@ const acceptExtensions = computed(
 
 type SupportedExtensions = UfSupportedExtensions | "vvproj";
 
+// VOICEVOX形式、汎用的な形式、その他の形式の順。それぞれはアルファベット順。
 const projectNameToExtensions = [
   ["VOICEVOX", ["vvproj"]],
   ["MIDI (SMF)", ["mid"]],
@@ -118,6 +121,7 @@ const _: IsEqual<
 
 // プロジェクトファイル
 const projectFile = ref<File | null>(null);
+
 // エラー
 const error = ref<
   | "emptyProject"
@@ -128,8 +132,8 @@ const error = ref<
   | null
 >(null);
 
-// ファイルエラー
-const projectFileError = computed(() => {
+// エラーメッセージ
+const projectFileErrorMessage = computed(() => {
   if (!projectFile.value) {
     return undefined;
   }
@@ -149,9 +153,10 @@ const projectFileError = computed(() => {
 
     throw new ExhaustiveError(error.value);
   } else if (project.value) {
-    if (projectTracks.value.length === 0) {
+    const tracks = getProjectTracks(project.value);
+    if (tracks.length === 0) {
       return "トラックがありません";
-    } else if (projectTracks.value.every((track) => track.notes.length === 0)) {
+    } else if (tracks.every((track) => track.noteLength === 0)) {
       return "ノートがありません";
     }
   }
@@ -172,35 +177,35 @@ type Project =
 // データ
 const project = ref<Project | null>(null);
 
-const projectTracks = computed(() => {
-  if (!project.value) {
-    return [];
-  }
-  return project.value.type === "utaformatix"
-    ? project.value.project.tracks
-    : project.value.project.song.tracks;
-});
-
 // トラック
-const tracks = computed(() => {
+function getProjectTracks(project: Project) {
+  function _track(name: string | undefined, noteLength: number) {
+    return { name, noteLength, disable: noteLength === 0 };
+  }
+  return project.type === "utaformatix"
+    ? project.project.tracks.map((track) =>
+        _track(track.name, track.notes.length),
+      )
+    : project.project.song.tracks.map((track) =>
+        _track(undefined, track.notes.length),
+      );
+}
+
+// 選択用のトラック
+const trackOptions = computed(() => {
   if (!project.value) {
     return [];
   }
   // トラックリストを生成
   // "トラックNo: トラック名 / ノート数" の形式で表示
-  return project.value.type === "utaformatix"
-    ? project.value.project.tracks.map((track, index) => ({
-        label: `${index + 1}: ${track.name || "（トラック名なし）"} / ノート数：${
-          track.notes.length
-        }`,
-        value: index,
-        disable: track.notes.length === 0,
-      }))
-    : project.value.project.song.tracks.map((track, index) => ({
-        label: `${index + 1}: ノート数：${track.notes.length}`,
-        value: index,
-        disable: track.notes.length === 0,
-      }));
+  const tracks = getProjectTracks(project.value);
+  return tracks.map((track, index) => ({
+    label: `${index + 1}: ${track?.name || "（トラック名なし）"} / ノート数：${
+      track.noteLength
+    }`,
+    value: index,
+    disable: track.disable,
+  }));
 });
 // 選択中のトラック
 const selectedTrack = ref<number | null>(null);
@@ -250,7 +255,9 @@ const handleFileChange = async (event: Event) => {
         }),
       };
     }
-    selectedTrack.value = tracks.value.findIndex((track) => !track.disable);
+    selectedTrack.value = getProjectTracks(project.value).findIndex(
+      (track) => !track.disable,
+    );
     if (selectedTrack.value === -1) {
       selectedTrack.value = 0;
     }
