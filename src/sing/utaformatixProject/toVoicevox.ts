@@ -95,7 +95,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
   let tempos = projectTempos.map((value): Tempo => {
     return {
       position: convertPosition(value.tickPosition, projectTpqn, tpqn),
-      bpm: round(value.bpm, 2),
+      bpm: value.bpm,
     };
   });
   tempos = removeDuplicateTempos(tempos);
