@@ -1,18 +1,18 @@
 <!-- ２種類以上のボタンから１つ選ぶ設定項目 -->
 
 <template>
-  <BaseCell :title="title" :description="description">
+  <BaseCell :title :description>
     <QBtnToggle
       padding="xs md"
       unelevated
       color="background"
-      text-color="display"
-      toggle-color="primary"
-      toggle-text-color="display-on-primary"
-      :disable="disable"
-      :model-value="modelValue"
+      textColor="display"
+      toggleColor="primary"
+      toggleTextColor="display-on-primary"
+      :disable
+      :modelValue
       :options="optionsForQBtnToggle"
-      @update:model-value="props['onUpdate:modelValue']"
+      @update:modelValue="props['onUpdate:modelValue']"
     >
       <slot />
 
