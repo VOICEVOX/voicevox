@@ -42,23 +42,23 @@ export const convertAudioQueryFromEditorToEngine = (
 ): AudioQuery => {
   console.log("convertAudioQueryFromEditorToEngine");
   // editorAudioQuery の内容をそのままコピーする
-  const convertedQuery: AudioQuery = { ...editorAudioQuery };
+  const newAudioQuery = {
+    ...editorAudioQuery,
+    outputSamplingRate:
+      editorAudioQuery.outputSamplingRate == "engineDefault"
+        ? defaultOutputSamplingRate
+        : editorAudioQuery.outputSamplingRate,
+  };
 
-  // outputSamplingRate を設定する
-  convertedQuery.outputSamplingRate =
-    editorAudioQuery.outputSamplingRate === "engineDefault"
-      ? defaultOutputSamplingRate
-      : editorAudioQuery.outputSamplingRate;
-
-  // 不要なプロパティ除去
+  // 不要なプロパティを無効化
   if (pauseLengthMode === "ABSOLUTE") {
-    delete editorAudioQuery.pauseLengthScale;
+    newAudioQuery.pauseLengthScale = 1;
   } else {
-    delete editorAudioQuery.pauseLength;
+    newAudioQuery.pauseLength = null;
   }
-  console.log(editorAudioQuery);
+  console.log(newAudioQuery);
   // 変換されたオブジェクトを返す
-  return convertedQuery;
+  return newAudioQuery;
 };
 
 export const proxyStore = proxyStoreCreator(OpenAPIEngineConnectorFactory);

@@ -396,7 +396,7 @@ const changeMoraData = (
   data: number,
   type: MoraDataType,
 ) => {
-  console.log("AccentPhrase.vue ＞chageMoraData");
+  console.log("AccentPhrase.vue ＞ changeMoraData");
   console.log(`data: ${data}`);
   console.log(`type: ${type}`);
   const accentPhraseIndex = props.index;

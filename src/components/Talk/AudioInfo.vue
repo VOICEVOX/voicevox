@@ -525,31 +525,6 @@ const parameters = computed<Parameter[]>(() => {
       action: "COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH",
       key: "postPhonemeLength",
     },
-<<<<<<< Updated upstream
-    {
-      label: "文内無音(秒)",
-      slider: previewSliderHelper({
-        modelValue: () => query.value?.pauseLength ?? null,
-        disable: () => uiLocked.value,
-        max: SLIDER_PARAMETERS.PAUSE_LENGTH.max,
-        min: SLIDER_PARAMETERS.PAUSE_LENGTH.min,
-        step: SLIDER_PARAMETERS.PAUSE_LENGTH.step,
-        scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollStep,
-        scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollMinStep,
-        onChange: (pauseLength: number) =>
-          store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
-            audioKeys: selectedAudioKeys.value,
-            pauseLength: pauseLength,
-          }),
-      }),
-      action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH",
-      key: "pauseLength",
-    },
-  ]; // 文内無音は何故か変数埋め込みだと「test("複数選択：AudioInfo操作"・・・」でvisibilityでfillが効かない
-  // switchPauseLengthModeの変更に伴って更新
-  const newParam = switchPauseLengthMode.value === "SCALE" ? plsParam : plParam;
-  const index = baseParam.findIndex((param) => param.label === newParam.label);
-=======
   ];
   // pauseLengthModeの変更に伴って更新
   const newParam =
@@ -560,7 +535,6 @@ const parameters = computed<Parameter[]>(() => {
     param.label.includes("文内無音"),
   );
 
->>>>>>> Stashed changes
   if (index !== -1) {
     baseParam[index] = newParam;
   } else {

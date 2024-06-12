@@ -1,6 +1,7 @@
 import {
   AudioItem,
   AudioStoreState,
+  UiStoreState,
   EditorAudioQuery,
   FetchAudioResult,
   IEngineConnectorFactoryActionsMapper,
@@ -19,7 +20,7 @@ type Instance = {
  * エンジンで音声を合成する。音声のキャッシュ機構も備える。
  */
 export async function fetchAudioFromAudioItem(
-  state: AudioStoreState & SettingStoreState,
+  state: AudioStoreState & SettingStoreState & UiStoreState,
   instance: Instance,
   {
     audioItem,
