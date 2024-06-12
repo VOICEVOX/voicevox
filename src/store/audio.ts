@@ -2424,7 +2424,6 @@ export const audioCommandStore = transformCommandStore(
           popUntilPause: boolean;
         },
       ) {
-        console.log("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE");
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
 

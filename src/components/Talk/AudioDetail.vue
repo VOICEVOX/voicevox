@@ -184,9 +184,7 @@ const selectedDetail = ref<DetailTypes>("accent");
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const audioItem = computed(() => store.state.audioItems[props.activeAudioKey]);
-
 const query = computed(() => audioItem.value?.query);
-
 const accentPhrases = computed(() => query.value?.accentPhrases);
 
 // エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す

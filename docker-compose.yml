@@ -1,9 +1,9 @@
 version: '3'
 services:
   test:
-    build: . 
+    build: .
     working_dir: /work
-    # If you don't have node_modules, use "npm ci", install node_modules into the your directory.
+    # If you don't have node_modules, use "npm ci", install node_modules into the yor directory.
     # Use command bellow
     # `docker-compose up -d --build`
     # The container will stop automatically after install

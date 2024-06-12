@@ -396,9 +396,6 @@ const changeMoraData = (
   data: number,
   type: MoraDataType,
 ) => {
-  console.log("AccentPhrase.vue ＞ changeMoraData");
-  console.log(`data: ${data}`);
-  console.log(`type: ${type}`);
   const accentPhraseIndex = props.index;
   if (!props.altKeyFlag) {
     if (type == "pitch") {

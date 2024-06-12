@@ -783,7 +783,6 @@ const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
 
 // セルへのプリセットの設定
 const selectablePresetList = computed<PresetSelectModelType[]>(() => {
-  console.log("AudioInfo.vue > selectablePresetList");
   const topPresetList: { key: PresetKey | undefined; label: string }[] = [];
 
   if (isRegisteredPreset.value) {
