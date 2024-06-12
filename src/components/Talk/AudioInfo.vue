@@ -526,7 +526,7 @@ const parameters = computed<Parameter[]>(() => {
       key: "postPhonemeLength",
     },
   ];
-  // pauseLengthModeの変更に伴って更新
+  // pauseLengthModeの変更に伴って切替
   const newParam =
     pauseLengthMode.value === "SCALE"
       ? pauseLengthScaleParameter
