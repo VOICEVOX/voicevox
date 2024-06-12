@@ -301,7 +301,7 @@ import { QSelectProps } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
 import { useStore } from "@/store";
-
+import { AudioItem } from "@/store/type";
 import {
   AudioKey,
   CharacterInfo,
@@ -332,9 +332,9 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 const audioItem = computed(() => store.state.audioItems[props.activeAudioKey]);
 const query = computed(() => audioItem.value?.query);
 
-// 句読点などの無音時間の指定方式 "SCALE" || "ABSOLUTE"
-const switchPauseLengthMode = computed(() => {
-  return store.state.switchPauseLengthMode;
+// 文内無音の指定方式 "SCALE" || "ABSOLUTE"
+const pauseLengthMode = computed(() => {
+  return store.state.pauseLengthMode;
 });
 
 const supportedFeatures = computed(
@@ -361,8 +361,9 @@ const selectedAudioKeys = computed(() =>
 
 // 句読点などの無音時間はひとまず倍率verを表示 のち必要に応じ絶対値に切替
 const parameters = computed<Parameter[]>(() => {
-  const plParam: Parameter = {
-    label: "文内無音(秒)",
+  console.log("AudioInfo.vue > parameters");
+  const pauseLengthParameter: Parameter = {
+    label: "文内無音",
     slider: previewSliderHelper({
       modelValue: () => query.value?.pauseLength ?? null,
       disable: () => uiLocked.value,
@@ -372,6 +373,9 @@ const parameters = computed<Parameter[]>(() => {
       scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollStep,
       scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollMinStep,
       onChange: (pauseLength: number) =>
+        // b.query.pauseLengthにnull以外の値を代入したとき
+        // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し
+        // 適用範囲: 現在選択しているaudioItem
         store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
           audioKeys: selectedAudioKeys.value,
           pauseLength: pauseLength,
@@ -381,8 +385,8 @@ const parameters = computed<Parameter[]>(() => {
     key: "pauseLength",
   };
 
-  const plsParam: Parameter = {
-    label: "文内無音(倍)",
+  const pauseLengthScaleParameter: Parameter = {
+    label: "文内無音倍率",
     slider: previewSliderHelper({
       modelValue: () => query.value?.pauseLengthScale ?? null,
       disable: () => uiLocked.value,
@@ -482,6 +486,7 @@ const parameters = computed<Parameter[]>(() => {
       action: "COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE",
       key: "volumeScale",
     },
+    pauseLengthScaleParameter,
     {
       label: "開始無音",
       slider: previewSliderHelper({
@@ -520,6 +525,7 @@ const parameters = computed<Parameter[]>(() => {
       action: "COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH",
       key: "postPhonemeLength",
     },
+<<<<<<< Updated upstream
     {
       label: "文内無音(秒)",
       slider: previewSliderHelper({
@@ -543,10 +549,22 @@ const parameters = computed<Parameter[]>(() => {
   // switchPauseLengthModeの変更に伴って更新
   const newParam = switchPauseLengthMode.value === "SCALE" ? plsParam : plParam;
   const index = baseParam.findIndex((param) => param.label === newParam.label);
+=======
+  ];
+  // pauseLengthModeの変更に伴って更新
+  const newParam =
+    pauseLengthMode.value === "SCALE"
+      ? pauseLengthScaleParameter
+      : pauseLengthParameter;
+  const index = baseParam.findIndex((param) =>
+    param.label.includes("文内無音"),
+  );
+
+>>>>>>> Stashed changes
   if (index !== -1) {
     baseParam[index] = newParam;
   } else {
-    baseParam.push(newParam);
+    baseParam.splice(4, 0, newParam);
   }
   return baseParam;
 });
@@ -791,6 +809,7 @@ const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
 
 // セルへのプリセットの設定
 const selectablePresetList = computed<PresetSelectModelType[]>(() => {
+  console.log("AudioInfo.vue > selectablePresetList");
   const topPresetList: { key: PresetKey | undefined; label: string }[] = [];
 
   if (isRegisteredPreset.value) {
@@ -870,6 +889,7 @@ const closeAllDialog = () => {
 
 // プリセットの登録
 const registerPreset = ({ overwrite }: { overwrite: boolean }) => {
+  console.log("AudioInfo.vue > registerPreset");
   // 既存の場合は名前をセット
   if (isRegisteredPreset.value) {
     if (audioPresetKey.value == undefined)
@@ -979,6 +999,31 @@ const updatePreset = async (fullApply: boolean) => {
   });
 
   if (fullApply) {
+    if (store.state.pauseLengthMode === "ABSOLUTE") {
+      // c.「プリセットの再適用」をしたとき
+      // 適用範囲: 現在選択しているAudioItemとpresetKeyが同じAudioItem
+      const audioItems = store.state.audioItems;
+      console.log(audioItems);
+      const audioKeys: AudioKey[] = Object.keys(
+        audioItems as Record<string, AudioItem>,
+      )
+        .filter((audioKey) => {
+          const audioItem = audioItems[audioKey as keyof typeof audioItems];
+          return audioItem.presetKey === key;
+        })
+        .map((audioKey) => audioKey as unknown as AudioKey);
+      const activeAudioItem = audioItems[props.activeAudioKey];
+      if (activeAudioItem && activeAudioItem.query) {
+        const pauseLength = activeAudioItem.query.pauseLength;
+        if (pauseLength != null) {
+          store.dispatch("COMMAND_MULTI_APPLY_PAUSE_LENGTH", {
+            audioKeys: audioKeys,
+            pauseLength: pauseLength,
+          });
+        }
+      }
+    }
+
     await store.dispatch("COMMAND_FULLY_APPLY_AUDIO_PRESET", {
       presetKey: key,
     });

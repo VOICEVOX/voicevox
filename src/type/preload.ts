@@ -349,7 +349,7 @@ export type AcceptRetrieveTelemetryStatus =
 
 export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
-export type SwitchPauseLengthMode = "SCALE" | "ABSOLUTE";
+export type PauseLengthMode = "SCALE" | "ABSOLUTE";
 
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
@@ -605,7 +605,7 @@ export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
 export const configSchema = z
   .object({
-    switchPauseLengthMode: z.enum(["SCALE", "ABSOLUTE"]).default("SCALE"),
+    pauseLengthMode: z.enum(["SCALE", "ABSOLUTE"]).default("SCALE"),
     inheritAudioInfo: z.boolean().default(true),
     activePointScrollMode: z
       .enum(["CONTINUOUSLY", "PAGE", "OFF"])

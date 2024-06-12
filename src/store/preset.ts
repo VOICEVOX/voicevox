@@ -220,7 +220,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
           volumeScale: 1.0,
           prePhonemeLength: 0.1,
           postPhonemeLength: 0.1,
-          pauseLength: 0.3,
+          pauseLength: null,
           pauseLengthScale: 1,
         };
         const newPresetKey = await dispatch("ADD_PRESET", { presetData });

@@ -34,7 +34,7 @@ import {
   UpdateInfo,
   Preset,
   MorphingInfo,
-  SwitchPauseLengthMode,
+  PauseLengthMode,
   ActivePointScrollMode,
   EngineInfo,
   ConfirmedTips,
@@ -291,7 +291,7 @@ export type AudioStoreTypes = {
   };
 
   SET_AUDIO_PAUSE_LENGTH: {
-    mutation: { audioKey: AudioKey; pauseLength: number | null };
+    mutation: { audioKey: AudioKey; pauseLength: number };
   };
 
   SET_AUDIO_PAUSE_LENGTH_SCALE: {
@@ -378,6 +378,10 @@ export type AudioStoreTypes = {
 
   APPLY_AUDIO_PRESET: {
     mutation: { audioKey: AudioKey };
+  };
+
+  APPLY_PAUSE_LENGTH: {
+    mutation: { audioKey: AudioKey; pauseLength: number };
   };
 
   FETCH_MORA_DATA: {
@@ -638,11 +642,8 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH: {
-    mutation: { audioKeys: AudioKey[]; pauseLength: number | null };
-    action(payload: {
-      audioKeys: AudioKey[];
-      pauseLength: number | null;
-    }): void;
+    mutation: { audioKeys: AudioKey[]; pauseLength: number };
+    action(payload: { audioKeys: AudioKey[]; pauseLength: number }): void;
   };
 
   COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
@@ -675,6 +676,11 @@ export type AudioCommandStoreTypes = {
   COMMAND_MULTI_APPLY_AUDIO_PRESET: {
     mutation: { audioKeys: AudioKey[] };
     action(payload: { audioKeys: AudioKey[] }): void;
+  };
+
+  COMMAND_MULTI_APPLY_PAUSE_LENGTH: {
+    mutation: { audioKeys: AudioKey[]; pauseLength: number };
+    action(payload: { audioKeys: AudioKey[]; pauseLength: number }): void;
   };
 
   COMMAND_FULLY_APPLY_AUDIO_PRESET: {
@@ -1647,7 +1653,7 @@ export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
   reloadingLock: boolean;
-  switchPauseLengthMode: SwitchPauseLengthMode;
+  pauseLengthMode: PauseLengthMode;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
@@ -1788,9 +1794,9 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  SET_SWITCH_PAUSE_LENGTH_MODE: {
-    mutation: { switchPauseLengthMode: SwitchPauseLengthMode };
-    action(payload: { switchPauseLengthMode: SwitchPauseLengthMode }): void;
+  SET_PAUSE_LENGTH_MODE: {
+    mutation: { pauseLengthMode: PauseLengthMode };
+    action(payload: { pauseLengthMode: PauseLengthMode }): void;
   };
 
   SET_INHERIT_AUDIOINFO: {

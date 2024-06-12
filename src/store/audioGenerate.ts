@@ -43,6 +43,7 @@ export async function fetchAudioFromAudioItem(
   const engineAudioQuery = convertAudioQueryFromEditorToEngine(
     audioQuery,
     state.engineManifests[engineId].defaultSamplingRate,
+    state.pauseLengthMode,
   );
 
   let blob: Blob;

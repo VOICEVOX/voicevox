@@ -254,15 +254,21 @@ const contextMenudata = ref<[MenuItemButton]>([
   },
 ]);
 
+let beforeText: string = "";
+
 const pronunciation = computed(() => {
   let textString = props.accentPhrase.moras.map((mora) => mora.text).join("");
   if (props.accentPhrase.pauseMora) {
     textString += "、";
   }
+  beforeText = textString;
   return textString;
 });
 
-const handleChangePronounce = (newPronunciation: string) => {
+const handleChangePronounce = async (newPronunciation: string) => {
+  console.log("AccentPhrase.vue > handleChangePronounce");
+  const copyBeforeText = beforeText;
+
   let popUntilPause = false;
   newPronunciation = newPronunciation
     .replace(/,/g, "、")
@@ -278,12 +284,31 @@ const handleChangePronounce = (newPronunciation: string) => {
       popUntilPause = true;
     }
   }
-  store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+  await store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
     audioKey: props.audioKey,
     newPronunciation,
     accentPhraseIndex: props.index,
     popUntilPause,
   });
+
+  // e.AccentPhrasesをfetchしたとき（読み変更で句読点を含めたとき）
+  // 適用範囲: 現在選択しているAudioItem
+  console.log(`copyBeforeText: ${copyBeforeText}`);
+  console.log(`newPronunciation: ${newPronunciation}`);
+  await console.log(store.state.audioItems[props.audioKey]);
+  if (store.state.pauseLengthMode === "ABSOLUTE") {
+    // テキストが変更されて、かつ読点が追加されたことを確認
+    if (!copyBeforeText.includes("、") && newPronunciation.includes("、")) {
+      const pauseLength =
+        store.state.audioItems[props.audioKey].query?.pauseLength;
+      if (pauseLength != null && pauseLength != undefined) {
+        store.dispatch("COMMAND_MULTI_APPLY_PAUSE_LENGTH", {
+          audioKeys: [props.audioKey],
+          pauseLength: pauseLength,
+        });
+      }
+    }
+  }
 };
 
 const hoveredMoraIndex = ref<number | undefined>(undefined);
@@ -371,6 +396,9 @@ const changeMoraData = (
   data: number,
   type: MoraDataType,
 ) => {
+  console.log("AccentPhrase.vue ＞chageMoraData");
+  console.log(`data: ${data}`);
+  console.log(`type: ${type}`);
   const accentPhraseIndex = props.index;
   if (!props.altKeyFlag) {
     if (type == "pitch") {
