@@ -254,7 +254,8 @@ async function installVvppEngineWithWarning({
       })
       .then((result) => {
         if (result.response === 0) {
-          ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { // これじゃない
+          ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
+            // これじゃない
             closeOrReload: "reload",
           });
           console.log("installVvppEngineWithWarning");
@@ -457,7 +458,8 @@ async function createWindow() {
   win.on("close", (event) => {
     if (!appState.willQuit) {
       event.preventDefault();
-      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { // これじゃない
+      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
+        // これじゃない
         closeOrReload: "close",
       });
       console.log("win.on > close");
