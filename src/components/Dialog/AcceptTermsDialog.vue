@@ -81,6 +81,7 @@ const modelValueComputed = computed({
 });
 
 const handler = (acceptTerms: boolean) => {
+  console.log("handler");
   store.dispatch("SET_ACCEPT_TERMS", {
     acceptTerms: acceptTerms ? "Accepted" : "Rejected",
   });

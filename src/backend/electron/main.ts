@@ -254,9 +254,10 @@ async function installVvppEngineWithWarning({
       })
       .then((result) => {
         if (result.response === 0) {
-          ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
+          ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { // これじゃない
             closeOrReload: "reload",
           });
+          console.log("installVvppEngineWithWarning");
         }
       });
   }
@@ -456,9 +457,10 @@ async function createWindow() {
   win.on("close", (event) => {
     if (!appState.willQuit) {
       event.preventDefault();
-      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
+      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { // これじゃない
         closeOrReload: "close",
       });
+      console.log("win.on > close");
       return;
     }
   });
@@ -1038,7 +1040,8 @@ app.on("window-all-closed", () => {
 app.on("before-quit", async (event) => {
   if (!appState.willQuit) {
     event.preventDefault();
-    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
+    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" }); // これじゃない
+    console.log("before-quit");
     return;
   }
 

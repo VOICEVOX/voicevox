@@ -1128,20 +1128,23 @@ const audioKeys = computed(() => store.state.audioKeys);
 
 watchEffect(() => {
   console.log("SettingDialog.vue > watchEffect");
-  console.log(`audioKeys: ${audioKeys.value}`);
-  if (pauseLengthMode.value === "ABSOLUTE") {
-    // a.設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき
-    // 適用範囲: 全てのaudioItem
-    // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し
-    store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
-      audioKeys: store.state.audioKeys,
-      pauseLength: 0.3,
-    });
-  } else {
-    store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
-      audioKeys: store.state.audioKeys,
-      pauseLengthScale: 1,
-    });
+  const nonComputedAudioKeys = store.state.audioKeys;
+  console.log(nonComputedAudioKeys);
+  if(nonComputedAudioKeys.length > 0) {
+    if (pauseLengthMode.value === "ABSOLUTE") {
+      // a.設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき
+      // 適用範囲: 全てのaudioItem
+      // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し
+      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
+        audioKeys: nonComputedAudioKeys,
+        pauseLength: 0.3,
+      });
+    } else {
+      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
+        audioKeys: nonComputedAudioKeys,
+        pauseLengthScale: 1,
+      });
+    }
   }
 });
 
