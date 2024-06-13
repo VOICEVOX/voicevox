@@ -45,7 +45,6 @@ export const ipcMessageReceiver: Plugin = {
     );
 
     window.backend.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", (_, obj) => {
-      console.log("window.backend.onReceivedIPCMsg");
       options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE", obj);
     });
 
