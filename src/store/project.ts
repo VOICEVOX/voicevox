@@ -620,7 +620,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    */
   SAVE_OR_DISCARD_PROJECT_FILE: {
     action: createUILockAction(async ({ dispatch }, { additionalMessage }) => {
-      console.log("SAVE_OR_DISCARD_PROJECT_FILE");
       let message = "プロジェクトの変更が保存されていません。";
       if (additionalMessage) {
         message += "\n" + additionalMessage;

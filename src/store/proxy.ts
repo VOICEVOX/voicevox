@@ -40,7 +40,6 @@ export const convertAudioQueryFromEditorToEngine = (
   defaultOutputSamplingRate: number,
   pauseLengthMode: "SCALE" | "ABSOLUTE",
 ): AudioQuery => {
-  console.log("convertAudioQueryFromEditorToEngine");
   // editorAudioQuery の内容をそのままコピーする
   const newAudioQuery = {
     ...editorAudioQuery,
@@ -56,7 +55,6 @@ export const convertAudioQueryFromEditorToEngine = (
   } else {
     newAudioQuery.pauseLength = null;
   }
-  console.log(newAudioQuery);
   // 変換されたオブジェクトを返す
   return newAudioQuery;
 };

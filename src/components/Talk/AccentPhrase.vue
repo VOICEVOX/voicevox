@@ -266,7 +266,6 @@ const pronunciation = computed(() => {
 });
 
 const handleChangePronounce = async (newPronunciation: string) => {
-  console.log("AccentPhrase.vue > handleChangePronounce");
   const copyBeforeText = beforeText;
 
   let popUntilPause = false;
@@ -293,9 +292,6 @@ const handleChangePronounce = async (newPronunciation: string) => {
 
   // e.AccentPhrasesをfetchしたとき（読み変更で句読点を含めたとき）
   // 適用範囲: 現在選択しているAudioItem
-  console.log(`copyBeforeText: ${copyBeforeText}`);
-  console.log(`newPronunciation: ${newPronunciation}`);
-  await console.log(store.state.audioItems[props.audioKey]);
   if (store.state.pauseLengthMode === "ABSOLUTE") {
     // テキストが変更されて、かつ読点が追加されたことを確認
     if (!copyBeforeText.includes("、") && newPronunciation.includes("、")) {

@@ -837,7 +837,6 @@ const closeAllDialog = () => {
 
 // プリセットの登録
 const registerPreset = ({ overwrite }: { overwrite: boolean }) => {
-  console.log("AudioInfo.vue > registerPreset");
   // 既存の場合は名前をセット
   if (isRegisteredPreset.value) {
     if (audioPresetKey.value == undefined)
@@ -951,7 +950,6 @@ const updatePreset = async (fullApply: boolean) => {
       // c.「プリセットの再適用」をしたとき
       // 適用範囲: 現在選択しているAudioItemとpresetKeyが同じAudioItem
       const audioItems = store.state.audioItems;
-      console.log(audioItems);
       const audioKeys: AudioKey[] = Object.keys(
         audioItems as Record<string, AudioItem>,
       )

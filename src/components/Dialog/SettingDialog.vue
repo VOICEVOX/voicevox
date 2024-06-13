@@ -1125,9 +1125,7 @@ const pauseLengthMode = computed({
 });
 
 watchEffect(() => {
-  console.log("SettingDialog.vue > watchEffect");
   const audioKeys = store.state.audioKeys;
-  console.log(audioKeys);
   if (audioKeys.length > 0) {
     if (pauseLengthMode.value === "ABSOLUTE") {
       // a.設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき

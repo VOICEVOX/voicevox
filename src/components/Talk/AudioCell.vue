@@ -291,7 +291,6 @@ const isSelectedAudioCell = computed(() =>
 const audioTextBuffer = ref(audioItem.value.text);
 const isChangeFlag = ref(false);
 const setAudioTextBuffer = (text: string | number | null) => {
-  console.log("AudioCell.vue > setAudioTextBuffer");
   if (typeof text !== "string") throw new Error("typeof text !== 'string'");
   audioTextBuffer.value = text;
   isChangeFlag.value = true;
@@ -308,7 +307,6 @@ watch(
 );
 
 const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
-  console.log("AudioCell.vue > pushAudioTextIfNeeded");
   // COMMAND_CHANGE_AUDIO_TEXTでもAccenPhrases弄ってるっぽいのでフラグをコピーして後で処理
   const copy_isChangeFlag = isChangeFlag.value;
 

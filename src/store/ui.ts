@@ -432,7 +432,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
      * 保存がキャンセルされた場合は何もしない。
      */
     async action({ dispatch, getters }, obj) {
-      console.log("CHECK_EDITED_AND_NOT_SAVE");
       await dispatch("SING_STOP_AUDIO"); // FIXME: ON_BEFORE_QUITTINGなどを作成して移動すべき
 
       if (getters.IS_EDITED) {

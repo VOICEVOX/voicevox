@@ -234,9 +234,6 @@ export function applyPauseLengthToAccentPhrases(
   audioItem: AudioItem,
   pauseLength: number,
 ): AudioItem {
-  console.log("applyPauseLengthToAccentPhrases");
-  console.log(`pauseLength: ${pauseLength}`);
-
   const newAccentPhrases = audioItem?.query?.accentPhrases ?? [];
 
   const newAudioItem = audioItem;
@@ -1181,7 +1178,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       state,
       { audioKey, pauseLength }: { audioKey: AudioKey; pauseLength: number },
     ) {
-      console.log("APPLY_PAUSE_LENGTH");
       const audioItem = state.audioItems[audioKey];
 
       const newAudioItem = applyPauseLengthToAccentPhrases(
@@ -2819,7 +2815,6 @@ export const audioCommandStore = transformCommandStore(
         { commit, dispatch },
         payload: { audioKeys: AudioKey[]; pauseLength: number },
       ) {
-        console.log("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH");
         commit("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", payload);
         dispatch("COMMAND_MULTI_APPLY_PAUSE_LENGTH", {
           audioKeys: payload.audioKeys,
@@ -2934,7 +2929,6 @@ export const audioCommandStore = transformCommandStore(
         { commit },
         payload: { audioKeys: AudioKey[]; pauseLength: number },
       ) {
-        console.log("COMMAND_MULTI_APPLY_PAUSE_LENGTH");
         commit("COMMAND_MULTI_APPLY_PAUSE_LENGTH", payload);
       },
     },
