@@ -333,9 +333,7 @@ const audioItem = computed(() => store.state.audioItems[props.activeAudioKey]);
 const query = computed(() => audioItem.value?.query);
 
 // 文内無音の指定方式 "SCALE" || "ABSOLUTE"
-const pauseLengthMode = computed(() => {
-  return store.state.pauseLengthMode;
-});
+const pauseLengthMode = computed(() => store.state.pauseLengthMode);
 
 const supportedFeatures = computed(
   () =>
@@ -360,188 +358,165 @@ const selectedAudioKeys = computed(() =>
 );
 
 // 句読点などの無音時間はひとまず倍率verを表示 のち必要に応じ絶対値に切替
-const parameters = computed<Parameter[]>(() => {
-  console.log("AudioInfo.vue > parameters");
-  const pauseLengthParameter: Parameter = {
-    label: "文内無音",
+const parameters = computed<Parameter[]>(() => [
+  {
+    label: "話速",
     slider: previewSliderHelper({
-      modelValue: () => query.value?.pauseLength ?? null,
-      disable: () => uiLocked.value,
-      max: SLIDER_PARAMETERS.PAUSE_LENGTH.max,
-      min: SLIDER_PARAMETERS.PAUSE_LENGTH.min,
-      step: SLIDER_PARAMETERS.PAUSE_LENGTH.step,
-      scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollMinStep,
-      onChange: (pauseLength: number) =>
-        // b.query.pauseLengthにnull以外の値を代入したとき
-        // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し
-        // 適用範囲: 現在選択しているaudioItem
-        store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
+      modelValue: () => query.value?.speedScale ?? null,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
+      max: SLIDER_PARAMETERS.SPEED.max,
+      min: SLIDER_PARAMETERS.SPEED.min,
+      step: SLIDER_PARAMETERS.SPEED.step,
+      scrollStep: SLIDER_PARAMETERS.SPEED.scrollStep,
+      onChange: (speedScale: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_SPEED_SCALE", {
           audioKeys: selectedAudioKeys.value,
-          pauseLength: pauseLength,
+          speedScale,
         }),
     }),
-    action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH",
-    key: "pauseLength",
-  };
-
-  const pauseLengthScaleParameter: Parameter = {
-    label: "文内無音倍率",
+    action: "COMMAND_MULTI_SET_AUDIO_SPEED_SCALE",
+    key: "speedScale",
+  },
+  {
+    label: "音高",
     slider: previewSliderHelper({
-      modelValue: () => query.value?.pauseLengthScale ?? null,
-      disable: () => uiLocked.value,
-      max: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.max,
-      min: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.min,
-      step: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.step,
-      scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollMinStep,
-      onChange: (pauseLengthScale: number) =>
-        store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
+      modelValue: () => query.value?.pitchScale ?? null,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
+      max: SLIDER_PARAMETERS.PITCH.max,
+      min: SLIDER_PARAMETERS.PITCH.min,
+      step: SLIDER_PARAMETERS.PITCH.step,
+      scrollStep: SLIDER_PARAMETERS.PITCH.scrollStep,
+      onChange: (pitchScale: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_PITCH_SCALE", {
           audioKeys: selectedAudioKeys.value,
-          pauseLengthScale: pauseLengthScale,
+          pitchScale,
         }),
     }),
-    action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE",
-    key: "pauseLengthScale",
-  };
-  const baseParam: Parameter[] = [
-    {
-      label: "話速",
-      slider: previewSliderHelper({
-        modelValue: () => query.value?.speedScale ?? null,
-        disable: () =>
-          uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
-        max: SLIDER_PARAMETERS.SPEED.max,
-        min: SLIDER_PARAMETERS.SPEED.min,
-        step: SLIDER_PARAMETERS.SPEED.step,
-        scrollStep: SLIDER_PARAMETERS.SPEED.scrollStep,
-        scrollMinStep: SLIDER_PARAMETERS.SPEED.scrollMinStep,
-        onChange: (speedScale: number) =>
-          store.dispatch("COMMAND_MULTI_SET_AUDIO_SPEED_SCALE", {
-            audioKeys: selectedAudioKeys.value,
-            speedScale,
-          }),
-      }),
-      action: "COMMAND_MULTI_SET_AUDIO_SPEED_SCALE",
-      key: "speedScale",
-    },
-    {
-      label: "音高",
-      slider: previewSliderHelper({
-        modelValue: () => query.value?.pitchScale ?? null,
-        disable: () =>
-          uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
-        max: SLIDER_PARAMETERS.PITCH.max,
-        min: SLIDER_PARAMETERS.PITCH.min,
-        step: SLIDER_PARAMETERS.PITCH.step,
-        scrollStep: SLIDER_PARAMETERS.PITCH.scrollStep,
-        onChange: (pitchScale: number) =>
-          store.dispatch("COMMAND_MULTI_SET_AUDIO_PITCH_SCALE", {
-            audioKeys: selectedAudioKeys.value,
-            pitchScale,
-          }),
-      }),
-      action: "COMMAND_MULTI_SET_AUDIO_PITCH_SCALE",
-      key: "pitchScale",
-    },
-    {
-      label: "抑揚",
-      slider: previewSliderHelper({
-        modelValue: () => query.value?.intonationScale ?? null,
-        disable: () =>
-          uiLocked.value ||
-          supportedFeatures.value?.adjustIntonationScale === false,
-        max: SLIDER_PARAMETERS.INTONATION.max,
-        min: SLIDER_PARAMETERS.INTONATION.min,
-        step: SLIDER_PARAMETERS.INTONATION.step,
-        scrollStep: SLIDER_PARAMETERS.INTONATION.scrollStep,
-        scrollMinStep: SLIDER_PARAMETERS.INTONATION.scrollMinStep,
-        onChange: (intonationScale: number) =>
-          store.dispatch("COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE", {
-            audioKeys: selectedAudioKeys.value,
-            intonationScale,
-          }),
-      }),
-      action: "COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE",
-      key: "intonationScale",
-    },
-    {
-      label: "音量",
-      slider: previewSliderHelper({
-        modelValue: () => query.value?.volumeScale ?? null,
-        disable: () =>
-          uiLocked.value ||
-          supportedFeatures.value?.adjustVolumeScale === false,
-        max: SLIDER_PARAMETERS.VOLUME.max,
-        min: SLIDER_PARAMETERS.VOLUME.min,
-        step: SLIDER_PARAMETERS.VOLUME.step,
-        scrollStep: SLIDER_PARAMETERS.VOLUME.scrollStep,
-        scrollMinStep: SLIDER_PARAMETERS.VOLUME.scrollMinStep,
-        onChange: (volumeScale: number) =>
-          store.dispatch("COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE", {
-            audioKeys: selectedAudioKeys.value,
-            volumeScale,
-          }),
-      }),
-      action: "COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE",
-      key: "volumeScale",
-    },
-    pauseLengthScaleParameter,
-    {
-      label: "開始無音",
-      slider: previewSliderHelper({
-        modelValue: () => query.value?.prePhonemeLength ?? null,
-        disable: () => uiLocked.value,
-        max: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.max,
-        min: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.min,
-        step: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.step,
-        scrollStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollStep,
-        scrollMinStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollMinStep,
-        onChange: (prePhonemeLength: number) =>
-          store.dispatch("COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH", {
-            audioKeys: selectedAudioKeys.value,
-            prePhonemeLength,
-          }),
-      }),
-      action: "COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH",
-      key: "prePhonemeLength",
-    },
-    {
-      label: "終了無音",
-      slider: previewSliderHelper({
-        modelValue: () => query.value?.postPhonemeLength ?? null,
-        disable: () => uiLocked.value,
-        max: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.max,
-        min: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.min,
-        step: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.step,
-        scrollStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollStep,
-        scrollMinStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollMinStep,
-        onChange: (postPhonemeLength: number) =>
-          store.dispatch("COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH", {
-            audioKeys: selectedAudioKeys.value,
-            postPhonemeLength,
-          }),
-      }),
-      action: "COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH",
-      key: "postPhonemeLength",
-    },
-  ];
-  // pauseLengthModeの変更に伴って切替
-  const newParam =
-    pauseLengthMode.value === "SCALE"
-      ? pauseLengthScaleParameter
-      : pauseLengthParameter;
-  const index = baseParam.findIndex((param) =>
-    param.label.includes("文内無音"),
-  );
-
-  if (index !== -1) {
-    baseParam[index] = newParam;
-  } else {
-    baseParam.splice(4, 0, newParam);
-  }
-  return baseParam;
-});
+    action: "COMMAND_MULTI_SET_AUDIO_PITCH_SCALE",
+    key: "pitchScale",
+  },
+  {
+    label: "抑揚",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.intonationScale ?? null,
+      disable: () =>
+        uiLocked.value ||
+        supportedFeatures.value?.adjustIntonationScale === false,
+      max: SLIDER_PARAMETERS.INTONATION.max,
+      min: SLIDER_PARAMETERS.INTONATION.min,
+      step: SLIDER_PARAMETERS.INTONATION.step,
+      scrollStep: SLIDER_PARAMETERS.INTONATION.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.INTONATION.scrollMinStep,
+      onChange: (intonationScale: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE", {
+          audioKeys: selectedAudioKeys.value,
+          intonationScale,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE",
+    key: "intonationScale",
+  },
+  {
+    label: "音量",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.volumeScale ?? null,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustVolumeScale === false,
+      max: SLIDER_PARAMETERS.VOLUME.max,
+      min: SLIDER_PARAMETERS.VOLUME.min,
+      step: SLIDER_PARAMETERS.VOLUME.step,
+      scrollStep: SLIDER_PARAMETERS.VOLUME.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.VOLUME.scrollMinStep,
+      onChange: (volumeScale: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE", {
+          audioKeys: selectedAudioKeys.value,
+          volumeScale,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE",
+    key: "volumeScale",
+  },
+  // 条件に基づくパラメータの追加
+  pauseLengthMode.value === "SCALE"
+    ? {
+        label: "文内無音倍率",
+        slider: previewSliderHelper({
+          modelValue: () => query.value?.pauseLengthScale ?? null,
+          disable: () => uiLocked.value,
+          max: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.max,
+          min: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.min,
+          step: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.step,
+          scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollStep,
+          scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollMinStep,
+          onChange: (pauseLengthScale: number) =>
+            store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
+              audioKeys: selectedAudioKeys.value,
+              pauseLengthScale,
+            }),
+        }),
+        action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE",
+        key: "pauseLengthScale",
+      }
+    : {
+        label: "文内無音",
+        slider: previewSliderHelper({
+          modelValue: () => query.value?.pauseLength ?? null,
+          disable: () => uiLocked.value,
+          max: SLIDER_PARAMETERS.PAUSE_LENGTH.max,
+          min: SLIDER_PARAMETERS.PAUSE_LENGTH.min,
+          step: SLIDER_PARAMETERS.PAUSE_LENGTH.step,
+          scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollStep,
+          scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH.scrollMinStep,
+          onChange: (pauseLength: number) =>
+            store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
+              audioKeys: selectedAudioKeys.value,
+              pauseLength,
+            }),
+        }),
+        action: "COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH",
+        key: "pauseLength",
+      },
+  {
+    label: "開始無音",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.prePhonemeLength ?? null,
+      disable: () => uiLocked.value,
+      max: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.max,
+      min: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.min,
+      step: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.step,
+      scrollStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollMinStep,
+      onChange: (prePhonemeLength: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH", {
+          audioKeys: selectedAudioKeys.value,
+          prePhonemeLength,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH",
+    key: "prePhonemeLength",
+  },
+  {
+    label: "終了無音",
+    slider: previewSliderHelper({
+      modelValue: () => query.value?.postPhonemeLength ?? null,
+      disable: () => uiLocked.value,
+      max: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.max,
+      min: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.min,
+      step: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.step,
+      scrollStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollMinStep,
+      onChange: (postPhonemeLength: number) =>
+        store.dispatch("COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH", {
+          audioKeys: selectedAudioKeys.value,
+          postPhonemeLength,
+        }),
+    }),
+    action: "COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH",
+    key: "postPhonemeLength",
+  },
+]);
 
 const handleParameterChange = (
   parameter: Parameter,
