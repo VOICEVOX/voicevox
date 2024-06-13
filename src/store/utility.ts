@@ -109,7 +109,7 @@ export const SLIDER_PARAMETERS = {
     max: () => 1,
     min: () => 0,
     step: () => 0.01,
-    scrollStep: () => 0.01,
+    scrollStep: () => 0.1,
     scrollMinStep: () => 0.01,
   },
   /**

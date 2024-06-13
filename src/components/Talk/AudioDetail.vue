@@ -183,28 +183,9 @@ const selectedDetail = ref<DetailTypes>("accent");
 // accent phrase
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const switchPauseLengthMode = computed(() => store.state.switchPauseLengthMode);
-
 const audioItem = computed(() => store.state.audioItems[props.activeAudioKey]);
-
 const query = computed(() => audioItem.value?.query);
-
-// pauseLength&pauseLengthScaleにおいては、エンジン側で行う処理を例外的にここで行う
-// storeへの反映はAccentPhrases.vueでやってくれる
-const accentPhrases = computed(() => {
-  const newAccentPhrases = query.value?.accentPhrases;
-  if (switchPauseLengthMode.value === "ABSOLUTE" && newAccentPhrases) {
-    const pauseLength = query.value?.pauseLength;
-    if (pauseLength != null) {
-      newAccentPhrases.forEach((accentPhrase) => {
-        if (accentPhrase.pauseMora) {
-          accentPhrase.pauseMora.vowelLength = pauseLength;
-        }
-      });
-    }
-  }
-  return newAccentPhrases;
-});
+const accentPhrases = computed(() => query.value?.accentPhrases);
 
 // エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す
 // TODO: 連続再生するとアクセントに移動してしまうため、タブの中身を全てdisabledにする、半透明divをかぶせるなど

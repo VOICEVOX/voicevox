@@ -106,4 +106,3 @@ export function MoraToJSON(value?: Mora | null): any {
         'pitch': value.pitch,
     };
 }
-

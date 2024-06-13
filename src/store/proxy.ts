@@ -38,14 +38,25 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
 export const convertAudioQueryFromEditorToEngine = (
   editorAudioQuery: EditorAudioQuery,
   defaultOutputSamplingRate: number,
+  pauseLengthMode: "SCALE" | "ABSOLUTE",
 ): AudioQuery => {
-  return {
+  // editorAudioQuery の内容をそのままコピーする
+  const newAudioQuery = {
     ...editorAudioQuery,
     outputSamplingRate:
       editorAudioQuery.outputSamplingRate == "engineDefault"
         ? defaultOutputSamplingRate
         : editorAudioQuery.outputSamplingRate,
   };
+
+  // 不要なプロパティを無効化
+  if (pauseLengthMode === "ABSOLUTE") {
+    newAudioQuery.pauseLengthScale = 1;
+  } else {
+    newAudioQuery.pauseLength = null;
+  }
+  // 変換されたオブジェクトを返す
+  return newAudioQuery;
 };
 
 export const proxyStore = proxyStoreCreator(OpenAPIEngineConnectorFactory);

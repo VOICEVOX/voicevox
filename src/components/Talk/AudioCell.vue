@@ -307,6 +307,9 @@ watch(
 );
 
 const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
+  // COMMAND_CHANGE_AUDIO_TEXTでもAccenPhrases弄ってるっぽいのでフラグをコピーして後で処理
+  const copy_isChangeFlag = isChangeFlag.value;
+
   if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;
@@ -314,6 +317,23 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
       audioKey: props.audioKey,
       text: audioTextBuffer.value,
     });
+  }
+
+  // d.AudioQueryをfetchしたとき（テキスト入力したとき）
+  // 適用範囲: 現在選択しているAudioItem
+  // pushAudioTextIfNeededはblurで発火するので、さらにテキストを変更した場合に絞り込む
+  if (
+    store.state.pauseLengthMode === "ABSOLUTE" &&
+    copy_isChangeFlag === true
+  ) {
+    const pauseLength =
+      store.state.audioItems[props.audioKey].query?.pauseLength;
+    if (pauseLength != null && pauseLength != undefined) {
+      store.dispatch("COMMAND_MULTI_APPLY_PAUSE_LENGTH", {
+        audioKeys: [props.audioKey],
+        pauseLength: pauseLength,
+      });
+    }
   }
 };
 

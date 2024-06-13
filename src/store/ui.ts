@@ -7,7 +7,7 @@ import {
   UiStoreTypes,
 } from "./type";
 import { createPartialStore } from "./vuex";
-import { SwitchPauseLengthMode } from "@/type/preload";
+import { PauseLengthMode } from "@/type/preload";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
   CommonDialogOptions,
@@ -54,7 +54,7 @@ export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
   reloadingLock: false,
-  switchPauseLengthMode: "SCALE",
+  pauseLengthMode: "SCALE",
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
@@ -259,10 +259,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   HYDRATE_UI_STORE: {
     async action({ commit }) {
-      commit("SET_SWITCH_PAUSE_LENGTH_MODE", {
-        switchPauseLengthMode: await window.backend.getSetting(
-          "switchPauseLengthMode",
-        ),
+      commit("SET_PAUSE_LENGTH_MODE", {
+        pauseLengthMode: await window.backend.getSetting("pauseLengthMode"),
       });
 
       commit("SET_INHERIT_AUDIOINFO", {
@@ -309,25 +307,18 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  SET_SWITCH_PAUSE_LENGTH_MODE: {
-    mutation(
-      state,
-      {
-        switchPauseLengthMode,
-      }: { switchPauseLengthMode: SwitchPauseLengthMode },
-    ) {
-      state.switchPauseLengthMode = switchPauseLengthMode;
+  SET_PAUSE_LENGTH_MODE: {
+    mutation(state, { pauseLengthMode }: { pauseLengthMode: PauseLengthMode }) {
+      state.pauseLengthMode = pauseLengthMode;
     },
     async action(
       { commit },
-      {
-        switchPauseLengthMode,
-      }: { switchPauseLengthMode: SwitchPauseLengthMode },
+      { pauseLengthMode }: { pauseLengthMode: PauseLengthMode },
     ) {
-      commit("SET_SWITCH_PAUSE_LENGTH_MODE", {
-        switchPauseLengthMode: await window.backend.setSetting(
-          "switchPauseLengthMode",
-          switchPauseLengthMode,
+      commit("SET_PAUSE_LENGTH_MODE", {
+        pauseLengthMode: await window.backend.setSetting(
+          "pauseLengthMode",
+          pauseLengthMode,
         ),
       });
     },

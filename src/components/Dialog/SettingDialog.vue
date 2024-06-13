@@ -201,7 +201,7 @@
                 </div>
                 <QSpace />
                 <QBtnToggle
-                  v-model="switchPauseLengthMode"
+                  v-model="pauseLengthMode"
                   padding="xs md"
                   unelevated
                   color="background"
@@ -1065,12 +1065,11 @@ import { computed, ref, watchEffect } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
-  AudioKey,
   isProduction,
   SavingSetting,
   EngineSettingType,
   ExperimentalSettingType,
-  SwitchPauseLengthMode,
+  PauseLengthMode,
   ActivePointScrollMode,
   RootMiscSettingType,
   EngineId,
@@ -1092,7 +1091,6 @@ const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
 
 const props = defineProps<{
   modelValue: boolean;
-  activeAudioKey: AudioKey;
 }>();
 const emit = defineEmits<{
   (e: "update:modelValue", val: boolean): void;
@@ -1117,31 +1115,29 @@ const engineUseGpu = computed({
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 
-const switchPauseLengthMode = computed({
-  get: () => store.state.switchPauseLengthMode,
-  set: (switchPauseLengthMode: SwitchPauseLengthMode) => {
-    store.dispatch("SET_SWITCH_PAUSE_LENGTH_MODE", {
-      switchPauseLengthMode,
+const pauseLengthMode = computed({
+  get: () => store.state.pauseLengthMode,
+  set: (pauseLengthMode: PauseLengthMode) => {
+    store.dispatch("SET_PAUSE_LENGTH_MODE", {
+      pauseLengthMode,
     });
   },
 });
 
-const selectedAudioKeys = computed(() =>
-  store.state.experimentalSetting.enableMultiSelect
-    ? store.getters.SELECTED_AUDIO_KEYS
-    : [props.activeAudioKey],
-);
-
 watchEffect(() => {
-  if (selectedAudioKeys.value) {
-    if (switchPauseLengthMode.value === "SCALE") {
+  const audioKeys = store.state.audioKeys;
+  if (audioKeys.length > 0) {
+    if (pauseLengthMode.value === "ABSOLUTE") {
+      // a.設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき
+      // 適用範囲: 全てのaudioItem
+      // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し
       store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
-        audioKeys: selectedAudioKeys.value,
+        audioKeys: audioKeys,
         pauseLength: 0.3,
       });
     } else {
       store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
-        audioKeys: selectedAudioKeys.value,
+        audioKeys: audioKeys,
         pauseLengthScale: 1,
       });
     }
