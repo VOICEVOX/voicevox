@@ -324,7 +324,7 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
 
   // d.AudioQueryをfetchしたとき（テキスト入力したとき）
   // 適用範囲: 現在選択しているAudioItem
-  // pushAudioTextIfNeededはblurで発火するので、さらにテキスト変更時に絞り込む
+  // pushAudioTextIfNeededはblurで発火するので、さらにテキストを変更した場合に絞り込む
   if (
     store.state.pauseLengthMode === "ABSOLUTE" &&
     copy_isChangeFlag === true
