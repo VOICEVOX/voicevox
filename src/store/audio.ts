@@ -1317,7 +1317,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           length += m.vowelLength;
         });
         if (phrase.pauseMora != null) {
-          let pauseLength = phrase.pauseMora.vowelLength
+          const pauseLength = phrase.pauseMora.vowelLength;
           if (state.pauseLengthMode === "SCALE") {
             length += pauseLength * query.pauseLengthScale;
           }
