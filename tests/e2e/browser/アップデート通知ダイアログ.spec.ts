@@ -9,7 +9,7 @@ import { assertNonNullable } from "@/type/utility";
 // アップデート通知が出る環境にする
 test.beforeEach(async ({ page }) => {
   dotenv.config();
-  
+
   // 動作環境より新しいバージョン
   const latestVersion = semver.inc(
     process.env.VITE_APP_VERSION ?? process.env.npm_package_version ?? "0.0.0",
