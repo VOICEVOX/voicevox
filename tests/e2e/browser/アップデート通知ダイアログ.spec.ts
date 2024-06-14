@@ -9,6 +9,7 @@ import { assertNonNullable } from "@/type/utility";
 // アップデート通知が出る環境にする
 test.beforeEach(async ({ page }) => {
   dotenv.config();
+  
   // 動作環境より新しいバージョン
   const latestVersion = semver.inc(
     process.env.VITE_APP_VERSION ?? process.env.npm_package_version ?? "0.0.0",
@@ -62,7 +63,7 @@ test("アップデートが通知されたりスキップしたりできる", as
   // 再度開くとまた表示される
   await page.reload();
   await expect(dialog.getByText("アップデートのお知らせ")).toBeVisible({
-    timeout: 40000, // 表示に時間がかかる
+    timeout: 10000, // 表示に時間がかかる
   });
 
   // スキップすると消える
@@ -74,6 +75,6 @@ test("アップデートが通知されたりスキップしたりできる", as
 
   // 再度開いても表示されない（スキップされた）
   await page.reload();
-  await page.waitForTimeout(40000); // エンジン読み込み待機
+  await page.waitForTimeout(5000); // エンジン読み込み待機
   await expect(dialog).not.toBeVisible();
 });
