@@ -9,21 +9,16 @@ import { assertNonNullable } from "@/type/utility";
 // アップデート通知が出る環境にする
 test.beforeEach(async ({ page }) => {
   dotenv.config();
-  console.log("アップデート通知ダイアログ 出力");
-
-  console.log(process.env.VITE_APP_VERSION); // undefined
-  console.log(process.env.npm_package_version); // 999.999.999
   // 動作環境より新しいバージョン
   const latestVersion = semver.inc(
     process.env.VITE_APP_VERSION ?? process.env.npm_package_version ?? "0.0.0",
     "major",
   );
-  console.log(latestVersion); // 1000.0.0
   assertNonNullable(latestVersion);
 
   // アップデート情報を返すAPIのモック
   if (process.env.VITE_LATEST_UPDATE_INFOS_URL == undefined) {
-    throw new Error("VITE_LATEST_UPDATE_INFOS_URL is not defined"); // 該当しない
+    throw new Error("VITE_LATEST_UPDATE_INFOS_URL is not defined");
   }
   page.route(process.env.VITE_LATEST_UPDATE_INFOS_URL, (route) => {
     const updateInfos: UpdateInfo[] = [
@@ -79,6 +74,6 @@ test("アップデートが通知されたりスキップしたりできる", as
 
   // 再度開いても表示されない（スキップされた）
   await page.reload();
-  await page.waitForTimeout(5000); // エンジン読み込み待機
+  await page.waitForTimeout(40000); // エンジン読み込み待機
   await expect(dialog).not.toBeVisible();
 });
