@@ -439,6 +439,7 @@ const parameters = computed<Parameter[]>(() => [
     key: "volumeScale",
   },
   // 条件に基づくパラメータの追加
+  // b.query.pauseLengthにnull以外の値を代入したとき
   pauseLengthMode.value === "SCALE"
     ? {
         label: "文内無音倍率",

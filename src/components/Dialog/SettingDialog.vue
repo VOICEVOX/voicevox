@@ -1124,23 +1124,30 @@ const pauseLengthMode = computed({
   },
 });
 
+// 読込時の1回は除外しないと設定を操作した判定になって何もしなくても終了時にダイアログが出てしまう
+// 何か他にスマートな方法があればいいけど
+let isFirst: boolean = true;
+
 watchEffect(() => {
+  if (isFirst) {
+    isFirst = false;
+    return;
+  }
   const audioKeys = store.state.audioKeys;
-  if (audioKeys.length > 0) {
-    if (pauseLengthMode.value === "ABSOLUTE") {
-      // a.設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき
-      // 適用範囲: 全てのaudioItem
-      // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
-        audioKeys: audioKeys,
-        pauseLength: 0.3,
-      });
-    } else {
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
-        audioKeys: audioKeys,
-        pauseLengthScale: 1,
-      });
-    }
+  if (pauseLengthMode.value === "ABSOLUTE") {
+    console.log("watchEffect");
+    // a.設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき
+    // 適用範囲: 全てのaudioItem
+    // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し
+    store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
+      audioKeys: audioKeys,
+      pauseLength: 0.3,
+    });
+  } else {
+    store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
+      audioKeys: audioKeys,
+      pauseLengthScale: 1,
+    });
   }
 });
 
