@@ -307,10 +307,8 @@ watch(
 );
 
 const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
-  console.log("pushAudioTextIfNeeded");
   // COMMAND_CHANGE_AUDIO_TEXTでもAccenPhrases弄ってるっぽいのでフラグをコピーして後で処理
   const copy_isChangeFlag = isChangeFlag.value;
-  console.log(copy_isChangeFlag);
 
   if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
@@ -328,11 +326,8 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
     store.state.pauseLengthMode === "ABSOLUTE" &&
     copy_isChangeFlag === true
   ) {
-    console.log("check");
-    console.log(props.audioKey);
     const pauseLength =
       store.state.audioItems[props.audioKey].query?.pauseLength;
-    console.log(pauseLength);
     if (pauseLength != null && pauseLength != undefined) {
       store.dispatch("COMMAND_MULTI_APPLY_PAUSE_LENGTH", {
         audioKeys: [props.audioKey],
