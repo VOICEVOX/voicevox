@@ -705,9 +705,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             () => undefined,
           )
         : undefined;
-      if (query) {
-        query.pauseLength = 0.3;
-      }
 
       const newAudioItem: AudioItem = { text, voice };
       if (query != undefined) {
@@ -1319,12 +1316,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           length += m.consonantLength != undefined ? m.consonantLength : 0;
           length += m.vowelLength;
         });
-        if (state.pauseLengthMode === "SCALE") {
-          length += phrase.pauseMora
-            ? phrase.pauseMora.vowelLength * query.pauseLengthScale
-            : 0;
-        } else {
-          length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
+        if (phrase.pauseMora != null) {
+          let pauseLength = phrase.pauseMora.vowelLength
+          if (state.pauseLengthMode === "SCALE") {
+            length += pauseLength * query.pauseLengthScale;
+          }
         }
         // post phoneme lengthは最後のアクセント句の一部として扱う
         if (i === accentPhrases.length - 1) {
