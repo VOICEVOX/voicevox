@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  VOICEVOX_ENGINE_REPO: "VOICEVOX/voicevox_engine" # 軽いのでNemoを使う
-  VOICEVOX_ENGINE_VERSION: "0.19.1"
+  VOICEVOX_ENGINE_REPO: "VOICEVOX/voicevox_nemo_engine" # 軽いのでNemoを使う
+  VOICEVOX_ENGINE_VERSION: "0.14.0"
 
 defaults:
   run:
