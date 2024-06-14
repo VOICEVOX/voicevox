@@ -1061,7 +1061,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from "vue";
+import { computed, ref, watchEffect, watch } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
 import {
@@ -1126,29 +1126,34 @@ const pauseLengthMode = computed({
 
 // 読込時の1回は除外しないと設定を操作した判定になって何もしなくても終了時にダイアログが出てしまう
 // 何か他にスマートな方法があればいいけど
-let isFirst: boolean = true;
+let isFirstRun: boolean = true;
 
-watchEffect(() => {
-  if (isFirst) {
-    isFirst = false;
-    return;
-  }
-  const audioKeys = store.state.audioKeys;
-  if (pauseLengthMode.value === "ABSOLUTE") {
-    // a.設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき
-    // 適用範囲: 全てのaudioItem
-    // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し
-    store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
-      audioKeys: audioKeys,
-      pauseLength: 0.3,
-    });
-  } else {
-    store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
-      audioKeys: audioKeys,
-      pauseLengthScale: 1,
-    });
-  }
-});
+watch(
+  () => pauseLengthMode.value,
+  () => {
+    if (isFirstRun) {
+      isFirstRun = false;
+      return;
+    }
+
+    const audioKeys = store.state.audioKeys;
+    console.log(audioKeys);
+    if (pauseLengthMode.value === "ABSOLUTE") {
+      // a. 設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき
+      // 適用範囲: 全てのaudioItem
+      // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し
+      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", {
+        audioKeys: audioKeys,
+        pauseLength: 0.3,
+      });
+    } else {
+      store.dispatch("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", {
+        audioKeys: audioKeys,
+        pauseLengthScale: 1,
+      });
+    }
+  },
+);
 
 const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
