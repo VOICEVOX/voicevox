@@ -8,6 +8,7 @@ import { assertNonNullable } from "@/type/utility";
 
 // アップデート通知が出る環境にする
 test.beforeEach(async ({ page }) => {
+  dotenv.config();
   console.log("アップデート通知ダイアログ 出力");
 
   console.log(process.env.VITE_APP_VERSION); // undefined
