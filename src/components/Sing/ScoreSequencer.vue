@@ -220,9 +220,30 @@ const notesIncludingPreviewNotes = computed(() => {
     const previewNoteIds = new Set(previewNotes.value.map((value) => value.id));
     return previewNotes.value
       .concat(notes.value.filter((value) => !previewNoteIds.has(value.id)))
-      .sort((a, b) => a.position - b.position);
+      .sort((a, b) => {
+        const aIsSelectedOrPreview =
+          state.selectedNoteIds.has(a.id) || previewNoteIds.has(a.id);
+        const bIsSelectedOrPreview =
+          state.selectedNoteIds.has(b.id) || previewNoteIds.has(b.id);
+        if (aIsSelectedOrPreview === bIsSelectedOrPreview) {
+          return a.position - b.position;
+        } else {
+          // 「プレビュー中か選択中のノート」が「選択されていないノート」より
+          // 手前に表示されるようにする
+          return aIsSelectedOrPreview ? 1 : -1;
+        }
+      });
   } else {
-    return notes.value;
+    return [...notes.value].sort((a, b) => {
+      const aIsSelected = state.selectedNoteIds.has(a.id);
+      const bIsSelected = state.selectedNoteIds.has(b.id);
+      if (aIsSelected === bIsSelected) {
+        return a.position - b.position;
+      } else {
+        // 「選択中のノート」が「選択されていないノート」より手前に表示されるようにする
+        return aIsSelected ? 1 : -1;
+      }
+    });
   }
 });
 
