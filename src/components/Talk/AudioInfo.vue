@@ -463,7 +463,7 @@ const parameters = computed<Parameter[]>(() => [
     : {
         label: "文内無音",
         slider: previewSliderHelper({
-          modelValue: () => query.value?.pauseLength ?? null,
+          modelValue: () => query.value?.pauseLength ?? 0.3,
           disable: () => uiLocked.value,
           max: SLIDER_PARAMETERS.PAUSE_LENGTH.max,
           min: SLIDER_PARAMETERS.PAUSE_LENGTH.min,

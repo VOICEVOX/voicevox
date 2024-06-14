@@ -706,6 +706,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           )
         : undefined;
 
+      // query.pauseLengthはAPIの初期値がnullなので表示の為に0.3(エディタでのデフォルト値)を設定しないといけない
+      // ただしこのとき、IS_EDITEDが更新されないようにしないと設定を操作していないのに閉じるときにダイアログが表示される
+      if (query) {
+        query.pauseLength = 0.3;
+      }
+
       const newAudioItem: AudioItem = { text, voice };
       if (query != undefined) {
         newAudioItem.query = query;
