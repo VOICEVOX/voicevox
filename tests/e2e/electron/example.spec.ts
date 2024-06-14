@@ -49,18 +49,14 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
       VITE_DEV_SERVER_URL: "http://localhost:7357",
     },
   });
-  console.log("check1");
 
   const sut = await app.firstWindow({
     timeout: process.env.CI ? 60000 : 30000,
   });
-  console.log("check2");
 
   // エンジンが起動し「利用規約に関するお知らせ」が表示されるのを待つ
   await sut.waitForSelector("text=利用規約に関するお知らせ", {
     timeout: 60000,
   });
-  console.log("check3");
   await app.close();
-  console.log("check4");
 });

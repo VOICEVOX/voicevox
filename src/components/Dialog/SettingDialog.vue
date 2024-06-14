@@ -1135,7 +1135,6 @@ watchEffect(() => {
   }
   const audioKeys = store.state.audioKeys;
   if (pauseLengthMode.value === "ABSOLUTE") {
-    console.log("watchEffect");
     // a.設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき
     // 適用範囲: 全てのaudioItem
     // COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTHから呼び出し

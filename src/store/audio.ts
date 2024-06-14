@@ -2811,7 +2811,6 @@ export const audioCommandStore = transformCommandStore(
         { commit, dispatch },
         payload: { audioKeys: AudioKey[]; pauseLength: number },
       ) {
-        console.log("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH");
         commit("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH", payload);
         dispatch("COMMAND_MULTI_APPLY_PAUSE_LENGTH", {
           audioKeys: payload.audioKeys,
