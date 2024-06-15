@@ -22,7 +22,7 @@
   <UpdateNotificationDialogContainer
     :canOpenDialog="canOpenNotificationDialog"
   />
-  <ImportMidiDialog v-model="isImportMidiDialogOpenComputed" />
+  <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
@@ -38,7 +38,7 @@ import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
-import ImportMidiDialog from "@/components/Dialog/ImportMidiDialog.vue";
+import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -159,12 +159,12 @@ const canOpenNotificationDialog = computed(() => {
   );
 });
 
-// MIDIインポート時の設定ダイアログ
-const isImportMidiDialogOpenComputed = computed({
-  get: () => store.state.isImportMidiDialogOpen,
+// ソングのプロジェクトファイルのインポート時の設定ダイアログ
+const isImportSongProjectDialogOpenComputed = computed({
+  get: () => store.state.isImportSongProjectDialogOpen,
   set: (val) =>
     store.dispatch("SET_DIALOG_OPEN", {
-      isImportMidiDialogOpen: val,
+      isImportSongProjectDialogOpen: val,
     }),
 });
 </script>

@@ -130,6 +130,29 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     ),
   },
 
+  PARSE_PROJECT_FILE: {
+    async action({ dispatch, getters }, { projectJson }) {
+      const projectData = JSON.parse(projectJson);
+
+      const characterInfos = getters.USER_ORDERED_CHARACTER_INFOS("talk");
+      if (characterInfos == undefined)
+        throw new Error("characterInfos == undefined");
+
+      const parsedProjectData = await migrateProjectFileObject(projectData, {
+        fetchMoraData: (payload) => dispatch("FETCH_MORA_DATA", payload),
+        voices: characterInfos.flatMap((characterInfo) =>
+          characterInfo.metas.styles.map((style) => ({
+            engineId: style.engineId,
+            speakerId: characterInfo.metas.speakerUuid,
+            styleId: style.styleId,
+          })),
+        ),
+      });
+
+      return parsedProjectData;
+    },
+  },
+
   LOAD_PROJECT_FILE: {
     /**
      * プロジェクトファイルを読み込む。読み込めたかの成否が返る。
@@ -137,7 +160,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
      */
     action: createUILockAction(
       async (
-        context,
+        { dispatch, commit, getters },
         { filePath, confirm }: { filePath?: string; confirm?: boolean },
       ) => {
         if (!filePath) {
@@ -157,58 +180,31 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             .readFile({ filePath })
             .then(getValueOrThrow);
 
-          await context.dispatch("APPEND_RECENTLY_USED_PROJECT", {
+          await dispatch("APPEND_RECENTLY_USED_PROJECT", {
             filePath,
           });
 
           const text = new TextDecoder("utf-8").decode(buf).trim();
-          const projectData = JSON.parse(text);
+          const parsedProjectData = await dispatch("PARSE_PROJECT_FILE", {
+            projectJson: text,
+          });
 
-          const characterInfos =
-            context.getters.USER_ORDERED_CHARACTER_INFOS("talk");
-          if (characterInfos == undefined)
-            throw new Error("characterInfos == undefined");
-
-          const parsedProjectData = await migrateProjectFileObject(
-            projectData,
-            {
-              fetchMoraData: (payload) =>
-                context.dispatch("FETCH_MORA_DATA", payload),
-              voices: characterInfos.flatMap((characterInfo) =>
-                characterInfo.metas.styles.map((style) => ({
-                  engineId: style.engineId,
-                  speakerId: characterInfo.metas.speakerUuid,
-                  styleId: style.styleId,
-                })),
-              ),
-            },
-          );
-
-          if (confirm !== false && context.getters.IS_EDITED) {
-            const result = await context.dispatch(
-              "SAVE_OR_DISCARD_PROJECT_FILE",
-              {
-                additionalMessage:
-                  "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
-              },
-            );
+          if (confirm !== false && getters.IS_EDITED) {
+            const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {
+              additionalMessage:
+                "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
+            });
             if (result == "canceled") {
               return false;
             }
           }
 
-          await applyTalkProjectToStore(
-            context.dispatch,
-            parsedProjectData.talk,
-          );
-          await applySongProjectToStore(
-            context.dispatch,
-            parsedProjectData.song,
-          );
+          await applyTalkProjectToStore(dispatch, parsedProjectData.talk);
+          await applySongProjectToStore(dispatch, parsedProjectData.song);
 
-          context.commit("SET_PROJECT_FILEPATH", { filePath });
-          context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
-          context.commit("CLEAR_COMMANDS");
+          commit("SET_PROJECT_FILEPATH", { filePath });
+          commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+          commit("CLEAR_COMMANDS");
           return true;
         } catch (err) {
           window.backend.logError(err);
