@@ -35,7 +35,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (name: "lyricInput", text: string, note: Note): void;
-  (name: "lyricComfirmed", nextNoteId: NoteId | undefined): void;
+  (name: "lyricConfirmed", nextNoteId: NoteId | undefined): void;
 }>();
 
 const store = useStore();
@@ -72,7 +72,7 @@ const onLyricInputKeyDown = (event: KeyboardEvent) => {
       return;
     }
     const nextNoteId = notes[index + (event.shiftKey ? -1 : 1)].id;
-    emit("lyricComfirmed", nextNoteId);
+    emit("lyricConfirmed", nextNoteId);
   }
   // IME変換確定時のEnterを無視する
   if (event.key === "Enter" && event.isComposing) {
@@ -80,12 +80,12 @@ const onLyricInputKeyDown = (event: KeyboardEvent) => {
   }
   // IME変換でなければ入力を確定
   if (event.key === "Enter" && !event.isComposing) {
-    emit("lyricComfirmed", undefined);
+    emit("lyricConfirmed", undefined);
   }
 };
 
 const onLyricInputBlur = () => {
-  emit("lyricComfirmed", undefined);
+  emit("lyricConfirmed", undefined);
 };
 
 const onLyricInput = (event: Event) => {

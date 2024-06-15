@@ -60,7 +60,7 @@
         v-if="editingLyricNote != undefined"
         :editingLyricNote
         @lyricInput="onLyricInput"
-        @lyricComfirmed="onLyricComfirmed"
+        @lyricConfirmed="onLyricConfirmed"
       />
     </div>
     <SequencerPitch
@@ -323,7 +323,7 @@ const onLyricInput = (text: string, note: Note) => {
   splitAndUpdatePreview(text, note);
 };
 
-const onLyricComfirmed = (nextNoteId: NoteId | undefined) => {
+const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
   commitPreviewLyrics();
   store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
 };
