@@ -48,13 +48,19 @@
         :key="note.id"
         :note
         :nowPreviewing
+        :isSelected="selectedNoteIds.has(note.id)"
+        :isPreview="previewNoteIds.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
         @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyricInput="onNoteLyricInput($event, note)"
-        @lyricBlur="onNoteLyricBlur()"
+      />
+      <SequencerLyricInput
+        v-if="editingLyricNote != undefined"
+        :editingLyricNote
+        @lyricInput="onLyricInput"
+        @lyricComfirmed="onLyricComfirmed"
       />
     </div>
     <SequencerPitch
@@ -176,6 +182,7 @@ import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
+import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -208,12 +215,12 @@ const state = store.state;
 const tpqn = computed(() => state.tpqn);
 const tempos = computed(() => state.tempos);
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
+const selectedNoteIds = computed(() => new Set(state.selectedNoteIds));
 const isNoteSelected = computed(() => {
-  return state.selectedNoteIds.size > 0;
+  return selectedNoteIds.value.size > 0;
 });
 const selectedNotes = computed(() => {
-  const selectedNoteIds = state.selectedNoteIds;
-  return notes.value.filter((value) => selectedNoteIds.has(value.id));
+  return notes.value.filter((value) => selectedNoteIds.value.has(value.id));
 });
 const notesIncludingPreviewNotes = computed(() => {
   if (nowPreviewing.value) {
@@ -222,9 +229,9 @@ const notesIncludingPreviewNotes = computed(() => {
       .concat(notes.value.filter((value) => !previewNoteIds.has(value.id)))
       .sort((a, b) => {
         const aIsSelectedOrPreview =
-          state.selectedNoteIds.has(a.id) || previewNoteIds.has(a.id);
+          selectedNoteIds.value.has(a.id) || previewNoteIds.has(a.id);
         const bIsSelectedOrPreview =
-          state.selectedNoteIds.has(b.id) || previewNoteIds.has(b.id);
+          selectedNoteIds.value.has(b.id) || previewNoteIds.has(b.id);
         if (aIsSelectedOrPreview === bIsSelectedOrPreview) {
           return a.position - b.position;
         } else {
@@ -235,8 +242,8 @@ const notesIncludingPreviewNotes = computed(() => {
       });
   } else {
     return [...notes.value].sort((a, b) => {
-      const aIsSelected = state.selectedNoteIds.has(a.id);
-      const bIsSelected = state.selectedNoteIds.has(b.id);
+      const aIsSelected = selectedNoteIds.value.has(a.id);
+      const bIsSelected = selectedNoteIds.value.has(b.id);
       if (aIsSelected === bIsSelected) {
         return a.position - b.position;
       } else {
@@ -312,12 +319,13 @@ const cursorY = ref(0);
 const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
   useLyricInput();
 
-const onNoteLyricInput = (text: string, note: Note) => {
+const onLyricInput = (text: string, note: Note) => {
   splitAndUpdatePreview(text, note);
 };
 
-const onNoteLyricBlur = () => {
+const onLyricComfirmed = (nextNoteId: NoteId | undefined) => {
   commitPreviewLyrics();
+  store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
 };
 
 // プレビュー
@@ -330,6 +338,9 @@ let executePreviewProcess = false;
 // ノート編集のプレビュー
 const previewNotes = ref<Note[]>([]);
 const copiedNotesForPreview = new Map<NoteId, Note>();
+const previewNoteIds = computed(() => {
+  return new Set(nowPreviewing.value ? copiedNotesForPreview.keys() : []);
+});
 let dragStartTicks = 0;
 let dragStartNoteNumber = 0;
 let dragStartGuideLineTicks = 0;
@@ -342,6 +353,11 @@ const previewPitchEdit = ref<
   | undefined
 >(undefined);
 const prevCursorPos = { frame: 0, frequency: 0 }; // 前のカーソル位置
+
+// 歌詞を編集中のノート
+const editingLyricNote = computed(() => {
+  return notes.value.find((value) => value.id === state.editingLyricNoteId);
+});
 
 // 入力を補助する線
 const showGuideLine = ref(true);
