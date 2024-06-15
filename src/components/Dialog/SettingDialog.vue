@@ -1137,7 +1137,6 @@ watch(
     }
 
     const audioKeys = store.state.audioKeys;
-    console.log(audioKeys);
     if (pauseLengthMode.value === "ABSOLUTE") {
       // a. 設定で絶対値モードに変更し、query.pauseLengthにnull以外の値が入っているとき
       // 適用範囲: 全てのaudioItem
