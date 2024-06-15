@@ -183,7 +183,8 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
 // FileSystemFileHandleを保持するMap。キーは生成した疑似パス。
 const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
 
-// 疑似パスを返す
+// ファイル選択ダイアログを開く
+// 返り値はファイルパスではなく、疑似パスを返す
 export const showOpenFilePickerImpl = async (options: {
   multiple: boolean;
   fileTypes: {
