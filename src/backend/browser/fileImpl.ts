@@ -3,6 +3,9 @@ import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./browserConfig";
 import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
+import { createLogger } from "@/domain/frontend/log";
+
+const log = createLogger("fileImpl");
 
 const storeDirectoryHandle = async (
   directoryHandle: FileSystemDirectoryHandle,
@@ -176,3 +179,45 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
 
     return Promise.resolve(fileEntries.includes(fileName));
   };
+
+// FileSystemFileHandleを保持するMap。キーは生成した疑似パス。
+const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
+
+// ファイル選択ダイアログを開く
+// 返り値はファイルパスではなく、疑似パスを返す
+export const showOpenFilePickerImpl = async (options: {
+  multiple: boolean;
+  fileTypes: {
+    description: string;
+    accept: Record<string, string[]>;
+  }[];
+}) => {
+  try {
+    const handles = await showOpenFilePicker({
+      excludeAcceptAllOption: true,
+      multiple: options.multiple,
+      types: options.fileTypes,
+    });
+    const paths = [];
+    for (const handle of handles) {
+      const fakePath = `<browser-dummy-${crypto.randomUUID()}>-${handle.name}`;
+      fileHandleMap.set(fakePath, handle);
+      paths.push(fakePath);
+    }
+    return handles.length > 0 ? paths : undefined;
+  } catch (e) {
+    log.warn(`showOpenFilePicker error: ${e}`);
+    return undefined;
+  }
+};
+
+// 指定した疑似パスのファイルを読み込む
+export const readFileImpl = async (filePath: string) => {
+  const fileHandle = fileHandleMap.get(filePath);
+  if (fileHandle == undefined) {
+    return failure(new Error(`ファイルが見つかりません: ${filePath}`));
+  }
+  const file = await fileHandle.getFile();
+  const buffer = await file.arrayBuffer();
+  return success(buffer);
+};
