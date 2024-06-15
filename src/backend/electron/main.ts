@@ -977,7 +977,8 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
 ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
   win.hide(); // FIXME: ダミーページ表示のほうが良い
 
-  win.reload();
+  // 一旦適当なURLに飛ばしてページをアンロードする
+  await win.loadURL("about:blank");
 
   log.info("Checking ENGINE status before reload app");
   const engineCleanupResult = cleanupEngines();
