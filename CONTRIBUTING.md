@@ -69,7 +69,7 @@ VOICEVOXには、下記のような貢献の仕方があります。
 
 ## 事前準備
 
-ここからはWindowsをお使いの方が、VOICEVOX(エディタ)の環境を作るケースを想定し、話を進めます。まず、テスト版VOICEVOXの環境を構築しましょう。
+ここからはWindowsをお使いの方が、VOICEVOX（エディタ）の環境を作るケースを想定し、話を進めます。まず、テスト版VOICEVOXの環境を構築しましょう。
 
 ### 1. 製品版VOICEVOXを導入する
 
@@ -85,9 +85,9 @@ VOICEVOXには、下記のような貢献の仕方があります。
   - [Git](https://git-scm.com/downloads)
   - [Visual Studio Code](https://code.visualstudio.com/)
   - [GitHub CLI](https://github.com/cli/cli#installation)
-  - [typos](https://github.com/crate-ci/typos#install) (誤字チェックする場合)
+  - [typos](https://github.com/crate-ci/typos#install) （誤字チェックする場合）
   - [Tortoise Git](https://tortoisegit.org/download/)
-    (エクスプローラ上で操作したい場合)
+    （エクスプローラ上で操作したい場合）
 
 ### 3. フォークする
 
@@ -202,9 +202,14 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 ```
 
 - 変数名や型名の命名にあたっては、その仕組みで一般的に使われる命名則があれば、それらを優先して採用します。
-- 関数名は、動詞＋役割となるように設定をします。 |命名例 |役割 |
-  |------------|------------------------------| |setVolume() |音量を設定 |
-  |getVolume() |音量を取得 | |isMuted |ミュート状態の取得(boolean) |
+
+* 関数名は、動詞＋役割となるように設定をします。
+
+  | 命名例      | 役割                        |
+  | ----------- | --------------------------- |
+  | setVolume() | 音量を設定                  |
+  | getVolume() | 音量を取得                  |
+  | isMuted     | ミュート状態の取得(boolean) |
 
 - 変数や関数名につける英語は極力省略しないようにします。
 - コードは分かりやすさや単純さを保つようにしてください。
@@ -316,7 +321,7 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 
 ### 7. コンフリクト対応
 
-- レビューが終わると、マージ(取り込み)準備が始まります。
+- レビューが終わると、マージ（取り込み）準備が始まります。
 
 - 作業中に他の修正が取り込まれている場合には、修正箇所が重なる「コンフリクト」という現象が発生することがあります。
 
