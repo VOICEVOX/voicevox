@@ -1,0 +1,43 @@
+name: Release latest dev build
+
+# mainブランチが更新されるたびに開発版をビルドしてデプロイする。
+# バージョン（タグ）は最新リリースのバージョンを`X.Y.Z`としたときの`X.Y+1.0-dev`。
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "docs/**"
+      - "tests/**"
+
+jobs:
+  latest-dev-build:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'VOICEVOX'
+    steps:
+      - name: Trigger workflow_dispatch
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const latest_release = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            const split_version = latest_release.data.tag_name.split('.');
+            const dev_version = `${split_version[0]}.${parseInt(split_version[1]) + 1}.0-dev`;
+
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build.yml',
+              ref: 'main',
+              inputs: {
+                version: dev_version,
+                prerelease: true
+              }
+            })
+
+            console.log(`Triggered workflow_dispatch for ${dev_version}`);

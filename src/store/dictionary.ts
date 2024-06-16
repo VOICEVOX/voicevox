@@ -1,16 +1,18 @@
+import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import { UserDictWord, UserDictWordToJSON } from "@/openapi";
 import { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
 import { EngineId } from "@/type/preload";
-import { createPartialStore } from "./vuex";
 
 export const dictionaryStoreState: DictionaryStoreState = {};
 
 export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
   LOAD_USER_DICT: {
-    async action({ dispatch }, { engineId }) {
-      const engineDict = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineId,
-      }).then((instance) => instance.invoke("getUserDictWordsUserDictGet")({}));
+    async action({ actions }, { engineId }) {
+      const engineDict = await actions
+        .INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        })
+        .then((instance) => instance.invoke("getUserDictWordsUserDictGet")({}));
 
       // 50音順にソートするために、一旦arrayにする
       const dictArray = Object.keys(engineDict).map((k) => {
@@ -32,11 +34,11 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
   },
 
   LOAD_ALL_USER_DICT: {
-    async action({ dispatch, state }) {
+    async action({ actions, state }) {
       const allDict = await Promise.all(
         state.engineIds.map((engineId) => {
-          return dispatch("LOAD_USER_DICT", { engineId });
-        })
+          return actions.LOAD_USER_DICT({ engineId });
+        }),
       );
       const mergedDictMap = new Map<string, [string, UserDictWord]>();
       for (const dict of allDict) {
@@ -61,98 +63,108 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
 
   ADD_WORD: {
     async action(
-      { state, dispatch },
-      { surface, pronunciation, accentType, priority }
+      { state, actions },
+      { surface, pronunciation, accentType, priority },
     ) {
       // 同じ単語IDで登録するために、１つのエンジンで登録したあと全エンジンに同期する。
       const engineId: EngineId | undefined = state.engineIds[0];
 
-      if (engineId === undefined)
+      if (engineId == undefined)
         throw new Error(`No such engine registered: index == 0`);
-      await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineId,
-      }).then((instance) =>
-        instance.invoke("addUserDictWordUserDictWordPost")({
-          surface,
-          pronunciation,
-          accentType,
-          priority,
+      await actions
+        .INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
         })
-      );
+        .then((instance) =>
+          instance.invoke("addUserDictWordUserDictWordPost")({
+            surface,
+            pronunciation,
+            accentType,
+            priority,
+          }),
+        );
 
-      await dispatch("SYNC_ALL_USER_DICT");
+      await actions.SYNC_ALL_USER_DICT();
     },
   },
 
   REWRITE_WORD: {
     async action(
-      { state, dispatch },
-      { wordUuid, surface, pronunciation, accentType, priority }
+      { state, actions },
+      { wordUuid, surface, pronunciation, accentType, priority },
     ) {
       if (state.engineIds.length === 0)
         throw new Error(`At least one engine must be registered`);
       for (const engineId of state.engineIds) {
-        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        }).then((instance) =>
-          instance.invoke("rewriteUserDictWordUserDictWordWordUuidPut")({
-            wordUuid,
-            surface,
-            pronunciation,
-            accentType,
-            priority,
+        await actions
+          .INSTANTIATE_ENGINE_CONNECTOR({
+            engineId,
           })
-        );
+          .then((instance) =>
+            instance.invoke("rewriteUserDictWordUserDictWordWordUuidPut")({
+              wordUuid,
+              surface,
+              pronunciation,
+              accentType,
+              priority,
+            }),
+          );
       }
     },
   },
 
   DELETE_WORD: {
-    async action({ state, dispatch }, { wordUuid }) {
+    async action({ state, actions }, { wordUuid }) {
       if (state.engineIds.length === 0)
         throw new Error(`At least one engine must be registered`);
       for (const engineId of state.engineIds) {
-        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        }).then((instance) =>
-          instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")({
-            wordUuid,
+        await actions
+          .INSTANTIATE_ENGINE_CONNECTOR({
+            engineId,
           })
-        );
+          .then((instance) =>
+            instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")({
+              wordUuid,
+            }),
+          );
       }
     },
   },
 
   SYNC_ALL_USER_DICT: {
-    async action({ dispatch, state }) {
-      const mergedDict = await dispatch("LOAD_ALL_USER_DICT");
+    async action({ actions, state }) {
+      const mergedDict = await actions.LOAD_ALL_USER_DICT();
       for (const engineId of state.engineIds) {
         // エンジンの辞書のIDリストを取得する。
-        const dictIdSet = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        }).then(
-          async (instance) =>
-            new Set(
-              Object.keys(
-                await instance.invoke("getUserDictWordsUserDictGet")({})
-              )
-            )
-        );
-        if (Object.keys(mergedDict).some((id) => !dictIdSet.has(id))) {
-          await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+        const dictIdSet = await actions
+          .INSTANTIATE_ENGINE_CONNECTOR({
             engineId,
-          }).then((instance) =>
-            // マージした辞書をエンジンにインポートする。
-            instance.invoke("importUserDictWordsImportUserDictPost")({
-              override: true,
-              requestBody: Object.fromEntries(
-                Object.entries(mergedDict).map(([k, v]) => [
-                  k,
-                  UserDictWordToJSON(v),
-                ])
+          })
+          .then(
+            async (instance) =>
+              new Set(
+                Object.keys(
+                  await instance.invoke("getUserDictWordsUserDictGet")({}),
+                ),
               ),
-            })
           );
+        if (Object.keys(mergedDict).some((id) => !dictIdSet.has(id))) {
+          await actions
+            .INSTANTIATE_ENGINE_CONNECTOR({
+              engineId,
+            })
+            .then((instance) =>
+              // マージした辞書をエンジンにインポートする。
+              instance.invoke("importUserDictWordsImportUserDictPost")({
+                override: true,
+                requestBody: Object.fromEntries(
+                  Object.entries(mergedDict).map(([k, v]) => [
+                    k,
+                    UserDictWordToJSON(v),
+                  ]),
+                ),
+              }),
+            );
         }
         const removedDictIdSet = new Set(dictIdSet);
         // マージされた辞書にあるIDを削除する。
@@ -163,20 +175,20 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
           }
         }
 
-        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId }).then(
-          (instance) => {
+        await actions
+          .INSTANTIATE_ENGINE_CONNECTOR({ engineId })
+          .then((instance) => {
             // マージ処理で削除された項目をエンジンから削除する。
             Promise.all(
               [...removedDictIdSet].map((id) =>
                 instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")(
                   {
                     wordUuid: id,
-                  }
-                )
-              )
+                  },
+                ),
+              ),
             );
-          }
-        );
+          });
       }
     },
   },

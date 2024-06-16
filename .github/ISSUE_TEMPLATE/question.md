@@ -1,6 +1,6 @@
 ---
 name: Question
-about: 質問 (既存のIssueや一般事例を良く調べてからしてください)
+about: 質問（既存のIssueや一般事例を良く調べてからしてください）
 labels: question
 ---
 

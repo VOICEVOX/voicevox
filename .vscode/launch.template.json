@@ -1,0 +1,47 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to Renderer Process",
+            // NOTE: background.tsで指定しているremote-debugging-port
+            "port": 9222,
+            "request": "attach",
+            "type": "chrome",
+            "webRoot": "${workspaceFolder}",
+            "timeout": 20000, // 20 * 1000 ms程度あればビルド時間は間に合うはず
+        },
+        {
+            "name": "Launch Electron Main Process via NPM",
+            "request": "launch",
+            "runtimeArgs": [
+                "run",
+                "electron:serve"
+            ],
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
+            "name": "Attach by Process ID",
+            // .bin viteを指定するとElectronのMain Processのデバッグが可能
+            "processId": "${command:PickProcess}",
+            "request": "attach",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+    ],
+    "compounds": [
+        {
+            "name": "Launch Electron Main/Renderer",
+            "configurations": ["Attach to Renderer Process", "Launch Electron Main Process via NPM"],
+            "stopAll": true
+        }
+    ]
+}

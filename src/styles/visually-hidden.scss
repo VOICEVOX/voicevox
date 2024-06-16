@@ -1,0 +1,31 @@
+/*
+Copyright 2013–2023 The Accessibility Project
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// This file is customized for using @mixin and @import.
+// The inner is not changed.
+// source https://www.a11yproject.com/posts/how-to-hide-content/
+// github https://github.com/a11yproject/a11yproject.com/blob/main/src/posts/how-to-hide-content.md
+
+// アクセシビリティのため display:none を避けつつ見た目上非表示にする
+@mixin visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}

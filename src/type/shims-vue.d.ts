@@ -5,7 +5,3 @@ declare module "*.vue" {
 
   export default component;
 }
-
-interface Window {
-  readonly electron: import("./preload").Sandbox;
-}

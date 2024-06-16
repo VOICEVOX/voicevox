@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-const crypto = require('crypto');
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
 const createIni = (sizes, hashes) => {
-  const ini = ['[files]', `n=${sizes.length}`];
+  const ini = ["[files]", `n=${sizes.length}`];
   hashes.forEach((v, i) => ini.push(`hash${i}=${v.toUpperCase()}`));
   sizes.forEach((v, i) => ini.push(`size${i}=${v}`));
   return ini.join("\r\n") + "\r\n";
@@ -13,13 +13,13 @@ const createIni = (sizes, hashes) => {
 // target: electron-builder.Target
 exports.default = async function (target) {
   const projectName = process.env.npm_package_name;
-  if (projectName === undefined) {
+  if (projectName == undefined) {
     const ErrorMessage = "Project name is undefined.";
     console.error(ErrorMessage);
     throw ErrorMessage;
   }
   const projectVersion = process.env.npm_package_version;
-  if (projectVersion === undefined) {
+  if (projectVersion == undefined) {
     const ErrorMessage = "Project version is undefined.";
     console.error(ErrorMessage);
     throw ErrorMessage;
@@ -66,8 +66,8 @@ exports.default = async function (target) {
 
       fileIndex += 1;
       sizes.push(chunk.length);
-      const hash = crypto.createHash('md5');
-      hashes.push(hash.update(chunk).digest('hex'));
+      const hash = crypto.createHash("md5");
+      hashes.push(hash.update(chunk).digest("hex"));
     });
   });
 
