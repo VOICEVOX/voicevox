@@ -78,7 +78,7 @@ VOICEVOXには、下記のような貢献の仕方があります。
 ### 2. 開発環境の構築
 
 - 必須ツール
-  - [Node.js](https://nodejs.org/en/download/releases/)
+  - [Node.js](https://nodejs.org/en/download/releases/)\
     [こちら](https://github.com/VOICEVOX/voicevox/blob/main/.node-version)に記載されているバージョンのインストーラを入手し、インストールします。
 
 - 必要に応じて
