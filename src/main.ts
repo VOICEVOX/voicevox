@@ -5,7 +5,7 @@ import iconSet from "quasar/icon-set/material-icons";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
-import { generateColorPalette } from "./helpers/colors";
+import { generateColorPalette, applyTheme } from "./helpers/colors";
 import App from "@/components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
@@ -19,61 +19,38 @@ window.dataLayer = [];
 
 const colorConfig = {
   sourceColor: "#a5d4ad",
-  primaryHue: {
-    light: 260,
-    dark: 240,
-  },
-  secondaryHue: {
-    light: 200,
-    dark: 180,
-  },
-  tertiaryHue: {
-    light: 180,
-    dark: 160,
-  },
-  neutral: {
-    light: 200,
-    dark: 800,
-  },
-  neutralVariant: {
-    light: 200,
-    dark: 800,
+  neutralHue: 180,
+  light: {},
+  dark: {},
+  tones: {
+    primary: 40,
+    secondary: 40,
+    tertiary: 40,
+    neutral: 40,
+    neutralVariant: 40,
+    error: 40,
   },
   customColors: {
     error: "#B3261E",
-    success: "#198754",
+    brand: "#a5d4ad",
   },
 };
 
 // カラーパレットを生成
 const colorPalette = generateColorPalette(colorConfig);
 
-// CSS 変数に設定
-function applyColorPalette(palette: { [key: string]: number }) {
-  const root = document.documentElement;
-  for (const [key, value] of Object.entries(palette)) {
-    root.style.setProperty(
-      `--md-sys-color-${key}`,
-      `#${value.toString(16).padStart(8, "0").slice(2)}`,
-    );
-  }
-}
-
-// ライトテーマとダークテーマの切り替え
-function applyTheme(isDark: boolean) {
-  const palette = isDark ? colorPalette.dark : colorPalette.light;
-  applyColorPalette(palette);
-}
-
 // 初期テーマを適用
-applyTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+applyTheme(
+  colorPalette,
+  window.matchMedia("(prefers-color-scheme: dark)").matches,
+);
 
 // テーマ切り替えイベントリスナー
 window
   .matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", (event) => {
-    applyTheme(event.matches);
-});
+    applyTheme(colorPalette, event.matches);
+  });
 
 createApp(App)
   .use(store, storeKey)

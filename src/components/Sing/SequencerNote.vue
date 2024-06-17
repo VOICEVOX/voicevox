@@ -302,22 +302,21 @@ const onLyricInput = (event: Event) => {
 
   &.below-pitch {
     .note-bar {
-      background-color: rgba(colors.$primary-rgb, 0.18);
-      border-color: hsl(130, 35%, 78%);
+      background-color: var(--md-sys-color-primary-container);
+      border-color: var(--md-sys-color-primary);
     }
   }
 
   &.selected {
-    // 色は仮
     .note-bar {
-      background-color: lab(95, -22.953, 14.365);
-      border-color: lab(65, -22.953, 14.365);
-      outline: solid 2px lab(70, -22.953, 14.365);
+      background-color: var(--md-sys-color-primary-container);
+      border-color: var(--md-sys-color-inverse-primary);
+      outline: solid 2px var(--md-sys-color-inverse-primary);
     }
 
     &.below-pitch {
       .note-bar {
-        background-color: rgba(colors.$primary-rgb, 0.18);
+        background-color: var(--md-sys-color-primary-container);
       }
     }
   }
@@ -367,14 +366,9 @@ const onLyricInput = (event: Event) => {
   min-width: 2rem;
   padding: 0;
   background: transparent;
-  color: #121212;
+  color: var(--md-sys-color-on-surface);
   font-size: 1rem;
-  font-weight: 700;
-  text-shadow:
-    -1px -1px 0 #fff,
-    1px -1px 0 #fff,
-    -1px 1px 0 #fff,
-    1px 1px 0 #fff;
+  font-weight: 500;
   white-space: nowrap;
   pointer-events: none;
 }
@@ -384,45 +378,45 @@ const onLyricInput = (event: Event) => {
   position: absolute;
   width: calc(100% + 1px);
   height: 100%;
-  background-color: colors.$primary;
-  border: 1px solid rgba(colors.$background-rgb, 0.5);
+  border: 1px solid var(--md-sys-color-brand);
+  background-color: var(--md-sys-color-secondary-container);
   border-radius: 4px;
 }
 
 .note-left-edge {
   position: absolute;
   top: 0;
-  left: -1px;
-  width: 5px;
+  left: 0;
+  width: 6px;
   height: 100%;
 
   &:hover {
     // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: lab(80, -22.953, 14.365);
+    background-color: var(--md-sys-color-inverse-primary);
   }
 }
 
 .note-right-edge {
   position: absolute;
   top: 0;
-  right: -1px;
-  width: 5px;
+  right: 0;
+  width: 6px;
   height: 100%;
 
   &:hover {
     // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: lab(80, -22.953, 14.365);
+    background-color: var(--md-sys-color-inverse-primary);
   }
 }
 
 .note-lyric-input {
   position: absolute;
   bottom: 0;
-  font-weight: 700;
-  min-width: 3rem;
-  max-width: 6rem;
+  font-weight: 500;
+  min-width: 2rem;
+  max-width: fit-content;
   border: 0;
-  outline: 2px solid lab(80, -22.953, 14.365);
+  outline: 2px solid var(--md-sys-color-inverse-primary);
   border-radius: 4px;
 }
 

@@ -175,29 +175,29 @@ onUnmounted(() => {
 
 .sequencer-keys {
   backface-visibility: hidden;
-  background: colors.$background;
+  background: var(--md-sys-color-background);
   overflow: hidden;
 }
 
 .white-key {
-  fill: colors.$sequencer-white-key;
-  stroke: colors.$sequencer-main-divider;
+  fill: var(--md-sys-color-background);
+  stroke: var(--md-sys-color-outline);
 }
 
 .white-key-being-pressed {
-  fill: colors.$primary;
-  stroke: colors.$primary;
+  fill: var(--md-sys-color-secondary-container);
+  stroke: var(--md-sys-color-primary);
 }
 
 .black-key {
-  fill: colors.$sequencer-black-key;
+  fill: var(--md-sys-color-surface-container-highest);
 }
 
 .black-key-being-pressed {
-  fill: colors.$primary;
+  fill: var(--md-sys-color-secondary-container);
 }
 
 .pitchname {
-  fill: colors.$sequencer-black-key;
+  fill: var(--md-sys-color-on-surface);
 }
 </style>

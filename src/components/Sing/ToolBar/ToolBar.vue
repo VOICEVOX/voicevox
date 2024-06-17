@@ -37,29 +37,37 @@
           <QIcon name="music_note" size="xs" class="sing-tempo-icon" />
         </template>
       </QInput>
-      <div class="sing-beats">
-        <QInput
-          type="number"
-          :model-value="beatsInputBuffer"
-          label="拍子"
-          dense
-          hide-bottom-space
-          class="sing-time-signature"
-          @update:model-value="setBeatsInputBuffer"
-          @change="setTimeSignature"
-        />
-        <div class="sing-beats-separator">/</div>
-        <QInput
-          type="number"
-          :model-value="beatTypeInputBuffer"
-          label=""
-          dense
-          hide-bottom-space
-          class="sing-time-signature"
-          @update:model-value="setBeatTypeInputBuffer"
-          @change="setTimeSignature"
-        />
-      </div>
+      <QField label="拍子" hide-bottom-space dense>
+        <div class="sing-beats">
+          <QSelect
+            :model-value="timeSignatures[0].beats"
+            :options="beatsOptions"
+            hide-bottom-space
+            hide-dropdown-icon
+            user-inputs
+            dense
+            options-dense
+            transition-show="none"
+            transition-hide="none"
+            class="sing-time-signature"
+            @update:model-value="setBeats"
+          />
+          <div class="sing-beats-separator">/</div>
+          <QSelect
+            :model-value="timeSignatures[0].beatType"
+            :options="beatTypeOptions"
+            hide-bottom-space
+            hide-dropdown-icon
+            user-inputs
+            dense
+            options-dense
+            transition-show="none"
+            transition-hide="none"
+            class="sing-time-signature"
+            @update:model-value="setBeatType"
+          />
+        </div>
+      </QField>
     </div>
     <!-- player -->
     <div class="sing-player">
@@ -219,6 +227,20 @@ const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
 
+const beatsOptions = computed(() => {
+  return Array.from({ length: 32 }, (_, i) => ({
+    label: (i + 1).toString(),
+    value: i + 1,
+  }));
+});
+
+const beatTypeOptions = computed(() => {
+  return [2, 4, 8, 16, 32].map((beatType) => ({
+    label: beatType.toString(),
+    value: beatType,
+  }));
+});
+
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
 const beatTypeInputBuffer = ref(4);
@@ -266,20 +288,30 @@ const setBpmInputBuffer = (bpmStr: string | number | null) => {
   bpmInputBuffer.value = bpmValue;
 };
 
-const setBeatsInputBuffer = (beatsStr: string | number | null) => {
-  const beatsValue = Number(beatsStr);
-  if (!isValidBeats(beatsValue)) {
+const setBeats = (beats: { label: string; value: number }) => {
+  if (!isValidBeats(beats.value)) {
     return;
   }
-  beatsInputBuffer.value = beatsValue;
+  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+    timeSignature: {
+      measureNumber: 1,
+      beats: beats.value,
+      beatType: timeSignatures.value[0].beatType,
+    },
+  });
 };
 
-const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
-  const beatTypeValue = Number(beatTypeStr);
-  if (!isValidBeatType(beatTypeValue)) {
+const setBeatType = (beatType: { label: string; value: number }) => {
+  if (!isValidBeatType(beatType.value)) {
     return;
   }
-  beatTypeInputBuffer.value = beatTypeValue;
+  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+    timeSignature: {
+      measureNumber: 1,
+      beats: timeSignatures.value[0].beats,
+      beatType: beatType.value,
+    },
+  });
 };
 
 const setKeyRangeAdjustmentInputBuffer = (
@@ -451,12 +483,12 @@ onUnmounted(() => {
 }
 
 .sing-toolbar {
-  background: colors.$sing-toolbar;
+  background: var(--md-sys-color-surface);
   align-items: center;
   display: flex;
   justify-content: space-between;
-  min-height: 56px;
-  padding: 0 8px 0 0;
+  min-height: 64px;
+  padding: 0 16px;
   width: 100%;
 }
 
@@ -476,13 +508,13 @@ onUnmounted(() => {
 .key-range-adjustment {
   margin-left: 16px;
   margin-right: 4px;
-  width: 50px;
+  width: 48px;
 }
 
 .volume-range-adjustment {
   margin-left: 4px;
   margin-right: 4px;
-  width: 50px;
+  width: 48px;
 }
 
 .sing-tempo {
@@ -492,7 +524,6 @@ onUnmounted(() => {
 }
 
 .sing-tempo-icon {
-  color: rgba(colors.$display-rgb, 0.6);
   padding-right: 0px;
   position: relative;
   top: 4px;
@@ -512,7 +543,6 @@ onUnmounted(() => {
   width: 32px;
 }
 .sing-beats-separator {
-  color: rgba(colors.$display-rgb, 0.6);
   position: relative;
   top: 5px;
   margin-right: 8px;
@@ -532,7 +562,7 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 700;
   margin: 10px 0 0 2px;
-  color: rgba(colors.$display-rgb, 0.73);
+  color: var(--md-sys-color-on-surface);
 }
 
 .sing-controls {

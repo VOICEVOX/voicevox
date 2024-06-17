@@ -1575,16 +1575,14 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
-  grid-template-rows: 30px 1fr;
+  grid-template-rows: 40px 1fr;
   grid-template-columns: 48px 1fr;
 }
 
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: colors.$background;
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
+  background: var(--md-sys-color-surface-variant);
 }
 
 .sequencer-ruler {
@@ -1616,35 +1614,36 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 
 .sequencer-grid-cell {
   display: block;
-  stroke: rgba(colors.$sequencer-sub-divider-rgb, 0.3);
+  stroke: var(--md-sys-color-surface-variant);
   stroke-width: 1;
 }
 
 .sequencer-grid-octave-cell {
-  stroke: colors.$sequencer-main-divider;
+  stroke: var(--md-sys-color-outline);
 }
 
 .sequencer-grid-octave-line {
   backface-visibility: hidden;
-  stroke: colors.$sequencer-main-divider;
+  stroke: var(--md-sys-color-outline);
 }
 
 .sequencer-grid-cell-white {
-  fill: colors.$sequencer-whitekey-cell;
+  fill: var(--md-sys-color-background);
 }
 
 .sequencer-grid-cell-black {
-  fill: colors.$sequencer-blackkey-cell;
+  fill: var(--md-sys-color-surface-variant);
 }
 
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
-  stroke: colors.$sequencer-main-divider;
+  stroke: var(--md-sys-color-outline);
 }
 
 .sequencer-grid-beat-line {
   backface-visibility: hidden;
-  stroke: colors.$sequencer-sub-divider;
+  stroke: var(--md-sys-color-outline);
+  opacity: 0.6;
 }
 
 .sequencer-guideline {
@@ -1652,7 +1651,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   top: 0;
   left: -1px;
   width: 2px;
-  background: hsl(130, 35%, 82%);
+  background: var(--md-sys-color-secondary-container);
   pointer-events: none;
 }
 
@@ -1683,15 +1682,15 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   left: -1px;
   width: 2px;
   height: 100%;
-  background: rgba(colors.$display-rgb, 0.6);
+  background: var(--md-sys-color-inverse-surface);
   will-change: transform;
 }
 
 .rect-select-preview {
   pointer-events: none;
   position: absolute;
-  border: 2px solid rgba(colors.$primary-rgb, 0.5);
-  background: rgba(colors.$primary-rgb, 0.25);
+  border: 1px dashed var(--md-sys-color-secondary);
+  background: var(--md-sys-color-secondary-container);
 }
 
 .cursor-draw {
