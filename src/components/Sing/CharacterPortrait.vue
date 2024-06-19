@@ -33,24 +33,47 @@ const portraitPath = computed(() => {
 @use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
 
+// 表示変数
+$headerMargin: 120px;
+$rightMargin: 24px;
+$portraitMaxWidth: 40vw;
+$portraitMaxHeight: 60vh;
+$portraitMinHeight: 500px;
+
 // 画面右下に固定表示
 // 幅固定、高さ可変、画像のアスペクト比を保持、wrapのwidthに合わせてheightを調整
 // bottom位置はスクロールバーの上に表示
 .character-portrait-wrap {
   opacity: 0.55;
-  overflow: hidden;
+  overflow: visible;
   contain: layout;
   pointer-events: none;
   position: fixed;
+  display: grid;
+  place-items: end;
   bottom: 0;
-  right: 88px;
-  min-width: 200px;
-  max-width: 20vw;
+  right: $rightMargin;
 }
 
 .character-portrait {
-  width: 100%;
-  height: auto;
+  width: auto;
+  height: $portraitMaxHeight;
+  min-height: $portraitMinHeight;
+  max-width: $portraitMaxWidth;
+  overflow: visible;
   backface-visibility: hidden;
+  object-fit: cover;
+  object-position: top center;
+}
+
+// ポートレートサイズが画面サイズを超えた場合、ヘッダーを考慮してポートレートを上部基準で表示させる
+// ヘッダー高さ120px+ポートレート高さ500pxだとする
+@media (max-height: #{calc(#{$portraitMinHeight} + #{$headerMargin})}) {
+  .character-portrait-wrap {
+    top: $headerMargin; // ヘッダーの高さより下に位置させる
+    bottom: auto;
+    height: calc(100vh - #{$headerMargin});
+    place-items: start end;
+  }
 }
 </style>
