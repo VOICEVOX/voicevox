@@ -1,5 +1,4 @@
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
 import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -24,7 +23,6 @@ import {
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
-import { Midi } from "@/sing/midi";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
@@ -43,7 +41,6 @@ import {
 } from "@/sing/audioRendering";
 import {
   selectPriorPhrase,
-  getMeasureDuration,
   getNoteDuration,
   isValidNote,
   isValidSnapType,
@@ -70,6 +67,8 @@ import {
   createDefaultTimeSignature,
   isValidNotes,
   isValidTrack,
+  SEQUENCER_MIN_NUM_MEASURES,
+  getNumMeasures,
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
@@ -78,7 +77,6 @@ import {
   removeNotesFromOverlappingNoteInfos,
   updateNotesOfOverlappingNoteInfos,
 } from "@/sing/storeHelper";
-import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import {
   AnimationTimer,
   createPromiseThatResolvesWhen,
@@ -89,6 +87,7 @@ import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjust
 import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
+import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 
 const logger = createLogger("store/singing");
 
@@ -144,7 +143,7 @@ const animationTimer = new AnimationTimer();
 const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
 const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
-const initialTrackId = TrackId(uuidv4());
+const initialTrackId = TrackId(crypto.randomUUID());
 
 export const singingStoreState: SingingStoreState = {
   tpqn: DEFAULT_TPQN,
@@ -228,11 +227,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const engineId = singer?.engineId ?? state.engineIds[0];
 
-      // 最初のスタイルをソングエディタにおける仮のデフォルトスタイルとする
-      // TODO: ソングエディタ向けのデフォルトスタイルをどうするか考える
       const defaultStyleId =
         userOrderedCharacterInfos[0].metas.styles[0].styleId;
-
       const styleId = singer?.styleId ?? defaultStyleId;
 
       dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
@@ -724,6 +720,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SEQUENCER_NUM_MEASURES: {
+    getter(state) {
+      // NOTE: スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
+      // NOTE: いったん最後尾に足した場合は伸びるようにする
+      return Math.max(
+        SEQUENCER_MIN_NUM_MEASURES,
+        getNumMeasures(
+          getOrThrow(state.tracks, state.selectedTrackId).notes,
+          state.tempos,
+          state.timeSignatures,
+          state.tpqn,
+        ) + 1,
+      );
+    },
+  },
+
   SET_ZOOM_X: {
     mutation(state, { zoomX }: { zoomX: number }) {
       state.sequencerZoomX = zoomX;
@@ -911,7 +923,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   CREATE_TRACK: {
     action() {
-      const trackId = TrackId(uuidv4());
+      const trackId = TrackId(crypto.randomUUID());
       const track = createDefaultTrack();
 
       return { trackId, track };
@@ -1807,140 +1819,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     }),
   },
 
-  IMPORT_MIDI_FILE: {
+  // TODO: Undoできるようにする
+  IMPORT_UTAFORMATIX_PROJECT: {
     action: createUILockAction(
-      async (
-        { state, dispatch },
-        { filePath, trackIndex = 0 }: { filePath: string; trackIndex: number },
-      ) => {
-        const convertPosition = (
-          position: number,
-          sourceTpqn: number,
-          targetTpqn: number,
-        ) => {
-          return Math.round(position * (targetTpqn / sourceTpqn));
-        };
+      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
+        const { tempos, timeSignatures, tracks, tpqn } =
+          ufProjectToVoicevox(project);
 
-        const convertDuration = (
-          startPosition: number,
-          endPosition: number,
-          sourceTpqn: number,
-          targetTpqn: number,
-        ) => {
-          const convertedEndPosition = convertPosition(
-            endPosition,
-            sourceTpqn,
-            targetTpqn,
-          );
-          const convertedStartPosition = convertPosition(
-            startPosition,
-            sourceTpqn,
-            targetTpqn,
-          );
-          return Math.max(1, convertedEndPosition - convertedStartPosition);
-        };
+        const notes = tracks[trackIndex].notes;
 
-        const getTopNotes = (notes: Note[]) => {
-          const topNotes: Note[] = [];
-          for (const note of notes) {
-            if (topNotes.length === 0) {
-              topNotes.push(note);
-              continue;
-            }
-            const topNote = topNotes[topNotes.length - 1];
-            const topNoteEndPos = topNote.position + topNote.duration;
-            if (topNoteEndPos <= note.position) {
-              topNotes.push(note);
-              continue;
-            }
-            if (topNote.noteNumber < note.noteNumber) {
-              topNotes.pop();
-              topNotes.push(note);
-            }
-          }
-          return topNotes;
-        };
-
-        const removeDuplicateTempos = (tempos: Tempo[]) => {
-          return tempos.filter((value, index, array) => {
-            return (
-              index === array.length - 1 ||
-              value.position !== array[index + 1].position
-            );
-          });
-        };
-
-        const removeDuplicateTimeSignatures = (
-          timeSignatures: TimeSignature[],
-        ) => {
-          return timeSignatures.filter((value, index, array) => {
-            return (
-              index === array.length - 1 ||
-              value.measureNumber !== array[index + 1].measureNumber
-            );
-          });
-        };
-
-        // NOTE: トラック選択のために一度ファイルを読み込んでいるので、Midiを渡すなどでもよさそう
-        const midiData = getValueOrThrow(
-          await window.backend.readFile({ filePath }),
-        );
-        const midi = new Midi(midiData);
-        const midiTpqn = midi.ticksPerBeat;
-        const midiTempos = midi.tempos;
-        const midiTimeSignatures = midi.timeSignatures;
-
-        const midiNotes = midi.tracks[trackIndex].notes;
-
-        midiNotes.sort((a, b) => a.ticks - b.ticks);
-
-        const tpqn = DEFAULT_TPQN;
-
-        let notes = midiNotes.map((value): Note => {
-          return {
-            id: NoteId(uuidv4()),
-            position: convertPosition(value.ticks, midiTpqn, tpqn),
-            duration: convertDuration(
-              value.ticks,
-              value.ticks + value.duration,
-              midiTpqn,
-              tpqn,
-            ),
-            noteNumber: value.noteNumber,
-            lyric: value.lyric || getDoremiFromNoteNumber(value.noteNumber),
-          };
-        });
-        // ノートの重なりを考慮して、一番音が高いノート（トップノート）のみインポートする
-        notes = getTopNotes(notes);
-
-        let tempos = midiTempos.map((value): Tempo => {
-          return {
-            position: convertPosition(value.ticks, midiTpqn, tpqn),
-            bpm: round(value.bpm, 2),
-          };
-        });
-        tempos.unshift(createDefaultTempo(0));
-        tempos = removeDuplicateTempos(tempos);
-
-        let timeSignatures: TimeSignature[] = [];
-        let tsPosition = 0;
-        let measureNumber = 1;
-        for (let i = 0; i < midiTimeSignatures.length; i++) {
-          const midiTs = midiTimeSignatures[i];
-          const beats = midiTs.numerator;
-          const beatType = midiTs.denominator;
-          timeSignatures.push({ measureNumber, beats, beatType });
-          if (i < midiTimeSignatures.length - 1) {
-            const nextTsTicks = midiTimeSignatures[i + 1].ticks;
-            const nextTsPos = convertPosition(nextTsTicks, midiTpqn, tpqn);
-            const tsDuration = nextTsPos - tsPosition;
-            const measureDuration = getMeasureDuration(beats, beatType, tpqn);
-            tsPosition = nextTsPos;
-            measureNumber += tsDuration / measureDuration;
-          }
+        if (tempos.length > 1) {
+          logger.warn("Multiple tempos are not supported.");
         }
-        timeSignatures.unshift(createDefaultTimeSignature(1));
-        timeSignatures = removeDuplicateTimeSignatures(timeSignatures);
+        if (timeSignatures.length > 1) {
+          logger.warn("Multiple time signatures are not supported.");
+        }
 
         tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
         timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
@@ -1948,432 +1841,71 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         if (tpqn !== state.tpqn) {
           throw new Error("TPQN does not match. Must be converted.");
         }
+
+        // TODO: ここら辺のSET系の処理をまとめる
+        await dispatch("SET_TPQN", { tpqn });
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
+
+        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        commit("CLEAR_COMMANDS");
+        dispatch("RENDER");
       },
     ),
   },
 
-  IMPORT_MUSICXML_FILE: {
+  // TODO: Undoできるようにする
+  IMPORT_VOICEVOX_PROJECT: {
     action: createUILockAction(
-      async ({ state, dispatch }, { filePath }: { filePath?: string }) => {
-        if (!filePath) {
-          filePath = await window.backend.showImportFileDialog({
-            title: "MusicXML読み込み",
-            name: "MusicXML",
-            extensions: ["musicxml", "xml"],
-          });
-          if (!filePath) return;
+      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
+        const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
+          project.song;
+
+        const track = tracks[trackOrder[trackIndex]];
+        if (!track) {
+          throw new Error("Track not found.");
         }
-
-        let xmlStr = new TextDecoder("utf-8").decode(
-          getValueOrThrow(await window.backend.readFile({ filePath })),
-        );
-        if (xmlStr.indexOf("\ufffd") > -1) {
-          xmlStr = new TextDecoder("shift-jis").decode(
-            getValueOrThrow(await window.backend.readFile({ filePath })),
-          );
-        }
-
-        const tpqn = DEFAULT_TPQN;
-        const tempos = [createDefaultTempo(0)];
-        const timeSignatures = [createDefaultTimeSignature(1)];
-        const notes: Note[] = [];
-
-        let divisions = 1;
-        let position = 0;
-        let measureNumber = 1;
-        let measurePosition = 0;
-        let measureDuration = getMeasureDuration(
-          timeSignatures[0].beats,
-          timeSignatures[0].beatType,
-          tpqn,
-        );
-        let tieStartNote: Note | undefined;
-
-        const getChild = (element: Element | undefined, tagName: string) => {
-          if (element) {
-            for (const childElement of element.children) {
-              if (childElement.tagName === tagName) {
-                return childElement;
-              }
-            }
-          }
-          return undefined;
-        };
-
-        const getValueAsNumber = (element: Element) => {
-          const value = Number(element.textContent);
-          if (Number.isNaN(value)) {
-            throw new Error("The value is invalid.");
-          }
-          return value;
-        };
-
-        const getAttributeAsNumber = (
-          element: Element,
-          qualifiedName: string,
-        ) => {
-          const value = Number(element.getAttribute(qualifiedName));
-          if (Number.isNaN(value)) {
-            throw new Error("The value is invalid.");
-          }
-          return value;
-        };
-
-        const getStepNumber = (stepElement: Element) => {
-          const stepNumberDict: { [key: string]: number } = {
-            C: 0,
-            D: 2,
-            E: 4,
-            F: 5,
-            G: 7,
-            A: 9,
-            B: 11,
-          };
-          const stepChar = stepElement.textContent;
-          if (stepChar == null) {
-            throw new Error("The value is invalid.");
-          }
-          return stepNumberDict[stepChar];
-        };
-
-        const getDuration = (durationElement: Element) => {
-          const duration = getValueAsNumber(durationElement);
-          return Math.round((tpqn * duration) / divisions);
-        };
-
-        const getTie = (elementThatMayBeTied: Element) => {
-          let tie: boolean | undefined;
-          for (const childElement of elementThatMayBeTied.children) {
-            if (
-              childElement.tagName === "tie" ||
-              childElement.tagName === "tied"
-            ) {
-              const tieType = childElement.getAttribute("type");
-              if (tieType === "start") {
-                tie = true;
-              } else if (tieType === "stop") {
-                tie = false;
-              } else {
-                throw new Error("The value is invalid.");
-              }
-            }
-          }
-          return tie;
-        };
-
-        const parseSound = (soundElement: Element) => {
-          if (!soundElement.hasAttribute("tempo")) {
-            return;
-          }
-          if (tempos.length !== 0) {
-            const lastTempo = tempos[tempos.length - 1];
-            if (lastTempo.position === position) {
-              tempos.pop();
-            }
-          }
-          const tempo = getAttributeAsNumber(soundElement, "tempo");
-          tempos.push({
-            position: position,
-            bpm: round(tempo, 2),
-          });
-        };
-
-        const parseDirection = (directionElement: Element) => {
-          for (const childElement of directionElement.children) {
-            if (childElement.tagName === "sound") {
-              parseSound(childElement);
-            }
-          }
-        };
-
-        const parseDivisions = (divisionsElement: Element) => {
-          divisions = getValueAsNumber(divisionsElement);
-        };
-
-        const parseTime = (timeElement: Element) => {
-          const beatsElement = getChild(timeElement, "beats");
-          if (!beatsElement) {
-            throw new Error("beats element does not exist.");
-          }
-          const beatTypeElement = getChild(timeElement, "beat-type");
-          if (!beatTypeElement) {
-            throw new Error("beat-type element does not exist.");
-          }
-          const beats = getValueAsNumber(beatsElement);
-          const beatType = getValueAsNumber(beatTypeElement);
-          measureDuration = getMeasureDuration(beats, beatType, tpqn);
-          if (timeSignatures.length !== 0) {
-            const lastTimeSignature = timeSignatures[timeSignatures.length - 1];
-            if (lastTimeSignature.measureNumber === measureNumber) {
-              timeSignatures.pop();
-            }
-          }
-          timeSignatures.push({
-            measureNumber,
-            beats,
-            beatType,
-          });
-        };
-
-        const parseAttributes = (attributesElement: Element) => {
-          for (const childElement of attributesElement.children) {
-            if (childElement.tagName === "divisions") {
-              parseDivisions(childElement);
-            } else if (childElement.tagName === "time") {
-              parseTime(childElement);
-            } else if (childElement.tagName === "sound") {
-              parseSound(childElement);
-            }
-          }
-        };
-
-        const parseNote = (noteElement: Element) => {
-          // TODO: ノートの重なり・和音を考慮していないので、
-          //       それらが存在する場合でも読み込めるようにする
-
-          const durationElement = getChild(noteElement, "duration");
-          if (!durationElement) {
-            throw new Error("duration element does not exist.");
-          }
-          let duration = getDuration(durationElement);
-          let noteEnd = position + duration;
-          const measureEnd = measurePosition + measureDuration;
-          if (noteEnd > measureEnd) {
-            // 小節に収まらない場合、ノートの長さを変えて小節に収まるようにする
-            duration = measureEnd - position;
-            noteEnd = position + duration;
-          }
-
-          if (getChild(noteElement, "rest")) {
-            position += duration;
-            return;
-          }
-
-          const pitchElement = getChild(noteElement, "pitch");
-          if (!pitchElement) {
-            throw new Error("pitch element does not exist.");
-          }
-          const octaveElement = getChild(pitchElement, "octave");
-          if (!octaveElement) {
-            throw new Error("octave element does not exist.");
-          }
-          const stepElement = getChild(pitchElement, "step");
-          if (!stepElement) {
-            throw new Error("step element does not exist.");
-          }
-          const alterElement = getChild(pitchElement, "alter");
-
-          const octave = getValueAsNumber(octaveElement);
-          const stepNumber = getStepNumber(stepElement);
-          let noteNumber = 12 * (octave + 1) + stepNumber;
-          if (alterElement) {
-            noteNumber += getValueAsNumber(alterElement);
-          }
-
-          const lyricElement = getChild(noteElement, "lyric");
-          let lyric = getChild(lyricElement, "text")?.textContent ?? "";
-          lyric = lyric.trim();
-
-          let tie = getTie(noteElement);
-          for (const childElement of noteElement.children) {
-            if (childElement.tagName === "notations") {
-              tie = getTie(childElement);
-            }
-          }
-
-          const note: Note = {
-            id: NoteId(uuidv4()),
-            position,
-            duration,
-            noteNumber,
-            lyric,
-          };
-
-          if (tieStartNote) {
-            if (tie === false) {
-              tieStartNote.duration = noteEnd - tieStartNote.position;
-              notes.push(tieStartNote);
-              tieStartNote = undefined;
-            }
-          } else {
-            if (tie === true) {
-              tieStartNote = note;
-            } else {
-              notes.push(note);
-            }
-          }
-          position += duration;
-        };
-
-        const parseMeasure = (measureElement: Element) => {
-          measurePosition = position;
-          measureNumber = getAttributeAsNumber(measureElement, "number");
-          for (const childElement of measureElement.children) {
-            if (childElement.tagName === "direction") {
-              parseDirection(childElement);
-            } else if (childElement.tagName === "sound") {
-              parseSound(childElement);
-            } else if (childElement.tagName === "attributes") {
-              parseAttributes(childElement);
-            } else if (childElement.tagName === "note") {
-              if (position < measurePosition + measureDuration) {
-                parseNote(childElement);
-              }
-            }
-          }
-          const measureEnd = measurePosition + measureDuration;
-          if (position !== measureEnd) {
-            tieStartNote = undefined;
-            position = measureEnd;
-          }
-        };
-
-        const parsePart = (partElement: Element) => {
-          for (const childElement of partElement.children) {
-            if (childElement.tagName === "measure") {
-              parseMeasure(childElement);
-            }
-          }
-        };
-
-        const parseMusicXml = (xmlStr: string) => {
-          const parser = new DOMParser();
-          const dom = parser.parseFromString(xmlStr, "application/xml");
-          const partElements = dom.getElementsByTagName("part");
-          if (partElements.length === 0) {
-            throw new Error("part element does not exist.");
-          }
-          // TODO: UIで読み込むパートを選択できるようにする
-          parsePart(partElements[0]);
-        };
-
-        parseMusicXml(xmlStr);
-
-        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
+        const notes = track.notes.map((note) => ({
+          ...note,
+          id: NoteId(crypto.randomUUID()),
+        }));
 
         if (tpqn !== state.tpqn) {
           throw new Error("TPQN does not match. Must be converted.");
         }
+
+        // TODO: ここら辺のSET系の処理をまとめる
+        await dispatch("SET_SINGER", {
+          singer: track.singer,
+          trackId: state.selectedTrackId,
+        });
+        await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
+          keyRangeAdjustment: track.keyRangeAdjustment,
+
+          trackId: state.selectedTrackId,
+        });
+        await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
+          volumeRangeAdjustment: track.volumeRangeAdjustment,
+
+          trackId: state.selectedTrackId,
+        });
+        await dispatch("SET_TPQN", { tpqn });
         await dispatch("SET_TEMPOS", { tempos });
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
-      },
-    ),
-  },
-
-  IMPORT_UST_FILE: {
-    action: createUILockAction(
-      async ({ state, dispatch }, { filePath }: { filePath?: string }) => {
-        // USTファイルの読み込み
-        if (!filePath) {
-          filePath = await window.backend.showImportFileDialog({
-            title: "UST読み込み",
-            name: "UST",
-            extensions: ["ust"],
-          });
-          if (!filePath) return;
-        }
-        // ファイルの読み込み
-        const fileData = getValueOrThrow(
-          await window.backend.readFile({ filePath }),
-        );
-
-        // ファイルフォーマットに応じてエンコーディングを変える
-        // UTF-8とShiftJISの2種類に対応
-        let ustData;
-        try {
-          ustData = new TextDecoder("utf-8").decode(fileData);
-          // ShiftJISの場合はShiftJISでデコードし直す
-          if (ustData.includes("\ufffd")) {
-            ustData = new TextDecoder("shift-jis").decode(fileData);
-          }
-        } catch (error) {
-          throw new Error("Failed to decode UST file.", { cause: error });
-        }
-        if (!ustData || typeof ustData !== "string") {
-          throw new Error("Failed to decode UST file.");
-        }
-
-        // 初期化
-        const tpqn = DEFAULT_TPQN;
-        const tempos = [createDefaultTempo(0)];
-        const timeSignatures = [createDefaultTimeSignature(1)];
-        const notes: Note[] = [];
-
-        // USTファイルのセクションをパース
-        const parseSection = (section: string): { [key: string]: string } => {
-          const sectionNameMatch = section.match(/\[(.+)\]/);
-          if (!sectionNameMatch) {
-            throw new Error("UST section name not found");
-          }
-          const params = section.split(/[\r\n]+/).reduce(
-            (acc, line) => {
-              const [key, value] = line.split("=");
-              if (key && value) {
-                acc[key] = value;
-              }
-              return acc;
-            },
-            {} as { [key: string]: string },
-          );
-          return {
-            ...params,
-            sectionName: sectionNameMatch[1],
-          };
-        };
-
-        // セクションを分割
-        const sections = ustData.split(/^(?=\[)/m);
-        // ポジション
-        let position = 0;
-        // セクションごとに処理
-        sections.forEach((section) => {
-          const params = parseSection(section);
-          // SETTINGセクション
-          if (params.sectionName === "#SETTING") {
-            const tempo = Number(params["Tempo"]);
-            if (tempo) tempos[0].bpm = tempo;
-          }
-          // ノートセクション
-          // #以降に数字の場合はノートセクション ex: #0, #0000
-          if (params.sectionName.match(/^#\d+$/)) {
-            // テンポ変更があれば追加
-            const tempo = Number(params["Tempo"]);
-            if (tempo) tempos.push({ position, bpm: tempo });
-            const noteNumber = Number(params["NoteNum"]);
-            const duration = Number(params["Length"]);
-            let lyric = params["Lyric"].trim();
-            // 歌詞の前に連続音が含まれている場合は除去
-            if (lyric.includes(" ")) {
-              lyric = lyric.split(" ")[1];
-            }
-            // 休符であればポジションを進めるのみ
-            if (lyric === "R") {
-              position += duration;
-            } else {
-              // それ以外の場合はノートを追加
-              notes.push({
-                id: NoteId(uuidv4()),
-                position,
-                duration,
-                noteNumber,
-                lyric,
-              });
-              position += duration;
-            }
-          }
+        await dispatch("CLEAR_PITCH_EDIT_DATA", {
+          trackId: state.selectedTrackId,
+        }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+        await dispatch("SET_PITCH_EDIT_DATA", {
+          pitchArray: track.pitchEditData,
+          startFrame: 0,
+          trackId: state.selectedTrackId,
         });
 
-        if (tpqn !== state.tpqn) {
-          throw new Error("TPQN does not match. Must be converted.");
-        }
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
+        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        commit("CLEAR_COMMANDS");
+        dispatch("RENDER");
       },
     ),
   },
@@ -2764,7 +2296,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const quantizedPastePos =
           Math.round(pasteOriginPos / snapTicks) * snapTicks;
         return {
-          id: NoteId(uuidv4()),
+          id: NoteId(crypto.randomUUID()),
           position: quantizedPastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),

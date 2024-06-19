@@ -46,10 +46,10 @@
     </div>
     <CharacterButton
       v-model:selected-voice="selectedVoice"
-      :character-infos="userOrderedCharacterInfos"
+      :characterInfos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
-      :show-engine-info="isMultipleEngine"
-      :ui-locked="uiLocked"
+      :showEngineInfo="isMultipleEngine"
+      :uiLocked
       @focus="
         if (!isSelectedAudioCell) {
           selectAndSetActiveAudioKey();
@@ -64,14 +64,14 @@
       ref="textField"
       filled
       dense
-      hide-bottom-space
+      hideBottomSpace
       class="full-width"
       color="primary"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
-      :model-value="audioTextBuffer"
+      :modelValue="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
-      @update:model-value="setAudioTextBuffer"
+      @update:modelValue="setAudioTextBuffer"
       @focus="
         clearInputSelection();
         selectAndSetActiveAudioKey();
@@ -99,11 +99,11 @@
         ref="contextMenu"
         :header="contextMenuHeader"
         :menudata="contextMenudata"
-        @before-show="
+        @beforeShow="
           startContextMenuOperation();
           readyForContextMenu();
         "
-        @before-hide="endContextMenuOperation()"
+        @beforeHide="endContextMenuOperation()"
       />
     </QInput>
   </div>

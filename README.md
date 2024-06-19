@@ -15,7 +15,13 @@
 
 こちらは開発用のページになります。利用方法に関しては[VOICEVOX 公式サイト](https://voicevox.hiroshiba.jp/) をご覧ください。
 
-## 貢献者の方へ
+## プロジェクトに貢献したいと考えている方へ
+
+VOICEVOXプロジェクトは興味ある方の参画を歓迎しています。
+[貢献手順について説明したガイド](./CONTRIBUTING.md)をご用意しております。
+
+貢献というとプログラム作成と思われがちですが、ドキュメント執筆、テスト生成、改善提案への議論参加など様々な参加方法があります。
+初心者歓迎タスクもありますので、皆様のご参加をお待ちしております。
 
 VOICEVOX のエディタは Electron・TypeScript・Vue・Vuex などが活用されており、全体構成がわかりにくくなっています。  
 [コードの歩き方](./docs/コードの歩き方.md)で構成を紹介しているので、開発の一助になれば幸いです。
@@ -163,6 +169,14 @@ npm run test-watch:electron-e2e # 監視モード
 
 npm run license:generate -- -o voicevox_licenses.json
 npm run license:merge -- -o public/licenses.json -i engine_licenses.json -i voicevox_licenses.json
+```
+
+## リント（静的解析）
+
+コードの静的解析を行い、バグを未然に防ぎます。プルリクエストを送る前に実行してください。
+
+```bash
+npm run lint
 ```
 
 ## コードフォーマット

@@ -2,8 +2,8 @@
   <QDialog
     v-model="dictionaryManageDialogOpenedComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr fFf" class="bg-background">
@@ -46,28 +46,12 @@
               @click="discardOrNotDialog(cancel)"
             />
             <div class="word-list-header text-no-wrap">
-              <div class="row word-list-title text-h5">単語一覧</div>
-              <div class="row no-wrap">
+              <div class="row word-list-title">
+                <span class="text-h5 col-8">単語一覧</span>
                 <QBtn
                   outline
-                  text-color="warning"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
-                  :disable="uiLocked || !isDeletable"
-                  @click="deleteWord"
-                  >削除</QBtn
-                >
-                <QBtn
-                  outline
-                  text-color="display"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
-                  :disable="uiLocked || !selectedId"
-                  @click="editWord"
-                  >編集</QBtn
-                >
-                <QBtn
-                  outline
-                  text-color="display"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
+                  textColor="display"
+                  class="text-no-wrap text-bold col"
                   :disable="uiLocked"
                   @click="newWord"
                   >追加</QBtn
@@ -77,20 +61,50 @@
             <QList class="word-list">
               <QItem
                 v-for="(value, key) in userDict"
-                :key="key"
+                :key
                 v-ripple
                 tag="label"
                 clickable
                 :active="selectedId === key"
-                active-class="active-word"
+                activeClass="active-word"
                 @click="selectWord(key)"
                 @dblclick="editWord"
+                @mouseover="hoveredKey = key"
+                @mouseleave="hoveredKey = undefined"
               >
                 <QItemSection>
-                  <QItemLabel class="text-display">{{
+                  <QItemLabel lines="1" class="text-display">{{
                     value.surface
                   }}</QItemLabel>
-                  <QItemLabel caption>{{ value.yomi }}</QItemLabel>
+                  <QItemLabel lines="1" caption>{{ value.yomi }}</QItemLabel>
+                </QItemSection>
+
+                <QItemSection
+                  v-if="!uiLocked && (hoveredKey === key || selectedId === key)"
+                  side
+                >
+                  <div class="q-gutter-xs">
+                    <QBtn
+                      size="12px"
+                      flat
+                      dense
+                      round
+                      icon="edit"
+                      @click.stop="editWord"
+                    >
+                      <QTooltip :delay="500">編集</QTooltip>
+                    </QBtn>
+                    <QBtn
+                      size="12px"
+                      flat
+                      dense
+                      round
+                      icon="delete_outline"
+                      @click.stop="deleteWord"
+                    >
+                      <QTooltip :delay="500">削除</QTooltip>
+                    </QBtn>
+                  </div>
                 </QItemSection>
               </QItem>
             </QList>
@@ -140,7 +154,7 @@
                   v-if="!nowPlaying && !nowGenerating"
                   fab
                   color="primary"
-                  text-color="display-on-primary"
+                  textColor="display-on-primary"
                   icon="play_arrow"
                   @click="play"
                 />
@@ -148,7 +162,7 @@
                   v-else
                   fab
                   color="primary"
-                  text-color="display-on-primary"
+                  textColor="display-on-primary"
                   icon="stop"
                   :disable="nowGenerating"
                   @click="stop"
@@ -160,10 +174,10 @@
               >
                 <div v-if="accentPhrase" class="mora-table">
                   <AudioAccent
-                    :accent-phrase="accentPhrase"
-                    :accent-phrase-index="0"
-                    :ui-locked="uiLocked"
-                    :on-change-accent="changeAccent"
+                    :accentPhrase
+                    :accentPhraseIndex="0"
+                    :uiLocked
+                    :onChangeAccent="changeAccent"
                   />
                   <template
                     v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -207,7 +221,7 @@
                 :min="0"
                 :max="10"
                 :step="1"
-                :marker-labels="wordPriorityLabels"
+                :markerLabels="wordPriorityLabels"
                 :style="{
                   width: '80%',
                 }"
@@ -218,7 +232,7 @@
               <QBtn
                 v-show="!!selectedId"
                 outline
-                text-color="display"
+                textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
                 @click="resetWord"
@@ -226,7 +240,7 @@
               >
               <QBtn
                 outline
-                text-color="display"
+                textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked"
                 @click="discardOrNotDialog(cancel)"
@@ -234,7 +248,7 @@
               >
               <QBtn
                 outline
-                text-color="display"
+                textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
                 @click="saveWord"
@@ -259,7 +273,7 @@ import {
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
-} from "@/store/utility";
+} from "@/domain/japanese";
 
 const defaultDictPriority = 5;
 
@@ -279,6 +293,9 @@ const dictionaryManageDialogOpenedComputed = computed({
 const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
 const nowGenerating = ref(false);
 const nowPlaying = ref(false);
+
+// word-list の要素のうち、どの要素がホバーされているか
+const hoveredKey = ref<string | undefined>(undefined);
 
 const loadingDictState = ref<null | "loading" | "synchronizing">("loading");
 const userDict = ref<Record<string, UserDictWord>>({});
@@ -555,11 +572,10 @@ const saveWord = async () => {
   await loadingDictProcess();
   toInitialState();
 };
-const isDeletable = computed(() => !!selectedId.value);
 const deleteWord = async () => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "登録された単語を削除しますか？",
-    message: "削除された単語は復旧できません。",
+    message: "削除された単語は元に戻せません。",
     actionName: "削除",
   });
   if (result === "OK") {
@@ -594,9 +610,8 @@ const discardOrNotDialog = async (okCallback: () => void) => {
   if (isWordChanged.value) {
     const result = await store.dispatch("SHOW_WARNING_DIALOG", {
       title: "単語の追加・変更を破棄しますか？",
-      message:
-        "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
-      actionName: "続行",
+      message: "破棄すると、単語の追加・変更はリセットされます。",
+      actionName: "破棄",
     });
     if (result === "OK") {
       okCallback();
@@ -676,13 +691,14 @@ const toDialogClosedState = () => {
 
 .word-list {
   // menubar-height + toolbar-height + window-border-width +
-  // 82(title & buttons) + 30(margin 15x2)
+  // 36(title & buttons) + 30(margin 15x2)
   height: calc(
     100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width + 82px + 30px}
+      vars.$window-border-width + 36px + 30px}
   );
   width: 100%;
   overflow-y: auto;
+  padding-bottom: 16px;
 }
 
 .active-word {

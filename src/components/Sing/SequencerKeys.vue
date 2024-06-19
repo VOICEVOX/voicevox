@@ -1,6 +1,6 @@
 <template>
   <div ref="sequencerKeys" class="sequencer-keys">
-    <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
+    <svg xmlns="http://www.w3.org/2000/svg" :width :height>
       <g
         v-for="(whiteKeyInfo, index) in whiteKeyInfos"
         :key="index"

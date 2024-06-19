@@ -1,5 +1,6 @@
 import { Patch } from "immer";
 import { z } from "zod";
+import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import {
   MutationTree,
   MutationsBase,
@@ -62,6 +63,7 @@ import {
 } from "@/components/Dialog/Dialog";
 import { OverlappingNoteInfos } from "@/sing/storeHelper";
 import {
+  LatestProjectType,
   noteSchema,
   singerSchema,
   tempoSchema,
@@ -816,7 +818,7 @@ export type PhraseSourceHash = z.infer<typeof phraseSourceHashSchema>;
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
 export type SingingStoreState = {
-  tpqn: number;
+  tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
   tracks: Map<TrackId, Track>;
@@ -1008,6 +1010,10 @@ export type SingingStoreTypes = {
     action(payload: { snapType: number }): void;
   };
 
+  SEQUENCER_NUM_MEASURES: {
+    getter: number;
+  };
+
   SET_ZOOM_X: {
     mutation: { zoomX: number };
     action(payload: { zoomX: number }): void;
@@ -1028,16 +1034,12 @@ export type SingingStoreTypes = {
     action(payload: { isDrag: boolean }): void;
   };
 
-  IMPORT_MIDI_FILE: {
-    action(payload: { filePath: string; trackIndex: number }): void;
+  IMPORT_UTAFORMATIX_PROJECT: {
+    action(payload: { project: UfProject; trackIndex: number }): void;
   };
 
-  IMPORT_MUSICXML_FILE: {
-    action(payload: { filePath?: string }): void;
-  };
-
-  IMPORT_UST_FILE: {
-    action(payload: { filePath?: string }): void;
+  IMPORT_VOICEVOX_PROJECT: {
+    action(payload: { project: LatestProjectType; trackIndex: number }): void;
   };
 
   EXPORT_WAVE_FILE: {
@@ -1532,6 +1534,10 @@ export type ProjectStoreTypes = {
     action(payload: { confirm?: boolean }): void;
   };
 
+  PARSE_PROJECT_FILE: {
+    action(payload: { projectJson: string }): Promise<LatestProjectType>;
+  };
+
   LOAD_PROJECT_FILE: {
     action(payload: { filePath?: string; confirm?: boolean }): boolean;
   };
@@ -1685,7 +1691,7 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
-  isImportMidiDialogOpen: boolean;
+  isImportSongProjectDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -1757,7 +1763,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
-      isImportMidiDialogOpen?: boolean;
+      isImportExternalProjectDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -1771,7 +1777,7 @@ export type UiStoreTypes = {
       isCharacterOrderDialogOpen?: boolean;
       isEngineManageDialogOpen?: boolean;
       isUpdateNotificationDialogOpen?: boolean;
-      isImportMidiDialogOpen?: boolean;
+      isImportSongProjectDialogOpen?: boolean;
     }): void;
   };
 

@@ -1,6 +1,6 @@
 <template>
   <div v-if="!tipConfirmed" style="z-index: 10">
-    <QBanner class="bg-surface text-display" dense rounded inline-actions>
+    <QBanner class="bg-surface text-display" dense rounded inlineActions>
       <template #avatar>
         <QIcon name="info" color="primary" />
       </template>
@@ -8,7 +8,7 @@
       <template #action>
         <QBtn
           color="primary"
-          text-color="display-on-primary"
+          textColor="display-on-primary"
           label="OK"
           @click="tipConfirmed = true"
         />

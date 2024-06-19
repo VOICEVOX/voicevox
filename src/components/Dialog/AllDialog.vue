@@ -10,25 +10,25 @@
   <CharacterOrderDialog
     v-if="orderedAllCharacterInfos.length > 0"
     v-model="isCharacterOrderDialogOpenComputed"
-    :character-infos="orderedAllCharacterInfos"
+    :characterInfos="orderedAllCharacterInfos"
   />
   <DefaultStyleListDialog
     v-if="orderedTalkCharacterInfos.length > 0"
     v-model="isDefaultStyleSelectDialogOpenComputed"
-    :character-infos="orderedTalkCharacterInfos"
+    :characterInfos="orderedTalkCharacterInfos"
   />
   <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
   <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
   <UpdateNotificationDialogContainer
-    :can-open-dialog="canOpenNotificationDialog"
+    :canOpenDialog="canOpenNotificationDialog"
   />
-  <ImportMidiDialog v-model="isImportMidiDialogOpenComputed" />
+  <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
-import SettingDialog from "@/components/Dialog/SettingDialog.vue";
+import SettingDialog from "@/components/Dialog/SettingDialog/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
 import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
 import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
@@ -38,7 +38,7 @@ import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
-import ImportMidiDialog from "@/components/Dialog/ImportMidiDialog.vue";
+import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -100,7 +100,6 @@ const isCharacterOrderDialogOpenComputed = computed({
     }),
 });
 
-// TODO: デフォルトスタイル選択(ソング)の実装
 // デフォルトスタイル選択(トーク)
 const orderedTalkCharacterInfos = computed(() => {
   return filterCharacterInfosByStyleType(
@@ -160,12 +159,12 @@ const canOpenNotificationDialog = computed(() => {
   );
 });
 
-// MIDIインポート時の設定ダイアログ
-const isImportMidiDialogOpenComputed = computed({
-  get: () => store.state.isImportMidiDialogOpen,
+// ソングのプロジェクトファイルのインポート時の設定ダイアログ
+const isImportSongProjectDialogOpenComputed = computed({
+  get: () => store.state.isImportSongProjectDialogOpen,
   set: (val) =>
     store.dispatch("SET_DIALOG_OPEN", {
-      isImportMidiDialogOpen: val,
+      isImportSongProjectDialogOpen: val,
     }),
 });
 </script>

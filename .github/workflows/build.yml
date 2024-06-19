@@ -27,8 +27,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.19.0
-  VOICEVOX_RESOURCE_VERSION: 0.19.0
+  VOICEVOX_ENGINE_VERSION: 0.20-preview.0
+  VOICEVOX_RESOURCE_VERSION: 0.19.1
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -55,7 +55,8 @@ jobs:
           - windows-nvidia-prepackage
           - windows-cpu-prepackage
           - windows-directml-prepackage
-          - macos-cpu-prepackage
+          - macos-x64-cpu-prepackage
+          - macos-arm64-cpu-prepackage
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-nvidia-prepackage
@@ -111,20 +112,30 @@ jobs:
             installer_artifact_name: windows-directml-nsis-web
             nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
             os: windows-2019
-          # macOS CPU
-          - artifact_name: macos-cpu-prepackage
+          # macOS CPU (x64)
+          - artifact_name: macos-x64-cpu-prepackage
             artifact_path: dist_electron/mac
             voicevox_engine_asset_name: macos-x64
             package_name: voicevox-cpu
-            compressed_artifact_name: voicevox-macos-cpu
+            compressed_artifact_name: voicevox-macos-x64-cpu
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
-            installer_artifact_name: macos-cpu-dmg
-            macos_artifact_name: "VOICEVOX.${version}.${ext}"
+            installer_artifact_name: macos-x64-cpu-dmg
+            macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             os: macos-12
+          # macOS CPU (arm64)
+          - artifact_name: macos-arm64-cpu-prepackage
+            artifact_path: dist_electron/mac-arm64
+            voicevox_engine_asset_name: macos-arm64
+            package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-macos-arm64-cpu
+            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
+            installer_artifact_name: macos-arm64-cpu-dmg
+            macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
+            os: macos-14
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # NOTE: The default sed of macOS is BSD sed.
       #       There is a difference in specification between BSD sed and GNU sed,
@@ -149,13 +160,13 @@ jobs:
           $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: ".node-version"
           cache: "npm"
 
       - name: Cache Electron
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.ELECTRON_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
@@ -163,7 +174,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
       - name: Cache Electron-Builder
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.ELECTRON_BUILDER_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
@@ -174,7 +185,7 @@ jobs:
         run: npm ci
 
       - name: Checkout Product Version Resource
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: VOICEVOX/voicevox_resource
           ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
@@ -194,10 +205,15 @@ jobs:
 
           cp resource/editor/PRIVACYPOLICY.md public/privacyPolicy.md
 
-      - name: Overwrite .env.production for Linux and macOS
-        if: startsWith(matrix.os, 'ubuntu-') || startsWith(matrix.os, 'macos-')
+      - name: Overwrite .env.production for Linux
+        if: startsWith(matrix.os, 'ubuntu-')
         run: |
           $sed -i 's|run.exe|./run|g' .env.production
+
+      - name: Overwrite .env.production for macOS
+        if: startsWith(matrix.os, 'macos-')
+        run: |
+          $sed -i 's|vv-engine/run.exe|../Resources/vv-engine/run|g' .env.production
 
       - name: Replace .env.production infomations
         run: |
@@ -280,10 +296,10 @@ jobs:
         run: |
           mv voicevox_engine/ prepackage/vv-engine/
 
-      - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/MacOS/
+      - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/Resources/
         if: startsWith(matrix.artifact_name, 'macos-')
         run: |
-          mv voicevox_engine/ prepackage/VOICEVOX.app/Contents/MacOS/vv-engine/
+          mv voicevox_engine/ prepackage/VOICEVOX.app/Contents/Resources/vv-engine/
 
       - name: Recover file permissions
         if: startsWith(matrix.artifact_name, 'linux-') # linux
@@ -294,17 +310,21 @@ jobs:
       - name: Recover file permissions for macOS build
         if: startsWith(matrix.artifact_name, 'macos-') # macOS
         run: |
-          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/vv-engine/run"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Resources/vv-engine/run"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
-      # NOTE: actions/upload-artifact@v3 does not upload `**.lproj` directories, which are an empty directory.
+      # NOTE: actions/upload-artifact@v4 does not upload `**.lproj` directories, which are an empty directory.
       #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
       - name: Make .lproj directories in Resources directory of VOICEVOX.app
         if: startsWith(matrix.artifact_name, 'macos-')
         run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
+
+      - name: Ad hoc code signing
+        if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
+        run: codesign --force --deep -s - prepackage/VOICEVOX.app
 
       - name: Create Linux tar.gz (without nvidia)
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
@@ -317,7 +337,7 @@ jobs:
 
       - name: Upload Linux tar.gz (without nvidia) to Artifacts
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-targz
           path: |-
@@ -325,7 +345,7 @@ jobs:
 
       - name: Upload Linux tar.gz (without nvidia) to Release Assets
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -347,7 +367,7 @@ jobs:
 
       - name: Upload Windows & Mac zip (without nvidia) to Artifacts
         if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-zip
           path: |-
@@ -355,7 +375,7 @@ jobs:
 
       - name: Upload Windows & Mac zip (without nvidia) to Release Assets
         if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -436,7 +456,7 @@ jobs:
 
       - name: Upload Linux AppImage split to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
@@ -444,7 +464,7 @@ jobs:
 
       - name: Upload Linux AppImage split to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -454,7 +474,7 @@ jobs:
 
       - name: Upload macOS dmg to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
@@ -462,7 +482,7 @@ jobs:
 
       - name: Upload macOS dmg to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -472,7 +492,7 @@ jobs:
 
       - name: Upload Windows NSIS Web to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
@@ -481,7 +501,7 @@ jobs:
 
       - name: Upload Windows NSIS Web to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}

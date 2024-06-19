@@ -3,16 +3,12 @@
     <!-- 左上の角 -->
     <div class="sequencer-corner"></div>
     <!-- ルーラー -->
-    <SequencerRuler
-      class="sequencer-ruler"
-      :offset="scrollX"
-      :num-of-measures="numOfMeasures"
-    />
+    <SequencerRuler class="sequencer-ruler" :offset="scrollX" :numMeasures />
     <!-- 鍵盤 -->
     <SequencerKeys
       class="sequencer-keys"
       :offset="scrollY"
-      :black-key-width="28"
+      :blackKeyWidth="28"
     />
     <!-- シーケンサ -->
     <div
@@ -36,74 +32,7 @@
       <!-- キャラクター全身 -->
       <CharacterPortrait />
       <!-- グリッド -->
-      <!-- NOTE: 現状オクターブごとの罫線なし -->
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        :width="gridWidth"
-        :height="gridHeight"
-        class="sequencer-grid"
-      >
-        <defs>
-          <pattern
-            id="sequencer-grid-octave-cells"
-            patternUnits="userSpaceOnUse"
-            :width="gridCellWidth"
-            :height="gridCellHeight * 12"
-          >
-            <rect
-              v-for="(keyInfo, index) in keyInfos"
-              :key="index"
-              x="0"
-              :y="gridCellHeight * index"
-              :width="gridCellWidth"
-              :height="gridCellHeight"
-              :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
-            />
-            <template v-for="(keyInfo, index) in keyInfos" :key="index">
-              <line
-                v-if="keyInfo.pitch === 'C'"
-                x1="0"
-                :x2="gridCellWidth"
-                :y1="gridCellHeight * (index + 1)"
-                :y2="gridCellHeight * (index + 1)"
-                stroke-width="1"
-                class="sequencer-grid-octave-line"
-              />
-            </template>
-          </pattern>
-          <pattern
-            id="sequencer-grid-measure"
-            patternUnits="userSpaceOnUse"
-            :width="beatWidth * beatsPerMeasure"
-            :height="gridHeight"
-          >
-            <line
-              v-for="n in beatsPerMeasure"
-              :key="n"
-              :x1="beatWidth * (n - 1)"
-              :x2="beatWidth * (n - 1)"
-              y1="0"
-              y2="100%"
-              stroke-width="1"
-              :class="`sequencer-grid-${n === 1 ? 'measure' : 'beat'}-line`"
-            />
-          </pattern>
-        </defs>
-        <rect
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-          fill="url(#sequencer-grid-octave-cells)"
-        />
-        <rect
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-          fill="url(#sequencer-grid-measure)"
-        />
-      </svg>
+      <SequencerGrid />
       <div
         v-if="editTarget === 'NOTE' && showGuideLine"
         class="sequencer-guideline"
@@ -120,32 +49,32 @@
       <SequencerNote
         v-for="note in unselectedNotes"
         :key="note.id"
-        :track-id="selectedTrackId"
-        :note="note"
-        :preview-lyric="previewLyrics.get(note.id) || null"
-        :is-selected="false"
-        @bar-mousedown="onNoteBarMouseDown($event, note)"
-        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
-        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-input="onNoteLyricInput($event, note)"
-        @lyric-blur="onNoteLyricBlur()"
+        :trackId="selectedTrackId"
+        :note
+        :previewLyric="previewLyrics.get(note.id) || null"
+        :isSelected="false"
+        @barMousedown="onNoteBarMouseDown($event, note)"
+        @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
+        @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyricMouseDown="onNoteLyricMouseDown($event, note)"
+        @lyricInput="onNoteLyricInput($event, note)"
+        @lyricBlur="onNoteLyricBlur()"
       />
       <SequencerNote
         v-for="note in editTarget === 'NOTE' && nowPreviewing
           ? previewNotes
           : selectedNotes"
         :key="note.id"
-        :track-id="selectedTrackId"
-        :note="note"
-        :preview-lyric="previewLyrics.get(note.id) || null"
-        :is-selected="true"
-        @bar-mousedown="onNoteBarMouseDown($event, note)"
-        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
-        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-input="onNoteLyricInput($event, note)"
-        @lyric-blur="onNoteLyricBlur()"
+        :trackId="selectedTrackId"
+        :note
+        :previewLyric="previewLyrics.get(note.id) || null"
+        :isSelected="true"
+        @barMousedown="onNoteBarMouseDown($event, note)"
+        @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
+        @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
+        @lyricMouseDown="onNoteLyricMouseDown($event, note)"
+        @lyricInput="onNoteLyricInput($event, note)"
+        @lyricBlur="onNoteLyricBlur()"
       />
     </div>
     <SequencerPitch
@@ -155,9 +84,9 @@
         marginRight: `${scrollBarWidth}px`,
         marginBottom: `${scrollBarWidth}px`,
       }"
-      :offset-x="scrollX"
-      :offset-y="scrollY"
-      :preview-pitch-edit="previewPitchEdit"
+      :offsetX="scrollX"
+      :offsetY="scrollY"
+      :previewPitchEdit
     />
     <div
       class="sequencer-overlay"
@@ -176,11 +105,11 @@
           width: `${Math.abs(cursorX - rectSelectStartX)}px`,
           height: `${Math.abs(cursorY - rectSelectStartY)}px`,
         }"
-      />
+      ></div>
       <SequencerPhraseIndicator
         v-for="phraseInfo in phraseInfos"
         :key="phraseInfo.key"
-        :phrase-key="phraseInfo.key"
+        :phraseKey="phraseInfo.key"
         class="sequencer-phrase-indicator"
         :style="{
           width: `${phraseInfo.width}px`,
@@ -196,22 +125,22 @@
       ></div>
     </div>
     <QSlider
-      :model-value="zoomX"
+      :modelValue="zoomX"
       :min="ZOOM_X_MIN"
       :max="ZOOM_X_MAX"
       :step="ZOOM_X_STEP"
       class="zoom-x-slider"
-      @update:model-value="setZoomX"
+      @update:modelValue="setZoomX"
     />
     <QSlider
-      :model-value="zoomY"
+      :modelValue="zoomY"
       :min="ZOOM_Y_MIN"
       :max="ZOOM_Y_MAX"
       :step="ZOOM_Y_STEP"
       vertical
       reverse
       class="zoom-y-slider"
-      @update:model-value="setZoomY"
+      @update:modelValue="setZoomY"
     />
     <ContextMenu
       v-if="editTarget === 'NOTE'"
@@ -230,7 +159,6 @@ import {
   onActivated,
   onDeactivated,
 } from "vue";
-import { v4 as uuidv4 } from "uuid";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
@@ -239,9 +167,7 @@ import { useStore } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import {
   getEndTicksOfPhrase,
-  getMeasureDuration,
   getNoteDuration,
-  getNumOfMeasures,
   getStartTicksOfPhrase,
   noteNumberToFrequency,
   tickToSecond,
@@ -266,6 +192,7 @@ import {
   GridAreaInfo,
   getButton,
 } from "@/sing/viewHelper";
+import SequencerGrid from "@/components/Sing/SequencerGrid.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
@@ -284,10 +211,10 @@ import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 
 type PreviewMode =
-  | "ADD"
-  | "MOVE"
-  | "RESIZE_RIGHT"
-  | "RESIZE_LEFT"
+  | "ADD_NOTE"
+  | "MOVE_NOTE"
+  | "RESIZE_NOTE_RIGHT"
+  | "RESIZE_NOTE_LEFT"
   | "DRAW_PITCH"
   | "ERASE_PITCH";
 
@@ -296,23 +223,16 @@ const isSelfEventTarget = (event: UIEvent) => {
   return event.target === event.currentTarget;
 };
 
-const store = useStore();
 const { warn } = createLogger("ScoreSequencer");
+const store = useStore();
 const state = store.state;
 
 // 選択中のトラックID
 const selectedTrackId = computed(() => state.selectedTrackId);
 
-// 分解能（Ticks Per Quarter Note）
+// TPQN、テンポ、ノーツ
 const tpqn = computed(() => state.tpqn);
-
-// テンポ
 const tempos = computed(() => state.tempos);
-
-// 拍子
-const timeSignatures = computed(() => state.timeSignatures);
-
-// ノート
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
 const isNoteSelected = computed(() => {
   return state.selectedNoteIds.size > 0;
@@ -342,49 +262,15 @@ const snapTicks = computed(() => {
   return getNoteDuration(state.sequencerSnapType, tpqn.value);
 });
 
-// シーケンサグリッド
-const gridCellTicks = snapTicks; // ひとまずスナップ幅＝グリッドセル幅
-const gridCellWidth = computed(() => {
-  return tickToBaseX(gridCellTicks.value, tpqn.value) * zoomX.value;
-});
+// グリッド
 const gridCellBaseHeight = getKeyBaseHeight();
-const gridCellHeight = computed(() => {
-  return gridCellBaseHeight * zoomY.value;
-});
-const numOfMeasures = computed(() => {
-  // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
-  const minNumOfMeasures = 32;
-  // NOTE: いったん最後尾に足した場合は伸びるようにする
-  return Math.max(
-    minNumOfMeasures,
-    getNumOfMeasures(
-      notes.value,
-      tempos.value,
-      timeSignatures.value,
-      tpqn.value,
-    ) + 1,
-  );
-});
-const beatsPerMeasure = computed(() => {
-  return timeSignatures.value[0].beats;
-});
-const beatWidth = computed(() => {
-  const beatType = timeSignatures.value[0].beatType;
-  const wholeNoteDuration = tpqn.value * 4;
-  const beatTicks = wholeNoteDuration / beatType;
-  return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
-});
-const gridWidth = computed(() => {
-  // TODO: 複数拍子に対応する
-  const beats = timeSignatures.value[0].beats;
-  const beatType = timeSignatures.value[0].beatType;
-  const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
-  const numOfGridColumns =
-    Math.round(measureDuration / gridCellTicks.value) * numOfMeasures.value;
-  return gridCellWidth.value * numOfGridColumns;
-});
 const gridHeight = computed(() => {
-  return gridCellHeight.value * keyInfos.length;
+  return gridCellBaseHeight * zoomY.value * keyInfos.length;
+});
+
+// 小節の数
+const numMeasures = computed(() => {
+  return store.getters.SEQUENCER_NUM_MEASURES;
 });
 
 // スクロール位置
@@ -436,7 +322,7 @@ const onNoteLyricBlur = () => {
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
 const nowPreviewing = ref(false);
-let previewMode: PreviewMode = "ADD";
+let previewMode: PreviewMode = "ADD_NOTE";
 let previewRequestId = 0;
 let previewStartEditTarget: SequencerEditTarget = "NOTE";
 let executePreviewProcess = false;
@@ -748,16 +634,16 @@ const previewErasePitch = () => {
 
 const preview = () => {
   if (executePreviewProcess) {
-    if (previewMode === "ADD") {
+    if (previewMode === "ADD_NOTE") {
       previewAdd();
     }
-    if (previewMode === "MOVE") {
+    if (previewMode === "MOVE_NOTE") {
       previewMove();
     }
-    if (previewMode === "RESIZE_RIGHT") {
+    if (previewMode === "RESIZE_NOTE_RIGHT") {
       previewResizeRight();
     }
-    if (previewMode === "RESIZE_LEFT") {
+    if (previewMode === "RESIZE_NOTE_LEFT") {
       previewResizeLeft();
     }
     if (previewMode === "DRAW_PITCH") {
@@ -817,12 +703,12 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
     const guideLineTicks =
       Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
     const copiedNotes: Note[] = [];
-    if (mode === "ADD") {
+    if (mode === "ADD_NOTE") {
       if (cursorNoteNumber < 0) {
         return;
       }
       note = {
-        id: NoteId(uuidv4()),
+        id: NoteId(crypto.randomUUID()),
         position: guideLineTicks,
         duration: snapTicks.value,
         noteNumber: cursorNoteNumber,
@@ -865,7 +751,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
     dragStartNoteNumber = cursorNoteNumber;
     dragStartGuideLineTicks = guideLineTicks;
     draggingNoteId = note.id;
-    edited = mode === "ADD";
+    edited = mode === "ADD_NOTE";
     copiedNotesForPreview.clear();
     for (const copiedNote of copiedNotes) {
       copiedNotesForPreview.set(copiedNote.id, copiedNote);
@@ -913,7 +799,7 @@ const endPreview = () => {
     // 編集ターゲットがノートのときにプレビューを開始した場合の処理
 
     if (edited) {
-      if (previewMode === "ADD") {
+      if (previewMode === "ADD_NOTE") {
         store.dispatch("COMMAND_ADD_NOTES", {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
@@ -984,7 +870,7 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   }
 
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "MOVE", note);
+    startPreview(event, "MOVE_NOTE", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -1001,7 +887,7 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
   }
 
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "RESIZE_LEFT", note);
+    startPreview(event, "RESIZE_NOTE_LEFT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -1018,7 +904,7 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
   }
 
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "RESIZE_RIGHT", note);
+    startPreview(event, "RESIZE_NOTE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -1057,7 +943,7 @@ const onMouseDown = (event: MouseEvent) => {
         rectSelectStartX.value = cursorX.value;
         rectSelectStartY.value = cursorY.value;
       } else {
-        startPreview(event, "ADD");
+        startPreview(event, "ADD_NOTE");
       }
     } else {
       store.dispatch("DESELECT_ALL_NOTES");
@@ -1365,6 +1251,7 @@ const onWheel = (event: WheelEvent) => {
     newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
     const scrollLeft = sequencerBodyElement.scrollLeft;
     const scrollTop = sequencerBodyElement.scrollTop;
+    guideLineX.value = 0; // 補助線がはみ出さないように位置を一旦0にする
 
     store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
       const cursorBaseX = (scrollLeft + cursorX.value) / oldZoomX;
@@ -1443,7 +1330,7 @@ onActivated(() => {
     yToScroll = scrollY.value;
   }
   // 実際にスクロールする
-  nextTick().then(() => {
+  nextTick(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });
 });
@@ -1636,44 +1523,6 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   &.rect-selecting {
     cursor: crosshair;
   }
-}
-
-.sequencer-grid {
-  display: block;
-  pointer-events: none;
-}
-
-.sequencer-grid-cell {
-  display: block;
-  stroke: rgba(colors.$sequencer-sub-divider-rgb, 0.3);
-  stroke-width: 1;
-}
-
-.sequencer-grid-octave-cell {
-  stroke: colors.$sequencer-main-divider;
-}
-
-.sequencer-grid-octave-line {
-  backface-visibility: hidden;
-  stroke: colors.$sequencer-main-divider;
-}
-
-.sequencer-grid-cell-white {
-  fill: colors.$sequencer-whitekey-cell;
-}
-
-.sequencer-grid-cell-black {
-  fill: colors.$sequencer-blackkey-cell;
-}
-
-.sequencer-grid-measure-line {
-  backface-visibility: hidden;
-  stroke: colors.$sequencer-main-divider;
-}
-
-.sequencer-grid-beat-line {
-  backface-visibility: hidden;
-  stroke: colors.$sequencer-sub-divider;
 }
 
 .sequencer-guideline {

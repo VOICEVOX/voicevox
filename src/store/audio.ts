@@ -1,5 +1,4 @@
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
 import Encoding from "encoding-japanese";
 import { createUILockAction, withProgress } from "./ui";
 import {
@@ -16,9 +15,6 @@ import {
 import {
   buildAudioFileNameFromRawData,
   isAccentPhrasesTextDifferent,
-  convertHiraToKana,
-  convertLongVowel,
-  createKanaRegex,
   currentDateString,
   extractExportText,
   extractYomiText,
@@ -38,6 +34,11 @@ import {
 } from "./audioGenerate";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
 import {
+  convertHiraToKana,
+  convertLongVowel,
+  createKanaRegex,
+} from "@/domain/japanese";
+import {
   AudioKey,
   CharacterInfo,
   DefaultStyleId,
@@ -53,11 +54,11 @@ import {
   Voice,
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
-import { base64ImageToUri } from "@/helpers/imageHelper";
+import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 
 function generateAudioKey() {
-  return AudioKey(uuidv4());
+  return AudioKey(crypto.randomUUID());
 }
 
 function parseTextFile(
@@ -288,17 +289,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
         });
-        const base64ToUrl = function (base64: string, type: string) {
-          const buffer = Buffer.from(base64, "base64");
-          const iconBlob = new Blob([buffer.buffer], { type: type });
-          return URL.createObjectURL(iconBlob);
-        };
-        const getStyles = function (
+        const getStyles = async function (
           speaker: Speaker,
           speakerInfo: SpeakerInfo,
         ) {
           const styles: StyleInfo[] = new Array(speaker.styles.length);
-          speaker.styles.forEach((style, i) => {
+          for (const [i, style] of speaker.styles.entries()) {
             const styleInfo = speakerInfo.styleInfos.find(
               (styleInfo) => style.id === styleInfo.id,
             );
@@ -306,20 +302,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               throw new Error(
                 `Not found the style id "${style.id}" of "${speaker.name}". `,
               );
-            const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
-              return base64ToUrl(voiceSample, "audio/wav");
-            });
+            const voiceSamples = await Promise.all(
+              styleInfo.voiceSamples.map((voiceSample) => {
+                return base64ToUri(voiceSample, "audio/wav");
+              }),
+            );
             styles[i] = {
               styleName: style.name,
               styleId: StyleId(style.id),
               styleType: style.type,
               engineId,
-              iconPath: base64ImageToUri(styleInfo.icon),
+              iconPath: await base64ImageToUri(styleInfo.icon),
               portraitPath:
-                styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
+                styleInfo.portrait &&
+                (await base64ImageToUri(styleInfo.portrait)),
               voiceSamplePaths: voiceSamples,
             };
-          });
+          }
           return styles;
         };
         const getCharacterInfo = async (
@@ -375,7 +374,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           ]).then((styles) => styles.flat());
 
           const characterInfo: CharacterInfo = {
-            portraitPath: base64ImageToUri(baseCharacterInfo.portrait),
+            portraitPath: await base64ImageToUri(baseCharacterInfo.portrait),
             metas: {
               speakerUuid: SpeakerId(baseSpeaker.speakerUuid),
               speakerName: baseSpeaker.name,
@@ -671,7 +670,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const baseAudioItem = payload.baseAudioItem;
 
       const fetchQueryParams = {
-        text,
+        text: extractYomiText(text, {
+          enableMemoNotation: state.enableMemoNotation,
+          enableRubyNotation: state.enableRubyNotation,
+        }),
         engineId: voice.engineId,
         styleId: voice.styleId,
       };
