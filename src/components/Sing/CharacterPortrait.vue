@@ -34,11 +34,11 @@ const portraitPath = computed(() => {
 @use "@/styles/colors" as colors;
 
 // 表示変数
-$headerMargin: 120px;
-$rightMargin: 24px;
-$portraitMaxWidth: 40vw;
-$portraitMaxHeight: 60vh;
-$portraitMinHeight: 500px;
+$header-margin: vars.$toolbar-height + vars.$menubar-height + 30px; // 30pxはルーラーの高さ
+$right-margin: 24px;
+$portrait-max-width: 40vw;
+$portrait-max-height: 60vh;
+$portrait-min-height: 500px;
 
 // 画面右下に固定表示
 // 幅固定、高さ可変、画像のアスペクト比を保持、wrapのwidthに合わせてheightを調整
@@ -52,14 +52,14 @@ $portraitMinHeight: 500px;
   display: grid;
   place-items: end;
   bottom: 0;
-  right: $rightMargin;
+  right: $right-margin;
 }
 
 .character-portrait {
   width: auto;
-  height: $portraitMaxHeight;
-  min-height: $portraitMinHeight;
-  max-width: $portraitMaxWidth;
+  height: $portrait-max-height;
+  min-height: $portrait-min-height;
+  max-width: $portrait-max-width;
   overflow: visible;
   backface-visibility: hidden;
   object-fit: cover;
@@ -68,11 +68,11 @@ $portraitMinHeight: 500px;
 
 // ポートレートサイズが画面サイズを超えた場合、ヘッダーを考慮してポートレートを上部基準で表示させる
 // ヘッダー高さ120px+ポートレート高さ500pxだとする
-@media (max-height: #{calc(#{$portraitMinHeight} + #{$headerMargin})}) {
+@media (max-height: #{calc(#{$portrait-min-height} + #{$header-margin})}) {
   .character-portrait-wrap {
-    top: $headerMargin; // ヘッダーの高さより下に位置させる
+    top: $header-margin; // ヘッダーの高さより下に位置させる
     bottom: auto;
-    height: calc(100vh - #{$headerMargin});
+    height: calc(100vh - #{$header-margin});
     place-items: start end;
   }
 }
