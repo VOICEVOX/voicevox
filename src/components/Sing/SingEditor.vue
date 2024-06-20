@@ -1,9 +1,7 @@
 <template>
   <ToolBar />
   <div class="sing-main">
-    <EngineStartupOverlay
-      :is-completed-initial-startup="isCompletedInitialStartup"
-    />
+    <EngineStartupOverlay :isCompletedInitialStartup />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <QSpinner color="primary" size="2.5rem" />
@@ -15,7 +13,7 @@
           padding="xs md"
           label="音声の書き出しをキャンセル"
           color="surface"
-          text-color="display"
+          textColor="display"
           class="q-mt-sm"
           @click="cancelExport"
         />

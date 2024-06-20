@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.19.2",
+    "descriptions": [
+      "キャラクター「後鬼」のスタイルを追加"
+    ],
+    "contributors": []
+  },
+  {
     "version": "0.19.1",
     "descriptions": [
       "ソング：音域調整時に音量が変わるバグを修正",

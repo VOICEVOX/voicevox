@@ -7,21 +7,11 @@ export const useMenuBarData = () => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);
   const isNotesSelected = computed(() => store.state.selectedNoteIds.size > 0);
 
-  const importMidiFile = async () => {
+  const importExternalSongProject = async () => {
     if (uiLocked.value) return;
     await store.dispatch("SET_DIALOG_OPEN", {
-      isImportMidiDialogOpen: true,
+      isImportSongProjectDialogOpen: true,
     });
-  };
-
-  const importMusicXMLFile = async () => {
-    if (uiLocked.value) return;
-    await store.dispatch("IMPORT_MUSICXML_FILE", {});
-  };
-
-  const importUstFile = async () => {
-    if (uiLocked.value) return;
-    await store.dispatch("IMPORT_UST_FILE", {});
   };
 
   const exportWaveFile = async () => {
@@ -41,25 +31,9 @@ export const useMenuBarData = () => {
     { type: "separator" },
     {
       type: "button",
-      label: "MIDI読み込み",
+      label: "インポート",
       onClick: () => {
-        importMidiFile();
-      },
-      disableWhenUiLocked: true,
-    },
-    {
-      type: "button",
-      label: "MusicXML読み込み",
-      onClick: () => {
-        importMusicXMLFile();
-      },
-      disableWhenUiLocked: true,
-    },
-    {
-      type: "button",
-      label: "UST読み込み",
-      onClick: () => {
-        importUstFile();
+        importExternalSongProject();
       },
       disableWhenUiLocked: true,
     },
