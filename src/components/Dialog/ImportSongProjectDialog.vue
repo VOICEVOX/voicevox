@@ -40,15 +40,15 @@
         >
           <template #selected>
             <div
-              v-for="track in trackOptions.filter(
+              v-for="(track, i) in trackOptions.filter(
                 (track) =>
                   selectedTrackIndexes &&
                   selectedTrackIndexes.includes(track.value),
               )"
               :key="track.value"
               :class="{
-                'q-mt-sm': track.value === 0,
-                'q-mt-xs': track.value !== 0,
+                'q-mt-sm': i === 0,
+                'q-mt-xs': i !== 0,
               }"
             >
               {{ track.label }}
