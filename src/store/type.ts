@@ -1035,11 +1035,14 @@ export type SingingStoreTypes = {
   };
 
   IMPORT_UTAFORMATIX_PROJECT: {
-    action(payload: { project: UfProject; trackIndex: number }): void;
+    action(payload: { project: UfProject; trackIndexes: number[] }): void;
   };
 
   IMPORT_VOICEVOX_PROJECT: {
-    action(payload: { project: LatestProjectType; trackIndex: number }): void;
+    action(payload: {
+      project: LatestProjectType;
+      trackIndexes: number[];
+    }): void;
   };
 
   EXPORT_WAVE_FILE: {

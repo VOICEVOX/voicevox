@@ -20,6 +20,7 @@ import {
   SingingVoiceSourceHash,
   SequencerEditTarget,
   PhraseSourceHash,
+  Track,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
@@ -112,6 +113,9 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
     };
   });
 };
+
+const isTracksEmpty = (tracks: Map<TrackId, Track>) =>
+  tracks.size === 1 && [...tracks.values()][0].notes.length === 0;
 
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
@@ -1846,11 +1850,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   // TODO: Undoできるようにする
   IMPORT_UTAFORMATIX_PROJECT: {
     action: createUILockAction(
-      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
+      async ({ state, commit, dispatch }, { project, trackIndexes }) => {
         const { tempos, timeSignatures, tracks, tpqn } =
           ufProjectToVoicevox(project);
-
-        const notes = tracks[trackIndex].notes;
 
         if (tempos.length > 1) {
           logger.warn("Multiple tempos are not supported.");
@@ -1859,6 +1861,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           logger.warn("Multiple time signatures are not supported.");
         }
 
+        await dispatch("SET_TPQN", { tpqn });
+        await dispatch("SET_TEMPOS", { tempos });
+        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+
         tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
         timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
 
@@ -1866,11 +1872,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("TPQN does not match. Must be converted.");
         }
 
-        // TODO: ここら辺のSET系の処理をまとめる
-        await dispatch("SET_TPQN", { tpqn });
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
+        const currentTrack = getOrThrow(state.tracks, state.selectedTrackId);
+
+        for (const [i, trackIndex] of trackIndexes.entries()) {
+          const notes = tracks[trackIndex].notes;
+
+          const track = {
+            ...structuredClone(toRaw(currentTrack)),
+
+            notes,
+          };
+
+          // 空のプロジェクトならトラックを上書きする
+          if (i === 0 && isTracksEmpty(state.tracks)) {
+            await dispatch("SET_TRACK", {
+              track,
+              trackId: state.selectedTrackId,
+            });
+          } else {
+            const { trackId } = await dispatch("CREATE_TRACK");
+            await dispatch("REGISTER_TRACK", {
+              track,
+              trackId,
+            });
+          }
+        }
 
         commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         commit("CLEAR_COMMANDS");
@@ -1882,50 +1908,51 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   // TODO: Undoできるようにする
   IMPORT_VOICEVOX_PROJECT: {
     action: createUILockAction(
-      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
+      async ({ state, commit, dispatch }, { project, trackIndexes }) => {
         const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
           project.song;
 
-        const track = tracks[trackOrder[trackIndex]];
-        if (!track) {
-          throw new Error("Track not found.");
-        }
-        const notes = track.notes.map((note) => ({
-          ...note,
-          id: NoteId(crypto.randomUUID()),
-        }));
+        await dispatch("SET_TPQN", { tpqn });
+        await dispatch("SET_TEMPOS", { tempos });
+        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
+
+        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
 
         if (tpqn !== state.tpqn) {
           throw new Error("TPQN does not match. Must be converted.");
         }
 
-        // TODO: ここら辺のSET系の処理をまとめる
-        await dispatch("SET_SINGER", {
-          singer: track.singer,
-          trackId: state.selectedTrackId,
-        });
-        await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-          keyRangeAdjustment: track.keyRangeAdjustment,
+        const filteredTracks = new Map<TrackId, Track>();
 
-          trackId: state.selectedTrackId,
-        });
-        await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-          volumeRangeAdjustment: track.volumeRangeAdjustment,
+        for (const trackIndex of trackIndexes) {
+          const track = tracks[trackOrder[trackIndex]];
+          if (!track) {
+            throw new Error("Track not found.");
+          }
+          const { trackId } = await dispatch("CREATE_TRACK");
+          filteredTracks.set(trackId, {
+            ...toRaw(track),
+            notes: track.notes.map((note) => ({
+              ...note,
+              id: NoteId(crypto.randomUUID()),
+            })),
+          });
+        }
 
-          trackId: state.selectedTrackId,
-        });
-        await dispatch("SET_TPQN", { tpqn });
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
-        await dispatch("CLEAR_PITCH_EDIT_DATA", {
-          trackId: state.selectedTrackId,
-        }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-        await dispatch("SET_PITCH_EDIT_DATA", {
-          pitchArray: track.pitchEditData,
-          startFrame: 0,
-          trackId: state.selectedTrackId,
-        });
+        // 空のプロジェクトならトラックを上書きする
+        if (isTracksEmpty(state.tracks)) {
+          await dispatch("SET_TRACKS", {
+            tracks: filteredTracks,
+          });
+        } else {
+          for (const [trackId, track] of filteredTracks) {
+            await dispatch("REGISTER_TRACK", {
+              track,
+              trackId,
+            });
+          }
+        }
 
         commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         commit("CLEAR_COMMANDS");
