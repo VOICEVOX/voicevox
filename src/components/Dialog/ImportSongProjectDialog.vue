@@ -25,18 +25,36 @@
           :accept="acceptExtensions"
           :errorMessage="projectFileErrorMessage"
           :error="!!projectFileErrorMessage"
-          placeholder="外部プロジェクトファイルを選択してください"
+          placeholder="ファイルを選択してください"
           @input="handleFileChange"
         />
         <QSelect
           v-if="project"
-          v-model="selectedTrack"
+          v-model="selectedTrackIndexes"
           :options="trackOptions"
           :disable="projectFileErrorMessage != undefined"
           emitValue
           mapOptions
+          multiple
           label="インポートするトラック"
-        />
+        >
+          <template #selected>
+            <div
+              v-for="track in trackOptions.filter(
+                (track) =>
+                  selectedTrackIndexes &&
+                  selectedTrackIndexes.includes(track.value),
+              )"
+              :key="track.value"
+              :class="{
+                'q-mt-sm': track.value === 0,
+                'q-mt-xs': track.value !== 0,
+              }"
+            >
+              {{ track.label }}
+            </div>
+          </template>
+        </QSelect>
       </QPageContainer>
       <QFooter>
         <QToolbar>
@@ -58,7 +76,9 @@
             textColor="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
             :disabled="
-              selectedTrack == null || projectFileErrorMessage != undefined
+              selectedTrackIndexes == null ||
+              selectedTrackIndexes.length === 0 ||
+              projectFileErrorMessage != undefined
             "
             @click="handleImportTrack"
           />
@@ -212,13 +232,13 @@ const trackOptions = computed(() => {
   }));
 });
 // 選択中のトラック
-const selectedTrack = ref<number | null>(null);
+const selectedTrackIndexes = ref<number[] | null>(null);
 
 // データ初期化
 const initializeValues = () => {
   projectFile.value = null;
   project.value = null;
-  selectedTrack.value = null;
+  selectedTrackIndexes.value = null;
 };
 
 // ファイル変更時
@@ -236,7 +256,7 @@ const handleFileChange = async (event: Event) => {
 
   // 既存のデータおよび選択中のトラックをクリア
   project.value = null;
-  selectedTrack.value = null;
+  selectedTrackIndexes.value = null;
   error.value = null;
 
   const file = input.files[0];
@@ -259,12 +279,14 @@ const handleFileChange = async (event: Event) => {
         }),
       };
     }
-    selectedTrack.value = getProjectTracks(project.value).findIndex(
+    const firstSelectableTrack = getProjectTracks(project.value).findIndex(
       (track) => !track.disable,
     );
-    if (selectedTrack.value === -1) {
-      selectedTrack.value = 0;
+    if (firstSelectableTrack === -1) {
+      error.value = "emptyProject";
+      return;
     }
+    selectedTrackIndexes.value = [firstSelectableTrack];
   } catch (e) {
     log.error(e);
     error.value = "unknown";
@@ -281,19 +303,19 @@ const handleFileChange = async (event: Event) => {
 // トラックインポート実行時
 const handleImportTrack = () => {
   // ファイルまたは選択中のトラックが未設定の場合はエラー
-  if (project.value == null || selectedTrack.value == null) {
+  if (project.value == null || selectedTrackIndexes.value == null) {
     throw new Error("project or selected track is not set");
   }
   // トラックをインポート
   if (project.value.type === "vvproj") {
     store.dispatch("IMPORT_VOICEVOX_PROJECT", {
       project: project.value.project,
-      trackIndexes: [selectedTrack.value],
+      trackIndexes: selectedTrackIndexes.value,
     });
   } else {
     store.dispatch("IMPORT_UTAFORMATIX_PROJECT", {
       project: project.value.project,
-      trackIndexes: [selectedTrack.value],
+      trackIndexes: selectedTrackIndexes.value,
     });
   }
   onDialogOK();
