@@ -1166,6 +1166,11 @@ export type SingingStoreTypes = {
     action(payload: { trackId: TrackId }): void;
   };
 
+  SET_TRACK: {
+    mutation: { trackId: TrackId; track: Track };
+    action(payload: { trackId: TrackId; track: Track }): void;
+  };
+
   SET_TRACKS: {
     mutation: { tracks: Map<TrackId, Track> };
     action(payload: { tracks: Map<TrackId, Track> }): Promise<void>;

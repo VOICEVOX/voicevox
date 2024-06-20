@@ -962,6 +962,47 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_TRACK: {
+    mutation(state, { trackId, track }) {
+      state.tracks.set(trackId, track);
+      state.overlappingNoteIds.set(trackId, new Set());
+      state.overlappingNoteInfos.set(trackId, new Map());
+    },
+    async action({ state, commit, dispatch }, { trackId, track }) {
+      if (!isValidTrack(track)) {
+        throw new Error("The track is invalid.");
+      }
+      if (!state.tracks.has(trackId)) {
+        throw new Error(`Track ${trackId} does not exist.`);
+      }
+
+      commit("SET_TRACK", { trackId, track });
+      // 色々な処理を動かすため、二重にセットする
+      // TODO: もっとスマートな方法を考える
+      await dispatch("SET_SINGER", {
+        singer: track.singer,
+        trackId,
+      });
+      await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
+        keyRangeAdjustment: track.keyRangeAdjustment,
+        trackId,
+      });
+      await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
+        volumeRangeAdjustment: track.volumeRangeAdjustment,
+        trackId,
+      });
+      await dispatch("SET_NOTES", { notes: track.notes, trackId });
+      await dispatch("CLEAR_PITCH_EDIT_DATA", {
+        trackId,
+      }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+      await dispatch("SET_PITCH_EDIT_DATA", {
+        pitchArray: track.pitchEditData,
+        startFrame: 0,
+        trackId,
+      });
+    },
+  },
+
   SET_TRACKS: {
     mutation(state, { tracks }) {
       state.tracks = tracks;
@@ -975,31 +1016,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.selectedTrackId = state.trackOrder[0];
     },
     async action({ commit, dispatch }, { tracks }) {
+      if (![...tracks.values()].every((track) => isValidTrack(track))) {
+        throw new Error("The track is invalid.");
+      }
       commit("SET_TRACKS", { tracks });
-      // 色々な処理を動かすため、二重にセットする
-      // TODO: もっとスマートな方法を考える
+
       for (const [trackId, track] of tracks) {
-        await dispatch("SET_SINGER", {
-          singer: track.singer,
-          trackId,
-        });
-        await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-          keyRangeAdjustment: track.keyRangeAdjustment,
-          trackId,
-        });
-        await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-          volumeRangeAdjustment: track.volumeRangeAdjustment,
-          trackId,
-        });
-        await dispatch("SET_NOTES", { notes: track.notes, trackId });
-        await dispatch("CLEAR_PITCH_EDIT_DATA", {
-          trackId,
-        }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-        await dispatch("SET_PITCH_EDIT_DATA", {
-          pitchArray: track.pitchEditData,
-          startFrame: 0,
-          trackId,
-        });
+        // 色々な処理を動かすため、二重にセットする
+        await dispatch("SET_TRACK", { trackId, track });
       }
     },
   },
