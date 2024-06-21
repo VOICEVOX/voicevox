@@ -29,7 +29,7 @@ defineEmits<{
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
 @use '@/styles/mixin' as mixin;
-@use '@/styles/new-colors' as colors;
+@use '@/styles/colors-v2' as colors;
 
 .row-card {
   display: flex;
