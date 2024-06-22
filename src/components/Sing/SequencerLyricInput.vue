@@ -2,7 +2,6 @@
   <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
   <input
     ref="lyricInput"
-    v-focus
     :value="editingLyricNote.lyric"
     class="lyric-input"
     :style="{
@@ -17,17 +16,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { tickToBaseX, noteNumberToBaseY } from "@/sing/viewHelper";
 import { NoteId } from "@/type/preload";
 import { Note } from "@/store/type";
-
-const vFocus = {
-  mounted(el: HTMLInputElement) {
-    el.focus();
-  },
-};
 
 const props = defineProps<{
   editingLyricNote: Note;
@@ -95,17 +88,15 @@ const onLyricInput = (event: Event) => {
   emit("lyricInput", event.target.value, props.editingLyricNote);
 };
 
-onMounted(() => {
-  lyricInput.value?.select();
-});
-
 watch(
   () => props.editingLyricNote,
   () => {
     nextTick(() => {
+      lyricInput.value?.focus();
       lyricInput.value?.select();
     });
   },
+  { immediate: true }
 );
 </script>
 
