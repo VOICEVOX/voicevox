@@ -6,6 +6,7 @@
     </QAvatar>
   </QAvatar>
 </template>
+
 <script setup lang="ts">
 import { useAttrs } from "vue";
 import { EngineId, StyleInfo } from "@/type/preload";
@@ -23,6 +24,7 @@ const props = withDefaults(
   },
 );
 </script>
+
 <style scoped lang="scss">
 .engine-icon {
   position: absolute;
