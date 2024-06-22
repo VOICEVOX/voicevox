@@ -1664,7 +1664,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         });
         if (!result.ok) {
           window.backend.logError(result.error);
-          return { result: "WRITE_ERROR", path: filePath };
+          return {
+            result: "WRITE_ERROR",
+            path: filePath,
+            errorMessage: generateWriteErrorMessage(new ResultError(result)),
+          };
         }
 
         return { result: "SUCCESS", path: filePath };
