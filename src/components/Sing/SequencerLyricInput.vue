@@ -47,6 +47,10 @@ const positionY = computed(() => {
 const lyricInput = ref<HTMLInputElement | null>(null);
 
 const onLyricInputKeyDown = (event: KeyboardEvent) => {
+  // IME変換中のキー入力を無視する
+  if (event.isComposing) {
+    return;
+  }
   // タブキーで次のノート入力に移動
   if (event.key === "Tab") {
     event.preventDefault();
@@ -67,12 +71,8 @@ const onLyricInputKeyDown = (event: KeyboardEvent) => {
     const nextNoteId = notes[index + (event.shiftKey ? -1 : 1)].id;
     emit("lyricConfirmed", nextNoteId);
   }
-  // IME変換確定時のEnterを無視する
-  if (event.key === "Enter" && event.isComposing) {
-    return;
-  }
-  // IME変換でなければ入力を確定
-  if (event.key === "Enter" && !event.isComposing) {
+  // Enterキーで入力を確定
+  if (event.key === "Enter") {
     emit("lyricConfirmed", undefined);
   }
 };
@@ -96,7 +96,7 @@ watch(
       lyricInput.value?.select();
     });
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>
 
