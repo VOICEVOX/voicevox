@@ -1478,8 +1478,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const labs: string[] = [];
         const texts: string[] = [];
 
-        let labOffset = 0;
-
         const base64Encoder = (blob: Blob): Promise<string | undefined> => {
           return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -1500,6 +1498,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const totalCount = state.audioKeys.length;
         let finishedCount = 0;
 
+        let labOffset = 0;
         for (const audioKey of state.audioKeys) {
           let fetchAudioResult: FetchAudioResult;
           try {
@@ -1521,21 +1520,21 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             return { result: "WRITE_ERROR", path: filePath };
           }
           encodedBlobs.push(encodedBlob);
+
           // 大して処理能力を要しないので、生成設定のon/offにかかわらず生成してしまう
           const lab = await generateLabFromAudioQuery(audioQuery, labOffset);
-          if (lab == undefined) {
-            return { result: "WRITE_ERROR", path: filePath };
-          }
           labs.push(lab);
+
+          // 最終音素の終了時刻を取得する
+          const splitLab = lab.split(" ");
+          labOffset = Number(splitLab[splitLab.length - 2]);
+
           texts.push(
             extractExportText(state.audioItems[audioKey].text, {
               enableMemoNotation: state.enableMemoNotation,
               enableRubyNotation: state.enableRubyNotation,
             }),
           );
-          // 最終音素の終了時刻を取得する
-          const splitLab = lab.split(" ");
-          labOffset = Number(splitLab[splitLab.length - 2]);
         }
 
         const connectedWav = await dispatch("CONNECT_AUDIO", {
@@ -1545,40 +1544,48 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           return { result: "ENGINE_ERROR", path: filePath };
         }
 
-        const writeFileResult = await window.backend.writeFile({
-          filePath,
-          buffer: await connectedWav.arrayBuffer(),
-        });
-        if (!writeFileResult.ok) {
-          window.backend.logError(writeFileResult.error);
-          return { result: "WRITE_ERROR", path: filePath };
-        }
+        try {
+          await window.backend
+            .writeFile({
+              filePath,
+              buffer: await connectedWav.arrayBuffer(),
+            })
+            .then(getValueOrThrow);
 
-        if (state.savingSetting.exportLab) {
-          const labResult = await writeTextFile({
-            // `generateLabFromAudioQuery`で生成される文字列はすべて改行で終わるので、追加で改行を挟む必要はない
-            text: labs.join(""),
-            filePath: filePath.replace(/\.wav$/, ".lab"),
-          });
-          if (!labResult.ok) {
-            window.backend.logError(labResult.error);
-            return { result: "WRITE_ERROR", path: filePath };
+          if (state.savingSetting.exportLab) {
+            await writeTextFile({
+              // `generateLabFromAudioQuery`で生成される文字列はすべて改行で終わるので、追加で改行を挟む必要はない
+              text: labs.join(""),
+              filePath: filePath.replace(/\.wav$/, ".lab"),
+            }).then(getValueOrThrow);
           }
-        }
 
-        if (state.savingSetting.exportText) {
-          const textResult = await writeTextFile({
-            text: texts.join("\n"),
-            filePath: filePath.replace(/\.wav$/, ".txt"),
-            encoding: state.savingSetting.fileEncoding,
-          });
-          if (!textResult.ok) {
-            window.backend.logError(textResult.error);
-            return { result: "WRITE_ERROR", path: filePath };
+          if (state.savingSetting.exportText) {
+            await writeTextFile({
+              text: texts.join("\n"),
+              filePath: filePath.replace(/\.wav$/, ".txt"),
+              encoding: state.savingSetting.fileEncoding,
+            }).then(getValueOrThrow);
           }
-        }
 
-        return { result: "SUCCESS", path: filePath };
+          return { result: "SUCCESS", path: filePath };
+        } catch (e) {
+          window.backend.logError(e);
+          if (e instanceof ResultError) {
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: generateWriteErrorMessage(e),
+            };
+          }
+          return {
+            result: "UNKNOWN_ERROR",
+            path: filePath,
+            errorMessage:
+              (e instanceof Error ? e.message : String(e)) ||
+              "不明なエラーが発生しました。",
+          };
+        }
       },
     ),
   },
