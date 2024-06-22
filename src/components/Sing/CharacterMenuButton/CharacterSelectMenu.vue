@@ -203,7 +203,7 @@ const selectedStyleId = computed(
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
-const engineIcons = useEngineIcons();
+const engineIcons = useEngineIcons(() => store.state.engineManifests);
 </script>
 
 <style scoped lang="scss">
