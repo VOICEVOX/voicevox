@@ -6,7 +6,7 @@
           <QToolbarTitle class="text-display">インポート</QToolbarTitle>
         </QToolbar>
       </QHeader>
-      <QPageContainer class="q-px-lg">
+      <QPageContainer class="q-px-lg page">
         <details class="q-pt-md">
           <summary>対応しているプロジェクトファイル</summary>
           <ul>
@@ -28,33 +28,30 @@
           placeholder="ファイルを選択してください"
           @input="handleFileChange"
         />
-        <QSelect
-          v-if="project"
-          v-model="selectedTrackIndexes"
-          :options="trackOptions"
-          :disable="projectFileErrorMessage != undefined"
-          emitValue
-          mapOptions
-          multiple
-          label="インポートするトラック"
+
+        <QList
+          v-if="trackOptions.length > 0"
+          bordered
+          class="rounded-borders q-mb-md"
         >
-          <template #selected>
-            <div
-              v-for="(track, i) in trackOptions.filter(
-                (track) =>
-                  selectedTrackIndexes &&
-                  selectedTrackIndexes.includes(track.value),
-              )"
-              :key="track.value"
-              :class="{
-                'q-mt-sm': i === 0,
-                'q-mt-xs': i !== 0,
-              }"
-            >
+          <QItem
+            v-for="track in trackOptions"
+            :key="track.value"
+            v-ripple
+            :disable="track.disable"
+            clickable
+            :class="{
+              'active-menu':
+                selectedTrackIndexes &&
+                selectedTrackIndexes.includes(track.value),
+            }"
+            @click="toggleTrackSelection(track.value)"
+          >
+            <QItemSection>
               {{ track.label }}
-            </div>
-          </template>
-        </QSelect>
+            </QItemSection>
+          </QItem>
+        </QList>
       </QPageContainer>
       <QFooter>
         <QToolbar>
@@ -234,6 +231,20 @@ const trackOptions = computed(() => {
 // 選択中のトラック
 const selectedTrackIndexes = ref<number[] | null>(null);
 
+// トラック選択切り替え
+const toggleTrackSelection = (index: number) => {
+  if (selectedTrackIndexes.value == null) {
+    selectedTrackIndexes.value = [index];
+  } else {
+    const selectedIndex = selectedTrackIndexes.value.indexOf(index);
+    if (selectedIndex === -1) {
+      selectedTrackIndexes.value.push(index);
+    } else {
+      selectedTrackIndexes.value.splice(selectedIndex, 1);
+    }
+  }
+};
+
 // データ初期化
 const initializeValues = () => {
   projectFile.value = null;
@@ -326,3 +337,10 @@ const handleCancel = () => {
   onDialogCancel();
 };
 </script>
+
+<style scoped lang="scss">
+.page {
+  display: flex;
+  flex-direction: column;
+}
+</style>
