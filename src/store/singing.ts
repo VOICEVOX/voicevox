@@ -1850,7 +1850,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   // TODO: Undoできるようにする
   IMPORT_UTAFORMATIX_PROJECT: {
     action: createUILockAction(
-      async ({ state, commit, dispatch }, { project, trackIndexes }) => {
+      async ({ state, dispatch }, { project, trackIndexes }) => {
         const { tempos, timeSignatures, tracks, tpqn } =
           ufProjectToVoicevox(project);
 
@@ -1861,10 +1861,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           logger.warn("Multiple time signatures are not supported.");
         }
 
-        await dispatch("SET_TPQN", { tpqn });
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-
         tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
         timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
 
@@ -1872,34 +1868,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("TPQN does not match. Must be converted.");
         }
 
-        const currentTrack = getOrThrow(state.tracks, state.selectedTrackId);
+        const selectedTrack = getOrThrow(state.tracks, state.selectedTrackId);
 
-        for (const [i, trackIndex] of trackIndexes.entries()) {
-          const notes = tracks[trackIndex].notes;
-
-          const track = {
-            ...structuredClone(toRaw(currentTrack)),
-
-            notes,
-          };
-
-          // 空のプロジェクトならトラックを上書きする
-          if (i === 0 && isTracksEmpty(state.tracks)) {
-            await dispatch("SET_TRACK", {
-              track,
-              trackId: state.selectedTrackId,
-            });
-          } else {
-            const { trackId } = await dispatch("CREATE_TRACK");
-            await dispatch("REGISTER_TRACK", {
-              track,
-              trackId,
-            });
+        const filteredTracks = trackIndexes.map((trackIndex) => {
+          const track = tracks[trackIndex];
+          if (!track) {
+            throw new Error("Track not found.");
           }
-        }
+          return {
+            ...toRaw(selectedTrack),
+            notes: track.notes.map((note) => ({
+              ...note,
+              id: NoteId(crypto.randomUUID()),
+            })),
+          };
+        });
 
-        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
-        commit("CLEAR_COMMANDS");
+        await dispatch("COMMAND_IMPORT_TRACKS", {
+          tpqn,
+          tempos,
+          timeSignatures,
+          tracks: filteredTracks,
+        });
+
         dispatch("RENDER");
       },
     ),
@@ -1908,13 +1899,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   // TODO: Undoできるようにする
   IMPORT_VOICEVOX_PROJECT: {
     action: createUILockAction(
-      async ({ state, commit, dispatch }, { project, trackIndexes }) => {
+      async ({ state, dispatch }, { project, trackIndexes }) => {
         const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
           project.song;
-
-        await dispatch("SET_TPQN", { tpqn });
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
 
         tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
         timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
@@ -1923,15 +1910,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("TPQN does not match. Must be converted.");
         }
 
-        const filteredTracks = new Map<TrackId, Track>();
+        const filteredTracks = [];
 
         for (const trackIndex of trackIndexes) {
           const track = tracks[trackOrder[trackIndex]];
           if (!track) {
             throw new Error("Track not found.");
           }
-          const { trackId } = await dispatch("CREATE_TRACK");
-          filteredTracks.set(trackId, {
+          filteredTracks.push({
             ...toRaw(track),
             notes: track.notes.map((note) => ({
               ...note,
@@ -1940,22 +1926,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
         }
 
-        // 空のプロジェクトならトラックを上書きする
-        if (isTracksEmpty(state.tracks)) {
-          await dispatch("SET_TRACKS", {
-            tracks: filteredTracks,
-          });
-        } else {
-          for (const [trackId, track] of filteredTracks) {
-            await dispatch("REGISTER_TRACK", {
-              track,
-              trackId,
-            });
-          }
-        }
+        await dispatch("COMMAND_IMPORT_TRACKS", {
+          tpqn,
+          tempos,
+          timeSignatures,
+          tracks: filteredTracks,
+        });
 
-        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
-        commit("CLEAR_COMMANDS");
         dispatch("RENDER");
       },
     ),
@@ -2631,6 +2608,54 @@ export const singingCommandStore = transformCommandStore(
           startFrame,
           frameLength,
           trackId,
+        });
+
+        dispatch("RENDER");
+      },
+    },
+
+    COMMAND_IMPORT_TRACKS: {
+      mutation(draft, { tpqn, tempos, timeSignatures, tracks }) {
+        singingStore.mutations.SET_TPQN(draft, { tpqn });
+        singingStore.mutations.SET_TEMPOS(draft, { tempos });
+        singingStore.mutations.SET_TIME_SIGNATURES(draft, { timeSignatures });
+        for (const { track, trackId, overwrite } of tracks) {
+          if (overwrite) {
+            singingStore.mutations.SET_TRACK(draft, { track, trackId });
+          } else {
+            singingStore.mutations.REGISTER_TRACK(draft, { track, trackId });
+          }
+        }
+      },
+      async action(
+        { state, commit, dispatch },
+        { tpqn, tempos, timeSignatures, tracks },
+      ) {
+        const payload: {
+          track: Track;
+          trackId: TrackId;
+          overwrite: boolean;
+        }[] = [];
+        for (const [i, track] of tracks.entries()) {
+          // 空のプロジェクトならトラックを上書きする
+          if (i === 0 && isTracksEmpty(state.tracks)) {
+            payload.push({
+              track,
+              trackId: state.selectedTrackId,
+              overwrite: true,
+            });
+          } else {
+            const { trackId } = await dispatch("CREATE_TRACK");
+            payload.push({ track, trackId, overwrite: false });
+          }
+        }
+
+        commit("COMMAND_IMPORT_TRACKS", {
+          tpqn,
+          tempos,
+          timeSignatures,
+
+          tracks: payload,
         });
 
         dispatch("RENDER");

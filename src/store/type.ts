@@ -1260,6 +1260,21 @@ export type SingingCommandStoreTypes = {
       trackId: TrackId;
     }): void;
   };
+
+  COMMAND_IMPORT_TRACKS: {
+    mutation: {
+      tpqn: number;
+      tempos: Tempo[];
+      timeSignatures: TimeSignature[];
+      tracks: { track: Track; trackId: TrackId; overwrite: boolean }[];
+    };
+    action(payload: {
+      tpqn: number;
+      tempos: Tempo[];
+      timeSignatures: TimeSignature[];
+      tracks: Track[];
+    }): void;
+  };
 };
 
 /*
