@@ -336,7 +336,9 @@ let previewRequestId = 0;
 let previewStartEditTarget: SequencerEditTarget = "NOTE";
 let executePreviewProcess = false;
 // ノート編集のプレビュー
+// プレビュー中に更新（移動やリサイズ等）されるノーツ
 const previewNotes = ref<Note[]>([]);
+// プレビュー中に変更されない（プレビュー前の状態を保持する）ノーツ
 const copiedNotesForPreview = new Map<NoteId, Note>();
 const previewNoteIds = computed(() => {
   return new Set(nowPreviewing.value ? copiedNotesForPreview.keys() : []);
