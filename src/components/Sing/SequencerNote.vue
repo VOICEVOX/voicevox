@@ -331,17 +331,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   height: 100%;
 }
 
-.note-lyric-input {
-  position: absolute;
-  bottom: 0;
-  font-weight: 700;
-  min-width: 3rem;
-  max-width: 6rem;
-  border: 0;
-  outline: 2px solid lab(80, -22.953, 14.365);
-  border-radius: 4px;
-}
-
 .cursor-move {
   cursor: move;
 }
