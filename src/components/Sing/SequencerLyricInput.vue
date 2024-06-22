@@ -28,6 +28,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (name: "lyricInput", text: string, note: Note): void;
+  /** 歌詞が確定したときに呼ばれる。次に歌詞入力を開始すべきノートIDを返す。 */
   (name: "lyricConfirmed", nextNoteId: NoteId | undefined): void;
 }>();
 
