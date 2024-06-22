@@ -108,10 +108,10 @@
 import { computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
-import { base64ImageToUri } from "@/helpers/base64Helper";
 import { SpeakerId, StyleId, TrackId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 defineOptions({
   name: "CharacterMenuButton",
@@ -203,14 +203,7 @@ const selectedStyleId = computed(
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
-const engineIcons = computed(() =>
-  Object.fromEntries(
-    store.state.engineIds.map((engineId) => [
-      engineId,
-      base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ]),
-  ),
-);
+const engineIcons = useEngineIcons();
 </script>
 
 <style scoped lang="scss">
