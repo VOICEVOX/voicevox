@@ -1,12 +1,13 @@
 <template>
   <QDialog ref="dialogRef" autoScroll @beforeShow="initializeValues">
-    <QLayout container view="hHh lpr fFf" class="q-dialog-plugin bg-background">
-      <QHeader>
-        <QToolbar>
-          <QToolbarTitle class="text-display">インポート</QToolbarTitle>
-        </QToolbar>
-      </QHeader>
-      <QPageContainer class="q-px-lg">
+    <QCard class="q-py-sm q-px-md dialog-card">
+      <QCardSection>
+        <div class="text-h5">インポート</div>
+      </QCardSection>
+
+      <QSeparator />
+
+      <QCardSection class="q-py-none">
         <details class="q-pt-md">
           <summary>対応しているプロジェクトファイル</summary>
           <ul>
@@ -28,13 +29,10 @@
           placeholder="ファイルを選択してください"
           @input="handleFileChange"
         />
-
-        <!-- TODO: ダイアログ全体ではなくQListだけスクロールするようにする -->
-        <QList
-          v-if="trackOptions.length > 0"
-          bordered
-          class="rounded-borders q-mb-md"
-        >
+      </QCardSection>
+      <QCardSection>
+        <div v-if="trackOptions.length === 0" class="scrollable-area" />
+        <QList v-else bordered class="rounded-borders scroll scrollable-area">
           <QItem
             v-for="(track, index) in trackOptions"
             :key="track.value"
@@ -54,36 +52,37 @@
             </QItemSection>
           </QItem>
         </QList>
-      </QPageContainer>
-      <QFooter>
-        <QToolbar>
-          <QSpace />
-          <QBtn
-            unelevated
-            align="right"
-            label="キャンセル"
-            color="toolbar-button"
-            textColor="toolbar-button-display"
-            class="text-no-wrap text-bold q-mr-sm"
-            @click="handleCancel"
-          />
-          <QBtn
-            unelevated
-            align="right"
-            label="インポート"
-            color="toolbar-button"
-            textColor="toolbar-button-display"
-            class="text-no-wrap text-bold q-mr-sm"
-            :disabled="
-              selectedTrackIndexes == null ||
-              selectedTrackIndexes.length === 0 ||
-              projectFileErrorMessage != undefined
-            "
-            @click="handleImportTrack"
-          />
-        </QToolbar>
-      </QFooter>
-    </QLayout>
+      </QCardSection>
+
+      <QSeparator />
+
+      <QCardActions>
+        <QSpace />
+        <QBtn
+          unelevated
+          align="right"
+          label="キャンセル"
+          color="toolbar-button"
+          textColor="toolbar-button-display"
+          class="text-no-wrap text-bold q-mr-sm"
+          @click="handleCancel"
+        />
+        <QBtn
+          unelevated
+          align="right"
+          label="インポート"
+          color="toolbar-button"
+          textColor="toolbar-button-display"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disabled="
+            selectedTrackIndexes == null ||
+            selectedTrackIndexes.length === 0 ||
+            projectFileErrorMessage != undefined
+          "
+          @click="handleImportTrack"
+        />
+      </QCardActions>
+    </QCard>
   </QDialog>
 </template>
 
@@ -323,3 +322,25 @@ const handleCancel = () => {
   onDialogCancel();
 };
 </script>
+
+<style scoped lang="scss">
+.dialog-card {
+  width: 700px;
+  max-width: 80vw;
+
+  height: calc(100vh - 100px);
+}
+
+.scrollable-area {
+  overflow-y: auto;
+  height: calc(100vh - 100px - 295px);
+
+  :deep() {
+    h3 {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin: 0;
+    }
+  }
+}
+</style>
