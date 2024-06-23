@@ -2544,6 +2544,9 @@ export const singingCommandStore = transformCommandStore(
           overwrite: boolean;
         }[] = [];
         for (const [i, track] of tracks.entries()) {
+          if (!isValidTrack(track)) {
+            throw new Error("The track is invalid.");
+          }
           // 空のプロジェクトならトラックを上書きする
           if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
             payload.push({
