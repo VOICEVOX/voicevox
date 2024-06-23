@@ -6,7 +6,7 @@
           <QToolbarTitle class="text-display">インポート</QToolbarTitle>
         </QToolbar>
       </QHeader>
-      <QPageContainer class="q-px-lg page">
+      <QPageContainer class="q-px-lg">
         <details class="q-pt-md">
           <summary>対応しているプロジェクトファイル</summary>
           <ul>
@@ -29,26 +29,28 @@
           @input="handleFileChange"
         />
 
+        <!-- TODO: ダイアログ全体ではなくQListだけスクロールするようにする -->
         <QList
           v-if="trackOptions.length > 0"
           bordered
           class="rounded-borders q-mb-md"
         >
           <QItem
-            v-for="track in trackOptions"
+            v-for="(track, index) in trackOptions"
             :key="track.value"
-            v-ripple
+            tag="label"
             :disable="track.disable"
-            clickable
-            :class="{
-              'active-menu':
-                selectedTrackIndexes &&
-                selectedTrackIndexes.includes(track.value),
-            }"
-            @click="toggleTrackSelection(track.value)"
           >
+            <QItemSection avatar>
+              <QCheckbox
+                v-model="selectedTrackIndexes"
+                :val="track.value"
+                :disable="track.disable"
+              />
+            </QItemSection>
             <QItemSection>
-              {{ track.label }}
+              <QItemLabel> {{ index + 1 }}：{{ track.name }} </QItemLabel>
+              <QItemLabel caption>ノート数：{{ track.noteLength }}</QItemLabel>
             </QItemSection>
           </QItem>
         </QList>
@@ -218,32 +220,16 @@ const trackOptions = computed(() => {
     return [];
   }
   // トラックリストを生成
-  // "トラックNo: トラック名 / ノート数" の形式で表示
   const tracks = getProjectTracks(project.value);
   return tracks.map((track, index) => ({
-    label: `${index + 1}: ${track?.name || "（トラック名なし）"} / ノート数：${
-      track.noteLength
-    }`,
+    name: track?.name,
+    noteLength: track.noteLength,
     value: index,
     disable: track.disable,
   }));
 });
 // 選択中のトラック
 const selectedTrackIndexes = ref<number[] | null>(null);
-
-// トラック選択切り替え
-const toggleTrackSelection = (index: number) => {
-  if (selectedTrackIndexes.value == null) {
-    selectedTrackIndexes.value = [index];
-  } else {
-    const selectedIndex = selectedTrackIndexes.value.indexOf(index);
-    if (selectedIndex === -1) {
-      selectedTrackIndexes.value.push(index);
-    } else {
-      selectedTrackIndexes.value.splice(selectedIndex, 1);
-    }
-  }
-};
 
 // データ初期化
 const initializeValues = () => {
@@ -337,10 +323,3 @@ const handleCancel = () => {
   onDialogCancel();
 };
 </script>
-
-<style scoped lang="scss">
-.page {
-  display: flex;
-  flex-direction: column;
-}
-</style>
