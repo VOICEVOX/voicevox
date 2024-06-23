@@ -70,6 +70,7 @@ import {
   isValidTrack,
   SEQUENCER_MIN_NUM_MEASURES,
   getNumMeasures,
+  isTracksEmpty,
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
@@ -113,9 +114,6 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
     };
   });
 };
-
-const isTracksEmpty = (tracks: Map<TrackId, Track>) =>
-  tracks.size === 1 && [...tracks.values()][0].notes.length === 0;
 
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
@@ -2635,7 +2633,7 @@ export const singingCommandStore = transformCommandStore(
         }[] = [];
         for (const [i, track] of tracks.entries()) {
           // 空のプロジェクトならトラックを上書きする
-          if (i === 0 && isTracksEmpty(state.tracks)) {
+          if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
             payload.push({
               track,
               trackId: state.selectedTrackId,
