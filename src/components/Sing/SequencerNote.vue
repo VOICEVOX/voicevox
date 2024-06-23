@@ -84,8 +84,11 @@ import ContextMenu, {
 
 const props = defineProps<{
   note: Note;
+  /** どれかのノートがプレビュー中 */
   nowPreviewing: boolean;
+  /** このノートが選択中か */
   isSelected: boolean;
+  /** このノートがプレビュー中か */
   isPreview: boolean;
   previewLyric: string | null;
 }>();
