@@ -1847,7 +1847,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     }),
   },
 
-  // TODO: Undoできるようにする
   IMPORT_UTAFORMATIX_PROJECT: {
     action: createUILockAction(
       async ({ state, dispatch }, { project, trackIndexes }) => {
@@ -1910,21 +1909,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("TPQN does not match. Must be converted.");
         }
 
-        const filteredTracks = [];
-
-        for (const trackIndex of trackIndexes) {
+        const filteredTracks = trackIndexes.map((trackIndex) => {
           const track = tracks[trackOrder[trackIndex]];
           if (!track) {
             throw new Error("Track not found.");
           }
-          filteredTracks.push({
+          return {
             ...toRaw(track),
             notes: track.notes.map((note) => ({
               ...note,
               id: NoteId(crypto.randomUUID()),
             })),
-          });
-        }
+          };
+        });
 
         await dispatch("COMMAND_IMPORT_TRACKS", {
           tpqn,
