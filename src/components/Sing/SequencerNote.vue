@@ -2,8 +2,8 @@
   <div
     class="note"
     :class="{
-      selected: noteState === 'SELECTED',
-      'preview-lyric': props.previewLyric != undefined,
+      'selected-or-preview': isSelected || isPreview,
+      'preview-lyric': previewLyric != undefined,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
       'below-pitch': editTargetIsPitch,
@@ -20,6 +20,7 @@
         'cursor-move': editTargetIsNote,
       }"
       @mousedown="onBarMouseDown"
+      @dblclick="onBarDoubleClick"
     >
       <div
         class="note-left-edge"
@@ -41,48 +42,30 @@
         :menudata="contextMenuData"
       />
     </div>
-    <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
-    <input
-      v-if="showLyricInput"
-      v-focus
-      :value="lyricToDisplay"
-      class="note-lyric-input"
-      @input="onLyricInput"
-      @mousedown.stop
-      @dblclick.stop
-      @keydown.stop="onLyricInputKeyDown"
-      @blur="onLyricInputBlur"
-    />
-    <template v-else>
-      <div
-        class="note-lyric"
-        data-testid="note-lyric"
-        @mousedown="onLyricMouseDown"
-      >
-        {{ lyricToDisplay }}
-      </div>
-      <!-- エラー内容を表示 -->
-      <QTooltip
-        v-if="hasOverlappingError"
-        anchor="bottom left"
-        self="top left"
-        :offset="[0, 8]"
-        transitionShow=""
-        transitionHide=""
-      >
-        ノートが重なっています
-      </QTooltip>
-      <QTooltip
-        v-if="hasPhraseError"
-        anchor="bottom left"
-        self="top left"
-        :offset="[0, 8]"
-        transitionShow=""
-        transitionHide=""
-      >
-        フレーズが生成できません。歌詞は日本語1文字までです。
-      </QTooltip>
-    </template>
+    <div class="note-lyric" data-testid="note-lyric">
+      {{ lyricToDisplay }}
+    </div>
+    <!-- エラー内容を表示 -->
+    <QTooltip
+      v-if="hasOverlappingError"
+      anchor="bottom left"
+      self="top left"
+      :offset="[0, 8]"
+      transitionShow=""
+      transitionHide=""
+    >
+      ノートが重なっています
+    </QTooltip>
+    <QTooltip
+      v-if="hasPhraseError"
+      anchor="bottom left"
+      self="top left"
+      :offset="[0, 8]"
+      transitionShow=""
+      transitionHide=""
+    >
+      フレーズが生成できません。歌詞は日本語1文字までです。
+    </QTooltip>
   </div>
 </template>
 
@@ -99,33 +82,22 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
 
-type NoteState = "NORMAL" | "SELECTED";
-
-const vFocus = {
-  mounted(el: HTMLInputElement) {
-    el.focus();
-    el.select();
-  },
-};
-
-const props = withDefaults(
-  defineProps<{
-    note: Note;
-    isSelected: boolean;
-    previewLyric: string | null;
-  }>(),
-  {
-    isSelected: false,
-  },
-);
+const props = defineProps<{
+  note: Note;
+  /** どれかのノートがプレビュー中 */
+  nowPreviewing: boolean;
+  /** このノートが選択中か */
+  isSelected: boolean;
+  /** このノートがプレビュー中か */
+  isPreview: boolean;
+  previewLyric: string | null;
+}>();
 
 const emit = defineEmits<{
   (name: "barMousedown", event: MouseEvent): void;
+  (name: "barDoubleClick", event: MouseEvent): void;
   (name: "rightEdgeMousedown", event: MouseEvent): void;
   (name: "leftEdgeMousedown", event: MouseEvent): void;
-  (name: "lyricMouseDown", event: MouseEvent): void;
-  (name: "lyricInput", text: string): void;
-  (name: "lyricBlur"): void;
 }>();
 
 const store = useStore();
@@ -148,12 +120,6 @@ const width = computed(() => {
   const noteStartBaseX = tickToBaseX(noteStartTicks, tpqn.value);
   const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
   return (noteEndBaseX - noteStartBaseX) * zoomX.value;
-});
-const noteState = computed((): NoteState => {
-  if (props.isSelected) {
-    return "SELECTED";
-  }
-  return "NORMAL";
 });
 const editTargetIsNote = computed(() => {
   return state.sequencerEditTarget === "NOTE";
@@ -178,60 +144,65 @@ const hasPhraseError = computed(() => {
 });
 
 // 表示する歌詞。
-// 優先度：入力中の歌詞 > 他ノートの入力中の歌詞 > 渡された（=Storeの）歌詞
-const lyricToDisplay = computed(
-  () => temporaryLyric.value ?? props.previewLyric ?? props.note.lyric,
-);
-// 歌詞入力中の一時的な歌詞
-const temporaryLyric = ref<string | undefined>(undefined);
-const showLyricInput = computed(() => {
-  return state.editingLyricNoteId === props.note.id;
+// 優先度：入力中の歌詞 > 渡された（=Storeの）歌詞
+const lyricToDisplay = computed(() => {
+  return props.previewLyric ?? props.note.lyric;
 });
+
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
-const contextMenuData = ref<ContextMenuItemData[]>([
-  {
-    type: "button",
-    label: "コピー",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+const contextMenuData = computed<ContextMenuItemData[]>(() => {
+  return [
+    {
+      type: "button",
+      label: "コピー",
+      disabled: props.nowPreviewing,
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "切り取り",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    {
+      type: "button",
+      label: "切り取り",
+      disabled: props.nowPreviewing,
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "クオンタイズ",
-    disabled: !props.isSelected,
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "クオンタイズ",
+      disabled: props.nowPreviewing || !props.isSelected,
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "削除",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "削除",
+      disabled: props.nowPreviewing,
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-]);
+  ];
+});
 
 const onBarMouseDown = (event: MouseEvent) => {
   emit("barMousedown", event);
+};
+
+const onBarDoubleClick = (event: MouseEvent) => {
+  emit("barDoubleClick", event);
 };
 
 const onRightEdgeMouseDown = (event: MouseEvent) => {
@@ -240,54 +211,6 @@ const onRightEdgeMouseDown = (event: MouseEvent) => {
 
 const onLeftEdgeMouseDown = (event: MouseEvent) => {
   emit("leftEdgeMousedown", event);
-};
-
-const onLyricMouseDown = (event: MouseEvent) => {
-  emit("lyricMouseDown", event);
-};
-
-const onLyricInputKeyDown = (event: KeyboardEvent) => {
-  // タブキーで次のノート入力に移動
-  if (event.key === "Tab") {
-    event.preventDefault();
-    const noteId = props.note.id;
-    const notes = store.getters.SELECTED_TRACK.notes;
-    const index = notes.findIndex((value) => value.id === noteId);
-    if (index === -1) {
-      return;
-    }
-    if (event.shiftKey && index - 1 < 0) {
-      return;
-    }
-    if (!event.shiftKey && index + 1 >= notes.length) {
-      return;
-    }
-    const nextNoteId = notes[index + (event.shiftKey ? -1 : 1)].id;
-    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
-  }
-  // IME変換確定時のEnterを無視する
-  if (event.key === "Enter" && event.isComposing) {
-    return;
-  }
-  // IME変換でなければ入力モードを終了
-  if (event.key === "Enter" && !event.isComposing) {
-    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
-  }
-};
-
-const onLyricInputBlur = () => {
-  if (state.editingLyricNoteId === props.note.id) {
-    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: undefined });
-  }
-  temporaryLyric.value = undefined;
-  emit("lyricBlur");
-};
-const onLyricInput = (event: Event) => {
-  if (!(event.target instanceof HTMLInputElement)) {
-    throw new Error("Invalid event target");
-  }
-  temporaryLyric.value = event.target.value;
-  emit("lyricInput", temporaryLyric.value);
 };
 </script>
 
@@ -318,7 +241,7 @@ const onLyricInput = (event: Event) => {
       background-color: lab(80, -22.953, 14.365);
     }
 
-    &.selected {
+    &.selected-or-preview {
       // 色は仮
       .note-bar {
         background-color: lab(95, -22.953, 14.365);
@@ -356,7 +279,7 @@ const onLyricInput = (event: Event) => {
       opacity: 0.6;
     }
 
-    &.selected {
+    &.selected-or-preview {
       .note-bar {
         background-color: rgba(colors.$warning-rgb, 0.5);
         border-color: colors.$warning;
@@ -409,17 +332,6 @@ const onLyricInput = (event: Event) => {
   right: -1px;
   width: 5px;
   height: 100%;
-}
-
-.note-lyric-input {
-  position: absolute;
-  bottom: 0;
-  font-weight: 700;
-  min-width: 3rem;
-  max-width: 6rem;
-  border: 0;
-  outline: 2px solid lab(80, -22.953, 14.365);
-  border-radius: 4px;
 }
 
 .cursor-move {
