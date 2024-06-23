@@ -319,12 +319,12 @@ const handleImportTrack = () => {
   }
   // トラックをインポート
   if (project.value.type === "vvproj") {
-    store.dispatch("IMPORT_VOICEVOX_PROJECT", {
+    store.dispatch("COMMAND_IMPORT_VOICEVOX_PROJECT", {
       project: project.value.project,
       trackIndexes: selectedTrackIndexes.value,
     });
   } else {
-    store.dispatch("IMPORT_UTAFORMATIX_PROJECT", {
+    store.dispatch("COMMAND_IMPORT_UTAFORMATIX_PROJECT", {
       project: project.value.project,
       trackIndexes: selectedTrackIndexes.value,
     });

@@ -1845,94 +1845,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     }),
   },
 
-  IMPORT_UTAFORMATIX_PROJECT: {
-    action: createUILockAction(
-      async ({ state, dispatch }, { project, trackIndexes }) => {
-        const { tempos, timeSignatures, tracks, tpqn } =
-          ufProjectToVoicevox(project);
-
-        if (tempos.length > 1) {
-          logger.warn("Multiple tempos are not supported.");
-        }
-        if (timeSignatures.length > 1) {
-          logger.warn("Multiple time signatures are not supported.");
-        }
-
-        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
-
-        if (tpqn !== state.tpqn) {
-          throw new Error("TPQN does not match. Must be converted.");
-        }
-
-        const selectedTrack = getOrThrow(state.tracks, state.selectedTrackId);
-
-        const filteredTracks = trackIndexes.map((trackIndex) => {
-          const track = tracks[trackIndex];
-          if (!track) {
-            throw new Error("Track not found.");
-          }
-          return {
-            ...toRaw(selectedTrack),
-            notes: track.notes.map((note) => ({
-              ...note,
-              id: NoteId(crypto.randomUUID()),
-            })),
-          };
-        });
-
-        await dispatch("COMMAND_IMPORT_TRACKS", {
-          tpqn,
-          tempos,
-          timeSignatures,
-          tracks: filteredTracks,
-        });
-
-        dispatch("RENDER");
-      },
-    ),
-  },
-
-  // TODO: Undoできるようにする
-  IMPORT_VOICEVOX_PROJECT: {
-    action: createUILockAction(
-      async ({ state, dispatch }, { project, trackIndexes }) => {
-        const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
-          project.song;
-
-        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
-
-        if (tpqn !== state.tpqn) {
-          throw new Error("TPQN does not match. Must be converted.");
-        }
-
-        const filteredTracks = trackIndexes.map((trackIndex) => {
-          const track = tracks[trackOrder[trackIndex]];
-          if (!track) {
-            throw new Error("Track not found.");
-          }
-          return {
-            ...toRaw(track),
-            notes: track.notes.map((note) => ({
-              ...note,
-              id: NoteId(crypto.randomUUID()),
-            })),
-          };
-        });
-
-        await dispatch("COMMAND_IMPORT_TRACKS", {
-          tpqn,
-          tempos,
-          timeSignatures,
-          tracks: filteredTracks,
-        });
-
-        dispatch("RENDER");
-      },
-    ),
-  },
-
   FETCH_SING_FRAME_VOLUME: {
     async action(
       { dispatch },
@@ -2655,6 +2567,93 @@ export const singingCommandStore = transformCommandStore(
 
         dispatch("RENDER");
       },
+    },
+
+    COMMAND_IMPORT_UTAFORMATIX_PROJECT: {
+      action: createUILockAction(
+        async ({ state, dispatch }, { project, trackIndexes }) => {
+          const { tempos, timeSignatures, tracks, tpqn } =
+            ufProjectToVoicevox(project);
+
+          if (tempos.length > 1) {
+            logger.warn("Multiple tempos are not supported.");
+          }
+          if (timeSignatures.length > 1) {
+            logger.warn("Multiple time signatures are not supported.");
+          }
+
+          tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+          timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
+
+          if (tpqn !== state.tpqn) {
+            throw new Error("TPQN does not match. Must be converted.");
+          }
+
+          const selectedTrack = getOrThrow(state.tracks, state.selectedTrackId);
+
+          const filteredTracks = trackIndexes.map((trackIndex) => {
+            const track = tracks[trackIndex];
+            if (!track) {
+              throw new Error("Track not found.");
+            }
+            return {
+              ...toRaw(selectedTrack),
+              notes: track.notes.map((note) => ({
+                ...note,
+                id: NoteId(crypto.randomUUID()),
+              })),
+            };
+          });
+
+          await dispatch("COMMAND_IMPORT_TRACKS", {
+            tpqn,
+            tempos,
+            timeSignatures,
+            tracks: filteredTracks,
+          });
+
+          dispatch("RENDER");
+        },
+      ),
+    },
+
+    COMMAND_IMPORT_VOICEVOX_PROJECT: {
+      action: createUILockAction(
+        async ({ state, dispatch }, { project, trackIndexes }) => {
+          const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
+            project.song;
+
+          tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+          timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
+
+          if (tpqn !== state.tpqn) {
+            throw new Error("TPQN does not match. Must be converted.");
+          }
+
+          const filteredTracks = trackIndexes.map((trackIndex) => {
+            const track = tracks[trackOrder[trackIndex]];
+            if (!track) {
+              throw new Error("Track not found.");
+            }
+            return {
+              ...toRaw(track),
+              notes: track.notes.map((note) => ({
+                ...note,
+                id: NoteId(crypto.randomUUID()),
+              })),
+            };
+          });
+
+          await dispatch("COMMAND_IMPORT_TRACKS", {
+            tpqn,
+            tempos,
+            timeSignatures,
+            tracks: filteredTracks,
+          });
+
+          dispatch("RENDER");
+        },
+      ),
     },
   }),
   "song",

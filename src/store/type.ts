@@ -1034,17 +1034,6 @@ export type SingingStoreTypes = {
     action(payload: { isDrag: boolean }): void;
   };
 
-  IMPORT_UTAFORMATIX_PROJECT: {
-    action(payload: { project: UfProject; trackIndexes: number[] }): void;
-  };
-
-  IMPORT_VOICEVOX_PROJECT: {
-    action(payload: {
-      project: LatestProjectType;
-      trackIndexes: number[];
-    }): void;
-  };
-
   EXPORT_WAVE_FILE: {
     action(payload: { filePath?: string }): SaveResultObject;
   };
@@ -1273,6 +1262,17 @@ export type SingingCommandStoreTypes = {
       tempos: Tempo[];
       timeSignatures: TimeSignature[];
       tracks: Track[];
+    }): void;
+  };
+
+  COMMAND_IMPORT_UTAFORMATIX_PROJECT: {
+    action(payload: { project: UfProject; trackIndexes: number[] }): void;
+  };
+
+  COMMAND_IMPORT_VOICEVOX_PROJECT: {
+    action(payload: {
+      project: LatestProjectType;
+      trackIndexes: number[];
     }): void;
   };
 };
