@@ -62,10 +62,10 @@ export function getOverlappingNoteIds(notes: Note[]): Set<NoteId> {
       return a.tick - b.tick;
     }
     if (a.type === "start" && b.type === "end") {
-      return -1;
+      return 1;
     }
     if (a.type === "end" && b.type === "start") {
-      return 1;
+      return -1;
     }
     return 0;
   });
