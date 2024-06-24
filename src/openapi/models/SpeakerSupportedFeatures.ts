@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -13,13 +13,6 @@
  */
 
 import { exists, mapValues } from '../runtime';
-import type { SpeakerSupportPermittedSynthesisMorphing } from './SpeakerSupportPermittedSynthesisMorphing';
-import {
-    SpeakerSupportPermittedSynthesisMorphingFromJSON,
-    SpeakerSupportPermittedSynthesisMorphingFromJSONTyped,
-    SpeakerSupportPermittedSynthesisMorphingToJSON,
-} from './SpeakerSupportPermittedSynthesisMorphing';
-
 /**
  * 話者の対応機能の情報
  * @export
@@ -27,12 +20,24 @@ import {
  */
 export interface SpeakerSupportedFeatures {
     /**
-     * 
-     * @type {SpeakerSupportPermittedSynthesisMorphing}
+     * 'ALL' は「全て許可」、'SELF_ONLY' は「同じ話者内でのみ許可」、'NOTHING' は「全て禁止」
+     * @type {string}
      * @memberof SpeakerSupportedFeatures
      */
-    permittedSynthesisMorphing?: SpeakerSupportPermittedSynthesisMorphing;
+    permittedSynthesisMorphing?: SpeakerSupportedFeaturesPermittedSynthesisMorphingEnum;
 }
+
+
+/**
+ * @export
+ */
+export const SpeakerSupportedFeaturesPermittedSynthesisMorphingEnum = {
+    All: 'ALL',
+    SelfOnly: 'SELF_ONLY',
+    Nothing: 'NOTHING'
+} as const;
+export type SpeakerSupportedFeaturesPermittedSynthesisMorphingEnum = typeof SpeakerSupportedFeaturesPermittedSynthesisMorphingEnum[keyof typeof SpeakerSupportedFeaturesPermittedSynthesisMorphingEnum];
+
 
 /**
  * Check if a given object implements the SpeakerSupportedFeatures interface.
@@ -53,7 +58,7 @@ export function SpeakerSupportedFeaturesFromJSONTyped(json: any, ignoreDiscrimin
     }
     return {
         
-        'permittedSynthesisMorphing': !exists(json, 'permitted_synthesis_morphing') ? undefined : SpeakerSupportPermittedSynthesisMorphingFromJSON(json['permitted_synthesis_morphing']),
+        'permittedSynthesisMorphing': !exists(json, 'permitted_synthesis_morphing') ? undefined : json['permitted_synthesis_morphing'],
     };
 }
 
@@ -66,7 +71,7 @@ export function SpeakerSupportedFeaturesToJSON(value?: SpeakerSupportedFeatures 
     }
     return {
         
-        'permitted_synthesis_morphing': SpeakerSupportPermittedSynthesisMorphingToJSON(value.permittedSynthesisMorphing),
+        'permitted_synthesis_morphing': value.permittedSynthesisMorphing,
     };
 }
 
