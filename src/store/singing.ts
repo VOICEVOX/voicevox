@@ -417,17 +417,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  UPDATE_OVERLAPPING_NOTE_IDS: {
-    mutation(state) {
-      state.overlappingNoteIds = getOverlappingNoteIds(
-        state.tracks[selectedTrackIndex].notes,
-      );
-    },
-    async action({ commit }) {
-      commit("UPDATE_OVERLAPPING_NOTE_IDS");
-    },
-  },
-
   SET_NOTES: {
     mutation(state, { notes }: { notes: Note[] }) {
       // TODO: マルチトラック対応
@@ -435,7 +424,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.editingLyricNoteId = undefined;
       state.selectedNoteIds.clear();
       state.tracks[selectedTrackIndex].notes = notes;
-      singingStore.mutations.UPDATE_OVERLAPPING_NOTE_IDS(state, undefined);
+      state.overlappingNoteIds = getOverlappingNoteIds(
+        state.tracks[selectedTrackIndex].notes,
+      );
     },
     async action({ commit, dispatch }, { notes }: { notes: Note[] }) {
       if (!isValidNotes(notes)) {
@@ -453,7 +444,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      singingStore.mutations.UPDATE_OVERLAPPING_NOTE_IDS(state, undefined);
+      state.overlappingNoteIds = getOverlappingNoteIds(
+        state.tracks[selectedTrackIndex].notes,
+      );
     },
   },
 
@@ -467,7 +460,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      singingStore.mutations.UPDATE_OVERLAPPING_NOTE_IDS(state, undefined);
+      state.overlappingNoteIds = getOverlappingNoteIds(
+        state.tracks[selectedTrackIndex].notes,
+      );
     },
   },
 
@@ -488,7 +483,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return !noteIdsSet.has(value.id);
       });
 
-      singingStore.mutations.UPDATE_OVERLAPPING_NOTE_IDS(state, undefined);
+      state.overlappingNoteIds = getOverlappingNoteIds(
+        state.tracks[selectedTrackIndex].notes,
+      );
     },
   },
 

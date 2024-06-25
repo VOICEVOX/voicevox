@@ -899,11 +899,6 @@ export type SingingStoreTypes = {
     getter: Set<NoteId>;
   };
 
-  UPDATE_OVERLAPPING_NOTE_IDS: {
-    mutation: undefined;
-    action(): void;
-  };
-
   SET_NOTES: {
     mutation: { notes: Note[] };
     action(payload: { notes: Note[] }): void;
