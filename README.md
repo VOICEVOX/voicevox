@@ -66,7 +66,11 @@ VOICEVOX エディタの実行とは別にエンジン API のサーバを立て
 また、エンジン API の宛先エンドポイントを変更する場合は`VITE_DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
 
 ```bash
+# 開発しやすい環境で実行
 npm run electron:serve
+
+# ビルド時に近い環境で実行
+npm run electron:serve -- --mode production
 ```
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>

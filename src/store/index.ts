@@ -408,7 +408,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...singingStore.actions,
     ...singingCommandStore.actions,
   },
-  strict: process.env.NODE_ENV !== "production",
+  strict: import.meta.env.MODE !== "production",
 });
 
 export const useStore = (): Store<
