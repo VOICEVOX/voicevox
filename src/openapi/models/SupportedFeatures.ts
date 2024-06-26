@@ -60,6 +60,12 @@ export interface SupportedFeatures {
      * @type {boolean}
      * @memberof SupportedFeatures
      */
+     adjustPauseLength: boolean;
+     /**
+      * 
+      * @type {boolean}
+      * @memberof SupportedFeatures
+      */
     interrogativeUpspeak: boolean;
     /**
      * 
@@ -92,6 +98,7 @@ export function instanceOfSupportedFeatures(value: object): boolean {
     isInstance = isInstance && "adjustPitchScale" in value;
     isInstance = isInstance && "adjustIntonationScale" in value;
     isInstance = isInstance && "adjustVolumeScale" in value;
+    isInstance = isInstance && "adjustPauseLength" in value;
     isInstance = isInstance && "interrogativeUpspeak" in value;
     isInstance = isInstance && "synthesisMorphing" in value;
 
@@ -136,10 +143,10 @@ export function SupportedFeaturesToJSON(value?: SupportedFeatures | null): any {
         'adjust_pitch_scale': value.adjustPitchScale,
         'adjust_intonation_scale': value.adjustIntonationScale,
         'adjust_volume_scale': value.adjustVolumeScale,
+        'adjust_pause_length': value.adjustPauseLength,
         'interrogative_upspeak': value.interrogativeUpspeak,
         'synthesis_morphing': value.synthesisMorphing,
         'sing': value.sing,
         'manage_library': value.manageLibrary,
     };
 }
-

@@ -461,6 +461,7 @@ const getFeatureName = (name: keyof SupportedFeatures) => {
     adjustPitchScale: "全体の音高の調整",
     adjustIntonationScale: "全体の抑揚の調整",
     adjustVolumeScale: "全体の音量の調整",
+    adjustPauseLength: "句読点などの無音時間の調整",
     interrogativeUpspeak: "疑問文の自動調整",
     synthesisMorphing: "2種類のスタイルでモーフィングした音声を合成",
     sing: "歌唱音声合成",
