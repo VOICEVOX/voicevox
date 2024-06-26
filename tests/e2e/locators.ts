@@ -5,6 +5,7 @@ import { Page } from "@playwright/test";
  */
 export function getNewestQuasarDialog(page: Page) {
   const locator = page.locator('[id^="q-portal--dialog"]');
+  console.log("Commit update snapshotを発火させるための追加");
   return locator.last();
 }
 
