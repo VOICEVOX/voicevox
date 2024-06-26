@@ -445,7 +445,9 @@ const parameters = computed<Parameter[]>(() => [
         label: "文内無音倍率",
         slider: previewSliderHelper({
           modelValue: () => query.value?.pauseLengthScale ?? null,
-          disable: () => uiLocked.value || supportedFeatures.value?.adjustPauseLength === false,
+          disable: () =>
+            uiLocked.value ||
+            supportedFeatures.value?.adjustPauseLength === false,
           max: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.max,
           min: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.min,
           step: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.step,
@@ -464,7 +466,9 @@ const parameters = computed<Parameter[]>(() => [
         label: "文内無音",
         slider: previewSliderHelper({
           modelValue: () => query.value?.pauseLength ?? 0.3,
-          disable: () => uiLocked.value || supportedFeatures.value?.adjustPauseLength === false,
+          disable: () =>
+            uiLocked.value ||
+            supportedFeatures.value?.adjustPauseLength === false,
           max: SLIDER_PARAMETERS.PAUSE_LENGTH.max,
           min: SLIDER_PARAMETERS.PAUSE_LENGTH.min,
           step: SLIDER_PARAMETERS.PAUSE_LENGTH.step,

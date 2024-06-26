@@ -121,6 +121,7 @@ export function SupportedFeaturesFromJSONTyped(json: any, ignoreDiscriminator: b
         'adjustPitchScale': json['adjust_pitch_scale'],
         'adjustIntonationScale': json['adjust_intonation_scale'],
         'adjustVolumeScale': json['adjust_volume_scale'],
+        'adjustPauseLength': json['adjust_pause_length'],
         'interrogativeUpspeak': json['interrogative_upspeak'],
         'synthesisMorphing': json['synthesis_morphing'],
         'sing': !exists(json, 'sing') ? undefined : json['sing'],
