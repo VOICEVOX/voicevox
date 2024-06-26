@@ -5,7 +5,7 @@ import { Page } from "@playwright/test";
  */
 export function getNewestQuasarDialog(page: Page) {
   const locator = page.locator('[id^="q-portal--dialog"]');
-  return locator.last();
+  return locator.last(); 
 }
 
 /**
