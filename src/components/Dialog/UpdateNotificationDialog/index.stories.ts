@@ -1,4 +1,4 @@
-import { userEvent, within, expect } from "@storybook/test";
+import { userEvent, within, expect, fn } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import Presentation from "./Presentation.vue";
@@ -7,11 +7,29 @@ const meta: Meta<typeof Presentation> = {
   component: Presentation,
   args: {
     modelValue: false,
+    latestVersion: "1.0.0",
+    newUpdateInfos: [
+      {
+        version: "1.1.0",
+        descriptions: ["追加機能１", "追加機能２"],
+        contributors: ["これは表示されないはず"],
+      },
+      {
+        version: "1.0.1",
+        descriptions: ["バグ修正"],
+        contributors: ["これは表示されないはず"],
+      },
+    ],
   },
+  tags: ["!autodocs"],
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Closed: Story = {
+  name: "閉じている",
+};
 
 export const Opened: Story = {
   name: "開いている",
@@ -35,7 +53,7 @@ export const Close: Story = {
 
 export const SkipThisVersion: Story = {
   name: "スキップボタンを押す",
-  args: { ...Opened.args, latestVersion: "9.9.9" },
+  args: { ...Opened.args },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -44,26 +62,29 @@ export const SkipThisVersion: Story = {
     });
     await userEvent.click(button);
 
-    expect(args["onSkipThisVersionClick"]).toBeCalledWith("9.9.9");
+    expect(args["onSkipThisVersionClick"]).toBeCalledWith("1.0.0");
     expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
 
-// export const OpenOfficialSite: Story = {
-//   name: "公式サイトを開くボタンを押す",
-//   args: { ...Opened.args },
-//   play: async () => {
-//     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
+export const OpenOfficialSite: Story = {
+  name: "公式サイトを開くボタンを押す",
+  args: { ...Opened.args },
+  play: async ({ args }) => {
+    window.open = fn();
 
-//     const button = canvas.getByRole("button", {
-//       name: /公式サイトを開く/,
-//     });
-//     await userEvent.click(button);
+    const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
-//     expect(window.open).toBeCalledWith("https://example.com", "_blank");
-//   },
-// };
+    const button = canvas.getByRole("button", {
+      name: /公式サイトを開く/,
+    });
+    await userEvent.click(button);
 
-export const Closed: Story = {
-  name: "閉じている",
+    // 公式サイトが開かれる
+    expect(window.open).toBeCalledWith(
+      "https://voicevox.hiroshiba.jp/",
+      "_blank",
+    );
+    expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+  },
 };

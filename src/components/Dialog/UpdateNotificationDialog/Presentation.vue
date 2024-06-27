@@ -98,7 +98,6 @@ const closeUpdateNotificationDialog = () => {
   modelValueComputed.value = false;
 };
 
-// onにする？
 const openOfficialWebsite = () => {
   window.open(import.meta.env.VITE_OFFICIAL_WEBSITE_URL, "_blank");
 };

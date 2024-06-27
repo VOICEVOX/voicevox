@@ -33,6 +33,11 @@ setup((app) => {
 
 const preview: Preview = {
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      toc: true,
+    },
+  },
   argTypesEnhancers: [
     addActionsWithEmits,
   ],
