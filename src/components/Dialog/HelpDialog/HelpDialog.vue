@@ -270,7 +270,7 @@ const openLogDirectory = window.electron.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/new-colors' as colors;
+@use '@/styles/colors-v2' as colors;
 @use '@/styles/variables' as vars;
 
 .grid {
