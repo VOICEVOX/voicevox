@@ -62,6 +62,9 @@ jobs:
         run: npx playwright install
       - name: Run Storybook tests
         run: |
+          # .env
+          cp .env.test .env
+
           # ランダムなポートを使う
           PORT=$(node -r net -e "server=net.createServer();server.listen(0,()=>{console.log(server.address().port);server.close()})")
           npx storybook dev --ci --port $PORT &
