@@ -125,7 +125,13 @@
                 :disable="uiLocked"
                 @blur="setSurface(surface)"
                 @keydown.enter="yomiFocus"
-              />
+              >
+                <ContextMenu
+                  ref="contextMenu"
+                  :header="contextMenuHeader"
+                  :menudata="contextMenudata"
+                />
+              </QInput>
             </div>
             <div class="row q-pl-md q-pt-sm">
               <div class="text-h6">読み</div>
@@ -142,6 +148,11 @@
                 <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
                 </template>
+                <ContextMenu
+                  ref="contextMenu"
+                  :header="contextMenuHeader"
+                  :menudata="contextMenudata"
+                />
               </QInput>
             </div>
             <div class="row q-pl-md q-mt-lg text-h6">アクセント調整</div>
@@ -266,6 +277,8 @@
 import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
+import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
+import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
 import { AccentPhrase, UserDictWord } from "@/openapi";
@@ -666,6 +679,45 @@ const toWordEditingState = () => {
 const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
+
+// テキスト編集エリアの右クリック
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+const contextMenuHeader = ref<string | undefined>("");
+const contextMenudata = ref<
+  [
+    MenuItemButton,
+    MenuItemButton,
+    MenuItemButton,
+    MenuItemSeparator,
+    MenuItemButton,
+  ]
+>([
+  {
+    type: "button",
+    label: "切り取り",
+    onClick: async () => {},
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "コピー",
+    onClick: () => {},
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "貼り付け",
+    onClick: async () => {},
+    disableWhenUiLocked: true,
+  },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "全選択",
+    onClick: async () => {},
+    disableWhenUiLocked: true,
+  },
+]);
 </script>
 
 <style lang="scss" scoped>
