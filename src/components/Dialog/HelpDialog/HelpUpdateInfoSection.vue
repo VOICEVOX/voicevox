@@ -47,19 +47,18 @@ import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { UpdateInfo } from "@/type/preload";
 
-const props =
-  defineProps<{
-    latestVersion: string;
-    downloadLink: string;
-    updateInfos: UpdateInfo[];
-    isUpdateAvailable: boolean;
-  }>();
+const props = defineProps<{
+  latestVersion: string;
+  downloadLink: string;
+  updateInfos: UpdateInfo[];
+  isUpdateAvailable: boolean;
+}>();
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/mixin' as mixin;
-@use '@/styles/colors-v2' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/mixin" as mixin;
+@use "@/styles/colors-v2" as colors;
 
 .container {
   // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する

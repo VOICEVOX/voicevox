@@ -14,7 +14,7 @@
             @click="selectLicenseIndex(index)"
           >
             <!-- 暫定でq-iconを使用 -->
-            <q-icon name="keyboard_arrow_right" size="sm" />
+            <QIcon name="keyboard_arrow_right" size="sm" />
           </BaseRowCard>
         </div>
       </div>
@@ -43,10 +43,9 @@ import BaseRowCard from "@/components/Base/BaseRowCard.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 
-const props =
-  defineProps<{
-    licenses: Record<string, string>[];
-  }>();
+const props = defineProps<{
+  licenses: Record<string, string>[];
+}>();
 
 const detailIndex = ref<number | undefined>(undefined);
 
@@ -56,9 +55,9 @@ const selectLicenseIndex = (index: number | undefined) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/mixin' as mixin;
-@use '@/styles/colors-v2' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/mixin" as mixin;
+@use "@/styles/colors-v2" as colors;
 
 .container {
   // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する

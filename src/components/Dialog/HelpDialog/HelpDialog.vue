@@ -1,12 +1,12 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="modelValueComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="help-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr lff">
+    <QLayout container view="hHh Lpr lff">
       <div class="grid">
         <div class="list-wrapper">
           <BaseScrollArea>
@@ -27,34 +27,34 @@
           </BaseScrollArea>
         </div>
 
-        <q-page-container>
-          <q-page>
-            <q-tab-panels v-model="selectedPageIndex">
-              <q-tab-panel
+        <QPageContainer>
+          <QPage>
+            <QTabPanels v-model="selectedPageIndex">
+              <QTabPanel
                 v-for="(page, pageIndex) of pagedata"
                 :key="pageIndex"
                 :name="pageIndex"
                 class="q-pa-none"
               >
                 <div v-if="page.type === 'item'" class="root">
-                  <q-header class="q-pa-sm">
-                    <q-toolbar>
-                      <q-toolbar-title class="text-display">
+                  <QHeader class="q-pa-sm">
+                    <QToolbar>
+                      <QToolbarTitle class="text-display">
                         ヘルプ / {{ page.parent ? page.parent + " / " : ""
                         }}{{ page.name }}
-                      </q-toolbar-title>
-                      <q-btn
+                      </QToolbarTitle>
+                      <QBtn
                         v-if="page.shouldShowOpenLogDirectoryButton"
                         unelevated
                         color="toolbar-button"
-                        text-color="toolbar-button-display"
+                        textColor="toolbar-button-display"
                         class="text-no-wrap text-bold q-mr-sm"
                         @click="openLogDirectory"
                       >
                         ログフォルダを開く
-                      </q-btn>
+                      </QBtn>
                       <!-- close button -->
-                      <q-btn
+                      <QBtn
                         round
                         flat
                         icon="close"
@@ -62,17 +62,17 @@
                         aria-label="ヘルプを閉じる"
                         @click="modelValueComputed = false"
                       />
-                    </q-toolbar>
-                  </q-header>
-                  <component :is="page.component" v-bind="page.props" />
+                    </QToolbar>
+                  </QHeader>
+                  <Component :is="page.component" v-bind="page.props" />
                 </div>
-              </q-tab-panel>
-            </q-tab-panels>
-          </q-page>
-        </q-page-container>
+              </QTabPanel>
+            </QTabPanels>
+          </QPage>
+        </QPageContainer>
       </div>
-    </q-layout>
-  </q-dialog>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
@@ -103,14 +103,12 @@ type PageSeparator = {
 };
 type PageData = PageItem | PageSeparator;
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const modelValueComputed = computed({
   get: () => props.modelValue,
@@ -145,7 +143,9 @@ const howToUse = ref<string>();
 store.dispatch("GET_HOW_TO_USE_TEXT").then((obj) => (howToUse.value = obj));
 
 const ossCommunityInfos = ref<string>();
-store.dispatch("GET_OSS_COMMUNITY_INFOS").then((obj) => (ossCommunityInfos.value = obj));
+store
+  .dispatch("GET_OSS_COMMUNITY_INFOS")
+  .then((obj) => (ossCommunityInfos.value = obj));
 
 const qAndA = ref<string>();
 store.dispatch("GET_Q_AND_A_TEXT").then((obj) => (qAndA.value = obj));
@@ -271,7 +271,7 @@ const pagedata = computed(() => {
             //       https://github.com/VOICEVOX/voicevox_engine/issues/476
             isUpdateAvailable: false,
           },
-        }
+        },
       );
     }
   }
@@ -284,8 +284,8 @@ const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors-v2' as colors;
-@use '@/styles/variables' as vars;
+@use "@/styles/colors-v2" as colors;
+@use "@/styles/variables" as vars;
 
 .grid {
   display: grid;
