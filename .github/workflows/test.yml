@@ -79,7 +79,7 @@ jobs:
           done
 
           # テスト
-          npm run test:storybook -- --port $PORT
+          npm run test:storybook -- --url "http://127.0.0.1:$PORT"
 
   # e2e テスト
   e2e-test:
