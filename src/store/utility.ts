@@ -1,6 +1,7 @@
 import path from "path";
 import { Platform } from "quasar";
 import * as diff from "fast-array-diff";
+import { store } from "./index";
 import {
   CharacterInfo,
   StyleInfo,
@@ -120,6 +121,7 @@ export const replaceTagIdToTagString = {
   styleName: "スタイル",
   text: "テキスト",
   date: "日付",
+  projectName: "プロジェクトファイル名",
 };
 const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
   replaceTagIdToTagString,
@@ -143,6 +145,14 @@ export function currentDateString(): string {
   const date = currentDate.getDate().toString().padStart(2, "0");
 
   return `${year}${month}${date}`;
+}
+
+/**
+ * 書き出しファイルにプロジェクトファイル名を拡張子を取り除いて追加する
+ */
+export function removeExtension(projectNameWithExtension?: string): string {
+  const projectName = projectNameWithExtension?.replace(".vvproj", "") ?? "";
+  return projectName;
 }
 
 function replaceTag(
@@ -342,12 +352,14 @@ export function buildAudioFileNameFromRawData(
   const index = (vars.index + 1).toString().padStart(3, "0");
   const styleName = sanitizeFileName(vars.styleName);
   const date = vars.date;
+  const projectName = removeExtension(store.getters.PROJECT_NAME);
   return replaceTag(pattern, {
     text,
     characterName,
     index,
     styleName,
     date,
+    projectName,
   });
 }
 
