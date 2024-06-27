@@ -76,16 +76,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, type Component } from "vue";
+import { computed, ref } from "vue";
+import type { Component } from "vue";
 import MarkdownView from "./HelpMarkdownViewSection.vue";
 import OssLicense from "./HelpOssLicenseSection.vue";
 import UpdateInfo from "./HelpUpdateInfoSection.vue";
 import LibraryPolicy from "./HelpLibraryPolicySection.vue";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
-import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
+import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
+import { createLogger } from "@/domain/frontend/log";
 
 type PageItem = {
   type: "item";
@@ -117,15 +119,20 @@ const modelValueComputed = computed({
 
 // エディタのアップデート確認
 const store = useStore();
+const { warn } = createLogger("HelpDialog");
 
 const updateInfos = ref<UpdateInfoObject[]>();
 store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
-const { isCheckingFinished, latestVersion } = useFetchNewUpdateInfos();
-
-const isUpdateAvailable = computed(() => {
-  return isCheckingFinished.value && latestVersion.value !== "";
-});
+if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
+  throw new Error(
+    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。",
+  );
+}
+const newUpdateResult = useFetchNewUpdateInfos(
+  () => window.backend.getAppInfos().then((obj) => obj.version), // アプリのバージョン
+  UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
+);
 
 // エディタのOSSライセンス取得
 const licenses = ref<Record<string, string>[]>();
@@ -192,8 +199,15 @@ const pagedata = computed(() => {
       props: {
         downloadLink: import.meta.env.VITE_OFFICIAL_WEBSITE_URL,
         updateInfos: updateInfos.value,
-        isUpdateAvailable: isUpdateAvailable.value,
-        latestVersion: latestVersion.value,
+        ...(newUpdateResult.value.status == "updateAvailable"
+          ? {
+              isUpdateAvailable: true,
+              latestVersion: newUpdateResult.value.latestVersion,
+            }
+          : {
+              isUpdateAvailable: false,
+              latestVersion: undefined,
+            }),
       },
     },
     {
@@ -219,7 +233,7 @@ const pagedata = computed(() => {
     for (const id of store.getters.GET_SORTED_ENGINE_INFOS.map((m) => m.uuid)) {
       const manifest = store.state.engineManifests[id];
       if (!manifest) {
-        store.dispatch("LOG_WARN", `manifest not found: ${id}`);
+        warn(`manifest not found: ${id}`);
         continue;
       }
 
@@ -266,7 +280,7 @@ const pagedata = computed(() => {
 
 const selectedPageIndex = ref(0);
 
-const openLogDirectory = window.electron.openLogDirectory;
+const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
