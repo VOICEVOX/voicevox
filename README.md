@@ -71,6 +71,14 @@ npm run electron:serve
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
 
+### Storybook の実行
+
+Storybook を使ってコンポーネントを開発することができます。
+
+```bash
+npm run storybook
+```
+
 ### ブラウザ版の実行（開発中）
 
 別途音声合成エンジンを起動し、以下を実行して表示された localhost へアクセスします。
@@ -101,6 +109,16 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 npm run test:unit
 npm run test-watch:unit # 監視モード
 npm run test:unit -- --update # スナップショットの更新
+```
+
+### コンポーネントのテスト
+
+Storybook を使ってコンポーネントのテストを行います。
+
+```bash
+npm run storybook # 先に Storybook を起動
+npm run test:storybook
+npm run test-watch:storybook # 監視モード
 ```
 
 ### ブラウザ End to End テスト
@@ -171,20 +189,20 @@ npm run license:generate -- -o voicevox_licenses.json
 npm run license:merge -- -o public/licenses.json -i engine_licenses.json -i voicevox_licenses.json
 ```
 
-## リント（静的解析）
-
-コードの静的解析を行い、バグを未然に防ぎます。プルリクエストを送る前に実行してください。
-
-```bash
-npm run lint
-```
-
 ## コードフォーマット
 
 コードのフォーマットを整えます。プルリクエストを送る前に実行してください。
 
 ```bash
 npm run fmt
+```
+
+## リント（静的解析）
+
+コードの静的解析を行い、バグを未然に防ぎます。プルリクエストを送る前に実行してください。
+
+```bash
+npm run lint
 ```
 
 ## タイポチェック
