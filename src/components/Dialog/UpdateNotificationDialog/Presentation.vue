@@ -48,7 +48,7 @@
           textColor="display"
           class="q-mt-sm"
           @click="
-            onSkipThisVersionClick(props.latestVersion);
+            emit('skipThisVersionClick', props.latestVersion);
             closeUpdateNotificationDialog();
           "
         />
@@ -75,16 +75,22 @@ import { UpdateInfo } from "@/type/preload";
 
 const props = defineProps<{
   modelValue: boolean;
+  /** 公開されている最新のバージョン */
   latestVersion: string;
+  /** 表示するアップデート情報 */
   newUpdateInfos: UpdateInfo[];
-  onSkipThisVersionClick: (version: string) => void;
 }>();
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
+  /** このバージョンをスキップする */
+  (e: "skipThisVersionClick", version: string): void;
 }>();
 
 const modelValueComputed = computed({
-  get: () => props.modelValue,
+  get: () => {
+    console.log("modelValueComputed", props.modelValue);
+    return props.modelValue;
+  },
   set: (val) => emit("update:modelValue", val),
 });
 
@@ -92,6 +98,7 @@ const closeUpdateNotificationDialog = () => {
   modelValueComputed.value = false;
 };
 
+// onにする？
 const openOfficialWebsite = () => {
   window.open(import.meta.env.VITE_OFFICIAL_WEBSITE_URL, "_blank");
 };

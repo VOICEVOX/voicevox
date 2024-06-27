@@ -7,6 +7,9 @@ import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "../src/styles/_index.scss";
 
+import { addActionsWithEmits } from './utils/argTypesEnhancers';
+
+
 
 setup((app) => {
   app.use(Quasar, {
@@ -30,6 +33,9 @@ setup((app) => {
 
 const preview: Preview = {
   tags: ['autodocs'],
+  argTypesEnhancers: [
+    addActionsWithEmits,
+  ],
 };
 
 export default preview;
