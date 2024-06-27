@@ -21,15 +21,11 @@ const meta: Meta<typeof Presentation> = {
       },
     ],
   },
-  tags: ["!autodocs"],
+  tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-export const Closed: Story = {
-  name: "閉じている",
-};
 
 export const Opened: Story = {
   name: "開いている",
@@ -47,6 +43,7 @@ export const Close: Story = {
     const button = canvas.getByRole("button", { name: /閉じる/ });
     await userEvent.click(button);
 
+    // ダイアログを閉じるイベントが呼ばれる
     expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
@@ -62,7 +59,9 @@ export const SkipThisVersion: Story = {
     });
     await userEvent.click(button);
 
+    // スキップイベントが呼ばれる
     expect(args["onSkipThisVersionClick"]).toBeCalledWith("1.0.0");
+    // ダイアログを閉じるイベントが呼ばれる
     expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
@@ -85,6 +84,11 @@ export const OpenOfficialSite: Story = {
       "https://voicevox.hiroshiba.jp/",
       "_blank",
     );
+    // ダイアログを閉じるイベントが呼ばれる
     expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
+};
+
+export const Closed: Story = {
+  name: "閉じている",
 };

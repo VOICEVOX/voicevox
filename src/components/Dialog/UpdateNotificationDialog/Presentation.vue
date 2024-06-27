@@ -74,6 +74,7 @@ import { computed } from "vue";
 import { UpdateInfo } from "@/type/preload";
 
 const props = defineProps<{
+  /** ダイアログの表示状態 */
   modelValue: boolean;
   /** 公開されている最新のバージョン */
   latestVersion: string;
@@ -81,8 +82,9 @@ const props = defineProps<{
   newUpdateInfos: UpdateInfo[];
 }>();
 const emit = defineEmits<{
+  /** ダイアログの表示状態が変わるときに呼ばれる */
   (e: "update:modelValue", value: boolean): void;
-  /** このバージョンをスキップする */
+  /** スキップするときに呼ばれる */
   (e: "skipThisVersionClick", version: string): void;
 }>();
 
