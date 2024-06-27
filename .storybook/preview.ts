@@ -1,15 +1,12 @@
-import { setup, Preview } from '@storybook/vue3';
+import { setup, Preview } from "@storybook/vue3";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
+import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "../src/styles/_index.scss";
-
-import { addActionsWithEmits } from './utils/argTypesEnhancers';
-
-
 
 setup((app) => {
   app.use(Quasar, {
@@ -26,21 +23,18 @@ setup((app) => {
       Loading,
       Notify,
     },
-  })
-  app.use(markdownItPlugin)
-})
-
+  });
+  app.use(markdownItPlugin);
+});
 
 const preview: Preview = {
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   parameters: {
     docs: {
       toc: true,
     },
   },
-  argTypesEnhancers: [
-    addActionsWithEmits,
-  ],
+  argTypesEnhancers: [addActionsWithEmits],
 };
 
 export default preview;
