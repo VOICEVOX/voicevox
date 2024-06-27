@@ -336,13 +336,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           // 同じIDの歌手がいる場合は歌手情報を取得し、スタイルをマージする
           let speakerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
           let speakerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
-          const resourceFormat = useResourceUrl ? "url" : undefined;
           if (speaker != undefined) {
+            const params: { speakerUuid: string; resourceFormat?: "url" } = {
+              speakerUuid: speaker.speakerUuid,
+            };
+            if (useResourceUrl) {
+              params.resourceFormat = "url";
+            }
             speakerInfoPromise = instance
-              .invoke("speakerInfoSpeakerInfoGet")({
-                speakerUuid: speaker.speakerUuid,
-                resourceFormat,
-              })
+              .invoke("speakerInfoSpeakerInfoGet")(params)
               .catch((error) => {
                 window.backend.logError(error, `Failed to get speakerInfo.`);
                 throw error;
@@ -355,11 +357,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let singerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
           let singerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
           if (singer != undefined) {
+            const params: { speakerUuid: string; resourceFormat?: "url" } = {
+              speakerUuid: singer.speakerUuid,
+            };
+            if (useResourceUrl) {
+              params.resourceFormat = "url";
+            }
             singerInfoPromise = instance
-              .invoke("singerInfoSingerInfoGet")({
-                speakerUuid: singer.speakerUuid,
-                resourceFormat,
-              })
+              .invoke("singerInfoSingerInfoGet")(params)
               .catch((error) => {
                 window.backend.logError(error, `Failed to get singerInfo.`);
                 throw error;
