@@ -12,21 +12,25 @@ import {
   CommonDialogOptions,
   LoadingScreenOption,
   NotifyAndNotShowAgainButtonOption,
+  connectAndExportTextWithDialog,
+  generateAndConnectAndSaveAudioWithDialog,
+  generateAndSaveOneAudioWithDialog,
   hideAllLoadingScreen,
+  multiGenerateAndSaveAudioWithDialog,
   showAlertDialog,
   showConfirmDialog,
   showLoadingScreen,
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
-} from "@/components/Dialog";
+} from "@/components/Dialog/Dialog";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
     context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
-    payload: Parameters<A[K]>[0]
+    payload: Parameters<A[K]>[0],
   ) => ReturnType<A[K]> extends Promise<unknown>
     ? ReturnType<A[K]>
-    : Promise<ReturnType<A[K]>>
+    : Promise<ReturnType<A[K]>>,
 ): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
   return (context, payload: Parameters<A[K]>[0]) => {
     context.commit("LOCK_UI");
@@ -38,13 +42,14 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 
 export function withProgress<T>(
   action: Promise<T>,
-  dispatch: Dispatch<AllActions>
+  dispatch: Dispatch<AllActions>,
 ): Promise<T> {
   dispatch("START_PROGRESS");
   return action.finally(() => dispatch("RESET_PROGRESS"));
 }
 
 export const uiStoreState: UiStoreState = {
+  openedEditor: undefined,
   uiLockCount: 0,
   dialogLockCount: 0,
   reloadingLock: false,
@@ -61,6 +66,7 @@ export const uiStoreState: UiStoreState = {
   isDictionaryManageDialogOpen: false,
   isEngineManageDialogOpen: false,
   isUpdateNotificationDialogOpen: false,
+  isImportSongProjectDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -69,6 +75,15 @@ export const uiStoreState: UiStoreState = {
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
+  SET_OPENED_EDITOR: {
+    mutation(state, { editor }) {
+      state.openedEditor = editor;
+    },
+    action({ commit }, { editor }) {
+      commit("SET_OPENED_EDITOR", { editor });
+    },
+  },
+
   UI_LOCKED: {
     getter(state) {
       return state.uiLockCount > 0;
@@ -91,7 +106,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (_, { callback }: { callback: () => Promise<void> }) => {
         await callback();
-      }
+      },
     ),
   },
 
@@ -110,8 +125,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         state.uiLockCount--;
       } else {
         // eslint-disable-next-line no-console
-        window.electron.logWarn(
-          "UNLOCK_UI is called when state.uiLockCount == 0"
+        window.backend.logWarn(
+          "UNLOCK_UI is called when state.uiLockCount == 0",
         );
       }
     },
@@ -171,7 +186,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         isCharacterOrderDialogOpen?: boolean;
         isEngineManageDialogOpen?: boolean;
         isUpdateNotificationDialogOpen?: boolean;
-      }
+        isImportExternalProjectDialogOpen?: boolean;
+      },
     ) {
       for (const [key, value] of Object.entries(dialogState)) {
         if (!(key in state)) {
@@ -201,7 +217,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (_, payload: { title: string; message: string; ok?: string }) => {
         return await showAlertDialog(payload);
-      }
+      },
     ),
   },
 
@@ -209,7 +225,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (_, payload: CommonDialogOptions["confirm"]) => {
         return await showConfirmDialog(payload);
-      }
+      },
     ),
   },
 
@@ -217,7 +233,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (_, payload: CommonDialogOptions["warning"]) => {
         return await showWarningDialog(payload);
-      }
+      },
     ),
   },
 
@@ -242,18 +258,18 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   HYDRATE_UI_STORE: {
     async action({ commit }) {
       commit("SET_INHERIT_AUDIOINFO", {
-        inheritAudioInfo: await window.electron.getSetting("inheritAudioInfo"),
+        inheritAudioInfo: await window.backend.getSetting("inheritAudioInfo"),
       });
 
       commit("SET_ACTIVE_POINT_SCROLL_MODE", {
-        activePointScrollMode: await window.electron.getSetting(
-          "activePointScrollMode"
+        activePointScrollMode: await window.backend.getSetting(
+          "activePointScrollMode",
         ),
       });
 
       // electron-window-stateがvuex初期化前に働くので
       // ここで改めてelectron windowの最大化状態をVuex storeに同期
-      if (await window.electron.isMaximizedWindow()) {
+      if (await window.backend.isMaximizedWindow()) {
         commit("DETECT_MAXIMIZED");
       }
     },
@@ -264,8 +280,24 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       state.isVuexReady = true;
     },
     action({ commit }) {
-      window.electron.vuexReady();
+      window.backend.vuexReady();
       commit("ON_VUEX_READY");
+    },
+  },
+
+  // Vuexが準備できるまで待つ
+  WAIT_VUEX_READY: {
+    async action({ state }, { timeout }) {
+      if (state.isVuexReady) return;
+
+      let vuexReadyTimeout = 0;
+      while (!state.isVuexReady) {
+        if (vuexReadyTimeout >= timeout) {
+          throw new Error("Vuexが準備できませんでした");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        vuexReadyTimeout += 300;
+      }
     },
   },
 
@@ -275,12 +307,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
     async action(
       { commit },
-      { inheritAudioInfo }: { inheritAudioInfo: boolean }
+      { inheritAudioInfo }: { inheritAudioInfo: boolean },
     ) {
       commit("SET_INHERIT_AUDIOINFO", {
-        inheritAudioInfo: await window.electron.setSetting(
+        inheritAudioInfo: await window.backend.setSetting(
           "inheritAudioInfo",
-          inheritAudioInfo
+          inheritAudioInfo,
         ),
       });
     },
@@ -291,7 +323,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       state,
       {
         activePointScrollMode,
-      }: { activePointScrollMode: ActivePointScrollMode }
+      }: { activePointScrollMode: ActivePointScrollMode },
     ) {
       state.activePointScrollMode = activePointScrollMode;
     },
@@ -299,12 +331,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       { commit },
       {
         activePointScrollMode,
-      }: { activePointScrollMode: ActivePointScrollMode }
+      }: { activePointScrollMode: ActivePointScrollMode },
     ) {
       commit("SET_ACTIVE_POINT_SCROLL_MODE", {
-        activePointScrollMode: await window.electron.setSetting(
+        activePointScrollMode: await window.backend.setSetting(
           "activePointScrollMode",
-          activePointScrollMode
+          activePointScrollMode,
         ),
       });
     },
@@ -377,6 +409,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
      * 保存がキャンセルされた場合は何もしない。
      */
     async action({ dispatch, getters }, obj) {
+      await dispatch("SING_STOP_AUDIO"); // FIXME: ON_BEFORE_QUITTINGなどを作成して移動すべき
+
       if (getters.IS_EDITED) {
         const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {});
         if (result == "canceled") {
@@ -384,8 +418,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         }
       }
 
+      await dispatch("STOP_RENDERING"); // FIXME: FINISH_VUEXなどを作成して移動すべき
+
       if (obj.closeOrReload == "close") {
-        window.electron.closeWindow();
+        window.backend.closeWindow();
       } else if (obj.closeOrReload == "reload") {
         await dispatch("RELOAD_APP", {
           isMultiEngineOffMode: obj.isMultiEngineOffMode,
@@ -398,13 +434,13 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action: createUILockAction(
       async (
         { dispatch },
-        { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }
+        { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean },
       ) => {
         await dispatch("LOCK_RELOADING");
-        await window.electron.reloadApp({
+        await window.backend.reloadApp({
           isMultiEngineOffMode: !!isMultiEngineOffMode,
         });
-      }
+      },
     ),
   },
 
@@ -434,6 +470,66 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action({ dispatch }) {
       // -1で非表示
       dispatch("SET_PROGRESS", { progress: -1 });
+    },
+  },
+
+  // TODO: この4つのアクションをVue側に移動したい
+  SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
+    async action({ state, dispatch }) {
+      await multiGenerateAndSaveAudioWithDialog({
+        audioKeys: state.audioKeys,
+        disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
+        dispatch,
+      });
+    },
+  },
+
+  SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
+    async action({ dispatch, state }) {
+      await generateAndConnectAndSaveAudioWithDialog({
+        dispatch,
+        disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
+      });
+    },
+  },
+
+  SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG: {
+    async action({ getters, dispatch, state }) {
+      const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
+      if (activeAudioKey == undefined) {
+        dispatch("SHOW_ALERT_DIALOG", {
+          title: "テキスト欄が選択されていません",
+          message: "音声を書き出したいテキスト欄を選択してください。",
+        });
+        return;
+      }
+
+      const selectedAudioKeys = getters.SELECTED_AUDIO_KEYS;
+      if (
+        state.experimentalSetting.enableMultiSelect &&
+        selectedAudioKeys.length > 1
+      ) {
+        await multiGenerateAndSaveAudioWithDialog({
+          audioKeys: selectedAudioKeys,
+          dispatch: dispatch,
+          disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
+        });
+      } else {
+        await generateAndSaveOneAudioWithDialog({
+          audioKey: activeAudioKey,
+          disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
+          dispatch: dispatch,
+        });
+      }
+    },
+  },
+
+  SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG: {
+    async action({ dispatch, state }) {
+      await connectAndExportTextWithDialog({
+        dispatch,
+        disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
+      });
     },
   },
 });

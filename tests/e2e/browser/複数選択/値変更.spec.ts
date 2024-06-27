@@ -33,7 +33,7 @@ async function getSelectedCharacters(page: Page): Promise<string[]> {
  * @returns パラメーター名と値のマップ
  */
 async function getAudioInfoParameters(
-  page: Page
+  page: Page,
 ): Promise<Record<string, number>> {
   return await page.evaluate(() => {
     const result: Record<string, number> = {};
@@ -45,7 +45,7 @@ async function getAudioInfoParameters(
     const parameters = audioInfo.querySelectorAll(".parameters > div");
     for (const parameter of parameters) {
       const input = parameter.querySelector<HTMLInputElement>(
-        "label input[type=text]"
+        "label input[type=text]",
       );
       if (!input) {
         throw new Error("inputがありません");
@@ -118,7 +118,7 @@ test("複数選択：AudioInfo操作", async ({ page }) => {
 
   for (const parameter of parameters) {
     const input = parameter.locator("label input");
-    await input.type("2\n");
+    await input.fill("2");
     await page.waitForTimeout(100);
   }
 

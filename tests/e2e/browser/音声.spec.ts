@@ -16,7 +16,7 @@ test("テキストを入力→アクセントを変更→音声合成→再生�
 
   await page
     .locator(
-      ".accent-slider-cell > div > div > .q-slider > .q-slider__track-container"
+      ".accent-slider-cell > div > div > .q-slider > .q-slider__track-container",
     ) //FIXME: 良くないセレクタを直す
     .click();
   await page.waitForTimeout(1000);

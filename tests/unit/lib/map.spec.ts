@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mapUndefinedPipe, undefinedToDefault } from "@/helpers/map";
+import { mapNullablePipe, nullableToDefault } from "@/helpers/map";
 
 type DummyType = {
   outerValue?: {
@@ -19,11 +19,11 @@ describe("mapUndefinedPipe", () => {
     };
     const map = new Map<string, DummyType>([[key, value]]);
     expect(
-      mapUndefinedPipe(
+      mapNullablePipe(
         map.get(key),
         (v) => v.outerValue,
-        (v) => v.innerValue
-      )
+        (v) => v.innerValue,
+      ),
     ).toEqual(innerValue);
   });
 
@@ -36,11 +36,11 @@ describe("mapUndefinedPipe", () => {
     };
     const map = new Map<string, DummyType>([[key, value]]);
     expect(
-      mapUndefinedPipe(
+      mapNullablePipe(
         map.get(key),
         (v) => v.outerValue,
-        (v) => v.innerValue
-      )
+        (v) => v.innerValue,
+      ),
     ).toBeUndefined();
   });
 });
@@ -48,16 +48,11 @@ describe("mapUndefinedPipe", () => {
 describe("undefinedToDefault", () => {
   it("値がある時はそのまま返す", () => {
     const actualValue = "value";
-    expect(undefinedToDefault("test", actualValue)).toEqual(actualValue);
+    expect(nullableToDefault("test", actualValue)).toEqual(actualValue);
   });
 
   it("値がない時はdefaultValueを返す", () => {
     const defaultValue = "test";
-    expect(undefinedToDefault(defaultValue, undefined)).toEqual(defaultValue);
-  });
-
-  it("undefinedのみを値がない状態とみなす", () => {
-    const defaultValue = "test";
-    expect(undefinedToDefault(defaultValue, null)).toBeNull();
+    expect(nullableToDefault(defaultValue, undefined)).toEqual(defaultValue);
   });
 });

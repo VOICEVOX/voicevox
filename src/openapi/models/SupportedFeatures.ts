@@ -72,6 +72,12 @@ export interface SupportedFeatures {
      * @type {boolean}
      * @memberof SupportedFeatures
      */
+    sing?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof SupportedFeatures
+     */
     manageLibrary?: boolean;
 }
 
@@ -110,6 +116,7 @@ export function SupportedFeaturesFromJSONTyped(json: any, ignoreDiscriminator: b
         'adjustVolumeScale': json['adjust_volume_scale'],
         'interrogativeUpspeak': json['interrogative_upspeak'],
         'synthesisMorphing': json['synthesis_morphing'],
+        'sing': !exists(json, 'sing') ? undefined : json['sing'],
         'manageLibrary': !exists(json, 'manage_library') ? undefined : json['manage_library'],
     };
 }
@@ -131,6 +138,7 @@ export function SupportedFeaturesToJSON(value?: SupportedFeatures | null): any {
         'adjust_volume_scale': value.adjustVolumeScale,
         'interrogative_upspeak': value.interrogativeUpspeak,
         'synthesis_morphing': value.synthesisMorphing,
+        'sing': value.sing,
         'manage_library': value.manageLibrary,
     };
 }

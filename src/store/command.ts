@@ -13,6 +13,7 @@ import {
   MutationsBase,
   MutationTree,
 } from "@/store/vuex";
+import { EditorType } from "@/type/preload";
 
 // ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
 // enable * も両方叩く必要がある。
@@ -37,13 +38,14 @@ export type PayloadRecipeTree<S, M> = {
  * @returns Mutationを持つオブジェクト(MutationTree)
  */
 export const createCommandMutationTree = <S, M extends MutationsBase>(
-  payloadRecipeTree: PayloadRecipeTree<S, M>
+  payloadRecipeTree: PayloadRecipeTree<S, M>,
+  editor: EditorType,
 ): MutationTree<S, M> =>
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
-      createCommandMutation(val),
-    ])
+      createCommandMutation(val, editor),
+    ]),
   ) as MutationTree<S, M>;
 
 /**
@@ -53,13 +55,14 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
  */
 export const createCommandMutation =
   <S extends State, M extends MutationsBase, K extends keyof M>(
-    payloadRecipe: PayloadRecipe<S, M[K]>
+    payloadRecipe: PayloadRecipe<S, M[K]>,
+    editor: EditorType,
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
     const command = recordPatches(payloadRecipe)(state, payload);
     applyPatchesImpl(state, command.redoPatches);
-    state.undoCommands.push(command);
-    state.redoCommands.splice(0);
+    state.undoCommands[editor].push(command);
+    state.redoCommands[editor].splice(0);
   };
 
 /**
@@ -71,7 +74,7 @@ const recordPatches =
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
       toRaw(state) as S,
-      (draft: S) => recipe(draft, payload)
+      (draft: S) => recipe(draft, payload),
     );
     return {
       unixMillisec: new Date().getTime(),
@@ -81,63 +84,98 @@ const recordPatches =
   };
 
 export const commandStoreState: CommandStoreState = {
-  undoCommands: [],
-  redoCommands: [],
+  undoCommands: {
+    talk: [],
+    song: [],
+  },
+  redoCommands: {
+    talk: [],
+    song: [],
+  },
 };
 
 export const commandStore = createPartialStore<CommandStoreTypes>({
   CAN_UNDO: {
-    getter(state) {
-      return state.undoCommands.length > 0;
+    getter: (state) => (editor: EditorType) => {
+      return state.undoCommands[editor].length > 0;
     },
   },
 
   CAN_REDO: {
-    getter(state) {
-      return state.redoCommands.length > 0;
+    getter: (state) => (editor: EditorType) => {
+      return state.redoCommands[editor].length > 0;
     },
   },
 
   UNDO: {
-    mutation(state) {
-      const command = state.undoCommands.pop();
+    mutation(state, { editor }) {
+      const command = state.undoCommands[editor].pop();
       if (command != null) {
-        state.redoCommands.push(command);
+        state.redoCommands[editor].push(command);
         applyPatchesImpl(state, command.undoPatches);
       }
     },
-    action({ commit }) {
-      commit("UNDO");
+    action({ commit, dispatch }, { editor }: { editor: EditorType }) {
+      commit("UNDO", { editor });
+      if (editor === "song") {
+        // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
+        commit("DESELECT_ALL_NOTES");
+        dispatch("RENDER");
+      }
     },
   },
 
   REDO: {
-    mutation(state) {
-      const command = state.redoCommands.pop();
+    mutation(state, { editor }) {
+      const command = state.redoCommands[editor].pop();
       if (command != null) {
-        state.undoCommands.push(command);
+        state.undoCommands[editor].push(command);
         applyPatchesImpl(state, command.redoPatches);
       }
     },
-    action({ commit }) {
-      commit("REDO");
+    action({ commit, dispatch }, { editor }: { editor: EditorType }) {
+      commit("REDO", { editor });
+      if (editor === "song") {
+        // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
+        commit("DESELECT_ALL_NOTES");
+        dispatch("RENDER");
+      }
     },
   },
 
   LAST_COMMAND_UNIX_MILLISEC: {
     getter(state) {
-      if (state.undoCommands.length === 0) {
-        return null;
+      const getLastCommandUnixMillisec = (
+        commands: Command[],
+      ): number | null => {
+        const lastCommand = commands[commands.length - 1];
+        // 型的にはundefinedにはならないが、lengthが0の場合はundefinedになる
+        return lastCommand ? lastCommand.unixMillisec : null;
+      };
+
+      const lastTalkCommandTime = getLastCommandUnixMillisec(
+        state.undoCommands["talk"],
+      );
+      const lastSongCommandTime = getLastCommandUnixMillisec(
+        state.undoCommands["song"],
+      );
+
+      if (lastTalkCommandTime != null && lastSongCommandTime != null) {
+        return Math.max(lastTalkCommandTime, lastSongCommandTime);
+      } else if (lastTalkCommandTime != null) {
+        return lastTalkCommandTime;
       } else {
-        return state.undoCommands[state.undoCommands.length - 1].unixMillisec;
+        return lastSongCommandTime;
       }
     },
   },
 
   CLEAR_COMMANDS: {
     mutation(state) {
-      state.redoCommands.splice(0);
-      state.undoCommands.splice(0);
+      for (const editor of ["talk", "song"] as const) {
+        state.undoCommands[editor].splice(0);
+        state.redoCommands[editor].splice(0);
+      }
     },
   },
 });

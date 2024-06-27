@@ -4,11 +4,9 @@
 
 <script setup lang="ts">
 import { onErrorCaptured, onMounted } from "vue";
-import { useStore } from "@/store";
 
-const store = useStore();
 const logError = (error: Error): void => {
-  store.dispatch("LOG_ERROR", error.stack);
+  window.backend.logError(error);
 };
 
 onMounted(() => {

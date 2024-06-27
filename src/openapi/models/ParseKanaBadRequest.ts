@@ -44,7 +44,7 @@ export interface ParseKanaBadRequest {
      * @type {{ [key: string]: string; }}
      * @memberof ParseKanaBadRequest
      */
-    errorArgs: { [key: string]: string; };
+    errorArgs: { [key: string]: string; } | null;
 }
 
 /**

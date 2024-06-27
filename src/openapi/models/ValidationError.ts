@@ -13,6 +13,13 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { ValidationErrorLocInner } from './ValidationErrorLocInner';
+import {
+    ValidationErrorLocInnerFromJSON,
+    ValidationErrorLocInnerFromJSONTyped,
+    ValidationErrorLocInnerToJSON,
+} from './ValidationErrorLocInner';
+
 /**
  * 
  * @export
@@ -21,10 +28,10 @@ import { exists, mapValues } from '../runtime';
 export interface ValidationError {
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<ValidationErrorLocInner>}
      * @memberof ValidationError
      */
-    loc: Array<string>;
+    loc: Array<ValidationErrorLocInner>;
     /**
      * 
      * @type {string}
@@ -61,7 +68,7 @@ export function ValidationErrorFromJSONTyped(json: any, ignoreDiscriminator: boo
     }
     return {
         
-        'loc': json['loc'],
+        'loc': ((json['loc'] as Array<any>).map(ValidationErrorLocInnerFromJSON)),
         'msg': json['msg'],
         'type': json['type'],
     };
@@ -76,7 +83,7 @@ export function ValidationErrorToJSON(value?: ValidationError | null): any {
     }
     return {
         
-        'loc': value.loc,
+        'loc': ((value.loc as Array<any>).map(ValidationErrorLocInnerToJSON)),
         'msg': value.msg,
         'type': value.type,
     };

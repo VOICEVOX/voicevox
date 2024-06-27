@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { createPartialStore } from "./vuex";
 import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
 import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
@@ -17,7 +16,7 @@ export function determineNextPresetKey(
   >,
   voice: Voice,
   presetKeyCandidate: PresetKey | undefined,
-  operation: "generate" | "copy" | "changeVoice"
+  operation: "generate" | "copy" | "changeVoice",
 ): {
   nextPresetKey: PresetKey | undefined;
   shouldApplyPreset: boolean;
@@ -60,7 +59,7 @@ export function determineNextPresetKey(
       }
 
       const isDefaultPreset = Object.values(state.defaultPresetKeys).some(
-        (key) => key === presetKeyCandidate
+        (key) => key === presetKeyCandidate,
       );
 
       // 引き継ぎ元が他スタイルのデフォルトプリセットだった場合
@@ -92,7 +91,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   SET_PRESET_ITEMS: {
     mutation(
       state,
-      { presetItems }: { presetItems: Record<PresetKey, Preset> }
+      { presetItems }: { presetItems: Record<PresetKey, Preset> },
     ) {
       state.presetItems = presetItems;
     },
@@ -107,14 +106,14 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   SET_DEFAULT_PRESET_MAP: {
     action(
       { commit },
-      { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> }
+      { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> },
     ) {
-      window.electron.setSetting("defaultPresetKeys", defaultPresetKeys);
+      window.backend.setSetting("defaultPresetKeys", defaultPresetKeys);
       commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeys });
     },
     mutation(
       state,
-      { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> }
+      { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> },
     ) {
       state.defaultPresetKeys = defaultPresetKeys;
     },
@@ -122,8 +121,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   HYDRATE_PRESET_STORE: {
     async action({ commit }) {
-      const defaultPresetKeys = (await window.electron.getSetting(
-        "defaultPresetKeys"
+      const defaultPresetKeys = (await window.backend.getSetting(
+        "defaultPresetKeys",
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
         // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
       )) as Record<VoiceId, PresetKey>;
@@ -132,11 +131,11 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         defaultPresetKeys,
       });
 
-      const presetConfig = await window.electron.getSetting("presets");
+      const presetConfig = await window.backend.getSetting("presets");
       if (
-        presetConfig === undefined ||
-        presetConfig.items === undefined ||
-        presetConfig.keys === undefined
+        presetConfig == undefined ||
+        presetConfig.items == undefined ||
+        presetConfig.keys == undefined
       )
         return;
       commit("SET_PRESET_ITEMS", {
@@ -165,9 +164,9 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       {
         presetItems,
         presetKeys,
-      }: { presetItems: Record<PresetKey, Preset>; presetKeys: PresetKey[] }
+      }: { presetItems: Record<PresetKey, Preset>; presetKeys: PresetKey[] },
     ) {
-      const result = await window.electron.setSetting("presets", {
+      const result = await window.backend.setSetting("presets", {
         items: JSON.parse(JSON.stringify(presetItems)),
         keys: JSON.parse(JSON.stringify(presetKeys)),
       });
@@ -182,7 +181,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   ADD_PRESET: {
     async action(context, { presetData }: { presetData: Preset }) {
-      const newKey = PresetKey(uuidv4());
+      const newKey = PresetKey(crypto.randomUUID());
       const newPresetItems = {
         ...context.state.presetItems,
         [newKey]: presetData,
@@ -200,7 +199,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   CREATE_ALL_DEFAULT_PRESET: {
     async action({ state, dispatch, getters }) {
-      const voices = getters.GET_ALL_VOICES;
+      const voices = getters.GET_ALL_VOICES("talk");
 
       for (const voice of voices) {
         const voiceId = VoiceId(voice);
@@ -236,7 +235,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   UPDATE_PRESET: {
     async action(
       context,
-      { presetKey, presetData }: { presetData: Preset; presetKey: PresetKey }
+      { presetKey, presetData }: { presetData: Preset; presetKey: PresetKey },
     ) {
       const newPresetItems = {
         ...context.state.presetItems,
@@ -256,7 +255,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   DELETE_PRESET: {
     async action(context, { presetKey }: { presetKey: PresetKey }) {
       const newPresetKeys = context.state.presetKeys.filter(
-        (key) => key != presetKey
+        (key) => key != presetKey,
       );
       // Filter the `presetKey` properties from presetItems.
       const { [presetKey]: _, ...newPresetItems } = context.state.presetItems;

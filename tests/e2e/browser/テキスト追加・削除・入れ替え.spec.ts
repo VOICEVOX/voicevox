@@ -29,7 +29,7 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
   // デフォルトでaudioCellは一つなのを確認
   await navigateToMain(page);
   await expect(
-    page.getByRole("button").filter({ hasText: "add" })
+    page.getByRole("button").filter({ hasText: "add" }),
   ).toBeVisible();
   expect(await page.locator(".audio-cell").count()).toBe(1);
   // ３つAudioCellを追加したらAudioCellが４つになるのを確認
@@ -53,10 +53,10 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
   await validateInput(page.locator(".audio-cell input").first(), "bar");
   // ドラッグして一番上と２番めに上のものを入れ替えて、入れ替わってることを確認
   const dragFrom = await getCenter(
-    page.locator(".audio-cell .icon-container").first()
+    page.locator(".audio-cell .icon-container").first(),
   );
   const dragTo = await getCenter(
-    page.locator(".audio-cell .icon-container").nth(1)
+    page.locator(".audio-cell .icon-container").nth(1),
   );
   await page.mouse.move(dragFrom.x, dragFrom.y);
   await page.mouse.down();

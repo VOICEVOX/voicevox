@@ -1,14 +1,20 @@
 import path from "path";
 import { Platform } from "quasar";
-import { diffArrays } from "diff";
-import { ToolbarButtonTagType, isMac } from "@/type/preload";
+import * as diff from "fast-array-diff";
+import {
+  CharacterInfo,
+  StyleInfo,
+  StyleType,
+  ToolbarButtonTagType,
+  isMac,
+} from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 
 export const formatCharacterStyleName = (
   characterName: string,
-  styleName = DEFAULT_STYLE_NAME
+  styleName = DEFAULT_STYLE_NAME,
 ) => `${characterName}（${styleName}）`;
 
 export function sanitizeFileName(fileName: string): string {
@@ -116,7 +122,7 @@ export const replaceTagIdToTagString = {
   date: "日付",
 };
 const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
-  replaceTagIdToTagString
+  replaceTagIdToTagString,
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
 export const DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE =
@@ -141,11 +147,11 @@ export function currentDateString(): string {
 
 function replaceTag(
   template: string,
-  replacer: { [key: string]: string }
+  replacer: { [key: string]: string },
 ): string {
   const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
     const replaceTagId = replaceTagStringToTagId[p1];
-    if (replaceTagId === undefined) {
+    if (replaceTagId == undefined) {
       return match;
     }
     return replacer[replaceTagId] ?? "";
@@ -154,29 +160,63 @@ function replaceTag(
   return result;
 }
 
-export function extractExportText(text: string): string {
-  return skipReadingPart(skipMemoText(text));
-}
-export function extractYomiText(text: string): string {
-  return skipWritingPart(skipMemoText(text));
-}
-function skipReadingPart(text: string): string {
-  // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
-  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$1");
-}
-function skipWritingPart(text: string): string {
-  // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
-  return text.replace(/\{([^|]*)\|([^}]*)\}/g, "$2");
-}
-function skipMemoText(targettext: string): string {
-  // []をスキップ
-  const resolvedText = targettext.replace(/\[.*?\]/g, "");
-  return resolvedText;
+/**
+ * テキスト書き出し用のテキストを生成する。
+ */
+export function extractExportText(
+  text: string,
+  {
+    enableMemoNotation,
+    enableRubyNotation,
+  }: { enableMemoNotation: boolean; enableRubyNotation: boolean },
+): string {
+  if (enableMemoNotation) {
+    text = skipMemoText(text);
+  }
+  if (enableRubyNotation) {
+    text = skipRubyReadingPart(text);
+  }
+  return text;
 }
 
 /**
- * 2つのアクセント句配列を比べて同じだと思われるモーラの調整結果を転写し
- * 変更前のアクセント句の調整結果を変更後のアクセント句に保持する。
+ * 読み用のテキストを生成する。
+ */
+export function extractYomiText(
+  text: string,
+  {
+    enableMemoNotation,
+    enableRubyNotation,
+  }: { enableMemoNotation: boolean; enableRubyNotation: boolean },
+): string {
+  if (enableMemoNotation) {
+    text = skipMemoText(text);
+  }
+  if (enableRubyNotation) {
+    text = skipRubyWritingPart(text);
+  }
+  return text;
+}
+
+function skipRubyReadingPart(text: string): string {
+  // テキスト内の全ての{漢字|かんじ}パターンを探し、漢字部分だけを残す
+  return text
+    .replace(/\{([^|]*)\|([^}]*)\}/g, "$1")
+    .replace(/｛([^|]*)｜([^}]*)｝/g, "$1");
+}
+function skipRubyWritingPart(text: string): string {
+  // テキスト内の全ての{漢字|かんじ}パターンを探し、かんじ部分だけを残す
+  return text
+    .replace(/\{([^|]*)\|([^}]*)\}/g, "$2")
+    .replace(/｛([^|]*)｜([^}]*)｝/g, "$2");
+}
+function skipMemoText(targettext: string): string {
+  // []をスキップ
+  return targettext.replace(/\[.*?\]/g, "").replace(/［.*?］/g, "");
+}
+
+/**
+ * 調整したモーラのパラメーターがリセットされるのを防ぐ
  *
  * <例>
  * 「こんにちは」 -> 「こんばんは」と変更した場合、[]に囲まれる部分で変更前のモーラが転写される。
@@ -190,81 +230,35 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  private createFlatArray<T, K extends keyof T>(
-    collection: T[],
-    key: K
-  ): T[K] extends (infer U)[] ? U[] : T[K][] {
-    const result = [];
-    for (const element of collection) {
-      const value = element[key];
-      if (Array.isArray(value)) {
-        result.push(...value);
-      } else {
-        result.push(value);
-      }
-    }
-    return result as T[K] extends (infer U)[] ? U[] : T[K][];
-  }
-
   /**
-   * 変更前の配列を操作してpatchMora配列を作る。
-   *
-   * <例> (Ｕはundefined）
-   * 変更前 [ ズ, ン, ダ, モ, ン, ナ, ノ, ダ ]
-   * 変更後 [ ボ, ク, ズ, ン, ダ, ナ, ノ, デ, ス ]
-   *
-   * 再利用される文字列とundefinedで構成されたデータを作る。
-   *       [ Ｕ, Ｕ, ズ, ン, ダ, ナ, ノ, Ｕ, Ｕ ]
-   *
-   * 実際には"ズ"などの文字列部分は{text: "ズ"...}のようなデータ構造になっている。
-   * [ Ｕ, Ｕ, {text: "ズ"...}, {text: "ン"...}, {text: "ダ"...}, {text: "ナ"...}, {text: "ノ"...}, Ｕ, Ｕ ]
+   * 変更前と変更後のAccentPhraseに存在するモーラの差分を取得し
+   * 変更内容を適用したモーラの配列を返す
    */
-  private createDiffPatch() {
+  private createTranscriptionSource() {
     const before = structuredClone(this.beforeAccent);
     const after = structuredClone(this.afterAccent);
+    const beforeFlatArray = before.flatMap((accent) => accent.moras);
+    const afterFlatArray = after.flatMap((accent) => accent.moras);
 
-    const beforeFlatArray = this.createFlatArray(before, "moras");
-    const afterFlatArray = this.createFlatArray(after, "moras");
-    const diffed = diffArrays(
-      this.createFlatArray(beforeFlatArray, "text"),
-      this.createFlatArray(afterFlatArray, "text")
+    // beforeFlatArrayとafterFlatArrayの特定の要素が一致するかどうかを判定する関数
+    const matchRequirements = (beforeMora: Mora, afterMora: Mora) =>
+      beforeMora?.text === afterMora?.text;
+
+    const morasDiff = diff.getPatch(
+      beforeFlatArray,
+      afterFlatArray,
+      matchRequirements,
     );
 
-    // FIXME: beforeFlatArrayを破壊的に変更しなくても良いようにしてasを不要にする
-    let currentTextIndex = 0;
-    for (const diff of diffed) {
-      if (diff.removed) {
-        beforeFlatArray.splice(currentTextIndex, diff.count);
-      } else if (diff.added) {
-        diff.value.forEach(() => {
-          beforeFlatArray.splice(
-            currentTextIndex,
-            0,
-            undefined as never as Mora
-          );
-          currentTextIndex++;
-        });
-      } else {
-        currentTextIndex += diff.value.length;
-      }
-    }
-    return beforeFlatArray as (Mora | undefined)[];
+    return diff.applyPatch(beforeFlatArray, morasDiff);
   }
 
   /**
-   * moraPatchとafterAccentを比較し、textが一致するモーラを転写する。
-   *
-   *  <例> (「||」は等号記号を表す)
-   * 「こんにちは」 -> 「こんばんは」 とテキストを変更した場合、以下の例のように比較する。
-   *
-   *           moraPatch = [ {text: "コ"...}, {text: "ン"...}, undefined      , undefined      , {text: "ハ"...} ]
-   *                              ||                ||                                                ||
-   * after[...]["moras"] = [ {text: "コ"...}, {text: "ン"...}, {text: "バ"...}, {text: "ン"...}, {text: "ハ"...} ]
-   *
-   * あとは一致したモーラを転写するだけ。
-   *
+   * transcriptionSourceのモーラ配列のうち、テキストが一致するものを変更後のAccentPhraseの各モーラに適用する
    */
-  private mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
+  private applyTranscriptionSource(
+    transcriptionSource: Mora[],
+  ): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
@@ -275,18 +269,12 @@ export class TuningTranscription {
         moraIndex < after[accentIndex]["moras"].length;
         moraIndex++
       ) {
-        // undefinedのとき、何もせず次のモーラへ移動
-        if (moraPatch[moraPatchIndex] == undefined) {
-          moraPatchIndex++;
-          continue;
-        }
         if (
           after[accentIndex]["moras"][moraIndex].text ===
-          moraPatch[moraPatchIndex]?.text
+          transcriptionSource[moraPatchIndex]?.text
         ) {
-          after[accentIndex]["moras"][moraIndex] = moraPatch[
-            moraPatchIndex
-          ] as Mora;
+          after[accentIndex]["moras"][moraIndex] =
+            transcriptionSource[moraPatchIndex];
         }
         moraPatchIndex++;
       }
@@ -296,8 +284,8 @@ export class TuningTranscription {
   }
 
   transcribe() {
-    const moraPatch = this.createDiffPatch();
-    return this.mergeAccentPhrases(moraPatch as never);
+    const transcriptionSource = this.createTranscriptionSource();
+    return this.applyTranscriptionSource(transcriptionSource);
   }
 }
 
@@ -306,7 +294,7 @@ export class TuningTranscription {
  */
 export function isAccentPhrasesTextDifferent(
   beforeAccent: AccentPhrase[],
-  afterAccent: AccentPhrase[]
+  afterAccent: AccentPhrase[],
 ): boolean {
   if (beforeAccent.length !== afterAccent.length) return true;
 
@@ -337,7 +325,7 @@ export function isAccentPhrasesTextDifferent(
 
 export function buildAudioFileNameFromRawData(
   fileNamePattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
-  vars = DEFAULT_AUDIO_FILE_NAME_VARIABLES
+  vars = DEFAULT_AUDIO_FILE_NAME_VARIABLES,
 ): string {
   let pattern = fileNamePattern;
   if (pattern === "") {
@@ -351,13 +339,9 @@ export function buildAudioFileNameFromRawData(
   }
 
   const characterName = sanitizeFileName(vars.characterName);
-
   const index = (vars.index + 1).toString().padStart(3, "0");
-
   const styleName = sanitizeFileName(vars.styleName);
-
-  const date = currentDateString();
-
+  const date = vars.date;
   return replaceTag(pattern, {
     text,
     characterName,
@@ -365,6 +349,18 @@ export function buildAudioFileNameFromRawData(
     styleName,
     date,
   });
+}
+
+/**
+ * オブジェクトごとに一意なキーを作る。
+ * 一時的な利用のみを想定しているため、保存に利用すべきではない。
+ */
+export async function generateTempUniqueId(serializable: unknown) {
+  const data = new TextEncoder().encode(JSON.stringify(serializable));
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
@@ -381,35 +377,6 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
     EMPTY: "空白",
   };
   return tag2NameObj[tag];
-};
-
-export const createKanaRegex = (includeSeparation?: boolean): RegExp => {
-  // 以下の文字のみで構成される場合、「読み仮名」としてこれを処理する
-  // includeSeparationがtrueの時は、読点(U+3001)とクエスチョン(U+FF1F)も含む
-  //  * ひらがな(U+3041~U+3094)
-  //  * カタカナ(U+30A1~U+30F4)
-  //  * 全角長音(U+30FC)
-  if (includeSeparation) {
-    return /^[\u3041-\u3094\u30A1-\u30F4\u30FC\u3001\uFF1F]+$/;
-  }
-  return /^[\u3041-\u3094\u30A1-\u30F4\u30FC]+$/;
-};
-
-export const convertHiraToKana = (text: string): string => {
-  return text.replace(/[\u3041-\u3094]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) + 0x60);
-  });
-};
-
-export const convertLongVowel = (text: string): string => {
-  return text
-    .replace(/(?<=[アカサタナハマヤラワャァガザダバパ]ー*)ー/g, "ア")
-    .replace(/(?<=[イキシチニヒミリィギジヂビピ]ー*)ー/g, "イ")
-    .replace(/(?<=[ウクスツヌフムユルュゥヴグズヅブプ]ー*)ー/g, "ウ")
-    .replace(/(?<=[エケセテネヘメレェゲゼデベペ]ー*)ー/g, "エ")
-    .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ")
-    .replace(/(?<=[ン]ー*)ー/g, "ン")
-    .replace(/(?<=[ッ]ー*)ー/g, "ッ");
 };
 
 // based on https://github.com/BBWeb/path-browserify/blob/win-version/index.js
@@ -449,10 +416,45 @@ export const isOnCommandOrCtrlKeyDown = (event: {
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
 
 /**
- * AccentPhraseのtextを結合して返します。
+ * スタイルがシングエディタで利用可能なスタイルかどうかを判定します。
  */
-export const joinTextsInAccentPhrases = (
-  accentPhrase: AccentPhrase
-): string => {
-  return accentPhrase.moras.map((mora) => mora.text).join("");
+export const isSingingStyle = (styleInfo: StyleInfo) => {
+  return (
+    styleInfo.styleType === "frame_decode" ||
+    styleInfo.styleType === "sing" ||
+    styleInfo.styleType === "singing_teacher"
+  );
+};
+
+/**
+ * CharacterInfoの配列を、指定されたスタイルタイプでフィルタリングします。
+ * singerLikeはソング系スタイルのみを残します。
+ * talkはソング系スタイルをすべて除外します。
+ * FIXME: 上記以外のフィルタリング機能はテストでしか使っていないので、しばらくそのままなら削除する
+ */
+export const filterCharacterInfosByStyleType = (
+  characterInfos: CharacterInfo[],
+  styleType: StyleType | "singerLike",
+): CharacterInfo[] => {
+  const withStylesFiltered: CharacterInfo[] = characterInfos.map(
+    (characterInfo) => {
+      const styles = characterInfo.metas.styles.filter((styleInfo) => {
+        if (styleType === "singerLike") {
+          return isSingingStyle(styleInfo);
+        }
+        // 過去のエンジンにはstyleTypeが存在しないので、「singerLike以外」をtalkとして扱っている。
+        if (styleType === "talk") {
+          return !isSingingStyle(styleInfo);
+        }
+        return styleInfo.styleType === styleType;
+      });
+      return { ...characterInfo, metas: { ...characterInfo.metas, styles } };
+    },
+  );
+
+  const withoutEmptyStyles = withStylesFiltered.filter(
+    (characterInfo) => characterInfo.metas.styles.length > 0,
+  );
+
+  return withoutEmptyStyles;
 };
