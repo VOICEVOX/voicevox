@@ -110,6 +110,7 @@ const projectNameToExtensions = [
   ["UtaFormatix", ["ufdata"]],
   ["UTAU", ["ust"]],
   ["VOCALOID", ["vpr", "vsq", "vsqx"]],
+  ["VoiSona", ["tssln"]],
 ] as const satisfies [string, SupportedExtensions[]][];
 
 // ちゃんと全部の拡張子があるかチェック
