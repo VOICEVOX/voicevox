@@ -289,9 +289,22 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
         });
+
+        // リソースをURLで取得するかどうか。falseの場合はbase64文字列。
         const useResourceUrl =
           state.engineManifests[engineId].supportedFeatures.returnResourceUrl ??
           false;
+        const getResourceSrc = async function (
+          resource: string,
+          type: "image" | "wav",
+        ) {
+          return useResourceUrl
+            ? resource
+            : type == "image"
+              ? await base64ImageToUri(resource)
+              : await base64ToUri(resource, "audio/wav");
+        };
+
         const getStyles = async function (
           speaker: Speaker,
           speakerInfo: SpeakerInfo,
@@ -305,25 +318,20 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               throw new Error(
                 `Not found the style id "${style.id}" of "${speaker.name}". `,
               );
-            const voiceSamples = useResourceUrl
-              ? styleInfo.voiceSamples
-              : await Promise.all(
-                  styleInfo.voiceSamples.map((voiceSample) => {
-                    return base64ToUri(voiceSample, "audio/wav");
-                  }),
-                );
+            const voiceSamples = await Promise.all(
+              styleInfo.voiceSamples.map((voiceSample) =>
+                getResourceSrc(voiceSample, "wav"),
+              ),
+            );
             styles[i] = {
               styleName: style.name,
               styleId: StyleId(style.id),
               styleType: style.type,
               engineId,
-              iconPath: useResourceUrl
-                ? styleInfo.icon
-                : await base64ImageToUri(styleInfo.icon),
+              iconPath: await getResourceSrc(styleInfo.icon, "image"),
               portraitPath:
-                useResourceUrl || styleInfo.portrait == undefined
-                  ? styleInfo.portrait
-                  : await base64ImageToUri(styleInfo.portrait),
+                styleInfo.portrait &&
+                (await getResourceSrc(styleInfo.portrait, "image")),
               voiceSamplePaths: voiceSamples,
             };
           }
@@ -337,14 +345,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let speakerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
           let speakerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
           if (speaker != undefined) {
-            const params: { speakerUuid: string; resourceFormat?: "url" } = {
-              speakerUuid: speaker.speakerUuid,
-            };
-            if (useResourceUrl) {
-              params.resourceFormat = "url";
-            }
             speakerInfoPromise = instance
-              .invoke("speakerInfoSpeakerInfoGet")(params)
+              .invoke("speakerInfoSpeakerInfoGet")({
+                speakerUuid: speaker.speakerUuid,
+                ...(useResourceUrl && { resourceFormat: "url" }),
+              })
               .catch((error) => {
                 window.backend.logError(error, `Failed to get speakerInfo.`);
                 throw error;
@@ -357,14 +362,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let singerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
           let singerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
           if (singer != undefined) {
-            const params: { speakerUuid: string; resourceFormat?: "url" } = {
-              speakerUuid: singer.speakerUuid,
-            };
-            if (useResourceUrl) {
-              params.resourceFormat = "url";
-            }
             singerInfoPromise = instance
-              .invoke("singerInfoSingerInfoGet")(params)
+              .invoke("singerInfoSingerInfoGet")({
+                speakerUuid: singer.speakerUuid,
+                ...(useResourceUrl && { resourceFormat: "url" }),
+              })
               .catch((error) => {
                 window.backend.logError(error, `Failed to get singerInfo.`);
                 throw error;
@@ -390,9 +392,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           ]).then((styles) => styles.flat());
 
           const characterInfo: CharacterInfo = {
-            portraitPath: useResourceUrl
-              ? baseCharacterInfo.portrait
-              : await base64ImageToUri(baseCharacterInfo.portrait),
+            portraitPath: await getResourceSrc(
+              baseCharacterInfo.portrait,
+              "image",
+            ),
             metas: {
               speakerUuid: SpeakerId(baseSpeaker.speakerUuid),
               speakerName: baseSpeaker.name,
