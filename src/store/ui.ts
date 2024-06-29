@@ -1,4 +1,12 @@
-import { Action, ActionContext, ActionsBase, Dispatch } from "./vuex";
+import {
+  Action,
+  ActionContext,
+  ActionsBase,
+  Dispatch,
+  DotNotationAction,
+  DotNotationActionContext,
+  DotNotationDispatch,
+} from "./vuex";
 import {
   AllActions,
   AllGetters,
@@ -40,12 +48,46 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   };
 }
 
+export function createDotNotationUILockAction<
+  S,
+  A extends ActionsBase,
+  K extends keyof A,
+>(
+  action: (
+    context: DotNotationActionContext<
+      S,
+      S,
+      AllGetters,
+      AllActions,
+      AllMutations
+    >,
+    payload: Parameters<A[K]>[0],
+  ) => ReturnType<A[K]> extends Promise<unknown>
+    ? ReturnType<A[K]>
+    : Promise<ReturnType<A[K]>>,
+): DotNotationAction<S, S, A, K, AllGetters, AllActions, AllMutations> {
+  return (context, payload: Parameters<A[K]>[0]) => {
+    context.mutations.LOCK_UI();
+    return action(context, payload).finally(() => {
+      context.mutations.UNLOCK_UI();
+    });
+  };
+}
+
 export function withProgress<T>(
   action: Promise<T>,
   dispatch: Dispatch<AllActions>,
 ): Promise<T> {
   dispatch("START_PROGRESS");
   return action.finally(() => dispatch("RESET_PROGRESS"));
+}
+
+export function withProgressDotNotation<T>(
+  action: Promise<T>,
+  actions: DotNotationDispatch<AllActions>,
+): Promise<T> {
+  actions.START_PROGRESS();
+  return action.finally(() => actions.RESET_PROGRESS());
 }
 
 export const uiStoreState: UiStoreState = {
