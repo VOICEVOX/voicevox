@@ -284,6 +284,8 @@ export function decibelToLinear(decibelValue: number) {
   return Math.pow(10, decibelValue / 20);
 }
 
+export const DEFAULT_TRACK_NAME = "無名トラック";
+
 export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;

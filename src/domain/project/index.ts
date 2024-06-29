@@ -12,6 +12,7 @@ import {
   DEFAULT_BEATS,
   DEFAULT_BPM,
   DEFAULT_TPQN,
+  DEFAULT_TRACK_NAME,
 } from "@/sing/domain";
 
 const DEFAULT_SAMPLING_RATE = 24000;
@@ -287,6 +288,9 @@ export const migrateProjectFileObject = async (
     // tracks: Track[] -> tracks: Record<TrackId, Track> + trackOrder: TrackId[]
     const newTracks: Record<TrackId, unknown> = {};
     for (const track of projectData.song.tracks) {
+      track.name = DEFAULT_TRACK_NAME;
+      track.solo = false;
+      track.mute = false;
       newTracks[TrackId(crypto.randomUUID())] = track;
     }
     projectData.song.tracks = newTracks;

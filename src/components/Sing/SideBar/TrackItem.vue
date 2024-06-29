@@ -1,0 +1,385 @@
+<template>
+  <QItem
+    v-ripple
+    clickable
+    class="track-item"
+    activeClass="selected-track"
+    :active="props.trackId === selectedTrackId"
+    :disable="uiLocked"
+    @click="selectTrack()"
+  >
+    <ContextMenu
+      :menudata="[
+        {
+          type: 'button',
+          label: '削除',
+          onClick: deleteTrack,
+          disabled: tracks.size === 1,
+          disableWhenUiLocked: true,
+        },
+      ]"
+    />
+    <div class="track-handle track-handle-bg" />
+    <QIcon
+      v-if="props.trackId === selectedTrackId"
+      name="arrow_right"
+      color="primary"
+      size="md"
+      class="active-arrow"
+    />
+    <QItemSection
+      avatar
+      class="singer-icon-container track-handle"
+      @click.stop=""
+    >
+      <div class="singer-icon-hitbox">
+        <SingerIcon
+          v-if="trackStyle"
+          round
+          class="singer-icon"
+          size="3rem"
+          :style="trackStyle"
+        />
+        <QAvatar v-else round size="3rem" color="primary"
+          ><span color="text-display-on-primary">?</span></QAvatar
+        >
+        <CharacterSelectMenu :trackId="props.trackId" />
+      </div>
+    </QItemSection>
+    <QItemSection>
+      <QItemLabel class="singer-name" @click.stop="selectTrack()">
+        <QInput v-model="temporaryTrackName" dense @blur="updateTrackName" />
+      </QItemLabel>
+      <QItemLabel v-if="trackStyle" caption class="singer-style">
+        <QIcon
+          v-if="!shouldPlayTrack"
+          name="volume_off"
+          color="display"
+          :style="{ opacity: 0.8 }"
+        />
+        {{ singerName }}
+      </QItemLabel>
+    </QItemSection>
+    <div side class="track-control">
+      <QBtn
+        color="default"
+        icon="volume_off"
+        round
+        outline
+        dense
+        size="sm"
+        class="track-button"
+        :class="{ 'track-button-active': track.mute }"
+        :disable="uiLocked || isThereSoloTrack"
+        @click.stop="setTrackMute(!track.mute)"
+      >
+        <QTooltip :delay="500">ミュート</QTooltip>
+      </QBtn>
+      <QBtn
+        color="default"
+        icon="headset"
+        rounded
+        outline
+        dense
+        size="sm"
+        class="track-button"
+        :class="{ 'track-button-active': track.solo }"
+        :disable="uiLocked"
+        @click.stop="setTrackSolo(!track.solo)"
+      >
+        <QTooltip :delay="500">ソロ</QTooltip>
+      </QBtn>
+    </div>
+  </QItem>
+
+  <QItem
+    v-if="!isDragging && props.trackId === selectedTrackId"
+    class="track-detail-container"
+  >
+    <div class="track-detail">
+      <div class="pan">
+        <div class="l">L</div>
+        <QSlider
+          :modelValue="track.pan"
+          :min="-1"
+          :max="1"
+          :step="0.1"
+          :markers="1"
+          selectionColor="transparent"
+          :disable="uiLocked"
+          @change="setTrackPan($event)"
+          @dblclick="setTrackPan(0)"
+        />
+        <div class="r">R</div>
+      </div>
+      <div class="volume">
+        <QIcon name="volume_down" class="l" size="1rem" />
+        <QSlider
+          :modelValue="track.volume"
+          :min="0"
+          :max="2"
+          :step="0.1"
+          :markers="1"
+          :disable="uiLocked"
+          @change="setTrackVolume($event)"
+          @dblclick="setTrackVolume(1)"
+        />
+        <QIcon name="volume_up" class="r" size="1rem" />
+      </div>
+    </div>
+  </QItem>
+</template>
+<script setup lang="ts">
+import { computed, watch, ref } from "vue";
+import Draggable from "vuedraggable";
+import { QList } from "quasar";
+import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/CharacterSelectMenu.vue";
+import SingerIcon from "@/components/Sing/SingerIcon.vue";
+import { useStore } from "@/store";
+import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import { shouldPlay } from "@/sing/domain";
+import { TrackId } from "@/type/preload";
+
+// https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
+Draggable.components = { ...Draggable.components, QList };
+
+const props = defineProps<{
+  trackId: TrackId;
+}>();
+
+const store = useStore();
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+const track = computed(() => {
+  const track = store.state.tracks.get(props.trackId);
+  if (!track) throw new Error(`Track not found: ${props.trackId}`);
+  return track;
+});
+
+const tracks = computed(() => store.state.tracks);
+const isThereSoloTrack = computed(() =>
+  [...tracks.value.values()].some((track) => track.solo),
+);
+const shouldPlayTrack = computed(
+  () => shouldPlay(store.state.tracks)[props.trackId],
+);
+
+const setTrackPan = (pan: number) => {
+  if (store.state.songUndoableTrackControl.panVolume) {
+    store.dispatch("COMMAND_SET_TRACK_PAN", { trackId: props.trackId, pan });
+  } else {
+    store.dispatch("SET_TRACK_PAN", { trackId: props.trackId, pan });
+  }
+};
+
+const setTrackVolume = (volume: number) => {
+  if (store.state.songUndoableTrackControl.panVolume) {
+    store.dispatch("COMMAND_SET_TRACK_VOLUME", {
+      trackId: props.trackId,
+      volume,
+    });
+  } else {
+    store.dispatch("SET_TRACK_VOLUME", { trackId: props.trackId, volume });
+  }
+};
+
+watch(
+  () => track.value.name,
+  () => {
+    temporaryTrackName.value = track.value.name;
+  },
+);
+
+const temporaryTrackName = ref(track.value.name);
+
+const updateTrackName = () => {
+  if (temporaryTrackName.value === track.value.name) return;
+  if (temporaryTrackName.value === "") {
+    temporaryTrackName.value = track.value.name;
+    return;
+  }
+  setTrackName(temporaryTrackName.value);
+};
+
+const setTrackName = (name: string) => {
+  if (store.state.songUndoableTrackControl.name) {
+    store.dispatch("COMMAND_SET_TRACK_NAME", { trackId: props.trackId, name });
+  } else {
+    store.dispatch("SET_TRACK_NAME", { trackId: props.trackId, name });
+  }
+};
+
+const setTrackMute = (mute: boolean) => {
+  if (store.state.songUndoableTrackControl.soloMute) {
+    store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId: props.trackId, mute });
+  } else {
+    store.dispatch("SET_TRACK_MUTE", { trackId: props.trackId, mute });
+  }
+};
+
+const setTrackSolo = (solo: boolean) => {
+  if (store.state.songUndoableTrackControl.soloMute) {
+    store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId: props.trackId, solo });
+  } else {
+    store.dispatch("SET_TRACK_SOLO", { trackId: props.trackId, solo });
+  }
+};
+
+const selectedTrackId = computed(() => store.state.selectedTrackId);
+const trackCharacter = computed(() => {
+  if (!track.value.singer) return undefined;
+
+  for (const character of store.state.characterInfos[
+    track.value.singer.engineId
+  ]) {
+    for (const style of character.metas.styles) {
+      if (style.styleId === track.value.singer.styleId) {
+        return character;
+      }
+    }
+  }
+  return undefined;
+});
+const selectTrack = () => {
+  store.dispatch("SET_SELECTED_TRACK", { trackId: props.trackId });
+};
+
+const deleteTrack = () => {
+  store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.trackId });
+};
+
+const isDragging = ref(false);
+
+const trackStyle = computed(() => {
+  if (!track.value.singer) return undefined;
+
+  const character = trackCharacter.value;
+  if (!character) return undefined;
+
+  for (const style of character.metas.styles) {
+    if (style.styleId === track.value.singer.styleId) {
+      return style;
+    }
+  }
+  return undefined;
+});
+
+const singerName = computed(() => {
+  const character = trackCharacter.value;
+  if (!character) return "（不明なキャラクター）";
+  return character.metas.speakerName;
+});
+</script>
+<style scoped lang="scss">
+@use "@/styles/colors" as colors;
+@use "@/styles/variables" as vars;
+
+.track-detail-container {
+  padding: 0;
+
+  border-bottom: 1px solid colors.$sequencer-sub-divider;
+
+  .dragging & {
+    display: none;
+  }
+}
+
+.track-detail {
+  margin-left: 0.5rem;
+  padding: 0 0.5rem 0.25rem 0.5rem;
+  width: 100%;
+  border-left: 1px solid colors.$sequencer-sub-divider;
+  display: flex;
+  flex-direction: column;
+
+  .pan,
+  .volume {
+    display: grid;
+    align-items: center;
+    gap: 1rem;
+    grid-template-columns: 1.5rem 1fr 1.5rem;
+
+    .l,
+    .r {
+      justify-self: center;
+    }
+  }
+}
+
+.track-item {
+  &.selected-track {
+    color: colors.$display;
+  }
+
+  .track-handle-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4.5rem;
+    height: 100%;
+    cursor: grab;
+    z-index: 1;
+  }
+
+  .track-control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    z-index: 2;
+
+    .track-button {
+      width: 1.75rem;
+      height: 1.75rem;
+      padding: 0;
+
+      &:not(.track-button-active)::before {
+        border-color: rgba(colors.$display-rgb, 0.5);
+      }
+      &.track-button-active {
+        &::before {
+          border-width: 2px;
+        }
+        color: colors.$primary;
+
+        :deep(i) {
+          color: colors.$display;
+        }
+      }
+    }
+  }
+}
+
+.active-arrow {
+  position: absolute;
+  left: -0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.singer-icon-container {
+  z-index: 2;
+  position: relative;
+  cursor: grab;
+}
+
+.singer-icon-hitbox {
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.singer-name :deep(.q-field__control) {
+  height: 1.5rem;
+}
+
+.singer-name,
+.singer-style {
+  width: calc(100% - 3.5rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
