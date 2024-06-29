@@ -251,17 +251,18 @@ describe("isAccentPhrasesTextDifferent", () => {
 
 test("buildAudioFileNameFromRawData", () => {
   const fileNamePattern =
-    "index=$連番$ characterName=$キャラ$ text=$テキスト$ styleName=$スタイル$ date=$日付$";
+    "index=$連番$ characterName=$キャラ$ text=$テキスト$ styleName=$スタイル$ date=$日付$ projectName=$プロジェクトファイル名$";
   const vars = {
     index: 10,
     characterName: "キャラ１",
     text: "テストテキスト",
     styleName: "スタイル１",
     date: "20210801",
+    projectName: "サンプルプロジェクト",
   };
   const result = buildAudioFileNameFromRawData(fileNamePattern, vars);
   expect(result).toBe(
-    "index=011 characterName=キャラ１ text=テストテキスト styleName=スタイル１ date=20210801",
+    "index=011 characterName=キャラ１ text=テストテキスト styleName=スタイル１ date=20210801 projectName=サンプルプロジェクト",
   );
 });
 

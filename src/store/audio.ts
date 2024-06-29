@@ -1200,7 +1200,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   DEFAULT_AUDIO_FILE_NAME: {
-    getter: (state) => (audioKey) => {
+    getter: (state, getters) => (audioKey) => {
       const fileNamePattern = state.savingSetting.fileNamePattern;
 
       const index = state.audioKeys.indexOf(audioKey);
@@ -1220,12 +1220,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       if (style == undefined) throw new Error("assert style != undefined");
 
       const styleName = style.styleName || DEFAULT_STYLE_NAME;
+
+      const projectName = getters.PROJECT_NAME ?? "";
+
       return buildAudioFileNameFromRawData(fileNamePattern, {
         characterName: character.metas.speakerName,
         index,
         styleName,
         text: audioItem.text,
         date: currentDateString(),
+        projectName,
       });
     },
   },
