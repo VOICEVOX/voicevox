@@ -139,6 +139,7 @@ import { useStore } from "@/store";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { shouldPlay } from "@/sing/domain";
 import { TrackId } from "@/type/preload";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
 Draggable.components = { ...Draggable.components, QList };
@@ -159,8 +160,8 @@ const tracks = computed(() => store.state.tracks);
 const isThereSoloTrack = computed(() =>
   [...tracks.value.values()].some((track) => track.solo),
 );
-const shouldPlayTrack = computed(
-  () => shouldPlay(store.state.tracks)[props.trackId],
+const shouldPlayTrack = computed(() =>
+  getOrThrow(shouldPlay(store.state.tracks), props.trackId),
 );
 
 const setTrackPan = (pan: number) => {

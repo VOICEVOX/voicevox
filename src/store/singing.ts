@@ -171,6 +171,7 @@ export const singingStoreState: SingingStoreState = {
   nowRendering: false,
   nowAudioExporting: false,
   cancellationOfAudioExportRequested: false,
+  isSongSidebarOpen: false,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -945,6 +946,26 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The track is invalid.");
       }
       commit("REGISTER_TRACK", { trackId, track });
+
+      dispatch("RENDER");
+    },
+  },
+
+  DELETE_TRACK: {
+    mutation(state, { trackId }) {
+      state.tracks.delete(trackId);
+      state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
+      state.overlappingNoteInfos.delete(trackId);
+      state.overlappingNoteIds.delete(trackId);
+      if (state.selectedTrackId === trackId) {
+        state.selectedTrackId = state.trackOrder[0];
+      }
+    },
+    async action({ state, commit, dispatch }, { trackId }) {
+      if (!state.tracks.has(trackId)) {
+        throw new Error(`Track ${trackId} does not exist.`);
+      }
+      commit("DELETE_TRACK", { trackId });
 
       dispatch("RENDER");
     },
@@ -2338,6 +2359,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       dispatch("RENDER");
     },
   },
+
+  SET_SONG_SIDEBAR_OPEN: {
+    mutation(state, { isSongSidebarOpen }) {
+      state.isSongSidebarOpen = isSongSidebarOpen;
+    },
+    action({ commit }, { isSongSidebarOpen }) {
+      commit("SET_SONG_SIDEBAR_OPEN", { isSongSidebarOpen });
+    },
+  },
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};
@@ -2583,6 +2613,24 @@ export const singingCommandStore = transformCommandStore(
         });
 
         dispatch("RENDER");
+      },
+    },
+
+    COMMAND_REGISTER_TRACK: {
+      mutation(draft, { trackId, track }) {
+        singingStore.mutations.REGISTER_TRACK(draft, { trackId, track });
+      },
+      action({ commit }, { trackId, track }) {
+        commit("COMMAND_REGISTER_TRACK", { trackId, track });
+      },
+    },
+
+    COMMAND_DELETE_TRACK: {
+      mutation(draft, { trackId }) {
+        singingStore.mutations.DELETE_TRACK(draft, { trackId });
+      },
+      action({ commit }, { trackId }) {
+        commit("COMMAND_DELETE_TRACK", { trackId });
       },
     },
   }),

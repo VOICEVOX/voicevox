@@ -844,6 +844,7 @@ export type SingingStoreState = {
   nowRendering: boolean;
   nowAudioExporting: boolean;
   cancellationOfAudioExportRequested: boolean;
+  isSongSidebarOpen: boolean;
 };
 
 export type SingingStoreTypes = {
@@ -1161,6 +1162,11 @@ export type SingingStoreTypes = {
     action(payload: { trackId: TrackId; track: Track }): void;
   };
 
+  DELETE_TRACK: {
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
+  };
+
   SELECT_TRACK: {
     mutation: { trackId: TrackId };
     action(payload: { trackId: TrackId }): void;
@@ -1169,6 +1175,11 @@ export type SingingStoreTypes = {
   SET_TRACKS: {
     mutation: { tracks: Map<TrackId, Track> };
     action(payload: { tracks: Map<TrackId, Track> }): Promise<void>;
+  };
+
+  SET_SONG_SIDEBAR_OPEN: {
+    mutation: { isSongSidebarOpen: boolean };
+    action(payload: { isSongSidebarOpen: boolean }): void;
   };
 };
 
@@ -1251,6 +1262,16 @@ export type SingingCommandStoreTypes = {
       frameLength: number;
       trackId: TrackId;
     }): void;
+  };
+
+  COMMAND_REGISTER_TRACK: {
+    mutation: { trackId: TrackId; track: Track };
+    action(payload: { trackId: TrackId; track: Track }): void;
+  };
+
+  COMMAND_DELETE_TRACK: {
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
   };
 };
 

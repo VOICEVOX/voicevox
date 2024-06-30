@@ -92,8 +92,10 @@ export const trackSchema = z.object({
   notes: z.array(noteSchema),
   pitchEditData: z.array(z.number()), // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
 
-  solo: z.boolean().optional(),
-  mute: z.boolean().optional(),
+  solo: z.boolean(),
+  mute: z.boolean(),
+  pan: z.number(),
+  volume: z.number(),
 });
 
 // プロジェクトファイルのスキーマ

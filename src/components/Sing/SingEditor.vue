@@ -1,6 +1,6 @@
 <template>
   <ToolBar />
-  <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpened }">
+  <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
     <EngineStartupOverlay :isCompletedInitialStartup />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
@@ -21,18 +21,18 @@
     </div>
 
     <QSplitter
-      :modelValue="isSidebarOpened ? sidebarWidth : 0"
+      :modelValue="isSidebarOpen ? sidebarWidth : 0"
       unit="px"
       class="full-width"
       afterClass="flex"
       :limits="[200, 300]"
-      :disable="!isSidebarOpened"
-      :separatorStyle="{ display: isSidebarOpened ? 'block' : 'none' }"
+      :disable="!isSidebarOpen"
+      :separatorStyle="{ display: isSidebarOpen ? 'block' : 'none' }"
       emitImmediately
       @update:modelValue="sidebarWidth = $event"
     >
       <template #before>
-        <SideBar v-if="isSidebarOpened" />
+        <SideBar v-if="isSidebarOpen" />
       </template>
       <template #after>
         <ScoreSequencer />
@@ -62,12 +62,12 @@ const props = defineProps<{
 
 const store = useStore();
 
-const isSidebarOpened = computed(() => store.state.isSidebarOpened);
+const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const sidebarWidth = ref(300);
 //const $q = useQuasar();
 
 watch(
-  () => isSidebarOpened.value,
+  () => isSidebarOpen.value,
   (isSidebarOpened) => {
     if (isSidebarOpened) {
       sidebarWidth.value = 300;

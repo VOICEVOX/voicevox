@@ -81,12 +81,15 @@ const isThereSoloTrack = computed(() =>
 const trackOrder = computed(() => store.state.trackOrder);
 const selectedTrackId = computed(() => store.state.selectedTrackId);
 
-const createTrack = () => {
+const createTrack = async () => {
   const singer = tracks.value.get(selectedTrackId.value)?.singer;
   if (!singer) return;
 
-  store.dispatch("COMMAND_CREATE_TRACK", {
-    singer,
+  const { trackId, track } = await store.dispatch("CREATE_TRACK");
+  track.singer = singer;
+  store.dispatch("REGISTER_TRACK", {
+    trackId,
+    track,
   });
 };
 const deleteTrack = () => {
