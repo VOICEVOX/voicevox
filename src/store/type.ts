@@ -1034,14 +1034,6 @@ export type SingingStoreTypes = {
     action(payload: { isDrag: boolean }): void;
   };
 
-  IMPORT_UTAFORMATIX_PROJECT: {
-    action(payload: { project: UfProject; trackIndex: number }): void;
-  };
-
-  IMPORT_VOICEVOX_PROJECT: {
-    action(payload: { project: LatestProjectType; trackIndex: number }): void;
-  };
-
   EXPORT_WAVE_FILE: {
     action(payload: { filePath?: string }): SaveResultObject;
   };
@@ -1166,6 +1158,11 @@ export type SingingStoreTypes = {
     action(payload: { trackId: TrackId }): void;
   };
 
+  SET_TRACK: {
+    mutation: { trackId: TrackId; track: Track };
+    action(payload: { trackId: TrackId; track: Track }): void;
+  };
+
   SET_TRACKS: {
     mutation: { tracks: Map<TrackId, Track> };
     action(payload: { tracks: Map<TrackId, Track> }): Promise<void>;
@@ -1250,6 +1247,32 @@ export type SingingCommandStoreTypes = {
       startFrame: number;
       frameLength: number;
       trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_IMPORT_TRACKS: {
+    mutation: {
+      tpqn: number;
+      tempos: Tempo[];
+      timeSignatures: TimeSignature[];
+      tracks: { track: Track; trackId: TrackId; overwrite: boolean }[];
+    };
+    action(payload: {
+      tpqn: number;
+      tempos: Tempo[];
+      timeSignatures: TimeSignature[];
+      tracks: Track[];
+    }): void;
+  };
+
+  COMMAND_IMPORT_UTAFORMATIX_PROJECT: {
+    action(payload: { project: UfProject; trackIndexes: number[] }): void;
+  };
+
+  COMMAND_IMPORT_VOICEVOX_PROJECT: {
+    action(payload: {
+      project: LatestProjectType;
+      trackIndexes: number[];
     }): void;
   };
 };

@@ -20,6 +20,7 @@ import {
   SingingVoiceSourceHash,
   SequencerEditTarget,
   PhraseSourceHash,
+  Track,
 } from "./type";
 import { sanitizeFileName } from "./utility";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
@@ -69,6 +70,7 @@ import {
   isValidTrack,
   SEQUENCER_MIN_NUM_MEASURES,
   getNumMeasures,
+  isTracksEmpty,
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
@@ -962,6 +964,47 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_TRACK: {
+    mutation(state, { trackId, track }) {
+      state.tracks.set(trackId, track);
+      state.overlappingNoteIds.set(trackId, new Set());
+      state.overlappingNoteInfos.set(trackId, new Map());
+    },
+    async action({ state, commit, dispatch }, { trackId, track }) {
+      if (!isValidTrack(track)) {
+        throw new Error("The track is invalid.");
+      }
+      if (!state.tracks.has(trackId)) {
+        throw new Error(`Track ${trackId} does not exist.`);
+      }
+
+      commit("SET_TRACK", { trackId, track });
+      // 色々な処理を動かすため、二重にセットする
+      // TODO: もっとスマートな方法を考える
+      await dispatch("SET_SINGER", {
+        singer: track.singer,
+        trackId,
+      });
+      await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
+        keyRangeAdjustment: track.keyRangeAdjustment,
+        trackId,
+      });
+      await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
+        volumeRangeAdjustment: track.volumeRangeAdjustment,
+        trackId,
+      });
+      await dispatch("SET_NOTES", { notes: track.notes, trackId });
+      await dispatch("CLEAR_PITCH_EDIT_DATA", {
+        trackId,
+      }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
+      await dispatch("SET_PITCH_EDIT_DATA", {
+        pitchArray: track.pitchEditData,
+        startFrame: 0,
+        trackId,
+      });
+    },
+  },
+
   SET_TRACKS: {
     mutation(state, { tracks }) {
       state.tracks = tracks;
@@ -975,31 +1018,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.selectedTrackId = state.trackOrder[0];
     },
     async action({ commit, dispatch }, { tracks }) {
+      if (![...tracks.values()].every((track) => isValidTrack(track))) {
+        throw new Error("The track is invalid.");
+      }
       commit("SET_TRACKS", { tracks });
-      // 色々な処理を動かすため、二重にセットする
-      // TODO: もっとスマートな方法を考える
+
       for (const [trackId, track] of tracks) {
-        await dispatch("SET_SINGER", {
-          singer: track.singer,
-          trackId,
-        });
-        await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-          keyRangeAdjustment: track.keyRangeAdjustment,
-          trackId,
-        });
-        await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-          volumeRangeAdjustment: track.volumeRangeAdjustment,
-          trackId,
-        });
-        await dispatch("SET_NOTES", { notes: track.notes, trackId });
-        await dispatch("CLEAR_PITCH_EDIT_DATA", {
-          trackId,
-        }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-        await dispatch("SET_PITCH_EDIT_DATA", {
-          pitchArray: track.pitchEditData,
-          startFrame: 0,
-          trackId,
-        });
+        // 色々な処理を動かすため、二重にセットする
+        // TODO: もっとスマートな方法を考える
+        await dispatch("SET_TRACK", { trackId, track });
       }
     },
   },
@@ -1043,12 +1070,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseFirstRestDuration = Math.max(
           phraseFirstRestDuration,
           phraseFirstNote.position -
-            secondToTick(
-              tickToSecond(phraseFirstNote.position, tempos, tpqn) -
-                phraseFirstRestMinDurationSeconds,
-              tempos,
-              tpqn,
-            ),
+          secondToTick(
+            tickToSecond(phraseFirstNote.position, tempos, tpqn) -
+            phraseFirstRestMinDurationSeconds,
+            tempos,
+            tpqn,
+          ),
         );
         // 1tick以上にする
         phraseFirstRestDuration = Math.max(1, phraseFirstRestDuration);
@@ -1355,10 +1382,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             trackId,
             track.singer
               ? {
-                  singer: track.singer,
-                  frameRate:
-                    state.engineManifests[track.singer.engineId].frameRate,
-                }
+                singer: track.singer,
+                frameRate:
+                  state.engineManifests[track.singer.engineId].frameRate,
+              }
               : undefined,
           ]),
         );
@@ -1817,97 +1844,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         logger.info("Rendering stopped.");
       }
     }),
-  },
-
-  // TODO: Undoできるようにする
-  IMPORT_UTAFORMATIX_PROJECT: {
-    action: createUILockAction(
-      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
-        const { tempos, timeSignatures, tracks, tpqn } =
-          ufProjectToVoicevox(project);
-
-        const notes = tracks[trackIndex].notes;
-
-        if (tempos.length > 1) {
-          logger.warn("Multiple tempos are not supported.");
-        }
-        if (timeSignatures.length > 1) {
-          logger.warn("Multiple time signatures are not supported.");
-        }
-
-        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
-
-        if (tpqn !== state.tpqn) {
-          throw new Error("TPQN does not match. Must be converted.");
-        }
-
-        // TODO: ここら辺のSET系の処理をまとめる
-        await dispatch("SET_TPQN", { tpqn });
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
-
-        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
-        commit("CLEAR_COMMANDS");
-        dispatch("RENDER");
-      },
-    ),
-  },
-
-  // TODO: Undoできるようにする
-  IMPORT_VOICEVOX_PROJECT: {
-    action: createUILockAction(
-      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
-        const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
-          project.song;
-
-        const track = tracks[trackOrder[trackIndex]];
-        if (!track) {
-          throw new Error("Track not found.");
-        }
-        const notes = track.notes.map((note) => ({
-          ...note,
-          id: NoteId(crypto.randomUUID()),
-        }));
-
-        if (tpqn !== state.tpqn) {
-          throw new Error("TPQN does not match. Must be converted.");
-        }
-
-        // TODO: ここら辺のSET系の処理をまとめる
-        await dispatch("SET_SINGER", {
-          singer: track.singer,
-          trackId: state.selectedTrackId,
-        });
-        await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-          keyRangeAdjustment: track.keyRangeAdjustment,
-
-          trackId: state.selectedTrackId,
-        });
-        await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-          volumeRangeAdjustment: track.volumeRangeAdjustment,
-
-          trackId: state.selectedTrackId,
-        });
-        await dispatch("SET_TPQN", { tpqn });
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes, trackId: state.selectedTrackId });
-        await dispatch("CLEAR_PITCH_EDIT_DATA", {
-          trackId: state.selectedTrackId,
-        }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-        await dispatch("SET_PITCH_EDIT_DATA", {
-          pitchArray: track.pitchEditData,
-          startFrame: 0,
-          trackId: state.selectedTrackId,
-        });
-
-        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
-        commit("CLEAR_COMMANDS");
-        dispatch("RENDER");
-      },
-    ),
   },
 
   FETCH_SING_FRAME_VOLUME: {
@@ -2584,6 +2520,143 @@ export const singingCommandStore = transformCommandStore(
 
         dispatch("RENDER");
       },
+    },
+
+    COMMAND_IMPORT_TRACKS: {
+      mutation(draft, { tpqn, tempos, timeSignatures, tracks }) {
+        singingStore.mutations.SET_TPQN(draft, { tpqn });
+        singingStore.mutations.SET_TEMPOS(draft, { tempos });
+        singingStore.mutations.SET_TIME_SIGNATURES(draft, { timeSignatures });
+        for (const { track, trackId, overwrite } of tracks) {
+          if (overwrite) {
+            singingStore.mutations.SET_TRACK(draft, { track, trackId });
+          } else {
+            singingStore.mutations.REGISTER_TRACK(draft, { track, trackId });
+          }
+        }
+      },
+      async action(
+        { state, commit, dispatch },
+        { tpqn, tempos, timeSignatures, tracks },
+      ) {
+        const payload: {
+          track: Track;
+          trackId: TrackId;
+          overwrite: boolean;
+        }[] = [];
+        for (const [i, track] of tracks.entries()) {
+          if (!isValidTrack(track)) {
+            throw new Error("The track is invalid.");
+          }
+          // 空のプロジェクトならトラックを上書きする
+          if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
+            payload.push({
+              track,
+              trackId: state.selectedTrackId,
+              overwrite: true,
+            });
+          } else {
+            const { trackId } = await dispatch("CREATE_TRACK");
+            payload.push({ track, trackId, overwrite: false });
+          }
+        }
+
+        commit("COMMAND_IMPORT_TRACKS", {
+          tpqn,
+          tempos,
+          timeSignatures,
+          tracks: payload,
+        });
+
+        dispatch("RENDER");
+      },
+    },
+
+    COMMAND_IMPORT_UTAFORMATIX_PROJECT: {
+      action: createUILockAction(
+        async ({ state, dispatch }, { project, trackIndexes }) => {
+          const { tempos, timeSignatures, tracks, tpqn } =
+            ufProjectToVoicevox(project);
+
+          if (tempos.length > 1) {
+            logger.warn("Multiple tempos are not supported.");
+          }
+          if (timeSignatures.length > 1) {
+            logger.warn("Multiple time signatures are not supported.");
+          }
+
+          tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+          timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
+
+          if (tpqn !== state.tpqn) {
+            throw new Error("TPQN does not match. Must be converted.");
+          }
+
+          const selectedTrack = getOrThrow(state.tracks, state.selectedTrackId);
+
+          const filteredTracks = trackIndexes.map((trackIndex) => {
+            const track = tracks[trackIndex];
+            if (!track) {
+              throw new Error("Track not found.");
+            }
+            return {
+              ...toRaw(selectedTrack),
+              notes: track.notes.map((note) => ({
+                ...note,
+                id: NoteId(crypto.randomUUID()),
+              })),
+            };
+          });
+
+          await dispatch("COMMAND_IMPORT_TRACKS", {
+            tpqn,
+            tempos,
+            timeSignatures,
+            tracks: filteredTracks,
+          });
+
+          dispatch("RENDER");
+        },
+      ),
+    },
+
+    COMMAND_IMPORT_VOICEVOX_PROJECT: {
+      action: createUILockAction(
+        async ({ state, dispatch }, { project, trackIndexes }) => {
+          const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
+            project.song;
+
+          tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+          timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
+
+          if (tpqn !== state.tpqn) {
+            throw new Error("TPQN does not match. Must be converted.");
+          }
+
+          const filteredTracks = trackIndexes.map((trackIndex) => {
+            const track = tracks[trackOrder[trackIndex]];
+            if (!track) {
+              throw new Error("Track not found.");
+            }
+            return {
+              ...toRaw(track),
+              notes: track.notes.map((note) => ({
+                ...note,
+                id: NoteId(crypto.randomUUID()),
+              })),
+            };
+          });
+
+          await dispatch("COMMAND_IMPORT_TRACKS", {
+            tpqn,
+            tempos,
+            timeSignatures,
+            tracks: filteredTracks,
+          });
+
+          dispatch("RENDER");
+        },
+      ),
     },
   }),
   "song",
