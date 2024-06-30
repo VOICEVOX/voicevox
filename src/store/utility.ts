@@ -11,6 +11,7 @@ import {
 import { AccentPhrase, Mora } from "@/openapi";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
+export const DEFAULT_PROJECT_NAME = "Untitled";
 
 export const formatCharacterStyleName = (
   characterName: string,
@@ -120,7 +121,7 @@ export const replaceTagIdToTagString = {
   styleName: "スタイル",
   text: "テキスト",
   date: "日付",
-  projectName: "プロジェクトファイル名",
+  projectName: "プロジェクト名",
 };
 const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
   replaceTagIdToTagString,

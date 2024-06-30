@@ -23,6 +23,7 @@ import {
   formatCharacterStyleName,
   TuningTranscription,
   filterCharacterInfosByStyleType,
+  DEFAULT_PROJECT_NAME,
 } from "./utility";
 import { createPartialStore } from "./vuex";
 import { determineNextPresetKey } from "./preset";
@@ -1195,7 +1196,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const defaultFileBaseName = sanitizeFileName(headTailItemText);
 
-      return defaultFileBaseName === "" ? "Untitled" : defaultFileBaseName;
+      return defaultFileBaseName === ""
+        ? DEFAULT_PROJECT_NAME
+        : defaultFileBaseName;
     },
   },
 
@@ -1220,9 +1223,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       if (style == undefined) throw new Error("assert style != undefined");
 
       const styleName = style.styleName || DEFAULT_STYLE_NAME;
-
-      const projectName = getters.PROJECT_NAME ?? "";
-
+      const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
       return buildAudioFileNameFromRawData(fileNamePattern, {
         characterName: character.metas.speakerName,
         index,
