@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -79,6 +79,18 @@ export interface Preset {
      * @memberof Preset
      */
     postPhonemeLength: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof Preset
+     */
+    pauseLength?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof Preset
+     */
+    pauseLengthScale?: number;
 }
 
 /**
@@ -120,6 +132,8 @@ export function PresetFromJSONTyped(json: any, ignoreDiscriminator: boolean): Pr
         'volumeScale': json['volumeScale'],
         'prePhonemeLength': json['prePhonemeLength'],
         'postPhonemeLength': json['postPhonemeLength'],
+        'pauseLength': !exists(json, 'pauseLength') ? undefined : json['pauseLength'],
+        'pauseLengthScale': !exists(json, 'pauseLengthScale') ? undefined : json['pauseLengthScale'],
     };
 }
 
@@ -142,6 +156,8 @@ export function PresetToJSON(value?: Preset | null): any {
         'volumeScale': value.volumeScale,
         'prePhonemeLength': value.prePhonemeLength,
         'postPhonemeLength': value.postPhonemeLength,
+        'pauseLength': value.pauseLength,
+        'pauseLengthScale': value.pauseLengthScale,
     };
 }
 

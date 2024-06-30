@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -79,6 +79,12 @@ export interface SupportedFeatures {
      * @memberof SupportedFeatures
      */
     manageLibrary?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof SupportedFeatures
+     */
+    returnResourceUrl?: boolean;
 }
 
 /**
@@ -118,6 +124,7 @@ export function SupportedFeaturesFromJSONTyped(json: any, ignoreDiscriminator: b
         'synthesisMorphing': json['synthesis_morphing'],
         'sing': !exists(json, 'sing') ? undefined : json['sing'],
         'manageLibrary': !exists(json, 'manage_library') ? undefined : json['manage_library'],
+        'returnResourceUrl': !exists(json, 'return_resource_url') ? undefined : json['return_resource_url'],
     };
 }
 
@@ -140,6 +147,7 @@ export function SupportedFeaturesToJSON(value?: SupportedFeatures | null): any {
         'synthesis_morphing': value.synthesisMorphing,
         'sing': value.sing,
         'manage_library': value.manageLibrary,
+        'return_resource_url': value.returnResourceUrl,
     };
 }
 
