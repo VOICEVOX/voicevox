@@ -1,6 +1,6 @@
 import path from "path";
 import { Platform } from "quasar";
-import { diffArrays } from "diff";
+import * as diff from "fast-array-diff";
 import {
   CharacterInfo,
   StyleInfo,
@@ -216,8 +216,7 @@ function skipMemoText(targettext: string): string {
 }
 
 /**
- * 2つのアクセント句配列を比べて同じだと思われるモーラの調整結果を転写し
- * 変更前のアクセント句の調整結果を変更後のアクセント句に保持する。
+ * 調整したモーラのパラメーターがリセットされるのを防ぐ
  *
  * <例>
  * 「こんにちは」 -> 「こんばんは」と変更した場合、[]に囲まれる部分で変更前のモーラが転写される。
@@ -231,81 +230,35 @@ export class TuningTranscription {
     this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
   }
 
-  private createFlatArray<T, K extends keyof T>(
-    collection: T[],
-    key: K,
-  ): T[K] extends (infer U)[] ? U[] : T[K][] {
-    const result = [];
-    for (const element of collection) {
-      const value = element[key];
-      if (Array.isArray(value)) {
-        result.push(...value);
-      } else {
-        result.push(value);
-      }
-    }
-    return result as T[K] extends (infer U)[] ? U[] : T[K][];
-  }
-
   /**
-   * 変更前の配列を操作してpatchMora配列を作る。
-   *
-   * <例> (Ｕはundefined）
-   * 変更前 [ ズ, ン, ダ, モ, ン, ナ, ノ, ダ ]
-   * 変更後 [ ボ, ク, ズ, ン, ダ, ナ, ノ, デ, ス ]
-   *
-   * 再利用される文字列とundefinedで構成されたデータを作る。
-   *       [ Ｕ, Ｕ, ズ, ン, ダ, ナ, ノ, Ｕ, Ｕ ]
-   *
-   * 実際には"ズ"などの文字列部分は{text: "ズ"...}のようなデータ構造になっている。
-   * [ Ｕ, Ｕ, {text: "ズ"...}, {text: "ン"...}, {text: "ダ"...}, {text: "ナ"...}, {text: "ノ"...}, Ｕ, Ｕ ]
+   * 変更前と変更後のAccentPhraseに存在するモーラの差分を取得し
+   * 変更内容を適用したモーラの配列を返す
    */
-  private createDiffPatch() {
+  private createTranscriptionSource() {
     const before = structuredClone(this.beforeAccent);
     const after = structuredClone(this.afterAccent);
+    const beforeFlatArray = before.flatMap((accent) => accent.moras);
+    const afterFlatArray = after.flatMap((accent) => accent.moras);
 
-    const beforeFlatArray = this.createFlatArray(before, "moras");
-    const afterFlatArray = this.createFlatArray(after, "moras");
-    const diffed = diffArrays(
-      this.createFlatArray(beforeFlatArray, "text"),
-      this.createFlatArray(afterFlatArray, "text"),
+    // beforeFlatArrayとafterFlatArrayの特定の要素が一致するかどうかを判定する関数
+    const matchRequirements = (beforeMora: Mora, afterMora: Mora) =>
+      beforeMora?.text === afterMora?.text;
+
+    const morasDiff = diff.getPatch(
+      beforeFlatArray,
+      afterFlatArray,
+      matchRequirements,
     );
 
-    // FIXME: beforeFlatArrayを破壊的に変更しなくても良いようにしてasを不要にする
-    let currentTextIndex = 0;
-    for (const diff of diffed) {
-      if (diff.removed) {
-        beforeFlatArray.splice(currentTextIndex, diff.count);
-      } else if (diff.added) {
-        diff.value.forEach(() => {
-          beforeFlatArray.splice(
-            currentTextIndex,
-            0,
-            undefined as never as Mora,
-          );
-          currentTextIndex++;
-        });
-      } else {
-        currentTextIndex += diff.value.length;
-      }
-    }
-    return beforeFlatArray as (Mora | undefined)[];
+    return diff.applyPatch(beforeFlatArray, morasDiff);
   }
 
   /**
-   * moraPatchとafterAccentを比較し、textが一致するモーラを転写する。
-   *
-   *  <例> (「||」は等号記号を表す)
-   * 「こんにちは」 -> 「こんばんは」 とテキストを変更した場合、以下の例のように比較する。
-   *
-   *           moraPatch = [ {text: "コ"...}, {text: "ン"...}, undefined      , undefined      , {text: "ハ"...} ]
-   *                              ||                ||                                                ||
-   * after[...]["moras"] = [ {text: "コ"...}, {text: "ン"...}, {text: "バ"...}, {text: "ン"...}, {text: "ハ"...} ]
-   *
-   * あとは一致したモーラを転写するだけ。
-   *
+   * transcriptionSourceのモーラ配列のうち、テキストが一致するものを変更後のAccentPhraseの各モーラに適用する
    */
-  private mergeAccentPhrases(moraPatch: (Mora | undefined)[]): AccentPhrase[] {
+  private applyTranscriptionSource(
+    transcriptionSource: Mora[],
+  ): AccentPhrase[] {
     const after: AccentPhrase[] = structuredClone(this.afterAccent);
     let moraPatchIndex = 0;
 
@@ -316,18 +269,12 @@ export class TuningTranscription {
         moraIndex < after[accentIndex]["moras"].length;
         moraIndex++
       ) {
-        // undefinedのとき、何もせず次のモーラへ移動
-        if (moraPatch[moraPatchIndex] == undefined) {
-          moraPatchIndex++;
-          continue;
-        }
         if (
           after[accentIndex]["moras"][moraIndex].text ===
-          moraPatch[moraPatchIndex]?.text
+          transcriptionSource[moraPatchIndex]?.text
         ) {
-          after[accentIndex]["moras"][moraIndex] = moraPatch[
-            moraPatchIndex
-          ] as Mora;
+          after[accentIndex]["moras"][moraIndex] =
+            transcriptionSource[moraPatchIndex];
         }
         moraPatchIndex++;
       }
@@ -337,8 +284,8 @@ export class TuningTranscription {
   }
 
   transcribe() {
-    const moraPatch = this.createDiffPatch();
-    return this.mergeAccentPhrases(moraPatch as never);
+    const transcriptionSource = this.createTranscriptionSource();
+    return this.applyTranscriptionSource(transcriptionSource);
   }
 }
 
@@ -430,42 +377,6 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
     EMPTY: "空白",
   };
   return tag2NameObj[tag];
-};
-
-export const createKanaRegex = (includeSeparation?: boolean): RegExp => {
-  // 以下の文字のみで構成される場合、「読み仮名」としてこれを処理する
-  // includeSeparationがtrueの時は、読点(U+3001)とクエスチョン(U+FF1F)も含む
-  //  * ひらがな(U+3041~U+3094)
-  //  * カタカナ(U+30A1~U+30F4)
-  //  * 全角長音(U+30FC)
-  if (includeSeparation) {
-    return /^[\u3041-\u3094\u30A1-\u30F4\u30FC\u3001\uFF1F]+$/;
-  }
-  return /^[\u3041-\u3094\u30A1-\u30F4\u30FC]+$/;
-};
-
-export const convertHiraToKana = (text: string): string => {
-  return text.replace(/[\u3041-\u3094]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) + 0x60);
-  });
-};
-
-export const convertLongVowel = (text: string): string => {
-  return text
-    .replace(/(?<=[アカサタナハマヤラワャァガザダバパ]ー*)ー/g, "ア")
-    .replace(/(?<=[イキシチニヒミリィギジヂビピ]ー*)ー/g, "イ")
-    .replace(/(?<=[ウクスツヌフムユルュゥヴグズヅブプ]ー*)ー/g, "ウ")
-    .replace(/(?<=[エケセテネヘメレェゲゼデベペ]ー*)ー/g, "エ")
-    .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ")
-    .replace(/(?<=[ン]ー*)ー/g, "ン")
-    .replace(/(?<=[ッ]ー*)ー/g, "ッ")
-    .replace(/(?<=[あかさたなはまやらわゃぁがざだばぱ]ー*)ー/g, "あ")
-    .replace(/(?<=[いきしちにひみりぃぎじぢびぴ]ー*)ー/g, "い")
-    .replace(/(?<=[うくすつぬふむゆるゅぅぐずづぶぷ]ー*)ー/g, "う")
-    .replace(/(?<=[えけせてねへめれぇげぜでべぺ]ー*)ー/g, "え")
-    .replace(/(?<=[おこそとのほもよろをょぉごぞどぼぽ]ー*)ー/g, "お")
-    .replace(/(?<=[ん]ー*)ー/g, "ん")
-    .replace(/(?<=[っ]ー*)ー/g, "っ");
 };
 
 // based on https://github.com/BBWeb/path-browserify/blob/win-version/index.js

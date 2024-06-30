@@ -36,7 +36,7 @@
           label="閉じる"
           unelevated
           color="surface"
-          text-color="display"
+          textColor="display"
           class="q-mt-sm"
           @click="closeUpdateNotificationDialog()"
         />
@@ -45,10 +45,10 @@
           label="このバージョンをスキップ"
           unelevated
           color="surface"
-          text-color="display"
+          textColor="display"
           class="q-mt-sm"
           @click="
-            onSkipThisVersionClick(props.latestVersion);
+            emit('skipThisVersionClick', props.latestVersion);
             closeUpdateNotificationDialog();
           "
         />
@@ -57,7 +57,7 @@
           label="公式サイトを開く"
           unelevated
           color="primary"
-          text-color="display-on-primary"
+          textColor="display-on-primary"
           class="q-mt-sm"
           @click="
             openOfficialWebsite();
@@ -74,13 +74,18 @@ import { computed } from "vue";
 import { UpdateInfo } from "@/type/preload";
 
 const props = defineProps<{
+  /** ダイアログの表示状態 */
   modelValue: boolean;
+  /** 公開されている最新のバージョン */
   latestVersion: string;
+  /** 表示するアップデート情報 */
   newUpdateInfos: UpdateInfo[];
-  onSkipThisVersionClick: (version: string) => void;
 }>();
 const emit = defineEmits<{
+  /** ダイアログの表示状態が変わるときに呼ばれる */
   (e: "update:modelValue", value: boolean): void;
+  /** スキップするときに呼ばれる */
+  (e: "skipThisVersionClick", version: string): void;
 }>();
 
 const modelValueComputed = computed({

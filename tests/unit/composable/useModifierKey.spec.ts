@@ -20,29 +20,28 @@ describe("useModifierKey", () => {
 
   it("Shiftキーが押されている状態になる", async () => {
     const wrapper = mountWrapper(useShiftKey);
+    const elem = wrapper.vm.elem as HTMLDivElement;
 
     // 押す
-    wrapper.vm.elem.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Shift" }),
-    );
+    elem.dispatchEvent(new KeyboardEvent("keydown", { key: "Shift" }));
     expect(wrapper.vm.isActive).toBe(true);
 
     // 離す
-    wrapper.vm.elem.dispatchEvent(new KeyboardEvent("keyup", { key: "Shift" }));
+    elem.dispatchEvent(new KeyboardEvent("keyup", { key: "Shift" }));
     expect(wrapper.vm.isActive).toBe(false);
 
     // もう一度押したあとblurさせる
-    wrapper.vm.elem.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Shift" }),
-    );
-    wrapper.vm.elem.dispatchEvent(new Event("blur"));
+    elem.dispatchEvent(new KeyboardEvent("keydown", { key: "Shift" }));
+    elem.dispatchEvent(new Event("blur"));
     expect(wrapper.vm.isActive).toBe(false);
   });
 
   it("isMacに従ったキーが押されている状態になる", async () => {
     const wrapper = mountWrapper(useCommandOrControlKey);
+    const elem = wrapper.vm.elem as HTMLDivElement;
+
     const key = isMac ? "Meta" : "Control";
-    wrapper.vm.elem.dispatchEvent(new KeyboardEvent("keydown", { key }));
+    elem.dispatchEvent(new KeyboardEvent("keydown", { key }));
     expect(wrapper.vm.isActive).toBe(true);
   });
 });

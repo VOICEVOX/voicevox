@@ -32,12 +32,14 @@ import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { engineStoreState, engineStore } from "./engine";
+import { filterCharacterInfosByStyleType } from "./utility";
 import {
   DefaultStyleId,
   EngineId,
   SpeakerId,
   StyleId,
   Voice,
+  isProduction,
 } from "@/type/preload";
 
 export const storeKey: InjectionKey<
@@ -124,10 +126,16 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   },
 
   GET_ALL_VOICES: {
-    getter(state) {
-      const flattenCharacters = Object.values(state.characterInfos).flatMap(
+    getter: (state) => (styleType: "all" | "singerLike" | "talk") => {
+      let flattenCharacters = Object.values(state.characterInfos).flatMap(
         (characterInfos) => characterInfos,
       );
+      if (styleType !== "all") {
+        flattenCharacters = filterCharacterInfosByStyleType(
+          flattenCharacters,
+          styleType,
+        );
+      }
       const flattenVoices: Voice[] = flattenCharacters.flatMap((c) =>
         c.metas.styles.map((s) => ({
           engineId: EngineId(s.engineId),
@@ -401,7 +409,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...singingStore.actions,
     ...singingCommandStore.actions,
   },
-  strict: process.env.NODE_ENV !== "production",
+  strict: !isProduction,
 });
 
 export const useStore = (): Store<

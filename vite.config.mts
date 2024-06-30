@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 import path from "path";
 import { rm } from "fs/promises";
-import treeKill from "tree-kill";
+import { fileURLToPath } from "url";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -10,6 +10,9 @@ import checker from "vite-plugin-checker";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
@@ -58,25 +61,17 @@ export default defineConfig((options) => {
       },
     },
     test: {
-      include: [
-        path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
-      ],
+      include: ["../tests/unit/**/*.spec.ts"],
       environment: "happy-dom",
-      environmentMatchGlobs: [
-        [
-          path
-            .resolve(__dirname, "tests/unit/backend/electron/**/*.spec.ts")
-            .replace(/\\/g, "/"),
-          "node",
-        ],
-      ],
       globals: true,
     },
 
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),
-      nodePolyfills(),
+      nodePolyfills({
+        include: ["path"],
+      }),
       options.mode !== "test" &&
         checker({
           overlay: false,
@@ -87,31 +82,41 @@ export default defineConfig((options) => {
         }),
       isElectron && [
         cleanDistPlugin(),
-        electron({
-          entry: [
-            "./src/backend/electron/main.ts",
-            "./src/backend/electron/preload.ts",
-          ],
-          // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
-          onstart: ({ startup }) => {
-            // @ts-expect-error vite-electron-pluginはprocess.electronAppにelectronのプロセスを格納している。
-            //   しかし、型定義はないので、ts-expect-errorで回避する。
-            const pid = process.electronApp?.pid;
-            if (pid) {
-              treeKill(pid);
-            }
-            if (options.mode !== "test") {
-              startup([".", "--no-sandbox"]);
-            }
-          },
-          vite: {
-            plugins: [tsconfigPaths({ root: __dirname })],
-            build: {
-              outDir: path.resolve(__dirname, "dist"),
-              sourcemap,
+        electron([
+          {
+            entry: "./src/backend/electron/main.ts",
+            // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
+            onstart: ({ startup }) => {
+              if (options.mode !== "test") {
+                startup([".", "--no-sandbox"]);
+              }
+            },
+            vite: {
+              plugins: [tsconfigPaths({ root: __dirname })],
+              build: {
+                outDir: path.resolve(__dirname, "dist"),
+                sourcemap,
+              },
             },
           },
-        }),
+          {
+            // ref: https://electron-vite.github.io/guide/preload-not-split.html
+            entry: "./src/backend/electron/preload.ts",
+            onstart({ reload }) {
+              reload();
+            },
+            vite: {
+              plugins: [tsconfigPaths({ root: __dirname })],
+              build: {
+                outDir: path.resolve(__dirname, "dist"),
+                sourcemap,
+                rollupOptions: {
+                  output: { inlineDynamicImports: true },
+                },
+              },
+            },
+          },
+        ]),
       ],
       isBrowser && injectBrowserPreloadPlugin(),
     ],
@@ -135,8 +140,8 @@ const injectBrowserPreloadPlugin = (): Plugin => {
   return {
     name: "inject-browser-preload",
     transformIndexHtml: {
-      enforce: "pre" as const,
-      transform: (html: string) =>
+      order: "pre",
+      handler: (html: string) =>
         html.replace(
           "<!-- %BROWSER_PRELOAD% -->",
           `<script type="module" src="./backend/browser/preload.ts"></script>`,

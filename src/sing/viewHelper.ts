@@ -120,87 +120,18 @@ export const getStyleDescription = (style: StyleInfo) => {
   return description.join("・");
 };
 
-interface AreaInfo {
-  readonly id: string;
-}
-
-type ClickInfo<T extends AreaInfo> = {
-  readonly clickCount: number;
-  readonly areaInfo: T;
-};
-
-type DoubleClickInfo<T extends AreaInfo> = {
-  readonly clickInfos: [ClickInfo<T>, ClickInfo<T>];
-};
-
-export class DoubleClickDetector<T extends AreaInfo> {
-  private clickInfos: ClickInfo<T>[] = [];
-
-  recordClick(clickCount: number, areaInfo: T) {
-    if (clickCount === 1) {
-      this.clickInfos = [];
-    }
-    this.clickInfos.push({ clickCount, areaInfo });
-  }
-
-  detect(): DoubleClickInfo<T> | undefined {
-    if (this.clickInfos.length < 2) {
-      return undefined;
-    }
-    const clickInfo1 = this.clickInfos[this.clickInfos.length - 2];
-    const clickInfo2 = this.clickInfos[this.clickInfos.length - 1];
-    if (
-      clickInfo1.clickCount === 1 &&
-      clickInfo2.clickCount === 2 &&
-      clickInfo1.areaInfo.id === clickInfo2.areaInfo.id
-    ) {
-      return { clickInfos: [clickInfo1, clickInfo2] };
-    }
-    return undefined;
-  }
-}
-
-export class NoteAreaInfo implements AreaInfo {
-  readonly type: "note";
-  readonly id: string;
-  readonly noteId: string;
-
-  constructor(noteId: string) {
-    this.type = "note";
-    this.id = `NOTE-${noteId}`;
-    this.noteId = noteId;
-  }
-}
-
-export class GridAreaInfo implements AreaInfo {
-  readonly type: "grid";
-  readonly id: string;
-
-  constructor() {
-    this.type = "grid";
-    this.id = "GRID";
-  }
-}
-
-export type FramewiseDataSection = {
-  readonly startFrame: number;
-  readonly frameRate: number;
+export type PitchData = {
+  readonly ticksArray: number[];
   readonly data: number[];
 };
 
-const framewiseDataSectionHashSchema = z
-  .string()
-  .brand<"FramewiseDataSectionHash">();
+const pitchDataHashSchema = z.string().brand<"PitchDataHash">();
 
-export type FramewiseDataSectionHash = z.infer<
-  typeof framewiseDataSectionHashSchema
->;
+export type PitchDataHash = z.infer<typeof pitchDataHashSchema>;
 
-export async function calculateFramewiseDataSectionHash(
-  dataSection: FramewiseDataSection,
-) {
-  const hash = await calculateHash(dataSection);
-  return framewiseDataSectionHashSchema.parse(hash);
+export async function calculatePitchDataHash(pitchData: PitchData) {
+  const hash = await calculateHash(pitchData);
+  return pitchDataHashSchema.parse(hash);
 }
 
 export type MouseButton = "LEFT_BUTTON" | "RIGHT_BUTTON" | "OTHER_BUTTON";

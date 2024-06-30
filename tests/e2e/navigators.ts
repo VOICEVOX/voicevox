@@ -56,9 +56,9 @@ export async function navigateToHelpDialog(page: Page) {
 }
 
 /**
- * オプションダイアログの表示まで移動
+ * 設定ダイアログの表示まで移動
  */
-export async function navigateToOptionDialog(page: Page) {
+export async function navigateToSettingDialog(page: Page) {
   await navigateToMain(page);
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "設定" }).click();

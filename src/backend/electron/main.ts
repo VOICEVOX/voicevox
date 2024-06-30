@@ -114,6 +114,21 @@ let win: BrowserWindow;
 
 process.on("uncaughtException", (error) => {
   log.error(error);
+
+  if (isDevelopment) {
+    app.exit(1);
+  } else {
+    const { message, name } = error;
+    let detailedMessage = "";
+    detailedMessage += `メインプロセスで原因不明のエラーが発生しました。\n`;
+    detailedMessage += `エラー名: ${name}\n`;
+    detailedMessage += `メッセージ: ${message}\n`;
+    if (error.stack) {
+      detailedMessage += `スタックトレース: \n${error.stack}`;
+    }
+
+    dialog.showErrorBox("エラー", detailedMessage);
+  }
 });
 process.on("unhandledRejection", (reason) => {
   log.error(reason);
@@ -385,9 +400,6 @@ async function createWindow() {
     backgroundColor,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: false, // TODO: 外しても問題ないか検証して外す
     },
     icon: path.join(__static, "icon.png"),
   });
@@ -962,8 +974,8 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
 ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
   win.hide(); // FIXME: ダミーページ表示のほうが良い
 
-  // FIXME: 同じようなURLだとスーパーリロードされないことがあるので一度ダミーページを読み込む
-  await win.loadURL(firstUrl + "dummypage");
+  // 一旦適当なURLに飛ばしてページをアンロードする
+  await win.loadURL("about:blank");
 
   log.info("Checking ENGINE status before reload app");
   const engineCleanupResult = cleanupEngines();

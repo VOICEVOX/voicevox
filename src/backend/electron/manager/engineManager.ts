@@ -420,10 +420,17 @@ export class EngineManager {
       return undefined;
     }
 
-    return new Promise<void>((resolve, reject) => {
-      log.info(
-        `ENGINE ${engineId}: Killing process (PID=${engineProcess.pid})`,
+    const enginePid = engineProcess.pid;
+    if (enginePid == undefined) {
+      // エンジン起動済みの場合来ないはず
+      // 万が一の場合はエンジン停止済みとみなす
+      log.error(
+        `ENGINE ${engineId}: Process PID is undefined, assuming closed`,
       );
+      return undefined;
+    }
+    return new Promise<void>((resolve, reject) => {
+      log.info(`ENGINE ${engineId}: Killing process (PID=${enginePid})`);
 
       // エラーダイアログを抑制
       engineProcessContainer.willQuitEngine = true;
@@ -434,12 +441,12 @@ export class EngineManager {
         resolve();
       });
 
-      try {
-        engineProcess.pid != undefined && treeKill(engineProcess.pid);
-      } catch (error: unknown) {
-        log.error(`ENGINE ${engineId}: Error during killing process`);
-        reject(error);
-      }
+      treeKill(enginePid, (error) => {
+        if (error != undefined) {
+          log.error(`ENGINE ${engineId}: Error during killing process`);
+          reject(error);
+        }
+      });
     });
   }
 

@@ -7,8 +7,6 @@ const fs = require("fs");
 const { spawnSync } = require("child_process");
 
 (async () => {
-  // node-fetchはESModuleなので、import()で読み込む
-  const { default: fetch } = await import("node-fetch");
   const distPath = path.resolve(__dirname, "vendored", "7z");
   let url;
   let filesToExtract;

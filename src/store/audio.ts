@@ -1,5 +1,4 @@
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
 import Encoding from "encoding-japanese";
 import { createUILockAction, withProgress } from "./ui";
 import {
@@ -16,9 +15,6 @@ import {
 import {
   buildAudioFileNameFromRawData,
   isAccentPhrasesTextDifferent,
-  convertHiraToKana,
-  convertLongVowel,
-  createKanaRegex,
   currentDateString,
   extractExportText,
   extractYomiText,
@@ -38,6 +34,11 @@ import {
 } from "./audioGenerate";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
 import {
+  convertHiraToKana,
+  convertLongVowel,
+  createKanaRegex,
+} from "@/domain/japanese";
+import {
   AudioKey,
   CharacterInfo,
   DefaultStyleId,
@@ -53,11 +54,11 @@ import {
   Voice,
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
-import { base64ImageToUri } from "@/helpers/imageHelper";
+import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 
 function generateAudioKey() {
-  return AudioKey(uuidv4());
+  return AudioKey(crypto.randomUUID());
 }
 
 function parseTextFile(
@@ -278,38 +279,38 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  /**
+   * CharacterInfoをエンジンから取得する。
+   * GETクエリとBASE64のデコードがそこそこ重いため並行処理をしている。
+   */
   LOAD_CHARACTER: {
     action: createUILockAction(
       async ({ commit, dispatch, state }, { engineId }) => {
-        const { speakers, singers } = await dispatch(
-          "INSTANTIATE_ENGINE_CONNECTOR",
-          {
-            engineId,
-          },
-        )
-          .then(async (instance) => {
-            return {
-              speakers: await instance.invoke("speakersSpeakersGet")({}),
-              singers: state.engineManifests[engineId].supportedFeatures.sing
-                ? await instance.invoke("singersSingersGet")({})
-                : [],
-            };
-          })
-          .catch((error) => {
-            window.backend.logError(error, `Failed to get speakers.`);
-            throw error;
-          });
-        const base64ToUrl = function (base64: string, type: string) {
-          const buffer = Buffer.from(base64, "base64");
-          const iconBlob = new Blob([buffer.buffer], { type: type });
-          return URL.createObjectURL(iconBlob);
+        const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        });
+
+        // リソースをURLで取得するかどうか。falseの場合はbase64文字列。
+        const useResourceUrl =
+          state.engineManifests[engineId].supportedFeatures.returnResourceUrl ??
+          false;
+        const getResourceSrc = async function (
+          resource: string,
+          type: "image" | "wav",
+        ) {
+          return useResourceUrl
+            ? resource
+            : type == "image"
+              ? await base64ImageToUri(resource)
+              : await base64ToUri(resource, "audio/wav");
         };
-        const getStyles = function (
+
+        const getStyles = async function (
           speaker: Speaker,
           speakerInfo: SpeakerInfo,
         ) {
           const styles: StyleInfo[] = new Array(speaker.styles.length);
-          speaker.styles.forEach((style, i) => {
+          for (const [i, style] of speaker.styles.entries()) {
             const styleInfo = speakerInfo.styleInfos.find(
               (styleInfo) => style.id === styleInfo.id,
             );
@@ -317,72 +318,123 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               throw new Error(
                 `Not found the style id "${style.id}" of "${speaker.name}". `,
               );
-            const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
-              return base64ToUrl(voiceSample, "audio/wav");
-            });
+            const voiceSamples = await Promise.all(
+              styleInfo.voiceSamples.map((voiceSample) =>
+                getResourceSrc(voiceSample, "wav"),
+              ),
+            );
             styles[i] = {
               styleName: style.name,
               styleId: StyleId(style.id),
               styleType: style.type,
               engineId,
-              iconPath: base64ImageToUri(styleInfo.icon),
+              iconPath: await getResourceSrc(styleInfo.icon, "image"),
               portraitPath:
-                styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
+                styleInfo.portrait &&
+                (await getResourceSrc(styleInfo.portrait, "image")),
               voiceSamplePaths: voiceSamples,
             };
-          });
+          }
           return styles;
         };
-        const getSpeakerInfo = async function (speaker: Speaker) {
+        const getCharacterInfo = async (
+          speaker: Speaker | undefined,
+          singer: Speaker | undefined,
+        ) => {
           // 同じIDの歌手がいる場合は歌手情報を取得し、スタイルをマージする
-          // FIXME: ソングのみのキャラも考慮する
-          const singer = singers.find(
-            (singer) => singer.speakerUuid === speaker.speakerUuid,
-          );
-          const { speakerInfo, singerInfo } = await dispatch(
-            "INSTANTIATE_ENGINE_CONNECTOR",
-            {
-              engineId,
-            },
-          )
-            .then(async (instance) => {
-              const speakerInfo = await instance.invoke(
-                "speakerInfoSpeakerInfoGet",
-              )({
+          let speakerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
+          let speakerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
+          if (speaker != undefined) {
+            speakerInfoPromise = instance
+              .invoke("speakerInfoSpeakerInfoGet")({
                 speakerUuid: speaker.speakerUuid,
+                ...(useResourceUrl && { resourceFormat: "url" }),
+              })
+              .catch((error) => {
+                window.backend.logError(error, `Failed to get speakerInfo.`);
+                throw error;
               });
-              let singerInfo: SpeakerInfo | undefined = undefined;
-              if (singer) {
-                singerInfo = await instance.invoke("singerInfoSingerInfoGet")({
-                  speakerUuid: singer.speakerUuid,
-                });
-              }
-              return { speakerInfo, singerInfo };
-            })
-            .catch((error) => {
-              window.backend.logError(error, `Failed to get speakers.`);
-              throw error;
-            });
-          const styles = getStyles(speaker, speakerInfo);
-          if (singer && singerInfo) {
-            styles.push(...getStyles(singer, singerInfo));
+            speakerStylePromise = speakerInfoPromise.then((speakerInfo) =>
+              getStyles(speaker, speakerInfo),
+            );
           }
+
+          let singerInfoPromise: Promise<SpeakerInfo> | undefined = undefined;
+          let singerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
+          if (singer != undefined) {
+            singerInfoPromise = instance
+              .invoke("singerInfoSingerInfoGet")({
+                speakerUuid: singer.speakerUuid,
+                ...(useResourceUrl && { resourceFormat: "url" }),
+              })
+              .catch((error) => {
+                window.backend.logError(error, `Failed to get singerInfo.`);
+                throw error;
+              });
+            singerStylePromise = singerInfoPromise.then((singerInfo) =>
+              getStyles(singer, singerInfo),
+            );
+          }
+
+          const baseSpeaker = speaker ?? singer;
+          if (baseSpeaker == undefined) {
+            throw new Error("assert baseSpeaker != undefined");
+          }
+          const baseCharacterInfo = await (speakerInfoPromise ??
+            singerInfoPromise);
+          if (baseCharacterInfo == undefined) {
+            throw new Error("assert baseSpeakerInfo != undefined");
+          }
+
+          const stylesPromise = Promise.all([
+            speakerStylePromise ?? [],
+            singerStylePromise ?? [],
+          ]).then((styles) => styles.flat());
+
           const characterInfo: CharacterInfo = {
-            portraitPath: base64ImageToUri(speakerInfo.portrait),
+            portraitPath: await getResourceSrc(
+              baseCharacterInfo.portrait,
+              "image",
+            ),
             metas: {
-              speakerUuid: SpeakerId(speaker.speakerUuid),
-              speakerName: speaker.name,
-              styles,
-              policy: speakerInfo.policy,
+              speakerUuid: SpeakerId(baseSpeaker.speakerUuid),
+              speakerName: baseSpeaker.name,
+              styles: await stylesPromise,
+              policy: baseCharacterInfo.policy,
             },
           };
           return characterInfo;
         };
-        const characterInfos: CharacterInfo[] = await Promise.all(
-          speakers.map(async (speaker) => {
-            return await getSpeakerInfo(speaker);
-          }),
+
+        const [speakers, singers] = await Promise.all([
+          instance.invoke("speakersSpeakersGet")({}),
+          state.engineManifests[engineId].supportedFeatures.sing
+            ? await instance.invoke("singersSingersGet")({})
+            : [],
+        ]).catch((error) => {
+          window.backend.logError(error, `Failed to get Speakers.`);
+          throw error;
+        });
+
+        // エンジン側の順番を保ってCharacterInfoを作る
+        const allUuids = new Set([
+          ...speakers.map((speaker) => speaker.speakerUuid),
+          ...singers.map((singer) => singer.speakerUuid),
+        ]);
+
+        const characterInfoPromises = Array.from(allUuids).map(
+          (speakerUuid) => {
+            const speaker = speakers.find(
+              (speaker) => speaker.speakerUuid === speakerUuid,
+            );
+            const singer = singers.find(
+              (singer) => singer.speakerUuid === speakerUuid,
+            );
+            return getCharacterInfo(speaker, singer);
+          },
         );
+
+        const characterInfos = await Promise.all(characterInfoPromises);
 
         commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
       },
@@ -639,7 +691,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const baseAudioItem = payload.baseAudioItem;
 
       const fetchQueryParams = {
-        text,
+        text: extractYomiText(text, {
+          enableMemoNotation: state.enableMemoNotation,
+          enableRubyNotation: state.enableRubyNotation,
+        }),
         engineId: voice.engineId,
         styleId: voice.styleId,
       };
