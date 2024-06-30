@@ -1,12 +1,12 @@
 <template>
-  <q-dialog
+  <QDialog
     v-model="modelValueComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="help-dialog transparent-backdrop"
   >
-    <q-layout container view="hHh Lpr lff">
+    <QLayout container view="hHh Lpr lff">
       <div class="grid">
         <div class="list-wrapper">
           <BaseScrollArea>
@@ -27,34 +27,34 @@
           </BaseScrollArea>
         </div>
 
-        <q-page-container>
-          <q-page>
-            <q-tab-panels v-model="selectedPageIndex">
-              <q-tab-panel
+        <QPageContainer>
+          <QPage>
+            <QTabPanels v-model="selectedPageIndex">
+              <QTabPanel
                 v-for="(page, pageIndex) of pagedata"
                 :key="pageIndex"
                 :name="pageIndex"
                 class="q-pa-none"
               >
                 <div v-if="page.type === 'item'" class="root">
-                  <q-header class="q-pa-sm">
-                    <q-toolbar>
-                      <q-toolbar-title class="text-display">
+                  <QHeader class="q-pa-sm">
+                    <QToolbar>
+                      <QToolbarTitle class="text-display">
                         ヘルプ / {{ page.parent ? page.parent + " / " : ""
                         }}{{ page.name }}
-                      </q-toolbar-title>
-                      <q-btn
+                      </QToolbarTitle>
+                      <QBtn
                         v-if="page.shouldShowOpenLogDirectoryButton"
                         unelevated
                         color="toolbar-button"
-                        text-color="toolbar-button-display"
+                        textColor="toolbar-button-display"
                         class="text-no-wrap text-bold q-mr-sm"
                         @click="openLogDirectory"
                       >
                         ログフォルダを開く
-                      </q-btn>
+                      </QBtn>
                       <!-- close button -->
-                      <q-btn
+                      <QBtn
                         round
                         flat
                         icon="close"
@@ -62,30 +62,32 @@
                         aria-label="ヘルプを閉じる"
                         @click="modelValueComputed = false"
                       />
-                    </q-toolbar>
-                  </q-header>
-                  <component :is="page.component" v-bind="page.props" />
+                    </QToolbar>
+                  </QHeader>
+                  <Component :is="page.component" v-bind="page.props" />
                 </div>
-              </q-tab-panel>
-            </q-tab-panels>
-          </q-page>
-        </q-page-container>
+              </QTabPanel>
+            </QTabPanels>
+          </QPage>
+        </QPageContainer>
       </div>
-    </q-layout>
-  </q-dialog>
+    </QLayout>
+  </QDialog>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, type Component } from "vue";
+import { computed, ref } from "vue";
+import type { Component } from "vue";
 import MarkdownView from "./HelpMarkdownViewSection.vue";
 import OssLicense from "./HelpOssLicenseSection.vue";
 import UpdateInfo from "./HelpUpdateInfoSection.vue";
 import LibraryPolicy from "./HelpLibraryPolicySection.vue";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
-import { UpdateInfo as UpdateInfoObject } from "@/type/preload";
+import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
+import { createLogger } from "@/domain/frontend/log";
 
 type PageItem = {
   type: "item";
@@ -101,14 +103,12 @@ type PageSeparator = {
 };
 type PageData = PageItem | PageSeparator;
 
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", val: boolean): void;
+}>();
 
 const modelValueComputed = computed({
   get: () => props.modelValue,
@@ -117,15 +117,20 @@ const modelValueComputed = computed({
 
 // エディタのアップデート確認
 const store = useStore();
+const { warn } = createLogger("HelpDialog");
 
 const updateInfos = ref<UpdateInfoObject[]>();
 store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
-const { isCheckingFinished, latestVersion } = useFetchNewUpdateInfos();
-
-const isUpdateAvailable = computed(() => {
-  return isCheckingFinished.value && latestVersion.value !== "";
-});
+if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
+  throw new Error(
+    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。",
+  );
+}
+const newUpdateResult = useFetchNewUpdateInfos(
+  () => window.backend.getAppInfos().then((obj) => obj.version), // アプリのバージョン
+  UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
+);
 
 // エディタのOSSライセンス取得
 const licenses = ref<Record<string, string>[]>();
@@ -138,7 +143,9 @@ const howToUse = ref<string>();
 store.dispatch("GET_HOW_TO_USE_TEXT").then((obj) => (howToUse.value = obj));
 
 const ossCommunityInfos = ref<string>();
-store.dispatch("GET_OSS_COMMUNITY_INFOS").then((obj) => (ossCommunityInfos.value = obj));
+store
+  .dispatch("GET_OSS_COMMUNITY_INFOS")
+  .then((obj) => (ossCommunityInfos.value = obj));
 
 const qAndA = ref<string>();
 store.dispatch("GET_Q_AND_A_TEXT").then((obj) => (qAndA.value = obj));
@@ -192,8 +199,15 @@ const pagedata = computed(() => {
       props: {
         downloadLink: import.meta.env.VITE_OFFICIAL_WEBSITE_URL,
         updateInfos: updateInfos.value,
-        isUpdateAvailable: isUpdateAvailable.value,
-        latestVersion: latestVersion.value,
+        ...(newUpdateResult.value.status == "updateAvailable"
+          ? {
+              isUpdateAvailable: true,
+              latestVersion: newUpdateResult.value.latestVersion,
+            }
+          : {
+              isUpdateAvailable: false,
+              latestVersion: undefined,
+            }),
       },
     },
     {
@@ -219,7 +233,7 @@ const pagedata = computed(() => {
     for (const id of store.getters.GET_SORTED_ENGINE_INFOS.map((m) => m.uuid)) {
       const manifest = store.state.engineManifests[id];
       if (!manifest) {
-        store.dispatch("LOG_WARN", `manifest not found: ${id}`);
+        warn(`manifest not found: ${id}`);
         continue;
       }
 
@@ -257,7 +271,7 @@ const pagedata = computed(() => {
             //       https://github.com/VOICEVOX/voicevox_engine/issues/476
             isUpdateAvailable: false,
           },
-        }
+        },
       );
     }
   }
@@ -266,12 +280,12 @@ const pagedata = computed(() => {
 
 const selectedPageIndex = ref(0);
 
-const openLogDirectory = window.electron.openLogDirectory;
+const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/colors-v2' as colors;
-@use '@/styles/variables' as vars;
+@use "@/styles/colors-v2" as colors;
+@use "@/styles/variables" as vars;
 
 .grid {
   display: grid;

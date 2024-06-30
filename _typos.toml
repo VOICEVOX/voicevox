@@ -2,10 +2,16 @@
 # Instruction:  https://github.com/marketplace/actions/typos-action#getting-started
 
 [default.extend-identifiers]
+splited = "splited" # コードで使う時、もっと自然な感じを与える
 
 [default.extend-words]
 ba = "ba" # 7zコマンドの-baオプション
 commitish = "commitish" # softprops/action-gh-releaseのオプションの１つ
 
 [files]
-extend-exclude = ["package-lock.json", "src/store/project.ts", "*.svg"]
+extend-exclude = [
+    "package-lock.json",
+    "src/domain/project/index.ts",
+    "*.svg",
+    "public/res/macos-big-sur-software-update-rosetta-alert.jpg", # macos-big-surは正しい固有名詞
+]

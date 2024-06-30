@@ -27,9 +27,9 @@ defineEmits<{
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/mixin' as mixin;
-@use '@/styles/colors-v2' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/mixin" as mixin;
+@use "@/styles/colors-v2" as colors;
 
 .row-card {
   display: flex;

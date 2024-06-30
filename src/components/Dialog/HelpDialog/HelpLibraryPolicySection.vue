@@ -6,18 +6,18 @@
         <div class="list">
           <template
             v-for="(engineId, engineIndex) in sortedEngineInfos.map(
-              (engineInfo) => engineInfo.uuid
+              (engineInfo) => engineInfo.uuid,
             )"
             :key="engineIndex"
           >
             <!-- エンジンが一つだけの場合は名前を表示しない -->
             <h2 v-if="engineInfos.size > 1" class="subtitle">
-              {{ mapUndefinedPipe(engineInfos.get(engineId), (v) => v.name) }}
+              {{ mapNullablePipe(engineInfos.get(engineId), (v) => v.name) }}
             </h2>
             <BaseRowCard
-              v-for="([, characterInfo], characterIndex) in mapUndefinedPipe(
+              v-for="([, characterInfo], characterIndex) in mapNullablePipe(
                 engineInfos.get(engineId),
-                (v) => v.characterInfos
+                (v) => v.characterInfos,
               )"
               :key="characterIndex"
               :title="characterInfo.metas.speakerName"
@@ -30,7 +30,7 @@
               "
             >
               <!-- 暫定でq-iconを使用 -->
-              <q-icon name="keyboard_arrow_right" size="sm" />
+              <QIcon name="keyboard_arrow_right" size="sm" />
             </BaseRowCard>
           </template>
         </div>
@@ -49,11 +49,11 @@
         </div>
         <h1 class="title">
           {{
-            mapUndefinedPipe(
+            mapNullablePipe(
               engineInfos.get(selectedInfo.engine),
               (v) => v.characterInfos,
-              (v) => mapUndefinedPipe(selectedInfo, (i) => v.get(i.character)),
-              (v) => v.metas.speakerName
+              (v) => mapNullablePipe(selectedInfo, (i) => v.get(i.character)),
+              (v) => v.metas.speakerName,
             )
           }}
         </h1>
@@ -75,7 +75,7 @@ import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
-import { mapUndefinedPipe } from "@/helpers/map";
+import { mapNullablePipe } from "@/helpers/map";
 
 type DetailKey = { engine: EngineId; character: SpeakerId };
 
@@ -96,13 +96,13 @@ const engineInfos = computed(
               engineId,
               name: store.state.engineManifests[engineId].name,
               characterInfos: new Map(
-                characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
+                characterInfos.map((ci) => [ci.metas.speakerUuid, ci]),
               ),
             },
           ];
-        }
-      )
-    )
+        },
+      ),
+    ),
 );
 
 const policy = computed<string | undefined>(() => {
@@ -112,7 +112,7 @@ const policy = computed<string | undefined>(() => {
   if (engineInfo == undefined) return undefined;
 
   const characterInfo = engineInfo.characterInfos.get(
-    selectedInfo.value.character
+    selectedInfo.value.character,
   );
   if (characterInfo == undefined) return undefined;
 
@@ -126,9 +126,9 @@ const selectCharacterInfo = (index: DetailKey | undefined) => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/mixin' as mixin;
-@use '@/styles/colors-v2' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/mixin" as mixin;
+@use "@/styles/colors-v2" as colors;
 
 .container {
   // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する

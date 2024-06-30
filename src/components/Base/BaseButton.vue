@@ -5,7 +5,7 @@
     @click="(payload) => $emit('click', payload)"
   >
     <!-- 暫定でq-iconを使用 -->
-    <q-icon v-if="icon" :name="icon" size="sm" />
+    <QIcon v-if="icon" :name="icon" size="sm" />
     {{ label }}
   </button>
 </template>
@@ -23,9 +23,9 @@ defineEmits<{
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as vars;
-@use '@/styles/mixin' as mixin;
-@use '@/styles/colors-v2' as colors;
+@use "@/styles/variables" as vars;
+@use "@/styles/mixin" as mixin;
+@use "@/styles/colors-v2" as colors;
 
 .button {
   display: flex;

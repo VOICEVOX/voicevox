@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -72,7 +72,19 @@ export interface SupportedFeatures {
      * @type {boolean}
      * @memberof SupportedFeatures
      */
+    sing?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof SupportedFeatures
+     */
     manageLibrary?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof SupportedFeatures
+     */
+    returnResourceUrl?: boolean;
 }
 
 /**
@@ -110,7 +122,9 @@ export function SupportedFeaturesFromJSONTyped(json: any, ignoreDiscriminator: b
         'adjustVolumeScale': json['adjust_volume_scale'],
         'interrogativeUpspeak': json['interrogative_upspeak'],
         'synthesisMorphing': json['synthesis_morphing'],
+        'sing': !exists(json, 'sing') ? undefined : json['sing'],
         'manageLibrary': !exists(json, 'manage_library') ? undefined : json['manage_library'],
+        'returnResourceUrl': !exists(json, 'return_resource_url') ? undefined : json['return_resource_url'],
     };
 }
 
@@ -131,7 +145,9 @@ export function SupportedFeaturesToJSON(value?: SupportedFeatures | null): any {
         'adjust_volume_scale': value.adjustVolumeScale,
         'interrogative_upspeak': value.interrogativeUpspeak,
         'synthesis_morphing': value.synthesisMorphing,
+        'sing': value.sing,
         'manage_library': value.manageLibrary,
+        'return_resource_url': value.returnResourceUrl,
     };
 }
 

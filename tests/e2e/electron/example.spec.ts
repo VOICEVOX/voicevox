@@ -7,17 +7,16 @@ import dotenv from "dotenv";
 test.beforeAll(async () => {
   dotenv.config(); // FIXME: エンジンの設定直読み
 
-  console.log("Waiting for background.js to be built...");
-  // eslint-disable-next-line no-constant-condition
+  console.log("Waiting for main.js to be built...");
   while (true) {
     try {
-      await fs.access("./dist/background.js");
+      await fs.access("./dist/main.js");
       break;
     } catch (e) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
-  console.log("background.js is built.");
+  console.log("main.js is built.");
 });
 
 // キャッシュなどでテスト結果が変化しないように、appDataをテスト起動時に毎回消去する。

@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -91,7 +91,7 @@ export const DefaultConfig = new Configuration();
  */
 export class BaseAPI {
 
-	 private static readonly jsonRegex = new RegExp('^(:?application\/json|[^;/ \t]+\/[^;/ \t]+[+]json)[ \t]*(:?;.*)?$', 'i');
+    private static readonly jsonRegex = new RegExp('^(:?application\/json|[^;/ \t]+\/[^;/ \t]+[+]json)[ \t]*(:?;.*)?$', 'i');
     private middleware: Middleware[];
 
     constructor(protected configuration = DefaultConfig) {

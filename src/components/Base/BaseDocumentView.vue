@@ -5,8 +5,8 @@
 </template>
 
 <style scoped lang="scss">
-@use '@/styles/mixin' as mixin;
-@use '@/styles/colors-v2' as colors;
+@use "@/styles/mixin" as mixin;
+@use "@/styles/colors-v2" as colors;
 
 .document {
   :deep(*) {

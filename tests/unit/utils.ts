@@ -6,11 +6,11 @@ import { Component } from "vue";
 export const wrapQPage = (page: Component) => {
   return {
     template: `
-      <q-layout>
-        <q-page-container>
+      <QLayout>
+        <QPageContainer>
           <page />
-        </q-page-container>
-      </q-layout>
+        </QPageContainer>
+      </QLayout>
     `,
     components: {
       page,

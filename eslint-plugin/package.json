@@ -1,0 +1,6 @@
+{
+  "name": "@voicevox/eslint-plugin",
+  "version": "0.0.0",
+  "description": "eslint plugin for voicevox",
+  "main": "index.js"
+}

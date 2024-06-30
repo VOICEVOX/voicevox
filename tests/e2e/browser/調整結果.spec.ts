@@ -19,9 +19,9 @@ async function getSliderValues(page: Page) {
             throw new Error("aria-valuenowが取得できません");
           }
           return parseFloat(value);
-        })
+        }),
       );
-    })
+    }),
   );
 }
 

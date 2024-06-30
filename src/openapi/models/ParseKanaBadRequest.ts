@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -44,7 +44,7 @@ export interface ParseKanaBadRequest {
      * @type {{ [key: string]: string; }}
      * @memberof ParseKanaBadRequest
      */
-    errorArgs: { [key: string]: string; };
+    errorArgs: { [key: string]: string; } | null;
 }
 
 /**

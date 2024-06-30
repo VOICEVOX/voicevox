@@ -1,0 +1,30 @@
+# Chromaticにmainブランチをpushする
+# お試し運用中なので消滅する可能性あり
+
+# TODO: Enable TurboSnap
+# https://www.chromatic.com/docs/github-actions/#enable-turbosnap
+
+name: "Chromatic"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  chromatic:
+    name: Run Chromatic
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'VOICEVOX'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+      - name: Run Chromatic
+        uses: chromaui/action@v11
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          buildScriptName: "storybook:build"
+          exitZeroOnChanges: true

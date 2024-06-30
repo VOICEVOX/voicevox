@@ -1,19 +1,19 @@
 <template>
   <div v-if="!tipConfirmed" style="z-index: 10">
-    <q-banner class="bg-surface text-display" dense rounded inline-actions>
+    <QBanner class="bg-surface text-display" dense rounded inlineActions>
       <template #avatar>
-        <q-icon name="info" color="primary" />
+        <QIcon name="info" color="primary" />
       </template>
       <slot></slot>
       <template #action>
-        <q-btn
+        <QBtn
           color="primary"
-          text-color="display-on-primary"
+          textColor="display-on-primary"
           label="OK"
           @click="tipConfirmed = true"
         />
       </template>
-    </q-banner>
+    </QBanner>
   </div>
 </template>
 
@@ -22,10 +22,9 @@ import { computed } from "vue";
 import { ConfirmedTips } from "@/type/preload";
 import { useStore } from "@/store";
 
-const props =
-  defineProps<{
-    tipKey: keyof ConfirmedTips;
-  }>();
+const props = defineProps<{
+  tipKey: keyof ConfirmedTips;
+}>();
 
 const store = useStore();
 
