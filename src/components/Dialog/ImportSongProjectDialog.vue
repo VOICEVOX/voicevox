@@ -1,5 +1,5 @@
 <template>
-  <QDialog ref="dialogRef" autoScroll @beforeShow="initializeValues">
+  <QDialog ref="dialogRef" @beforeShow="initializeValues">
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection>
         <div class="text-h5">インポート</div>
@@ -9,7 +9,7 @@
 
       <QCardSection class="q-py-none">
         <details class="q-pt-md">
-          <summary>対応しているプロジェクトファイル</summary>
+          <summary>対応しているファイル形式</summary>
           <ul>
             <li
               v-for="[name, extensions] in projectNameToExtensions"
@@ -30,9 +30,8 @@
           @input="handleFileChange"
         />
       </QCardSection>
-      <QCardSection>
-        <div v-if="trackOptions.length === 0" class="scrollable-area" />
-        <QList v-else bordered class="rounded-borders scroll scrollable-area">
+      <QCardSection v-if="trackOptions.length > 0">
+        <QList bordered class="rounded-borders scroll scrollable-area">
           <QItem
             v-for="(track, index) in trackOptions"
             :key="track.value"
@@ -327,20 +326,10 @@ const handleCancel = () => {
 .dialog-card {
   width: 700px;
   max-width: 80vw;
-
-  height: calc(100vh - 100px);
 }
 
 .scrollable-area {
   overflow-y: auto;
-  height: calc(100vh - 100px - 295px);
-
-  :deep() {
-    h3 {
-      font-size: 1.3rem;
-      font-weight: bold;
-      margin: 0;
-    }
-  }
+  max-height: calc(100vh - 100px - 295px);
 }
 </style>

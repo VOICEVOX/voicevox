@@ -1025,6 +1025,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       for (const [trackId, track] of tracks) {
         // 色々な処理を動かすため、二重にセットする
+        // TODO: もっとスマートな方法を考える
         await dispatch("SET_TRACK", { trackId, track });
       }
     },
@@ -1069,12 +1070,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseFirstRestDuration = Math.max(
           phraseFirstRestDuration,
           phraseFirstNote.position -
-            secondToTick(
-              tickToSecond(phraseFirstNote.position, tempos, tpqn) -
-                phraseFirstRestMinDurationSeconds,
-              tempos,
-              tpqn,
-            ),
+          secondToTick(
+            tickToSecond(phraseFirstNote.position, tempos, tpqn) -
+            phraseFirstRestMinDurationSeconds,
+            tempos,
+            tpqn,
+          ),
         );
         // 1tick以上にする
         phraseFirstRestDuration = Math.max(1, phraseFirstRestDuration);
@@ -1381,10 +1382,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             trackId,
             track.singer
               ? {
-                  singer: track.singer,
-                  frameRate:
-                    state.engineManifests[track.singer.engineId].frameRate,
-                }
+                singer: track.singer,
+                frameRate:
+                  state.engineManifests[track.singer.engineId].frameRate,
+              }
               : undefined,
           ]),
         );
@@ -2564,7 +2565,6 @@ export const singingCommandStore = transformCommandStore(
           tpqn,
           tempos,
           timeSignatures,
-
           tracks: payload,
         });
 
