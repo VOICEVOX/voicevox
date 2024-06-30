@@ -47,8 +47,13 @@
       </div>
     </QItemSection>
     <QItemSection>
-      <QItemLabel class="singer-name" @click.stop="selectTrack()">
-        <QInput v-model="temporaryTrackName" dense @blur="updateTrackName" />
+      <QItemLabel class="singer-name" @click.stop="uiLocked || selectTrack()">
+        <QInput
+          v-model="temporaryTrackName"
+          dense
+          :disable="uiLocked"
+          @blur="updateTrackName"
+        />
       </QItemLabel>
       <QItemLabel v-if="trackStyle" caption class="singer-style">
         <QIcon

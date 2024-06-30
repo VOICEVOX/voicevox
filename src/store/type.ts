@@ -1181,6 +1181,36 @@ export type SingingStoreTypes = {
     mutation: { isSongSidebarOpen: boolean };
     action(payload: { isSongSidebarOpen: boolean }): void;
   };
+
+  SET_TRACK_NAME: {
+    mutation: { trackId: TrackId; name: string };
+    action(payload: { trackId: TrackId; name: string }): void;
+  };
+
+  SET_TRACK_MUTE: {
+    mutation: { trackId: TrackId; mute: boolean };
+    action(payload: { trackId: TrackId; mute: boolean }): void;
+  };
+
+  SET_TRACK_SOLO: {
+    mutation: { trackId: TrackId; solo: boolean };
+    action(payload: { trackId: TrackId; solo: boolean }): void;
+  };
+
+  SET_TRACK_VOLUME: {
+    mutation: { trackId: TrackId; volume: number };
+    action(payload: { trackId: TrackId; volume: number }): void;
+  };
+
+  SET_TRACK_PAN: {
+    mutation: { trackId: TrackId; pan: number };
+    action(payload: { trackId: TrackId; pan: number }): void;
+  };
+
+  SET_SELECTED_TRACK: {
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
+  };
 };
 
 export type SingingCommandStoreState = {
@@ -1272,6 +1302,31 @@ export type SingingCommandStoreTypes = {
   COMMAND_DELETE_TRACK: {
     mutation: { trackId: TrackId };
     action(payload: { trackId: TrackId }): void;
+  };
+
+  COMMAND_SET_TRACK_NAME: {
+    mutation: { trackId: TrackId; name: string };
+    action(payload: { trackId: TrackId; name: string }): void;
+  };
+
+  COMMAND_SET_TRACK_MUTE: {
+    mutation: { trackId: TrackId; mute: boolean };
+    action(payload: { trackId: TrackId; mute: boolean }): void;
+  };
+
+  COMMAND_SET_TRACK_SOLO: {
+    mutation: { trackId: TrackId; solo: boolean };
+    action(payload: { trackId: TrackId; solo: boolean }): void;
+  };
+
+  COMMAND_SET_TRACK_VOLUME: {
+    mutation: { trackId: TrackId; volume: number };
+    action(payload: { trackId: TrackId; volume: number }): void;
+  };
+
+  COMMAND_SET_TRACK_PAN: {
+    mutation: { trackId: TrackId; pan: number };
+    action(payload: { trackId: TrackId; pan: number }): void;
   };
 };
 

@@ -59,7 +59,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, toRaw } from "vue";
 import Draggable from "vuedraggable";
 import { QList } from "quasar";
 import TrackItem from "./TrackItem.vue";
@@ -86,7 +86,7 @@ const createTrack = async () => {
   if (!singer) return;
 
   const { trackId, track } = await store.dispatch("CREATE_TRACK");
-  track.singer = singer;
+  track.singer = structuredClone(toRaw(singer));
   store.dispatch("REGISTER_TRACK", {
     trackId,
     track,

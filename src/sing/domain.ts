@@ -569,9 +569,7 @@ export const shouldPlay = (
   const soloTrackExists = [...tracks.values()].some((track) => track.solo);
   const shouldPlayMap = new Map<string, boolean>();
   for (const [trackKey, track] of tracks) {
-    const base = soloTrackExists ? track.solo : true;
-
-    shouldPlayMap.set(trackKey, base && !track.mute);
+    shouldPlayMap.set(trackKey, soloTrackExists ? track.solo : !track.mute);
   }
 
   return shouldPlayMap;

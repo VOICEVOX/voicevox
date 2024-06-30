@@ -933,7 +933,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REGISTER_TRACK: {
     mutation(state, { trackId, track }) {
-      state.tracks.set(trackId, track);
+      state.tracks.set(trackId, structuredClone(toRaw(track)));
       state.trackOrder.push(trackId);
       state.overlappingNoteInfos.set(trackId, new Map());
       state.overlappingNoteIds.set(trackId, new Set());
@@ -2368,6 +2368,65 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_SONG_SIDEBAR_OPEN", { isSongSidebarOpen });
     },
   },
+
+  SET_TRACK_NAME: {
+    mutation(state, { trackId, name }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.name = name;
+    },
+    action({ commit }, { trackId, name }) {
+      commit("SET_TRACK_NAME", { trackId, name });
+    },
+  },
+
+  SET_TRACK_MUTE: {
+    mutation(state, { trackId, mute }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.mute = mute;
+    },
+    action({ commit }, { trackId, mute }) {
+      commit("SET_TRACK_MUTE", { trackId, mute });
+    },
+  },
+
+  SET_TRACK_SOLO: {
+    mutation(state, { trackId, solo }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.solo = solo;
+    },
+    action({ commit }, { trackId, solo }) {
+      commit("SET_TRACK_SOLO", { trackId, solo });
+    },
+  },
+
+  SET_TRACK_VOLUME: {
+    mutation(state, { trackId, volume }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.volume = volume;
+    },
+    action({ commit }, { trackId, volume }) {
+      commit("SET_TRACK_VOLUME", { trackId, volume });
+    },
+  },
+
+  SET_TRACK_PAN: {
+    mutation(state, { trackId, pan }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.pan = pan;
+    },
+    action({ commit }, { trackId, pan }) {
+      commit("SET_TRACK_PAN", { trackId, pan });
+    },
+  },
+
+  SET_SELECTED_TRACK: {
+    mutation(state, { trackId }) {
+      state.selectedTrackId = trackId;
+    },
+    action({ commit }, { trackId }) {
+      commit("SET_SELECTED_TRACK", { trackId });
+    },
+  },
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};
@@ -2631,6 +2690,51 @@ export const singingCommandStore = transformCommandStore(
       },
       action({ commit }, { trackId }) {
         commit("COMMAND_DELETE_TRACK", { trackId });
+      },
+    },
+
+    COMMAND_SET_TRACK_NAME: {
+      mutation(draft, { trackId, name }) {
+        singingStore.mutations.SET_TRACK_NAME(draft, { trackId, name });
+      },
+      action({ commit }, { trackId, name }) {
+        commit("COMMAND_SET_TRACK_NAME", { trackId, name });
+      },
+    },
+
+    COMMAND_SET_TRACK_MUTE: {
+      mutation(draft, { trackId, mute }) {
+        singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
+      },
+      action({ commit }, { trackId, mute }) {
+        commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
+      },
+    },
+
+    COMMAND_SET_TRACK_SOLO: {
+      mutation(draft, { trackId, solo }) {
+        singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
+      },
+      action({ commit }, { trackId, solo }) {
+        commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
+      },
+    },
+
+    COMMAND_SET_TRACK_VOLUME: {
+      mutation(draft, { trackId, volume }) {
+        singingStore.mutations.SET_TRACK_VOLUME(draft, { trackId, volume });
+      },
+      action({ commit }, { trackId, volume }) {
+        commit("COMMAND_SET_TRACK_VOLUME", { trackId, volume });
+      },
+    },
+
+    COMMAND_SET_TRACK_PAN: {
+      mutation(draft, { trackId, pan }) {
+        singingStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
+      },
+      action({ commit }, { trackId, pan }) {
+        commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
       },
     },
   }),
