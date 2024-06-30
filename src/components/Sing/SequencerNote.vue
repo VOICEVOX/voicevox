@@ -378,7 +378,7 @@ const onLyricInput = (event: Event) => {
   position: absolute;
   width: calc(100% + 1px);
   height: 100%;
-  border: 1px solid var(--md-sys-color-brand);
+  border: 1px solid var(--md-sys-color-secondary);
   background-color: var(--md-sys-color-secondary-container);
   border-radius: 4px;
 }

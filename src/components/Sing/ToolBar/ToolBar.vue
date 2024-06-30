@@ -483,7 +483,7 @@ onUnmounted(() => {
 }
 
 .sing-toolbar {
-  background: var(--md-sys-color-surface);
+  background: var(--md-custom-color-sing-toolbar);
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -555,7 +555,7 @@ onUnmounted(() => {
   font-size: 28px;
   font-weight: 700;
   margin-left: 16px;
-  color: colors.$display;
+  color: var(--md-sys-color-on-surface);
 }
 
 .sing-playhead-position-millisec {

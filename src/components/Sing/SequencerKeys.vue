@@ -180,8 +180,8 @@ onUnmounted(() => {
 }
 
 .white-key {
-  fill: var(--md-sys-color-background);
-  stroke: var(--md-sys-color-outline);
+  fill: var(--md-custom-color-sing-piano-key-white);
+  stroke: var(--md-custom-color-sing-grid-beat-line);
 }
 
 .white-key-being-pressed {
@@ -190,7 +190,7 @@ onUnmounted(() => {
 }
 
 .black-key {
-  fill: var(--md-sys-color-surface-container-highest);
+  fill: var(--md-custom-color-sing-piano-key-black);
 }
 
 .black-key-being-pressed {

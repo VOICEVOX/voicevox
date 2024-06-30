@@ -188,7 +188,7 @@ onUnmounted(() => {
 @use "@/styles/colors" as colors;
 
 .sequencer-ruler {
-  background: var(--md-sys-color-surface-variant);
+  background: var(--md-custom-color-sing-ruler);
   height: 40px;
   position: relative;
   overflow: hidden;

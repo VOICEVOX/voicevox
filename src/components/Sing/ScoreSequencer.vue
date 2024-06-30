@@ -1614,8 +1614,8 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 
 .sequencer-grid-cell {
   display: block;
-  stroke: var(--md-sys-color-surface-variant);
-  stroke-width: 1;
+  stroke: var(--md-sys-color-outline);
+  stroke-width: 0;
 }
 
 .sequencer-grid-octave-cell {
@@ -1628,22 +1628,21 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 }
 
 .sequencer-grid-cell-white {
-  fill: var(--md-sys-color-background);
+  fill: var(--md-custom-color-cell-white);
 }
 
 .sequencer-grid-cell-black {
-  fill: var(--md-sys-color-surface-variant);
+  fill: var(--md-custom-color-cell-black);
 }
 
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
-  stroke: var(--md-sys-color-outline);
+  stroke: var(--md-custom-color-sing-grid-measure-line);
 }
 
 .sequencer-grid-beat-line {
   backface-visibility: hidden;
-  stroke: var(--md-sys-color-outline);
-  opacity: 0.6;
+  stroke: var(--md-custom-color-sing-grid-beat-line);
 }
 
 .sequencer-guideline {
@@ -1690,7 +1689,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   pointer-events: none;
   position: absolute;
   border: 1px dashed var(--md-sys-color-secondary);
-  background: var(--md-sys-color-secondary-container);
+  background: rgba(var(--md-sys-color-secondary-container), 0.5);
 }
 
 .cursor-draw {

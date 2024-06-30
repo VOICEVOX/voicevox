@@ -5,7 +5,7 @@ import iconSet from "quasar/icon-set/material-icons";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
-import { generateColorPalette, applyTheme } from "./helpers/colors";
+import { generateTheme, themeToCssVariables } from "./helpers/colors";
 import App from "@/components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
@@ -17,40 +17,79 @@ import "./styles/_index.scss";
 //       ため、それを防止するため自前でdataLayerをあらかじめ用意する
 window.dataLayer = [];
 
-const colorConfig = {
-  sourceColor: "#a5d4ad",
-  neutralHue: 180,
-  light: {},
-  dark: {},
-  tones: {
-    primary: 40,
-    secondary: 40,
-    tertiary: 40,
-    neutral: 40,
-    neutralVariant: 40,
-    error: 40,
-  },
-  customColors: {
-    error: "#B3261E",
-    brand: "#a5d4ad",
-  },
+// ブランドカラー
+const sourceColor = "#A5D4AD";
+// パレットの調整
+const adjustments = {
+  neutral: { chroma: -5, tone: 0 },
+  neutralVariant: { chroma: -1, tone: 0 },
 };
+// カスタムカラー(仮)
+const customColors: CustomColor[] = [
+  {
+    name: "sing-toolbar",
+    palette: "neutral",
+    lightTone: 99,
+    darkTone: 20,
+    blend: true,
+  },
+  {
+    name: "sing-ruler",
+    palette: "neutralVariant",
+    lightTone: 90,
+    darkTone: 10,
+    blend: true,
+  },
+  {
+    name: "cell-white",
+    palette: "neutral",
+    lightTone: 100,
+    darkTone: 15,
+    blend: true,
+  },
+  {
+    name: "cell-black",
+    palette: "neutral",
+    lightTone: 96,
+    darkTone: 12,
+    blend: true,
+  },
+  {
+    name: "sing-grid-measure-line",
+    palette: "neutral",
+    lightTone: 70,
+    darkTone: 40,
+    blend: true,
+  },
+  {
+    name: "sing-grid-beat-line",
+    palette: "neutral",
+    lightTone: 90,
+    darkTone: 0,
+    blend: true,
+  },
+  {
+    name: "sing-piano-key-white",
+    palette: "neutral",
+    lightTone: 100,
+    darkTone: 80,
+    blend: true,
+  },
+  {
+    name: "sing-piano-key-black",
+    palette: "neutral",
+    lightTone: 50,
+    darkTone: 30,
+    blend: true,
+  },
+];
+const theme = generateTheme(sourceColor, adjustments, customColors);
+const cssVariables = themeToCssVariables(theme, false);
 
-// カラーパレットを生成
-const colorPalette = generateColorPalette(colorConfig);
-
-// 初期テーマを適用
-applyTheme(
-  colorPalette,
-  window.matchMedia("(prefers-color-scheme: dark)").matches,
-);
-
-// テーマ切り替えイベントリスナー
-window
-  .matchMedia("(prefers-color-scheme: dark)")
-  .addEventListener("change", (event) => {
-    applyTheme(colorPalette, event.matches);
-  });
+// CSSに適用する
+Object.entries(cssVariables).forEach(([key, value]) => {
+  document.documentElement.style.setProperty(key, value);
+});
 
 createApp(App)
   .use(store, storeKey)
