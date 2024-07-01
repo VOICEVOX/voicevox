@@ -1211,6 +1211,16 @@ export type SingingStoreTypes = {
     mutation: { trackId: TrackId };
     action(payload: { trackId: TrackId }): void;
   };
+
+  REORDER_TRACKS: {
+    mutation: { trackOrder: TrackId[] };
+    action(payload: { trackOrder: TrackId[] }): void;
+  };
+
+  UNSOLO_ALL_TRACKS: {
+    mutation: undefined;
+    action(): void;
+  };
 };
 
 export type SingingCommandStoreState = {
@@ -1294,9 +1304,9 @@ export type SingingCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_REGISTER_TRACK: {
+  COMMAND_ADD_TRACK: {
     mutation: { trackId: TrackId; track: Track };
-    action(payload: { trackId: TrackId; track: Track }): void;
+    action(): void;
   };
 
   COMMAND_DELETE_TRACK: {
@@ -1327,6 +1337,16 @@ export type SingingCommandStoreTypes = {
   COMMAND_SET_TRACK_PAN: {
     mutation: { trackId: TrackId; pan: number };
     action(payload: { trackId: TrackId; pan: number }): void;
+  };
+
+  COMMAND_REORDER_TRACKS: {
+    mutation: { trackOrder: TrackId[] };
+    action(payload: { trackOrder: TrackId[] }): void;
+  };
+
+  COMMAND_UNSOLO_ALL_TRACKS: {
+    mutation: undefined;
+    action(): void;
   };
 };
 

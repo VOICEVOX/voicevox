@@ -1,5 +1,6 @@
 import path from "path";
 import { toRaw } from "vue";
+import createRfdc from "rfdc";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -90,6 +91,7 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 
 const logger = createLogger("store/singing");
+const rfdc = createRfdc();
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -933,7 +935,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REGISTER_TRACK: {
     mutation(state, { trackId, track }) {
-      state.tracks.set(trackId, structuredClone(toRaw(track)));
+      state.tracks.set(trackId, rfdc(track));
       state.trackOrder.push(trackId);
       state.overlappingNoteInfos.set(trackId, new Map());
       state.overlappingNoteIds.set(trackId, new Set());
@@ -2427,6 +2429,26 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_SELECTED_TRACK", { trackId });
     },
   },
+
+  REORDER_TRACKS: {
+    mutation(state, { trackOrder }) {
+      state.trackOrder = trackOrder;
+    },
+    action({ commit }, { trackOrder }) {
+      commit("REORDER_TRACKS", { trackOrder });
+    },
+  },
+
+  UNSOLO_ALL_TRACKS: {
+    mutation(state) {
+      for (const track of state.tracks.values()) {
+        track.solo = false;
+      }
+    },
+    action({ commit }) {
+      commit("UNSOLO_ALL_TRACKS");
+    },
+  },
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};
@@ -2675,12 +2697,17 @@ export const singingCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_REGISTER_TRACK: {
+    COMMAND_ADD_TRACK: {
       mutation(draft, { trackId, track }) {
         singingStore.mutations.REGISTER_TRACK(draft, { trackId, track });
       },
-      action({ commit }, { trackId, track }) {
-        commit("COMMAND_REGISTER_TRACK", { trackId, track });
+      async action({ getters, dispatch, commit }) {
+        const { trackId, track } = await dispatch("CREATE_TRACK");
+        const selectedTrack = getters.SELECTED_TRACK;
+        track.singer = selectedTrack.singer;
+        track.keyRangeAdjustment = selectedTrack.keyRangeAdjustment;
+        track.volumeRangeAdjustment = selectedTrack.volumeRangeAdjustment;
+        commit("COMMAND_ADD_TRACK", { trackId, track });
       },
     },
 
@@ -2735,6 +2762,24 @@ export const singingCommandStore = transformCommandStore(
       },
       action({ commit }, { trackId, pan }) {
         commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
+      },
+    },
+
+    COMMAND_REORDER_TRACKS: {
+      mutation(draft, { trackOrder }) {
+        singingStore.mutations.REORDER_TRACKS(draft, { trackOrder });
+      },
+      action({ commit }, { trackOrder }) {
+        commit("COMMAND_REORDER_TRACKS", { trackOrder });
+      },
+    },
+
+    COMMAND_UNSOLO_ALL_TRACKS: {
+      mutation(draft) {
+        singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
+      },
+      action({ commit }) {
+        commit("COMMAND_UNSOLO_ALL_TRACKS");
       },
     },
   }),

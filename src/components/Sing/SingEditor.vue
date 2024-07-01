@@ -24,7 +24,6 @@
       :modelValue="isSidebarOpen ? sidebarWidth : 0"
       unit="px"
       class="full-width"
-      afterClass="flex"
       :limits="[200, 300]"
       :disable="!isSidebarOpen"
       :separatorStyle="{ display: isSidebarOpen ? 'block' : 'none' }"

@@ -396,6 +396,8 @@ onMountedOrActivated(() => {
   const canvasElement = document.createElement("canvas");
   canvasElement.width = canvasWidth;
   canvasElement.height = canvasHeight;
+  canvasElement.style.position = "absolute";
+  canvasElement.style.inset = "0";
   canvasContainerElement.appendChild(canvasElement);
 
   renderer = new PIXI.Renderer({
@@ -463,5 +465,6 @@ onUnmountedOrDeactivated(() => {
   overflow: hidden;
   z-index: 0;
   pointer-events: none;
+  position: relative;
 }
 </style>

@@ -59,7 +59,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, toRaw } from "vue";
+import { computed, ref } from "vue";
 import Draggable from "vuedraggable";
 import { QList } from "quasar";
 import TrackItem from "./TrackItem.vue";
@@ -82,15 +82,7 @@ const trackOrder = computed(() => store.state.trackOrder);
 const selectedTrackId = computed(() => store.state.selectedTrackId);
 
 const createTrack = async () => {
-  const singer = tracks.value.get(selectedTrackId.value)?.singer;
-  if (!singer) return;
-
-  const { trackId, track } = await store.dispatch("CREATE_TRACK");
-  track.singer = structuredClone(toRaw(singer));
-  store.dispatch("REGISTER_TRACK", {
-    trackId,
-    track,
-  });
+  store.dispatch("COMMAND_ADD_TRACK");
 };
 const deleteTrack = () => {
   if (tracks.value.size === 1) return;
@@ -108,9 +100,9 @@ const unsoloAllTracks = () => {
 };
 
 const isDragging = ref(false);
-const reorderTracks = (trackIds: TrackId[]) => {
+const reorderTracks = (trackOrder: TrackId[]) => {
   store.dispatch("COMMAND_REORDER_TRACKS", {
-    trackIds,
+    trackOrder,
   });
 };
 </script>

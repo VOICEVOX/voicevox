@@ -1489,6 +1489,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 @use "@/styles/colors" as colors;
 
 .score-sequencer {
+  height: 100%;
   backface-visibility: hidden;
   display: grid;
   grid-template-rows: 30px 1fr;
