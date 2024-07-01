@@ -12,6 +12,7 @@ module.exports = {
     "@vue/eslint-config-typescript/recommended",
     "@vue/eslint-config-prettier",
     "plugin:@voicevox/all",
+    "plugin:storybook/recommended",
   ],
   plugins: ["import"],
   parser: "vue-eslint-parser",

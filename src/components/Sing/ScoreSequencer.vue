@@ -22,7 +22,6 @@
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
-      @dblclick="onDoubleClick"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
       @wheel="onWheel"
@@ -42,39 +41,29 @@
         }"
       ></div>
 
-      <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
       <!-- undefinedだと警告が出るのでnullを渡す -->
-
       <!-- TODO: ちゃんとしたトラックIDを渡す -->
       <SequencerNote
-        v-for="note in unselectedNotes"
+        v-for="note in editTarget === 'NOTE'
+          ? notesIncludingPreviewNotes
+          : notes"
         :key="note.id"
         :trackId="selectedTrackId"
         :note
+        :nowPreviewing
+        :isSelected="selectedNoteIds.has(note.id)"
+        :isPreview="previewNoteIds.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
-        :isSelected="false"
         @barMousedown="onNoteBarMouseDown($event, note)"
+        @barDoubleClick="onNoteBarDoubleClick($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
         @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyricMouseDown="onNoteLyricMouseDown($event, note)"
-        @lyricInput="onNoteLyricInput($event, note)"
-        @lyricBlur="onNoteLyricBlur()"
       />
-      <SequencerNote
-        v-for="note in editTarget === 'NOTE' && nowPreviewing
-          ? previewNotes
-          : selectedNotes"
-        :key="note.id"
-        :trackId="selectedTrackId"
-        :note
-        :previewLyric="previewLyrics.get(note.id) || null"
-        :isSelected="true"
-        @barMousedown="onNoteBarMouseDown($event, note)"
-        @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
-        @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyricMouseDown="onNoteLyricMouseDown($event, note)"
-        @lyricInput="onNoteLyricInput($event, note)"
-        @lyricBlur="onNoteLyricBlur()"
+      <SequencerLyricInput
+        v-if="editingLyricNote != undefined"
+        :editingLyricNote
+        @lyricInput="onLyricInput"
+        @lyricConfirmed="onLyricConfirmed"
       />
     </div>
     <SequencerPitch
@@ -187,9 +176,6 @@ import {
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
-  DoubleClickDetector,
-  NoteAreaInfo,
-  GridAreaInfo,
   getButton,
 } from "@/sing/viewHelper";
 import SequencerGrid from "@/components/Sing/SequencerGrid.vue";
@@ -199,6 +185,7 @@ import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
+import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -234,16 +221,43 @@ const selectedTrackId = computed(() => state.selectedTrackId);
 const tpqn = computed(() => state.tpqn);
 const tempos = computed(() => state.tempos);
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
+const selectedNoteIds = computed(() => new Set(state.selectedNoteIds));
 const isNoteSelected = computed(() => {
-  return state.selectedNoteIds.size > 0;
-});
-const unselectedNotes = computed(() => {
-  const selectedNoteIds = state.selectedNoteIds;
-  return notes.value.filter((value) => !selectedNoteIds.has(value.id));
+  return selectedNoteIds.value.size > 0;
 });
 const selectedNotes = computed(() => {
-  const selectedNoteIds = state.selectedNoteIds;
-  return notes.value.filter((value) => selectedNoteIds.has(value.id));
+  return notes.value.filter((value) => selectedNoteIds.value.has(value.id));
+});
+const notesIncludingPreviewNotes = computed(() => {
+  if (nowPreviewing.value) {
+    const previewNoteIds = new Set(previewNotes.value.map((value) => value.id));
+    return previewNotes.value
+      .concat(notes.value.filter((value) => !previewNoteIds.has(value.id)))
+      .sort((a, b) => {
+        const aIsSelectedOrPreview =
+          selectedNoteIds.value.has(a.id) || previewNoteIds.has(a.id);
+        const bIsSelectedOrPreview =
+          selectedNoteIds.value.has(b.id) || previewNoteIds.has(b.id);
+        if (aIsSelectedOrPreview === bIsSelectedOrPreview) {
+          return a.position - b.position;
+        } else {
+          // 「プレビュー中か選択中のノート」が「選択されていないノート」より
+          // 手前に表示されるようにする
+          return aIsSelectedOrPreview ? 1 : -1;
+        }
+      });
+  } else {
+    return [...notes.value].sort((a, b) => {
+      const aIsSelected = selectedNoteIds.value.has(a.id);
+      const bIsSelected = selectedNoteIds.value.has(b.id);
+      if (aIsSelected === bIsSelected) {
+        return a.position - b.position;
+      } else {
+        // 「選択中のノート」が「選択されていないノート」より手前に表示されるようにする
+        return aIsSelected ? 1 : -1;
+      }
+    });
+  }
 });
 
 // 矩形選択
@@ -311,12 +325,13 @@ const cursorY = ref(0);
 const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
   useLyricInput();
 
-const onNoteLyricInput = (text: string, note: Note) => {
+const onLyricInput = (text: string, note: Note) => {
   splitAndUpdatePreview(text, note);
 };
 
-const onNoteLyricBlur = () => {
+const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
   commitPreviewLyrics();
+  store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
 };
 
 // プレビュー
@@ -327,8 +342,13 @@ let previewRequestId = 0;
 let previewStartEditTarget: SequencerEditTarget = "NOTE";
 let executePreviewProcess = false;
 // ノート編集のプレビュー
+// プレビュー中に更新（移動やリサイズ等）されるノーツ
 const previewNotes = ref<Note[]>([]);
+// プレビュー中に変更されない（プレビュー前の状態を保持する）ノーツ
 const copiedNotesForPreview = new Map<NoteId, Note>();
+const previewNoteIds = computed(() => {
+  return new Set(nowPreviewing.value ? copiedNotesForPreview.keys() : []);
+});
 let dragStartTicks = 0;
 let dragStartNoteNumber = 0;
 let dragStartGuideLineTicks = 0;
@@ -342,12 +362,10 @@ const previewPitchEdit = ref<
 >(undefined);
 const prevCursorPos = { frame: 0, frequency: 0 }; // 前のカーソル位置
 
-// ダブルクリック
-let mouseDownAreaInfo: NoteAreaInfo | GridAreaInfo | undefined;
-const doubleClickDetector = new DoubleClickDetector<
-  NoteAreaInfo | GridAreaInfo
->();
-let ignoreDoubleClick = false;
+// 歌詞を編集中のノート
+const editingLyricNote = computed(() => {
+  return notes.value.find((value) => value.id === state.editingLyricNoteId);
+});
 
 // 入力を補助する線
 const showGuideLine = ref(true);
@@ -864,15 +882,20 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "MOVE_NOTE", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
+  }
+};
+
+const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
+  if (editTarget.value !== "NOTE") {
+    return;
+  }
+  const mouseButton = getButton(event);
+  if (mouseButton === "LEFT_BUTTON" && note.id !== state.editingLyricNoteId) {
+    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
   }
 };
 
@@ -881,11 +904,6 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_NOTE_LEFT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
@@ -898,29 +916,9 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_NOTE_RIGHT", note);
   } else if (!state.selectedNoteIds.has(note.id)) {
-    selectOnlyThis(note);
-  }
-};
-
-const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
-  if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
-    return;
-  }
-  const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
-  if (!state.selectedNoteIds.has(note.id)) {
     selectOnlyThis(note);
   }
 };
@@ -930,11 +928,6 @@ const onMouseDown = (event: MouseEvent) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new GridAreaInfo();
-  }
-
   // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
   if (editTarget.value === "NOTE") {
     if (mouseButton === "LEFT_BUTTON") {
@@ -988,13 +981,6 @@ const onMouseUp = (event: MouseEvent) => {
   if (mouseButton !== "LEFT_BUTTON") {
     return;
   }
-  // ダブルクリック用の処理を行う
-  if (mouseDownAreaInfo) {
-    doubleClickDetector.recordClick(event.detail, mouseDownAreaInfo);
-  }
-  ignoreDoubleClick =
-    editTarget.value !== "NOTE" || (nowPreviewing.value && edited);
-
   if (isRectSelecting.value) {
     rectSelect(isOnCommandOrCtrlKeyDown(event));
   } else if (nowPreviewing.value) {
@@ -1044,22 +1030,6 @@ const rectSelect = (additive: boolean) => {
     store.dispatch("DESELECT_ALL_NOTES");
   }
   store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
-};
-
-const onDoubleClick = () => {
-  if (ignoreDoubleClick) {
-    return;
-  }
-  const doubleClickInfo = doubleClickDetector.detect();
-  if (doubleClickInfo) {
-    const areaInfo = doubleClickInfo.clickInfos[0].areaInfo;
-    if (
-      areaInfo.type === "note" &&
-      areaInfo.noteId !== state.editingLyricNoteId
-    ) {
-      store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: areaInfo.noteId });
-    }
-  }
 };
 
 const onMouseEnter = () => {
@@ -1409,79 +1379,81 @@ registerHotkeyWithCleanup({
 
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
-const contextMenuData = ref<ContextMenuItemData[]>([
-  {
-    type: "button",
-    label: "コピー",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+const contextMenuData = computed<ContextMenuItemData[]>(() => {
+  return [
+    {
+      type: "button",
+      label: "コピー",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "切り取り",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    {
+      type: "button",
+      label: "切り取り",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "貼り付け",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+    {
+      type: "button",
+      label: "貼り付け",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "すべて選択",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("SELECT_ALL_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "すべて選択",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("SELECT_ALL_NOTES");
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "選択解除",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("DESELECT_ALL_NOTES");
+    {
+      type: "button",
+      label: "選択解除",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("DESELECT_ALL_NOTES");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "クオンタイズ",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "クオンタイズ",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "削除",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "削除",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-]);
+  ];
+});
 </script>
 
 <style scoped lang="scss">

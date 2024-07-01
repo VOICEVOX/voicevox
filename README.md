@@ -55,7 +55,7 @@ npm ci
 
 Windows の場合でもパスの区切り文字は`\`ではなく`/`なのでご注意ください。
 
-また、macOS 向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Contents/MacOS/run`を指定してください。
+また、macOS 向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Contents/MacOS/vv-engine/run`を指定してください。
 
 Linux の場合は、[Releases](https://github.com/VOICEVOX/voicevox/releases/)から入手できる tar.gz 版に含まれる`run`コマンドを指定してください。
 AppImage 版の場合は`$ /path/to/VOICEVOX.AppImage --appimage-mount`でファイルシステムをマウントできます。
@@ -66,10 +66,22 @@ VOICEVOX エディタの実行とは別にエンジン API のサーバを立て
 また、エンジン API の宛先エンドポイントを変更する場合は`VITE_DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
 
 ```bash
+# 開発しやすい環境で実行
 npm run electron:serve
+
+# ビルド時に近い環境で実行
+npm run electron:serve -- --mode production
 ```
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
+
+### Storybook の実行
+
+Storybook を使ってコンポーネントを開発することができます。
+
+```bash
+npm run storybook
+```
 
 ### ブラウザ版の実行（開発中）
 
@@ -101,6 +113,16 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 npm run test:unit
 npm run test-watch:unit # 監視モード
 npm run test:unit -- --update # スナップショットの更新
+```
+
+### コンポーネントのテスト
+
+Storybook を使ってコンポーネントのテストを行います。
+
+```bash
+npm run storybook # 先に Storybook を起動
+npm run test:storybook
+npm run test-watch:storybook # 監視モード
 ```
 
 ### ブラウザ End to End テスト
@@ -171,20 +193,20 @@ npm run license:generate -- -o voicevox_licenses.json
 npm run license:merge -- -o public/licenses.json -i engine_licenses.json -i voicevox_licenses.json
 ```
 
-## リント（静的解析）
-
-コードの静的解析を行い、バグを未然に防ぎます。プルリクエストを送る前に実行してください。
-
-```bash
-npm run lint
-```
-
 ## コードフォーマット
 
 コードのフォーマットを整えます。プルリクエストを送る前に実行してください。
 
 ```bash
 npm run fmt
+```
+
+## リント（静的解析）
+
+コードの静的解析を行い、バグを未然に防ぎます。プルリクエストを送る前に実行してください。
+
+```bash
+npm run lint
 ```
 
 ## タイポチェック

@@ -400,9 +400,6 @@ async function createWindow() {
     backgroundColor,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: false, // TODO: 外しても問題ないか検証して外す
     },
     icon: path.join(__static, "icon.png"),
   });
@@ -977,8 +974,8 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
 ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
   win.hide(); // FIXME: ダミーページ表示のほうが良い
 
-  // FIXME: 同じようなURLだとスーパーリロードされないことがあるので一度ダミーページを読み込む
-  await win.loadURL(firstUrl + "dummypage");
+  // 一旦適当なURLに飛ばしてページをアンロードする
+  await win.loadURL("about:blank");
 
   log.info("Checking ENGINE status before reload app");
   const engineCleanupResult = cleanupEngines();

@@ -69,10 +69,18 @@ const applySongProjectToStore = async (
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
-  PROJECT_NAME: {
+  PROJECT_NAME_WITH_EXT: {
     getter(state) {
       return state.projectFilePath
         ? getBaseName(state.projectFilePath)
+        : undefined;
+    },
+  },
+
+  PROJECT_NAME: {
+    getter(state) {
+      return state.projectFilePath
+        ? getBaseName(state.projectFilePath).replace(".vvproj", "")
         : undefined;
     },
   },

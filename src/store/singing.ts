@@ -22,7 +22,7 @@ import {
   PhraseSourceHash,
   Track,
 } from "./type";
-import { sanitizeFileName } from "./utility";
+import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
@@ -74,10 +74,7 @@ import {
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
-  addNotesToOverlappingNoteInfos,
   getOverlappingNoteIds,
-  removeNotesFromOverlappingNoteInfos,
-  updateNotesOfOverlappingNoteInfos,
 } from "@/sing/storeHelper";
 import {
   AnimationTimer,
@@ -165,7 +162,6 @@ export const singingStoreState: SingingStoreState = {
   sequencerEditTarget: "NOTE",
   selectedNoteIds: new Set(),
   overlappingNoteIds: new Map([[initialTrackId, new Set()]]),
-  overlappingNoteInfos: new Map([[initialTrackId, new Map()]]),
   nowPlaying: false,
   volume: 0,
   startRenderingRequested: false,
@@ -426,16 +422,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const selectedTrack = getOrThrow(state.tracks, trackId);
       selectedTrack.notes = notes;
 
-      const overlappingNoteInfos = getOrThrow(
-        state.overlappingNoteInfos,
-        trackId,
-      );
-      overlappingNoteInfos.clear();
-      addNotesToOverlappingNoteInfos(overlappingNoteInfos, notes);
-      state.overlappingNoteIds.set(
-        trackId,
-        getOverlappingNoteIds(overlappingNoteInfos),
-      );
+      state.overlappingNoteIds.set(trackId, getOverlappingNoteIds(notes));
     },
     async action({ commit, dispatch }, { notes, trackId }) {
       if (!isValidNotes(notes)) {
@@ -453,16 +440,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-
-      const overlappingNoteInfos = getOrThrow(
-        state.overlappingNoteInfos,
-        trackId,
-      );
-      addNotesToOverlappingNoteInfos(overlappingNoteInfos, notes);
-      state.overlappingNoteIds.set(
-        trackId,
-        getOverlappingNoteIds(overlappingNoteInfos),
-      );
+      state.overlappingNoteIds.set(trackId, getOverlappingNoteIds(newNotes));
     },
   },
 
@@ -476,15 +454,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-
-      const overlappingNoteInfos = getOrThrow(
-        state.overlappingNoteInfos,
-        trackId,
-      );
-      updateNotesOfOverlappingNoteInfos(overlappingNoteInfos, notes);
       state.overlappingNoteIds.set(
         trackId,
-        getOverlappingNoteIds(overlappingNoteInfos),
+        getOverlappingNoteIds(selectedTrack.notes),
       );
     },
   },
@@ -493,20 +465,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { noteIds, trackId }) {
       const noteIdsSet = new Set(noteIds);
       const selectedTrack = getOrThrow(state.tracks, trackId);
-      const notes = selectedTrack.notes.filter((value) => {
-        return noteIdsSet.has(value.id);
-      });
-
-      const overlappingNoteInfos = getOrThrow(
-        state.overlappingNoteInfos,
-        trackId,
-      );
-      removeNotesFromOverlappingNoteInfos(overlappingNoteInfos, notes);
-      state.overlappingNoteIds.set(
-        trackId,
-        getOverlappingNoteIds(overlappingNoteInfos),
-      );
-
       if (
         state.editingLyricNoteId != undefined &&
         noteIdsSet.has(state.editingLyricNoteId)
@@ -519,6 +477,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
+
+      state.overlappingNoteIds.set(
+        trackId,
+        getOverlappingNoteIds(selectedTrack.notes),
+      );
     },
   },
 
@@ -936,7 +899,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
       state.trackOrder.push(trackId);
-      state.overlappingNoteInfos.set(trackId, new Map());
       state.overlappingNoteIds.set(trackId, new Set());
     },
     action({ state, commit, dispatch }, { trackId, track }) {
@@ -968,7 +930,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
       state.overlappingNoteIds.set(trackId, new Set());
-      state.overlappingNoteInfos.set(trackId, new Map());
     },
     async action({ state, commit, dispatch }, { trackId, track }) {
       if (!isValidTrack(track)) {
@@ -1070,12 +1031,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseFirstRestDuration = Math.max(
           phraseFirstRestDuration,
           phraseFirstNote.position -
-          secondToTick(
-            tickToSecond(phraseFirstNote.position, tempos, tpqn) -
-            phraseFirstRestMinDurationSeconds,
-            tempos,
-            tpqn,
-          ),
+            secondToTick(
+              tickToSecond(phraseFirstNote.position, tempos, tpqn) -
+                phraseFirstRestMinDurationSeconds,
+              tempos,
+              tpqn,
+            ),
         );
         // 1tick以上にする
         phraseFirstRestDuration = Math.max(1, phraseFirstRestDuration);
@@ -1382,10 +1343,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             trackId,
             track.singer
               ? {
-                singer: track.singer,
-                frameRate:
-                  state.engineManifests[track.singer.engineId].frameRate,
-              }
+                  singer: track.singer,
+                  frameRate:
+                    state.engineManifests[track.singer.engineId].frameRate,
+                }
               : undefined,
           ]),
         );
@@ -1983,7 +1944,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const generateDefaultSongFileName = () => {
           const projectName = getters.PROJECT_NAME;
           if (projectName) {
-            return projectName.split(".")[0] + ".wav";
+            return projectName + ".wav";
           }
 
           const singer = getters.SELECTED_TRACK.singer;
@@ -2003,7 +1964,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
-          return "Untitled.wav";
+          return `${DEFAULT_PROJECT_NAME}.wav`;
         };
 
         const exportWaveFile = async (): Promise<SaveResultObject> => {

@@ -82,25 +82,41 @@ export default defineConfig((options) => {
         }),
       isElectron && [
         cleanDistPlugin(),
-        electron({
-          entry: [
-            "./src/backend/electron/main.ts",
-            "./src/backend/electron/preload.ts",
-          ],
-          // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
-          onstart: ({ startup }) => {
-            if (options.mode !== "test") {
-              startup([".", "--no-sandbox"]);
-            }
-          },
-          vite: {
-            plugins: [tsconfigPaths({ root: __dirname })],
-            build: {
-              outDir: path.resolve(__dirname, "dist"),
-              sourcemap,
+        electron([
+          {
+            entry: "./src/backend/electron/main.ts",
+            // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
+            onstart: ({ startup }) => {
+              if (options.mode !== "test") {
+                startup([".", "--no-sandbox"]);
+              }
+            },
+            vite: {
+              plugins: [tsconfigPaths({ root: __dirname })],
+              build: {
+                outDir: path.resolve(__dirname, "dist"),
+                sourcemap,
+              },
             },
           },
-        }),
+          {
+            // ref: https://electron-vite.github.io/guide/preload-not-split.html
+            entry: "./src/backend/electron/preload.ts",
+            onstart({ reload }) {
+              reload();
+            },
+            vite: {
+              plugins: [tsconfigPaths({ root: __dirname })],
+              build: {
+                outDir: path.resolve(__dirname, "dist"),
+                sourcemap,
+                rollupOptions: {
+                  output: { inlineDynamicImports: true },
+                },
+              },
+            },
+          },
+        ]),
       ],
       isBrowser && injectBrowserPreloadPlugin(),
     ],

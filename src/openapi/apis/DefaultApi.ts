@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -205,6 +205,7 @@ export interface SingFrameVolumeSingFrameVolumePostRequest {
 
 export interface SingerInfoSingerInfoGetRequest {
     speakerUuid: string;
+    resourceFormat?: SingerInfoSingerInfoGetResourceFormatEnum;
     coreVersion?: string;
 }
 
@@ -214,6 +215,7 @@ export interface SingersSingersGetRequest {
 
 export interface SpeakerInfoSpeakerInfoGetRequest {
     speakerUuid: string;
+    resourceFormat?: SpeakerInfoSpeakerInfoGetResourceFormatEnum;
     coreVersion?: string;
 }
 
@@ -384,7 +386,7 @@ export interface DefaultApiInterface {
     connectWavesConnectWavesPost(requestParameters: ConnectWavesConnectWavesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
     /**
-     * 
+     * 利用可能なコアのバージョン一覧を取得します。
      * @summary Core Versions
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -393,6 +395,7 @@ export interface DefaultApiInterface {
     coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>>;
 
     /**
+     * 利用可能なコアのバージョン一覧を取得します。
      * Core Versions
      */
     coreVersionsCoreVersionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string>>;
@@ -445,7 +448,7 @@ export interface DefaultApiInterface {
     downloadableLibrariesDownloadableLibrariesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<DownloadableLibraryInfo>>;
 
     /**
-     * 
+     * エンジンマニフェストを取得します。
      * @summary Engine Manifest
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -454,6 +457,7 @@ export interface DefaultApiInterface {
     engineManifestEngineManifestGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EngineManifest>>;
 
     /**
+     * エンジンマニフェストを取得します。
      * Engine Manifest
      */
     engineManifestEngineManifestGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EngineManifest>;
@@ -475,6 +479,21 @@ export interface DefaultApiInterface {
      * Frame Synthesis
      */
     frameSynthesisFrameSynthesisPost(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
+
+    /**
+     * ポータルページを返します。
+     * @summary Get Portal Page
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    getPortalPageGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>>;
+
+    /**
+     * ポータルページを返します。
+     * Get Portal Page
+     */
+    getPortalPageGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string>;
 
     /**
      * エンジンが保持しているプリセットの設定を返します
@@ -763,9 +782,10 @@ export interface DefaultApiInterface {
     singFrameVolumeSingFrameVolumePost(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>>;
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * 指定されたspeaker_uuidの歌手に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
      * @summary Singer Info
      * @param {string} speakerUuid 
+     * @param {'base64' | 'url'} [resourceFormat] 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -774,13 +794,13 @@ export interface DefaultApiInterface {
     singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>>;
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * 指定されたspeaker_uuidの歌手に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Singer Info
      */
     singerInfoSingerInfoGet(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo>;
 
     /**
-     * 
+     * 歌手情報の一覧を取得します
      * @summary Singers
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
@@ -790,14 +810,16 @@ export interface DefaultApiInterface {
     singersSingersGetRaw(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>>;
 
     /**
+     * 歌手情報の一覧を取得します
      * Singers
      */
     singersSingersGet(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>>;
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * 指定されたspeaker_uuidの話者に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
      * @summary Speaker Info
      * @param {string} speakerUuid 
+     * @param {'base64' | 'url'} [resourceFormat] 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -806,13 +828,13 @@ export interface DefaultApiInterface {
     speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>>;
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * 指定されたspeaker_uuidの話者に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Speaker Info
      */
     speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo>;
 
     /**
-     * 
+     * 話者情報の一覧を取得します。
      * @summary Speakers
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
@@ -822,12 +844,13 @@ export interface DefaultApiInterface {
     speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>>;
 
     /**
+     * 話者情報の一覧を取得します。
      * Speakers
      */
     speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>>;
 
     /**
-     * 
+     * 対応デバイスの一覧を取得します。
      * @summary Supported Devices
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
@@ -837,6 +860,7 @@ export interface DefaultApiInterface {
     supportedDevicesSupportedDevicesGetRaw(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SupportedDevicesInfo>>;
 
     /**
+     * 対応デバイスの一覧を取得します。
      * Supported Devices
      */
     supportedDevicesSupportedDevicesGet(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SupportedDevicesInfo>;
@@ -928,7 +952,7 @@ export interface DefaultApiInterface {
     validateKanaValidateKanaPost(requestParameters: ValidateKanaValidateKanaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean>;
 
     /**
-     * 
+     * エンジンのバージョンを取得します。
      * @summary Version
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -937,6 +961,7 @@ export interface DefaultApiInterface {
     versionVersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>>;
 
     /**
+     * エンジンのバージョンを取得します。
      * Version
      */
     versionVersionGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string>;
@@ -1280,6 +1305,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 利用可能なコアのバージョン一覧を取得します。
      * Core Versions
      */
     async coreVersionsCoreVersionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>> {
@@ -1298,6 +1324,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 利用可能なコアのバージョン一覧を取得します。
      * Core Versions
      */
     async coreVersionsCoreVersionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string>> {
@@ -1400,6 +1427,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * エンジンマニフェストを取得します。
      * Engine Manifest
      */
     async engineManifestEngineManifestGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EngineManifest>> {
@@ -1418,6 +1446,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * エンジンマニフェストを取得します。
      * Engine Manifest
      */
     async engineManifestEngineManifestGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EngineManifest> {
@@ -1469,6 +1498,38 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      */
     async frameSynthesisFrameSynthesisPost(requestParameters: FrameSynthesisFrameSynthesisPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
         const response = await this.frameSynthesisFrameSynthesisPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ポータルページを返します。
+     * Get Portal Page
+     */
+    async getPortalPageGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * ポータルページを返します。
+     * Get Portal Page
+     */
+    async getPortalPageGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.getPortalPageGetRaw(initOverrides);
         return await response.value();
     }
 
@@ -2172,7 +2233,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * 指定されたspeaker_uuidの歌手に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Singer Info
      */
     async singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
@@ -2184,6 +2245,10 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
         if (requestParameters.speakerUuid !== undefined) {
             queryParameters['speaker_uuid'] = requestParameters.speakerUuid;
+        }
+
+        if (requestParameters.resourceFormat !== undefined) {
+            queryParameters['resource_format'] = requestParameters.resourceFormat;
         }
 
         if (requestParameters.coreVersion !== undefined) {
@@ -2203,7 +2268,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * 指定されたspeaker_uuidの歌手に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Singer Info
      */
     async singerInfoSingerInfoGet(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
@@ -2212,6 +2277,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 歌手情報の一覧を取得します
      * Singers
      */
     async singersSingersGetRaw(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
@@ -2234,6 +2300,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 歌手情報の一覧を取得します
      * Singers
      */
     async singersSingersGet(requestParameters: SingersSingersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
@@ -2242,7 +2309,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * 指定されたspeaker_uuidの話者に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Speaker Info
      */
     async speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
@@ -2254,6 +2321,10 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
         if (requestParameters.speakerUuid !== undefined) {
             queryParameters['speaker_uuid'] = requestParameters.speakerUuid;
+        }
+
+        if (requestParameters.resourceFormat !== undefined) {
+            queryParameters['resource_format'] = requestParameters.resourceFormat;
         }
 
         if (requestParameters.coreVersion !== undefined) {
@@ -2273,7 +2344,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidに関する情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。
+     * 指定されたspeaker_uuidの話者に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Speaker Info
      */
     async speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
@@ -2282,6 +2353,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 話者情報の一覧を取得します。
      * Speakers
      */
     async speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
@@ -2304,6 +2376,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 話者情報の一覧を取得します。
      * Speakers
      */
     async speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
@@ -2312,6 +2385,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 対応デバイスの一覧を取得します。
      * Supported Devices
      */
     async supportedDevicesSupportedDevicesGetRaw(requestParameters: SupportedDevicesSupportedDevicesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SupportedDevicesInfo>> {
@@ -2334,6 +2408,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * 対応デバイスの一覧を取得します。
      * Supported Devices
      */
     async supportedDevicesSupportedDevicesGet(requestParameters: SupportedDevicesSupportedDevicesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SupportedDevicesInfo> {
@@ -2564,6 +2639,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * エンジンのバージョンを取得します。
      * Version
      */
     async versionVersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
@@ -2586,6 +2662,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
+     * エンジンのバージョンを取得します。
      * Version
      */
     async versionVersionGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
@@ -2594,3 +2671,20 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
 }
+
+/**
+ * @export
+ */
+export const SingerInfoSingerInfoGetResourceFormatEnum = {
+    Base64: 'base64',
+    Url: 'url'
+} as const;
+export type SingerInfoSingerInfoGetResourceFormatEnum = typeof SingerInfoSingerInfoGetResourceFormatEnum[keyof typeof SingerInfoSingerInfoGetResourceFormatEnum];
+/**
+ * @export
+ */
+export const SpeakerInfoSpeakerInfoGetResourceFormatEnum = {
+    Base64: 'base64',
+    Url: 'url'
+} as const;
+export type SpeakerInfoSpeakerInfoGetResourceFormatEnum = typeof SpeakerInfoSpeakerInfoGetResourceFormatEnum[keyof typeof SpeakerInfoSpeakerInfoGetResourceFormatEnum];

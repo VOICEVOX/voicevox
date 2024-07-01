@@ -23,7 +23,8 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx"
+    "tests/**/*.tsx",
+    ".storybook/**/*.ts",
   ],
   "exclude": ["node_modules"]
 }
