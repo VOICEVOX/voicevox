@@ -40,6 +40,7 @@ export function ipcMainSend(
   return win.webContents.send(channel, ...args);
 }
 
+/** IPCメッセージの送信元を確認する */
 const validateIpcSender = (event: IpcMainInvokeEvent) => {
   let isValid: boolean;
   const senderUrl = new URL(event.senderFrame.url);
