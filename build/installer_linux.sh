@@ -405,7 +405,8 @@ DESKTOP_FILE=$(find squashfs-root -maxdepth 1 -name '*.desktop' | head -1)
 chmod +x "${DESKTOP_FILE}"
 
 ESCAPED_APP_DIR=$(echo "$APP_DIR" | sed 's/\//\\\//g')
-sed "s/Exec=.*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE} %U/" "${DESKTOP_FILE}" > _
+# TODO: --no-sandboxをつけているのはセキュリティが強化されたUbuntu 24.04で動作させるため ref:https://github.com/electron/electron/issues/41066。外せたら外す。
+sed "s/Exec=.*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE} %U --no-sandbox/" "${DESKTOP_FILE}" > _
 mv _ "${DESKTOP_FILE}"
 
 mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"

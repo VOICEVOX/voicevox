@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -34,12 +34,6 @@ import {
 export interface Speaker {
     /**
      * 
-     * @type {SpeakerSupportedFeatures}
-     * @memberof Speaker
-     */
-    supportedFeatures?: SpeakerSupportedFeatures;
-    /**
-     * 
      * @type {string}
      * @memberof Speaker
      */
@@ -61,7 +55,13 @@ export interface Speaker {
      * @type {string}
      * @memberof Speaker
      */
-    version?: string;
+    version: string;
+    /**
+     * 
+     * @type {SpeakerSupportedFeatures}
+     * @memberof Speaker
+     */
+    supportedFeatures?: SpeakerSupportedFeatures;
 }
 
 /**
@@ -72,6 +72,7 @@ export function instanceOfSpeaker(value: object): boolean {
     isInstance = isInstance && "name" in value;
     isInstance = isInstance && "speakerUuid" in value;
     isInstance = isInstance && "styles" in value;
+    isInstance = isInstance && "version" in value;
 
     return isInstance;
 }
@@ -86,11 +87,11 @@ export function SpeakerFromJSONTyped(json: any, ignoreDiscriminator: boolean): S
     }
     return {
         
-        'supportedFeatures': !exists(json, 'supported_features') ? undefined : SpeakerSupportedFeaturesFromJSON(json['supported_features']),
         'name': json['name'],
         'speakerUuid': json['speaker_uuid'],
         'styles': ((json['styles'] as Array<any>).map(SpeakerStyleFromJSON)),
-        'version': !exists(json, 'version') ? undefined : json['version'],
+        'version': json['version'],
+        'supportedFeatures': !exists(json, 'supported_features') ? undefined : SpeakerSupportedFeaturesFromJSON(json['supported_features']),
     };
 }
 
@@ -103,11 +104,11 @@ export function SpeakerToJSON(value?: Speaker | null): any {
     }
     return {
         
-        'supported_features': SpeakerSupportedFeaturesToJSON(value.supportedFeatures),
         'name': value.name,
         'speaker_uuid': value.speakerUuid,
         'styles': ((value.styles as Array<any>).map(SpeakerStyleToJSON)),
         'version': value.version,
+        'supported_features': SpeakerSupportedFeaturesToJSON(value.supportedFeatures),
     };
 }
 

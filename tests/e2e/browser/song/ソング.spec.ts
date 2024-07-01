@@ -79,7 +79,7 @@ test("ダブルクリックで歌詞を編集できる", async ({ page }) => {
 
   await sequencer.click({ position: { x: 107, y: 171 }, clickCount: 2 }); // ダブルクリック
 
-  await note.getByRole("textbox").fill("あ");
+  await sequencer.locator(".lyric-input").fill("あ");
   await page.keyboard.press("Enter");
   const afterLyric = await getCurrentNoteLyric(note);
   expect(afterLyric).not.toEqual(beforeLyric);

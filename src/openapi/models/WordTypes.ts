@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -14,7 +14,7 @@
 
 
 /**
- * fastapiでword_type引数を検証する時に使用するクラス
+ * 品詞
  * @export
  */
 export const WordTypes = {
