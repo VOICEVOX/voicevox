@@ -26,18 +26,14 @@
       <QInput
         type="number"
         :model-value="bpmInputBuffer"
-        label="テンポ"
         dense
         hide-bottom-space
+        standout
         class="sing-tempo"
         @update:model-value="setBpmInputBuffer"
         @change="setTempo"
-      >
-        <template #prepend>
-          <QIcon name="music_note" size="xs" class="sing-tempo-icon" />
-        </template>
-      </QInput>
-      <QField label="拍子" hide-bottom-space dense>
+      />
+      <QField hide-bottom-space dense>
         <div class="sing-beats">
           <QSelect
             :model-value="timeSignatures[0].beats"
@@ -45,6 +41,7 @@
             hide-bottom-space
             hide-dropdown-icon
             user-inputs
+            standout
             dense
             options-dense
             transition-show="none"
@@ -59,6 +56,7 @@
             hide-bottom-space
             hide-dropdown-icon
             user-inputs
+            standout
             dense
             options-dense
             transition-show="none"
@@ -129,12 +127,12 @@
       <QSelect
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
-        outlined
+        standout
         color="primary"
-        dense
         text-color="display-on-primary"
         hide-bottom-space
         options-dense
+        hide-dropdown-icon
         label="スナップ"
         transition-show="none"
         transition-hide="none"
@@ -344,18 +342,6 @@ const setTempo = () => {
   });
 };
 
-const setTimeSignature = () => {
-  const beats = beatsInputBuffer.value;
-  const beatType = beatTypeInputBuffer.value;
-  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
-    timeSignature: {
-      measureNumber: 1,
-      beats,
-      beatType,
-    },
-  });
-};
-
 const setKeyRangeAdjustment = () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
   store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
@@ -472,13 +458,13 @@ onUnmounted(() => {
 
 .q-input {
   :deep(.q-field__control::before) {
-    border-color: rgba(colors.$display-rgb, 0.3);
+    border-color: var(--md-sys-color-outline);
   }
 }
 
 .q-select {
   :deep(.q-field__control::before) {
-    border-color: rgba(colors.$display-rgb, 0.3);
+    border-color: var(--md-sys-color-outline);
   }
 }
 
@@ -488,7 +474,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   min-height: 64px;
-  padding: 0 16px;
+  padding: 0 4px;
   width: 100%;
 }
 
@@ -549,6 +535,16 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
+.sing-playback-button {
+  // primaryボタン
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-surface);
+  &:before {
+    box-shadow: none;
+  }
+  //border: 1px solid var(--md-ref-palette-neutral-variant-80);
+}
+
 .sing-playhead-position {
   align-items: center;
   display: flex;
@@ -574,8 +570,10 @@ onUnmounted(() => {
 
 .sing-undo-button,
 .sing-redo-button {
+  height: 40px;
+  min-width: 40px;
   &.disabled {
-    opacity: 0.4 !important;
+    opacity: 0.87 !important;
   }
 }
 .sing-redo-button {
@@ -592,6 +590,6 @@ onUnmounted(() => {
 }
 
 .sing-snap {
-  min-width: 104px;
+  min-width: 80px;
 }
 </style>

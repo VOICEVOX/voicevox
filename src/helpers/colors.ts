@@ -28,7 +28,7 @@ export function generateTheme(
 ): Theme {
   let theme = themeFromSourceColor(argbFromHex(sourceColor));
 
-  // Apply adjustments to palettes
+  // パレットの調整
   const adjustedPalettes: Record<keyof Theme["palettes"], TonalPalette> = {
     ...theme.palettes,
   };
@@ -43,7 +43,7 @@ export function generateTheme(
     }
   }
 
-  // Process custom colors
+  // カスタムカラーの処理
   const customColorGroups: CustomColorGroup[] = customColors.map((color) => {
     const lightColor = adjustedPalettes[color.palette].tone(color.lightTone);
     const darkColor = adjustedPalettes[color.palette].tone(color.darkTone);
@@ -71,11 +71,11 @@ export function generateTheme(
     };
   });
 
-  // Generate new schemes based on adjusted palettes
+  // パレットに基づいて新しいスキームを生成
   const lightScheme = Scheme.light(adjustedPalettes.primary.keyColor.toInt());
   const darkScheme = Scheme.dark(adjustedPalettes.primary.keyColor.toInt());
 
-  // Update custom colors with scheme colors
+  // スキームに基づいてカスタムカラーを更新
   customColorGroups.forEach((group) => {
     group.light.onColor = lightScheme.onPrimary;
     group.light.colorContainer = lightScheme.primaryContainer;
@@ -85,7 +85,7 @@ export function generateTheme(
     group.dark.onColorContainer = darkScheme.onPrimaryContainer;
   });
 
-  // Create new theme with adjusted palettes, schemes, and custom colors
+  // 調整されたパレット、スキーム、カスタムカラーを使用して新しいテーマを作成
   theme = {
     ...theme,
     palettes: adjustedPalettes,
@@ -109,18 +109,43 @@ export function themeToCssVariables(
 
   // Set sys colors
   Object.entries(scheme.toJSON()).forEach(([colorName, color]) => {
-    const kebabCaseName = colorName
+    const kebabCasePaletteName = colorName
       .replace(/([a-z])([A-Z])/g, "$1-$2")
       .toLowerCase();
-    vars[`--md-sys-color-${kebabCaseName}`] = hexFromArgb(color);
+    vars[`--md-sys-color-${kebabCasePaletteName}`] = hexFromArgb(color);
+  });
+
+  // 追加のカラーバリアントの生成と設定
+  const colorRoles = [
+    "primary",
+    "secondary",
+    "tertiary",
+    "neutral",
+    "neutralVariant",
+    "error",
+  ] as const;
+  colorRoles.forEach((role) => {
+    const palette = theme.palettes[role];
+
+    // dim, bright バリアントの生成
+    const dimTone = isDark ? 6 : 87;
+    const brightTone = isDark ? 24 : 98;
+    vars[`--md-sys-color-${role}-dim`] = hexFromArgb(palette.tone(dimTone));
+    vars[`--md-sys-color-${role}-bright`] = hexFromArgb(
+      palette.tone(brightTone),
+    );
   });
 
   // Set ref palette
   for (const [paletteName, palette] of Object.entries(theme.palettes)) {
     const tones = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
     for (const tone of tones) {
-      vars[`--md-ref-palette-${paletteName.toLowerCase()}-${tone}`] =
-        hexFromArgb(palette.tone(tone));
+      const kebabCasePaletteName = paletteName
+        .replace(/([a-z])([A-Z])/g, "$1-$2")
+        .toLowerCase();
+      vars[`--md-ref-palette-${kebabCasePaletteName}-${tone}`] = hexFromArgb(
+        palette.tone(tone),
+      );
     }
   }
 

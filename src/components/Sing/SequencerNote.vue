@@ -309,8 +309,7 @@ const onLyricInput = (event: Event) => {
 
   &.selected {
     .note-bar {
-      background-color: var(--md-sys-color-primary-container);
-      border-color: var(--md-sys-color-inverse-primary);
+      background-color: var(--md-ref-palette-primary-95);
       outline: solid 2px var(--md-sys-color-inverse-primary);
     }
 
@@ -366,7 +365,7 @@ const onLyricInput = (event: Event) => {
   min-width: 2rem;
   padding: 0;
   background: transparent;
-  color: var(--md-sys-color-on-surface);
+  color: var(--md-ref-palette-neutral-variant-20);
   font-size: 1rem;
   font-weight: 500;
   white-space: nowrap;
@@ -378,8 +377,8 @@ const onLyricInput = (event: Event) => {
   position: absolute;
   width: calc(100% + 1px);
   height: 100%;
-  border: 1px solid var(--md-sys-color-secondary);
-  background-color: var(--md-sys-color-secondary-container);
+  border: 1px solid var(--md-ref-palette-neutral-variant-90);
+  background-color: var(--md-ref-palette-primary-90);
   border-radius: 4px;
 }
 
@@ -410,14 +409,18 @@ const onLyricInput = (event: Event) => {
 }
 
 .note-lyric-input {
-  position: absolute;
+  position: relative;
   bottom: 0;
   font-weight: 500;
-  min-width: 2rem;
-  max-width: fit-content;
-  border: 0;
+  min-width: fit-content;
   outline: 2px solid var(--md-sys-color-inverse-primary);
   border-radius: 4px;
+  border: 0;
+  // boxshadow beautiful md3 medium
+  box-shadow:
+    0px 2px 4px -2px rgba(0, 0, 0, 0.2),
+    0px 0px 2px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 5px 0px rgba(0, 0, 0, 0.12);
 }
 
 .cursor-move {

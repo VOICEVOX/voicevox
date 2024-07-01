@@ -69,6 +69,15 @@
                 stroke-width="1"
                 class="sequencer-grid-octave-line"
               />
+              <line
+                v-if="keyInfo.pitch === 'F'"
+                x1="0"
+                :x2="gridCellWidth"
+                :y1="gridCellHeight * (index + 1)"
+                :y2="gridCellHeight * (index + 1)"
+                stroke-width="1"
+                class="sequencer-grid-f-line"
+              />
             </template>
           </pattern>
           <pattern
@@ -1582,7 +1591,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: var(--md-sys-color-surface-variant);
+  background: var(--md-custom-color-sing-ruler);
 }
 
 .sequencer-ruler {
@@ -1614,19 +1623,24 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 
 .sequencer-grid-cell {
   display: block;
-  stroke: var(--md-sys-color-outline);
-  stroke-width: 0;
+  stroke: var(--md-sys-color-grid-beat-line);
 }
 
 .sequencer-grid-octave-cell {
-  stroke: var(--md-sys-color-outline);
+  stroke: var(--md-sys-color-grid-measure-line);
 }
 
 .sequencer-grid-octave-line {
   backface-visibility: hidden;
-  stroke: var(--md-sys-color-outline);
+  stroke: var(--md-custom-color-sing-grid-measure-line);
+  position: relative;
+  top: 1px;
 }
 
+.sequencer-grid-f-line {
+  backface-visibility: hidden;
+  stroke: var(--md-custom-color-sing-grid-beat-line);
+}
 .sequencer-grid-cell-white {
   fill: var(--md-custom-color-cell-white);
 }
@@ -1638,6 +1652,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
   stroke: var(--md-custom-color-sing-grid-measure-line);
+  stroke-width: 1.5;
 }
 
 .sequencer-grid-beat-line {
@@ -1648,8 +1663,8 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 .sequencer-guideline {
   position: absolute;
   top: 0;
-  left: -1px;
-  width: 2px;
+  left: 0;
+  width: 1px;
   background: var(--md-sys-color-secondary-container);
   pointer-events: none;
 }

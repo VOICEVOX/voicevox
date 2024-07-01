@@ -1,4 +1,5 @@
 import { Dark, setCssVar, colors } from "quasar";
+import { generateTheme, themeToCssVariables } from "../helpers/colors";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
@@ -274,6 +275,80 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       );
 
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
+
+      // ブランドカラー
+      const sourceColor = "#A5D4AD";
+      // パレットの調整
+      const adjustments = {
+        neutral: { chroma: -2 },
+        neutralVariant: { chroma: -2 },
+      };
+      // カスタムカラー(仮)
+      const customColors = [
+        {
+          name: "sing-toolbar",
+          palette: "neutralVariant",
+          lightTone: 99,
+          darkTone: 20,
+          blend: true,
+        },
+        {
+          name: "sing-ruler",
+          palette: "neutralVariant",
+          lightTone: 90,
+          darkTone: 10,
+          blend: true,
+        },
+        {
+          name: "cell-white",
+          palette: "neutral",
+          lightTone: 100,
+          darkTone: 15,
+          blend: true,
+        },
+        {
+          name: "cell-black",
+          palette: "neutral",
+          lightTone: 96,
+          darkTone: 12,
+          blend: true,
+        },
+        {
+          name: "sing-grid-measure-line",
+          palette: "neutral",
+          lightTone: 70,
+          darkTone: 30,
+          blend: true,
+        },
+        {
+          name: "sing-grid-beat-line",
+          palette: "neutral",
+          lightTone: 90,
+          darkTone: 0,
+          blend: true,
+        },
+        {
+          name: "sing-piano-key-white",
+          palette: "neutral",
+          lightTone: 100,
+          darkTone: 80,
+          blend: true,
+        },
+        {
+          name: "sing-piano-key-black",
+          palette: "neutral",
+          lightTone: 50,
+          darkTone: 30,
+          blend: true,
+        },
+      ];
+      const md3theme = generateTheme(sourceColor, adjustments, customColors);
+      const cssVariables = themeToCssVariables(md3theme, theme.isDark);
+
+      // CSSに適用する
+      Object.entries(cssVariables).forEach(([key, value]) => {
+        document.documentElement.style.setProperty(key, value);
+      });
 
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
