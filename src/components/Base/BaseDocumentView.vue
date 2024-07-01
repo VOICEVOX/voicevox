@@ -5,6 +5,7 @@
 </template>
 
 <style scoped lang="scss">
+@use "@/styles/variables" as vars;
 @use "@/styles/mixin" as mixin;
 @use "@/styles/colors-v2" as colors;
 
@@ -48,8 +49,8 @@
     margin-top: 1rem;
   }
 
-  :deep(ul),
-  :deep(ol) {
+  :deep(div > ul),
+  :deep(div > ol) {
     margin-top: 1rem;
   }
 
@@ -69,7 +70,7 @@
   :deep(img) {
     margin-top: 0.5rem;
     border: 1px solid colors.$border;
-    border-radius: 8px;
+    border-radius: vars.$radius-1;
     vertical-align: middle;
   }
 
@@ -82,16 +83,39 @@
   }
 
   :deep(pre) {
-    padding: 8px;
+    padding: vars.$padding-1;
     margin-top: 1rem;
-    background-color: colors.$background;
-    border-radius: 8px;
+    background-color: colors.$surface;
+    border: 1px solid colors.$border;
+    border-radius: vars.$radius-1;
   }
 
-  :deep(p > code) {
+  :deep(:not(pre) > code) {
     padding: 4px;
-    background-color: colors.$background;
+    background-color: colors.$surface;
+    border: 1px solid colors.$border;
     border-radius: 4px;
+  }
+
+  :deep(details) {
+    padding: vars.$padding-1;
+    background-color: colors.$surface;
+    border: 1px solid colors.$border;
+    border-radius: vars.$radius-1;
+  }
+
+  :deep(summary) {
+    padding: vars.$padding-1;
+    margin: calc(#{vars.$padding-1} * -1);
+    cursor: pointer;
+  }
+
+  :deep(summary::before) {
+    content: "▶ ";
+  }
+
+  :deep(details[open] > summary::before) {
+    content: "▼ ";
   }
 }
 </style>
