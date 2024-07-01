@@ -87,6 +87,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
 
     return {
       ...createDefaultTrack(),
+      name: projectTrack.name,
       notes,
     };
   });
