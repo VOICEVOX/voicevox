@@ -181,12 +181,12 @@ onUnmounted(() => {
 
 .white-key {
   fill: var(--md-custom-color-sing-piano-key-white);
-  stroke: var(--md-custom-color-sing-grid-beat-line);
+  stroke: var(--md-sys-color-outline-variant);
 }
 
 .white-key-being-pressed {
-  fill: var(--md-sys-color-secondary-container);
-  stroke: var(--md-sys-color-primary);
+  fill: var(--md-sys-color-secondary-fixed-dim);
+  stroke: var(--md-sys-color-secondary-fixed-dim);
 }
 
 .black-key {
@@ -194,10 +194,10 @@ onUnmounted(() => {
 }
 
 .black-key-being-pressed {
-  fill: var(--md-sys-color-secondary-container);
+  fill: var(--md-sys-color-secondary-fixed-dim);
 }
 
 .pitchname {
-  fill: var(--md-sys-color-on-surface);
+  fill: var(--md-sys-color-on-surface-fixed);
 }
 </style>

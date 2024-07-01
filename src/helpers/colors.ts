@@ -5,26 +5,32 @@ import {
   Theme,
   Scheme,
   TonalPalette,
-  CustomColorGroup,
   Hct,
+  CustomColorGroup,
 } from "@material/material-color-utilities";
 
 type ColorAdjustment = Partial<{ hue: number; chroma: number; tone: number }>;
 type PaletteAdjustments = Partial<
   Record<keyof Theme["palettes"], ColorAdjustment>
 >;
-type CustomColor = {
+type CustomPaletteColor = {
   name: string;
   palette: keyof Theme["palettes"];
   lightTone: number;
   darkTone: number;
   blend: boolean;
 };
+type CustomDefinedColor = {
+  name: string;
+  value: string;
+  blend: boolean;
+};
 
 export function generateTheme(
   sourceColor: string,
   adjustments: PaletteAdjustments = {},
-  customColors: CustomColor[] = [],
+  customPaletteColors: CustomPaletteColor[] = [],
+  customDefinedColors: CustomDefinedColor[] = [],
 ): Theme {
   let theme = themeFromSourceColor(argbFromHex(sourceColor));
 
@@ -44,32 +50,57 @@ export function generateTheme(
   }
 
   // カスタムカラーの処理
-  const customColorGroups: CustomColorGroup[] = customColors.map((color) => {
-    const lightColor = adjustedPalettes[color.palette].tone(color.lightTone);
-    const darkColor = adjustedPalettes[color.palette].tone(color.darkTone);
-    return {
-      name: color.name,
-      value: lightColor, // デフォルト値として明るい方の色を使用
-      blend: color.blend,
-      color: {
-        name: color.name,
+  const customColorGroups: CustomColorGroup[] = [
+    ...customPaletteColors.map((color) => {
+      const lightColor = adjustedPalettes[color.palette].tone(color.lightTone);
+      const darkColor = adjustedPalettes[color.palette].tone(color.darkTone);
+      return {
+        color: {
+          name: color.name,
+          value: lightColor,
+          blend: color.blend,
+        },
         value: lightColor,
         blend: color.blend,
-      },
-      light: {
-        color: lightColor,
-        onColor: 0,
-        colorContainer: 0,
-        onColorContainer: 0,
-      },
-      dark: {
-        color: darkColor,
-        onColor: 0,
-        colorContainer: 0,
-        onColorContainer: 0,
-      },
-    };
-  });
+        light: {
+          color: lightColor,
+          onColor: 0,
+          colorContainer: 0,
+          onColorContainer: 0,
+        },
+        dark: {
+          color: darkColor,
+          onColor: 0,
+          colorContainer: 0,
+          onColorContainer: 0,
+        },
+      };
+    }),
+    ...customDefinedColors.map((color) => {
+      const colorValue = argbFromHex(color.value);
+      return {
+        color: {
+          name: color.name,
+          value: colorValue,
+          blend: color.blend,
+        },
+        value: colorValue,
+        blend: color.blend,
+        light: {
+          color: colorValue,
+          onColor: 0,
+          colorContainer: 0,
+          onColorContainer: 0,
+        },
+        dark: {
+          color: colorValue,
+          onColor: 0,
+          colorContainer: 0,
+          onColorContainer: 0,
+        },
+      };
+    }),
+  ];
 
   // パレットに基づいて新しいスキームを生成
   const lightScheme = Scheme.light(adjustedPalettes.primary.keyColor.toInt());
@@ -104,39 +135,74 @@ export function themeToCssVariables(
   isDark: boolean,
 ): Record<string, string> {
   const vars: Record<string, string> = {};
-
   const scheme = isDark ? theme.schemes.dark : theme.schemes.light;
 
-  // Set sys colors
+  // すべての標準カラーロールを設定
   Object.entries(scheme.toJSON()).forEach(([colorName, color]) => {
-    const kebabCasePaletteName = colorName
+    const kebabCaseName = colorName
       .replace(/([a-z])([A-Z])/g, "$1-$2")
       .toLowerCase();
-    vars[`--md-sys-color-${kebabCasePaletteName}`] = hexFromArgb(color);
+    vars[`--md-sys-color-${kebabCaseName}`] = hexFromArgb(color);
   });
 
-  // 追加のカラーバリアントの生成と設定
-  const colorRoles = [
-    "primary",
-    "secondary",
-    "tertiary",
-    "neutral",
-    "neutralVariant",
-    "error",
-  ] as const;
+  // 追加のカラーバリアントを生成
+  const colorRoles = ["primary", "secondary", "tertiary", "error"] as const;
   colorRoles.forEach((role) => {
     const palette = theme.palettes[role];
 
-    // dim, bright バリアントの生成
-    const dimTone = isDark ? 6 : 87;
-    const brightTone = isDark ? 24 : 98;
-    vars[`--md-sys-color-${role}-dim`] = hexFromArgb(palette.tone(dimTone));
-    vars[`--md-sys-color-${role}-bright`] = hexFromArgb(
-      palette.tone(brightTone),
+    // Fixed, Fixed Dim, On Fixed, On Fixed Variant
+    vars[`--md-sys-color-${role}-fixed`] = hexFromArgb(palette.tone(90));
+    vars[`--md-sys-color-${role}-fixed-dim`] = hexFromArgb(palette.tone(80));
+    vars[`--md-sys-color-on-${role}-fixed`] = hexFromArgb(palette.tone(10));
+    vars[`--md-sys-color-on-${role}-fixed-variant`] = hexFromArgb(
+      palette.tone(30),
     );
   });
 
-  // Set ref palette
+  // Surface Variants
+  const neutralPalette = theme.palettes.neutral;
+  vars["--md-sys-color-surface-dim"] = hexFromArgb(
+    neutralPalette.tone(isDark ? 6 : 87),
+  );
+  vars["--md-sys-color-surface-bright"] = hexFromArgb(
+    neutralPalette.tone(isDark ? 24 : 98),
+  );
+
+  // Surface Container
+  const containerTones = isDark
+    ? { lowest: 4, low: 10, medium: 12, high: 17, highest: 22 }
+    : { lowest: 100, low: 96, medium: 94, high: 92, highest: 90 };
+
+  Object.entries(containerTones).forEach(([variant, tone]) => {
+    vars[`--md-sys-color-surface-container-${variant}`] = hexFromArgb(
+      neutralPalette.tone(tone),
+    );
+  });
+
+  // Inverse
+  vars["--md-sys-color-inverse-surface"] = hexFromArgb(
+    neutralPalette.tone(isDark ? 90 : 20),
+  );
+  vars["--md-sys-color-inverse-on-surface"] = hexFromArgb(
+    neutralPalette.tone(isDark ? 20 : 95),
+  );
+  vars["--md-sys-color-inverse-primary"] = hexFromArgb(
+    theme.palettes.primary.tone(isDark ? 40 : 80),
+  );
+
+  // Outline
+  vars["--md-sys-color-outline"] = hexFromArgb(
+    theme.palettes.neutralVariant.tone(isDark ? 60 : 50),
+  );
+  vars["--md-sys-color-outline-variant"] = hexFromArgb(
+    theme.palettes.neutralVariant.tone(isDark ? 30 : 80),
+  );
+
+  // Scrim, Shadow
+  vars["--md-sys-color-scrim"] = hexFromArgb(neutralPalette.tone(0));
+  vars["--md-sys-color-shadow"] = hexFromArgb(neutralPalette.tone(0));
+
+  // refパレット
   for (const [paletteName, palette] of Object.entries(theme.palettes)) {
     const tones = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
     for (const tone of tones) {
@@ -149,7 +215,7 @@ export function themeToCssVariables(
     }
   }
 
-  // Set custom colors
+  // カスタムカラーを設定
   theme.customColors.forEach((customColor) => {
     const color = isDark ? customColor.dark.color : customColor.light.color;
     vars[`--md-custom-color-${customColor.color.name}`] = hexFromArgb(color);

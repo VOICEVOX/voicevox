@@ -278,13 +278,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       // ブランドカラー
       const sourceColor = "#A5D4AD";
-      // パレットの調整
+      // パレットの調整(ニュートラルカラーの彩度を落とす)
       const adjustments = {
-        neutral: { chroma: -2 },
-        neutralVariant: { chroma: -2 },
+        neutral: { chroma: -1 },
+        neutralVariant: { chroma: -4 },
       };
       // カスタムカラー(仮)
-      const customColors = [
+      const customPaletteColors = [
         {
           name: "sing-toolbar",
           palette: "neutralVariant",
@@ -310,14 +310,21 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           name: "cell-black",
           palette: "neutral",
           lightTone: 96,
-          darkTone: 12,
+          darkTone: 10,
           blend: true,
         },
         {
           name: "sing-grid-measure-line",
           palette: "neutral",
           lightTone: 70,
-          darkTone: 30,
+          darkTone: 50,
+          blend: true,
+        },
+        {
+          name: "sing-grid-cell-line",
+          palette: "neutral",
+          lightTone: 95,
+          darkTone: 10,
           blend: true,
         },
         {
@@ -330,20 +337,32 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         {
           name: "sing-piano-key-white",
           palette: "neutral",
-          lightTone: 100,
+          lightTone: 99,
           darkTone: 80,
           blend: true,
         },
         {
           name: "sing-piano-key-black",
           palette: "neutral",
-          lightTone: 50,
+          lightTone: 40,
           darkTone: 30,
           blend: true,
         },
       ];
-      const md3theme = generateTheme(sourceColor, adjustments, customColors);
-      const cssVariables = themeToCssVariables(md3theme, theme.isDark);
+      const definedPaletteColors = [
+        {
+          name: "brand",
+          value: "#A5D4AD",
+          blend: false,
+        },
+      ];
+      const m3theme = generateTheme(
+        sourceColor,
+        adjustments,
+        customPaletteColors,
+        definedPaletteColors,
+      );
+      const cssVariables = themeToCssVariables(m3theme, theme.isDark);
 
       // CSSに適用する
       Object.entries(cssVariables).forEach(([key, value]) => {

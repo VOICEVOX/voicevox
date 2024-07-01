@@ -109,6 +109,7 @@
         dense
         round
         icon="undo"
+        size="16px"
         class="sing-undo-button"
         :disable="!canUndo"
         @click="undo"
@@ -118,6 +119,7 @@
         dense
         round
         icon="redo"
+        size="16px"
         class="sing-redo-button"
         :disable="!canRedo"
         @click="redo"
@@ -469,7 +471,7 @@ onUnmounted(() => {
 }
 
 .sing-toolbar {
-  background: var(--md-custom-color-sing-toolbar);
+  background: var(--md-sys-color-surface-high);
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -568,10 +570,12 @@ onUnmounted(() => {
   flex: 1;
 }
 
+.sing-undo-button {
+  margin-left: 24px;
+}
+
 .sing-undo-button,
 .sing-redo-button {
-  height: 40px;
-  min-width: 40px;
   &.disabled {
     opacity: 0.87 !important;
   }

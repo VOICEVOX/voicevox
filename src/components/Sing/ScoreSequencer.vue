@@ -1591,7 +1591,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: var(--md-custom-color-sing-ruler);
+  background: var(--md-sys-color-surface-container-high);
 }
 
 .sequencer-ruler {
@@ -1623,11 +1623,11 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 
 .sequencer-grid-cell {
   display: block;
-  stroke: var(--md-sys-color-grid-beat-line);
+  stroke: var(--md-custom-color-sing-grid-cell-line);
 }
 
 .sequencer-grid-octave-cell {
-  stroke: var(--md-sys-color-grid-measure-line);
+  stroke: var(--md-custom-color-sing-grid-measure-line);
 }
 
 .sequencer-grid-octave-line {

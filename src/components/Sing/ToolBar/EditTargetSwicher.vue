@@ -37,11 +37,12 @@ defineProps<{
 
 <style scoped lang="scss">
 .edit-target-switcher {
-  border: 1px solid var(--md-ref-palette-neutral-variant-80);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 6px;
 }
 
 .segment-switch {
-  color: var(--md-sys-color-secondary-on-surface);
+  color: var(--md-sys-color-secondary-on-secondary-container);
   height: 40px;
   min-width: 40px;
 

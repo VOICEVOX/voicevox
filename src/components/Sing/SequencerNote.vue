@@ -302,29 +302,30 @@ const onLyricInput = (event: Event) => {
 
   &.below-pitch {
     .note-bar {
-      background-color: var(--md-sys-color-primary-container);
-      border-color: var(--md-sys-color-primary);
+      background-color: var(--md-sys-color-surface-variant);
+      border-color: var(--md-sys-color-secondary-fixed-dim);
     }
   }
 
   &.selected {
     .note-bar {
-      background-color: var(--md-ref-palette-primary-95);
-      outline: solid 2px var(--md-sys-color-inverse-primary);
+      background-color: var(--md-sys-color-primary-fixed-dim);
+      border-color: var(--md-sys-color-secondary-fixed);
+      outline: solid 2px var(--md-sys-color-secondady-fixed);
     }
 
     &.below-pitch {
       .note-bar {
-        background-color: var(--md-sys-color-primary-container);
+        background-color: var(--md-sys-color-surface-variant);
       }
     }
   }
   // TODO：もっといい見た目を考える
   &.preview-lyric {
     .note-bar {
-      background-color: lab(90, -22.953, 14.365);
-      border-color: lab(75, -22.953, 14.365);
-      outline: solid 2px lab(80, -22.953, 14.365);
+      background-color: var(--md-sys-color-secondary-fixed);
+      border-color: var(--md-sys-color-primary-fixed);
+      outline: solid 2px var(--md-sys-color-primary-fixed-dim);
     }
 
     .note-lyric {
@@ -333,7 +334,9 @@ const onLyricInput = (event: Event) => {
 
     &.below-pitch {
       .note-bar {
-        background-color: rgba(hsl(130, 100%, 50%), 0.18);
+        background-color: var(--md-sys-color-secondary-fixed);
+        border-color: var(--md-sys-color-primary-fixed);
+        outline: solid 2px var(--md-sys-color-primary-fixed-dim);
       }
     }
   }
@@ -341,18 +344,20 @@ const onLyricInput = (event: Event) => {
   &.overlapping,
   &.invalid-phrase {
     .note-bar {
-      background-color: rgba(colors.$warning-rgb, 0.5);
+      background-color: var(--md-sys-color-error-container);
+      border-color: var(--md-sys-color-error);
     }
 
     .note-lyric {
+      color: var(--md-sys-color-error);
       opacity: 0.6;
     }
 
     &.selected {
       .note-bar {
-        background-color: rgba(colors.$warning-rgb, 0.5);
-        border-color: colors.$warning;
-        outline: 2px solid rgba(colors.$warning-rgb, 0.3);
+        background-color: var(--md-sys-color-error-container);
+        border-color: var(--md-sys-color-error);
+        outline: 2px solid var(--md-sys-color-error-container);
       }
     }
   }
@@ -377,8 +382,8 @@ const onLyricInput = (event: Event) => {
   position: absolute;
   width: calc(100% + 1px);
   height: 100%;
-  border: 1px solid var(--md-ref-palette-neutral-variant-90);
-  background-color: var(--md-ref-palette-primary-90);
+  border: 1px solid var(--md-sys-color-secondary-fixed-dim);
+  background-color: var(--md-sys-color-secondary-fixed);
   border-radius: 4px;
 }
 
@@ -391,7 +396,7 @@ const onLyricInput = (event: Event) => {
 
   &:hover {
     // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: var(--md-sys-color-inverse-primary);
+    background-color: var(--md-sys-color-secondary-fixed-dim);
   }
 }
 
@@ -404,7 +409,7 @@ const onLyricInput = (event: Event) => {
 
   &:hover {
     // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: var(--md-sys-color-inverse-primary);
+    background-color: var(--md-sys-color-secondary-fixed-dim);
   }
 }
 

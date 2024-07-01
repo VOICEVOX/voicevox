@@ -35,9 +35,9 @@ type PitchLine = {
 };
 
 const originalPitchLineColor = new Color(171, 201, 176, 255);
-const originalPitchLineWidth = 1.2;
+const originalPitchLineWidth = 1;
 const pitchEditLineColor = new Color(146, 214, 154, 255);
-const pitchEditLineWidth = 2;
+const pitchEditLineWidth = 1.5;
 
 const props = defineProps<{
   offsetX: number;
