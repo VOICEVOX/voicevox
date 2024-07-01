@@ -12,8 +12,8 @@ export const useLyricInput = () => {
   const previewLyrics = ref<Map<string, string>>(new Map());
   // 入力中の歌詞を分割してプレビューに反映する。
   const splitAndUpdatePreview = (lyric: string, note: Note) => {
-    // TODO: マルチトラック対応
-    const inputNoteIndex = store.state.tracks[0].notes.findIndex(
+    const currentTrack = store.getters.SELECTED_TRACK;
+    const inputNoteIndex = currentTrack.notes.findIndex(
       (value) => value.id === note.id,
     );
     if (inputNoteIndex === -1) {
@@ -23,7 +23,7 @@ export const useLyricInput = () => {
 
     const lyricPerNote = splitLyricsByMoras(
       lyric,
-      store.state.tracks[0].notes.length - inputNoteIndex,
+      currentTrack.notes.length - inputNoteIndex,
     );
     for (const [index, mora] of lyricPerNote.entries()) {
       const noteIndex = inputNoteIndex + index;
@@ -50,7 +50,10 @@ export const useLyricInput = () => {
       newNotes.push({ ...note, lyric });
     }
     previewLyrics.value = new Map();
-    store.dispatch("COMMAND_UPDATE_NOTES", { notes: newNotes });
+    store.dispatch("COMMAND_UPDATE_NOTES", {
+      notes: newNotes,
+      trackId: store.state.selectedTrackId,
+    });
   };
 
   return { previewLyrics, splitAndUpdatePreview, commitPreviewLyrics };

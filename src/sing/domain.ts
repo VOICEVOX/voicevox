@@ -4,7 +4,6 @@ import {
   Note,
   Phrase,
   PhraseSource,
-  PhraseSourceHash,
   SingingGuide,
   SingingGuideSource,
   SingingVoiceSource,
@@ -20,6 +19,9 @@ import { FramePhoneme } from "@/openapi";
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
 const MAX_SNAP_TYPE = 32;
+
+export const isTracksEmpty = (tracks: Track[]) =>
+  tracks.length === 0 || (tracks.length === 1 && tracks[0].notes.length === 0);
 
 export const isValidTpqn = (tpqn: number) => {
   return (
@@ -88,6 +90,14 @@ export const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
 
 export const isValidNotes = (notes: Note[]) => {
   return notes.every((value) => isValidNote(value));
+};
+
+export const isValidTrack = (track: Track) => {
+  return (
+    isValidKeyRangeAdjustment(track.keyRangeAdjustment) &&
+    isValidVolumeRangeAdjustment(track.volumeRangeAdjustment) &&
+    isValidNotes(track.notes)
+  );
 };
 
 const tickToSecondForConstantBpm = (
@@ -394,7 +404,7 @@ export function getEndTicksOfPhrase(phrase: Phrase) {
   return lastNote.position + lastNote.duration;
 }
 
-export function toSortedPhrases(phrases: Map<PhraseSourceHash, Phrase>) {
+export function toSortedPhrases<K extends string>(phrases: Map<K, Phrase>) {
   return [...phrases.entries()].sort((a, b) => {
     const startTicksOfPhraseA = getStartTicksOfPhrase(a[1]);
     const startTicksOfPhraseB = getStartTicksOfPhrase(b[1]);
@@ -410,10 +420,10 @@ export function toSortedPhrases(phrases: Map<PhraseSourceHash, Phrase>) {
  * - 再生位置より後のPhrase
  * - 再生位置より前のPhrase
  */
-export function selectPriorPhrase(
-  phrases: Map<PhraseSourceHash, Phrase>,
+export function selectPriorPhrase<K extends string>(
+  phrases: Map<K, Phrase>,
   position: number,
-): [PhraseSourceHash, Phrase] {
+): [K, Phrase] {
   if (phrases.size === 0) {
     throw new Error("Received empty phrases");
   }

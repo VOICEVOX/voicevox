@@ -40,12 +40,15 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
+
       <!-- undefinedだと警告が出るのでnullを渡す -->
+      <!-- TODO: ちゃんとしたトラックIDを渡す -->
       <SequencerNote
         v-for="note in editTarget === 'NOTE'
           ? notesIncludingPreviewNotes
           : notes"
         :key="note.id"
+        :trackId="selectedTrackId"
         :note
         :nowPreviewing
         :isSelected="selectedNoteIds.has(note.id)"
@@ -210,6 +213,9 @@ const isSelfEventTarget = (event: UIEvent) => {
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
 const state = store.state;
+
+// 選択中のトラックID
+const selectedTrackId = computed(() => state.selectedTrackId);
 
 // TPQN、テンポ、ノーツ
 const tpqn = computed(() => state.tpqn);
@@ -812,12 +818,18 @@ const endPreview = () => {
 
     if (edited) {
       if (previewMode === "ADD_NOTE") {
-        store.dispatch("COMMAND_ADD_NOTES", { notes: previewNotes.value });
+        store.dispatch("COMMAND_ADD_NOTES", {
+          notes: previewNotes.value,
+          trackId: selectedTrackId.value,
+        });
         store.dispatch("SELECT_NOTES", {
           noteIds: previewNotes.value.map((value) => value.id),
         });
       } else {
-        store.dispatch("COMMAND_UPDATE_NOTES", { notes: previewNotes.value });
+        store.dispatch("COMMAND_UPDATE_NOTES", {
+          notes: previewNotes.value,
+          trackId: selectedTrackId.value,
+        });
       }
       if (previewNotes.value.length === 1) {
         store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -844,14 +856,16 @@ const endPreview = () => {
         data = data.map((value) => Math.exp(value));
 
         store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
-          data,
+          pitchArray: data,
           startFrame: previewPitchEdit.value.startFrame,
+          trackId: selectedTrackId.value,
         });
       }
     } else if (previewPitchEditType === "erase") {
       store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
         startFrame: previewPitchEdit.value.startFrame,
         frameLength: previewPitchEdit.value.frameLength,
+        trackId: selectedTrackId.value,
       });
     } else {
       throw new ExhaustiveError(previewPitchEditType);
@@ -1036,7 +1050,10 @@ const handleNotesArrowUp = () => {
   if (editedNotes.some((note) => note.noteNumber > 127)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", {
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 
   if (editedNotes.length === 1) {
     store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -1055,7 +1072,10 @@ const handleNotesArrowDown = () => {
   if (editedNotes.some((note) => note.noteNumber < 0)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", {
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 
   if (editedNotes.length === 1) {
     store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -1075,7 +1095,10 @@ const handleNotesArrowRight = () => {
     // TODO: 例外処理は`UPDATE_NOTES`内に移す？
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", {
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const handleNotesArrowLeft = () => {
@@ -1090,7 +1113,10 @@ const handleNotesArrowLeft = () => {
   ) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", {
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const handleNotesBackspaceOrDelete = () => {

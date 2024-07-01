@@ -6,7 +6,7 @@ import semver from "semver";
 
 import { LatestProjectType, projectSchema } from "./schema";
 import { AccentPhrase } from "@/openapi";
-import { EngineId, StyleId, Voice } from "@/type/preload";
+import { EngineId, StyleId, TrackId, Voice } from "@/type/preload";
 import {
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
@@ -281,6 +281,16 @@ export const migrateProjectFileObject = async (
     for (const track of projectData.song.tracks) {
       track.pitchEditData = [];
     }
+  }
+
+  if (semver.satisfies(projectAppVersion, "<0.20.0", semverSatisfiesOptions)) {
+    // tracks: Track[] -> tracks: Record<TrackId, Track> + trackOrder: TrackId[]
+    const newTracks: Record<TrackId, unknown> = {};
+    for (const track of projectData.song.tracks) {
+      newTracks[TrackId(crypto.randomUUID())] = track;
+    }
+    projectData.song.tracks = newTracks;
+    projectData.song.trackOrder = Object.keys(newTracks);
   }
 
   // Validation check

@@ -218,6 +218,7 @@ const keyRangeAdjustment = computed(
 const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
+const selectedTrackId = computed(() => store.state.selectedTrackId);
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
@@ -326,13 +327,17 @@ const setTimeSignature = () => {
 
 const setKeyRangeAdjustment = () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
-  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+    keyRangeAdjustment,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const setVolumeRangeAdjustment = () => {
   const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
   store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
     volumeRangeAdjustment,
+    trackId: selectedTrackId.value,
   });
 };
 
