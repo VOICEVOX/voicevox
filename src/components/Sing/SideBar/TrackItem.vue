@@ -67,28 +67,30 @@
     </QItemSection>
     <div side class="track-control">
       <QBtn
-        color="default"
+        :color="track.mute ? 'primary' : 'default'"
+        :textColor="track.mute ? 'display-on-primary' : 'default'"
         icon="volume_off"
         round
-        outline
+        unelevated
+        :outline="!track.mute"
         dense
         size="sm"
         class="track-button"
-        :class="{ 'track-button-active': track.mute }"
         :disable="uiLocked || isThereSoloTrack"
         @click.stop="setTrackMute(!track.mute)"
       >
         <QTooltip :delay="500">ミュート</QTooltip>
       </QBtn>
       <QBtn
-        color="default"
+        :color="track.solo ? 'primary' : 'default'"
+        :textColor="track.solo ? 'display-on-primary' : 'default'"
         icon="headset"
         rounded
-        outline
+        unelevated
+        :outline="!track.solo"
         dense
         size="sm"
         class="track-button"
-        :class="{ 'track-button-active': track.solo }"
         :disable="uiLocked"
         @click.stop="setTrackSolo(!track.solo)"
       >
