@@ -18,6 +18,7 @@ export function ipcMainHandle(
     ...args: unknown[]
   ) => {
     try {
+      validateIpcSender(event);
       return listener(event, ...args);
     } catch (e) {
       log.error(e);
@@ -38,3 +39,19 @@ export function ipcMainSend(
 ): void {
   return win.webContents.send(channel, ...args);
 }
+
+const validateIpcSender = (event: IpcMainInvokeEvent) => {
+  let isValid: boolean;
+  const senderUrl = new URL(event.senderFrame.url);
+  if (process.env.VITE_DEV_SERVER_URL != undefined) {
+    const devServerUrl = new URL(process.env.VITE_DEV_SERVER_URL);
+    isValid = senderUrl.origin === devServerUrl.origin;
+  } else {
+    isValid = senderUrl.protocol === "app:";
+  }
+  if (!isValid) {
+    throw new Error(
+      `不正なURLからのIPCメッセージを検出しました。senderUrl: ${senderUrl.toString()}`,
+    );
+  }
+};
