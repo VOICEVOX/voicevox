@@ -921,7 +921,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId }) {
       state.tracks.delete(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
-      state.overlappingNoteInfos.delete(trackId);
       state.overlappingNoteIds.delete(trackId);
       if (state.selectedTrackId === trackId) {
         state.selectedTrackId = state.trackOrder[0];
