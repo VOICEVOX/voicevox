@@ -10,10 +10,10 @@ $primitive-red: #d04756;
 
 // ライトテーマの色
 :root[is-dark-theme="false"] {
-  --color-v2-background: #{$primitive-white};
+  --color-v2-background: #{lighten($primitive-primary, 25%)};
   --color-v2-background-drawer: #{rgba(lighten($primitive-primary, 20%), 0.75)};
 
-  --color-v2-surface: #{lighten($primitive-primary, 25%)};
+  --color-v2-surface: #{$primitive-white};
   --color-v2-border: #{rgba($primitive-black, 0.2)};
   --color-v2-selected: #{rgba($primitive-primary, 0.3)};
 
