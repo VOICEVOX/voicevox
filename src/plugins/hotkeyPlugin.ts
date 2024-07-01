@@ -4,15 +4,15 @@
  * HotkeyAction: 実行する処理の名前とコールバックのペア
  * HotkeySetting: ユーザーが設定できるもの。ActionとCobinationのペア
  * Combination: ショートカットキーを文字列で表したもの
- * binding: hotkeys-js に登録したコールバック
- * bindingKey: hotkeys-js で使う、キーの文字列表記
+ * binding: 登録したコールバック
+ * bindingKey: キーの文字列表記
  */
 import { Plugin, inject, onMounted, onUnmounted } from "vue";
-import hotkeys from "hotkeys-js";
 import {
   HotkeyActionNameType,
   HotkeyCombination,
   HotkeySettingType,
+  EditorType,
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 
@@ -33,7 +33,7 @@ export const useHotkeyManager = () => {
   return { hotkeyManager, registerHotkeyWithCleanup };
 };
 
-type Editor = "talk" | "song";
+type Editor = "talk" | "song" | "talk&song";
 
 type BindingKey = string & { __brand: "BindingKey" }; // BindingKey専用のブランド型
 
@@ -51,22 +51,6 @@ export type HotkeyAction = {
   callback: (e: KeyboardEvent) => void;
 };
 
-export type HotkeysJs = {
-  (
-    key: BindingKey,
-    options: {
-      scope: string;
-    },
-    callback: (e: KeyboardEvent) => void,
-  ): void;
-  unbind: (key: BindingKey, scope: string) => void;
-  setScope: (scope: string) => void;
-};
-
-// デフォルトはテキストボックス内でショートカットキー無効なので有効にする
-hotkeys.filter = () => {
-  return true;
-};
 type Log = (message: string, ...args: unknown[]) => void;
 
 type RegisteredCombination = {
@@ -92,20 +76,17 @@ const isNotSameHotkeyTarget = (a: HotkeyTarget) => (b: HotkeyTarget) => {
 export class HotkeyManager {
   /** 登録されたHotkeyAction */
   private actions: HotkeyAction[] = [];
+  /** スコープ */
+  private scope: EditorType | undefined;
   /** ユーザーのショートカットキー設定 */
   private settings: HotkeySettingType[] | undefined; // ユーザーのショートカットキー設定
-  /** hotkeys-jsに登録されたショートカットキーの組み合わせ */
+  /** 登録されたショートカットキーの組み合わせ */
   private registeredCombinations: RegisteredCombination[] = [];
 
-  private hotkeys: HotkeysJs;
   private log: Log;
 
-  constructor(
-    hotkeys_: HotkeysJs = hotkeys,
-    log: Log = createLogger("HotkeyManager").info,
-  ) {
+  constructor(log: Log = createLogger("HotkeyManager").info) {
     this.log = log;
-    this.hotkeys = hotkeys_;
   }
 
   /**
@@ -170,7 +151,6 @@ export class HotkeyManager {
     for (const combination of combinations) {
       const bindingKey = combinationToBindingKey(combination.combination);
       this.log("Unbind:", bindingKey, "in", combination.editor);
-      this.hotkeys.unbind(bindingKey, combination.editor);
       this.registeredCombinations = this.registeredCombinations.filter(
         isNotSameHotkeyTarget(combination),
       );
@@ -187,33 +167,6 @@ export class HotkeyManager {
         action.name,
         "in",
         action.editor,
-      );
-      this.hotkeys(
-        combinationToBindingKey(setting.combination),
-        { scope: action.editor },
-        (e) => {
-          const element = e.target;
-          // メニュー項目ではショートカットキーを無効化
-          if (
-            element instanceof HTMLElement &&
-            element.classList.contains("q-item")
-          ) {
-            return;
-          }
-          if (!action.enableInTextbox) {
-            if (
-              element instanceof HTMLElement &&
-              (element.tagName === "INPUT" ||
-                element.tagName === "SELECT" ||
-                element.tagName === "TEXTAREA" ||
-                element.contentEditable === "true")
-            ) {
-              return;
-            }
-          }
-          e.preventDefault();
-          action.callback(e);
-        },
       );
       this.registeredCombinations = this.registeredCombinations.filter(
         isNotSameHotkeyTarget(action),
@@ -265,27 +218,78 @@ export class HotkeyManager {
   /**
    * エディタが変更されたときに呼び出される。
    */
-  onEditorChange(editor: "talk" | "song"): void {
-    this.hotkeys.setScope(editor);
+  onEditorChange(editor: EditorType): void {
+    this.scope = editor;
     this.log("Editor changed to", editor);
+  }
+
+  keyInput(e: KeyboardEvent): void {
+    const element = e.target;
+
+    if (this.scope == undefined) {
+      console.error("hotkeyPluginのスコープが未設定です");
+      return;
+    }
+
+    // メニュー項目・ダイアログではショートカットキーを無効化
+    if (
+      element instanceof HTMLElement &&
+      (element.getAttribute("role") == "menu" ||
+        element.classList.contains("q-dialog__inner"))
+    ) {
+      return;
+    }
+
+    const isInTextbox =
+      element instanceof HTMLElement &&
+      (element.tagName === "INPUT" ||
+        element.tagName === "SELECT" ||
+        element.tagName === "TEXTAREA" ||
+        element.contentEditable === "true");
+
+    const combination = combinationToBindingKey(eventToCombination(e));
+
+    const actions = this.actions
+      .filter((item) => !isInTextbox || item.enableInTextbox)
+      .filter(
+        (item) =>
+          combinationToBindingKey(this.getSetting(item).combination) ==
+          combination,
+      )
+      .filter((item) => {
+        if (item.editor === "talk&song") {
+          return this.scope === "talk" || this.scope === "song";
+        } else if (item.editor === "talk") {
+          return this.scope === "talk";
+        } else if (item.editor === "song") {
+          return this.scope === "song";
+        } else {
+          console.error("scopeに対する処理が設定されていません");
+        }
+      });
+    if (actions.length == 0) {
+      return;
+    }
+    e.preventDefault();
+    actions.forEach((action) => action.callback(e));
+  }
+
+  /**
+   * 現在登録されているHotkeyActionをすべて取得する
+   */
+  getAllActions(): HotkeyAction[] {
+    return this.actions;
   }
 }
 
-/** hotkeys-js用のキーに変換する */
+/** 判定用のキーに変換する */
 const combinationToBindingKey = (
   combination: HotkeyCombination,
 ): BindingKey => {
   // MetaキーはCommandキーとして扱う
-  // NOTE: hotkeys-jsにはWinキーが無く、Commandキーとして扱われている
   // NOTE: Metaキーは以前採用していたmousetrapがそうだった名残り
-  // NOTE: hotkeys-jsでは方向キーのarrowプレフィックスが不要
-  const bindingKey = combination
-    .toLowerCase()
-    .split(" ")
-    .map((key) => (key === "meta" ? "command" : key))
-    .map((key) => key.replace("arrow", ""))
-    .join("+");
-  return bindingKey as BindingKey;
+  // 順番が違うものも一致させるために並べ替え
+  return combination.split(" ").sort().join(" ") as BindingKey;
 };
 
 export const hotkeyPlugin: Plugin = {
