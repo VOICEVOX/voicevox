@@ -287,6 +287,8 @@ export function decibelToLinear(decibelValue: number) {
   return Math.pow(10, decibelValue / 20);
 }
 
+export const DEFAULT_TRACK_NAME = "無名トラック";
+
 export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
@@ -328,11 +330,17 @@ export function createDefaultTimeSignature(
 
 export function createDefaultTrack(): Track {
   return {
+    name: DEFAULT_TRACK_NAME,
     singer: undefined,
     keyRangeAdjustment: 0,
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
+
+    solo: false,
+    mute: false,
+    volume: 1,
+    pan: 0,
   };
 }
 
@@ -556,4 +564,16 @@ export const splitLyricsByMoras = (
     );
   }
   return moraAndNonMoras;
+};
+
+export const shouldPlay = (
+  tracks: Map<string, Track>,
+): Map<string, boolean> => {
+  const soloTrackExists = [...tracks.values()].some((track) => track.solo);
+  const shouldPlayMap = new Map<string, boolean>();
+  for (const [trackKey, track] of tracks) {
+    shouldPlayMap.set(trackKey, soloTrackExists ? track.solo : !track.mute);
+  }
+
+  return shouldPlayMap;
 };
