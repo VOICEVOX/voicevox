@@ -599,13 +599,15 @@ export const rootMiscSettingSchema = z.object({
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
+  // ソングエディタでのトラック操作をUndo可能にするか
+  // TODO: 設定画面で変更可能にする
   songUndoableTrackControl: z
     .object({
       name: z.boolean().default(true),
       soloMute: z.boolean().default(true),
       panVolume: z.boolean().default(true),
     })
-    .default({}), // ソングエディタでのトラック操作をUndo可能にするか
+    .default({}),
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
