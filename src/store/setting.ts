@@ -232,7 +232,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.themeSetting.currentTheme = currentTheme;
     },
     action({ state, commit }, { currentTheme }: { currentTheme: string }) {
-      window.backend.theme(currentTheme);
+      // window.backend.theme(currentTheme);
       const theme = state.themeSetting.availableThemes.find((value) => {
         return value.name == currentTheme;
       });

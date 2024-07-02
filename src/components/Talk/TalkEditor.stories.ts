@@ -33,6 +33,7 @@ const meta: Meta<typeof TalkEditor> = {
       const store = createStoreWrapper({
         proxyStoreDI: proxyStoreCreator(createOpenAPIEngineMock()),
       });
+      store.dispatch("HYDRATE_SETTING_STORE"); // FIXME: 色設定取得のため。設定も読み込んでしまうため不要にしたい。
 
       // context.parameters.store = store;
 
@@ -111,7 +112,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   name: "デフォルト",
-  play: async ({ parameters }) => { },
 };
 
 export const NowLoading: Story = {

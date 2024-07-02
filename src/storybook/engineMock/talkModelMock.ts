@@ -5,7 +5,7 @@
 
 import { IpadicFeatures } from "kuromoji";
 import { moraToPhonemes } from "./phonemeMock";
-import { convertHiraToKana, moraPattern } from "@/domain/japanese";
+import { moraPattern } from "@/domain/japanese";
 import { AccentPhrase, Mora } from "@/openapi";
 
 /** アルファベット文字列を適当な0~1の適当な数値に変換する */
@@ -15,14 +15,14 @@ function alphabetsToNumber(text: string): number {
   return (sum % 256) / 256;
 }
 
-// 0.1~1になるように適当な長さを決める
+// 0.01~0.25になるように適当な長さを決める
 function phonemeToLengthMock(phoneme: string): number {
-  return alphabetsToNumber(phoneme) * 0.9 + 0.1;
+  return alphabetsToNumber(phoneme) * 0.24 + 0.01;
 }
 
-// 3~6になるように適当なピッチを決める
+// 3~5になるように適当なピッチを決める
 function phonemeToPitchMock(phoneme: string): number {
-  return (1 - alphabetsToNumber(phoneme)) * 3 + 3;
+  return (1 - alphabetsToNumber(phoneme)) * 2 + 3;
 }
 
 /** カタカナテキストをモーラに変換する */
@@ -67,7 +67,7 @@ export function replaseLengthMock(
       const mora = accentPhrase.moras[i];
 
       // 最後のモーラだけ長く
-      const offset = i == accentPhrase.moras.length - 1 ? 0.1 : 0;
+      const offset = i == accentPhrase.moras.length - 1 ? 0.05 : 0;
 
       if (mora.consonant != undefined)
         mora.consonantLength = phonemeToLengthMock(mora.consonant) + offset;
