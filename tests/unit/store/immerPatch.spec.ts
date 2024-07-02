@@ -1,4 +1,4 @@
-import { enableMapSet, enablePatches, Immer } from "immer";
+import { enableMapSet, enablePatches, Immer, Patch } from "immer";
 import { applyPatches } from "@/store/immerPatch";
 
 test("objectAdd", () => {
@@ -261,6 +261,22 @@ test("arrayRemove", () => {
   expect(object2).toStrictEqual([1, 2]);
   applyPatches(object2, undoPatches2);
   expect(object2).toStrictEqual([1, 2, 3]);
+
+  // immer 9.0.21において{ op: "remove" }を持つPatchがArrayに対して発行されないため、専用のテストケースを用意する
+  const object3 = [1, 2, 3];
+  const patch: Patch[] = [{ op: "remove", path: [1] }];
+  applyPatches(object3, patch);
+  expect(object3).toStrictEqual([1, 3]);
+
+  const object4 = [1, 2, 3];
+  const patch2: Patch[] = [{ op: "remove", path: [2] }];
+  applyPatches(object4, patch2);
+  expect(object4).toStrictEqual([1, 2]);
+
+  const object5 = [1, 2, 3];
+  const patch3: Patch[] = [{ op: "remove", path: [0] }];
+  applyPatches(object5, patch3);
+  expect(object5).toStrictEqual([2, 3]);
 });
 
 test("complexObject1", () => {
