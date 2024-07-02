@@ -378,21 +378,41 @@ test("map", () => {
     },
   );
 
-  expect(new_object1.get(1)).toBe(2);
-  expect(new_object1.get(3)).toBe(5);
+  expect(new_object1).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 5],
+    ]),
+  );
   applyPatches(new_object1, undoPatches1);
-  expect(new_object1.get(1)).toBe(2);
-  expect(new_object1.get(3)).toBe(4);
+  expect(new_object1).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 4],
+    ]),
+  );
   applyPatches(new_object1, redoPatches1);
-  expect(new_object1.get(1)).toBe(2);
-  expect(new_object1.get(3)).toBe(5);
+  expect(new_object1).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 5],
+    ]),
+  );
 
   applyPatches(object1, redoPatches1);
-  expect(object1.get(1)).toBe(2);
-  expect(object1.get(3)).toBe(5);
+  expect(object1).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 5],
+    ]),
+  );
   applyPatches(object1, undoPatches1);
-  expect(object1.get(1)).toBe(2);
-  expect(object1.get(3)).toBe(4);
+  expect(object1).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 4],
+    ]),
+  );
 
   const object2: { field: Map<number, () => number> } = {
     field: new Map([
@@ -440,26 +460,17 @@ test("set", () => {
       obj.delete(2);
     },
   );
-  expect(new_object1.has(1)).toBe(true);
-  expect(new_object1.has(2)).toBe(false);
-  expect(new_object1.has(3)).toBe(true);
+
+  expect(new_object1).toStrictEqual(new Set([1, 3]));
   applyPatches(new_object1, undoPatches1);
-  expect(new_object1.has(1)).toBe(true);
-  expect(new_object1.has(2)).toBe(true);
-  expect(new_object1.has(3)).toBe(true);
+  expect(new_object1).toStrictEqual(new Set([1, 2, 3]));
   applyPatches(new_object1, redoPatches1);
-  expect(new_object1.has(1)).toBe(true);
-  expect(new_object1.has(2)).toBe(false);
-  expect(new_object1.has(3)).toBe(true);
+  expect(new_object1).toStrictEqual(new Set([1, 3]));
 
   applyPatches(object1, redoPatches1);
-  expect(object1.has(1)).toBe(true);
-  expect(object1.has(2)).toBe(false);
-  expect(object1.has(3)).toBe(true);
+  expect(object1).toStrictEqual(new Set([1, 3]));
   applyPatches(object1, undoPatches1);
-  expect(object1.has(1)).toBe(true);
-  expect(object1.has(2)).toBe(true);
-  expect(object1.has(3)).toBe(true);
+  expect(object1).toStrictEqual(new Set([1, 2, 3]));
 
   const object2: { field: Set<() => number> } = { field: new Set([() => 1]) };
   const [new_object2, redoPatches2, undoPatches2] = immer.produceWithPatches(
