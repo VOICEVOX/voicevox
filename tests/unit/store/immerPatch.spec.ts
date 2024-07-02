@@ -13,6 +13,10 @@ test("objectAdd", () => {
       obj.c = 3;
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches).toStrictEqual([{ op: "add", path: ["c"], value: 3 }]);
+  expect(undoPatches).toStrictEqual([{ op: "remove", path: ["c"] }]);
+
   expect(new_object).toStrictEqual({ a: 1, b: 2, c: 3 });
   applyPatches(new_object, undoPatches);
   expect(new_object).toStrictEqual({ a: 1, b: 2 });
@@ -37,6 +41,12 @@ test("arrayAdd", () => {
       obj.push(4);
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches1).toStrictEqual([{ op: "add", path: [3], value: 4 }]);
+  expect(undoPatches1).toStrictEqual([
+    { op: "replace", path: ["length"], value: 3 },
+  ]);
+
   expect(new_object1).toStrictEqual([1, 2, 3, 4]);
   applyPatches(new_object1, undoPatches1);
   expect(new_object1).toStrictEqual([1, 2, 3]);
@@ -55,6 +65,18 @@ test("arrayAdd", () => {
       obj.splice(1, 0, 4);
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches2).toStrictEqual([
+    { op: "replace", path: [1], value: 4 },
+    { op: "replace", path: [2], value: 2 },
+    { op: "add", path: [3], value: 3 },
+  ]);
+  expect(undoPatches2).toStrictEqual([
+    { op: "replace", path: [1], value: 2 },
+    { op: "replace", path: [2], value: 3 },
+    { op: "replace", path: ["length"], value: 3 },
+  ]);
+
   expect(new_object2).toStrictEqual([1, 4, 2, 3]);
   applyPatches(new_object2, undoPatches2);
   expect(new_object2).toStrictEqual([1, 2, 3]);
@@ -73,6 +95,20 @@ test("arrayAdd", () => {
       obj.unshift(4);
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches3).toStrictEqual([
+    { op: "replace", path: [0], value: 4 },
+    { op: "replace", path: [1], value: 1 },
+    { op: "replace", path: [2], value: 2 },
+    { op: "add", path: [3], value: 3 },
+  ]);
+  expect(undoPatches3).toStrictEqual([
+    { op: "replace", path: [0], value: 1 },
+    { op: "replace", path: [1], value: 2 },
+    { op: "replace", path: [2], value: 3 },
+    { op: "replace", path: ["length"], value: 3 },
+  ]);
+
   expect(new_object3).toStrictEqual([4, 1, 2, 3]);
   applyPatches(new_object3, undoPatches3);
   expect(new_object3).toStrictEqual([1, 2, 3]);
@@ -97,6 +133,10 @@ test("objectReplace", () => {
       obj.a = 3;
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches).toStrictEqual([{ op: "replace", path: ["a"], value: 3 }]);
+  expect(undoPatches).toStrictEqual([{ op: "replace", path: ["a"], value: 1 }]);
+
   expect(new_object).toStrictEqual({ a: 3, b: 2 });
   applyPatches(new_object, undoPatches);
   expect(new_object).toStrictEqual({ a: 1, b: 2 });
@@ -121,6 +161,10 @@ test("arrayReplace", () => {
       obj[1] = 4;
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches).toStrictEqual([{ op: "replace", path: [1], value: 4 }]);
+  expect(undoPatches).toStrictEqual([{ op: "replace", path: [1], value: 2 }]);
+
   expect(new_object).toStrictEqual([1, 4, 3]);
   applyPatches(new_object, undoPatches);
   expect(new_object).toStrictEqual([1, 2, 3]);
@@ -145,6 +189,10 @@ test("objectRemove", () => {
       delete obj.c;
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches).toStrictEqual([{ op: "remove", path: ["c"] }]);
+  expect(undoPatches).toStrictEqual([{ op: "add", path: ["c"], value: 3 }]);
+
   expect(new_object).toStrictEqual({ a: 1, b: 2 });
   applyPatches(new_object, undoPatches);
   expect(new_object).toStrictEqual({ a: 1, b: 2, c: 3 });
@@ -169,6 +217,16 @@ test("arrayRemove", () => {
       obj.splice(1, 1);
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches1).toStrictEqual([
+    { op: "replace", path: [1], value: 3 },
+    { op: "replace", path: ["length"], value: 2 },
+  ]);
+  expect(undoPatches1).toStrictEqual([
+    { op: "replace", path: [1], value: 2 },
+    { op: "add", path: [2], value: 3 },
+  ]);
+
   expect(new_object1).toStrictEqual([1, 3]);
   applyPatches(new_object1, undoPatches1);
   expect(new_object1).toStrictEqual([1, 2, 3]);
@@ -187,6 +245,12 @@ test("arrayRemove", () => {
       obj.pop();
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches2).toStrictEqual([
+    { op: "replace", path: ["length"], value: 2 },
+  ]);
+  expect(undoPatches2).toStrictEqual([{ op: "add", path: [2], value: 3 }]);
+
   expect(new_object2).toStrictEqual([1, 2]);
   applyPatches(new_object2, undoPatches2);
   expect(new_object2).toStrictEqual([1, 2, 3]);
@@ -215,6 +279,12 @@ test("complexObject1", () => {
       obj.c.e = { f: "4", g: [5, 6] };
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches).toStrictEqual([
+    { op: "add", path: ["c", "e"], value: { f: "4", g: [5, 6] } },
+  ]);
+  expect(undoPatches).toStrictEqual([{ op: "remove", path: ["c", "e"] }]);
+
   expect(new_object).toStrictEqual({
     a: 1,
     b: 2,
@@ -255,6 +325,13 @@ test("complexObject2", () => {
       obj.c.e.g[0] = 7;
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches).toStrictEqual([
+    { op: "replace", path: ["c", "e", "g", 0], value: 7 },
+  ]);
+  expect(undoPatches).toStrictEqual([
+    { op: "replace", path: ["c", "e", "g", 0], value: 5 },
+  ]);
 
   expect(new_object).toStrictEqual({
     a: 1,
@@ -304,6 +381,11 @@ test("complexObject3", () => {
       delete obj.c.e.g;
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches).toStrictEqual([{ op: "remove", path: ["c", "e", "g"] }]);
+  expect(undoPatches).toStrictEqual([
+    { op: "add", path: ["c", "e", "g"], value: [5, 6] },
+  ]);
 
   expect(new_object).toStrictEqual({ a: 1, b: 2, c: { d: 3, e: { f: "4" } } });
   applyPatches(new_object, undoPatches);
@@ -341,6 +423,9 @@ test("map", () => {
       obj.set(3, 5);
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches).toStrictEqual([{ op: "replace", path: [3], value: 5 }]);
+  expect(undoPatches).toStrictEqual([{ op: "replace", path: [3], value: 4 }]);
 
   expect(new_object).toStrictEqual(
     new Map([
@@ -392,6 +477,9 @@ test("set", () => {
       obj.delete(2);
     },
   );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches).toStrictEqual([{ op: "remove", path: [1], value: 2 }]);
+  expect(undoPatches).toStrictEqual([{ op: "add", path: [1], value: 2 }]);
 
   expect(new_object).toStrictEqual(new Set([1, 3]));
   applyPatches(new_object, undoPatches);
