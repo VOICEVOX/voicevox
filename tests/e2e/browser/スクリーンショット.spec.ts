@@ -26,7 +26,7 @@ async function getSpeakerImages(): Promise<
   }[]
 > {
   if (!speakerImages) {
-    const assetsPath = path.resolve(__dirname, "assets");
+    const assetsPath = path.resolve(__dirname, "../../assets");
     const images = await fs.readdir(assetsPath);
     const icons = images.filter((image) => image.startsWith("icon"));
     icons.sort(

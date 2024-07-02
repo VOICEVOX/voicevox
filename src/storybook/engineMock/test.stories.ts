@@ -17,7 +17,7 @@ export const OpenOfficialSite: Story = {
   play: async ({ args }) => {
     const mockApi = createOpenAPIEngineMock();
     const api = mockApi.instance(mockHost);
-    const result = await api.accentPhrasesAccentPhrasesPost({
+    const result = await api.audioQueryAudioQueryPost({
       text: "そうです、そのとおりだと思いますね",
       speaker: 1,
     });
