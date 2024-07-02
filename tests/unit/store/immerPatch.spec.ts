@@ -413,50 +413,103 @@ test("map", () => {
   enablePatches();
   enableMapSet();
 
-  const object: Map<number, number> = new Map([
+  const object1: Map<number, number> = new Map([
     [1, 2],
     [3, 4],
   ]);
-  const [new_object, redoPatches, undoPatches] = immer.produceWithPatches(
-    object,
+  const [new_object1, redoPatches1, undoPatches1] = immer.produceWithPatches(
+    object1,
     (obj) => {
       obj.set(3, 5);
     },
   );
   // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
-  expect(redoPatches).toStrictEqual([{ op: "replace", path: [3], value: 5 }]);
-  expect(undoPatches).toStrictEqual([{ op: "replace", path: [3], value: 4 }]);
+  expect(redoPatches1).toStrictEqual([{ op: "replace", path: [3], value: 5 }]);
+  expect(undoPatches1).toStrictEqual([{ op: "replace", path: [3], value: 4 }]);
 
-  expect(new_object).toStrictEqual(
+  expect(new_object1).toStrictEqual(
     new Map([
       [1, 2],
       [3, 5],
     ]),
   );
-  applyPatches(new_object, undoPatches);
-  expect(new_object).toStrictEqual(
+  applyPatches(new_object1, undoPatches1);
+  expect(new_object1).toStrictEqual(
     new Map([
       [1, 2],
       [3, 4],
     ]),
   );
-  applyPatches(new_object, redoPatches);
-  expect(new_object).toStrictEqual(
+  applyPatches(new_object1, redoPatches1);
+  expect(new_object1).toStrictEqual(
     new Map([
       [1, 2],
       [3, 5],
     ]),
   );
 
-  applyPatches(object, redoPatches);
-  expect(object).toStrictEqual(
+  applyPatches(object1, redoPatches1);
+  expect(object1).toStrictEqual(
     new Map([
       [1, 2],
       [3, 5],
     ]),
   );
-  applyPatches(object, undoPatches);
-  expect(object).toStrictEqual(
+  applyPatches(object1, undoPatches1);
+  expect(object1).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 4],
+    ]),
+  );
+
+  const object2: Map<number, number> = new Map([
+    [1, 2],
+    [3, 4],
+  ]);
+  const [new_object2, redoPatches2, undoPatches2] = immer.produceWithPatches(
+    object2,
+    (obj) => {
+      obj.set(5, 6);
+    },
+  );
+  // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+  expect(redoPatches2).toStrictEqual([{ op: "add", path: [5], value: 6 }]);
+  expect(undoPatches2).toStrictEqual([{ op: "remove", path: [5] }]);
+
+  expect(new_object2).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 4],
+      [5, 6],
+    ]),
+  );
+  applyPatches(new_object2, undoPatches2);
+  expect(new_object2).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 4],
+    ]),
+  );
+  applyPatches(new_object2, redoPatches2);
+  expect(new_object2).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 4],
+      [5, 6],
+    ]),
+  );
+
+  applyPatches(object2, redoPatches2);
+  expect(object2).toStrictEqual(
+    new Map([
+      [1, 2],
+      [3, 4],
+      [5, 6],
+    ]),
+  );
+  applyPatches(object2, undoPatches2);
+  expect(object2).toStrictEqual(
     new Map([
       [1, 2],
       [3, 4],
