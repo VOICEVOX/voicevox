@@ -52,7 +52,7 @@
     </QItemSection>
     <!-- トラック名、キャラ名+スタイル表示 -->
     <QItemSection>
-      <QItemLabel class="singer-name" @click.stop="uiLocked || selectTrack()">
+      <QItemLabel class="track-name" @click.stop="uiLocked || selectTrack()">
         <QInput
           v-model="temporaryTrackName"
           dense
@@ -375,11 +375,11 @@ const singerName = computed(() => {
   cursor: pointer;
 }
 
-.singer-name :deep(.q-field__control) {
+.track-name :deep(.q-field__control) {
   height: 1.5rem;
 }
 
-.singer-name,
+.track-name,
 .singer-style {
   width: calc(100% - 3.5rem);
   white-space: nowrap;
