@@ -1,3 +1,4 @@
+import { assetsPath, dicPath } from "@/storybook/engineMock";
 import type { StorybookConfig } from "@storybook/vue3-vite";
 
 const config: StorybookConfig = {
@@ -8,12 +9,20 @@ const config: StorybookConfig = {
     "@chromatic-com/storybook",
     "@storybook/addon-interactions",
   ],
+  core: {
+    builder: '@storybook/builder-vite',
+  },
   framework: {
     name: "@storybook/vue3-vite",
     options: {
       docgen: "vue-component-meta",
     },
   },
+  staticDirs: [
+    // モックエンジン用のファイル
+    { from: "../node_modules/kuromoji/dict", to: dicPath },
+    { from: "../tests/assets", to: assetsPath }
+  ],
 };
 
 export default config;

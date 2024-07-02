@@ -671,7 +671,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         getters.USER_ORDERED_CHARACTER_INFOS("talk");
 
       if (userOrderedCharacterInfos == undefined) {
-        throw new Error("state.characterInfos == undefined");
+        throw new Error("state.userOrderedCharacterInfos == undefined");
       }
 
       const text = payload.text ?? "";
@@ -702,8 +702,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const query = getters.IS_ENGINE_READY(voice.engineId)
         ? await dispatch("FETCH_AUDIO_QUERY", fetchQueryParams).catch(
-            () => undefined,
-          )
+          () => undefined,
+        )
         : undefined;
 
       const newAudioItem: AudioItem = { text, voice };
@@ -2010,16 +2010,16 @@ export const audioCommandStore = transformCommandStore(
           changes: Record<
             AudioKey,
             | {
-                update: "AccentPhrases";
-                accentPhrases: AccentPhrase[];
-              }
+              update: "AccentPhrases";
+              accentPhrases: AccentPhrase[];
+            }
             | {
-                update: "AudioQuery";
-                query: AudioQuery;
-              }
+              update: "AudioQuery";
+              query: AudioQuery;
+            }
             | {
-                update: "OnlyVoice";
-              }
+              update: "OnlyVoice";
+            }
           >;
         },
       ) {
@@ -2074,16 +2074,16 @@ export const audioCommandStore = transformCommandStore(
         const changes: Record<
           AudioKey,
           | {
-              update: "AccentPhrases";
-              accentPhrases: AccentPhrase[];
-            }
+            update: "AccentPhrases";
+            accentPhrases: AccentPhrase[];
+          }
           | {
-              update: "AudioQuery";
-              query: AudioQuery;
-            }
+            update: "AudioQuery";
+            query: AudioQuery;
+          }
           | {
-              update: "OnlyVoice";
-            }
+            update: "OnlyVoice";
+          }
         > = {};
 
         for (const audioKey of audioKeys) {
