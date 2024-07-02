@@ -1461,6 +1461,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 @use "@/styles/colors" as colors;
 
 .score-sequencer {
+  // これがないとスクロールバーが表示されない
   height: 100%;
   backface-visibility: hidden;
   display: grid;
