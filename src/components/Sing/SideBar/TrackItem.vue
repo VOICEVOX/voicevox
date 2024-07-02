@@ -19,7 +19,9 @@
         },
       ]"
     />
-    <div class="track-handle track-handle-bg" />
+    <!-- 左端のドラッグ判定 -->
+    <div :class="props.draggableClass" class="track-handle-bg" />
+    <!-- 選択中のトラックは左に>を出す（AudioCellみたいな）-->
     <QIcon
       v-if="props.trackId === selectedTrackId"
       name="arrow_right"
@@ -27,9 +29,11 @@
       size="md"
       class="active-arrow"
     />
+    <!-- アイコン周り（アイコン、フォールバック、クリック判定 -->
     <QItemSection
       avatar
-      class="singer-icon-container track-handle"
+      class="singer-icon-container"
+      :class="props.draggableClass"
       @click.stop=""
     >
       <div class="singer-icon-hitbox">
@@ -46,6 +50,7 @@
         <CharacterSelectMenu :trackId="props.trackId" />
       </div>
     </QItemSection>
+    <!-- トラック名、キャラ名+スタイル表示 -->
     <QItemSection>
       <QItemLabel class="singer-name" @click.stop="uiLocked || selectTrack()">
         <QInput
@@ -56,6 +61,7 @@
         />
       </QItemLabel>
       <QItemLabel v-if="trackStyle" caption class="singer-style">
+        <!-- ミュート中はアイコンを表示 -->
         <QIcon
           v-if="!shouldPlayTrack"
           name="volume_off"
@@ -65,7 +71,8 @@
         {{ singerName }}
       </QItemLabel>
     </QItemSection>
-    <div side class="track-control">
+    <!-- ミュート・ソロボタン -->
+    <div class="track-control">
       <QBtn
         :color="track.mute ? 'primary' : 'default'"
         :textColor="track.mute ? 'display-on-primary' : 'default'"
@@ -76,6 +83,7 @@
         dense
         size="sm"
         class="track-button"
+        :class="{ 'track-button-active': track.mute }"
         :disable="uiLocked || isThereSoloTrack"
         @click.stop="setTrackMute(!track.mute)"
       >
@@ -91,6 +99,7 @@
         dense
         size="sm"
         class="track-button"
+        :class="{ 'track-button-active': track.solo }"
         :disable="uiLocked"
         @click.stop="setTrackSolo(!track.solo)"
       >
@@ -99,8 +108,9 @@
     </div>
   </QItem>
 
+  <!-- トラックのパン・ボリューム調整 -->
   <QItem
-    v-if="!isDragging && props.trackId === selectedTrackId"
+    v-if="props.trackId === selectedTrackId"
     class="track-detail-container"
   >
     <div class="track-detail">
@@ -138,8 +148,6 @@
 </template>
 <script setup lang="ts">
 import { computed, watch, ref } from "vue";
-import Draggable from "vuedraggable";
-import { QList } from "quasar";
 import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/CharacterSelectMenu.vue";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
@@ -148,11 +156,10 @@ import { shouldPlay } from "@/sing/domain";
 import { TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 
-// https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
-Draggable.components = { ...Draggable.components, QList };
-
 const props = defineProps<{
   trackId: TrackId;
+
+  draggableClass: string;
 }>();
 
 const store = useStore();
@@ -255,8 +262,6 @@ const deleteTrack = () => {
   store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.trackId });
 };
 
-const isDragging = ref(false);
-
 const trackStyle = computed(() => {
   if (!track.value.singer) return undefined;
 
@@ -343,18 +348,9 @@ const singerName = computed(() => {
       height: 1.75rem;
       padding: 0;
 
+      // 線を薄くする
       &:not(.track-button-active)::before {
         border-color: rgba(colors.$display-rgb, 0.5);
-      }
-      &.track-button-active {
-        &::before {
-          border-width: 2px;
-        }
-        color: colors.$primary;
-
-        :deep(i) {
-          color: colors.$display;
-        }
       }
     }
   }

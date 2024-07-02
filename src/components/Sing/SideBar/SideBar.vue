@@ -9,7 +9,7 @@
         size="0.75rem"
         padding="xs sm"
         :disable="uiLocked"
-        @click="createTrack"
+        @click="addTrack"
       >
         追加
       </QBtn>
@@ -37,7 +37,9 @@
     >
       <template #item="{ element: trackId }">
         <div>
-          <TrackItem :trackId />
+          <!-- 上のdivを消すとDraggableが動かなくなる -->
+          <!-- （上のコメントはtemplate直下に置くとエラーが出る） -->
+          <TrackItem :trackId draggableClass="track-handle" />
         </div>
       </template>
     </Draggable>
@@ -81,7 +83,7 @@ const isThereSoloTrack = computed(() =>
 const trackOrder = computed(() => store.state.trackOrder);
 const selectedTrackId = computed(() => store.state.selectedTrackId);
 
-const createTrack = async () => {
+const addTrack = async () => {
   store.dispatch("COMMAND_ADD_TRACK");
 };
 const deleteTrack = () => {
@@ -114,8 +116,8 @@ const reorderTracks = (trackOrder: TrackId[]) => {
   width: 100%;
   height: 100%;
   background-color: colors.$background;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   border-top: 1px solid colors.$sequencer-sub-divider;
   border-right: 1px solid colors.$sequencer-main-divider;
 }
@@ -128,7 +130,6 @@ const reorderTracks = (trackOrder: TrackId[]) => {
 
 .tracks-header,
 .tracks-footer {
-  position: sticky;
   display: flex;
   background: colors.$background;
   z-index: 10;
