@@ -396,6 +396,7 @@ onMountedOrActivated(() => {
   const canvasElement = document.createElement("canvas");
   canvasElement.width = canvasWidth;
   canvasElement.height = canvasHeight;
+  // canvasを浮かせて親要素のサイズに影響を与えないようにする
   canvasElement.style.position = "absolute";
   canvasElement.style.inset = "0";
   canvasContainerElement.appendChild(canvasElement);
