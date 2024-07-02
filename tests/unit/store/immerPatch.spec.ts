@@ -548,12 +548,12 @@ test("set", () => {
 
 test("expect-throws", () => {
   expect(() => {
-    applyPatches({}, [{op: "add", path: ["a", "b"], value: 1}]);
+    applyPatches({}, [{ op: "add", path: ["a", "b"], value: 1 }]);
   }).toThrow();
   expect(() => {
-    applyPatches({}, [{op: "add", path: ["a", "b", "c"], value: 1}]);
+    applyPatches({}, [{ op: "add", path: ["a", "b", "c"], value: 1 }]);
   }).toThrow();
   expect(() => {
-    applyPatches([], [{op: "replace", path: [0, "a"], value: 1}]);
+    applyPatches([], [{ op: "replace", path: [0, "a"], value: 1 }]);
   }).toThrow();
 });
