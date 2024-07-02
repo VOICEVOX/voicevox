@@ -545,3 +545,15 @@ test("set", () => {
   applyPatches(object, undoPatches);
   expect(object).toStrictEqual(new Set([1, 2, 3]));
 });
+
+test("expect-throws", () => {
+  expect(() => {
+    applyPatches({}, [{op: "add", path: ["a", "b"], value: 1}]);
+  }).toThrow();
+  expect(() => {
+    applyPatches({}, [{op: "add", path: ["a", "b", "c"], value: 1}]);
+  }).toThrow();
+  expect(() => {
+    applyPatches([], [{op: "replace", path: [0, "a"], value: 1}]);
+  }).toThrow();
+});
