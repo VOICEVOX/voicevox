@@ -123,7 +123,8 @@
                 class="word-input"
                 dense
                 :disable="uiLocked"
-                @focus="handleFocus('surface')"
+                @select="handleInteraction('surface')"
+                @focus="handleInteraction('surface')"
                 @blur="setSurface(surface)"
                 @keydown.enter="yomiFocus"
               >
@@ -143,7 +144,8 @@
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
-                @focus="handleFocus('yomi')"
+                @select="handleInteraction('yomi')"
+                @focus="handleInteraction('yomi')"
                 @blur="setYomi(yomi)"
                 @keydown.enter="setYomiWhenEnter"
               >
@@ -289,6 +291,7 @@ import {
   convertLongVowel,
   createKanaRegex,
 } from "@/domain/japanese";
+import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
 
 const defaultDictPriority = 5;
 
@@ -703,8 +706,17 @@ const contextMenudata = ref<
   {
     type: "button",
     label: "コピー",
-    onClick: () => {},
-    disableWhenUiLocked: true,
+    onClick: () => {
+      contextMenu.value?.hide();
+      if (inputElement.value === "surface") {
+        if (surfaceInputSelection.isEmpty) return;
+        navigator.clipboard.writeText(surfaceInputSelection.getAsString());
+      } else if (inputElement.value === "yomi") {
+        if (yomiInputSelection.isEmpty) return;
+        navigator.clipboard.writeText(yomiInputSelection.getAsString());
+      }
+    },
+    disableWhenUiLocked: false,
   },
   {
     type: "button",
@@ -718,9 +730,9 @@ const contextMenudata = ref<
     label: "全選択",
     onClick: async () => {
       contextMenu.value?.hide();
-      if (focusInputElement.value === "surface") {
+      if (inputElement.value === "surface") {
         surfaceInput.value?.select();
-      } else if (focusInputElement.value === "yomi") {
+      } else if (inputElement.value === "yomi") {
         yomiInput.value?.select();
       }
     },
@@ -728,10 +740,13 @@ const contextMenudata = ref<
   },
 ]);
 
+const surfaceInputSelection = new SelectionHelperForQInput(surfaceInput);
+const yomiInputSelection = new SelectionHelperForQInput(yomiInput);
+
 // surface と yomi のどちらを選択しているか
-const focusInputElement = ref("");
-const handleFocus = (inputName: string) => {
-  focusInputElement.value = inputName;
+const inputElement = ref("");
+const handleInteraction = (inputName: string) => {
+  inputElement.value = inputName;
 };
 </script>
 
