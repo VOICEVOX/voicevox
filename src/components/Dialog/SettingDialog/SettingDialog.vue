@@ -233,28 +233,12 @@
                 title="ソング：元に戻す対象のトラックの設定"
                 description="トラックの設定のうち、「元に戻す」機能の対象にする設定を指定します。"
               >
-                <QSelect
+                <QOptionGroup
                   v-model="songUndoableTrackOptions"
-                  multiple
+                  type="checkbox"
                   :options="songUndoableTrackOptionLabels"
-                  emitValue
-                  mapOptions
-                  ><template #selected>
-                    <span v-if="songUndoableTrackOptions.length > 0">
-                      {{
-                        songUndoableTrackOptions
-                          .map((option) =>
-                            songUndoableTrackOptionLabels.find(
-                              (label) => label.value === option,
-                            ),
-                          )
-                          .map((label) => label && label.label)
-                          .join("、")
-                      }}
-                    </span>
-                    <span v-else>（なし）</span>
-                  </template></QSelect
-                >
+                  inline
+                />
               </BaseCell>
             </QCard>
             <!-- Saving Card -->
