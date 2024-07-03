@@ -98,6 +98,26 @@
     border-radius: 4px;
   }
 
+  :deep(table) {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: vars.$radius-1;
+    border: 1px solid colors.$border;
+  }
+
+  :deep(tr) {
+    height: vars.$size-control;
+  }
+
+  :deep(td),
+  :deep(th) {
+    padding-inline: vars.$padding-2;
+  }
+
+  :deep(td) {
+    border-top: 1px solid colors.$border;
+  }
+
   :deep(details) {
     padding: vars.$padding-1;
     background-color: colors.$surface;
