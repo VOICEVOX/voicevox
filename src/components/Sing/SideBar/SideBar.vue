@@ -27,13 +27,10 @@
     <Draggable
       tag="QList"
       :modelValue="trackOrder"
-      itemKey="id"
       handle=".track-handle"
       class="tracks"
       dragClass="dragging"
       @update:modelValue="reorderTracks"
-      @start="isDragging = true"
-      @end="isDragging = false"
     >
       <template #item="{ element: trackId }">
         <TrackItem :trackId draggableClass="track-handle" />
@@ -57,7 +54,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import Draggable from "vuedraggable";
 import { QList } from "quasar";
 import TrackItem from "./TrackItem.vue";
@@ -98,7 +95,6 @@ const unsoloAllTracks = () => {
   }
 };
 
-const isDragging = ref(false);
 const reorderTracks = (trackOrder: TrackId[]) => {
   store.dispatch("COMMAND_REORDER_TRACKS", {
     trackOrder,
