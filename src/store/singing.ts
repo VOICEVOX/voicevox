@@ -1,6 +1,5 @@
 import path from "path";
 import { toRaw } from "vue";
-import createRfdc from "rfdc";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -87,10 +86,10 @@ import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjust
 import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 
 const logger = createLogger("store/singing");
-const rfdc = createRfdc();
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -900,7 +899,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REGISTER_TRACK: {
     mutation(state, { trackId, track }) {
-      state.tracks.set(trackId, rfdc(track));
+      state.tracks.set(trackId, cloneWithUnwrapProxy(track));
       state.trackOrder.push(trackId);
       state.overlappingNoteIds.set(trackId, new Set());
     },

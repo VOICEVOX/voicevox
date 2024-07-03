@@ -156,7 +156,7 @@ import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/Character
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
-import { shouldPlay } from "@/sing/domain";
+import { shouldPlayTracks } from "@/sing/domain";
 import { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 
@@ -179,7 +179,7 @@ const isThereSoloTrack = computed(() =>
   [...tracks.value.values()].some((track) => track.solo),
 );
 const shouldPlayTrack = computed(() =>
-  getOrThrow(shouldPlay(store.state.tracks), props.trackId),
+  getOrThrow(shouldPlayTracks(store.state.tracks), props.trackId),
 );
 
 const setTrackPan = (pan: number) => {
@@ -282,9 +282,7 @@ const singerName = computed(() => {
 .track-detail-container {
   padding: 0;
 
-  .track-item-container:not(:last-child) & {
-    border-bottom: 1px solid colors.$sequencer-sub-divider;
-  }
+  border-bottom: 1px solid colors.$sequencer-sub-divider;
 
   .dragging & {
     display: none;

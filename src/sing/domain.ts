@@ -15,6 +15,7 @@ import {
   singingVoiceSourceHashSchema,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
+import { TrackId } from "@/type/preload";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
@@ -566,11 +567,17 @@ export const splitLyricsByMoras = (
   return moraAndNonMoras;
 };
 
-export const shouldPlay = (
-  tracks: Map<string, Track>,
-): Map<string, boolean> => {
+/**
+ * トラックのミュート・ソロ状態から再生すべきトラックを判定する。
+ *
+ * ソロのトラックが存在する場合は、ソロのトラックのみ再生する。（ミュートは無視される）
+ * ソロのトラックが存在しない場合は、ミュートされていないトラックを再生する。
+ */
+export const shouldPlayTracks = (
+  tracks: Map<TrackId, Track>,
+): Map<TrackId, boolean> => {
   const soloTrackExists = [...tracks.values()].some((track) => track.solo);
-  const shouldPlayMap = new Map<string, boolean>();
+  const shouldPlayMap = new Map<TrackId, boolean>();
   for (const [trackKey, track] of tracks) {
     shouldPlayMap.set(trackKey, soloTrackExists ? track.solo : !track.mute);
   }
