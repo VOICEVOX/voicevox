@@ -72,6 +72,7 @@
     border: 1px solid colors.$border;
     border-radius: vars.$radius-1;
     vertical-align: middle;
+    max-width: 100%;
   }
 
   :deep(hr) {

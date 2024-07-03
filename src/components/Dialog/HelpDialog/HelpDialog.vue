@@ -298,6 +298,7 @@ const openLogDirectory = window.backend.openLogDirectory;
 .list-wrapper {
   margin-top: 66px;
   height: calc(100vh - 90px);
+  width: max-content;
 }
 
 .list-inner {
