@@ -39,11 +39,11 @@
       >
         <div class="singer-icon-hitbox">
           <SingerIcon
-            v-if="trackStyle"
+            v-if="trackCharacter"
             round
             class="singer-icon"
             size="3rem"
-            :style="trackStyle"
+            :style="trackCharacter.style"
           />
           <QAvatar v-else round size="3rem" color="primary"
             ><span color="text-display-on-primary">?</span></QAvatar
@@ -61,7 +61,7 @@
             @blur="updateTrackName"
           />
         </QItemLabel>
-        <QItemLabel v-if="trackStyle" caption class="singer-style">
+        <QItemLabel v-if="trackCharacter" caption class="singer-style">
           <!-- ミュート中はアイコンを表示 -->
           <QIcon
             v-if="!shouldPlayTrack"
@@ -157,7 +157,7 @@ import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { shouldPlay } from "@/sing/domain";
-import { TrackId } from "@/type/preload";
+import { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 const props = defineProps<{
@@ -244,7 +244,10 @@ const setTrackSolo = (solo: boolean) => {
 };
 
 const selectedTrackId = computed(() => store.state.selectedTrackId);
-const trackCharacter = computed(() => {
+
+const trackCharacter = computed<
+  { character: CharacterInfo; style: StyleInfo } | undefined
+>(() => {
   if (!track.value.singer) return undefined;
 
   for (const character of store.state.characterInfos[
@@ -252,7 +255,7 @@ const trackCharacter = computed(() => {
   ]) {
     for (const style of character.metas.styles) {
       if (style.styleId === track.value.singer.styleId) {
-        return character;
+        return { character, style };
       }
     }
   }
@@ -266,24 +269,10 @@ const deleteTrack = () => {
   store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.trackId });
 };
 
-const trackStyle = computed(() => {
-  if (!track.value.singer) return undefined;
-
-  const character = trackCharacter.value;
-  if (!character) return undefined;
-
-  for (const style of character.metas.styles) {
-    if (style.styleId === track.value.singer.styleId) {
-      return style;
-    }
-  }
-  return undefined;
-});
-
 const singerName = computed(() => {
   const character = trackCharacter.value;
   if (!character) return "（不明なキャラクター）";
-  return character.metas.speakerName;
+  return character.character.metas.speakerName;
 });
 </script>
 <style scoped lang="scss">
