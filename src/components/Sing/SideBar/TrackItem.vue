@@ -22,7 +22,7 @@
       />
       <!-- 左端のドラッグ判定 -->
       <div :class="props.draggableClass" class="track-handle-bg" />
-      <!-- 選択中のトラックは左に>を出す（AudioCellみたいな）-->
+      <!-- 選択中のトラックの左端に表示される矢印 -->
       <QIcon
         v-if="props.trackId === selectedTrackId"
         name="arrow_right"
@@ -30,7 +30,7 @@
         size="md"
         class="active-arrow"
       />
-      <!-- アイコン周り（アイコン、フォールバック、クリック判定 -->
+      <!-- アイコン -->
       <QItemSection
         avatar
         class="singer-icon-container"
@@ -51,7 +51,7 @@
           <CharacterSelectMenu :trackId="props.trackId" />
         </div>
       </QItemSection>
-      <!-- トラック名、キャラ名+スタイル表示 -->
+      <!-- トラック名、キャラ名表示 -->
       <QItemSection>
         <QItemLabel class="track-name" @click.stop="uiLocked || selectTrack()">
           <QInput
@@ -330,7 +330,6 @@ const singerName = computed(() => {
       display: flex;
       align-items: center;
       gap: 0.25rem;
-      flex-wrap: nowrap;
 
       .track-button {
         width: 1.75rem;
@@ -355,12 +354,10 @@ const singerName = computed(() => {
 }
 
 .singer-icon-container {
-  position: relative;
   cursor: grab;
 }
 
 .singer-icon-hitbox {
-  position: relative;
   cursor: pointer;
 }
 

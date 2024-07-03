@@ -128,7 +128,6 @@ const reorderTracks = (trackOrder: TrackId[]) => {
 .tracks-footer {
   display: flex;
   background: colors.$background;
-  z-index: 10;
   align-items: center;
 }
 .tracks-header {
