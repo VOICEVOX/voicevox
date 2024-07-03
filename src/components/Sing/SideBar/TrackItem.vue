@@ -318,7 +318,7 @@ const singerName = computed(() => {
     position: absolute;
     top: 0;
     left: 0;
-    width: 4.5rem;
+    width: 4.5rem; // TrackItemの左端からトラック名の左端まで
     height: 100%;
     cursor: grab;
   }
