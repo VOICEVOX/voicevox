@@ -123,6 +123,7 @@
                 class="word-input"
                 dense
                 :disable="uiLocked"
+                @focus="handleFocus('surface')"
                 @blur="setSurface(surface)"
                 @keydown.enter="yomiFocus"
               >
@@ -142,6 +143,7 @@
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
+                @focus="handleFocus('yomi')"
                 @blur="setYomi(yomi)"
                 @keydown.enter="setYomiWhenEnter"
               >
@@ -714,10 +716,23 @@ const contextMenudata = ref<
   {
     type: "button",
     label: "全選択",
-    onClick: async () => {},
-    disableWhenUiLocked: true,
+    onClick: async () => {
+      contextMenu.value?.hide();
+      if (focusInputElement.value === "surface") {
+        surfaceInput.value?.select();
+      } else if (focusInputElement.value === "yomi") {
+        yomiInput.value?.select();
+      }
+    },
+    disableWhenUiLocked: false,
   },
 ]);
+
+// surface と yomi のどちらを選択しているか
+const focusInputElement = ref("");
+const handleFocus = (inputName: string) => {
+  focusInputElement.value = inputName;
+};
 </script>
 
 <style lang="scss" scoped>
