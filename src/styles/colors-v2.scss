@@ -39,9 +39,9 @@ $primitive-red: #d04756;
   --color-v2-warning-hovered: #{lighten($primitive-red, 40%)};
   --color-v2-warning-pressed: #{lighten($primitive-red, 35%)};
 
-  --color-v2-scrollbar: #{rgba($primitive-black, 0.2)};
-  --color-v2-scrollbar-hovered: #{rgba($primitive-black, 0.3)};
-  --color-v2-scrollbar-pressed: #{rgba($primitive-black, 0.4)};
+  --color-v2-scrollbar: #{rgba($primitive-black, 0.3)};
+  --color-v2-scrollbar-hovered: #{rgba($primitive-black, 0.4)};
+  --color-v2-scrollbar-pressed: #{rgba($primitive-black, 0.5)};
 }
 
 // ダークテーマの色
@@ -75,9 +75,9 @@ $primitive-red: #d04756;
   --color-v2-warning-hovered: #{darken($primitive-red, 35%)};
   --color-v2-warning-pressed: #{darken($primitive-red, 30%)};
 
-  --color-v2-scrollbar: #{rgba($primitive-white, 0.2)};
-  --color-v2-scrollbar-hovered: #{rgba($primitive-white, 0.3)};
-  --color-v2-scrollbar-pressed: #{rgba($primitive-white, 0.4)};
+  --color-v2-scrollbar: #{rgba($primitive-white, 0.3)};
+  --color-v2-scrollbar-hovered: #{rgba($primitive-white, 0.4)};
+  --color-v2-scrollbar-pressed: #{rgba($primitive-white, 0.5)};
 }
 
 $background: var(--color-v2-background);
