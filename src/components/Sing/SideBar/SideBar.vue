@@ -64,6 +64,7 @@ import TrackItem from "./TrackItem.vue";
 import { useStore } from "@/store";
 import { TrackId } from "@/type/preload";
 
+// DraggableのコンテナにQListを使うための設定。
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
 Draggable.components = { ...Draggable.components, QList };
 
