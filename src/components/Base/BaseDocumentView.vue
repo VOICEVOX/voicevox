@@ -1,6 +1,8 @@
 <template>
   <div class="document">
-    <slot />
+    <div>
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -16,27 +18,33 @@
 
   :deep(h1) {
     @include mixin.headline-1;
+    margin-bottom: 2rem;
   }
 
   :deep(h2) {
     @include mixin.headline-2;
-    margin-top: 1.5rem;
+    padding-block: 0.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
     border-bottom: 1px solid colors.$border;
   }
 
   :deep(h3) {
     @include mixin.headline-3;
-    margin-top: 1.5rem;
+    margin-top: 1.75rem;
+    margin-bottom: 1rem;
   }
 
   :deep(h4) {
     @include mixin.headline-4;
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
   }
 
   :deep(h5) {
     @include mixin.headline-5;
     margin-top: 1rem;
+    margin-bottom: 0.25rem;
   }
 
   :deep(h6) {
@@ -46,12 +54,17 @@
 
   :deep(p) {
     line-height: 1.75;
-    margin-top: 1rem;
+    margin-bottom: 1rem;
   }
 
-  :deep(div > ul),
-  :deep(div > ol) {
-    margin-top: 1rem;
+  :deep(ul),
+  :deep(ol) {
+    padding-left: 1.5rem;
+  }
+
+  :deep(:where(div, details) > ul),
+  :deep(:where(div, details) > ol) {
+    margin-bottom: 1rem;
   }
 
   :deep(li) {
@@ -68,11 +81,15 @@
   }
 
   :deep(img) {
-    margin-top: 0.5rem;
     border: 1px solid colors.$border;
     border-radius: vars.$radius-1;
     vertical-align: middle;
     max-width: 100%;
+  }
+
+  :deep(:where(div, details) > img) {
+    display: block;
+    margin-bottom: 1rem;
   }
 
   :deep(hr) {
@@ -85,7 +102,7 @@
 
   :deep(pre) {
     padding: vars.$padding-1;
-    margin-top: 1rem;
+    margin-bottom: 1rem;
     background-color: colors.$surface;
     border: 1px solid colors.$border;
     border-radius: vars.$radius-1;
@@ -119,24 +136,32 @@
   }
 
   :deep(details) {
-    padding: vars.$padding-1;
+    margin-bottom: 1rem;
+    padding: vars.$padding-2;
     background-color: colors.$surface;
     border: 1px solid colors.$border;
     border-radius: vars.$radius-1;
   }
 
   :deep(summary) {
-    padding: vars.$padding-1;
-    margin: calc(#{vars.$padding-1} * -1);
+    padding: vars.$padding-2;
+    margin: calc(#{vars.$padding-2} * -1);
     cursor: pointer;
   }
 
+  :deep(details[open] > summary) {
+    margin-bottom: 0;
+  }
   :deep(summary::before) {
     content: "▶ ";
   }
 
   :deep(details[open] > summary::before) {
     content: "▼ ";
+  }
+
+  :deep(:last-child) {
+    margin-bottom: 0;
   }
 }
 </style>
