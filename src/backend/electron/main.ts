@@ -430,6 +430,7 @@ async function createWindow() {
   if (process.env.VITE_DEV_SERVER_URL == undefined) {
     protocol.handle("app", (request) => {
       // 読み取り先のファイルがインストールディレクトリ内であることを確認する
+      // ref: https://www.electronjs.org/ja/docs/latest/api/protocol#protocolhandlescheme-handler
       const { pathname } = new URL(request.url);
       const pathToServe = path.resolve(path.join(__dirname, pathname));
       const relativePath = path.relative(__dirname, pathToServe);
