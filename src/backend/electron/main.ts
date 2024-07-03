@@ -1022,7 +1022,7 @@ app.on("web-contents-created", (e, contents) => {
     if (protocol.match(/^https?:/)) {
       shell.openExternal(url);
     } else {
-      log.warn(`許可されないリンクです。url: ${url}`);
+      log.error(`許可されないリンクです。url: ${url}`);
     }
     return { action: "deny" };
   });
