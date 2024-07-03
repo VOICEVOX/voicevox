@@ -123,6 +123,7 @@
                 class="word-input"
                 dense
                 :disable="uiLocked"
+                @update:modelValue="setSurfaceOrYomiText"
                 @select="handleInteraction('surface')"
                 @focus="handleInteraction('surface')"
                 @blur="setSurface(surface)"
@@ -144,6 +145,7 @@
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
+                @update:modelValue="setSurfaceOrYomiText"
                 @select="handleInteraction('yomi')"
                 @focus="handleInteraction('yomi')"
                 @blur="setYomi(yomi)"
@@ -278,7 +280,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
@@ -700,8 +702,29 @@ const contextMenudata = ref<
   {
     type: "button",
     label: "切り取り",
-    onClick: async () => {},
-    disableWhenUiLocked: true,
+    onClick: async () => {
+      contextMenu.value?.hide();
+      if (inputElement.value === "surface") {
+        if (surfaceInputSelection.isEmpty) return;
+
+        const text = surfaceInputSelection.getAsString();
+        const start = surfaceInputSelection.selectionStart;
+        setSurfaceOrYomiText(surfaceInputSelection.getReplacedStringTo(""));
+        await nextTick();
+        navigator.clipboard.writeText(text);
+        surfaceInputSelection.setCursorPosition(start);
+      } else if (inputElement.value === "yomi") {
+        if (yomiInputSelection.isEmpty) return;
+
+        const text = yomiInputSelection.getAsString();
+        const start = yomiInputSelection.selectionStart;
+        setSurfaceOrYomiText(yomiInputSelection.getReplacedStringTo(""));
+        await nextTick();
+        navigator.clipboard.writeText(text);
+        yomiInputSelection.setCursorPosition(start);
+      }
+    },
+    disableWhenUiLocked: false,
   },
   {
     type: "button",
@@ -710,9 +733,11 @@ const contextMenudata = ref<
       contextMenu.value?.hide();
       if (inputElement.value === "surface") {
         if (surfaceInputSelection.isEmpty) return;
+
         navigator.clipboard.writeText(surfaceInputSelection.getAsString());
       } else if (inputElement.value === "yomi") {
         if (yomiInputSelection.isEmpty) return;
+
         navigator.clipboard.writeText(yomiInputSelection.getAsString());
       }
     },
@@ -747,6 +772,15 @@ const yomiInputSelection = new SelectionHelperForQInput(yomiInput);
 const inputElement = ref("");
 const handleInteraction = (inputName: string) => {
   inputElement.value = inputName;
+};
+
+const setSurfaceOrYomiText = (text: string | number | null) => {
+  if (typeof text !== "string") throw new Error("typeof text !== 'string'");
+  if (inputElement.value === "surface") {
+    surface.value = text;
+  } else if (inputElement.value === "yomi") {
+    yomi.value = text;
+  }
 };
 </script>
 
