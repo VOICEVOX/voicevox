@@ -127,6 +127,7 @@
                 @select="handleInteraction('surface')"
                 @focus="handleInteraction('surface')"
                 @blur="setSurface(surface)"
+                @paste="pasteOnDictionary"
                 @keydown.enter="yomiFocus"
               >
                 <ContextMenu
@@ -149,6 +150,7 @@
                 @select="handleInteraction('yomi')"
                 @focus="handleInteraction('yomi')"
                 @blur="setYomi(yomi)"
+                @paste="pasteOnDictionary"
                 @keydown.enter="setYomiWhenEnter"
               >
                 <template #error>
@@ -688,6 +690,7 @@ const toDialogClosedState = () => {
 };
 
 // テキスト編集エリアの右クリック
+// 参考実装: https://github.com/VOICEVOX/voicevox/pull/1374/files#diff-444f263f72d4db11fe82c672d5c232eb4c29d29dbc1ffd20e279d586b1b2c180R371-R379
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuHeader = ref<string | undefined>("");
 const contextMenudata = ref<
@@ -746,8 +749,11 @@ const contextMenudata = ref<
   {
     type: "button",
     label: "貼り付け",
-    onClick: async () => {},
-    disableWhenUiLocked: true,
+    onClick: async () => {
+      contextMenu.value?.hide();
+      paste();
+    },
+    disableWhenUiLocked: false,
   },
   { type: "separator" },
   {
@@ -768,7 +774,11 @@ const contextMenudata = ref<
 const surfaceInputSelection = new SelectionHelperForQInput(surfaceInput);
 const yomiInputSelection = new SelectionHelperForQInput(yomiInput);
 
-// surface と yomi のどちらを選択しているか
+/**
+ * surface と yomi のどちらを選択しているかを取得する。
+ * inputElement.value をもとに、単語か読み、どちらの <QInput> であるかを区別し、
+ * それに対する切り取りやコピー、貼り付けの処理を行う
+ */
 const inputElement = ref("");
 const handleInteraction = (inputName: string) => {
   inputElement.value = inputName;
@@ -780,6 +790,34 @@ const setSurfaceOrYomiText = (text: string | number | null) => {
     surface.value = text;
   } else if (inputElement.value === "yomi") {
     yomi.value = text;
+  }
+};
+
+const pasteOnDictionary = async (event: ClipboardEvent) => {
+  event.preventDefault();
+  paste({ text: event.clipboardData?.getData("text/plain") });
+};
+
+const paste = async (options?: { text?: string }) => {
+  const text = options ? options.text : await navigator.clipboard.readText();
+  if (text == undefined) return;
+
+  if (inputElement.value === "surface") {
+    const beforeLength = surface.value.length;
+    const end = surfaceInputSelection.selectionEnd ?? 0;
+    setSurfaceOrYomiText(surfaceInputSelection.getReplacedStringTo(text));
+    await nextTick();
+    surfaceInputSelection.setCursorPosition(
+      end + surface.value.length - beforeLength,
+    );
+  } else if (inputElement.value === "yomi") {
+    const beforeLength = yomi.value.length;
+    const end = yomiInputSelection.selectionEnd ?? 0;
+    setSurfaceOrYomiText(yomiInputSelection.getReplacedStringTo(text));
+    await nextTick();
+    yomiInputSelection.setCursorPosition(
+      end + yomi.value.length - beforeLength,
+    );
   }
 };
 </script>
