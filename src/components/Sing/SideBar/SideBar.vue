@@ -27,6 +27,7 @@
     <Draggable
       tag="QList"
       :modelValue="trackOrder"
+      :itemKey
       handle=".track-handle"
       class="tracks"
       dragClass="dragging"
@@ -64,6 +65,7 @@ import { TrackId } from "@/type/preload";
 // DraggableのコンテナにQListを使うための設定。
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
 Draggable.components = { ...Draggable.components, QList };
+const itemKey = (trackId: TrackId) => trackId;
 
 const store = useStore();
 

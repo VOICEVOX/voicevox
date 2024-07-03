@@ -291,7 +291,7 @@ export const migrateProjectFileObject = async (
       track.name = DEFAULT_TRACK_NAME;
       track.solo = false;
       track.mute = false;
-      track.volume = 1;
+      track.gain = 1;
       track.pan = 0;
       newTracks[TrackId(crypto.randomUUID())] = track;
     }
