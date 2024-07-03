@@ -1,150 +1,154 @@
 <template>
-  <QItem
-    v-ripple
-    clickable
-    class="track-item"
-    activeClass="selected-track"
-    :active="props.trackId === selectedTrackId"
-    :disable="uiLocked"
-    @click="selectTrack()"
-  >
-    <ContextMenu
-      :menudata="[
-        {
-          type: 'button',
-          label: '削除',
-          onClick: deleteTrack,
-          disabled: tracks.size === 1,
-          disableWhenUiLocked: true,
-        },
-      ]"
-    />
-    <!-- 左端のドラッグ判定 -->
-    <div :class="props.draggableClass" class="track-handle-bg" />
-    <!-- 選択中のトラックは左に>を出す（AudioCellみたいな）-->
-    <QIcon
-      v-if="props.trackId === selectedTrackId"
-      name="arrow_right"
-      color="primary"
-      size="md"
-      class="active-arrow"
-    />
-    <!-- アイコン周り（アイコン、フォールバック、クリック判定 -->
-    <QItemSection
-      avatar
-      class="singer-icon-container"
-      :class="props.draggableClass"
-      @click.stop=""
+  <div class="track-item-container">
+    <QItem
+      v-ripple
+      clickable
+      class="track-item"
+      activeClass="selected-track"
+      :active="props.trackId === selectedTrackId"
+      :disable="uiLocked"
+      @click="selectTrack()"
     >
-      <div class="singer-icon-hitbox">
-        <SingerIcon
-          v-if="trackStyle"
-          round
-          class="singer-icon"
-          size="3rem"
-          :style="trackStyle"
-        />
-        <QAvatar v-else round size="3rem" color="primary"
-          ><span color="text-display-on-primary">?</span></QAvatar
-        >
-        <CharacterSelectMenu :trackId="props.trackId" />
-      </div>
-    </QItemSection>
-    <!-- トラック名、キャラ名+スタイル表示 -->
-    <QItemSection>
-      <QItemLabel class="track-name" @click.stop="uiLocked || selectTrack()">
-        <QInput
-          v-model="temporaryTrackName"
-          dense
-          :disable="uiLocked"
-          @blur="updateTrackName"
-        />
-      </QItemLabel>
-      <QItemLabel v-if="trackStyle" caption class="singer-style">
-        <!-- ミュート中はアイコンを表示 -->
-        <QIcon
-          v-if="!shouldPlayTrack"
-          name="volume_off"
-          color="display"
-          :style="{ opacity: 0.8 }"
-        />
-        {{ singerName }}
-      </QItemLabel>
-    </QItemSection>
-    <!-- ミュート・ソロボタン -->
-    <div class="track-control">
-      <QBtn
-        :color="track.mute ? 'primary' : 'default'"
-        :textColor="track.mute ? 'display-on-primary' : 'default'"
-        icon="volume_off"
-        round
-        unelevated
-        :outline="!track.mute"
-        dense
-        size="sm"
-        class="track-button"
-        :class="{ 'track-button-active': track.mute }"
-        :disable="uiLocked || isThereSoloTrack"
-        @click.stop="setTrackMute(!track.mute)"
+      <ContextMenu
+        :menudata="[
+          {
+            type: 'button',
+            label: '削除',
+            onClick: deleteTrack,
+            disabled: tracks.size === 1,
+            disableWhenUiLocked: true,
+          },
+        ]"
+      />
+      <!-- 左端のドラッグ判定 -->
+      <div :class="props.draggableClass" class="track-handle-bg" />
+      <!-- 選択中のトラックは左に>を出す（AudioCellみたいな）-->
+      <QIcon
+        v-if="props.trackId === selectedTrackId"
+        name="arrow_right"
+        color="primary"
+        size="md"
+        class="active-arrow"
+      />
+      <!-- アイコン周り（アイコン、フォールバック、クリック判定 -->
+      <QItemSection
+        avatar
+        class="singer-icon-container"
+        :class="props.draggableClass"
+        @click.stop=""
       >
-        <QTooltip :delay="500">ミュート</QTooltip>
-      </QBtn>
-      <QBtn
-        :color="track.solo ? 'primary' : 'default'"
-        :textColor="track.solo ? 'display-on-primary' : 'default'"
-        icon="headset"
-        rounded
-        unelevated
-        :outline="!track.solo"
-        dense
-        size="sm"
-        class="track-button"
-        :class="{ 'track-button-active': track.solo }"
-        :disable="uiLocked"
-        @click.stop="setTrackSolo(!track.solo)"
-      >
-        <QTooltip :delay="500">ソロ</QTooltip>
-      </QBtn>
-    </div>
-  </QItem>
+        <div class="singer-icon-hitbox">
+          <SingerIcon
+            v-if="trackStyle"
+            round
+            class="singer-icon"
+            size="3rem"
+            :style="trackStyle"
+          />
+          <QAvatar v-else round size="3rem" color="primary"
+            ><span color="text-display-on-primary">?</span></QAvatar
+          >
+          <CharacterSelectMenu :trackId="props.trackId" />
+        </div>
+      </QItemSection>
+      <!-- トラック名、キャラ名+スタイル表示 -->
+      <QItemSection>
+        <QItemLabel class="track-name" @click.stop="uiLocked || selectTrack()">
+          <QInput
+            v-model="temporaryTrackName"
+            dense
+            :disable="uiLocked"
+            @blur="updateTrackName"
+          />
+        </QItemLabel>
+        <QItemLabel v-if="trackStyle" caption class="singer-style">
+          <!-- ミュート中はアイコンを表示 -->
+          <QIcon
+            v-if="!shouldPlayTrack"
+            name="volume_off"
+            color="display"
+            :style="{ opacity: 0.8 }"
+          />
+          {{ singerName }}
+        </QItemLabel>
+      </QItemSection>
+      <!-- ミュート・ソロボタン -->
+      <QItemSection side class="track-control-container">
+        <div class="track-control">
+          <QBtn
+            :color="track.mute ? 'primary' : 'default'"
+            :textColor="track.mute ? 'display-on-primary' : 'display'"
+            icon="volume_off"
+            round
+            unelevated
+            :outline="!track.mute"
+            dense
+            size="sm"
+            class="track-button"
+            :class="{ 'track-button-active': track.mute }"
+            :disable="uiLocked || isThereSoloTrack"
+            @click.stop="setTrackMute(!track.mute)"
+          >
+            <QTooltip :delay="500">ミュート</QTooltip>
+          </QBtn>
+          <QBtn
+            :color="track.solo ? 'primary' : 'default'"
+            :textColor="track.solo ? 'display-on-primary' : 'display'"
+            icon="headset"
+            rounded
+            unelevated
+            :outline="!track.solo"
+            dense
+            size="sm"
+            class="track-button"
+            :class="{ 'track-button-active': track.solo }"
+            :disable="uiLocked"
+            @click.stop="setTrackSolo(!track.solo)"
+          >
+            <QTooltip :delay="500">ソロ</QTooltip>
+          </QBtn>
+        </div>
+      </QItemSection>
+    </QItem>
 
-  <!-- トラックのパン・ボリューム調整 -->
-  <QItem
-    v-if="props.trackId === selectedTrackId"
-    class="track-detail-container"
-  >
-    <div class="track-detail">
-      <div class="pan">
-        <div class="l">L</div>
-        <QSlider
-          :modelValue="track.pan"
-          :min="-1"
-          :max="1"
-          :step="0.1"
-          :markers="1"
-          selectionColor="transparent"
-          :disable="uiLocked"
-          @change="setTrackPan($event)"
-          @dblclick="setTrackPan(0)"
-        />
-        <div class="r">R</div>
+    <!-- トラックのパン・ボリューム調整 -->
+    <QItem
+      v-if="props.trackId === selectedTrackId"
+      class="track-detail-container"
+    >
+      <div class="track-detail">
+        <div class="pan">
+          <div class="l">L</div>
+          <QSlider
+            :modelValue="track.pan"
+            :min="-1"
+            :max="1"
+            :step="0.1"
+            :markers="1"
+            selectionColor="transparent"
+            :disable="uiLocked"
+            @change="setTrackPan($event)"
+            @dblclick="setTrackPan(0)"
+          />
+          <div class="r">R</div>
+        </div>
+        <div class="volume">
+          <QIcon name="volume_down" class="l" size="1rem" />
+          <QSlider
+            :modelValue="track.volume"
+            :min="0"
+            :max="2"
+            :step="0.1"
+            :markers="1"
+            :disable="uiLocked"
+            @change="setTrackVolume($event)"
+            @dblclick="setTrackVolume(1)"
+          />
+          <QIcon name="volume_up" class="r" size="1rem" />
+        </div>
       </div>
-      <div class="volume">
-        <QIcon name="volume_down" class="l" size="1rem" />
-        <QSlider
-          :modelValue="track.volume"
-          :min="0"
-          :max="2"
-          :step="0.1"
-          :markers="1"
-          :disable="uiLocked"
-          @change="setTrackVolume($event)"
-          @dblclick="setTrackVolume(1)"
-        />
-        <QIcon name="volume_up" class="r" size="1rem" />
-      </div>
-    </div>
-  </QItem>
+    </QItem>
+  </div>
 </template>
 <script setup lang="ts">
 import { computed, watch, ref } from "vue";
@@ -289,7 +293,9 @@ const singerName = computed(() => {
 .track-detail-container {
   padding: 0;
 
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
+  .track-item-container:not(:last-child) & {
+    border-bottom: 1px solid colors.$sequencer-sub-divider;
+  }
 
   .dragging & {
     display: none;
@@ -319,6 +325,8 @@ const singerName = computed(() => {
 }
 
 .track-item {
+  padding-right: 0.5rem;
+
   &.selected-track {
     color: colors.$display;
   }
@@ -332,23 +340,24 @@ const singerName = computed(() => {
     cursor: grab;
   }
 
-  .track-control {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    right: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
+  .track-control-container {
+    padding-left: 0.5rem;
 
-    .track-button {
-      width: 1.75rem;
-      height: 1.75rem;
-      padding: 0;
+    .track-control {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      flex-wrap: nowrap;
 
-      // 線を薄くする
-      &:not(.track-button-active)::before {
-        border-color: rgba(colors.$display-rgb, 0.5);
+      .track-button {
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+
+        // 線を薄くする
+        &:not(.track-button-active)::before {
+          border-color: rgba(colors.$display-rgb, 0.5);
+        }
       }
     }
   }
@@ -378,7 +387,6 @@ const singerName = computed(() => {
 
 .track-name,
 .singer-style {
-  width: calc(100% - 3.5rem);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

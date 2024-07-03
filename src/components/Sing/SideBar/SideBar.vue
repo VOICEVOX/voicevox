@@ -36,11 +36,7 @@
       @end="isDragging = false"
     >
       <template #item="{ element: trackId }">
-        <div>
-          <!-- 上のdivを消すとDraggableが動かなくなる -->
-          <!-- （上のコメントはtemplate直下に置くとエラーが出る） -->
-          <TrackItem :trackId draggableClass="track-handle" />
-        </div>
+        <TrackItem :trackId draggableClass="track-handle" />
       </template>
     </Draggable>
     <div class="tracks-footer">
