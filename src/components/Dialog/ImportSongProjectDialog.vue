@@ -209,8 +209,8 @@ function getProjectTracks(project: Project) {
       )
     : project.project.song.trackOrder.map((trackId) =>
         toTrack(
-          project.project.song.tracks[trackId]?.name,
           // zodが何故かundefinedを入れてくるので、null-safe operatorを使う
+          project.project.song.tracks[trackId]?.name,
           project.project.song.tracks[trackId]?.notes.length ?? 0,
         ),
       );
