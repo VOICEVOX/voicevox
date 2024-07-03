@@ -601,7 +601,7 @@ export const rootMiscSettingSchema = z.object({
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
   // ソングエディタでのトラック操作をUndo可能にするか
   // TODO: 設定画面で変更可能にする
-  songUndoableTrackControl: z
+  songUndoableTrackOptions: z
     .object({
       name: z.boolean().default(true),
       soloMute: z.boolean().default(true),

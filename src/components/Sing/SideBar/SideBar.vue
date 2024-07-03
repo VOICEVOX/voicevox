@@ -90,7 +90,7 @@ const deleteTrack = () => {
 };
 
 const unsoloAllTracks = () => {
-  if (store.state.songUndoableTrackControl.soloMute) {
+  if (store.state.songUndoableTrackOptions.soloMute) {
     store.dispatch("COMMAND_UNSOLO_ALL_TRACKS");
   } else {
     store.dispatch("UNSOLO_ALL_TRACKS");
