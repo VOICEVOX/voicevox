@@ -340,7 +340,7 @@ export function createDefaultTrack(): Track {
 
     solo: false,
     mute: false,
-    volume: 1,
+    gain: 1,
     pan: 0,
   };
 }

@@ -2296,13 +2296,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_TRACK_VOLUME: {
-    mutation(state, { trackId, volume }) {
+  SET_TRACK_GAIN: {
+    mutation(state, { trackId, gain }) {
       const track = getOrThrow(state.tracks, trackId);
-      track.volume = volume;
+      track.gain = gain;
     },
-    action({ commit }, { trackId, volume }) {
-      commit("SET_TRACK_VOLUME", { trackId, volume });
+    action({ commit }, { trackId, gain }) {
+      commit("SET_TRACK_GAIN", { trackId, gain });
     },
   },
 
@@ -2642,12 +2642,12 @@ export const singingCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_SET_TRACK_VOLUME: {
-      mutation(draft, { trackId, volume }) {
-        singingStore.mutations.SET_TRACK_VOLUME(draft, { trackId, volume });
+    COMMAND_SET_TRACK_GAIN: {
+      mutation(draft, { trackId, gain }) {
+        singingStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
       },
-      action({ commit }, { trackId, volume }) {
-        commit("COMMAND_SET_TRACK_VOLUME", { trackId, volume });
+      action({ commit }, { trackId, gain }) {
+        commit("COMMAND_SET_TRACK_GAIN", { trackId, gain });
       },
     },
 

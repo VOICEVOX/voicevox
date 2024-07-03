@@ -603,9 +603,8 @@ export const rootMiscSettingSchema = z.object({
   // TODO: 設定画面で変更可能にする
   songUndoableTrackOptions: z
     .object({
-      name: z.boolean().default(true),
-      soloMute: z.boolean().default(true),
-      panVolume: z.boolean().default(true),
+      soloAndMute: z.boolean().default(true),
+      panAndGain: z.boolean().default(true),
     })
     .default({}),
 });

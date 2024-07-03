@@ -135,14 +135,14 @@
         <div class="volume">
           <QIcon name="volume_down" class="l" size="1rem" />
           <QSlider
-            :modelValue="track.volume"
+            :modelValue="track.gain"
             :min="0"
             :max="2"
             :step="0.1"
             :markers="1"
             :disable="uiLocked"
-            @change="setTrackVolume($event)"
-            @dblclick="setTrackVolume(1)"
+            @change="setTrackGain($event)"
+            @dblclick="setTrackGain(1)"
           />
           <QIcon name="volume_up" class="r" size="1rem" />
         </div>
@@ -183,21 +183,21 @@ const shouldPlayTrack = computed(() =>
 );
 
 const setTrackPan = (pan: number) => {
-  if (store.state.songUndoableTrackOptions.panVolume) {
+  if (store.state.songUndoableTrackOptions.panAndGain) {
     store.dispatch("COMMAND_SET_TRACK_PAN", { trackId: props.trackId, pan });
   } else {
     store.dispatch("SET_TRACK_PAN", { trackId: props.trackId, pan });
   }
 };
 
-const setTrackVolume = (volume: number) => {
-  if (store.state.songUndoableTrackOptions.panVolume) {
-    store.dispatch("COMMAND_SET_TRACK_VOLUME", {
+const setTrackGain = (gain: number) => {
+  if (store.state.songUndoableTrackOptions.panAndGain) {
+    store.dispatch("COMMAND_SET_TRACK_GAIN", {
       trackId: props.trackId,
-      volume,
+      gain,
     });
   } else {
-    store.dispatch("SET_TRACK_VOLUME", { trackId: props.trackId, volume });
+    store.dispatch("SET_TRACK_GAIN", { trackId: props.trackId, gain });
   }
 };
 
@@ -220,15 +220,11 @@ const updateTrackName = () => {
 };
 
 const setTrackName = (name: string) => {
-  if (store.state.songUndoableTrackOptions.name) {
-    store.dispatch("COMMAND_SET_TRACK_NAME", { trackId: props.trackId, name });
-  } else {
-    store.dispatch("SET_TRACK_NAME", { trackId: props.trackId, name });
-  }
+  store.dispatch("COMMAND_SET_TRACK_NAME", { trackId: props.trackId, name });
 };
 
 const setTrackMute = (mute: boolean) => {
-  if (store.state.songUndoableTrackOptions.soloMute) {
+  if (store.state.songUndoableTrackOptions.soloAndMute) {
     store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId: props.trackId, mute });
   } else {
     store.dispatch("SET_TRACK_MUTE", { trackId: props.trackId, mute });
@@ -236,7 +232,7 @@ const setTrackMute = (mute: boolean) => {
 };
 
 const setTrackSolo = (solo: boolean) => {
-  if (store.state.songUndoableTrackOptions.soloMute) {
+  if (store.state.songUndoableTrackOptions.soloAndMute) {
     store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId: props.trackId, solo });
   } else {
     store.dispatch("SET_TRACK_SOLO", { trackId: props.trackId, solo });

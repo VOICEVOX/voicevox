@@ -66,9 +66,8 @@ export const settingStoreState: SettingStoreState = {
   enableMemoNotation: false,
   enableRubyNotation: false,
   songUndoableTrackOptions: {
-    name: true,
-    soloMute: true,
-    panVolume: true,
+    soloAndMute: true,
+    panAndGain: true,
   },
 };
 

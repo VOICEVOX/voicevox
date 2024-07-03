@@ -623,9 +623,8 @@ const isDefaultConfirmedTips = computed(() => {
 type SongUndoableTrackOption =
   keyof RootMiscSettingType["songUndoableTrackOptions"];
 const songUndoableTrackOptionLabels = [
-  { value: "name", label: "トラック名" },
-  { value: "soloMute", label: "ミュート・ソロ" },
-  { value: "panVolume", label: "パン・音量" },
+  { value: "soloAndMute", label: "ミュート・ソロ" },
+  { value: "panAndGain", label: "パン・音量" },
 ];
 const songUndoableTrackOptions = computed({
   get: () =>
@@ -637,9 +636,8 @@ const songUndoableTrackOptions = computed({
     store.dispatch("SET_ROOT_MISC_SETTING", {
       key: "songUndoableTrackOptions",
       value: {
-        name: songUndoableTrackOptions.includes("name"),
-        soloMute: songUndoableTrackOptions.includes("soloMute"),
-        panVolume: songUndoableTrackOptions.includes("panVolume"),
+        soloAndMute: songUndoableTrackOptions.includes("soloAndMute"),
+        panAndGain: songUndoableTrackOptions.includes("panAndGain"),
       },
     });
   },

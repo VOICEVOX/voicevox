@@ -1192,9 +1192,9 @@ export type SingingStoreTypes = {
     action(payload: { trackId: TrackId; solo: boolean }): void;
   };
 
-  SET_TRACK_VOLUME: {
-    mutation: { trackId: TrackId; volume: number };
-    action(payload: { trackId: TrackId; volume: number }): void;
+  SET_TRACK_GAIN: {
+    mutation: { trackId: TrackId; gain: number };
+    action(payload: { trackId: TrackId; gain: number }): void;
   };
 
   SET_TRACK_PAN: {
@@ -1324,9 +1324,9 @@ export type SingingCommandStoreTypes = {
     action(payload: { trackId: TrackId; solo: boolean }): void;
   };
 
-  COMMAND_SET_TRACK_VOLUME: {
-    mutation: { trackId: TrackId; volume: number };
-    action(payload: { trackId: TrackId; volume: number }): void;
+  COMMAND_SET_TRACK_GAIN: {
+    mutation: { trackId: TrackId; gain: number };
+    action(payload: { trackId: TrackId; gain: number }): void;
   };
 
   COMMAND_SET_TRACK_PAN: {
