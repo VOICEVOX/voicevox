@@ -330,7 +330,6 @@ const singerName = computed(() => {
     width: 4.5rem;
     height: 100%;
     cursor: grab;
-    z-index: 1;
   }
 
   .track-control {
@@ -341,7 +340,6 @@ const singerName = computed(() => {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    z-index: 2;
 
     .track-button {
       width: 1.75rem;
@@ -361,17 +359,16 @@ const singerName = computed(() => {
   left: -0.5rem;
   top: 50%;
   transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .singer-icon-container {
-  z-index: 2;
   position: relative;
   cursor: grab;
 }
 
 .singer-icon-hitbox {
   position: relative;
-  z-index: 1;
   cursor: pointer;
 }
 
