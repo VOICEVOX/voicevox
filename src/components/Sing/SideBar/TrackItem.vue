@@ -212,10 +212,6 @@ const updateTrackName = () => {
     temporaryTrackName.value = track.value.name;
     return;
   }
-  setTrackName(temporaryTrackName.value);
-};
-
-const setTrackName = (name: string) => {
   store.dispatch("COMMAND_SET_TRACK_NAME", { trackId: props.trackId, name });
 };
 
