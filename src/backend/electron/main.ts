@@ -436,8 +436,7 @@ async function createWindow() {
       const relativePath = path.relative(__dirname, pathToServe);
       const isUnsafe =
         path.isAbsolute(relativePath) ||
-        relativePath.startsWith(`..${path.sep}`) ||
-        relativePath === ".." ||
+        relativePath.startsWith("..") ||
         relativePath === "";
       if (isUnsafe) {
         log.error(`Bad Request URL: ${request.url}`);
