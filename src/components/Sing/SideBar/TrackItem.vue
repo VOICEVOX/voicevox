@@ -61,7 +61,7 @@
             @blur="updateTrackName"
           />
         </QItemLabel>
-        <QItemLabel v-if="trackCharacter" caption class="singer-style">
+        <QItemLabel v-if="trackCharacter" caption class="singer-name">
           <!-- ミュート中はアイコンを表示 -->
           <QIcon
             v-if="!shouldPlayTrack"
@@ -366,7 +366,7 @@ const singerName = computed(() => {
 }
 
 .track-name,
-.singer-style {
+.singer-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
