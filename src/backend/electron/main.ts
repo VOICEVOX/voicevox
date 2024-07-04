@@ -1029,8 +1029,10 @@ app.on("web-contents-created", (e, contents) => {
 
   // ナビゲーションを無効化
   contents.on("will-navigate", (event) => {
-    log.error(`ナビゲーションは無効化されています。url: ${event.url}`);
-    event.preventDefault();
+    if (contents.getURL() !== event.url) {
+      log.error(`ナビゲーションは無効化されています。url: ${event.url}`);
+      event.preventDefault();
+    }
   });
 });
 
