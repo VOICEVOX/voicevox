@@ -281,47 +281,33 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // パレットの調整(ニュートラルカラーの彩度を落とす)
       const adjustments = {
         neutral: { chroma: -1 },
-        neutralVariant: { chroma: -4 },
+        neutralVariant: { chroma: 2 },
       };
       // カスタムカラー(仮)
       const customPaletteColors = [
         {
-          name: "sing-toolbar",
-          palette: "neutralVariant",
-          lightTone: 99,
-          darkTone: 20,
-          blend: true,
-        },
-        {
-          name: "sing-ruler",
-          palette: "neutralVariant",
-          lightTone: 90,
-          darkTone: 10,
-          blend: true,
-        },
-        {
-          name: "cell-white",
+          name: "sing-grid-cell-white",
           palette: "neutral",
           lightTone: 100,
+          darkTone: 18,
+          blend: true,
+        },
+        {
+          name: "sing-grid-cell-black",
+          palette: "neutral",
+          lightTone: 98,
           darkTone: 15,
           blend: true,
         },
         {
-          name: "cell-black",
+          name: "sing-grid-vertical-line",
           palette: "neutral",
-          lightTone: 96,
+          lightTone: 95,
           darkTone: 10,
           blend: true,
         },
         {
-          name: "sing-grid-measure-line",
-          palette: "neutral",
-          lightTone: 70,
-          darkTone: 50,
-          blend: true,
-        },
-        {
-          name: "sing-grid-cell-line",
+          name: "sing-grid-horizontal-line",
           palette: "neutral",
           lightTone: 95,
           darkTone: 10,
@@ -331,6 +317,20 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           name: "sing-grid-beat-line",
           palette: "neutral",
           lightTone: 90,
+          darkTone: 0,
+          blend: true,
+        },
+        {
+          name: "sing-grid-measure-line",
+          palette: "neutral",
+          lightTone: 85,
+          darkTone: 0,
+          blend: true,
+        },
+        {
+          name: "sing-grid-octave-line",
+          palette: "neutral",
+          lightTone: 85,
           darkTone: 0,
           blend: true,
         },

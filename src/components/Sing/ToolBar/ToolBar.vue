@@ -79,14 +79,14 @@
       <QBtn
         v-if="!nowPlaying"
         round
-        class="sing-playback-button"
+        class="sing-playback-button sing-playback-play"
         icon="play_arrow"
         @click="play"
       />
       <QBtn
         v-else
         round
-        class="sing-playback-button"
+        class="sing-playback-button sing-playback-stop"
         icon="stop"
         @click="stop"
       />
@@ -538,13 +538,19 @@ onUnmounted(() => {
 }
 
 .sing-playback-button {
-  // primaryボタン
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-surface);
   &:before {
     box-shadow: none;
   }
-  //border: 1px solid var(--md-ref-palette-neutral-variant-80);
+
+  &.sing-playback-play .q-btn__wrapper .q-icon {
+    transform: translateX(-0.5px);
+  }
+
+  &.sing-playback-stop .q-btn__wrapper .q-icon {
+    transform: translateX(-0.5px);
+  }
 }
 
 .sing-playhead-position {

@@ -48,7 +48,7 @@ defineProps<{
 
   &.active {
     background: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-secondary-on-secondary-container);
+    color: var(--md-sys-color-primary);
   }
 
   &:before {

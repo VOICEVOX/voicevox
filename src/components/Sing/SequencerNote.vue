@@ -308,16 +308,22 @@ const onLyricInput = (event: Event) => {
   }
 
   &.selected {
+    // 仮
     .note-bar {
-      background-color: var(--md-sys-color-primary-fixed-dim);
-      border-color: var(--md-sys-color-secondary-fixed);
-      outline: solid 2px var(--md-sys-color-secondady-fixed);
+      background-color: var(--md-custom-color-brand);
+      border-color: var(--md-sys-color-primary-fixed);
+      outline: solid 1px var(--md-sys-color-primary-fixed);
     }
 
     &.below-pitch {
       .note-bar {
         background-color: var(--md-sys-color-surface-variant);
       }
+    }
+
+    .note-right-edge:hover,
+    .note-left-edge:hover {
+      background-color: var(--md-sys-color-primary-fixed-dim);
     }
   }
   // TODO：もっといい見た目を考える
@@ -344,12 +350,12 @@ const onLyricInput = (event: Event) => {
   &.overlapping,
   &.invalid-phrase {
     .note-bar {
-      background-color: var(--md-sys-color-error-container);
-      border-color: var(--md-sys-color-error);
+      background-color: var(--md-sys-color-error);
+      border-color: var(--md-sys-color-error-container);
     }
 
     .note-lyric {
-      color: var(--md-sys-color-error);
+      color: var(--md-sys-color-on-error);
       opacity: 0.6;
     }
 

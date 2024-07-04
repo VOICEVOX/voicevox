@@ -1,6 +1,11 @@
 <template>
   <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
-    <svg xmlns="http://www.w3.org/2000/svg" :width="width" :height="height">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      :width="width"
+      :height="height"
+      shape-rendering="crispEdges"
+    >
       <defs>
         <pattern
           id="sequencer-ruler-measure"
