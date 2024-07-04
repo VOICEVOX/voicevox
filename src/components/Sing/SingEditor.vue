@@ -34,7 +34,7 @@
         <SideBar v-if="isSidebarOpen" />
       </template>
       <template #after>
-        <!-- full-height：高さをQSplitterの高さに揃える -->
+        <!-- full-heightで高さをQSplitterの高さに揃える -->
         <ScoreSequencer class="full-height" />
       </template>
     </QSplitter>

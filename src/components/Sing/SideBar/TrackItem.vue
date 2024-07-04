@@ -272,7 +272,7 @@ const singerName = computed(() => {
 
   border-bottom: 1px solid colors.$sequencer-sub-divider;
 
-  // draggingクラス：SideBarのDraggableにより追加/削除される。
+  // draggingクラスはSideBarのDraggableにより追加/削除される。
   .dragging & {
     display: none;
   }
