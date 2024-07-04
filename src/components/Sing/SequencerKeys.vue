@@ -4,7 +4,7 @@
       xmlns="http://www.w3.org/2000/svg"
       :width="width"
       :height="height"
-      shape-rendering="crispEdges"
+      shape-rendering="geometricPrecision"
     >
       <g
         v-for="(whiteKeyInfo, index) in whiteKeyInfos"
@@ -13,8 +13,8 @@
         @mouseenter="onMouseEnter(whiteKeyInfo.noteNumber)"
       >
         <rect
-          :x="whiteKeyRects[index].x - 0.5"
-          :y="whiteKeyRects[index].y + 0.5 - offset"
+          :x="whiteKeyRects[index].x"
+          :y="whiteKeyRects[index].y - offset"
           :width="whiteKeyRects[index].width"
           :height="whiteKeyRects[index].height"
           :title="whiteKeyInfo.name"
@@ -37,8 +37,8 @@
       <rect
         v-for="(blackKeyInfo, index) in blackKeyInfos"
         :key="index"
-        :x="blackKeyRects[index].x - 0.5"
-        :y="blackKeyRects[index].y + 0.5 - offset"
+        :x="blackKeyRects[index].x"
+        :y="blackKeyRects[index].y - offset"
         :width="blackKeyRects[index].width"
         :height="blackKeyRects[index].height"
         rx="2"
@@ -190,8 +190,8 @@ onUnmounted(() => {
 }
 
 .white-key-being-pressed {
-  fill: var(--md-sys-color-secondary-fixed-dim);
-  stroke: var(--md-sys-color-secondary-fixed-dim);
+  fill: var(--md-sys-color-secondary-fixed);
+  stroke: var(--md-sys-color-secondary-fixed);
 }
 
 .black-key {
@@ -199,7 +199,7 @@ onUnmounted(() => {
 }
 
 .black-key-being-pressed {
-  fill: var(--md-sys-color-secondary-fixed-dim);
+  fill: var(--md-sys-color-secondary-fixed);
 }
 
 .pitchname {

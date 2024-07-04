@@ -83,9 +83,11 @@ const selectedStyleIconPath = computed(() => {
 @use "@/styles/colors" as colors;
 
 .selected-character {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 4px;
   align-items: center;
   display: flex;
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  padding: 4px;
   position: relative;
 
   .character-avatar-icon {
@@ -105,21 +107,21 @@ const selectedStyleIconPath = computed(() => {
     white-space: nowrap;
   }
   .character-name {
-    font-size: 0.875rem;
+    font-size: 14px;
     font-weight: bold;
     line-height: 1rem;
-    padding-top: 0.5rem;
+    padding-top: 0;
 
     &.skeleton {
-      margin-top: 0.4rem;
-      margin-bottom: 0.2rem;
+      margin-top: 0;
+      margin-bottom: 8px;
     }
   }
 
   .character-style {
-    color: rgba(colors.$display-rgb, 0.6);
-    font-size: 0.75rem;
-    font-weight: bold;
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 12px;
+    font-weight: 500;
     line-height: 1rem;
   }
 

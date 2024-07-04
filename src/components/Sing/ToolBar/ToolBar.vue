@@ -9,6 +9,8 @@
         label="音域調整"
         dense
         hide-bottom-space
+        standout
+        unelevated
         class="key-range-adjustment"
         @update:model-value="setKeyRangeAdjustmentInputBuffer"
         @change="setKeyRangeAdjustment"
@@ -18,7 +20,9 @@
         :model-value="volumeRangeAdjustmentInputBuffer"
         label="声量調整"
         dense
+        standout
         hide-bottom-space
+        unelevated
         class="volume-range-adjustment"
         @update:model-value="setVolumeRangeAdjustmentInputBuffer"
         @change="setVolumeRangeAdjustment"
@@ -29,42 +33,53 @@
         dense
         hide-bottom-space
         standout
+        unelevated
+        label="BPM"
         class="sing-tempo"
         @update:model-value="setBpmInputBuffer"
         @change="setTempo"
       />
-      <QField hide-bottom-space dense>
-        <div class="sing-beats">
-          <QSelect
-            :model-value="timeSignatures[0].beats"
-            :options="beatsOptions"
-            hide-bottom-space
-            hide-dropdown-icon
-            user-inputs
-            standout
-            dense
-            options-dense
-            transition-show="none"
-            transition-hide="none"
-            class="sing-time-signature"
-            @update:model-value="setBeats"
-          />
-          <div class="sing-beats-separator">/</div>
-          <QSelect
-            :model-value="timeSignatures[0].beatType"
-            :options="beatTypeOptions"
-            hide-bottom-space
-            hide-dropdown-icon
-            user-inputs
-            standout
-            dense
-            options-dense
-            transition-show="none"
-            transition-hide="none"
-            class="sing-time-signature"
-            @update:model-value="setBeatType"
-          />
-        </div>
+      <QField
+        hide-bottom-space
+        dense
+        standout
+        class="sing-time-signature-field"
+      >
+        <template #control>
+          <div class="sing-beats">
+            <QSelect
+              :model-value="timeSignatures[0].beats"
+              :options="beatsOptions"
+              hide-bottom-space
+              hide-dropdown-icon
+              user-inputs
+              standout
+              unelevated
+              dense
+              options-dense
+              transition-show="none"
+              transition-hide="none"
+              class="sing-time-signature beats"
+              @update:model-value="setBeats"
+            />
+            <div class="sing-beats-separator">/</div>
+            <QSelect
+              :model-value="timeSignatures[0].beatType"
+              :options="beatTypeOptions"
+              hide-bottom-space
+              hide-dropdown-icon
+              user-inputs
+              standout
+              unelevated
+              dense
+              options-dense
+              transition-show="none"
+              transition-hide="none"
+              class="sing-time-signature beat-type"
+              @update:model-value="setBeatType"
+            />
+          </div>
+        </template>
       </QField>
     </div>
     <!-- player -->
@@ -108,33 +123,32 @@
         flat
         dense
         round
-        icon="undo"
-        size="16px"
         class="sing-undo-button"
         :disable="!canUndo"
         @click="undo"
-      />
+      >
+        <QIcon name="undo" size="24px" />
+      </QBtn>
       <QBtn
         flat
         dense
         round
-        icon="redo"
-        size="16px"
         class="sing-redo-button"
         :disable="!canRedo"
         @click="redo"
-      />
+      >
+        <QIcon name="redo" size="24px" />
+      </QBtn>
       <QIcon name="volume_up" size="xs" class="sing-volume-icon" />
       <QSlider v-model.number="volume" class="sing-volume" />
       <QSelect
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
         standout
-        color="primary"
-        text-color="display-on-primary"
         hide-bottom-space
         options-dense
         hide-dropdown-icon
+        unelevated
         label="スナップ"
         transition-show="none"
         transition-hide="none"
@@ -458,20 +472,68 @@ onUnmounted(() => {
 @use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
 
-.q-input {
-  :deep(.q-field__control::before) {
-    border-color: var(--md-sys-color-outline);
+// フィールドデフォルト
+:deep(.q-field__native) {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+// background
+:deep(.q-field--standout.q-field--highlighted .q-field__control) {
+  background: var(--md-sys-color-surface-variant);
+  box-shadow: none;
+
+  &:after {
+    box-shadow: none;
   }
 }
 
-.q-select {
-  :deep(.q-field__control::before) {
-    border-color: var(--md-sys-color-outline);
-  }
+:deep(.q-field--standout .q-field__native) {
+  padding: 0;
+}
+
+// ラベル(ハイライト)
+:deep(.q-field--standout.q-field--highlighted .q-field__label) {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+// テキスト(ハイライト)
+:deep(.q-field--standout.q-field--highlighted .q-field__native) {
+  color: var(--md-sys-color-on-surface) !important;
+}
+
+// オプションメニュー全体の背景色
+:deep(.q-menu) {
+  background: var(--md-sys-color-surface-container);
+}
+
+// TODO: アクティブ色が効かないので修正したい
+:deep(.q-menu .q-item--active) {
+  //background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-primary);
+}
+
+:deep(.sing-time-signature-field .q-field__control) {
+  background: var(--md-sys-color-surface-container-high);
+  padding: 0;
+}
+
+:deep(.sing-beats .q-field__control) {
+  background: transparent;
+  padding: 0 4px;
+}
+
+:deep(.sing-time-signature.beats .q-field__control) {
+  padding-left: 8px;
+}
+
+:deep(.sing-time-signature.beat-type .q-field__control) {
+  padding-right: 8px;
 }
 
 .sing-toolbar {
-  background: var(--md-sys-color-surface-high);
+  background: var(--md-sys-color-surface-container);
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -506,7 +568,7 @@ onUnmounted(() => {
 }
 
 .sing-tempo {
-  margin-left: 8px;
+  margin-left: 16px;
   margin-right: 4px;
   width: 72px;
 }
@@ -518,22 +580,24 @@ onUnmounted(() => {
   left: 0;
 }
 
-.sing-beats {
-  align-items: center;
-  display: flex;
-  margin-left: 8px;
-  position: relative;
+.sing-time-signature-field {
+  padding: 0;
 }
 
-.sing-time-signature {
-  margin: 0;
-  position: relative;
-  width: 32px;
+.sing-beats {
+  display: flex;
+  align-items: center;
 }
+
 .sing-beats-separator {
-  position: relative;
-  top: 5px;
-  margin-right: 8px;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 0;
+  opacity: 0.6;
+}
+
+.sing-beats-separator {
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
   pointer-events: none;
 }
 
@@ -582,8 +646,11 @@ onUnmounted(() => {
 
 .sing-undo-button,
 .sing-redo-button {
+  color: var(--md-sys-color-on-surface-variant);
+  width: 40px;
+  height: 40px;
   &.disabled {
-    opacity: 0.87 !important;
+    opacity: 0.38 !important;
   }
 }
 .sing-redo-button {

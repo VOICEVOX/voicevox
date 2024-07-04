@@ -300,6 +300,20 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           blend: true,
         },
         {
+          name: "sing-ruler-beat-line",
+          palette: "neutralVariant",
+          lightTone: 70,
+          darkTone: 40,
+          blend: true,
+        },
+        {
+          name: "sing-ruler-measure-line",
+          palette: "neutralVariant",
+          lightTone: 50,
+          darkTone: 50,
+          blend: true,
+        },
+        {
           name: "sing-grid-vertical-line",
           palette: "neutral",
           lightTone: 95,
@@ -323,14 +337,14 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         {
           name: "sing-grid-measure-line",
           palette: "neutral",
-          lightTone: 85,
-          darkTone: 0,
+          lightTone: 80,
+          darkTone: 40,
           blend: true,
         },
         {
           name: "sing-grid-octave-line",
           palette: "neutral",
-          lightTone: 85,
+          lightTone: 80,
           darkTone: 0,
           blend: true,
         },
@@ -338,7 +352,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           name: "sing-piano-key-white",
           palette: "neutral",
           lightTone: 99,
-          darkTone: 80,
+          darkTone: 70,
           blend: true,
         },
         {

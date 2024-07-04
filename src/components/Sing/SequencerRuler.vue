@@ -4,7 +4,7 @@
       xmlns="http://www.w3.org/2000/svg"
       :width="width"
       :height="height"
-      shape-rendering="crispEdges"
+      shape-rendering="geometricPrecision"
     >
       <defs>
         <pattern
@@ -14,15 +14,24 @@
           :width="beatWidth * beatsPerMeasure"
           :height="height"
         >
+          <!-- 拍線 -->
           <line
             v-for="n in beatsPerMeasure"
             :key="n"
             :x1="beatWidth * (n - 1)"
             :x2="beatWidth * (n - 1)"
-            :y1="n === 1 ? 20 : 28"
+            y1="28"
             y2="100%"
-            stroke-width="1.5"
-            :class="`sequencer-ruler-${n === 1 ? 'measure' : 'beat'}-line`"
+            stroke-width="1"
+            class="sequencer-ruler-beat-line"
+          />
+          <line
+            x1="0"
+            x2="0"
+            y1="20"
+            y2="100%"
+            stroke-width="1"
+            class="sequencer-ruler-measure-line"
           />
         </pattern>
         <symbol id="sequencer-ruler-measure-numbers">
@@ -211,16 +220,18 @@ onUnmounted(() => {
 }
 
 .sequencer-ruler-measure-number {
-  fill: colors.$display;
+  fill: var(--md-sys-color-on-surface-variant);
 }
 
 .sequencer-ruler-measure-line {
   backface-visibility: hidden;
-  stroke: rgba(colors.$display-rgb, 0.5);
+  stroke: var(--md-custom-color-sing-ruler-measure-line);
+  stroke-width: 2px;
 }
 
 .sequencer-ruler-beat-line {
   backface-visibility: hidden;
-  stroke: rgba(colors.$display-rgb, 0.25);
+  stroke: var(--md-custom-color-sing-ruler-beat-line);
+  stroke-width: 1px;
 }
 </style>

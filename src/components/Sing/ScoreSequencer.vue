@@ -41,7 +41,7 @@
         :width="gridWidth"
         :height="gridHeight"
         class="sequencer-grid"
-        shape-rendering="crispEdges"
+        shape-rendering="geometricPrecision"
       >
         <defs>
           <pattern
@@ -106,10 +106,8 @@
             />
             <!-- 小節線 -->
             <line
-              v-for="n in numOfMeasures"
-              :key="`measureline-${n}`"
-              :x1="beatWidth * beatsPerMeasure * n"
-              :x2="beatWidth * beatsPerMeasure * n"
+              x1="0"
+              x2="0"
               y1="0"
               :y2="gridCellHeight * 12"
               class="sequencer-grid-measure-line"
@@ -1665,7 +1663,7 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
   stroke: var(--md-custom-color-sing-grid-measure-line);
-  stroke-width: 1px;
+  stroke-width: 2px;
 }
 
 .sequencer-grid-beat-line {
