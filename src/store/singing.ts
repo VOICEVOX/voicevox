@@ -899,7 +899,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REGISTER_TRACK: {
     mutation(state, { trackId, track }) {
-      state.tracks.set(trackId, cloneWithUnwrapProxy(track));
+      state.tracks.set(trackId, track);
       state.trackOrder.push(trackId);
       state.overlappingNoteIds.set(trackId, new Set());
     },
@@ -2602,7 +2602,10 @@ export const singingCommandStore = transformCommandStore(
         track.singer = selectedTrack.singer;
         track.keyRangeAdjustment = selectedTrack.keyRangeAdjustment;
         track.volumeRangeAdjustment = selectedTrack.volumeRangeAdjustment;
-        commit("COMMAND_ADD_TRACK", { trackId, track });
+        commit("COMMAND_ADD_TRACK", {
+          trackId,
+          track: cloneWithUnwrapProxy(track),
+        });
       },
     },
 
