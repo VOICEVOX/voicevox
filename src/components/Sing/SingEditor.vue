@@ -28,7 +28,7 @@
       :disable="!isSidebarOpen"
       :separatorStyle="{ display: isSidebarOpen ? 'block' : 'none' }"
       emitImmediately
-      @update:modelValue="sidebarWidth = $event"
+      @update:modelValue="setSidebarWidth"
     >
       <template #before>
         <SideBar v-if="isSidebarOpen" />
@@ -64,19 +64,12 @@ const store = useStore();
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const sidebarWidth = ref(300);
-let previousSidebarWidth = 300;
 
-// 開き直すときに最小幅が使われないようにするワークアラウンド。
-watch(
-  () => isSidebarOpen.value,
-  (isSidebarOpened) => {
-    if (isSidebarOpened) {
-      sidebarWidth.value = previousSidebarWidth;
-    } else {
-      previousSidebarWidth = sidebarWidth.value;
-    }
-  },
-);
+const setSidebarWidth = (width: number) => {
+  if (isSidebarOpen.value) {
+    sidebarWidth.value = width;
+  }
+};
 
 const nowRendering = computed(() => {
   return store.state.nowRendering;

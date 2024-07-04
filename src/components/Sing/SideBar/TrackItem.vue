@@ -212,7 +212,10 @@ const updateTrackName = () => {
     temporaryTrackName.value = track.value.name;
     return;
   }
-  store.dispatch("COMMAND_SET_TRACK_NAME", { trackId: props.trackId, name });
+  store.dispatch("COMMAND_SET_TRACK_NAME", {
+    trackId: props.trackId,
+    name: track.value.name,
+  });
 };
 
 const setTrackMute = (mute: boolean) => {
