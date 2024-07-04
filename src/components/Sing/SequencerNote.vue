@@ -310,14 +310,14 @@ const onLyricInput = (event: Event) => {
   &.selected {
     // 仮
     .note-bar {
-      background-color: var(--md-custom-color-brand);
-      border-color: var(--md-sys-color-primary-fixed);
-      outline: solid 1px var(--md-sys-color-primary-fixed);
+      background-color: var(--md-ref-palette-primary-90);
+      border-color: var(--md-ref-palette-primary-60);
     }
 
     &.below-pitch {
       .note-bar {
         background-color: var(--md-sys-color-surface-variant);
+        border-color: var(--md-sys-color-secondary-fixed);
       }
     }
 
@@ -350,13 +350,12 @@ const onLyricInput = (event: Event) => {
   &.overlapping,
   &.invalid-phrase {
     .note-bar {
-      background-color: var(--md-sys-color-error);
-      border-color: var(--md-sys-color-error-container);
+      background-color: var(--md-sys-color-error-container);
+      border-color: var(--md-sys-color-error);
     }
 
     .note-lyric {
-      color: var(--md-sys-color-on-error);
-      opacity: 0.6;
+      color: var(--md-sys-color-on-error-container);
     }
 
     &.selected {
@@ -377,7 +376,7 @@ const onLyricInput = (event: Event) => {
   padding: 0;
   background: transparent;
   color: var(--md-ref-palette-neutral-variant-20);
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 500;
   white-space: nowrap;
   pointer-events: none;
@@ -420,18 +419,21 @@ const onLyricInput = (event: Event) => {
 }
 
 .note-lyric-input {
-  position: relative;
-  bottom: 0;
+  position: absolute;
+  top: 0;
   font-weight: 500;
-  min-width: fit-content;
-  outline: 2px solid var(--md-sys-color-inverse-primary);
+  font-size: 16px;
+  max-width: 4rem;
+  width: fit-content;
+  background-color: var(--md-ref-palette-neutral-100);
+  color: var(--md-sys-color-on-surface);
+  outline: 2px solid var(--md-sys-color-primary-fixed-dim);
   border-radius: 4px;
   border: 0;
-  // boxshadow beautiful md3 medium
+  // large boxshadow beautiful M3
   box-shadow:
-    0px 2px 4px -2px rgba(0, 0, 0, 0.2),
-    0px 0px 2px 0px rgba(0, 0, 0, 0.14),
-    0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .cursor-move {

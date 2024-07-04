@@ -5,8 +5,8 @@
       <QSkeleton
         class="character-name skeleton"
         type="rect"
-        width="65px"
-        height="15px"
+        width="64px"
+        height="16px"
       />
       <QSkeleton
         class="character-style"
@@ -17,11 +17,7 @@
     </div>
   </div>
   <div v-else class="selected-character">
-    <QAvatar
-      v-if="selectedStyleIconPath"
-      class="character-avatar"
-      size="3.5rem"
-    >
+    <QAvatar v-if="selectedStyleIconPath" class="character-avatar" size="3rem">
       <img :src="selectedStyleIconPath" class="character-avatar-icon" />
     </QAvatar>
     <div class="character-info">
@@ -84,11 +80,12 @@ const selectedStyleIconPath = computed(() => {
 
 .selected-character {
   border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 4px;
+  border-radius: 4px 0 0 4px;
   align-items: center;
   display: flex;
   padding: 4px;
   position: relative;
+  height: 56px;
 
   .character-avatar-icon {
     display: block;
@@ -101,15 +98,17 @@ const selectedStyleIconPath = computed(() => {
     align-items: start;
     display: flex;
     flex-direction: column;
-    margin-left: 0.5rem;
+    margin-left: 8px;
     text-align: left;
     justify-content: center;
     white-space: nowrap;
   }
+
   .character-name {
     font-size: 14px;
-    font-weight: bold;
-    line-height: 1rem;
+    font-weight: 500;
+    line-height: 16px;
+    margin-bottom: 8px;
     padding-top: 0;
 
     &.skeleton {
@@ -120,14 +119,14 @@ const selectedStyleIconPath = computed(() => {
 
   .character-style {
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 500;
-    line-height: 1rem;
+    line-height: 1em;
   }
 
   .character-menu-dropdown-icon {
-    color: rgba(colors.$display-rgb, 0.8);
-    margin-left: 0.25rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-left: 4px;
   }
 }
 </style>

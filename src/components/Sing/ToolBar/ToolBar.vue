@@ -3,30 +3,32 @@
     <!-- configs for entire song -->
     <div class="sing-configs">
       <CharacterMenuButton />
-      <QInput
-        type="number"
-        :model-value="keyRangeAdjustmentInputBuffer"
-        label="音域調整"
-        dense
-        hide-bottom-space
-        standout
-        unelevated
-        class="key-range-adjustment"
-        @update:model-value="setKeyRangeAdjustmentInputBuffer"
-        @change="setKeyRangeAdjustment"
-      />
-      <QInput
-        type="number"
-        :model-value="volumeRangeAdjustmentInputBuffer"
-        label="声量調整"
-        dense
-        standout
-        hide-bottom-space
-        unelevated
-        class="volume-range-adjustment"
-        @update:model-value="setVolumeRangeAdjustmentInputBuffer"
-        @change="setVolumeRangeAdjustment"
-      />
+      <div class="sing-adjustment">
+        <QInput
+          type="number"
+          :model-value="keyRangeAdjustmentInputBuffer"
+          label="音域"
+          dense
+          hide-bottom-space
+          standout
+          unelevated
+          class="key-range-adjustment"
+          @update:model-value="setKeyRangeAdjustmentInputBuffer"
+          @change="setKeyRangeAdjustment"
+        />
+        <QInput
+          type="number"
+          :model-value="volumeRangeAdjustmentInputBuffer"
+          label="声量"
+          dense
+          hide-bottom-space
+          standout
+          unelevated
+          class="volume-range-adjustment"
+          @update:model-value="setVolumeRangeAdjustmentInputBuffer"
+          @change="setVolumeRangeAdjustment"
+        />
+      </div>
       <QInput
         type="number"
         :model-value="bpmInputBuffer"
@@ -36,6 +38,7 @@
         unelevated
         label="BPM"
         class="sing-tempo"
+        padding="0"
         @update:model-value="setBpmInputBuffer"
         @change="setTempo"
       />
@@ -44,6 +47,8 @@
         dense
         standout
         class="sing-time-signature-field"
+        label="拍子"
+        stack-label
       >
         <template #control>
           <div class="sing-beats">
@@ -145,6 +150,7 @@
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
         standout
+        dense
         hide-bottom-space
         options-dense
         hide-dropdown-icon
@@ -525,11 +531,11 @@ onUnmounted(() => {
 }
 
 :deep(.sing-time-signature.beats .q-field__control) {
-  padding-left: 8px;
+  padding: 0 4px 0 12px;
 }
 
 :deep(.sing-time-signature.beat-type .q-field__control) {
-  padding-right: 8px;
+  padding: 0 12px 0 4px;
 }
 
 .sing-toolbar {
@@ -538,7 +544,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   min-height: 64px;
-  padding: 0 4px;
+  padding: 0 8px 0 4px;
   width: 100%;
 }
 
@@ -555,20 +561,38 @@ onUnmounted(() => {
   flex: 1;
 }
 
+.sing-adjustment {
+  height: 56px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+  padding: 0 0 0 8px;
+  display: flex;
+  align-items: center;
+}
+
 .key-range-adjustment {
-  margin-left: 16px;
-  margin-right: 4px;
-  width: 48px;
+  margin-right: 0px;
+  width: 40px;
+
+  :deep(.q-field__control) {
+    background: var(--md-sys-color-surface-container);
+    text-align: left;
+    padding: 0 2px;
+  }
 }
 
 .volume-range-adjustment {
-  margin-left: 4px;
-  margin-right: 4px;
-  width: 48px;
+  width: 40px;
+
+  :deep(.q-field__control) {
+    background: var(--md-sys-color-surface-container);
+    padding: 0 2px;
+  }
 }
 
 .sing-tempo {
-  margin-left: 16px;
+  margin-left: 24px;
   margin-right: 4px;
   width: 72px;
 }
@@ -581,12 +605,35 @@ onUnmounted(() => {
 }
 
 .sing-time-signature-field {
-  padding: 0;
+  :deep(.q-field__control) {
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
+  }
+
+  :deep(.q-field__label) {
+    font-size: 10px;
+    top: 2px;
+    margin-left: 8px;
+    transform: translateY(0) !important;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  :deep(.q-field__native) {
+    padding-top: 4px;
+    min-height: unset;
+  }
+
+  :deep(.q-field__marginal) {
+    height: 32px;
+  }
 }
 
 .sing-beats {
   display: flex;
   align-items: center;
+  transform: translateY(-14px);
+  padding-top: 1px;
 }
 
 .sing-beats-separator {
@@ -599,6 +646,7 @@ onUnmounted(() => {
   font-weight: 500;
   color: var(--md-sys-color-on-surface-variant);
   pointer-events: none;
+  transform: translateY(4px);
 }
 
 .sing-playback-button {
@@ -654,7 +702,7 @@ onUnmounted(() => {
   }
 }
 .sing-redo-button {
-  margin-right: 16px;
+  margin-right: 8px;
 }
 
 .sing-volume-icon {

@@ -256,7 +256,7 @@ const engineIcons = computed(() =>
 
 .character-menu {
   .q-item {
-    color: colors.$display;
+    color: var(--md-sys-color-on-surface);
   }
   .q-btn-group {
     > .q-btn:first-child > :deep(.q-btn__content) {
