@@ -1246,6 +1246,7 @@ const playheadPositionChangeListener = (position: number) => {
   if (!sequencerBodyElement) {
     if (import.meta.env.DEV) {
       // HMR時にここにたどり着くことがあるので、開発時は警告だけにする
+      // TODO: HMR時にここにたどり着く原因を調査して修正する
       warn("sequencerBodyElement is null.");
       return;
     }
