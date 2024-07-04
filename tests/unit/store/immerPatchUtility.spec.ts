@@ -1,5 +1,5 @@
 import { enableMapSet, enablePatches, Immer, Patch } from "immer";
-import { applyPatches } from "@/store/immerPatch";
+import { applyPatches } from "@/store/immerPatchUtility";
 
 test("objectAdd", () => {
   const immer = new Immer();
