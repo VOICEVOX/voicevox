@@ -287,10 +287,8 @@ const singerName = computed(() => {
 }
 
 .track-detail {
-  margin-left: 0.5rem;
   padding: 0 0.5rem 0.25rem 0.5rem;
   width: 100%;
-  border-left: 1px solid colors.$sequencer-sub-divider;
   display: flex;
   flex-direction: column;
 
