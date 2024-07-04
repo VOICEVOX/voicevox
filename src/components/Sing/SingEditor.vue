@@ -64,12 +64,16 @@ const store = useStore();
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const sidebarWidth = ref(300);
+let previousSidebarWidth = 300;
 
+// 開き直すときに最小幅が使われないようにするワークアラウンド。
 watch(
   () => isSidebarOpen.value,
   (isSidebarOpened) => {
     if (isSidebarOpened) {
-      sidebarWidth.value = 300;
+      sidebarWidth.value = previousSidebarWidth;
+    } else {
+      previousSidebarWidth = sidebarWidth.value;
     }
   },
 );

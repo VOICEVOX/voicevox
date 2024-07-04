@@ -1244,7 +1244,9 @@ const playheadPositionChangeListener = (position: number) => {
   // オートスクロール
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
-    throw new Error("sequencerBodyElement is null.");
+    // HMR時にここにたどり着くことがあるので、ここは警告だけにする
+    warn("sequencerBodyElement is null.");
+    return;
   }
   const scrollLeft = sequencerBodyElement.scrollLeft;
   const scrollTop = sequencerBodyElement.scrollTop;
