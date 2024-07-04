@@ -600,7 +600,6 @@ export const rootMiscSettingSchema = z.object({
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
   // ソングエディタでのトラック操作をUndo可能にするか
-  // TODO: 設定画面で変更可能にする
   songUndoableTrackOptions: z
     .object({
       soloAndMute: z.boolean().default(true),
