@@ -63,7 +63,6 @@ const store = useStore();
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const sidebarWidth = ref(300);
-//const $q = useQuasar();
 
 watch(
   () => isSidebarOpen.value,
