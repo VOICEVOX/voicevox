@@ -569,13 +569,29 @@ test("set", () => {
 });
 
 test("expect-throws", () => {
+  // pathを辿っている途中で存在しないプロパティにアクセスしようとした場合例外が発生する
   expect(() => {
     applyPatches({}, [{ op: "add", path: ["a", "b"], value: 1 }]);
   }).toThrow();
   expect(() => {
-    applyPatches({}, [{ op: "add", path: ["a", "b", "c"], value: 1 }]);
+    applyPatches({ a: {} }, [
+      { op: "remove", path: ["a", "b", "c"], value: 1 },
+    ]);
   }).toThrow();
   expect(() => {
-    applyPatches([], [{ op: "replace", path: [0, "a"], value: 1 }]);
+    applyPatches({ a: [] }, [
+      { op: "replace", path: ["a", "b", "c", "d"], value: 1 },
+    ]);
+  }).toThrow();
+  expect(() => {
+    applyPatches([], [{ op: "add", path: [0, "a"], value: 1 }]);
+  }).toThrow();
+  expect(() => {
+    applyPatches([{}], [{ op: "remove", path: [0, "a", "b"], value: 1 }]);
+  }).toThrow();
+  expect(() => {
+    applyPatches({ a: [] }, [
+      { op: "replace", path: ["a", 0, "b", "c"], value: 1 },
+    ]);
   }).toThrow();
 });
