@@ -94,8 +94,8 @@ export const trackSchema = z.object({
 
   solo: z.boolean(),
   mute: z.boolean(),
-  pan: z.number(),
   gain: z.number(),
+  pan: z.number(),
 });
 
 // プロジェクトファイルのスキーマ
