@@ -201,14 +201,10 @@ const setTrackGain = (gain: number) => {
   }
 };
 
-watch(
-  () => track.value.name,
-  () => {
-    temporaryTrackName.value = track.value.name;
-  },
-);
-
 const temporaryTrackName = ref(track.value.name);
+watchEffect(() => {
+  temporaryTrackName.value = track.value.name;
+});
 
 const updateTrackName = () => {
   if (temporaryTrackName.value === track.value.name) return;
