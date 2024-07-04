@@ -464,6 +464,6 @@ onUnmountedOrDeactivated(() => {
   z-index: 0;
   pointer-events: none;
 
-  contain: content;
+  contain: strict;
 }
 </style>
