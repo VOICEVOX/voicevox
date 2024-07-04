@@ -132,7 +132,7 @@
           />
           <div class="r">R</div>
         </div>
-        <div class="volume">
+        <div class="gain">
           <QIcon name="volume_down" class="l" size="1rem" />
           <QSlider
             :modelValue="track.gain"
@@ -294,7 +294,7 @@ const singerName = computed(() => {
   flex-direction: column;
 
   .pan,
-  .volume {
+  .gain {
     display: grid;
     align-items: center;
     gap: 1rem;
