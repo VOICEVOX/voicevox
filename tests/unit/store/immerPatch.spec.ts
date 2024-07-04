@@ -119,6 +119,12 @@ test("arrayAdd", () => {
   expect(object3).toStrictEqual([4, 1, 2, 3]);
   applyPatches(object3, undoPatches3);
   expect(object3).toStrictEqual([1, 2, 3]);
+
+  // pathとして"-"を渡した際の挙動はRFC6902に規定されているが、現バージョンのimmerはこのpathを生成しないため専用のテストケースを用意する
+  const object4 = [1, 2, 3];
+  const patch: Patch[] = [{ op: "add", path: ["-"], value: 4 }];
+  applyPatches(object4, patch);
+  expect(object4).toStrictEqual([1, 2, 3, 4]);
 });
 
 test("objectReplace", () => {
