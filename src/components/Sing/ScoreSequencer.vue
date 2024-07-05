@@ -102,16 +102,30 @@
           height: `${Math.abs(cursorY - rectSelectStartY)}px`,
         }"
       ></div>
-      <SequencerPhraseIndicator
-        v-for="phraseInfo in phraseInfos"
-        :key="phraseInfo.key"
-        :phraseKey="phraseInfo.key"
-        class="sequencer-phrase-indicator"
-        :style="{
-          width: `${phraseInfo.width}px`,
-          transform: `translateX(${phraseInfo.x - scrollX}px)`,
-        }"
-      />
+      <div class="sequencer-phrase-indicator-container-active">
+        <SequencerPhraseIndicator
+          v-for="phraseInfo in phraseInfosInCurrentTrack"
+          :key="phraseInfo.key"
+          :phraseKey="phraseInfo.key"
+          class="sequencer-phrase-indicator"
+          :style="{
+            width: `${phraseInfo.width}px`,
+            transform: `translateX(${phraseInfo.x - scrollX}px)`,
+          }"
+        />
+      </div>
+      <div class="sequencer-phrase-indicator-container-inactive">
+        <SequencerPhraseIndicator
+          v-for="phraseInfo in phraseInfosInInactiveTracks"
+          :key="phraseInfo.key"
+          :phraseKey="phraseInfo.key"
+          class="sequencer-phrase-indicator"
+          :style="{
+            width: `${phraseInfo.width}px`,
+            transform: `translateX(${phraseInfo.x - scrollX}px)`,
+          }"
+        />
+      </div>
       <div
         class="sequencer-playhead"
         data-testid="sequencer-playhead"
@@ -333,8 +347,19 @@ const phraseInfos = computed(() => {
     const endBaseX = tickToBaseX(endTicks, tpqn.value);
     const startX = startBaseX * zoomX.value;
     const endX = endBaseX * zoomX.value;
-    return { key, x: startX, width: endX - startX };
+    const trackId = phrase.trackId;
+    return { key, x: startX, width: endX - startX, trackId };
   });
+});
+const phraseInfosInCurrentTrack = computed(() => {
+  return phraseInfos.value.filter(
+    ({ trackId }) => trackId === selectedTrackId.value,
+  );
+});
+const phraseInfosInInactiveTracks = computed(() => {
+  return phraseInfos.value.filter(
+    ({ trackId }) => trackId !== selectedTrackId.value,
+  );
 });
 
 const ctrlKey = useCommandOrControlKey();
@@ -1558,6 +1583,13 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   left: 0;
   height: 6px;
   border-radius: 2px;
+}
+
+.sequencer-phrase-indicator-container-active {
+  opacity: 1;
+}
+.sequencer-phrase-indicator-container-inactive {
+  opacity: 0.5;
 }
 
 .sequencer-note {
