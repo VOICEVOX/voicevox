@@ -18,9 +18,11 @@ function isObject(value: unknown): value is object {
   return typeof value === "object" && value != null;
 }
 
-// structuredCloneはfunction等を処理できないため、オブジェクトのコピーを自前実装する
+// clone処理はstructuredCloneを利用することでも可能だが、ユーザ定義classのprototype情報が欠落するなどの問題がある
+// ユーザ定義classなどを扱おうとした場合にunsoundな不具合になることを防ぐため、clone処理を自前実装する
 function clone<T>(value: T): T {
-  if (!isObject(value)) return value;
+  // function等、単純にcloneできない値の取り扱いを禁止する
+  if (!isObject(value)) return structuredClone(value);
 
   if (Array.isArray(value)) {
     if (Object.getPrototypeOf(value) !== Array.prototype)

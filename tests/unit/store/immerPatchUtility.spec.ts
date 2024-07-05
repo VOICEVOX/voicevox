@@ -531,4 +531,10 @@ describe("unsupported", () => {
       applyPatches({}, [{ op: "add", path: ["a"], value: new MyClass() }]);
     }).toThrow();
   });
+
+  test("un-cloneable", () => {
+    expect(() => {
+      applyPatches({}, [{ op: "add", path: ["a"], value: () => {} }]);
+    }).toThrow();
+  });
 });
