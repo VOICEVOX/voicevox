@@ -220,12 +220,21 @@ describe("array", () => {
     expect(object).toStrictEqual([1, 2, 3]);
   });
 
-  test("add", () => {
+  test("add - 1", () => {
     // pathとして"-"を渡した際の挙動はRFC6902に規定されているが、現バージョンのimmerはこのpathを生成しないため専用のテストケースを用意する
     const object = [1, 2, 3];
     const patch: Patch[] = [{ op: "add", path: ["-"], value: 4 }];
     applyPatches(object, patch);
     expect(object).toStrictEqual([1, 2, 3, 4]);
+  });
+
+  test("add - 2", () => {
+    // pathとして配列のlength未満の値を渡した際はinsertが行われることが期待される(RFC6902にてそのように規定されており、immerのapplyPatchesもそのような動作をする)
+    // 現バージョンのimmerはこのpathを生成しないため専用のテストケースを用意する
+    const object = [1, 2, 3];
+    const patch: Patch[] = [{ op: "add", path: [1], value: 4 }];
+    applyPatches(object, patch);
+    expect(object).toStrictEqual([1, 4, 2, 3]);
   });
 
   test("replace", () => {
