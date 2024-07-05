@@ -70,6 +70,25 @@ function add(value: unknown, key: string | number, v: unknown): void {
     value.set(key, v);
   } else if (value instanceof Set) {
     value.add(v);
+  } else if (Array.isArray(value)) {
+    if (typeof key === "number") {
+      value.splice(key, 0, v);
+    } else if (key === "-") {
+      value.push(v);
+    } else {
+      throw new Error("unsupported key");
+    }
+  } else {
+    // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、valueはany型として扱う
+    value[key] = v;
+  }
+}
+
+function replace(value: unknown, key: string | number, v: unknown): void {
+  if (value instanceof Map) {
+    value.set(key, v);
+  } else if (value instanceof Set) {
+    value.add(v);
   } else {
     // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、valueはany型として扱う
     value[key] = v;
@@ -104,8 +123,10 @@ export function applyPatch<T>(target: T, patch: Patch) {
   const v = clone(value);
   switch (op) {
     case "add":
-    case "replace":
       add(target, path[path.length - 1], v);
+      break;
+    case "replace":
+      replace(target, path[path.length - 1], v);
       break;
     case "remove":
       remove(target, path[path.length - 1], v);
