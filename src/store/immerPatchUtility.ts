@@ -48,6 +48,11 @@ function clone<T>(value: T): T {
     return result as T;
   }
 
+  // object以外の自前classは現状利用していないため不具合予防として一旦禁止します
+  // 適切な動作テストの後制限を緩めることを妨げるものではありません
+  if (Object.getPrototypeOf(value) !== Object.prototype)
+    throw new Error("unsupported type");
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: any = Object.create(Object.getPrototypeOf(value));
   for (const [k, v] of Object.entries(value)) {

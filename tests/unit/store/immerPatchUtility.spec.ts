@@ -522,3 +522,13 @@ test("expect-throws", () => {
     ]);
   }).toThrow();
 });
+
+describe("unsupported", () => {
+  test("userClass", () => {
+    class MyClass {}
+
+    expect(() => {
+      applyPatches({}, [{ op: "add", path: ["a"], value: new MyClass() }]);
+    }).toThrow();
+  });
+});
