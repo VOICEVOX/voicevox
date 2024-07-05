@@ -85,7 +85,7 @@ import { TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 const props = defineProps<{
-  trackId: TrackId;
+  trackId: TrackId | null;
   note: Note;
   /** どれかのノートがプレビュー中 */
   nowPreviewing: boolean;
@@ -133,6 +133,9 @@ const editTargetIsPitch = computed(() => {
 
 // ノートの重なりエラー
 const hasOverlappingError = computed(() => {
+  if (props.isPreview) {
+    return false;
+  }
   const overlappingNoteIds = getOrThrow(
     state.overlappingNoteIds,
     props.trackId,

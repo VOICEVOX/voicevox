@@ -44,11 +44,12 @@
       <!-- undefinedだと警告が出るのでnullを渡す -->
       <!-- TODO: ちゃんとしたトラックIDを渡す -->
       <SequencerNote
-        v-for="note in editTarget === 'NOTE'
-          ? notesIncludingPreviewNotes
-          : notes"
+        v-for="{ note, trackId } in editTarget === 'NOTE'
+          ? notesInCurrentTrackWithPreview
+          : notesInCurrentTrack"
         :key="note.id"
-        :trackId="selectedTrackId"
+        class="sequencer-note"
+        :trackId
         :note
         :nowPreviewing
         :isSelected="selectedNoteIds.has(note.id)"
@@ -59,9 +60,15 @@
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
         @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
       />
+
+      <SequencerShadowNote
+        v-for="{ note } in notesInInactiveTracks"
+        :key="note.id"
+        :note
+      />
       <SequencerLyricInput
         v-if="editingLyricNote != undefined"
-        :editingLyricNote
+        :editingLyricNote="editingLyricNote.note"
         @lyricInput="onLyricInput"
         @lyricConfirmed="onLyricConfirmed"
       />
@@ -151,7 +158,7 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { NoteId } from "@/type/preload";
+import { NoteId, TrackId } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import {
@@ -182,6 +189,7 @@ import SequencerGrid from "@/components/Sing/SequencerGrid.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
+import SequencerShadowNote from "@/components/Sing/SequencerShadowNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
@@ -220,20 +228,38 @@ const selectedTrackId = computed(() => state.selectedTrackId);
 // TPQN、テンポ、ノーツ
 const tpqn = computed(() => state.tpqn);
 const tempos = computed(() => state.tempos);
-const notes = computed(() => store.getters.SELECTED_TRACK.notes);
+const notes = computed(() =>
+  [...store.state.tracks.entries()].flatMap(([trackId, track]) =>
+    track.notes.map((note) => ({
+      trackId,
+      note,
+    })),
+  ),
+);
+const notesInCurrentTrack = computed(() =>
+  notes.value.filter(({ trackId }) => trackId === selectedTrackId.value),
+);
+const notesInInactiveTracks = computed(() =>
+  notes.value.filter(({ trackId }) => trackId !== selectedTrackId.value),
+);
 const selectedNoteIds = computed(() => new Set(state.selectedNoteIds));
 const isNoteSelected = computed(() => {
   return selectedNoteIds.value.size > 0;
 });
 const selectedNotes = computed(() => {
-  return notes.value.filter((value) => selectedNoteIds.value.has(value.id));
+  return notes.value.filter(({ note }) => selectedNoteIds.value.has(note.id));
 });
-const notesIncludingPreviewNotes = computed(() => {
+const notesInCurrentTrackWithPreview = computed(() => {
   if (nowPreviewing.value) {
     const previewNoteIds = new Set(previewNotes.value.map((value) => value.id));
     return previewNotes.value
-      .concat(notes.value.filter((value) => !previewNoteIds.has(value.id)))
-      .sort((a, b) => {
+      .map((note) => ({ trackId: null as TrackId | null, note }))
+      .concat(
+        notesInCurrentTrack.value.filter(
+          ({ note }) => !previewNoteIds.has(note.id),
+        ),
+      )
+      .toSorted(({ note: a }, { note: b }) => {
         const aIsSelectedOrPreview =
           selectedNoteIds.value.has(a.id) || previewNoteIds.has(a.id);
         const bIsSelectedOrPreview =
@@ -247,7 +273,7 @@ const notesIncludingPreviewNotes = computed(() => {
         }
       });
   } else {
-    return [...notes.value].sort((a, b) => {
+    return notesInCurrentTrack.value.toSorted(({ note: a }, { note: b }) => {
       const aIsSelected = selectedNoteIds.value.has(a.id);
       const bIsSelected = selectedNoteIds.value.has(b.id);
       if (aIsSelected === bIsSelected) {
@@ -364,7 +390,7 @@ const prevCursorPos = { frame: 0, frequency: 0 }; // 前のカーソル位置
 
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {
-  return notes.value.find((value) => value.id === state.editingLyricNoteId);
+  return notes.value.find(({ note }) => note.id === state.editingLyricNoteId);
 });
 
 // 入力を補助する線
@@ -742,7 +768,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         let minIndex = notes.value.length - 1;
         let maxIndex = 0;
         for (let i = 0; i < notes.value.length; i++) {
-          const noteId = notes.value[i].id;
+          const noteId = notes.value[i].note.id;
           if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
             minIndex = Math.min(minIndex, i);
             maxIndex = Math.max(maxIndex, i);
@@ -750,7 +776,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         }
         const noteIdsToSelect: NoteId[] = [];
         for (let i = minIndex; i <= maxIndex; i++) {
-          const noteId = notes.value[i].id;
+          const noteId = notes.value[i].note.id;
           if (!state.selectedNoteIds.has(noteId)) {
             noteIdsToSelect.push(noteId);
           }
@@ -762,7 +788,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         selectOnlyThis(note);
       }
       for (const note of selectedNotes.value) {
-        copiedNotes.push({ ...note });
+        copiedNotes.push(structuredClone(note.note));
       }
     }
     dragStartTicks = cursorTicks;
@@ -1016,7 +1042,7 @@ const rectSelect = (additive: boolean) => {
   );
 
   const noteIdsToSelect: NoteId[] = [];
-  for (const note of notes.value) {
+  for (const { note } of notes.value) {
     if (
       note.position + note.duration >= startTicks &&
       note.position <= endTicks &&
@@ -1043,7 +1069,7 @@ const onMouseLeave = () => {
 // キーボードイベント
 const handleNotesArrowUp = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotes.value) {
+  for (const { note } of selectedNotes.value) {
     const noteNumber = Math.min(note.noteNumber + 1, 127);
     editedNotes.push({ ...note, noteNumber });
   }
@@ -1065,7 +1091,7 @@ const handleNotesArrowUp = () => {
 
 const handleNotesArrowDown = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotes.value) {
+  for (const { note } of selectedNotes.value) {
     const noteNumber = Math.max(note.noteNumber - 1, 0);
     editedNotes.push({ ...note, noteNumber });
   }
@@ -1087,7 +1113,7 @@ const handleNotesArrowDown = () => {
 
 const handleNotesArrowRight = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotes.value) {
+  for (const { note } of selectedNotes.value) {
     const position = note.position + snapTicks.value;
     editedNotes.push({ ...note, position });
   }
@@ -1103,7 +1129,7 @@ const handleNotesArrowRight = () => {
 
 const handleNotesArrowLeft = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotes.value) {
+  for (const { note } of selectedNotes.value) {
     const position = note.position - snapTicks.value;
     editedNotes.push({ ...note, position });
   }
@@ -1532,6 +1558,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   left: 0;
   height: 6px;
   border-radius: 2px;
+}
+
+.sequencer-note {
+  z-index: 1;
 }
 
 .sequencer-playhead {
