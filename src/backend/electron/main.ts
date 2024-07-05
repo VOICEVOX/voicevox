@@ -1018,11 +1018,19 @@ ipcMainHandle("READ_FILE", async (_, { filePath }) => {
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
   contents.setWindowOpenHandler(({ url }) => {
-    if (url.match(/^http/)) {
+    const { protocol } = new URL(url);
+    if (protocol.match(/^https?:/)) {
       shell.openExternal(url);
-      return { action: "deny" };
+    } else {
+      log.error(`許可されないリンクです。url: ${url}`);
     }
-    return { action: "allow" };
+    return { action: "deny" };
+  });
+
+  // ナビゲーションを無効化
+  contents.on("will-navigate", (event) => {
+    log.error(`ナビゲーションは無効化されています。url: ${event.url}`);
+    event.preventDefault();
   });
 });
 
