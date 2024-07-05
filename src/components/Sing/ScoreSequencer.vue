@@ -68,6 +68,7 @@
       />
       <SequencerLyricInput
         v-if="editingLyricNote != undefined"
+        class="sequencer-lyric-input"
         :editingLyricNote="editingLyricNote.note"
         @lyricInput="onLyricInput"
         @lyricConfirmed="onLyricConfirmed"
@@ -1587,6 +1588,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .sequencer-phrase-indicator-container-active {
   opacity: 1;
+  z-index: 1;
 }
 .sequencer-phrase-indicator-container-inactive {
   opacity: 0.5;
@@ -1594,6 +1596,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .sequencer-note {
   z-index: 1;
+}
+.sequencer-lyric-input {
+  z-index: 2;
 }
 
 .sequencer-playhead {
