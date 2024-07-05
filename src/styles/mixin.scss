@@ -8,7 +8,7 @@
 @mixin headline-1 {
   font-size: 1.75rem;
   font-weight: 600;
-  line-height: 2;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -16,7 +16,7 @@
 @mixin headline-2 {
   font-size: 1.25rem;
   font-weight: bold;
-  line-height: 2;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -24,7 +24,7 @@
 @mixin headline-3 {
   font-size: 1.125rem;
   font-weight: bold;
-  line-height: 2;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -32,7 +32,7 @@
 @mixin headline-4 {
   font-size: 1rem;
   font-weight: bold;
-  line-height: 2;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -40,7 +40,7 @@
 @mixin headline-5 {
   font-size: 0.875rem;
   font-weight: bold;
-  line-height: 2;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -48,6 +48,6 @@
 @mixin headline-6 {
   font-size: 0.75rem;
   font-weight: bold;
-  line-height: 2;
+  line-height: 1.5;
   margin: 0;
 }
