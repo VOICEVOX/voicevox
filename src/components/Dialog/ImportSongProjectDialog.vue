@@ -46,7 +46,9 @@
               />
             </QItemSection>
             <QItemSection>
-              <QItemLabel> {{ index + 1 }}：{{ track.name }} </QItemLabel>
+              <QItemLabel>
+                {{ index + 1 }}：{{ track.name || DEFAULT_TRACK_NAME }}
+              </QItemLabel>
               <QItemLabel caption>ノート数：{{ track.noteLength }}</QItemLabel>
             </QItemSection>
           </QItem>
@@ -101,6 +103,7 @@ import { createLogger } from "@/domain/frontend/log";
 import { ExhaustiveError } from "@/type/utility";
 import { IsEqual } from "@/type/utility";
 import { LatestProjectType } from "@/domain/project/schema";
+import { DEFAULT_TRACK_NAME } from "@/sing/domain";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
@@ -206,8 +209,8 @@ function getProjectTracks(project: Project) {
       )
     : project.project.song.trackOrder.map((trackId) =>
         toTrack(
-          undefined,
           // zodが何故かundefinedを入れてくるので、null-safe operatorを使う
+          project.project.song.tracks[trackId]?.name,
           project.project.song.tracks[trackId]?.notes.length ?? 0,
         ),
       );

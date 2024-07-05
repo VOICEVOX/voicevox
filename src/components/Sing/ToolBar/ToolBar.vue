@@ -2,6 +2,13 @@
   <QToolbar class="sing-toolbar">
     <!-- configs for entire song -->
     <div class="sing-configs">
+      <QBtn
+        class="q-mx-xs"
+        :icon="isSidebarOpen ? 'menu_open' : 'menu'"
+        round
+        flat
+        @click="toggleSidebar"
+      />
       <CharacterMenuButton />
       <QInput
         type="number"
@@ -208,6 +215,13 @@ const editTarget = computed(() => store.state.sequencerEditTarget);
 
 const changeEditTarget = (editTarget: SequencerEditTarget) => {
   store.dispatch("SET_EDIT_TARGET", { editTarget });
+};
+
+const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
+const toggleSidebar = () => {
+  store.dispatch("SET_SONG_SIDEBAR_OPEN", {
+    isSongSidebarOpen: !isSidebarOpen.value,
+  });
 };
 
 const tempos = computed(() => store.state.tempos);

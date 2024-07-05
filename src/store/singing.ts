@@ -86,6 +86,7 @@ import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjust
 import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 
 const logger = createLogger("store/singing");
@@ -169,6 +170,7 @@ export const singingStoreState: SingingStoreState = {
   nowRendering: false,
   nowAudioExporting: false,
   cancellationOfAudioExportRequested: false,
+  isSongSidebarOpen: false,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -909,6 +911,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The track is invalid.");
       }
       commit("REGISTER_TRACK", { trackId, track });
+
+      dispatch("RENDER");
+    },
+  },
+
+  DELETE_TRACK: {
+    mutation(state, { trackId }) {
+      state.tracks.delete(trackId);
+      state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
+      state.overlappingNoteIds.delete(trackId);
+      if (state.selectedTrackId === trackId) {
+        state.selectedTrackId = state.trackOrder[0];
+      }
+    },
+    async action({ state, commit, dispatch }, { trackId }) {
+      if (!state.tracks.has(trackId)) {
+        throw new Error(`Track ${trackId} does not exist.`);
+      }
+      commit("DELETE_TRACK", { trackId });
 
       dispatch("RENDER");
     },
@@ -2235,6 +2256,94 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       dispatch("RENDER");
     },
   },
+
+  SET_SONG_SIDEBAR_OPEN: {
+    mutation(state, { isSongSidebarOpen }) {
+      state.isSongSidebarOpen = isSongSidebarOpen;
+    },
+    action({ commit }, { isSongSidebarOpen }) {
+      commit("SET_SONG_SIDEBAR_OPEN", { isSongSidebarOpen });
+    },
+  },
+
+  SET_TRACK_NAME: {
+    mutation(state, { trackId, name }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.name = name;
+    },
+    action({ commit }, { trackId, name }) {
+      commit("SET_TRACK_NAME", { trackId, name });
+    },
+  },
+
+  SET_TRACK_MUTE: {
+    mutation(state, { trackId, mute }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.mute = mute;
+    },
+    action({ commit }, { trackId, mute }) {
+      commit("SET_TRACK_MUTE", { trackId, mute });
+    },
+  },
+
+  SET_TRACK_SOLO: {
+    mutation(state, { trackId, solo }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.solo = solo;
+    },
+    action({ commit }, { trackId, solo }) {
+      commit("SET_TRACK_SOLO", { trackId, solo });
+    },
+  },
+
+  SET_TRACK_GAIN: {
+    mutation(state, { trackId, gain }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.gain = gain;
+    },
+    action({ commit }, { trackId, gain }) {
+      commit("SET_TRACK_GAIN", { trackId, gain });
+    },
+  },
+
+  SET_TRACK_PAN: {
+    mutation(state, { trackId, pan }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.pan = pan;
+    },
+    action({ commit }, { trackId, pan }) {
+      commit("SET_TRACK_PAN", { trackId, pan });
+    },
+  },
+
+  SET_SELECTED_TRACK: {
+    mutation(state, { trackId }) {
+      state.selectedTrackId = trackId;
+    },
+    action({ commit }, { trackId }) {
+      commit("SET_SELECTED_TRACK", { trackId });
+    },
+  },
+
+  REORDER_TRACKS: {
+    mutation(state, { trackOrder }) {
+      state.trackOrder = trackOrder;
+    },
+    action({ commit }, { trackOrder }) {
+      commit("REORDER_TRACKS", { trackOrder });
+    },
+  },
+
+  UNSOLO_ALL_TRACKS: {
+    mutation(state) {
+      for (const track of state.tracks.values()) {
+        track.solo = false;
+      }
+    },
+    action({ commit }) {
+      commit("UNSOLO_ALL_TRACKS");
+    },
+  },
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};
@@ -2480,6 +2589,95 @@ export const singingCommandStore = transformCommandStore(
         });
 
         dispatch("RENDER");
+      },
+    },
+
+    COMMAND_ADD_TRACK: {
+      mutation(draft, { trackId, track }) {
+        singingStore.mutations.REGISTER_TRACK(draft, { trackId, track });
+      },
+      async action({ getters, dispatch, commit }) {
+        const { trackId, track } = await dispatch("CREATE_TRACK");
+        const selectedTrack = getters.SELECTED_TRACK;
+        track.singer = selectedTrack.singer;
+        track.keyRangeAdjustment = selectedTrack.keyRangeAdjustment;
+        track.volumeRangeAdjustment = selectedTrack.volumeRangeAdjustment;
+        commit("COMMAND_ADD_TRACK", {
+          trackId,
+          track: cloneWithUnwrapProxy(track),
+        });
+      },
+    },
+
+    COMMAND_DELETE_TRACK: {
+      mutation(draft, { trackId }) {
+        singingStore.mutations.DELETE_TRACK(draft, { trackId });
+      },
+      action({ commit }, { trackId }) {
+        commit("COMMAND_DELETE_TRACK", { trackId });
+      },
+    },
+
+    COMMAND_SET_TRACK_NAME: {
+      mutation(draft, { trackId, name }) {
+        singingStore.mutations.SET_TRACK_NAME(draft, { trackId, name });
+      },
+      action({ commit }, { trackId, name }) {
+        commit("COMMAND_SET_TRACK_NAME", { trackId, name });
+      },
+    },
+
+    COMMAND_SET_TRACK_MUTE: {
+      mutation(draft, { trackId, mute }) {
+        singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
+      },
+      action({ commit }, { trackId, mute }) {
+        commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
+      },
+    },
+
+    COMMAND_SET_TRACK_SOLO: {
+      mutation(draft, { trackId, solo }) {
+        singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
+      },
+      action({ commit }, { trackId, solo }) {
+        commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
+      },
+    },
+
+    COMMAND_SET_TRACK_GAIN: {
+      mutation(draft, { trackId, gain }) {
+        singingStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
+      },
+      action({ commit }, { trackId, gain }) {
+        commit("COMMAND_SET_TRACK_GAIN", { trackId, gain });
+      },
+    },
+
+    COMMAND_SET_TRACK_PAN: {
+      mutation(draft, { trackId, pan }) {
+        singingStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
+      },
+      action({ commit }, { trackId, pan }) {
+        commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
+      },
+    },
+
+    COMMAND_REORDER_TRACKS: {
+      mutation(draft, { trackOrder }) {
+        singingStore.mutations.REORDER_TRACKS(draft, { trackOrder });
+      },
+      action({ commit }, { trackOrder }) {
+        commit("COMMAND_REORDER_TRACKS", { trackOrder });
+      },
+    },
+
+    COMMAND_UNSOLO_ALL_TRACKS: {
+      mutation(draft) {
+        singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
+      },
+      action({ commit }) {
+        commit("COMMAND_UNSOLO_ALL_TRACKS");
       },
     },
 

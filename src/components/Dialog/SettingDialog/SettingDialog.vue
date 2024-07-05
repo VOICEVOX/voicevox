@@ -229,6 +229,17 @@
                 >
                 </QBtn>
               </QCardActions>
+              <BaseCell
+                title="ソング：元に戻す対象のトラックの設定"
+                description="トラックの設定のうち、「元に戻す」機能の対象にする設定を指定します。"
+              >
+                <QOptionGroup
+                  v-model="songUndoableTrackOptions"
+                  type="checkbox"
+                  :options="songUndoableTrackOptionLabels"
+                  inline
+                />
+              </BaseCell>
             </QCard>
             <!-- Saving Card -->
             <QCard flat class="setting-card">
@@ -537,6 +548,7 @@ import { computed, ref, watchEffect } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import ToggleCell from "./ToggleCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
+import BaseCell from "./BaseCell.vue";
 import { useStore } from "@/store";
 import {
   isProduction,
@@ -605,6 +617,30 @@ const isDefaultConfirmedTips = computed(() => {
   const confirmedTips = store.state.confirmedTips;
   // すべて false (= 初期値) かどうか確認
   return Object.values(confirmedTips).every((v) => !v);
+});
+
+// ソング：元に戻す対象のトラックの設定
+type SongUndoableTrackOption =
+  keyof RootMiscSettingType["songUndoableTrackOptions"];
+const songUndoableTrackOptionLabels = [
+  { value: "soloAndMute", label: "ミュート・ソロ" },
+  { value: "panAndGain", label: "パン・音量" },
+];
+const songUndoableTrackOptions = computed({
+  get: () =>
+    Object.keys(store.state.songUndoableTrackOptions).filter(
+      (key) =>
+        store.state.songUndoableTrackOptions[key as SongUndoableTrackOption],
+    ) as SongUndoableTrackOption[],
+  set: (songUndoableTrackOptions: SongUndoableTrackOption[]) => {
+    store.dispatch("SET_ROOT_MISC_SETTING", {
+      key: "songUndoableTrackOptions",
+      value: {
+        soloAndMute: songUndoableTrackOptions.includes("soloAndMute"),
+        panAndGain: songUndoableTrackOptions.includes("panAndGain"),
+      },
+    });
+  },
 });
 
 // 外観

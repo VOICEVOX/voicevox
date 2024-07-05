@@ -463,5 +463,7 @@ onUnmountedOrDeactivated(() => {
   overflow: hidden;
   z-index: 0;
   pointer-events: none;
+
+  contain: strict; // canvasのサイズが変わるのを無視する
 }
 </style>
