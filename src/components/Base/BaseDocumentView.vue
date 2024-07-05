@@ -1,8 +1,6 @@
 <template>
   <div class="document">
-    <div>
-      <slot />
-    </div>
+    <slot />
   </div>
 </template>
 
@@ -62,6 +60,8 @@
     padding-left: 1.5rem;
   }
 
+  :deep(> ul),
+  :deep(> ol),
   :deep(:where(div, details) > ul),
   :deep(:where(div, details) > ol) {
     margin-bottom: 1rem;
@@ -87,6 +87,7 @@
     max-width: 100%;
   }
 
+  :deep(> img),
   :deep(:where(div, details) > img) {
     display: block;
     margin-bottom: 1rem;
