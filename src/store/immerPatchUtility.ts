@@ -81,6 +81,8 @@ function remove(value: unknown, key: string | number, v: unknown): void {
     value.delete(key);
   } else if (value instanceof Set) {
     value.delete(v);
+  } else if (Array.isArray(value) && typeof key === "number") {
+    value.splice(key, 1);
   } else {
     // @ts-expect-error produceWithPatchesにより生成されたPatchを適用するため、valueはany型として扱う
     delete value[key];
