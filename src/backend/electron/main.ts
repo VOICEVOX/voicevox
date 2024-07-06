@@ -922,15 +922,8 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   return configManager.get("hotkeySettings");
 });
 
-ipcMainHandle("THEME", (_, { newData }) => {
-  if (newData != undefined) {
-    configManager.set("currentTheme", newData);
-    return;
-  }
-  return {
-    currentTheme: configManager.get("currentTheme"),
-    availableThemes: themes,
-  };
+ipcMainHandle("GET_AVAILABLE_THEMES", () => {
+  return themes;
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {

@@ -7,7 +7,6 @@ import {
   SavingSetting,
   ExperimentalSettingType,
   ThemeColorType,
-  ThemeConf,
   ToolbarSettingType,
   EngineId,
   ConfirmedTips,
@@ -32,10 +31,8 @@ export const settingStoreState: SettingStoreState = {
   engineIds: [],
   engineInfos: {},
   engineManifests: {},
-  themeSetting: {
-    currentTheme: "Default",
-    availableThemes: [],
-  },
+  currentTheme: "Default",
+  availableThemes: [],
   editorFont: "default",
   showTextLineNumber: false,
   showAddAudioItemButton: true,
@@ -78,16 +75,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       });
 
-      const theme = await window.backend.theme();
-      if (theme) {
-        commit("SET_THEME_SETTING", {
-          currentTheme: theme.currentTheme,
-          themes: theme.availableThemes,
-        });
-        dispatch("SET_THEME_SETTING", {
-          currentTheme: theme.currentTheme,
-        });
-      }
+      commit("SET_AVAILABLE_THEMES", {
+        themes: await window.backend.getAvailableThemes(),
+      });
+      dispatch("SET_CURRENT_THEME_SETTING", {
+        currentTheme: await window.backend.getSetting("currentTheme"),
+      });
 
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
         acceptRetrieveTelemetry: await window.backend.getSetting(
@@ -221,19 +214,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
-  SET_THEME_SETTING: {
-    mutation(
-      state,
-      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] },
-    ) {
-      if (themes) {
-        state.themeSetting.availableThemes = themes;
-      }
-      state.themeSetting.currentTheme = currentTheme;
+  SET_CURRENT_THEME_SETTING: {
+    mutation(state, { currentTheme }: { currentTheme: string }) {
+      state.currentTheme = currentTheme;
     },
     action({ state, commit }, { currentTheme }: { currentTheme: string }) {
-      window.backend.theme(currentTheme);
-      const theme = state.themeSetting.availableThemes.find((value) => {
+      window.backend.setSetting("currentTheme", currentTheme);
+      const theme = state.availableThemes.find((value) => {
         return value.name == currentTheme;
       });
 
@@ -275,7 +262,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
-      commit("SET_THEME_SETTING", {
+      commit("SET_CURRENT_THEME_SETTING", {
         currentTheme: currentTheme,
       });
     },

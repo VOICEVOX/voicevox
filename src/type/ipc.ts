@@ -244,9 +244,9 @@ export type IpcIHData = {
     return: ToolbarSettingType;
   };
 
-  THEME: {
-    args: [obj: { newData?: string }];
-    return: ThemeSetting | void;
+  GET_AVAILABLE_THEMES: {
+    args: [];
+    return: ThemeSetting;
   };
 
   ON_VUEX_READY: {
