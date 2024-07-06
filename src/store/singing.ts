@@ -22,7 +22,7 @@ import {
   SequencerEditTarget,
   PhraseSourceHash,
 } from "./type";
-import { sanitizeFileName } from "./utility";
+import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
 import { EngineId, NoteId, StyleId } from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
@@ -1895,7 +1895,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const generateDefaultSongFileName = () => {
           const projectName = getters.PROJECT_NAME;
           if (projectName) {
-            return projectName.split(".")[0] + ".wav";
+            return projectName + ".wav";
           }
 
           const singer = getters.SELECTED_TRACK.singer;
@@ -1915,7 +1915,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
-          return "Untitled.wav";
+          return `${DEFAULT_PROJECT_NAME}.wav`;
         };
 
         const exportWaveFile = async (): Promise<SaveResultObject> => {
