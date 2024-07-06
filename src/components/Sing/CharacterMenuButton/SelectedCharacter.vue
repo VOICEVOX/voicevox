@@ -105,11 +105,11 @@ const selectedStyleIconPath = computed(() => {
   }
 
   .character-name {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
-    line-height: 16px;
-    margin-bottom: 8px;
-    padding-top: 0;
+    line-height: 24px;
+    padding-top: 8px;
+    margin-bottom: 0;
 
     &.skeleton {
       margin-top: 0;
@@ -121,7 +121,8 @@ const selectedStyleIconPath = computed(() => {
     color: var(--md-sys-color-on-surface-variant);
     font-size: 10px;
     font-weight: 500;
-    line-height: 1em;
+    line-height: 16px;
+    margin-bottom: 8px;
   }
 
   .character-menu-dropdown-icon {

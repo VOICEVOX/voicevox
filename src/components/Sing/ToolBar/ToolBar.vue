@@ -8,7 +8,6 @@
           type="number"
           :model-value="keyRangeAdjustmentInputBuffer"
           label="音域"
-          dense
           hide-bottom-space
           unelevated
           class="key-range-adjustment"
@@ -19,7 +18,6 @@
           type="number"
           :model-value="volumeRangeAdjustmentInputBuffer"
           label="声量"
-          dense
           hide-bottom-space
           unelevated
           class="volume-range-adjustment"
@@ -481,6 +479,32 @@ onUnmounted(() => {
   border: 1px solid var(--md-sys-color-outline-variant);
 }
 
+// ラベルのフォントサイズを小さくする()
+:deep(.q-input .q-field__label, .q-select .q-field__label) {
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+// type:number
+:deep(.q-field__native[type="number"]) {
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    cursor: pointer;
+  }
+
+  // スピンボタンのホバー状態
+  &:hover::-webkit-inner-spin-button,
+  &:hover::-webkit-outer-spin-button {
+    background: var(--md-sys-color-surface-container-highest);
+  }
+
+  // スピンボタンのアクティブ状態
+  &:active::-webkit-inner-spin-button,
+  &:active::-webkit-outer-spin-button {
+    background: var(--md-sys-color-surface-container-low);
+  }
+}
+
 :deep(
     .q-input .q-field__control:hover:before,
     .q-select .q-field__control:hover:before
@@ -522,7 +546,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   min-height: 64px;
-  padding: 0 8px 0 4px;
+  padding: 0 4px 0 4px;
   width: 100%;
 }
 
@@ -587,7 +611,7 @@ onUnmounted(() => {
 }
 
 .sing-tempo {
-  margin-left: 24px;
+  margin-left: 16px;
   margin-right: 4px;
   width: 72px;
 }
@@ -604,15 +628,16 @@ onUnmounted(() => {
 
   :deep(.q-field__control) {
     height: 56px;
-    padding: 0;
+    padding: 0 4px;
   }
 
   :deep(.q-field__label) {
     font-size: 10px;
-    top: 2px;
+    top: 7px;
     margin-left: 8px;
     transform: translateY(0) !important;
     color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.9;
   }
 
   :deep(.q-field__native) {
@@ -730,6 +755,10 @@ onUnmounted(() => {
 
   :deep(.q-field__control:hover:before) {
     border-color: var(--md-sys-color-outline);
+  }
+
+  :deep(.q-field__label) {
+    font-size: 14px;
   }
 }
 </style>

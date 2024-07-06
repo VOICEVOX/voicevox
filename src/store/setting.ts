@@ -280,7 +280,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       const sourceColor = "#A5D4AD";
       // パレットの調整(ニュートラルカラーの彩度を落とす)
       const adjustments = {
-        primary: { chroma: 45, tone: 40 },
+        primary: { chroma: 40, tone: 50 },
         neutral: { chroma: 0 },
         neutralVariant: { chroma: 6 },
       };

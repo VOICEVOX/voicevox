@@ -9,10 +9,19 @@ import {
   CustomColorGroup,
 } from "@material/material-color-utilities";
 
-type ColorAdjustment = Partial<{ hue: number; chroma: number; tone: number }>;
+// テーマカラーロール調整
+type ColorAdjustment = Partial<{
+  hue: number;
+  chroma: number;
+  tone: number;
+}>;
+
+// パレット調整
 type PaletteAdjustments = Partial<
   Record<keyof Theme["palettes"], ColorAdjustment>
 >;
+
+// パレットからカラーを生成
 type CustomPaletteColor = {
   name: string;
   palette: keyof Theme["palettes"];
@@ -20,12 +29,15 @@ type CustomPaletteColor = {
   darkTone: number;
   blend: boolean;
 };
+
+// カスタムカラー(固定値)
 type CustomDefinedColor = {
   name: string;
   value: string;
   blend: boolean;
 };
 
+// テーマを生成
 export function generateTheme(
   sourceColor: string,
   adjustments: PaletteAdjustments = {},
@@ -64,15 +76,9 @@ export function generateTheme(
         blend: color.blend,
         light: {
           color: lightColor,
-          onColor: 0,
-          colorContainer: 0,
-          onColorContainer: 0,
         },
         dark: {
           color: darkColor,
-          onColor: 0,
-          colorContainer: 0,
-          onColorContainer: 0,
         },
       };
     }),
