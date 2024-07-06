@@ -814,7 +814,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         selectOnlyThis(note);
       }
       for (const note of selectedNotes.value) {
-        copiedNotes.push(structuredClone(note.note));
+        copiedNotes.push({ ...note.note });
       }
     }
     dragStartTicks = cursorTicks;
