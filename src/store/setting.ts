@@ -280,8 +280,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       const sourceColor = "#A5D4AD";
       // パレットの調整(ニュートラルカラーの彩度を落とす)
       const adjustments = {
-        neutral: { chroma: -1 },
-        neutralVariant: { chroma: 2 },
+        primary: { chroma: 45, tone: 40 },
+        neutral: { chroma: 0 },
+        neutralVariant: { chroma: 6 },
       };
       // カスタムカラー(仮)
       const customPaletteColors = [
@@ -289,14 +290,14 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           name: "sing-grid-cell-white",
           palette: "neutral",
           lightTone: 100,
-          darkTone: 18,
+          darkTone: 15,
           blend: true,
         },
         {
           name: "sing-grid-cell-black",
           palette: "neutral",
           lightTone: 98,
-          darkTone: 15,
+          darkTone: 12,
           blend: true,
         },
         {

@@ -10,7 +10,6 @@
           label="音域"
           dense
           hide-bottom-space
-          standout
           unelevated
           class="key-range-adjustment"
           @update:model-value="setKeyRangeAdjustmentInputBuffer"
@@ -22,7 +21,6 @@
           label="声量"
           dense
           hide-bottom-space
-          standout
           unelevated
           class="volume-range-adjustment"
           @update:model-value="setVolumeRangeAdjustmentInputBuffer"
@@ -32,9 +30,8 @@
       <QInput
         type="number"
         :model-value="bpmInputBuffer"
-        dense
         hide-bottom-space
-        standout
+        outlined
         unelevated
         label="BPM"
         class="sing-tempo"
@@ -44,11 +41,10 @@
       />
       <QField
         hide-bottom-space
-        dense
-        standout
         class="sing-time-signature-field"
         label="拍子"
         stack-label
+        outlined
       >
         <template #control>
           <div class="sing-beats">
@@ -58,9 +54,7 @@
               hide-bottom-space
               hide-dropdown-icon
               user-inputs
-              standout
               unelevated
-              dense
               options-dense
               transition-show="none"
               transition-hide="none"
@@ -74,9 +68,7 @@
               hide-bottom-space
               hide-dropdown-icon
               user-inputs
-              standout
               unelevated
-              dense
               options-dense
               transition-show="none"
               transition-hide="none"
@@ -149,8 +141,7 @@
       <QSelect
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
-        standout
-        dense
+        outlined
         hide-bottom-space
         options-dense
         hide-dropdown-icon
@@ -485,28 +476,16 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-// background
-:deep(.q-field--standout.q-field--highlighted .q-field__control) {
-  background: var(--md-sys-color-surface-variant);
-  box-shadow: none;
-
-  &:after {
-    box-shadow: none;
-  }
+/* QInput のアウトラインをoutline-variantにする */
+:deep(.q-input .q-field__control:before, .q-select .q-field__control:before) {
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
-:deep(.q-field--standout .q-field__native) {
-  padding: 0;
-}
-
-// ラベル(ハイライト)
-:deep(.q-field--standout.q-field--highlighted .q-field__label) {
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-// テキスト(ハイライト)
-:deep(.q-field--standout.q-field--highlighted .q-field__native) {
-  color: var(--md-sys-color-on-surface) !important;
+:deep(
+    .q-input .q-field__control:hover:before,
+    .q-select .q-field__control:hover:before
+  ) {
+  border: 1px solid var(--md-sys-color-outline);
 }
 
 // オプションメニュー全体の背景色
@@ -521,7 +500,6 @@ onUnmounted(() => {
 }
 
 :deep(.sing-time-signature-field .q-field__control) {
-  background: var(--md-sys-color-surface-container-high);
   padding: 0;
 }
 
@@ -576,9 +554,17 @@ onUnmounted(() => {
   width: 40px;
 
   :deep(.q-field__control) {
-    background: var(--md-sys-color-surface-container);
-    text-align: left;
     padding: 0 2px;
+    height: 56px;
+
+    &:before {
+      border: 1px solid transparent;
+    }
+
+    &:hover:before {
+      border-color: transparent;
+      border-bottom: 1px solid var(--md-sys-color-outline);
+    }
   }
 }
 
@@ -586,8 +572,17 @@ onUnmounted(() => {
   width: 40px;
 
   :deep(.q-field__control) {
-    background: var(--md-sys-color-surface-container);
     padding: 0 2px;
+    height: 56px;
+
+    &:before {
+      border: 1px solid transparent;
+    }
+
+    &:hover:before {
+      border-color: transparent;
+      border-bottom: 1px solid var(--md-sys-color-outline);
+    }
   }
 }
 
@@ -605,9 +600,10 @@ onUnmounted(() => {
 }
 
 .sing-time-signature-field {
+  height: 56px;
+
   :deep(.q-field__control) {
-    height: 32px;
-    min-height: 32px;
+    height: 56px;
     padding: 0;
   }
 
@@ -621,32 +617,43 @@ onUnmounted(() => {
 
   :deep(.q-field__native) {
     padding-top: 4px;
-    min-height: unset;
   }
 
-  :deep(.q-field__marginal) {
-    height: 32px;
+  :deep(.q-field__control:before) {
+    border-color: var(--md-sys-color-outline-variant);
+  }
+
+  :deep(.q-field__control:hover:before) {
+    border-color: var(--md-sys-color-outline);
   }
 }
 
 .sing-beats {
   display: flex;
   align-items: center;
-  transform: translateY(-14px);
-  padding-top: 1px;
+  height: 56px;
+  margin-top: -24px;
+
+  &:deep(.q-field__control:before) {
+    border: 1px solid transparent;
+  }
+
+  &:deep(.q-field--standard .q-field__control:hover:before) {
+    border-color: transparent;
+  }
 }
 
 .sing-beats-separator {
   color: var(--md-sys-color-on-surface-variant);
   padding: 0;
-  opacity: 0.6;
+  opacity: 0.56;
 }
 
 .sing-beats-separator {
   font-weight: 500;
   color: var(--md-sys-color-on-surface-variant);
   pointer-events: none;
-  transform: translateY(4px);
+  transform: translateY(8px);
 }
 
 .sing-playback-button {
@@ -716,5 +723,13 @@ onUnmounted(() => {
 
 .sing-snap {
   min-width: 80px;
+
+  &:deep(.q-field__control:before) {
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  :deep(.q-field__control:hover:before) {
+    border-color: var(--md-sys-color-outline);
+  }
 }
 </style>

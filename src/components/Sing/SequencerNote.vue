@@ -300,121 +300,130 @@ const onLyricInput = (event: Event) => {
   top: 0;
   left: 0;
 
-  &.below-pitch {
-    .note-bar {
-      background-color: var(--md-sys-color-surface-variant);
-      border-color: var(--md-sys-color-secondary-fixed-dim);
+  .note-lyric {
+    position: absolute;
+    left: 4px;
+    bottom: 0;
+    min-width: 2em;
+    padding: 0;
+    color: var(--md-sys-color-on-primary-fixed);
+    font-size: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    text-shadow:
+      0 0 1px var(--md-ref-palette-neutral-variant-95),
+      0 0 1px var(--md-ref-palette-neutral-variant-95),
+      0 0 1px var(--md-ref-palette-neutral-variant-95),
+      0 0 1px var(--md-ref-palette-neutral-variant-95),
+      0 0 1px var(--md-ref-palette-neutral-variant-95),
+      0 0 1px var(--md-ref-palette-neutral-variant-95),
+      0 0 1px var(--md-ref-palette-neutral-variant-95),
+      0 0 1px var(--md-ref-palette-neutral-variant-95);
+  }
+
+  .note-bar {
+    box-sizing: border-box;
+    position: absolute;
+    width: calc(100% + 1px);
+    height: 100%;
+    background-color: var(--md-sys-color-secondary-fixed);
+    border: 1px solid var(--md-sys-color-secondary-fixed-dim);
+    border-radius: 4px;
+  }
+
+  .note-left-edge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+
+    &:hover {
+      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+      background-color: var(--md-sys-color-secondary-fixed-dim);
+    }
+  }
+
+  .note-right-edge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 6px;
+    height: 100%;
+
+    &:hover {
+      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+      background-color: var(--md-sys-color-secondary-fixed-dim);
     }
   }
 
   &.selected {
-    // 仮
     .note-bar {
-      background-color: var(--md-ref-palette-primary-90);
-      border-color: var(--md-ref-palette-primary-60);
-    }
-
-    &.below-pitch {
-      .note-bar {
-        background-color: var(--md-sys-color-surface-variant);
-        border-color: var(--md-sys-color-secondary-fixed);
-      }
+      background-color: var(--md-sys-color-primary-fixed-dim);
+      border-color: var(--md-sys-color-primary-fixed);
     }
 
     .note-right-edge:hover,
     .note-left-edge:hover {
-      background-color: var(--md-sys-color-primary-fixed-dim);
+      background-color: var(--md-sys-color-primary-fixed);
     }
   }
+
+  &.below-pitch {
+    opacity: 0.38;
+
+    .note-bar {
+      background-color: var(--md-sys-color-surface-variant);
+      border-color: var(--md-sys-color-outline-variant);
+    }
+
+    .note-lyric {
+      color: var(--md-sys-color-on-surface);
+      text-shadow: none;
+    }
+
+    .note-right-edge:hover,
+    .note-left-edge:hover {
+      background-color: transparent;
+    }
+  }
+
   // TODO：もっといい見た目を考える
   &.preview-lyric {
     .note-bar {
-      background-color: var(--md-sys-color-secondary-fixed);
-      border-color: var(--md-sys-color-primary-fixed);
-      outline: solid 2px var(--md-sys-color-primary-fixed-dim);
+      background-color: var(--md-sys-color-primary-fixed);
+      border-color: var(--md-sys-color-primary-fixed-dim);
     }
 
     .note-lyric {
       opacity: 0.38;
-    }
-
-    &.below-pitch {
-      .note-bar {
-        background-color: var(--md-sys-color-secondary-fixed);
-        border-color: var(--md-sys-color-primary-fixed);
-        outline: solid 2px var(--md-sys-color-primary-fixed-dim);
-      }
     }
   }
 
   &.overlapping,
   &.invalid-phrase {
     .note-bar {
-      background-color: var(--md-sys-color-error-container);
+      background-color: var(--md-ref-palette-neutral-80);
       border-color: var(--md-sys-color-error);
     }
 
+    .note-right-edge:hover,
+    .note-left-edge:hover {
+      background-color: var(--md-sys-color-error);
+    }
+
     .note-lyric {
-      color: var(--md-sys-color-on-error-container);
+      color: var(--md-sys-color-error);
+      opacity: 0.38;
     }
 
     &.selected {
       .note-bar {
-        background-color: var(--md-sys-color-error-container);
+        background-color: var(--md-ref-palette-neutral-80);
         border-color: var(--md-sys-color-error);
-        outline: 2px solid var(--md-sys-color-error-container);
       }
     }
-  }
-}
-
-.note-lyric {
-  position: absolute;
-  left: 0.125rem;
-  bottom: 0;
-  min-width: 2rem;
-  padding: 0;
-  background: transparent;
-  color: var(--md-ref-palette-neutral-variant-20);
-  font-size: 16px;
-  font-weight: 500;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-.note-bar {
-  box-sizing: border-box;
-  position: absolute;
-  width: calc(100% + 1px);
-  height: 100%;
-  border: 1px solid var(--md-sys-color-secondary-fixed-dim);
-  background-color: var(--md-sys-color-secondary-fixed);
-  border-radius: 4px;
-}
-
-.note-left-edge {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 6px;
-  height: 100%;
-
-  &:hover {
-    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: var(--md-sys-color-secondary-fixed-dim);
-  }
-}
-
-.note-right-edge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 6px;
-  height: 100%;
-
-  &:hover {
-    // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-    background-color: var(--md-sys-color-secondary-fixed-dim);
   }
 }
 
@@ -425,12 +434,12 @@ const onLyricInput = (event: Event) => {
   font-size: 16px;
   max-width: 4rem;
   width: fit-content;
-  background-color: var(--md-ref-palette-neutral-100);
-  color: var(--md-sys-color-on-surface);
-  outline: 2px solid var(--md-sys-color-primary-fixed-dim);
+  background-color: var(--md-ref-palette-neutral-99);
+  color: var(--md-sys-color-on-primary-fixed);
+  outline: 1px solid var(--md-sys-color-primary);
+  //outline-offset: 1px;
   border-radius: 4px;
   border: 0;
-  // large boxshadow beautiful M3
   box-shadow:
     0 4px 6px rgba(0, 0, 0, 0.1),
     0 1px 3px rgba(0, 0, 0, 0.08);

@@ -34,9 +34,9 @@ type PitchLine = {
   readonly lineStrip: LineStrip;
 };
 
-const originalPitchLineColor = new Color(171, 201, 176, 255);
+const originalPitchLineColor = new Color(145, 145, 145, 255);
 const originalPitchLineWidth = 1;
-const pitchEditLineColor = new Color(146, 214, 154, 255);
+const pitchEditLineColor = new Color(128, 217, 152, 255);
 const pitchEditLineWidth = 1.5;
 
 const props = defineProps<{

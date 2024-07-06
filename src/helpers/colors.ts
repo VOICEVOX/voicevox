@@ -102,7 +102,7 @@ export function generateTheme(
     }),
   ];
 
-  // パレットに基づいて新しいスキームを生成
+  // 調整されたパレットを使用して新しいスキームを生成
   const lightScheme = Scheme.light(adjustedPalettes.primary.keyColor.toInt());
   const darkScheme = Scheme.dark(adjustedPalettes.primary.keyColor.toInt());
 
