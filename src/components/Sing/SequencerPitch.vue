@@ -30,7 +30,6 @@ import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { getLast } from "@/sing/utility";
 import { SingingGuideSourceHash } from "@/store/type";
-import { TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 type PitchLine = {
@@ -38,8 +37,6 @@ type PitchLine = {
   readonly width: number;
   readonly pitchDataMap: Map<PitchDataHash, PitchData>;
   readonly lineStripMap: Map<PitchDataHash, LineStrip>;
-
-  pitchDataHashToTrackIds: Map<PitchDataHash, TrackId[]>;
 };
 
 const props = defineProps<{
@@ -60,25 +57,19 @@ const pitchEditData = computed(() => {
 });
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const selectedTrackId = computed(() => store.state.selectedTrackId);
-const tracks = computed(() => store.state.tracks);
 const editFrameRate = computed(() => store.state.editFrameRate);
-const singingGuideKeyToTrackIds = computed(() => {
-  const singingGuideKeyToTrackIds = new Map<
-    SingingGuideSourceHash,
-    TrackId[]
-  >();
+const singingGuideKeysInSelectedTrack = computed(() => {
+  const singingGuideKeys = new Set<SingingGuideSourceHash>();
   for (const phrase of store.state.phrases.values()) {
-    const singingGuideKey = phrase.singingGuideKey;
-    if (!singingGuideKey) {
+    if (phrase.trackId !== selectedTrackId.value) {
       continue;
     }
-    if (!singingGuideKeyToTrackIds.has(singingGuideKey)) {
-      singingGuideKeyToTrackIds.set(singingGuideKey, []);
+    if (phrase.singingGuideKey == undefined) {
+      continue;
     }
-    const trackIds = getOrThrow(singingGuideKeyToTrackIds, singingGuideKey);
-    trackIds.push(phrase.trackId);
+    singingGuideKeys.add(phrase.singingGuideKey);
   }
-  return singingGuideKeyToTrackIds;
+  return singingGuideKeys;
 });
 
 const originalPitchLine: PitchLine = {
@@ -86,14 +77,12 @@ const originalPitchLine: PitchLine = {
   width: 1.2,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
-  pitchDataHashToTrackIds: new Map(),
 };
 const pitchEditLine: PitchLine = {
   color: new Color(146, 214, 154, 255),
   width: 2,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
-  pitchDataHashToTrackIds: new Map(),
 };
 
 const canvasContainer = ref<HTMLElement | null>(null);
@@ -105,22 +94,6 @@ let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
-const trackContainers: Map<TrackId, PIXI.Container> = new Map();
-
-watch(
-  tracks,
-  async (tracks) => {
-    for (const trackId of tracks.keys()) {
-      if (trackContainers.has(trackId)) {
-        continue;
-      }
-      const trackContainer = new PIXI.Container();
-      trackContainers.set(trackId, trackContainer);
-      stage?.addChild(trackContainer);
-    }
-  },
-  { immediate: true, deep: true },
-);
 
 const updateLineStrips = (pitchLine: PitchLine) => {
   if (stage == undefined) {
@@ -167,10 +140,7 @@ const updateLineStrips = (pitchLine: PitchLine) => {
     } else {
       lineStrip = new LineStrip(dataLength, pitchLine.color, pitchLine.width);
     }
-    for (const trackId of getOrThrow(pitchLine.pitchDataHashToTrackIds, key)) {
-      const container = getOrThrow(trackContainers, trackId);
-      container.addChild(lineStrip.displayObject);
-    }
+    stage?.addChild(lineStrip.displayObject);
     pitchLine.lineStripMap.set(key, lineStrip);
   }
 
@@ -279,14 +249,10 @@ const setPitchDataToPitchLine = async (
   ).filter((value) => value.data.length >= 2);
 
   pitchLine.pitchDataMap.clear();
-  const hashes: PitchDataHash[] = [];
   for (const partialPitchData of partialPitchDataArray) {
     const hash = await calculatePitchDataHash(partialPitchData);
     pitchLine.pitchDataMap.set(hash, partialPitchData);
-    hashes.push(hash);
   }
-
-  return hashes;
 };
 
 const generateOriginalPitchData = () => {
@@ -295,10 +261,9 @@ const generateOriginalPitchData = () => {
   const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
 
   // トラック毎の歌い方のf0を結合してピッチデータを生成する
-  const tempDataMap = new Map<TrackId, number[]>(
-    [...tracks.value.keys()].map((trackId) => [trackId, []]),
-  );
-  for (const [singingGuideSourceHash, singingGuide] of singingGuidesValue) {
+  const tempData = [];
+  for (const singingGuideKey of singingGuideKeysInSelectedTrack.value) {
+    const singingGuide = getOrThrow(singingGuidesValue, singingGuideKey);
     // TODO: 補間を行うようにする
     if (singingGuide.frameRate !== frameRate) {
       throw new Error(
@@ -325,36 +290,25 @@ const generateOriginalPitchData = () => {
     const singingGuideEndFrame =
       singingGuideStartFrame + singingGuideFrameLength;
 
-    const trackIds = getOrThrow(
-      singingGuideKeyToTrackIds.value,
-      singingGuideSourceHash,
-    );
-
-    for (const trackId of trackIds) {
-      const tempData = getOrThrow(tempDataMap, trackId);
-
-      // 無声子音区間以外のf0をtempDataにコピーする
-      // NOTE: 無声子音区間は音程が無く、f0の値が大きく上下するので表示しない
-      if (tempData.length < singingGuideEndFrame) {
-        const valuesToPush = new Array(
-          singingGuideEndFrame - tempData.length,
-        ).fill(VALUE_INDICATING_NO_DATA);
-        tempData.push(...valuesToPush);
-      }
-      const startFrame = Math.max(0, singingGuideStartFrame);
-      const endFrame = singingGuideEndFrame;
-      for (let i = startFrame; i < endFrame; i++) {
-        const phoneme = framePhonemes[i - singingGuideStartFrame];
-        const unvoiced = unvoicedPhonemes.includes(phoneme);
-        if (!unvoiced) {
-          tempData[i] = f0[i - singingGuideStartFrame];
-        }
+    // 無声子音区間以外のf0をtempDataにコピーする
+    // NOTE: 無声子音区間は音程が無く、f0の値が大きく上下するので表示しない
+    if (tempData.length < singingGuideEndFrame) {
+      const valuesToPush = new Array(
+        singingGuideEndFrame - tempData.length,
+      ).fill(VALUE_INDICATING_NO_DATA);
+      tempData.push(...valuesToPush);
+    }
+    const startFrame = Math.max(0, singingGuideStartFrame);
+    const endFrame = singingGuideEndFrame;
+    for (let i = startFrame; i < endFrame; i++) {
+      const phoneme = framePhonemes[i - singingGuideStartFrame];
+      const unvoiced = unvoicedPhonemes.includes(phoneme);
+      if (!unvoiced) {
+        tempData[i] = f0[i - singingGuideStartFrame];
       }
     }
   }
-  return new Map(
-    [...tempDataMap.entries()].map(([k, v]) => [k, toPitchData(v, frameRate)]),
-  );
+  return toPitchData(tempData, frameRate);
 };
 
 const generatePitchEditData = () => {
@@ -393,38 +347,16 @@ const generatePitchEditData = () => {
   return toPitchData(tempData, frameRate);
 };
 
-const pushTrackId = (
-  pitchDataHashToTrackIds: Map<PitchDataHash, TrackId[]>,
-  hashes: PitchDataHash[],
-  trackId: TrackId,
-) => {
-  for (const hash of hashes) {
-    if (!pitchDataHashToTrackIds.has(hash)) {
-      pitchDataHashToTrackIds.set(hash, []);
-    }
-    const trackIds = getOrThrow(pitchDataHashToTrackIds, hash);
-    trackIds.push(trackId);
-  }
-};
-
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
 watch(
-  [singingGuides, tempos, tpqn],
+  [singingGuideKeysInSelectedTrack, singingGuides, tempos, tpqn],
   async () => {
     asyncLock.acquire(
       "originalPitch",
       async () => {
         const originalPitchData = generateOriginalPitchData();
-        const pitchDataHashToTrackIds = new Map<PitchDataHash, TrackId[]>();
-        for (const [trackId, originalPitchDataInTrack] of originalPitchData) {
-          const hashes = await setPitchDataToPitchLine(
-            originalPitchDataInTrack,
-            originalPitchLine,
-          );
-          pushTrackId(pitchDataHashToTrackIds, hashes, trackId);
-        }
-        originalPitchLine.pitchDataHashToTrackIds = pitchDataHashToTrackIds;
+        await setPitchDataToPitchLine(originalPitchData, originalPitchLine);
         renderInNextFrame = true;
       },
       (err) => {
@@ -438,33 +370,13 @@ watch(
 );
 
 watch(
-  selectedTrackId,
-  async () => {
-    for (const [trackId, trackContainer] of trackContainers) {
-      if (trackId === selectedTrackId.value) {
-        trackContainer.visible = true;
-      } else {
-        trackContainer.visible = false;
-      }
-    }
-  },
-  { immediate: true },
-);
-
-watch(
   [pitchEditData, previewPitchEdit, tempos, tpqn],
   async () => {
     asyncLock.acquire(
       "pitchEdit",
       async () => {
         const pitchEditData = generatePitchEditData();
-        const hashes = await setPitchDataToPitchLine(
-          pitchEditData,
-          pitchEditLine,
-        );
-        const pitchDataHashToTrackIds = new Map<PitchDataHash, TrackId[]>();
-        pushTrackId(pitchDataHashToTrackIds, hashes, selectedTrackId.value);
-        pitchEditLine.pitchDataHashToTrackIds = pitchDataHashToTrackIds;
+        await setPitchDataToPitchLine(pitchEditData, pitchEditLine);
         renderInNextFrame = true;
       },
       (err) => {
@@ -511,10 +423,6 @@ onMountedOrActivated(() => {
     autoDensity: true,
   });
   stage = new PIXI.Container();
-
-  for (const trackContainer of trackContainers.values()) {
-    stage.addChild(trackContainer);
-  }
 
   // webGLVersionをチェックする
   // 2未満の場合、ピッチの表示ができないのでエラーとしてロギングする
