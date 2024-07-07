@@ -43,6 +43,11 @@
 
       <!-- undefinedだと警告が出るのでnullを渡す -->
       <!-- TODO: ちゃんとしたトラックIDを渡す -->
+      <SequencerShadowNote
+        v-for="{ note } in notesInInactiveTracks"
+        :key="note.id"
+        :note
+      />
       <SequencerNote
         v-for="{ note, trackId } in editTarget === 'NOTE'
           ? notesInCurrentTrackWithPreview
@@ -61,11 +66,6 @@
         @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
       />
 
-      <SequencerShadowNote
-        v-for="{ note } in notesInInactiveTracks"
-        :key="note.id"
-        :note
-      />
       <SequencerLyricInput
         v-if="editingLyricNote != undefined"
         class="sequencer-lyric-input"
@@ -103,9 +103,9 @@
           height: `${Math.abs(cursorY - rectSelectStartY)}px`,
         }"
       ></div>
-      <div class="sequencer-phrase-indicator-container-active">
+      <div class="sequencer-phrase-indicator-container-inactive">
         <SequencerPhraseIndicator
-          v-for="phraseInfo in phraseInfosInCurrentTrack"
+          v-for="phraseInfo in phraseInfosInInactiveTracks"
           :key="phraseInfo.key"
           :phraseKey="phraseInfo.key"
           class="sequencer-phrase-indicator"
@@ -115,9 +115,9 @@
           }"
         />
       </div>
-      <div class="sequencer-phrase-indicator-container-inactive">
+      <div class="sequencer-phrase-indicator-container-active">
         <SequencerPhraseIndicator
-          v-for="phraseInfo in phraseInfosInInactiveTracks"
+          v-for="phraseInfo in phraseInfosInCurrentTrack"
           :key="phraseInfo.key"
           :phraseKey="phraseInfo.key"
           class="sequencer-phrase-indicator"
@@ -1586,19 +1586,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   border-radius: 2px;
 }
 
-.sequencer-phrase-indicator-container-active {
-  opacity: 1;
-  z-index: 1;
-}
 .sequencer-phrase-indicator-container-inactive {
   opacity: 0.5;
-}
-
-.sequencer-note {
-  z-index: 1;
-}
-.sequencer-lyric-input {
-  z-index: 2;
 }
 
 .sequencer-playhead {
