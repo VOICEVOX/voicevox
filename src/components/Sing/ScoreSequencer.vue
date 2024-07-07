@@ -173,7 +173,7 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { NoteId, TrackId } from "@/type/preload";
+import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import {
@@ -268,7 +268,7 @@ const notesInCurrentTrackWithPreview = computed(() => {
   if (nowPreviewing.value) {
     const previewNoteIds = new Set(previewNotes.value.map((value) => value.id));
     return previewNotes.value
-      .map((note) => ({ trackId: null as TrackId | null, note }))
+      .map((note) => ({ trackId: selectedTrackId.value, note }))
       .concat(
         notesInCurrentTrack.value.filter(
           ({ note }) => !previewNoteIds.has(note.id),

@@ -85,7 +85,7 @@ import { TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 const props = defineProps<{
-  trackId: TrackId | null;
+  trackId: TrackId;
   note: Note;
   /** どれかのノートがプレビュー中 */
   nowPreviewing: boolean;
