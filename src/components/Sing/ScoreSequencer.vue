@@ -49,12 +49,16 @@
         :note
       />
       <SequencerNote
-        v-for="{ note, trackId } in editTarget === 'NOTE'
+        v-for="{ note } in editTarget === 'NOTE'
           ? notesInCurrentTrackWithPreview
           : notesInCurrentTrack"
         :key="note.id"
         class="sequencer-note"
-        :trackId
+        :hasOverlappingError="
+          previewNoteIds.has(note.id)
+            ? false
+            : overlappingNoteIdsInCurrentTrack.has(note.id)
+        "
         :note
         :nowPreviewing
         :isSelected="selectedNoteIds.has(note.id)"
@@ -219,6 +223,7 @@ import {
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 type PreviewMode =
   | "ADD_NOTE"
@@ -256,6 +261,9 @@ const notesInCurrentTrack = computed(() =>
 );
 const notesInOtherTracks = computed(() =>
   allNotes.value.filter(({ trackId }) => trackId !== selectedTrackId.value),
+);
+const overlappingNoteIdsInCurrentTrack = computed(() =>
+  getOrThrow(store.state.overlappingNoteIds, selectedTrackId.value),
 );
 const selectedNoteIds = computed(() => new Set(state.selectedNoteIds));
 const isNoteSelected = computed(() => {

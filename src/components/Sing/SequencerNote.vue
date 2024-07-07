@@ -81,11 +81,8 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { TrackId } from "@/type/preload";
-import { getOrThrow } from "@/helpers/mapHelper";
 
 const props = defineProps<{
-  trackId: TrackId;
   note: Note;
   /** どれかのノートがプレビュー中 */
   nowPreviewing: boolean;
@@ -93,6 +90,8 @@ const props = defineProps<{
   isSelected: boolean;
   /** このノートがプレビュー中か */
   isPreview: boolean;
+  /** ノートが重なっているか */
+  hasOverlappingError: boolean;
   previewLyric: string | null;
 }>();
 
@@ -129,18 +128,6 @@ const editTargetIsNote = computed(() => {
 });
 const editTargetIsPitch = computed(() => {
   return state.sequencerEditTarget === "PITCH";
-});
-
-// ノートの重なりエラー
-const hasOverlappingError = computed(() => {
-  if (props.isPreview) {
-    return false;
-  }
-  const overlappingNoteIds = getOrThrow(
-    state.overlappingNoteIds,
-    props.trackId,
-  );
-  return overlappingNoteIds.has(props.note.id);
 });
 
 // フレーズ生成エラー
