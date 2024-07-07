@@ -1,5 +1,5 @@
 import path from "path";
-import { toRaw } from "vue";
+import { toRaw, watch } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -21,6 +21,7 @@ import {
   SequencerEditTarget,
   PhraseSourceHash,
   Track,
+  StorePlugin,
 } from "./type";
 import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
@@ -71,6 +72,7 @@ import {
   SEQUENCER_MIN_NUM_MEASURES,
   getNumMeasures,
   isTracksEmpty,
+  shouldPlayTracks,
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
@@ -116,7 +118,8 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let previewSynth: PolySynth | undefined;
-let channelStrip: ChannelStrip | undefined;
+let globalChannelStrip: ChannelStrip | undefined;
+const trackChannelStrips = new Map<TrackId, ChannelStrip>();
 let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
 
@@ -125,12 +128,11 @@ if (window.AudioContext) {
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
   previewSynth = new PolySynth(audioContext);
-  channelStrip = new ChannelStrip(audioContext);
+  globalChannelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
 
-  previewSynth.output.connect(channelStrip.input);
-  channelStrip.output.connect(limiter.input);
+  globalChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
 }
@@ -144,6 +146,47 @@ const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
 const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
 const initialTrackId = TrackId(crypto.randomUUID());
+
+export const singingStorePlugin: StorePlugin = (store) => {
+  watch(
+    () => store.state.tracks,
+    async (tracks) => {
+      if (!audioContext || !globalChannelStrip) {
+        return;
+      }
+      const shouldPlays = shouldPlayTracks(tracks);
+      for (const [trackId, track] of tracks) {
+        if (!trackChannelStrips.has(trackId)) {
+          const channelStrip = new ChannelStrip(audioContext);
+          trackChannelStrips.set(trackId, channelStrip);
+          channelStrip.output.connect(globalChannelStrip.input);
+
+          trackChannelStrips.set(trackId, channelStrip);
+        }
+
+        const channelStrip = getOrThrow(trackChannelStrips, trackId);
+        channelStrip.volume = track.gain;
+        channelStrip.pan = track.pan;
+
+        channelStrip.mute = !getOrThrow(shouldPlays, trackId);
+      }
+    },
+    { deep: true, immediate: true },
+  );
+
+  watch(
+    () => store.state.selectedTrackId,
+    async (selectedTrackId) => {
+      if (!audioContext || !globalChannelStrip || !previewSynth) {
+        return;
+      }
+      const channelStrip = getOrThrow(trackChannelStrips, selectedTrackId);
+      previewSynth.output.disconnect();
+      previewSynth.output.connect(channelStrip.input);
+    },
+    { immediate: true },
+  );
+};
 
 export const singingStoreState: SingingStoreState = {
   tpqn: DEFAULT_TPQN,
@@ -823,12 +866,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.volume = volume;
     },
     async action({ commit }, { volume }) {
-      if (!channelStrip) {
+      if (!globalChannelStrip) {
         throw new Error("channelStrip is undefined.");
       }
       commit("SET_VOLUME", { volume });
 
-      channelStrip.volume = volume;
+      globalChannelStrip.volume = volume;
     },
   },
 
@@ -1349,12 +1392,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         if (!transport) {
           throw new Error("transport is undefined.");
         }
-        if (!channelStrip) {
+        if (!globalChannelStrip) {
           throw new Error("channelStrip is undefined.");
         }
         const audioContextRef = audioContext;
         const transportRef = transport;
-        const channelStripRef = channelStrip;
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         const tracks = structuredClone(toRaw(state.tracks));
@@ -1556,7 +1598,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               instrument: polySynth,
               noteEvents,
             };
-            polySynth.output.connect(channelStripRef.input);
+            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
+            polySynth.output.connect(channelStrip.input);
             transportRef.addSequence(noteSequence);
             sequences.set(phraseKey, noteSequence);
           }
@@ -1760,7 +1803,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               audioPlayer,
               audioEvents,
             };
-            audioPlayer.output.connect(channelStripRef.input);
+            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
+            audioPlayer.output.connect(channelStrip.input);
             transportRef.addSequence(audioSequence);
             sequences.set(phraseKey, audioSequence);
 
