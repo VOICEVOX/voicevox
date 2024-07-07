@@ -2,7 +2,7 @@ import { Patch } from "immer";
 import { ExhaustiveError } from "@/type/utility";
 
 /**
- * produceWithPatchesにより生成された複数のパッチをオブジェクトに適用します。
+ * produceWithPatchesにより生成された複数のパッチをオブジェクトに適用する。
  *
  * @param {T} target パッチを適用する対象オブジェクト
  * @param {Patch[]} patches 適用するパッチの配列
@@ -18,8 +18,8 @@ function isObject(value: unknown): value is object {
   return typeof value === "object" && value != null;
 }
 
-// clone処理はstructuredCloneを利用することでも可能だが、ユーザ定義classのprototype情報が欠落するなどの問題がある
-// ユーザ定義classなどを扱おうとした場合にunsoundな不具合になることを防ぐため、clone処理を自前実装する
+// 値を再帰的に複製する。
+// ユーザー定義クラスのインスタンスや関数など、複製しない値で例外を発生させる。
 function clone<T>(value: T): T {
   // function等、単純にcloneできない値の取り扱いを禁止する
   if (!isObject(value)) return structuredClone(value);
@@ -50,8 +50,8 @@ function clone<T>(value: T): T {
     return result as T;
   }
 
-  // object以外の自前classは現状利用していないため不具合予防として一旦禁止します
-  // 適切な動作テストの後制限を緩めることを妨げるものではありません
+  // object以外の自前classは現状利用していないため不具合予防として一旦禁止
+  // 適切な動作テストの後制限を緩めることを妨げるものではない
   if (Object.getPrototypeOf(value) !== Object.prototype)
     throw new Error("unsupported type");
 
@@ -116,13 +116,13 @@ function remove(value: unknown, key: string | number, v: unknown): void {
 }
 
 /**
- * produceWithPatchesにより生成された単一のパッチをオブジェクトに適用します。
+ * produceWithPatchesにより生成された単一のパッチをオブジェクトに適用する。
  *
  * @param {T} target パッチを適用する対象オブジェクト
  * @param {Patch} patch 適用するパッチ
  * @template T 対象オブジェクトの型(任意)
  */
-export function applyPatch<T>(target: T, patch: Patch) {
+function applyPatch<T>(target: T, patch: Patch) {
   const { path, value, op } = patch;
   for (const p of patch.path.slice(0, path.length - 1)) {
     target = get(target, p);

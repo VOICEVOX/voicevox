@@ -8,14 +8,13 @@ describe("object", () => {
     enablePatches();
 
     const object: { a: number; b: number; c?: number } = { a: 1, b: 2 };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.c = 3;
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([{ op: "add", path: ["c"], value: 3 }]);
     expect(undoPatches).toStrictEqual([{ op: "remove", path: ["c"] }]);
 
@@ -31,14 +30,13 @@ describe("object", () => {
     enablePatches();
 
     const object: { a: number; b: number; c?: number } = { a: 1, b: 2, c: 3 };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         delete obj.c;
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([{ op: "remove", path: ["c"] }]);
     expect(undoPatches).toStrictEqual([{ op: "add", path: ["c"], value: 3 }]);
 
@@ -54,14 +52,13 @@ describe("object", () => {
     enablePatches();
 
     const object: { a: number; b: number } = { a: 1, b: 2 };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.a = 3;
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([
       { op: "replace", path: ["a"], value: 3 },
     ]);
@@ -83,14 +80,13 @@ describe("array", () => {
     enablePatches();
 
     const object: number[] = [1, 2, 3];
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.push(4);
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([{ op: "add", path: [3], value: 4 }]);
     expect(undoPatches).toStrictEqual([
       { op: "replace", path: ["length"], value: 3 },
@@ -108,14 +104,13 @@ describe("array", () => {
     enablePatches();
 
     const object: number[] = [1, 2, 3];
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.splice(1, 0, 4);
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([
       { op: "replace", path: [1], value: 4 },
       { op: "replace", path: [2], value: 2 },
@@ -139,14 +134,13 @@ describe("array", () => {
     enablePatches();
 
     const object: number[] = [1, 2, 3];
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.unshift(4);
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([
       { op: "replace", path: [0], value: 4 },
       { op: "replace", path: [1], value: 1 },
@@ -172,14 +166,13 @@ describe("array", () => {
     enablePatches();
 
     const object: number[] = [1, 2, 3];
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.splice(1, 1);
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([
       { op: "replace", path: [1], value: 3 },
       { op: "replace", path: ["length"], value: 2 },
@@ -201,14 +194,13 @@ describe("array", () => {
     enablePatches();
 
     const object: number[] = [1, 2, 3];
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.pop();
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([
       { op: "replace", path: ["length"], value: 2 },
     ]);
@@ -243,14 +235,13 @@ describe("array", () => {
     enablePatches();
 
     const object: number[] = [1, 2, 3];
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj[1] = 4;
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([{ op: "replace", path: [1], value: 4 }]);
     expect(undoPatches).toStrictEqual([{ op: "replace", path: [1], value: 2 }]);
 
@@ -294,14 +285,13 @@ describe("complexObject", () => {
       b: number;
       c: { d: number; e?: { f: string; g: [number, number] } };
     } = { a: 1, b: 2, c: { d: 3 } };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.c.e = { f: "4", g: [5, 6] };
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([
       { op: "add", path: ["c", "e"], value: { f: "4", g: [5, 6] } },
     ]);
@@ -327,14 +317,13 @@ describe("complexObject", () => {
       b: number;
       c: { d: number; e: { f: string; g: [number, number] } };
     } = { a: 1, b: 2, c: { d: 3, e: { f: "4", g: [5, 6] } } };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.c.e.g[0] = 7;
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([
       { op: "replace", path: ["c", "e", "g", 0], value: 7 },
     ]);
@@ -366,14 +355,13 @@ describe("complexObject", () => {
       b: number;
       c: { d: number; e: { f: string; g?: [number, number] } };
     } = { a: 1, b: 2, c: { d: 3, e: { f: "4", g: [5, 6] } } };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         delete obj.c.e.g;
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([
       { op: "remove", path: ["c", "e", "g"] },
     ]);
@@ -403,14 +391,13 @@ describe("Map", () => {
       [1, 2],
       [3, 4],
     ]);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.set(5, 6);
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([{ op: "add", path: [5], value: 6 }]);
     expect(undoPatches).toStrictEqual([{ op: "remove", path: [5] }]);
 
@@ -441,14 +428,13 @@ describe("Map", () => {
       [1, 2],
       [3, 4],
     ]);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.set(3, 5);
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([{ op: "replace", path: [3], value: 5 }]);
     expect(undoPatches).toStrictEqual([{ op: "replace", path: [3], value: 4 }]);
 
@@ -477,14 +463,13 @@ describe("Set", () => {
     enableMapSet();
 
     const object: Set<number> = new Set([1, 2, 3]);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_new_object, redoPatches, undoPatches] = immer.produceWithPatches(
+    const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {
         obj.delete(2);
       },
     );
-    // patchに対するテストはテストケースの可視化のためのものです failした場合はその通りに書き替えてください
+    // テストケースの可視化
     expect(redoPatches).toStrictEqual([{ op: "remove", path: [1], value: 2 }]);
     expect(undoPatches).toStrictEqual([{ op: "add", path: [1], value: 2 }]);
 
