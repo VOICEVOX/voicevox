@@ -52,7 +52,7 @@ export const useLyricInput = () => {
     previewLyrics.value = new Map();
     store.dispatch("COMMAND_UPDATE_NOTES", {
       notes: newNotes,
-      trackId: store.state.selectedTrackId,
+      trackId: store.getters.SELECTED_TRACK_ID,
     });
   };
 
