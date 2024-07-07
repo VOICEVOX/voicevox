@@ -44,7 +44,7 @@
       <!-- undefinedだと警告が出るのでnullを渡す -->
       <!-- TODO: ちゃんとしたトラックIDを渡す -->
       <SequencerShadowNote
-        v-for="{ note } in notesInInactiveTracks"
+        v-for="{ note } in notesInOtherTracks"
         :key="note.id"
         :note
       />
@@ -103,9 +103,9 @@
           height: `${Math.abs(cursorY - rectSelectStartY)}px`,
         }"
       ></div>
-      <div class="sequencer-phrase-indicator-container-inactive">
+      <div class="sequencer-phrase-indicator-container-other-track">
         <SequencerPhraseIndicator
-          v-for="phraseInfo in phraseInfosInInactiveTracks"
+          v-for="phraseInfo in phraseInfosInOtherTracks"
           :key="phraseInfo.key"
           :phraseKey="phraseInfo.key"
           class="sequencer-phrase-indicator"
@@ -254,7 +254,7 @@ const notes = computed(() =>
 const notesInCurrentTrack = computed(() =>
   notes.value.filter(({ trackId }) => trackId === selectedTrackId.value),
 );
-const notesInInactiveTracks = computed(() =>
+const notesInOtherTracks = computed(() =>
   notes.value.filter(({ trackId }) => trackId !== selectedTrackId.value),
 );
 const selectedNoteIds = computed(() => new Set(state.selectedNoteIds));
@@ -357,7 +357,7 @@ const phraseInfosInCurrentTrack = computed(() => {
     ({ trackId }) => trackId === selectedTrackId.value,
   );
 });
-const phraseInfosInInactiveTracks = computed(() => {
+const phraseInfosInOtherTracks = computed(() => {
   return phraseInfos.value.filter(
     ({ trackId }) => trackId !== selectedTrackId.value,
   );
@@ -1586,7 +1586,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   border-radius: 2px;
 }
 
-.sequencer-phrase-indicator-container-inactive {
+.sequencer-phrase-indicator-container-other-track {
   opacity: 0.5;
 }
 

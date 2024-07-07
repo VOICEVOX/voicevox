@@ -1,3 +1,4 @@
+<!-- アクティブではないトラックのノートを描画するコンポーネント -->
 <template>
   <div
     class="note"
@@ -12,9 +13,6 @@
 </template>
 
 <script setup lang="ts">
-/**
- * アクティブではないトラックのノートを描画するコンポーネント。
- */
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
