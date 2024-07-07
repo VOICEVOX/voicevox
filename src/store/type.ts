@@ -1221,6 +1221,14 @@ export type SingingStoreTypes = {
     mutation: undefined;
     action(): void;
   };
+
+  CALC_RENDER_DURATION: {
+    action(): number;
+  };
+
+  GENERATE_DEFAULT_SONG_FILE_NAME: {
+    action(): string;
+  };
 };
 
 export type SingingCommandStoreState = {

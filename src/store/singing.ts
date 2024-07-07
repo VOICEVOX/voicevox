@@ -90,6 +90,8 @@ import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
+import { convertToWavFileData } from "@/sing/convertToWavFileData";
+import { generateWriteErrorMessage } from "@/helpers/generateWriteErrorMessage";
 
 const logger = createLogger("store/singing");
 
@@ -113,6 +115,93 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
       noteOffTime: tickToSecond(noteOffPos, tempos, tpqn),
     };
   });
+};
+
+const createAudioPlayerSequence = (
+  audioContext: BaseAudioContext,
+  audioEvents: AudioEvent[],
+): { audioPlayer: AudioPlayer; audioSequence: AudioSequence } => {
+  const audioPlayer = new AudioPlayer(audioContext);
+  const audioSequence: AudioSequence = {
+    type: "audio",
+    audioPlayer,
+    audioEvents,
+  };
+  return { audioPlayer, audioSequence };
+};
+
+const offlineRenderTracks = async (
+  numberOfChannels: number,
+  sampleRate: number,
+  renderDuration: number,
+  withLimiter: boolean,
+  tracks: Map<TrackId, Track>,
+  phrases: Map<PhraseSourceHash, Phrase>,
+  singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
+  singingVoices: Map<SingingVoiceSourceHash, SingingVoice>,
+) => {
+  const offlineAudioContext = new OfflineAudioContext(
+    numberOfChannels,
+    sampleRate * renderDuration,
+    sampleRate,
+  );
+  const offlineTransport = new OfflineTransport();
+  const globalChannelStrip = new ChannelStrip(offlineAudioContext);
+  const limiter = withLimiter ? new Limiter(offlineAudioContext) : undefined;
+  const clipper = new Clipper(offlineAudioContext);
+  const trackChannelStrips = new Map<TrackId, ChannelStrip>();
+  const shouldPlays = shouldPlayTracks(tracks);
+  for (const [trackId, track] of tracks) {
+    const channelStrip = new ChannelStrip(offlineAudioContext);
+    channelStrip.volume = track.gain;
+    channelStrip.pan = track.pan;
+    channelStrip.mute = !getOrThrow(shouldPlays, trackId);
+
+    channelStrip.output.connect(globalChannelStrip.input);
+    trackChannelStrips.set(trackId, channelStrip);
+  }
+
+  for (const phrase of phrases.values()) {
+    if (
+      phrase.singingGuideKey == undefined ||
+      phrase.singingVoiceKey == undefined ||
+      phrase.state !== "PLAYABLE"
+    ) {
+      continue;
+    }
+    const singingGuide = getOrThrow(singingGuides, phrase.singingGuideKey);
+    const singingVoice = getOrThrow(singingVoices, phrase.singingVoiceKey);
+
+    // TODO: この辺りの処理を共通化する
+    const audioEvents = await generateAudioEvents(
+      offlineAudioContext,
+      singingGuide.startTime,
+      singingVoice.blob,
+    );
+    const { audioPlayer, audioSequence } = createAudioPlayerSequence(
+      offlineAudioContext,
+      audioEvents,
+    );
+    const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
+    audioPlayer.output.connect(channelStrip.input);
+    offlineTransport.addSequence(audioSequence);
+  }
+  globalChannelStrip.volume = 1;
+  if (limiter) {
+    globalChannelStrip.output.connect(limiter.input);
+    limiter.output.connect(clipper.input);
+  } else {
+    globalChannelStrip.output.connect(clipper.input);
+  }
+  clipper.output.connect(offlineAudioContext.destination);
+
+  // スケジューリングを行い、オフラインレンダリングを実行
+  // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
+  offlineTransport.schedule(0, renderDuration);
+  const audioBuffer = await offlineAudioContext.startRendering();
+  const waveFileData = convertToWavFileData(audioBuffer);
+
+  return waveFileData;
 };
 
 let audioContext: AudioContext | undefined;
@@ -167,7 +256,6 @@ export const singingStorePlugin: StorePlugin = (store) => {
         const channelStrip = getOrThrow(trackChannelStrips, trackId);
         channelStrip.volume = track.gain;
         channelStrip.pan = track.pan;
-
         channelStrip.mute = !getOrThrow(shouldPlays, trackId);
       }
     },
@@ -1797,12 +1885,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingGuide.startTime,
               singingVoice.blob,
             );
-            const audioPlayer = new AudioPlayer(audioContextRef);
-            const audioSequence: AudioSequence = {
-              type: "audio",
-              audioPlayer,
+            const { audioPlayer, audioSequence } = createAudioPlayerSequence(
+              audioContextRef,
               audioEvents,
-            };
+            );
             const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
             audioPlayer.output.connect(channelStrip.input);
             transportRef.addSequence(audioSequence);
@@ -1916,129 +2002,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   EXPORT_WAVE_FILE: {
     action: createUILockAction(
-      async ({ state, getters, commit, dispatch }, { filePath }) => {
-        const convertToWavFileData = (audioBuffer: AudioBuffer) => {
-          const bytesPerSample = 4; // Float32
-          const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
-
-          const numberOfChannels = audioBuffer.numberOfChannels;
-          const numberOfSamples = audioBuffer.length;
-          const sampleRate = audioBuffer.sampleRate;
-          const byteRate = sampleRate * numberOfChannels * bytesPerSample;
-          const blockSize = numberOfChannels * bytesPerSample;
-          const dataSize = numberOfSamples * numberOfChannels * bytesPerSample;
-
-          const buffer = new ArrayBuffer(44 + dataSize);
-          const dataView = new DataView(buffer);
-
-          let pos = 0;
-          const writeString = (value: string) => {
-            for (let i = 0; i < value.length; i++) {
-              dataView.setUint8(pos, value.charCodeAt(i));
-              pos += 1;
-            }
-          };
-          const writeUint32 = (value: number) => {
-            dataView.setUint32(pos, value, true);
-            pos += 4;
-          };
-          const writeUint16 = (value: number) => {
-            dataView.setUint16(pos, value, true);
-            pos += 2;
-          };
-          const writeSample = (offset: number, value: number) => {
-            dataView.setFloat32(pos + offset * 4, value, true);
-          };
-
-          writeString("RIFF");
-          writeUint32(36 + dataSize); // RIFFチャンクサイズ
-          writeString("WAVE");
-          writeString("fmt ");
-          writeUint32(16); // fmtチャンクサイズ
-          writeUint16(formatCode);
-          writeUint16(numberOfChannels);
-          writeUint32(sampleRate);
-          writeUint32(byteRate);
-          writeUint16(blockSize);
-          writeUint16(bytesPerSample * 8); // 1サンプルあたりのビット数
-          writeString("data");
-          writeUint32(dataSize);
-
-          for (let i = 0; i < numberOfChannels; i++) {
-            const channelData = audioBuffer.getChannelData(i);
-            for (let j = 0; j < numberOfSamples; j++) {
-              writeSample(j * numberOfChannels + i, channelData[j]);
-            }
-          }
-
-          return buffer;
-        };
-
-        const generateWriteErrorMessage = (writeFileResult: ResultError) => {
-          if (writeFileResult.code) {
-            const code = writeFileResult.code.toUpperCase();
-
-            if (code.startsWith("ENOSPC")) {
-              return "空き容量が足りません。";
-            }
-
-            if (code.startsWith("EACCES")) {
-              return "ファイルにアクセスする許可がありません。";
-            }
-
-            if (code.startsWith("EBUSY")) {
-              return "ファイルが開かれています。";
-            }
-          }
-
-          return `何らかの理由で失敗しました。${writeFileResult.message}`;
-        };
-
-        const calcRenderDuration = () => {
-          // TODO: マルチトラックに対応する
-          const notes = getters.SELECTED_TRACK.notes;
-          if (notes.length === 0) {
-            return 1;
-          }
-          const lastNote = notes[notes.length - 1];
-          const lastNoteEndPosition = lastNote.position + lastNote.duration;
-          const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
-          return Math.max(1, lastNoteEndTime + 1);
-        };
-
-        const generateDefaultSongFileName = () => {
-          const projectName = getters.PROJECT_NAME;
-          if (projectName) {
-            return projectName + ".wav";
-          }
-
-          const singer = getters.SELECTED_TRACK.singer;
-          if (singer) {
-            const singerName = getters.CHARACTER_INFO(
-              singer.engineId,
-              singer.styleId,
-            )?.metas.speakerName;
-            if (singerName) {
-              const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
-              const beginningPartLyrics = notes
-                .map((note) => note.lyric)
-                .join("");
-              return sanitizeFileName(
-                `${singerName}_${beginningPartLyrics}.wav`,
-              );
-            }
-          }
-
-          return `${DEFAULT_PROJECT_NAME}.wav`;
-        };
-
+      async ({ state, commit, dispatch }, { filePath }) => {
         const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const fileName = generateDefaultSongFileName();
+          const fileName = await dispatch("GENERATE_DEFAULT_SONG_FILE_NAME");
           const numberOfChannels = 2;
           const sampleRate = 48000; // TODO: 設定できるようにする
           const withLimiter = false; // TODO: 設定できるようにする
 
-          const renderDuration = calcRenderDuration();
+          const renderDuration = await dispatch("CALC_RENDER_DURATION");
 
           if (state.nowPlaying) {
             await dispatch("SING_STOP_AUDIO");
@@ -2076,64 +2047,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
-          const offlineAudioContext = new OfflineAudioContext(
+          const shouldPlays = shouldPlayTracks(state.tracks);
+
+          const waveFileData = await offlineRenderTracks(
             numberOfChannels,
-            sampleRate * renderDuration,
             sampleRate,
+            renderDuration,
+            withLimiter,
+            new Map(
+              [...state.tracks.entries()].filter(([trackId]) =>
+                getOrThrow(shouldPlays, trackId),
+              ),
+            ),
+            state.phrases,
+            state.singingGuides,
+            singingVoiceCache,
           );
-          const offlineTransport = new OfflineTransport();
-          const channelStrip = new ChannelStrip(offlineAudioContext);
-          const limiter = withLimiter
-            ? new Limiter(offlineAudioContext)
-            : undefined;
-          const clipper = new Clipper(offlineAudioContext);
-
-          for (const phrase of state.phrases.values()) {
-            if (
-              phrase.singingGuideKey == undefined ||
-              phrase.singingVoiceKey == undefined ||
-              phrase.state !== "PLAYABLE"
-            ) {
-              continue;
-            }
-            const singingGuide = getOrThrow(
-              state.singingGuides,
-              phrase.singingGuideKey,
-            );
-            const singingVoice = getOrThrow(
-              singingVoices,
-              phrase.singingVoiceKey,
-            );
-
-            // TODO: この辺りの処理を共通化する
-            const audioEvents = await generateAudioEvents(
-              offlineAudioContext,
-              singingGuide.startTime,
-              singingVoice.blob,
-            );
-            const audioPlayer = new AudioPlayer(offlineAudioContext);
-            const audioSequence: AudioSequence = {
-              type: "audio",
-              audioPlayer,
-              audioEvents,
-            };
-            audioPlayer.output.connect(channelStrip.input);
-            offlineTransport.addSequence(audioSequence);
-          }
-          channelStrip.volume = 1;
-          if (limiter) {
-            channelStrip.output.connect(limiter.input);
-            limiter.output.connect(clipper.input);
-          } else {
-            channelStrip.output.connect(clipper.input);
-          }
-          clipper.output.connect(offlineAudioContext.destination);
-
-          // スケジューリングを行い、オフラインレンダリングを実行
-          // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
-          offlineTransport.schedule(0, renderDuration);
-          const audioBuffer = await offlineAudioContext.startRendering();
-          const waveFileData = convertToWavFileData(audioBuffer);
 
           try {
             await window.backend
@@ -2386,6 +2315,44 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     action({ commit }) {
       commit("UNSOLO_ALL_TRACKS");
+    },
+  },
+
+  CALC_RENDER_DURATION: {
+    action({ state, getters }) {
+      const notes = [...state.tracks.values()].flatMap((track) => track.notes);
+      if (notes.length === 0) {
+        return 1;
+      }
+      notes.sort((a, b) => a.position + a.duration - (b.position + b.duration));
+      const lastNote = notes[notes.length - 1];
+      const lastNoteEndPosition = lastNote.position + lastNote.duration;
+      const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
+      return Math.max(1, lastNoteEndTime + 1);
+    },
+  },
+
+  GENERATE_DEFAULT_SONG_FILE_NAME: {
+    action({ getters }) {
+      const projectName = getters.PROJECT_NAME;
+      if (projectName) {
+        return projectName + ".wav";
+      }
+
+      const singer = getters.SELECTED_TRACK.singer;
+      if (singer) {
+        const singerName = getters.CHARACTER_INFO(
+          singer.engineId,
+          singer.styleId,
+        )?.metas.speakerName;
+        if (singerName) {
+          const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
+          const beginningPartLyrics = notes.map((note) => note.lyric).join("");
+          return sanitizeFileName(`${singerName}_${beginningPartLyrics}.wav`);
+        }
+      }
+
+      return `${DEFAULT_PROJECT_NAME}.wav`;
     },
   },
 });
