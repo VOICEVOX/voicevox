@@ -1,23 +1,34 @@
-import { userEvent, within, expect, fn } from "@storybook/test";
+import { userEvent, within, expect, fn, waitFor } from "@storybook/test";
+import hotkeys from "hotkeys-js";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import { provide, toRaw } from "vue";
 import TalkEditor from "./TalkEditor.vue";
 import { createStoreWrapper, storeKey } from "@/store";
 import { HotkeyManager, hotkeyManagerKey } from "@/plugins/hotkeyPlugin";
-import { StoreType } from "@/store/type";
 import {
   assetsPath,
   createOpenAPIEngineMock,
   mockHost,
-} from "@/storybook/engineMock";
+} from "@/mock/engineMock";
 import { proxyStoreCreator } from "@/store/proxy";
-import { CharacterInfo, EngineId, SpeakerId, StyleId } from "@/type/preload";
-import { getEngineManifestMock } from "@/storybook/engineMock/manifestMock";
+import {
+  CharacterInfo,
+  defaultHotkeySettings,
+  DefaultStyleId,
+  EngineId,
+  EngineInfo,
+  SpeakerId,
+  StyleId,
+  ThemeConf,
+} from "@/type/preload";
+import { getEngineManifestMock } from "@/mock/engineMock/manifestMock";
 import {
   getSpeakerInfoMock,
   getSpeakersMock,
-} from "@/storybook/engineMock/speakerResourceMock";
+} from "@/mock/engineMock/speakerResourceMock";
+import { setFont, themeToCss } from "@/domain/dom";
+import defaultTheme from "@/../public/themes/default.json";
 
 const meta: Meta<typeof TalkEditor> = {
   component: TalkEditor,
@@ -27,20 +38,51 @@ const meta: Meta<typeof TalkEditor> = {
   },
   decorators: [
     (story, context) => {
+      // CSS関連
+      themeToCss(defaultTheme as ThemeConf);
+      setFont("default");
+
+      // ショートカットキーの管理
       const hotkeyManager = new HotkeyManager();
       provide(hotkeyManagerKey, hotkeyManager);
+      hotkeyManager.load(defaultHotkeySettings);
 
+      hotkeyManager.onEditorChange("talk");
+
+      // setup store
       const store = createStoreWrapper({
         proxyStoreDI: proxyStoreCreator(createOpenAPIEngineMock()),
       });
-      store.dispatch("HYDRATE_SETTING_STORE"); // FIXME: 色設定取得のため。設定も読み込んでしまうため不要にしたい。
+      provide(storeKey, store);
 
-      // context.parameters.store = store;
+      // なぜか必要、これがないとdispatch内でcommitしたときにエラーになる
+      store.replaceState({
+        ...structuredClone(toRaw(store.state)),
+      });
 
+      // エンジンの情報
       const engineManifest = getEngineManifestMock();
       const engineId = EngineId(engineManifest.uuid);
+      const engineInfo: EngineInfo = {
+        uuid: engineId,
+        host: mockHost,
+        name: engineManifest.name,
+        path: undefined,
+        executionEnabled: false,
+        executionFilePath: "not_found",
+        executionArgs: [],
+        type: "default",
+      };
+      store.commit("SET_ENGINE_INFOS", {
+        engineIds: [engineId],
+        engineInfos: [engineInfo],
+      });
+      store.commit("SET_ENGINE_MANIFESTS", {
+        engineManifests: { [engineId]: engineManifest },
+      });
+      store.commit("SET_ENGINE_STATE", { engineId, engineState: "READY" });
 
-      // setup store
+      // キャラクター情報
       const speakers = getSpeakersMock();
       const characterInfos: CharacterInfo[] = speakers.map((speaker) => {
         const speakerInfo = getSpeakerInfoMock(speaker.speakerUuid, assetsPath);
@@ -66,45 +108,24 @@ const meta: Meta<typeof TalkEditor> = {
           },
         };
       });
-
-      store.replaceState({
-        ...structuredClone(toRaw(store.state)),
-        engineIds: [engineId],
-        engineStates: {
-          [engineId]: "READY",
-        },
-        engineInfos: {
-          [engineId]: {
-            uuid: engineId,
-            host: mockHost,
-            name: engineManifest.name,
-            path: undefined,
-            executionEnabled: false,
-            executionFilePath: "not_found",
-            executionArgs: [],
-            type: "default",
-          },
-        },
-        engineManifests: {
-          [engineId]: engineManifest,
-        },
-        characterInfos: { [engineId]: characterInfos },
-        defaultStyleIds: speakers.map((speaker) => ({
-          engineId: engineId,
-          speakerUuid: SpeakerId(speaker.speakerUuid),
-          defaultStyleId: StyleId(speaker.styles[0].id),
-        })),
+      store.commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
+      store.commit("SET_USER_CHARACTER_ORDER", {
+        userCharacterOrder: store.state.characterInfos[engineId].map(
+          (c) => c.metas.speakerUuid,
+        ),
       });
 
-      provide(storeKey, store);
+      // デフォルトスタイルID
+      const defaultStyleIds: DefaultStyleId[] = speakers.map((speaker) => ({
+        engineId: engineId,
+        speakerUuid: SpeakerId(speaker.speakerUuid),
+        defaultStyleId: StyleId(speaker.styles[0].id),
+      }));
+      store.commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
 
       return story();
     },
   ],
-  beforeEach: async ({ parameters }) => {
-    // const store = parameters.store; // TODO: 型を付けたい
-    // await store.dispatch("LOAD_CHARACTER", { engineId: EngineId(mockHost) });
-  },
 };
 
 export default meta;
@@ -118,5 +139,20 @@ export const NowLoading: Story = {
   name: "プロジェクトファイルを読み込み中",
   args: {
     isProjectFileLoaded: "waiting",
+  },
+};
+
+export const KeyboardShortcuts: Story = {
+  name: "キーボードショートカットのテスト ",
+  play: async ({ args, canvasElement }) => {
+    await waitFor(() => {
+      expect(args.onCompleteInitialStartup).toHaveBeenCalled();
+    });
+
+    // Shift+Enter でテキスト欄を追加
+    // await userEvent.keyboard("{Shift>}[Enter]{/Shift}");
+    // await userEvent.keyboard("AAAAAA{Escape}");
+    hotkeys.trigger("shift+enter", "talk");
+    たぶんショートカットは使えない！
   },
 };

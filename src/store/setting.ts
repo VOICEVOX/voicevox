@@ -219,6 +219,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.currentTheme = currentTheme;
     },
     action({ state, commit }, { currentTheme }: { currentTheme: string }) {
+      // メモ：テーマ周りリファクタリングしたのでモック挿せるはず。
+      // うまくいけば、テーマ周りのリファクタリングだけでプルリク出す。
       window.backend.setSetting("currentTheme", currentTheme);
       const theme = state.availableThemes.find((value) => {
         return value.name == currentTheme;
@@ -227,38 +229,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       if (theme == undefined) {
         throw Error("Theme not found");
       }
-
-      for (const key in theme.colors) {
-        const color = theme.colors[key as ThemeColorType];
-        const { r, g, b } = colors.hexToRgb(color);
-        document.documentElement.style.setProperty(`--color-${key}`, color);
-        document.documentElement.style.setProperty(
-          `--color-${key}-rgb`,
-          `${r}, ${g}, ${b}`,
-        );
-      }
-      const mixColors: ThemeColorType[][] = [
-        ["primary", "background"],
-        ["warning", "background"],
-      ];
-      for (const [color1, color2] of mixColors) {
-        const color1Rgb = colors.hexToRgb(theme.colors[color1]);
-        const color2Rgb = colors.hexToRgb(theme.colors[color2]);
-        const r = Math.trunc((color1Rgb.r + color2Rgb.r) / 2);
-        const g = Math.trunc((color1Rgb.g + color2Rgb.g) / 2);
-        const b = Math.trunc((color1Rgb.b + color2Rgb.b) / 2);
-        const propertyName = `--color-mix-${color1}-${color2}-rgb`;
-        const cssColor = `${r}, ${g}, ${b}`;
-        document.documentElement.style.setProperty(propertyName, cssColor);
-      }
-      Dark.set(theme.isDark);
-      setCssVar("primary", theme.colors["primary"]);
-      setCssVar("warning", theme.colors["warning"]);
-
-      document.documentElement.setAttribute(
-        "is-dark-theme",
-        theme.isDark ? "true" : "false",
-      );
 
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
