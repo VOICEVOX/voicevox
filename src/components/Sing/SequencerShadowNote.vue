@@ -8,7 +8,7 @@
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
   >
-    <div class="line" />
+    <div class="shadow-line" />
   </div>
 </template>
 
@@ -59,7 +59,7 @@ const width = computed(() => {
   left: 0;
   pointer-events: none;
 
-  .line {
+  .shadow-line {
     position: absolute;
     top: 50%;
     left: 0;
