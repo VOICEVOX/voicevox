@@ -29,7 +29,6 @@ import {
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { getLast } from "@/sing/utility";
-import { SingingGuideSourceHash } from "@/store/type";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 type PitchLine = {
@@ -58,8 +57,8 @@ const pitchEditData = computed(() => {
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const selectedTrackId = computed(() => store.state.selectedTrackId);
 const editFrameRate = computed(() => store.state.editFrameRate);
-const singingGuideKeysInSelectedTrack = computed(() => {
-  const singingGuideKeys = new Set<SingingGuideSourceHash>();
+const singingGuidesInSelectedTrack = computed(() => {
+  const singingGuides = [];
   for (const phrase of store.state.phrases.values()) {
     if (phrase.trackId !== selectedTrackId.value) {
       continue;
@@ -67,9 +66,13 @@ const singingGuideKeysInSelectedTrack = computed(() => {
     if (phrase.singingGuideKey == undefined) {
       continue;
     }
-    singingGuideKeys.add(phrase.singingGuideKey);
+    const singingGuide = getOrThrow(
+      store.state.singingGuides,
+      phrase.singingGuideKey,
+    );
+    singingGuides.push(singingGuide);
   }
-  return singingGuideKeys;
+  return singingGuides;
 });
 
 const originalPitchLine: PitchLine = {
@@ -257,13 +260,11 @@ const setPitchDataToPitchLine = async (
 
 const generateOriginalPitchData = () => {
   const unvoicedPhonemes = UNVOICED_PHONEMES;
-  const singingGuidesValue = singingGuides.value;
   const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
 
   // トラック毎の歌い方のf0を結合してピッチデータを生成する
   const tempData = [];
-  for (const singingGuideKey of singingGuideKeysInSelectedTrack.value) {
-    const singingGuide = getOrThrow(singingGuidesValue, singingGuideKey);
+  for (const singingGuide of singingGuidesInSelectedTrack.value) {
     // TODO: 補間を行うようにする
     if (singingGuide.frameRate !== frameRate) {
       throw new Error(
@@ -350,7 +351,7 @@ const generatePitchEditData = () => {
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
 watch(
-  [singingGuideKeysInSelectedTrack, singingGuides, tempos, tpqn],
+  [singingGuidesInSelectedTrack, singingGuides, tempos, tpqn],
   async () => {
     asyncLock.acquire(
       "originalPitch",
