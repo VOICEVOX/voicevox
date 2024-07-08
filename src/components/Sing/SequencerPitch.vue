@@ -50,7 +50,6 @@ const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const tempos = computed(() => [store.state.tempos[0]]);
-const singingGuides = computed(() => store.state.singingGuides);
 const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;
 });
@@ -351,7 +350,7 @@ const generatePitchEditData = () => {
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
 watch(
-  [singingGuidesInSelectedTrack, singingGuides, tempos, tpqn],
+  [singingGuidesInSelectedTrack, tempos, tpqn],
   async () => {
     asyncLock.acquire(
       "originalPitch",
