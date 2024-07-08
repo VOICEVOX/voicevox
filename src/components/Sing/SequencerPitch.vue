@@ -142,7 +142,7 @@ const updateLineStrips = (pitchLine: PitchLine) => {
     } else {
       lineStrip = new LineStrip(dataLength, pitchLine.color, pitchLine.width);
     }
-    stage?.addChild(lineStrip.displayObject);
+    stage.addChild(lineStrip.displayObject);
     pitchLine.lineStripMap.set(key, lineStrip);
   }
 
