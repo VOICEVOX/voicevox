@@ -541,7 +541,7 @@ onUnmounted(() => {
 }
 
 .sing-toolbar {
-  background: var(--md-sys-color-surface-container);
+  background: var(--md-sys-color-surface-container-low);
   align-items: center;
   display: flex;
   justify-content: space-between;

@@ -1,5 +1,8 @@
 import { Dark, setCssVar, colors } from "quasar";
-import { generateTheme, themeToCssVariables } from "../helpers/colors";
+import {
+  createDynamicScheme,
+  dynamicSchemeToCssVariables,
+} from "../helpers/colors";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
@@ -278,12 +281,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       // ブランドカラー
       const sourceColor = "#A5D4AD";
-      // パレットの調整(ニュートラルカラーの彩度を落とす)
-      const adjustments = {
-        primary: { chroma: 40, tone: 50 },
-        neutral: { chroma: 0 },
-        neutralVariant: { chroma: 6 },
-      };
+
       // カスタムカラー(仮)
       const customPaletteColors = [
         {
@@ -364,20 +362,32 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           blend: true,
         },
       ];
-      const definedPaletteColors = [
+      const definedCustomColors = [
         {
           name: "brand",
           value: "#A5D4AD",
           blend: false,
         },
       ];
-      const m3theme = generateTheme(
+
+      const adjustments = {
+        neutral: { chroma: 0 },
+        neutralVariant: { chroma: 6 },
+      };
+
+      const baseScheme = createDynamicScheme({
         sourceColor,
+        variant: "tonalSpot",
+        isDark: theme.isDark,
+        contrastLevel: 0.0,
         adjustments,
+      });
+
+      const cssVariables = dynamicSchemeToCssVariables(
+        baseScheme,
         customPaletteColors,
-        definedPaletteColors,
+        definedCustomColors,
       );
-      const cssVariables = themeToCssVariables(m3theme, theme.isDark);
 
       // CSSに適用する
       Object.entries(cssVariables).forEach(([key, value]) => {
