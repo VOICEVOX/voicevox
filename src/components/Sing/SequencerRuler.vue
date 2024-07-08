@@ -206,7 +206,6 @@ onUnmounted(() => {
   height: 40px;
   position: relative;
   overflow: hidden;
-  cursor: pointer;
 }
 
 .sequencer-ruler-playhead {

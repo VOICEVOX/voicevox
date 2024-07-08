@@ -10,27 +10,32 @@ import {
   SchemeExpressive,
   SchemeFidelity,
   SchemeMonochrome,
+  SchemeRainbow,
+  SchemeFruitSalad,
   TonalPalette,
   MaterialDynamicColors,
 } from "@material/material-color-utilities";
 
 // MaterialDynamicColorのスキーマ
-type SchemeVariant =
+export type SchemeVariant =
   | "content"
   | "tonalSpot"
   | "neutral"
   | "vibrant"
   | "expressive"
   | "fidelity"
-  | "monochrome";
+  | "monochrome"
+  | "rainbow"
+  | "fruitSalad";
 
 // M3カラーパレットのキー
-type PaletteKey =
+export type PaletteKey =
   | "primary"
   | "secondary"
   | "tertiary"
   | "neutral"
-  | "neutralVariant";
+  | "neutralVariant"
+  | "error";
 
 // テーマにおける色相・彩度・明度の調整
 interface ColorAdjustment {
@@ -64,7 +69,7 @@ interface CustomPaletteColor {
   blend: boolean;
 }
 
-// 定数
+// テーマスキーマ
 const SCHEME_CONSTRUCTORS: Record<
   SchemeVariant,
   new (
@@ -80,21 +85,28 @@ const SCHEME_CONSTRUCTORS: Record<
   expressive: SchemeExpressive,
   fidelity: SchemeFidelity,
   monochrome: SchemeMonochrome,
+  rainbow: SchemeRainbow,
+  fruitSalad: SchemeFruitSalad,
 };
 
+// デフォルトテーマオプション
 const DEFAULT_OPTIONS: Partial<ThemeOptions> = {
   variant: "tonalSpot",
   isDark: false,
   contrastLevel: 0.0,
 };
 
+// パレットのキー
 const PALETTE_KEYS: PaletteKey[] = [
   "primary",
   "secondary",
   "tertiary",
   "neutral",
   "neutralVariant",
+  "error",
 ];
+
+// テーマパレットの明度
 const TONES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
 
 // キャメルケバブケースをケバブケースに変換
@@ -110,6 +122,7 @@ function adjustPalette(
   palette: TonalPalette,
   adjustment: ColorAdjustment,
 ): TonalPalette {
+  // 色相・彩度・明度に調整があった場合、新しいパレットを作成
   const hue = adjustment.hue ?? palette.hue;
   const chroma = adjustment.chroma ?? palette.chroma;
   return adjustment.tone != undefined
@@ -121,7 +134,6 @@ function adjustPalette(
 }
 
 // ダイナミックスキーマを作成
-// 調整可能
 export function createDynamicScheme(options: ThemeOptions): DynamicScheme {
   const { sourceColor, variant, isDark, contrastLevel, adjustments } = {
     ...DEFAULT_OPTIONS,
@@ -136,7 +148,7 @@ export function createDynamicScheme(options: ThemeOptions): DynamicScheme {
 
   let scheme = new SchemeConstructor(sourceColorHct, isDark!, contrastLevel!);
 
-  // パレットを調整
+  // 必要に応じてパレットを調整
   if (adjustments) {
     const adjustedPalettes = PALETTE_KEYS.reduce(
       (acc, key) => {

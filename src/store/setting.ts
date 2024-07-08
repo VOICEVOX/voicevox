@@ -1,7 +1,9 @@
 import { Dark, setCssVar, colors } from "quasar";
+import { Hct, argbFromHex } from "@material/material-color-utilities";
 import {
   createDynamicScheme,
   dynamicSchemeToCssVariables,
+  PaletteKey,
 } from "../helpers/colors";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
@@ -279,86 +281,114 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
-      // ブランドカラー
+      // ソースカラー
       const sourceColor = "#A5D4AD";
 
-      // カスタムカラー(仮)
+      const sourceColorHct = Hct.fromInt(argbFromHex(sourceColor));
+      // tertiary(いったんソースカラーの補色)
+      const tertiaryHue = (sourceColorHct.hue + 270) % 360;
+      // neutralの彩度を0(デフォルトだとソースカラーに引っ張られすぎるため)
+      const neutralChroma = 0;
+      // neutralVariantの彩度を6(デフォルトだとソースカラーに引っ張られすぎるため)
+      const neutralVariantChroma = 6;
+
+      const adjustments = {
+        tertiary: { hue: tertiaryHue },
+        neutral: { chroma: neutralChroma },
+        neutralVariant: { chroma: neutralVariantChroma },
+      };
+
+      // パレットからのカスタムカラー
       const customPaletteColors = [
         {
           name: "sing-grid-cell-white",
-          palette: "neutral",
+          palette: "neutral" as PaletteKey,
           lightTone: 100,
           darkTone: 15,
           blend: true,
         },
         {
           name: "sing-grid-cell-black",
-          palette: "neutral",
+          palette: "neutral" as PaletteKey,
           lightTone: 98,
           darkTone: 12,
           blend: true,
         },
         {
           name: "sing-ruler-beat-line",
-          palette: "neutralVariant",
+          palette: "neutralVariant" as PaletteKey,
           lightTone: 70,
           darkTone: 40,
           blend: true,
         },
         {
           name: "sing-ruler-measure-line",
-          palette: "neutralVariant",
+          palette: "neutralVariant" as PaletteKey,
           lightTone: 50,
           darkTone: 50,
           blend: true,
         },
         {
           name: "sing-grid-vertical-line",
-          palette: "neutral",
+          palette: "neutral" as PaletteKey,
           lightTone: 95,
           darkTone: 10,
           blend: true,
         },
         {
           name: "sing-grid-horizontal-line",
-          palette: "neutral",
+          palette: "neutral" as PaletteKey,
           lightTone: 95,
           darkTone: 10,
           blend: true,
         },
         {
           name: "sing-grid-beat-line",
-          palette: "neutral",
+          palette: "neutral" as PaletteKey,
           lightTone: 90,
           darkTone: 0,
           blend: true,
         },
         {
           name: "sing-grid-measure-line",
-          palette: "neutral",
+          palette: "neutral" as PaletteKey,
           lightTone: 80,
           darkTone: 40,
           blend: true,
         },
         {
           name: "sing-grid-octave-line",
-          palette: "neutral",
+          palette: "neutral" as PaletteKey,
           lightTone: 80,
-          darkTone: 0,
+          darkTone: 40,
           blend: true,
         },
         {
           name: "sing-piano-key-white",
-          palette: "neutral",
+          palette: "neutral" as PaletteKey,
           lightTone: 99,
           darkTone: 70,
           blend: true,
         },
         {
           name: "sing-piano-key-black",
-          palette: "neutral",
+          palette: "neutral" as PaletteKey,
           lightTone: 40,
           darkTone: 30,
+          blend: true,
+        },
+        {
+          name: "sing-note-bar-background",
+          palette: "secondary" as PaletteKey,
+          lightTone: 90,
+          darkTone: 70,
+          blend: true,
+        },
+        {
+          name: "sing-toolbar-background",
+          palette: "neutral" as PaletteKey,
+          lightTone: 99,
+          darkTone: 10,
           blend: true,
         },
       ];
@@ -369,11 +399,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           blend: false,
         },
       ];
-
-      const adjustments = {
-        neutral: { chroma: 0 },
-        neutralVariant: { chroma: 6 },
-      };
 
       const baseScheme = createDynamicScheme({
         sourceColor,

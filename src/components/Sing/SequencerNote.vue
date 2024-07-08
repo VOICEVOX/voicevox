@@ -327,7 +327,7 @@ const onLyricInput = (event: Event) => {
     position: absolute;
     width: calc(100% + 1px);
     height: 100%;
-    background-color: var(--md-sys-color-secondary-fixed);
+    background-color: var(--md-custom-color-sing-note-bar-background);
     border: 1px solid var(--md-sys-color-secondary-fixed-dim);
     border-radius: 4px;
   }
@@ -360,13 +360,13 @@ const onLyricInput = (event: Event) => {
 
   &.selected {
     .note-bar {
-      background-color: var(--md-sys-color-primary-fixed-dim);
-      border-color: var(--md-sys-color-primary-fixed);
+      background-color: var(--md-sys-color-primary-fixed);
+      border-color: var(--md-sys-color-primary-fixed-dim);
     }
 
     .note-right-edge:hover,
     .note-left-edge:hover {
-      background-color: var(--md-sys-color-primary-fixed);
+      background-color: var(--md-sys-color-primary-fixed-dim);
     }
   }
 
@@ -403,7 +403,7 @@ const onLyricInput = (event: Event) => {
   &.overlapping,
   &.invalid-phrase {
     .note-bar {
-      background-color: var(--md-ref-palette-neutral-variant-80);
+      background-color: var(--md-sys-color-surface-variant);
       border-color: var(--md-sys-color-error);
     }
 
@@ -413,8 +413,9 @@ const onLyricInput = (event: Event) => {
     }
 
     .note-lyric {
-      color: var(--md-sys-color-error);
+      color: var(--md-sys-color-on-surface-variant);
       opacity: 0.38;
+      text-shadow: none;
     }
 
     &.selected {
@@ -435,7 +436,7 @@ const onLyricInput = (event: Event) => {
   width: fit-content;
   background-color: var(--md-ref-palette-neutral-99);
   color: var(--md-sys-color-on-primary-fixed);
-  outline: 1px solid var(--md-sys-color-primary-fixed-dim);
+  outline: 2px solid var(--md-sys-color-primary);
   //outline-offset: 1px;
   border-radius: 4px;
   border: 0;

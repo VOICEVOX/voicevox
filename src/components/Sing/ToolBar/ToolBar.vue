@@ -540,8 +540,12 @@ onUnmounted(() => {
   padding: 0 12px 0 4px;
 }
 
+.body--light .sing-toolbar {
+  background: var(--md-sys-color-surface-container-lowest);
+}
+
 .sing-toolbar {
-  background: var(--md-sys-color-surface-container-low);
+  background: var(--md-sys-color-surface-container);
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -663,15 +667,9 @@ onUnmounted(() => {
     border: 1px solid transparent;
   }
 
-  &:deep(.q-field--standard .q-field__control:hover:before) {
+  &:deep(.q-field__control:hover:before) {
     border-color: transparent;
   }
-}
-
-.sing-beats-separator {
-  color: var(--md-sys-color-on-surface-variant);
-  padding: 0;
-  opacity: 0.56;
 }
 
 .sing-beats-separator {
@@ -679,6 +677,7 @@ onUnmounted(() => {
   color: var(--md-sys-color-on-surface-variant);
   pointer-events: none;
   transform: translateY(8px);
+  opacity: 0.56;
 }
 
 .sing-playback-button {
@@ -741,6 +740,7 @@ onUnmounted(() => {
   margin-right: 8px;
   opacity: 0.6;
 }
+
 .sing-volume {
   margin-right: 16px;
   width: 72px;

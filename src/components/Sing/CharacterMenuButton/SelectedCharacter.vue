@@ -87,6 +87,10 @@ const selectedStyleIconPath = computed(() => {
   position: relative;
   height: 56px;
 
+  &:focus {
+    border-color: var(--md-sys-color-primary);
+  }
+
   .character-avatar-icon {
     display: block;
     height: 100%;
