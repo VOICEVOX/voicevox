@@ -281,6 +281,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
+      // NOTE: 以下をどこかで設定ファイル化
+      // カラーを変更したい場合
+      // 1. ソースカラーを変更する(テーマ全体)
+      // 2. ソースカラーからtertiaryカラー(アクセント)を変更する
+      // 3. テーマの調整をする(adjustments)
+      // 4. パレットから取得するカラーを設定する
+      // 5. 定義済みカスタムカラーを設定する(パレット外)
+      // 6. テーマオプションを設定する(tonalSpot, monochrome, vibrant...etc)
+      // 7. コントラスト比を設定する
+
       // ソースカラー
       const sourceColor = "#A5D4AD";
 
