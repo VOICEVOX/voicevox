@@ -308,8 +308,8 @@ const openLogDirectory = window.backend.openLogDirectory;
 }
 
 .list-label {
-  padding: 8px 16px;
-  padding-top: 16px;
+  padding: vars.$padding-2;
+  padding-bottom: vars.$padding-1;
   color: colors.$display-sub;
 }
 

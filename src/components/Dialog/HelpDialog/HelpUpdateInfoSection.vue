@@ -75,15 +75,13 @@ const props = defineProps<{
 }
 
 .info {
-  background-color: #e9f3e7;
-  padding: 16px;
-  border-radius: 16px;
+  border: 1px solid colors.$border;
+  background-color: colors.$surface;
+  padding: vars.$padding-2;
+  border-radius: vars.$radius-2;
 }
 
 .info-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  line-height: 2;
-  margin: 0;
+  @include mixin.headline-2;
 }
 </style>
