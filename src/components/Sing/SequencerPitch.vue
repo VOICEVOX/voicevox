@@ -57,13 +57,13 @@ const previewPitchEdit = computed(() => props.previewPitchEdit);
 const editFrameRate = computed(() => store.state.editFrameRate);
 
 const originalPitchLine: PitchLine = {
-  color: new Color(171, 201, 176, 255),
+  color: new Color(160, 160, 160, 255),
   width: 1.2,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
 const pitchEditLine: PitchLine = {
-  color: new Color(146, 214, 154, 255),
+  color: new Color(152, 213, 164, 255),
   width: 2,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),

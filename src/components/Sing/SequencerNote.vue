@@ -314,8 +314,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   &.preview-lyric {
     .note-bar {
-      background-color: var(--md-sys-color-primary-fixed-dim);
-      border-color: var(--md-sys-color-primary-fixed);
+      background-color: var(--md-sys-color-primary-fixed);
+      border-color: var(--md-sys-color-primary-fixed-dim);
     }
 
     .note-lyric {
@@ -348,23 +348,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       }
     }
   }
-}
-
-.note-lyric-input {
-  position: absolute;
-  top: 0;
-  font-weight: 500;
-  font-size: 16px;
-  max-width: 4rem;
-  width: fit-content;
-  background-color: var(--md-ref-palette-neutral-99);
-  color: var(--md-sys-color-on-primary-fixed);
-  outline: 2px solid var(--md-sys-color-primary);
-  border-radius: 4px;
-  border: 0;
-  box-shadow:
-    0 4px 6px rgba(0, 0, 0, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .cursor-move {
