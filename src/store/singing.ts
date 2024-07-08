@@ -221,6 +221,7 @@ if (window.AudioContext) {
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
 
+  previewSynth.output.connect(globalChannelStrip.input);
   globalChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
@@ -260,19 +261,6 @@ export const singingStorePlugin: StorePlugin = (store) => {
       }
     },
     { deep: true, immediate: true },
-  );
-
-  watch(
-    () => store.state.selectedTrackId,
-    async (selectedTrackId) => {
-      if (!audioContext || !globalChannelStrip || !previewSynth) {
-        return;
-      }
-      const channelStrip = getOrThrow(trackChannelStrips, selectedTrackId);
-      previewSynth.output.disconnect();
-      previewSynth.output.connect(channelStrip.input);
-    },
-    { immediate: true },
   );
 };
 
