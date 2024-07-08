@@ -6,72 +6,72 @@
       <div class="sing-adjustment">
         <QInput
           type="number"
-          :model-value="keyRangeAdjustmentInputBuffer"
+          :modelValue="keyRangeAdjustmentInputBuffer"
           label="音域"
-          hide-bottom-space
+          hideBottomSpace
           unelevated
           class="key-range-adjustment"
-          @update:model-value="setKeyRangeAdjustmentInputBuffer"
+          @update:modelValue="setKeyRangeAdjustmentInputBuffer"
           @change="setKeyRangeAdjustment"
         />
         <QInput
           type="number"
-          :model-value="volumeRangeAdjustmentInputBuffer"
+          :modelValue="volumeRangeAdjustmentInputBuffer"
           label="声量"
-          hide-bottom-space
+          hideBottomSpace
           unelevated
           class="volume-range-adjustment"
-          @update:model-value="setVolumeRangeAdjustmentInputBuffer"
+          @update:modelValue="setVolumeRangeAdjustmentInputBuffer"
           @change="setVolumeRangeAdjustment"
         />
       </div>
       <QInput
         type="number"
-        :model-value="bpmInputBuffer"
-        hide-bottom-space
+        :modelValue="bpmInputBuffer"
+        hideBottomSpace
         outlined
         unelevated
         label="BPM"
         class="sing-tempo"
         padding="0"
-        @update:model-value="setBpmInputBuffer"
+        @update:modelValue="setBpmInputBuffer"
         @change="setTempo"
       />
       <QField
-        hide-bottom-space
+        hideBottomSpace
         class="sing-time-signature-field"
         label="拍子"
-        stack-label
+        stackLabel
         outlined
       >
         <template #control>
           <div class="sing-beats">
             <QSelect
-              :model-value="timeSignatures[0].beats"
+              :modelValue="timeSignatures[0].beats"
               :options="beatsOptions"
-              hide-bottom-space
-              hide-dropdown-icon
-              user-inputs
+              hideBottomSpace
+              hideDropdownIcon
+              userInputs
               unelevated
-              options-dense
-              transition-show="none"
-              transition-hide="none"
+              optionsDense
+              transitionShow="none"
+              transitionHide="none"
               class="sing-time-signature beats"
-              @update:model-value="setBeats"
+              @update:modelValue="setBeats"
             />
             <div class="sing-beats-separator">/</div>
             <QSelect
-              :model-value="timeSignatures[0].beatType"
+              :modelValue="timeSignatures[0].beatType"
               :options="beatTypeOptions"
-              hide-bottom-space
-              hide-dropdown-icon
-              user-inputs
+              hideBottomSpace
+              hideDropdownIcon
+              userInputs
               unelevated
-              options-dense
-              transition-show="none"
-              transition-hide="none"
+              optionsDense
+              transitionShow="none"
+              transitionHide="none"
               class="sing-time-signature beat-type"
-              @update:model-value="setBeatType"
+              @update:modelValue="setBeatType"
             />
           </div>
         </template>
@@ -111,8 +111,8 @@
     <div class="sing-controls">
       <EditTargetSwicher
         v-if="showEditTargetSwitchButton"
-        :edit-target="editTarget"
-        :change-edit-target="changeEditTarget"
+        :editTarget
+        :changeEditTarget
       />
       <QBtn
         flat
@@ -140,13 +140,13 @@
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
         outlined
-        hide-bottom-space
-        options-dense
-        hide-dropdown-icon
+        hideBottomSpace
+        optionsDense
+        hideDropdownIcon
         unelevated
         label="スナップ"
-        transition-show="none"
-        transition-hide="none"
+        transitionShow="none"
+        transitionHide="none"
         class="sing-snap"
       />
     </div>
@@ -165,7 +165,7 @@ import {
   isValidBeats,
   isValidBpm,
   isValidKeyRangeAdjustment,
-  isValidvolumeRangeAdjustment,
+  isValidVolumeRangeAdjustment,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -337,7 +337,7 @@ const setVolumeRangeAdjustmentInputBuffer = (
   volumeRangeAdjustmentStr: string | number | null,
 ) => {
   const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
-  if (!isValidvolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
+  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
     return;
   }
   volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;

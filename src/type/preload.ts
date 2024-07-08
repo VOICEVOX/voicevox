@@ -7,25 +7,28 @@ export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
 
-// electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なmacOS判定
-function checkIsMac(): boolean {
-  let isMac: boolean | undefined = undefined;
+// electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なOS判定
+function checkOs(os: "windows" | "mac"): boolean {
+  let isSpecifiedOs: boolean | undefined = undefined;
   if (process?.platform) {
     // electronのメインプロセス用
-    isMac = process.platform === "darwin";
+    isSpecifiedOs =
+      process.platform === (os === "windows" ? "win32" : "darwin");
   } else if (navigator?.userAgentData) {
     // electronのレンダラープロセス用、Chrome系統が実装する実験的機能
-    isMac = navigator.userAgentData.platform.toLowerCase().includes("mac");
+    isSpecifiedOs = navigator.userAgentData.platform.toLowerCase().includes(os);
   } else if (navigator?.platform) {
     // ブラウザ用、非推奨機能
-    isMac = navigator.platform.toLowerCase().includes("mac");
+    isSpecifiedOs = navigator.platform.toLowerCase().includes(os);
   } else {
     // ブラウザ用、不正確
-    isMac = navigator.userAgent.toLowerCase().includes("mac");
+    isSpecifiedOs = navigator.userAgent.toLowerCase().includes(os);
   }
-  return isMac;
+  return isSpecifiedOs;
 }
-export const isMac = checkIsMac();
+
+export const isMac = checkOs("mac");
+export const isWindows = checkOs("windows");
 
 const urlStringSchema = z.string().url().brand("URL");
 export type UrlString = z.infer<typeof urlStringSchema>;
@@ -61,6 +64,13 @@ export const voiceIdSchema = z.string().brand<"VoiceId">();
 export type VoiceId = z.infer<typeof voiceIdSchema>;
 export const VoiceId = (voice: Voice): VoiceId =>
   voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
+
+export const noteIdSchema = z.string().brand<"NoteId">();
+export type NoteId = z.infer<typeof noteIdSchema>;
+export const NoteId = (id: string): NoteId => noteIdSchema.parse(id);
+
+// 共通のアクション名
+export const actionPostfixSelectNthCharacter = "番目のキャラクターを選択";
 
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySettingType[] = [
@@ -137,11 +147,11 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     combination: HotkeyCombination(!isMac ? "Ctrl S" : "Meta S"),
   },
   {
-    action: "プロジェクト読み込み",
+    action: "プロジェクトを読み込む",
     combination: HotkeyCombination(!isMac ? "Ctrl O" : "Meta O"),
   },
   {
-    action: "テキスト読み込む",
+    action: "テキストを読み込む",
     combination: HotkeyCombination(""),
   },
   {
@@ -172,6 +182,14 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     action: "選択解除",
     combination: HotkeyCombination("Escape"),
   },
+  ...Array.from({ length: 10 }, (_, index) => {
+    const roleKey = index == 9 ? 0 : index + 1;
+    return {
+      action:
+        `${index + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
+      combination: HotkeyCombination((!isMac ? "Ctrl " : "Meta ") + roleKey),
+    };
+  }),
 ];
 
 export const defaultToolbarButtonSetting: ToolbarSettingType = [
@@ -449,8 +467,8 @@ export const hotkeyActionNameSchema = z.enum([
   "新規プロジェクト",
   "プロジェクトを名前を付けて保存",
   "プロジェクトを上書き保存",
-  "プロジェクト読み込み",
-  "テキスト読み込む",
+  "プロジェクトを読み込む",
+  "テキストを読み込む",
   "全体のイントネーションをリセット",
   "選択中のアクセント句のイントネーションをリセット",
   "コピー",
@@ -458,6 +476,17 @@ export const hotkeyActionNameSchema = z.enum([
   "貼り付け",
   "すべて選択",
   "選択解除",
+  "全セルを選択",
+  `1${actionPostfixSelectNthCharacter}`,
+  `2${actionPostfixSelectNthCharacter}`,
+  `3${actionPostfixSelectNthCharacter}`,
+  `4${actionPostfixSelectNthCharacter}`,
+  `5${actionPostfixSelectNthCharacter}`,
+  `6${actionPostfixSelectNthCharacter}`,
+  `7${actionPostfixSelectNthCharacter}`,
+  `8${actionPostfixSelectNthCharacter}`,
+  `9${actionPostfixSelectNthCharacter}`,
+  `10${actionPostfixSelectNthCharacter}`,
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;

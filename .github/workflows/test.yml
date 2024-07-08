@@ -43,20 +43,46 @@ jobs:
   build-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
-      - run: npm run electron:build_pnever
+      - run: npm run electron:build
 
   # unit テスト
   unit-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
       - run: npm run test:unit
+
+      - name: Setup playwright
+        run: npx playwright install
+      - name: Run Storybook tests
+        run: |
+          # .env
+          cp .env.test .env
+
+          # ランダムなポートを使う
+          PORT=$(node -r net -e "server=net.createServer();server.listen(0,()=>{console.log(server.address().port);server.close()})")
+          npx storybook dev --ci --port $PORT &
+
+          # 起動を待つ
+          elapsed=0
+          until curl --output /dev/null --silent --head --fail http://localhost:$PORT; do
+            echo "Waiting for Storybook to start on port $PORT..."
+            sleep 5
+            ((elapsed+=5))
+            if [ "$elapsed" -ge "60" ]; then
+              echo "Timed out waiting for Storybook to start."
+              exit 1
+            fi
+          done
+
+          # テスト
+          npm run test:storybook -- --url "http://127.0.0.1:$PORT"
 
   # e2e テスト
   e2e-test:
@@ -71,10 +97,13 @@ jobs:
             voicevox_engine_asset_name: linux-cpu
           - os: macos-latest
             voicevox_engine_asset_name: macos-x64
+          # TODO: voicevox_nemo_negineがarm64に対応したら変更する
+          # - os: macos-latest
+          #   voicevox_engine_asset_name: macos-arm64
           - os: windows-latest
             voicevox_engine_asset_name: windows-cpu
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
@@ -135,7 +164,7 @@ jobs:
 
       - name: Upload playwright report to artifact
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report-${{ matrix.os }}
           path: playwright-report
@@ -161,7 +190,7 @@ jobs:
     needs: [config, e2e-test]
     if: needs.config.outputs.shouldUpdateSnapshots == 'true'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -192,7 +221,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 

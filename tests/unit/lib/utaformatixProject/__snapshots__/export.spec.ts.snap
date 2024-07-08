@@ -1,0 +1,37 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`トラックを変換できる 1`] = `
+{
+  "formatVersion": 1,
+  "project": {
+    "measurePrefix": 0,
+    "name": "test",
+    "tempos": [
+      {
+        "bpm": 120,
+        "tickPosition": 0,
+      },
+    ],
+    "timeSignatures": [
+      {
+        "denominator": 4,
+        "measurePosition": 1,
+        "numerator": 4,
+      },
+    ],
+    "tracks": [
+      {
+        "name": "無名トラック",
+        "notes": [
+          {
+            "key": 60,
+            "lyric": "ど",
+            "tickOff": 480,
+            "tickOn": 0,
+          },
+        ],
+      },
+    ],
+  },
+}
+`;

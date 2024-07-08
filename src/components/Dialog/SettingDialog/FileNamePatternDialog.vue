@@ -1,8 +1,8 @@
 <template>
   <QDialog
-    :model-value="props.openDialog"
-    @update:model-value="updateOpenDialog"
-    @before-show="initializeInput"
+    :modelValue="props.openDialog"
+    @update:modelValue="updateOpenDialog"
+    @beforeShow="initializeInput"
   >
     <QCard class="q-pa-md dialog-card">
       <QCardSection>
@@ -19,18 +19,18 @@
               v-model="currentBaseNamePattern"
               dense
               outlined
-              bg-color="background"
+              bgColor="background"
               label="ファイル名パターン"
               suffix=".wav"
               :maxlength="maxLength"
               :error="hasError"
-              :error-message="errorMessage"
+              :errorMessage
             >
               <template #after>
                 <QBtn
                   label="デフォルトにリセット"
                   outline
-                  text-color="display"
+                  textColor="display"
                   class="text-no-wrap q-mr-sm"
                   @click="resetToDefault"
                 />
@@ -47,7 +47,7 @@
             :key="tagString"
             :label="`$${tagString}$`"
             outline
-            text-color="display"
+            textColor="display"
             class="text-no-wrap q-mr-sm"
             @click="insertTagToCurrentPosition(`$${tagString}$`)"
           />
@@ -56,7 +56,7 @@
           <QBtn
             label="キャンセル"
             outline
-            text-color="display"
+            textColor="display"
             class="text-no-wrap text-bold q-mr-sm col-2"
             @click="updateOpenDialog(false)"
           />
@@ -64,7 +64,7 @@
             label="確定"
             unelevated
             color="primary"
-            text-color="display-on-primary"
+            textColor="display-on-primary"
             class="text-no-wrap text-bold q-mr-sm col-2"
             :disable="hasError"
             @click="submit"

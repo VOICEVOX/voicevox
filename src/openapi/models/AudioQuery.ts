@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * VOICEVOX の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -73,6 +73,18 @@ export interface AudioQuery {
      * @type {number}
      * @memberof AudioQuery
      */
+    pauseLength?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof AudioQuery
+     */
+    pauseLengthScale?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof AudioQuery
+     */
     outputSamplingRate: number;
     /**
      * 
@@ -123,6 +135,8 @@ export function AudioQueryFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         'volumeScale': json['volumeScale'],
         'prePhonemeLength': json['prePhonemeLength'],
         'postPhonemeLength': json['postPhonemeLength'],
+        'pauseLength': !exists(json, 'pauseLength') ? undefined : json['pauseLength'],
+        'pauseLengthScale': !exists(json, 'pauseLengthScale') ? undefined : json['pauseLengthScale'],
         'outputSamplingRate': json['outputSamplingRate'],
         'outputStereo': json['outputStereo'],
         'kana': !exists(json, 'kana') ? undefined : json['kana'],
@@ -145,6 +159,8 @@ export function AudioQueryToJSON(value?: AudioQuery | null): any {
         'volumeScale': value.volumeScale,
         'prePhonemeLength': value.prePhonemeLength,
         'postPhonemeLength': value.postPhonemeLength,
+        'pauseLength': value.pauseLength,
+        'pauseLengthScale': value.pauseLengthScale,
         'outputSamplingRate': value.outputSamplingRate,
         'outputStereo': value.outputStereo,
         'kana': value.kana,

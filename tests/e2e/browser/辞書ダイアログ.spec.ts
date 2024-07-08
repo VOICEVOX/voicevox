@@ -114,9 +114,9 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
     .click();
   await page.waitForTimeout(100);
   await page
-    .locator(".word-list-header")
-    .getByRole("button")
-    .filter({ hasText: "削除" })
+    .getByRole("listitem")
+    .filter({ hasText: zenkakuRandomString })
+    .getByText("delete")
     .click();
   await page.waitForTimeout(100);
   await getNewestQuasarDialog(page)

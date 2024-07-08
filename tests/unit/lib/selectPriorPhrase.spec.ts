@@ -1,18 +1,24 @@
 import { it, expect } from "vitest";
-import { v4 as uuidv4 } from "uuid";
-import { Phrase, PhraseState } from "@/store/type";
-import { DEFAULT_TPQN } from "@/sing/storeHelper";
-import { selectPriorPhrase } from "@/sing/domain";
+import {
+  Phrase,
+  PhraseSourceHash,
+  PhraseState,
+  phraseSourceHashSchema,
+} from "@/store/type";
+import { DEFAULT_TPQN, selectPriorPhrase } from "@/sing/domain";
+import { NoteId } from "@/type/preload";
 
 const createPhrase = (
+  firstRestDuration: number,
   start: number,
   end: number,
   state: PhraseState,
 ): Phrase => {
   return {
+    firstRestDuration: firstRestDuration * DEFAULT_TPQN,
     notes: [
       {
-        id: uuidv4(),
+        id: NoteId(crypto.randomUUID()),
         position: start * DEFAULT_TPQN,
         duration: (end - start) * DEFAULT_TPQN,
         noteNumber: 60,
@@ -22,12 +28,27 @@ const createPhrase = (
     state,
   };
 };
-const basePhrases = new Map<string, Phrase>([
-  ["1", createPhrase(0, 1, "WAITING_TO_BE_RENDERED")],
-  ["2", createPhrase(1, 2, "WAITING_TO_BE_RENDERED")],
-  ["3", createPhrase(2, 3, "WAITING_TO_BE_RENDERED")],
-  ["4", createPhrase(3, 4, "WAITING_TO_BE_RENDERED")],
-  ["5", createPhrase(4, 5, "WAITING_TO_BE_RENDERED")],
+const basePhrases = new Map<PhraseSourceHash, Phrase>([
+  [
+    phraseSourceHashSchema.parse("1"),
+    createPhrase(0, 0, 1, "WAITING_TO_BE_RENDERED"),
+  ],
+  [
+    phraseSourceHashSchema.parse("2"),
+    createPhrase(0, 1, 2, "WAITING_TO_BE_RENDERED"),
+  ],
+  [
+    phraseSourceHashSchema.parse("3"),
+    createPhrase(0, 2, 3, "WAITING_TO_BE_RENDERED"),
+  ],
+  [
+    phraseSourceHashSchema.parse("4"),
+    createPhrase(0, 3, 4, "WAITING_TO_BE_RENDERED"),
+  ],
+  [
+    phraseSourceHashSchema.parse("5"),
+    createPhrase(0, 4, 5, "WAITING_TO_BE_RENDERED"),
+  ],
 ]);
 
 it("しっかり優先順位に従って探している", () => {

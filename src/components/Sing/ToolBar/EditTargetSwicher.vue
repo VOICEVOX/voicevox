@@ -12,8 +12,8 @@
       <QTooltip
         :delay="500"
         anchor="bottom middle"
-        transition-show=""
-        transition-hide=""
+        transitionShow=""
+        transitionHide=""
       >
         ノート編集
       </QTooltip>
@@ -31,10 +31,10 @@
       <QTooltip
         :delay="500"
         anchor="bottom middle"
-        transition-show=""
-        transition-hide=""
+        transitionShow=""
+        transitionSide=""
       >
-        ピッチ編集<br />Ctrl+クリックで消去
+        ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去
       </QTooltip>
     </QBtn>
   </QBtnGroup>
@@ -42,6 +42,7 @@
 
 <script setup lang="ts">
 import { SequencerEditTarget } from "@/store/type";
+import { isMac } from "@/type/preload";
 
 defineProps<{
   editTarget: SequencerEditTarget;

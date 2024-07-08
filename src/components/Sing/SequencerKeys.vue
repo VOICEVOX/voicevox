@@ -2,8 +2,8 @@
   <div ref="sequencerKeys" class="sequencer-keys">
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      :width="width"
-      :height="height"
+      :width
+      :height
       shape-rendering="geometricPrecision"
     >
       <g
