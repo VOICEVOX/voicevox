@@ -129,6 +129,9 @@ const editTargetIsNote = computed(() => {
 const editTargetIsPitch = computed(() => {
   return state.sequencerEditTarget === "PITCH";
 });
+const hasOverlappingError = computed(() => {
+  return props.hasOverlappingError && !props.isPreview;
+});
 
 // フレーズ生成エラー
 const hasPhraseError = computed(() => {
