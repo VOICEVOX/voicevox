@@ -235,14 +235,14 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     white-space: nowrap;
     pointer-events: none;
     text-shadow:
-      0 0 1px var(--md-ref-palette-neutral-variant-95),
-      0 0 1px var(--md-ref-palette-neutral-variant-95),
-      0 0 1px var(--md-ref-palette-neutral-variant-95),
-      0 0 1px var(--md-ref-palette-neutral-variant-95),
-      0 0 1px var(--md-ref-palette-neutral-variant-95),
-      0 0 1px var(--md-ref-palette-neutral-variant-95),
-      0 0 1px var(--md-ref-palette-neutral-variant-95),
-      0 0 1px var(--md-ref-palette-neutral-variant-95);
+      0 0 1px var(--md-ref-palette-neutral-variant-99),
+      0 0 1px var(--md-ref-palette-neutral-variant-99),
+      0 0 1px var(--md-ref-palette-neutral-variant-99),
+      0 0 1px var(--md-ref-palette-neutral-variant-99),
+      0 0 1px var(--md-ref-palette-neutral-variant-99),
+      0 0 1px var(--md-ref-palette-neutral-variant-99),
+      0 0 1px var(--md-ref-palette-neutral-variant-99),
+      0 0 1px var(--md-ref-palette-neutral-variant-99);
   }
 
   .note-bar {
@@ -290,6 +290,17 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     .note-right-edge:hover,
     .note-left-edge:hover {
       background-color: var(--md-sys-color-primary-fixed-dim);
+    }
+  }
+
+  &.preview-lyric {
+    .note-bar {
+      background-color: var(--md-sys-color-primary-fixed);
+      border-color: var(--md-sys-color-primary-fixed-dim);
+    }
+
+    .note-lyric {
+      border-bottom: 1px solid var(--md-sys-color-primary-fixed-dim);
     }
   }
 

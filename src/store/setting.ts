@@ -302,10 +302,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // neutralVariantの彩度を6(デフォルトだとソースカラーに引っ張られすぎるため)
       const neutralVariantChroma = 6;
 
-      const adjustments = {
+      const themeAdjustments = {
         tertiary: { hue: tertiaryHue },
-        neutral: { chroma: neutralChroma },
-        neutralVariant: { chroma: neutralVariantChroma },
+        neutral: { hue: sourceColorHct.hue, chroma: neutralChroma },
+        neutralVariant: { hue: sourceColorHct.hue, chroma: neutralVariantChroma },
       };
 
       // パレットからのカスタムカラー
@@ -415,7 +415,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         variant: "tonalSpot",
         isDark: theme.isDark,
         contrastLevel: 0.0,
-        adjustments,
+        adjustments: themeAdjustments,
       });
 
       const cssVariables = dynamicSchemeToCssVariables(
