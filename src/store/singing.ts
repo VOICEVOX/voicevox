@@ -161,7 +161,7 @@ export const singingStoreState: SingingStoreState = {
   tracks: new Map([[initialTrackId, createDefaultTrack()]]),
   trackOrder: [initialTrackId],
 
-  // メモ：必ず存在するトラックを選択しているとは限らない（Undo/Redoがあるため）。
+  // NOTE: 必ず存在するトラックを選択しているとは限らない（Undo/Redoがあるため）。
   // その場合は最初のトラックを選択していることにする。
   // 可能な限りgetters.SELECTED_TRACK_IDを使うこと。getTrackWithFallbackも参照。
   _selectedTrackId: initialTrackId,
