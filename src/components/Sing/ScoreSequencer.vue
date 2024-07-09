@@ -257,7 +257,7 @@ const selectedNoteIds = computed(() => new Set(state.selectedNoteIds));
 const isNoteSelected = computed(() => {
   return selectedNoteIds.value.size > 0;
 });
-const selectedNotes = computed(() => {
+const selectedNotesInCurrentTrack = computed(() => {
   return notesInCurrentTrack.value.filter((note) =>
     selectedNoteIds.value.has(note.id),
   );
@@ -812,7 +812,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
       } else if (!state.selectedNoteIds.has(note.id)) {
         selectOnlyThis(note);
       }
-      for (const note of selectedNotes.value) {
+      for (const note of selectedNotesInCurrentTrack.value) {
         copiedNotes.push({ ...note });
       }
     }
@@ -1094,7 +1094,7 @@ const onMouseLeave = () => {
 // キーボードイベント
 const handleNotesArrowUp = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotes.value) {
+  for (const note of selectedNotesInCurrentTrack.value) {
     const noteNumber = Math.min(note.noteNumber + 1, 127);
     editedNotes.push({ ...note, noteNumber });
   }
@@ -1116,7 +1116,7 @@ const handleNotesArrowUp = () => {
 
 const handleNotesArrowDown = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotes.value) {
+  for (const note of selectedNotesInCurrentTrack.value) {
     const noteNumber = Math.max(note.noteNumber - 1, 0);
     editedNotes.push({ ...note, noteNumber });
   }
@@ -1138,7 +1138,7 @@ const handleNotesArrowDown = () => {
 
 const handleNotesArrowRight = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotes.value) {
+  for (const note of selectedNotesInCurrentTrack.value) {
     const position = note.position + snapTicks.value;
     editedNotes.push({ ...note, position });
   }
@@ -1154,7 +1154,7 @@ const handleNotesArrowRight = () => {
 
 const handleNotesArrowLeft = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotes.value) {
+  for (const note of selectedNotesInCurrentTrack.value) {
     const position = note.position - snapTicks.value;
     editedNotes.push({ ...note, position });
   }
