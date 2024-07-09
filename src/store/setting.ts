@@ -305,7 +305,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       const themeAdjustments = {
         tertiary: { hue: tertiaryHue },
         neutral: { hue: sourceColorHct.hue, chroma: neutralChroma },
-        neutralVariant: { hue: sourceColorHct.hue, chroma: neutralVariantChroma },
+        neutralVariant: {
+          hue: sourceColorHct.hue,
+          chroma: neutralVariantChroma,
+        },
       };
 
       // パレットからのカスタムカラー
