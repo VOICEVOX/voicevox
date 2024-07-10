@@ -24,7 +24,13 @@ import {
   StorePlugin,
 } from "./type";
 import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
-import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
+import {
+  CharacterInfo,
+  EngineId,
+  NoteId,
+  StyleId,
+  TrackId,
+} from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
@@ -128,6 +134,32 @@ const createAudioPlayerSequence = (
     audioEvents,
   };
   return { audioPlayer, audioSequence };
+};
+
+const generateDefaultSongFileName = (
+  projectName: string | undefined,
+  selectedTrack: Track,
+  getCharacterInfo: (
+    engineId: EngineId,
+    styleId: StyleId,
+  ) => CharacterInfo | undefined,
+) => {
+  if (projectName) {
+    return projectName + ".wav";
+  }
+
+  const singer = selectedTrack.singer;
+  if (singer) {
+    const singerName = getCharacterInfo(singer.engineId, singer.styleId)?.metas
+      .speakerName;
+    if (singerName) {
+      const notes = selectedTrack.notes.slice(0, 5);
+      const beginningPartLyrics = notes.map((note) => note.lyric).join("");
+      return sanitizeFileName(`${singerName}_${beginningPartLyrics}.wav`);
+    }
+  }
+
+  return `${DEFAULT_PROJECT_NAME}.wav`;
 };
 
 const offlineRenderTracks = async (
@@ -1990,9 +2022,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   EXPORT_WAVE_FILE: {
     action: createUILockAction(
-      async ({ state, commit, dispatch }, { filePath }) => {
+      async ({ state, commit, getters, dispatch }, { filePath }) => {
         const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const fileName = await dispatch("GENERATE_DEFAULT_SONG_FILE_NAME");
+          const fileName = generateDefaultSongFileName(
+            getters.PROJECT_NAME,
+            getters.SELECTED_TRACK,
+            getters.CHARACTER_INFO,
+          );
           const numberOfChannels = 2;
           const sampleRate = 48000; // TODO: 設定できるようにする
           const withLimiter = false; // TODO: 設定できるようにする
@@ -2317,30 +2353,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const lastNoteEndPosition = lastNote.position + lastNote.duration;
       const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
       return Math.max(1, lastNoteEndTime + 1);
-    },
-  },
-
-  GENERATE_DEFAULT_SONG_FILE_NAME: {
-    action({ getters }) {
-      const projectName = getters.PROJECT_NAME;
-      if (projectName) {
-        return projectName + ".wav";
-      }
-
-      const singer = getters.SELECTED_TRACK.singer;
-      if (singer) {
-        const singerName = getters.CHARACTER_INFO(
-          singer.engineId,
-          singer.styleId,
-        )?.metas.speakerName;
-        if (singerName) {
-          const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
-          const beginningPartLyrics = notes.map((note) => note.lyric).join("");
-          return sanitizeFileName(`${singerName}_${beginningPartLyrics}.wav`);
-        }
-      }
-
-      return `${DEFAULT_PROJECT_NAME}.wav`;
     },
   },
 });
