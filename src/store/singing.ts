@@ -231,9 +231,8 @@ const offlineRenderTracks = async (
   // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
   offlineTransport.schedule(0, renderDuration);
   const audioBuffer = await offlineAudioContext.startRendering();
-  const waveFileData = convertToWavFileData(audioBuffer);
 
-  return waveFileData;
+  return audioBuffer;
 };
 
 let audioContext: AudioContext | undefined;
@@ -2080,7 +2079,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const shouldPlays = shouldPlayTracks(state.tracks);
 
-          const waveFileData = await offlineRenderTracks(
+          const audioBuffer = await offlineRenderTracks(
             numberOfChannels,
             sampleRate,
             renderDuration,
@@ -2094,6 +2093,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             state.singingGuides,
             singingVoiceCache,
           );
+
+          const waveFileData = convertToWavFileData(audioBuffer);
 
           try {
             await window.backend
