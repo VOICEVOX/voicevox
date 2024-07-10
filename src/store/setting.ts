@@ -387,7 +387,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           name: "sing-piano-key-black",
           palette: "neutral" as PaletteKey,
           lightTone: 40,
-          darkTone: 30,
+          darkTone: 20,
           blend: true,
         },
         {

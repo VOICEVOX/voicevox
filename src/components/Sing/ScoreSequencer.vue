@@ -110,6 +110,7 @@
         }"
       ></div>
     </div>
+    <ThemeChanger />
     <QSlider
       :modelValue="zoomX"
       :min="ZOOM_X_MIN"
@@ -183,6 +184,7 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
+import ThemeChanger from "@/components/Sing/ThemeChanger.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
