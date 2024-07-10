@@ -97,7 +97,7 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { convertToWavFileData } from "@/sing/convertToWavFileData";
-import { generateWriteErrorMessage } from "@/helpers/generateWriteErrorMessage";
+import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 
 const logger = createLogger("store/singing");
 
