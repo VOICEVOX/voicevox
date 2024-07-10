@@ -1,5 +1,5 @@
 import path from "path";
-import { toRaw, watch } from "vue";
+import { toRaw, watchEffect } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -21,7 +21,7 @@ import {
   SequencerEditTarget,
   PhraseSourceHash,
   Track,
-  StorePlugin,
+  WatchStoreStatePlugin,
 } from "./type";
 import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
 import {
@@ -269,31 +269,38 @@ const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
 const initialTrackId = TrackId(crypto.randomUUID());
 
-export const singingStorePlugin: StorePlugin = (store) => {
-  watch(
-    () => store.state.tracks,
-    async (tracks) => {
-      if (!audioContext || !globalChannelStrip) {
-        return;
+export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
+  // tracksの変更とtrackChannelStripsを同期する。
+  // NOTE: ChannelStripをVuex内に入れると変更された扱いで警告が出るため、
+  // Vuex内に入れない。
+  watchEffect(async () => {
+    if (!audioContext || !globalChannelStrip) {
+      return;
+    }
+    const shouldPlays = shouldPlayTracks(store.state.tracks);
+    for (const [trackId, track] of store.state.tracks) {
+      if (!trackChannelStrips.has(trackId)) {
+        const channelStrip = new ChannelStrip(audioContext);
+        trackChannelStrips.set(trackId, channelStrip);
+        channelStrip.output.connect(globalChannelStrip.input);
+
+        trackChannelStrips.set(trackId, channelStrip);
       }
-      const shouldPlays = shouldPlayTracks(tracks);
-      for (const [trackId, track] of tracks) {
-        if (!trackChannelStrips.has(trackId)) {
-          const channelStrip = new ChannelStrip(audioContext);
-          trackChannelStrips.set(trackId, channelStrip);
-          channelStrip.output.connect(globalChannelStrip.input);
 
-          trackChannelStrips.set(trackId, channelStrip);
-        }
-
+      const channelStrip = getOrThrow(trackChannelStrips, trackId);
+      channelStrip.volume = track.gain;
+      channelStrip.pan = track.pan;
+      channelStrip.mute = !getOrThrow(shouldPlays, trackId);
+    }
+    const channelStripTrackIds = [...trackChannelStrips.keys()];
+    for (const trackId of channelStripTrackIds) {
+      if (!store.state.tracks.has(trackId)) {
         const channelStrip = getOrThrow(trackChannelStrips, trackId);
-        channelStrip.volume = track.gain;
-        channelStrip.pan = track.pan;
-        channelStrip.mute = !getOrThrow(shouldPlays, trackId);
+        channelStrip.output.disconnect();
+        trackChannelStrips.delete(trackId);
       }
-    },
-    { deep: true, immediate: true },
-  );
+    }
+  });
 };
 
 export const singingStoreState: SingingStoreState = {

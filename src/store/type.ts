@@ -122,7 +122,7 @@ export type ErrorTypeForSaveAllResultDialog = {
   message: string;
 };
 
-export type StorePlugin = (
+export type WatchStoreStatePlugin = (
   store: Store<State, AllGetters, AllActions, AllMutations>,
 ) => void;
 

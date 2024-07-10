@@ -413,7 +413,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   strict: !isProduction,
 });
 
-export const storePlugins: Plugin = {
+export const watchStoreStatePlugins: Plugin = {
   install(
     app,
     { store }: { store: Store<State, AllGetters, AllActions, AllMutations> },

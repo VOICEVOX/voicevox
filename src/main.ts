@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import { createGtm } from "@gtm-support/vue-gtm";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
-import { store, storePlugins, storeKey } from "./store";
+import { store, watchStoreStatePlugins, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
 import App from "@/components/App.vue";
@@ -18,7 +18,7 @@ window.dataLayer = [];
 
 createApp(App)
   .use(store, storeKey)
-  .use(storePlugins, { store })
+  .use(watchStoreStatePlugins, { store })
   .use(
     createGtm({
       id: import.meta.env.VITE_GTM_CONTAINER_ID ?? "GTM-DUMMY",
