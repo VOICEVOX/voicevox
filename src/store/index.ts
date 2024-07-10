@@ -413,6 +413,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   strict: !isProduction,
 });
 
+// Storeをwatchするためのプラグインをまとめたもの。
 export const watchStoreStatePlugin: Plugin = {
   install(
     app,
