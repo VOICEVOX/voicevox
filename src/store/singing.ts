@@ -1,5 +1,5 @@
 import path from "path";
-import { toRaw, nextTick, watchSyncEffect } from "vue";
+import { toRaw, watchSyncEffect } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -1511,9 +1511,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
         const audioContextRef = audioContext;
         const transportRef = transport;
-
-        // trackChannelStripsRefの更新を待つ
-        await nextTick();
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         const tracks = structuredClone(toRaw(state.tracks));
