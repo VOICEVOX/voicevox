@@ -913,7 +913,7 @@ export type SingingStoreTypes = {
     mutation: { measureNumber: number };
   };
 
-  NOTE_IDS: {
+  ALL_NOTE_IDS: {
     getter: Set<NoteId>;
   };
 

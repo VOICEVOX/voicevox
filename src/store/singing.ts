@@ -449,7 +449,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  NOTE_IDS: {
+  ALL_NOTE_IDS: {
     getter(state) {
       const noteIds = [...state.tracks.values()].flatMap((track) =>
         track.notes.map((note) => note.id),
@@ -536,7 +536,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
     },
     async action({ getters, commit }, { noteIds }: { noteIds: NoteId[] }) {
-      const existingNoteIds = getters.NOTE_IDS;
+      const existingNoteIds = getters.ALL_NOTE_IDS;
       const isValidNoteIds = noteIds.every((value) => {
         return existingNoteIds.has(value);
       });
@@ -577,7 +577,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.editingLyricNoteId = noteId;
     },
     async action({ getters, commit }, { noteId }: { noteId?: NoteId }) {
-      if (noteId != undefined && !getters.NOTE_IDS.has(noteId)) {
+      if (noteId != undefined && !getters.ALL_NOTE_IDS.has(noteId)) {
         throw new Error("The note id is invalid.");
       }
       commit("SET_EDITING_LYRIC_NOTE_ID", { noteId });
@@ -2531,7 +2531,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.ADD_NOTES(draft, { notes, trackId });
       },
       action({ getters, commit, dispatch }, { notes, trackId }) {
-        const existingNoteIds = getters.NOTE_IDS;
+        const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return !existingNoteIds.has(value.id) && isValidNote(value);
         });
@@ -2548,7 +2548,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.UPDATE_NOTES(draft, { notes, trackId });
       },
       action({ getters, commit, dispatch }, { notes, trackId }) {
-        const existingNoteIds = getters.NOTE_IDS;
+        const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return existingNoteIds.has(value.id) && isValidNote(value);
         });
@@ -2565,7 +2565,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.REMOVE_NOTES(draft, { noteIds, trackId });
       },
       action({ getters, commit, dispatch }, { noteIds, trackId }) {
-        const existingNoteIds = getters.NOTE_IDS;
+        const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNoteIds = noteIds.every((value) => {
           return existingNoteIds.has(value);
         });
