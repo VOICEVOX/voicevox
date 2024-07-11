@@ -146,12 +146,15 @@ const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 const initialTrackId = TrackId(crypto.randomUUID());
 
 /** トラックを取得する。見付からないときはフォールバックとして最初のトラックを返す。 */
-const getTrackWithFallback = (
-  tracks: Map<TrackId, Track>,
-  trackId: TrackId,
-  firstTrackId: TrackId,
-) => {
-  return tracks.get(trackId) ?? getOrThrow(tracks, firstTrackId);
+const getSelectedTrackWithFallback = (partialState: {
+  tracks: Map<TrackId, Track>;
+  _selectedTrackId: TrackId;
+  trackOrder: TrackId[];
+}) => {
+  if (!partialState.tracks.has(partialState._selectedTrackId)) {
+    return getOrThrow(partialState.tracks, partialState.trackOrder[0]);
+  }
+  return getOrThrow(partialState.tracks, partialState._selectedTrackId);
 };
 
 export const singingStoreState: SingingStoreState = {
@@ -163,7 +166,7 @@ export const singingStoreState: SingingStoreState = {
 
   // NOTE: 必ず存在するトラックを選択しているとは限らない（Undo/Redoがあるため）。
   // その場合は最初のトラックを選択していることにする。
-  // 可能な限りgetters.SELECTED_TRACK_IDを使うこと。getTrackWithFallbackも参照。
+  // 可能な限りgetters.SELECTED_TRACK_IDを使うこと。getSelectedTrackWithFallbackも参照。
   _selectedTrackId: initialTrackId,
 
   editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
@@ -211,12 +214,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECTED_NOTE_IDS: {
     getter(state) {
-      // 選択中のトラックのノートのみ選択する
-      const currentTrack = getTrackWithFallback(
-        state.tracks,
-        state._selectedTrackId,
-        state.trackOrder[0],
-      );
+      // 他のトラックのノートは選択されないようにする
+      const currentTrack = getSelectedTrackWithFallback(state);
 
       const noteIdsInCurrentTrack = new Set(
         currentTrack.notes.map((note) => note.id),
@@ -452,12 +451,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   NOTE_IDS: {
     getter(state) {
-      const selectedTrack = getTrackWithFallback(
-        state.tracks,
-        state._selectedTrackId,
-        state.trackOrder[0],
+      const noteIds = [...state.tracks.values()].flatMap((track) =>
+        track.notes.map((note) => note.id),
       );
-      const noteIds = selectedTrack.notes.map((value) => value.id);
       return new Set(noteIds);
     },
   },
@@ -553,11 +549,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECT_ALL_NOTES: {
     mutation(state) {
-      const currentTrack = getTrackWithFallback(
-        state.tracks,
-        state._selectedTrackId,
-        state.trackOrder[0],
-      );
+      const currentTrack = getSelectedTrackWithFallback(state);
       const allNoteIds = currentTrack.notes.map((note) => note.id);
       state._selectedNoteIds = new Set(allNoteIds);
     },
@@ -720,11 +712,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECTED_TRACK: {
     getter(state) {
-      return getTrackWithFallback(
-        state.tracks,
-        state._selectedTrackId,
-        state.trackOrder[0],
-      );
+      return getSelectedTrackWithFallback(state);
     },
   },
 
@@ -748,11 +736,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       return Math.max(
         SEQUENCER_MIN_NUM_MEASURES,
         getNumMeasures(
-          getTrackWithFallback(
-            state.tracks,
-            state._selectedTrackId,
-            state.trackOrder[0],
-          ).notes,
+          [...state.tracks.values()].flatMap((track) => track.notes),
           state.tempos,
           state.timeSignatures,
           state.tpqn,
