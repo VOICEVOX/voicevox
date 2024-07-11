@@ -202,7 +202,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SELECTED_TRACK_ID: {
     getter(state) {
       // Undo/Redoで消えている場合は最初のトラックを選択していることにする
-      if (state.tracks.get(state._selectedTrackId) == undefined) {
+      if (!state.tracks.has(state._selectedTrackId)) {
         return state.trackOrder[0];
       }
       return state._selectedTrackId;
