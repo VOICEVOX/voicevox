@@ -211,7 +211,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECTED_NOTE_IDS: {
     getter(state) {
-      // 他のトラックのノートは選択されないようにする
+      // 選択中のトラックのノートのみ選択する
       const currentTrack = getTrackWithFallback(
         state.tracks,
         state._selectedTrackId,
