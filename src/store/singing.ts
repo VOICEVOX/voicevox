@@ -1,5 +1,5 @@
 import path from "path";
-import { toRaw, watchEffect } from "vue";
+import { toRaw, nextTick, watchSyncEffect } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -272,7 +272,7 @@ export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
   // tracksの変更とtrackChannelStripsを同期する。
   // NOTE: ChannelStripをVuex内に入れると変更された扱いで警告が出るため、
   // Vuex内に入れない。
-  watchEffect(async () => {
+  watchSyncEffect(async () => {
     if (!audioContext || !globalChannelStrip) {
       return;
     }
@@ -1512,8 +1512,26 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const audioContextRef = audioContext;
         const transportRef = transport;
 
+        // trackChannelStripsRefの更新を待つ
+        await nextTick();
+
         // レンダリング中に変更される可能性のあるデータをコピーする
         const tracks = structuredClone(toRaw(state.tracks));
+        const trackChannelStripsRef = new Map(trackChannelStrips);
+
+        const trackIdsInTracks = new Set(tracks.keys());
+        const trackIdsInTrackChannelStrips = new Set(
+          trackChannelStripsRef.keys(),
+        );
+        // どちらかにしか存在しないtrackIdがある場合はエラーを投げる
+        if (
+          trackIdsInTracks.symmetricDifference(trackIdsInTrackChannelStrips)
+            .size > 0
+        ) {
+          throw new Error(
+            `The track ids are different: ${trackIdsInTracks} | ${trackIdsInTrackChannelStrips}`,
+          );
+        }
 
         const singerAndFrameRates = new Map(
           [...tracks].map(([trackId, track]) => [
@@ -1712,7 +1730,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               instrument: polySynth,
               noteEvents,
             };
-            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
+            const channelStrip = getOrThrow(
+              trackChannelStripsRef,
+              phrase.trackId,
+            );
             polySynth.output.connect(channelStrip.input);
             transportRef.addSequence(noteSequence);
             sequences.set(phraseKey, noteSequence);
@@ -1915,7 +1936,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               audioContextRef,
               audioEvents,
             );
-            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
+            const channelStrip = getOrThrow(
+              trackChannelStripsRef,
+              phrase.trackId,
+            );
             audioPlayer.output.connect(channelStrip.input);
             transportRef.addSequence(audioSequence);
             sequences.set(phraseKey, audioSequence);
