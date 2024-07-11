@@ -469,6 +469,7 @@ onUnmounted(() => {
 
 // フィールドデフォルト
 :deep(.q-field__native) {
+  color: var(--md-sys-color-on-surface);
   text-align: center;
   font-size: 16px;
   font-weight: 500;
@@ -541,11 +542,11 @@ onUnmounted(() => {
 }
 
 .body--light .sing-toolbar {
-  background: var(--md-sys-color-surface-container-lowest);
+  background: var(--md-sys-color-surface-container-low);
 }
 
 .sing-toolbar {
-  background: var(--md-sys-color-surface-container);
+  background: var(--md-sys-color-surface-container-high);
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -680,6 +681,10 @@ onUnmounted(() => {
   opacity: 0.56;
 }
 
+.sing-transport-button {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
 .sing-playback-button {
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-surface);
@@ -739,11 +744,33 @@ onUnmounted(() => {
 .sing-volume-icon {
   margin-right: 8px;
   opacity: 0.6;
+
+  :deep {
+    color: var(--md-sys-color-on-surface-variant);
+  }
 }
 
 .sing-volume {
   margin-right: 16px;
   width: 72px;
+
+  :deep(.q-slider__track) {
+    background: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &:hover {
+    :deep(.q-slider__track) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    :deep(.q-slider__thumb) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  }
 }
 
 .sing-snap {
@@ -759,6 +786,7 @@ onUnmounted(() => {
 
   :deep(.q-field__label) {
     font-size: 14px;
+    color: var(--md-sys-color-on-surface-variant);
   }
 }
 </style>

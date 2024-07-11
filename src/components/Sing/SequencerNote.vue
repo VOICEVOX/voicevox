@@ -229,7 +229,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     bottom: 0;
     min-width: 2em;
     padding: 0;
-    color: var(--md-sys-color-on-primary-fixed);
+    color: var(--md-sys-color-on-secondary-fixed);
     font-size: 16px;
     font-weight: 500;
     white-space: nowrap;
@@ -253,6 +253,12 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     background-color: var(--md-custom-color-sing-note-bar-background);
     border: 1px solid var(--md-sys-color-secondary-fixed-dim);
     border-radius: 4px;
+  }
+
+  .body--light {
+    .note-bar {
+      background-color: var(--md-sys-color-surface-variant);
+    }
   }
 
   .note-left-edge {

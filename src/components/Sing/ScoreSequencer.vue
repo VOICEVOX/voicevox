@@ -1529,6 +1529,24 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   bottom: 16px;
   right: 32px;
   width: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &:hover {
+    :deep(.q-slider__track) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    :deep(.q-slider__thumb) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  }
 }
 
 .zoom-y-slider {
@@ -1536,5 +1554,23 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   bottom: 40px;
   right: 16px;
   height: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &:hover {
+    :deep(.q-slider__track) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    :deep(.q-slider__thumb) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  }
 }
 </style>

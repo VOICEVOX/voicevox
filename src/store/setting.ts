@@ -415,7 +415,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       const baseScheme = createDynamicScheme({
         sourceColor,
-        variant: "tonalSpot",
+        variant: "fidelity",
         isDark: theme.isDark,
         contrastLevel: 0.0,
         adjustments: themeAdjustments,
