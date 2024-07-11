@@ -2867,3 +2867,38 @@ export const singingCommandStore = transformCommandStore(
   }),
   "song",
 );
+
+if (import.meta.vitest) {
+  const { describe, test, expect } = import.meta.vitest;
+
+  const track1Id = TrackId("00000000-0000-0000-0000-000000000001");
+  const track2Id = TrackId("00000000-0000-0000-0000-000000000002");
+  const track3Id = TrackId("00000000-0000-0000-0000-000000000003");
+  const createTrack = (name: string): Track => ({
+    ...createDefaultTrack(),
+    name,
+  });
+
+  describe("getSelectedTrackWithFallback", () => {
+    test("_selectedTrackIdが存在するトラックを指していたらそれを使う", () => {
+      const state = {
+        _selectedTrackId: track1Id,
+        tracks: new Map([[track1Id, createTrack("track1")]]),
+        trackOrder: [track1Id],
+      };
+      expect(getSelectedTrackWithFallback(state).name).toEqual("track1");
+    });
+
+    test("_selectedTrackIdが存在しないトラックを指していたら最初のトラックを使う", () => {
+      const state = {
+        _selectedTrackId: track3Id,
+        tracks: new Map([
+          [track1Id, createTrack("track1")],
+          [track2Id, createTrack("track2")],
+        ]),
+        trackOrder: [track1Id, track2Id],
+      };
+      expect(getSelectedTrackWithFallback(state).name).toEqual("track1");
+    });
+  });
+}

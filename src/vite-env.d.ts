@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vitest/importMeta" />
 
 interface ImportMetaEnv {
   readonly VITE_7Z_BIN_NAME: string;

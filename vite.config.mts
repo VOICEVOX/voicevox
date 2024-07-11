@@ -61,9 +61,12 @@ export default defineConfig((options) => {
       },
     },
     test: {
-      include: ["../tests/unit/**/*.spec.ts"],
+      include: ["../tests/unit/**/*.spec.ts", "**/*.ts"],
       environment: "happy-dom",
       globals: true,
+    },
+    define: {
+      "import.meta.vitest": "undefined",
     },
 
     plugins: [
