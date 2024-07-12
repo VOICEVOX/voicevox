@@ -22,27 +22,34 @@
       @mousedown="onBarMouseDown"
       @dblclick="onBarDoubleClick"
     >
-      <div
-        class="note-left-edge"
-        :class="{
-          'cursor-ew-resize': editTargetIsNote,
-        }"
-        @mousedown="onLeftEdgeMouseDown"
-      ></div>
-      <div
-        class="note-right-edge"
-        :class="{
-          'cursor-ew-resize': editTargetIsNote,
-        }"
-        @mousedown="onRightEdgeMouseDown"
-      ></div>
       <ContextMenu
         v-if="editTargetIsNote"
         ref="contextMenu"
         :menudata="contextMenuData"
       />
     </div>
-    <div class="note-lyric" data-testid="note-lyric">
+    <div
+      class="note-left-edge"
+      :class="{
+        'cursor-ew-resize': editTargetIsNote,
+      }"
+      @mousedown="onLeftEdgeMouseDown"
+    ></div>
+    <div
+      class="note-right-edge"
+      :class="{
+        'cursor-ew-resize': editTargetIsNote,
+      }"
+      @mousedown="onRightEdgeMouseDown"
+    ></div>
+    <div
+      class="note-lyric"
+      data-testid="note-lyric"
+      :style="{
+        fontSize: `${height > 16 ? 16 : height - 2}px`,
+        lineHeight: `${height}px`,
+      }"
+    >
       {{ lyricToDisplay }}
     </div>
     <!-- エラー内容を表示 -->
@@ -224,25 +231,18 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   left: 0;
 
   .note-lyric {
-    position: absolute;
-    left: 4px;
+    border-radius: 4px;
+    position: fixed;
+    left: 2px;
     bottom: 0;
-    min-width: 2em;
-    padding: 0;
     color: var(--md-sys-color-on-secondary-fixed);
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 400;
+    line-height: 20px;
+    letter-spacing: -0.1em;
     white-space: nowrap;
     pointer-events: none;
-    text-shadow:
-      0 0 1px var(--md-ref-palette-neutral-variant-99),
-      0 0 1px var(--md-ref-palette-neutral-variant-99),
-      0 0 1px var(--md-ref-palette-neutral-variant-99),
-      0 0 1px var(--md-ref-palette-neutral-variant-99),
-      0 0 1px var(--md-ref-palette-neutral-variant-99),
-      0 0 1px var(--md-ref-palette-neutral-variant-99),
-      0 0 1px var(--md-ref-palette-neutral-variant-99),
-      0 0 1px var(--md-ref-palette-neutral-variant-99);
+    background: transparent;
   }
 
   .note-bar {
@@ -255,17 +255,14 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     border-radius: 4px;
   }
 
-  .body--light {
-    .note-bar {
-      background-color: var(--md-sys-color-surface-variant);
-    }
-  }
-
   .note-left-edge {
     position: absolute;
     top: 0;
     left: 0;
-    width: 6px;
+    border-radius: 4px 0 0 4px;
+    width: 25%;
+    min-width: 4px;
+    max-width: 8px;
     height: 100%;
 
     &:hover {
@@ -278,7 +275,10 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     position: absolute;
     top: 0;
     right: 0;
-    width: 6px;
+    border-radius: 0 4px 4px 0;
+    width: 25%;
+    min-width: 4px;
+    max-width: 8px;
     height: 100%;
 
     &:hover {
@@ -291,6 +291,10 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     .note-bar {
       background-color: var(--md-sys-color-primary-fixed);
       border-color: var(--md-sys-color-primary-fixed-dim);
+    }
+
+    .note-lyric {
+      color: var(--md-sys-color-on-primary-fixed);
     }
 
     .note-right-edge:hover,
@@ -311,16 +315,15 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   }
 
   &.below-pitch {
-    opacity: 0.38;
-
     .note-bar {
       background-color: var(--md-sys-color-surface-variant);
       border-color: var(--md-sys-color-outline-variant);
+      opacity: 0.38;
     }
 
     .note-lyric {
       color: var(--md-sys-color-on-surface);
-      text-shadow: none;
+      opacity: 0.72;
     }
 
     .note-right-edge:hover,

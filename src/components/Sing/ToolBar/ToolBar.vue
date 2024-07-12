@@ -541,12 +541,8 @@ onUnmounted(() => {
   padding: 0 12px 0 4px;
 }
 
-.body--light .sing-toolbar {
-  background: var(--md-sys-color-surface-container-low);
-}
-
 .sing-toolbar {
-  background: var(--md-sys-color-surface-container-high);
+  background: var(--md-custom-color-sing-toolbar-container);
   align-items: center;
   display: flex;
   justify-content: space-between;

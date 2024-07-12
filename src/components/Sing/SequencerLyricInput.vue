@@ -1,18 +1,21 @@
 <template>
-  <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
-  <input
-    ref="lyricInput"
-    :value="editingLyricNote.lyric"
-    class="lyric-input"
+  <div
+    class="lyric-input-container"
     :style="{
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
-    @input="onLyricInput"
-    @mousedown.stop
-    @dblclick.stop
-    @keydown.stop="onLyricInputKeyDown"
-    @blur="onLyricInputBlur"
-  />
+  >
+    <input
+      ref="lyricInput"
+      :value="editingLyricNote.lyric"
+      class="lyric-input"
+      @input="onLyricInput"
+      @mousedown.stop
+      @dblclick.stop
+      @keydown.stop="onLyricInputKeyDown"
+      @blur="onLyricInputBlur"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -86,11 +89,12 @@ const onLyricInput = (event: Event) => {
   if (!(event.target instanceof HTMLInputElement)) {
     throw new Error("Invalid event target");
   }
-  emit("lyricInput", event.target.value, props.editingLyricNote);
+  const newValue = event.target.value;
+  emit("lyricInput", newValue, props.editingLyricNote);
 };
 
 watch(
-  () => props.editingLyricNote,
+  () => props.editingLyricNote.lyric,
   () => {
     nextTick(() => {
       lyricInput.value?.focus();
@@ -105,14 +109,15 @@ watch(
 @use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
 
-.lyric-input {
+.lyric-input-container {
   position: absolute;
-  top: 0;
+  top: -1px;
+}
+
+.lyric-input {
   font-weight: 500;
   font-size: 16px;
-  max-width: 4rem;
-  width: fit-content;
-  background-color: var(--md-ref-palette-neutral-99);
+  background-color: rgba(255, 255, 255, 0.72);
   color: var(--md-sys-color-on-primary-fixed);
   outline: 1px solid var(--md-sys-color-primary);
   border-radius: 4px;
@@ -120,5 +125,11 @@ watch(
   box-shadow:
     0 4px 6px rgba(0, 0, 0, 0.1),
     0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 0 4px;
+  width: 8ch;
+  min-width: 8ch;
+  max-width: 16rem;
+  box-sizing: border-box;
+  letter-spacing: -0.1em;
 }
 </style>

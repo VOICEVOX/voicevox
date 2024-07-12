@@ -391,14 +391,21 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           blend: true,
         },
         {
-          name: "sing-note-bar-background",
+          name: "sing-note-bar-container",
           palette: "secondary" as PaletteKey,
           lightTone: 90,
           darkTone: 70,
           blend: true,
         },
         {
-          name: "sing-toolbar-background",
+          name: "sing-note-bar-outline",
+          palette: "neutral" as PaletteKey,
+          lightTone: 40,
+          darkTone: 30,
+          blend: true,
+        },
+        {
+          name: "sing-toolbar-container",
           palette: "neutral" as PaletteKey,
           lightTone: 99,
           darkTone: 10,
@@ -415,7 +422,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       const baseScheme = createDynamicScheme({
         sourceColor,
-        variant: "fidelity",
+        variant: "content",
         isDark: theme.isDark,
         contrastLevel: 0.0,
         adjustments: themeAdjustments,
