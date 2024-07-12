@@ -250,7 +250,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     position: absolute;
     width: calc(100% + 1px);
     height: 100%;
-    background-color: var(--md-custom-color-sing-note-bar-background);
+    background-color: var(--md-custom-color-sing-note-bar-container);
     border: 1px solid var(--md-sys-color-secondary-fixed-dim);
     border-radius: 4px;
   }
