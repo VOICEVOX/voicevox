@@ -1,3 +1,4 @@
+import { ColorSchemeConfig } from "../helpers/colors";
 import {
   AppInfos,
   ConfigType,
@@ -247,6 +248,11 @@ export type IpcIHData = {
   THEME: {
     args: [obj: { newData?: string }];
     return: ThemeSetting | void;
+  };
+
+  GET_COLOR_SCHEME_CONFIGS: {
+    args: [];
+    return: ColorSchemeConfig[];
   };
 
   ON_VUEX_READY: {

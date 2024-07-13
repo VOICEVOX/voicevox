@@ -19,6 +19,7 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
+import { ColorSchemeConfig } from "../../helpers/colors";
 import { hasSupportedGpu } from "./device";
 import EngineManager from "./manager/engineManager";
 import VvppManager, { isVvppFile } from "./manager/vvppManager";
@@ -323,6 +324,23 @@ function readThemeFiles() {
   }
   return themes;
 }
+
+// カラースキームを読み込み
+function loadColorSchemeConfig(schemeFile: string): ColorSchemeConfig {
+  const filePath = path.join(__static, "color-schemes", schemeFile);
+  const fileContent = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(fileContent) as ColorSchemeConfig;
+}
+
+// 利用可能なカラースキームのリストを取得する関数
+function getAvailableColorSchemeConfigs(): string[] {
+  const schemesDir = path.join(__static, "color-schemes");
+  return fs.readdirSync(schemesDir).filter((file) => file.endsWith(".json"));
+}
+
+const colorSchemeConfigs = getAvailableColorSchemeConfigs().map((schemeFile) =>
+  loadColorSchemeConfig(schemeFile),
+);
 
 // 使い方テキストの読み込み
 const howToUseText = fs.readFileSync(
@@ -931,6 +949,10 @@ ipcMainHandle("THEME", (_, { newData }) => {
     currentTheme: configManager.get("currentTheme"),
     availableThemes: themes,
   };
+});
+
+ipcMainHandle("GET_COLOR_SCHEME_CONFIGS", () => {
+  return colorSchemeConfigs;
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {

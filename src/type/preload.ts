@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ColorSchemeConfig } from "../helpers/colors";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -291,6 +292,7 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
+  getColorSchemeConfigs(): Promise<string[]>;
 }
 
 export type AppInfos = {

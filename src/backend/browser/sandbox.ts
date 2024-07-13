@@ -311,6 +311,9 @@ export const api: Sandbox = {
         ),
       );
   },
+  getColorSchemeConfigs() {
+    return Promise.resolve([]);
+  },
   vuexReady() {
     // NOTE: 何もしなくて良さそう
     return Promise.resolve();

@@ -230,6 +230,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("THEME", { newData });
   },
 
+  getColorSchemeConfigs: () => {
+    return ipcRenderer.invoke("GET_COLOR_SCHEME_CONFIGS");
+  },
+
   vuexReady: () => {
     ipcRenderer.invoke("ON_VUEX_READY");
   },

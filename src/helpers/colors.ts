@@ -1,5 +1,6 @@
 import {
   argbFromHex,
+  hexFromArgb,
   Hct,
   DynamicScheme,
   SchemeContent,
@@ -62,7 +63,7 @@ export interface CustomDefinedColor {
 // パレットから取得するカスタムカラー
 export interface CustomPaletteColor {
   name: string;
-  palette: string;
+  palette: PaletteKey;
   lightTone: number;
   darkTone: number;
   blend: boolean;
@@ -72,6 +73,17 @@ export interface CustomPaletteColor {
 export interface TonalPaletteOptions {
   color: string;
   tonalOffset?: number;
+}
+
+export interface ColorSchemeConfig {
+  name: string;
+  sourceColor: string;
+  variant: SchemeVariant;
+  isDark: boolean;
+  contrastLevel: number;
+  adjustments: Partial<Record<PaletteKey, ColorAdjustment>>;
+  customPaletteColors: CustomPaletteColor[];
+  customDefinedColors: CustomDefinedColor[];
 }
 
 // カラースキーマのコンストラクタ
@@ -174,17 +186,21 @@ export interface ColorTheme {
 
 // テーマの色スキーマの生成
 export const generateColorTheme = (
-  options: ThemeOptions,
-  customPaletteColors: CustomPaletteColor[] = [],
-  customDefinedColors: CustomDefinedColor[] = [],
+  schemeConfig: ColorSchemeConfig,
 ): ColorTheme => {
-  const scheme = createDynamicScheme(options);
+  const scheme = createDynamicScheme({
+    sourceColor: schemeConfig.sourceColor,
+    variant: schemeConfig.variant,
+    isDark: schemeConfig.isDark,
+    contrastLevel: schemeConfig.contrastLevel,
+    adjustments: schemeConfig.adjustments,
+  });
 
   // システムカラーの生成
   const systemColors = Object.entries(MaterialDynamicColors).reduce(
     (acc, [name, color]) => {
       if (typeof color === "object" && "getArgb" in color) {
-        acc[name] = rgbaFromArgb(color.getArgb(scheme));
+        acc[name] = hexFromArgb(color.getArgb(scheme));
       }
       return acc;
     },
@@ -192,11 +208,12 @@ export const generateColorTheme = (
   );
 
   // テーマの色パレットの生成
-  const paletteTones = PALETTE_KEYS.reduce((acc, key) => {
+  const paletteTones = PALETTE_KEYS.reduce(
+    (acc, key) => {
       acc[key] = Object.fromEntries(
         TONES.map((tone) => [
           tone,
-          rgbaFromArgb(
+          hexFromArgb(
             (
               scheme[`${key}Palette` as keyof DynamicScheme] as TonalPalette
             ).tone(tone),
@@ -209,9 +226,9 @@ export const generateColorTheme = (
   );
 
   // カスタムパレットの色の生成
-  const customPaletteColorValues = customPaletteColors.reduce(
+  const customPaletteColors = schemeConfig.customPaletteColors.reduce(
     (acc, { name, palette, lightTone, darkTone }) => {
-      acc[name] = rgbaFromArgb(
+      acc[name] = hexFromArgb(
         (
           scheme[`${palette}Palette` as keyof DynamicScheme] as TonalPalette
         ).tone(scheme.isDark ? darkTone : lightTone),
@@ -222,7 +239,7 @@ export const generateColorTheme = (
   );
 
   // カスタム定義色の生成
-  const customDefinedColorValues = customDefinedColors.reduce(
+  const customDefinedColors = schemeConfig.customDefinedColors.reduce(
     (acc, { name, value }) => {
       acc[name] = value;
       return acc;
@@ -234,8 +251,8 @@ export const generateColorTheme = (
     scheme,
     systemColors,
     paletteTones,
-    customPaletteColors: customPaletteColorValues,
-    customDefinedColors: customDefinedColorValues,
+    customPaletteColors,
+    customDefinedColors,
   };
 };
 
@@ -289,5 +306,5 @@ export const adjustColorToTheme = (
     sourceHct.tone,
   );
 
-  return rgbaFromArgb(adjustedHct.toInt());
+  return hexFromArgb(adjustedHct.toInt());
 };

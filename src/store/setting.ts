@@ -1,5 +1,4 @@
 import { Dark, setCssVar, colors } from "quasar";
-import { Hct, argbFromHex } from "@material/material-color-utilities";
 import {
   generateColorTheme,
   colorThemeToCssVariables,
@@ -291,152 +290,18 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // 7. コントラスト比を設定する
 
       // ソースカラー
-      const sourceColor = "#A5D4AD";
-
-      const sourceColorHct = Hct.fromInt(argbFromHex(sourceColor));
-      // tertiary(いったんソースカラーの補色)
-      const tertiaryHue = (sourceColorHct.hue + 270) % 360;
-      // neutralの彩度を0(デフォルトだとソースカラーに引っ張られすぎるため)
-      const neutralChroma = 0;
-      // neutralVariantの彩度を6(デフォルトだとソースカラーに引っ張られすぎるため)
-      const neutralVariantChroma = 6;
-
-      // テーマの調整
-      const themeAdjustments = {
-        tertiary: { hue: tertiaryHue },
-        neutral: { hue: sourceColorHct.hue, chroma: neutralChroma },
-        neutralVariant: {
-          hue: sourceColorHct.hue,
-          chroma: neutralVariantChroma,
-        },
-      };
-
-      // パレットからのカスタムカラー
-      const customPaletteColors = [
-        {
-          name: "sing-grid-cell-white",
-          palette: "neutral",
-          lightTone: 100,
-          darkTone: 15,
-          blend: true,
-        },
-        {
-          name: "sing-grid-cell-black",
-          palette: "neutral",
-          lightTone: 98,
-          darkTone: 12,
-          blend: true,
-        },
-        {
-          name: "sing-ruler-beat-line",
-          palette: "neutralVariant",
-          lightTone: 70,
-          darkTone: 40,
-          blend: true,
-        },
-        {
-          name: "sing-ruler-measure-line",
-          palette: "neutralVariant",
-          lightTone: 50,
-          darkTone: 50,
-          blend: true,
-        },
-        {
-          name: "sing-grid-vertical-line",
-          palette: "neutral",
-          lightTone: 95,
-          darkTone: 10,
-          blend: true,
-        },
-        {
-          name: "sing-grid-horizontal-line",
-          palette: "neutral",
-          lightTone: 95,
-          darkTone: 10,
-          blend: true,
-        },
-        {
-          name: "sing-grid-beat-line",
-          palette: "neutral",
-          lightTone: 90,
-          darkTone: 0,
-          blend: true,
-        },
-        {
-          name: "sing-grid-measure-line",
-          palette: "neutral",
-          lightTone: 80,
-          darkTone: 40,
-          blend: true,
-        },
-        {
-          name: "sing-grid-octave-line",
-          palette: "neutral",
-          lightTone: 80,
-          darkTone: 40,
-          blend: true,
-        },
-        {
-          name: "sing-piano-key-white",
-          palette: "neutral",
-          lightTone: 99,
-          darkTone: 70,
-          blend: true,
-        },
-        {
-          name: "sing-piano-key-black",
-          palette: "neutral",
-          lightTone: 40,
-          darkTone: 20,
-          blend: true,
-        },
-        {
-          name: "sing-note-bar-container",
-          palette: "secondary",
-          lightTone: 90,
-          darkTone: 70,
-          blend: true,
-        },
-        {
-          name: "sing-note-bar-outline",
-          palette: "neutral",
-          lightTone: 40,
-          darkTone: 30,
-          blend: true,
-        },
-        {
-          name: "sing-toolbar-container",
-          palette: "neutral",
-          lightTone: 99,
-          darkTone: 10,
-          blend: true,
-        },
-      ];
-      const customDefinedColors = [
-        {
-          name: "brand",
-          value: "#A5D4AD",
-          blend: false,
-        },
-      ];
-
-      const colorTheme = generateColorTheme(
-        {
-          sourceColor,
-          variant: "tonalSpot",
-          isDark: theme.isDark,
-          contrastLevel: 0.0,
-          adjustments: themeAdjustments,
-        },
-        customPaletteColors,
-        customDefinedColors,
-      );
-
-      const cssVariables = colorThemeToCssVariables(colorTheme);
-
-      // CSSに適用する
-      Object.entries(cssVariables).forEach(([key, value]) => {
-        document.documentElement.style.setProperty(key, value);
+      // カラースキーマの読み込み
+      window.backend.getColorSchemeConfigs().then((configs) => {
+        const defaultSchemeConfig = configs[0];
+        const colorTheme = generateColorTheme({
+          ...defaultSchemeConfig,
+          isDark: false,
+        });
+        const cssVariables = colorThemeToCssVariables(colorTheme);
+        // CSSに適用する
+        Object.entries(cssVariables).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value);
+        });
       });
 
       commit("SET_THEME_SETTING", {
