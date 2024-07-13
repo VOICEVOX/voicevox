@@ -215,14 +215,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SELECTED_NOTE_IDS: {
     getter(state) {
       // 他のトラックのノートは選択されないようにする
-      const currentTrack = getSelectedTrackWithFallback(state);
+      const selectedTrack = getSelectedTrackWithFallback(state);
 
-      const noteIdsInCurrentTrack = new Set(
-        currentTrack.notes.map((note) => note.id),
+      const noteIdsInSelectedTrack = new Set(
+        selectedTrack.notes.map((note) => note.id),
       );
 
       // toRawを1回挟まないとintersectionがエラーを返す
-      return toRaw(state._selectedNoteIds).intersection(noteIdsInCurrentTrack);
+      return toRaw(state._selectedNoteIds).intersection(noteIdsInSelectedTrack);
     },
   },
 
@@ -549,8 +549,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECT_ALL_NOTES: {
     mutation(state) {
-      const currentTrack = getSelectedTrackWithFallback(state);
-      const allNoteIds = currentTrack.notes.map((note) => note.id);
+      const selectedTrack = getSelectedTrackWithFallback(state);
+      const allNoteIds = selectedTrack.notes.map((note) => note.id);
       state._selectedNoteIds = new Set(allNoteIds);
     },
     async action({ commit }) {
@@ -2188,14 +2188,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   COPY_NOTES_TO_CLIPBOARD: {
     async action({ getters }) {
-      const currentTrack = getters.SELECTED_TRACK;
+      const selectedTrack = getters.SELECTED_TRACK;
       const noteIds = getters.SELECTED_NOTE_IDS;
       // ノートが選択されていない場合は何もしない
       if (noteIds.size === 0) {
         return;
       }
       // 選択されたノートのみをコピーする
-      const selectedNotes = currentTrack.notes
+      const selectedNotes = selectedTrack.notes
         .filter((note: Note) => noteIds.has(note.id))
         .map((note: Note) => {
           // idのみコピーしない
@@ -2280,8 +2280,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   COMMAND_QUANTIZE_SELECTED_NOTES: {
     action({ state, commit, getters, dispatch }) {
-      const currentTrack = getters.SELECTED_TRACK;
-      const selectedNotes = currentTrack.notes.filter((note: Note) => {
+      const selectedTrack = getters.SELECTED_TRACK;
+      const selectedNotes = selectedTrack.notes.filter((note: Note) => {
         return getters.SELECTED_NOTE_IDS.has(note.id);
       });
       // TODO: クオンタイズの処理を共通化する
