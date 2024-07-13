@@ -961,10 +961,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   DELETE_TRACK: {
     mutation(state, { trackId }) {
       state.tracks.delete(trackId);
+      const trackIndex = state.trackOrder.indexOf(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
       state.overlappingNoteIds.delete(trackId);
       if (state._selectedTrackId === trackId) {
-        state._selectedTrackId = state.trackOrder[0];
+        state._selectedTrackId =
+          state.trackOrder[trackIndex === 0 ? 0 : trackIndex - 1];
       }
     },
     async action({ state, commit, dispatch }, { trackId }) {
