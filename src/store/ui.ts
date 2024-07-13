@@ -299,12 +299,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   HYDRATE_UI_STORE: {
-    async action({ actions }) {
-      actions.SET_INHERIT_AUDIOINFO({
+    async action({ mutations }) {
+      mutations.SET_INHERIT_AUDIOINFO({
         inheritAudioInfo: await window.backend.getSetting("inheritAudioInfo"),
       });
 
-      actions.SET_ACTIVE_POINT_SCROLL_MODE({
+      mutations.SET_ACTIVE_POINT_SCROLL_MODE({
         activePointScrollMode: await window.backend.getSetting(
           "activePointScrollMode",
         ),
@@ -313,7 +313,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       // electron-window-stateがvuex初期化前に働くので
       // ここで改めてelectron windowの最大化状態をVuex storeに同期
       if (await window.backend.isMaximizedWindow()) {
-        actions.DETECT_MAXIMIZED();
+        mutations.DETECT_MAXIMIZED();
       }
     },
   },
