@@ -1434,7 +1434,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       label: "選択解除",
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("DESELECT_ALL_NOTES_IN_SELECTED_TRACK");
+        await store.dispatch("DESELECT_ALL_NOTES");
       },
       disabled: !isNoteSelected.value,
       disableWhenUiLocked: true,
