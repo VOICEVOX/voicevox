@@ -213,8 +213,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SELECTED_NOTE_IDS: {
+    // 選択中のトラックのノートだけを選択中のノートとして返す。
     getter(state) {
-      // 他のトラックのノートは選択されないようにする
       const selectedTrack = getSelectedTrackWithFallback(state);
 
       const noteIdsInSelectedTrack = new Set(
@@ -980,8 +980,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SELECT_TRACK: {
+    // 選択中のトラックのノートだけを選択中として扱うため、トラックが切り替わったときは選択中のノートをクリアする。
     mutation(state, { trackId }) {
-      // 他のトラックのノートは選択されないようにする
       state._selectedNoteIds.clear();
       state._selectedTrackId = trackId;
     },
