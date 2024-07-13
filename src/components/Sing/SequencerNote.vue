@@ -238,11 +238,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     color: var(--md-sys-color-on-secondary-fixed);
     font-size: 16px;
     font-weight: 400;
-    line-height: 20px;
     letter-spacing: -0.1em;
     white-space: nowrap;
     pointer-events: none;
     background: transparent;
+    transition: font-size 0.2s ease;
   }
 
   .note-bar {

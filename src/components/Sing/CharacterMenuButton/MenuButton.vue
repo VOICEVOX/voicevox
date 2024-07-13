@@ -243,6 +243,11 @@ const engineIcons = useEngineIcons(() => store.state.engineManifests);
 @use "@/styles/colors" as colors;
 
 .character-menu {
+  .q-menu {
+    :deep(.q-menu__container) {
+      border-radius: 1.25rem;
+    }
+  }
   .q-item {
     color: var(--md-sys-color-on-surface);
   }

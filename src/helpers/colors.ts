@@ -1,6 +1,5 @@
 import {
   argbFromHex,
-  hexFromArgb,
   Hct,
   DynamicScheme,
   SchemeContent,
@@ -16,7 +15,7 @@ import {
   MaterialDynamicColors,
 } from "@material/material-color-utilities";
 
-// MaterialDynamicColorのスキーマ
+// カラースキーマの種類
 export type SchemeVariant =
   | "content"
   | "tonalSpot"
@@ -28,7 +27,7 @@ export type SchemeVariant =
   | "rainbow"
   | "fruitSalad";
 
-// M3カラーパレットのキー
+// カラーパレットのキー(M3準拠)
 export type PaletteKey =
   | "primary"
   | "secondary"
@@ -37,15 +36,15 @@ export type PaletteKey =
   | "neutralVariant"
   | "error";
 
-// テーマにおける色相・彩度・明度の調整
-interface ColorAdjustment {
+// カラー調整
+export interface ColorAdjustment {
   hue?: number;
   chroma?: number;
   tone?: number;
 }
 
 // テーマオプション
-interface ThemeOptions {
+export interface ThemeOptions {
   sourceColor: string;
   variant?: SchemeVariant;
   isDark?: boolean;
@@ -53,31 +52,30 @@ interface ThemeOptions {
   adjustments?: Partial<Record<PaletteKey, ColorAdjustment>>;
 }
 
-// カスタムカラー(固定値)
-interface CustomColor {
+// 定義済みカスタムカラー
+export interface CustomDefinedColor {
   name: string;
   value: string;
   blend: boolean;
 }
 
-// カスタムカラー(パレットからtoneを指定して取得)
-interface CustomPaletteColor {
+// パレットから取得するカスタムカラー
+export interface CustomPaletteColor {
   name: string;
-  palette: PaletteKey;
+  palette: string;
   lightTone: number;
   darkTone: number;
   blend: boolean;
 }
 
-// テーマスキーマ
-const SCHEME_CONSTRUCTORS: Record<
-  SchemeVariant,
-  new (
-    sourceColorHct: Hct,
-    isDark: boolean,
-    contrastLevel: number,
-  ) => DynamicScheme
-> = {
+// カラーパレットオプション
+export interface TonalPaletteOptions {
+  color: string;
+  tonalOffset?: number;
+}
+
+// カラースキーマのコンストラクタ
+const SCHEME_CONSTRUCTORS: Record<SchemeVariant, typeof SchemeContent> = {
   content: SchemeContent,
   tonalSpot: SchemeTonalSpot,
   neutral: SchemeNeutral,
@@ -89,14 +87,7 @@ const SCHEME_CONSTRUCTORS: Record<
   fruitSalad: SchemeFruitSalad,
 };
 
-// デフォルトテーマオプション
-const DEFAULT_OPTIONS: Partial<ThemeOptions> = {
-  variant: "tonalSpot",
-  isDark: false,
-  contrastLevel: 0.0,
-};
-
-// パレットのキー
+// カラーパレットのキー
 const PALETTE_KEYS: PaletteKey[] = [
   "primary",
   "secondary",
@@ -106,56 +97,51 @@ const PALETTE_KEYS: PaletteKey[] = [
   "error",
 ];
 
-// テーマパレットの明度
-const TONES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
+// カラーパレットのトーン比率
+export const TONES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
 
-// キャメルケバブケースをケバブケースに変換
-const toKebabCase = (str: string) => {
-  return str
-    .split(/(?=[A-Z])/)
-    .join("-")
-    .toLowerCase();
+// ARGBをRGBAに変換
+export const rgbaFromArgb = (argb: number, alpha: number = 1): string => {
+  const r = (argb >> 16) & 255;
+  const g = (argb >> 8) & 255;
+  const b = argb & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
 };
 
-// パレットの調整
-function adjustPalette(
+// テーマパレットの調整
+export const adjustPalette = (
   palette: TonalPalette,
   adjustment: ColorAdjustment,
-): TonalPalette {
-  // 色相・彩度・明度に調整があった場合、新しいパレットを作成
+): TonalPalette => {
   const hue = adjustment.hue ?? palette.hue;
   const chroma = adjustment.chroma ?? palette.chroma;
-  return adjustment.tone != undefined
-    ? TonalPalette.fromHueAndChroma(
-        Hct.from(hue, chroma, adjustment.tone).hue,
-        Hct.from(hue, chroma, adjustment.tone).chroma,
-      )
-    : TonalPalette.fromHueAndChroma(hue, chroma);
-}
+  const tone = adjustment.tone ?? 50;
+  return TonalPalette.fromHueAndChroma(
+    Hct.from(hue, chroma, tone).hue,
+    Hct.from(hue, chroma, tone).chroma,
+  );
+};
 
-// ダイナミックスキーマを作成
-export function createDynamicScheme(options: ThemeOptions): DynamicScheme {
-  const { sourceColor, variant, isDark, contrastLevel, adjustments } = {
-    ...DEFAULT_OPTIONS,
-    ...options,
-  };
+// M3準拠のダイナミックスキーマの生成
+export const createDynamicScheme = (options: ThemeOptions): DynamicScheme => {
+  const {
+    sourceColor,
+    variant = "tonalSpot",
+    isDark = false,
+    contrastLevel = 0,
+    adjustments,
+  } = options;
   const sourceColorHct = Hct.fromInt(argbFromHex(sourceColor));
-  const SchemeConstructor = SCHEME_CONSTRUCTORS[variant!];
+  const SchemeConstructor = SCHEME_CONSTRUCTORS[variant];
+  let scheme = new SchemeConstructor(sourceColorHct, isDark, contrastLevel);
 
-  if (!SchemeConstructor) {
-    throw new Error(`Unsupported scheme variant: ${variant}`);
-  }
-
-  let scheme = new SchemeConstructor(sourceColorHct, isDark!, contrastLevel!);
-
-  // 必要に応じてパレットを調整
   if (adjustments) {
-    const adjustedPalettes = PALETTE_KEYS.reduce(
-      (acc, key) => {
-        if (adjustments[key]) {
+    const adjustedPalettes = Object.entries(adjustments).reduce(
+      (acc, [key, adjustment]) => {
+        if (adjustment) {
           acc[`${key}Palette`] = adjustPalette(
             scheme[`${key}Palette` as keyof DynamicScheme] as TonalPalette,
-            adjustments[key]!,
+            adjustment,
           );
         }
         return acc;
@@ -175,60 +161,133 @@ export function createDynamicScheme(options: ThemeOptions): DynamicScheme {
   }
 
   return scheme;
+};
+
+// テーマの色スキーマ
+export interface ColorTheme {
+  scheme: DynamicScheme;
+  systemColors: Record<string, string>;
+  paletteTones: Record<string, Record<number, string>>;
+  customPaletteColors: Record<string, string>;
+  customDefinedColors: Record<string, string>;
 }
 
-// ダイナミックスキーマをCSS変数に変換
-export function dynamicSchemeToCssVariables(
-  scheme: DynamicScheme,
+// テーマの色スキーマの生成
+export const generateColorTheme = (
+  options: ThemeOptions,
   customPaletteColors: CustomPaletteColor[] = [],
-  definedCustomColors: CustomColor[] = [],
-): Record<string, string> {
-  // システムカラーをCSS変数に変換
+  customDefinedColors: CustomDefinedColor[] = [],
+): ColorTheme => {
+  const scheme = createDynamicScheme(options);
+
+  // システムカラーの生成
   const systemColors = Object.entries(MaterialDynamicColors).reduce(
     (acc, [name, color]) => {
       if (typeof color === "object" && "getArgb" in color) {
-        acc[`--md-sys-color-${name.replace(/([A-Z])/g, "-$1").toLowerCase()}`] =
-          hexFromArgb(color.getArgb(scheme));
+        acc[name] = rgbaFromArgb(color.getArgb(scheme));
       }
       return acc;
     },
     {} as Record<string, string>,
   );
 
-  // パレットの色相・彩度・明度をCSS変数に変換
-  const paletteTones = PALETTE_KEYS.flatMap((key) =>
-    TONES.map((tone) => [
-      `--md-ref-palette-${toKebabCase(key)}-${tone}`,
-      hexFromArgb(
-        (scheme[`${key}Palette` as keyof DynamicScheme] as TonalPalette).tone(
+  // テーマの色パレットの生成
+  const paletteTones = PALETTE_KEYS.reduce((acc, key) => {
+      acc[key] = Object.fromEntries(
+        TONES.map((tone) => [
           tone,
-        ),
-      ),
-    ]),
+          rgbaFromArgb(
+            (
+              scheme[`${key}Palette` as keyof DynamicScheme] as TonalPalette
+            ).tone(tone),
+          ),
+        ]),
+      );
+      return acc;
+    },
+    {} as Record<string, Record<number, string>>,
   );
 
-  // カスタムパレットカラーをCSS変数に変換
-  const customPalettes = customPaletteColors.map(
-    ({ name, palette, lightTone, darkTone }) => [
-      `--md-custom-color-${name}`,
-      hexFromArgb(
+  // カスタムパレットの色の生成
+  const customPaletteColorValues = customPaletteColors.reduce(
+    (acc, { name, palette, lightTone, darkTone }) => {
+      acc[name] = rgbaFromArgb(
         (
           scheme[`${palette}Palette` as keyof DynamicScheme] as TonalPalette
         ).tone(scheme.isDark ? darkTone : lightTone),
-      ),
-    ],
+      );
+      return acc;
+    },
+    {} as Record<string, string>,
   );
 
-  // カスタムカラーをCSS変数に変換
-  const customColors = definedCustomColors.map(({ name, value }) => [
-    `--md-custom-color-${name}`,
-    value,
-  ]);
+  // カスタム定義色の生成
+  const customDefinedColorValues = customDefinedColors.reduce(
+    (acc, { name, value }) => {
+      acc[name] = value;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
-  return Object.fromEntries([
-    ...Object.entries(systemColors),
-    ...paletteTones,
-    ...customPalettes,
-    ...customColors,
-  ]);
-}
+  return {
+    scheme,
+    systemColors,
+    paletteTones,
+    customPaletteColors: customPaletteColorValues,
+    customDefinedColors: customDefinedColorValues,
+  };
+};
+
+// テーマの色スキーマをCSS変数に変換
+export const colorThemeToCssVariables = (
+  theme: ColorTheme,
+): Record<string, string> => {
+  const cssVars: Record<string, string> = {};
+
+  Object.entries(theme.systemColors).forEach(([name, color]) => {
+    cssVars[`--md-sys-color-${name.replace(/([A-Z])/g, "-$1").toLowerCase()}`] =
+      color;
+  });
+
+  Object.entries(theme.paletteTones).forEach(([key, tones]) => {
+    Object.entries(tones).forEach(([tone, color]) => {
+      cssVars[`--md-ref-palette-${key}-${tone}`] = color;
+    });
+  });
+
+  Object.entries(theme.customPaletteColors).forEach(([name, color]) => {
+    cssVars[`--md-custom-color-${name}`] = color;
+  });
+
+  Object.entries(theme.customDefinedColors).forEach(([name, color]) => {
+    cssVars[`--md-custom-color-${name}`] = color;
+  });
+
+  return cssVars;
+};
+
+// テーマに合わせて色を調整するユーティリティ関数 ex: トラックカラーをテーマにあわせる
+export const adjustColorToTheme = (
+  color: string,
+  theme: ColorTheme,
+  targetKey: PaletteKey = "primary",
+): string => {
+  const sourceHct = Hct.fromInt(argbFromHex(color));
+  const targetPalette = theme.scheme[
+    `${targetKey}Palette` as keyof DynamicScheme
+  ] as TonalPalette;
+
+  // テーマの色相と彩度を取得
+  const themeHue = targetPalette.hue;
+  const themeChroma = targetPalette.chroma;
+
+  // 元の色の明度を保持しつつ、テーマの色相と彩度に合わせる
+  const adjustedHct = Hct.from(
+    themeHue,
+    Math.min(sourceHct.chroma, themeChroma), // 彩度は元の色とテーマの低い方を選択
+    sourceHct.tone,
+  );
+
+  return rgbaFromArgb(adjustedHct.toInt());
+};

@@ -1,9 +1,8 @@
 import { Dark, setCssVar, colors } from "quasar";
 import { Hct, argbFromHex } from "@material/material-color-utilities";
 import {
-  createDynamicScheme,
-  dynamicSchemeToCssVariables,
-  PaletteKey,
+  generateColorTheme,
+  colorThemeToCssVariables,
 } from "../helpers/colors";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
@@ -302,6 +301,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // neutralVariantの彩度を6(デフォルトだとソースカラーに引っ張られすぎるため)
       const neutralVariantChroma = 6;
 
+      // テーマの調整
       const themeAdjustments = {
         tertiary: { hue: tertiaryHue },
         neutral: { hue: sourceColorHct.hue, chroma: neutralChroma },
@@ -315,104 +315,104 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       const customPaletteColors = [
         {
           name: "sing-grid-cell-white",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 100,
           darkTone: 15,
           blend: true,
         },
         {
           name: "sing-grid-cell-black",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 98,
           darkTone: 12,
           blend: true,
         },
         {
           name: "sing-ruler-beat-line",
-          palette: "neutralVariant" as PaletteKey,
+          palette: "neutralVariant",
           lightTone: 70,
           darkTone: 40,
           blend: true,
         },
         {
           name: "sing-ruler-measure-line",
-          palette: "neutralVariant" as PaletteKey,
+          palette: "neutralVariant",
           lightTone: 50,
           darkTone: 50,
           blend: true,
         },
         {
           name: "sing-grid-vertical-line",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 95,
           darkTone: 10,
           blend: true,
         },
         {
           name: "sing-grid-horizontal-line",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 95,
           darkTone: 10,
           blend: true,
         },
         {
           name: "sing-grid-beat-line",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 90,
           darkTone: 0,
           blend: true,
         },
         {
           name: "sing-grid-measure-line",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 80,
           darkTone: 40,
           blend: true,
         },
         {
           name: "sing-grid-octave-line",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 80,
           darkTone: 40,
           blend: true,
         },
         {
           name: "sing-piano-key-white",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 99,
           darkTone: 70,
           blend: true,
         },
         {
           name: "sing-piano-key-black",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 40,
           darkTone: 20,
           blend: true,
         },
         {
           name: "sing-note-bar-container",
-          palette: "secondary" as PaletteKey,
+          palette: "secondary",
           lightTone: 90,
           darkTone: 70,
           blend: true,
         },
         {
           name: "sing-note-bar-outline",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 40,
           darkTone: 30,
           blend: true,
         },
         {
           name: "sing-toolbar-container",
-          palette: "neutral" as PaletteKey,
+          palette: "neutral",
           lightTone: 99,
           darkTone: 10,
           blend: true,
         },
       ];
-      const definedCustomColors = [
+      const customDefinedColors = [
         {
           name: "brand",
           value: "#A5D4AD",
@@ -420,19 +420,19 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         },
       ];
 
-      const baseScheme = createDynamicScheme({
-        sourceColor,
-        variant: "content",
-        isDark: theme.isDark,
-        contrastLevel: 0.0,
-        adjustments: themeAdjustments,
-      });
-
-      const cssVariables = dynamicSchemeToCssVariables(
-        baseScheme,
+      const colorTheme = generateColorTheme(
+        {
+          sourceColor,
+          variant: "tonalSpot",
+          isDark: theme.isDark,
+          contrastLevel: 0.0,
+          adjustments: themeAdjustments,
+        },
         customPaletteColors,
-        definedCustomColors,
+        customDefinedColors,
       );
+
+      const cssVariables = colorThemeToCssVariables(colorTheme);
 
       // CSSに適用する
       Object.entries(cssVariables).forEach(([key, value]) => {
