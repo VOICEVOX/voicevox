@@ -939,7 +939,7 @@ export type SingingStoreTypes = {
     action(payload: { noteIds: NoteId[] }): void;
   };
 
-  SELECT_ALL_NOTES: {
+  SELECT_ALL_NOTES_IN_SELECTED_TRACK: {
     mutation: undefined;
     action(): void;
   };

@@ -1382,7 +1382,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("SELECT_ALL_NOTES");
+    store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
   },
 });
 
@@ -1425,7 +1425,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       label: "すべて選択",
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("SELECT_ALL_NOTES");
+        await store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
       },
       disableWhenUiLocked: true,
     },
@@ -1434,7 +1434,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       label: "選択解除",
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("DESELECT_ALL_NOTES");
+        await store.dispatch("DESELECT_ALL_NOTES_IN_SELECTED_TRACK");
       },
       disabled: !isNoteSelected.value,
       disableWhenUiLocked: true,

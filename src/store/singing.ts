@@ -547,14 +547,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SELECT_ALL_NOTES: {
+  SELECT_ALL_NOTES_IN_SELECTED_TRACK: {
     mutation(state) {
       const selectedTrack = getSelectedTrackWithFallback(state);
       const allNoteIds = selectedTrack.notes.map((note) => note.id);
       state._selectedNoteIds = new Set(allNoteIds);
     },
     async action({ commit }) {
-      commit("SELECT_ALL_NOTES");
+      commit("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
     },
   },
 
