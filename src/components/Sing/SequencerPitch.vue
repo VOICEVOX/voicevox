@@ -261,7 +261,7 @@ const generateOriginalPitchData = () => {
   const unvoicedPhonemes = UNVOICED_PHONEMES;
   const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
 
-  // トラック毎の歌い方のf0を結合してピッチデータを生成する
+  // 選択中のトラックで使われている歌い方のf0を結合してピッチデータを生成する
   const tempData = [];
   for (const singingGuide of singingGuidesInSelectedTrack.value) {
     // TODO: 補間を行うようにする
