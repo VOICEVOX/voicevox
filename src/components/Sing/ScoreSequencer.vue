@@ -65,10 +65,8 @@
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
         @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
       />
-
       <SequencerLyricInput
         v-if="editingLyricNote != undefined"
-        class="sequencer-lyric-input"
         :editingLyricNote
         @lyricInput="onLyricInput"
         @lyricConfirmed="onLyricConfirmed"
@@ -103,6 +101,7 @@
           height: `${Math.abs(cursorY - rectSelectStartY)}px`,
         }"
       ></div>
+      <!-- 他のトラックのSequencerPhraseIndicatorにまとめて透明度をかけるためのコンテナ -->
       <div class="sequencer-phrase-indicator-container-other-track">
         <SequencerPhraseIndicator
           v-for="phraseInfo in phraseInfosInOtherTracks"
@@ -115,7 +114,7 @@
           }"
         />
       </div>
-      <div class="sequencer-phrase-indicator-container-active">
+      <div>
         <SequencerPhraseIndicator
           v-for="phraseInfo in phraseInfosInCurrentTrack"
           :key="phraseInfo.key"
