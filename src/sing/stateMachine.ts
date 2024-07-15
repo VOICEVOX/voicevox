@@ -1,19 +1,17 @@
-export abstract class State<
+export interface State<
   States extends State<States, Input, Context, Dispatcher>,
   Input,
   Context,
   Dispatcher,
 > {
-  abstract process(
+  process(
     input: Input,
     context: Context,
     dispatcher: Dispatcher,
     setNextState: (nextState: States) => void,
   ): void;
-
-  onEnter(_context: Context, _dispatcher: Dispatcher) {}
-
-  onExit(_context: Context, _dispatcher: Dispatcher) {}
+  onEnter(context: Context, dispatcher: Dispatcher): void;
+  onExit(context: Context, dispatcher: Dispatcher): void;
 }
 
 export class StateMachine<

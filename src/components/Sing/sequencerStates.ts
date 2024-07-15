@@ -68,8 +68,10 @@ const getGuideLineTicks = (
   return Math.round(cursorTicks / snapTicks - 0.25) * snapTicks;
 };
 
-class IdleState extends State<States, Input, Context, Dispatcher> {
+class IdleState implements State<States, Input, Context, Dispatcher> {
   readonly id = "idle";
+
+  onEnter(_context: Context, _dispatcher: Dispatcher) {}
 
   process(
     input: Input,
@@ -103,9 +105,11 @@ class IdleState extends State<States, Input, Context, Dispatcher> {
       }
     }
   }
+
+  onExit(_context: Context, _dispatcher: Dispatcher) {}
 }
 
-class AddNoteState extends State<States, Input, Context, Dispatcher> {
+class AddNoteState implements State<States, Input, Context, Dispatcher> {
   readonly id = "addNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -116,7 +120,6 @@ class AddNoteState extends State<States, Input, Context, Dispatcher> {
   private currentCursorPos: PositionOnSequencer;
 
   constructor(cursorPosAtStart: PositionOnSequencer) {
-    super();
     this.cursorPosAtStart = cursorPosAtStart;
     this.currentCursorPos = cursorPosAtStart;
   }
@@ -146,7 +149,7 @@ class AddNoteState extends State<States, Input, Context, Dispatcher> {
     context.guideLineTicks.value = noteEndPos;
   }
 
-  override onEnter(context: Context, dispatcher: Dispatcher) {
+  onEnter(context: Context, dispatcher: Dispatcher) {
     dispatcher.deselectAllNotes();
 
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
@@ -192,7 +195,7 @@ class AddNoteState extends State<States, Input, Context, Dispatcher> {
     }
   }
 
-  override onExit(context: Context, dispatcher: Dispatcher) {
+  onExit(context: Context, dispatcher: Dispatcher) {
     const previewNotes = context.previewNotes.value;
     const previewNoteIds = previewNotes.map((value) => value.id);
 

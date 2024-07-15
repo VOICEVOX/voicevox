@@ -3,7 +3,6 @@
     "target": "ES6",
     "module": "esnext",
     "strict": true,
-    "noImplicitOverride": true,
     "jsx": "preserve",
     "importHelpers": true,
     "moduleResolution": "bundler",
