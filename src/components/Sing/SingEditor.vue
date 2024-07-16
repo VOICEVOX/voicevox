@@ -20,6 +20,7 @@
       </div>
     </div>
     <ScoreSequencer />
+    <ColorSchemeEditor v-if="isCompletedInitialStartup" />
   </div>
 </template>
 
@@ -27,6 +28,7 @@
 import { computed, ref, watch } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
+import ColorSchemeEditor from "@/components/Sing/ColorSchemeEditor.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";

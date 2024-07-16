@@ -52,6 +52,7 @@ import {
   RootMiscSettingType,
   EditorType,
   NoteId,
+  ColorSchemeConfig,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -1571,6 +1572,24 @@ export type SettingStoreTypes = {
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
+  };
+
+  INITIALIZE_COLOR_SCHEME: {
+    mutation: {
+      colorScheme: ColorSchemeConfig;
+      availableColorSchemes: ColorSchemeConfig[];
+    };
+    action(payload: {
+      colorScheme: ColorSchemeConfig;
+      availableColorSchemes: ColorSchemeConfig[];
+    }): void;
+  };
+
+  SET_COLOR_SCHEME_SETTING: {
+    mutation: {
+      colorScheme: ColorSchemeConfig;
+    };
+    action(payload: { colorScheme: ColorSchemeConfig }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

@@ -558,6 +558,78 @@ export type ThemeSetting = {
   availableThemes: ThemeConf[];
 };
 
+// カラースキーマの種類
+export type SchemeVariant =
+  | "content"
+  | "tonalSpot"
+  | "neutral"
+  | "vibrant"
+  | "expressive"
+  | "fidelity"
+  | "monochrome"
+  | "rainbow"
+  | "fruitSalad";
+
+// カラーパレットのキー(M3準拠)
+export type PaletteKey =
+  | "primary"
+  | "secondary"
+  | "tertiary"
+  | "neutral"
+  | "neutralVariant"
+  | "error";
+
+// カラー調整
+export interface ColorAdjustment {
+  hue?: number;
+  chroma?: number;
+  tone?: number;
+  hex?: string;
+}
+
+// テーマオプション
+export interface ThemeOptions {
+  sourceColor: string;
+  variant?: SchemeVariant;
+  isDark?: boolean;
+  contrastLevel?: number;
+  adjustments?: Partial<Record<PaletteKey, ColorAdjustment>>;
+}
+
+// 定義済みカスタムカラー
+export interface CustomDefinedColor {
+  name: string;
+  value: string;
+  blend: boolean;
+}
+
+// パレットから取得するカスタムカラー
+export interface CustomPaletteColor {
+  name: string;
+  palette: PaletteKey;
+  lightTone: number;
+  darkTone: number;
+  blend: boolean;
+}
+
+// カラーパレットオプション
+export interface TonalPaletteOptions {
+  color: string;
+  tonalOffset?: number;
+}
+
+// カラースキーマの設定
+export interface ColorSchemeConfig {
+  name: string;
+  sourceColor: string;
+  variant: SchemeVariant;
+  isDark: boolean;
+  contrastLevel: number;
+  adjustments: Partial<Record<PaletteKey, ColorAdjustment>>;
+  customPaletteColors: CustomPaletteColor[];
+  customDefinedColors: CustomDefinedColor[];
+}
+
 export const experimentalSettingSchema = z.object({
   enablePreset: z.boolean().default(false),
   shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),

@@ -19,7 +19,6 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
-import { ColorSchemeConfig } from "../../helpers/colors";
 import { hasSupportedGpu } from "./device";
 import EngineManager from "./manager/engineManager";
 import VvppManager, { isVvppFile } from "./manager/vvppManager";
@@ -47,6 +46,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  ColorSchemeConfig,
 } from "@/type/preload";
 
 type SingleInstanceLockData = {

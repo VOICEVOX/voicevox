@@ -1,11 +1,8 @@
 import { Dark, setCssVar, colors } from "quasar";
-import {
-  generateColorTheme,
-  colorThemeToCssVariables,
-} from "../helpers/colors";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import { generateColorTheme, colorThemeToCssVariables } from "@/helpers/colors";
 import {
   HotkeySettingType,
   SavingSetting,
@@ -16,6 +13,7 @@ import {
   EngineId,
   ConfirmedTips,
   RootMiscSettingType,
+  ColorSchemeConfig,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
 
@@ -39,6 +37,10 @@ export const settingStoreState: SettingStoreState = {
   themeSetting: {
     currentTheme: "Default",
     availableThemes: [],
+  },
+  colorSchemeSetting: {
+    colorScheme: undefined,
+    availableColorSchemes: [],
   },
   editorFont: "default",
   showTextLineNumber: false,
@@ -92,6 +94,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           currentTheme: theme.currentTheme,
         });
       }
+
+      // TODO: Hydrate
+      dispatch("INITIALIZE_COLOR_SCHEME");
 
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
         acceptRetrieveTelemetry: await window.backend.getSetting(
@@ -279,35 +284,83 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
-      // NOTE: 以下をどこかで設定ファイル化
-      // カラーを変更したい場合
-      // 1. ソースカラーを変更する(テーマ全体)
-      // 2. ソースカラーからtertiaryカラー(アクセント)を変更する
-      // 3. テーマの調整をする(adjustments)
-      // 4. パレットから取得するカラーを設定する
-      // 5. 定義済みカスタムカラーを設定する(パレット外)
-      // 6. テーマオプションを設定する(tonalSpot, monochrome, vibrant...etc)
-      // 7. コントラスト比を設定する
-
-      // ソースカラー
-      // カラースキーマの読み込み
-      window.backend.getColorSchemeConfigs().then((configs) => {
-        const defaultSchemeConfig = configs[0];
-        const colorTheme = generateColorTheme({
-          ...defaultSchemeConfig,
-          isDark: theme.isDark,
-        });
-        const cssVariables = colorThemeToCssVariables(colorTheme);
-        // CSSに適用する
-        Object.entries(cssVariables).forEach(([key, value]) => {
-          document.documentElement.style.setProperty(key, value);
-        });
-      });
-
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
       });
     },
+  },
+
+  INITIALIZE_COLOR_SCHEME: {
+    mutation(state, { colorScheme, availableColorSchemes }) {
+      state.colorSchemeSetting.colorScheme = colorScheme;
+      state.colorSchemeSetting.availableColorSchemes = availableColorSchemes;
+    },
+    action: createUILockAction(async ({ commit, state }) => {
+      try {
+        const availableColorSchemes =
+          await window.backend.getColorSchemeConfigs();
+        const defaultSchemeConfig = availableColorSchemes[0];
+        const isDark = state.themeSetting.currentTheme.isDark ?? false;
+        const colorTheme = generateColorTheme({
+          ...defaultSchemeConfig,
+          isDark,
+        });
+
+        // CSS変数に変換
+        const cssVariables = colorThemeToCssVariables(colorTheme);
+
+        // CSSに適用
+        Object.entries(cssVariables).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value);
+        });
+
+        commit("INITIALIZE_COLOR_SCHEME", {
+          colorScheme: defaultSchemeConfig,
+          availableColorSchemes,
+        });
+      } catch (error) {
+        console.error("Error initializing color scheme:", error);
+        await window.backend.showMessageDialog({
+          type: "error",
+          title: "カラースキーム初期化エラー",
+          message: "カラースキームの初期化中にエラーが発生しました。",
+        });
+      }
+    }),
+  },
+
+  SET_COLOR_SCHEME_SETTING: {
+    mutation(state, { colorScheme }) {
+      state.colorSchemeSetting.colorScheme = colorScheme;
+    },
+    action: createUILockAction(
+      async (
+        { commit, state },
+        { colorScheme }: { colorScheme: ColorSchemeConfig },
+      ) => {
+        try {
+          const isDark = state.themeSetting.currentTheme.isDark ?? false;
+          const colorTheme = generateColorTheme({
+            ...colorScheme,
+            isDark,
+          });
+          const cssVariables = colorThemeToCssVariables(colorTheme);
+
+          Object.entries(cssVariables).forEach(([key, value]) => {
+            document.documentElement.style.setProperty(key, value);
+          });
+
+          commit("SET_COLOR_SCHEME_SETTING", { colorScheme: colorScheme });
+        } catch (error) {
+          console.error("Error setting color scheme:", error);
+          await window.backend.showMessageDialog({
+            type: "error",
+            title: "カラースキーム設定エラー",
+            message: "カラースキームの設定中にエラーが発生しました。",
+          });
+        }
+      },
+    ),
   },
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

@@ -15,76 +15,14 @@ import {
   MaterialDynamicColors,
 } from "@material/material-color-utilities";
 
-// カラースキーマの種類
-export type SchemeVariant =
-  | "content"
-  | "tonalSpot"
-  | "neutral"
-  | "vibrant"
-  | "expressive"
-  | "fidelity"
-  | "monochrome"
-  | "rainbow"
-  | "fruitSalad";
-
-// カラーパレットのキー(M3準拠)
-export type PaletteKey =
-  | "primary"
-  | "secondary"
-  | "tertiary"
-  | "neutral"
-  | "neutralVariant"
-  | "error";
-
-// カラー調整
-export interface ColorAdjustment {
-  hue?: number;
-  chroma?: number;
-  tone?: number;
-  hex?: string;
-}
-
-// テーマオプション
-export interface ThemeOptions {
-  sourceColor: string;
-  variant?: SchemeVariant;
-  isDark?: boolean;
-  contrastLevel?: number;
-  adjustments?: Partial<Record<PaletteKey, ColorAdjustment>>;
-}
-
-// 定義済みカスタムカラー
-export interface CustomDefinedColor {
-  name: string;
-  value: string;
-  blend: boolean;
-}
-
-// パレットから取得するカスタムカラー
-export interface CustomPaletteColor {
-  name: string;
-  palette: PaletteKey;
-  lightTone: number;
-  darkTone: number;
-  blend: boolean;
-}
-
-// カラーパレットオプション
-export interface TonalPaletteOptions {
-  color: string;
-  tonalOffset?: number;
-}
-
-export interface ColorSchemeConfig {
-  name: string;
-  sourceColor: string;
-  variant: SchemeVariant;
-  isDark: boolean;
-  contrastLevel: number;
-  adjustments: Partial<Record<PaletteKey, ColorAdjustment>>;
-  customPaletteColors: CustomPaletteColor[];
-  customDefinedColors: CustomDefinedColor[];
-}
+import {
+  ColorSchemeConfig,
+  PaletteKey,
+  ColorAdjustment,
+  ThemeOptions,
+  SchemeVariant,
+  ColorTheme,
+} from "@/type/preload";
 
 // カラースキーマのコンストラクタ
 const SCHEME_CONSTRUCTORS: Record<SchemeVariant, typeof SchemeContent> = {
@@ -130,7 +68,7 @@ export const adjustPalette = (
     const hexHct = Hct.fromInt(argbFromHex(adjustment.hex));
     return TonalPalette.fromHueAndChroma(hexHct.hue, hexHct.chroma);
   } else {
-    // 色相、彩度、明度を指定されている場合はテーマを調整
+    // 色相、彩度、明度を指定されている場合はテーマパレットを調整
     const hue = adjustment.hue != undefined ? adjustment.hue : palette.hue;
     const chroma =
       adjustment.chroma != undefined ? adjustment.chroma : palette.chroma;
