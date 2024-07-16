@@ -295,7 +295,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         const defaultSchemeConfig = configs[0];
         const colorTheme = generateColorTheme({
           ...defaultSchemeConfig,
-          isDark: false,
+          isDark: theme.isDark,
         });
         const cssVariables = colorThemeToCssVariables(colorTheme);
         // CSSに適用する

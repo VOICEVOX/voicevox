@@ -56,9 +56,10 @@ const pitchEditData = computed(() => {
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const editFrameRate = computed(() => store.state.editFrameRate);
 
+// NOTE: カラースキーマオブジェクトから変換できるようにする
 const originalPitchLine: PitchLine = {
-  color: new Color(160, 160, 160, 255),
-  width: 1.2,
+  color: new Color(160, 160, 160, 255 * 0.8),
+  width: 1,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };

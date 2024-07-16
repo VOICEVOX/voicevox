@@ -1472,7 +1472,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-guideline {
   position: absolute;
   top: 0;
-  left: 0;
+  left: -0.5px;
   width: 1px;
   background: var(--md-sys-color-secondary-container);
   pointer-events: none;

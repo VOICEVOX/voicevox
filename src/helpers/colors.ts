@@ -1,6 +1,5 @@
 import {
   argbFromHex,
-  hexFromArgb,
   Hct,
   DynamicScheme,
   SchemeContent,
@@ -200,7 +199,7 @@ export const generateColorTheme = (
   const systemColors = Object.entries(MaterialDynamicColors).reduce(
     (acc, [name, color]) => {
       if (typeof color === "object" && "getArgb" in color) {
-        acc[name] = hexFromArgb(color.getArgb(scheme));
+        acc[name] = rgbaFromArgb(color.getArgb(scheme));
       }
       return acc;
     },
@@ -213,7 +212,7 @@ export const generateColorTheme = (
       acc[key] = Object.fromEntries(
         TONES.map((tone) => [
           tone,
-          hexFromArgb(
+          rgbaFromArgb(
             (
               scheme[`${key}Palette` as keyof DynamicScheme] as TonalPalette
             ).tone(tone),
@@ -228,7 +227,7 @@ export const generateColorTheme = (
   // カスタムパレットの色の生成
   const customPaletteColors = schemeConfig.customPaletteColors.reduce(
     (acc, { name, palette, lightTone, darkTone }) => {
-      acc[name] = hexFromArgb(
+      acc[name] = rgbaFromArgb(
         (
           scheme[`${palette}Palette` as keyof DynamicScheme] as TonalPalette
         ).tone(scheme.isDark ? darkTone : lightTone),
@@ -306,5 +305,5 @@ export const adjustColorToTheme = (
     sourceHct.tone,
   );
 
-  return hexFromArgb(adjustedHct.toInt());
+  return rgbaFromArgb(adjustedHct.toInt());
 };

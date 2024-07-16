@@ -39,7 +39,7 @@
             v-for="measureInfo in measureInfos"
             :key="measureInfo.number"
             font-size="12"
-            :x="measureInfo.x + 8"
+            :x="measureInfo.x + 6"
             y="32"
             class="sequencer-ruler-measure-number"
           >

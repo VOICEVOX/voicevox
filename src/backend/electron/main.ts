@@ -326,7 +326,7 @@ function readThemeFiles() {
 }
 
 // カラースキームを読み込み
-function loadColorSchemeConfig(schemeFile: string): ColorSchemeConfig {
+function readColorSchemeConfig(schemeFile: string): ColorSchemeConfig {
   const filePath = path.join(__static, "color-schemes", schemeFile);
   const fileContent = fs.readFileSync(filePath, "utf-8");
   return JSON.parse(fileContent) as ColorSchemeConfig;
@@ -339,7 +339,7 @@ function getAvailableColorSchemeConfigs(): string[] {
 }
 
 const colorSchemeConfigs = getAvailableColorSchemeConfigs().map((schemeFile) =>
-  loadColorSchemeConfig(schemeFile),
+  readColorSchemeConfig(schemeFile),
 );
 
 // 使い方テキストの読み込み

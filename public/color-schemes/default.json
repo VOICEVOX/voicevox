@@ -1,13 +1,12 @@
 {
   "label": "デフォルト",
   "sourceColor": "#A5D4AD",
-  "variant": "tonalSpot",
-  "isDark": false,
+  "variant": "content",
   "contrastLevel": 0.0,
   "adjustments": {
-    "tertiary": { "hue": 270 },
-    "neutral": { "hue": 0, "chroma": 0 },
-    "neutralVariant": { "hue": 0, "chroma": 6 }
+    "tertiary": { "hue": 45 },
+    "neutral": { "chroma": 0 },
+    "neutralVariant": { "chroma": 6 }
   },
   "customPaletteColors": [
     {
