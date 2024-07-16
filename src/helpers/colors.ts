@@ -41,6 +41,7 @@ export interface ColorAdjustment {
   hue?: number;
   chroma?: number;
   tone?: number;
+  hex?: string;
 }
 
 // テーマオプション
@@ -124,13 +125,21 @@ export const adjustPalette = (
   palette: TonalPalette,
   adjustment: ColorAdjustment,
 ): TonalPalette => {
-  const hue = adjustment.hue ?? palette.hue;
-  const chroma = adjustment.chroma ?? palette.chroma;
-  const tone = adjustment.tone ?? 50;
-  return TonalPalette.fromHueAndChroma(
-    Hct.from(hue, chroma, tone).hue,
-    Hct.from(hue, chroma, tone).chroma,
-  );
+  if (adjustment.hex) {
+    // HEX指定されている場合はHEX値からトーナルパレットを作成
+    const hexHct = Hct.fromInt(argbFromHex(adjustment.hex));
+    return TonalPalette.fromHueAndChroma(hexHct.hue, hexHct.chroma);
+  } else {
+    // 色相、彩度、明度を指定されている場合はテーマを調整
+    const hue = adjustment.hue != undefined ? adjustment.hue : palette.hue;
+    const chroma =
+      adjustment.chroma != undefined ? adjustment.chroma : palette.chroma;
+    const tone = adjustment.tone != undefined ? adjustment.tone : 50;
+    return TonalPalette.fromHueAndChroma(
+      Hct.from(hue, chroma, tone).hue,
+      Hct.from(hue, chroma, tone).chroma,
+    );
+  }
 };
 
 // M3準拠のダイナミックスキーマの生成

@@ -119,11 +119,11 @@ watch(
   font-weight: 500;
   font-size: 16px;
   // 被さった背景ノートが見えるようにする
-  background-color: rgba(255, 255, 255, 0.56);
+  background-color: rgba(255, 255, 255, 0.72);
   // 入力欄が背景に邪魔されないようぼかす(あとかっこいい)
-  backdrop-filter: blur(1px) grayscale(50%);
+  backdrop-filter: blur(1px) grayscale(70%);
   color: var(--md-sys-color-on-primary-fixed);
-  outline: 1px solid var(--md-sys-color-primary);
+  outline: 2px solid var(--md-sys-color-primary);
   border-radius: 4px;
   border: 0;
   box-shadow:

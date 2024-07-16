@@ -1,12 +1,13 @@
 {
   "label": "デフォルト",
   "sourceColor": "#A5D4AD",
-  "variant": "content",
+  "variant": "tonalSpot",
   "contrastLevel": 0.0,
   "adjustments": {
-    "tertiary": { "hue": 45 },
     "neutral": { "chroma": 0 },
-    "neutralVariant": { "chroma": 6 }
+    "neutralVariant": { "chroma": 6 },
+    "tertiary": { "hex": "#ffc919" },
+    "error": { "hex": "#d04756" }
   },
   "customPaletteColors": [
     {
@@ -110,8 +111,18 @@
   ],
   "customDefinedColors": [
     {
-      "name": "brand",
+      "name": "primitive-primary",
       "value": "#A5D4AD",
+      "blend": false
+    },
+    {
+      "name": "primitive-blue",
+      "value": "#0969da",
+      "blend": false
+    },
+    {
+      "name": "primitive-red",
+      "value": "#d04756",
       "blend": false
     }
   ]
