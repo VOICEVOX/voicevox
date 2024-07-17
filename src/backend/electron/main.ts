@@ -627,7 +627,7 @@ ipcMainHandle("GET_POLICY_TEXT", () => {
   return policyText;
 });
 
-ipcMainHandle("GET_OSS_LICENSES", async () => {
+ipcMainHandle("GET_OSS_LICENSES", () => {
   return ossLicenses;
 });
 
