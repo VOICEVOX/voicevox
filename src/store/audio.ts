@@ -99,7 +99,7 @@ function parseTextFile(
       name2Voice.set(formatCharacterStyleName(characterName, styleName), voice);
       // 古いフォーマットにも対応するため
       name2Voice.set(
-        `${characterName}(${styleName || DEFAULT_STYLE_NAME})`,
+        `${characterName}(${styleName ?? DEFAULT_STYLE_NAME})`,
         voice,
       );
     }
@@ -236,7 +236,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         //  undo/redoで消えていることがあるためフィルタする
         state._selectedAudioKeys?.filter((audioKey) =>
           state.audioKeys.includes(audioKey),
-        ) || []
+        ) ?? []
       );
     },
   },
@@ -333,7 +333,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
                 speakerUuid: speaker.speakerUuid,
                 ...(useResourceUrl && { resourceFormat: "url" }),
               })
-              .catch((error) => {
+              .catch((error: unknown) => {
                 window.backend.logError(error, `Failed to get speakerInfo.`);
                 throw error;
               });
@@ -350,7 +350,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
                 speakerUuid: singer.speakerUuid,
                 ...(useResourceUrl && { resourceFormat: "url" }),
               })
-              .catch((error) => {
+              .catch((error: unknown) => {
                 window.backend.logError(error, `Failed to get singerInfo.`);
                 throw error;
               });
@@ -394,7 +394,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           state.engineManifests[engineId].supportedFeatures.sing
             ? await instance.invoke("singersSingersGet")({})
             : [],
-        ]).catch((error) => {
+        ]).catch((error: unknown) => {
           window.backend.logError(error, `Failed to get Speakers.`);
           throw error;
         });
@@ -581,7 +581,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action({ commit, dispatch }, { audioKey }: { audioKey?: AudioKey }) {
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
       // reset audio play start point
-      dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
+      void dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
     },
   },
 
@@ -967,7 +967,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             speaker: styleId,
           }),
         )
-        .catch((error) => {
+        .catch((error: unknown) => {
           window.backend.logError(
             error,
             `Failed to fetch AudioQuery for the text "${text}".`,
@@ -1022,7 +1022,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             isKana,
           }),
         )
-        .catch((error) => {
+        .catch((error: unknown) => {
           window.backend.logError(
             error,
             `Failed to fetch AccentPhrases for the text "${text}".`,
@@ -1143,7 +1143,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             speaker: styleId,
           }),
         )
-        .catch((error) => {
+        .catch((error: unknown) => {
           window.backend.logError(
             error,
             `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(
@@ -1225,7 +1225,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       );
       if (style == undefined) throw new Error("assert style != undefined");
 
-      const styleName = style.styleName || DEFAULT_STYLE_NAME;
+      const styleName = style.styleName ?? DEFAULT_STYLE_NAME;
       const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
       return buildAudioFileNameFromRawData(fileNamePattern, {
         characterName: character.metas.speakerName,
@@ -1253,7 +1253,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       let i = 0;
       for (const phrase of accentPhrases) {
         phrase.moras.forEach((m) => {
-          length += m.consonantLength != undefined ? m.consonantLength : 0;
+          length += m.consonantLength ?? 0;
           length += m.vowelLength;
         });
         length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
@@ -1514,7 +1514,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
                 // resultの中身は、"data:audio/wav;base64,<content>"という形なので、カンマ以降を抜き出す
                 resolve(result.slice(result.indexOf(",") + 1));
               } else {
-                reject();
+                reject(new Error("Failed to encode blob to base64."));
               }
             };
             reader.readAsDataURL(blob);
@@ -1601,7 +1601,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             return {
               result: "WRITE_ERROR",
               path: filePath,
-              errorMessage: generateWriteErrorMessage(e),
+              errorMessage: generateWriteErrorMessage(e as ResultError),
             };
           }
           return {
@@ -1670,7 +1670,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
           const speakerName =
             styleId != undefined
-              ? characters.get(`${engineId}:${styleId}`) + ","
+              ? `${characters.get(`${engineId}:${styleId}`)},`
               : "";
 
           const skippedText = extractExportText(
@@ -1798,7 +1798,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         commit("SET_ACTIVE_AUDIO_KEY", { audioKey: e.audioKey });
       });
       player.addEventListener("waitstart", (e) => {
-        dispatch("START_PROGRESS");
+        void dispatch("START_PROGRESS");
         commit("SET_ACTIVE_AUDIO_KEY", { audioKey: e.audioKey });
         commit("SET_AUDIO_NOW_GENERATING", {
           audioKey: e.audioKey,
@@ -1806,7 +1806,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         });
       });
       player.addEventListener("waitend", (e) => {
-        dispatch("RESET_PROGRESS");
+        void dispatch("RESET_PROGRESS");
         commit("SET_AUDIO_NOW_GENERATING", {
           audioKey: e.audioKey,
           nowGenerating: false,

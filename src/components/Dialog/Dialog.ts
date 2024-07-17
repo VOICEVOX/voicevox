@@ -311,7 +311,7 @@ const showWriteSuccessNotify = ({
     audio: "音声",
     text: "テキスト",
   };
-  dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
+  void dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
     message: `${mediaTypeNames[mediaType]}を書き出しました`,
     tipName: "notifyOnGenerate",
   });
@@ -329,7 +329,7 @@ const showWriteErrorDialog = ({
 }) => {
   if (mediaType === "text") {
     // テキスト書き出し時のエラーを出力
-    dispatch("SHOW_ALERT_DIALOG", {
+    void dispatch("SHOW_ALERT_DIALOG", {
       title: "テキストの書き出しに失敗しました。",
       message:
         "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。",
@@ -345,7 +345,7 @@ const showWriteErrorDialog = ({
     };
 
     // 音声書き出し時のエラーを出力
-    dispatch("SHOW_ALERT_DIALOG", {
+    void dispatch("SHOW_ALERT_DIALOG", {
       title: "書き出しに失敗しました。",
       message: result.errorMessage ?? defaultErrorMessages[result.result] ?? "",
     });
@@ -376,7 +376,7 @@ export const showNotifyAndNotShowAgainButton = (
         label: "今後このメッセージを表示しない",
         textColor: "toast-button-display" + suffix,
         handler: () => {
-          dispatch("SET_CONFIRMED_TIP", {
+          void dispatch("SET_CONFIRMED_TIP", {
             confirmedTip: {
               [options.tipName]: true,
             },

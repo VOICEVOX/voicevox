@@ -127,7 +127,16 @@ module.exports = {
       },
     },
     {
-      files: ["*.ts", "*.vue"],
+      files: ["./src/**/*.ts"],
+      parser: "@typescript-eslint/parser",
+      extends: [
+        "plugin:@typescript-eslint/strict-type-checked",
+        "plugin:@typescript-eslint/stylistic-type-checked",
+      ],
+      rules: tsEslintRules,
+    },
+    {
+      files: ["*.vue"],
       parser: vueEslintParser,
       parserOptions: vueEslintParserOptions,
       extends: [
