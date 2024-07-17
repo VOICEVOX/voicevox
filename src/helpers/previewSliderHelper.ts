@@ -55,7 +55,7 @@ class CancelableFinary {
 
   constructor(promise: Promise<void>, func: (...args: unknown[]) => unknown) {
     this.isCanceled = false;
-    promise.finally(() => {
+    void promise.finally(() => {
       if (!this.isCanceled) func();
     });
   }

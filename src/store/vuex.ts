@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // FIXME: anyを使わないようにする
 import { InjectionKey } from "vue";
@@ -314,6 +316,7 @@ const unwrapDotNotationAction = <
       actions: dotNotationDispatchProxy(injectee.dispatch),
       mutations: dotNotationCommitProxy(injectee.commit),
     };
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return wrappedHandler.call(this, dotNotationInjectee, payload);
   };
 

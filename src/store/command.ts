@@ -34,6 +34,7 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       createCommandMutation(val, editor),
     ]),
   ) as MutationTree<S, M>;
@@ -112,7 +113,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         commit("DESELECT_ALL_NOTES");
-        dispatch("RENDER");
+        void dispatch("RENDER");
       }
     },
   },
@@ -130,7 +131,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         commit("DESELECT_ALL_NOTES");
-        dispatch("RENDER");
+        void dispatch("RENDER");
       }
     },
   },

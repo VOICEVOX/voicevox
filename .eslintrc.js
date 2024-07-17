@@ -35,6 +35,7 @@ module.exports = {
   root: true,
   env: {
     node: true,
+    "vue/setup-compiler-macros": true,
   },
   extends: [
     "plugin:vue/vue3-recommended",
@@ -130,7 +131,17 @@ module.exports = {
       parser: vueEslintParser,
       parserOptions: { ...vueEslintParserOptions, ...tsEslintOptions },
       extends: ["plugin:@typescript-eslint/recommended-type-checked"],
-      rules: tsEslintRules,
+      rules: {
+        ...tsEslintRules,
+
+        // typescript-eslintにVueの型がanyとして認識されるので無効化
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-redundant-type-constituents": "off",
+      },
     },
     // Electronのメインプロセス以外でelectronのimportを禁止する
     {

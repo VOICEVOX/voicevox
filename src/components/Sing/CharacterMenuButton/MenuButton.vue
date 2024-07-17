@@ -182,7 +182,7 @@ const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
       `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`,
     );
 
-  store.dispatch("COMMAND_SET_SINGER", {
+  void store.dispatch("COMMAND_SET_SINGER", {
     singer: { engineId, styleId },
     withRelated: true,
   });

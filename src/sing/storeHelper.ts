@@ -78,7 +78,7 @@ export function getOverlappingNoteIds(notes: Note[]): Set<NoteId> {
   for (const event of events) {
     if (event.type === "start") {
       if (currentNotes.size === 1) {
-        overlappingNoteIds.add(currentNotes.values().next().value);
+        overlappingNoteIds.add(currentNotes.values().next().value as NoteId);
         overlappingNoteIds.add(event.noteId);
       } else if (currentNotes.size > 1) {
         overlappingNoteIds.add(event.noteId);

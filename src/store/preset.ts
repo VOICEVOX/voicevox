@@ -108,7 +108,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       { commit },
       { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> },
     ) {
-      window.backend.setSetting("defaultPresetKeys", defaultPresetKeys);
+      void window.backend.setSetting("defaultPresetKeys", defaultPresetKeys);
       commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeys });
     },
     mutation(

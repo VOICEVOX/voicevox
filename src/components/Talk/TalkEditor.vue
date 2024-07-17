@@ -163,7 +163,7 @@ registerHotkeyWithCleanup({
   name: "音声書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      store.dispatch("SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG");
+      void store.dispatch("SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG");
     }
   },
 });
@@ -172,7 +172,7 @@ registerHotkeyWithCleanup({
   name: "選択音声を書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      store.dispatch("SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG");
+      void store.dispatch("SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG");
     }
   },
 });
@@ -181,7 +181,7 @@ registerHotkeyWithCleanup({
   name: "音声を繋げて書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      store.dispatch("SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG");
+      void store.dispatch("SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG");
     }
   },
 });
@@ -190,7 +190,7 @@ registerHotkeyWithCleanup({
   name: "テキストを読み込む",
   callback: () => {
     if (!uiLocked.value) {
-      store.dispatch("SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG");
+      void store.dispatch("SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG");
     }
   },
 });
@@ -210,7 +210,7 @@ registerHotkeyWithCleanup({
   name: "テキスト欄を複製",
   callback: () => {
     if (activeAudioKey.value != undefined) {
-      duplicateAudioItem();
+      void duplicateAudioItem();
     }
   },
 });
@@ -220,7 +220,7 @@ registerHotkeyWithCleanup({
   name: "テキスト欄を追加",
   callback: () => {
     if (!uiLocked.value) {
-      addAudioItem();
+      void addAudioItem();
     }
   },
 });
@@ -230,7 +230,7 @@ registerHotkeyWithCleanup({
   name: "テキスト欄を削除",
   callback: () => {
     if (!uiLocked.value) {
-      removeAudioItem();
+      void removeAudioItem();
     }
   },
 });
@@ -252,7 +252,7 @@ registerHotkeyWithCleanup({
   name: "すべて選択",
   callback: () => {
     if (!uiLocked.value && isMultiSelectEnabled.value) {
-      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+      void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: audioKeys.value,
       });
     }
@@ -265,7 +265,7 @@ for (let i = 0; i < 10; i++) {
     name: `${i + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
     callback: () => {
       if (!uiLocked.value) {
-        onCharacterSelectHotkey(i);
+        void onCharacterSelectHotkey(i);
       }
     },
   });
@@ -482,7 +482,7 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
   }
 
   if (audioKeys.value.length === 1) {
-    const first = audioKeys.value[0] as AudioKey;
+    const first = audioKeys.value[0];
     const audioItem = audioItems.value[first];
     if (audioItem.text.length > 0) {
       return;
@@ -501,7 +501,7 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
     };
 
     // FIXME: UNDOができてしまうのでできれば直したい
-    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+    void store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
       audioKeys: [first],
       voice: voice,
     });
@@ -525,7 +525,7 @@ onetimeWatch(
       focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
 
       // 最初の話者を初期化
-      store.dispatch("SETUP_SPEAKER", {
+      void store.dispatch("SETUP_SPEAKER", {
         audioKeys: [newAudioKey],
         engineId: audioItem.voice.engineId,
         styleId: audioItem.voice.styleId,
@@ -557,7 +557,7 @@ watch(
       const altPort = store.state.altPortInfos[engineId];
       if (!altPort) return;
 
-      store.dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
+      void store.dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
         message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
         icon: "compare_arrows",
         tipName: "engineStartedOnAltPort",
@@ -573,13 +573,13 @@ const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
   const file = event.dataTransfer.files[0];
   switch (path.extname(file.name)) {
     case ".txt":
-      store.dispatch("COMMAND_IMPORT_FROM_FILE", { filePath: file.path });
+      void store.dispatch("COMMAND_IMPORT_FROM_FILE", { filePath: file.path });
       break;
     case ".vvproj":
-      store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
+      void store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
       break;
     default:
-      store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.dispatch("SHOW_ALERT_DIALOG", {
         title: "対応していないファイルです",
         message:
           "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
@@ -619,7 +619,7 @@ const onAudioCellPaneClick = () => {
     store.state.experimentalSetting.enableMultiSelect &&
     activeAudioKey.value
   ) {
-    store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+    void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
       audioKeys: [activeAudioKey.value],
     });
   }

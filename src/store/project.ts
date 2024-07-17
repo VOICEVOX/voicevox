@@ -140,7 +140,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   PARSE_PROJECT_FILE: {
     async action({ dispatch, getters }, { projectJson }) {
-      const projectData = JSON.parse(projectJson);
+      const projectData = JSON.parse(projectJson) as unknown;
 
       const characterInfos = getters.USER_ORDERED_CHARACTER_INFOS("talk");
       if (characterInfos == undefined)
