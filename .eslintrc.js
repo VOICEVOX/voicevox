@@ -1,3 +1,43 @@
+const vueEslintParser = "vue-eslint-parser";
+const vueEslintParserOptions = {
+  ecmaVersion: 2020,
+  parser: "@typescript-eslint/parser",
+  project: ["./tsconfig.json"],
+  tsconfigRootDir: __dirname,
+};
+
+const tsEslintRules = {
+  // interface、typeの使い分けをするので無効化
+  "@typescript-eslint/consistent-type-definitions": "off",
+  // voidを関数の戻り値以外に使うので無効化
+  "@typescript-eslint/no-invalid-void-type": "off",
+  // Template String LiteralでBrandedなstringやnumberを入れられなくなるので無効化
+  "@typescript-eslint/restrict-template-expressions": "off",
+  // == undefinedのチェックでもエラーを出すので無効化
+  "@typescript-eslint/no-unnecessary-condition": "off",
+  // Storeでよくasyncなしの関数を使うので無効化
+  "@typescript-eslint/require-await": "off",
+
+  // 思想が強すぎるので無効化
+  "@typescript-eslint/dot-notation": "off",
+  "@typescript-eslint/no-dynamic-delete": "off",
+
+  "@typescript-eslint/no-floating-promises": [
+    "error",
+    {
+      ignoreIIFE: true,
+    },
+  ],
+
+  "@typescript-eslint/no-misused-promises": [
+    "error",
+    {
+      // (...) => voidに(...) => Promise<void>を渡すのは許可
+      checksVoidReturn: false,
+    },
+  ],
+};
+
 /** @type {import('@typescript-eslint/utils').TSESLint.Linter.ConfigType} */
 module.exports = {
   root: true,
@@ -15,13 +55,8 @@ module.exports = {
     "plugin:storybook/recommended",
   ],
   plugins: ["import"],
-  parser: "vue-eslint-parser",
-  parserOptions: {
-    ecmaVersion: 2020,
-    parser: "@typescript-eslint/parser",
-    project: ["./tsconfig.json"],
-    tsconfigRootDir: __dirname,
-  },
+  parser: vueEslintParser,
+  parserOptions: vueEslintParserOptions,
   ignorePatterns: ["dist_electron/**/*", "dist/**/*", "node_modules/**/*"],
   rules: {
     "linebreak-style":
@@ -93,34 +128,13 @@ module.exports = {
     },
     {
       files: ["*.ts", "*.vue"],
+      parser: vueEslintParser,
+      parserOptions: vueEslintParserOptions,
       extends: [
         "plugin:@typescript-eslint/strict-type-checked",
         "plugin:@typescript-eslint/stylistic-type-checked",
       ],
-      rules: {
-        // interface、typeの使い分けをするので無効化
-        "@typescript-eslint/consistent-type-definitions": "off",
-        // voidを関数の戻り値以外に使うので無効化
-        "@typescript-eslint/no-invalid-void-type": "off",
-        // Template String LiteralでBrandedなstringやnumberを入れられなくなるので無効化
-        "@typescript-eslint/restrict-template-expressions": "off",
-        // == undefinedのチェックでもエラーを出すので無効化
-        "@typescript-eslint/no-unnecessary-condition": "off",
-        // Storeでよくasyncなしの関数を使うので無効化
-        "@typescript-eslint/require-await": "off",
-
-        // 思想が強すぎるので無効化
-        "@typescript-eslint/dot-notation": "off",
-        "@typescript-eslint/no-dynamic-delete": "off",
-
-        "@typescript-eslint/no-misused-promises": [
-          "error",
-          {
-            // (...) => voidに(...) => Promise<void>を渡すのは許可
-            checksVoidReturn: false,
-          },
-        ],
-      },
+      rules: tsEslintRules,
     },
     // Electronのメインプロセス以外でelectronのimportを禁止する
     {

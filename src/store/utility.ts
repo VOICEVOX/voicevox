@@ -123,7 +123,7 @@ export const replaceTagIdToTagString = {
   date: "日付",
   projectName: "プロジェクト名",
 };
-const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
+const replaceTagStringToTagId: Record<string, string> = Object.entries(
   replaceTagIdToTagString,
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
@@ -150,7 +150,7 @@ export function currentDateString(): string {
 
 function replaceTag(
   template: string,
-  replacer: { [key: string]: string },
+  replacer: Record<string, string>,
 ): string {
   const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
     const replaceTagId = replaceTagStringToTagId[p1];

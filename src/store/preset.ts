@@ -132,11 +132,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       });
 
       const presetConfig = await window.backend.getSetting("presets");
-      if (
-        presetConfig == undefined ||
-        presetConfig.items == undefined ||
-        presetConfig.keys == undefined
-      )
+      if (presetConfig?.items == undefined || presetConfig.keys == undefined)
         return;
       commit("SET_PRESET_ITEMS", {
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換

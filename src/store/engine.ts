@@ -290,7 +290,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   OPEN_ENGINE_DIRECTORY: {
     action(_, { engineId }) {
-      return window.backend.openEngineDirectory(engineId);
+      window.backend.openEngineDirectory(engineId);
     },
   },
 

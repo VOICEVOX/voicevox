@@ -63,8 +63,10 @@ const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      toRaw(state) as S,
-      (draft: S) => recipe(draft, payload),
+      toRaw(state),
+      (draft: S) => {
+        recipe(draft, payload);
+      },
     );
     return {
       unixMillisec: new Date().getTime(),

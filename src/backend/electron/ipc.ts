@@ -37,7 +37,7 @@ export function ipcMainSend(
   channel: string,
   ...args: unknown[]
 ): void {
-  return win.webContents.send(channel, ...args);
+  win.webContents.send(channel, ...args);
 }
 
 /** IPCメッセージの送信元を確認する */

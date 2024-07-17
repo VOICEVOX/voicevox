@@ -36,9 +36,7 @@ export class Store<
   constructor(options: StoreOptions<S, G, A, M>) {
     super(options as OriginalStoreOptions<S>);
     this.actions = dotNotationDispatchProxy(this.dispatch.bind(this));
-    this.mutations = dotNotationCommitProxy(
-      this.commit.bind(this) as Commit<M>,
-    );
+    this.mutations = dotNotationCommitProxy(this.commit.bind(this));
   }
 
   declare readonly getters: G;
@@ -139,7 +137,9 @@ const dotNotationCommitProxy = <M extends MutationsBase>(
     { commit },
     {
       get(target, tag: string) {
-        return (...payloads: [M[string]]) => target.commit(tag, ...payloads);
+        return (...payloads: [M[string]]) => {
+          target.commit(tag, ...payloads);
+        };
       },
     },
   ) as DotNotationCommit<M>;
@@ -377,13 +377,14 @@ export type CustomMutationTree<S, M extends MutationsBase> = {
   [K in keyof M]: Mutation<S, M, K>;
 };
 
-type StoreTypesBase = {
-  [key: string]: {
+type StoreTypesBase = Record<
+  string,
+  {
     getter?: GettersBase[number];
     mutation?: MutationsBase[number];
     action?: ActionsBase[number];
-  };
-};
+  }
+>;
 
 type PartialStoreOptions<
   S,

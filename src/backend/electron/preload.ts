@@ -256,11 +256,7 @@ const api: Sandbox = {
   },
 
   setEngineSetting: async (engineId, engineSetting) => {
-    return await ipcRendererInvoke(
-      "SET_ENGINE_SETTING",
-      engineId,
-      engineSetting,
-    );
+    await ipcRendererInvoke("SET_ENGINE_SETTING", engineId, engineSetting);
   },
 
   installVvppEngine: async (filePath) => {
@@ -280,7 +276,7 @@ const api: Sandbox = {
    * 画面以外の情報を刷新する。
    */
   reloadApp: async ({ isMultiEngineOffMode }) => {
-    return await ipcRendererInvoke("RELOAD_APP", { isMultiEngineOffMode });
+    await ipcRendererInvoke("RELOAD_APP", { isMultiEngineOffMode });
   },
 };
 

@@ -111,7 +111,7 @@ function parseTextFile(
   let lastVoice =
     initVoice ?? uuid2Voice.get(userOrderedCharacterInfos[0].metas.speakerUuid);
   if (lastVoice == undefined) throw new Error(`lastStyle is undefined.`);
-  for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
+  for (const splitText of body.split(new RegExp(seps.join("|"), "g"))) {
     const voice = name2Voice.get(splitText);
     if (voice != undefined) {
       lastVoice = voice;

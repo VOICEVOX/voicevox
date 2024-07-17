@@ -201,25 +201,25 @@ export async function multiGenerateAndSaveAudioWithDialog({
   if (result == undefined) return;
 
   // 書き出し成功時の出力先パスを配列に格納
-  const successArray: Array<string | undefined> = result.flatMap((result) =>
+  const successArray: (string | undefined)[] = result.flatMap((result) =>
     result.result === "SUCCESS" ? result.path : [],
   );
 
   // 書き込みエラーを配列に格納
-  const writeErrorArray: Array<ErrorTypeForSaveAllResultDialog> =
-    result.flatMap((result) =>
+  const writeErrorArray: ErrorTypeForSaveAllResultDialog[] = result.flatMap(
+    (result) =>
       result.result === "WRITE_ERROR"
         ? { path: result.path ?? "", message: result.errorMessage ?? "" }
         : [],
-    );
+  );
 
   // エンジンエラーを配列に格納
-  const engineErrorArray: Array<ErrorTypeForSaveAllResultDialog> =
-    result.flatMap((result) =>
+  const engineErrorArray: ErrorTypeForSaveAllResultDialog[] = result.flatMap(
+    (result) =>
       result.result === "ENGINE_ERROR"
         ? { path: result.path ?? "", message: result.errorMessage ?? "" }
         : [],
-    );
+  );
 
   if (successArray.length === result.length) {
     if (disableNotifyOnGenerate) return;

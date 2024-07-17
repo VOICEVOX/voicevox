@@ -453,14 +453,18 @@ async function createWindow() {
 
   if (isDevelopment && !isTest) win.webContents.openDevTools();
 
-  win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
-  win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
-  win.on("enter-full-screen", () =>
-    win.webContents.send("DETECT_ENTER_FULLSCREEN"),
-  );
-  win.on("leave-full-screen", () =>
-    win.webContents.send("DETECT_LEAVE_FULLSCREEN"),
-  );
+  win.on("maximize", () => {
+    win.webContents.send("DETECT_MAXIMIZED");
+  });
+  win.on("unmaximize", () => {
+    win.webContents.send("DETECT_UNMAXIMIZED");
+  });
+  win.on("enter-full-screen", () => {
+    win.webContents.send("DETECT_ENTER_FULLSCREEN");
+  });
+  win.on("leave-full-screen", () => {
+    win.webContents.send("DETECT_LEAVE_FULLSCREEN");
+  });
   win.on("always-on-top-changed", () => {
     win.webContents.send(
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED",
@@ -875,7 +879,9 @@ ipcMainHandle("CLOSE_WINDOW", () => {
   appState.willQuit = true;
   win.destroy();
 });
-ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
+ipcMainHandle("MINIMIZE_WINDOW", () => {
+  win.minimize();
+});
 ipcMainHandle("MAXIMIZE_WINDOW", () => {
   if (win.isMaximized()) {
     win.unmaximize();

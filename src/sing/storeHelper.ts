@@ -15,7 +15,9 @@ export class FrequentlyUpdatedState<T> {
 
   set value(newValue: T) {
     this._value = newValue;
-    this.listeners.forEach((listener) => listener(newValue));
+    this.listeners.forEach((listener) => {
+      listener(newValue);
+    });
   }
 
   constructor(initialValue: T) {

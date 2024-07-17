@@ -255,9 +255,7 @@ export const api: Sandbox = {
       (typeof configSchema)["parse"]
     >["hotkeySettings"];
     if (newData != undefined) {
-      const hotkeySettings = (await this.getSetting(
-        "hotkeySettings",
-      )) as HotkeySettingType;
+      const hotkeySettings = await this.getSetting("hotkeySettings");
       const hotkeySetting = hotkeySettings.find(
         (hotkey) => hotkey.action == newData.action,
       );
@@ -266,7 +264,7 @@ export const api: Sandbox = {
       }
       await this.setSetting("hotkeySettings", hotkeySettings);
     }
-    return this.getSetting("hotkeySettings") as Promise<HotkeySettingType>;
+    return this.getSetting("hotkeySettings");
   },
   checkFileExists(file: string) {
     return checkFileExistsImpl(file);

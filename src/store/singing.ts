@@ -229,10 +229,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         userOrderedCharacterInfos[0].metas.styles[0].styleId;
       const styleId = singer?.styleId ?? defaultStyleId;
 
-      dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
+      void dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
       commit("SET_SINGER", { singer: { engineId, styleId }, withRelated });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -249,7 +249,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -272,7 +272,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         volumeRangeAdjustment,
       });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -296,7 +296,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_TPQN", { tpqn });
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -320,7 +320,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_TEMPOS", { tempos });
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -371,7 +371,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_TIME_SIGNATURES", { timeSignatures });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -434,7 +434,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_NOTES", { notes });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -555,9 +555,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const tempData = [...pitchEditData];
       const endFrame = startFrame + data.length;
       if (tempData.length < endFrame) {
-        const valuesToPush = new Array(endFrame - tempData.length).fill(
-          VALUE_INDICATING_NO_DATA,
-        );
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const valuesToPush: number[] = new Array(
+          endFrame - tempData.length,
+        ).fill(VALUE_INDICATING_NO_DATA);
         tempData.push(...valuesToPush);
       }
       tempData.splice(startFrame, data.length, ...data);
@@ -575,7 +576,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_PITCH_EDIT_DATA", { data, startFrame });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -600,7 +601,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ dispatch, commit }) {
       commit("CLEAR_PITCH_EDIT_DATA");
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -1710,7 +1711,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         commit("CLEAR_COMMANDS");
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     ),
   },
@@ -1753,7 +1754,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         commit("CLEAR_COMMANDS");
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     ),
   },
@@ -2034,7 +2035,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               return {
                 result: "WRITE_ERROR",
                 path: filePath,
-                errorMessage: generateWriteErrorMessage(e),
+                errorMessage: generateWriteErrorMessage(e as ResultError),
               };
             }
             return {
@@ -2154,7 +2155,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const pastedNoteIds = notesToPaste.map((note) => note.id);
       // ノートを追加してレンダリングする
       commit("COMMAND_ADD_NOTES", { notes: notesToPaste });
-      dispatch("RENDER");
+      void dispatch("RENDER");
       // 貼り付けたノートを選択する
       commit("DESELECT_ALL_NOTES");
       commit("SELECT_NOTES", { noteIds: pastedNoteIds });
@@ -2177,7 +2178,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return { ...note, position: quantizedPosition };
       });
       commit("COMMAND_UPDATE_NOTES", { notes: quantizedNotes });
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 });
@@ -2191,10 +2192,10 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_SINGER(draft, { singer, withRelated });
       },
       async action({ dispatch, commit }, { singer, withRelated }) {
-        dispatch("SETUP_SINGER", { singer });
+        void dispatch("SETUP_SINGER", { singer });
         commit("COMMAND_SET_SINGER", { singer, withRelated });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
@@ -2212,7 +2213,7 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
@@ -2232,7 +2233,7 @@ export const singingCommandStore = transformCommandStore(
           volumeRangeAdjustment,
         });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_TEMPO: {
@@ -2257,7 +2258,7 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_SET_TEMPO", { tempo });
         transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_REMOVE_TEMPO: {
@@ -2284,7 +2285,7 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_REMOVE_TEMPO", { position });
         transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_TIME_SIGNATURE: {
@@ -2328,7 +2329,7 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_ADD_NOTES", { notes });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_UPDATE_NOTES: {
@@ -2345,7 +2346,7 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_UPDATE_NOTES", { notes });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_REMOVE_NOTES: {
@@ -2362,14 +2363,14 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_REMOVE_NOTES", { noteIds });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_REMOVE_SELECTED_NOTES: {
       action({ state, commit, dispatch }) {
         commit("COMMAND_REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_PITCH_EDIT_DATA: {
@@ -2388,7 +2389,7 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_SET_PITCH_EDIT_DATA", { data, startFrame });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_ERASE_PITCH_EDIT_DATA: {
@@ -2413,7 +2414,7 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_ERASE_PITCH_EDIT_DATA", { startFrame, frameLength });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
   }),

@@ -79,19 +79,15 @@ class CancelableFinary {
 export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   // Reactive references of each props
   const modelValue = computed(props.modelValue);
-  const min = computed(() => (props.min && props.min()) ?? 0);
+  const min = computed(() => props.min?.() ?? 0);
   const max = computed(() => props.max());
-  const disable = computed(() => (props.disable && props.disable()) ?? false);
-  const step = computed(() => (props.step && props.step()) ?? 1);
-  const scrollStep = computed(
-    () => (props.scrollStep && props.scrollStep()) ?? step.value,
-  );
+  const disable = computed(() => props.disable?.() ?? false);
+  const step = computed(() => props.step?.() ?? 1);
+  const scrollStep = computed(() => props.scrollStep?.() ?? step.value);
   const scrollMinStep = computed(
-    () => (props.scrollMinStep && props.scrollMinStep()) ?? scrollStep.value,
+    () => props.scrollMinStep?.() ?? scrollStep.value,
   );
-  const disableScroll = computed(
-    () => (props.disableScroll && props.disableScroll()) ?? false,
-  );
+  const disableScroll = computed(() => props.disableScroll?.() ?? false);
 
   // Inner states
   const previewValue = ref(modelValue.value);

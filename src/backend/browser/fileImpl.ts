@@ -44,7 +44,7 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
 // ディレクトリ名をキーとして、Write権限を持ったFileSystemDirectoryHandleを保持する
 // writeFileに`ディレクトリ名/ファイル名`の形式でfilePathが渡ってくるため、
 // `/`で区切ってディレクトリ名を取得し、そのディレクトリ名をキーとしてdirectoryHandleMapからハンドラを取得し、fileWriteを可能にする
-const directoryHandleMap: Map<string, FileSystemDirectoryHandle> = new Map();
+const directoryHandleMap = new Map<string, FileSystemDirectoryHandle>();
 
 const showWritableDirectoryPicker = async (): Promise<
   FileSystemDirectoryHandle | undefined
@@ -181,7 +181,7 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
   };
 
 // FileSystemFileHandleを保持するMap。キーは生成した疑似パス。
-const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
+const fileHandleMap = new Map<string, FileSystemFileHandle>();
 
 // ファイル選択ダイアログを開く
 // 返り値はファイルパスではなく、疑似パスを返す

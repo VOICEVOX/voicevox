@@ -72,7 +72,7 @@ export class VvppManager {
   vvppEngineDir: string;
 
   willDeleteEngineIds: Set<EngineId>;
-  willReplaceEngineDirs: Array<{ from: string; to: string }>;
+  willReplaceEngineDirs: { from: string; to: string }[];
 
   private lock = new AsyncLock();
 
