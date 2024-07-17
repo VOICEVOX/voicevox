@@ -27,7 +27,6 @@
     "tests/**/*.ts",
     "tests/**/*.tsx",
     ".storybook/**/*.ts",
-    "./vite.config.mts",
   ],
   "exclude": ["node_modules"]
 }
