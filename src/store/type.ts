@@ -53,6 +53,7 @@ import {
   EditorType,
   NoteId,
   ColorSchemeConfig,
+  ColorScheme,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -1587,9 +1588,9 @@ export type SettingStoreTypes = {
 
   SET_COLOR_SCHEME_SETTING: {
     mutation: {
-      colorScheme: ColorSchemeConfig;
+      colorScheme: ColorScheme;
     };
-    action(payload: { colorScheme: ColorSchemeConfig }): void;
+    action(payload: { colorSchemeConfig: ColorSchemeConfig }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

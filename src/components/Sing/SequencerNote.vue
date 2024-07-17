@@ -314,24 +314,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     }
   }
 
-  &.below-pitch {
-    .note-bar {
-      background-color: var(--md-sys-color-surface-variant);
-      border-color: var(--md-sys-color-outline-variant);
-      opacity: 0.38;
-    }
-
-    .note-lyric {
-      color: var(--md-sys-color-on-surface);
-      opacity: 0.72;
-    }
-
-    .note-right-edge:hover,
-    .note-left-edge:hover {
-      background-color: transparent;
-    }
-  }
-
   &.preview-lyric {
     .note-bar {
       background-color: var(--md-sys-color-primary-fixed);
@@ -362,6 +344,32 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     }
 
     &.selected-or-preview {
+      .note-bar {
+        background-color: var(--md-sys-color-error-container);
+        border-color: var(--md-sys-color-error);
+      }
+    }
+  }
+
+  &.below-pitch {
+    .note-bar {
+      background-color: var(--md-sys-color-surface-variant);
+      border-color: var(--md-sys-color-outline-variant);
+      opacity: 0.38;
+    }
+
+    .note-lyric {
+      color: var(--md-sys-color-on-surface);
+      opacity: 0.72;
+    }
+
+    .note-right-edge:hover,
+    .note-left-edge:hover {
+      background-color: transparent;
+    }
+
+    &.overlapping,
+    &.invalid-phrase {
       .note-bar {
         background-color: var(--md-sys-color-error-container);
         border-color: var(--md-sys-color-error);

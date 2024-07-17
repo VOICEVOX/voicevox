@@ -1,22 +1,56 @@
 <template>
-  <div class="scheme-editor">
+  <div v-if="isShowEditor" class="scheme-editor">
     <div class="editor-content">
-      <h2 class="editor-title">カラースキーム</h2>
-
+      <h2 class="editor-title">
+        <QIcon name="mdi:arrow-left" @click="isShowEditor = false" />
+        カラースキーム
+      </h2>
+      <div class="editor-section">
+        <label>テーマ</label>
+        <select
+          :value="
+            availableColorSchemes.find(
+              (scheme) => scheme.label === colorSchemeConfig.label,
+            )
+          "
+          class="select-input"
+          @change="updateColorScheme"
+        >
+          <option
+            v-for="scheme in availableColorSchemes"
+            :key="scheme"
+            :value="scheme"
+          >
+            {{ scheme.label }}
+          </option>
+        </select>
+      </div>
+      <div class="editor-section">
+        <button @click="resetColorScheme">リセット</button>
+      </div>
       <div class="editor-section">
         <label>ソースカラー</label>
         <input
-          :value="colorScheme.sourceColor"
-          type="color"
+          :value="colorSchemeConfig.sourceColor"
           class="color-input"
+          type="color"
           @input="updateSourceColor"
         />
       </div>
 
       <div class="editor-section">
+        <input
+          type="checkbox"
+          :checked="colorSchemeConfig.isDark"
+          @change="updateIsDark"
+        />
+        ダークテーマ
+      </div>
+
+      <div class="editor-section">
         <label>バリエーション</label>
         <select
-          :value="colorScheme.variant"
+          :value="colorSchemeConfig.variant"
           class="select-input"
           @change="updateVariant"
         >
@@ -32,9 +66,9 @@
 
       <div class="editor-section">
         <label>
-          コントラスト {{ colorScheme.contrastLevel.toFixed(2) }}
+          コントラスト {{ colorSchemeConfig.contrastLevel.toFixed(2) }}
           <input
-            :value="colorScheme.contrastLevel"
+            :value="colorSchemeConfig.contrastLevel"
             type="range"
             min="-1"
             max="1"
@@ -44,42 +78,49 @@
           />
         </label>
       </div>
+
       <hr />
+
       <h3>調整</h3>
       <div v-for="color in colorKeys" :key="color" class="editor-section">
         <h4>{{ color.charAt(0).toUpperCase() + color.slice(1) }}</h4>
-        <div
-          v-for="(value, property) in colorScheme.adjustments[color]"
-          :key="property"
-        >
+        <div>
           <label>
-            {{ property }}: {{ value }}
+            Hex:
             <input
-              v-if="property === 'hex'"
-              :value
+              v-if="getAdjustment(color, 'hex')"
+              :value="getAdjustment(color, 'hex')"
               type="color"
               class="color-input"
-              @input="(e) => updateAdjustment(color, property, e.target.value)"
+              @input="(e) => updateAdjustment(color, 'hex', e.target.value)"
             />
+            <button v-else @click="addHexToAdjustment(color)">Hexを追加</button>
+          </label>
+        </div>
+        <div v-for="prop in ['hue', 'chroma', 'tone']" :key="prop">
+          <label>
+            {{ prop.charAt(0).toUpperCase() + prop.slice(1) }}:
+            {{ getAdjustment(color, prop).toFixed(2) }}
             <input
-              v-else
-              :value
+              :value="getAdjustment(color, prop)"
               type="range"
-              :min="0"
-              :max="property === 'hue' ? 360 : 100"
-              :step="property === 'chroma' ? 0.1 : 1"
+              :min="prop === 'hue' ? 0 : prop === 'chroma' ? 0 : 0"
+              :max="prop === 'hue' ? 360 : prop === 'chroma' ? 150 : 100"
+              :step="prop === 'chroma' ? 0.1 : 1"
               class="range-input"
               @input="
-                (e) => updateAdjustment(color, property, Number(e.target.value))
+                (e) => updateAdjustment(color, prop, Number(e.target.value))
               "
             />
           </label>
         </div>
       </div>
+
       <hr />
+
       <h3 class="custom-palette-title">カスタムカラー</h3>
       <div
-        v-for="(color, index) in colorScheme.customPaletteColors"
+        v-for="(color, index) in colorSchemeConfig.customPaletteColors"
         :key="index"
         class="editor-section custom-palette-color"
       >
@@ -110,6 +151,7 @@
               type="range"
               min="0"
               max="100"
+              step="1"
               class="range-input"
               @input="
                 (e) =>
@@ -130,6 +172,7 @@
               type="range"
               min="0"
               max="100"
+              step="1"
               class="range-input"
               @input="
                 (e) =>
@@ -161,13 +204,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import { Hct } from "@material/material-color-utilities";
 import { useStore } from "@/store";
 import { ColorSchemeConfig, SchemeVariant, PaletteKey } from "@/type/preload";
 
 const store = useStore();
 
-const colorScheme = computed(() => store.state.colorSchemeSetting.colorScheme);
+const isShowEditor = ref(true);
+
+const availableColorSchemes = computed<ColorSchemeConfig[]>(() => {
+  return store.state.colorSchemeSetting.availableColorSchemes;
+});
+
+const colorSchemeConfig = computed<ColorSchemeConfig>(() => {
+  // deep copy
+  return JSON.parse(
+    JSON.stringify(
+      store.state.colorSchemeSetting.colorScheme.colorSchemeConfig,
+    ),
+  );
+});
 
 const colorKeys = [
   "primary",
@@ -195,19 +252,32 @@ const paletteOptions: PaletteKey[] = [
   "neutralVariant",
 ];
 
+const getAdjustment = (color: string, property: string) => {
+  return colorSchemeConfig.value.adjustments?.[color]?.[property] ?? 0;
+};
+
+const updateColorScheme = () => {
+  store.dispatch("SET_COLOR_SCHEME_SETTING", {
+    colorSchemeConfig: colorSchemeConfig.value,
+  });
+};
+
 const updateSourceColor = (e: Event) => {
-  const value = (e.target as HTMLInputElement).value;
-  updateColorScheme({ sourceColor: value });
+  colorSchemeConfig.value.sourceColor = (e.target as HTMLInputElement).value;
+  updateColorScheme();
 };
 
 const updateVariant = (e: Event) => {
-  const value = (e.target as HTMLSelectElement).value as SchemeVariant;
-  updateColorScheme({ variant: value });
+  colorSchemeConfig.value.variant = (e.target as HTMLSelectElement)
+    .value as SchemeVariant;
+  updateColorScheme();
 };
 
 const updateContrastLevel = (e: Event) => {
-  const value = Number((e.target as HTMLInputElement).value);
-  updateColorScheme({ contrastLevel: value });
+  colorSchemeConfig.value.contrastLevel = Number(
+    (e.target as HTMLInputElement).value,
+  );
+  updateColorScheme();
 };
 
 const updateAdjustment = (
@@ -215,33 +285,43 @@ const updateAdjustment = (
   property: string,
   value: number | string,
 ) => {
-  const newAdjustments = {
-    ...colorScheme.value.adjustments,
-    [color]: {
-      ...colorScheme.value.adjustments[color],
-      [property]: value,
-    },
-  };
-  updateColorScheme({ adjustments: newAdjustments });
+  if (!colorSchemeConfig.value.adjustments) {
+    colorSchemeConfig.value.adjustments = {};
+  }
+  if (!colorSchemeConfig.value.adjustments[color]) {
+    colorSchemeConfig.value.adjustments[color] = {};
+  }
+  colorSchemeConfig.value.adjustments[color][property] = value;
+  updateColorScheme();
+};
+
+const addHexToAdjustment = (color: string) => {
+  const hue = getAdjustment(color, "hue");
+  const chroma = getAdjustment(color, "chroma");
+  const tone = getAdjustment(color, "tone");
+  const hct = Hct.from(hue, chroma, tone);
+  const hex = `#${hct.toInt().toString(16).padStart(6, "0")}`;
+  updateAdjustment(color, "hex", hex);
 };
 
 const updateCustomPaletteColor = (
   index: number,
   property: string,
-  value: any,
+  value: string | number | boolean,
 ) => {
-  const newCustomPaletteColors = [...colorScheme.value.customPaletteColors];
-  newCustomPaletteColors[index] = {
-    ...newCustomPaletteColors[index],
-    [property]: value,
-  };
-  updateColorScheme({ customPaletteColors: newCustomPaletteColors });
+  if (colorSchemeConfig.value.customPaletteColors) {
+    colorSchemeConfig.value.customPaletteColors[index][property] = value;
+    updateColorScheme();
+  }
 };
 
-const updateColorScheme = (newValues: Partial<ColorSchemeConfig>) => {
-  store.dispatch("SET_COLOR_SCHEME_SETTING", {
-    colorScheme: { ...colorScheme.value, ...newValues },
-  });
+const resetColorScheme = () => {
+  store.dispatch("INITIALIZE_COLOR_SCHEME");
+};
+
+const updateIsDark = (e: Event) => {
+  colorSchemeConfig.value.isDark = (e.target as HTMLInputElement).checked;
+  updateColorScheme();
 };
 </script>
 

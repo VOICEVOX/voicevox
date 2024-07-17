@@ -2,7 +2,10 @@ import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
-import { generateColorTheme, colorThemeToCssVariables } from "@/helpers/colors";
+import {
+  generateColorScheme,
+  colorSchemeToCssVariables,
+} from "@/helpers/colors";
 import {
   HotkeySettingType,
   SavingSetting,
@@ -300,22 +303,22 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         const availableColorSchemes =
           await window.backend.getColorSchemeConfigs();
         const defaultSchemeConfig = availableColorSchemes[0];
-        const isDark = state.themeSetting.currentTheme.isDark ?? false;
-        const colorTheme = generateColorTheme({
+        const isDark = state.themeSetting.currentTheme === "Dark" ?? false;
+        const colorScheme = generateColorScheme({
           ...defaultSchemeConfig,
           isDark,
         });
 
         // CSS変数に変換
-        const cssVariables = colorThemeToCssVariables(colorTheme);
+        const cssVariables = colorSchemeToCssVariables(colorScheme);
 
         // CSSに適用
         Object.entries(cssVariables).forEach(([key, value]) => {
-          document.documentElement.style.setProperty(key, value);
+          document.documentElement.style.setProperty(key, value as string);
         });
 
         commit("INITIALIZE_COLOR_SCHEME", {
-          colorScheme: defaultSchemeConfig,
+          colorScheme: colorScheme,
           availableColorSchemes,
         });
       } catch (error) {
@@ -328,7 +331,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
     }),
   },
-
   SET_COLOR_SCHEME_SETTING: {
     mutation(state, { colorScheme }) {
       state.colorSchemeSetting.colorScheme = colorScheme;
@@ -336,21 +338,23 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action: createUILockAction(
       async (
         { commit, state },
-        { colorScheme }: { colorScheme: ColorSchemeConfig },
+        { colorSchemeConfig }: { colorSchemeConfig: ColorSchemeConfig },
       ) => {
         try {
-          const isDark = state.themeSetting.currentTheme.isDark ?? false;
-          const colorTheme = generateColorTheme({
-            ...colorScheme,
+          const isDark = state.themeSetting.currentTheme === "Dark" ?? false;
+          const colorScheme = generateColorScheme({
+            ...colorSchemeConfig,
             isDark,
           });
-          const cssVariables = colorThemeToCssVariables(colorTheme);
+          const cssVariables = colorSchemeToCssVariables(colorScheme);
 
           Object.entries(cssVariables).forEach(([key, value]) => {
-            document.documentElement.style.setProperty(key, value);
+            document.documentElement.style.setProperty(key, value as string);
           });
 
-          commit("SET_COLOR_SCHEME_SETTING", { colorScheme: colorScheme });
+          commit("SET_COLOR_SCHEME_SETTING", {
+            colorScheme: colorScheme,
+          });
         } catch (error) {
           console.error("Error setting color scheme:", error);
           await window.backend.showMessageDialog({

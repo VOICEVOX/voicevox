@@ -13,6 +13,8 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
+const colorScheme = store.state.colorSchemeSetting.colorScheme;
+console.log(colorScheme.systemColors.primaryFixedDim);
 const classNames: Record<PhraseState, string> = {
   WAITING_TO_BE_RENDERED: "waiting-to-be-rendered",
   NOW_RENDERING: "now-rendering",
@@ -31,28 +33,28 @@ const className = computed(() => {
 @use "@/styles/colors" as colors;
 
 .waiting-to-be-rendered {
-  background-color: colors.$background;
+  background-color: var(--md-sys-color-background);
   background-image: linear-gradient(
     to right,
-    rgba(colors.$primary-rgb, 0.8),
-    rgba(colors.$primary-rgb, 0.8)
+    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.8),
+    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.8)
   );
 }
 
 .now-rendering {
-  border: 1px solid rgba(colors.$primary-rgb, 0.7);
-  background-color: colors.$background;
+  border: 1px solid rgba(var(--md-sys-color-primary-fixed-dim-rgb), 0.7);
+  background-color: var(--md-sys-color-background);
   background-size: 28px 28px;
   background-image: linear-gradient(
     -45deg,
-    colors.$primary,
-    colors.$primary 25%,
-    rgba(colors.$primary-rgb, 0.36) 25%,
-    rgba(colors.$primary-rgb, 0.36) 50%,
-    colors.$primary 50%,
-    colors.$primary 75%,
-    rgba(colors.$primary-rgb, 0.36) 75%,
-    rgba(colors.$primary-rgb, 0.36) 100%
+    var(--md-sys-color-secondary-fixed),
+    var(--md-sys-color-secondary-fixed) 25%,
+    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.36) 25%,
+    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.36) 50%,
+    var(--md-sys-color-secondary-fixed) 50%,
+    var(--md-sys-color-secondary-fixed) 75%,
+    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.36) 75%,
+    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.36) 100%
   );
   animation: stripes-animation 0.7s linear infinite;
 }
@@ -67,7 +69,7 @@ const className = computed(() => {
 }
 
 .could-not-render {
-  background-color: colors.$warning;
+  background-color: var(--md-ref-palette-error-60);
 }
 
 .playable {

@@ -123,7 +123,7 @@ watch(
   // 入力欄が背景に邪魔されないようぼかす(あとかっこいい)
   backdrop-filter: blur(1px) grayscale(70%);
   color: var(--md-sys-color-on-primary-fixed);
-  outline: 2px solid var(--md-sys-color-primary);
+  outline: 1px solid var(--md-sys-color-primary);
   border-radius: 4px;
   border: 0;
   box-shadow:

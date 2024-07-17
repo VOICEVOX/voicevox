@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DynamicScheme } from "@material/material-color-utilities";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -628,6 +629,16 @@ export interface ColorSchemeConfig {
   adjustments: Partial<Record<PaletteKey, ColorAdjustment>>;
   customPaletteColors: CustomPaletteColor[];
   customDefinedColors: CustomDefinedColor[];
+}
+
+// カラースキーマ
+export interface ColorScheme {
+  scheme: DynamicScheme;
+  systemColors: Record<string, string>;
+  paletteTones: Record<string, Record<number, string>>;
+  customPaletteColors: Record<string, string>;
+  customDefinedColors: Record<string, string>;
+  colorSchemeConfig: ColorSchemeConfig;
 }
 
 export const experimentalSettingSchema = z.object({

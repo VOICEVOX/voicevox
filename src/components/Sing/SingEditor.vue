@@ -20,7 +20,7 @@
       </div>
     </div>
     <ScoreSequencer />
-    <ColorSchemeEditor v-if="isCompletedInitialStartup" />
+    <ColorSchemeEditor v-if="store.state.colorSchemeSetting.colorScheme" />
   </div>
 </template>
 
