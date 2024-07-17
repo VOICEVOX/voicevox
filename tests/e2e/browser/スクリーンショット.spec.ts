@@ -11,10 +11,12 @@ import {
   SpeakerToJSON,
 } from "@/openapi";
 
-let speakerImages: {
-  portrait: string;
-  icon: string;
-}[] | undefined = undefined;
+let speakerImages:
+  | {
+      portrait: string;
+      icon: string;
+    }[]
+  | undefined = undefined;
 
 /**
  * 差し替え用の立ち絵・アイコンを取得する。

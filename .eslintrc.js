@@ -78,9 +78,6 @@ module.exports = {
       },
     ],
     "import/order": "error",
-    "@typescript-eslint/consistent-type-definitions": "off",
-    "@typescript-eslint/no-invalid-void-type": "off",
-    "@typescript-eslint/restrict-template-expressions": "off",
   },
   overrides: [
     {
@@ -96,10 +93,32 @@ module.exports = {
     },
     {
       files: ["*.ts", "*.vue"],
+      extends: [
+        "plugin:@typescript-eslint/strict-type-checked",
+        "plugin:@typescript-eslint/stylistic-type-checked",
+      ],
       rules: {
-        extends: [
-          "plugin:@typescript-eslint/strict-type-checked",
-          "plugin:@typescript-eslint/stylistic-type-checked",
+        // interface、typeの使い分けをするので無効化
+        "@typescript-eslint/consistent-type-definitions": "off",
+        // voidを関数の戻り値以外に使うので無効化
+        "@typescript-eslint/no-invalid-void-type": "off",
+        // Template String LiteralでBrandedなstringやnumberを入れられなくなるので無効化
+        "@typescript-eslint/restrict-template-expressions": "off",
+        // == undefinedのチェックでもエラーを出すので無効化
+        "@typescript-eslint/no-unnecessary-condition": "off",
+        // Storeでよくasyncなしの関数を使うので無効化
+        "@typescript-eslint/require-await": "off",
+
+        // 思想が強すぎるので無効化
+        "@typescript-eslint/dot-notation": "off",
+        "@typescript-eslint/no-dynamic-delete": "off",
+
+        "@typescript-eslint/no-misused-promises": [
+          "error",
+          {
+            // (...) => voidに(...) => Promise<void>を渡すのは許可
+            checksVoidReturn: false,
+          },
         ],
       },
     },

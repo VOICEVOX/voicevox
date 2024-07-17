@@ -292,7 +292,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           speaker: Speaker,
           speakerInfo: SpeakerInfo,
         ) {
-          const styles: StyleInfo[] = new Array(speaker.styles.length);
+          const styles: StyleInfo[] = [];
           for (const [i, style] of speaker.styles.entries()) {
             const styleInfo = speakerInfo.styleInfos.find(
               (styleInfo) => style.id === styleInfo.id,
