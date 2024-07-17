@@ -1,21 +1,47 @@
 {
-  "label": "調整なし(M3デフォルト)",
-  "sourceColor": "#A5D4AD",
+  "label": "テスト",
+  "sourceColor": "#9cf476",
   "variant": "content",
-  "contrastLevel": 0.0,
-  "adjustments": {},
+  "contrastLevel": 0,
+  "adjustments": {
+    "neutral": {
+      "chroma": 3.7
+    },
+    "neutralVariant": {
+      "chroma": 24.4,
+      "tone": 0
+    },
+    "tertiary": {
+      "hex": "#ff1a6a",
+      "chroma": 19.4,
+      "tone": 80
+    },
+    "error": {
+      "hex": "#d04756"
+    },
+    "primary": {
+      "hex": "#f6ee1e",
+      "chroma": 125.7,
+      "tone": 75,
+      "hue": 100
+    },
+    "secondary": {
+      "chroma": 28.6,
+      "tone": 50
+    }
+  },
   "customPaletteColors": [
     {
       "name": "sing-grid-cell-white",
-      "palette": "neutral",
-      "lightTone": 100,
+      "palette": "neutralVariant",
+      "lightTone": 96,
       "darkTone": 15,
       "blend": true
     },
     {
       "name": "sing-grid-cell-black",
-      "palette": "neutral",
-      "lightTone": 98,
+      "palette": "neutralVariant",
+      "lightTone": 93,
       "darkTone": 12,
       "blend": true
     },
@@ -28,15 +54,15 @@
     },
     {
       "name": "sing-ruler-measure-line",
-      "palette": "neutralVariant",
-      "lightTone": 50,
-      "darkTone": 50,
+      "palette": "secondary",
+      "lightTone": 80,
+      "darkTone": 70,
       "blend": true
     },
     {
       "name": "sing-grid-vertical-line",
       "palette": "neutral",
-      "lightTone": 95,
+      "lightTone": 90,
       "darkTone": 10,
       "blend": true
     },
@@ -56,7 +82,7 @@
     },
     {
       "name": "sing-grid-measure-line",
-      "palette": "neutral",
+      "palette": "secondary",
       "lightTone": 80,
       "darkTone": 40,
       "blend": true
@@ -64,29 +90,29 @@
     {
       "name": "sing-grid-octave-line",
       "palette": "neutral",
-      "lightTone": 80,
-      "darkTone": 40,
+      "lightTone": 75,
+      "darkTone": 30,
       "blend": true
     },
     {
       "name": "sing-piano-key-white",
       "palette": "neutral",
       "lightTone": 99,
-      "darkTone": 70,
+      "darkTone": 60,
       "blend": true
     },
     {
       "name": "sing-piano-key-black",
-      "palette": "neutral",
-      "lightTone": 40,
-      "darkTone": 20,
+      "palette": "tertiary",
+      "lightTone": 83,
+      "darkTone": 15,
       "blend": true
     },
     {
       "name": "sing-note-bar-container",
       "palette": "secondary",
       "lightTone": 90,
-      "darkTone": 70,
+      "darkTone": 80,
       "blend": true
     },
     {
@@ -99,26 +125,10 @@
     {
       "name": "sing-toolbar-container",
       "palette": "neutral",
-      "lightTone": 99,
-      "darkTone": 10,
+      "lightTone": 100,
+      "darkTone": 20,
       "blend": true
     }
   ],
-  "customDefinedColors": [
-    {
-      "name": "primitive-primary",
-      "value": "#A5D4AD",
-      "blend": false
-    },
-    {
-      "name": "primitive-blue",
-      "value": "#0969da",
-      "blend": false
-    },
-    {
-      "name": "primitive-red",
-      "value": "#d04756",
-      "blend": false
-    }
-  ]
+  "customDefinedColors": []
 }

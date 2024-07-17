@@ -58,6 +58,7 @@ export const settingStoreState: SettingStoreState = {
     enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
     enablePitchEditInSongEditor: false,
+    enableColorSchemeEditor: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -341,11 +342,17 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         { colorSchemeConfig }: { colorSchemeConfig: ColorSchemeConfig },
       ) => {
         try {
-          const isDark = state.themeSetting.currentTheme === "Dark" ?? false;
-          const colorScheme = generateColorScheme({
+          const currentTheme = state.themeSetting.availableThemes.find(
+            (theme: ThemeConf) =>
+              theme.name === state.themeSetting.currentTheme,
+          );
+          const isDark =
+            colorSchemeConfig.isDark ?? currentTheme?.isDark ?? false;
+          const updatedColorSchemeConfig = {
             ...colorSchemeConfig,
             isDark,
-          });
+          };
+          const colorScheme = generateColorScheme(updatedColorSchemeConfig);
           const cssVariables = colorSchemeToCssVariables(colorScheme);
 
           Object.entries(cssVariables).forEach(([key, value]) => {

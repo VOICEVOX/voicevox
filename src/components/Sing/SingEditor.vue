@@ -20,7 +20,11 @@
       </div>
     </div>
     <ScoreSequencer />
-    <ColorSchemeEditor v-if="store.state.colorSchemeSetting.colorScheme" />
+    <ColorSchemeEditor
+      v-if="
+        enableColorSchemeEditor && store.state.colorSchemeSetting.colorScheme
+      "
+    />
   </div>
 </template>
 
@@ -54,6 +58,10 @@ const nowAudioExporting = computed(() => {
 });
 const enablePitchEditInSongEditor = computed(() => {
   return store.state.experimentalSetting.enablePitchEditInSongEditor;
+});
+
+const enableColorSchemeEditor = computed(() => {
+  return store.state.experimentalSetting.enableColorSchemeEditor;
 });
 
 const cancelExport = () => {

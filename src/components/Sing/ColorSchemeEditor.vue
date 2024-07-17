@@ -1,25 +1,30 @@
 <template>
   <div v-if="isShowEditor" class="scheme-editor">
     <div class="editor-content">
-      <h2 class="editor-title">
-        <QIcon name="mdi:arrow-left" @click="isShowEditor = false" />
+      <h2
+        class="editor-title"
+        style="display: flex; align-items: center; justify-content: start"
+      >
+        <QBtn
+          icon="close"
+          color="secondary"
+          variant="flat"
+          flat
+          @click="isShowEditor = false"
+        />
         カラースキーム
       </h2>
       <div class="editor-section">
         <label>テーマ</label>
         <select
-          :value="
-            availableColorSchemes.find(
-              (scheme) => scheme.label === colorSchemeConfig.label,
-            )
-          "
+          :value="colorSchemeConfig.label"
           class="select-input"
-          @change="updateColorScheme"
+          @change="changeColorScheme"
         >
           <option
             v-for="scheme in availableColorSchemes"
-            :key="scheme"
-            :value="scheme"
+            :key="scheme.label"
+            :value="scheme.label"
           >
             {{ scheme.label }}
           </option>
@@ -94,7 +99,7 @@
               class="color-input"
               @input="(e) => updateAdjustment(color, 'hex', e.target.value)"
             />
-            <button v-else @click="addHexToAdjustment(color)">Hexを追加</button>
+            <button v-else @click="addHexToAdjustment(color)">Hex指定</button>
           </label>
         </div>
         <div v-for="prop in ['hue', 'chroma', 'tone']" :key="prop">
@@ -199,12 +204,30 @@
           </label>
         </div>
       </div>
+      <hr />
+      <div class="editor-section">
+        <QBtn
+          flat
+          label="エクスポート"
+          color="secondary"
+          @click="exportColorScheme"
+        />
+      </div>
     </div>
   </div>
+  <QBtn
+    v-if="!isShowEditor"
+    class="toggle-button"
+    variant="flat"
+    flat
+    @click="isShowEditor = true"
+  >
+    カラースキーム
+  </QBtn>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { Hct } from "@material/material-color-utilities";
 import { useStore } from "@/store";
 import { ColorSchemeConfig, SchemeVariant, PaletteKey } from "@/type/preload";
@@ -232,7 +255,9 @@ const colorKeys = [
   "tertiary",
   "neutral",
   "neutralVariant",
+  "error",
 ];
+
 const variantOptions: SchemeVariant[] = [
   "tonalSpot",
   "neutral",
@@ -244,40 +269,42 @@ const variantOptions: SchemeVariant[] = [
   "rainbow",
   "fruitSalad",
 ];
+
 const paletteOptions: PaletteKey[] = [
   "primary",
   "secondary",
   "tertiary",
   "neutral",
   "neutralVariant",
+  "error",
 ];
 
 const getAdjustment = (color: string, property: string) => {
   return colorSchemeConfig.value.adjustments?.[color]?.[property] ?? 0;
 };
 
-const updateColorScheme = () => {
-  store.dispatch("SET_COLOR_SCHEME_SETTING", {
-    colorSchemeConfig: colorSchemeConfig.value,
-  });
-};
-
 const updateSourceColor = (e: Event) => {
-  colorSchemeConfig.value.sourceColor = (e.target as HTMLInputElement).value;
-  updateColorScheme();
+  const updatedConfig = {
+    ...colorSchemeConfig.value,
+    sourceColor: (e.target as HTMLInputElement).value,
+  };
+  updateColorScheme(updatedConfig);
 };
 
 const updateVariant = (e: Event) => {
-  colorSchemeConfig.value.variant = (e.target as HTMLSelectElement)
-    .value as SchemeVariant;
-  updateColorScheme();
+  const updatedConfig = {
+    ...colorSchemeConfig.value,
+    variant: (e.target as HTMLSelectElement).value as SchemeVariant,
+  };
+  updateColorScheme(updatedConfig);
 };
 
 const updateContrastLevel = (e: Event) => {
-  colorSchemeConfig.value.contrastLevel = Number(
-    (e.target as HTMLInputElement).value,
-  );
-  updateColorScheme();
+  const updatedConfig = {
+    ...colorSchemeConfig.value,
+    contrastLevel: Number((e.target as HTMLInputElement).value),
+  };
+  updateColorScheme(updatedConfig);
 };
 
 const updateAdjustment = (
@@ -291,8 +318,17 @@ const updateAdjustment = (
   if (!colorSchemeConfig.value.adjustments[color]) {
     colorSchemeConfig.value.adjustments[color] = {};
   }
-  colorSchemeConfig.value.adjustments[color][property] = value;
-  updateColorScheme();
+  const updatedConfig = {
+    ...colorSchemeConfig.value,
+    adjustments: {
+      ...colorSchemeConfig.value.adjustments,
+      [color]: {
+        ...colorSchemeConfig.value.adjustments[color],
+        [property]: value,
+      },
+    },
+  };
+  updateColorScheme(updatedConfig);
 };
 
 const addHexToAdjustment = (color: string) => {
@@ -310,8 +346,32 @@ const updateCustomPaletteColor = (
   value: string | number | boolean,
 ) => {
   if (colorSchemeConfig.value.customPaletteColors) {
-    colorSchemeConfig.value.customPaletteColors[index][property] = value;
-    updateColorScheme();
+    const updatedConfig = {
+      ...colorSchemeConfig.value,
+      customPaletteColors: [
+        ...colorSchemeConfig.value.customPaletteColors.slice(0, index),
+        {
+          ...colorSchemeConfig.value.customPaletteColors[index],
+          [property]: value,
+        },
+        ...colorSchemeConfig.value.customPaletteColors.slice(index + 1),
+      ],
+    };
+    updateColorScheme(updatedConfig);
+  }
+};
+
+const changeColorScheme = (event: Event) => {
+  const selectedValue = (event.target as HTMLSelectElement).value;
+  const selected = availableColorSchemes.value.find(
+    (scheme) => scheme.label === selectedValue,
+  );
+  if (selected) {
+    const updatedConfig = {
+      ...selected,
+      isDark: colorSchemeConfig.value.isDark,
+    };
+    updateColorScheme(updatedConfig);
   }
 };
 
@@ -320,9 +380,48 @@ const resetColorScheme = () => {
 };
 
 const updateIsDark = (e: Event) => {
-  colorSchemeConfig.value.isDark = (e.target as HTMLInputElement).checked;
-  updateColorScheme();
+  const isDark = (e.target as HTMLInputElement).checked;
+  const updatedConfig = { ...colorSchemeConfig.value, isDark };
+  updateColorScheme(updatedConfig);
 };
+
+const updateColorScheme = (updatedConfig: ColorSchemeConfig) => {
+  store.dispatch("SET_COLOR_SCHEME_SETTING", {
+    colorSchemeConfig: updatedConfig,
+  });
+};
+
+const exportColorScheme = () => {
+  const schemeToExport = {
+    label: colorSchemeConfig.value.label,
+    sourceColor: colorSchemeConfig.value.sourceColor,
+    variant: colorSchemeConfig.value.variant,
+    isDark: colorSchemeConfig.value.isDark,
+    contrastLevel: colorSchemeConfig.value.contrastLevel,
+    adjustments: colorSchemeConfig.value.adjustments,
+    customPaletteColors: colorSchemeConfig.value.customPaletteColors,
+  };
+
+  const jsonString = JSON.stringify(schemeToExport, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "color-scheme.json";
+  link.click();
+};
+
+// テーマが変更されたときにカラースキームも更新
+watch(
+  () => store.state.themeSetting.currentTheme,
+  (newTheme) => {
+    const isDark = newTheme === "Dark";
+    if (isDark !== colorSchemeConfig.value.isDark) {
+      const updatedConfig = { ...colorSchemeConfig.value, isDark };
+      updateColorScheme(updatedConfig);
+    }
+  },
+);
 </script>
 
 <style scoped>
@@ -349,17 +448,18 @@ h4 {
 
 .toggle-button {
   position: fixed;
-  right: 16px;
+  right: 32px;
   top: 144px;
-  z-index: 10000;
+  z-index: 1;
   padding: 8px 16px;
-  background-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
+  background-color: transparent;
+  backdrop-filter: blur(10px);
+  color: var(--md-sys-color-on-secondary-container);
   border: none;
   border-radius: 20px;
   cursor: pointer;
-  opacity: 0.1;
-  transition: all 0.4s ease;
+  opacity: 0.72;
+  transition: all 0.2s ease;
 
   &:hover {
     opacity: 1;
@@ -368,17 +468,18 @@ h4 {
 
 .scheme-editor {
   position: fixed;
-  bottom: 48px;
+  top: 144px;
   right: 0;
   width: 300px;
-  height: 80vh;
-  background-color: var(--md-sys-color-surface);
+  height: calc(100vh - 184px);
+  background-color: rgba(var(--md-sys-color-surface-rgb), 0.8);
+  backdrop-filter: blur(10px);
   color: var(--md-sys-color-on-surface);
-  border-radius: 16px 0 0 16px;
+  border-radius: 20px 0 0 20px;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   transition: right 0.3s ease;
   overflow-y: auto;
-  z-index: 9999;
+  z-index: 1;
 }
 
 .scheme-editor.editor-open {

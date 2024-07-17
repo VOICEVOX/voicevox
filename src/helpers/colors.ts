@@ -22,6 +22,7 @@ import {
   ThemeOptions,
   SchemeVariant,
   ColorScheme,
+  CustomPaletteColor,
 } from "@/type/preload";
 
 // カラースキーマのコンストラクタ
@@ -91,6 +92,47 @@ export const adjustPalette = (
 
   // 調整されたHCTオブジェクトからトーナルパレットを作成
   return TonalPalette.fromHueAndChroma(adjustedHct.hue, adjustedHct.chroma);
+};
+
+// カスタムパレットの色をコントラスト含め調整(簡易)
+const adjustCustomPaletteColors = (
+  customPaletteColors: CustomPaletteColor[],
+  scheme: DynamicScheme,
+  isDark: boolean,
+): Record<string, string> => {
+  const sortedColors = [...customPaletteColors].sort((a, b) => {
+    const toneA = isDark ? a.darkTone : a.lightTone;
+    const toneB = isDark ? b.darkTone : b.lightTone;
+    return toneA - toneB;
+  });
+
+  // 明度の調整
+  const adjustTone = (
+    tone: number,
+    index: number,
+    contrastLevel: number,
+  ): number => {
+    const direction = index < sortedColors.length / 2 ? -1 : 1;
+    const adjustmentFactor =
+      Math.abs(index - (sortedColors.length - 1) / 2) /
+      ((sortedColors.length - 1) / 2);
+    const adjustment = direction * contrastLevel * 10 * adjustmentFactor;
+    return Math.max(0, Math.min(100, tone + adjustment));
+  };
+
+  // カスタムパレットの色を調整
+  return sortedColors.reduce(
+    (acc, color, index) => {
+      const palette = scheme[
+        `${color.palette}Palette` as keyof DynamicScheme
+      ] as TonalPalette;
+      const tone = isDark ? color.darkTone : color.lightTone;
+      const adjustedTone = adjustTone(tone, index, scheme.contrastLevel);
+      acc[color.name] = rgbaFromArgb(palette.tone(adjustedTone));
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 };
 
 // M3準拠のダイナミックスキーマの生成
@@ -176,29 +218,10 @@ export const generateColorScheme = (
   );
 
   // カスタムパレットの色の生成
-  const customPaletteColors = colorSchemeConfig.customPaletteColors.reduce(
-    (
-      acc: { [x: string]: string },
-      {
-        name,
-        palette,
-        lightTone,
-        darkTone,
-      }: {
-        name: string;
-        palette: PaletteKey;
-        lightTone: number;
-        darkTone: number;
-      },
-    ) => {
-      acc[name] = rgbaFromArgb(
-        (
-          scheme[`${palette}Palette` as keyof DynamicScheme] as TonalPalette
-        ).tone(scheme.isDark ? darkTone : lightTone),
-      );
-      return acc;
-    },
-    {} as Record<string, string>,
+  const customPaletteColors = adjustCustomPaletteColors(
+    colorSchemeConfig.customPaletteColors,
+    scheme,
+    colorSchemeConfig.isDark,
   );
 
   // カスタム定義色の生成

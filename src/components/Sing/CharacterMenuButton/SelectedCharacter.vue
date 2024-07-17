@@ -87,6 +87,11 @@ const selectedStyleIconPath = computed(() => {
   position: relative;
   height: 56px;
 
+  &:hover {
+    border-color: var(--md-sys-color-outline);
+    background: rgba(var(--md-sys-color-secondary-container-rgb), 0.1);
+  }
+
   &:focus {
     border-color: var(--md-sys-color-primary);
   }

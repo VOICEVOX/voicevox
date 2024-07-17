@@ -1,9 +1,23 @@
 {
-  "label": "調整なし(M3デフォルト)",
+  "label": "モノクローム",
   "sourceColor": "#A5D4AD",
-  "variant": "content",
-  "contrastLevel": 0.0,
-  "adjustments": {},
+  "variant": "monochrome",
+  "isDark": false,
+  "contrastLevel": 0.1,
+  "adjustments": {
+    "neutral": {
+      "chroma": 0
+    },
+    "neutralVariant": {
+      "chroma": 6
+    },
+    "tertiary": {
+      "hex": "#ffc919"
+    },
+    "error": {
+      "hex": "#d04756"
+    }
+  },
   "customPaletteColors": [
     {
       "name": "sing-grid-cell-white",
@@ -15,7 +29,7 @@
     {
       "name": "sing-grid-cell-black",
       "palette": "neutral",
-      "lightTone": 98,
+      "lightTone": 96,
       "darkTone": 12,
       "blend": true
     },
@@ -99,26 +113,10 @@
     {
       "name": "sing-toolbar-container",
       "palette": "neutral",
-      "lightTone": 99,
+      "lightTone": 100,
       "darkTone": 10,
       "blend": true
     }
   ],
-  "customDefinedColors": [
-    {
-      "name": "primitive-primary",
-      "value": "#A5D4AD",
-      "blend": false
-    },
-    {
-      "name": "primitive-blue",
-      "value": "#0969da",
-      "blend": false
-    },
-    {
-      "name": "primitive-red",
-      "value": "#d04756",
-      "blend": false
-    }
-  ]
+  "customDefinedColors": []
 }

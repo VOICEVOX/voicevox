@@ -13,8 +13,6 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
-const colorScheme = store.state.colorSchemeSetting.colorScheme;
-console.log(colorScheme.systemColors.primaryFixedDim);
 const classNames: Record<PhraseState, string> = {
   WAITING_TO_BE_RENDERED: "waiting-to-be-rendered",
   NOW_RENDERING: "now-rendering",

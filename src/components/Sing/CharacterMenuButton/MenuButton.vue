@@ -256,7 +256,7 @@ const engineIcons = useEngineIcons(() => store.state.engineManifests);
       justify-content: flex-start;
     }
     > div:last-child:hover {
-      background-color: rgba(colors.$primary-rgb, 0.1);
+      background-color: rgba(var(--md-sys-color-secondary-rgb), 0.1);
     }
   }
   .engine-icon {

@@ -513,6 +513,14 @@
                   )
                 "
               />
+              <ToggleCell
+                title="ソング：カラー調整"
+                description="ONの場合、カラー調整モードに切り替えてカラーを変えられるようになります。"
+                :modelValue="experimentalSetting.enableColorSchemeEditor"
+                @update:modelValue="
+                  changeExperimentalSetting('enableColorSchemeEditor', $event)
+                "
+              />
             </QCard>
             <QCard flat class="setting-card">
               <QCardActions>
@@ -612,6 +620,8 @@ const currentThemeNameComputed = computed({
   get: () => store.state.themeSetting.currentTheme,
   set: (currentTheme: string) => {
     store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
+    // テーマ変更時に色スキームを初期値にする(ライト/ダーク切り替え)
+    store.dispatch("INITIALIZE_COLOR_SCHEME");
   },
 });
 
