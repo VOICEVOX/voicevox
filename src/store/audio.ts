@@ -58,6 +58,7 @@ import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 function generateAudioKey() {
   return AudioKey(crypto.randomUUID());
@@ -1273,8 +1274,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       { dispatch, state },
       { audioKey, ...options }: { audioKey: AudioKey; cacheOnly?: boolean },
     ) {
-      const audioItem: AudioItem = JSON.parse(
-        JSON.stringify(state.audioItems[audioKey]),
+      const audioItem: AudioItem = cloneWithUnwrapProxy(
+        state.audioItems[audioKey],
       );
       return dispatch("FETCH_AUDIO_FROM_AUDIO_ITEM", {
         audioItem,
@@ -2153,8 +2154,8 @@ export const audioCommandStore = transformCommandStore(
       ) {
         const query = state.audioItems[audioKey].query;
         if (query != undefined) {
-          const newAccentPhrases: AccentPhrase[] = JSON.parse(
-            JSON.stringify(query.accentPhrases),
+          const newAccentPhrases: AccentPhrase[] = cloneWithUnwrapProxy(
+            query.accentPhrases,
           );
           newAccentPhrases[accentPhraseIndex].accent = accent;
 
@@ -2215,8 +2216,8 @@ export const audioCommandStore = transformCommandStore(
             "`COMMAND_CHANGE_ACCENT_PHRASE_SPLIT` should not be called if the query does not exist.",
           );
         }
-        const newAccentPhrases: AccentPhrase[] = JSON.parse(
-          JSON.stringify(query.accentPhrases),
+        const newAccentPhrases: AccentPhrase[] = cloneWithUnwrapProxy(
+          query.accentPhrases,
         );
         const changeIndexes = [accentPhraseIndex];
         // toggleAccentPhrase to newAccentPhrases and record changeIndexes

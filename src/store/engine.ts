@@ -116,14 +116,18 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       commit("SET_ENGINE_MANIFESTS", {
         engineManifests: Object.fromEntries(
           await Promise.all(
-            state.engineIds.map(
-              async (engineId) =>
-                await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-                  engineId,
-                }).then(async (instance) => [
-                  engineId,
-                  await instance.invoke("engineManifestEngineManifestGet")({}),
-                ]),
+            state.engineIds.map((engineId) =>
+              this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+                engineId,
+              }).then(
+                async (instance) =>
+                  [
+                    engineId,
+                    await instance.invoke("engineManifestEngineManifestGet")(
+                      {},
+                    ),
+                  ] as const,
+              ),
             ),
           ),
         ),
