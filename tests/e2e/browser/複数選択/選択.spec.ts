@@ -12,10 +12,10 @@ test.beforeEach(async ({ page }) => {
   await addAudioCells(page, 3);
 });
 
-interface SelectedStatus {
+type SelectedStatus = {
   active: number;
   selected: number[];
-}
+};
 /**
  * アクティブなAudioCellと選択されているAudioCellを取得する。
  * 戻り値のインデックスは1から始まる。（nth-childのインデックスと揃えるため）

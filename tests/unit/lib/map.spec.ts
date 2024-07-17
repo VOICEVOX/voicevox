@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { mapNullablePipe, nullableToDefault } from "@/helpers/map";
 
-interface DummyType {
+type DummyType = {
   outerValue?: {
     innerValue?: string;
   };
-}
+};
 
 describe("mapUndefinedPipe", () => {
   it("値をunwrap出来る", () => {
