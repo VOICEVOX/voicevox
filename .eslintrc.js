@@ -1,4 +1,4 @@
-/** @type {import('@typescript-eslint/utils').TSESLint.Linter.Config} */
+/** @type {import('@typescript-eslint/utils').TSESLint.Linter.ConfigType} */
 module.exports = {
   root: true,
   env: {
@@ -19,6 +19,8 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
     parser: "@typescript-eslint/parser",
+    project: ["./tsconfig.json"],
+    tsconfigRootDir: __dirname,
   },
   ignorePatterns: ["dist_electron/**/*", "dist/**/*", "node_modules/**/*"],
   rules: {
@@ -76,6 +78,9 @@ module.exports = {
       },
     ],
     "import/order": "error",
+    "@typescript-eslint/consistent-type-definitions": "off",
+    "@typescript-eslint/no-invalid-void-type": "off",
+    "@typescript-eslint/restrict-template-expressions": "off",
   },
   overrides: [
     {
@@ -87,6 +92,15 @@ module.exports = {
       ],
       rules: {
         "no-console": "off",
+      },
+    },
+    {
+      files: ["*.ts", "*.vue"],
+      rules: {
+        extends: [
+          "plugin:@typescript-eslint/strict-type-checked",
+          "plugin:@typescript-eslint/stylistic-type-checked",
+        ],
       },
     },
     // Electronのメインプロセス以外でelectronのimportを禁止する
