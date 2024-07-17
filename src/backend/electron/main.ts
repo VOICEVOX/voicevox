@@ -46,6 +46,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  UpdateInfo,
 } from "@/type/preload";
 
 type SingleInstanceLockData = {
@@ -197,7 +198,7 @@ function openEngineDirectory(engineId: EngineId) {
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
   // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
-  shell.openPath(path.resolve(engineDirectory));
+  void shell.openPath(path.resolve(engineDirectory));
 }
 
 /**
@@ -243,7 +244,7 @@ async function installVvppEngineWithWarning({
   await installVvppEngine(vvppPath);
 
   if (reloadNeeded) {
-    dialog
+    void dialog
       .showMessageBox(win, {
         type: "info",
         title: "再読み込みが必要です",
@@ -318,7 +319,9 @@ function readThemeFiles() {
   const themes: ThemeConf[] = [];
   const dir = path.join(__static, "themes");
   for (const file of fs.readdirSync(dir)) {
-    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
+    const theme = JSON.parse(
+      fs.readFileSync(path.join(dir, file)).toString(),
+    ) as ThemeConf;
     themes.push(theme);
   }
   return themes;
@@ -347,7 +350,7 @@ const ossLicenses = JSON.parse(
   fs.readFileSync(path.join(__static, OssLicensesJsonFileName), {
     encoding: "utf-8",
   }),
-);
+) as Record<string, string>[];
 
 // 問い合わせの読み込み
 const contactText = fs.readFileSync(
@@ -366,7 +369,7 @@ const updateInfos = JSON.parse(
   fs.readFileSync(path.join(__static, UpdateInfosJsonFileName), {
     encoding: "utf-8",
   }),
-);
+) as UpdateInfo[];
 
 const privacyPolicyText = fs.readFileSync(
   path.join(__static, PrivacyPolicyTextFileName),
@@ -558,7 +561,7 @@ function cleanupEngines(): Promise<void> | "alreadyCompleted" {
     killingProcessPromises,
   ).map(([engineId, promise]) => {
     return promise
-      .catch((error) => {
+      .catch((error: unknown) => {
         // TODO: 各エンジンプロセスキルの失敗をUIに通知する
         log.error(`ENGINE ${engineId}: Error during killing process: ${error}`);
         // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
@@ -624,7 +627,7 @@ ipcMainHandle("GET_POLICY_TEXT", () => {
   return policyText;
 });
 
-ipcMainHandle("GET_OSS_LICENSES", () => {
+ipcMainHandle("GET_OSS_LICENSES", async () => {
   return ossLicenses;
 });
 
@@ -891,7 +894,7 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 });
 
 ipcMainHandle("OPEN_LOG_DIRECTORY", () => {
-  shell.openPath(app.getPath("logs"));
+  void shell.openPath(app.getPath("logs"));
 });
 
 ipcMainHandle("ENGINE_INFOS", () => {
@@ -1042,7 +1045,7 @@ app.on("web-contents-created", (e, contents) => {
   contents.setWindowOpenHandler(({ url }) => {
     const { protocol } = new URL(url);
     if (protocol.match(/^https?:/)) {
-      shell.openExternal(url);
+      void shell.openExternal(url);
     } else {
       log.error(`許可されないリンクです。url: ${url}`);
     }
@@ -1118,7 +1121,7 @@ app.once("will-finish-launching", () => {
 });
 
 app.on("ready", async () => {
-  await configManager.initialize().catch(async (e) => {
+  await configManager.initialize().catch(async (e: unknown) => {
     log.error(e);
 
     const appExit = async () => {
@@ -1244,7 +1247,7 @@ app.on("ready", async () => {
     }
   }
 
-  start();
+  void start();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。

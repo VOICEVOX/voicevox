@@ -13,7 +13,7 @@ function ipcRendererInvoke<T extends keyof IpcIHData>(
   ...args: IpcIHData[T]["args"]
 ): Promise<IpcIHData[T]["return"]>;
 function ipcRendererInvoke(channel: string, ...args: unknown[]): unknown {
-  return ipcRenderer.invoke(channel, ...args);
+  return ipcRenderer.invoke(channel, ...args) as unknown;
 }
 
 function ipcRendererOn<T extends keyof IpcSOData>(
@@ -150,15 +150,15 @@ const api: Sandbox = {
   },
 
   closeWindow: () => {
-    ipcRenderer.invoke("CLOSE_WINDOW");
+    void ipcRenderer.invoke("CLOSE_WINDOW");
   },
 
   minimizeWindow: () => {
-    ipcRenderer.invoke("MINIMIZE_WINDOW");
+    void ipcRenderer.invoke("MINIMIZE_WINDOW");
   },
 
   maximizeWindow: () => {
-    ipcRenderer.invoke("MAXIMIZE_WINDOW");
+    void ipcRenderer.invoke("MAXIMIZE_WINDOW");
   },
 
   logError: (...params) => {
@@ -187,7 +187,7 @@ const api: Sandbox = {
   },
 
   openLogDirectory: () => {
-    ipcRenderer.invoke("OPEN_LOG_DIRECTORY");
+    void ipcRenderer.invoke("OPEN_LOG_DIRECTORY");
   },
 
   engineInfos: () => {
@@ -207,7 +207,7 @@ const api: Sandbox = {
   },
 
   changePinWindow: () => {
-    ipcRenderer.invoke("CHANGE_PIN_WINDOW");
+    void ipcRenderer.invoke("CHANGE_PIN_WINDOW");
   },
 
   hotkeySettings: (newData) => {
@@ -223,7 +223,7 @@ const api: Sandbox = {
   },
 
   setNativeTheme: (source) => {
-    ipcRenderer.invoke("SET_NATIVE_THEME", source);
+    void ipcRenderer.invoke("SET_NATIVE_THEME", source);
   },
 
   theme: (newData) => {
@@ -231,7 +231,7 @@ const api: Sandbox = {
   },
 
   vuexReady: () => {
-    ipcRenderer.invoke("ON_VUEX_READY");
+    void ipcRenderer.invoke("ON_VUEX_READY");
   },
 
   /**
