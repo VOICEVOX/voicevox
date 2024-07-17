@@ -51,7 +51,7 @@ export const ipcMessageReceiver: Plugin = {
     window.backend.onReceivedIPCMsg(
       "DETECT_RESIZED",
       debounce(
-        (_, { width, height }) =>
+        (_, { width, height }: { width: number; height: number }) =>
           window.dataLayer?.push({ event: "windowResize", width, height }),
         300,
       ),
