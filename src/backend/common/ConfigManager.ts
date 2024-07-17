@@ -13,6 +13,7 @@ import {
   VoiceId,
   PresetKey,
 } from "@/type/preload";
+import { errorIfNullish } from "@/helpers/errorIfNullish";
 
 const lockKey = "save";
 
@@ -39,7 +40,12 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
       }
       const engineId = EngineId(
-        JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid,
+        // TODO: ちゃんとした型をつける
+        (
+          JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS) as {
+            uuid: string;
+          }[]
+        )[0].uuid,
       );
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
@@ -83,6 +89,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
           "enableMultiEngine",
         )
       ) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const enableMultiEngine: boolean =
           // @ts-expect-error 削除されたパラメータ。
           config.experimentalSetting.enableMultiEngine;
@@ -291,7 +298,7 @@ export abstract class BaseConfigManager {
   }
 
   private _save() {
-    this.lock.acquire(lockKey, async () => {
+    void this.lock.acquire(lockKey, async () => {
       await this.save({
         ...configSchema.parse({
           ...this.config,
@@ -337,15 +344,16 @@ export abstract class BaseConfigManager {
           action: defaultHotkey.action,
           combination: COMBINATION_IS_NONE,
         };
-        return loadedHotkey || hotkeyWithoutCombination;
+        return loadedHotkey ?? hotkeyWithoutCombination;
       },
     );
     const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
       if (hotkey.combination === COMBINATION_IS_NONE) {
-        const newHotkey =
+        const newHotkey = errorIfNullish(
           defaultHotkeySettings.find(
             (defaultHotkey) => defaultHotkey.action === hotkey.action,
-          ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
+          ),
+        );
         const combinationExists = hotkeysWithoutNewCombination.some(
           (hotkey) => hotkey.combination === newHotkey.combination,
         );

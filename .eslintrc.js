@@ -2,6 +2,8 @@ const vueEslintParser = "vue-eslint-parser";
 const vueEslintParserOptions = {
   ecmaVersion: 2020,
   parser: "@typescript-eslint/parser",
+};
+const tsEslintOptions = {
   project: ["./tsconfig.json"],
   tsconfigRootDir: __dirname,
 };
@@ -133,12 +135,13 @@ module.exports = {
         "plugin:@typescript-eslint/strict-type-checked",
         "plugin:@typescript-eslint/stylistic-type-checked",
       ],
+      parserOptions: tsEslintOptions,
       rules: tsEslintRules,
     },
     {
       files: ["*.vue"],
       parser: vueEslintParser,
-      parserOptions: vueEslintParserOptions,
+      parserOptions: { ...vueEslintParserOptions, ...tsEslintOptions },
       extends: [
         "plugin:@typescript-eslint/strict-type-checked",
         "plugin:@typescript-eslint/stylistic-type-checked",

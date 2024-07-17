@@ -187,7 +187,7 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     return {
       action:
         `${index + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
-      combination: HotkeyCombination((!isMac ? "Ctrl " : "Meta ") + roleKey),
+      combination: HotkeyCombination(`${!isMac ? "Ctrl" : "Meta"} ${roleKey}`),
     };
   }),
 ];

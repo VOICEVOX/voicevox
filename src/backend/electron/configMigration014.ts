@@ -23,7 +23,14 @@ export default function ({
     // ファイルが存在していてバージョン0.14以上であれば何もしない
     const configPath = path.join(fixedUserDataDir, "config.json");
     if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      // eslint-disable-next-line  @typescript-eslint/no-unsafe-assignment
+      const config: {
+        __internal__?: {
+          migrations?: {
+            version?: string;
+          };
+        };
+      } = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
       if (config?.__internal__?.migrations?.version == undefined) {
         throw new Error("configMigration014: config.json is invalid");

@@ -4,6 +4,7 @@ import { openDB } from "./browserConfig";
 import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 import { createLogger } from "@/domain/frontend/log";
+import { errorIfNullish } from "@/helpers/errorIfNullish";
 
 const log = createLogger("fileImpl");
 
@@ -19,7 +20,7 @@ const storeDirectoryHandle = async (
       resolve();
     };
     request.onerror = () => {
-      reject(request.error);
+      reject(errorIfNullish(request.error));
     };
   });
 };
@@ -32,10 +33,11 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
       const store = transaction.objectStore(directoryHandleStoreKey);
       const request = store.get(maybeDirectoryHandleName);
       request.onsuccess = () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         resolve(request.result);
       };
       request.onerror = () => {
-        reject(request.error);
+        reject(errorIfNullish(request.error));
       };
     },
   );
@@ -145,8 +147,8 @@ export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
         return writable.close();
       })
       .then(() => success(undefined))
-      .catch((e) => {
-        return failure(e);
+      .catch((e: unknown) => {
+        return failure(e as Error);
       });
   };
 

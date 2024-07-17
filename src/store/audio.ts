@@ -1409,7 +1409,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             return {
               result: "WRITE_ERROR",
               path: filePath,
-              errorMessage: generateWriteErrorMessage(e),
+              errorMessage: generateWriteErrorMessage(e as ResultError),
             };
           }
           return {
