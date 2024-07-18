@@ -1,5 +1,5 @@
-export interface State<
-  States extends State<States, Input, Context, Dispatcher>,
+export interface IState<
+  State extends IState<State, Input, Context, Dispatcher>,
   Input,
   Context,
   Dispatcher,
@@ -8,29 +8,29 @@ export interface State<
     input: Input;
     context: Context;
     dispatcher: Dispatcher;
-    setNextState: (nextState: States) => void;
+    setNextState: (nextState: State) => void;
   }): void;
   onEnter(payload: { context: Context; dispatcher: Dispatcher }): void;
   onExit(payload: { context: Context; dispatcher: Dispatcher }): void;
 }
 
 export class StateMachine<
-  States extends State<States, Input, Context, Dispatcher>,
+  State extends IState<State, Input, Context, Dispatcher>,
   Input,
   Context,
   Dispatcher,
 > {
   private readonly context: Context;
   private readonly dispatcher: Dispatcher;
-  private readonly setNextState: (nextState: States) => void;
+  private readonly setNextState: (nextState: State) => void;
 
-  private currentState: States;
-  private nextState: States | undefined;
+  private currentState: State;
+  private nextState: State | undefined;
 
-  constructor(initialState: States, context: Context, dispatcher: Dispatcher) {
+  constructor(initialState: State, context: Context, dispatcher: Dispatcher) {
     this.context = context;
     this.dispatcher = dispatcher;
-    this.setNextState = (nextState: States) => {
+    this.setNextState = (nextState: State) => {
       this.nextState = nextState;
     };
     this.currentState = initialState;

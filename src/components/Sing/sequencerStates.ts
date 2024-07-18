@@ -1,5 +1,5 @@
 import { ComputedRef, Ref } from "vue";
-import { State, StateMachine } from "@/sing/stateMachine";
+import { IState, StateMachine } from "@/sing/stateMachine";
 import {
   getButton,
   getDoremiFromNoteNumber,
@@ -56,7 +56,7 @@ type Context = {
   readonly guideLineTicks: Ref<number>;
 };
 
-type States = IdleState | AddNoteState;
+type State = IdleState | AddNoteState;
 
 const getGuideLineTicks = (
   cursorPos: PositionOnSequencer,
@@ -68,7 +68,7 @@ const getGuideLineTicks = (
   return Math.round(cursorTicks / snapTicks - 0.25) * snapTicks;
 };
 
-class IdleState implements State<States, Input, Context, Dispatcher> {
+class IdleState implements IState<State, Input, Context, Dispatcher> {
   readonly id = "idle";
 
   onEnter() {}
@@ -81,7 +81,7 @@ class IdleState implements State<States, Input, Context, Dispatcher> {
     input: Input;
     context: Context;
     dispatcher: Dispatcher;
-    setNextState: (nextState: States) => void;
+    setNextState: (nextState: State) => void;
   }) {
     const mouseButton = getButton(input.mouseEvent);
     if (input.targetArea === "SequencerBody") {
@@ -113,7 +113,7 @@ class IdleState implements State<States, Input, Context, Dispatcher> {
   onExit() {}
 }
 
-class AddNoteState implements State<States, Input, Context, Dispatcher> {
+class AddNoteState implements IState<State, Input, Context, Dispatcher> {
   readonly id = "addNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -193,7 +193,7 @@ class AddNoteState implements State<States, Input, Context, Dispatcher> {
     input: Input;
     context: Context;
     dispatcher: Dispatcher;
-    setNextState: (nextState: States) => void;
+    setNextState: (nextState: State) => void;
   }) {
     const mouseButton = getButton(input.mouseEvent);
     if (input.targetArea === "SequencerBody") {
@@ -235,7 +235,7 @@ export const createStateMachineForSequencer = (
   context: Context,
   dispatcher: Dispatcher,
 ) => {
-  return new StateMachine<States, Input, Context, Dispatcher>(
+  return new StateMachine<State, Input, Context, Dispatcher>(
     new IdleState(),
     context,
     dispatcher,
