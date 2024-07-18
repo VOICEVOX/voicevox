@@ -54,11 +54,11 @@
           : notesInCurrentTrack"
         :key="note.id"
         class="sequencer-note"
-        :isOverlapping="overlappingNoteIdsInCurrentTrack.has(note.id)"
         :note
         :nowPreviewing
         :isSelected="selectedNoteIds.has(note.id)"
         :isPreview="previewNoteIds.has(note.id)"
+        :isOverlapping="overlappingNoteIdsInCurrentTrack.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
