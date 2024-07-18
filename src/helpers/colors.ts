@@ -16,17 +16,15 @@ import {
 } from "@material/material-color-utilities";
 
 import {
-  ColorSchemeConfig,
-  PaletteKey,
-  ColorAdjustment,
-  ThemeOptions,
-  SchemeVariant,
   ColorScheme,
+  ColorSchemeConfig,
+  ColorSchemeCorePalettes,
+  ColorSchemeAdjustment,
   CustomPaletteColor,
 } from "@/type/preload";
 
-// カラースキーマのコンストラクタ
-const SCHEME_CONSTRUCTORS: Record<SchemeVariant, typeof SchemeContent> = {
+// Constants with improved type safety
+const SCHEME_CONSTRUCTORS = {
   content: SchemeContent,
   tonalSpot: SchemeTonalSpot,
   neutral: SchemeNeutral,
@@ -36,22 +34,20 @@ const SCHEME_CONSTRUCTORS: Record<SchemeVariant, typeof SchemeContent> = {
   monochrome: SchemeMonochrome,
   rainbow: SchemeRainbow,
   fruitSalad: SchemeFruitSalad,
-};
+} as const;
 
-// カラーパレットのキー
-const PALETTE_KEYS: PaletteKey[] = [
+const PALETTE_KEYS = [
   "primary",
   "secondary",
   "tertiary",
   "neutral",
   "neutralVariant",
   "error",
-];
+] as const;
 
-// カラーパレットのトーン比率
-export const TONES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100];
+const TONES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100] as const;
 
-// ARGBをRGBAに変換
+// ARGBからRGBAに変換
 export const rgbaFromArgb = (argb: number, alpha: number = 1): string => {
   const r = (argb >> 16) & 255;
   const g = (argb >> 8) & 255;
@@ -59,100 +55,48 @@ export const rgbaFromArgb = (argb: number, alpha: number = 1): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
 };
 
+// RGBAから数値配列に変換
 export const arrayFromRgba = (rgba: string): number[] => {
   const match = rgba.match(/^rgba\(([0-9]+), ([0-9]+), ([0-9]+), ([0-9.]+)\)$/);
-  return match
-    ? [Number(match[1]), Number(match[2]), Number(match[3]), Number(match[4])]
-    : [];
+  return match ? match.slice(1, 5).map(Number) : [];
 };
 
-// テーマパレットの調整
-export const adjustPalette = (
+// パレット事前調整
+const createAdjustedPalette = (
   palette: TonalPalette,
-  adjustment: ColorAdjustment,
+  adjustment: ColorSchemeAdjustment,
 ): TonalPalette => {
-  let hct: Hct;
+  const baseHct = adjustment.hex
+    ? Hct.fromInt(argbFromHex(adjustment.hex))
+    : Hct.from(palette.hue, palette.chroma, 50);
 
-  if (adjustment.hex) {
-    // HEX指定されている場合はHEX値からHCTを作成
-    hct = Hct.fromInt(argbFromHex(adjustment.hex));
-  } else {
-    // HEX指定がない場合は既存のパレットの値を使用
-    hct = Hct.from(palette.hue, palette.chroma, 50); // トーンは50をデフォルトとする
-  }
+  const adjustedHct = Hct.from(
+    adjustment.hue ?? baseHct.hue,
+    adjustment.chroma ?? baseHct.chroma,
+    adjustment.tone ?? baseHct.tone,
+  );
 
-  // hue, chroma, toneが指定されている場合は上書き
-  const hue = adjustment.hue != undefined ? adjustment.hue : hct.hue;
-  const chroma =
-    adjustment.chroma != undefined ? adjustment.chroma : hct.chroma;
-  const tone = adjustment.tone != undefined ? adjustment.tone : hct.tone;
-
-  // 調整された値でHCTオブジェクトを作成
-  const adjustedHct = Hct.from(hue, chroma, tone);
-
-  // 調整されたHCTオブジェクトからトーナルパレットを作成
   return TonalPalette.fromHueAndChroma(adjustedHct.hue, adjustedHct.chroma);
 };
 
-// カスタムパレットの色をコントラスト含め調整(簡易)
-const adjustCustomPaletteColors = (
-  customPaletteColors: CustomPaletteColor[],
-  scheme: DynamicScheme,
-  isDark: boolean,
-): Record<string, string> => {
-  const sortedColors = [...customPaletteColors].sort((a, b) => {
-    const toneA = isDark ? a.darkTone : a.lightTone;
-    const toneB = isDark ? b.darkTone : b.lightTone;
-    return toneA - toneB;
-  });
-
-  // 明度の調整
-  const adjustTone = (
-    tone: number,
-    index: number,
-    contrastLevel: number,
-  ): number => {
-    const direction = index < sortedColors.length / 2 ? -1 : 1;
-    const adjustmentFactor =
-      Math.abs(index - (sortedColors.length - 1) / 2) /
-      ((sortedColors.length - 1) / 2);
-    const adjustment = direction * contrastLevel * 10 * adjustmentFactor;
-    return Math.max(0, Math.min(100, tone + adjustment));
-  };
-
-  // カスタムパレットの色を調整
-  return sortedColors.reduce(
-    (acc, color, index) => {
-      const palette = scheme[
-        `${color.palette}Palette` as keyof DynamicScheme
-      ] as TonalPalette;
-      const tone = isDark ? color.darkTone : color.lightTone;
-      const adjustedTone = adjustTone(tone, index, scheme.contrastLevel);
-      acc[color.name] = rgbaFromArgb(palette.tone(adjustedTone));
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-};
-
-// M3準拠のダイナミックスキーマの生成
-export const createDynamicScheme = (options: ThemeOptions): DynamicScheme => {
+// M3のダイナミックスキーム生成
+const createDynamicScheme = (config: ColorSchemeConfig): DynamicScheme => {
   const {
     sourceColor,
     variant = "tonalSpot",
     isDark = false,
     contrastLevel = 0,
     adjustments,
-  } = options;
-  const sourceColorHct = Hct.fromInt(argbFromHex(sourceColor));
+  } = config;
+  const sourceHct = Hct.fromInt(argbFromHex(sourceColor));
   const SchemeConstructor = SCHEME_CONSTRUCTORS[variant];
-  let scheme = new SchemeConstructor(sourceColorHct, isDark, contrastLevel);
+  let scheme = new SchemeConstructor(sourceHct, isDark, contrastLevel);
 
   if (adjustments) {
     const adjustedPalettes = Object.entries(adjustments).reduce(
       (acc, [key, adjustment]) => {
         if (adjustment) {
-          acc[`${key}Palette`] = adjustPalette(
+          acc[`${key}Palette`] = createAdjustedPalette(
             scheme[`${key}Palette` as keyof DynamicScheme] as TonalPalette,
             adjustment,
           );
@@ -176,20 +120,11 @@ export const createDynamicScheme = (options: ThemeOptions): DynamicScheme => {
   return scheme;
 };
 
-// テーマの色スキーマの生成
-export const generateColorScheme = (
-  colorSchemeConfig: ColorSchemeConfig,
-): ColorScheme => {
-  const scheme = createDynamicScheme({
-    sourceColor: colorSchemeConfig.sourceColor,
-    variant: colorSchemeConfig.variant,
-    isDark: colorSchemeConfig.isDark,
-    contrastLevel: colorSchemeConfig.contrastLevel,
-    adjustments: colorSchemeConfig.adjustments,
-  });
-
-  // システムカラーの生成
-  const systemColors = Object.entries(MaterialDynamicColors).reduce(
+// システムカラー生成
+const generateSystemColors = (
+  scheme: DynamicScheme,
+): Record<string, string> => {
+  return Object.entries(MaterialDynamicColors).reduce(
     (acc, [name, color]) => {
       if (typeof color === "object" && "getArgb" in color) {
         acc[name] = rgbaFromArgb(color.getArgb(scheme));
@@ -198,9 +133,13 @@ export const generateColorScheme = (
     },
     {} as Record<string, string>,
   );
+};
 
-  // テーマの色パレットの生成
-  const paletteTones = PALETTE_KEYS.reduce(
+// パレットの色域生成
+const generatePaletteTones = (
+  scheme: DynamicScheme,
+): Record<ColorSchemeCorePalettes, Record<number, string>> => {
+  return PALETTE_KEYS.reduce(
     (acc, key) => {
       acc[key] = Object.fromEntries(
         TONES.map((tone) => [
@@ -214,22 +153,60 @@ export const generateColorScheme = (
       );
       return acc;
     },
-    {} as Record<string, Record<number, string>>,
+    {} as Record<ColorSchemeCorePalettes, Record<number, string>>,
   );
+};
 
-  // カスタムパレットの色の生成
+const adjustCustomPaletteColors = (
+  customColors: CustomPaletteColor[],
+  scheme: DynamicScheme,
+  isDark: boolean,
+): Record<string, string> => {
+  const sortedColors = [...customColors].sort((a, b) => {
+    const toneA = isDark ? a.darkTone : a.lightTone;
+    const toneB = isDark ? b.darkTone : b.lightTone;
+    return toneA - toneB;
+  });
+
+  const adjustTone = (
+    tone: number,
+    index: number,
+    contrastLevel: number,
+  ): number => {
+    const direction = index < sortedColors.length / 2 ? -1 : 1;
+    const adjustmentFactor =
+      Math.abs(index - (sortedColors.length - 1) / 2) /
+      ((sortedColors.length - 1) / 2);
+    const adjustment = direction * contrastLevel * 10 * adjustmentFactor;
+    return Math.max(0, Math.min(100, tone + adjustment));
+  };
+
+  return sortedColors.reduce(
+    (acc, color, index) => {
+      const palette = scheme[
+        `${color.palette}Palette` as keyof DynamicScheme
+      ] as TonalPalette;
+      const tone = isDark ? color.darkTone : color.lightTone;
+      const adjustedTone = adjustTone(tone, index, scheme.contrastLevel);
+      acc[color.name] = rgbaFromArgb(palette.tone(adjustedTone));
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+};
+
+// カラースキームの生成
+export const generateColorScheme = (config: ColorSchemeConfig): ColorScheme => {
+  const scheme = createDynamicScheme(config);
+  const systemColors = generateSystemColors(scheme);
+  const paletteTones = generatePaletteTones(scheme);
   const customPaletteColors = adjustCustomPaletteColors(
-    colorSchemeConfig.customPaletteColors,
+    config.customPaletteColors,
     scheme,
-    colorSchemeConfig.isDark,
+    config.isDark,
   );
-
-  // カスタム定義色の生成
-  const customDefinedColors = colorSchemeConfig.customDefinedColors.reduce(
-    (
-      acc: Record<string, string>,
-      { name, value }: { name: string; value: string },
-    ) => {
+  const customDefinedColors = config.customDefinedColors.reduce(
+    (acc, { name, value }) => {
       acc[name] = value;
       return acc;
     },
@@ -242,13 +219,13 @@ export const generateColorScheme = (
     paletteTones,
     customPaletteColors,
     customDefinedColors,
-    colorSchemeConfig,
+    config,
   };
 };
 
-// テーマの色スキーマをCSS変数に変換
+// カラースキームをCSS Variablesに変換
 export const colorSchemeToCssVariables = (
-  theme: ColorScheme,
+  colorScheme: ColorScheme,
 ): Record<string, string> => {
   const cssVars: Record<string, string> = {};
 
@@ -260,51 +237,24 @@ export const colorSchemeToCssVariables = (
     cssVars[`${prefix}${name}`] = color;
   };
 
-  Object.entries(theme.systemColors).forEach(([name, color]) => {
+  Object.entries(colorScheme.systemColors).forEach(([name, color]) => {
     const cssName = name.replace(/([A-Z])/g, "-$1").toLowerCase();
-    setColorVar("--md-sys-color-", cssName, color as string);
+    setColorVar("--md-sys-color-", cssName, color);
   });
 
-  Object.entries(
-    theme.paletteTones as Record<string, Record<number, string>>,
-  ).forEach(([key, tones]) => {
+  Object.entries(colorScheme.paletteTones).forEach(([key, tones]) => {
     Object.entries(tones).forEach(([tone, color]) => {
-      setColorVar(`--md-ref-palette-${key}-`, tone, color as string);
+      setColorVar(`--md-ref-palette-${key}-`, tone, color);
     });
   });
 
-  Object.entries(theme.customPaletteColors).forEach(([name, color]) => {
-    setColorVar("--md-custom-color-", name, color as string);
+  Object.entries(colorScheme.customPaletteColors).forEach(([name, color]) => {
+    setColorVar("--md-custom-color-", name, color);
   });
 
-  Object.entries(theme.customDefinedColors).forEach(([name, color]) => {
-    setColorVar("--md-custom-color-", name, color as string);
+  Object.entries(colorScheme.customDefinedColors).forEach(([name, color]) => {
+    setColorVar("--md-custom-color-", name, color);
   });
 
   return cssVars;
-};
-
-// テーマに合わせて色を調整するユーティリティ関数 ex: トラックカラーをテーマにあわせる
-export const adjustColorToTheme = (
-  color: string,
-  theme: ColorScheme,
-  targetKey: PaletteKey = "primary",
-): string => {
-  const sourceHct = Hct.fromInt(argbFromHex(color));
-  const targetPalette = theme.scheme[
-    `${targetKey}Palette` as keyof DynamicScheme
-  ] as TonalPalette;
-
-  // テーマの色相と彩度を取得
-  const themeHue = targetPalette.hue;
-  const themeChroma = targetPalette.chroma;
-
-  // 元の色の明度を保持しつつ、テーマの色相と彩度に合わせる
-  const adjustedHct = Hct.from(
-    themeHue,
-    Math.min(sourceHct.chroma, themeChroma), // 彩度は元の色とテーマの低い方を選択
-    sourceHct.tone,
-  );
-
-  return rgbaFromArgb(adjustedHct.toInt());
 };

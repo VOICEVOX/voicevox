@@ -1,4 +1,3 @@
-import { ColorSchemeConfig } from "../helpers/colors";
 import {
   AppInfos,
   ConfigType,
@@ -12,6 +11,7 @@ import {
   EngineSettingType,
   EngineId,
   MessageBoxReturnValue,
+  ColorSchemeConfig,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";

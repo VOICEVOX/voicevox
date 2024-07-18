@@ -30,6 +30,7 @@ import {
   SavingSetting,
   ThemeConf,
   ThemeSetting,
+  ColorSchemeSetting,
   ExperimentalSettingType,
   ToolbarSettingType,
   UpdateInfo,
@@ -1530,6 +1531,7 @@ export type SettingStoreState = {
   engineInfos: Record<EngineId, EngineInfo>;
   engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
+  colorSchemeSetting: ColorSchemeSetting;
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSettingType;
@@ -1577,16 +1579,13 @@ export type SettingStoreTypes = {
 
   INITIALIZE_COLOR_SCHEME: {
     mutation: {
-      colorScheme: ColorSchemeConfig;
-      availableColorSchemes: ColorSchemeConfig[];
+      currentColorScheme: ColorScheme;
+      availableColorSchemeConfigs: ColorSchemeConfig[];
     };
-    action(payload: {
-      colorScheme: ColorSchemeConfig;
-      availableColorSchemes: ColorSchemeConfig[];
-    }): void;
+    action(): void;
   };
 
-  SET_COLOR_SCHEME_SETTING: {
+  SET_COLOR_SCHEME: {
     mutation: {
       colorScheme: ColorScheme;
     };

@@ -6,7 +6,7 @@
 import { ref, watch, computed } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
-import { arrayFromRgba } from "@/helpers/colors";
+import { useColorScheme } from "@/composables/useColorScheme";
 import { useStore } from "@/store";
 import {
   UNVOICED_PHONEMES,
@@ -50,7 +50,6 @@ const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const tempos = computed(() => [store.state.tempos[0]]);
-const colorScheme = computed(() => store.state.colorSchemeSetting.colorScheme);
 const singingGuides = computed(() => [...store.state.singingGuides.values()]);
 const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;
@@ -58,13 +57,12 @@ const pitchEditData = computed(() => {
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const editFrameRate = computed(() => store.state.editFrameRate);
 
+const { systemColorsRgba } = useColorScheme();
+
 // TODO: このままだとテーマ変更で更新されないため、変更に追随する必要あり
-const pitchLineColor = [
-  ...arrayFromRgba(colorScheme.value.systemColors.outline).splice(0, 3),
-  255,
-];
+const pitchLineColor = [...systemColorsRgba.value.outline.splice(0, 3), 255];
 const pitchEditLineColor = [
-  ...arrayFromRgba(colorScheme.value.systemColors.primaryFixedDim).splice(0, 3),
+  ...systemColorsRgba.value.primaryFixedDim.splice(0, 3),
   255,
 ];
 const originalPitchLine: PitchLine = {

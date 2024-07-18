@@ -19,6 +19,7 @@ import {
   HotkeySettingType,
   Sandbox,
   ThemeConf,
+  ColorSchemeConfig,
 } from "@/type/preload";
 import {
   ContactTextFileName,
@@ -315,10 +316,12 @@ export const api: Sandbox = {
     // ブラウザ版では、ファイルシステムから直接読み込むのではなく、
     // ビルド時に生成されたファイルを読み込む
     // NOTE: 定数にする？
-    const colorSchemeFiles = ["default.json"];
+    const colorSchemeFiles = ["default.json", "none.json", "monochrome.json"];
 
     // カラースキーム個別の取得
-    const fetchColorScheme = async (fileName: string) => {
+    const fetchColorScheme = async (
+      fileName: string,
+    ): Promise<ColorSchemeConfig> => {
       const response = await fetch(`/color-schemes/${fileName}`);
       if (!response.ok) {
         throw new Error(`Failed to load color scheme: ${fileName}`);
@@ -329,7 +332,7 @@ export const api: Sandbox = {
     // すべてのカラースキームの取得
     return Promise.all(colorSchemeFiles.map(fetchColorScheme))
       .then((colorSchemes) => {
-        return colorSchemes;
+        return colorSchemes as ColorSchemeConfig[];
       })
       .catch((error) => {
         throw new Error(`Error loading color schemes: ${error}`);

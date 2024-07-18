@@ -292,7 +292,7 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
-  getColorSchemeConfigs(): Promise<string[]>;
+  getColorSchemeConfigs(): Promise<ColorSchemeConfig[]>;
 }
 
 export type AppInfos = {
@@ -559,8 +559,13 @@ export type ThemeSetting = {
   availableThemes: ThemeConf[];
 };
 
-// カラースキーマの種類
-export type SchemeVariant =
+export type ColorSchemeSetting = {
+  currentColorScheme: ColorScheme;
+  availableColorSchemeConfigs: ColorSchemeConfig[];
+};
+
+// カラースキーマの種類(M3準拠)
+export type ColorSchemeVariant =
   | "content"
   | "tonalSpot"
   | "neutral"
@@ -572,7 +577,7 @@ export type SchemeVariant =
   | "fruitSalad";
 
 // カラーパレットのキー(M3準拠)
-export type PaletteKey =
+export type ColorSchemeCorePalettes =
   | "primary"
   | "secondary"
   | "tertiary"
@@ -580,21 +585,21 @@ export type PaletteKey =
   | "neutralVariant"
   | "error";
 
-// カラー調整
-export interface ColorAdjustment {
+// カラー事前調整
+export interface ColorSchemeAdjustment {
   hue?: number;
   chroma?: number;
   tone?: number;
   hex?: string;
 }
 
-// テーマオプション
-export interface ThemeOptions {
-  sourceColor: string;
-  variant?: SchemeVariant;
-  isDark?: boolean;
-  contrastLevel?: number;
-  adjustments?: Partial<Record<PaletteKey, ColorAdjustment>>;
+// パレットから取得するカスタムカラー
+export interface CustomPaletteColor {
+  name: string;
+  palette: ColorSchemeCorePalettes;
+  lightTone: number;
+  darkTone: number;
+  blend: boolean;
 }
 
 // 定義済みカスタムカラー
@@ -604,29 +609,14 @@ export interface CustomDefinedColor {
   blend: boolean;
 }
 
-// パレットから取得するカスタムカラー
-export interface CustomPaletteColor {
-  name: string;
-  palette: PaletteKey;
-  lightTone: number;
-  darkTone: number;
-  blend: boolean;
-}
-
-// カラーパレットオプション
-export interface TonalPaletteOptions {
-  color: string;
-  tonalOffset?: number;
-}
-
-// カラースキーマの設定
+// カラースキーマのベース設定(ここから生成)
 export interface ColorSchemeConfig {
   name: string;
   sourceColor: string;
-  variant: SchemeVariant;
+  variant: ColorSchemeVariant;
   isDark: boolean;
   contrastLevel: number;
-  adjustments: Partial<Record<PaletteKey, ColorAdjustment>>;
+  adjustments: Partial<Record<ColorSchemeCorePalettes, ColorSchemeAdjustment>>;
   customPaletteColors: CustomPaletteColor[];
   customDefinedColors: CustomDefinedColor[];
 }
@@ -638,7 +628,7 @@ export interface ColorScheme {
   paletteTones: Record<string, Record<number, string>>;
   customPaletteColors: Record<string, string>;
   customDefinedColors: Record<string, string>;
-  colorSchemeConfig: ColorSchemeConfig;
+  config: ColorSchemeConfig;
 }
 
 export const experimentalSettingSchema = z.object({

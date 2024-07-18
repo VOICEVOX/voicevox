@@ -16,6 +16,7 @@ import {
   EngineId,
   ConfirmedTips,
   RootMiscSettingType,
+  ColorScheme,
   ColorSchemeConfig,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
@@ -42,8 +43,8 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   colorSchemeSetting: {
-    colorScheme: undefined,
-    availableColorSchemes: [],
+    currentColorScheme: undefined as unknown as ColorScheme,
+    availableColorSchemeConfigs: [] as ColorSchemeConfig[],
   },
   editorFont: "default",
   showTextLineNumber: false,
@@ -295,80 +296,51 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
   },
 
   INITIALIZE_COLOR_SCHEME: {
-    mutation(state, { colorScheme, availableColorSchemes }) {
-      state.colorSchemeSetting.colorScheme = colorScheme;
-      state.colorSchemeSetting.availableColorSchemes = availableColorSchemes;
+    mutation(state, { currentColorScheme, availableColorSchemeConfigs }) {
+      state.colorSchemeSetting = {
+        currentColorScheme,
+        availableColorSchemeConfigs,
+      };
     },
     action: createUILockAction(async ({ commit, state }) => {
       try {
-        const availableColorSchemes =
+        const availableColorSchemeConfigs =
           await window.backend.getColorSchemeConfigs();
-        const defaultSchemeConfig = availableColorSchemes[0];
-        const isDark = state.themeSetting.currentTheme === "Dark" ?? false;
-        const colorScheme = generateColorScheme({
+        const defaultSchemeConfig = availableColorSchemeConfigs[0];
+        const isDark = state.themeSetting.currentTheme === "Dark";
+        const currentColorScheme = generateColorScheme({
           ...defaultSchemeConfig,
           isDark,
         });
-
-        // CSS変数に変換
-        const cssVariables = colorSchemeToCssVariables(colorScheme);
-
-        // CSSに適用
-        Object.entries(cssVariables).forEach(([key, value]) => {
-          document.documentElement.style.setProperty(key, value as string);
+        commit("INITIALIZE_COLOR_SCHEME", {
+          currentColorScheme,
+          availableColorSchemeConfigs,
         });
 
-        commit("INITIALIZE_COLOR_SCHEME", {
-          colorScheme: colorScheme,
-          availableColorSchemes,
+        const cssVariables = colorSchemeToCssVariables(currentColorScheme);
+        Object.entries(cssVariables).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value);
         });
       } catch (error) {
         console.error("Error initializing color scheme:", error);
-        await window.backend.showMessageDialog({
-          type: "error",
-          title: "カラースキーム初期化エラー",
-          message: "カラースキームの初期化中にエラーが発生しました。",
-        });
       }
     }),
   },
-  SET_COLOR_SCHEME_SETTING: {
+  SET_COLOR_SCHEME: {
     mutation(state, { colorScheme }) {
-      state.colorSchemeSetting.colorScheme = colorScheme;
+      state.colorSchemeSetting.currentColorScheme = colorScheme;
     },
     action: createUILockAction(
-      async (
-        { commit, state },
-        { colorSchemeConfig }: { colorSchemeConfig: ColorSchemeConfig },
-      ) => {
+      async ({ commit, state }, { colorSchemeConfig }) => {
         try {
-          const currentTheme = state.themeSetting.availableThemes.find(
-            (theme: ThemeConf) =>
-              theme.name === state.themeSetting.currentTheme,
-          );
           const isDark =
-            colorSchemeConfig.isDark ?? currentTheme?.isDark ?? false;
-          const updatedColorSchemeConfig = {
-            ...colorSchemeConfig,
-            isDark,
-          };
-          const colorScheme = generateColorScheme(updatedColorSchemeConfig);
-          const cssVariables = colorSchemeToCssVariables(colorScheme);
-
-          Object.entries(cssVariables).forEach(([key, value]) => {
-            document.documentElement.style.setProperty(key, value as string);
-          });
-
-          commit("SET_COLOR_SCHEME_SETTING", {
-            colorScheme: colorScheme,
-          });
+            colorSchemeConfig.isDark ??
+            state.themeSetting.currentTheme === "Dark";
+          const updatedConfig = { ...colorSchemeConfig, isDark };
+          const colorScheme = generateColorScheme(updatedConfig);
+          commit("SET_COLOR_SCHEME", { colorScheme });
         } catch (error) {
           console.error("Error setting color scheme:", error);
-          await window.backend.showMessageDialog({
-            type: "error",
-            title: "カラースキーム設定エラー",
-            message: "カラースキームの設定中にエラーが発生しました。",
-          });
         }
       },
     ),

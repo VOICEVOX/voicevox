@@ -1,19 +1,19 @@
 {
-  "label": "テスト",
+  "name": "スプリング",
   "sourceColor": "#9cf476",
   "variant": "content",
   "contrastLevel": 0,
   "adjustments": {
     "neutral": {
-      "chroma": 3.7
+      "chroma": 0
     },
     "neutralVariant": {
-      "chroma": 24.4,
+      "chroma": 20.1,
       "tone": 0
     },
     "tertiary": {
-      "hex": "#ff1a6a",
-      "chroma": 19.4,
+      "hex": "#ffae52",
+      "chroma": 70,
       "tone": 80
     },
     "error": {
@@ -54,7 +54,7 @@
     },
     {
       "name": "sing-ruler-measure-line",
-      "palette": "secondary",
+      "palette": "tertiary",
       "lightTone": 80,
       "darkTone": 70,
       "blend": true
@@ -82,7 +82,7 @@
     },
     {
       "name": "sing-grid-measure-line",
-      "palette": "secondary",
+      "palette": "tertiary",
       "lightTone": 80,
       "darkTone": 40,
       "blend": true
@@ -103,9 +103,9 @@
     },
     {
       "name": "sing-piano-key-black",
-      "palette": "tertiary",
-      "lightTone": 83,
-      "darkTone": 15,
+      "palette": "neutral",
+      "lightTone": 65,
+      "darkTone": 20,
       "blend": true
     },
     {
@@ -124,9 +124,9 @@
     },
     {
       "name": "sing-toolbar-container",
-      "palette": "neutral",
+      "palette": "neutralVariant",
       "lightTone": 100,
-      "darkTone": 20,
+      "darkTone": 25,
       "blend": true
     }
   ],
