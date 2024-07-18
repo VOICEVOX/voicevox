@@ -7,6 +7,7 @@
           color="secondary"
           variant="flat"
           flat
+          rounded
           @click="isShowEditor = false"
         />
         カラースキーム

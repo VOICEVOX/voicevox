@@ -23,7 +23,6 @@ import {
   CustomPaletteColor,
 } from "@/type/preload";
 
-// Constants with improved type safety
 const SCHEME_CONSTRUCTORS = {
   content: SchemeContent,
   tonalSpot: SchemeTonalSpot,
@@ -157,17 +156,21 @@ const generatePaletteTones = (
   );
 };
 
+// カスタムカラーの調整
+// TODO: ContrastやBlendを使う
 const adjustCustomPaletteColors = (
   customColors: CustomPaletteColor[],
   scheme: DynamicScheme,
   isDark: boolean,
 ): Record<string, string> => {
+  // ソート
   const sortedColors = [...customColors].sort((a, b) => {
     const toneA = isDark ? a.darkTone : a.lightTone;
     const toneB = isDark ? b.darkTone : b.lightTone;
     return toneA - toneB;
   });
 
+  // トーンを調整
   const adjustTone = (
     tone: number,
     index: number,
@@ -229,6 +232,10 @@ export const colorSchemeToCssVariables = (
 ): Record<string, string> => {
   const cssVars: Record<string, string> = {};
 
+  const toKebabCase = (str: string) => {
+    return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+  };
+
   const setColorVar = (prefix: string, name: string, color: string) => {
     const rgba = arrayFromRgba(color);
     if (rgba.length >= 3) {
@@ -238,22 +245,25 @@ export const colorSchemeToCssVariables = (
   };
 
   Object.entries(colorScheme.systemColors).forEach(([name, color]) => {
-    const cssName = name.replace(/([A-Z])/g, "-$1").toLowerCase();
+    const cssName = toKebabCase(name);
     setColorVar("--md-sys-color-", cssName, color);
   });
 
   Object.entries(colorScheme.paletteTones).forEach(([key, tones]) => {
     Object.entries(tones).forEach(([tone, color]) => {
-      setColorVar(`--md-ref-palette-${key}-`, tone, color);
+      const cssName = toKebabCase(key);
+      setColorVar(`--md-ref-palette-${cssName}-`, tone, color);
     });
   });
 
   Object.entries(colorScheme.customPaletteColors).forEach(([name, color]) => {
-    setColorVar("--md-custom-color-", name, color);
+    const cssName = toKebabCase(name);
+    setColorVar("--md-custom-color-", cssName, color);
   });
 
   Object.entries(colorScheme.customDefinedColors).forEach(([name, color]) => {
-    setColorVar("--md-custom-color-", name, color);
+    const cssName = toKebabCase(name);
+    setColorVar("--md-custom-color-", cssName, color);
   });
 
   return cssVars;

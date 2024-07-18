@@ -19,7 +19,10 @@ import {
   ColorScheme,
   ColorSchemeConfig,
 } from "@/type/preload";
+import { createLogger } from "@/domain/frontend/log";
 import { IsEqual } from "@/type/utility";
+
+const logger = createLogger("store/setting");
 
 export const settingStoreState: SettingStoreState = {
   savingSetting: {
@@ -306,10 +309,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       try {
         const availableColorSchemeConfigs =
           await window.backend.getColorSchemeConfigs();
-        const defaultSchemeConfig = availableColorSchemeConfigs[0];
+        // デフォルト
+        const defaultSchemeConfigWorkaround = availableColorSchemeConfigs[0];
         const isDark = state.themeSetting.currentTheme === "Dark";
         const currentColorScheme = generateColorScheme({
-          ...defaultSchemeConfig,
+          ...defaultSchemeConfigWorkaround,
           isDark,
         });
         commit("INITIALIZE_COLOR_SCHEME", {
@@ -317,12 +321,15 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           availableColorSchemeConfigs,
         });
 
+        logger.info("initialized color scheme");
+
         const cssVariables = colorSchemeToCssVariables(currentColorScheme);
         Object.entries(cssVariables).forEach(([key, value]) => {
           document.documentElement.style.setProperty(key, value);
         });
       } catch (error) {
-        throw new Error(`Error initializing color scheme: ${error}`);
+        logger.error(`Error initializing color scheme: ${error}`);
+        throw error;
       }
     }),
   },
@@ -339,8 +346,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           const updatedConfig = { ...colorSchemeConfig, isDark };
           const colorScheme = generateColorScheme(updatedConfig);
           commit("SET_COLOR_SCHEME", { colorScheme });
+          logger.info("set color scheme");
         } catch (error) {
-          throw new Error(`Error setting color scheme: ${error}`);
+          logger.error(`Error setting color scheme: ${error}`);
+          throw error;
         }
       },
     ),
