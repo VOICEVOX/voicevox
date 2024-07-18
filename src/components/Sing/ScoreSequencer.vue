@@ -54,7 +54,7 @@
           : notesInCurrentTrack"
         :key="note.id"
         class="sequencer-note"
-        :hasOverlappingError="overlappingNoteIdsInCurrentTrack.has(note.id)"
+        :isOverlapping="overlappingNoteIdsInCurrentTrack.has(note.id)"
         :note
         :nowPreviewing
         :isSelected="selectedNoteIds.has(note.id)"

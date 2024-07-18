@@ -91,7 +91,7 @@ const props = defineProps<{
   /** このノートがプレビュー中か */
   isPreview: boolean;
   /** ノートが重なっているか */
-  hasOverlappingError: boolean;
+  isOverlapping: boolean;
   previewLyric: string | null;
 }>();
 
@@ -130,7 +130,7 @@ const editTargetIsPitch = computed(() => {
   return state.sequencerEditTarget === "PITCH";
 });
 const hasOverlappingError = computed(() => {
-  return props.hasOverlappingError && !props.isPreview;
+  return props.isOverlapping && !props.isPreview;
 });
 
 // フレーズ生成エラー
