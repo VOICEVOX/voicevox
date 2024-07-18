@@ -101,7 +101,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
 
       // TODO: Hydrate
-      dispatch("INITIALIZE_COLOR_SCHEME");
+      actions.INITIALIZE_COLOR_SCHEME();
 
       actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
         acceptRetrieveTelemetry: await window.backend.getSetting(
@@ -322,7 +322,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           document.documentElement.style.setProperty(key, value);
         });
       } catch (error) {
-        console.error("Error initializing color scheme:", error);
+        throw new Error(`Error initializing color scheme: ${error}`);
       }
     }),
   },
@@ -340,7 +340,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           const colorScheme = generateColorScheme(updatedConfig);
           commit("SET_COLOR_SCHEME", { colorScheme });
         } catch (error) {
-          console.error("Error setting color scheme:", error);
+          throw new Error(`Error setting color scheme: ${error}`);
         }
       },
     ),

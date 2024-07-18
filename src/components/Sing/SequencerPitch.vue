@@ -60,9 +60,9 @@ const editFrameRate = computed(() => store.state.editFrameRate);
 const { systemColorsRgba } = useColorScheme();
 
 // TODO: このままだとテーマ変更で更新されないため、変更に追随する必要あり
-const pitchLineColor = [...systemColorsRgba.value.outline.splice(0, 3), 255];
+const pitchLineColor = [...systemColorsRgba.value.outline.slice(0, 3), 255];
 const pitchEditLineColor = [
-  ...systemColorsRgba.value.primaryFixedDim.splice(0, 3),
+  ...systemColorsRgba.value.primaryFixedDim.slice(0, 3),
   255,
 ];
 const originalPitchLine: PitchLine = {
