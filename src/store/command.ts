@@ -1,12 +1,8 @@
 import { toRaw } from "vue";
 import { enablePatches, enableMapSet, Immer } from "immer";
-// immerの内部関数であるgetPlugin("Patches").applyPatches_はexportされていないので
-// ビルド前のsrcからソースコードを読み込んで使う必要がある
-import { enablePatches as enablePatchesImpl } from "immer/src/plugins/patches";
-import { enableMapSet as enableMapSetImpl } from "immer/src/plugins/mapset";
-import { getPlugin } from "immer/src/utils/plugins";
 
 import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
+import { applyPatches } from "@/store/immerPatchUtility";
 import {
   createPartialStore,
   Mutation,
@@ -15,14 +11,8 @@ import {
 } from "@/store/vuex";
 import { EditorType } from "@/type/preload";
 
-// ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
-// enable * も両方叩く必要がある。
 enablePatches();
 enableMapSet();
-enablePatchesImpl();
-enableMapSetImpl();
-// immerのPatchをmutableに適応する内部関数
-const applyPatchesImpl = getPlugin("Patches").applyPatches_;
 
 const immer = new Immer();
 immer.setAutoFreeze(false);
@@ -60,7 +50,7 @@ export const createCommandMutation =
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
     const command = recordPatches(payloadRecipe)(state, payload);
-    applyPatchesImpl(state, command.redoPatches);
+    applyPatches(state, command.redoPatches);
     state.undoCommands[editor].push(command);
     state.redoCommands[editor].splice(0);
   };
@@ -112,7 +102,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       const command = state.undoCommands[editor].pop();
       if (command != null) {
         state.redoCommands[editor].push(command);
-        applyPatchesImpl(state, command.undoPatches);
+        applyPatches(state, command.undoPatches);
       }
     },
     action({ commit, dispatch }, { editor }: { editor: EditorType }) {
@@ -130,7 +120,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       const command = state.redoCommands[editor].pop();
       if (command != null) {
         state.undoCommands[editor].push(command);
-        applyPatchesImpl(state, command.redoPatches);
+        applyPatches(state, command.redoPatches);
       }
     },
     action({ commit, dispatch }, { editor }: { editor: EditorType }) {

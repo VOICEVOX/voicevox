@@ -77,7 +77,7 @@ const isThereSoloTrack = computed(() =>
 );
 
 const trackOrder = computed(() => store.state.trackOrder);
-const selectedTrackId = computed(() => store.state.selectedTrackId);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 const addTrack = async () => {
   store.dispatch("COMMAND_ADD_TRACK");

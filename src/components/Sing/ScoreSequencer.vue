@@ -238,7 +238,7 @@ const store = useStore();
 const state = store.state;
 
 // 選択中のトラックID
-const selectedTrackId = computed(() => state.selectedTrackId);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 // TPQN、テンポ、ノーツ
 const tpqn = computed(() => state.tpqn);
@@ -252,7 +252,9 @@ const notesInOtherTracks = computed(() =>
 const overlappingNoteIdsInCurrentTrack = computed(() =>
   getOrThrow(store.state.overlappingNoteIds, selectedTrackId.value),
 );
-const selectedNoteIds = computed(() => new Set(state.selectedNoteIds));
+const selectedNoteIds = computed(
+  () => new Set(store.getters.SELECTED_NOTE_IDS),
+);
 const isNoteSelected = computed(() => {
   return selectedNoteIds.value.size > 0;
 });
@@ -793,7 +795,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         let maxIndex = 0;
         for (let i = 0; i < notesInCurrentTrack.value.length; i++) {
           const noteId = notesInCurrentTrack.value[i].id;
-          if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
+          if (selectedNoteIds.value.has(noteId) || noteId === note.id) {
             minIndex = Math.min(minIndex, i);
             maxIndex = Math.max(maxIndex, i);
           }
@@ -801,14 +803,14 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         const noteIdsToSelect: NoteId[] = [];
         for (let i = minIndex; i <= maxIndex; i++) {
           const noteId = notesInCurrentTrack.value[i].id;
-          if (!state.selectedNoteIds.has(noteId)) {
+          if (!selectedNoteIds.value.has(noteId)) {
             noteIdsToSelect.push(noteId);
           }
         }
         store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
       } else if (isOnCommandOrCtrlKeyDown(event)) {
         store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-      } else if (!state.selectedNoteIds.has(note.id)) {
+      } else if (!selectedNoteIds.value.has(note.id)) {
         selectOnlyThis(note);
       }
       for (const note of selectedNotesInCurrentTrack.value) {
@@ -934,7 +936,7 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "MOVE_NOTE", note);
-  } else if (!state.selectedNoteIds.has(note.id)) {
+  } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
   }
 };
@@ -956,7 +958,7 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_NOTE_LEFT", note);
-  } else if (!state.selectedNoteIds.has(note.id)) {
+  } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
   }
 };
@@ -968,7 +970,7 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_NOTE_RIGHT", note);
-  } else if (!state.selectedNoteIds.has(note.id)) {
+  } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
   }
 };
@@ -1170,7 +1172,7 @@ const handleNotesArrowLeft = () => {
 };
 
 const handleNotesBackspaceOrDelete = () => {
-  if (state.selectedNoteIds.size === 0) {
+  if (selectedNoteIds.value.size === 0) {
     // TODO: 例外処理は`COMMAND_REMOVE_SELECTED_NOTES`内に移す？
     return;
   }
@@ -1391,7 +1393,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    if (state.selectedNoteIds.size === 0) {
+    if (selectedNoteIds.value.size === 0) {
       return;
     }
     store.dispatch("COPY_NOTES_TO_CLIPBOARD");
@@ -1405,7 +1407,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    if (state.selectedNoteIds.size === 0) {
+    if (selectedNoteIds.value.size === 0) {
       return;
     }
     store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
@@ -1430,7 +1432,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("SELECT_ALL_NOTES");
+    store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
   },
 });
 
@@ -1473,7 +1475,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       label: "すべて選択",
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("SELECT_ALL_NOTES");
+        await store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
       },
       disableWhenUiLocked: true,
     },

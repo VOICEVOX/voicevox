@@ -232,7 +232,7 @@ const keyRangeAdjustment = computed(
 const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
-const selectedTrackId = computed(() => store.state.selectedTrackId);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);

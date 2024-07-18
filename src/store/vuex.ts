@@ -35,20 +35,18 @@ export class Store<
 > extends BaseStore<S> {
   constructor(options: StoreOptions<S, G, A, M>) {
     super(options as OriginalStoreOptions<S>);
-    // @ts-expect-error Storeの型を書き換えている影響で未初期化として判定される
     this.actions = dotNotationDispatchProxy(this.dispatch.bind(this));
     this.mutations = dotNotationCommitProxy(
-      // @ts-expect-error Storeの型を書き換えている影響で未初期化として判定される
       this.commit.bind(this) as Commit<M>,
     );
   }
 
-  readonly getters!: G;
+  declare readonly getters: G;
 
   // @ts-expect-error Storeの型を非互換な型で書き換えているためエラー
-  dispatch: Dispatch<A>;
+  declare dispatch: Dispatch<A>;
   // @ts-expect-error Storeの型を非互換な型で書き換えているためエラー
-  commit: Commit<M>;
+  declare commit: Commit<M>;
   /**
    * ドット記法用のActionを直接呼べる。エラーになる場合はdispatchを使う。
    * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
