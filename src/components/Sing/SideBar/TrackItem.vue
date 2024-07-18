@@ -234,7 +234,7 @@ const setTrackSolo = (solo: boolean) => {
   }
 };
 
-const selectedTrackId = computed(() => store.state.selectedTrackId);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 const trackCharacter = computed<
   { character: CharacterInfo; style: StyleInfo } | undefined

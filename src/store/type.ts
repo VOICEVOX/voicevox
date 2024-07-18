@@ -827,7 +827,7 @@ export type SingingStoreState = {
   timeSignatures: TimeSignature[];
   tracks: Map<TrackId, Track>;
   trackOrder: TrackId[];
-  selectedTrackId: TrackId;
+  _selectedTrackId: TrackId;
   editFrameRate: number;
   phrases: Map<PhraseSourceHash, Phrase>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
@@ -837,7 +837,7 @@ export type SingingStoreState = {
   sequencerZoomY: number;
   sequencerSnapType: number;
   sequencerEditTarget: SequencerEditTarget;
-  selectedNoteIds: Set<NoteId>;
+  _selectedNoteIds: Set<NoteId>;
   overlappingNoteIds: Map<TrackId, Set<NoteId>>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
@@ -854,6 +854,14 @@ export type SingingStoreTypes = {
   SET_SHOW_SINGER: {
     mutation: { isShowSinger: boolean };
     action(payload: { isShowSinger: boolean }): void;
+  };
+
+  SELECTED_TRACK_ID: {
+    getter: TrackId;
+  };
+
+  SELECTED_NOTE_IDS: {
+    getter: Set<NoteId>;
   };
 
   SETUP_SINGER: {
@@ -910,7 +918,7 @@ export type SingingStoreTypes = {
     mutation: { measureNumber: number };
   };
 
-  NOTE_IDS: {
+  ALL_NOTE_IDS: {
     getter: Set<NoteId>;
   };
 
@@ -936,7 +944,7 @@ export type SingingStoreTypes = {
     action(payload: { noteIds: NoteId[] }): void;
   };
 
-  SELECT_ALL_NOTES: {
+  SELECT_ALL_NOTES_IN_SELECTED_TRACK: {
     mutation: undefined;
     action(): void;
   };

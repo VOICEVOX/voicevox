@@ -302,13 +302,32 @@ export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
   });
 };
 
+/** トラックを取得する。見付からないときはフォールバックとして最初のトラックを返す。 */
+const getSelectedTrackWithFallback = (partialState: {
+  tracks: Map<TrackId, Track>;
+  _selectedTrackId: TrackId;
+  trackOrder: TrackId[];
+}) => {
+  if (!partialState.tracks.has(partialState._selectedTrackId)) {
+    return getOrThrow(partialState.tracks, partialState.trackOrder[0]);
+  }
+  return getOrThrow(partialState.tracks, partialState._selectedTrackId);
+};
+
 export const singingStoreState: SingingStoreState = {
   tpqn: DEFAULT_TPQN,
   tempos: [createDefaultTempo(0)],
   timeSignatures: [createDefaultTimeSignature(1)],
   tracks: new Map([[initialTrackId, createDefaultTrack()]]),
   trackOrder: [initialTrackId],
-  selectedTrackId: initialTrackId,
+
+  /**
+   * 選択中のトラックID。
+   * NOTE: このトラックIDは存在しない場合がある（Undo/Redoがあるため）。
+   * 可能な限りgetters.SELECTED_TRACK_IDを使うこと。getSelectedTrackWithFallbackも参照。
+   */
+  _selectedTrackId: initialTrackId,
+
   editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   phrases: new Map(),
   singingGuides: new Map(),
@@ -318,7 +337,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
-  selectedNoteIds: new Set(),
+  _selectedNoteIds: new Set(),
   overlappingNoteIds: new Map([[initialTrackId, new Set()]]),
   nowPlaying: false,
   volume: 0,
@@ -339,6 +358,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_SHOW_SINGER", {
         isShowSinger,
       });
+    },
+  },
+
+  SELECTED_TRACK_ID: {
+    getter(state) {
+      // Undo/Redoで消えている場合は最初のトラックを選択していることにする
+      if (!state.tracks.has(state._selectedTrackId)) {
+        return state.trackOrder[0];
+      }
+      return state._selectedTrackId;
+    },
+  },
+
+  SELECTED_NOTE_IDS: {
+    // 選択中のトラックのノートだけを選択中のノートとして返す。
+    getter(state) {
+      const selectedTrack = getSelectedTrackWithFallback(state);
+
+      const noteIdsInSelectedTrack = new Set(
+        selectedTrack.notes.map((note) => note.id),
+      );
+
+      // toRawを1回挟まないとintersectionがエラーを返す
+      return toRaw(state._selectedNoteIds).intersection(noteIdsInSelectedTrack);
     },
   },
 
@@ -565,10 +608,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  NOTE_IDS: {
+  ALL_NOTE_IDS: {
     getter(state) {
-      const selectedTrack = getOrThrow(state.tracks, state.selectedTrackId);
-      const noteIds = selectedTrack.notes.map((value) => value.id);
+      const noteIds = [...state.tracks.values()].flatMap((track) =>
+        track.notes.map((note) => note.id),
+      );
       return new Set(noteIds);
     },
   },
@@ -577,7 +621,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { notes, trackId }) {
       state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
-      state.selectedNoteIds.clear();
+      state._selectedNoteIds.clear();
       const selectedTrack = getOrThrow(state.tracks, trackId);
       selectedTrack.notes = notes;
 
@@ -631,7 +675,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.editingLyricNoteId = undefined;
       }
       for (const noteId of noteIds) {
-        state.selectedNoteIds.delete(noteId);
+        state._selectedNoteIds.delete(noteId);
       }
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
@@ -647,11 +691,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SELECT_NOTES: {
     mutation(state, { noteIds }: { noteIds: NoteId[] }) {
       for (const noteId of noteIds) {
-        state.selectedNoteIds.add(noteId);
+        state._selectedNoteIds.add(noteId);
       }
     },
     async action({ getters, commit }, { noteIds }: { noteIds: NoteId[] }) {
-      const existingNoteIds = getters.NOTE_IDS;
+      const existingNoteIds = getters.ALL_NOTE_IDS;
       const isValidNoteIds = noteIds.every((value) => {
         return existingNoteIds.has(value);
       });
@@ -662,21 +706,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SELECT_ALL_NOTES: {
+  SELECT_ALL_NOTES_IN_SELECTED_TRACK: {
     mutation(state) {
-      const currentTrack = getOrThrow(state.tracks, state.selectedTrackId);
-      const allNoteIds = currentTrack.notes.map((note) => note.id);
-      state.selectedNoteIds = new Set(allNoteIds);
+      const selectedTrack = getSelectedTrackWithFallback(state);
+      const allNoteIds = selectedTrack.notes.map((note) => note.id);
+      state._selectedNoteIds = new Set(allNoteIds);
     },
     async action({ commit }) {
-      commit("SELECT_ALL_NOTES");
+      commit("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
     },
   },
 
   DESELECT_ALL_NOTES: {
     mutation(state) {
       state.editingLyricNoteId = undefined;
-      state.selectedNoteIds = new Set();
+      state._selectedNoteIds = new Set();
     },
     async action({ commit }) {
       commit("DESELECT_ALL_NOTES");
@@ -685,14 +729,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_EDITING_LYRIC_NOTE_ID: {
     mutation(state, { noteId }: { noteId?: NoteId }) {
-      if (noteId != undefined && !state.selectedNoteIds.has(noteId)) {
-        state.selectedNoteIds.clear();
-        state.selectedNoteIds.add(noteId);
+      if (noteId != undefined && !state._selectedNoteIds.has(noteId)) {
+        state._selectedNoteIds.clear();
+        state._selectedNoteIds.add(noteId);
       }
       state.editingLyricNoteId = noteId;
     },
     async action({ getters, commit }, { noteId }: { noteId?: NoteId }) {
-      if (noteId != undefined && !getters.NOTE_IDS.has(noteId)) {
+      if (noteId != undefined && !getters.ALL_NOTE_IDS.has(noteId)) {
         throw new Error("The note id is invalid.");
       }
       commit("SET_EDITING_LYRIC_NOTE_ID", { noteId });
@@ -827,7 +871,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECTED_TRACK: {
     getter(state) {
-      return getOrThrow(state.tracks, state.selectedTrackId);
+      return getSelectedTrackWithFallback(state);
     },
   },
 
@@ -851,7 +895,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       return Math.max(
         SEQUENCER_MIN_NUM_MEASURES,
         getNumMeasures(
-          getOrThrow(state.tracks, state.selectedTrackId).notes,
+          [...state.tracks.values()].flatMap((track) => track.notes),
           state.tempos,
           state.timeSignatures,
           state.tpqn,
@@ -1076,10 +1120,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   DELETE_TRACK: {
     mutation(state, { trackId }) {
       state.tracks.delete(trackId);
+      const trackIndex = state.trackOrder.indexOf(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
       state.overlappingNoteIds.delete(trackId);
-      if (state.selectedTrackId === trackId) {
-        state.selectedTrackId = state.trackOrder[0];
+      if (state._selectedTrackId === trackId) {
+        state._selectedTrackId =
+          state.trackOrder[trackIndex === 0 ? 0 : trackIndex - 1];
       }
     },
     async action({ state, commit, dispatch }, { trackId }) {
@@ -1093,8 +1139,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SELECT_TRACK: {
+    // トラックを切り替えるときに選択中のノートをクリアする。
     mutation(state, { trackId }) {
-      state.selectedTrackId = trackId;
+      state._selectedNoteIds.clear();
+      state._selectedTrackId = trackId;
     },
     action({ state, commit }, { trackId }) {
       if (!state.tracks.has(trackId)) {
@@ -1154,7 +1202,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.overlappingNoteInfos = new Map(
         [...tracks.keys()].map((trackId) => [trackId, new Map()]),
       );
-      state.selectedTrackId = state.trackOrder[0];
+      state._selectedTrackId = state.trackOrder[0];
     },
     async action({ commit, dispatch }, { tracks }) {
       if (![...tracks.values()].every((track) => isValidTrack(track))) {
@@ -2169,15 +2217,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COPY_NOTES_TO_CLIPBOARD: {
-    async action({ state, getters }) {
-      const currentTrack = getters.SELECTED_TRACK;
-      const noteIds = state.selectedNoteIds;
+    async action({ getters }) {
+      const selectedTrack = getters.SELECTED_TRACK;
+      const noteIds = getters.SELECTED_NOTE_IDS;
       // ノートが選択されていない場合は何もしない
       if (noteIds.size === 0) {
         return;
       }
       // 選択されたノートのみをコピーする
-      const selectedNotes = currentTrack.notes
+      const selectedNotes = selectedTrack.notes
         .filter((note: Note) => noteIds.has(note.id))
         .map((note: Note) => {
           // idのみコピーしない
@@ -2251,7 +2299,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       // ノートを追加してレンダリングする
       commit("COMMAND_ADD_NOTES", {
         notes: notesToPaste,
-        trackId: state.selectedTrackId,
+        trackId: getters.SELECTED_TRACK_ID,
       });
       dispatch("RENDER");
       // 貼り付けたノートを選択する
@@ -2262,9 +2310,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   COMMAND_QUANTIZE_SELECTED_NOTES: {
     action({ state, commit, getters, dispatch }) {
-      const currentTrack = getters.SELECTED_TRACK;
-      const selectedNotes = currentTrack.notes.filter((note: Note) => {
-        return state.selectedNoteIds.has(note.id);
+      const selectedTrack = getters.SELECTED_TRACK;
+      const selectedNotes = selectedTrack.notes.filter((note: Note) => {
+        return getters.SELECTED_NOTE_IDS.has(note.id);
       });
       // TODO: クオンタイズの処理を共通化する
       const snapType = state.sequencerSnapType;
@@ -2277,7 +2325,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       });
       commit("COMMAND_UPDATE_NOTES", {
         notes: quantizedNotes,
-        trackId: state.selectedTrackId,
+        trackId: getters.SELECTED_TRACK_ID,
       });
       dispatch("RENDER");
     },
@@ -2344,7 +2392,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_SELECTED_TRACK: {
     mutation(state, { trackId }) {
-      state.selectedTrackId = trackId;
+      state._selectedTrackId = trackId;
     },
     action({ commit }, { trackId }) {
       commit("SET_SELECTED_TRACK", { trackId });
@@ -2527,7 +2575,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.ADD_NOTES(draft, { notes, trackId });
       },
       action({ getters, commit, dispatch }, { notes, trackId }) {
-        const existingNoteIds = getters.NOTE_IDS;
+        const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return !existingNoteIds.has(value.id) && isValidNote(value);
         });
@@ -2544,7 +2592,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.UPDATE_NOTES(draft, { notes, trackId });
       },
       action({ getters, commit, dispatch }, { notes, trackId }) {
-        const existingNoteIds = getters.NOTE_IDS;
+        const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return existingNoteIds.has(value.id) && isValidNote(value);
         });
@@ -2561,7 +2609,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.REMOVE_NOTES(draft, { noteIds, trackId });
       },
       action({ getters, commit, dispatch }, { noteIds, trackId }) {
-        const existingNoteIds = getters.NOTE_IDS;
+        const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNoteIds = noteIds.every((value) => {
           return existingNoteIds.has(value);
         });
@@ -2574,10 +2622,10 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_REMOVE_SELECTED_NOTES: {
-      action({ state, commit, dispatch }) {
+      action({ commit, getters, dispatch }) {
         commit("COMMAND_REMOVE_NOTES", {
-          noteIds: [...state.selectedNoteIds],
-          trackId: state.selectedTrackId,
+          noteIds: [...getters.SELECTED_NOTE_IDS],
+          trackId: getters.SELECTED_TRACK_ID,
         });
 
         dispatch("RENDER");
@@ -2735,7 +2783,7 @@ export const singingCommandStore = transformCommandStore(
         }
       },
       async action(
-        { state, commit, dispatch },
+        { state, commit, getters, dispatch },
         { tpqn, tempos, timeSignatures, tracks },
       ) {
         const payload: {
@@ -2751,7 +2799,7 @@ export const singingCommandStore = transformCommandStore(
           if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
             payload.push({
               track,
-              trackId: state.selectedTrackId,
+              trackId: getters.SELECTED_TRACK_ID,
               overwrite: true,
             });
           } else {
@@ -2773,7 +2821,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_IMPORT_UTAFORMATIX_PROJECT: {
       action: createUILockAction(
-        async ({ state, dispatch }, { project, trackIndexes }) => {
+        async ({ state, getters, dispatch }, { project, trackIndexes }) => {
           const { tempos, timeSignatures, tracks, tpqn } =
             ufProjectToVoicevox(project);
 
@@ -2791,7 +2839,10 @@ export const singingCommandStore = transformCommandStore(
             throw new Error("TPQN does not match. Must be converted.");
           }
 
-          const selectedTrack = getOrThrow(state.tracks, state.selectedTrackId);
+          const selectedTrack = getOrThrow(
+            state.tracks,
+            getters.SELECTED_TRACK_ID,
+          );
 
           const filteredTracks = trackIndexes.map((trackIndex) => {
             const track = tracks[trackIndex];

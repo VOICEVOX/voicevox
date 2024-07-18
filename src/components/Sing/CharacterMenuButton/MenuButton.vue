@@ -18,7 +18,7 @@ defineOptions({
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const selectedTrackId = computed(() => store.state.selectedTrackId);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 const showSkeleton = computed(() => selectedCharacterInfo.value == undefined);
 

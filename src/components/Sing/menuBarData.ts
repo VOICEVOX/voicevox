@@ -5,7 +5,9 @@ import { MenuItemData } from "@/components/Menu/type";
 export const useMenuBarData = () => {
   const store = useStore();
   const uiLocked = computed(() => store.getters.UI_LOCKED);
-  const isNotesSelected = computed(() => store.state.selectedNoteIds.size > 0);
+  const isNotesSelected = computed(
+    () => store.getters.SELECTED_NOTE_IDS.size > 0,
+  );
 
   const importExternalSongProject = async () => {
     if (uiLocked.value) return;
@@ -76,7 +78,7 @@ export const useMenuBarData = () => {
       label: "すべて選択",
       onClick: () => {
         if (uiLocked.value) return;
-        store.dispatch("SELECT_ALL_NOTES");
+        store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
       },
       disableWhenUiLocked: true,
     },
