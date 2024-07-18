@@ -50,15 +50,15 @@
       />
       <SequencerNote
         v-for="note in editTarget === 'NOTE'
-          ? notesInCurrentTrackWithPreview
-          : notesInCurrentTrack"
+          ? notesInSelectedTrackWithPreview
+          : notesInSelectedTrack"
         :key="note.id"
         class="sequencer-note"
         :note
         :nowPreviewing
         :isSelected="selectedNoteIds.has(note.id)"
         :isPreview="previewNoteIds.has(note.id)"
-        :isOverlapping="overlappingNoteIdsInCurrentTrack.has(note.id)"
+        :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
@@ -116,7 +116,7 @@
       </div>
       <div>
         <SequencerPhraseIndicator
-          v-for="phraseInfo in phraseInfosInCurrentTrack"
+          v-for="phraseInfo in phraseInfosInSelectedTrack"
           :key="phraseInfo.key"
           :phraseKey="phraseInfo.key"
           class="sequencer-phrase-indicator"
@@ -243,13 +243,13 @@ const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 // TPQN、テンポ、ノーツ
 const tpqn = computed(() => state.tpqn);
 const tempos = computed(() => state.tempos);
-const notesInCurrentTrack = computed(() => store.getters.SELECTED_TRACK.notes);
+const notesInSelectedTrack = computed(() => store.getters.SELECTED_TRACK.notes);
 const notesInOtherTracks = computed(() =>
   [...store.state.tracks.entries()].flatMap(([trackId, track]) =>
     trackId === selectedTrackId.value ? [] : track.notes,
   ),
 );
-const overlappingNoteIdsInCurrentTrack = computed(() =>
+const overlappingNoteIdsInSelectedTrack = computed(() =>
   getOrThrow(store.state.overlappingNoteIds, selectedTrackId.value),
 );
 const selectedNoteIds = computed(
@@ -258,17 +258,17 @@ const selectedNoteIds = computed(
 const isNoteSelected = computed(() => {
   return selectedNoteIds.value.size > 0;
 });
-const selectedNotesInCurrentTrack = computed(() => {
-  return notesInCurrentTrack.value.filter((note) =>
+const selectedNotesInSelectedTrack = computed(() => {
+  return notesInSelectedTrack.value.filter((note) =>
     selectedNoteIds.value.has(note.id),
   );
 });
-const notesInCurrentTrackWithPreview = computed(() => {
+const notesInSelectedTrackWithPreview = computed(() => {
   if (nowPreviewing.value) {
     const previewNoteIds = new Set(previewNotes.value.map((value) => value.id));
     return previewNotes.value
       .concat(
-        notesInCurrentTrack.value.filter(
+        notesInSelectedTrack.value.filter(
           (note) => !previewNoteIds.has(note.id),
         ),
       )
@@ -286,7 +286,7 @@ const notesInCurrentTrackWithPreview = computed(() => {
         }
       });
   } else {
-    return notesInCurrentTrack.value.toSorted((a, b) => {
+    return notesInSelectedTrack.value.toSorted((a, b) => {
       const aIsSelected = selectedNoteIds.value.has(a.id);
       const bIsSelected = selectedNoteIds.value.has(b.id);
       if (aIsSelected === bIsSelected) {
@@ -350,7 +350,7 @@ const phraseInfos = computed(() => {
     return { key, x: startX, width: endX - startX, trackId };
   });
 });
-const phraseInfosInCurrentTrack = computed(() => {
+const phraseInfosInSelectedTrack = computed(() => {
   return phraseInfos.value.filter(
     ({ trackId }) => trackId === selectedTrackId.value,
   );
@@ -414,7 +414,7 @@ const prevCursorPos = { frame: 0, frequency: 0 }; // 前のカーソル位置
 
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {
-  return notesInCurrentTrack.value.find(
+  return notesInSelectedTrack.value.find(
     (note) => note.id === state.editingLyricNoteId,
   );
 });
@@ -791,10 +791,10 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         throw new Error("note is undefined.");
       }
       if (event.shiftKey) {
-        let minIndex = notesInCurrentTrack.value.length - 1;
+        let minIndex = notesInSelectedTrack.value.length - 1;
         let maxIndex = 0;
-        for (let i = 0; i < notesInCurrentTrack.value.length; i++) {
-          const noteId = notesInCurrentTrack.value[i].id;
+        for (let i = 0; i < notesInSelectedTrack.value.length; i++) {
+          const noteId = notesInSelectedTrack.value[i].id;
           if (selectedNoteIds.value.has(noteId) || noteId === note.id) {
             minIndex = Math.min(minIndex, i);
             maxIndex = Math.max(maxIndex, i);
@@ -802,7 +802,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         }
         const noteIdsToSelect: NoteId[] = [];
         for (let i = minIndex; i <= maxIndex; i++) {
-          const noteId = notesInCurrentTrack.value[i].id;
+          const noteId = notesInSelectedTrack.value[i].id;
           if (!selectedNoteIds.value.has(noteId)) {
             noteIdsToSelect.push(noteId);
           }
@@ -813,7 +813,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
       } else if (!selectedNoteIds.value.has(note.id)) {
         selectOnlyThis(note);
       }
-      for (const note of selectedNotesInCurrentTrack.value) {
+      for (const note of selectedNotesInSelectedTrack.value) {
         copiedNotes.push({ ...note });
       }
     }
@@ -1068,7 +1068,7 @@ const rectSelect = (additive: boolean) => {
   );
 
   const noteIdsToSelect: NoteId[] = [];
-  for (const note of notesInCurrentTrack.value) {
+  for (const note of notesInSelectedTrack.value) {
     if (
       note.position + note.duration >= startTicks &&
       note.position <= endTicks &&
@@ -1095,7 +1095,7 @@ const onMouseLeave = () => {
 // キーボードイベント
 const handleNotesArrowUp = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotesInCurrentTrack.value) {
+  for (const note of selectedNotesInSelectedTrack.value) {
     const noteNumber = Math.min(note.noteNumber + 1, 127);
     editedNotes.push({ ...note, noteNumber });
   }
@@ -1117,7 +1117,7 @@ const handleNotesArrowUp = () => {
 
 const handleNotesArrowDown = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotesInCurrentTrack.value) {
+  for (const note of selectedNotesInSelectedTrack.value) {
     const noteNumber = Math.max(note.noteNumber - 1, 0);
     editedNotes.push({ ...note, noteNumber });
   }
@@ -1139,7 +1139,7 @@ const handleNotesArrowDown = () => {
 
 const handleNotesArrowRight = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotesInCurrentTrack.value) {
+  for (const note of selectedNotesInSelectedTrack.value) {
     const position = note.position + snapTicks.value;
     editedNotes.push({ ...note, position });
   }
@@ -1155,7 +1155,7 @@ const handleNotesArrowRight = () => {
 
 const handleNotesArrowLeft = () => {
   const editedNotes: Note[] = [];
-  for (const note of selectedNotesInCurrentTrack.value) {
+  for (const note of selectedNotesInSelectedTrack.value) {
     const position = note.position - snapTicks.value;
     editedNotes.push({ ...note, position });
   }
