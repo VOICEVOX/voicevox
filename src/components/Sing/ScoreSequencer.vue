@@ -221,9 +221,7 @@ const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const tpqn = computed(() => state.tpqn);
 const tempos = computed(() => state.tempos);
 const notes = computed(() => store.getters.SELECTED_TRACK.notes);
-const selectedNoteIds = computed(
-  () => new Set(store.getters.SELECTED_NOTE_IDS),
-);
+const selectedNoteIds = computed(() => store.getters.SELECTED_NOTE_IDS);
 const isNoteSelected = computed(() => {
   return selectedNoteIds.value.size > 0;
 });
