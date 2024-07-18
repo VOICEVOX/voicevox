@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { DynamicScheme } from "@material/material-color-utilities";
+import {
+  DynamicScheme,
+  CustomColorGroup,
+} from "@material/material-color-utilities";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -627,7 +630,7 @@ export interface ColorScheme {
   systemColors: Record<string, string>;
   paletteTones: Record<string, Record<number, string>>;
   customPaletteColors: Record<string, string>;
-  customDefinedColors: Record<string, string>;
+  customDefinedColors: CustomColorGroup[];
   config: ColorSchemeConfig;
 }
 

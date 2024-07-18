@@ -13,6 +13,9 @@ import {
   SchemeFruitSalad,
   TonalPalette,
   MaterialDynamicColors,
+  CustomColor,
+  CustomColorGroup,
+  customColor,
 } from "@material/material-color-utilities";
 
 import {
@@ -21,6 +24,7 @@ import {
   ColorSchemeCorePalettes,
   ColorSchemeAdjustment,
   CustomPaletteColor,
+  CustomDefinedColor,
 } from "@/type/preload";
 
 const SCHEME_CONSTRUCTORS = {
@@ -79,7 +83,7 @@ const createAdjustedPalette = (
 };
 
 // M3のダイナミックスキーム生成
-const createDynamicScheme = (config: ColorSchemeConfig): DynamicScheme => {
+const generateDynamicScheme = (config: ColorSchemeConfig): DynamicScheme => {
   const {
     sourceColor,
     variant = "tonalSpot",
@@ -198,9 +202,29 @@ const adjustCustomPaletteColors = (
   );
 };
 
+export const generateCustomDefinedColors = (
+  sourceColorHex: string,
+  customDefinedColors: CustomDefinedColor[],
+): CustomColorGroup[] => {
+  const customColorGroups: CustomColorGroup[] = customDefinedColors.map(
+    (customDefinedColor: CustomDefinedColor) => {
+      const customColorValue = {
+        ...customDefinedColor,
+        value: argbFromHex(customDefinedColor.value),
+      };
+      return customColor(
+        argbFromHex(sourceColorHex),
+        customColorValue as CustomColor,
+      );
+    },
+  );
+
+  return customColorGroups;
+};
+
 // カラースキームの生成
 export const generateColorScheme = (config: ColorSchemeConfig): ColorScheme => {
-  const scheme = createDynamicScheme(config);
+  const scheme = generateDynamicScheme(config);
   const systemColors = generateSystemColors(scheme);
   const paletteTones = generatePaletteTones(scheme);
   const customPaletteColors = adjustCustomPaletteColors(
@@ -208,12 +232,9 @@ export const generateColorScheme = (config: ColorSchemeConfig): ColorScheme => {
     scheme,
     config.isDark,
   );
-  const customDefinedColors = config.customDefinedColors.reduce(
-    (acc, { name, value }) => {
-      acc[name] = value;
-      return acc;
-    },
-    {} as Record<string, string>,
+  const customDefinedColors = generateCustomDefinedColors(
+    config.sourceColor,
+    config.customDefinedColors,
   );
 
   return {
@@ -263,7 +284,7 @@ export const colorSchemeToCssVariables = (
 
   Object.entries(colorScheme.customDefinedColors).forEach(([name, color]) => {
     const cssName = toKebabCase(name);
-    setColorVar("--md-custom-color-", cssName, color);
+    setColorVar("--md-custom-color-", cssName, rgbaFromArgb(color.value));
   });
 
   return cssVars;
