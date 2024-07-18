@@ -4,14 +4,14 @@ export interface State<
   Context,
   Dispatcher,
 > {
-  process(
-    input: Input,
-    context: Context,
-    dispatcher: Dispatcher,
-    setNextState: (nextState: States) => void,
-  ): void;
-  onEnter(context: Context, dispatcher: Dispatcher): void;
-  onExit(context: Context, dispatcher: Dispatcher): void;
+  process(payload: {
+    input: Input;
+    context: Context;
+    dispatcher: Dispatcher;
+    setNextState: (nextState: States) => void;
+  }): void;
+  onEnter(payload: { context: Context; dispatcher: Dispatcher }): void;
+  onExit(payload: { context: Context; dispatcher: Dispatcher }): void;
 }
 
 export class StateMachine<
@@ -43,16 +43,22 @@ export class StateMachine<
 
   process(input: Input) {
     try {
-      this.currentState.process(
+      this.currentState.process({
         input,
-        this.context,
-        this.dispatcher,
-        this.setNextState,
-      );
+        context: this.context,
+        dispatcher: this.dispatcher,
+        setNextState: this.setNextState,
+      });
       if (this.nextState != undefined) {
-        this.currentState.onExit(this.context, this.dispatcher);
+        this.currentState.onExit({
+          context: this.context,
+          dispatcher: this.dispatcher,
+        });
         this.currentState = this.nextState;
-        this.currentState.onEnter(this.context, this.dispatcher);
+        this.currentState.onEnter({
+          context: this.context,
+          dispatcher: this.dispatcher,
+        });
       }
     } finally {
       this.nextState = undefined;

@@ -49,7 +49,6 @@ module.exports = {
     "@typescript-eslint/no-unused-vars": [
       process.env.NODE_ENV === "development" ? "warn" : "error", // 開発時のみwarn
       {
-        argsIgnorePattern: "^_",
         ignoreRestSiblings: true,
       },
     ],

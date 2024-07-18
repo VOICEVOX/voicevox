@@ -71,14 +71,18 @@ const getGuideLineTicks = (
 class IdleState implements State<States, Input, Context, Dispatcher> {
   readonly id = "idle";
 
-  onEnter(_context: Context, _dispatcher: Dispatcher) {}
+  onEnter() {}
 
-  process(
-    input: Input,
-    context: Context,
-    _dispatcher: Dispatcher,
-    setNextState: (nextState: States) => void,
-  ) {
+  process({
+    input,
+    context,
+    setNextState,
+  }: {
+    input: Input;
+    context: Context;
+    dispatcher: Dispatcher;
+    setNextState: (nextState: States) => void;
+  }) {
     const mouseButton = getButton(input.mouseEvent);
     if (input.targetArea === "SequencerBody") {
       context.guideLineTicks.value = getGuideLineTicks(
@@ -106,7 +110,7 @@ class IdleState implements State<States, Input, Context, Dispatcher> {
     }
   }
 
-  onExit(_context: Context, _dispatcher: Dispatcher) {}
+  onExit() {}
 }
 
 class AddNoteState implements State<States, Input, Context, Dispatcher> {
@@ -149,7 +153,13 @@ class AddNoteState implements State<States, Input, Context, Dispatcher> {
     context.guideLineTicks.value = noteEndPos;
   }
 
-  onEnter(context: Context, dispatcher: Dispatcher) {
+  onEnter({
+    context,
+    dispatcher,
+  }: {
+    context: Context;
+    dispatcher: Dispatcher;
+  }) {
     dispatcher.deselectAllNotes();
 
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
@@ -176,12 +186,15 @@ class AddNoteState implements State<States, Input, Context, Dispatcher> {
     this.previewRequestId = requestAnimationFrame(preview);
   }
 
-  process(
-    input: Input,
-    _context: Context,
-    _dispatcher: Dispatcher,
-    setNextState: (nextState: States) => void,
-  ) {
+  process({
+    input,
+    setNextState,
+  }: {
+    input: Input;
+    context: Context;
+    dispatcher: Dispatcher;
+    setNextState: (nextState: States) => void;
+  }) {
     const mouseButton = getButton(input.mouseEvent);
     if (input.targetArea === "SequencerBody") {
       if (input.mouseEvent.type === "mousemove") {
@@ -195,7 +208,13 @@ class AddNoteState implements State<States, Input, Context, Dispatcher> {
     }
   }
 
-  onExit(context: Context, dispatcher: Dispatcher) {
+  onExit({
+    context,
+    dispatcher,
+  }: {
+    context: Context;
+    dispatcher: Dispatcher;
+  }) {
     const previewNotes = context.previewNotes.value;
     const previewNoteIds = previewNotes.map((value) => value.id);
 
